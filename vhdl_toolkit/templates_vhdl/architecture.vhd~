@@ -1,0 +1,17 @@
+ARCHITECTURE {{ name }} OF {{ entityName }} IS
+    {% for t in extraTypes %}
+    {{t}}
+    {% endfor %}
+
+    {% for v in variables %}
+    {{str(v)}}    
+    {% endfor %}
+BEGIN
+    {% for p in processes %}
+    {{p}}
+    {% endfor %}
+
+    {% for c in components %}
+    {{str(c)}}
+    {% endfor %}      
+END ARCHITECTURE_NAME;

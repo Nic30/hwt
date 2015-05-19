@@ -1,0 +1,5 @@
+{{ name }}: PROCESS ({{ sensitivityList }})
+BEGIN
+    {% for s in statements %}
+    {% endfor %} 
+END PROCESS;
