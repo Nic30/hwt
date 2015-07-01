@@ -1,5 +1,11 @@
 eclipse.preferences.version=1
-encoding//vhdl_toolkit/axi_lite_tb_trans_generator.py=utf-8
+encoding//hls_toolkit/debug.py=utf-8
+encoding//vhdl_toolkit/architecture.py=utf-8
+encoding//vhdl_toolkit/axi_testbench.py=utf-8
+encoding//vhdl_toolkit/entity.py=utf-8
+encoding//vhdl_toolkit/formater.py=utf-8
 encoding//vhdl_toolkit/lex.py=utf-8
 encoding//vhdl_toolkit/parser.py=utf-8
+encoding//vhdl_toolkit/parser_helpers.py=utf-8
 encoding//vhdl_toolkit/testbench_generator.py=utf-8
+encoding//vivado_toolkit/ip_core_fix.py=utf-8

@@ -1,0 +1,92 @@
+$date
+	Thu Jun 25 22:00:48 2015
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module top $end
+$scope module dut $end
+$var wire 1 ! c_ack $end
+$var wire 2 " len [1:0] $end
+$var wire 1 # sys_clk $end
+$var wire 1 $ sys_rst $end
+$var reg 64 % axiIn_data [63:0] $end
+$var reg 1 & axiIn_last $end
+$var reg 1 ' axiIn_ready $end
+$var reg 8 ( axiIn_strb [7:0] $end
+$var reg 1 ) axiIn_valid $end
+$var reg 64 * axiOut_data [63:0] $end
+$var reg 1 + axiOut_last $end
+$var reg 1 , axiOut_ready $end
+$var reg 8 - axiOut_strb [7:0] $end
+$var reg 1 . axiOut_valid $end
+$var reg 1 / c_open $end
+$var reg 1 0 dummy_d $end
+$var reg 1 1 dummy_s $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+01
+00
+0/
+0.
+b0 -
+0,
+0+
+b0 *
+0)
+b0 (
+0'
+0&
+b0 %
+1$
+0#
+b10 "
+0!
+$end
+#5000
+0$
+1#
+#10000
+0#
+#15000
+1#
+#20000
+0#
+#25000
+1)
+1#
+#30000
+0#
+#35000
+1!
+1,
+1#
+#40000
+0#
+#45000
+1#
+#50000
+0#
+#55000
+0!
+0,
+0)
+1#
+#60000
+0#
+#65000
+1#
+#70000
+0#
+#75000
+1#
+#80000
+0#
+#85000
+1#

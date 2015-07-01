@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #import ply.lex as lex
-from vhdl_toolkit.vhdl_lex import VHDL_Lex_parser
-from vhdl_toolkit.vhdl_entity import Entity
+from vhdl_toolkit.lex import VHDL_Lex_parser
+from vhdl_toolkit.entity import Entity
 
 """
 install dependencies by:
@@ -43,3 +43,13 @@ class CachedLex(object):
          
     def __back__(self, token):
         self._buff.append(token)
+        
+def entityFromFile(fileName):
+    with open(fileName) as f:
+        l = CachedLex(f.read())
+        for t in l:
+            if t.type == "ENTITY":
+                l.__back__(t)
+                e = Entity()
+                e.parse(l)
+                return e

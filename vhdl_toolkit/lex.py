@@ -5,9 +5,9 @@ import ply.lex as lex
 tokens = (
     'WHILE', 'THEN', 'ENTITY', 'END', 'NAME', 'FLOAT', 'NUMBER',
     'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'EQUALS', 'DDOT', 'SEMICOLON',
-    'L_OR_EQ','NONEQUALS', 'G_OR_EQ', 'CONNECT', 'GREATER', 'LESSER', 'COMMA',
+    'L_OR_EQ', 'NONEQUALS', 'ASSIG', 'G_OR_EQ', 'CONNECT', 'GREATER', 'LESSER', 'COMMA',
     'LPAREN', 'RPAREN', 'DOWNTO', 'TO', 'LIBRARY',
-    'IN', 'OUT', 'USE', 'IS', 'ARCHITECTURE', 'BEGIN', 'MAP', 'PORT',
+    'IN', 'OUT', 'USE', 'IS', 'ARCHITECTURE', 'BEGIN', 'GENERIC', 'MAP', 'PORT',
     'COMPONENT', 'COMMENT', 'STRING', 'PROCESS', "LENOP", "HIGH", "LOW"
     )
 
@@ -21,6 +21,7 @@ t_TIMES = r'\*'
 t_DIVIDE = r'/'
 t_EQUALS = r'='
 t_NONEQUALS = r'/='
+t_ASSIG = r':='
 t_GREATER = r'>'
 t_LESSER = r'<'
 t_L_OR_EQ = r'<='
@@ -43,71 +44,75 @@ def t_STRING(t):
     return t
 
 def t_LIBRARY(t):
-    r'(?i)LIBRARY(?!\S)'
+    r'(?i)LIBRARY(?!\w)'
     return t
 
 def t_PROCESS(t):
-    r'(?i)PROCESS(?!\S)'
+    r'(?i)PROCESS(?!\w)'
     return t
 
 def t_IN(t):
-    r'(?i)IN(?!\S)'
+    r'(?i)IN(?!\w)'
     return t
 
 def t_OUT(t):
-    r'(?i)OUT(?!\S)'
+    r'(?i)OUT(?!\w)'
     return t
 
 def t_USE(t):
-    r'(?i)USE(?!\S)'
+    r'(?i)USE(?!\w)'
     return t
 
 def t_ENTITY(t):
-    r'(?i)ENTITY(?!\S)'
+    r'(?i)ENTITY(?!\w)'
     return t
 
 def t_IS(t):
-    r'(?i)IS(?!\S)'
+    r'(?i)IS(?!\w)'
     return t
 
 def t_ARCHITECTURE(t):
-    r'(?i)ARCHITECTURE(?!\S)'
+    r'(?i)ARCHITECTURE(?!\w)'
     return t
 
 def t_BEGIN(t):
-    r'(?i)BEGIN(?!\S)'
+    r'(?i)BEGIN(?!\w)'
+    return t
+
+def t_GENERIC(t):
+    r'(?i)GENERIC(?!\w)'
     return t
 
 def t_MAP(t):
-    r'(?i)MAP(?!\S)'
+    r'(?i)MAP(?!\w)'
     return t
 
 def t_PORT(t):
-    r'(?i)PORT(?!\S)'
+    r'(?i)PORT(?!\w)'
     return t
 
 def t_COMPONENT(t):
-    r'(?i)COMPONENT(?!\S)'
+    r'(?i)COMPONENT(?!\w)'
     return t
 
 def t_DOWNTO(t):
-    r'(?i)DOWNTO(?!\S)'
+    r'(?i)DOWNTO(?!\w)'
     return t
 
 def t_TO(t):
-    r'(?i)TO(?!\S)'
+    r'(?i)TO(?!\w)'
     return t
 
 def t_WHILE(t):
-    r'(?i)WHILE(?!\S)'
+    r'(?i)WHILE(?!\w)'
     return t
 
 def t_THEN(t):
-    r'(?i)THEN(?!\S)'
+    r'(?i)THEN(?!\w)'
     return t
 
 def t_END(t):
-    r'(?i)END(?!\S)'
+    r'(?i)END(?!\w)'
     return t
 
 # Ignored characters

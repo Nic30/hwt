@@ -1,10 +1,25 @@
-from vhdl_toolkit.entity import Entity, PortItem, VHDLType, VHDLExtraType
+from vhdl_toolkit.entity import Entity
+from vhdl_toolkit.types import PortItem, VHDLType, VHDLExtraType
 from vhdl_toolkit.architecture import Architecture
+from hls_toolkit.syntetizator_config import HLSSyntetizatorConfig as config
+
+"""
+@attention:  Not used yet
+"""
+
+
+def portFromVariables(variables):
+    port = []
+    for v in variables:
+        v.typ.name = v.name
+        v.typ.direction = PortItem.typeIn
+        port.extend(v.typ.asPortItems())
+    return port
 
 def serializeComponent(comp):
     ent = Entity()
     ent.name = comp.name
-    ent.port.extend(comp.port)
+    ent.port.extend(portFromVariables(comp.port))
     variables = []
     eTypes = []
     processes = []

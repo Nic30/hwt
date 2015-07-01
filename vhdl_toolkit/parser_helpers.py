@@ -1,4 +1,5 @@
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 def for_parentBlock(iterator, func):
     lp_cnt = 1

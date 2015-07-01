@@ -1,24 +1,11 @@
-
-import jinja2
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 from vhdl_toolkit.templates import VHDLTemplates
 
-
-class SignalItem(object):
-    def __init__(self, name, var_type, isConstant=False, defaultVal=None):
-        self.name = name
-        self.var_type = var_type
-        self.isConstant = isConstant
-        if defaultVal is not None:
-            self.defaultVal = defaultVal
-    def __str__(self):
-        if self.isConstant:
-            prefix = "CONSTANT"
-        else:
-            prefix = "SIGNAL"
-        return prefix + " %s : %s" % (self.name, " ".join([str(t.value) for t in self.var_type]))
-    
+      
     
 class Architecture(object):
+    """basic vhdl architecture"""
     def __init__(self, entityName, variables, extraTypes, processes, components):
         self.entityName = entityName
         self.name = "rtl"
