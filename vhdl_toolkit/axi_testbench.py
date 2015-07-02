@@ -3,7 +3,7 @@
 import re
 from vhdl_toolkit.testbench_generator import TestbenchCreator, HWProcess
 from vhdl_toolkit.templates import VHDLTemplates as templ
-from vhdl_toolkit.architecture import SignalItem
+from vhdl_toolkit.variables import SignalItem
 from vhdl_toolkit.types import VHDLType
 
 

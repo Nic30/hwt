@@ -3,12 +3,18 @@
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
          mkSpiElm, spi_ns_prefix
 from vivado_toolkit.ip_packager.others import Parameter
-from python_toolkit.arrayQuery import single
+from python_toolkit.arrayQuery import single, where
 
          
 class IfConfig():
     dir_out, dir_in = ("out", "in")
     ifMaster, ifSlave = ("master", "slave")
+    
+    def findPort(self, logName):
+        logName = logName.lower()
+        p = single(self.port, lambda x : x.logName.lower() == logName)
+        return p
+
     @classmethod
     def opositDir(cls, _dir_):
         if _dir_ == cls.dir_out:
@@ -44,6 +50,8 @@ class IfConfMap():
         else:
             self.phyName = phyName
         self.masterDir = masterDir
+    def __repr__(self):
+        return "<IfConfMap {%s:%s}>" % (self.logName, self.phyName)
 
 class Handshake(IfConfig):
     def __init__(self):
@@ -77,16 +85,63 @@ class HS_config_d(Handshake):
 
         
 class Ap_clk(IfConfig):
-        def __init__(self):
-            self.name = "clock"
-            self.version = "1.0"
-            self.vendor = "xilinx.com" 
-            self.library = "signal"
-            c = IfConfMap
-            self.port = [c("CLK", "ap_clk", masterDir=self.dir_out)
-                         ]
+    def __init__(self):
+        self.name = "clock"
+        self.version = "1.0"
+        self.vendor = "xilinx.com" 
+        self.library = "signal"
+        c = IfConfMap
+        self.port = [c("CLK", "ap_clk", masterDir=self.dir_out)
+                     ]
             
-        # ASSOCIATED_BUSIF ASSOCIATED_RESET
+    # ASSOCIATED_BUSIF ASSOCIATED_RESET
+    @classmethod                 
+    def postProcess(cls, component, entity, allInterfaces, thisIf):
+            rst = list(where(allInterfaces, lambda intf: intf._ifCls  in [Ap_rst, Ap_rst_n]))
+            if len(rst) > 0:
+                p = Parameter()
+                p.name = "ASSOCIATED_RESET"
+                p.value.resolve = "immediate"
+                p.value.id = "BUSIFPARAM_VALUE." + thisIf.name + ".ASSOCIATED_RESET"
+                p.value.text = rst[0]._portMaps['rst']  # getResetPortName
+                thisIf.parameters.append(p)
+            elif len(rst) > 1:
+                raise Exception("Dont know how to work with multiple resets")
+            
+            intfs = where(allInterfaces, lambda intf: intf._ifCls not  in  [Ap_clk, Ap_rst, Ap_rst_n])
+            p = Parameter()
+            p.name = "ASSOCIATED_BUSIF"
+            p.value.resolve = "immediate"
+            p.value.id = "BUSIFPARAM_VALUE." + thisIf.name + ".ASSOCIATED_BUSIF"
+            p.value.text = ":".join(map(lambda intf: intf.name, intfs))
+            thisIf.parameters.append(p)
+            p = Parameter()
+            p.name = "FREQ_HZ"
+            p.value.resolve = "immediate"
+            p.value.id = "BUSIFPARAM_VALUE." + thisIf.name + ".FREQ_HZ"
+            p.value.text = str(102000000)  # zynq std.
+            thisIf.parameters.append(p)
+            
+
+
+class Ap_rst(IfConfig):
+    def __init__(self):
+        self.name = "reset"
+        self.version = "1.0"
+        self.vendor = "xilinx.com" 
+        self.library = "signal"
+        c = IfConfMap
+        self.port = [c("rst", "ap_rst", masterDir=self.dir_out)]
+        
+    @classmethod                 
+    def postProcess(cls, component, entity, allInterfaces, thisIf):
+        p = Parameter()
+        p.name = "POLARITY"
+        p.value.resolve = "immediate"
+        p.value.id = "BUSIFPARAM_VALUE." + thisIf.name + ".POLARITY"
+        p.value.text = "ACTIVE_HIGH"
+        thisIf.parameters.append(p)
+
 class Ap_rst_n(IfConfig):
     def __init__(self):
         self.name = "reset"
@@ -136,25 +191,26 @@ class AXILite(IfConfig):
                      c("BRESP", masterDir=self.dir_in) 
 
                      ]
-        
+
     @classmethod                 
     def postProcess(cls, component, entity, allInterfaces, thisIf):
         def getMyPortWidth(name):
-            dim = single(component.model.ports, lambda p : p.name.lower() == thisIf.name + name).vector
+            name = cls.master().findPort(name).phyName
+            dim = single(component.model.ports, lambda p : p.name.lower() == (thisIf.name + name).lower()).vector
             return abs(dim[0] - dim[1]) + 1
         thisIf.endianness = "little"
         p_aw = Parameter()
         p_aw.name = "ADDR_WIDTH"
         p_aw.value.resolve = "immediate"
         p_aw.value.id = "BUSIFPARAM_VALUE." + thisIf.name + ".ADDR_WIDTH"
-        p_aw.value.text = getMyPortWidth("_awaddr")
+        p_aw.value.text = getMyPortWidth("AWADDR")
         thisIf.parameters.append(p_aw)
         
         p_dw = Parameter()
         p_dw.name = "DATA_WIDTH"
         p_dw.value.resolve = "immediate"
         p_dw.value.id = "BUSIFPARAM_VALUE." + thisIf.name + ".DATA_WIDTH"
-        p_dw.value.text = getMyPortWidth("_wdata")
+        p_dw.value.text = getMyPortWidth("WDATA")
         thisIf.parameters.append(p_dw)
         
         p_prot = Parameter()
@@ -171,8 +227,59 @@ class AXILite(IfConfig):
         p_rw.value.text = "READ_WRITE"
         thisIf.parameters.append(p_rw)
         
+
+class Axi(AXILite):
+    def __init__(self):
+        super().__init__()
+        c = IfConfMap
+        self.port += [
+                      c("ARBURST", masterDir=self.dir_out),
+                      c("ARCACHE", masterDir=self.dir_out),
+                      c("ARID", masterDir=self.dir_out),
+                      c("ARLEN", masterDir=self.dir_out),
+                      c("ARLOCK", masterDir=self.dir_out),
+                      c("ARPROT", masterDir=self.dir_out),
+                      c("ARSIZE", masterDir=self.dir_out),
+                      c("ARQOS", masterDir=self.dir_out),
+                      
+                      c("BID", masterDir=self.dir_in),
+                      
+                      c("AWBURST", masterDir=self.dir_out),
+                      c("AWCACHE", masterDir=self.dir_out),
+                      c("AWID", masterDir=self.dir_out),
+                      c("AWLEN", masterDir=self.dir_out),
+                      c("AWLOCK", masterDir=self.dir_out),
+                      c("AWPROT", masterDir=self.dir_out),
+                      c("AWSIZE", masterDir=self.dir_out),
+                      c("AWQOS", masterDir=self.dir_out),
+                      
+                      
+                      c("RID", masterDir=self.dir_in),
+                      c("RLAST", masterDir=self.dir_in),
+                      
+                      c("WID", masterDir=self.dir_out),
+                      c("WLAST", masterDir=self.dir_out),
+                      ]
     
-defaultBusResolve = [ Ap_clk, Ap_rst_n, AXILite, Handshake, Handshake2, HS_config_d]
+    
+class Axi_channeled(Axi):
+    def __init__(self):
+        super().__init__()
+        def splitPortName(name):
+            if name.startswith("A"):
+                return (name[:2], name[2:])
+            if name[0] in ["B", "W", "R"]:
+                return (name[0], name[1:])
+            else:
+                raise Exception()
+        for p in self.port:
+            ch, n = splitPortName(p.logName)
+            p.phyName = "_" + ch + "_" + n
+            if  n not in ["VALID", "READY" , "LAST"]:
+                p.phyName += "_V" 
+
+        
+defaultBusResolve = [ Ap_clk, Ap_rst_n, Ap_rst, Axi, Axi_channeled, AXILite, Handshake, Handshake2, HS_config_d]
 
 
 class Type():
@@ -243,7 +350,7 @@ class BusInterface():
        
         pm = appendSpiElem(e, "portMaps")
 
-        for lName, pName in self._portMaps.items():
+        for lName, pName in sorted(self._portMaps.items(), key=lambda pm: pm[0]):
             pm.append(mkPortMap(lName, pName))
         if self.endianness is not None:
             appendSpiElem(e, "endianness").text = self.endianness

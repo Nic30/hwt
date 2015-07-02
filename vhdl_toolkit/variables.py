@@ -9,6 +9,7 @@ class VHDLVariable():
     def __init__(self, name, var_type, defaultVal=None):
         self.name = name
         self.var_type = var_type
+        self.isConstant = False
         if defaultVal is not None:
             self.defaultVal = defaultVal
             

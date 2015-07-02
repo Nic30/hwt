@@ -6,7 +6,6 @@ from vhdl_toolkit.samples.axi4_trans_tester_tb import axi_tester, ADDR_CNT_DATA,
     MODE_R, MODE_W, MODE_DELAY_R
 
 from vhdl_toolkit.formater import formatVhdl
-from vivado_toolkit.vivado_ip_wrap_fix import axi_m_integer_fix
 from vhdl_toolkit.testbench_generator import delay
 from python_toolkit.arrayQuery import single
 
@@ -14,8 +13,8 @@ from python_toolkit.arrayQuery import single
 
 def axi4_tester():
     projectSrcPath = "/home/nic30/Documents/vivado/axi_trans_tester2/axi_trans_tester2.srcs"
-    fileName = os.path.join(projectSrcPath, "sources_1/bd/top_axi_trans_tester_complex/hdl/top_axi_trans_tester_complex_wrapper.vhd")
-    outputFile = os.path.join(projectSrcPath, "sim_1/new/top_axi_trans_tester_complex_tb.vhd")
+    fileName = os.path.join(projectSrcPath, "sources_1/bd/axi_tester_complex/hdl/axi_tester_complex_wrapper.vhd")
+    outputFile = os.path.join(projectSrcPath, "sim_1/new/axi_tester_complex_wrapper_tb.vhd")
     entity = entityFromFile(fileName)
     
     IDs_CNT = 2
@@ -28,14 +27,15 @@ def axi4_tester():
     tb.register(axi4lite)
     tb.register(axi4)
     tester = axi_tester(axi4lite)
+
     def axiDelay(ch, clk):
         single(tb.processes, lambda p : p.name == axi4.prefix + ch).bodyBuff += [delay(clk)]
-        
+
     def axiLiteDelay(clk):
         single(tb.processes, lambda p : p.name == axi4lite.prefix + "proc").bodyBuff += [delay(clk)]
+
     def rd_test():
         tester.setup(baseAddr_r=0, baseAddr_w=128, frameSize=frameSize, mode=MODE_R)
-    
         axi4lite.read(ADDR_CNT_DATA)
         
         for i in range(10):

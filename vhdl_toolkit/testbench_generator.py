@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from vhdl_toolkit.architecture import SignalItem
+from vhdl_toolkit.variables import SignalItem
 from vhdl_toolkit.process import HWProcess
 from vhdl_toolkit.parser import entityFromFile
 from vhdl_toolkit.formater import get_indent

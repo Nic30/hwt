@@ -16,40 +16,63 @@ proc init_gui { IPINST } {
         f.write(s)
 
 
-def packageMultipleProjects(workspace, names):
+def packageMultipleProjects(workspace, names, ipRepo):
     for folder, name in names.items():
-        packageVivadoHLSProj(os.path.join(workspace, folder), "solution1", name + ".vhd")
+        packageVivadoHLSProj(os.path.join(workspace, folder), "solution1", name + ".vhd", ipRepo)
         print(folder + " packaged")
 
-def packageVivadoHLSProj(projPath, solutionName, mainVhdlFileName, relIpPath="impl/ip"):
+class Packager(object):
+    def __init__(self, topEntity, vhdlDirs=[]):
+        self.topEntity = topEntity
+        self.vhdlFiles = []
+        for d in vhdlDirs:
+            for f in find_files(d, "*.vhd"):
+                self.vhdlFiles.append(f)
+        
+
+    def createPackage(self, repoDir):
+        ip_dir = os.path.join(repoDir, self.topEntity.name + "/")      
+        if os.path.exists(ip_dir):
+            shutil.rmtree(ip_dir)
+        
+        ip_srcPath = os.path.join(ip_dir, "src")  
+        tclPath = os.path.join(ip_dir, "xgui")  
+        guiFile = os.path.join(tclPath, "gui.tcl")       
+        for d in [ip_dir , ip_srcPath, tclPath]:
+            os.makedirs(d)
+        for f in self.vhdlFiles:
+            shutil.copy2(f, ip_srcPath + "/")
+        makeDummyXGUIFile(guiFile)
+        
+        c = Component()
+        c._files = self.vhdlFiles + [guiFile ]
+        c.vendor = "nic"
+        c.library = "mylib"
+        c.description = self.topEntity.name + "_v" + c.version
+        c.asignTopEntity(self.topEntity)
+        xml_str = prettify(c.xml()) 
+        with open(ip_dir + "component.xml", "w") as f:
+            f.write(xml_str)
+
+def packageVivadoHLSProj(projPath, solutionName, mainVhdlFileName, ipRepo):
     # rm others ip in project
-    ip_dir = os.path.join(projPath, solutionName, "impl/ip/")
-    vhdlPath = os.path.join(projPath, solutionName, "syn/vhdl")
-    tclPath = os.path.join(ip_dir, "xgui")
-    ip_srcPath = os.path.join(ip_dir, "src")
-    guiFile = os.path.join(tclPath, "gui.tcl")
+    vhdlPath = os.path.join(projPath, solutionName, "syn/vhdl")   
+    e = entityFromFile(os.path.join(vhdlPath, mainVhdlFileName))
+    p = Packager(e, [vhdlPath])
+    p.createPackage(ipRepo)
+
+def packageBD(bdPath, repoPath):
+    bdName = os.path.basename(bdPath)
+    bdSourcesDir = os.path.join(bdPath, "hdl")
+    vhldFolders = []
+    ips_path = os.path.join(bdPath, "ip/")
+    vhldFolders += [os.path.join(x[0], "synth") for x in os.walk(ips_path)]  # synth subfolder of each ip 
+    vhldFolders += [bdSourcesDir]
+    e = entityFromFile(os.path.join(bdSourcesDir, bdName + ".vhd"))
+    p = Packager(e, vhldFolders)
+    p.createPackage(ipRepo)
     
-    if os.path.exists(ip_dir):
-        shutil.rmtree(ip_dir)
-    for d in [ip_dir , ip_srcPath, tclPath]:
-        os.makedirs(d)
-    vhdlfiles = list(find_files(vhdlPath, "*.vhd"))
-    for f in vhdlfiles:
-        shutil.copy2(f, ip_srcPath + "/")
-    
-    makeDummyXGUIFile(guiFile)
-    e = entityFromFile(os.path.join(ip_srcPath, mainVhdlFileName))
-    
-    c = Component()
-    c._files = vhdlfiles + [guiFile ]
-    c.vendor = "nic"
-    c.library = "mylib"
-    c.description = e.name + "_v" + c.version
-    c.asignTopEntity(e)
-    xml_str = prettify(c.xml()) 
-    with open(ip_dir + "component.xml", "w") as f:
-        f.write(xml_str)
-    # print(xml_str)
+        
 
 def demo():
     c_folder = "/home/nic30/Documents/vivado/ip_repo/component_test/"
@@ -66,6 +89,11 @@ def demo():
     print(xml_str)
 
 if __name__ == "__main__":
-    demo()
+    # demo()
+    ipRepo = "/home/nic30/Documents/vivado/ip_repo"
+
     packageMultipleProjects("/home/nic30/Documents/vivado_hls/", {"axi_custom_master": "axi_custom_master",
-                                                                  "axi_trans_tester2": "axi_trans_tester"})
+                                                                 "axi_trans_tester2": "axi_trans_tester",
+                                                                 "axi_ch_a": "axi_native_intf"},
+                                                                   ipRepo)
+    packageBD("/home/nic30/Documents/vivado/axi_trans_tester2/axi_trans_tester2.srcs/sources_1/bd/axi_tester_complex", ipRepo)

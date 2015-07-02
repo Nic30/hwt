@@ -4,7 +4,7 @@ from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements,
          mkSpiElm, ns, whereEndsWithExt
 from vivado_toolkit.ip_packager.model import Model, Port
 from vivado_toolkit.ip_packager.busInterface import \
-    IfConfig, BusInterface, Type, defaultBusResolve, AXILite
+    IfConfig, BusInterface, Type, defaultBusResolve, AXILite, Axi_channeled
 from python_toolkit.arrayQuery import single
 from vivado_toolkit.ip_packager.others import VendorExtensions, FileSet, File, \
     Parameter, Value
@@ -13,8 +13,9 @@ vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
 vhdl_sim_fileSetName = "xilinx_vhdlbehavioralsimulation_view_fileset"
 tcl_fileSetName = "xilinx_xpgui_view_fileset"
 
-
-        
+class InterfaceIncompatibilityExc(Exception):
+    pass
+    
 class Component():
     """
     Xilinx xml is element position dependent
@@ -113,6 +114,8 @@ class Component():
             """
             @return: yields busInterfce objects for interface in entity 
             """
+            if interface is Axi_channeled:
+                pass
             m = interface.master()
             firstIntfPort = m.port[0]
             def firstPortInstances():
@@ -137,9 +140,9 @@ class Component():
                 noneMatch = True
                 ifMap = {}
                 for bi in m.port:
-                    ep = single(ent.port, lambda p : p.name.lower() == ifprefix + bi.phyName)
+                    ep = single(ent.port, lambda p : p.name.lower() == ifprefix + bi.phyName.lower())
                     if ep is None:
-                        return
+                        raise InterfaceIncompatibilityExc("Missing " + ifprefix + bi.phyName.lower())
                     dirMatches = ep.direction.lower() == bi.masterDir
                     allMatch = allMatch and dirMatches
                     noneMatch = noneMatch  and not dirMatches     
@@ -150,7 +153,7 @@ class Component():
                 elif noneMatch:
                     ifT = IfConfig.ifSlave
                 else:
-                    return
+                    raise InterfaceIncompatibilityExc("Direction mismatch")
 
                 return (ifT, ifMap)
             
@@ -166,8 +169,8 @@ class Component():
                     ifPrefix = ""
                 else:
                     ifPrefix = ifName
-                ifMap = getMap(ifPrefix, interface, e)
-                if ifMap:
+                try:
+                    ifMap = getMap(ifPrefix, interface, e)
                     bi = BusInterface()
                 
                     if ifPrefix == "":
@@ -181,6 +184,8 @@ class Component():
                     bi._portMaps = ifMap[1]
                     bi._ifCls = interface
                     yield bi
+                except InterfaceIncompatibilityExc:
+                    pass
        
         
         for c in defaultBusResolve:
