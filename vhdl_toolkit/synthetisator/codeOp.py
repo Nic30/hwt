@@ -6,5 +6,8 @@ def If(cond, ifTrue=[], ifFalse=[]):
         stm.cond.add(cond)
     for stm in ifFalse:
         stm.cond.add(cond.opNot())
-    yield from ifTrue
-    yield from ifFalse
+    
+    ret = []
+    ret.extend(ifTrue)
+    ret.extend(ifFalse)
+    return ret

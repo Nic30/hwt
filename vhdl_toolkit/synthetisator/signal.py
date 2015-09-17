@@ -131,12 +131,19 @@ class Signal(SignalItem):
         return op.result
     
     def opNot(self):
+        if hasattr(self, "_not"):
+            return self._not.result
         op = OpNot(self)
+        self._not = op
         self.expr.append(op)
         return op.result
     
     def opOnRisigEdge(self):
+        if hasattr(self, "_onRisingEdge"):
+            return self._onRisingEdge
+        
         op = OpOnRisingEdge(self)
+        self._onRisingEdge = op
         self.expr.append(op)
         return op
     
@@ -153,7 +160,12 @@ class Signal(SignalItem):
         self.expr.append(op)
         return op.result
         
-        
+    def opIsOn(self):
+        if int(self.onIn) == 0:
+            return self.opNot()
+        else:
+            return self 
+            
     def opEq(self, operand1):
         if self.var_type.width == 1:
             # And(Or(Not(a), b), Or(Not(b), a))

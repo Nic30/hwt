@@ -33,13 +33,15 @@ class Context(object):
             raise Exception("Invalid size for signal %s" % (name))
         if clk:
             s = SynSignal(name, t, defVal)
-            dflt = []
+            if syncRst is not None and defVal is None:
+                raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None and defVal is not None:
-                dflt.append(syncRst.assign(syncRst.onIn))
-            If(clk.opOnRisigEdge(), [ If(syncRst,
-                                         [Signal.assign(s, s.next)],
-                                         dflt)
-                                     ])
+                r = If(syncRst.opIsOn(),[Signal.assign(s, defVal)] ,
+                                        [Signal.assign(s, s.next)])
+            else:
+                r = [Signal.assign(s, s.next)]
+            
+            If(clk.opOnRisigEdge(), r)
         else:
             s = Signal(name, t, defVal)
         self.signals.append(s)
