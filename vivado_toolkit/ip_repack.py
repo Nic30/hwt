@@ -30,6 +30,9 @@ def updateZip(zipname, filename, data):
 
 
 class Component(object):
+    """
+    deprecated
+    """
     def __init__(self, name, version, paramNames):
         self.name = name
         self.version = version

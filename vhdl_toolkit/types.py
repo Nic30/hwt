@@ -1,8 +1,6 @@
 from ply.lex import LexToken
 from vhdl_toolkit.parser_helpers import for_parentBlock
 
-
-
 class VHDLType():
     """
     Vhdl type container
@@ -37,6 +35,8 @@ class VHDLType():
     def __str__(self):
         return self.str
 
+
+
 class VHDLExtraType(object):
     """
     user type definition
@@ -50,3 +50,10 @@ class VHDLExtraType(object):
             
     def __str__(self):
         return "TYPE %s IS (%s);" % (self.name, ", ".join(self.values) )
+
+def STD_LOGIC():
+    t = VHDLType()
+    t.str = "std_logic"
+    return t
+def VHDLBoolean():
+    return STD_LOGIC()

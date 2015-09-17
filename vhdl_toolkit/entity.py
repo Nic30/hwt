@@ -72,7 +72,7 @@ class Entity(object):
             self.port.append(p)    
             # print(name.value ,dd.value , direction.value, " ".join([ x.value for x in var_type] ))
         for_parentBlock(tokens, read_port_item)
-        
+           
     def __str__(self):
         return VHDLTemplates.entity.render(self.__dict__)
     

@@ -104,8 +104,8 @@ class  ValueInterpreter:
     @staticmethod
     def contextFromGenerics(entity):
         context = {}
-        for g in where(entity.generics, lambda x : x.defaultVal.type == "NUMBER"):
-            context[g.name.lower()] = int(g.defaultVal.value)
+        for g in where(entity.generics, lambda x : isinstance(x.defaultVal, int)):
+            context[g.name.lower()] = int(g.defaultVal)
         return context
     
     @staticmethod

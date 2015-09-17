@@ -7,6 +7,38 @@ from vhdl_toolkit.variables import SignalItem
 from vhdl_toolkit.types import VHDLType
 
 
+
+#class HandShake_interface():
+#    def __init__(self, rd, vld, sensitivityList):
+#        self.vld = vld
+#        self.rd = rd
+#        # self.sensitivityList = sensitivityList
+#        
+#    def _onBouthHigh(self, rd, vld,):
+#        # self.sensitivityList.add(vld)
+#        return """{0} <= '1';
+#        if {1} /= '1' then 
+#            wait until {1} = '1';
+#        end if;
+#        """.format(rd, vld)
+#    def _stop(self, rd):
+#        return """
+#        wait for clk_period;
+#        {0} <= '0';
+#        """.format(rd)
+#    def _renderAssigments(self, assigmensts):
+#        if assigmensts is not None or assigmensts == []:
+#            return "\n".join([str(assign) for assign in assigmensts]) + "\n"
+#        else:
+#            return ""
+#    def writeAccept(self, assigmensts=None):
+#        return self._renderAssigments(assigmensts) + self._onBouthHigh(self.rd, self.vld) + self._stop(self.rd)
+#    
+#    def write(self, assigmensts=None):
+#        return self._onBouthHigh(self.vld, self.rd) + self._renderAssigments(assigmensts) + self._stop(self.vld)
+#
+
+
 class HandShake_interface():
     def __init__(self, rd, vld, sensitivityList):
         self.vld = vld
@@ -19,20 +51,24 @@ class HandShake_interface():
         if {1} /= '1' then 
             wait until {1} = '1';
         end if;
+        """.format(rd, vld)
+    def _stop(self, rd):
+        return """
         wait for clk_period;
         {0} <= '0';
-        """.format(rd, vld)
+        """.format(rd)
     def _renderAssigments(self, assigmensts):
         if assigmensts is not None or assigmensts == []:
-            return "\n".join([str(assig) for assig in assigmensts]) + "\n"
+            return "\n".join([str(assign) for assign in assigmensts]) + "\n"
         else:
             return ""
     def writeAccept(self, assigmensts=None):
-        return self._renderAssigments(assigmensts) + self._onBouthHigh(self.rd, self.vld)
+        return self._renderAssigments(assigmensts) + self._onBouthHigh(self.rd, self.vld) + self._stop(self.rd)
     
     def write(self, assigmensts=None):
-        return self._renderAssigments(assigmensts) + self._onBouthHigh(self.vld, self.rd)
-    
+        return self._onBouthHigh(self.vld, self.rd) + self._renderAssigments(assigmensts) + self._stop(self.vld)
+
+
 class Axi4_a():
     def __init__(self, prefix, process, rw='w'):
         self.hs = HandShake_interface(prefix + "A" + rw + "READY", prefix + "A" + rw + "VALID", process.sensitivityList)
@@ -136,10 +172,10 @@ class AXI_lite_master(object):
         return ""
     
     def read(self, addr):
-        return templ.axi_lite_read.render(axi_prefix=self.prefix, addr=addr)
+        return templ.axi_lite_read.render(axi_prefix=self.prefix, addr=int(addr))
     
     def write(self, addr, data):
-        return templ.axi_lite_write.render(axi_prefix=self.prefix, addr=addr, data=data)
+        return templ.axi_lite_write.render(axi_prefix=self.prefix, addr=int(addr), data=data)
 
 # class AXI4_master(AXI_lite_master):
 #    def __init__(self, prefix):

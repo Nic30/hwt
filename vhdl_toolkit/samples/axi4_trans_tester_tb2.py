@@ -2,8 +2,8 @@ import os
 from vhdl_toolkit.parser import entityFromFile
 from vhdl_toolkit.axi_testbench import AXI_testbench, AXI_lite_master, \
     AXI4_slave
-from vhdl_toolkit.samples.axi4_trans_tester_tb import axi_tester, ADDR_CNT_DATA, \
-    MODE_R, MODE_W, MODE_DELAY_R
+from vhdl_toolkit.samples.axi4_trans_tester_tb import axi_tester, \
+    MODE_R, MODE_W, MODE_DELAY_R, MODE_DELAY_W, MODE_INIT
 
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.testbench_generator import delay
@@ -18,7 +18,7 @@ def axi4_tester():
     entity = entityFromFile(fileName)
     
     IDs_CNT = 2
-    frameSize = 4
+    frameSize = 30
     # listAxiIterfaces(entity)
     tb = AXI_testbench(entity)
   
@@ -29,22 +29,24 @@ def axi4_tester():
     tester = axi_tester(axi4lite)
 
     def axiDelay(ch, clk):
-        single(tb.processes, lambda p : p.name == axi4.prefix + ch).bodyBuff += [delay(clk)]
+        p= single(tb.processes, lambda p : p.name == axi4.prefix + ch)
+        p.bodyBuff += [delay(clk)]
 
     def axiLiteDelay(clk):
         single(tb.processes, lambda p : p.name == axi4lite.prefix + "proc").bodyBuff += [delay(clk)]
 
     def rd_test():
-        tester.setup(baseAddr_r=0, baseAddr_w=128, frameSize=frameSize, mode=MODE_R)
-        axi4lite.read(ADDR_CNT_DATA)
+        tester.setup(baseAddr_r=256, baseAddr_w=128, frameSize=frameSize, mode=MODE_R)
+        tester.readCNT()
         
         for i in range(10):
-            axi4.readResp(128, [i for i in range(frameSize)], burstId=i % IDs_CNT)
-            axiDelay("R", 3)
-            axiDelay("AR", 4 + frameSize)
+            axi4.readResp(256, [i for i in range(frameSize)], burstId=i % IDs_CNT)
+            # axiDelay("R", 3)
+            # axiDelay("AR", 4 + frameSize)
             # axi4.writeAccept(expectedAddr, data, withLast)
-        axiLiteDelay(10)
-        tester.readCNT()
+            tester.readCNT()
+        # axiLiteDelay(10)
+        
         # axiLiteDelay(10)
         # tester.setup(baseAddr_r=0, baseAddr_w=128, frameSize=frameSize, mode=MODE_R)
         # for i in range(30):
@@ -54,24 +56,48 @@ def axi4_tester():
         tester.setup(baseAddr_r=0, baseAddr_w=128, frameSize=frameSize, mode=MODE_W)
         for i in range(10):
             axi4.writeAccept(0, [0 for _ in range(frameSize)])
+            tester.readCNT()
         axiLiteDelay(frameSize * 10)
         tester.readCNT()
-    def delay_test():
-        tester.setup(baseAddr_r=0, baseAddr_w=128, frameSize=1, mode=MODE_DELAY_R)
+        
+    def delayR_test():
+        tester.setup(baseAddr_r=0, baseAddr_w=128, frameSize=frameSize, mode=MODE_DELAY_R)
         for i in range(10):
-            axi4.readResp(128, [1], burstId=i % 2)
-            axiDelay("AR", 3)
+            axi4.readResp(128, range(frameSize), burstId=i % IDs_CNT)
+            axiDelay("AR", 4)
+            axiDelay("R", 5)
+        axiLiteDelay(300)
+        tester.readDelay()
+        tester.setMode(MODE_INIT)
         axiLiteDelay(50)
-        tester.readCNT()
+
+        tester.setup(baseAddr_r=0, baseAddr_w=128, frameSize=frameSize, mode=MODE_DELAY_R)
+        for i in range(10):
+            axi4.readResp(128, range(frameSize), burstId=i % IDs_CNT)
+            axiDelay("AR", 4)
+            axiDelay("R", 5)
+        axiLiteDelay(300)
+        tester.readDelay()
+        
+        
+    def delayW_test():
+        tester.setup(baseAddr_r=0, baseAddr_w=128, frameSize=frameSize, mode=MODE_DELAY_W)
+        for i in range(10):
+            axi4.writeAccept(128, range(frameSize))
+            #axiDelay("AW", 4)
+            axiDelay("W", 5)
+        axiLiteDelay(250)
+        tester.readDelay()
 
     def mixed():
         tester.setup(baseAddr_r=0, baseAddr_w=128, frameSize=frameSize, mode=MODE_R)
-        for i in range(10):
+        for i in range(12):
             axi4.readResp(128, [i for i in range(frameSize)], burstId=i % IDs_CNT)
             axi4.writeAccept(0, [1 for _ in range(frameSize)])
-    # wr_test()
-    rd_test()
-    # delay_test()
+    #wr_test()
+    # rd_test()
+    delayR_test()
+    #delayW_test()
     # mixed()
     
     tester.readCNT()
@@ -79,7 +105,7 @@ def axi4_tester():
     with open(outputFile, "w") as f:
         f.write(s)
     # axi_m_integer_fix(os.path.join(projectSrcPath, "sources_1/bd/top/ip/top_axi4_trans_tester_0_0/sim/top_axi4_trans_tester_0_0.vhd"))
-    print(s)
+    #print(s)
 
 if __name__ == "__main__":
     axi4_tester() 

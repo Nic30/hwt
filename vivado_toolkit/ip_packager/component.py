@@ -3,9 +3,7 @@ from time import  time
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
          mkSpiElm, ns, whereEndsWithExt
 from vivado_toolkit.ip_packager.model import Model, Port
-from vivado_toolkit.ip_packager.busInterface import \
-    IfConfig, BusInterface, Type, defaultBusResolve, AXILite, Axi_channeled
-from python_toolkit.arrayQuery import single
+from vivado_toolkit.ip_packager.busInterface import defaultBusResolve, extractBusInterface
 from vivado_toolkit.ip_packager.others import VendorExtensions, FileSet, File, \
     Parameter, Value
 
@@ -13,9 +11,7 @@ vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
 vhdl_sim_fileSetName = "xilinx_vhdlbehavioralsimulation_view_fileset"
 tcl_fileSetName = "xilinx_xpgui_view_fileset"
 
-class InterfaceIncompatibilityExc(Exception):
-    pass
-    
+   
 class Component():
     """
     Xilinx xml is element position dependent
@@ -80,7 +76,6 @@ class Component():
         v = compNameParam.value
         v.id = "PARAM_VALUE.Component_Name"
         v.resolve = "user"
-        v.order = "1"
         v.text = self.name
         parameters.append(compNameParam.asElem())
         
@@ -101,100 +96,40 @@ class Component():
         c.append(self.vendorExtensions.asElem(self.name + "_v" + self.version, revision=str(int(time()))))
         
         return c
+   
     
     def asignTopEntity(self, e):
         self._topEntity = e
         self.name = e.name
         self.model.addDefaultViews(self.name)
+        def trimUnderscores(s):
+            while s.endswith("_"):
+                s = s[:-1]
+            return s
+        def removeUndescores_witSep(s, separator):
+            if isinstance(s, str):
+                return separator.join([ trimUnderscores(a) for a  in s.split(separator)])
+            else:
+                return s
         for p in self._topEntity.port:
             self.model.ports.append(Port._entPort2CompPort(e, p))
 
-
-        def extractBusInterfaces(interface):
-            """
-            @return: yields busInterfce objects for interface in entity 
-            """
-            if interface is Axi_channeled:
-                pass
-            m = interface.master()
-            firstIntfPort = m.port[0]
-            def firstPortInstances():
-                """
-                @return: entity ports whitch probably matches with this interface
-                """
-                for x in e.port:
-                    if x.name.lower().endswith(firstIntfPort.phyName.lower()):
-                        yield x
-            def getIfPrefix(entPort, interfaceConf):
-                pName = entPort.name.lower()
-                iName = firstIntfPort.phyName.lower()
-                if pName == iName:
-                    return interfaceConf.name
-                else:
-                    return  pName[:-len(iName)]
-            def getMap(ifprefix, intfCls, ent):
-                """
-                @return:None if intf. cant be mapped othervicese returns (master/slave, {logical : physical})
-                """
-                allMatch = True
-                noneMatch = True
-                ifMap = {}
-                for bi in m.port:
-                    ep = single(ent.port, lambda p : p.name.lower() == ifprefix + bi.phyName.lower())
-                    if ep is None:
-                        raise InterfaceIncompatibilityExc("Missing " + ifprefix + bi.phyName.lower())
-                    dirMatches = ep.direction.lower() == bi.masterDir
-                    allMatch = allMatch and dirMatches
-                    noneMatch = noneMatch  and not dirMatches     
-                    ifMap[bi.logName] = ifprefix + bi.phyName
-                    
-                if allMatch:
-                    ifT = IfConfig.ifMaster
-                elif noneMatch:
-                    ifT = IfConfig.ifSlave
-                else:
-                    raise InterfaceIncompatibilityExc("Direction mismatch")
-
-                return (ifT, ifMap)
-            
-            def getBusTypeFromConf(IfConfigObj):
-                t = Type()
-                for s in t.__slots__:
-                    setattr(t, s, getattr(IfConfigObj, s))
-                return t
-                
-            for fpi in firstPortInstances():
-                ifName = getIfPrefix(fpi, m)
-                if fpi.name == firstIntfPort.phyName:
-                    ifPrefix = ""
-                else:
-                    ifPrefix = ifName
-                try:
-                    ifMap = getMap(ifPrefix, interface, e)
-                    bi = BusInterface()
-                
-                    if ifPrefix == "":
-                        bi.name = m.name
-                    else:
-                        bi.name = ifName
-                    bi.busType = getBusTypeFromConf(m)
-                    bi.abstractionType = getBusTypeFromConf(m)
-                    bi.abstractionType.name += "_rtl"
-                    bi.isMaster = ifMap[0] == IfConfig.ifMaster
-                    bi._portMaps = ifMap[1]
-                    bi._ifCls = interface
-                    yield bi
-                except InterfaceIncompatibilityExc:
-                    pass
-       
-        
         for c in defaultBusResolve:
-            for bi in extractBusInterfaces(c):
+            for bi in extractBusInterface(self._topEntity, c):
                 self.busInterfaces.append(bi)
-        
-        for bi in self.busInterfaces:
-            bi._ifCls.postProcess(self, self._topEntity, self.busInterfaces, bi)
                 
+       
+        for bi in self.busInterfaces:
+            bi._ifObj.postProcess(self, self._topEntity, self.busInterfaces, bi)
+                
+        for bi in self.busInterfaces:
+            bi.name = trimUnderscores(bi.name)
+            for p in bi.parameters:
+                
+                p.name = removeUndescores_witSep(p.name, ".")
+                p.value.id = removeUndescores_witSep(p.value.id , ".")
+                p.value.text = removeUndescores_witSep(p.value.text , ".")
+
             
 
 

@@ -1,6 +1,13 @@
 
-from vhdl_toolkit.expr import Assigment
+from vhdl_toolkit.expr import Assignment, value2vhdlformat
 
+def LexToken2Val(token):
+    if isinstance(token, int):
+        return token
+    elif token.type == 'NUMBER':
+        return int(token.value)
+    else:
+        raise Exception("Unimplemented")
 
 class VHDLVariable():
     """
@@ -10,29 +17,47 @@ class VHDLVariable():
         self.name = name
         self.var_type = var_type
         self.isConstant = False
+        self.isShared = False
         if defaultVal is not None:
-            self.defaultVal = defaultVal
+            self.defaultVal = LexToken2Val(defaultVal)
+        
+            
+    def __str__(self):
+        if self.isShared :
+            prefix = "SHARED VARIABLE"
+        else:
+            prefix = "VARIABLE"
+        s = prefix + " %s : %s" % (self.name, str(self.var_type))
+        if self.defaultVal is not None:
+            return s + " := %s" % value2vhdlformat(self, self.defaultVal)
+        else:
+            return s 
+            
             
 class VHDLGeneric(VHDLVariable):
     def __str__(self):
         if hasattr(self, "defaultVal"):
-            return "%s : %s = %s;" % (self.name, str(self.var_type), str(self.defaultVal))
+            return "%s : %s := %s" % (self.name, str(self.var_type), str(self.defaultVal))
         else:
-            return "%s : %s;" % (self.name + str(self.var_type))
+            return "%s : %s" % (self.name, str(self.var_type))
 
 
 class SignalItem(VHDLVariable):
     """basic vhdl signal"""
 
     def eq(self, src):
-        return Assigment(src, self)
+        return Assignment(src, self)
     
     def __str__(self):
         if self.isConstant:
             prefix = "CONSTANT"
         else:
             prefix = "SIGNAL"
-        return prefix + " %s : %s" % (self.name, str(self.var_type))
+        s = prefix + " %s : %s" % (self.name, str(self.var_type))
+        if hasattr(self, "defaultVal") and self.defaultVal is not None:
+            return s + " := %s" % value2vhdlformat(self, self.defaultVal)
+        else:
+            return s 
     
     
 class PortItem(object):

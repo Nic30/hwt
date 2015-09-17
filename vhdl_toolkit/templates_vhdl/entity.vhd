@@ -1,10 +1,8 @@
 ENTITY {{ name }} IS
-   {% if generics|length >0 %}
-   GENERIC ( {{generics|join(';\n')}} 
+{% if generics|length >0 %}  GENERIC ( 
+	{{generics|join(';\n')}} 
    );
-   {% endif %}
-   {% if port|length >0 %}  
-   PORT ({{port|join(';\n')}}
-   );
-   {% endif %}
-END ENTITY_NAME;
+{% endif %}{% if port|length >0 %}PORT ({{port|join(';\n')}}
+   );{% endif %}
+END {{ name }};
+

@@ -1,4 +1,5 @@
-from vhdl_toolkit.expr import Assigment
+from vhdl_toolkit.expr import Assignment
+from vhdl_toolkit.templates import VHDLTemplates
 
 class HWProcess():
     overloadedMethods = ['write', 'init', 'read', 'readResp', 'writeAccept']
@@ -10,30 +11,30 @@ class HWProcess():
     def logToProcWrap(self, func):
         def fnWithLogToProc(*args, **kwargs):
             cmdstr = func(*args, **kwargs)
-            self.bodyBuff.append(cmdstr)
+            if isinstance(cmdstr, str):
+                self.bodyBuff.append(cmdstr)
+            else:
+                self.bodyBuff.extend(cmdstr)
+                    
             return cmdstr
         return fnWithLogToProc
     
     def register(self, interf):
-        if interf.prefix in self.interfaces.keys():
-            raise Exception("Redining interface %s" % interf.prefix) 
-        self.interfaces[interf.prefix] = interf
+        if interf.name in self.interfaces.keys():
+            raise Exception("This process already constains this interface %s" % interf.name) 
+        self.interfaces[interf.name] = interf
         for attr in self.overloadedMethods:
             if hasattr(interf, attr):
                 ovrld = self.logToProcWrap(getattr(interf, attr))
                 setattr(interf, attr, ovrld)
     
     def sigAssign(self, sig, item):
-        self.bodyBuff.append(str(Assigment(sig, item)))
+        self.bodyBuff.append(str(Assignment(sig, item)))
         
     def delay(self, clkCnt):
         self.bodyBuff.append("wait for clk_period * %d;" % (clkCnt))
     
     def __str__(self):
-        return """%s: process --(%s)
-        begin
-           %s
-        end process;
-        """ % (self.name,
-              ", ".join(self.sensitivityList),
-              "\n".join([ str(s) for s in self.bodyBuff]))
+        return VHDLTemplates.process.render({"name": self.name,
+              "sensitivityList": ", ".join(self.sensitivityList),
+              "statements": [ str(s) for s in self.bodyBuff] })

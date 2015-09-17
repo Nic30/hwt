@@ -4,7 +4,7 @@ import os
 from time import gmtime, strftime
 
 class Value():
-    __slots__ = ['id', 'resolve', "order", 'text']
+    __slots__ = ['id', 'resolve', 'text']
 
     @classmethod
     def fromElem(cls, elm):
@@ -18,8 +18,6 @@ class Value():
         e = mkSpiElm("value")
         e.attrib[spi_ns_prefix + 'id'] = self.id
         e.attrib[spi_ns_prefix + 'resolve'] = self.resolve
-        if hasattr(self, "order"):
-            e.attrib[spi_ns_prefix + 'order'] = str(self.order)
         e.text = str(self.text)
         return e
 
