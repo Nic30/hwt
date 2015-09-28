@@ -1,4 +1,5 @@
 from python_toolkit.arrayQuery import where
+import re
 
 
 class InterpreterErr(Exception):
@@ -100,7 +101,17 @@ class  ValueInterpreter:
         names = context
         parser.parse(exprStr)
         return result
-
+    
+    @staticmethod
+    def resolveWidth(context, typeStr):
+        if typeStr == 'std_logic':
+            return 1
+        else:
+            m = re.match("std_logic_vector\s*\((.*)downto(.*)\)", typeStr, re.IGNORECASE)
+            if not m:
+                raise Exception("ValueInterpreter can not resolve width from type string '%s'" % typeStr)
+            return int(ValueInterpreter().resolve(context, m.group(1).lower())) - int(ValueInterpreter().resolve(context, m.group(2).lower())) + 1
+    
     @staticmethod
     def contextFromGenerics(entity):
         context = {}

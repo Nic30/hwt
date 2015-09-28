@@ -1,3 +1,6 @@
+from vhdl_toolkit.templates import VHDLTemplates
+from vhdl_toolkit.synthetisator.signal import exp__str__, Signal
+from vhdl_toolkit.types import VHDLBoolean
 
 
 def If(cond, ifTrue=[], ifFalse=[]):
@@ -11,3 +14,14 @@ def If(cond, ifTrue=[], ifFalse=[]):
     ret.extend(ifTrue)
     ret.extend(ifFalse)
     return ret
+
+
+class IfContainer:
+    def __init__(self, cond, ifTrue=[], ifFalse=[]):
+        self.cond = cond
+        self.ifTrue = ifTrue
+        self.ifFalse = ifFalse
+    def __str__(self):
+        condResult = Signal(None, VHDLBoolean())
+        VHDLTemplates.If.render(cond=exp__str__(condResult, self.cond), ifTrue=self.ifTrue, ifFalse = self.ifFalse)
+     

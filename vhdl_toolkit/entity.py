@@ -42,7 +42,7 @@ class Entity(object):
             elif tmp.type == "END":
                 return
             else:
-                raise Exception()
+                raise Exception("Unknown token")
             
     def _parse_generic_body(self, tokens):
         def read_generic_item(iterator, name):

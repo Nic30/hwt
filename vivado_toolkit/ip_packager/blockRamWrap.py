@@ -1,6 +1,6 @@
 from vivado_toolkit.ip_packager.component import Component
 from vivado_toolkit.ip_packager.busInterface import BlockRamPort_withMissing_clk,\
-    BlockRamPort_withMissing_clk2
+    BlockRamPort_withMissing_clk2, extractBusInterface
 from vhdl_toolkit.variables import PortItem, SignalItem
 from vhdl_toolkit.formater import formatVhdl
 import re, copy, os
@@ -52,7 +52,8 @@ def blockRamWrap(packager, vhdlPath):
     originalEntity.name = origPrefix + originalEntity.name
     p =  []
     for bi in [BlockRamPort_withMissing_clk, BlockRamPort_withMissing_clk2]:
-        p += list(Component.extractBusInterface(e, bi))
+        
+        p += list(extractBusInterface(e, bi))
     if len(p) == 0:
         #print("blockRamWrap not aplyed")
         return 

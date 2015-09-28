@@ -31,7 +31,7 @@ class VHDLType():
                 var_type.append(t)
             else:    
                 var_type.append(tmp)
-        self.str = " ".join([ x.value for x in var_type])
+        self.str = " ".join([ str(x.value) for x in var_type])
     def __str__(self):
         return self.str
 

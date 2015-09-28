@@ -4,6 +4,8 @@ from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
          mkSpiElm, spi_ns_prefix
 from vivado_toolkit.ip_packager.others import Parameter
 from python_toolkit.arrayQuery import single, where
+import python_toolkit
+from python_toolkit.stringUtils import matchIgnorecase
 
 
 DEFAULT_CLOCK = 100000000
@@ -365,7 +367,7 @@ class Axi(AXILite):
         param("SUPPORTS_NARROW_BURST", str(0))
         
 class Axi_channeled(Axi):
-    def __init__(self,ID_WIDTH=0, A_WIDTH=0, D_WIDTH=0):
+    def __init__(self, ID_WIDTH=0, A_WIDTH=0, D_WIDTH=0):
         super().__init__(ID_WIDTH, A_WIDTH, D_WIDTH)
         def splitPortName(name):
             if name.startswith("A"):
@@ -499,8 +501,9 @@ def extractBusInterface(entity, interface, excOnIncompatibilytiy=False):
             noneMatch = True
             ifMap = {}
             for bi in m.port:
-                ep = single(ent.port, lambda p : p.name.lower() == ifprefix + bi.phyName.lower())
-                if ep is None:
+                try:
+                    ep = single(ent.port, lambda p : matchIgnorecase(p.name, ifprefix + bi.phyName))
+                except python_toolkit.arrayQuery.NoValueExc:
                     raise InterfaceIncompatibilityExc("Missing " + ifprefix + bi.phyName.lower())
                 dirMatches = ep.direction.lower() == bi.masterDir
                 allMatch = allMatch and dirMatches

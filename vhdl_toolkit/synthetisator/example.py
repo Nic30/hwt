@@ -5,7 +5,7 @@ from vhdl_toolkit.synthetisator.signal import signalsForInterface
 from python_toolkit.stringUtils import matchIgnorecase
 from python_toolkit.arrayQuery import single
 from vhdl_toolkit.synthetisator.codeOp import If
-from vhdl_toolkit.synthetisator.optimalizator import cond_optimize
+from vhdl_toolkit.synthetisator.optimalizator import expr_optimize
 
 
 def connectUnits(sig, unit0, unit1, unit0PortName, unit1PortName):
@@ -30,25 +30,6 @@ class AxiLiteR():
         self.ready = foundAxiRSig("ready")
         
 if __name__ == "__main__":
-    c = Context("test_top")
-    ch = 2
-    axiLite_interf = AXILite(32, 32)
-    
-    clk = c.sig("ap_clk", 1)
-    rst = c.sig("ap_rst", 1)
-    
-    # eq = clk.opEq(rst).origin
-    # print( cond_optimize([eq]))
-    
-    
-    slave = signalsForInterface(c, axiLite_interf, "s_axi")
-    masters = [ signalsForInterface(c, axiLite_interf, "m_axi" + str(i)) for i in range(ch) ]
-   
-    s_ar = AxiLiteA(slave, "s_axi_", rw="r")
-    s_r = AxiLiteR(slave, "s_axi_")
-    m0_ar = AxiLiteA(masters[0], "m_axi0_", rw="r")
-    m0_r = AxiLiteR(masters[0], "m_axi0_")
-   
     def isPending(pending, done):
         return pending.opNEq(done)
     
@@ -60,25 +41,45 @@ if __name__ == "__main__":
 
     def flipOnTrue(synsig, cond):
         synsig.next.assign(synsig.opNEq(cond)) 
+    c = Context("axi_lite_interconnect")
     
-
+    ch = 2
+    axiLite_interf = AXILite(32, 32)
+    
+    clk = c.sig("ap_clk", 1)
+    rst = c.sig("ap_rst", 1)
+    
+    slave = signalsForInterface(c, axiLite_interf, "s_axi")
+    masters = [ signalsForInterface(c, axiLite_interf, "m_axi" + str(i)) for i in range(ch) ]
+   
+    s_ar = AxiLiteA(slave, "s_axi_", rw="r")
+    s_r = AxiLiteR(slave, "s_axi_")
+    m0_ar = AxiLiteA(masters[0], "m_axi0_", rw="r")
+    m0_r = AxiLiteR(masters[0], "m_axi0_")
+    m1_ar = AxiLiteA(masters[1], "m_axi1_", rw="r")
+    m1_r = AxiLiteR(masters[1], "m_axi1_")
+    
+   
     # ar active regs
     ar0_pendig = c.sig('ar0_pendig', 1, clk=clk, syncRst=rst, defVal=0)
     flipOnTrue(ar0_pendig, hsActiv(s_ar.vld, m0_ar.ack))
-    ar0_done = c.sig('ar0_done', 1, clk=clk, defVal=0)
+    ar0_done = c.sig('ar0_done', 1, clk=clk, syncRst=rst, defVal=0)
     flipOnTrue(ar0_done, hsActiv(s_ar.vld, m0_ar.ack))
     
     # AR s <-> m0
     s_ar.ack.assign(isDone(ar0_pendig, ar0_done))
     m0_ar.addr.assign(s_ar.addr)
-    #m0_ar.vld.assign(s_ar.vld)
-    ##
-    ## # R s<-> m0
-    #s_r.ready.assign(isPending(ar0_pendig, ar0_done).opAnd(m0_r.ready))
-    #m0_r.valid.assign(isPending(ar0_pendig, ar0_done).opAnd(s_r.valid))
+    m0_ar.vld.assign(s_ar.vld)
+    # #
+    # # # R s<-> m0
+    s_r.ready.assign(isPending(ar0_pendig, ar0_done).opAnd(m0_r.ready))
+    m0_r.valid.assign(isPending(ar0_pendig, ar0_done).opAnd(s_r.valid))
+    If(isPending(ar0_pendig, ar0_done), [s_r.data.assign(m0_r.data),
+                                         s_r.resp.assign(m0_r.resp)],
+                                        [s_r.data.assign(m1_r.data),
+                                         s_r.resp.assign(m1_r.resp)])
     
-    interf = [] 
-    interf.append(clk)
+    interf = [clk, rst] 
     interf.extend(slave)
     for m in masters:
         interf.extend(m)

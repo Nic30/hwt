@@ -3,11 +3,20 @@ from vhdl_toolkit.expr import Assignment, value2vhdlformat
 from python_toolkit.arrayQuery import arr_any, single
 from vhdl_toolkit.types import VHDLType, VHDLBoolean
 
+class InvalidOperandExc(Exception):
+    pass
+
+def checkOperand(op):
+    if isinstance(op, int) or isinstance(op, Signal):
+        return
+    else:
+        raise InvalidOperandExc()
+
 def exp__str__(dst, src):
     if isinstance(src, OperatorUnary) or isinstance(src, OperatorBinary):
         return "(" + str(src) + ")"
     elif isinstance(src, Signal) and hasattr(src, 'origin'):
-        return exp__str__(dst, src.origin)  # consume signal betweeen operators
+        return exp__str__(dst, src.origin)  # consume signal between operators
     else:
         return value2vhdlformat(dst, src)
 
@@ -25,6 +34,7 @@ class OperatorUnary:
 class OpOnRisingEdge(OperatorUnary):
     def __str__(self):
         return "RISING_EDGE(" + exp__str__(self.result, self.operand) + ")"
+    
 class OpEvent(OperatorUnary):
     def __str__(self):
         return exp__str__(self.result, self.operand) + "'EVENT"
@@ -96,7 +106,15 @@ class PortConnection():
         self.unit = unit
         self.portItem = portItem
     def asPortMap(self):
-        return " %s => %s" % (self.portItem.name, self.sig.name)
+        p_w = self.portItem.var_type.width
+        s_w = self.sig.var_type.width
+        if p_w > s_w:  # if port item is wider fill signal with zeros
+            diff = p_w - s_w
+            return '%s => %s & X"' + "%0" + str(diff) + 'd"' % (self.portItem.name, self.sig.name, 0) 
+        elif p_w < s_w:  # if signal is wider take lower part
+            return '%s => %s( %d downto 0)' % (self.portItem.name, self.sig.name, p_w - 1)
+        else:
+            return " %s => %s" % (self.portItem.name, self.sig.name)
 
 
 class Signal(SignalItem):
@@ -148,14 +166,17 @@ class Signal(SignalItem):
         return op
     
     def opAnd(self, operand1):
+        checkOperand(operand1)
         op = OpAnd(self, operand1)
         self.expr.append(op)
         return op.result
     def opXor(self, operand1):
+        checkOperand(operand1)
         op = OpXor(self, operand1)
         self.expr.append(op)
         return op.result
     def opOr(self, operand1):
+        checkOperand(operand1)
         op = OpOr(self, operand1)
         self.expr.append(op)
         return op.result
@@ -167,6 +188,7 @@ class Signal(SignalItem):
             return self 
             
     def opEq(self, operand1):
+        checkOperand(operand1)
         if self.var_type.width == 1:
             # And(Or(Not(a), b), Or(Not(b), a))
             if isinstance(operand1, Signal):
@@ -183,6 +205,7 @@ class Signal(SignalItem):
         return self.opEq(operand1).opNot()
         
     def indx(self, indexer):
+        checkOperand(indexer)
         indx = OpIndx(self, indexer)
         self.expr.append(indx)
         return indx.result
@@ -201,6 +224,7 @@ class Signal(SignalItem):
         return arr_any(walkSigExpr(self), assign2Me)
     
     def assign(self, source):
+        checkOperand(source)
         a = Assignment(source, self)
         a.cond = set()
         self.expr.append(a)
@@ -255,7 +279,7 @@ def walkSignalsInExpr(expr):
         else:
             yield expr
     else:
-        raise Exception("Unknown node type")
+        raise Exception("Unknown node type %s" % str(expr.__class__))
 
 def discoverSensitivity(datapath):
     if not isinstance(datapath, Assignment):
@@ -282,8 +306,9 @@ def walkSigSouces(sig, parent=None):
         if hasattr(sig, 'origin'):  # if this is only internal signal
             yield from walkSigSouces(sig.origin)
         for e in sig.expr:
-            if isinstance(e, PortConnection) and not e.unit.discovered:
-                yield e
+            if isinstance(e, PortConnection):
+                if not e.unit.discovered:
+                    yield e
             elif isinstance(e, Assignment) and e.src != sig:
                 yield e
             else:

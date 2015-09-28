@@ -6,8 +6,10 @@ def LexToken2Val(token):
         return token
     elif token.type == 'NUMBER':
         return int(token.value)
+    elif token.type == 'BOOLEAN':
+        return token.value
     else:
-        raise Exception("Unimplemented")
+        raise Exception("Unimplemented token type %s" % token.type)
 
 class VHDLVariable():
     """

@@ -8,8 +8,23 @@ from vhdl_toolkit.architecture import Architecture, Component
 from vhdl_toolkit.variables import PortItem
 from vhdl_toolkit.templates import VHDLTemplates  
 from vhdl_toolkit.process import HWProcess
-from vhdl_toolkit.synthetisator.codeOp import If
-from vhdl_toolkit.synthetisator.optimalizator import TreeBalancer, cond_optimize
+from vhdl_toolkit.synthetisator.codeOp import If, IfContainer
+from vhdl_toolkit.synthetisator.optimalizator import TreeBalancer, expr_optimize, \
+    expr2cond
+
+
+def renderIfTree(assigments):
+    # optimizedSrc = expr_optimize([dp.src])
+    # dp.cond = expr_optimize(dp.cond)
+    # dp.src = optimizedSrc
+    
+    for a in assigments:
+        if a.cond:
+            cond = expr2cond(a.cond)
+            ic = IfContainer(cond, a)
+            yield ic
+        else:
+            yield a
 
 
 class Context(object):
@@ -36,7 +51,7 @@ class Context(object):
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None and defVal is not None:
-                r = If(syncRst.opIsOn(),[Signal.assign(s, defVal)] ,
+                r = If(syncRst.opIsOn(), [Signal.assign(s, defVal)] ,
                                         [Signal.assign(s, s.next)])
             else:
                 r = [Signal.assign(s, s.next)]
@@ -74,9 +89,10 @@ class Context(object):
                             discoverDatapaths(s)
                         subUnits.add(node.unit)
                     startsOfDataPaths.add(node)
-                    for s in  walkSignalsInExpr(node.src):
-                        # print("discovering signal %s" % (str(s)))
-                        discoverDatapaths(s)
+                    if hasattr(node, 'src'):
+                        for s in  walkSignalsInExpr(node.src):
+                            # print("discovering signal %s" % (str(s)))
+                            discoverDatapaths(s)
 
                             
                     
@@ -85,22 +101,13 @@ class Context(object):
             
         for s in where(arch.statements, lambda x: isinstance(x, PortConnection)):  # found subUnits
             subUnits.add(self.unit)
-
-        for sig in set(map(lambda x:x.dst, where(startsOfDataPaths, lambda x: hasattr(x, 'dst')))):
-            dps = where(startsOfDataPaths, lambda x: x.dst == sig)
+        assigments = list(where(startsOfDataPaths, lambda x: hasattr(x, 'dst')))
+        for sig in set(map(lambda x:x.dst, assigments)):
+            dps = list(where(assigments, lambda x: x.dst == sig))
             p = HWProcess("assig_process_" + sig.name)
             for dp in dps:
                 p.sensitivityList.update(map(lambda x: x.name, discoverSensitivity(dp)))
-                optimizedSrc = cond_optimize([dp.src])
-                dp.src = optimizedSrc
-                if dp.cond:
-                    condResult = Signal(None, VHDLBoolean())
-                    cond = cond_optimize(dp.cond)
-                   
-                    ifStr = VHDLTemplates.If.render(cond=exp__str__(condResult, cond), statements=[dp])
-                    p.bodyBuff.append(ifStr) 
-                else:
-                    p.bodyBuff.append(str(dp))
+            p.bodyBuff.extend(renderIfTree(dps)) 
             arch.processes.append(p)
         # arch.statements = list(where(arch.statements, lambda x: not isinstance(x, PortConnection))) 
         

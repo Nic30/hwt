@@ -9,22 +9,22 @@ install dependencies by:
 pip3 install ply
 """
 
-class VHLD_base(object):
-    def __init__(self):
-        self.imports = []
-        self.packages = []
-        self.architectures = []
-        self.entities = []
-        
-    def loadFromFile(self, filename):
-        with open(filename) as f:
-            l = CachedLex(f.read())
-            for t in l:
-                if t.type == "ENTITY":
-                    l.__back__(t)
-                    e = Entity()
-                    e.parse(l)
-                    return e
+#class VHLD_base(object):
+#    def __init__(self):
+#        self.imports = []
+#        self.packages = []
+#        self.architectures = []
+#        self.entities = []
+#        
+#    def loadFromFile(self, filename):
+#        with open(filename) as f:
+#            l = CachedLex(f.read())
+#            for t in l:
+#                if t.type == "ENTITY":
+#                    l.__back__(t)
+#                    e = Entity()
+#                    e.parse(l)
+#                    return e
  
 class CachedLex(object):
     def __init__(self, string):

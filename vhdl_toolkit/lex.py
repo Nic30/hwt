@@ -8,7 +8,7 @@ tokens = (
     'L_OR_EQ', 'NONEQUALS', 'ASSIG', 'G_OR_EQ', 'CONNECT', 'GREATER', 'LESSER', 'COMMA',
     'LPAREN', 'RPAREN', 'DOWNTO', 'TO', 'LIBRARY',
     'IN', 'OUT', 'USE', 'IS', 'ARCHITECTURE', 'BEGIN', 'GENERIC', 'MAP', 'PORT',
-    'COMPONENT', 'COMMENT', 'STRING', 'PROCESS', "LENOP", "HIGH", "LOW"
+    'COMPONENT', 'COMMENT', 'STRING', 'PROCESS', "LENOP", "HIGH", "LOW", "TRUE", "FALSE", "BOOLEAN"
     )
 
 # Tokens
@@ -31,10 +31,18 @@ t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 t_FLOAT = r'[0-9]*\.[0-9]*'
-t_NUMBER = r'\d+'
+
 t_COMMA = r','
 t_HIGH = r"'1'"
 t_LOW = r"'0'"
+
+def t_NUMBER(t):
+    r'(\d+)|(X"[0,1]*")'
+    if t.value.startswith("X"):
+        t.value = int(t.value[2:-1], 2)
+    else:
+        t.value = int(t.value)
+    return t
 
 def t_COMMENT(t):
     r'--.*'
@@ -114,6 +122,13 @@ def t_THEN(t):
 def t_END(t):
     r'(?i)END(?!\w)'
     return t
+
+def t_BOOLEAN(t):
+    r'(?i)(TRUE)|(FALSE)(?!\w)'
+    t.type = "BOOLEAN"
+    t.value = t.value.lower() == "true"
+    return t
+
 
 # Ignored characters
 t_ignore = " \t"

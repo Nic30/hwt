@@ -1,11 +1,12 @@
-from math import log2
-import math
 from sympy import Symbol, Or, And, Xor, to_cnf, Not
 from vhdl_toolkit.synthetisator.signal import Signal, OpAnd, OpXor, OpNot, OpOr, \
-    OpEvent, OpOnRisingEdge
-from vhdl_toolkit.types import VHDLBoolean
-from sympy import sympify
+    OpEvent, OpOnRisingEdge, OperatorUnary, OperatorBinary, OpEq
 from collections import deque
+from sympy.logic.boolalg import simplify_logic
+
+
+binaryOpTransl = [(OpAnd, And), (OpOr, Or), (OpXor, Xor)  ]
+unaryOpTransl = [(OpNot, Not)]
 
 class SigSymbol(Symbol):
     __slots__ = Symbol.__slots__ + ["signal"]
@@ -20,10 +21,8 @@ class SpecSymbol(Symbol):
         self.data = data
         return self
 
-binaryOpTransl = [(OpAnd, And), (OpOr, Or), (OpXor, Xor)  ]
-unaryOpTransl = [(OpNot, Not)]
-
 def toSympyOp(op):
+    """ converts expresion to sympy expression """
     if isinstance(op, Signal):
         if hasattr(op, 'origin'):
             return toSympyOp(op.origin)
@@ -58,24 +57,71 @@ def fromSympyOp(op):
                 tb = TreeBalancer(bOp)
                 return  tb.balanceExprSet([ fromSympyOp(x) for x in op.args])
         
-    raise Exception("Can not convert symbol form Sympy")
+    raise Exception("Can not convert symbol '%s' from Sympy" % str(op))
     
-def cond_optimize(cond):
+def expr_optimize(expr):
+    if not expr:
+        return expr
     tb = TreeBalancer(And)
-    condExpr = tb.balanceExprSet(list(map(lambda x : toSympyOp(x), cond)))  # to CNF of terms in cond
-    r = sympify(condExpr)
+    condExpr = tb.balanceExprSet(list(map(lambda x : toSympyOp(x), expr)))  # to CNF of terms in cond
+    r = simplify_logic(condExpr)
     return fromSympyOp(r)
 
+def exprTerm2Bool(e):
+    if hasattr(e, 'onIn'):
+        return OpEq(e, e.onIn).result
+    else:
+        return OpEq(e, 1).result
+
+def expr2cond(expr):
+    '''
+        Walk down the tree if you discover OpOnRisignEdge convert others on same level to bool by "= 1" then walk up the tree and propagate bool 
+        The only difference between expr and cond is that result of cond has to be bool
+    '''
+    e, isBool = _expr2cond(expr)
+    if not isBool:
+        return exprTerm2Bool(e)
+    else:
+        return e
+
+def _expr2cond(expr):
+    ''' @return: expr, exprIsBoolean '''
+    if isinstance(expr, OpOnRisingEdge):
+        return expr, True
+    if isinstance(expr, int):
+        return expr, False
+    if isinstance(expr, Signal):
+        if hasattr(expr, 'origin'):
+            return _expr2cond(expr.origin)
+        else:
+            return expr, False
+        
+    if isinstance(expr, OperatorUnary):
+        op0, op0_isBool = _expr2cond(expr.operand)
+        expr.operand = op0
+        return expr, op0_isBool  
+         
+    if isinstance(expr, OperatorBinary):
+        op0, op0_isBool = _expr2cond(expr.operand0)
+        op1, op1_isBool = _expr2cond(expr.operand1)
+        if op0_isBool != op1_isBool:
+            if op0_isBool:
+                expr.operand1 = exprTerm2Bool(op1)
+            elif op1_isBool:
+                expr.operand0 = exprTerm2Bool(op0)
+            return expr, True
+        else:
+            return expr, op0_isBool
+    raise Exception('_expr2cond canot convert expr %s' % str(expr))
+
 class TreeBalancer():
-    
     def __init__(self, operator):
         self.op = operator
         self.root = None
     def balanceExprSet(self, nodes, low=None, high=None):
+        """Creates balanced tree with operator and list of nodes"""
         if not nodes:
             return 
-    
-        
         root = nodes[0]
         fifo = deque([nodes[0]])
         nextNode = None
@@ -96,7 +142,6 @@ class TreeBalancer():
                         tmp_parent.operand1 = tmp.result
                         fifo.appendleft(tmp)
                         nextNode = None
-                        
             else:
                 tmp = self.op(tmp, n)
                 root = tmp
@@ -106,22 +151,3 @@ class TreeBalancer():
             return root.result
         else:        
             return  root
- 
-        
-        
-        
-        # mid = int(math.floor((low + high) / 2))
-        # if high == low:
-        #    return expr[mid]
-        # else:
-        #    if mid == low:
-        #        op0 = expr[low]
-        #    else :
-        #        op0 = self.balanceExprSet(expr, low, mid - 1)
-        #        
-        #    op1 = self.balanceExprSet(expr, mid + 1, high)
-        #        
-        #    if op0 is None and op1 is None:
-        #        raise Exception("Unexpected")
-        #    root = self.op(op0, op1) 
-        #    return root
