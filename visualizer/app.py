@@ -20,7 +20,7 @@ def send_static(path):
 
 @app.route('/')
 def index():
-    return render_template('base.html')
+    return render_template('index.html')
 
 # http://roberto.open-lab.com/2012/06/14/the-javascript-gantt-odyssey/
 @app.route('/gantt/')

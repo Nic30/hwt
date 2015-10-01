@@ -1,891 +1,413 @@
-var svg, tooltip, biHiSankey, path, defs, colorScale, highlightColorScale, isTransitioning;
+//var nodes = [{
+//		id : 0,
+//		name : "component name",
+//		inputs : [ "clk", "rst" ],
+//		outputs : [ "outA", "outB" ]
+//	}, {
+//		id:1,
+//		name : "component name2",
+//		inputs : [ "clk2", "rst2" ],
+//		outputs : [ "outA2", "outB2" ]	
+//	}, {
+//		id: 2,
+//		name : "clk",
+//		inputs : [],
+//		outputs : ["clk"]	
+//	}];
+//var links = [ {"source": 0, "sourceIndex": 0, "target": 1, "targetIndex": 0}, 
+//              {"source": 0, "sourceIndex": 1, "target": 1, "targetIndex": 1}, 
+//              {"source": 2, "sourceIndex": 0, "target": 0, "targetIndex": 0}];
 
-var OPACITY = {
-	NODE_DEFAULT : 0.9,
-	NODE_FADED : 0.1,
-	NODE_HIGHLIGHT : 0.8,
-	LINK_DEFAULT : 0.6,
-	LINK_FADED : 0.05,
-	LINK_HIGHLIGHT : 0.9
+var nodes = [{
+		id : 0,
+		name : "smaller one",
+		inputs : [ "clk", "rst" ],
+		outputs : [ "outA", "outB" ]
+	}, {
+		id:1,
+		name : "biggest",
+		inputs : [ "clk2", "rst2", "inA", "inB"],
+		outputs : [ "outA2", "outB2" ]	
+	}, {
+		id: 2,
+		name : "clk",
+		inputs : [],
+		outputs : ["clk"]	
+	}];
+var links = [ {"source": 2, "sourceIndex": 0, "target": 1, "targetIndex": 0}, 
+              {"source": 0, "sourceIndex": 1, "target": 1, "targetIndex": 2}, 
+              {"source": 2, "sourceIndex": 0, "target": 0, "targetIndex": 0}];
+
+
+
+var columnWidth = 120;
+var portHeight = 10;
+var COMPONENT_PADDING = 40;
+
+// replaces ID with node object
+function resolveNodesInLinks(nodes, links){
+	var dict = {};
+	for(var i=0; i< nodes.length; i++){
+		var n =nodes[i];
+		dict[n.id] =n;
+	}
+	for(var i=0; i< links.length; i++){
+		var l = links[i];
+		var s = dict[l.source];
+		var t = dict[l.target];
+		if(s === undefined || t == undefined ){
+			throw "Can not resolve link source or target";
+		}
+		l.source = s;
+		l.target = t;
+	}	
 }
-var TYPES = [ "Asset", "Expense", "Revenue", "Equity", "Liability" ];
-var TYPE_COLORS = [ "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e",
-		"#e6ab02", "#a6761d" ];
-var TYPE_HIGHLIGHT_COLORS = [ "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3",
-		"#a6d854", "#ffd92f", "#e5c494" ];
-var LINK_COLOR = "#b3b3b3", INFLOW_COLOR = "#2E86D1", OUTFLOW_COLOR = "#D63028", NODE_WIDTH = 36;
-var COLLAPSER = {
-	RADIUS : NODE_WIDTH / 2,
-	SPACING : 2
-}, OUTER_MARGIN = 10;
-var MARGIN = {
-	TOP : 2 * (COLLAPSER.RADIUS + OUTER_MARGIN),
-	RIGHT : OUTER_MARGIN,
-	BOTTOM : OUTER_MARGIN,
-	LEFT : OUTER_MARGIN
-};
-var TRANSITION_DURATION = 400, HEIGHT = 500 - MARGIN.TOP - MARGIN.BOTTOM, WIDTH = 960
-		- MARGIN.LEFT - MARGIN.RIGHT, LAYOUT_INTERATIONS = 32, REFRESH_INTERVAL = 7000;
 
-function formatNumber(d) {
-	var numberFormat = d3.format(",.0f"); // zero decimal places
-	return "£" + numberFormat(d);
-};
-function formatFlow(d) {
-	var flowFormat = d3.format(",.0f"); // zero decimal places with sign
-	return "£" + flowFormat(Math.abs(d)) + (d < 0 ? " CR" : " DR");
-};
-// Used when temporarily disabling user interractions to allow animations to
-// complete
-function disableUserInterractions(time) {
-	isTransitioning = true;
-	setTimeout(function() {
-		isTransitioning = false;
-	}, time);
-};
-function hideTooltip() {
-	return tooltip.transition().duration(TRANSITION_DURATION).style("opacity",
-			0);
-};
-function showTooltip() {
-	return tooltip.style("left", d3.event.pageX + "px").style("top",
-			d3.event.pageY + 15 + "px").transition().duration(
-			TRANSITION_DURATION).style("opacity", 1);
-};
-var colorScale = d3.scale.ordinal().domain(TYPES).range(TYPE_COLORS), highlightColorScale = d3.scale
-		.ordinal().domain(TYPES).range(TYPE_HIGHLIGHT_COLORS)
+function trim(a , boundry){
+	if(a > boundry)
+		return boundry;
+	if (a <  0)
+		return 0;
+	return a;
+}
 
-var svg = d3.select("#chart").append("svg").attr("width",
-		WIDTH + MARGIN.LEFT + MARGIN.RIGHT).attr("height",
-		HEIGHT + MARGIN.TOP + MARGIN.BOTTOM).append("g").attr("transform",
-		"translate(" + MARGIN.LEFT + "," + MARGIN.TOP + ")");
 
-svg.append("g").attr("id", "links");
-svg.append("g").attr("id", "nodes");
-svg.append("g").attr("id", "collapsers");
+function ReDiscoveredErr(message) { //is exception
+	this.name = 'ReDiscoveredErr';
+	this.message = message ;
+	this.stack = (new Error()).stack;
+}
+ReDiscoveredErr.prototype = Object.create(Error.prototype);
+ReDiscoveredErr.prototype.constructor = ReDiscoveredErr;
 
-tooltip = d3.select("#chart").append("div").attr("id", "tooltip");
-
-tooltip.style("opacity", 0).append("p").attr("class", "value");
-
-biHiSankey = d3.biHiSankey();
-
-// Set the biHiSankey diagram properties
-biHiSankey.nodeWidth(NODE_WIDTH).nodeSpacing(10).linkSpacing(4)
-		.arrowheadScaleFactor(0.5) // Specifies that 0.5 of the link's stroke
-		// WIDTH should be allowed for the marker at
-		// the end of the link.
-		.size([ WIDTH, HEIGHT ]);
-
-path = biHiSankey.link().curvature(0.45);
-
-defs = svg.append("defs");
-
-defs.append("marker").style("fill", LINK_COLOR).attr("id", "arrowHead").attr(
-		"viewBox", "0 0 6 10").attr("refX", "1").attr("refY", "5").attr(
-		"markerUnits", "strokeWidth").attr("markerWidth", "1").attr(
-		"markerHeight", "1").attr("orient", "auto").append("path").attr("d",
-		"M 0 0 L 1 0 L 6 5 L 1 10 L 0 10 z");
-
-defs.append("marker").style("fill", OUTFLOW_COLOR)
-		.attr("id", "arrowHeadInflow").attr("viewBox", "0 0 6 10").attr("refX",
-				"1").attr("refY", "5").attr("markerUnits", "strokeWidth").attr(
-				"markerWidth", "1").attr("markerHeight", "1").attr("orient",
-				"auto").append("path").attr("d",
-				"M 0 0 L 1 0 L 6 5 L 1 10 L 0 10 z");
-
-defs.append("marker").style("fill", INFLOW_COLOR).attr("id", "arrowHeadOutlow")
-		.attr("viewBox", "0 0 6 10").attr("refX", "1").attr("refY", "5").attr(
-				"markerUnits", "strokeWidth").attr("markerWidth", "1").attr(
-				"markerHeight", "1").attr("orient", "auto").append("path")
-		.attr("d", "M 0 0 L 1 0 L 6 5 L 1 10 L 0 10 z");
-
-function update() {
-	var link, linkEnter, node, nodeEnter, collapser, collapserEnter;
-
-	function dragmove(node) {
-		node.x = Math.max(0, Math.min(WIDTH - node.width, d3.event.x));
-		node.y = Math.max(0, Math.min(HEIGHT - node.height, d3.event.y));
-		d3.select(this).attr("transform",
-				"translate(" + node.x + "," + node.y + ")");
-		biHiSankey.relayout();
-		svg.selectAll(".node").selectAll("rect").attr("height", function(d) {
-			return d.height;
-		});
-		link.attr("d", path);
-	}
-
-	function containChildren(node) {
-		node.children.forEach(function(child) {
-			child.state = "contained";
-			child.parent = this;
-			child._parent = null;
-			containChildren(child);
-		}, node);
-	}
-
-	function expand(node) {
-		node.state = "expanded";
-		node.children.forEach(function(child) {
-			child.state = "collapsed";
-			child._parent = this;
-			child.parent = null;
-			containChildren(child);
-		}, node);
-	}
-
-	function collapse(node) {
-		node.state = "collapsed";
-		containChildren(node);
-	}
-
-	function restoreLinksAndNodes() {
-		link.style("stroke", LINK_COLOR).style("marker-end", function() {
-			return 'url(#arrowHead)';
-		}).transition().duration(TRANSITION_DURATION).style("opacity",
-				OPACITY.LINK_DEFAULT);
-
-		node.selectAll("rect").style("fill", function(d) {
-			d.color = colorScale(d.type.replace(/ .*/, ""));
-			return d.color;
-		}).style("stroke", function(d) {
-			return d3.rgb(colorScale(d.type.replace(/ .*/, ""))).darker(0.1);
-		}).style("fill-opacity", OPACITY.NODE_DEFAULT);
-
-		node.filter(function(n) {
-			return n.state === "collapsed";
-		}).transition().duration(TRANSITION_DURATION).style("opacity",
-				OPACITY.NODE_DEFAULT);
-	}
-
-	function showHideChildren(node) {
-		disableUserInterractions(2 * TRANSITION_DURATION);
-		hideTooltip();
-		if (node.state === "collapsed") {
-			expand(node);
-		} else {
-			collapse(node);
-		}
-
-		biHiSankey.relayout();
-		update();
-		link.attr("d", path);
-		restoreLinksAndNodes();
-	}
-
-	function highlightConnected(g) {
-		link.filter(function(d) {
-			return d.source === g;
-		}).style("marker-end", function() {
-			return 'url(#arrowHeadInflow)';
-		}).style("stroke", OUTFLOW_COLOR)
-				.style("opacity", OPACITY.LINK_DEFAULT);
-
-		link.filter(function(d) {
-			return d.target === g;
-		}).style("marker-end", function() {
-			return 'url(#arrowHeadOutlow)';
-		}).style("stroke", INFLOW_COLOR).style("opacity", OPACITY.LINK_DEFAULT);
-	}
-
-	function fadeUnconnected(g) {
-		link.filter(function(d) {
-			return d.source !== g && d.target !== g;
-		}).style("marker-end", function() {
-			return 'url(#arrowHead)';
-		}).transition().duration(TRANSITION_DURATION).style("opacity",
-				OPACITY.LINK_FADED);
-
-		node.filter(function(d) {
-			return (d.name === g.name) ? false : !biHiSankey.connected(d, g);
-		}).transition().duration(TRANSITION_DURATION).style("opacity",
-				OPACITY.NODE_FADED);
-	}
-
-	link = svg.select("#links").selectAll("path.link").data(
-			biHiSankey.visibleLinks(), function(d) {
-				return d.id;
-			});
-
-	link.transition().duration(TRANSITION_DURATION).style("stroke-WIDTH",
-			function(d) {
-				return Math.max(1, d.thickness);
-			}).attr("d", path).style("opacity", OPACITY.LINK_DEFAULT);
-
-	link.exit().remove();
-
-	linkEnter = link.enter().append("path").attr("class", "link").style("fill",
-			"none");
-
-	linkEnter.on('mouseenter', function(d) {
-		if (!isTransitioning) {
-			showTooltip().select(".value").text(
-					function() {
-						if (d.direction > 0) {
-							return d.source.name + " → " + d.target.name + "\n"
-									+ formatNumber(d.value);
-						}
-						return d.target.name + " ← " + d.source.name + "\n"
-								+ formatNumber(d.value);
-					});
-
-			d3.select(this).style("stroke", LINK_COLOR).transition().duration(
-					TRANSITION_DURATION / 2).style("opacity",
-					OPACITY.LINK_HIGHLIGHT);
-		}
-	});
-
-	linkEnter.on('mouseleave', function() {
-		if (!isTransitioning) {
-			hideTooltip();
-
-			d3.select(this).style("stroke", LINK_COLOR).transition().duration(
-					TRANSITION_DURATION / 2).style("opacity",
-					OPACITY.LINK_DEFAULT);
-		}
-	});
-
-	linkEnter.sort(function(a, b) {
-		return b.thickness - a.thickness;
-	}).classed("leftToRight", function(d) {
-		return d.direction > 0;
-	}).classed("rightToLeft", function(d) {
-		return d.direction < 0;
-	}).style("marker-end", function() {
-		return 'url(#arrowHead)';
-	}).style("stroke", LINK_COLOR).style("opacity", 0).transition().delay(
-			TRANSITION_DURATION).duration(TRANSITION_DURATION).attr("d", path)
-			.style("stroke-WIDTH", function(d) {
-				return Math.max(1, d.thickness);
-			}).style("opacity", OPACITY.LINK_DEFAULT);
-
-	node = svg.select("#nodes").selectAll(".node").data(
-			biHiSankey.collapsedNodes(), function(d) {
-				return d.id;
-			});
-
-	node.transition().duration(TRANSITION_DURATION).attr("transform",
-			function(d) {
-				return "translate(" + d.x + "," + d.y + ")";
-			}).style("opacity", OPACITY.NODE_DEFAULT).select("rect").style(
-			"fill", function(d) {
-				d.color = colorScale(d.type.replace(/ .*/, ""));
-				return d.color;
-			}).style("stroke", function(d) {
-		return d3.rgb(colorScale(d.type.replace(/ .*/, ""))).darker(0.1);
-	}).style("stroke-WIDTH", "1px").attr("height", function(d) {
-		return d.height;
-	}).attr("width", biHiSankey.nodeWidth());
-
-	node.exit().transition().duration(TRANSITION_DURATION).attr("transform",
-			function(d) {
-				var collapsedAncestor, endX, endY;
-				collapsedAncestor = d.ancestors.filter(function(a) {
-					return a.state === "collapsed";
-				})[0];
-				endX = collapsedAncestor ? collapsedAncestor.x : d.x;
-				endY = collapsedAncestor ? collapsedAncestor.y : d.y;
-				return "translate(" + endX + "," + endY + ")";
-			}).remove();
-
-	nodeEnter = node.enter().append("g").attr("class", "node");
-
-	nodeEnter
-			.attr(
-					"transform",
-					function(d) {
-						var startX = d._parent ? d._parent.x : d.x, startY = d._parent ? d._parent.y
-								: d.y;
-						return "translate(" + startX + "," + startY + ")";
-					}).style("opacity", 1e-6).transition().duration(
-					TRANSITION_DURATION).style("opacity", OPACITY.NODE_DEFAULT)
-			.attr("transform", function(d) {
-				return "translate(" + d.x + "," + d.y + ")";
-			});
-
-	nodeEnter.append("text");
-	nodeEnter.append("rect").style("fill", function(d) {
-		d.color = colorScale(d.type.replace(/ .*/, ""));
-		return d.color;
-	}).style("stroke", function(d) {
-		return d3.rgb(colorScale(d.type.replace(/ .*/, ""))).darker(0.1);
-	}).style("stroke-WIDTH", "1px").attr("height", function(d) {
-		return d.height;
-	}).attr("width", biHiSankey.nodeWidth());
-
-	node
-			.on(
-					"mouseenter",
-					function(g) {
-						if (!isTransitioning) {
-							restoreLinksAndNodes();
-							highlightConnected(g);
-							fadeUnconnected(g);
-
-							d3.select(this).select("rect").style(
-									"fill",
-									function(d) {
-										d.color = d.netFlow > 0 ? INFLOW_COLOR
-												: OUTFLOW_COLOR;
-										return d.color;
-									}).style("stroke", function(d) {
-								return d3.rgb(d.color).darker(0.1);
-							}).style("fill-opacity", OPACITY.LINK_DEFAULT);
-
-							tooltip
-									.style("left", g.x + MARGIN.LEFT + "px")
-									.style(
-											"top",
-											g.y + g.height + MARGIN.TOP + 15
-													+ "px")
-									.transition()
-									.duration(TRANSITION_DURATION)
-									.style("opacity", 1)
-									.select(".value")
-									.text(
-											function() {
-												var additionalInstructions = g.children.length ? "\n(Double click to expand)"
-														: "";
-												return g.name
-														+ "\nNet flow: "
-														+ formatFlow(g.netFlow)
-														+ additionalInstructions;
-											});
-						}
-					});
-
-	node.on("mouseleave", function() {
-		if (!isTransitioning) {
-			hideTooltip();
-			restoreLinksAndNodes();
-		}
-	});
-
-	node.filter(function(d) {
-		return d.children.length;
-	}).on("dblclick", showHideChildren);
-
-	// allow nodes to be dragged to new positions
-	node.call(d3.behavior.drag().origin(function(d) {
-		return d;
-	}).on("dragstart", function() {
-		this.parentNode.appendChild(this);
-	}).on("drag", dragmove));
-
-	// add in the text for the nodes
-	node.filter(function(d) {
-		return d.value !== 0;
-	}).select("text").attr("x", -6).attr("y", function(d) {
-		return d.height / 2;
-	}).attr("dy", ".35em").attr("text-anchor", "end").attr("transform", null)
-			.text(function(d) {
-				return d.name;
-			}).filter(function(d) {
-				return d.x < WIDTH / 2;
-			}).attr("x", 6 + biHiSankey.nodeWidth()).attr("text-anchor",
-					"start");
-
-	collapser = svg.select("#collapsers").selectAll(".collapser").data(
-			biHiSankey.expandedNodes(), function(d) {
-				return d.id;
-			});
-
-	collapserEnter = collapser.enter().append("g").attr("class", "collapser");
-
-	collapserEnter.append("circle").attr("r", COLLAPSER.RADIUS).style("fill",
-			function(d) {
-				d.color = colorScale(d.type.replace(/ .*/, ""));
-				return d.color;
-			});
-
-	collapserEnter.style("opacity", OPACITY.NODE_DEFAULT).attr(
-			"transform",
-			function(d) {
-				return "translate(" + (d.x + d.width / 2) + ","
-						+ (d.y + COLLAPSER.RADIUS) + ")";
-			});
-
-	collapserEnter.on("dblclick", showHideChildren);
-
-	collapser.select("circle").attr("r", COLLAPSER.RADIUS);
-
-	collapser.transition().delay(TRANSITION_DURATION).duration(
-			TRANSITION_DURATION).attr(
-			"transform",
-			function(d, i) {
-				return "translate("
-						+ (COLLAPSER.RADIUS + i * 2
-								* (COLLAPSER.RADIUS + COLLAPSER.SPACING)) + ","
-						+ (-COLLAPSER.RADIUS - OUTER_MARGIN) + ")";
-			});
-
-	collapser.on("mouseenter",
-			function(g) {
-				if (!isTransitioning) {
-					showTooltip().select(".value").text(function() {
-						return g.name + "\n(Double click to collapse)";
-					});
-
-					var highlightColor = highlightColorScale(g.type.replace(
-							/ .*/, ""));
-
-					d3.select(this).style("opacity", OPACITY.NODE_HIGHLIGHT)
-							.select("circle").style("fill", highlightColor);
-
-					node.filter(function(d) {
-						return d.ancestors.indexOf(g) >= 0;
-					}).style("opacity", OPACITY.NODE_HIGHLIGHT).select("rect")
-							.style("fill", highlightColor);
+// Column container is like an array which allow negative indexing and indexing from most left (and ColumnContainer() is its constructor)
+function ColumnContainer(){
+	var self = {
+			left : [],
+			midleRight : [],
+			push : function(indx, elm){
+				var arr;
+				if(indx < 0){
+					arr= self.left;
+					indx = -indx -1;
+				} else {
+					arr = self.midleRight;
 				}
-			});
-
-	collapser.on("mouseleave", function(g) {
-		if (!isTransitioning) {
-			hideTooltip();
-			d3.select(this).style("opacity", OPACITY.NODE_DEFAULT).select(
-					"circle").style("fill", function(d) {
-				return d.color;
-			});
-
-			node.filter(function(d) {
-				return d.ancestors.indexOf(g) >= 0;
-			}).style("opacity", OPACITY.NODE_DEFAULT).select("rect").style(
-					"fill", function(d) {
-						return d.color;
-					});
-		}
-	});
-
-	collapser.exit().remove();
-
+				if(! arr[indx]){
+					arr[indx] = [];
+				}
+				arr[indx].push(elm); 
+				
+			},	
+			accessFromLeft : function (indx){
+				var leftLen = self.left.length;
+				if(indx < leftLen){
+					return self.left[indx];
+				}else{
+					return self.midleRight[indx - leftLen];
+				}
+			},
+			length : function() {
+				return self.left.length + self.midleRight.length;
+			}	
+	};
+	return self;
 }
 
-var exampleNodes = [ {
-	"type" : "Asset",
-	"id" : "a",
-	"parent" : null,
-	"name" : "Assets"
-}, {
-	"type" : "Asset",
-	"id" : 1,
-	"parent" : "a",
-	"number" : "101",
-	"name" : "Cash"
-}, {
-	"type" : "Asset",
-	"id" : 2,
-	"parent" : "a",
-	"number" : "120",
-	"name" : "Accounts Receivable"
-}, {
-	"type" : "Asset",
-	"id" : 3,
-	"parent" : "a",
-	"number" : "140",
-	"name" : "Merchandise Inventory"
-}, {
-	"type" : "Asset",
-	"id" : 4,
-	"parent" : "a",
-	"number" : "150",
-	"name" : "Supplies"
-}, {
-	"type" : "Asset",
-	"id" : 5,
-	"parent" : "a",
-	"number" : "160",
-	"name" : "Prepaid Insurance"
-}, {
-	"type" : "Asset",
-	"id" : 6,
-	"parent" : "a",
-	"number" : "170",
-	"name" : "Land"
-}, {
-	"type" : "Asset",
-	"id" : 7,
-	"parent" : "a",
-	"number" : "175",
-	"name" : "Buildings"
-}, {
-	"type" : "Asset",
-	"id" : 8,
-	"parent" : "a",
-	"number" : "178",
-	"name" : "Acc. Depreciation Buildings"
-}, {
-	"type" : "Asset",
-	"id" : 9,
-	"parent" : "a",
-	"number" : "180",
-	"name" : "Equipment"
-}, {
-	"type" : "Asset",
-	"id" : 10,
-	"parent" : "a",
-	"number" : "188",
-	"name" : "Acc. Depreciation Equipment"
-}, {
-	"type" : "Liability",
-	"id" : "l",
-	"parent" : null,
-	"number" : "l",
-	"name" : "Liabilities"
-}, {
-	"type" : "Liability",
-	"id" : 11,
-	"parent" : "l",
-	"number" : "210",
-	"name" : "Notes Payable"
-}, {
-	"type" : "Liability",
-	"id" : 12,
-	"parent" : "l",
-	"number" : "215",
-	"name" : "Accounts Payable"
-}, {
-	"type" : "Liability",
-	"id" : 13,
-	"parent" : "l",
-	"number" : "220",
-	"name" : "Wages Payable"
-}, {
-	"type" : "Liability",
-	"id" : 14,
-	"parent" : "l",
-	"number" : "230",
-	"name" : "Interest Payable"
-}, {
-	"type" : "Liability",
-	"id" : 15,
-	"parent" : "l",
-	"number" : "240",
-	"name" : "Unearned Revenues"
-}, {
-	"type" : "Liability",
-	"id" : 16,
-	"parent" : "l",
-	"number" : "250",
-	"name" : "Mortage Loan Payable"
-}, {
-	"type" : "Equity",
-	"id" : "eq",
-	"parent" : null,
-	"number" : "eq",
-	"name" : "Equity"
-}, {
-	"type" : "Revenue",
-	"id" : "r",
-	"parent" : null,
-	"number" : "r",
-	"name" : "Revenues"
-}, {
-	"type" : "Revenue",
-	"id" : "or",
-	"parent" : "r",
-	"number" : "",
-	"name" : "Operating Revenue"
-}, {
-	"type" : "Revenue",
-	"id" : 17,
-	"parent" : "or",
-	"number" : "310",
-	"name" : "Service Revenues"
-}, {
-	"type" : "Revenue",
-	"id" : "nor",
-	"parent" : "r",
-	"number" : "",
-	"name" : "Non-Operating Revenue"
-}, {
-	"type" : "Revenue",
-	"id" : 18,
-	"parent" : "nor",
-	"number" : "810",
-	"name" : "Interest Revenues"
-}, {
-	"type" : "Revenue",
-	"id" : 19,
-	"parent" : "nor",
-	"number" : "910",
-	"name" : "Asset Sale Gain"
-}, {
-	"type" : "Revenue",
-	"id" : 20,
-	"parent" : "nor",
-	"number" : "960",
-	"name" : "Asset Sale Loss"
-}, {
-	"type" : "Expense",
-	"id" : "ex",
-	"parent" : null,
-	"number" : "ex",
-	"name" : "Expenses"
-}, {
-	"type" : "Expense",
-	"id" : 21,
-	"parent" : "ex",
-	"number" : "500",
-	"name" : "Salaries Expense"
-}, {
-	"type" : "Expense",
-	"id" : 22,
-	"parent" : "ex",
-	"number" : "510",
-	"name" : "Wages Expense"
-}, {
-	"type" : "Expense",
-	"id" : 23,
-	"parent" : "ex",
-	"number" : "540",
-	"name" : "Supplies Expense"
-}, {
-	"type" : "Expense",
-	"id" : 24,
-	"parent" : "ex",
-	"number" : "560",
-	"name" : "Rent Expense"
-}, {
-	"type" : "Expense",
-	"id" : 25,
-	"parent" : "ex",
-	"number" : "570",
-	"name" : "Utilities Expense"
-}, {
-	"type" : "Expense",
-	"id" : 26,
-	"parent" : "ex",
-	"number" : "576",
-	"name" : "Telephone Expense"
-}, {
-	"type" : "Expense",
-	"id" : 27,
-	"parent" : "ex",
-	"number" : "610",
-	"name" : "Advertising Expense"
-}, {
-	"type" : "Expense",
-	"id" : 28,
-	"parent" : "ex",
-	"number" : "750",
-	"name" : "Depreciation Expense"
-} ]
+function components2columns(nodes, links){ // discover component with most ports (bigger) then go on both sides and assign components to columns
+	function findBiggestComponent(nodes){ // find component with biggest no of ports
+		var biggestComponent = null;
+		for(var i =0; i<nodes.length; i++){
+			var c = nodes[i];
+			if(biggestComponent){
+				var portCnt = biggestComponent.inputs.length + biggestComponent.outputs.length;
+				var thisCompPortCnt = c.inputs.length + c.outputs.length;
+				if(thisCompPortCnt > portCnt)
+					biggestComponent = c;
+			}else{
+				biggestComponent = c;
+			}
+		}	
+		return biggestComponent;
+	}
+	function constructTriplets(nodes, links){ //for each node discover what is on left and right side
+		var triplets = [];
+		function Triplet(){ // triplet obj constructor
+			return { me: null, left: new Set(), right:new Set()};
+		}
+		for(var i =0; i<nodes.length; i++){
+			var c = nodes[i];
+			var t = new Triplet();
+			t.me = c;
+			for(var i2 =0; i2 < links.length; i2++){
+				var l = links[i2];
+				if(l.target == c && l.source != c) 
+					t.left.add(l.source)
+				if(l.source == c && l.target != c)
+					t.right.add(l.target)
+			}
+			triplets.push(t);
+		}
+		return triplets;
+	}
 
-var exampleLinks = [ {
-	"source" : 8,
-	"target" : 28,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 17,
-	"target" : 18,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 22,
-	"target" : 24,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 3,
-	"target" : 13,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 24,
-	"target" : 24,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 5,
-	"target" : 4,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 15,
-	"target" : 5,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 18,
-	"target" : 8,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 3,
-	"target" : 20,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 17,
-	"target" : 18,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 22,
-	"target" : 5,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 4,
-	"target" : 24,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 26,
-	"target" : 16,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 27,
-	"target" : 6,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 23,
-	"target" : 4,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 10,
-	"target" : 24,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 17,
-	"target" : 16,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 5,
-	"target" : 12,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 12,
-	"target" : 16,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 19,
-	"target" : 5,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 15,
-	"target" : 24,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 27,
-	"target" : 2,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 26,
-	"target" : 28,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 22,
-	"target" : 24,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 3,
-	"target" : 18,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 18,
-	"target" : 5,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 25,
-	"target" : 28,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 12,
-	"target" : 1,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 28,
-	"target" : 21,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 9,
-	"target" : 16,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 14,
-	"target" : 23,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 6,
-	"target" : 1,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 9,
-	"target" : 15,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 16,
-	"target" : 24,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 22,
-	"target" : 28,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 8,
-	"target" : 21,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 22,
-	"target" : 7,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 18,
-	"target" : 10,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : "eq",
-	"target" : 1,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 1,
-	"target" : 21,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 1,
-	"target" : 24,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : 17,
-	"target" : 1,
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : Math.ceil(Math.random() * 28),
-	"target" : Math.ceil(Math.random() * 28),
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : Math.ceil(Math.random() * 28),
-	"target" : Math.ceil(Math.random() * 28),
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : Math.ceil(Math.random() * 28),
-	"target" : Math.ceil(Math.random() * 28),
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : Math.ceil(Math.random() * 28),
-	"target" : Math.ceil(Math.random() * 28),
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : Math.ceil(Math.random() * 28),
-	"target" : Math.ceil(Math.random() * 28),
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : Math.ceil(Math.random() * 28),
-	"target" : Math.ceil(Math.random() * 28),
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : Math.ceil(Math.random() * 28),
-	"target" : Math.ceil(Math.random() * 28),
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : Math.ceil(Math.random() * 28),
-	"target" : Math.ceil(Math.random() * 28),
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : Math.ceil(Math.random() * 28),
-	"target" : Math.ceil(Math.random() * 28),
-	"value" : Math.floor(Math.random() * 100)
-}, {
-	"source" : Math.ceil(Math.random() * 28),
-	"target" : Math.ceil(Math.random() * 28),
-	"value" : Math.floor(Math.random() * 100)
-} ]
+	
+	var columns = new ColumnContainer();
+	var biggestComponent = findBiggestComponent(nodes);
+	var triplets = constructTriplets(nodes, links);
 
-biHiSankey.nodes(exampleNodes).links(exampleLinks).initializeNodes(
-		function(node) {
-			node.state = node.parent ? "contained" : "collapsed";
-		}).layout(LAYOUT_INTERATIONS);
+	// now take triplets and build columns out of them
+	// go from biggest component on left and right at symetricaly,
+	// use set to control if this component was discovered
+	var discovered = new Set();
+	function popTriplet( component){
+		if(discovered.has(component))
+			throw new ReDiscoveredErr();
+		
+		for(var index =0;index< triplets.length; index++ ){
+			if(triplets[index].me == component)
+				break;
+		}
+		if(index == triplets.length)
+			throw "this component is not in triplets"
+		var triplet = triplets[index];
+		triplets.splice(index, 1);
+		discovered.add(triplet.me);
+		return triplet;
+	}
+	
+	function makeColumns(baseIndx, triplet){
+		function discoverSide(sideSet, indxShift){
+			sideSet.forEach(function (c) {
+				try {
+					makeColumns(baseIndx+indxShift, popTriplet(c));
+				} catch (e){
+					if (e instanceof ReDiscoveredErr) {
+					//	console.log("found same " +c.name )
+					}else 
+						throw e;
+				}
+			});	
+		}
+		discoverSide(triplet.left, -1);
+		discoverSide(triplet.right, 1);
 
-disableUserInterractions(2 * TRANSITION_DURATION);
+		columns.push(baseIndx, triplet.me);
+	}
+	makeColumns(0, popTriplet(biggestComponent));
+	
+	function heightOfPrevious(column, myIndx){
+		var y =0;
+		for(var i =0; i < myIndx; i++ ){
+			y+= column[i].height + COMPONENT_PADDING;
+		}
+		return y;
+	}
+	
+	for(var x = 0; x< columns.length(); x++){
+		var column = columns.accessFromLeft(x);	
+		for(var y =0; y < column.length; y++ ){
+			var component = column[y]; 
+			console.log(component.name + "\n");
+			component.x = (columnWidth +COMPONENT_PADDING)* x;
+			component.y = heightOfPrevious(column, y);
+			component.width = columnWidth;
+			component.height = portHeight*3 + portHeight * Math.max(component.inputs.length, component.outputs.length);
+		}
+	}
+}
 
-update();
+function doesRectangleOverlap(a, b) {
+	  return (Math.abs(a.x - b.x) * 2 < (a.width + b.width)) &&
+	         (Math.abs(a.y - b.y) * 2 < (a.height + b.height));
+}
+
+// used for collision detection, and keep out behavior of nodes
+function collide(node) {
+	  var nx1, nx2, ny1, ny2, padding;
+	  padding = 32;
+	  function x2(node){
+		  return node.x + node.width; 
+	  }
+	  function y2(node){
+		  return node.y + node.height; 
+	  }
+	  nx1 = node.x - padding;
+	  nx2 = x2(node) + padding;
+	  ny1 = node.y - padding;
+	  ny2 = y2(node.y) + padding;
+	  
+	  
+	  return function(quad, x1, y1, x2, y2) {
+	    var dx, dy;
+		function x2(node){
+		 return node.x + node.width; 
+		}
+		function y2(node){
+		 return node.y + node.height; 
+		}
+	    if (quad.point && (quad.point !== node)) {
+	      if (doesRectangleOverlap(node, quad.point)) {
+	        dx = Math.min(x2(node)- quad.point.x, x2(quad.point) - node.x) / 2;
+	        node.x -= dx;
+	        quad.point.x -= dx;
+	        dy = Math.min(y2(node) - quad.point.y,y2(quad.point) - node.y) / 2;
+	        node.y -= dy;
+	        quad.point.y += dy;
+	      }
+	    }
+	    return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+	  };
+};
+
+function redraw(){ //main function for renderign components layout
+	var place = d3.select("#chartWraper")
+		.node()
+		.getBoundingClientRect();
+	d3.select("#chartWraper").selectAll("svg").remove(); // delete old on redraw
+	
+	//force for self organizing of diagram
+	var force = d3.layout.force()
+		.gravity(.05)
+		.distance(150)
+		.charge(function(d, i) { return i ? 0 : -2000; })
+		.size([place.width, place.height])
+		.nodes(nodes)
+		.links(links)
+		.start();
+	
+	var svg = d3.select("#chartWraper").append("svg");
+	var svgGroup= svg.append("g");;
+
+
+	var portsOffset = 3*portHeight - portHeight/2;
+	var wrap = svgGroup.selectAll("g")
+		.data(nodes)
+		.enter()
+		.append("g")
+	    .classed({"component": true})
+	    .attr("transform", function(d) {
+	    	return "translate(" + [ d.x,d.y ] + ")"; 
+	    })
+	    .call(force.drag); //component dragging
+	
+	// background
+	wrap.append("rect")
+	    .attr("rx", 5) // this make rounded corners
+	    .attr("ry", 5)
+	    .attr("width", function(d) { return d.width})
+	    .attr("height", function(d) { return d.height});
+	
+	// component name
+	wrap.append('text')
+		.attr("y", 10)
+		.text(function(d) {
+		    return d.name;
+		});
+
+	
+	// input port wraps
+	var port_inputs = wrap.append("g")
+		.attr("transform", function(d) { 
+			return "translate(" + 0 + "," + 3*portHeight + ")"; 
+		})
+		.selectAll("g .port-input")
+		.data(function (d){
+			return d.inputs;
+		})
+		.enter()
+		.append('g')
+		.classed({"port-input": true});
+	
+	// input port icon
+	port_inputs.append("image")
+		.attr("xlink:href", function(d) { 
+			return "/static/hls/connections/arrow_right.ico"; 
+		})
+		.attr("y", function(d, i){
+			return (i-1)*portHeight;
+		})
+		.attr("width", 10)
+		.attr("height", portHeight);
+	
+	// portName text
+	port_inputs.append('text')
+		.attr("x", 10)
+		.attr("y", function(d, i){
+			return i*portHeight;
+		})
+		.attr("height", portHeight)
+		.text(function(portName) { 
+			return portName; 
+		});
+	
+	// output port wraps
+	var port_out = wrap.append("g")
+		.attr("transform", function(d) { 
+			var componentWidth = d3.select(this).node().parentNode.getBoundingClientRect().width
+			return "translate(" + componentWidth/2 + "," + 3*portHeight + ")"; 
+		})
+		.selectAll("g .port-group")
+		.data(function (d){
+			return d.outputs;
+		})
+		.enter()
+		.append('g')
+		.classed({"port-output": true});
+	
+	// portName text
+	port_out.append('text')
+		.attr("x", 10)
+		.attr("y", function(d, i){
+			return i*portHeight;
+		})
+		.attr("height", portHeight)
+		.text(function(portName) { 
+			return portName; 
+		});
+	
+    var link = svgGroup.selectAll(".link")
+    	.data(links)
+    	.enter()
+    	.append("path")
+    	.classed({"link": true});
+	
+    function update(){
+		wrap.attr("transform", function (d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        });
+    	link.attr("d", function (d) {
+            var sx = d.source.x + d.source.width;
+            var sy = d.source.y + portsOffset + d.sourceIndex * portHeight;
+            var tx = d.target.x;
+            var ty = d.target.y + portsOffset + d.targetIndex * portHeight;
+            return "M" + sx + "," + sy + " L " + tx + "," + ty;
+        });
+	};
+	
+    //force.on("tick", function () {
+    //	var q = d3.geom.quadtree(nodes),
+    //        i = 0,
+    //        n = nodes.length;
+    //
+    //	while (++i < n) 
+    //		q.visit(collide(nodes[i]));
+    //	
+    //	update();
+    //});
+    
+    update();
+    
+    // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
+    var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom",  
+    		function () {
+    			svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    		}
+    );
+    svg.call(zoomListener);
+}
+
+resolveNodesInLinks(nodes, links);
+components2columns(nodes, links);
+redraw();
+

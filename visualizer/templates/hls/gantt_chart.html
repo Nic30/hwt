@@ -1,18 +1,18 @@
 {% extends "base.html" %} {% block css_extra %}
-<link type="text/css" href="/static/hls/gantt-style.css"
+<link type="text/css" href="/static/hls/gantt/gantt-style.css"
 	rel="stylesheet" />
-<link type="text/css" href="/static/hls/gantt_chart.css"
+<link type="text/css" href="/static/hls/gantt/gantt_chart.css"
 	rel="stylesheet" />
 {% endblock %} {% block js_extra %}
 <script type="text/javascript" src="/static/bower_components/d3/d3.js"></script>
-<script type="text/javascript" src="/static/hls/gantt-chart-d3v2.js"></script>
+<script type="text/javascript" src="/static/hls/gantt/gantt-chart-d3v2.js"></script>
 
 <script type="text/javascript">
 	var tasks = {{ ganttTasks|safe }};
 	var taskNames = {{ganttTaskNames|safe}};
 </script>
 
-<script type="text/javascript" src="/static/hls/gantt_chart.js"></script>
+<script type="text/javascript" src="/static/hls/gantt/app.js"></script>
 
 {% endblock %}
 {% block content %}
