@@ -339,8 +339,8 @@ class Axi(AXILite):
                       
                       c("AWID", masterDir=self.dir_out, width=ID_WIDTH),
                       c("AWBURST", masterDir=self.dir_out, width=2),
-                      c("AWCACHE", masterDir=self.dir_out, width=44),
-                      c("AWLEN", masterDir=self.dir_out, width=48),
+                      c("AWCACHE", masterDir=self.dir_out, width=4),
+                      c("AWLEN", masterDir=self.dir_out, width=8),
                       c("AWLOCK", masterDir=self.dir_out, width=2),
                       c("AWPROT", masterDir=self.dir_out, width=3),
                       c("AWSIZE", masterDir=self.dir_out, width=3),
