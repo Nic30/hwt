@@ -15,7 +15,7 @@ def superDMA_complex():
     # nterf, c = dualportRam(512, 64)   
 
     ch_cnt = 2
-    workspace = "/home/nic30/Documents/vivado/toolkitTest/toolkitTest.srcs/sources_1/new/"
+    workspace = "/home/nic30/Documents/vivado/toolkitTest/toolkitTest.srcs/sources_1/superDMA_complex/"
     dma = VHDLUnit(entityFromFile(workspace + "superDMA/src/superDMA.vhd"))
     axi_regs = VHDLUnit(entityFromFile(workspace + "axi_regs_with_def_value/src/axi_regs_with_def_value.vhd"))
     axiSplit = VHDLUnit(entityFromFile(workspace + 'axi_lite_split/axi_lite_split.vhd'))
@@ -121,6 +121,7 @@ def superDMA_complex():
         # data_out from dma
         data_out = signalsForInterface(c, HsAXIStream(64), "data_out_" + str(i))
         automapSigs(dma, data_out)
+        interf.extend(data_out)
         
         # connect external axi registers
         OTHERS_WIDTH = 16
@@ -145,7 +146,7 @@ def superDMA_complex():
 
 if __name__ == "__main__":
     interf, c = superDMA_complex()
-    with open("/home/nic30/Documents/vivado/toolkitTest/toolkitTest.srcs/sources_1/new/superDMA_complex.vhd", "w") as f:
+    with open("/home/nic30/Documents/vivado/toolkitTest/toolkitTest.srcs/sources_1/superDMA_complex/superDMA_complex.vhd", "w") as f:
         for o in c.synthetize("superDMA_complex", interf):
             f.write(formatVhdl(str(o)))
     print("done")
