@@ -1,27 +1,67 @@
-var component = {
+//var nodes = [{
+//		id : 0,
+//		name : "component name",
+//		inputs : [ "clk", "rst" ],
+//		outputs : [ "outA", "outB" ]
+//	}, {
+//		id:1,
+//		name : "component name2",
+//		inputs : [ "clk2", "rst2" ],
+//		outputs : [ "outA2", "outB2" ]	
+//	}, {
+//		id: 2,
+//		name : "clk",
+//		inputs : [],
+//		outputs : ["clk"]	
+//	}];
+//var links = [ {"source": 0, "sourceIndex": 0, "target": 1, "targetIndex": 0}, 
+//              {"source": 0, "sourceIndex": 1, "target": 1, "targetIndex": 1}, 
+//              {"source": 2, "sourceIndex": 0, "target": 0, "targetIndex": 0}];
+
+var nodes = [{
 		id : 0,
-		name : "component name",
+		name : "smaller one",
 		inputs : [ "clk", "rst" ],
 		outputs : [ "outA", "outB" ]
-}
-var component2 = {
+	}, {
 		id:1,
-		name : "component name2",
-		inputs : [ "clk2", "rst2" ],
+		name : "biggest",
+		inputs : [ "clk2", "rst2", "inA", "inB"],
 		outputs : [ "outA2", "outB2" ]	
-}
-var clk = {
+	}, {
 		id: 2,
 		name : "clk",
 		inputs : [],
 		outputs : ["clk"]	
-}
-var nodes = [component, component2, clk];
-var links = [ {"source": component, "sourceIndex": 0, "target": component2, "targetIndex": 0}, 
-              {"source": component, "sourceIndex": 1, "target": component2, "targetIndex": 1}, 
-              {"source": clk, "sourceIndex": 0, "target": component, "targetIndex": 0}   ]
+	}];
+var links = [ {"source": 2, "sourceIndex": 0, "target": 1, "targetIndex": 0}, 
+              {"source": 0, "sourceIndex": 1, "target": 1, "targetIndex": 2}, 
+              {"source": 2, "sourceIndex": 0, "target": 0, "targetIndex": 0}];
+
+
+
 var columnWidth = 120;
 var portHeight = 10;
+var COMPONENT_PADDING = 40;
+
+// replaces ID with node object
+function resolveNodesInLinks(nodes, links){
+	var dict = {};
+	for(var i=0; i< nodes.length; i++){
+		var n =nodes[i];
+		dict[n.id] =n;
+	}
+	for(var i=0; i< links.length; i++){
+		var l = links[i];
+		var s = dict[l.source];
+		var t = dict[l.target];
+		if(s === undefined || t == undefined ){
+			throw "Can not resolve link source or target";
+		}
+		l.source = s;
+		l.target = t;
+	}	
+}
 
 function trim(a , boundry){
 	if(a > boundry)
@@ -31,7 +71,8 @@ function trim(a , boundry){
 	return a;
 }
 
-function ReDiscoveredErr(message) {
+
+function ReDiscoveredErr(message) { //is exception
 	this.name = 'ReDiscoveredErr';
 	this.message = message ;
 	this.stack = (new Error()).stack;
@@ -39,40 +80,42 @@ function ReDiscoveredErr(message) {
 ReDiscoveredErr.prototype = Object.create(Error.prototype);
 ReDiscoveredErr.prototype.constructor = ReDiscoveredErr;
 
+// Column container is like an array which allow negative indexing and indexing from most left (and ColumnContainer() is its constructor)
 function ColumnContainer(){
-	var self = {};
-	self.left = [];
-	self.midleRight = [];
-	self.push = function(indx, elm){
-		var arr;
-		if(indx < 0){
-			arr= self.left;
-			indx = -indx -1;
-		} else {
-			arr = self.midleRight;
-		}
-		if(! arr[indx]){
-			arr[indx] = [];
-		}
-		arr[indx].push(elm); 
-		
-	}
-	self.accessFromLeft = function (indx){
-		var leftLen = self.left.length;
-		if(indx < leftLen){
-			return self.left[indx];
-		}else{
-			return self.midleRight[indx - leftLen];
-		}
-	}
-	self.length = function() {
-		return self.left.length + self.midleRight.length;
-	}
+	var self = {
+			left : [],
+			midleRight : [],
+			push : function(indx, elm){
+				var arr;
+				if(indx < 0){
+					arr= self.left;
+					indx = -indx -1;
+				} else {
+					arr = self.midleRight;
+				}
+				if(! arr[indx]){
+					arr[indx] = [];
+				}
+				arr[indx].push(elm); 
+				
+			},	
+			accessFromLeft : function (indx){
+				var leftLen = self.left.length;
+				if(indx < leftLen){
+					return self.left[indx];
+				}else{
+					return self.midleRight[indx - leftLen];
+				}
+			},
+			length : function() {
+				return self.left.length + self.midleRight.length;
+			}	
+	};
 	return self;
 }
 
 function components2columns(nodes, links){ // discover component with most ports (bigger) then go on both sides and assign components to columns
-	function findBiggestComponent(nodes){
+	function findBiggestComponent(nodes){ // find component with biggest no of ports
 		var biggestComponent = null;
 		for(var i =0; i<nodes.length; i++){
 			var c = nodes[i];
@@ -87,9 +130,9 @@ function components2columns(nodes, links){ // discover component with most ports
 		}	
 		return biggestComponent;
 	}
-	function constructTriplets(nodes, links){
+	function constructTriplets(nodes, links){ //for each node discover what is on left and right side
 		var triplets = [];
-		function Triplet(){
+		function Triplet(){ // triplet obj constructor
 			return { me: null, left: new Set(), right:new Set()};
 		}
 		for(var i =0; i<nodes.length; i++){
@@ -153,48 +196,69 @@ function components2columns(nodes, links){ // discover component with most ports
 	}
 	makeColumns(0, popTriplet(biggestComponent));
 	
+	function heightOfPrevious(column, myIndx){
+		var y =0;
+		for(var i =0; i < myIndx; i++ ){
+			y+= column[i].height + COMPONENT_PADDING;
+		}
+		return y;
+	}
+	
 	for(var x = 0; x< columns.length(); x++){
-		var c = columns.accessFromLeft(x);	
-		for(var y =0; y < c.length; y++ ){
-			var component = c[y]; 
-			component.x = columnWidth * x;
-			component.y = 20;
+		var column = columns.accessFromLeft(x);	
+		for(var y =0; y < column.length; y++ ){
+			var component = column[y]; 
+			console.log(component.name + "\n");
+			component.x = (columnWidth +COMPONENT_PADDING)* x;
+			component.y = heightOfPrevious(column, y);
 			component.width = columnWidth;
 			component.height = portHeight*3 + portHeight * Math.max(component.inputs.length, component.outputs.length);
 		}
 	}
 }
 
-function doRectangleIntersect( a,  b) {
+function doesRectangleOverlap(a, b) {
 	  return (Math.abs(a.x - b.x) * 2 < (a.width + b.width)) &&
 	         (Math.abs(a.y - b.y) * 2 < (a.height + b.height));
 }
 
-// used for collision detection
+// used for collision detection, and keep out behavior of nodes
 function collide(node) {
-	 //var  nx1 = node.x,
-	 //     nx2 = node.x + node.width,
-	 //     ny1 = node.y,
-	 //     ny2 = node.y + node.height;
+	  var nx1, nx2, ny1, ny2, padding;
+	  padding = 32;
+	  function x2(node){
+		  return node.x + node.width; 
+	  }
+	  function y2(node){
+		  return node.y + node.height; 
+	  }
+	  nx1 = node.x - padding;
+	  nx2 = x2(node) + padding;
+	  ny1 = node.y - padding;
+	  ny2 = y2(node.y) + padding;
+	  
+	  
 	  return function(quad, x1, y1, x2, y2) {
-		 // var doesColide = doRectangleIntersect(node, quad.point)  //x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
-		// 
-		// if (doesColide && quad.point && (quad.point !== node)) {
-		//	  
-		//	  var dx0 = node.x - quad.point.x,
-		//	      dy0 = node.y - quad.point.y,
-		//		  l = (l - node.width) / l * .5;
-		//		  node.x -= dx *= l;
-		//		  node.y -= dy *= l;
-		//		  quad.point.x += dx;
-		//		  quad.point.y += dy;
-		//	  }
-		// }
-		  return false; // doesColide;
+	    var dx, dy;
+		function x2(node){
+		 return node.x + node.width; 
+		}
+		function y2(node){
+		 return node.y + node.height; 
+		}
+	    if (quad.point && (quad.point !== node)) {
+	      if (doesRectangleOverlap(node, quad.point)) {
+	        dx = Math.min(x2(node)- quad.point.x, x2(quad.point) - node.x) / 2;
+	        node.x -= dx;
+	        quad.point.x -= dx;
+	        dy = Math.min(y2(node) - quad.point.y,y2(quad.point) - node.y) / 2;
+	        node.y -= dy;
+	        quad.point.y += dy;
+	      }
+	    }
+	    return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
 	  };
-}
-
-components2columns(nodes, links);
+};
 
 function redraw(){ //main function for renderign components layout
 	var place = d3.select("#chartWraper")
@@ -213,10 +277,11 @@ function redraw(){ //main function for renderign components layout
 		.start();
 	
 	var svg = d3.select("#chartWraper").append("svg");
+	var svgGroup= svg.append("g");;
 
 
 	var portsOffset = 3*portHeight - portHeight/2;
-	var wrap = svg.selectAll("g")
+	var wrap = svgGroup.selectAll("g")
 		.data(nodes)
 		.enter()
 		.append("g")
@@ -254,7 +319,7 @@ function redraw(){ //main function for renderign components layout
 		.append('g')
 		.classed({"port-input": true});
 	
-	// port icon
+	// input port icon
 	port_inputs.append("image")
 		.attr("xlink:href", function(d) { 
 			return "/static/hls/connections/arrow_right.ico"; 
@@ -301,21 +366,14 @@ function redraw(){ //main function for renderign components layout
 			return portName; 
 		});
 	
-    var link = svg.selectAll(".link")
+    var link = svgGroup.selectAll(".link")
     	.data(links)
     	.enter()
     	.append("path")
     	.classed({"link": true});
 	
-    force.on("tick", function () {
-    	var q = d3.geom.quadtree(nodes),
-            i = 0,
-            n = nodes.length;
-
-    	while (++i < n) 
-    		q.visit(collide(nodes[i]));
-    	
-    	wrap.attr("transform", function (d) {
+    function update(){
+		wrap.attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
     	link.attr("d", function (d) {
@@ -325,9 +383,31 @@ function redraw(){ //main function for renderign components layout
             var ty = d.target.y + portsOffset + d.targetIndex * portHeight;
             return "M" + sx + "," + sy + " L " + tx + "," + ty;
         });
-        
-    });
+	};
+	
+    //force.on("tick", function () {
+    //	var q = d3.geom.quadtree(nodes),
+    //        i = 0,
+    //        n = nodes.length;
+    //
+    //	while (++i < n) 
+    //		q.visit(collide(nodes[i]));
+    //	
+    //	update();
+    //});
     
+    update();
+    
+    // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
+    var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom",  
+    		function () {
+    			svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    		}
+    );
+    svg.call(zoomListener);
 }
+
+resolveNodesInLinks(nodes, links);
+components2columns(nodes, links);
 redraw();
 
