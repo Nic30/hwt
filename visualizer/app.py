@@ -14,7 +14,7 @@ app = Flask(__name__)
 # http://bl.ocks.org/mbostock/3681006    --zoom
 # http://www.codeproject.com/Articles/709340/Implementing-a-Flowchart-with-SVG-and-AngularJS
 
-@app.route('/static/<path:path>')
+@app.route('/static/<path:path>') # for loading all static files (antipatent, but it is necessary because app is not deployed on webserver )
 def send_static(path):
     return send_from_directory('static', path)
 
