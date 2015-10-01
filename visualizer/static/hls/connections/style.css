@@ -57,3 +57,8 @@ path.link {
     stroke: black;
     stroke-width: 1px;
 }
+
+path.link-selected {
+    stroke: red;
+    stroke-width: 1px;
+}

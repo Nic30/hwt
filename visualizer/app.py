@@ -5,6 +5,7 @@ import json
 
 app = Flask(__name__)
 
+# https://leanpub.com/D3-Tips-and-Tricks/read
 # http://www.d3noob.org/2013/03/d3js-force-directed-graph-examples.html
 # http://blog.pixelingene.com/demos/d3_tree/
 # http://bl.ocks.org/Neilos/584b9a5d44d5fe00f779
@@ -13,6 +14,8 @@ app = Flask(__name__)
 # http://bl.ocks.org/GerHobbelt/3104394
 # http://bl.ocks.org/mbostock/3681006    --zoom
 # http://www.codeproject.com/Articles/709340/Implementing-a-Flowchart-with-SVG-and-AngularJS
+# http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
+# http://bl.ocks.org/explunit/5603250
 
 @app.route('/static/<path:path>') # for loading all static files (antipatent, but it is necessary because app is not deployed on webserver )
 def send_static(path):

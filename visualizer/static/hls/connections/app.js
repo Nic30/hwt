@@ -17,6 +17,9 @@
 //var links = [ {"source": 0, "sourceIndex": 0, "target": 1, "targetIndex": 0}, 
 //              {"source": 0, "sourceIndex": 1, "target": 1, "targetIndex": 1}, 
 //              {"source": 2, "sourceIndex": 0, "target": 0, "targetIndex": 0}];
+//var links = [ {"source": 2, "sourceIndex": 0, "target": 1, "targetIndex": 0}, 
+//              {"source": 0, "sourceIndex": 1, "target": 1, "targetIndex": 2}, 
+//              {"source": 2, "sourceIndex": 0, "target": 0, "targetIndex": 0}];
 
 var nodes = [{
 		id : 0,
@@ -26,23 +29,55 @@ var nodes = [{
 	}, {
 		id:1,
 		name : "biggest",
-		inputs : [ "clk2", "rst2", "inA", "inB"],
+		inputs : [ "clk", "rst", "inA", "inB"],
 		outputs : [ "outA2", "outB2" ]	
 	}, {
 		id: 2,
 		name : "clk",
 		inputs : [],
 		outputs : ["clk"]	
+	}, {
+		id: 3,
+		name : "rst",
+		inputs : [],
+		outputs : ["rst"]	
+	}, {
+		id: 4,
+		name : "dummy",
+		inputs : ["clk","rst"],
+		outputs : ["a", "b", "c", "d"]	
 	}];
-var links = [ {"source": 2, "sourceIndex": 0, "target": 1, "targetIndex": 0}, 
-              {"source": 0, "sourceIndex": 1, "target": 1, "targetIndex": 2}, 
-              {"source": 2, "sourceIndex": 0, "target": 0, "targetIndex": 0}];
+var nets = [{"name":"clk", "source": {"id" : 2, "portIndex":0}, "targets":  [{"id":0, "portIndex":0}, {"id":1, "portIndex":0}]},
+            {"name":"rst", "source": {"id" : 3, "portIndex":0}, "targets":  [{"id":0, "portIndex":1}, {"id":1, "portIndex":1}]},
+            {"source": {"id" : 0, "portIndex":0}, "targets":  [{"id":1, "portIndex":2}]},
+            {"source": {"id" : 0, "portIndex":1}, "targets":  [{"id":1, "portIndex":3}]},
+            ]
 
 
 
 var columnWidth = 120;
 var portHeight = 10;
 var COMPONENT_PADDING = 40;
+var portsOffset = 3*portHeight - portHeight/2;
+
+function generateLinks(nets){
+	var links = [];
+	for(var i =0; i < nets.length; i++){
+		var net = nets[i];
+		for(var i2=0; i2< net.targets.length; i2++){
+			var target = net.targets[i2];
+			var link = {
+					"net": net,
+					"source":net.source.id,
+					"sourceIndex": net.source.portIndex,
+					"target": target.id,
+					"targetIndex": target.portIndex};
+			links.push(link);
+		}
+	}
+	
+	return links;
+}
 
 // replaces ID with node object
 function resolveNodesInLinks(nodes, links){
@@ -62,15 +97,6 @@ function resolveNodesInLinks(nodes, links){
 		l.target = t;
 	}	
 }
-
-function trim(a , boundry){
-	if(a > boundry)
-		return boundry;
-	if (a <  0)
-		return 0;
-	return a;
-}
-
 
 function ReDiscoveredErr(message) { //is exception
 	this.name = 'ReDiscoveredErr';
@@ -204,6 +230,12 @@ function components2columns(nodes, links){ // discover component with most ports
 		return y;
 	}
 	
+	for(var i=0; i<nodes.length; i++ ){
+		var component = nodes[i]; 
+		component.width = columnWidth;
+		component.height = portHeight*3 + portHeight * Math.max(component.inputs.length, component.outputs.length);
+	}
+	
 	for(var x = 0; x< columns.length(); x++){
 		var column = columns.accessFromLeft(x);	
 		for(var y =0; y < column.length; y++ ){
@@ -211,8 +243,6 @@ function components2columns(nodes, links){ // discover component with most ports
 			console.log(component.name + "\n");
 			component.x = (columnWidth +COMPONENT_PADDING)* x;
 			component.y = heightOfPrevious(column, y);
-			component.width = columnWidth;
-			component.height = portHeight*3 + portHeight * Math.max(component.inputs.length, component.outputs.length);
 		}
 	}
 }
@@ -223,7 +253,7 @@ function doesRectangleOverlap(a, b) {
 }
 
 // used for collision detection, and keep out behavior of nodes
-function collide(node) {
+function nodeColisionResolver(node) {
 	  var nx1, nx2, ny1, ny2, padding;
 	  padding = 32;
 	  function x2(node){
@@ -260,27 +290,38 @@ function collide(node) {
 	  };
 };
 
+
+function netMouseOver() {
+	var net = d3.select(this)[0][0].__data__.net;
+	d3.selectAll(".link")
+	  .classed("link-selected", 
+			  function(d){
+		  			return d.net === net
+	  		  });
+}
+function netMouseOut() {
+	d3.selectAll(".link")
+	  .classed("link-selected", false);
+}
+
 function redraw(){ //main function for renderign components layout
-	var place = d3.select("#chartWraper")
-		.node()
-		.getBoundingClientRect();
+	var place = d3.select("#chartWraper").node().getBoundingClientRect();
 	d3.select("#chartWraper").selectAll("svg").remove(); // delete old on redraw
 	
 	//force for self organizing of diagram
 	var force = d3.layout.force()
-		.gravity(.05)
+		.gravity(.00)
 		.distance(150)
-		.charge(function(d, i) { return i ? 0 : -2000; })
+		.charge(-2000)
 		.size([place.width, place.height])
 		.nodes(nodes)
 		.links(links)
 		.start();
 	
 	var svg = d3.select("#chartWraper").append("svg");
-	var svgGroup= svg.append("g");;
+	var svgGroup= svg.append("g"); // because of zooming/moving
 
 
-	var portsOffset = 3*portHeight - portHeight/2;
 	var wrap = svgGroup.selectAll("g")
 		.data(nodes)
 		.enter()
@@ -370,7 +411,9 @@ function redraw(){ //main function for renderign components layout
     	.data(links)
     	.enter()
     	.append("path")
-    	.classed({"link": true});
+    	.classed({"link": true})
+    	.on("mouseover", netMouseOver)
+    	.on("mouseout", netMouseOut);
 	
     function update(){
 		wrap.attr("transform", function (d) {
@@ -385,18 +428,18 @@ function redraw(){ //main function for renderign components layout
         });
 	};
 	
-    //force.on("tick", function () {
-    //	var q = d3.geom.quadtree(nodes),
-    //        i = 0,
-    //        n = nodes.length;
-    //
-    //	while (++i < n) 
-    //		q.visit(collide(nodes[i]));
-    //	
-    //	update();
-    //});
+    force.on("tick", function () {
+    	var q = d3.geom.quadtree(nodes),
+            i = 0,
+            n = nodes.length;
     
-    update();
+    	while (++i < n) 
+    		q.visit(nodeColisionResolver(nodes[i]));
+    	
+    	update();
+    });
+    
+    //update();
     
     // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
     var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom",  
@@ -407,6 +450,7 @@ function redraw(){ //main function for renderign components layout
     svg.call(zoomListener);
 }
 
+var links = generateLinks(nets);
 resolveNodesInLinks(nodes, links);
 components2columns(nodes, links);
 redraw();
