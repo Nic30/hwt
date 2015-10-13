@@ -86,22 +86,30 @@ def expr2cond(expr):
 
 def _expr2cond(expr):
     ''' @return: expr, exprIsBoolean '''
-    if isinstance(expr, OpOnRisingEdge):
+    if isinstance(expr, set):
+        isBool = True
+        for c in expr:
+            e, isB = _expr2cond(c)
+            isBool  = isBool and isB
+        return expr, isBool
+        
+        
+    elif isinstance(expr, OpOnRisingEdge):
         return expr, True
-    if isinstance(expr, int):
+    elif isinstance(expr, int):
         return expr, False
-    if isinstance(expr, Signal):
+    elif isinstance(expr, Signal):
         if hasattr(expr, 'origin'):
             return _expr2cond(expr.origin)
         else:
             return expr, False
         
-    if isinstance(expr, OperatorUnary):
+    elif isinstance(expr, OperatorUnary):
         op0, op0_isBool = _expr2cond(expr.operand)
         expr.operand = op0
         return expr, op0_isBool  
          
-    if isinstance(expr, OperatorBinary):
+    elif isinstance(expr, OperatorBinary):
         op0, op0_isBool = _expr2cond(expr.operand0)
         op1, op1_isBool = _expr2cond(expr.operand1)
         if op0_isBool != op1_isBool:
@@ -151,3 +159,7 @@ class TreeBalancer():
             return root.result
         else:        
             return  root
+        
+class ProcessIfOptimalizer:
+    def otimize(self, expr):
+        pass

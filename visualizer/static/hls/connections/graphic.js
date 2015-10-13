@@ -41,7 +41,6 @@ function nodeColisionResolver(node) {
 	  };
 };
 
-
 function netMouseOver() {
 	var net = d3.select(this)[0][0].__data__.net;
 	d3.selectAll(".link")
@@ -55,7 +54,10 @@ function netMouseOut() {
 	  .classed("link-selected", false);
 }
 
-function redraw(){ //main function for renderign components layout
+
+
+
+function redraw(links){ //main function for renderign components layout
 	var place = d3.select("#chartWraper").node().getBoundingClientRect();
 	d3.select("#chartWraper").selectAll("svg").remove(); // delete old on redraw
 	
@@ -67,12 +69,12 @@ function redraw(){ //main function for renderign components layout
 		.size([place.width, place.height])
 		.nodes(nodes)
 		.links(links)
-		.start();
+		//.start();
 	
 	var svg = d3.select("#chartWraper").append("svg");
 	var svgGroup= svg.append("g"); // because of zooming/moving
 
-
+	//alias component body
 	var wrap = svgGroup.selectAll("g")
 		.data(nodes)
 		.enter()
@@ -90,14 +92,14 @@ function redraw(){ //main function for renderign components layout
 	    .attr("width", function(d) { return d.width})
 	    .attr("height", function(d) { return d.height});
 	
-	// component name
+	// component name [TODO] text nad komponentu
 	wrap.append('text')
 		.attr("y", 10)
 		.text(function(d) {
 		    return d.name;
 		});
 
-	
+	// [TODO] porty s dratkem ven z komponenty, ruzne typy portu viz stream/bus/wire ve Vivado
 	// input port wraps
 	var port_inputs = wrap.append("g")
 		.attr("transform", function(d) { 
@@ -111,7 +113,7 @@ function redraw(){ //main function for renderign components layout
 		.append('g')
 		.classed({"port-input": true});
 	
-	// input port icon
+	// input port icon [TODO] only for special types of connection, this is only example how to use it
 	port_inputs.append("image")
 		.attr("xlink:href", function(d) { 
 			return "/static/hls/connections/arrow_right.ico"; 
@@ -122,7 +124,7 @@ function redraw(){ //main function for renderign components layout
 		.attr("width", 10)
 		.attr("height", portHeight);
 	
-	// portName text
+	// portName text [TODO] intelligent alignment of port name
 	port_inputs.append('text')
 		.attr("x", 10)
 		.attr("y", function(d, i){
@@ -136,7 +138,7 @@ function redraw(){ //main function for renderign components layout
 	// output port wraps
 	var port_out = wrap.append("g")
 		.attr("transform", function(d) { 
-			var componentWidth = d3.select(this).node().parentNode.getBoundingClientRect().width
+			var componentWidth = d3.select(this).node().parentNode.getBoundingClientRect().width;
 			return "translate(" + componentWidth/2 + "," + 3*portHeight + ")"; 
 		})
 		.selectAll("g .port-group")
@@ -148,7 +150,7 @@ function redraw(){ //main function for renderign components layout
 		.classed({"port-output": true});
 	
 	// portName text
-	port_out.append('text')
+	port_out.append('text') 
 		.attr("x", 10)
 		.attr("y", function(d, i){
 			return i*portHeight;
@@ -158,6 +160,7 @@ function redraw(){ //main function for renderign components layout
 			return portName; 
 		});
 	
+	//grid higlight
     var link = svgGroup.selectAll(".link")
     	.data(links)
     	.enter()
@@ -166,10 +169,53 @@ function redraw(){ //main function for renderign components layout
     	.on("mouseover", netMouseOver)
     	.on("mouseout", netMouseOut);
 	
+
+    
     function update(){
+    	//move component on its position
 		wrap.attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
+		var grid = RoutingNodesContainer(nodes);
+		
+		//create debug dots for routing nodes
+		var flatenMap = [];
+		grid.visitFromLeftTop(function(c){
+			flatenMap.push(c);
+		});
+		svgGroup.selectAll("circle")
+		.data(flatenMap)
+		.enter().append("circle")
+		.style("fill", "steelblue")
+		.attr("r", 5)
+		.attr("cx", function(d){
+			return d.pos()[0];
+		})
+		.attr("cy", function(d){
+			return d.pos()[1];
+		});
+		
+		// route grids
+		for(var i = 0; i< links.length; i++ ){
+			var l = links[i];
+			var start = grid.componetOutputNode(l.souce, l.portIndex);
+			var end = grid.componetInputNode(l.target, l.targetIndex);
+			var path = astar.search(grid, start, end );
+		}
+		//// line to parent componet
+		//svgGroup.selectAll("#debuglink").data(flatenMap)
+		//.enter()
+		//.append("path") 
+		//.classed({"link": true})
+		//.attr("d", function (d) {
+        //    var sx = d.pos()[0];
+        //    var sy = d.pos()[1];
+        //    var tx = d.originComponent.x;
+        //    var ty = d.originComponent.y ;
+        //    return "M" + sx + "," + sy + " L " + tx + "," + ty;
+        //});
+		
+		//print link between them
     	link.attr("d", function (d) {
             var sx = d.source.x + d.source.width;
             var sy = d.source.y + portsOffset + d.sourceIndex * portHeight;
@@ -179,18 +225,18 @@ function redraw(){ //main function for renderign components layout
         });
 	};
 	
-    force.on("tick", function () {
-    	var q = d3.geom.quadtree(nodes),
-            i = 0,
-            n = nodes.length;
+    //force.on("tick", function () {
+    //	var q = d3.geom.quadtree(nodes),
+    //        i = 0,
+    //        n = nodes.length;
+    //
+    //	while (++i < n) 
+    //		q.visit(nodeColisionResolver(nodes[i]));
+    //	
+    //	update();
+    //});
     
-    	while (++i < n) 
-    		q.visit(nodeColisionResolver(nodes[i]));
-    	
-    	update();
-    });
-    
-    //update();
+    update();
     
     // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
     var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom",  

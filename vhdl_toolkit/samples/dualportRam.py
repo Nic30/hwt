@@ -3,6 +3,7 @@ from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.synthetisator.signal import Signal
 from vhdl_toolkit.variables import VHDLVariable
 from math import log2
+from vhdl_toolkit.synthetisator.codeOp import If
 
 
 def dualportRam(depth, width):
@@ -26,3 +27,4 @@ def dualportRam(depth, width):
         interf.extend([clk, we, en, addr, din, dout])
 
     return [interf, c]
+

@@ -20,20 +20,22 @@ def renderIfTree(assigments):
     
     for a in assigments:
         if a.cond:
-            cond = expr2cond(a.cond)
-            ic = IfContainer(cond, a)
+            tb = TreeBalancer(OpAnd)
+            cond = expr2cond(tb.balanceExprSet(list(a.cond)))
+            ic = IfContainer(cond, [a])
             yield ic
         else:
             yield a
 
 
 class Context(object):
+    """Context for synthetisator"""
     def __init__(self, name, debug=True):
         self.signals = []
         self.name = name
         self.debug = debug
     
-    def sig(self, name, width, clk=None, syncRst=None, defVal=None):
+    def sig(self, name, width=1, clk=None, syncRst=None, defVal=None):
         if self.debug and arr_any(self.signals, lambda x: x.name == name):
             raise Exception('signal name "%s" is not unique' % (name))
         
@@ -68,9 +70,9 @@ class Context(object):
             buff.append(self.sig(oldToNewNameFn(s.name), s.vat_type.width))
         return buff
         
-    def synthetize(self, name, interfaces):
+    def synthetize(self, interfaces):
         ent = Entity()
-        ent.name = name
+        ent.name = self.name
         
         for s in interfaces:
             ent.port.append(PortItemFromSignal(s))

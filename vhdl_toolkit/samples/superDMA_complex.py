@@ -12,7 +12,6 @@ from python_toolkit.arrayQuery import single
 def superDMA_complex():
     c = Context("superDMA_complex")
     interf = []          
-    # nterf, c = dualportRam(512, 64)   
 
     ch_cnt = 2
     workspace = "/home/nic30/Documents/vivado/toolkitTest/toolkitTest.srcs/sources_1/superDMA_complex/"

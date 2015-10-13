@@ -23,5 +23,5 @@ class IfContainer:
         self.ifFalse = ifFalse
     def __str__(self):
         condResult = Signal(None, VHDLBoolean())
-        VHDLTemplates.If.render(cond=exp__str__(condResult, self.cond), ifTrue=self.ifTrue, ifFalse = self.ifFalse)
+        return VHDLTemplates.If.render(cond=exp__str__(condResult, self.cond), ifTrue=self.ifTrue, ifFalse = self.ifFalse)
      

@@ -35,6 +35,7 @@ class HWProcess():
         self.bodyBuff.append("wait for clk_period * %d;" % (clkCnt))
     
     def __str__(self):
-        return VHDLTemplates.process.render({"name": self.name,
-              "sensitivityList": ", ".join(self.sensitivityList),
+        s = VHDLTemplates.process.render({"name": self.name,   \
+              "sensitivityList": ", ".join(self.sensitivityList), \
               "statements": [ str(s) for s in self.bodyBuff] })
+        return s
