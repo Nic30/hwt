@@ -52,10 +52,8 @@ function RoutingNode() {
 
 function generateLinks(nets) {
 	var links = [];
-	for (var i = 0; i < nets.length; i++) {
-		var net = nets[i];
-		for (var i2 = 0; i2 < net.targets.length; i2++) {
-			var target = net.targets[i2];
+	nets.forEach(function(net) {
+		net.targets.forEach(function(target) {
 			var link = {
 				"net" : net,
 				"source" : net.source.id,
@@ -64,8 +62,8 @@ function generateLinks(nets) {
 				"targetIndex" : target.portIndex
 			};
 			links.push(link);
-		}
-	}
+		});
+	});
 
 	return links;
 }
@@ -73,12 +71,10 @@ function generateLinks(nets) {
 // replaces ID with node object
 function resolveNodesInLinks(nodes, links) {
 	var dict = {};
-	for (var i = 0; i < nodes.length; i++) {
-		var n = nodes[i];
+	nodes.forEach(function(n) {
 		dict[n.id] = n;
-	}
-	for (var i = 0; i < links.length; i++) {
-		var l = links[i];
+	});
+	links.forEach(function(l) {
 		var s = dict[l.source];
 		var t = dict[l.target];
 		if (s === undefined || t == undefined) {
@@ -86,7 +82,7 @@ function resolveNodesInLinks(nodes, links) {
 		}
 		l.source = s;
 		l.target = t;
-	}
+	});
 }
 
 function components2columns(nodes, links) { // discover component with most
@@ -96,8 +92,7 @@ function components2columns(nodes, links) { // discover component with most
 	function findBiggestComponent(nodes) { // find component with biggest no of
 		// ports
 		var biggestComponent = null;
-		for (var i = 0; i < nodes.length; i++) {
-			var c = nodes[i];
+		nodes.forEach(function(c) {
 			if (biggestComponent) {
 				var portCnt = biggestComponent.inputs.length
 						+ biggestComponent.outputs.length;
@@ -107,7 +102,7 @@ function components2columns(nodes, links) { // discover component with most
 			} else {
 				biggestComponent = c;
 			}
-		}
+		});
 		return biggestComponent;
 	}
 	function constructTriplets(nodes, links) { // for each node discover what
@@ -120,8 +115,7 @@ function components2columns(nodes, links) { // discover component with most
 				right : new Set()
 			};
 		}
-		for (var i = 0; i < nodes.length; i++) {
-			var c = nodes[i];
+		nodes.forEach(function(c) {
 			var t = new Triplet();
 			t.me = c;
 			for (var i2 = 0; i2 < links.length; i2++) {
@@ -132,7 +126,7 @@ function components2columns(nodes, links) { // discover component with most
 					t.right.add(l.target)
 			}
 			triplets.push(t);
-		}
+		});
 		return triplets;
 	}
 
@@ -188,12 +182,12 @@ function components2columns(nodes, links) { // discover component with most
 		return y;
 	}
 
-	for (var i = 0; i < nodes.length; i++) {
-		var component = nodes[i];
+	nodes.forEach(function(component) {
 		component.width = columnWidth;
 		component.height = portHeight * 3 + portHeight
 				* Math.max(component.inputs.length, component.outputs.length);
-	}
+
+	});
 	function positionsForColumn(x, column) {
 		for (var y = 0; y < column.length; y++) {
 			var component = column[y];
@@ -313,7 +307,8 @@ function RoutingNodesContainer(nodes) {
 			}
 		}
 	}
-	for (var ni = 0; ni < nodes.length; ni++) { //add corner nodes and nod for each port
+	for (var ni = 0; ni < nodes.length; ni++) { // add corner nodes and nod for
+		// each port
 		var node = nodes[ni];
 		var leftTop = new RoutingNode();
 		leftTop.originComponent = node;
@@ -347,8 +342,7 @@ function RoutingNodesContainer(nodes) {
 							+ COMPONENT_PADDING ];
 		};
 		// insert port nodes
-		for (var i = 0; i < node.inputs.length; i++) {
-			var port = node.inputs[i];
+		node.inputs.forEach(function(port, i) {
 			var pn = new RoutingNode();
 			pn.originComponent = node;
 			pn.originPortIndex = i;
@@ -359,9 +353,8 @@ function RoutingNodesContainer(nodes) {
 								* portHeight ];
 			};
 			insertRNode(pn);
-		}
-		for (var i = 0; i < node.outputs.length; i++) {
-			var port = node.outputs[i];
+		});
+		node.outputs.forEach(function(port, i) {
 			var pn = new RoutingNode();
 			pn.originComponent = node;
 			pn.originPortIndex = i;
@@ -373,7 +366,8 @@ function RoutingNodesContainer(nodes) {
 								* portHeight ];
 			};
 			insertRNode(pn);
-		}
+		});
+
 		insertRNode(leftTop, true);
 		insertRNode(leftBottom, true);
 		insertRNode(rightTop, true);
@@ -395,7 +389,7 @@ function RoutingNodesContainer(nodes) {
 		}
 	}
 	grid.componetOutputNode = function(component, portIndex) {
-		var x = Math.ceil( component.x + component.width + COMPONENT_PADDING);
+		var x = Math.ceil(component.x + component.width + COMPONENT_PADDING);
 		var y = Math.ceil(component.y + (2 + portIndex) * portHeight);
 		return grid[x][y];
 
