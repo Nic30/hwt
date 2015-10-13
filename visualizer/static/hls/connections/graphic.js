@@ -57,7 +57,7 @@ function netMouseOut() {
 
 
 
-function redraw(links){ //main function for renderign components layout
+function redraw(nodes, links){ //main function for renderign components layout
 	var place = d3.select("#chartWraper").node().getBoundingClientRect();
 	d3.select("#chartWraper").selectAll("svg").remove(); // delete old on redraw
 	
