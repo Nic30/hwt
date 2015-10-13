@@ -313,7 +313,7 @@ function RoutingNodesContainer(nodes) {
 			}
 		}
 	}
-	for (var ni = 0; ni < nodes.length; ni++) {
+	for (var ni = 0; ni < nodes.length; ni++) { //add corner nodes and nod for each port
 		var node = nodes[ni];
 		var leftTop = RoutingNode();
 		leftTop.originComponent = node;
@@ -395,14 +395,14 @@ function RoutingNodesContainer(nodes) {
 		}
 	}
 	grid.componetOutputNode = function(component, portIndex) {
-		var x = component.x + component.width + COMPONENT_PADDING;
-		var y = component.y + (2 + portIndex) * portHeight;
+		var x = Math.ceil( component.x + component.width + COMPONENT_PADDING);
+		var y = Math.ceil(component.y + (2 + portIndex) * portHeight);
 		return grid[x][y];
 
 	}
 	grid.componetInputNode = function(component, portIndex) {
-		var x = component.x - COMPONENT_PADDING;
-		var y = component.y + (2 + portIndex) * portHeight;
+		var x = Math.ceil(component.x - COMPONENT_PADDING);
+		var y = Math.ceil(component.y + (2 + portIndex) * portHeight);
 		return grid[x][y];
 	}
 

@@ -187,7 +187,7 @@ function redraw(links){ //main function for renderign components layout
 		.data(flatenMap)
 		.enter().append("circle")
 		.style("fill", "steelblue")
-		.attr("r", 5)
+		.attr("r", 2)
 		.attr("cx", function(d){
 			return d.pos()[0];
 		})
@@ -198,12 +198,9 @@ function redraw(links){ //main function for renderign components layout
 		// route grids
 		for(var i = 0; i< links.length; i++ ){
 			var l = links[i];
-			var start = grid.componetOutputNode(l.source, l.sourceIndex);
-			var end = grid.componetInputNode(l.target, l.targetIndex);
-			var path = astar.search(grid, start, end );
-			
-			//render connection
-			
+			l.start = grid.componetOutputNode(l.source, l.sourceIndex);
+			l.end = grid.componetInputNode(l.target, l.targetIndex);
+			l.path = astar.search(grid, l.start, l.end );
 		}
 		//// line to parent componet
 		//svgGroup.selectAll("#debuglink").data(flatenMap)
@@ -220,11 +217,25 @@ function redraw(links){ //main function for renderign components layout
 		
 		//print link between them
     	link.attr("d", function (d) {
-            var sx = d.source.x + d.source.width;
-            var sy = d.source.y + portsOffset + d.sourceIndex * portHeight;
-            var tx = d.target.x;
-            var ty = d.target.y + portsOffset + d.targetIndex * portHeight;
-            return "M" + sx + "," + sy + " L " + tx + "," + ty;
+			var sp = d.start.pos();
+			var pathStr = " M" + [sp[0] - COMPONENT_PADDING , sp[1]]; //connection from port node to port
+			pathStr += " L " + sp +"\n";
+
+			for(var pi = 0; pi< d.path.length; pi++){
+				var p = d.path[pi];
+				pathStr += " L " + p.pos() +"\n";
+			}
+			var ep = l.end.pos();
+			pathStr += " L " + ep +"\n";
+			pathStr += " L " + [ep[0]+COMPONENT_PADDING, ep[1]]+"\n";
+			
+
+			return pathStr;
+    		//            var sx = d.source.x + d.source.width;
+			//            var sy = d.source.y + portsOffset + d.sourceIndex * portHeight;
+			//            var tx = d.target.x;
+			//            var ty = d.target.y + portsOffset + d.targetIndex * portHeight;
+			//            return "M" + sx + "," + sy + " L " + tx + "," + ty;
         });
 	};
 	
