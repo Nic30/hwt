@@ -232,7 +232,7 @@ function components2columns(nodes, links) { // discover component with most
 function RoutingNodesContainer(nodes) {
 	var grid = [];
 
-	function insertRNode(rnode) {
+	function insertRNode(rnode, canGoLeftAndRight) {
 		var pos = rnode.pos();
 		var x = Math.ceil(pos[0]);
 		var y = Math.ceil(pos[1]);
@@ -277,35 +277,37 @@ function RoutingNodesContainer(nodes) {
 			}
 		}
 
-		// connect left
-		for (var i = x - 1; i >= 0; i--) {
-			var col = grid[i];
-			if (col) {
-				var ln = col[y];
-				if (ln) {
-					if (ln.right) {
-						rnode.right = ln.right;
-						rnode.right.left = rnode;
-						rightFound = true;
-					}
-					rnode.left = ln;
-					break;
-				}
-			}
-
-		}
-		// find right
-		if (!rightFound) {
-			for (var i = x + 1; i < grid.length; i++) {
+		if (canGoLeftAndRight) {
+			// connect left
+			for (var i = x - 1; i >= 0; i--) {
 				var col = grid[i];
 				if (col) {
-					var rn = col[y];
-					if (rn) {
-						if (rnode.right)
-							throw "right should be found recently";
-						rnode.right = rn;
-						rn.left = rnode;
+					var ln = col[y];
+					if (ln) {
+						if (ln.right) {
+							rnode.right = ln.right;
+							rnode.right.left = rnode;
+							rightFound = true;
+						}
+						rnode.left = ln;
 						break;
+					}
+				}
+
+			}
+			// find right
+			if (!rightFound) {
+				for (var i = x + 1; i < grid.length; i++) {
+					var col = grid[i];
+					if (col) {
+						var rn = col[y];
+						if (rn) {
+							if (rnode.right)
+								throw "right should be found recently";
+							rnode.right = rn;
+							rn.left = rnode;
+							break;
+						}
 					}
 				}
 			}
@@ -352,20 +354,30 @@ function RoutingNodesContainer(nodes) {
 			pn.originPortIndex = i;
 			pn.pos = function() {
 				return [
-						this.originComponent.x + this.originPort.width
-								+ COMPONENT_PADDING,
-						this.originComponent.y + this.originComponent.height
-								+ COMPONENT_PADDING ];
+						this.originComponent.x - COMPONENT_PADDING,
+						this.originComponent.y + (2 + this.originPortIndex)
+								* portHeight ];
 			};
+			insertRNode(pn);
 		}
 		for (var i = 0; i < node.outputs.length; i++) {
 			var port = node.outputs[i];
-
+			var pn = RoutingNode();
+			pn.originComponent = node;
+			pn.originPortIndex = i;
+			pn.pos = function() {
+				return [
+						this.originComponent.x + +this.originComponent.width
+								+ COMPONENT_PADDING,
+						this.originComponent.y + (2 + this.originPortIndex)
+								* portHeight ];
+			};
+			insertRNode(pn);
 		}
-		insertRNode(leftTop);
-		insertRNode(leftBottom);
-		insertRNode(rightTop);
-		insertRNode(rightBottom);
+		insertRNode(leftTop, true);
+		insertRNode(leftBottom, true);
+		insertRNode(rightTop, true);
+		insertRNode(rightBottom, true);
 
 	}
 
@@ -383,10 +395,15 @@ function RoutingNodesContainer(nodes) {
 		}
 	}
 	grid.componetOutputNode = function(component, portIndex) {
+		var x = component.x + component.width + COMPONENT_PADDING;
+		var y = component.y + (2 + portIndex) * portHeight;
+		return grid[x][y];
 
 	}
 	grid.componetInputNode = function(component, portIndex) {
-
+		var x = component.x - COMPONENT_PADDING;
+		var y = component.y + (2 + portIndex) * portHeight;
+		return grid[x][y];
 	}
 
 	return grid;

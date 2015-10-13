@@ -103,7 +103,7 @@ function redraw(links){ //main function for renderign components layout
 	// input port wraps
 	var port_inputs = wrap.append("g")
 		.attr("transform", function(d) { 
-			return "translate(" + 0 + "," + 3*portHeight + ")"; 
+			return "translate(" + 0 + "," + 2*portHeight + ")"; 
 		})
 		.selectAll("g .port-input")
 		.data(function (d){
@@ -119,7 +119,7 @@ function redraw(links){ //main function for renderign components layout
 			return "/static/hls/connections/arrow_right.ico"; 
 		})
 		.attr("y", function(d, i){
-			return (i-1)*portHeight;
+			return i*portHeight;
 		})
 		.attr("width", 10)
 		.attr("height", portHeight);
@@ -139,7 +139,7 @@ function redraw(links){ //main function for renderign components layout
 	var port_out = wrap.append("g")
 		.attr("transform", function(d) { 
 			var componentWidth = d3.select(this).node().parentNode.getBoundingClientRect().width;
-			return "translate(" + componentWidth/2 + "," + 3*portHeight + ")"; 
+			return "translate(" + componentWidth/2 + "," + 2*portHeight + ")"; 
 		})
 		.selectAll("g .port-group")
 		.data(function (d){
@@ -196,14 +196,15 @@ function redraw(links){ //main function for renderign components layout
 		});
 		
 		// route grids
-		//for(var i = 0; i< links.length; i++ ){
-		//	var l = links[i];
-		//	var start = grid.componetOutputNode(l.souce, l.portIndex);
-		//	var end = grid.componetInputNode(l.target, l.targetIndex);
-		//	var path = astar.search(grid, start, end );
-		//	
-		//	
-		//}
+		for(var i = 0; i< links.length; i++ ){
+			var l = links[i];
+			var start = grid.componetOutputNode(l.source, l.sourceIndex);
+			var end = grid.componetInputNode(l.target, l.targetIndex);
+			var path = astar.search(grid, start, end );
+			
+			//render connection
+			
+		}
 		//// line to parent componet
 		//svgGroup.selectAll("#debuglink").data(flatenMap)
 		//.enter()
