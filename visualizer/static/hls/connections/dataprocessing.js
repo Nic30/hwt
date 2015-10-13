@@ -315,13 +315,13 @@ function RoutingNodesContainer(nodes) {
 	}
 	for (var ni = 0; ni < nodes.length; ni++) { //add corner nodes and nod for each port
 		var node = nodes[ni];
-		var leftTop = RoutingNode();
+		var leftTop = new RoutingNode();
 		leftTop.originComponent = node;
 		leftTop.pos = function() {
 			return [ this.originComponent.x - COMPONENT_PADDING,
 					this.originComponent.y - COMPONENT_PADDING ];
 		};
-		var leftBottom = RoutingNode();
+		var leftBottom = new RoutingNode();
 		leftBottom.originComponent = node;
 		leftBottom.pos = function() {
 			return [
@@ -329,7 +329,7 @@ function RoutingNodesContainer(nodes) {
 					this.originComponent.y + this.originComponent.height
 							+ COMPONENT_PADDING ];
 		};
-		var rightTop = RoutingNode();
+		var rightTop = new RoutingNode();
 		rightTop.originComponent = node;
 		rightTop.pos = function() {
 			return [
@@ -337,7 +337,7 @@ function RoutingNodesContainer(nodes) {
 							+ COMPONENT_PADDING,
 					this.originComponent.y - COMPONENT_PADDING ];
 		};
-		var rightBottom = RoutingNode();
+		var rightBottom = new RoutingNode();
 		rightBottom.originComponent = node;
 		rightBottom.pos = function() {
 			return [
@@ -349,7 +349,7 @@ function RoutingNodesContainer(nodes) {
 		// insert port nodes
 		for (var i = 0; i < node.inputs.length; i++) {
 			var port = node.inputs[i];
-			var pn = RoutingNode();
+			var pn = new RoutingNode();
 			pn.originComponent = node;
 			pn.originPortIndex = i;
 			pn.pos = function() {
@@ -362,7 +362,7 @@ function RoutingNodesContainer(nodes) {
 		}
 		for (var i = 0; i < node.outputs.length; i++) {
 			var port = node.outputs[i];
-			var pn = RoutingNode();
+			var pn = new RoutingNode();
 			pn.originComponent = node;
 			pn.originPortIndex = i;
 			pn.pos = function() {

@@ -67,8 +67,8 @@ function redraw(nodes, links){ //main function for renderign components layout
 		.distance(150)
 		.charge(-2000)
 		.size([place.width, place.height])
-		.nodes(nodes)
-		.links(links)
+		//.nodes(nodes)
+		//.links(links)
 		//.start();
 	
 	var svg = d3.select("#chartWraper").append("svg");
@@ -119,7 +119,7 @@ function redraw(nodes, links){ //main function for renderign components layout
 			return "/static/hls/connections/arrow_right.ico"; 
 		})
 		.attr("y", function(d, i){
-			return i*portHeight;
+			return (i-0.5)*portHeight;
 		})
 		.attr("width", 10)
 		.attr("height", portHeight);
@@ -176,32 +176,32 @@ function redraw(nodes, links){ //main function for renderign components layout
 		wrap.attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
-		var grid = RoutingNodesContainer(nodes);
+		var grid = new RoutingNodesContainer(nodes);
 		
-		//create debug dots for routing nodes
-		var flatenMap = [];
-		grid.visitFromLeftTop(function(c){
-			flatenMap.push(c);
-		});
-		svgGroup.selectAll("circle")
-		.data(flatenMap)
-		.enter().append("circle")
-		.style("fill", "steelblue")
-		.attr("r", 2)
-		.attr("cx", function(d){
-			return d.pos()[0];
-		})
-		.attr("cy", function(d){
-			return d.pos()[1];
-		});
+		////create debug dots for routing nodes
+		//var flatenMap = [];
+		//grid.visitFromLeftTop(function(c){
+		//	flatenMap.push(c);
+		//});
+		//svgGroup.selectAll("circle")
+		//.data(flatenMap)
+		//.enter().append("circle")
+		//.style("fill", "steelblue")
+		//.attr("r", 2)
+		//.attr("cx", function(d){
+		//	return d.pos()[0];
+		//})
+		//.attr("cy", function(d){
+		//	return d.pos()[1];
+		//});
 		
 		// route grids
-		for(var i = 0; i< links.length; i++ ){
-			var l = links[i];
+		links.forEach(function (l){
 			l.start = grid.componetOutputNode(l.source, l.sourceIndex);
 			l.end = grid.componetInputNode(l.target, l.targetIndex);
 			l.path = astar.search(grid, l.start, l.end );
-		}
+		})
+
 		//// line to parent componet
 		//svgGroup.selectAll("#debuglink").data(flatenMap)
 		//.enter()
@@ -225,7 +225,7 @@ function redraw(nodes, links){ //main function for renderign components layout
 				var p = d.path[pi];
 				pathStr += " L " + p.pos() +"\n";
 			}
-			var ep = l.end.pos();
+			var ep = d.end.pos();
 			pathStr += " L " + ep +"\n";
 			pathStr += " L " + [ep[0]+COMPONENT_PADDING, ep[1]]+"\n";
 			
