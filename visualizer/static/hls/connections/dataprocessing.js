@@ -90,11 +90,11 @@ function resolveNodesInLinks(nodes, links) {
 }
 
 function components2columns(nodes, links) { // discover component with most
-											// ports (bigger) then go on both
-											// sides and assign components to
-											// columns
+	// ports (bigger) then go on both
+	// sides and assign components to
+	// columns
 	function findBiggestComponent(nodes) { // find component with biggest no of
-											// ports
+		// ports
 		var biggestComponent = null;
 		for (var i = 0; i < nodes.length; i++) {
 			var c = nodes[i];
@@ -111,7 +111,7 @@ function components2columns(nodes, links) { // discover component with most
 		return biggestComponent;
 	}
 	function constructTriplets(nodes, links) { // for each node discover what
-												// is on left and right side
+		// is on left and right side
 		var triplets = [];
 		function Triplet() { // triplet obj constructor
 			return {
@@ -360,7 +360,7 @@ function RoutingNodesContainer(nodes) {
 		}
 		for (var i = 0; i < node.outputs.length; i++) {
 			var port = node.outputs[i];
-			
+
 		}
 		insertRNode(leftTop);
 		insertRNode(leftBottom);
@@ -381,6 +381,12 @@ function RoutingNodesContainer(nodes) {
 				}
 			}
 		}
+	}
+	grid.componetOutputNode = function(component, portIndex) {
+
+	}
+	grid.componetInputNode = function(component, portIndex) {
+
 	}
 
 	return grid;

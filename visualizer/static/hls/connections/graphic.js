@@ -196,12 +196,14 @@ function redraw(links){ //main function for renderign components layout
 		});
 		
 		// route grids
-		for(var i = 0; i< links.length; i++ ){
-			var l = links[i];
-			var start = grid.componetOutputNode(l.souce, l.portIndex);
-			var end = grid.componetInputNode(l.target, l.targetIndex);
-			var path = astar.search(grid, start, end );
-		}
+		//for(var i = 0; i< links.length; i++ ){
+		//	var l = links[i];
+		//	var start = grid.componetOutputNode(l.souce, l.portIndex);
+		//	var end = grid.componetInputNode(l.target, l.targetIndex);
+		//	var path = astar.search(grid, start, end );
+		//	
+		//	
+		//}
 		//// line to parent componet
 		//svgGroup.selectAll("#debuglink").data(flatenMap)
 		//.enter()
