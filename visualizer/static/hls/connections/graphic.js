@@ -201,6 +201,19 @@ function redraw(nodes, links){ //main function for renderign components layout
 			l.end = grid.componetInputNode(l.target, l.targetIndex);
 			l.path = astar.search(grid, l.start, l.end );
 		})
+		
+		/*
+		 * paths keep out ideology:
+		 *  for each routing node build vertical and horizontal netlist
+		 *    if path is curved in this node vertical index == horizontal index
+		 *    if there is path from same net join them
+		 *  for each component increase padding to let space for nets
+		 *  from each node extract routing node position for this path (use horizontal and/or vertical index, this node pos and NET_PADDING )
+		 *  draw path    
+		 * */
+		links.forEach(function (l){
+
+		})
 
 		//// line to parent componet
 		//svgGroup.selectAll("#debuglink").data(flatenMap)
