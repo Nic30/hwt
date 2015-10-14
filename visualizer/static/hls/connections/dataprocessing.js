@@ -189,13 +189,13 @@ function components2columns(nodes, links) { // discover component with most
 
 	});
 	function positionsForColumn(x, column) {
-		for (var y = 0; y < column.length; y++) {
-			var component = column[y];
+		column.forEach(function(component, y) {
 			component.x = COMPONENT_PADDING
 					+ (columnWidth + 2 * COMPONENT_PADDING) * x;
 			component.y = COMPONENT_PADDING + heightOfPrevious(column, y);
-		}
+		});
 	}
+	// set possitions forEach column
 	for (var x = 0; x < columns.length(); x++) {
 		var column = columns.accessFromLeft(x);
 		positionsForColumn(x, column);
