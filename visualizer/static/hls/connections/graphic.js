@@ -1,4 +1,4 @@
-;;function doesRectangleOverlap(a, b) {
+function doesRectangleOverlap(a, b) {
 	  return (Math.abs(a.x - b.x) * 2 < (a.width + b.width)) &&
 	         (Math.abs(a.y - b.y) * 2 < (a.height + b.height));
 }
