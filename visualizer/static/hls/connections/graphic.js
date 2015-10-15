@@ -92,12 +92,22 @@ function redraw(nodes, links){ //main function for renderign components layout
 	    .attr("width", function(d) { return d.width})
 	    .attr("height", function(d) { return d.height});
 	
+	//var externalPorts = wrap.filter( function(d){ return d.inputs.length + d.outputs.length == 1});	
+	//externalPorts.classed({"external-port" :true});
+	//wrap = wrap.filter( function(d){ return d.inputs.length + d.outputs.length != 1});	
+
+
 	// component name [TODO] text nad komponentu
 	wrap.append('text')
-		.attr("y", 10)
+		.classed({"component-title": true})
+		.attr("y", 10)	
+		.attr("x", function(d){
+			return d.width/2;
+		})
 		.text(function(d) {
 		    return d.name;
-		});
+		})
+		//.attr("font-size", 40);
 
 	// [TODO] porty s dratkem ven z komponenty, ruzne typy portu viz stream/bus/wire ve Vivado
 	// input port wraps

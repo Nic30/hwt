@@ -49,8 +49,18 @@ svg {
 	/*text-anchor: middle;*/
 }
 
-.component .port-input {
+.component .component-title {
+	fill: red;
+	text-anchor: middle;
+}
+
+.component .port-input text{
 	fill: black;
+}
+
+.component .port-output text{
+	fill: black;
+	text-anchor: end;
 }
 
 path.link {
@@ -62,4 +72,9 @@ path.link {
 path.link-selected {
     stroke: red;
     stroke-width: 1px;
+}
+
+.external-port {
+	fill : green;
+
 }
