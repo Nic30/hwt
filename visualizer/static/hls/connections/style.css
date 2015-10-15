@@ -6,6 +6,7 @@ svg {
 	position: absolute;
 	/*top: 0;
 	left: 0;*/
+
 }
 
 .node rect {
@@ -41,25 +42,29 @@ svg {
 }
 
 .component {
-	fill: #AFEEEE;
-}
+	/*fill: #AFEEEE;*/
+}	
 
 .component text {
 	fill: black;
+	font-size: 9pt; 
 	/*text-anchor: middle;*/
 }
 
 .component .component-title {
-	fill: red;
+	/*fill: #2E64FE;*/
 	text-anchor: middle;
+	font-size: 10pt; 
 }
 
 .component .port-input text{
 	fill: black;
+	font-variant: small-caps;
 }
 
 .component .port-output text{
 	fill: black;
+	font-variant: small-caps;
 	text-anchor: end;
 }
 
