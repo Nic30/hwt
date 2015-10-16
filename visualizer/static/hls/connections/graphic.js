@@ -74,6 +74,68 @@ function redraw(nodes, links){ //main function for renderign components layout
 	var svg = d3.select("#chartWraper").append("svg");
 	var svgGroup= svg.append("g"); // because of zooming/moving
 
+	/**add shadow*************************************/
+	//Dufam ze navadi ze som to skopirovala :D ak pojde ten tien inac radsej to prerobme
+	
+	// filters go in defs element
+	var defs = svg.append("defs");
+
+	// create filter with id #drop-shadow
+	// height=130% so that the shadow is not clipped
+	var filter = defs.append("filter")
+	    .attr("id", "drop-shadow")
+	    .attr("height", "130%");
+
+	// SourceAlpha refers to opacity of graphic that this filter will be applied to
+	// convolve that with a Gaussian with standard deviation 3 and store result
+	// in blur
+	filter.append("feGaussianBlur")
+	    .attr("in", "SourceAlpha")
+	    .attr("stdDeviation", 1)
+	    .attr("result", "blur");
+
+	// translate output of Gaussian blur to the right and downwards with 2px
+	// store result in offsetBlur
+	filter.append("feOffset")
+	    .attr("in", "blur")
+	    .attr("dx", 2)
+	    .attr("dy", 2)
+	    .attr("result", "offsetBlur");
+
+	// overlay original SourceGraphic over translated blurred opacity by using
+	// feMerge filter. Order of specifying inputs is important!
+	var feMerge = filter.append("feMerge");
+
+	feMerge.append("feMergeNode")
+	    .attr("in", "offsetBlur")
+	feMerge.append("feMergeNode")
+	    .attr("in", "SourceGraphic");
+
+	//gradient
+	var minY = 10;
+	var maxY = 210;
+
+	var gradient = svg
+    .append("linearGradient")
+    .attr("y1", minY)
+    .attr("y2", maxY)
+    .attr("x1", "0")
+    .attr("x2", "0")
+    .attr("id", "gradient")
+    .attr("gradientUnits", "userSpaceOnUse")
+    
+	gradient
+    .append("stop")
+    .attr("offset", "0")
+    .attr("stop-color", "#E6E6E6")
+    
+	gradient
+    .append("stop")
+    .attr("offset", "0.5")
+    .attr("stop-color", "#A9D0F5")    
+
+	/************************************/
+
 	//alias component body
 	var wrap = svgGroup.selectAll("g")
 		.data(nodes)
@@ -84,20 +146,35 @@ function redraw(nodes, links){ //main function for renderign components layout
 	    	return "translate(" + [ d.x,d.y ] + ")"; 
 	    })
 	    .call(force.drag); //component dragging
-	
+
 	// background
 	wrap.append("rect")
 	    .attr("rx", 5) // this make rounded corners
 	    .attr("ry", 5)
+	    .classed({"component": true})
+	    .attr("border", 1)
+	    .style("stroke", "#BDBDBD")
+	    .attr("fill", "url(#gradient)")
+	    .style("filter", "url(#drop-shadow)")
 	    .attr("width", function(d) { return d.width})
 	    .attr("height", function(d) { return d.height});
 	
+	//var externalPorts = wrap.filter( function(d){ return d.inputs.length + d.outputs.length == 1});	
+	//externalPorts.classed({"external-port" :true});
+	//wrap = wrap.filter( function(d){ return d.inputs.length + d.outputs.length != 1});	
+
+
 	// component name [TODO] text nad komponentu
 	wrap.append('text')
-		.attr("y", 10)
+		.classed({"component-title": true})
+		.attr("y", 0)	
+		.attr("x", function(d){
+			return d.width/2;
+		})
 		.text(function(d) {
 		    return d.name;
-		});
+		})
+		//.attr("font-size", 40);
 
 	// [TODO] porty s dratkem ven z komponenty, ruzne typy portu viz stream/bus/wire ve Vivado
 	// input port wraps
@@ -128,7 +205,7 @@ function redraw(nodes, links){ //main function for renderign components layout
 	port_inputs.append('text')
 		.attr("x", 10)
 		.attr("y", function(d, i){
-			return i*portHeight;
+			return (i+0.3)*portHeight;
 		})
 		.attr("height", portHeight)
 		.text(function(portName) { 
@@ -139,7 +216,7 @@ function redraw(nodes, links){ //main function for renderign components layout
 	var port_out = wrap.append("g")
 		.attr("transform", function(d) { 
 			var componentWidth = d3.select(this).node().parentNode.getBoundingClientRect().width;
-			return "translate(" + componentWidth/2 + "," + 2*portHeight + ")"; 
+			return "translate(" + componentWidth + "," + 2*portHeight + ")"; 
 		})
 		.selectAll("g .port-group")
 		.data(function (d){
@@ -148,17 +225,31 @@ function redraw(nodes, links){ //main function for renderign components layout
 		.enter()
 		.append('g')
 		.classed({"port-output": true});
-	
+
+	//  output port image
+	port_out.append("image")
+		.attr("xlink:href", function(d) { 
+			return "/static/hls/connections/arrow_right.ico"; 
+		})
+		.attr("x", -10)
+		.attr("y", function(d, i){
+			return (i-0.5)*portHeight;
+		})
+		.attr("width", 10)
+		.attr("height", portHeight);	
+
 	// portName text
 	port_out.append('text') 
-		.attr("x", 10)
+		.attr("x", -10)	// posunuty okrej o 10 dolava
 		.attr("y", function(d, i){
-			return i*portHeight;
+			return (i+0.3)*portHeight; //Zuzana: neviem ci je spravne manualne posunutie prvku ale vyzera to dobre, zalezi aj od velkosti fontu
 		})
 		.attr("height", portHeight)
 		.text(function(portName) { 
 			return portName; 
 		});
+
+
 	
 	//grid higlight
     var link = svgGroup.selectAll(".link")
