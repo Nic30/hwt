@@ -183,15 +183,15 @@ function components2columns(nodes, links) { // discover component with most
 	}
 
 	nodes.forEach(function(component) {
-		component.width = columnWidth;
-		component.height = portHeight * 3 + portHeight
+		component.width = COLUMN_WIDTH;
+		component.height = PORT_HEIGHT * 3 + PORT_HEIGHT
 				* Math.max(component.inputs.length, component.outputs.length);
 
 	});
 	function positionsForColumn(x, column) {
 		column.forEach(function(component, y) {
 			component.x = COMPONENT_PADDING
-					+ (columnWidth + 2 * COMPONENT_PADDING) * x;
+					+ (COLUMN_WIDTH + 2 * COMPONENT_PADDING) * x;
 			component.y = COMPONENT_PADDING + heightOfPrevious(column, y);
 		});
 	}
@@ -350,7 +350,7 @@ function RoutingNodesContainer(nodes) {
 				return [
 						this.originComponent.x - COMPONENT_PADDING,
 						this.originComponent.y + (2 + this.originPortIndex)
-								* portHeight ];
+								* PORT_HEIGHT ];
 			};
 			insertRNode(pn);
 		});
@@ -363,7 +363,7 @@ function RoutingNodesContainer(nodes) {
 						this.originComponent.x + +this.originComponent.width
 								+ COMPONENT_PADDING,
 						this.originComponent.y + (2 + this.originPortIndex)
-								* portHeight ];
+								* PORT_HEIGHT ];
 			};
 			insertRNode(pn);
 		});
@@ -390,13 +390,13 @@ function RoutingNodesContainer(nodes) {
 	}
 	grid.componetOutputNode = function(component, portIndex) {
 		var x = Math.ceil(component.x + component.width + COMPONENT_PADDING);
-		var y = Math.ceil(component.y + (2 + portIndex) * portHeight);
+		var y = Math.ceil(component.y + (2 + portIndex) * PORT_HEIGHT);
 		return grid[x][y];
 
 	}
 	grid.componetInputNode = function(component, portIndex) {
 		var x = Math.ceil(component.x - COMPONENT_PADDING);
-		var y = Math.ceil(component.y + (2 + portIndex) * portHeight);
+		var y = Math.ceil(component.y + (2 + portIndex) * PORT_HEIGHT);
 		return grid[x][y];
 	}
 
