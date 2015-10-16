@@ -200,8 +200,11 @@ function redraw(nodes, links){ //main function for renderign components layout
 			l.start = grid.componetOutputNode(l.source, l.sourceIndex);
 			l.end = grid.componetInputNode(l.target, l.targetIndex);
 			l.path = astar.search(grid, l.start, l.end );
-		})
-		
+		});
+		grid.visitFromLeftTop(function (n){
+			n.vertical = [];
+			n.horizontal = [];
+		});
 		/*
 		 * paths keep out ideology:
 		 *  for each routing node build vertical and horizontal netlist
@@ -211,8 +214,53 @@ function redraw(nodes, links){ //main function for renderign components layout
 		 *  from each node extract routing node position for this path (use horizontal and/or vertical index, this node pos and NET_PADDING )
 		 *  draw path    
 		 * */
-		links.forEach(function (l){
-
+		function walkLinkPath(link, fn){
+			if( !link.path || link.path.length == 0){
+				fn(link.start,link.end);
+			}else{
+				fn(link.start, link.path[0]);
+				for(var i =0; i< link.path.length; i++){
+					if(i==link.path.length -1){
+						fn(link.path[i], link.end);
+					}else{
+						fn(link.path[i],link.path[i+1]);
+					}
+				}
+			}
+			fn(link.end);	
+		}
+		function add2routingNode(arrA, arrB, net){
+			if(arrA.indexOf(net) >= 0){
+				return; // net is already routed on this node
+			}
+			var minIndex = arrB.indexOf(net);
+			if(minIndex < 0)
+				minIndex =0;
+			if(minIndex < arrA.length)
+				minIndex = arrA.length;
+			arrA[minIndex] = net;
+		}
+		function add2verticalList(node, link){
+			add2routingNode(node.vertical, node.horizontal, link.net);
+		}
+		function add2horizontalList(node, link){
+			add2routingNode(node.horizontal, node.vertical, link.net);
+		}
+		
+		links.forEach(function (link){
+			walkLinkPath(link, function (node, next){
+				if(next){
+					if(node.left == next || node.right == next){
+						add2verticalList(node, link);
+					}
+					if(node.top == next || node.bottom == next){
+						add2horizontalList(node, link);
+					}
+				}else{
+					add2horizontalList(node, link);
+					//add2verticalList(node, link);
+				}
+			});
 		})
 
 		//// line to parent componet
@@ -227,21 +275,42 @@ function redraw(nodes, links){ //main function for renderign components layout
         //    var ty = d.originComponent.y ;
         //    return "M" + sx + "," + sy + " L " + tx + "," + ty;
         //});
-		
+		function offsetFromNodeNetLists(node, net){
+			var x= NET_PADDING,
+				y= NET_PADDING;
+			
+			var xindx= node.horizontal.indexOf(net);
+			if(xindx > 0)
+				x += xindx*NET_PADDING;
+			
+			var yindx= node.vertical.indexOf(net);
+			if(yindx > 0)
+				y += yindx*NET_PADDING;
+			
+			return [x, y];
+		}
+		function pointAdd(a, b){
+			a[0] += b[0];
+			a[1] += b[1];			
+		}
 		//print link between them
     	link.attr("d", function (d) {
 			var sp = d.start.pos();
+			var spOffset = offsetFromNodeNetLists(d.start, d.net);
 			var pathStr = " M" + [sp[0] - COMPONENT_PADDING , sp[1]]; //connection from port node to port
+			pointAdd(sp, spOffset);
 			pathStr += " L " + sp +"\n";
 
 			for(var pi = 0; pi< d.path.length; pi++){
 				var p = d.path[pi];
-				pathStr += " L " + p.pos() +"\n";
+				spOffset = offsetFromNodeNetLists(p, d.net);
+				sp = p.pos();
+				pointAdd(sp, spOffset);
+				pathStr += " L " + sp +"\n";
 			}
 			var ep = d.end.pos();
 			pathStr += " L " + ep +"\n";
 			pathStr += " L " + [ep[0]+COMPONENT_PADDING, ep[1]]+"\n";
-			
 
 			return pathStr;
     		//            var sx = d.source.x + d.source.width;
