@@ -54,7 +54,6 @@ function netMouseOut() {
 	  .classed("link-selected", false);
 }
 
-
 function addShadows(svg){
 	// filters go in defs element
 	var defs = svg.append("defs");
@@ -114,98 +113,60 @@ function addShadows(svg){
     .attr("stop-color", "#A9D0F5")    
 }
 
-function updateLayout(componentWrap, linkElements, links){
+function updateLayout(svgGroup, componentWrap, linkElements, links){ // move component on its positions and redraw links between them
 	//move component on its position
 	componentWrap.attr("transform", function (d) {
         return "translate(" + d.x + "," + d.y + ")";
     });
 	var grid = new RoutingNodesContainer(nodes);
-	
-	////create debug dots for routing nodes
-	//var flatenMap = [];
-	//grid.visitFromLeftTop(function(c){
-	//	flatenMap.push(c);
-	//});
-	//svgGroup.selectAll("circle")
-	//.data(flatenMap)
-	//.enter().append("circle")
-	//.style("fill", "steelblue")
-	//.attr("r", 2)
-	//.attr("cx", function(d){
-	//	return d.pos()[0];
-	//})
-	//.attr("cy", function(d){
-	//	return d.pos()[1];
-	//});
-	
-	// route grids
-	links.forEach(function (l){
-		l.start = grid.componetOutputNode(l.source, l.sourceIndex);
-		l.end = grid.componetInputNode(l.target, l.targetIndex);
-		l.path = astar.search(grid, l.start, l.end );
-	});
 	grid.visitFromLeftTop(function (n){
 		n.vertical = [];
 		n.horizontal = [];
 	});
-	/*
-	 * paths keep out ideology:
-	 *  for each routing node build vertical and horizontal netlist
-	 *    if path is curved in this node vertical index == horizontal index
-	 *    if there is path from same net join them
-	 *  for each component increase padding to let space for nets
-	 *  from each node extract routing node position for this path (use horizontal and/or vertical index, this node pos and NET_PADDING )
-	 *  draw path    
-	 * */
-	function walkLinkPath(link, fn){
-		if( !link.path || link.path.length == 0){
-			fn(link.start,link.end);
-		}else{
-			fn(link.start, link.path[0]);
-			for(var i =0; i< link.path.length; i++){
-				if(i==link.path.length -1){
-					fn(link.path[i], link.end);
-				}else{
-					fn(link.path[i],link.path[i+1]);
-				}
-			}
-		}
-		fn(link.end);	
-	}
-	function add2routingNode(arrA, arrB, net){
-		if(arrA.indexOf(net) >= 0){
-			return; // net is already routed on this node
-		}
-		var minIndex = arrB.indexOf(net);
-		if(minIndex < 0)
-			minIndex =0;
-		if(minIndex < arrA.length)
-			minIndex = arrA.length;
-		arrA[minIndex] = net;
-	}
-	function add2verticalList(node, link){
-		add2routingNode(node.vertical, node.horizontal, link.net);
-	}
-	function add2horizontalList(node, link){
-		add2routingNode(node.horizontal, node.vertical, link.net);
-	}
-	
-	links.forEach(function (link){
-		walkLinkPath(link, function (node, next){
-			if(next){
-				if(node.left == next || node.right == next){
-					add2verticalList(node, link);
-				}
-				if(node.top == next || node.bottom == next){
-					add2horizontalList(node, link);
-				}
-			}else{
-				add2horizontalList(node, link);
-				//add2verticalList(node, link);
-			}
-		});
+	//create debug dots for routing nodes
+	var toolTipDiv = d3.select("body").append("div")   
+	    .attr("class", "tooltip")               
+	    .style("opacity", 0);
+	var flatenMap = [];
+	grid.visitFromLeftTop(function(c){
+		flatenMap.push(c);
+	});
+	svgGroup.selectAll("circle")
+	.data(flatenMap)
+	.enter().append("circle")
+	.style("fill", "steelblue")
+	.attr("r", 2)
+	.attr("cx", function(d){
+		return d.pos()[0];
 	})
-
+	.attr("cy", function(d){
+		return d.pos()[1];
+	}) 
+    .on("mouseover", function(d) {  
+    	var html = "<b>horizontal:</b><ol>"
+			d.horizontal.forEach(function (net){
+				html += "<li>" + net.name  + "</li>";
+			});
+    	html += "</ol><b>vertical:</b><ol>";
+    	d.vertical.forEach(function (net){
+			html += "<li>" + net.name  + "</li>";
+		});
+    	html += "</ol>";
+    	
+    	
+    	toolTipDiv.transition()        
+            .duration(100)      
+            .style("opacity", .9);      
+    	toolTipDiv.html(html)
+            .style("left", d3.event.pageX + "px")     
+            .style("top", (d3.event.pageY - 28) + "px");    
+    })                  
+    .on("mouseout", function(d) {       
+    	toolTipDiv.transition()        
+            .duration(200)      
+            .style("opacity", 0);   
+    });
+	
 	//// line to parent componet
 	//svgGroup.selectAll("#debuglink").data(flatenMap)
 	//.enter()
@@ -218,20 +179,202 @@ function updateLayout(componentWrap, linkElements, links){
     //    var ty = d.originComponent.y ;
     //    return "M" + sx + "," + sy + " L " + tx + "," + ty;
     //});
-	function offsetFromNodeNetLists(node, net){
-		var x= NET_PADDING,
-			y= NET_PADDING;
+	
+	// route grids
+	links.forEach(function (l){
+		l.start = grid.componetOutputNode(l.source, l.sourceIndex);
+		l.end = grid.componetInputNode(l.target, l.targetIndex);
+		l.path = astar.search(grid, l.start, l.end );
+	});
+
+	/*
+	 * paths keep out ideology:
+	 *  for each routing node build vertical and horizontal netlist
+	 *    if path is curved in this node vertical index == horizontal index
+	 *    if there is path from same net join them
+	 *  for each component increase padding to let space for nets
+	 *  from each node extract routing node position for this path (use horizontal and/or vertical index, this node pos and NET_PADDING )
+	 *  draw path    
+	 * */
+	//function walkLinkPath(link, fn){
+	//	if( !link.path || link.path.length == 0){
+	//		fn(link.start,link.end);
+	//	}else{
+	//		fn(link.start, link.path[0]);
+	//		for(var i =0; i< link.path.length; i++){
+	//			if(i==link.path.length -1){
+	//				fn(link.path[i], link.end);
+	//			}else{
+	//				fn(link.path[i],link.path[i+1]);
+	//			}
+	//		}
+	//	}
+	//	fn(link.end);	
+	//}
+	//function add2routingNode(arrA, arrB, net){
+	//	if(arrA.indexOf(net) >= 0){
+	//		return; // net is already routed on this node
+	//	}
+	//	var minIndex = arrB.indexOf(net);
+	//	if(minIndex < 0)
+	//		minIndex =0;
+	//	if(minIndex < arrA.length)
+	//		minIndex = arrA.length;
+	//	arrA[minIndex] = net;
+	//}
+	//function add2verticalList(node, link){
+	//	add2routingNode(node.vertical, node.horizontal, link.net);
+	//}
+	//function add2horizontalList(node, link){
+	//	add2routingNode(node.horizontal, node.vertical, link.net);
+	//}
+	
+	//links.forEach(function (link){
+	//	walkLinkPath(link, function (node, next){
+	//		if(next){
+	//			if(node.left == next || node.right == next){
+	//				add2verticalList(node, link);
+	//			}
+	//			if(node.top == next || node.bottom == next){
+	//				add2horizontalList(node, link);
+	//			}
+	//		}else{
+	//			add2horizontalList(node, link);
+	//			//add2verticalList(node, link);
+	//		}
+	//	});
+	//})
+	var HORIZONTAL = "h";
+	var VERTICAL = "v";
+	
+	function getNextPathDir(nodeA,nodeB){
+		if(!nodeA || !nodeB)
+			throw "invalid use with undefined node";
+		if(nodeA.left == nodeB || nodeA.right == nodeB){
+			return HORIZONTAL;
+		}
+		if(nodeA.top == nodeB || nodeA.bottom == nodeB){
+			return VERTICAL;
+		}
+		throw "Nodes are not even connected";
+	}
+	
+	function walkLinkSubPaths(link, fn){
+		var dir, dirTmp, last = link.start;
+		var subPath = [link.start];
+	    var p = link.path[0];
+	    dir = getNextPathDir(last, p);
+	    last = link.start; 
+	    	
+	    for(var i =0; i< link.path.length ; i++){// end is already in path
+	    	var p = link.path[i];
+	    	dirTmp = getNextPathDir(last, p);
+	    	if(dir != dirTmp){
+	    		subPath.push(p);
+	    		fn(subPath, dir);
+	    		subPath = [p];
+	    		dir = dirTmp;
+	    	}else{
+	    		subPath.push(p);
+	    	}
+	    	last = p;
+	    }
+	    if(subPath.length > 0){
+	    	fn(subPath, dir);
+	    }
 		
-		var xindx= node.horizontal.indexOf(net);
+	}
+	
+	
+	/*
+	 * 					[0,4]
+	 * 		[0,1] 						[2,4]
+	 *   [0,0]  [1,1]   			[2,3]    [4,4]  	
+	 * 							[2,2]	[3,3]
+	 * 
+	 * 
+	 * 					[0,3]
+	 * 		[0,1]				[2,3]
+	 * [0,0]	[1,1]		[2,2]	[3,3]			
+	 * */
+	function findLowestNetIndexInSubPath(subPath, dir, net){
+		function findMaxPossible(arrName, minimum, leftIndx, rightIndx){
+			//console.log([leftIndx, rightIndx])
+			if(leftIndx == rightIndx){
+				var arr = subPath[leftIndx][arrName];
+				return {"minFromSameNet":arr.indexOf(net, minimum),
+					    "minFromLen":	 Math.max(minimum,arr.length)
+					    };
+			}else{
+				
+				var midle = Math.ceil((leftIndx + rightIndx) / 2 );
+				
+				var ml = findMaxPossible(arrName, minimum, leftIndx, midle -1);
+				var mr = findMaxPossible(arrName, minimum, midle , rightIndx);
+				
+				while(ml.minFromSameNet != mr.minFromSameNet || ml.minFromLen != mr.minFromLen ){
+					if(ml.minFromSameNet == mr.minFromSameNet  && ml.minFromSameNet >= 0)
+						break;
+					var min = Math.max(ml.minFromSameNet, mr.minFromSameNet, ml.minFromLen, mr.minFromLen);
+					var ml = findMaxPossible(arrName, min, leftIndx, midle-1);
+					var mr = findMaxPossible(arrName, min, midle, rightIndx);
+				}
+				return ml;
+			}
+		}
+		
+		switch(dir){
+		case HORIZONTAL:
+			var m =  findMaxPossible("horizontal", 0, 0, subPath.length-1);
+			break;
+		case VERTICAL:
+			var m =findMaxPossible("vertical", 0, 0, subPath.length-1);
+			break;
+		default :
+			throw "invalid direction of subpath";
+		}
+		if (m.minFromSameNet < 0){
+			return m.minFromLen;
+		}else{
+			return m.minFromSameNet;
+		}return i;
+	}
+	links.forEach(function(link){
+		walkLinkSubPaths(link, function(subPath, dir){
+			var i = findLowestNetIndexInSubPath(subPath, dir, link.net);
+			switch(dir){
+			case HORIZONTAL:
+				subPath.forEach(function (n){
+					n.horizontal[i] = link.net;
+				});
+				break;
+			case VERTICAL:
+				subPath.forEach(function (n){
+					n.vertical[i] = link.net;
+				});
+				break;
+			default :
+				throw "invalid direction of subpath";
+			}
+		});
+	});
+
+	function offsetInRoutingNode(node, net){
+		var x= 0,
+			y= 0;
+		
+		var xindx= node.vertical.indexOf(net);
 		if(xindx > 0)
 			x += xindx*NET_PADDING;
 		
-		var yindx= node.vertical.indexOf(net);
+		var yindx= node.horizontal.indexOf(net);
 		if(yindx > 0)
 			y += yindx*NET_PADDING;
 		
 		return [x, y];
 	}
+	
+	
 	function pointAdd(a, b){
 		a[0] += b[0];
 		a[1] += b[1];			
@@ -239,20 +382,20 @@ function updateLayout(componentWrap, linkElements, links){
 	//print link between them
 	linkElements.attr("d", function (d) {
 		var sp = d.start.pos();
-		var spOffset = offsetFromNodeNetLists(d.start, d.net);
+		var spOffset = offsetInRoutingNode(d.start, d.net);
 		var pathStr = " M" + [sp[0] - COMPONENT_PADDING , sp[1]]; //connection from port node to port
 		pointAdd(sp, spOffset);
 		pathStr += " L " + sp +"\n";
 
 		for(var pi = 0; pi< d.path.length; pi++){
 			var p = d.path[pi];
-			spOffset = offsetFromNodeNetLists(p, d.net);
+			spOffset = offsetInRoutingNode(p, d.net);
 			sp = p.pos();
 			pointAdd(sp, spOffset);
 			pathStr += " L " + sp +"\n";
 		}
 		var ep = d.end.pos();
-		pathStr += " L " + ep +"\n";
+		//pathStr += " L " + ep +"\n";
 		pathStr += " L " + [ep[0]+COMPONENT_PADDING, ep[1]]+"\n";
 
 		return pathStr;
@@ -273,6 +416,7 @@ function redraw(nodes, links){ //main function for rendering components layout
 		//.links(links)
 		//.start();
 	
+
 	var svg = d3.select("#chartWraper").append("svg");
 	var svgGroup= svg.append("g"); // because of zooming/moving
 
@@ -413,13 +557,20 @@ function redraw(nodes, links){ //main function for rendering components layout
     //	updateLayout();
     //});
     
-    updateLayout(componentWrap, linkElements, links);
+    updateLayout(svgGroup, componentWrap, linkElements, links);
     
     // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
-    var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom",  
-    		function () {
+    var zoomListener = d3.behavior.zoom()
+    	.scaleExtent([0.1, 3])
+    	.on("zoom", function () {
     			svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-    		}
-    );
+    	})
+    	
+    //this is processiong of zoomListener explicit translate and scale on start
+    zoomListener.translate([0,0])
+    	.scale(2);
+    zoomListener.event(svg.transition().duration(100));
+    
     svg.call(zoomListener);
+ 
 }

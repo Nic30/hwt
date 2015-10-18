@@ -254,6 +254,7 @@ function RoutingNodesContainer(nodes) {
 					bottFound = true;
 				}
 				tn.bottom = rnode;
+				rnode.top = tn;
 				break;
 			}
 		}
@@ -283,6 +284,7 @@ function RoutingNodesContainer(nodes) {
 							rnode.right.left = rnode;
 							rightFound = true;
 						}
+						ln.right = rnode;
 						rnode.left = ln;
 						break;
 					}

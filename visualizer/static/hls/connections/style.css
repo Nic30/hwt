@@ -6,7 +6,6 @@ svg {
 	position: absolute;
 	/*top: 0;
 	left: 0;*/
-
 }
 
 .node rect {
@@ -43,43 +42,56 @@ svg {
 
 .component {
 	/*fill: #AFEEEE;*/
-}	
+	
+}
 
 .component text {
 	fill: black;
-	font-size: 9pt; 
+	font-size: 9pt;
 	/*text-anchor: middle;*/
 }
 
 .component .component-title {
 	/*fill: #2E64FE;*/
 	text-anchor: middle;
-	font-size: 10pt; 
+	font-size: 10pt;
 }
 
-.component .port-input text{
+.component .port-input text {
 	fill: black;
 	font-variant: small-caps;
 }
 
-.component .port-output text{
+.component .port-output text {
 	fill: black;
 	font-variant: small-caps;
 	text-anchor: end;
 }
 
 path.link {
-    stroke: black;
-    stroke-width: 1px;
-    fill:none;
+	stroke: black;
+	stroke-width: 1px;
+	fill: none;
 }
 
 path.link-selected {
-    stroke: red;
-    stroke-width: 1px;
+	stroke: red;
+	stroke-width: 1px;
 }
 
 .external-port {
-	fill : green;
+	fill: green;
+}
 
+div.tooltip {
+	position: absolute;
+	text-align: center;
+	width: 100px;
+	height: 150px;
+	padding: 2px;
+	font: 12px sans-serif;
+	background: lightsteelblue;
+	border: 0px;
+	border-radius: 8px;
+	pointer-events: none;
 }

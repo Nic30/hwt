@@ -1,3 +1,383 @@
+2.3.3 / 2015-09-19
+==================
+
+ * [#1875] - Fix Markdown reporter exceeds maximum call stack size ([@danielstjules])
+ * [#1864] - Fix xunit missing output with --reporter-options output ([@danielstjules])
+ * [#1846] - Support all harmony flags ([@danielstjules])
+ * Fix fragile xunit reporter spec ([@danielstjules])
+ * [#1669] - Fix catch uncaught errors outside test suite execution ([@danielstjules])
+ * [#1868] - Revert jade to support npm < v1.3.7 ([@danielstjules])
+ * [#1766] - Don't remove modules/components from stack trace in the browser ([@danielstjules])
+ * [#1798] - Fix correctly attribute mutiple done err with hooks ([@danielstjules])
+ * Fix use utils.reduce for IE8 compatibility ([@wsw0108])
+ * Some linting errors fixed by [@danielstjules]
+ * Call the inspect() function if message is not set ([@kevinburke])
+
+[#1875]: https://github.com/mochajs/mocha/issues/1875
+[#1864]: https://github.com/mochajs/mocha/issues/1864
+[#1846]: https://github.com/mochajs/mocha/issues/1846
+[#1669]: https://github.com/mochajs/mocha/issues/1669
+[#1868]: https://github.com/mochajs/mocha/issues/1868
+[#1766]: https://github.com/mochajs/mocha/issues/1766
+[#1798]: https://github.com/mochajs/mocha/issues/1798
+[@danielstjules]: https://github.com/danielstjules
+[@wsw0108]: https://github.com/wsw0108
+[@kevinburke]: https://github.com/kevinburke
+
+2.3.2 / 2015-09-07
+==================
+ * [#1868] - Fix compatibility with older versions of NPM ([@boneskull])
+
+  [#1868]: https://github.com/mochajs/mocha/issues/1868
+
+2.3.1 / 2015-09-06
+==================
+
+  * [#1812] - Fix: Bail flag causes before() hooks to be run even after a failure ([@aaroncrows])
+
+  [#1812]: https://github.com/mochajs/mocha/issues/1812
+  [aaroncrows]: https://github.com/aaroncrows
+
+2.3.0 / 2015-08-30
+==================
+
+  * [#553] - added --allowUncaught option ([@amsul])
+  * [#1490] - Allow --async-only to be satisfied by returning a promise ([@jlai])
+  * [#1829] - support --max-old-space-size ([@gigadude])
+  * [#1811] - upgrade Jade dependency ([@outsideris])
+  * [#1769] - Fix async hook error handling ([@ajaykodali])
+  * [#1230] - More descriptive beforeEach/afterEach messages ([@duncanbeevers])
+  * [#1787] - Scope loading behaviour instead of using early return ([@aryeguy])
+  * [#1789] - Fix: html-runner crashing ([@sunesimonsen])
+  * [#1749] - Fix maximum call stack error on large amount of tests ([@tinganho])
+  * [#1230] - Decorate failed hook titles with test title ([@duncanbeevers])
+  * [#1260] - Build using Browserify ([@ndhoule])
+  * [#1728] - Don't use `__proto__` ([@ndhoule])
+  * [#1781] - Fix hook error tests ([@glenjamin])
+  * [#1754] - Allow boolean --reporter-options ([@papandreou])
+  * [#1766] - Fix overly aggressive stack suppression ([@moll])
+  * [#1752] - Avoid potential infinite loop ([@gsilk])
+  * [#1761] - Fix problems running under PhantomJS ([@chromakode])
+  * [#1700] - Fix more problems running under PhantomJS ([@jbnicolai])
+  * [#1774] - Support escaped spaces in CLI options ([@adamgruber])
+  * [#1687] - Fix HTML reporter links with special chars ([@benvinegar])
+  * [#1359] - Adopt code style and enforce it using ESLint ([@ndhoule] w/ assist from [@jbnicolai] & [@boneskull])
+  * various refactors ([@jbnicolai])
+  * [#1758] - Add cross-frame compatible Error checking ([@outdooricon])
+  * [#1741] - Remove moot `version` property from bower.json ([@kkirsche])
+  * [#1739] - Improve `HISTORY.md` ([@rstacruz])
+  * [#1730] - Support more io.js flags ([@ryedog])
+  * [#1349] - Allow HTML in HTML reporter errors ([@papandreou] / [@sunesimonsen])
+  * [#1572] - Prevent default browser behavior for failure/pass links ([@jschilli])
+  * [#1630] - Support underscored harmony flags ([@dominicbarnes])
+  * [#1718] - Support more harmony flags ([@slyg])
+  * [#1689] - Add stack to JSON-stream reporter ([@jonathandelgado])
+  * [#1654] - Fix `ReferenceError` "location is not defined" ([@jakemmarsh])
+
+  [#553]: https://github.com/mochajs/mocha/issues/553
+  [#1490]: https://github.com/mochajs/mocha/issues/1490
+  [#1829]: https://github.com/mochajs/mocha/issues/1829
+  [#1811]: https://github.com/mochajs/mocha/issues/1811
+  [#1769]: https://github.com/mochajs/mocha/issues/1769
+  [#1230]: https://github.com/mochajs/mocha/issues/1230
+  [#1787]: https://github.com/mochajs/mocha/issues/1787
+  [#1789]: https://github.com/mochajs/mocha/issues/1789
+  [#1749]: https://github.com/mochajs/mocha/issues/1749
+  [#1230]: https://github.com/mochajs/mocha/issues/1230
+  [#1260]: https://github.com/mochajs/mocha/issues/1260
+  [#1728]: https://github.com/mochajs/mocha/issues/1728
+  [#1781]: https://github.com/mochajs/mocha/issues/1781
+  [#1754]: https://github.com/mochajs/mocha/issues/1754
+  [#1766]: https://github.com/mochajs/mocha/issues/1766
+  [#1752]: https://github.com/mochajs/mocha/issues/1752
+  [#1761]: https://github.com/mochajs/mocha/issues/1761
+  [#1700]: https://github.com/mochajs/mocha/issues/1700
+  [#1774]: https://github.com/mochajs/mocha/issues/1774
+  [#1687]: https://github.com/mochajs/mocha/issues/1687
+  [#1359]: https://github.com/mochajs/mocha/issues/1359
+  [#1758]: https://github.com/mochajs/mocha/issues/1758
+  [#1741]: https://github.com/mochajs/mocha/issues/1741
+  [#1739]: https://github.com/mochajs/mocha/issues/1739
+  [#1730]: https://github.com/mochajs/mocha/issues/1730
+  [#1349]: https://github.com/mochajs/mocha/issues/1349
+  [#1572]: https://github.com/mochajs/mocha/issues/1572
+  [#1630]: https://github.com/mochajs/mocha/issues/1630
+  [#1718]: https://github.com/mochajs/mocha/issues/1718
+  [#1689]: https://github.com/mochajs/mocha/issues/1689
+  [#1654]: https://github.com/mochajs/mocha/issues/1654
+  [@adamgruber]: https://github.com/adamgruber
+  [@ajaykodali]: https://github.com/ajaykodali
+  [@amsul]: https://github.com/amsul
+  [@aryeguy]: https://github.com/aryeguy
+  [@benvinegar]: https://github.com/benvinegar
+  [@boneskull]: https://github.com/boneskull
+  [@chromakode]: https://github.com/chromakode
+  [@dominicbarnes]: https://github.com/dominicbarnes
+  [@duncanbeevers]: https://github.com/duncanbeevers
+  [@gigadude]: https://github.com/gigadude
+  [@glenjamin]: https://github.com/glenjamin
+  [@gsilk]: https://github.com/gsilk
+  [@jakemmarsh]: https://github.com/jakemmarsh
+  [@jbnicolai]: https://github.com/jbnicolai
+  [@jlai]: https://github.com/jlai
+  [@jonathandelgado]: https://github.com/jonathandelgado
+  [@jschilli]: https://github.com/jschilli
+  [@kkirsche]: https://github.com/kkirsche
+  [@moll]: https://github.com/moll
+  [@ndhoule]: https://github.com/ndhoule
+  [@outdooricon]: https://github.com/outdooricon
+  [@outsideris]: https://github.com/outsideris
+  [@papandreou]: https://github.com/papandreou
+  [@rstacruz]: https://github.com/rstacruz
+  [@ryedog]: https://github.com/ryedog
+  [@slyg]: https://github.com/slyg
+  [@sunesimonsen]: https://github.com/sunesimonsen
+  [@tinganho]: https://github.com/tinganho
+
+2.2.5 / 2015-05-14
+==================
+
+  * [#1699] - Upgrade jsdiff to v1.4.0 ([@nylen])
+  * [#1648] - fix diff background colors in the console ([@nylen])
+  * [#1327] - fix tests running twice, a regression issue. ([#1686], [@danielstjules])
+  * [#1675] - add integration tests ([@danielstjules])
+  * [#1682] - use a valid SPDX license identifier in package.json ([@kemitchell])
+  * [#1660] - fix assertion of invalid dates ([#1661], [@a8m])
+  * [#1241] - fix issue with multiline diffs appearing as single line ([#1655], [@a8m])
+
+[#1699]: https://github.com/mochajs/mocha/issues/1699
+[#1648]: https://github.com/mochajs/mocha/issues/1648
+[#1327]: https://github.com/mochajs/mocha/issues/1327
+[#1686]: https://github.com/mochajs/mocha/issues/1686
+[#1675]: https://github.com/mochajs/mocha/issues/1675
+[#1682]: https://github.com/mochajs/mocha/issues/1682
+[#1660]: https://github.com/mochajs/mocha/issues/1660
+[#1661]: https://github.com/mochajs/mocha/issues/1661
+[#1241]: https://github.com/mochajs/mocha/issues/1241
+[#1655]: https://github.com/mochajs/mocha/issues/1655
+[@nylen]: https://github.com/nylen
+[@danielstjules]: https://github.com/danielstjules
+[@kemitchell]: https://github.com/kemitchell
+[@a8m]: https://github.com/a8m
+
+2.2.4 / 2015-04-08
+==================
+
+  * Load mocha.opts in _mocha for now (close #1645)
+
+2.2.3 / 2015-04-07
+==================
+
+  * fix(reporter/base): string diff - issue #1241
+  * fix(reporter/base): string diff - issue #1241
+  * fix(reporter/base): don't show diffs for errors without expectation
+  * fix(reporter/base): don't assume error message is first line of stack
+  * improve: dry up reporter/base test
+  * fix(reporter/base): explicitly ignore showDiff #1614
+  * Add iojs to travis build
+  * Pass `--allow-natives-syntax` flag to node.
+  * Support --harmony_classes flag for io.js
+  * Fix 1556: Update utils.clean to handle newlines in func declarations
+  * Fix 1606: fix err handling in IE <= 8 and non-ES5 browsers
+  * Fix 1585: make _mocha executable again
+  * chore(package.json): add a8m as a contributor
+  * Fixed broken link on html-cov reporter
+  * support --es_staging flag
+  * fix issue where menu overlaps content.
+  * update contributors in package.json
+  * Remove trailing whitespace from reporter output
+  * Remove contributors list from readme
+  * log third-party reporter errors
+  * [Fix] Exclude not own properties when looping on options
+  * fix: support node args in mocha.opts (close #1573)
+  * fix(reporter/base): string diff - issue #1241
+
+2.2.1 / 2015-03-09
+==================
+
+  * Fix passing of args intended for node/iojs.
+
+2.2.0 / 2015-03-06
+==================
+
+  * Update mocha.js
+  * Add --fgrep. Use grep for RegExp, fgrep for str
+  * Ignore async global errors after spec resolution
+  * Fixing errors that prevent mocha.js from loading in the browser - fixes #1558
+  * fix(utils): issue #1558 + make
+  * add ability to delay root suite; closes #362, closes #1124
+  * fix insanity in http tests
+  * update travis: add node 0.12, add gitter, remove slack
+  * building
+  * resolve #1548: ensure the environment's "node" executable is used
+  * reporters/base: use supports-color to detect colorable term
+  * travis: use docker containers
+  * small fix: commander option for --expose-gc
+  * Ignore asynchronous errors after global failure
+  * Improve error output when a test fails with a non-error
+  * updated travis badge, uses svg instead of img
+  * Allow skip from test context for #332
+  * [JSHINT] Unnecessary semicolon fixed in bin/_mocha
+  * Added a reminder about the done() callback to test timeout error messages
+  * fixes #1496, in Mocha.run(fn), check if fn exists before executing it, added tests too
+  * Add Harmony Proxy flag for iojs
+  * test(utils|ms|*): test existing units
+  * add support for some iojs flags
+  * fix(utils.stringify): issue #1229, diff viewer
+  * Remove slack link
+  * Prevent multiple 'grep=' querystring params in html reporter
+  * Use grep as regexp (close #1381)
+  * utils.stringify should handle objects without an Object prototype
+  * in runnable test, comparing to undefined error's message rather than a literal
+  * Fix test running output truncation on async STDIO
+  * ammended for deprecated customFds option in child_process
+
+2.1.0 / 2014-12-23
+==================
+
+ * showDiff: don’t stringify strings
+ * Clean up unused module dependencies.
+ * Filter zero-length strings from mocha.opts
+ * only write to stdout in reporters
+ * Revert "only write to stdout in reporters"
+ * Print colored output only to a tty
+ * update summary in README.md
+ * rename Readme.md/History.md to README.md/HISTORY.md because neurotic
+ * add .mailmap to fix "git shortlog" or "git summary" output
+ * fixes #1461: nyan-reporter now respects Base.useColors, fixed bug where Base.color would not return a string when str wasn't a string.
+ * Use existing test URL builder in failed replay links
+ * modify .travis.yml: use travis_retry; closes #1449
+ * fix -t 0 behavior; closes #1446
+ * fix tests (whoops)
+ * improve diff behavior
+ * Preserve pathname when linking to individual tests
+ * Fix test
+ * Tiny typo in comments fixed
+ * after hooks now being called on failed tests when using bail, fixes #1093
+ * fix throwing undefined/null now makes tests fail, fixes #1395
+ * compiler extensions are added as watched extensions, removed non-standard extensions from watch regex, resolves #1221
+ * prefix/namespace for suite titles in markdown reporter, fixes #554
+ * fix more bad markdown in CONTRIBUTING.md
+ * fix bad markdown in CONTRIBUTING.md
+ * add setImmediate/clearImmediate to globals; closes #1435
+ * Fix buffer diffs (closes #1132, closes #1433)
+ * add a CONTRIBUTING.md.  closes #882
+ * fix intermittent build failures (maybe). closes #1407
+ * add Slack notification to .travis.yml
+ * Fix slack link
+ * Add slack room to readme
+ * Update maintainers
+ * update maintainers and contributors
+ * resolves #1393: kill children with more effort on SIGINT
+ * xunit reporter support for optionally writing to a file
+ * if a reporter has a .done method, call it before exiting
+ * add support for reporter options
+ * only write to stdout in reporters
+
+2.0.0 / 2014-10-21
+==================
+
+ * remove: support for node 0.6.x, 0.4.x
+ * fix: landing reporter with non ansi characters (#211)
+ * fix: html reporter - preserve query params when navigating to suites/tests (#1358)
+ * fix: json stream reporter add error message to failed test
+ * fix: fixes for visionmedia -> mochajs
+ * fix: use stdio, fixes node deprecation warnings (#1391)
+
+1.21.5 / 2014-10-11
+==================
+
+ * fix: build for NodeJS v0.6.x
+ * fix: do not attempt to highlight syntax when non-HTML reporter is used
+ * update: escape-string-regexp to 1.0.2.
+ * fix: botched indentation in canonicalize()
+ * fix: .gitignore: ignore .patch and .diff files
+ * fix: changed 'Catched' to 'Caught' in uncaught exception error handler messages
+ * add: `pending` field for json reporter
+ * fix: Runner.prototype.uncaught: don't double-end runnables that already have a state.
+ * fix: --recursive, broken by f0facd2e
+ * update: replaces escapeRegexp with the escape-string-regexp package.
+ * update: commander to 2.3.0.
+ * update: diff to 1.0.8.
+ * fix: ability to disable syntax highlighting (#1329)
+ * fix: added empty object to errorJSON() call to catch when no error is present
+ * fix: never time out after calling enableTimeouts(false)
+ * fix: timeout(0) will work at suite level (#1300)
+ * Fix for --watch+only() issue (#888 )
+ * fix: respect err.showDiff, add Base reporter test (#810)
+
+1.22.1-3 / 2014-07-27
+==================
+
+  * fix: disabling timeouts with this.timeout(0) (#1301)
+
+1.22.1-3 / 2014-07-27
+==================
+
+  * fix: local uis and reporters (#1288)
+  * fix: building 1.21.0's changes in the browser (#1284)
+
+1.21.0 / 2014-07-23
+==================
+
+  * add: --no-timeouts option (#1262, #1268)
+  * add: --*- deprecation node flags (#1217)
+  * add: --watch-extensions argument (#1247)
+  * change: spec reporter is default (#1228)
+  * fix: diff output showing incorrect +/- (#1182)
+  * fix: diffs of circular structures (#1179)
+  * fix: re-render the progress bar when progress has changed only (#1151)
+  * fix support for environments with global and window (#1159)
+  * fix: reverting to previously defined onerror handler (#1178)
+  * fix: stringify non error objects passed to done() (#1270)
+  * fix: using local ui, reporters (#1267)
+  * fix: cleaning es6 arrows (#1176)
+  * fix: don't include attrs in failure tag for xunit (#1244)
+  * fix: fail tests that return a promise if promise is rejected w/o a reason (#1224)
+  * fix: showing failed tests in doc reporter (#1117)
+  * fix: dot reporter dots being off (#1204)
+  * fix: catch empty throws (#1219)
+  * fix: honoring timeout for sync operations (#1242)
+  * update: growl to 1.8.0
+
+1.20.1 / 2014-06-03
+==================
+
+  * update: should dev dependency to ~4.0.0 (#1231)
+
+1.20.0 / 2014-05-28
+==================
+
+  * add: filenames to suite objects (#1222)
+
+1.19.0 / 2014-05-17
+==================
+
+  * add: browser script option to package.json
+  * add: export file in Mocha.Test objects (#1174)
+  * add: add docs for wrapped node flags
+  * fix: mocha.run() to return error status in browser (#1216)
+  * fix: clean() to show failure details (#1205)
+  * fix: regex that generates html for new keyword (#1201)
+  * fix: sibling suites have inherited but separate contexts (#1164)
+
+
+1.18.2 / 2014-03-18
+==================
+
+  * fix: html runner was prevented from using #mocha as the default root el (#1162)
+
+1.18.1 / 2014-03-18
+==================
+
+  * fix: named before/after hooks in bdd, tdd, qunit interfaces (#1161)
+
+1.18.0 / 2014-03-13
+==================
+
+  * add: promise support (#329)
+  * add: named before/after hooks (#966)
+
 1.17.1 / 2014-01-22
 ==================
 

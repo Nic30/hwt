@@ -17,7 +17,7 @@ app = Flask(__name__)
 # http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
 # http://bl.ocks.org/explunit/5603250
 # http://www.ece.northwestern.edu/~haizhou/357/lec6.pdf
-
+# http://bl.ocks.org/lgersman/5310854                 -- selection 
 
 @app.route('/static/<path:path>') # for loading all static files (antipatent, but it is necessary because app is not deployed on webserver )
 def send_static(path):
@@ -36,6 +36,10 @@ def gantt():
 @app.route('/connections/')
 def connections():
     return render_template('hls/connections.html')
+@app.route('/connections-tests/')
+def connections_test():
+    return render_template('hls/connections_test.html')
+
 
 @app.route('/test/')
 def test():
