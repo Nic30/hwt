@@ -21,16 +21,16 @@ function NetRouter(nodes, links) {
 			var subPath = [ link.start ];
 			var p = link.path[0];
 			dir = self.getNextPathDir(last, p);
-			last = link.start;
 
-			for (var i = 0; i < link.path.length; i++) {// end is already in
-				// path
+
+			for (var i = 0; i < link.path.length; i++) {
+				// end is already in path
 				var p = link.path[i];
 				dirTmp = self.getNextPathDir(last, p);
 				if (dir != dirTmp) {
-					subPath.push(p);
+					//subPath.push(p);
 					fn(subPath, dir);
-					subPath = [ p ];
+					subPath = [ last, p ];
 					dir = dirTmp;
 				} else {
 					subPath.push(p);
@@ -43,12 +43,6 @@ function NetRouter(nodes, links) {
 
 		},
 		findLowestNetIndexInSubPath : function(subPath, dir, net) {
-			/*
-			 * [0,4] [0,1] [2,4] [0,0] [1,1] [2,3] [4,4] [2,2] [3,3]
-			 * 
-			 * 
-			 * [0,3] [0,1] [2,3] [0,0] [1,1] [2,2] [3,3]
-			 */
 			function findMaxPossible(arrName, minimum, leftIndx, rightIndx) {
 				// console.log([leftIndx, rightIndx])
 				if (leftIndx == rightIndx) {
@@ -119,25 +113,24 @@ function NetRouter(nodes, links) {
 				l.path = astar.search(grid, l.start, l.end);
 			});
 			links.forEach(function(link) {
-				self.walkLinkSubPaths(link,
-						function(subPath, dir) {
-							var i = self.findLowestNetIndexInSubPath(subPath, dir,
-									link.net);
-							switch (dir) {
-							case HORIZONTAL:
-								subPath.forEach(function(n) {
-									n.horizontal[i] = link.net;
-								});
-								break;
-							case VERTICAL:
-								subPath.forEach(function(n) {
-									n.vertical[i] = link.net;
-								});
-								break;
-							default:
-								throw "invalid direction of subpath";
-							}
+				self.walkLinkSubPaths(link, function(subPath, dir) {
+					var i = self.findLowestNetIndexInSubPath(subPath, dir,
+							link.net);
+					switch (dir) {
+					case HORIZONTAL:
+						subPath.forEach(function(n) {
+							n.horizontal[i] = link.net;
 						});
+						break;
+					case VERTICAL:
+						subPath.forEach(function(n) {
+							n.vertical[i] = link.net;
+						});
+						break;
+					default:
+						throw "invalid direction of subpath";
+					}
+				});
 			});
 
 		}

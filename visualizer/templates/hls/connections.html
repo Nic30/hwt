@@ -1,57 +1,127 @@
 {% extends "base.html" %} {% block css_extra %}
 <link type="text/css" href="/static/hls/connections/style.css"
 	rel="stylesheet" />
-{% endblock %} 
-{% block js_extra %}
+{% endblock %} {% block js_extra %}
 <script type="text/javascript">
-	var nodes = [{
+	var nodes = [ {
 		id : 0,
 		name : "smaller one",
 		inputs : [ "clk", "rst" ],
 		outputs : [ "outA", "outB" ]
 	}, {
-		id:1,
+		id : 1,
 		name : "biggest",
-		inputs : [ "clk", "rst", "inA", "inB"],
-		outputs : [ "outA2", "outB2" ]	
+		inputs : [ "clk", "rst", "inA", "inB" ],
+		outputs : [ "outA2", "outB2" ]
 	}, {
-		id: 2,
+		id : 2,
 		name : "clk",
 		isExternalPort : true,
 		inputs : [],
-		outputs : ["clk"]	
+		outputs : [ "clk" ]
 	}, {
-		id: 3,
+		id : 3,
 		name : "rst",
 		isExternalPort : true,
 		inputs : [],
-		outputs : ["rst"]	
+		outputs : [ "rst" ]
 	}, {
-		id: 4,
+		id : 4,
 		name : "dummy",
-		inputs : ["clk","rst"],
-		outputs : ["a", "b", "c", "d"]	
-	}];
-	var nets = [{"name":"clk", "source": {"id" : 2, "portIndex":0}, "targets":  [{"id":0, "portIndex":0}, {"id":1, "portIndex":0}]},
-		        {"name":"rst", "source": {"id" : 3, "portIndex":0}, "targets":  [{"id":0, "portIndex":1}, {"id":1, "portIndex":1}]},
-		        {"name": "A", "source": {"id" : 0, "portIndex":0}, "targets":  [{"id":1, "portIndex":2}]},
-		        {"name": "B","source": {"id" : 0, "portIndex":1}, "targets":  [{"id":1, "portIndex":3}]},
-	        ];
-	
+		inputs : [ "clk", "rst" ],
+		outputs : [ "a", "b", "c", "d" ]
+	}, {
+		id : 4,
+		name : "selfReference",
+		inputs : [ "clk", "inC", "inD" ],
+		outputs : [ "c", "d" ]
+	} ];
+	//{"id":4, "portIndex":0}
+	var nets = [ {
+		"name" : "clk",
+		"source" : {
+			"id" : 2,
+			"portIndex" : 0
+		},
+		"targets" : [ {
+			"id" : 0,
+			"portIndex" : 0
+		}, {
+			"id" : 1,
+			"portIndex" : 0
+		}, ]
+	}, {
+		"name" : "rst",
+		"source" : {
+			"id" : 3,
+			"portIndex" : 0
+		},
+		"targets" : [ {
+			"id" : 0,
+			"portIndex" : 1
+		}, {
+			"id" : 1,
+			"portIndex" : 1
+		} ]
+	}, {
+		"name" : "A",
+		"source" : {
+			"id" : 0,
+			"portIndex" : 0
+		},
+		"targets" : [ {
+			"id" : 1,
+			"portIndex" : 2
+		} ]
+	}, {
+		"name" : "B",
+		"source" : {
+			"id" : 0,
+			"portIndex" : 1
+		},
+		"targets" : [ {
+			"id" : 1,
+			"portIndex" : 3
+		} ]
+	}, {
+		"name" : "C",
+		"source" : {
+			"id" : 4,
+			"portIndex" : 0
+		},
+		"targets" : [ {
+			"id" : 4,
+			"portIndex" : 1
+		} ]
+	}, {
+		"name" : "D",
+		"source" : {
+			"id" : 4,
+			"portIndex" : 1
+		},
+		"targets" : [ {
+			"id" : 4,
+			"portIndex" : 2
+		} ]
+	},
+
+	];
+
 	var COLUMN_WIDTH = 120;
 	var PORT_HEIGHT = 10;
 	var COMPONENT_PADDING = 20;
 	var NET_PADDING = 5;
 </script>
 <script type="text/javascript" src="/static/bower_components/d3/d3.js"></script>
-<script type="text/javascript" src="/static/hls/connections/binaryheap.js"></script>
+<script type="text/javascript"
+	src="/static/hls/connections/binaryheap.js"></script>
 <script type="text/javascript" src="/static/hls/connections/a_star.js"></script>
 <script type="text/javascript" src="/static/hls/connections/graphic.js"></script>
-<script type="text/javascript" src="/static/hls/connections/dataprocessing.js"></script>
-<script type="text/javascript" src="/static/hls/connections/net_router.js"></script>
+<script type="text/javascript"
+	src="/static/hls/connections/dataprocessing.js"></script>
+<script type="text/javascript"
+	src="/static/hls/connections/net_router.js"></script>
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
-{% endblock %}
-{% block content %}
-<div id="chartWraper">
-</div>
+{% endblock %} {% block content %}
+<div id="chartWraper"></div>
 {% endblock %}

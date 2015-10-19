@@ -118,113 +118,117 @@ function updateLayout(svgGroup, componentWrap, linkElements, links){ // move com
 	componentWrap.attr("transform", function (d) {
         return "translate(" + d.x + "," + d.y + ")";
     });
-	var router = NetRouter(nodes, links);
+	var router = new NetRouter(nodes, links);
 	var grid = router.grid;
 	router.route();
 	//create debug dots for routing nodes
-	var toolTipDiv = d3.select("body").append("div")   
-	    .attr("class", "tooltip")               
-	    .style("opacity", 0);
-	var flatenMap = [];
-	grid.visitFromLeftTop(function(c){
-		flatenMap.push(c);
-	});
-	svgGroup.selectAll("circle")
-	.data(flatenMap)
-	.enter().append("circle")
-	.style("fill", "steelblue")
-	.attr("r", 2)
-	.attr("cx", function(d){
-		return d.pos()[0];
-	})
-	.attr("cy", function(d){
-		return d.pos()[1];
-	}) 
-    .on("mouseover", function(d) {  
-    	var html = "<b>horizontal:</b><ol>"
-			d.horizontal.forEach(function (net){
-				html += "<li>" + net.name  + "</li>";
-			});
-    	html += "</ol><b>vertical:</b><ol>";
-    	d.vertical.forEach(function (net){
-			html += "<li>" + net.name  + "</li>";
+	(function debugRoterDots(){
+		var toolTipDiv = d3.select("body")
+			.append("div")   
+		    .attr("class", "tooltip")               
+		    .style("opacity", 0);
+		var flatenMap = [];
+		grid.visitFromLeftTop(function(c){
+			flatenMap.push(c);
 		});
-    	html += "</ol>";
-    	
-    	
-    	toolTipDiv.transition()        
-            .duration(100)      
-            .style("opacity", .9);      
-    	toolTipDiv.html(html)
-            .style("left", d3.event.pageX + "px")     
-            .style("top", (d3.event.pageY - 28) + "px");    
-    })                  
-    .on("mouseout", function(d) {       
-    	toolTipDiv.transition()        
-            .duration(200)      
-            .style("opacity", 0);   
-    });
-	
-	//// line to parent componet
-	//svgGroup.selectAll("#debuglink").data(flatenMap)
-	//.enter()
-	//.append("path") 
-	//.classed({"link": true})
-	//.attr("d", function (d) {
-    //    var sx = d.pos()[0];
-    //    var sy = d.pos()[1];
-    //    var tx = d.originComponent.x;
-    //    var ty = d.originComponent.y ;
-    //    return "M" + sx + "," + sy + " L " + tx + "," + ty;
-    //});
-
-
-	function offsetInRoutingNode(node, net){
-		var x= 0,
-			y= 0;
+		svgGroup.selectAll("circle")
+			.data(flatenMap)
+			.enter().append("circle")
+			.style("fill", "steelblue")
+			.attr("r", 2)
+			.attr("cx", function(d){
+				return d.pos()[0];
+			})
+			.attr("cy", function(d){
+				return d.pos()[1];
+			}) 
+		    .on("mouseover", function(d) {  
+		    	var html = d.pos() + "</br><b>horizontal:</b><ol>"
+					d.horizontal.forEach(function (net){
+						html += "<li>" + net.name  + "</li>";
+					});
+		    	html += "</ol><b>vertical:</b><ol>";
+		    	d.vertical.forEach(function (net){
+					html += "<li>" + net.name  + "</li>";
+				});
+		    	html += "</ol>";
+		    	
+		    	
+		    	toolTipDiv.transition()        
+		            .duration(100)      
+		            .style("opacity", .9);      
+		    	toolTipDiv.html(html)
+		            .style("left", d3.event.pageX + "px")     
+		            .style("top", (d3.event.pageY - 28) + "px");    
+		    })                  
+		    .on("mouseout", function(d) {       
+		    	toolTipDiv.transition()        
+		            .duration(200)      
+		            .style("opacity", 0);   
+		    });
 		
-		var xindx= node.vertical.indexOf(net);
-		if(xindx > 0)
-			x += xindx*NET_PADDING;
+		//// line to parent componet
+		//svgGroup.selectAll("#debuglink")
+		//	.data(flatenMap)
+		//	.enter()
+		//	.append("path") 
+		//	.classed({"link": true})
+		//	.attr("d", function (d) {
+		//        var sx = d.pos()[0];
+		//        var sy = d.pos()[1];
+		//        var tx = d.originComponent.x;
+		//        var ty = d.originComponent.y ;
+		//        return "M" + sx + "," + sy + " L " + tx + "," + ty;
+		//    });
+	})();
+	(function drawNets(){
+		function offsetInRoutingNode(node, net){
+			var x= 0,
+				y= 0;
+			
+			var xindx= node.vertical.indexOf(net);
+			if(xindx > 0)
+				x += xindx*NET_PADDING;
+			
+			var yindx= node.horizontal.indexOf(net);
+			if(yindx > 0)
+				y += yindx*NET_PADDING;
+			
+			return [x, y];
+		}
 		
-		var yindx= node.horizontal.indexOf(net);
-		if(yindx > 0)
-			y += yindx*NET_PADDING;
 		
-		return [x, y];
-	}
-	
-	
-	function pointAdd(a, b){
-		a[0] += b[0];
-		a[1] += b[1];			
-	}
-	//print link between them
-	linkElements.attr("d", function (d) {
-		var sp = d.start.pos();
-		var spOffset = offsetInRoutingNode(d.start, d.net);
-		var pathStr = " M" + [sp[0] - COMPONENT_PADDING , sp[1]]; //connection from port node to port
-		pointAdd(sp, spOffset);
-		pathStr += " L " + sp +"\n";
-
-		for(var pi = 0; pi< d.path.length; pi++){
-			var p = d.path[pi];
-			spOffset = offsetInRoutingNode(p, d.net);
-			sp = p.pos();
+		function pointAdd(a, b){
+			a[0] += b[0];
+			a[1] += b[1];			
+		}
+		//print link between them
+		linkElements.attr("d", function (d) {
+			var sp = d.start.pos();
+			var spOffset = offsetInRoutingNode(d.start, d.net);
+			var pathStr = " M" + [sp[0] - COMPONENT_PADDING , sp[1]]; //connection from port node to port
 			pointAdd(sp, spOffset);
 			pathStr += " L " + sp +"\n";
-		}
-		var ep = d.end.pos();
-		//pathStr += " L " + ep +"\n";
-		pathStr += " L " + [ep[0]+COMPONENT_PADDING, ep[1]]+"\n";
-
-		return pathStr;
-    });
+	
+			for(var pi = 0; pi< d.path.length; pi++){
+				var p = d.path[pi];
+				spOffset = offsetInRoutingNode(p, d.net);
+				sp = p.pos();
+				pointAdd(sp, spOffset);
+				pathStr += " L " + sp +"\n";
+			}
+			var ep = d.end.pos();
+			pathStr += " L " + [ep[0]+COMPONENT_PADDING, ep[1]]+"\n";
+			return pathStr;
+		});
+	})();
 };
 
 function redraw(nodes, links){ //main function for rendering components layout
 	var place = d3.select("#chartWraper").node().getBoundingClientRect();
-	d3.select("#chartWraper").selectAll("svg").remove(); // delete old on redraw
+	d3.select("#chartWraper")
+		.selectAll("svg")
+		.remove(); // delete old on redraw
 	
 	//force for self organizing of diagram
 	var force = d3.layout.force()
@@ -389,7 +393,8 @@ function redraw(nodes, links){ //main function for rendering components layout
     //this is processiong of zoomListener explicit translate and scale on start
     zoomListener.translate([0,0])
     	.scale(2);
-    zoomListener.event(svg.transition().duration(100));
+    zoomListener.event(svg.transition()
+    					  .duration(100));
     
     svg.call(zoomListener);
  

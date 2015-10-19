@@ -36,6 +36,7 @@ def gantt():
 @app.route('/connections/')
 def connections():
     return render_template('hls/connections.html')
+
 @app.route('/connections-tests/')
 def connections_test():
     return render_template('hls/connections_test.html')
