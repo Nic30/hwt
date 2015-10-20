@@ -52,15 +52,3 @@ from sympy.logic.inference import satisfiable
 #
 #findCommonPart(expr0 , expr1)
 #print(simplify( Or(expr0, expr2)))
-
-
-import lxml.html
-from urllib.request import urlopen
-
-def check():
-    data = urlopen('http://slavetice.eu/obecni_urad/archiv.php').read();
-    return str(data);
-
-doc = lxml.html.document_fromstring(check())
-el = doc.xpath("//table/tbody/tr")
-print(el)
