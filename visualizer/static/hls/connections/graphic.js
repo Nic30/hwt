@@ -113,14 +113,93 @@ function addShadows(svg){
     .attr("stop-color", "#A9D0F5")    
 }
 
-function updateLayout(svgGroup, componentWrap, linkElements, links){ // move component on its positions and redraw links between them
+function updateLayout(svgGroup, componentWrap, linkElements, nodes, links){ // move component on its positions and redraw links between them
 	//move component on its position
-	componentWrap.attr("transform", function (d) {
-        return "translate(" + d.x + "," + d.y + ")";
-    });
+
 	var router = new NetRouter(nodes, links);
 	var grid = router.grid;
 	router.route();
+	(function moveComponetsOutOfNets(){
+		/* find width of channels
+		 * add it to component positions
+		 * */
+		function netPadding(netCnt){
+			return netCnt * (NET_PADDING+1);
+		}
+		
+		grid.maxNetCntY = [];
+		grid.maxNetCntX = [];
+		
+		for(var x = 0; x < grid.length; x++){
+			var col = grid[x];
+			if(col){
+				if(grid.maxNetCntX[x] === undefined)
+					grid.maxNetCntX[x] = 0;
+				for(var y =0; y < grid.length; y++){
+					var n = col[y];
+					if(n){
+						var netCntY = n.horizontal.length;
+						var netCntX = n.vertical.length;
+
+						if(grid.maxNetCntY[y] === undefined)
+							grid.maxNetCntY[y] = 0;
+						if(grid.maxNetCntY[y] < netCntY)
+							grid.maxNetCntY[y] = netCntY;
+						if(grid.maxNetCntX[x] < netCntX)
+							grid.maxNetCntX[x] = netCntX;
+					}
+				}
+			}
+		}
+
+		var sumOfNetOffsetsX = [];
+		var sumOfNetOffsetsY = [];
+		var offset = 0;
+		grid.maxNetCntX.forEach(function (d, i){
+			if(d){
+				offset += netPadding(d);
+			}
+			sumOfNetOffsetsX[i] = offset;
+		});
+		offset = 0;
+		grid.maxNetCntY.forEach(function (d, i){
+			if(d){
+				offset += netPadding(d);
+			}
+			sumOfNetOffsetsY[i] = offset;
+		});
+		function previousDefined(arr, indx){
+			return arr[indx]
+			for(var i = indx-1; i >=0; i--){
+				var offset  = arr[i];
+				if(offset){
+					return offset;
+				}
+			}
+			return 0;
+		}
+		nodes.forEach(function (n){
+			var x0 = n.x - COMPONENT_PADDING;
+			var x1 = n.x + n.width + COMPONENT_PADDING;
+			var y0 =n.y - COMPONENT_PADDING;
+			var y1 = n.y + n.height + COMPONENT_PADDING;
+			var npTop =  netPadding( previousDefined(grid.maxNetCntY, y0));
+			if(npTop)
+				n.netChannelPadding.top = npTop;
+			var npLeft = netPadding(previousDefined(grid.maxNetCntX, x0));
+			if (npLeft)
+				n.netChannelPadding.left = npLeft;
+			//var npBottom = netPadding(grid.maxNetCntY[y1]);
+			//if(npBottom)
+			//	n.netChannelPadding.bottom = npBottom;
+			//var npRight = netPadding(grid.maxNetCntX[x1]);
+			//if(npRight)
+			//	n.netChannelPadding.right = npRight;
+			
+			n.x = sumOfNetOffsetsX[x0] + n.x;
+			n.y = sumOfNetOffsetsY[y0] + n.y;
+		});
+	})();
 	//create debug dots for routing nodes
 	(function debugRoterDots(){
 		var toolTipDiv = d3.select("body")
@@ -181,6 +260,21 @@ function updateLayout(svgGroup, componentWrap, linkElements, links){ // move com
 		//        return "M" + sx + "," + sy + " L " + tx + "," + ty;
 		//    });
 	})();
+	
+	//(function redefinePosAsReferenceOnLeftAndTop(){
+	//	grid.visitFromLeftTop(function(c){
+	//		var originalPos = c.pos();
+	//		if(c.top){
+	//			if(c.left){
+	//				
+	//			}
+	//		}
+	//		
+	//	});
+	//})();
+	componentWrap.attr("transform", function (d) {
+        return "translate(" + d.x + "," + d.y + ")";
+    });
 	(function drawNets(){
 		function offsetInRoutingNode(node, net){
 			var x= 0,
@@ -218,7 +312,7 @@ function updateLayout(svgGroup, componentWrap, linkElements, links){ // move com
 				pathStr += " L " + sp +"\n";
 			}
 			var ep = d.end.pos();
-			pathStr += " L " + [ep[0]+COMPONENT_PADDING, ep[1]]+"\n";
+			pathStr += " L " + [ep[0]+COMPONENT_PADDING +d.end.originComponent.netChannelPadding.left, ep[1]]+"\n";
 			return pathStr;
 		});
 	})();
@@ -252,9 +346,6 @@ function redraw(nodes, links){ //main function for rendering components layout
 		.enter()
 		.append("g")
 	    .classed({"component": true})
-	    .attr("transform", function(d) {
-	    	return "translate(" + [ d.x,d.y ] + ")"; 
-	    })
 	    .call(force.drag); //component dragging
 
 	// background
@@ -381,7 +472,7 @@ function redraw(nodes, links){ //main function for rendering components layout
     //	updateLayout();
     //});
     
-    updateLayout(svgGroup, componentWrap, linkElements, links);
+    updateLayout(svgGroup, componentWrap, linkElements, nodes, links);
     
     // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
     var zoomListener = d3.behavior.zoom()

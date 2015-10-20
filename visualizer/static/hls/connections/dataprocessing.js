@@ -183,6 +183,12 @@ function components2columns(nodes, links) { // discover component with most
 	}
 
 	nodes.forEach(function(component) {
+		component.netChannelPadding = {
+			left : 0,
+			right : 0,
+			bottom : 0,
+			top : 0
+		};
 		component.width = COLUMN_WIDTH;
 		component.height = PORT_HEIGHT * 3 + PORT_HEIGHT
 				* Math.max(component.inputs.length, component.outputs.length);
@@ -202,7 +208,7 @@ function components2columns(nodes, links) { // discover component with most
 	}
 
 	// add unconnected components on right side
-	var mostLeftColumn = columns.length()-1;
+	var mostLeftColumn = columns.length() - 1;
 	for (var i = 0; i < nodes.length; i++) {
 		var component = nodes[i];
 		if (component.x === undefined)
@@ -309,7 +315,7 @@ function RoutingNodesContainer(nodes) {
 			}
 		}
 	}
-	for (var ni = 0; ni < nodes.length; ni++) { // add corner nodes and nod for
+	for (var ni = 0; ni < nodes.length; ni++) { // add corner nodes and node for
 		// each port
 		var node = nodes[ni];
 		var leftTop = new RoutingNode();
@@ -321,27 +327,28 @@ function RoutingNodesContainer(nodes) {
 		var leftBottom = new RoutingNode();
 		leftBottom.originComponent = node;
 		leftBottom.pos = function() {
+			var c = this.originComponent;
 			return [
-					this.originComponent.x - COMPONENT_PADDING,
-					this.originComponent.y + this.originComponent.height
-							+ COMPONENT_PADDING ];
+					c.x - COMPONENT_PADDING - c.netChannelPadding.left,
+					c.y + c.height + COMPONENT_PADDING
+							+ c.netChannelPadding.bottom ];
 		};
 		var rightTop = new RoutingNode();
 		rightTop.originComponent = node;
 		rightTop.pos = function() {
-			return [
-					this.originComponent.x + this.originComponent.width
-							+ COMPONENT_PADDING,
-					this.originComponent.y - COMPONENT_PADDING ];
+			var c = this.originComponent;
+			return [ c.x + c.width + COMPONENT_PADDING,
+					c.y - COMPONENT_PADDING - c.netChannelPadding.top ];
 		};
 		var rightBottom = new RoutingNode();
 		rightBottom.originComponent = node;
 		rightBottom.pos = function() {
+			var c = this.originComponent;
 			return [
-					this.originComponent.x + this.originComponent.width
-							+ COMPONENT_PADDING,
-					this.originComponent.y + this.originComponent.height
-							+ COMPONENT_PADDING ];
+					c.x + c.width + COMPONENT_PADDING
+							+ c.netChannelPadding.right,
+					c.y + c.height + COMPONENT_PADDING
+							+ c.netChannelPadding.bottom ];
 		};
 		// insert port nodes
 		node.inputs.forEach(function(port, i) {
@@ -349,10 +356,9 @@ function RoutingNodesContainer(nodes) {
 			pn.originComponent = node;
 			pn.originPortIndex = i;
 			pn.pos = function() {
-				return [
-						this.originComponent.x - COMPONENT_PADDING,
-						this.originComponent.y + (2 + this.originPortIndex)
-								* PORT_HEIGHT ];
+				var c = this.originComponent;
+				return [ c.x - COMPONENT_PADDING - c.netChannelPadding.left,
+						c.y + (2 + this.originPortIndex) * PORT_HEIGHT ];
 			};
 			insertRNode(pn);
 		});
@@ -361,11 +367,11 @@ function RoutingNodesContainer(nodes) {
 			pn.originComponent = node;
 			pn.originPortIndex = i;
 			pn.pos = function() {
+				var c = this.originComponent;
 				return [
-						this.originComponent.x + +this.originComponent.width
-								+ COMPONENT_PADDING,
-						this.originComponent.y + (2 + this.originPortIndex)
-								* PORT_HEIGHT ];
+						c.x + +c.width + COMPONENT_PADDING
+								+ c.netChannelPadding.right,
+						c.y + (2 + this.originPortIndex) * PORT_HEIGHT ];
 			};
 			insertRNode(pn);
 		});
