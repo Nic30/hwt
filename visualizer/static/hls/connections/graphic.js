@@ -224,11 +224,13 @@ function updateLayout(svgGroup, componentWrap, linkElements, nodes, links){ // m
 		    .on("mouseover", function(d) {  
 		    	var html = d.pos() + "</br><b>horizontal:</b><ol>"
 					d.horizontal.forEach(function (net){
-						html += "<li>" + net.name  + "</li>";
+						if (net)
+							html += "<li>" + net.name  + "</li>";
 					});
 		    	html += "</ol><b>vertical:</b><ol>";
 		    	d.vertical.forEach(function (net){
-					html += "<li>" + net.name  + "</li>";
+		    		if (net)
+		    			html += "<li>" + net.name  + "</li>";
 				});
 		    	html += "</ol>";
 		    	

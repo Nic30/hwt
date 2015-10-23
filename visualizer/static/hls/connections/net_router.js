@@ -1,6 +1,18 @@
+
 function NetRouter(nodes, links) {
 	var HORIZONTAL = "h";
 	var VERTICAL = "v";
+	function dir2arrName(dir) {
+		switch (dir) {
+		case HORIZONTAL:
+			return "horizontal";
+		case VERTICAL:
+			return "vertical";
+		default:
+			throw "undefined dir";
+		}
+	}
+
 	var self = {
 		nodes : nodes,
 		links : links,
@@ -22,13 +34,11 @@ function NetRouter(nodes, links) {
 			var p = link.path[0];
 			dir = self.getNextPathDir(last, p);
 
-
 			for (var i = 0; i < link.path.length; i++) {
 				// end is already in path
 				var p = link.path[i];
 				dirTmp = self.getNextPathDir(last, p);
 				if (dir != dirTmp) {
-					//subPath.push(p);
 					fn(subPath, dir);
 					subPath = [ last, p ];
 					dir = dirTmp;
@@ -74,17 +84,7 @@ function NetRouter(nodes, links) {
 					return ml;
 				}
 			}
-
-			switch (dir) {
-			case HORIZONTAL:
-				var m = findMaxPossible("horizontal", 0, 0, subPath.length - 1);
-				break;
-			case VERTICAL:
-				var m = findMaxPossible("vertical", 0, 0, subPath.length - 1);
-				break;
-			default:
-				throw "invalid direction of subpath";
-			}
+			var m = findMaxPossible(dir2arrName(dir), 0, 0, subPath.length - 1);
 			if (m.minFromSameNet < 0) {
 				return m.minFromLen;
 			} else {
@@ -101,6 +101,15 @@ function NetRouter(nodes, links) {
 			 * node extract routing node position for this path (use horizontal
 			 * and/or vertical index, this node pos and NET_PADDING ) draw path
 			 */
+			function wipeNetFromSubpath(net, subPath, dir) {
+				var arrName = dir2arrName(dir);
+				var rmFn = function(n) {
+					var i = n[arrName].indexOf(net)
+					if (i >= 0)
+						n[arrName][i] = undefined;
+				}
+				subPath.forEach(rmFn);
+			}
 			self.grid.visitFromLeftTop(function(n) {
 				n.vertical = [];
 				n.horizontal = [];
@@ -116,20 +125,11 @@ function NetRouter(nodes, links) {
 				self.walkLinkSubPaths(link, function(subPath, dir) {
 					var i = self.findLowestNetIndexInSubPath(subPath, dir,
 							link.net);
-					switch (dir) {
-					case HORIZONTAL:
-						subPath.forEach(function(n) {
-							n.horizontal[i] = link.net;
-						});
-						break;
-					case VERTICAL:
-						subPath.forEach(function(n) {
-							n.vertical[i] = link.net;
-						});
-						break;
-					default:
-						throw "invalid direction of subpath";
-					}
+					wipeNetFromSubpath(link.net, subPath, dir);
+					var arrName = dir2arrName(dir);
+					subPath.forEach(function(n) {
+						n[arrName][i] = link.net;
+					});
 				});
 			});
 
