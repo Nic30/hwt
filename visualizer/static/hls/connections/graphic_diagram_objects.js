@@ -1,5 +1,5 @@
 function drawExternalPorts(svgGroup, exterPortNodes){
-	var externalPorts = svgGroup.selectAll("g")
+	var externalPorts = svgGroup.selectAll(".external-port")
 		.data(exterPortNodes)
 		.enter()
 		.append("g")
@@ -40,7 +40,7 @@ function drawExternalPorts(svgGroup, exterPortNodes){
 
 function drawComponents(svgGroup, componentNodes){
 	//alias component body
-	var componentWrap = svgGroup.selectAll("g")
+	var componentWrap = svgGroup.selectAll(".component")
 		.data(componentNodes)
 		.enter()
 		.append("g")
@@ -66,8 +66,7 @@ function drawComponents(svgGroup, componentNodes){
 		})
 		.text(function(d) {
 		    return d.name;
-		})
-		//.attr("font-size", 40);
+		});
 
 	// [TODO] porty s dratkem ven z komponenty, ruzne typy portu viz stream/bus/wire ve Vivado
 	// input port wraps
