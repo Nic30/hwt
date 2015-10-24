@@ -1,7 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, Response
 from flask.helpers import send_from_directory
 import json
 
+from vhdl_toolkit.samples.superDMA_complex import superDMA_complex
+from vhdl_toolkit.synthetisator.signal import PortConnection
+from vhdl_toolkit.variables import PortItem
+from hls_connections import connectionsBp as connectionsBp
 
 app = Flask(__name__)
 
@@ -33,45 +37,8 @@ def gantt():
     return render_template('hls/gantt_chart.html', ganttTasks=[], ganttTaskNames=[])
 
 
-@app.route('/connections/')
-def connections():
-    return render_template('hls/connections.html')
-
-@app.route('/connections-tests/')
-def connections_test():
-    return render_template('hls/connections_test.html')
-
-
-@app.route('/test/')
-def test():
-    class Component:
-        def __init__(self, name, file):
-            self.name = name
-            self.file = file
-        def to_json(self):
-            return {"id": id(self), "name" : self.name, "file": self.file}
-                             
-    class Connection:
-        def __init__(self, compA, compA_portName, compB, compB_portName):
-            self.compA = compA
-            self.compA_portName = compA_portName
-            self.compB = compB
-            self.compB_portName = compB_portName
-        def to_json(self):
-            return {"compA_id":id(self.compA), "compA_portName": self.compA_portName, "compB_id":  id(self.compB), "compB_portName": self.compB_portName }
-    c0 = Component("compA", "./compA.vhd")
-    c1 = Component("compB", "./compB.vhd")
-    a = {"components" : [c0, c1], 'connections': [Connection(c0, "portA", c1, "portA"), Connection(c1, "portB", c0, "portB")]}
-    
-    def _default(obj):
-        if hasattr(obj, "to_json"):
-            return obj.to_json()
-        
-        return obj.__dict__
-
-    
-    return json.dumps(a, default=_default)
 
 if __name__ == '__main__':
+    app.register_blueprint(connectionsBp)
     app.debug = True
     app.run()

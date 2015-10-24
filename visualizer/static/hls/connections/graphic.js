@@ -113,12 +113,13 @@ function addShadows(svg){
     .attr("stop-color", "#A9D0F5")    
 }
 
-function updateLayout(svgGroup, componentWrap, linkElements, nodes, links){ // move component on its positions and redraw links between them
+function updateNetLayout(svgGroup, linkElements, nodes, links){ // move component on its positions and redraw links between them
 	//move component on its position
 
 	var router = new NetRouter(nodes, links);
 	var grid = router.grid;
 	router.route();
+	
 	(function moveComponetsOutOfNets(){
 		/* find width of channels
 		 * add it to component positions
@@ -195,13 +196,16 @@ function updateLayout(svgGroup, componentWrap, linkElements, nodes, links){ // m
 			//var npRight = netPadding(grid.maxNetCntX[x1]);
 			//if(npRight)
 			//	n.netChannelPadding.right = npRight;
-			
-			n.x = sumOfNetOffsetsX[x0] + n.x;
-			n.y = sumOfNetOffsetsY[y0] + n.y;
+			var xOffset = sumOfNetOffsetsX[x0];
+			if(xOffset  != undefined)
+				n.x = xOffset + n.x;
+			var yOffset = sumOfNetOffsetsY[y0];
+			if(yOffset != undefined)
+				n.y = yOffset + n.y;
 		});
 	})();
 	//create debug dots for routing nodes
-	(function debugRoterDots(){
+	(function debugRouterDots(){
 		var toolTipDiv = d3.select("body")
 			.append("div")   
 		    .attr("class", "tooltip")               
@@ -263,20 +267,7 @@ function updateLayout(svgGroup, componentWrap, linkElements, nodes, links){ // m
 		//    });
 	})();
 	
-	//(function redefinePosAsReferenceOnLeftAndTop(){
-	//	grid.visitFromLeftTop(function(c){
-	//		var originalPos = c.pos();
-	//		if(c.top){
-	//			if(c.left){
-	//				
-	//			}
-	//		}
-	//		
-	//	});
-	//})();
-	componentWrap.attr("transform", function (d) {
-        return "translate(" + d.x + "," + d.y + ")";
-    });
+
 	(function drawNets(){
 		function offsetInRoutingNode(node, net){
 			var x= 0,
@@ -321,11 +312,28 @@ function updateLayout(svgGroup, componentWrap, linkElements, nodes, links){ // m
 };
 
 function redraw(nodes, links){ //main function for rendering components layout
-	var place = d3.select("#chartWraper").node().getBoundingClientRect();
-	d3.select("#chartWraper")
-		.selectAll("svg")
-		.remove(); // delete old on redraw
+	var wrapper = d3.select("#chartWraper");
 	
+	wrapper.selectAll("svg").remove(); // delete old on redraw
+
+	var svg = wrapper.append("svg");
+	var svgGroup= svg.append("g"); // because of zooming/moving
+
+	addShadows(svg);
+
+	//grid higlight
+    var linkElements = svgGroup.selectAll(".link")
+    	.data(links)
+    	.enter()
+    	.append("path")
+    	.classed({"link": true})
+    	.on("mouseover", netMouseOver)
+    	.on("mouseout", netMouseOut);
+
+    updateNetLayout(svgGroup, linkElements, nodes, links);
+
+
+    var place = svg.node().getBoundingClientRect();
 	//force for self organizing of diagram
 	var force = d3.layout.force()
 		.gravity(.00)
@@ -335,187 +343,40 @@ function redraw(nodes, links){ //main function for rendering components layout
 		//.nodes(nodes)
 		//.links(links)
 		//.start();
-	
+	drawExternalPorts(svgGroup, nodes.filter(function (n){
+		return n.isExternalPort;
+		}));
+	drawComponents(svgGroup, nodes.filter(function (n){
+		return !n.isExternalPort;
+		}))
+		.call(force.drag); //component dragging
 
-	var svg = d3.select("#chartWraper").append("svg");
-	var svgGroup= svg.append("g"); // because of zooming/moving
-
-	addShadows(svg);
-	
-	//alias component body
-	var componentWrap = svgGroup.selectAll("g")
-		.data(nodes)    //nodes.filter(function(d) {return !d.isExternalPort}) )
-		.enter()
-		.append("g")
-	    .classed({"component": true})
-	    .on("click", onClick)
-	    .call(force.drag); //component dragging
-
-	var externalPorts = componentWrap.filter(function(d) {return d.isExternalPort})
-		.classed({"external-port" :true})
-		.append("g");
-
-	//console.log(function(d) {return d.inputs})
-	externalPorts.attr("transform", function(d) { 
-		return "translate(" + (d.x + d.width) + "," + (d.y + d.height/2) + ")"; 
-	})
-
-	externalPorts.append("text")
-		.attr("x", function(d) {return (d.inputs.length == 0)?-10:-44})
-		.attr("y", function(d) {return (d.inputs.length == 0)?4:27})
-		.text(function(d) {return d.name;})
-		
-		
-	externalPorts.append("image")
-		.attr("xlink:href", function(d) { 
-			return "/static/hls/connections/arrow_right.ico"; 
-		})
-		.attr("x", function(d) {return (d.inputs.length == 0)?-10:-78})
-		.attr("y", function(d) {return (d.inputs.length == 0)?-5:19})
-		.attr("width", 10)
-		.attr("height", PORT_HEIGHT);
-	
-	componentWrap = componentWrap.filter( function(d){ return !(d.isExternalPort)});
-	
-	// background
-	componentWrap.append("rect")
-	    .attr("rx", 5) // this make rounded corners
-	    .attr("ry", 5)
-	    .classed({"component": true})
-	    .attr("border", 1)
-	    .style("stroke", "#BDBDBD")
-	    .attr("fill", "url(#gradient)")
-	    .style("filter", "url(#drop-shadow)")
-	    .attr("width", function(d) { return d.width})
-	    .attr("height", function(d) { return d.height});
-
-	componentWrap.append('text')
-		.classed({"component-title": true})
-		.attr("y", 0)	
-		.attr("x", function(d){
-			return d.width/2;
-		})
-		.text(function(d) {
-		    return d.name;
-		})
-		//.attr("font-size", 40);
-
-	// [TODO] porty s dratkem ven z komponenty, ruzne typy portu viz stream/bus/wire ve Vivado
-	// input port wraps
-	var port_inputs = componentWrap.append("g")
-		.attr("transform", function(d) { 
-			return "translate(" + 0 + "," + 2*PORT_HEIGHT + ")"; 
-		})
-		.selectAll("g .port-input")
-		.data(function (d){
-			return d.inputs;
-		})
-		.enter()
-		.append('g')
-		.classed({"port-input": true});
-	
-	// input port icon [TODO] only for special types of connection, this is only example how to use it
-	port_inputs.append("image")
-		.attr("xlink:href", function(d) { 
-			return "/static/hls/connections/arrow_right.ico"; 
-		})
-		.attr("y", function(d, i){
-			return (i-0.5)*PORT_HEIGHT;
-		})
-		.attr("width", 10)
-		.attr("height", PORT_HEIGHT);
-	
-	// portName text [TODO] intelligent alignment of port name
-	port_inputs.append('text')
-		.attr("x", 10)
-		.attr("y", function(d, i){
-			return (i+0.3)*PORT_HEIGHT;
-		})
-		.attr("height", PORT_HEIGHT)
-		.text(function(portName) { 
-			return portName; 
-		});
-	
-	// output port wraps
-	var port_out = componentWrap.append("g")
-		.attr("transform", function(d) { 
-			var componentWidth = d3.select(this).node().parentNode.getBoundingClientRect().width;
-			return "translate(" + componentWidth + "," + 2*PORT_HEIGHT + ")"; 
-		})
-		.selectAll("g .port-group")
-		.data(function (d){
-			return d.outputs;
-		})
-		.enter()
-		.append('g')
-		.classed({"port-output": true});
-
-	//  output port image
-	port_out.append("image")
-		.attr("xlink:href", function(d) { 
-			return "/static/hls/connections/arrow_right.ico"; 
-		})
-		.attr("x", -10)
-		.attr("y", function(d, i){
-			return (i-0.5)*PORT_HEIGHT;
-		})
-		.attr("width", 10)
-		.attr("height", PORT_HEIGHT);	
-
-	// portName text
-	port_out.append('text') 
-		.attr("x", -10)	// posunuty okrej o 10 dolava
-		.attr("y", function(d, i){
-			return (i+0.3)*PORT_HEIGHT; //Zuzana: neviem ci je spravne manualne posunutie prvku ale vyzera to dobre, zalezi aj od velkosti fontu
-		})
-		.attr("height", PORT_HEIGHT)
-		.text(function(portName) { 
-			return portName; 
-		});
-
-
-	
-	//grid higlight
-    var linkElements = svgGroup.selectAll(".link")
-    	.data(links)
-    	.enter()
-    	.append("path")
-    	.classed({"link": true})
-    	.on("mouseover", netMouseOver)
-    	.on("mouseout", netMouseOut);
-	
-	
-    //force.on("tick", function () {
-    //	var q = d3.geom.quadtree(nodes),
-    //        i = 0,
-    //        n = nodes.length;
-    //
-    //	while (++i < n) 
-    //		q.visit(nodeColisionResolver(nodes[i]));
-    //	
-    //	updateLayout();
-    //});
-
-    updateLayout(svgGroup, componentWrap, linkElements, nodes, links, externalPorts);
-    
     // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
     var zoomListener = d3.behavior.zoom()
     	.scaleExtent([0.2, 30])
     	.on("zoom", function () {
     			svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-    	})
-    	
+    	});
+    function diagramSize(){
+    	var widthMax =0;
+    	var heigthtMax = 0;
+    	nodes.forEach(function (n){
+    		widthMax = Math.max(n.x +n.width + COMPONENT_PADDING, widthMax);
+    		heigthtMax = Math.max(n.y + n.height +COMPONENT_PADDING, heigthtMax);
+    	});
+    	return [widthMax, heigthtMax];
+    }
+    var size = diagramSize();
+    var scaleX = place.width /size[0] ;
+    var scaleY = place.height / size[1];
+    var scale = Math.min(scaleX, scaleY); 
+    
     //this is processiong of zoomListener explicit translate and scale on start
     zoomListener.translate([0,0])
-    	.scale(2);
+    	.scale(scale);
     zoomListener.event(svg.transition()
     					  .duration(100));
     
     svg.call(zoomListener);
  
-}
-
-function onClick(d)
-{
-	console.log(d.name)
 }

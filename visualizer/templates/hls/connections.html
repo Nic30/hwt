@@ -3,136 +3,17 @@
 	rel="stylesheet" />
 {% endblock %} {% block js_extra %}
 <script type="text/javascript">
-	var nodes = [ {
-		id : 0,
-		name : "smaller one",
-		inputs : [ "clk", "rst" ],
-		outputs : [ "outA", "outB" ]
-	}, {
-		id : 1,
-		name : "biggest",
-		inputs : [ "clk", "rst", "inA", "inB" ],
-		outputs : [ "outA2", "outB2" ]
-	}, {
-		id : 2,
-		name : "clk",
-		isExternalPort : true,
-		inputs : [],
-		outputs : [ "clk" ]
-	}, {
-		id : 3,
-		name : "rst",
-		isExternalPort : true,
-		inputs : [],
-		outputs : [ "rst" ]
-	}, {
-		id : 4,
-		name : "dummy",
-		inputs : [ "clk", "rst" ],
-		outputs : [ "a", "b", "c", "d" ]
-	}, {
-		id : 5,
-		name : "selfReference",
-		inputs : [ "clk", "inC", "inD" ],
-		outputs : [ "c", "d" ]
-	}, {
-		id : 6,
-		name : "outA",
-		isExternalPort : true,
-		inputs : ["outA" ],
-		outputs : [ ]
-	}];
-	//{"id":4, "portIndex":0}
-	var nets = [ {
-		"name" : "a",
-		"source" : {
-			"id" : 4,
-			"portIndex" : 0
-		}, 
-		targets : [{
-			"id" : 6,
-			"portIndex" : 0
-		}]
-		}, {
-		"name" : "clk",
-		"source" : {
-			"id" : 2,
-			"portIndex" : 0
-		},
-		"targets" : [ {
-			"id" : 0,
-			"portIndex" : 0
-		}, {
-			"id" : 1,
-			"portIndex" : 0
-		}, ]
-	}, {
-		"name" : "rst",
-		"source" : {
-			"id" : 3,
-			"portIndex" : 0
-		},
-		"targets" : [ {
-			"id" : 0,
-			"portIndex" : 1
-		}, {
-			"id" : 1,
-			"portIndex" : 1
-		} ]
-	}, {
-		"name" : "A",
-		"source" : {
-			"id" : 0,
-			"portIndex" : 0
-		},
-		"targets" : [ {
-			"id" : 1,
-			"portIndex" : 2
-		} ]
-	}, {
-		"name" : "B",
-		"source" : {
-			"id" : 0,
-			"portIndex" : 1
-		},
-		"targets" : [ {
-			"id" : 1,
-			"portIndex" : 3
-		} ]
-	}, {
-		"name" : "C",
-		"source" : {
-			"id" : 5,
-			"portIndex" : 0
-		},
-		"targets" : [ {
-			"id" : 5,
-			"portIndex" : 1
-		} ]
-	}, {
-		"name" : "D",
-		"source" : {
-			"id" : 5,
-			"portIndex" : 1
-		},
-		"targets" : [ {
-			"id" : 5,
-			"portIndex" : 2
-		} ]
-	},
-
-	];
-
 	var COLUMN_WIDTH = 120;
 	var PORT_HEIGHT = 10;
 	var COMPONENT_PADDING = 20;
 	var NET_PADDING = 5;
-
 </script>
+<script type="text/javascript" src="/static/bower_components/angularjs/angular.js"></script>
 <script type="text/javascript" src="/static/bower_components/d3/d3.js"></script>
 <script type="text/javascript"
 	src="/static/hls/connections/binaryheap.js"></script>
 <script type="text/javascript" src="/static/hls/connections/a_star.js"></script>
+<script type="text/javascript" src="/static/hls/connections/graphic_diagram_objects.js"></script>
 <script type="text/javascript" src="/static/hls/connections/graphic.js"></script>
 <script type="text/javascript"
 	src="/static/hls/connections/dataprocessing.js"></script>
@@ -140,5 +21,9 @@
 	src="/static/hls/connections/net_router.js"></script>
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
 {% endblock %} {% block content %}
-<div id="chartWraper"></div>
+<div id="chartWraper" ng-app="App" ng-controller="diagramController">
+<button ng-click="redraw()" >
+  Redraw
+</button>
+</div>
 {% endblock %}
