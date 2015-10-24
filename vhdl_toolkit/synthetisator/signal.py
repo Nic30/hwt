@@ -1,6 +1,6 @@
 from vhdl_toolkit.variables import SignalItem, PortItem
 from vhdl_toolkit.expr import Assignment, value2vhdlformat
-from python_toolkit.arrayQuery import arr_any, single
+from python_toolkit.arrayQuery import arr_any, single, first
 from vhdl_toolkit.types import VHDLType, VHDLBoolean
 
 class InvalidOperandExc(Exception):
@@ -105,6 +105,7 @@ class PortConnection():
         self.sig = signal
         self.unit = unit
         self.portItem = portItem
+        
     def asPortMap(self):
         p_w = self.portItem.var_type.width
         s_w = self.sig.var_type.width
@@ -116,7 +117,7 @@ class PortConnection():
         else:
             return " %s => %s" % (self.portItem.name, self.sig.name)
 
-
+#more like net
 class Signal(SignalItem):
     def __init__(self, name, var_type, defaultVal=None, onIn=True):
         if name is None:
@@ -211,17 +212,20 @@ class Signal(SignalItem):
         return indx.result
     
     def hasDriver(self):
+        return self.getDriver() != None
+    
+    def getDriver(self):
         def assign2Me(ep):
             if isinstance(ep, Assignment) and ep.dst == self:
-                return True
+                return ep
             elif isinstance(ep, PortConnection) and ep.portItem.direction == PortItem.typeOut: 
-                return True
+                return ep
             elif isinstance(ep, BitRange) and ep.sigSelect.hasDriver():
-                return True
+                return ep
             else:
-                return False
+                return None
                 
-        return arr_any(walkSigExpr(self), assign2Me)
+        return first(walkSigExpr(self), assign2Me)
     
     def assign(self, source):
         checkOperand(source)
@@ -229,8 +233,11 @@ class Signal(SignalItem):
         a.cond = set()
         self.expr.append(a)
         return a
+    
+    def toJson(self):
+        return {"name": self.name}
  
-class SynSignal(Signal):
+class SyncSignal(Signal):
     def __init__(self, name, var_type, defaultVal=None):
         super().__init__(name, var_type, defaultVal)
         self.next = Signal(name + "_next", var_type, defaultVal)

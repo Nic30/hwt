@@ -19,19 +19,24 @@ function NetRouter(nodes, links) {
 		grid : new RoutingNodesContainer(nodes),
 		getNextPathDir : function(nodeA, nodeB) {
 			if (!nodeA || !nodeB)
-				throw "invalid use with undefined node";
+				throw "Error:invalid use with undefined node";
 			if (nodeA.left == nodeB || nodeA.right == nodeB) {
 				return HORIZONTAL;
 			}
 			if (nodeA.top == nodeB || nodeA.bottom == nodeB) {
 				return VERTICAL;
 			}
-			throw "Nodes are not even connected";
+			throw "Error:Nodes are not even connected";
 		},
 		walkLinkSubPaths : function(link, fn) {
 			var dir, dirTmp, last = link.start;
 			var subPath = [ link.start ];
 			var p = link.path[0];
+			if (p == undefined){
+				fn(subPath, HORIZONTAL);
+				return;
+			}
+				
 			dir = self.getNextPathDir(last, p);
 
 			for (var i = 0; i < link.path.length; i++) {
@@ -121,7 +126,7 @@ function NetRouter(nodes, links) {
 				l.end = grid.componetInputNode(l.target, l.targetIndex);
 				l.path = astar.search(grid, l.start, l.end);
 			});
-			links.forEach(function(link) {
+			links.forEach(function(link, li) {
 				self.walkLinkSubPaths(link, function(subPath, dir) {
 					var i = self.findLowestNetIndexInSubPath(subPath, dir,
 							link.net);

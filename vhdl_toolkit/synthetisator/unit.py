@@ -1,5 +1,5 @@
 from vhdl_toolkit.architecture import ComponentInstance
-from python_toolkit.arrayQuery import single, arr_any, NoValueExc
+from python_toolkit.arrayQuery import single, arr_any, NoValueExc, where
 from vhdl_toolkit.entity import Entity
 from python_toolkit.stringUtils import matchIgnorecase
 from vhdl_toolkit.variables import PortItem
@@ -34,7 +34,6 @@ class VHDLUnit(Entity):
                     raise Exception("Missing connection for input %s of component %s", (p.name, self.entity.name))           
         self._updateWidthsFromGenerics()        
             
-            
         ci.portMaps = list(map(lambda x: x.asPortMap(), self.portConnections))
         
         for k, v in self.genericsValues.items():
@@ -49,6 +48,16 @@ class VHDLUnit(Entity):
             ci.genericMaps.append("%s => %s" % (k, val_str))
         
         return ci
+    def toJson(self):
+        return {"name":self.name, "id":id(self), 
+                "inputs": [{"name":x.name, 
+                            "id" : id(x),
+                            "portIndex": 0} \
+                        for x in where(self.port, lambda p : p.direction == PortItem.typeIn )],
+                "outputs": [{"name":x.name,
+                             "id" : id(x),
+                             "portIndex": 0} \
+                        for x in where(self.port, lambda p : p.direction == PortItem.typeOut)]}
         
 def portItemByName(entity, name):
     return single(entity.portItem, lambda x: x.name == name) 

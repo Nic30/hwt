@@ -214,7 +214,7 @@ function components2columns(nodes, links) { // discover component with most
 		if (component.x === undefined)
 			columns.push(mostLeftColumn, component);
 	}
-	positionsForColumn(x, columns.midleRight[mostLeftColumn]);
+	positionsForColumn(x, columns.accessFromLeft(mostLeftColumn));
 }
 
 /*
