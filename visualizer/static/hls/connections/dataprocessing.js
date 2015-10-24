@@ -16,7 +16,7 @@ function ColumnContainer() {
 			var arr;
 			if (indx < 0) {
 				arr = self.left;
-				indx = -indx - 1;
+				indx = (-indx) - 1;
 			} else {
 				arr = self.midleRight;
 			}
@@ -202,19 +202,25 @@ function components2columns(nodes, links) { // discover component with most
 		});
 	}
 	// set possitions forEach column
-	for (var x = 0; x < columns.length(); x++) {
+	var x =0;
+	for (var x; x < columns.length(); x++) {
 		var column = columns.accessFromLeft(x);
 		positionsForColumn(x, column);
 	}
 
 	// add unconnected components on right side
-	var mostLeftColumn = columns.length() - 1;
-	for (var i = 0; i < nodes.length; i++) {
-		var component = nodes[i];
+	var mostLeftColumn = columns.midleRight ;
+	nodes.forEach(function (component){
 		if (component.x === undefined)
 			columns.push(mostLeftColumn, component);
-	}
-	positionsForColumn(x, columns.accessFromLeft(mostLeftColumn));
+	});
+	positionsForColumn(x, columns.midleRight[mostLeftColumn]);
+	//@assert
+	nodes.forEach(function(n){
+		if(!Number.isFinite(n.x) || ! Number.isFinite(n.y))
+			throw "Node " + n.name + " is not properly placed";
+	});
+	
 }
 
 /*

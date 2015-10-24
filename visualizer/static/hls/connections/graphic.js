@@ -344,10 +344,10 @@ function redraw(nodes, links){ //main function for rendering components layout
 		//.links(links)
 		//.start();
 	drawExternalPorts(svgGroup, nodes.filter(function (n){
-		return n.isExternalPort;
+			return n.isExternalPort;
 		}));
 	drawComponents(svgGroup, nodes.filter(function (n){
-		return !n.isExternalPort;
+			return !n.isExternalPort;
 		}))
 		.call(force.drag); //component dragging
 
