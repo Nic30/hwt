@@ -348,6 +348,7 @@ function redraw(nodes, links){ //main function for rendering components layout
 		.enter()
 		.append("g")
 	    .classed({"component": true})
+	    .on("click", onClick)
 	    .call(force.drag); //component dragging
 
 	var externalPorts = componentWrap.filter(function(d) {return d.isExternalPort})
@@ -512,4 +513,9 @@ function redraw(nodes, links){ //main function for rendering components layout
     
     svg.call(zoomListener);
  
+}
+
+function onClick(d)
+{
+	console.log(d.name)
 }
