@@ -325,16 +325,46 @@ function redraw(nodes, links){ //main function for rendering components layout
 	var svgGroup= svg.append("g"); // because of zooming/moving
 
 	addShadows(svg);
+<<<<<<< HEAD
 
 	 
 	var componentWrap = (function drawComponents(svgGroup,nodes){
+=======
+	
+>>>>>>> 294edf93c3fbff04ea843af4de916d769845425c
 	//alias component body
 	var componentWrap = svgGroup.selectAll("g")
-		.data(nodes)
+		.data(nodes)    //nodes.filter(function(d) {return !d.isExternalPort}) )
 		.enter()
 		.append("g")
 	    .classed({"component": true});
 
+	var externalPorts = componentWrap.filter(function(d) {return d.isExternalPort})
+		.classed({"external-port" :true})
+		.append("g");
+
+	//console.log(function(d) {return d.inputs})
+	externalPorts.attr("transform", function(d) { 
+		return "translate(" + (d.x + d.width) + "," + (d.y + d.height/2) + ")"; 
+	})
+
+	externalPorts.append("text")
+		.attr("x", function(d) {return (d.inputs.length == 0)?-10:-44})
+		.attr("y", function(d) {return (d.inputs.length == 0)?4:27})
+		.text(function(d) {return d.name;})
+		
+		
+	externalPorts.append("image")
+		.attr("xlink:href", function(d) { 
+			return "/static/hls/connections/arrow_right.ico"; 
+		})
+		.attr("x", function(d) {return (d.inputs.length == 0)?-10:-78})
+		.attr("y", function(d) {return (d.inputs.length == 0)?-5:19})
+		.attr("width", 10)
+		.attr("height", PORT_HEIGHT);
+	
+	componentWrap = componentWrap.filter( function(d){ return !(d.isExternalPort)});
+	
 	// background
 	componentWrap.append("rect")
 	    .attr("rx", 5) // this make rounded corners
@@ -346,7 +376,11 @@ function redraw(nodes, links){ //main function for rendering components layout
 	    .style("filter", "url(#drop-shadow)")
 	    .attr("width", function(d) { return d.width})
 	    .attr("height", function(d) { return d.height});
+<<<<<<< HEAD
 	
+=======
+
+>>>>>>> 294edf93c3fbff04ea843af4de916d769845425c
 	componentWrap.append('text')
 		.classed({"component-title": true})
 		.attr("y", 0)	
@@ -442,7 +476,23 @@ function redraw(nodes, links){ //main function for rendering components layout
     	.on("mouseover", netMouseOver)
     	.on("mouseout", netMouseOut);
 	
+<<<<<<< HEAD
     updateLayout(svgGroup, componentWrap, linkElements, nodes, links);
+=======
+	
+    //force.on("tick", function () {
+    //	var q = d3.geom.quadtree(nodes),
+    //        i = 0,
+    //        n = nodes.length;
+    //
+    //	while (++i < n) 
+    //		q.visit(nodeColisionResolver(nodes[i]));
+    //	
+    //	updateLayout();
+    //});
+
+    updateLayout(svgGroup, componentWrap, linkElements, nodes, links, externalPorts);
+>>>>>>> 294edf93c3fbff04ea843af4de916d769845425c
     
     var place = svg.node().getBoundingClientRect();
 	//force for self organizing of diagram
@@ -459,7 +509,7 @@ function redraw(nodes, links){ //main function for rendering components layout
 
     // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
     var zoomListener = d3.behavior.zoom()
-    	.scaleExtent([0.1, 3])
+    	.scaleExtent([0.2, 30])
     	.on("zoom", function () {
     			svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
     	});
