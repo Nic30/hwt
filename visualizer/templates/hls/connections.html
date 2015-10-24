@@ -31,13 +31,29 @@
 		inputs : [ "clk", "rst" ],
 		outputs : [ "a", "b", "c", "d" ]
 	}, {
-		id : 4,
+		id : 5,
 		name : "selfReference",
 		inputs : [ "clk", "inC", "inD" ],
 		outputs : [ "c", "d" ]
-	} ];
+	}, {
+		id : 6,
+		name : "outA",
+		isExternalPort : true,
+		inputs : ["outA" ],
+		outputs : [ ]
+	}];
 	//{"id":4, "portIndex":0}
 	var nets = [ {
+		"name" : "a",
+		"source" : {
+			"id" : 4,
+			"portIndex" : 0
+		}, 
+		targets : [{
+			"id" : 6,
+			"portIndex" : 0
+		}]
+		}, {
 		"name" : "clk",
 		"source" : {
 			"id" : 2,
@@ -86,21 +102,21 @@
 	}, {
 		"name" : "C",
 		"source" : {
-			"id" : 4,
+			"id" : 5,
 			"portIndex" : 0
 		},
 		"targets" : [ {
-			"id" : 4,
+			"id" : 5,
 			"portIndex" : 1
 		} ]
 	}, {
 		"name" : "D",
 		"source" : {
-			"id" : 4,
+			"id" : 5,
 			"portIndex" : 1
 		},
 		"targets" : [ {
-			"id" : 4,
+			"id" : 5,
 			"portIndex" : 2
 		} ]
 	},
@@ -111,6 +127,7 @@
 	var PORT_HEIGHT = 10;
 	var COMPONENT_PADDING = 20;
 	var NET_PADDING = 5;
+
 </script>
 <script type="text/javascript" src="/static/bower_components/d3/d3.js"></script>
 <script type="text/javascript"

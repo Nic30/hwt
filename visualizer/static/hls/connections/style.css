@@ -81,6 +81,7 @@ path.link-selected {
 
 .external-port {
 	fill: green;
+	text-anchor: end;
 }
 
 div.tooltip {
