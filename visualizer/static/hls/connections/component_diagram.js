@@ -222,14 +222,14 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 				pathStr += " L " + sp +"\n";
 			}
 			var ep = d.end.pos();
-			pathStr += " L " + [ep[0]+COMPONENT_PADDING +d.target.netChannelPadding.left, ep[1]]+"\n";
+			pathStr += " L " + [ep[0]+COMPONENT_PADDING +d.target.netChannelPadding.left, ep[1]]+"\n"; //connection from port node to port
 			return pathStr;
 		});
 	})();
 };
 
-function redraw(nodes, links){ //main function for rendering components layout
-	var wrapper = d3.select("#chartWraper");
+function ComponentDiagram(selector,nodes, links){ //main function for rendering components layout
+	var wrapper = d3.select(selector);
 	
 	wrapper.selectAll("svg").remove(); // delete old on redraw
 
