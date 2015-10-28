@@ -210,7 +210,7 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 		linkElements.attr("d", function (d) {
 			var sp = d.start.pos();
 			var spOffset = offsetInRoutingNode(d.start, d.net);
-			var pathStr = "M " + [sp[0] - COMPONENT_PADDING , sp[1]]; //connection from port node to port
+			var pathStr = "M " + [sp[0] - COMPONENT_PADDING - d.source.netChannelPadding.right , sp[1]]; //connection from port node to port
 			pointAdd(sp, spOffset);
 			pathStr += " L " + sp +"\n";
 	
@@ -222,7 +222,7 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 				pathStr += " L " + sp +"\n";
 			}
 			var ep = d.end.pos();
-			pathStr += " L " + [ep[0]+COMPONENT_PADDING +d.end.originComponent.netChannelPadding.left, ep[1]]+"\n";
+			pathStr += " L " + [ep[0]+COMPONENT_PADDING +d.target.netChannelPadding.left, ep[1]]+"\n";
 			return pathStr;
 		});
 	})();

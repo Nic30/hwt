@@ -41,7 +41,8 @@ function ColumnContainer() {
 	return self;
 }
 
-function RoutingBoundry() {
+function RoutingBoundry(parentNode) {
+	return {"parent": parentNode}
 }
 
 function RoutingNode() {
@@ -246,7 +247,7 @@ function RoutingNodesContainer(nodes) {
 		var y0=node.y;
 		var width = node.widht
 		var height = node.height;
-		var boundry = RoutingBoundry(node);
+		var boundry = new RoutingBoundry(node);
 
 		for (var y = y0; y < y0 + height; y++) {
 			var col = grid[y];
