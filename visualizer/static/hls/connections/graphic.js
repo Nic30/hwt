@@ -120,95 +120,11 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){ // move componen
 	var grid = router.grid;
 	router.route();
 	
-	(function moveComponetsOutOfNets(){
-		/* find width of channels
-		 * add it to component positions
-		 * */
-		function netPadding(netCnt){
-			return netCnt * (NET_PADDING+1);
-		}
-		
-		grid.maxNetCntY = [];
-		grid.maxNetCntX = [];
-		
-		for(var x = 0; x < grid.length; x++){
-			var col = grid[x];
-			if(col){
-				if(grid.maxNetCntX[x] === undefined)
-					grid.maxNetCntX[x] = 0;
-				for(var y =0; y < grid.length; y++){
-					var n = col[y];
-					if(n){
-						var netCntY = n.horizontal.length;
-						var netCntX = n.vertical.length;
-
-						if(grid.maxNetCntY[y] === undefined)
-							grid.maxNetCntY[y] = 0;
-						if(grid.maxNetCntY[y] < netCntY)
-							grid.maxNetCntY[y] = netCntY;
-						if(grid.maxNetCntX[x] < netCntX)
-							grid.maxNetCntX[x] = netCntX;
-					}
-				}
-			}
-		}
-
-		var sumOfNetOffsetsX = [];
-		var sumOfNetOffsetsY = [];
-		var offset = 0;
-		grid.maxNetCntX.forEach(function (d, i){
-			if(d){
-				offset += netPadding(d);
-			}
-			sumOfNetOffsetsX[i] = offset;
-		});
-		offset = 0;
-		grid.maxNetCntY.forEach(function (d, i){
-			if(d){
-				offset += netPadding(d);
-			}
-			sumOfNetOffsetsY[i] = offset;
-		});
-		function previousDefined(arr, indx){
-			return arr[indx]
-			for(var i = indx-1; i >=0; i--){
-				var offset  = arr[i];
-				if(offset){
-					return offset;
-				}
-			}
-			return 0;
-		}
-		nodes.forEach(function (n){
-			var x0 = n.x - COMPONENT_PADDING;
-			var x1 = n.x + n.width + COMPONENT_PADDING;
-			var y0 =n.y - COMPONENT_PADDING;
-			var y1 = n.y + n.height + COMPONENT_PADDING;
-			var npTop =  netPadding( previousDefined(grid.maxNetCntY, y0));
-			if(npTop)
-				n.netChannelPadding.top = npTop;
-			var npLeft = netPadding(previousDefined(grid.maxNetCntX, x0));
-			if (npLeft)
-				n.netChannelPadding.left = npLeft;
-			//var npBottom = netPadding(grid.maxNetCntY[y1]);
-			//if(npBottom)
-			//	n.netChannelPadding.bottom = npBottom;
-			//var npRight = netPadding(grid.maxNetCntX[x1]);
-			//if(npRight)
-			//	n.netChannelPadding.right = npRight;
-			var xOffset = sumOfNetOffsetsX[x0];
-			if(xOffset  != undefined)
-				n.x = xOffset + n.x;
-			var yOffset = sumOfNetOffsetsY[y0];
-			if(yOffset != undefined)
-				n.y = yOffset + n.y;
-		});
-	})();
 	//create debug dots for routing nodes
 	(function debugRouterDots(){
 		var toolTipDiv = d3.select("body")
 			.append("div")   
-		    .attr("class", "tooltip")               
+		    .attr("id", "tooltip")               
 		    .style("opacity", 0);
 		var flatenMap = [];
 		grid.visitFromLeftTop(function(c){
@@ -225,7 +141,7 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){ // move componen
 			.attr("cy", function(d){
 				return d.pos()[1];
 			}) 
-		    .on("mouseover", function(d) {  
+		    .on("mouseover", function(d) {
 		    	var html = d.pos() + "</br><b>horizontal:</b><ol>"
 					d.horizontal.forEach(function (net){
 						if (net)

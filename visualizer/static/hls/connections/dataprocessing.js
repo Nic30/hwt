@@ -209,7 +209,7 @@ function components2columns(nodes, links) { // discover component with most
 	}
 
 	// add unconnected components on right side
-	var mostLeftColumn = columns.midleRight ;
+	var mostLeftColumn = columns.midleRight.length -1;
 	nodes.forEach(function (component){
 		if (component.x === undefined)
 			columns.push(mostLeftColumn, component);
