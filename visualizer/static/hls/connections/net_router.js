@@ -150,7 +150,7 @@ function NetRouter(nodes, links) {
 			grid.maxNetCntY = [];
 			grid.maxNetCntX = [];
 			
-			for(var x = 0; x < grid.length; x++){
+			for(var x = 0; x < grid.length; x++){ // discover sizes of net channels
 				var col = grid[x];
 				if(col){
 					if(grid.maxNetCntX[x] === undefined)

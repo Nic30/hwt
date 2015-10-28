@@ -113,7 +113,21 @@ function addShadows(svg){
     .attr("stop-color", "#A9D0F5")    
 }
 
-function updateNetLayout(svgGroup, linkElements, nodes, links){ // move component on its positions and redraw links between them
+function showTooltip(toolTipDiv, html){
+	toolTipDiv.transition()        
+	    .duration(100)      
+	    .style("opacity", .9);      
+	toolTipDiv.html(html)
+	    .style("left", d3.event.pageX + "px")     
+	    .style("top", (d3.event.pageY - 28) + "px");  
+}
+function hideTooltip(toolTipDiv){
+	toolTipDiv.transition()        
+		.duration(200)      
+		.style("opacity", 0);
+}
+
+function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // move component on its positions and redraw links between them
 	//move component on its position
 
 	var router = new NetRouter(nodes, links);
@@ -122,10 +136,6 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){ // move componen
 	
 	//create debug dots for routing nodes
 	(function debugRouterDots(){
-		var toolTipDiv = d3.select("body")
-			.append("div")   
-		    .attr("id", "tooltip")               
-		    .style("opacity", 0);
 		var flatenMap = [];
 		grid.visitFromLeftTop(function(c){
 			flatenMap.push(c);
@@ -153,19 +163,10 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){ // move componen
 		    			html += "<li>" + net.name  + "</li>";
 				});
 		    	html += "</ol>";
-		    	
-		    	
-		    	toolTipDiv.transition()        
-		            .duration(100)      
-		            .style("opacity", .9);      
-		    	toolTipDiv.html(html)
-		            .style("left", d3.event.pageX + "px")     
-		            .style("top", (d3.event.pageY - 28) + "px");    
+		    	showTooltip(toolTipDiv, html);
 		    })                  
 		    .on("mouseout", function(d) {       
-		    	toolTipDiv.transition()        
-		            .duration(200)      
-		            .style("opacity", 0);   
+		    	hideTooltip(toolTipDiv);   
 		    });
 		
 		//// line to parent componet
@@ -209,7 +210,7 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){ // move componen
 		linkElements.attr("d", function (d) {
 			var sp = d.start.pos();
 			var spOffset = offsetInRoutingNode(d.start, d.net);
-			var pathStr = " M" + [sp[0] - COMPONENT_PADDING , sp[1]]; //connection from port node to port
+			var pathStr = "M " + [sp[0] - COMPONENT_PADDING , sp[1]]; //connection from port node to port
 			pointAdd(sp, spOffset);
 			pathStr += " L " + sp +"\n";
 	
@@ -246,7 +247,12 @@ function redraw(nodes, links){ //main function for rendering components layout
     	.on("mouseover", netMouseOver)
     	.on("mouseout", netMouseOut);
 
-    updateNetLayout(svgGroup, linkElements, nodes, links);
+	var toolTipDiv = d3.select("body")
+		.append("div")   
+	    .attr("id", "tooltip")               
+	    .style("opacity", 0);
+    
+    updateNetLayout(svgGroup,toolTipDiv, linkElements, nodes, links);
 
 
     var place = svg.node().getBoundingClientRect();
@@ -273,26 +279,39 @@ function redraw(nodes, links){ //main function for rendering components layout
     	.on("zoom", function () {
     			svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
     	});
-    function diagramSize(){
-    	var widthMax =0;
-    	var heigthtMax = 0;
-    	nodes.forEach(function (n){
-    		widthMax = Math.max(n.x +n.width + COMPONENT_PADDING, widthMax);
-    		heigthtMax = Math.max(n.y + n.height +COMPONENT_PADDING, heigthtMax);
-    	});
-    	return [widthMax, heigthtMax];
-    }
-    var size = diagramSize();
-    var scaleX = place.width /size[0] ;
-    var scaleY = place.height / size[1];
-    var scale = Math.min(scaleX, scaleY); 
-    
-    //this is processiong of zoomListener explicit translate and scale on start
-    zoomListener.translate([0,0])
-    	.scale(scale);
-    zoomListener.event(svg.transition()
-    					  .duration(100));
+    (function fitDiagram2Screen(zoomListener){
+        function diagramSize(){
+        	var widthMax =0;
+        	var heigthtMax = 0;
+        	nodes.forEach(function (n){
+        		widthMax = Math.max(n.x +n.width + COMPONENT_PADDING, widthMax);
+        		heigthtMax = Math.max(n.y + n.height +COMPONENT_PADDING, heigthtMax);
+        	});
+        	return [widthMax, heigthtMax];
+        }
+        var size = diagramSize();
+        var scaleX = place.width /size[0] ;
+        var scaleY = place.height / size[1];
+        var scale = Math.min(scaleX, scaleY); 
+        //this is processiong of zoomListener explicit translate and scale on start
+        zoomListener.translate([0,0])
+        	.scale(scale);
+        zoomListener.event(svg.transition()
+        					  .duration(100));
+    })(zoomListener);
     
     svg.call(zoomListener);
- 
+
+    
+    d3.select('body')
+    	.call(d3.keybinding("keydown")
+    	    .on('p', function (){
+    	    	showTooltip(toolTipDiv, d3.mouse(this))
+    	    })
+    	).call(d3.keybinding("keyup")
+        	    .on('p', function (){
+        	    	hideTooltip(toolTipDiv)
+        	    })
+        );
+    
 }
