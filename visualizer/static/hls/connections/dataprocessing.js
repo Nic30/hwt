@@ -241,7 +241,12 @@ function components2columns(nodes, links) { // discover component with most
 
 function RoutingNodesContainer(nodes) {
 	var grid = [];
-
+	(function normalizeNodesPosition(nodes){
+		nodes.forEach(function (n){
+			n.x = Math.ceil(n.x);
+			n.y = Math.ceil(n.y);
+		});
+	})(nodes);
 	function insertRectangularBoundry(node) {
 		var x0 = node.x;
 		var y0=node.y;
@@ -268,8 +273,8 @@ function RoutingNodesContainer(nodes) {
 	
 	function insertRNode(rnode, canGoLeftAndRight) {
 		var pos = rnode.pos();
-		var x = Math.ceil(pos[0]);
-		var y = Math.ceil(pos[1]);
+		var x = pos[0];
+		var y = pos[1];
 
 		// check if exists
 		var col = grid[x];
@@ -416,7 +421,7 @@ function RoutingNodesContainer(nodes) {
 			pn.pos = function() {
 				var c = this.originComponent;
 				return [
-						c.x + +c.width + COMPONENT_PADDING
+						c.x + c.width + COMPONENT_PADDING
 								+ c.netChannelPadding.right,
 						c.y + (2 + this.originPortIndex) * PORT_HEIGHT ];
 			};
@@ -444,14 +449,14 @@ function RoutingNodesContainer(nodes) {
 		}
 	}
 	grid.componetOutputNode = function(component, portIndex) {
-		var x = Math.ceil(component.x + component.width + COMPONENT_PADDING);
-		var y = Math.ceil(component.y + (2 + portIndex) * PORT_HEIGHT);
+		var x = component.x + component.width + COMPONENT_PADDING + component.netChannelPadding.right;
+		var y = component.y + (2 + portIndex) * PORT_HEIGHT;
 		return grid[x][y];
 
 	}
 	grid.componetInputNode = function(component, portIndex) {
-		var x = Math.ceil(component.x - COMPONENT_PADDING);
-		var y = Math.ceil(component.y + (2 + portIndex) * PORT_HEIGHT);
+		var x = component.x - COMPONENT_PADDING - component.netChannelPadding.left;
+		var y = component.y + (2 + portIndex) * PORT_HEIGHT;
 		return grid[x][y];
 	}
 

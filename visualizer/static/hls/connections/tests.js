@@ -67,3 +67,11 @@ it('2 nets going down and then left', function() {
 	}
 
 });
+it('isOnLineVerticaly', function() {
+	var line = [[0,0], [0, 50]];
+	expect(isOnLineVerticaly(line, [0,0])).to.be.true;
+	expect(isOnLineVerticaly(line, [0,25])).to.be.true;
+	expect(isOnLineVerticaly(line, [0,50])).to.be.true;
+	expect(isOnLineVerticaly(line, [1,25])).to.be.false;
+	
+});

@@ -3,6 +3,49 @@ function doesRectangleOverlap(a, b) {
 	         (Math.abs(a.y - b.y) * 2 < (a.height + b.height));
 }
 
+function offsetInRoutingNode(node, net){
+	var x= 0,
+		y= 0;
+	
+	var xindx= node.vertical.indexOf(net);
+	if(xindx > 0)
+		x += xindx*NET_PADDING;
+	
+	var yindx= node.horizontal.indexOf(net);
+	if(yindx > 0)
+		y += yindx*NET_PADDING;
+	
+	return [x, y];
+}
+
+
+function pointAdd(a, b){
+	return [a[0] +b[0], a[1] + b[1]]
+}
+
+function isOnLineVerticaly(line, point){
+	if(line[0][1] < line[1][1]){
+		var lUp = line[0];
+		var lDown = line[1];
+	}else{
+		var lUp = line[1];
+		var lDown = line[0];
+	}
+	if(lUp[0] != lDown[0]){ // if this is not vertical line, point does not lay on vertically 
+		return false;
+	}
+	if(point[0] == lUp[0]){ // x == line.x
+		return lUp[1] <= point[1] && point[1] <= lDown[1]; // is between lUp and lDown vertically
+	}else{
+		return false;
+	}
+}
+
+function pointEq(pointA , pointB){
+	return pointA[0] == pointB[0] && pointA[1] == pointB[1];
+}
+
+
 // used for collision detection, and keep out behavior of nodes
 function nodeColisionResolver(node) {
 	  var nx1, nx2, ny1, ny2, padding;
@@ -46,7 +89,14 @@ function netMouseOver() {
 	d3.selectAll(".link")
 	  .classed("link-selected", 
 			  function(d){
-		  			return d.net === net
+		  			return d.net === net;
+	  		  });
+}
+function higlightNets(nets){
+	d3.selectAll(".link")
+	  .classed("link-selected", 
+			  function(d){
+		  			return nets.indexOf(d.net ) >-1; 
 	  		  });
 }
 function netMouseOut() {
@@ -134,7 +184,7 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 	var grid = router.grid;
 	router.route();
 	
-	//create debug dots for routing nodes
+	create debug dots for routing nodes
 	(function debugRouterDots(){
 		var flatenMap = [];
 		grid.visitFromLeftTop(function(c){
@@ -164,9 +214,18 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 				});
 		    	html += "</ol>";
 		    	showTooltip(toolTipDiv, html);
+		    	var connectedNets = [];
+		    	d.horizontal.forEach(function (n){
+		    		connectedNets.push(n);
+		    	})
+		    	d.vertical.forEach(function (n){
+		    		connectedNets.push(n);
+		    	})
+		    	higlightNets(connectedNets);
 		    })                  
 		    .on("mouseout", function(d) {       
 		    	hideTooltip(toolTipDiv);   
+		    	netMouseOut();
 		    });
 		
 		//// line to parent componet
@@ -185,52 +244,40 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 	})();
 	
 
-	(function drawNets(){
-		function offsetInRoutingNode(node, net){
-			var x= 0,
-				y= 0;
+	function drawNet(d){
+		var pos = d.start.pos();
+		var spOffset = offsetInRoutingNode(d.start, d.net);
+		var pathStr = "M " + [pos[0] - COMPONENT_PADDING - d.source.netChannelPadding.right, pos[1]] + "\n"; //connection from port node to port
+		var posWithOffset = pointAdd(pos, spOffset);
+		pathStr += " L " + posWithOffset +"\n";
+
+		router.walkLinkSubPaths(d, function(subPath, dir){
+			var p0 = subPath[0];
+			var p1 = subPath[subPath.length -1];
 			
-			var xindx= node.vertical.indexOf(net);
-			if(xindx > 0)
-				x += xindx*NET_PADDING;
-			
-			var yindx= node.horizontal.indexOf(net);
-			if(yindx > 0)
-				y += yindx*NET_PADDING;
-			
-			return [x, y];
-		}
-		
-		
-		function pointAdd(a, b){
-			a[0] += b[0];
-			a[1] += b[1];			
-		}
-		//print link between them
-		linkElements.attr("d", function (d) {
-			var sp = d.start.pos();
-			var spOffset = offsetInRoutingNode(d.start, d.net);
-			var pathStr = "M " + [sp[0] - COMPONENT_PADDING - d.source.netChannelPadding.right , sp[1]]; //connection from port node to port
-			pointAdd(sp, spOffset);
-			pathStr += " L " + sp +"\n";
-	
-			for(var pi = 0; pi< d.path.length; pi++){
-				var p = d.path[pi];
-				spOffset = offsetInRoutingNode(p, d.net);
-				sp = p.pos();
-				pointAdd(sp, spOffset);
-				pathStr += " L " + sp +"\n";
-			}
-			var ep = d.end.pos();
-			pathStr += " L " + [ep[0]+COMPONENT_PADDING +d.target.netChannelPadding.left, ep[1]]+"\n"; //connection from port node to port
-			return pathStr;
+			pathStr += " L " + pointAdd(p0.pos(), offsetInRoutingNode(p0, d.net)); +"\n";
+			pathStr += " L " + pointAdd(p1.pos(), offsetInRoutingNode(p1, d.net)); +"\n";
 		});
-	})();
+		
+		pos = d.end.pos();
+		pathStr += " L " + [pos[0]+COMPONENT_PADDING +d.target.netChannelPadding.left, pos[1]]+"\n"; //connection from port node to port
+		return pathStr;
+	}
+		
+		
+	linkElements.attr("d", drawNet);
+
+	
+	links.forEach(function (link){ //rm tmp variables
+		delete link.path;
+		delete link.end;
+		delete link.start;
+	});
+	
 };
 
-function ComponentDiagram(selector,nodes, links){ //main function for rendering components layout
+function ComponentDiagram(selector, nodes, links){ //main function for rendering components layout
 	var wrapper = d3.select(selector);
-	
 	wrapper.selectAll("svg").remove(); // delete old on redraw
 
 	var svg = wrapper.append("svg");
@@ -251,8 +298,8 @@ function ComponentDiagram(selector,nodes, links){ //main function for rendering 
 		.append("div")   
 	    .attr("id", "tooltip")               
 	    .style("opacity", 0);
-    
-    updateNetLayout(svgGroup,toolTipDiv, linkElements, nodes, links);
+    for(var i =0; i< 3; i++)
+    	updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links);
 
 
     var place = svg.node().getBoundingClientRect();
@@ -281,10 +328,10 @@ function ComponentDiagram(selector,nodes, links){ //main function for rendering 
     	});
     (function fitDiagram2Screen(zoomListener){
         function diagramSize(){
-        	var widthMax =0;
+        	var widthMax = 0;
         	var heigthtMax = 0;
         	nodes.forEach(function (n){
-        		widthMax = Math.max(n.x +n.width + COMPONENT_PADDING, widthMax);
+        		widthMax = Math.max(n.x + n.width + COMPONENT_PADDING, widthMax);
         		heigthtMax = Math.max(n.y + n.height +COMPONENT_PADDING, heigthtMax);
         	});
         	return [widthMax, heigthtMax];
