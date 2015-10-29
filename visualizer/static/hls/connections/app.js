@@ -1,17 +1,18 @@
 var App = angular.module('App', []);
 /*
- * [TODO] Michal: left top corner routing node is not moved away of nets as the
- * others, this causes invalid mess in left top corner instead of nets (usually
- * happens on the sides of diagram) [TODO] Michal: in super dma complex
- * axi_regs_with_def_value have not connected outputs (probably bad channel
- * width) [TODO] Michal: due net spacing dome of the connected nodes are no more
- * aligned to each other, this causes non horizontal/vertical lines [TODO]
- * Marek: external port style [TODO] find way how to allow temporary disable
- * zoom/moving to allow copy of the text [TODO] net mouse over style [TODO]
- * toolbar [TODO] select, multi-select [TODO] component dialog [TODO] add/delete
- * component [TODO] add/delete connection [TODO] construct external port
- * (shortcut)
- * 
+ * [TODO][Michal] connection to next left boundary of component to allow router make more straight line for long nets
+ * [TODO][Zuzana] find way how to allow temporary disable zoom/moving to allow copy of the text 
+ * [TODO][Zuzana] javaskriptova funkce ktera snizi jas a kontrast vsech objektu v svg (vse zasedne, a pak dalsi ukol bude pouzit to se zvyraznovanim...)
+ * [TODO][Zuzana] net mouse over style/ net(link) style (chce to i sjednotit nazvoslovi, na net) soucasne spoje jsou moc tenke, neda se na ne najet myssi
+ * 				  po najeti stejne nic neni videt protoze ta cervena se strati
+ * [TODO][Marek] toolbar 
+ * [TODO][Marek] select, multi-select 
+ * [TODO][Marek] component edit dialog 
+ * [TODO][Zuzana] filebrowser napriklad tento, nebo jakykoli jiny, http://ag-grid.com/example-file-browser/index.php , backend udela Michal
+ * [TODO][Marek] add/delete component (prozatim jen predpripraveny json, nebo tak neco bude potreba integrace s filebrowserem)
+ * [TODO][Marek] add/delete connection  /construct external port (shortcut), predstava je takova ze kdyz se klikne na sit tak se jakoby nalinkuje na kurzor a kde se klikne tam se pripoji (i vickrat za sebou),
+ * 				 zrusi se to pres ESC a pri kliknuti a drzeni napr ctrl se  misto pripojeni vytvori externi port
+ *
  */
 
 App.controller('diagramController', function($scope, $http) {

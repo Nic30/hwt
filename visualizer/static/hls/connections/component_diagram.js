@@ -184,7 +184,7 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 	var grid = router.grid;
 	router.route();
 	
-	create debug dots for routing nodes
+	//create debug dots for routing nodes
 	(function debugRouterDots(){
 		var flatenMap = [];
 		grid.visitFromLeftTop(function(c){
