@@ -174,7 +174,8 @@ function components2columns(nodes, links) { // discover component with most
 		discoverSide(triplet.left, -1);
 		discoverSide(triplet.right, 1);
 
-		columns.push(baseIndx, triplet.me);
+		if(!triplet.me.isExternalPort)
+			columns.push(baseIndx, triplet.me);
 	}
 	makeColumns(0, popTriplet(biggestComponent));
 
@@ -213,7 +214,7 @@ function components2columns(nodes, links) { // discover component with most
 	}
 
 	// add unconnected components on right side
-	var mostLeftColumn = columns.midleRight.length - 1;
+	var mostLeftColumn = columns.midleRight.length;
 	nodes.forEach(function(component) {
 		if (component.x === undefined)
 			columns.push(mostLeftColumn, component);

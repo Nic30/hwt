@@ -1,6 +1,9 @@
 {% extends "base.html" %} {% block css_extra %}
 <link type="text/css" href="/static/hls/connections/style.css"
 	rel="stylesheet" />
+<link type="text/css"
+	href="/static/bower_components/ag-grid/dist/ag-grid.css"
+	rel="stylesheet" />
 {% endblock %} {% block js_extra %}
 <script type="text/javascript">
 	var COLUMN_WIDTH = 120;
@@ -8,23 +11,38 @@
 	var COMPONENT_PADDING = 20;
 	var NET_PADDING = 5;
 </script>
-<script type="text/javascript" src="/static/bower_components/angularjs/angular.js"></script>
+
+<script type="text/javascript"
+	src="/static/bower_components/angularjs/angular.js"></script>
+<script type="text/javascript"
+	src="/static/bower_components/ag-grid/dist/ag-grid.js"></script>
 <script type="text/javascript" src="/static/bower_components/d3/d3.js"></script>
-<script type="text/javascript" src="/static/hls/connections/d3.keybinding.js"></script>
+<script type="text/javascript"
+	src="/static/hls/connections/d3.keybinding.js"></script>
 <script type="text/javascript"
 	src="/static/hls/connections/binaryheap.js"></script>
 <script type="text/javascript" src="/static/hls/connections/a_star.js"></script>
-<script type="text/javascript" src="/static/hls/connections/component_diagram_objects.js"></script>
-<script type="text/javascript" src="/static/hls/connections/component_diagram.js"></script>
+<script type="text/javascript"
+	src="/static/hls/connections/component_diagram_objects.js"></script>
+<script type="text/javascript"
+	src="/static/hls/connections/component_diagram.js"></script>
 <script type="text/javascript"
 	src="/static/hls/connections/dataprocessing.js"></script>
 <script type="text/javascript"
 	src="/static/hls/connections/net_router.js"></script>
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
 {% endblock %} {% block content %}
-<div id="chartWraper" ng-app="App" ng-controller="diagramController">
-<button ng-click="redraw()" >
-  Redraw
-</button>
+
+<div ng-app="App" ng-controller="diagramController">
+	<button ng-click="redraw()">Redraw</button>
+	<div id="fileDialog" style="display: none;">
+		<div
+			style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
+			&nbsp; {$ selectedFile $}</div>
+		<div style="width: 650px; height: 400px;" ag-grid="fileGridOptions"
+			class="ag-file-browser"></div>
+	</div>
+	<div id="chartWraper"></div>
 </div>
+
 {% endblock %}

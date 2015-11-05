@@ -1,4 +1,5 @@
 slimit
+sympy
 jinja2 
 ply
 flask
