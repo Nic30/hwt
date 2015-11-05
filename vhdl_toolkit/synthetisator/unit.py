@@ -51,12 +51,10 @@ class VHDLUnit(Entity):
     def toJson(self):
         return {"name":self.name, "id":id(self), 
                 "inputs": [{"name":x.name, 
-                            "id" : id(x),
-                            "portIndex": 0} \
+                            "id" : id(x)} \
                         for x in where(self.port, lambda p : p.direction == PortItem.typeIn )],
                 "outputs": [{"name":x.name,
-                             "id" : id(x),
-                             "portIndex": 0} \
+                             "id" : id(x)} \
                         for x in where(self.port, lambda p : p.direction == PortItem.typeOut)]}
         
 def portItemByName(entity, name):

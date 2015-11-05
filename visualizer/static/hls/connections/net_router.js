@@ -59,7 +59,6 @@ function NetRouter(nodes, links) {
 		},
 		findLowestNetIndexInSubPath : function(subPath, dir, net) {
 			function findMaxPossible(arrName, minimum, leftIndx, rightIndx) {
-				// console.log([leftIndx, rightIndx])
 				if (leftIndx == rightIndx) {
 					var arr = subPath[leftIndx][arrName];
 					return {
@@ -115,7 +114,7 @@ function NetRouter(nodes, links) {
 				}
 				subPath.forEach(rmFn);
 			}
-			self.grid.visitFromLeftTop(function(n) {
+			self.grid.visitFromLeftTop(function(n) { // init node
 				n.vertical = [];
 				n.horizontal = [];
 			});
@@ -137,7 +136,92 @@ function NetRouter(nodes, links) {
 					});
 				});
 			});
+			self.moveComponetsOutOfNets();
+		},
+		moveComponetsOutOfNets : function(){
+			/* find width of channels
+			 * add it to component positions
+			 * */
+			function netPadding(netCnt){
+				return netCnt * (NET_PADDING+1);
+			}
+			var grid = self.grid;
+			
+			grid.maxNetCntY = [];
+			grid.maxNetCntX = [];
+			
+			for(var x = 0; x < grid.length; x++){ // discover sizes of net channels
+				var col = grid[x];
+				if(col){
+					if(grid.maxNetCntX[x] === undefined)
+						grid.maxNetCntX[x] = 0;
+					for(var y =0; y < grid.length; y++){
+						var n = col[y];
+						if(n){
+							var netCntY = n.horizontal.length;
+							var netCntX = n.vertical.length;
 
+							if(grid.maxNetCntY[y] === undefined)
+								grid.maxNetCntY[y] = 0;
+							if(grid.maxNetCntY[y] < netCntY)
+								grid.maxNetCntY[y] = netCntY;
+							if(grid.maxNetCntX[x] < netCntX)
+								grid.maxNetCntX[x] = netCntX;
+						}
+					}
+				}
+			}
+
+			var sumOfNetOffsetsX = [];
+			var sumOfNetOffsetsY = [];
+			var offset = 0;
+			grid.maxNetCntX.forEach(function (d, i){
+				if(d){
+					offset += netPadding(d);
+				}
+				sumOfNetOffsetsX[i] = offset;
+			});
+			offset = 0;
+			grid.maxNetCntY.forEach(function (d, i){
+				if(d){
+					offset += netPadding(d);
+				}
+				sumOfNetOffsetsY[i] = offset;
+			});
+			function previousDefined(arr, indx){
+				return arr[indx]
+				for(var i = indx-1; i >=0; i--){
+					var offset  = arr[i];
+					if(offset){
+						return offset;
+					}
+				}
+				return 0;
+			}
+			nodes.forEach(function (n){
+				var x0 = n.x - COMPONENT_PADDING;
+				var x1 = n.x + n.width + COMPONENT_PADDING;
+				var y0 =n.y - COMPONENT_PADDING;
+				var y1 = n.y + n.height + COMPONENT_PADDING;
+				var npTop =  netPadding( previousDefined(grid.maxNetCntY, y0));
+				if(npTop)
+					n.netChannelPadding.top = npTop;
+				var npLeft = netPadding(previousDefined(grid.maxNetCntX, x0));
+				if (npLeft)
+					n.netChannelPadding.left = npLeft;
+				//var npBottom = netPadding(grid.maxNetCntY[y1]);
+				//if(npBottom)
+				//	n.netChannelPadding.bottom = npBottom;
+				//var npRight = netPadding(grid.maxNetCntX[x1]);
+				//if(npRight)
+				//	n.netChannelPadding.right = npRight;
+				var xOffset = sumOfNetOffsetsX[x0];
+				if(xOffset  != undefined)
+					n.x = xOffset + n.x;
+				var yOffset = sumOfNetOffsetsY[y0];
+				if(yOffset != undefined)
+					n.y = yOffset + n.y;
+			});
 		}
 	};
 	return self;

@@ -16,7 +16,7 @@ function ColumnContainer() {
 			var arr;
 			if (indx < 0) {
 				arr = self.left;
-				indx = -indx - 1;
+				indx = (-indx) - 1;
 			} else {
 				arr = self.midleRight;
 			}
@@ -39,6 +39,10 @@ function ColumnContainer() {
 		}
 	};
 	return self;
+}
+
+function RoutingBoundry(parentNode) {
+	return {"parent": parentNode}
 }
 
 function RoutingNode() {
@@ -170,7 +174,8 @@ function components2columns(nodes, links) { // discover component with most
 		discoverSide(triplet.left, -1);
 		discoverSide(triplet.right, 1);
 
-		columns.push(baseIndx, triplet.me);
+		if(!triplet.me.isExternalPort)
+			columns.push(baseIndx, triplet.me);
 	}
 	makeColumns(0, popTriplet(biggestComponent));
 
@@ -202,19 +207,25 @@ function components2columns(nodes, links) { // discover component with most
 		});
 	}
 	// set possitions forEach column
-	for (var x = 0; x < columns.length(); x++) {
+	var x = 0;
+	for (var x; x < columns.length(); x++) {
 		var column = columns.accessFromLeft(x);
 		positionsForColumn(x, column);
 	}
 
 	// add unconnected components on right side
-	var mostLeftColumn = columns.length() - 1;
-	for (var i = 0; i < nodes.length; i++) {
-		var component = nodes[i];
+	var mostLeftColumn = columns.midleRight.length;
+	nodes.forEach(function(component) {
 		if (component.x === undefined)
 			columns.push(mostLeftColumn, component);
-	}
-	positionsForColumn(x, columns.accessFromLeft(mostLeftColumn));
+	});
+	positionsForColumn(x, columns.midleRight[mostLeftColumn]);
+	// @assert
+	nodes.forEach(function(n) {
+		if (!Number.isFinite(n.x) || !Number.isFinite(n.y))
+			throw "Node " + n.name + " is not properly placed";
+	});
+
 }
 
 /*
@@ -231,11 +242,40 @@ function components2columns(nodes, links) { // discover component with most
 
 function RoutingNodesContainer(nodes) {
 	var grid = [];
+	(function normalizeNodesPosition(nodes){
+		nodes.forEach(function (n){
+			n.x = Math.ceil(n.x);
+			n.y = Math.ceil(n.y);
+		});
+	})(nodes);
+	function insertRectangularBoundry(node) {
+		var x0 = node.x;
+		var y0=node.y;
+		var width = node.widht
+		var height = node.height;
+		var boundry = new RoutingBoundry(node);
 
+		for (var y = y0; y < y0 + height; y++) {
+			var col = grid[y];
+			if (col == undefined) {
+				col = [];
+				grid[y] = col;
+			}
+			if (y == y0 || y == y0 + height - 1) {
+				for (var x = x0; x < x0 + width; x++) {
+					col[x] = boundry;
+				}
+			}else{
+				col[x0] = boundry;
+				col[x0+width -1] = boundry;
+			}
+		}
+	}
+	
 	function insertRNode(rnode, canGoLeftAndRight) {
 		var pos = rnode.pos();
-		var x = Math.ceil(pos[0]);
-		var y = Math.ceil(pos[1]);
+		var x = pos[0];
+		var y = pos[1];
 
 		// check if exists
 		var col = grid[x];
@@ -253,6 +293,8 @@ function RoutingNodesContainer(nodes) {
 		// connect top
 		for (var i = y - 1; i >= 0; i--) {
 			var tn = col[i];
+			if(tn instanceof RoutingBoundry)
+				break;
 			if (tn) {
 				if (tn.bottom) { // insert rnode between top and its bottom
 					rnode.bottom = tn.bottom;
@@ -268,9 +310,11 @@ function RoutingNodesContainer(nodes) {
 		if (!bottFound) {
 			for (var i = y + 1; i < col.length; i++) {
 				var bn = col[i];
+				if(bn instanceof RoutingBoundry)
+					break;
 				if (bn) {
 					if (bn.top)
-						throw "top node should be found recently";
+						throw "Error: top node should be founded recently";
 					bn.top = rnode;
 					rnode.bottom = bn;
 					break;
@@ -278,12 +322,14 @@ function RoutingNodesContainer(nodes) {
 			}
 		}
 
+		// connect left
 		if (canGoLeftAndRight) {
-			// connect left
 			for (var i = x - 1; i >= 0; i--) {
 				var col = grid[i];
 				if (col) {
 					var ln = col[y];
+					if(ln instanceof RoutingBoundry)
+						break;
 					if (ln) {
 						if (ln.right) {
 							rnode.right = ln.right;
@@ -295,7 +341,6 @@ function RoutingNodesContainer(nodes) {
 						break;
 					}
 				}
-
 			}
 			// find right
 			if (!rightFound) {
@@ -303,9 +348,11 @@ function RoutingNodesContainer(nodes) {
 					var col = grid[i];
 					if (col) {
 						var rn = col[y];
+						if(rn instanceof RoutingBoundry)
+							break;
 						if (rn) {
 							if (rnode.right)
-								throw "right should be found recently";
+								throw "Error: right should be founded recently";
 							rnode.right = rn;
 							rn.left = rnode;
 							break;
@@ -318,11 +365,17 @@ function RoutingNodesContainer(nodes) {
 	for (var ni = 0; ni < nodes.length; ni++) { // add corner nodes and node for
 		// each port
 		var node = nodes[ni];
+		insertRectangularBoundry(node.x, node.y, node.width, node.height);
+		
 		var leftTop = new RoutingNode();
 		leftTop.originComponent = node;
 		leftTop.pos = function() {
-			return [ this.originComponent.x - COMPONENT_PADDING,
-					this.originComponent.y - COMPONENT_PADDING ];
+			var c = this.originComponent;
+			return [
+					this.originComponent.x - COMPONENT_PADDING
+							- c.netChannelPadding.left,
+					this.originComponent.y - COMPONENT_PADDING
+							- c.netChannelPadding.top ];
 		};
 		var leftBottom = new RoutingNode();
 		leftBottom.originComponent = node;
@@ -369,7 +422,7 @@ function RoutingNodesContainer(nodes) {
 			pn.pos = function() {
 				var c = this.originComponent;
 				return [
-						c.x + +c.width + COMPONENT_PADDING
+						c.x + c.width + COMPONENT_PADDING
 								+ c.netChannelPadding.right,
 						c.y + (2 + this.originPortIndex) * PORT_HEIGHT ];
 			};
@@ -389,7 +442,7 @@ function RoutingNodesContainer(nodes) {
 			if (col) {
 				for (var y = 0; y < col.length; y++) {
 					var comp = col[y];
-					if (comp) {
+					if (comp && !(comp instanceof RoutingBoundry)) {
 						fn(comp);
 					}
 				}
@@ -397,17 +450,16 @@ function RoutingNodesContainer(nodes) {
 		}
 	}
 	grid.componetOutputNode = function(component, portIndex) {
-		var x = Math.ceil(component.x + component.width + COMPONENT_PADDING);
-		var y = Math.ceil(component.y + (2 + portIndex) * PORT_HEIGHT);
+		var x = component.x + component.width + COMPONENT_PADDING + component.netChannelPadding.right;
+		var y = component.y + (2 + portIndex) * PORT_HEIGHT;
 		return grid[x][y];
 
 	}
 	grid.componetInputNode = function(component, portIndex) {
-		var x = Math.ceil(component.x - COMPONENT_PADDING);
-		var y = Math.ceil(component.y + (2 + portIndex) * PORT_HEIGHT);
+		var x = component.x - COMPONENT_PADDING - component.netChannelPadding.left;
+		var y = component.y + (2 + portIndex) * PORT_HEIGHT;
 		return grid[x][y];
 	}
 
 	return grid;
-
 }

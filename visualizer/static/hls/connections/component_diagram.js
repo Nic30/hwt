@@ -3,6 +3,49 @@ function doesRectangleOverlap(a, b) {
 	         (Math.abs(a.y - b.y) * 2 < (a.height + b.height));
 }
 
+function offsetInRoutingNode(node, net){
+	var x= 0,
+		y= 0;
+	
+	var xindx= node.vertical.indexOf(net);
+	if(xindx > 0)
+		x += xindx*NET_PADDING;
+	
+	var yindx= node.horizontal.indexOf(net);
+	if(yindx > 0)
+		y += yindx*NET_PADDING;
+	
+	return [x, y];
+}
+
+
+function pointAdd(a, b){
+	return [a[0] +b[0], a[1] + b[1]]
+}
+
+function isOnLineVerticaly(line, point){
+	if(line[0][1] < line[1][1]){
+		var lUp = line[0];
+		var lDown = line[1];
+	}else{
+		var lUp = line[1];
+		var lDown = line[0];
+	}
+	if(lUp[0] != lDown[0]){ // if this is not vertical line, point does not lay on vertically 
+		return false;
+	}
+	if(point[0] == lUp[0]){ // x == line.x
+		return lUp[1] <= point[1] && point[1] <= lDown[1]; // is between lUp and lDown vertically
+	}else{
+		return false;
+	}
+}
+
+function pointEq(pointA , pointB){
+	return pointA[0] == pointB[0] && pointA[1] == pointB[1];
+}
+
+
 // used for collision detection, and keep out behavior of nodes
 function nodeColisionResolver(node) {
 	  var nx1, nx2, ny1, ny2, padding;
@@ -46,7 +89,14 @@ function netMouseOver() {
 	d3.selectAll(".link")
 	  .classed("link-selected", 
 			  function(d){
-		  			return d.net === net
+		  			return d.net === net;
+	  		  });
+}
+function higlightNets(nets){
+	d3.selectAll(".link")
+	  .classed("link-selected", 
+			  function(d){
+		  			return nets.indexOf(d.net ) >-1; 
 	  		  });
 }
 function netMouseOut() {
@@ -113,103 +163,29 @@ function addShadows(svg){
     .attr("stop-color", "#A9D0F5")    
 }
 
-function updateNetLayout(svgGroup, linkElements, nodes, links){ // move component on its positions and redraw links between them
+function showTooltip(toolTipDiv, html){
+	toolTipDiv.transition()        
+	    .duration(100)      
+	    .style("opacity", .9);      
+	toolTipDiv.html(html)
+	    .style("left", d3.event.pageX + "px")     
+	    .style("top", (d3.event.pageY - 28) + "px");  
+}
+function hideTooltip(toolTipDiv){
+	toolTipDiv.transition()        
+		.duration(200)      
+		.style("opacity", 0);
+}
+
+function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // move component on its positions and redraw links between them
 	//move component on its position
 
 	var router = new NetRouter(nodes, links);
 	var grid = router.grid;
 	router.route();
 	
-	(function moveComponetsOutOfNets(){
-		/* find width of channels
-		 * add it to component positions
-		 * */
-		function netPadding(netCnt){
-			return netCnt * (NET_PADDING+1);
-		}
-		
-		grid.maxNetCntY = [];
-		grid.maxNetCntX = [];
-		
-		for(var x = 0; x < grid.length; x++){
-			var col = grid[x];
-			if(col){
-				if(grid.maxNetCntX[x] === undefined)
-					grid.maxNetCntX[x] = 0;
-				for(var y =0; y < grid.length; y++){
-					var n = col[y];
-					if(n){
-						var netCntY = n.horizontal.length;
-						var netCntX = n.vertical.length;
-
-						if(grid.maxNetCntY[y] === undefined)
-							grid.maxNetCntY[y] = 0;
-						if(grid.maxNetCntY[y] < netCntY)
-							grid.maxNetCntY[y] = netCntY;
-						if(grid.maxNetCntX[x] < netCntX)
-							grid.maxNetCntX[x] = netCntX;
-					}
-				}
-			}
-		}
-
-		var sumOfNetOffsetsX = [];
-		var sumOfNetOffsetsY = [];
-		var offset = 0;
-		grid.maxNetCntX.forEach(function (d, i){
-			if(d){
-				offset += netPadding(d);
-			}
-			sumOfNetOffsetsX[i] = offset;
-		});
-		offset = 0;
-		grid.maxNetCntY.forEach(function (d, i){
-			if(d){
-				offset += netPadding(d);
-			}
-			sumOfNetOffsetsY[i] = offset;
-		});
-		function previousDefined(arr, indx){
-			return arr[indx]
-			for(var i = indx-1; i >=0; i--){
-				var offset  = arr[i];
-				if(offset){
-					return offset;
-				}
-			}
-			return 0;
-		}
-		nodes.forEach(function (n){
-			var x0 = n.x - COMPONENT_PADDING;
-			var x1 = n.x + n.width + COMPONENT_PADDING;
-			var y0 =n.y - COMPONENT_PADDING;
-			var y1 = n.y + n.height + COMPONENT_PADDING;
-			var npTop =  netPadding( previousDefined(grid.maxNetCntY, y0));
-			if(npTop)
-				n.netChannelPadding.top = npTop;
-			var npLeft = netPadding(previousDefined(grid.maxNetCntX, x0));
-			if (npLeft)
-				n.netChannelPadding.left = npLeft;
-			//var npBottom = netPadding(grid.maxNetCntY[y1]);
-			//if(npBottom)
-			//	n.netChannelPadding.bottom = npBottom;
-			//var npRight = netPadding(grid.maxNetCntX[x1]);
-			//if(npRight)
-			//	n.netChannelPadding.right = npRight;
-			var xOffset = sumOfNetOffsetsX[x0];
-			if(xOffset  != undefined)
-				n.x = xOffset + n.x;
-			var yOffset = sumOfNetOffsetsY[y0];
-			if(yOffset != undefined)
-				n.y = yOffset + n.y;
-		});
-	})();
 	//create debug dots for routing nodes
 	(function debugRouterDots(){
-		var toolTipDiv = d3.select("body")
-			.append("div")   
-		    .attr("class", "tooltip")               
-		    .style("opacity", 0);
 		var flatenMap = [];
 		grid.visitFromLeftTop(function(c){
 			flatenMap.push(c);
@@ -225,7 +201,7 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){ // move componen
 			.attr("cy", function(d){
 				return d.pos()[1];
 			}) 
-		    .on("mouseover", function(d) {  
+		    .on("mouseover", function(d) {
 		    	var html = d.pos() + "</br><b>horizontal:</b><ol>"
 					d.horizontal.forEach(function (net){
 						if (net)
@@ -237,19 +213,19 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){ // move componen
 		    			html += "<li>" + net.name  + "</li>";
 				});
 		    	html += "</ol>";
-		    	
-		    	
-		    	toolTipDiv.transition()        
-		            .duration(100)      
-		            .style("opacity", .9);      
-		    	toolTipDiv.html(html)
-		            .style("left", d3.event.pageX + "px")     
-		            .style("top", (d3.event.pageY - 28) + "px");    
+		    	showTooltip(toolTipDiv, html);
+		    	var connectedNets = [];
+		    	d.horizontal.forEach(function (n){
+		    		connectedNets.push(n);
+		    	})
+		    	d.vertical.forEach(function (n){
+		    		connectedNets.push(n);
+		    	})
+		    	higlightNets(connectedNets);
 		    })                  
 		    .on("mouseout", function(d) {       
-		    	toolTipDiv.transition()        
-		            .duration(200)      
-		            .style("opacity", 0);   
+		    	hideTooltip(toolTipDiv);   
+		    	netMouseOut();
 		    });
 		
 		//// line to parent componet
@@ -268,52 +244,40 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){ // move componen
 	})();
 	
 
-	(function drawNets(){
-		function offsetInRoutingNode(node, net){
-			var x= 0,
-				y= 0;
+	function drawNet(d){
+		var pos = d.start.pos();
+		var spOffset = offsetInRoutingNode(d.start, d.net);
+		var pathStr = "M " + [pos[0] - COMPONENT_PADDING - d.source.netChannelPadding.right, pos[1]] + "\n"; //connection from port node to port
+		var posWithOffset = pointAdd(pos, spOffset);
+		pathStr += " L " + posWithOffset +"\n";
+
+		router.walkLinkSubPaths(d, function(subPath, dir){
+			var p0 = subPath[0];
+			var p1 = subPath[subPath.length -1];
 			
-			var xindx= node.vertical.indexOf(net);
-			if(xindx > 0)
-				x += xindx*NET_PADDING;
-			
-			var yindx= node.horizontal.indexOf(net);
-			if(yindx > 0)
-				y += yindx*NET_PADDING;
-			
-			return [x, y];
-		}
-		
-		
-		function pointAdd(a, b){
-			a[0] += b[0];
-			a[1] += b[1];			
-		}
-		//print link between them
-		linkElements.attr("d", function (d) {
-			var sp = d.start.pos();
-			var spOffset = offsetInRoutingNode(d.start, d.net);
-			var pathStr = " M" + [sp[0] - COMPONENT_PADDING , sp[1]]; //connection from port node to port
-			pointAdd(sp, spOffset);
-			pathStr += " L " + sp +"\n";
-	
-			for(var pi = 0; pi< d.path.length; pi++){
-				var p = d.path[pi];
-				spOffset = offsetInRoutingNode(p, d.net);
-				sp = p.pos();
-				pointAdd(sp, spOffset);
-				pathStr += " L " + sp +"\n";
-			}
-			var ep = d.end.pos();
-			pathStr += " L " + [ep[0]+COMPONENT_PADDING +d.end.originComponent.netChannelPadding.left, ep[1]]+"\n";
-			return pathStr;
+			pathStr += " L " + pointAdd(p0.pos(), offsetInRoutingNode(p0, d.net)); +"\n";
+			pathStr += " L " + pointAdd(p1.pos(), offsetInRoutingNode(p1, d.net)); +"\n";
 		});
-	})();
+		
+		pos = d.end.pos();
+		pathStr += " L " + [pos[0]+COMPONENT_PADDING +d.target.netChannelPadding.left, pos[1]]+"\n"; //connection from port node to port
+		return pathStr;
+	}
+		
+		
+	linkElements.attr("d", drawNet);
+
+	
+	links.forEach(function (link){ //rm tmp variables
+		delete link.path;
+		delete link.end;
+		delete link.start;
+	});
+	
 };
 
-function redraw(nodes, links){ //main function for rendering components layout
-	var wrapper = d3.select("#chartWraper");
-	
+function ComponentDiagram(selector, nodes, links){ //main function for rendering components layout
+	var wrapper = d3.select(selector);
 	wrapper.selectAll("svg").remove(); // delete old on redraw
 
 	var svg = wrapper.append("svg");
@@ -330,7 +294,12 @@ function redraw(nodes, links){ //main function for rendering components layout
     	.on("mouseover", netMouseOver)
     	.on("mouseout", netMouseOut);
 
-    updateNetLayout(svgGroup, linkElements, nodes, links);
+	var toolTipDiv = d3.select("body")
+		.append("div")   
+	    .attr("id", "tooltip")               
+	    .style("opacity", 0);
+    for(var i =0; i< 3; i++)
+    	updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links);
 
 
     var place = svg.node().getBoundingClientRect();
@@ -344,10 +313,10 @@ function redraw(nodes, links){ //main function for rendering components layout
 		//.links(links)
 		//.start();
 	drawExternalPorts(svgGroup, nodes.filter(function (n){
-		return n.isExternalPort;
+			return n.isExternalPort;
 		}));
 	drawComponents(svgGroup, nodes.filter(function (n){
-		return !n.isExternalPort;
+			return !n.isExternalPort;
 		}))
 		.on("click", onClick)
 		.call(force.drag); //component dragging
@@ -358,31 +327,43 @@ function redraw(nodes, links){ //main function for rendering components layout
     	.on("zoom", function () {
     			svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
     	});
-    function diagramSize(){
-    	var widthMax =0;
-    	var heigthtMax = 0;
-    	nodes.forEach(function (n){
-    		widthMax = Math.max(n.x +n.width + COMPONENT_PADDING, widthMax);
-    		heigthtMax = Math.max(n.y + n.height +COMPONENT_PADDING, heigthtMax);
-    	});
-    	return [widthMax, heigthtMax];
-    }
-    var size = diagramSize();
-    var scaleX = place.width /size[0] ;
-    var scaleY = place.height / size[1];
-    var scale = Math.min(scaleX, scaleY); 
-    
-    //this is processiong of zoomListener explicit translate and scale on start
-    zoomListener.translate([0,0])
-    	.scale(scale);
-    zoomListener.event(svg.transition()
-    					  .duration(100));
+    (function fitDiagram2Screen(zoomListener){
+        function diagramSize(){
+        	var widthMax = 0;
+        	var heigthtMax = 0;
+        	nodes.forEach(function (n){
+        		widthMax = Math.max(n.x + n.width + COMPONENT_PADDING, widthMax);
+        		heigthtMax = Math.max(n.y + n.height +COMPONENT_PADDING, heigthtMax);
+        	});
+        	return [widthMax, heigthtMax];
+        }
+        var size = diagramSize();
+        var scaleX = place.width /size[0] ;
+        var scaleY = place.height / size[1];
+        var scale = Math.min(scaleX, scaleY); 
+        //this is processiong of zoomListener explicit translate and scale on start
+        zoomListener.translate([0,0])
+        	.scale(scale);
+        zoomListener.event(svg.transition()
+        					  .duration(100));
+    })(zoomListener);
     
     svg.call(zoomListener);
- 
+
 }
 
 function onClick()
 {
 	console.log(d.name)
-}
+    
+    d3.select('body')
+    	.call(d3.keybinding("keydown")
+    	    .on('p', function (){
+    	    	showTooltip(toolTipDiv, d3.mouse(this))
+    	    })
+    	).call(d3.keybinding("keyup")
+        	    .on('p', function (){
+        	    	hideTooltip(toolTipDiv)
+        	    })
+        );
+    }
