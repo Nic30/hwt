@@ -349,6 +349,7 @@ function redraw(nodes, links){ //main function for rendering components layout
 	drawComponents(svgGroup, nodes.filter(function (n){
 		return !n.isExternalPort;
 		}))
+		.on("click", onClick)
 		.call(force.drag); //component dragging
 
     // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
@@ -379,4 +380,9 @@ function redraw(nodes, links){ //main function for rendering components layout
     
     svg.call(zoomListener);
  
+}
+
+function onClick()
+{
+	console.log(d.name)
 }
