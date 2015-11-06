@@ -11,13 +11,13 @@
     }, {
         "id": 2,
         "name" : "clk",
-        "isExternalPort" : true,
+        "isExternalPort" : false,
         "inputs" : [],
         "outputs" : [{"name" :"clk"}]    
     }, {
         "id": 3,
         "name" : "rst",
-        "isExternalPort" : true,
+        "isExternalPort" : false,
         "inputs" : [],
         "outputs" : [{"name" :"rst"}]    
     }, {
@@ -28,7 +28,7 @@
     }, {
         "id" : 5,
         "name" : "selfReference",
-        "inputs" : [ {"name" :"clk"}, {"name" :"inC"}, {"name" :"inD"} ],
+        "inputs" : [ {"name" :"clk"}, {"name" :"inC"}, {"name" :"inD"}, {"name" :"inE"} ],
         "outputs" : [ {"name" :"c"}, {"name" :"d"} ]
     }, {
         "id" : 6,
@@ -36,6 +36,12 @@
         "isExternalPort" : true,
         "inputs" : [{"name" :"outA"} ],
         "outputs" : [ ]
+    }, {
+        "id" : 7,
+        "name" : "inA",
+        "isExternalPort" : true,
+        "inputs" : [ ],
+        "outputs" : [{"name" :"outA"} ]
     }
 ],
    
@@ -116,6 +122,14 @@
             "id" : 5,
             "portIndex" : 2
         } ]
-    }
+    }, {
+        "source" : {
+            "id" : 7,
+            "portIndex" : 0
+        },
+        "targets" : [{
+            "id" : 5,
+            "portIndex" : 3
+        }]}
     ]
 }

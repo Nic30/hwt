@@ -318,6 +318,7 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 	drawComponents(svgGroup, nodes.filter(function (n){
 			return !n.isExternalPort;
 		}))
+		.on("click", onClick)
 		.call(force.drag); //component dragging
 
     // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
@@ -347,18 +348,26 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
         					  .duration(100));
     })(zoomListener);
     
-    svg.call(zoomListener);
-
-    
+    svg.call(zoomListener);	
     d3.select('body')
     	.call(d3.keybinding("keydown")
     	    .on('p', function (){
-    	    	showTooltip(toolTipDiv, d3.mouse(this))
+    	    	//showTooltip(toolTipDiv, d3.mouse(this))
+    	    	console.log("p")
     	    })
     	).call(d3.keybinding("keyup")
         	    .on('p', function (){
-        	    	hideTooltip(toolTipDiv)
+        	    	//hideTooltip(toolTipDiv)
         	    })
         );
-    
+    }
+
+function onClick() {
+	//var selectedObject = console.log(d3.select(this)[0][0].__data__)
+    if (!d3.event.shiftKey) {
+    	d3.selectAll(".selected-object").classed({"selected-object": false})
+    }
+
+	d3.select(this).classed({"selected-object": true})
+	//d3.select(this).style("stroke", "red");
 }
