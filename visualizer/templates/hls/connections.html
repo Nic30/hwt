@@ -57,6 +57,10 @@
 <link type="text/css"
 	href="/static/bower_components/ag-grid/dist/ag-grid.css"
 	rel="stylesheet" />
+<link type="text/css"
+    href="/static/hls/connections/fileBrowser.css"
+    rel="stylesheet" />
+
 {% endblock %} {% block js_extra %}
 <script type="text/javascript">
 	var COLUMN_WIDTH = 120;
@@ -95,7 +99,7 @@
 		<div
 			style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
 			&nbsp; {$ selectedFile $}</div>
-		<div style="width: 650px; height: 400px;" ag-grid="fileGridOptions"
+		<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
 			class="ag-file-browser"></div>
 	</div>
 	<div id="chartWrapper"></div>
