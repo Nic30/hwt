@@ -1,0 +1,119 @@
+{   "nodes" : [{
+        "id" : 0,
+        "name" : "smaller one",
+        "inputs" : [ {"name" :"clk"}, {"name" :"rst"} ],
+        "outputs" : [ {"name" :"outA"}, {"name" :"outB"} ]
+    }, {
+        "id": 1,
+        "name" : "biggest",
+        "inputs" : [ {"name" :"clk"}, {"name" :"rst"}, {"name" :"inA"}, {"name" :"inB"}],
+        "outputs" : [{"name" : "outA2"}, {"name" :"outB2"} ]    
+    }, {
+        "id": 2,
+        "name" : "clk",
+        "inputs" : [],
+        "outputs" : [{"name" :"clk"}]    
+    }, {
+        "id": 3,
+        "name" : "rst",
+        "inputs" : [],
+        "outputs" : [{"name" :"rst"}]    
+    }, {
+        "id": 4,
+        "name" : "dummy",
+        "inputs" : [{"name" :"clk"}, {"name" :"rst"}],
+        "outputs" : [{"name" :"a"}, {"name" :"b"}, {"name" :"c"}, {"name" :"d"}]    
+    }, {
+        "id" : 5,
+        "name" : "selfReference",
+        "inputs" : [ {"name" :"clk"}, {"name" :"inC"}, {"name" :"inD"} ],
+        "outputs" : [ {"name" :"c"}, {"name" :"d"} ]
+    }, {
+        "id" : 6,
+        "name" : "outA",
+        "isExternalPort" : true,
+        "inputs" : [{"name" :"outA"} ],
+        "outputs" : [ ]
+    }
+],
+   
+    "nets": [
+            {
+        "name" : "a",
+        "source" : {
+            "id" : 5,
+            "portIndex" : 0
+        },
+        "targets" : [{
+            "id" : 6,
+            "portIndex" : 0
+        }]},
+         {
+        "name" : "clk",
+        "source" : {
+            "id" : 2,
+            "portIndex" : 0
+        },
+        "targets" : [ {
+            "id" : 0,
+            "portIndex" : 0
+        }, {
+            "id" : 1,
+            "portIndex" : 0
+        }]
+        }, {
+        "name" : "rst",
+        "source" : {
+            "id" : 3,
+            "portIndex" : 0
+        },
+        "targets" : [ {
+            "id" : 0,
+            "portIndex" : 1
+        }, {
+            "id" : 1,
+            "portIndex" : 1
+        } ]
+    }, {
+        "name" : "A",
+        "source" : {
+            "id" : 0,
+            "portIndex" : 0
+        },
+        "targets" : [ {
+            "id" : 1,
+            "portIndex" : 2
+        } ]
+    }, {
+        "name" : "B",
+        "source" : {
+            "id" : 0,
+            "portIndex" : 1
+        },
+        "targets" : [ {
+            "id" : 1,
+            "portIndex" : 3
+        } ]
+    }, {
+        "name" : "C",
+        "source" : {
+            "id" : 5,
+            "portIndex" : 0
+        },
+        "targets" : [ {
+            "id" : 5,
+            "portIndex" : 1
+        } ]
+    }, {
+        "name" : "D",
+        "source" : {
+            "id" : 5,
+            "portIndex" : 1
+        },
+        "targets" : [ {
+            "id" : 5,
+            "portIndex" : 2
+        } ]
+    }
+    ]
+}
