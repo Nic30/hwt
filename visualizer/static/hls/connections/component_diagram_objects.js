@@ -7,10 +7,10 @@ function drawExternalPorts(svgGroup, exterPortNodes){
 	
 	externalPorts.append("text")
 		.attr("x", function(d) {
-			return (d.inputs.length == 0)?-10:-44;
+			return (d.inputs.length == 0)?-10:-82;
 		})
 		.attr("y", function(d) {
-			return (d.inputs.length == 0)?4:27;
+			return (d.inputs.length == 0)?4:4;
 		})
 		.text(function(d) {
 			return d.name;
@@ -22,10 +22,10 @@ function drawExternalPorts(svgGroup, exterPortNodes){
 			return "/static/hls/connections/arrow_right.ico"; 
 		})
 		.attr("x", function(d) {
-			return (d.inputs.length == 0)?-10:-78;
+			return (d.inputs.length == 0)?-10:-120;
 		})
 		.attr("y", function(d) {
-			return (d.inputs.length == 0)?-5:19;
+			return (d.inputs.length == 0)?-5:-5;
 		})
 		.attr("width", 10)
 		.attr("height", PORT_HEIGHT);

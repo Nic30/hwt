@@ -354,7 +354,6 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 
 function onClick()
 {
-	console.log(d.name)
     
     d3.select('body')
     	.call(d3.keybinding("keydown")
