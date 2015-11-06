@@ -363,5 +363,11 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
     }
 
 function onClick() {
-	console.log(d.name);
+	//var selectedObject = console.log(d3.select(this)[0][0].__data__)
+    if (!d3.event.shiftKey) {
+    	d3.selectAll(".selected-object").classed({"selected-object": false})
+    }
+
+	d3.select(this).classed({"selected-object": true})
+	//d3.select(this).style("stroke", "red");
 }

@@ -218,8 +218,8 @@ App
 						onRowClicked : rowClicked
 					};
 
-					$scope.selectedFile = '';
-					console.log($scope.selectedFile);
+					$scope.selectedFile = 'workspace/example1.json';
+					//console.log($scope.selectedFile);
 					$scope.fileDialog = function() {
 						d3.selectAll("#fileDialog").style({
 							"display" : "block"
@@ -244,8 +244,9 @@ App
 													.setRowData(filesRowData);// .refreshView();
 										});
 					}
-					$scope.fileDialog()
-					// $scope.redraw()
+					//$scope.fileDialog()
+					 $scope.redraw()
+					 drawMenu();
 				}).config(function($interpolateProvider) {
 			$interpolateProvider.startSymbol('{$');
 			$interpolateProvider.endSymbol('$}');

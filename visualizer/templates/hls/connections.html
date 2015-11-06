@@ -1,4 +1,57 @@
-{% extends "base.html" %} {% block css_extra %}
+{% extends "base.html" %}
+{% block menu_extra %} 
+
+<li class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="fa fa-file fa-fw"></i> 
+    </a>
+    <!-- /.dropdown-messages -->
+</li>
+
+<li class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="fa fa-plus fa-fw"></i> 
+    </a>
+    <!-- /.dropdown-messages -->
+</li>
+
+<li class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="fa fa-remove fa-fw"></i> 
+    </a>
+    <!-- /.dropdown-messages -->
+</li>
+
+<li class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#" ng-click="redraw()">
+        <i class="fa fa-refresh fa-fw"></i> 
+    </a>
+    <!-- /.dropdown-messages -->
+</li>
+
+  <li class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="fa fa-search fa-fw"></i> 
+    </a>
+    <ul class="dropdown-menu dropdown-messages">
+        <li>
+            <a href="#">
+                <div>
+                    <strong>msg.title</strong>
+                    <span class="pull-right text-muted">
+                        <em>msg.info</em>
+                    </span>
+                </div>
+                <div> msg.text</div>
+            </a>
+        </li>
+    </ul>
+    <!-- /.dropdown-messages -->
+</li>
+{% endblock %}
+
+
+ {% block css_extra %}
 <link type="text/css" href="/static/hls/connections/style.css"
 	rel="stylesheet" />
 <link type="text/css"
@@ -30,11 +83,14 @@
 	src="/static/hls/connections/dataprocessing.js"></script>
 <script type="text/javascript"
 	src="/static/hls/connections/net_router.js"></script>
+<script type="text/javascript"
+	src="/static/hls/connections/drawMenu.js"></script>
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
-{% endblock %} {% block content %}
+{% endblock %}
+{% block angular_app %} ng-app="App" ng-controller="diagramController" {% endblock %}
+{% block content %}
 
-<div ng-app="App" ng-controller="diagramController">
-	<button ng-click="redraw()">Redraw</button>
+<div >
 	<div id="fileDialog" style="display: none;">
 		<div
 			style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
