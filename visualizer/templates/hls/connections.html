@@ -3,8 +3,71 @@
 
 <li class="dropdown">
     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-        <i class="fa fa-file fa-fw"></i> 
+        <i class="fa fa-file fa-fw"></i> <i class="fa fa-caret-down"></i>
     </a>
+    <ul class="dropdown-menu dropdown-messages">
+        <li>
+            <a href="#">
+                <div>
+                    <strong>New</strong>
+                    <span class="pull-right text-muted">
+                        <em>No Shortcut</em>
+                    </span>
+                </div>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <div>
+                    <strong>Open</strong>
+                    <span class="pull-right text-muted">
+                        <em>No Shortcut</em>
+                    </span>
+                </div>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <div>
+                    <strong>Save</strong>
+                    <span class="pull-right text-muted">
+                        <em>No Shortcut</em>
+                    </span>
+                </div>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <div>
+                    <strong>Export</strong>
+                    <span class="pull-right text-muted">
+                        <em>No Shortcut</em>
+                    </span>
+                </div>
+            </a>
+        </li>        
+        <li>
+            <a href="#">
+                <div>
+                    <strong>Delete</strong>
+                    <span class="pull-right text-muted">
+                        <em>No Shortcut</em>
+                    </span>
+                </div>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <div>
+                    <strong>Close</strong>
+                    <span class="pull-right text-muted">
+                        <em>No Shortcut</em>
+                    </span>
+                </div>
+            </a>
+        </li>
+
+    </ul>
     <!-- /.dropdown-messages -->
 </li>
 
@@ -29,7 +92,7 @@
     <!-- /.dropdown-messages -->
 </li>
 
-  <li class="dropdown">
+<li class="dropdown">
     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
         <i class="fa fa-search fa-fw"></i> 
     </a>
@@ -48,6 +111,24 @@
     </ul>
     <!-- /.dropdown-messages -->
 </li>
+
+<li class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="fa fa-question fa-fw"></i> 
+    </a>
+    <ul class="dropdown-menu dropdown-messages">
+        <li>
+            <a href="#">
+                <div>
+                    <strong>Show Shortcuts</strong>
+                    <span class="pull-right text-muted">
+                    </span>
+                </div>
+            </a>
+        </li>
+    </ul>
+    <!-- /.dropdown-messages -->
+</li>
 {% endblock %}
 
 
@@ -57,6 +138,10 @@
 <link type="text/css"
 	href="/static/bower_components/ag-grid/dist/ag-grid.css"
 	rel="stylesheet" />
+<link type="text/css"
+    href="/static/hls/connections/fileBrowser.css"
+    rel="stylesheet" />
+
 {% endblock %} {% block js_extra %}
 <script type="text/javascript">
 	var COLUMN_WIDTH = 120;
@@ -95,7 +180,7 @@
 		<div
 			style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
 			&nbsp; {$ selectedFile $}</div>
-		<div style="width: 650px; height: 400px;" ag-grid="fileGridOptions"
+		<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
 			class="ag-file-browser"></div>
 	</div>
 	<div id="chartWrapper"></div>

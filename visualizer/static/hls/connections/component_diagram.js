@@ -87,21 +87,21 @@ function nodeColisionResolver(node) {
 function netMouseOver() {
 	var net = d3.select(this)[0][0].__data__.net;
 	d3.selectAll(".link")
-	  .classed("link-selected", 
+	  .classed("link-hover", 
 			  function(d){
 		  			return d.net === net;
 	  		  });
 }
 function higlightNets(nets){
 	d3.selectAll(".link")
-	  .classed("link-selected", 
+	  .classed("link-hover", 
 			  function(d){
 		  			return nets.indexOf(d.net ) >-1; 
 	  		  });
 }
 function netMouseOut() {
 	d3.selectAll(".link")
-	  .classed("link-selected", false);
+	  .classed("link-hover", false);
 }
 
 function addShadows(svg){
@@ -280,9 +280,14 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 	var wrapper = d3.select(selector);
 	wrapper.selectAll("svg").remove(); // delete old on redraw
 
-	var svg = wrapper.append("svg");
+	var svg = wrapper.append("svg")
+		.on("click", removeSelections);
+	
+	
 	var svgGroup= svg.append("g"); // because of zooming/moving
 
+
+	
 	addShadows(svg);
 
 	//grid higlight
@@ -291,6 +296,7 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
     	.enter()
     	.append("path")
     	.classed({"link": true})
+    	.on("click", netOnClick)
     	.on("mouseover", netMouseOver)
     	.on("mouseout", netMouseOut);
 
@@ -314,20 +320,38 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 		//.start();
 	drawExternalPorts(svgGroup, nodes.filter(function (n){
 			return n.isExternalPort;
-		}));
+		}))
+		.on("click", exPortOnClick);
+		
 	drawComponents(svgGroup, nodes.filter(function (n){
 			return !n.isExternalPort;
 		}))
-		.on("click", onClick)
+		.on("click", componentOnClick)
 		.call(force.drag); //component dragging
 
+	
+	function defaultZoom () {
+		svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");   			
+	}
     // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
     var zoomListener = d3.behavior.zoom()
     	.scaleExtent([0.2, 30])
-    	.on("zoom", function () {
-    			svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-    	});
-    (function fitDiagram2Screen(zoomListener){
+    	.on("zoom", defaultZoom);
+    
+	svgGroup.on("mousedown", function() {
+		if (d3.event.shiftKey) {
+			zoomListener.on("zoom", null);
+		} else {
+			zoomListener.on("zoom", defaultZoom);
+		}
+	})
+		.on("mouseup", function() {
+			d3.event.translate = [0, 0];
+			d3.event.scale = [0, 0];
+		})
+	;
+	
+	(function fitDiagram2Screen(zoomListener){
         function diagramSize(){
         	var widthMax = 0;
         	var heigthtMax = 0;
@@ -362,12 +386,51 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
         );
     }
 
-function onClick() {
-	//var selectedObject = console.log(d3.select(this)[0][0].__data__)
-    if (!d3.event.shiftKey) {
-    	d3.selectAll(".selected-object").classed({"selected-object": false})
-    }
+function componentOnClick() {
+	// var selectedObject = console.log(d3.select(this)[0][0].__data__)
 
-	d3.select(this).classed({"selected-object": true})
-	//d3.select(this).style("stroke", "red");
+	d3.event.stopPropagation();
+	if (!d3.event.shiftKey) {
+		removeSelections();
+	}
+
+	d3.select(this).classed({
+		"selected-object" : true
+	})
+	// d3.select(this).style("stroke", "red");
+}
+
+function exPortOnClick() {
+
+	d3.event.stopPropagation();
+	if (!d3.event.shiftKey) {
+		removeSelections();
+	}
+
+	d3.select(this).classed({
+		"selected-port" : true
+	})
+}
+
+function netOnClick() {
+	d3.event.stopPropagation();
+	if (!d3.event.shiftKey) {
+		removeSelections();
+	}
+
+	d3.select(this).classed({
+		"selected-link" : true
+	})
+}
+
+function removeSelections() {
+	d3.selectAll(".selected-port").classed({
+		"selected-port" : false
+	});
+	d3.selectAll(".selected-object").classed({
+		"selected-object" : false
+	});
+	d3.selectAll(".selected-link").classed({
+		"selected-link" : false
+	});
 }

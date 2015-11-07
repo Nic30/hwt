@@ -49,6 +49,15 @@ svg {
 	fill: red;
 }
 
+.selected-port text{
+	fill: red;
+}
+
+.selected-link text{
+	stroke: red;
+	stroke-width: 3px;
+}
+
 .component text {
 	fill: black;
 	font-size: 9pt;
@@ -78,9 +87,9 @@ path.link {
 	fill: none;
 }
 
-path.link-selected {
-	stroke: red;
-	stroke-width: 1px;
+path.link-hover {
+	stroke: blue;
+	/*stroke-width: 1px;*/
 }
 
 .external-port {
