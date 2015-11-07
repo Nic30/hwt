@@ -181,7 +181,7 @@ App
 					var columnDefs = [ {
 						headerName : "Name",
 						field : "name",
-						width : 250,
+						width : 350,
 						cellRenderer : {
 							renderer : 'group',
 							innerRenderer : innerCellRenderer
@@ -189,7 +189,7 @@ App
 					}, {
 						headerName : "Size",
 						field : "size",
-						width : 70,
+						width : 100,
 						cellStyle : sizeCellStyle
 					}, {
 						headerName : "Type",
@@ -198,7 +198,7 @@ App
 					}, {
 						headerName : "Date Modified",
 						field : "dateModified",
-						width : 150
+						width : 200
 					} ];
 					$scope.rootDir = "";
 					var filesRowData = [];
@@ -244,8 +244,8 @@ App
 													.setRowData(filesRowData);// .refreshView();
 										});
 					}
-					//$scope.fileDialog()
-					 $scope.redraw()
+					 $scope.fileDialog()
+					 //$scope.redraw()
 					 drawMenu();
 				}).config(function($interpolateProvider) {
 			$interpolateProvider.startSymbol('{$');
