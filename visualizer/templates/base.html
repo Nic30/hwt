@@ -59,56 +59,30 @@
 
             <ul class="nav navbar-top-links navbar-left">
              {% block menu_extra %} {% endblock %}
-			</ul>
-
-                
-
-            <div class="navbar-default sidebar" role="navigation">
-                <div class="sidebar-nav navbar-collapse">
-                    <ul class="nav" id="side-menu">
-                        <!--  <li class="sidebar-search">
-                            <div class="input-group custom-search-form">
-                                <input type="text" class="form-control" placeholder="Search...">
-                                <span class="input-group-btn">
-                                <button class="btn btn-default" type="button">
-                                    <i class="fa fa-search"></i>
-                                </button>
-                            </span>
-                            </div>
-                            /input-group 
-                        </li>-->
-						{% for nav in navigation %}
-                        <li>
-                            <a href="#"><i class="fa fa-sitemap fa-fw"></i>{{ nav.text }}<span class="fa arrow"></span></a>
-                            {% if nav.childs.count() != 0 %}
-                            <ul class="nav nav-second-level">
-                                {% for nav2 in nav.childs %}
-                                <li>
-                                    <a href="#">{{nav2.text}} <span class="fa arrow"></span></a>
-                                    {% if nav.childs.count() != 0 %}
-                                    <ul class="nav nav-third-level">
-                                    	{% for nav3 in nav2.childs %}
-                                        <li>
-                                            <a href="#">{{nav3.text}}</a>
-                                        </li>
-                                       {% endfor %}
-                                    </ul>
-                                    <!-- /.nav-third-level -->
-                                    {% endif %}
-                                </li>
-                               {% endfor %}
-                            </ul>
-                            <!-- /.nav-second-level -->
-                            {% endif %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                <!-- /.sidebar-collapse -->
-            </div>
-            <!-- /.navbar-static-side -->
+			</ul>       
         </nav>
+		<div class="nav navbar-default navbar-fixed-top sidebar" role="navigation">
+			<div class="collapse-item">    
+			    <a class="btn" data-toggle="collapse" href="#side-bar-Collapsing" aria-expanded="false" aria-controls="side-bar-Collapsing">
+        			<i class="fa fa-caret-down"></i>
+    			</a>
+    		</div>	
+			<div class="collapse" id="side-bar-Collapsing">
+				
+					<ul class="nav nav-second-level" id="side-menu">
+					<li class="dropdown">
+						<div class="side-menu-item">
+						Text
+						</div>
+						<div class="side-menu-item">
+						More Text
+						</div>
+					</li>
+					</ul>
 
+			
+			</div>
+		</div>
         <div id="page-wrapper">
 			{% block content %}{% endblock %}
         </div>

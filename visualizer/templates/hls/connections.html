@@ -7,7 +7,7 @@
     </a>
     <ul class="dropdown-menu dropdown-messages">
         <li>
-            <a href="#">
+            <a href="javascript:menuNew();" class="menu-New" accesskey="n">
                 <div>
                     <strong>New</strong>
                     <span class="pull-right text-muted">
@@ -17,7 +17,7 @@
             </a>
         </li>
         <li>
-            <a href="#">
+            <a href="javascript:menuOpen();" accesskey="o">
                 <div>
                     <strong>Open</strong>
                     <span class="pull-right text-muted">
@@ -27,7 +27,7 @@
             </a>
         </li>
         <li>
-            <a href="#">
+            <a href="javascript:menuSave();" accesskey="s">
                 <div>
                     <strong>Save</strong>
                     <span class="pull-right text-muted">
@@ -37,7 +37,7 @@
             </a>
         </li>
         <li>
-            <a href="#">
+            <a href="javascript:menuExport();" accesskey="t">
                 <div>
                     <strong>Export</strong>
                     <span class="pull-right text-muted">
@@ -47,7 +47,7 @@
             </a>
         </li>        
         <li>
-            <a href="#">
+            <a href="javascript:menuDelete();" accesskey="l">
                 <div>
                     <strong>Delete</strong>
                     <span class="pull-right text-muted">
@@ -57,7 +57,7 @@
             </a>
         </li>
         <li>
-            <a href="#">
+            <a href="javascript:menuClose();" accesskey="c">
                 <div>
                     <strong>Close</strong>
                     <span class="pull-right text-muted">
@@ -118,7 +118,7 @@
     </a>
     <ul class="dropdown-menu dropdown-messages">
         <li>
-            <a href="#">
+            <a href="javascript:showShortcuts()">
                 <div>
                     <strong>Show Shortcuts</strong>
                     <span class="pull-right text-muted">
@@ -171,6 +171,8 @@
 <script type="text/javascript"
 	src="/static/hls/connections/drawMenu.js"></script>
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
+<script type="text/javascript" src="/static/hls/connections/uihandlers.js"></script>
+<script type="text/javascript" src="/static/hls/connections/clickhandlers.js"></script>
 {% endblock %}
 {% block angular_app %} ng-app="App" ng-controller="diagramController" {% endblock %}
 {% block content %}

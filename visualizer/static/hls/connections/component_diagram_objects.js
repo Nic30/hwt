@@ -80,7 +80,8 @@ function drawComponents(svgGroup, componentNodes){
 		})
 		.enter()
 		.append('g')
-		.classed({"port-input": true});
+		.classed({"port-input": true})
+		.on("click", portOnClick);
 	
 	// input port icon [TODO] only for special types of connection, this is only example how to use it
 	port_inputs.append("image")
@@ -116,7 +117,8 @@ function drawComponents(svgGroup, componentNodes){
 		})
 		.enter()
 		.append('g')
-		.classed({"port-output": true});
+		.classed({"port-output": true})
+		.on("click", portOnClick);
 
 	//  output port image
 	port_out.append("image")
