@@ -308,7 +308,6 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
     for(var i =0; i< 3; i++)
     	updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links);
 
-
     var place = svg.node().getBoundingClientRect();
 	//force for self organizing of diagram
 	var force = d3.layout.force()
@@ -322,7 +321,8 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 	drawExternalPorts(svgGroup, nodes.filter(function (n){
 			return n.isExternalPort;
 		}))
-		.on("click", exPortOnClick);
+		.on("click", exPortOnClick)
+		.on("dblclick", componentDetail);
 		
 	drawComponents(svgGroup, nodes.filter(function (n){
 			return !n.isExternalPort;

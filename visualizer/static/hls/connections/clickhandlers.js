@@ -83,3 +83,13 @@ function drawLink()
 		//drawlink
 	}
 }
+
+function componentDetail()
+{
+	console.log("Component Detail")
+}
+
+function exPortDetail()
+{
+	console.log("ExPort Detail")
+}

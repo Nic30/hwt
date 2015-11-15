@@ -59,3 +59,8 @@ function showShortcuts()
 {
 	console.log("Show Shortcuts")
 }
+
+function sidebarChangeStatus()
+{
+	console.log("checking state")
+}
