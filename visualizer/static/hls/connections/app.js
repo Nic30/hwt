@@ -27,14 +27,12 @@ var App = angular.module('App', [ 'agGrid' ]);
  * nazvoslovi, na net) soucasne spoje jsou moc tenke, neda se na ne najet myssi
  * po najeti stejne nic neni videt protoze ta cervena se strati
  * 
- * [TODO][Marek] toolbar
+ * [TODO][Marek] toolbar, funkcionalita (open, a pod...)
  * 
- * [TODO][Marek] select, multi-select
+ * [TODO][Marek] multi-select
  * 
  * [TODO][Marek] component edit dialog
  * 
- * [TODO][Zuzana] filebrowser napriklad tento, nebo jakykoli jiny,
- * http://ag-grid.com/example-file-browser/index.php , backend udela Michal
  * 
  * [TODO][Marek] add/delete component (prozatim jen predpripraveny json, nebo
  * tak neco bude potreba integrace s filebrowserem)
@@ -44,10 +42,10 @@ var App = angular.module('App', [ 'agGrid' ]);
  * kurzor a kde se klikne tam se pripoji (i vickrat za sebou), zrusi se to pres
  * ESC a pri kliknuti a drzeni napr ctrl se misto pripojeni vytvori externi port
  * 
- * [TODO][All] Stranka s demy
  * 
+ * Prioritne: [Zuzana] filebrower : lazy load, slozky  
  * 
- * Prioritne: [Zuzana] filebrowser [Marek] postranni panel ze ktereho se bude
+ * [Marek] postranni panel ze ktereho se bude
  * dat spustit filebrowser, smazat komponenta, pridat komponenta [Michal]
  * otevreni vybrane veci z filebrowser, predpracovat editace
  * 
@@ -55,11 +53,11 @@ var App = angular.module('App', [ 'agGrid' ]);
  * dobre otestujeme....
  * 
  */
-
 App
 		.controller(
 				'diagramController',
 				function($scope, $http) {
+					
 					$scope.redraw = function() {
 						$http
 								.get(
@@ -176,12 +174,12 @@ App
 											}
 
 											$scope.fileGridOptions.api
-													.setRowData(filesRowData);// .refreshView();
+													.setRowData(filesRowData);
 										});
 					}
-					 //$scope.fileDialog()
-					 $scope.redraw()
-					 drawMenu();
+					 $scope.fileDialog()
+					 //$scope.redraw()
+					 //drawMenu();
 				}).config(function($interpolateProvider) {
 			$interpolateProvider.startSymbol('{$');
 			$interpolateProvider.endSymbol('$}');

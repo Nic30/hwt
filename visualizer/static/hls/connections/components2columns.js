@@ -180,37 +180,35 @@ function components2columns(nodes, links) { // discover component with most
 			component.y = COMPONENT_PADDING + heightOfPrevious(column, y);
 		});
 	}
+
+
+	// add unconnected components on right side
+	var mostRightColumn = columns.mostRightIndx()  +1;
+	var mostLeftColumn = columns.mostLeftIndx() -1;
+	nodes.forEach(function(component) {
+		
+		if (component.isExternalPort){
+			if(component.direction == DIRECTION.IN){
+				columns.push(mostLeftColumn, component);
+			} else{
+				columns.push(mostRightColumn, component);
+			}
+		}else if( !component.discovered){
+			columns.push(mostRightColumn, component);
+		}
+		
+	});
 	// set possitions forEach column
 	var x = 0;
 	for (var x; x < columns.length(); x++) {
 		var column = columns.accessFromLeft(x);
 		positionsForColumn(x, column);
-	}
-
-	// add unconnected components on right side
-	var mostRightColumn = columns.mostRightIndx()  +1;
-	var mostLeftColumn = columns.mostLeftIndx() -1;
-	var mostRightUpdated = false;
-	var mostLeftUpdated = false;
-	nodes.forEach(function(component) {
-		if (!component.discovered)
-			if(component.isExternalPort && component.direction == DIRECTION.IN){
-				columns.push(mostLeftColumn, component);
-				mostLeftUpdated = true;
-			} else{
-				columns.push(mostRightColumn, component);
-				mostRightUpdated = true;
-			}
-	});
-	if(mostLeftUpdated)
-		positionsForColumn(x, columns.get(mostLeftColumn));
-	if(mostRightUpdated)
-		positionsForColumn(x, columns.get(mostRightColumn));
-	
+	}	
 	// @assert
 	nodes.forEach(function(n) {
 		if (!Number.isFinite(n.x) || !Number.isFinite(n.y))
 			throw "Node " + n.name + " is not properly placed";
 	});
 	rmDiscoveredFlag(nodes);
+	return columns;
 }

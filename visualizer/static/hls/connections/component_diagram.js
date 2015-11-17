@@ -180,12 +180,12 @@ function hideTooltip(toolTipDiv){
 function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // move component on its positions and redraw links between them
 	//move component on its position
 
-	var router = new NetRouter(nodes, links);
+	var router = new NetRouter(nodes, links, false);
 	var grid = router.grid;
-	router.route();
+
 	
 	//create debug dots for routing nodes
-	(function debugRouterDots(){
+	function debugRouterDots(){
 		var flatenMap = [];
 		grid.visitFromLeftTop(function(c){
 			flatenMap.push(c);
@@ -241,7 +241,7 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 		//        var ty = d.originComponent.y ;
 		//        return "M" + sx + "," + sy + " L " + tx + "," + ty;
 		//    });
-	})();
+	}
 	
 
 	function drawNet(d){
@@ -264,7 +264,8 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 		return pathStr;
 	}
 		
-		
+	router.route();	
+	debugRouterDots()
 	linkElements.attr("d", drawNet);
 
 	
@@ -283,10 +284,7 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 	var svg = wrapper.append("svg")
 		.on("click", removeSelections);
 	
-	
 	var svgGroup= svg.append("g"); // because of zooming/moving
-
-
 	
 	addShadows(svg);
 
@@ -304,8 +302,8 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 		.append("div")   
 	    .attr("id", "tooltip")               
 	    .style("opacity", 0);
-    for(var i =0; i< 3; i++)
-    	updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links);
+    //for(var i =0; i< 3; i++)
+	updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links);
 
 
     var place = svg.node().getBoundingClientRect();
