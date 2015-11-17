@@ -7,7 +7,7 @@
     </a>
     <ul class="dropdown-menu dropdown-messages">
         <li>
-            <a href="#">
+            <a href="javascript:menuNew();" class="menu-New" accesskey="n">
                 <div>
                     <strong>New</strong>
                     <span class="pull-right text-muted">
@@ -17,7 +17,7 @@
             </a>
         </li>
         <li>
-            <a href="#">
+            <a href="javascript:menuOpen();" accesskey="o">
                 <div>
                     <strong>Open</strong>
                     <span class="pull-right text-muted">
@@ -27,7 +27,7 @@
             </a>
         </li>
         <li>
-            <a href="#">
+            <a href="javascript:menuSave();" accesskey="s">
                 <div>
                     <strong>Save</strong>
                     <span class="pull-right text-muted">
@@ -37,7 +37,7 @@
             </a>
         </li>
         <li>
-            <a href="#">
+            <a href="javascript:menuExport();" accesskey="t">
                 <div>
                     <strong>Export</strong>
                     <span class="pull-right text-muted">
@@ -47,7 +47,7 @@
             </a>
         </li>        
         <li>
-            <a href="#">
+            <a href="javascript:menuDelete();" accesskey="l">
                 <div>
                     <strong>Delete</strong>
                     <span class="pull-right text-muted">
@@ -57,7 +57,7 @@
             </a>
         </li>
         <li>
-            <a href="#">
+            <a href="javascript:menuClose();" accesskey="c">
                 <div>
                     <strong>Close</strong>
                     <span class="pull-right text-muted">
@@ -72,14 +72,14 @@
 </li>
 
 <li class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+    <a href="javascript:componentAdd()">
         <i class="fa fa-plus fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->
 </li>
 
 <li class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+    <a class="dropdown-toggle disabled" href="javascript:componentDelete()">
         <i class="fa fa-remove fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->
@@ -118,7 +118,7 @@
     </a>
     <ul class="dropdown-menu dropdown-messages">
         <li>
-            <a href="#">
+            <a href="javascript:showShortcuts()">
                 <div>
                     <strong>Show Shortcuts</strong>
                     <span class="pull-right text-muted">
@@ -128,6 +128,19 @@
         </li>
     </ul>
     <!-- /.dropdown-messages -->
+</li>
+
+<li class="dropdown" ng-click="collapseSidebar($event)">
+    <a class="dropdown-toggle disabled icon-off" data-toggle="collapse" href="#side-bar-Collapsing" aria-expanded="false" aria-controls="side-bar-Collapsing">
+        <i class="fa fa-toggle-off fa-fw"></i> 
+    </a>
+    <!-- /.dropdown-messages -->
+</li>
+
+<li class="dropdown">
+    <a class="dropdown-toggle disabled" href="javascript:componentDetail()">
+        <i class="fa fa-edit fa-fw"></i> 
+    </a>
 </li>
 {% endblock %}
 
@@ -175,6 +188,8 @@
 <script type="text/javascript"
 	src="/static/hls/connections/drawMenu.js"></script>
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
+<script type="text/javascript" src="/static/hls/connections/uihandlers.js"></script>
+<script type="text/javascript" src="/static/hls/connections/clickhandlers.js"></script>
 {% endblock %}
 {% block angular_app %} ng-app="App" ng-controller="diagramController" {% endblock %}
 {% block content %}

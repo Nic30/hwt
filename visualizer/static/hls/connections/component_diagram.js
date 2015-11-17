@@ -282,7 +282,8 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 	wrapper.selectAll("svg").remove(); // delete old on redraw
 
 	var svg = wrapper.append("svg")
-		.on("click", removeSelections);
+		.on("click", onBoardClick)
+		.on("mousemove", drawLink);
 	
 	var svgGroup= svg.append("g"); // because of zooming/moving
 	
@@ -305,7 +306,6 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
     for(var i =0; i< 3; i++)
 	   updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links);
 
-
     var place = svg.node().getBoundingClientRect();
 	//force for self organizing of diagram
 	var force = d3.layout.force()
@@ -319,14 +319,14 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 	drawExternalPorts(svgGroup, nodes.filter(function (n){
 			return n.isExternalPort;
 		}))
-		.on("click", exPortOnClick);
+		.on("click", exPortOnClick)
+		.on("dblclick", componentDetail);
 		
 	drawComponents(svgGroup, nodes.filter(function (n){
 			return !n.isExternalPort;
 		}))
 		.on("click", componentOnClick)
 		.call(force.drag); //component dragging
-
 	
 	function defaultZoom () {
 		svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");   			
@@ -383,52 +383,3 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
         	    })
         );
     }
-
-function componentOnClick() {
-	// var selectedObject = console.log(d3.select(this)[0][0].__data__)
-
-	d3.event.stopPropagation();
-	if (!d3.event.shiftKey) {
-		removeSelections();
-	}
-
-	d3.select(this).classed({
-		"selected-object" : true
-	})
-	// d3.select(this).style("stroke", "red");
-}
-
-function exPortOnClick() {
-
-	d3.event.stopPropagation();
-	if (!d3.event.shiftKey) {
-		removeSelections();
-	}
-
-	d3.select(this).classed({
-		"selected-port" : true
-	})
-}
-
-function netOnClick() {
-	d3.event.stopPropagation();
-	if (!d3.event.shiftKey) {
-		removeSelections();
-	}
-
-	d3.select(this).classed({
-		"selected-link" : true
-	})
-}
-
-function removeSelections() {
-	d3.selectAll(".selected-port").classed({
-		"selected-port" : false
-	});
-	d3.selectAll(".selected-object").classed({
-		"selected-object" : false
-	});
-	d3.selectAll(".selected-link").classed({
-		"selected-link" : false
-	});
-}
