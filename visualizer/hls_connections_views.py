@@ -23,7 +23,7 @@ class FSEntry():
     def fromFile(cls, fileName):
         st = os.stat(fileName)
         
-        self = cls(fileName, S_ISDIR(st.st_mode))
+        self = cls(os.path.basename(fileName), S_ISDIR(st.st_mode))
         self.size = st.st_size
         #"%Y/%m/%d  %H:%M:%S"
         self.dateModified = time.strftime("%Y/%m/%d  %H:%M:%S", time.gmtime(st.st_ctime))
@@ -48,14 +48,8 @@ def connections_test():
 @connectionsBp.route('/hls/connections-data-ls/<path:path>')
 def connectionDataLs(path=""):
     data = []
-    
-    
-    if path == "":
-        path = os.path.join(WORKSPACE_DIR, path) + "/*"
-    else:
-        path += "/*"
-        
-    
+    path = os.path.join(WORKSPACE_DIR, path) + "/*"
+
     for f in glob.glob(path):
         data.append(FSEntry.fromFile(f))
     
