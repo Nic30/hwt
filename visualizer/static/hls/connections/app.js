@@ -17,42 +17,39 @@ var App = angular.module('App', [ 'agGrid' ]);
  * 
  * [TODO][Michal] connection to next left boundary of component to allow router
  * make more straight line for long nets
+ * [TODO] AngularHotkeys.js
+ * http://chieffancypants.github.io/angular-hotkeys/
+ * [TODO] posunut grapf pri sidebar
+ *
  * 
+ * [TODO][Zuzana] filebrowser napriklad tento, nebo jakykoli jiny,
+ * http://ag-grid.com/example-file-browser/index.php , backend udela Michal
  * [TODO][Zuzana] find way how to allow temporary disable zoom/moving to allow
- * copy of the text [TODO][Zuzana] javaskriptova funkce ktera snizi jas a
+ * copy of the text 
+ * [TODO][Zuzana] javaskriptova funkce ktera snizi jas a
  * kontrast vsech objektu v svg (vse zasedne, a pak dalsi ukol bude pouzit to se
  * zvyraznovanim...)
- * 
  * [TODO][Zuzana] net mouse over style/ net(link) style (chce to i sjednotit
  * nazvoslovi, na net) soucasne spoje jsou moc tenke, neda se na ne najet myssi
  * po najeti stejne nic neni videt protoze ta cervena se strati
  * 
+ * 
  * [TODO][Marek] toolbar
- * 
  * [TODO][Marek] select, multi-select
- * 
  * [TODO][Marek] component edit dialog
- * 
- * [TODO][Zuzana] filebrowser napriklad tento, nebo jakykoli jiny,
- * http://ag-grid.com/example-file-browser/index.php , backend udela Michal
- * 
  * [TODO][Marek] add/delete component (prozatim jen predpripraveny json, nebo
  * tak neco bude potreba integrace s filebrowserem)
- * 
  * [TODO][Marek] add/delete connection /construct external port (shortcut),
  * predstava je takova ze kdyz se klikne na sit tak se jakoby nalinkuje na
  * kurzor a kde se klikne tam se pripoji (i vickrat za sebou), zrusi se to pres
  * ESC a pri kliknuti a drzeni napr ctrl se misto pripojeni vytvori externi port
  * 
  * [TODO][All] Stranka s demy
- * 
- * [TODO] posunut grapf pri sidebar
- * 
  * [TODO] sidebar object map
  * 
- * Prioritne: [Zuzana] filebrowser [Marek] postranni panel ze ktereho se bude
- * dat spustit filebrowser, smazat komponenta, pridat komponenta [Michal]
- * otevreni vybrane veci z filebrowser, predpracovat editace
+ * Prioritne: 
+ * [Zuzana] filebrowser
+ * [Michal] otevreni vybrane veci z filebrowser, predpracovat editace
  * 
  * Proc? Protoze nemuzeme pohodlne prepinat mezi diagramy, a tak to asi tezko
  * dobre otestujeme....
@@ -127,8 +124,16 @@ App
 		.controller(
 				'diagramController',
 				function($scope, $http) {
+					$scope.sidebarCollapsed = true
 					$scope.collapseSidebar = function($event) {
-						console.log("collapse")
+						//console.log($event.target.className)
+						if($scope.sidebarCollapsed == true)
+							{
+							$scope.sidebarCollapsed = false;
+							}
+						else{
+							$scope.sidebarCollapsed = true;
+						}
 					}
 					$scope.redraw = function() {
 						$http
