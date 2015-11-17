@@ -59,6 +59,7 @@ def connectionDataLs(path=""):
 
 @connectionsBp.route('/hls/connections-data/<path:path>')
 def connectionData(path):
+    path = os.path.join(WORKSPACE_DIR, path)
     if path.endswith(".py"):
         path = path[:-3]
         try:

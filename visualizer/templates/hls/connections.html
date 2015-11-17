@@ -6,7 +6,7 @@
         <i class="fa fa-file fa-fw"></i> <i class="fa fa-caret-down"></i>
     </a>
     <ul class="dropdown-menu dropdown-messages">
-        <li ng-click="fileDialog()">
+        <li>
             <a href="#" class="menu-New" accesskey="n">
                 <div>
                     <strong>New</strong>
@@ -16,7 +16,7 @@
                 </div>
             </a>
         </li>
-        <li>
+        <li ng-click="fileDialog()">
             <a href="javascript:menuOpen();" accesskey="o">
                 <div>
                     <strong>Open</strong>
@@ -80,7 +80,7 @@
 
 <li class="dropdown">
     <a class="dropdown-toggle disabled" href="javascript:componentDelete()">
-        <i class="fa fa-remove fa-fw"></i> 
+        <i class="fa fa-trash fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->
 </li>
@@ -130,9 +130,9 @@
     <!-- /.dropdown-messages -->
 </li>
 
-<li class="dropdown" ng-click="collapseSidebar($event)">
+<li class="dropdown" ng-click="collapseSidebar($event)" >
     <a class="dropdown-toggle disabled icon-off" data-toggle="collapse" href="#side-bar-Collapsing" aria-expanded="false" aria-controls="side-bar-Collapsing">
-        <i class="fa fa-toggle-off fa-fw"></i> 
+        <i class="fa fa-toggle-off fa-fw" ng-class="{'fa-toggle-on':sidebarCollapsed === false, 'fa-toggle-off':sidebarCollapsed === true}"></i> 
     </a>
     <!-- /.dropdown-messages -->
 </li>
