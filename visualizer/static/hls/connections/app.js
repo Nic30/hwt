@@ -99,11 +99,16 @@ App
 							node = node.parent;
 							path = node.data.name + '/' + path;
 						}
-						$scope.selectedFile = path;
-						d3.selectAll("#fileDialog").style({
+						if(node.group){
+							$scope.loadFolderData(path);
+						}else{
+							$scope.selectedFile = path;
+							d3.selectAll("#fileDialog").style({
 							"display" : "none"
-						});
-						$scope.redraw();
+							});
+							$scope.redraw();	
+						}
+						
 					}
 
 					function sizeCellStyle() {
@@ -166,19 +171,15 @@ App
 						onRowClicked : rowClicked
 					};
 
-					$scope.selectedFile = 'workspace/example1.json';
-					$scope.fileDialog = function() {
-						d3.selectAll("#fileDialog").style({
-							"display" : "block"
-						});
-						$http.get('/hls/connections-data-ls/' + $scope.rootDir)
+					$scope.loadFolderData  = function(path){
+						$http.get('/hls/connections-data-ls/' + path)
 								.then(
 										function(res) {
 											function findDir(path) {
 												return filesRowData;
 											}
 											var files = res.data;
-											var dir = findDir($scope.rootDir);
+											var dir = findDir(path);
 											if (dir.childs === undefined) {
 												files.forEach(function(f) {
 													filesRowData.push(f);
@@ -190,6 +191,15 @@ App
 											$scope.fileGridOptions.api
 													.setRowData(filesRowData);
 										});
+					}
+					
+					$scope.selectedFile = 'workspace/example1.json';
+					$scope.fileDialog = function() {
+						d3.selectAll("#fileDialog").style({
+							"display" : "block"
+						});
+						filesRowData = [];
+						$scope.loadFolderData("");
 					}
 					 //$scope.fileDialog()
 					 $scope.redraw()
