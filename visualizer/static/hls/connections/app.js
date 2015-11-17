@@ -43,13 +43,11 @@ var App = angular.module('App', [ 'agGrid' ]);
  * ESC a pri kliknuti a drzeni napr ctrl se misto pripojeni vytvori externi port
  * 
  * 
-<<<<<<< HEAD
  * Prioritne: [Zuzana] filebrower : lazy load, slozky  
-=======
+ 
  * [TODO] posunut grapf pri sidebar
  * 
  * [TODO] sidebar object map
->>>>>>> Menu-features
  * 
  * [Marek] postranni panel ze ktereho se bude
  * dat spustit filebrowser, smazat komponenta, pridat komponenta [Michal]
@@ -95,7 +93,7 @@ App
 							path = node.data.name + '/' + path;
 						}
 						if(node.group){
-							//nacist obsah adresara	
+							$scope.loadFolderData(path);
 						}else{
 							$scope.selectedFile = path;
 							d3.selectAll("#fileDialog").style({
@@ -196,8 +194,8 @@ App
 						filesRowData = [];
 						$scope.loadFolderData("");
 					}
-					 $scope.fileDialog()
-					 //$scope.redraw()
+					 //$scope.fileDialog()
+					 $scope.redraw()
 					 //drawMenu();
 				}).config(function($interpolateProvider) {
 			$interpolateProvider.startSymbol('{$');
