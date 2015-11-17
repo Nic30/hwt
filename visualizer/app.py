@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 from flask.helpers import send_from_directory
 import sys
-sys.path.append("..")  # [hotfix]
+sys.path.append("..")  # [hotfix] to make visualizer run after downloading from git
 from hls_connections_views import connectionsBp
 
 app = Flask(__name__)

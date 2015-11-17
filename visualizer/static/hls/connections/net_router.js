@@ -1,4 +1,3 @@
-
 function NetRouter(nodes, links) {
 	var HORIZONTAL = "h";
 	var VERTICAL = "v";
@@ -19,7 +18,7 @@ function NetRouter(nodes, links) {
 		grid : new RoutingNodesContainer(nodes),
 		getNextPathDir : function(nodeA, nodeB) {
 			if (!nodeA || !nodeB)
-				throw "Error:invalid use with undefined node";
+				throw "Error:Invalid use with undefined node";
 			if (nodeA.left == nodeB || nodeA.right == nodeB) {
 				return HORIZONTAL;
 			}
@@ -32,11 +31,11 @@ function NetRouter(nodes, links) {
 			var dir, dirTmp, last = link.start;
 			var subPath = [ link.start ];
 			var p = link.path[0];
-			if (p == undefined){
+			if (p == undefined) {
 				fn(subPath, HORIZONTAL);
 				return;
 			}
-				
+
 			dir = self.getNextPathDir(last, p);
 
 			for (var i = 0; i < link.path.length; i++) {
@@ -68,7 +67,6 @@ function NetRouter(nodes, links) {
 				} else {
 
 					var midle = Math.ceil((leftIndx + rightIndx) / 2);
-
 					var ml = findMaxPossible(arrName, minimum, leftIndx,
 							midle - 1);
 					var mr = findMaxPossible(arrName, minimum, midle, rightIndx);
@@ -138,34 +136,35 @@ function NetRouter(nodes, links) {
 			});
 			self.moveComponetsOutOfNets();
 		},
-		moveComponetsOutOfNets : function(){
-			/* find width of channels
-			 * add it to component positions
-			 * */
-			function netPadding(netCnt){
-				return netCnt * (NET_PADDING+1);
+		moveComponetsOutOfNets : function() {
+			/*
+			 * find width of channels add it to component positions
+			 */
+			function netPadding(netCnt) {
+				return netCnt * (NET_PADDING + 1);
 			}
 			var grid = self.grid;
-			
+
 			grid.maxNetCntY = [];
 			grid.maxNetCntX = [];
-			
-			for(var x = 0; x < grid.length; x++){ // discover sizes of net channels
+
+			for (var x = 0; x < grid.length; x++) { // discover sizes of net
+													// channels
 				var col = grid[x];
-				if(col){
-					if(grid.maxNetCntX[x] === undefined)
+				if (col) {
+					if (grid.maxNetCntX[x] === undefined)
 						grid.maxNetCntX[x] = 0;
-					for(var y =0; y < grid.length; y++){
+					for (var y = 0; y < grid.length; y++) {
 						var n = col[y];
-						if(n){
+						if (n) {
 							var netCntY = n.horizontal.length;
 							var netCntX = n.vertical.length;
 
-							if(grid.maxNetCntY[y] === undefined)
+							if (grid.maxNetCntY[y] === undefined)
 								grid.maxNetCntY[y] = 0;
-							if(grid.maxNetCntY[y] < netCntY)
+							if (grid.maxNetCntY[y] < netCntY)
 								grid.maxNetCntY[y] = netCntY;
-							if(grid.maxNetCntX[x] < netCntX)
+							if (grid.maxNetCntX[x] < netCntX)
 								grid.maxNetCntX[x] = netCntX;
 						}
 					}
@@ -175,51 +174,51 @@ function NetRouter(nodes, links) {
 			var sumOfNetOffsetsX = [];
 			var sumOfNetOffsetsY = [];
 			var offset = 0;
-			grid.maxNetCntX.forEach(function (d, i){
-				if(d){
+			grid.maxNetCntX.forEach(function(d, i) {
+				if (d) {
 					offset += netPadding(d);
 				}
 				sumOfNetOffsetsX[i] = offset;
 			});
 			offset = 0;
-			grid.maxNetCntY.forEach(function (d, i){
-				if(d){
+			grid.maxNetCntY.forEach(function(d, i) {
+				if (d) {
 					offset += netPadding(d);
 				}
 				sumOfNetOffsetsY[i] = offset;
 			});
-			function previousDefined(arr, indx){
+			function previousDefined(arr, indx) {
 				return arr[indx]
-				for(var i = indx-1; i >=0; i--){
-					var offset  = arr[i];
-					if(offset){
+				for (var i = indx - 1; i >= 0; i--) {
+					var offset = arr[i];
+					if (offset) {
 						return offset;
 					}
 				}
 				return 0;
 			}
-			nodes.forEach(function (n){
+			nodes.forEach(function(n) {
 				var x0 = n.x - COMPONENT_PADDING;
 				var x1 = n.x + n.width + COMPONENT_PADDING;
-				var y0 =n.y - COMPONENT_PADDING;
+				var y0 = n.y - COMPONENT_PADDING;
 				var y1 = n.y + n.height + COMPONENT_PADDING;
-				var npTop =  netPadding( previousDefined(grid.maxNetCntY, y0));
-				if(npTop)
+				var npTop = netPadding(previousDefined(grid.maxNetCntY, y0));
+				if (npTop)
 					n.netChannelPadding.top = npTop;
 				var npLeft = netPadding(previousDefined(grid.maxNetCntX, x0));
 				if (npLeft)
 					n.netChannelPadding.left = npLeft;
-				//var npBottom = netPadding(grid.maxNetCntY[y1]);
-				//if(npBottom)
-				//	n.netChannelPadding.bottom = npBottom;
-				//var npRight = netPadding(grid.maxNetCntX[x1]);
-				//if(npRight)
-				//	n.netChannelPadding.right = npRight;
+				// var npBottom = netPadding(grid.maxNetCntY[y1]);
+				// if(npBottom)
+				// n.netChannelPadding.bottom = npBottom;
+				// var npRight = netPadding(grid.maxNetCntX[x1]);
+				// if(npRight)
+				// n.netChannelPadding.right = npRight;
 				var xOffset = sumOfNetOffsetsX[x0];
-				if(xOffset  != undefined)
+				if (xOffset != undefined)
 					n.x = xOffset + n.x;
 				var yOffset = sumOfNetOffsetsY[y0];
-				if(yOffset != undefined)
+				if (yOffset != undefined)
 					n.y = yOffset + n.y;
 			});
 		}
