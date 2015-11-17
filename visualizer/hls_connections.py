@@ -83,6 +83,7 @@ class ExternalPort():
             
         
         return {"name":self.name, "id":id(self),
+                "direction" : self.direction,
                 "isExternalPort" : True,
                 "inputs": inputs,
                 "outputs": outputs}
