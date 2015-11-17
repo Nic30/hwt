@@ -186,8 +186,8 @@ App
 													.setRowData(filesRowData);
 										});
 					}
-					 $scope.fileDialog()
-					 //$scope.redraw()
+					 //$scope.fileDialog()
+					 $scope.redraw()
 					 //drawMenu();
 				}).config(function($interpolateProvider) {
 			$interpolateProvider.startSymbol('{$');
