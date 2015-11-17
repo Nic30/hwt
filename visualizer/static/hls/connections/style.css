@@ -82,7 +82,6 @@ svg {
 }
 
 path.link {
-	margin: 10px;
 	stroke: black;
 	stroke-width: 1px;
 	fill: none;
