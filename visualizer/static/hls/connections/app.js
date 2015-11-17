@@ -186,7 +186,7 @@ App
 										});
 					}
 					
-					$scope.selectedFile = 'workspace/example1.json';
+					$scope.selectedFile = 'example1.json';
 					$scope.fileDialog = function() {
 						d3.selectAll("#fileDialog").style({
 							"display" : "block"
