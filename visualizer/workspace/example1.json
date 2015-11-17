@@ -11,13 +11,15 @@
     }, {
         "id": 2,
         "name" : "clk",
-        "isExternalPort" : false,
+        "isExternalPort" : true,
+        "direction" : "IN",
         "inputs" : [],
         "outputs" : [{"name" :"clk"}]    
     }, {
         "id": 3,
         "name" : "rst",
-        "isExternalPort" : false,
+        "isExternalPort" : true,
+        "direction" : "IN",
         "inputs" : [],
         "outputs" : [{"name" :"rst"}]    
     }, {
@@ -34,12 +36,14 @@
         "id" : 6,
         "name" : "outA",
         "isExternalPort" : true,
+        "direction" : "OUT",
         "inputs" : [{"name" :"outA"} ],
         "outputs" : [ ]
     }, {
         "id" : 7,
         "name" : "inA",
         "isExternalPort" : true,
+        "direction" : "IN",
         "inputs" : [ ],
         "outputs" : [{"name" :"outA"} ]
     }
