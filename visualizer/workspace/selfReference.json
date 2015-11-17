@@ -1,0 +1,28 @@
+{ "nodes" : [ {
+		"id" : 4,
+		"name" : "selfReference",
+		"inputs" : [ {"name":"clk"}, {"name":"inC"}, {"name":"inD"} ],
+		"outputs" : [ {"name":"c"}, {"name":"d"} ]
+	} ],
+	"nets" : [ {
+		"name" : "C",
+		"source" : {
+			"id" : 4,
+			"portIndex" : 0
+		},
+		"targets" : [ {
+			"id" : 4,
+			"portIndex" : 1
+		} ]
+	}, {
+		"name" : "D",
+		"source" : {
+			"id" : 4,
+			"portIndex" : 1
+		},
+		"targets" : [ {
+			"id" : 4,
+			"portIndex" : 2
+		} ]
+	} ]
+}
