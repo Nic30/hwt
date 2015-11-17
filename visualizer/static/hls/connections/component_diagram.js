@@ -302,8 +302,8 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 		.append("div")   
 	    .attr("id", "tooltip")               
 	    .style("opacity", 0);
-    //for(var i =0; i< 3; i++)
-	updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links);
+    for(var i =0; i< 3; i++)
+	   updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links);
 
 
     var place = svg.node().getBoundingClientRect();

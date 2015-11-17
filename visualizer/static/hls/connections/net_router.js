@@ -1,4 +1,4 @@
-function NetRouter(nodes, links, moveComponents) {
+function NetRouter(nodes, links) {
 	var HORIZONTAL = "h";
 	var VERTICAL = "v";
 	function dir2arrName(dir) {
@@ -15,7 +15,6 @@ function NetRouter(nodes, links, moveComponents) {
 	var self = {
 		nodes : nodes,
 		links : links,
-		moveComponents : moveComponents,
 		grid : new RoutingNodesContainer(nodes),
 		getNextPathDir : function(nodeA, nodeB) {
 			if (!nodeA || !nodeB)
@@ -135,8 +134,7 @@ function NetRouter(nodes, links, moveComponents) {
 					});
 				});
 			});
-			if (self.moveComponents)
-				self.moveComponetsOutOfNets();
+			self.moveComponetsOutOfNets();
 		},
 		moveComponetsOutOfNets : function() {
 			/*
