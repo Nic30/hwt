@@ -87,6 +87,24 @@ function drawLink()
 function componentDetail()
 {
 	console.log("Component Detail")
+	var selection = d3.selectAll(".selected-object")
+	var count = selection[0].length
+	if (count == 0)
+	{
+		console.log("No object selected!")
+	}
+	else if (count > 1)
+	{
+		console.log("Too many objects selected!")
+	}
+	else
+	{
+		console.log(selection[0][0])
+		var object = selection[0][0]
+		var selected = object.getElementsByTagName("g");
+		console.log(object.__data__)
+	}
+
 }
 
 function exPortDetail()

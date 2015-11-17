@@ -46,6 +46,9 @@ var App = angular.module('App', [ 'agGrid' ]);
  * 
  * [TODO][All] Stranka s demy
  * 
+ * [TODO] posunut grapf pri sidebar
+ * 
+ * [TODO] sidebar object map
  * 
  * Prioritne: [Zuzana] filebrowser [Marek] postranni panel ze ktereho se bude
  * dat spustit filebrowser, smazat komponenta, pridat komponenta [Michal]
@@ -124,6 +127,9 @@ App
 		.controller(
 				'diagramController',
 				function($scope, $http) {
+					$scope.collapseSidebar = function($event) {
+						console.log("collapse")
+					}
 					$scope.redraw = function() {
 						$http
 								.get(
