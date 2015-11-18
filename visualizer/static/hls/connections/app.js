@@ -96,9 +96,10 @@ App
 					function rowClicked(params) {
 						var node = params.node;
 						var path = node.data.name;
-						while (node.parent) {
-							node = node.parent;
-							path = node.data.name + '/' + path;
+						var tmpnode = node;
+						while (tmpnode.parent) {
+							var tmpnode = tmpnode.parent;
+							path = tmpnode.data.name + '/' + path;
 						}
 						if(node.group){
 							if(!node.expanded){
@@ -192,7 +193,7 @@ App
 											}
 											var files = res.data;
 											var dir = findDir(path);
-											if (dir.child === undefined) {
+											if (dir.children === undefined) {
 												
 													filesRowData = files;
 												
