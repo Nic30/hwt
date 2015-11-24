@@ -1,225 +1,182 @@
+function sizeCellStyle() {
+	return {
+		'text-align' : 'right'
+	};
+}
+
+function innerCellRenderer(params) {
+	var image;
+	if (params.node.group) {
+		image = 'folder';
+	} else {
+		image = 'file';
+	}
+	var imageFullUrl = "/static/hls/connections/graphic/" + image + '.png';
+	return '<img src="' + imageFullUrl + '" style="padding-left: 4px;" /> '
+			+ params.data.name;
+}
+
+var columnDefs = [ {
+	headerName : "Name",
+	field : "name",
+	width : 350,
+	cellRenderer : {
+		renderer : 'group',
+		innerRenderer : innerCellRenderer
+	}
+}, {
+	headerName : "Size",
+	field : "size",
+	width : 100,
+	cellStyle : sizeCellStyle
+}, {
+	headerName : "Type",
+	field : "type",
+	width : 150
+}, {
+	headerName : "Date Modified",
+	field : "dateModified",
+	width : 200
+} ];
+
 var App = angular.module('App', [ 'agGrid' ]);
-/*
- * https://leanpub.com/D3-Tips-and-Tricks/read
- * http://www.d3noob.org/2013/03/d3js-force-directed-graph-examples.html
- * http://blog.pixelingene.com/demos/d3_tree/
- * http://bl.ocks.org/Neilos/584b9a5d44d5fe00f779
- * http://www.jointjs.com/tutorial/ports
- * http://gojs.net/latest/samples/dynamicPorts.html
- * http://bl.ocks.org/GerHobbelt/3104394 http://bl.ocks.org/mbostock/3681006
- * --zoom
- * http://www.codeproject.com/Articles/709340/Implementing-a-Flowchart-with-SVG-and-AngularJS
- * http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
- * http://bl.ocks.org/explunit/5603250
- * http://www.ece.northwestern.edu/~haizhou/357/lec6.pdf
- * http://bl.ocks.org/lgersman/5310854 -- selection
- * http://ag-grid.com/example-file-browser/fileBrowser.html
- * 
- * [TODO][Michal] connection to next left boundary of component to allow router
- * make more straight line for long nets
- * [TODO] AngularHotkeys.js
- * http://chieffancypants.github.io/angular-hotkeys/
- * [TODO] posunut grapf pri sidebar
- *
- * 
- * [TODO][Zuzana] filebrowser napriklad tento, nebo jakykoli jiny,
- * http://ag-grid.com/example-file-browser/index.php , backend udela Michal
- * [TODO][Zuzana] find way how to allow temporary disable zoom/moving to allow
- * copy of the text 
- * [TODO][Zuzana] javaskriptova funkce ktera snizi jas a
- * kontrast vsech objektu v svg (vse zasedne, a pak dalsi ukol bude pouzit to se
- * zvyraznovanim...)
- * [TODO][Zuzana] net mouse over style/ net(link) style (chce to i sjednotit
- * nazvoslovi, na net) soucasne spoje jsou moc tenke, neda se na ne najet myssi
- * po najeti stejne nic neni videt protoze ta cervena se strati
- * 
- * [TODO][Marek] toolbar
- * [TODO][Marek] select, multi-select
- * [TODO][Marek] component edit dialog
- * [TODO][Marek] add/delete component (prozatim jen predpripraveny json, nebo
- * tak neco bude potreba integrace s filebrowserem)
- * [TODO][Marek] add/delete connection /construct external port (shortcut),
- * predstava je takova ze kdyz se klikne na sit tak se jakoby nalinkuje na
- * kurzor a kde se klikne tam se pripoji (i vickrat za sebou), zrusi se to pres
- * ESC a pri kliknuti a drzeni napr ctrl se misto pripojeni vytvori externi port
- * 
- * [TODO][All] Stranka s demy
- * Prioritne: [Zuzana] filebrower : lazy load, slozky  
+App.controller(
+		'diagramController',
+		function($scope, $http) {
+			$scope.sidebarCollapsed = true
+			$scope.collapseSidebar = function($event) {
+				if ($scope.sidebarCollapsed == true) {
+					$scope.sidebarCollapsed = false;
+				} else {
+					$scope.sidebarCollapsed = true;
+				}
+			}
+			$scope.redraw = function() {
+				var nodes = $scope.nodes;
+				var nets = $scope.nets;
 
- * [TODO] posunut grapf pri sidebar
- * [TODO] sidebar object map
- * 
- * Prioritne: 
- * [Zuzana] filebrowser
- * [Michal] otevreni vybrane veci z filebrowser, predpracovat editace
- * 
- * Proc? Protoze nemuzeme pohodlne prepinat mezi diagramy, a tak to asi tezko
- * dobre otestujeme....
- * 
- */
-App
-		.controller(
-				'diagramController',
-				function($scope, $http) {
-					$scope.sidebarCollapsed = true
-					$scope.collapseSidebar = function($event) {
-						//console.log($event.target.className)
-						if($scope.sidebarCollapsed == true)
-							{
-							$scope.sidebarCollapsed = false;
-							}
-						else{
-							$scope.sidebarCollapsed = true;
-						}
+				COLUMN_WIDTH = findColumnWidth(nodes);
+				checkDataConsistency(nodes, nets);
+
+				var links = generateLinks(nets);
+				resolveNodesInLinks(nodes, links);
+				components2columns(nodes, links);
+				ComponentDiagram("#chartWrapper", nodes, links);
+			}
+
+			$scope.open = function() {
+				return $http.get('/hls/connections-data/' + $scope.openedFile)
+					        .then(function(res) {
+					            var nets = res.data.nets;
+					            var nodes = res.data.nodes;
+					            $scope.nodes = nodes;
+					            $scope.nets = nets;
+					        });
+			}
+
+			function rowClicked(params) {
+				var node = params.node;
+				var path = node.data.name;
+				var tmpnode = node;
+				while (tmpnode.parent) {
+					var tmpnode = tmpnode.parent;
+					path = tmpnode.data.name + '/' + path;
+				}
+				if (node.group) {
+					if (!node.expanded) {
+						node.children = [];
+						return;
 					}
+					$scope.loadFolderData(path);
+				} else {
+					$scope.openedFile = path;
+					d3.selectAll("#fileDialog").style({
+						"display" : "none"
+					});
+					$scope.redraw();
+				}
 
-					$scope.redraw = function() {
-						$http
-								.get(
-										'/hls/connections-data/'
-												+ $scope.selectedFile)
-								.then(
-										function(res) {
-											var nets = res.data.nets;
-											var nodes = res.data.nodes;
-											COLUMN_WIDTH = findColumnWidth(nodes);
-											checkDataConsistency(nodes, nets);
-											
-											var links = generateLinks(nets);
-											resolveNodesInLinks(nodes, links);
-											components2columns(nodes, links);
-											ComponentDiagram("#chartWrapper",
-													nodes, links);
-										});
+			}
+
+			$scope.rootDir = "";
+			var filesRowData = [];
+
+			$scope.fileGridOptions = {
+				columnDefs : columnDefs,
+				rowData : filesRowData,
+				rowSelection : 'multiple',
+				rowsAlreadyGrouped : true,
+				enableColResize : true,
+				enableSorting : true,
+				rowHeight : 20,
+				icons : {
+					groupExpanded : '<i class="fa fa-minus-square-o"/>',
+					groupContracted : '<i class="fa fa-plus-square-o"/>'
+				},
+				onRowClicked : rowClicked
+			};
+
+			$scope.loadFolderData = function(path) {
+				$http.get('/hls/connections-data-ls/' + path)
+						.then(
+								function(res) {
+									function findDir(path) {
+										if (path == "")
+											return filesRowData
+
+										var dir = filesRowData.filter(function(
+												f) {
+											return f.data.name == path;
+										})[0]
+
+										return dir;
+									}
+									var files = res.data;
+									var dir = findDir(path);
+									if (dir.children === undefined) {
+
+										filesRowData = files;
+
+									} else {
+										dir.children = files;
+									}
+
+									$scope.fileGridOptions.api
+											.setRowData(filesRowData);
+								});
+			}
+
+			$scope.openedFile = 'example1.json';
+			$scope.fileDialog = function() {
+				d3.selectAll("#chartWrapper").html("");
+				d3.selectAll("#fileDialog").style({
+					"display" : "block"
+				});
+				filesRowData = [];
+				$scope.loadFolderData("");
+			}
+
+			$scope.save = function(path) {
+				var data = {
+					"path" : path,
+					"nodes" : $scope.nodes,
+					"nets" : $scope.nets
+				};
+				return $http.post("/customer/data/autocomplete", data, {
+					headers : {
+						'Content-Type' : 'application/json'
 					}
+				}).then(function(response) {
+					return response;
+				});
+			};
 
-					function rowClicked(params) {
-						var node = params.node;
-						var path = node.data.name;
-						var tmpnode = node;
-						while (tmpnode.parent) {
-							var tmpnode = tmpnode.parent;
-							path = tmpnode.data.name + '/' + path;
-						}
-						if(node.group){
-							if(!node.expanded){
-								node.children = [];
-								return;
-							}
-							$scope.loadFolderData(path);
-						}else{
-							$scope.selectedFile = path;
-							d3.selectAll("#fileDialog").style({
-							"display" : "none"
-							});
-							$scope.redraw();	
-						}
-						
-					}
-
-					function sizeCellStyle() {
-						return {
-							'text-align' : 'right'
-						};
-					}
-
-					function innerCellRenderer(params) {
-						var image;
-						if (params.node.group) {
-							image = 'folder';
-						} else {
-							image = 'file';
-						}
-						var imageFullUrl = "/static/hls/connections/" + image
-								+ '.png';
-						return '<img src="' + imageFullUrl
-								+ '" style="padding-left: 4px;" /> '
-								+ params.data.name;
-					}
-
-					var columnDefs = [ {
-						headerName : "Name",
-						field : "name",
-						width : 350,
-						cellRenderer : {
-							renderer : 'group',
-							innerRenderer : innerCellRenderer
-						}
-					}, {
-						headerName : "Size",
-						field : "size",
-						width : 100,
-						cellStyle : sizeCellStyle
-					}, {
-						headerName : "Type",
-						field : "type",
-						width : 150
-					}, {
-						headerName : "Date Modified",
-						field : "dateModified",
-						width : 200
-					} ];
-					$scope.rootDir = "";
-					var filesRowData = [];
-
-					$scope.fileGridOptions = {
-						columnDefs : columnDefs,
-						rowData : filesRowData,
-						rowSelection : 'multiple',
-						rowsAlreadyGrouped : true,
-						enableColResize : true,
-						enableSorting : true,
-						rowHeight : 20,
-						icons : {
-							groupExpanded : '<i class="fa fa-minus-square-o"/>',
-							groupContracted : '<i class="fa fa-plus-square-o"/>'
-						},
-						onRowClicked : rowClicked
-					};
-
-					$scope.loadFolderData  = function(path){
-						$http.get('/hls/connections-data-ls/' + path)
-								.then(
-										function(res) {
-											function findDir(path) {
-												if(path == "")
-													return filesRowData
-												 
-												var dir = filesRowData.filter(function(f){
-													return f.data.name == path;
-												})[0] 
-
-												return dir;
-											}
-											var files = res.data;
-											var dir = findDir(path);
-											if (dir.children === undefined) {
-												
-													filesRowData = files;
-												
-											} else {
-												dir.children = files;
-											}
-
-											$scope.fileGridOptions.api
-													.setRowData(filesRowData);
-										});
-					}
-					
-					$scope.selectedFile = 'example1.json';
-					$scope.fileDialog = function() {
-						d3.selectAll("#chartWrapper").html("");
-						d3.selectAll("#fileDialog").style({
-							"display" : "block"
-						});
-						filesRowData = [];
-						$scope.loadFolderData("");
-					}
-					 //$scope.fileDialog()
-					 $scope.redraw()
-					 //drawMenu();
-				}).config(function($interpolateProvider) {
-			$interpolateProvider.startSymbol('{$');
-			$interpolateProvider.endSymbol('$}');
-		});
+			// $scope.fileDialog()
+			$scope.open()
+			      .then($scope.redraw);
+			// drawMenu();
+		}).config(function($interpolateProvider) {
+	$interpolateProvider.startSymbol('{$');
+	$interpolateProvider.endSymbol('$}');
+});
 ;
