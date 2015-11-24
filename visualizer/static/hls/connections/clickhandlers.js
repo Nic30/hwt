@@ -76,11 +76,12 @@ function portOnClick() {
 function drawLink()
 {
 	var exists = !d3.selectAll(".clicked-port").empty()
+	var object = d3.selectAll(".clicked-port")[0]
 	var coordinates = d3.mouse(this);
 	var x = coordinates[0];
 	var y = coordinates[1];
 	if (exists) {
-		//drawlink
+		console.log("")
 	}
 }
 
