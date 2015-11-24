@@ -82,14 +82,14 @@ svg {
 }
 
 path.link {
-	margin: 10px;
 	stroke: black;
-	stroke-width: 1px;
+	stroke-width: 2px;
 	fill: none;
 }
 
 path.link-hover {
 	stroke: blue;
+	filter: url(#drop-shadow);
 	/*stroke-width: 1px;*/
 }
 

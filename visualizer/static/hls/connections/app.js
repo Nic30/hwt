@@ -45,6 +45,7 @@ var App = angular.module('App', [ 'agGrid' ]);
  * 
  * [TODO][All] Stranka s demy
  * Prioritne: [Zuzana] filebrower : lazy load, slozky  
+
  * [TODO] posunut grapf pri sidebar
  * [TODO] sidebar object map
  * 
@@ -95,11 +96,16 @@ App
 					function rowClicked(params) {
 						var node = params.node;
 						var path = node.data.name;
-						while (node.parent) {
-							node = node.parent;
-							path = node.data.name + '/' + path;
+						var tmpnode = node;
+						while (tmpnode.parent) {
+							var tmpnode = tmpnode.parent;
+							path = tmpnode.data.name + '/' + path;
 						}
 						if(node.group){
+							if(!node.expanded){
+								node.children = [];
+								return;
+							}
 							$scope.loadFolderData(path);
 						}else{
 							$scope.selectedFile = path;
@@ -176,16 +182,23 @@ App
 								.then(
 										function(res) {
 											function findDir(path) {
-												return filesRowData;
+												if(path == "")
+													return filesRowData
+												 
+												var dir = filesRowData.filter(function(f){
+													return f.data.name == path;
+												})[0] 
+
+												return dir;
 											}
 											var files = res.data;
 											var dir = findDir(path);
-											if (dir.childs === undefined) {
-												files.forEach(function(f) {
-													filesRowData.push(f);
-												})
+											if (dir.children === undefined) {
+												
+													filesRowData = files;
+												
 											} else {
-												dir.childs = files;
+												dir.children = files;
 											}
 
 											$scope.fileGridOptions.api
@@ -195,6 +208,7 @@ App
 					
 					$scope.selectedFile = 'example1.json';
 					$scope.fileDialog = function() {
+						d3.selectAll("#chartWrapper").html("");
 						d3.selectAll("#fileDialog").style({
 							"display" : "block"
 						});
