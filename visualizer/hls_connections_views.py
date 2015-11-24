@@ -64,13 +64,9 @@ def connections_test():
 def connectionDataLs(path=""):
     data = []
     path = os.path.join(WORKSPACE_DIR, path) + "/*"
-
     for f in glob.glob(path):
         data.append(FSEntry.fromFile(f))
-    
     return Response(response=json.dumps(data, default=_defaultToJson), status=200, mimetype="application/json")
-
-
 
 @connectionsBp.route('/hls/connections-data/<path:path>')
 def connectionData(path):

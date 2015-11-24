@@ -39,7 +39,7 @@ var columnDefs = [ {
 	width : 200
 } ];
 
-var App = angular.module('App', [ 'agGrid' ]);
+var App = angular.module('App', [ 'agGrid', 'cfp.hotkeys' ]);
 App.controller(
 		'diagramController',
 		function($scope, $http) {
