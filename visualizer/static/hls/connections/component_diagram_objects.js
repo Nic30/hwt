@@ -19,7 +19,7 @@ function drawExternalPorts(svgGroup, exterPortNodes){
 	
 	externalPorts.append("image")
 		.attr("xlink:href", function(d) { 
-			return "/static/hls/connections/arrow_right.ico"; 
+			return "/static/hls/connections/graphic/arrow_right.ico"; 
 		})
 		.attr("x", function(d) {
 			return (d.inputs.length == 0)?-10:-120;
@@ -86,7 +86,7 @@ function drawComponents(svgGroup, componentNodes){
 	// input port icon [TODO] only for special types of connection, this is only example how to use it
 	port_inputs.append("image")
 		.attr("xlink:href", function(d) { 
-			return "/static/hls/connections/arrow_right.ico"; 
+			return "/static/hls/connections/graphic/arrow_right.ico"; 
 		})
 		.attr("y", function(d, i){
 			return (i-0.5)*PORT_HEIGHT;
@@ -123,7 +123,7 @@ function drawComponents(svgGroup, componentNodes){
 	//  output port image
 	port_out.append("image")
 		.attr("xlink:href", function(d) { 
-			return "/static/hls/connections/arrow_right.ico"; 
+			return "/static/hls/connections/graphic/arrow_right.ico"; 
 		})
 		.attr("x", -10)
 		.attr("y", function(d, i){
