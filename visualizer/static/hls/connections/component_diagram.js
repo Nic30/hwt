@@ -171,6 +171,7 @@ function showTooltip(toolTipDiv, html){
 	    .style("left", d3.event.pageX + "px")     
 	    .style("top", (d3.event.pageY - 28) + "px");  
 }
+
 function hideTooltip(toolTipDiv){
 	toolTipDiv.transition()        
 		.duration(200)      
@@ -182,7 +183,6 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 
 	var router = new NetRouter(nodes, links, false);
 	var grid = router.grid;
-
 	
 	//create debug dots for routing nodes
 	function debugRouterDots(){
@@ -315,6 +315,7 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 		//.nodes(nodes)
 		//.links(links)
 		//.start();
+		
 	drawExternalPorts(svgGroup, nodes.filter(function (n){
 			return n.isExternalPort;
 		}))

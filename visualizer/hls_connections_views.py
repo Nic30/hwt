@@ -1,6 +1,6 @@
 import json, importlib, sys, os, glob, time
 from flask.blueprints import Blueprint
-from flask import render_template, Response
+from flask import render_template, Response, request, jsonify
 from hls_connections import serializeUnit, _defaultToJson
 from stat import S_ISDIR
 
@@ -35,6 +35,21 @@ class FSEntry():
                 "data": { "name": self.name, "size": self.size, "type": self.type, "dateModified": self.dateModified},
                 "children": []
                 }
+
+
+@connectionsBp.route(r'/hls/connections-save',  methods=[ 'POST'])
+def connections_save():
+    data = request.get_json()
+    path = data["path"]
+    path = os.path.join(WORKSPACE_DIR, path)
+    if path.endswith(".json"):
+        nodes = data["nodes"]
+        nets = data["nets"]
+        with open(path, mode='w') as f:
+            json.dump({"nodes": nodes, "nets": nets}, f)
+        return jsonify( success = True) 
+    else:
+        raise Exception("Not implemented")
 
 @connectionsBp.route('/connections/')
 def connections():

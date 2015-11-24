@@ -162,7 +162,7 @@ App.controller(
 					"nodes" : $scope.nodes,
 					"nets" : $scope.nets
 				};
-				return $http.post("/customer/data/autocomplete", data, {
+				return $http.post("/hls/connections-save", data, {
 					headers : {
 						'Content-Type' : 'application/json'
 					}
