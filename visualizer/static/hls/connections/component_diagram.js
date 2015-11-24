@@ -242,7 +242,6 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 		//        return "M" + sx + "," + sy + " L " + tx + "," + ty;
 		//    });
 	}
-	
 
 	function drawNet(d){
 		var pos = d.start.pos();
@@ -268,7 +267,6 @@ function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // m
 	debugRouterDots()
 	linkElements.attr("d", drawNet);
 
-	
 	links.forEach(function (link){ //rm tmp variables
 		delete link.path;
 		delete link.end;
@@ -303,7 +301,8 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 		.append("div")   
 	    .attr("id", "tooltip")               
 	    .style("opacity", 0);
-    for(var i =0; i< 3; i++)
+    
+	for(var i =0; i< 2; i++)
 	   updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links);
 
     var place = svg.node().getBoundingClientRect();
@@ -342,12 +341,11 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 		} else {
 			zoomListener.on("zoom", defaultZoom);
 		}
-	})
+		})
 		.on("mouseup", function() {
 			d3.event.translate = [0, 0];
 			d3.event.scale = [0, 0];
-		})
-	;
+		});
 	
 	(function fitDiagram2Screen(zoomListener){
         function diagramSize(){
@@ -373,13 +371,13 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
     svg.call(zoomListener);	
     d3.select('body')
     	.call(d3.keybinding("keydown")
-    	    .on('p', function (){
-    	    	//showTooltip(toolTipDiv, d3.mouse(this))
-    	    	console.log("p")
-    	    })
-    	).call(d3.keybinding("keyup")
-        	    .on('p', function (){
-        	    	//hideTooltip(toolTipDiv)
-        	    })
+	    	.on('p', function (){
+	    		//showTooltip(toolTipDiv, d3.mouse(this))
+	    		console.log("p")
+	    	}))
+    	.call(d3.keybinding("keyup")
+        	.on('p', function (){
+        		//hideTooltip(toolTipDiv)
+        	})
         );
     }

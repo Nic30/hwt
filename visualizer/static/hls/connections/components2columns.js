@@ -183,21 +183,26 @@ function components2columns(nodes, links) { // discover component with most
 
 
 	// add unconnected components on right side
-	var mostRightColumn = columns.mostRightIndx()  +1;
+	var mostRightColumn = columns.mostRightIndx() + 1;
 	var mostLeftColumn = columns.mostLeftIndx() -1;
+	var outputs = [];
 	nodes.forEach(function(component) {
-		
 		if (component.isExternalPort){
 			if(component.direction == DIRECTION.IN){
 				columns.push(mostLeftColumn, component);
 			} else{
-				columns.push(mostRightColumn, component);
+				outputs.push(component);
+				//columns.push(mostRightColumn, component);
 			}
-		}else if( !component.discovered){
+		} else if(!component.discovered){
 			columns.push(mostRightColumn, component);
 		}
-		
 	});
+	mostRightColumn = columns.mostRightIndx() + 1;
+	outputs.forEach(function(component){
+		columns.push(mostRightColumn, component);
+	});
+	
 	// set possitions forEach column
 	var x = 0;
 	for (var x; x < columns.length(); x++) {
