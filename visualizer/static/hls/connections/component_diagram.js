@@ -368,17 +368,4 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
         zoomListener.event(svg.transition()
         					  .duration(100));
     })(zoomListener);
-    
-    svg.call(zoomListener);	
-    d3.select('body')
-    	.call(d3.keybinding("keydown")
-	    	.on('p', function (){
-	    		//showTooltip(toolTipDiv, d3.mouse(this))
-	    		console.log("p")
-	    	}))
-    	.call(d3.keybinding("keyup")
-        	.on('p', function (){
-        		//hideTooltip(toolTipDiv)
-        	})
-        );
-    }
+}
