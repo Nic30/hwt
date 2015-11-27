@@ -319,8 +319,8 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 	drawExternalPorts(svgGroup, nodes.filter(function (n){
 			return n.isExternalPort;
 		}))
-		.on("click", exPortOnClick)
-		.on("dblclick", componentDetail);
+		.on("click", exPortOnClick);
+		//.on("dblclick", componentDetail);
 		
 	drawComponents(svgGroup, nodes.filter(function (n){
 			return !n.isExternalPort;
@@ -368,4 +368,6 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
         zoomListener.event(svg.transition()
         					  .duration(100));
     })(zoomListener);
+	svg.call(zoomListener);
+	
 }

@@ -72,14 +72,14 @@
 </li>
 
 <li class="dropdown">
-    <a href="javascript:componentAdd()">
+    <a ng-click="componentAdd()">
         <i class="fa fa-plus fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->
 </li>
 
 <li class="dropdown">
-    <a class="dropdown-toggle disabled" href="javascript:componentDelete()">
+    <a class="dropdown-toggle disabled" ng-click="componentDelete()">
         <i class="fa fa-trash fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->
@@ -138,7 +138,7 @@
 </li>
 
 <li class="dropdown">
-    <a class="dropdown-toggle disabled" href="javascript:componentDetail()">
+    <a class="dropdown-toggle disabled" ng-click="componentEditDetail()">
         <i class="fa fa-edit fa-fw"></i> 
     </a>
 </li>
@@ -174,28 +174,149 @@
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
 <script type="text/javascript" src="/static/hls/connections/uihandlers.js"></script>
 <script type="text/javascript" src="/static/hls/connections/clickhandlers.js"></script>
-{% endblock %}
-{% block angular_app %} ng-app="App" ng-controller="diagramController" {% endblock %}
-{% block content %}
 
-<div >
-	<div id="componentEdit">
-	<form role="form">
-			<div class="form-group component-edit-window" style="background-color: darkgrey;">
-				<label>Lorem Ipsum</label>
-			</div>		
-		</form>
-	</div>
-	<div id="fileDialog" style="display: none;">
-		<div
-			style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
-			&nbsp; {$ selectedFile $}</div>
-		<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
-			class="ag-file-browser"></div>
-	</div>
-	<div id="chartWrapper"></div>
-
-
+{% endblock %} {% block angular_app %} ng-app="App"
+ng-controller="diagramController" {% endblock %} {% block content %}
+<div id="fileDialog" style="display: none;">
+	<div
+		style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
+		&nbsp; {$ selectedFile $}</div>
+	<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
+		class="ag-file-browser"></div>
 </div>
+<div id="chartWrapper"></div>
+{% endblock %} {% block componentAdd %}
+<div id="componentAdd" class="component-window" style="display: none;">
+	<form role="form" id="componentAddForm" class="form-horizontal"
+		style="background-color: darkgrey;">
 
+		<!-- Component Name -->
+		<div class="form-group">
+			<label for="componentAddName" class="control-label col-sm-2">Component
+				name: </label>
+			<div class="col-sm-10">
+				<input class="form-control" id="componentAddName" type="text"
+					ng-model="newObject.name" placeholder="Component name">
+			</div>
+		</div>
+
+		<!-- Component ID -->
+		<div class="form-group">
+			<label for="componentAddID" class="control-label col-sm-2">Component
+				ID: </label>
+			<div class="col-sm-10">
+				<input class="form-control" id="componentAddID" type="text"
+					ng-model="newObject.id" placeholder="Component ID">
+			</div>
+		</div>
+
+		<!-- Component type -->
+		<div class="form-group">
+			<label for="componentAddType" class="control-label col-sm-2">Component
+				type: </label>
+			<div class="col-sm-10">
+				<input class="form-control" id="componentAddType" type="text"
+					ng-model="newObject.type" placeholder="Component type">
+			</div>
+		</div>
+
+		<!-- Ports -->
+		<div class="form-group">
+			<div ng-repeat="portgroup in portarrays" class="col-sm-4">
+				<!-- ng-repeat="portgroup in [{array: editedObject.inputs, name: 'Inputs'}, {array: editedObject.outputs, name: 'Outputs'}]">-->
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th><div>{$portgroup.name$}</div> <i class="fa fa-plus"
+								ng-click="componentAddPort(newObject, portgroup.name)"></i></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="port in portgroup.array">
+							<td>
+								<div>
+									<input class="form-control" type="text" ng-model="port.name"
+										placeholder="Port name"><i class="fa fa-remove"
+										ng-click="componentRemovePort(newObject, portgroup.name, port)"></i>
+								</div>
+							</td>
+
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<button ng-click="componentAddSubmit()" class="btn btn-default">OK</button>
+		<button ng-click="componentAddCancel()" class="btn btn-default">Cancel</button>
+		<button class="btn btn-default">Template</button>
+	</form>
+</div>
+{% endblock %} {% block componentEdit %}
+<div id="componentEdit" class="component-window" style="display: none;">
+	<form role="form" id="componentEditForm" class="form-horizontal"
+		style="background-color: darkgrey;">
+
+		<!-- Component Name -->
+		<div class="form-group">
+			<label for="componentEditName" class="control-label col-sm-2">Component
+				name: </label>
+			<div class="col-sm-10">
+				<input class="form-control" id="componentEditName" type="text"
+					ng-model="editedObject.name" placeholder="Component name">
+			</div>
+		</div>
+
+		<!-- Component ID -->
+		<div class="form-group">
+			<label for="componentEditID" class="control-label col-sm-2">Component
+				ID: </label>
+			<div class="col-sm-10">
+				<input class="form-control" id="componentEditID" type="text"
+					ng-model="editedObject.id" placeholder="Component ID">
+			</div>
+		</div>
+
+		<!-- Component type -->
+		<div class="form-group">
+			<label for="componentEditType" class="control-label col-sm-2">Component
+				type: </label>
+			<div class="col-sm-10">
+				<input class="form-control" id="componentEditType" type="text"
+					ng-model="editedObject.type" placeholder="Component type">
+			</div>
+		</div>
+
+		<!-- Ports -->
+		<div class="form-group">
+			<div ng-repeat="portgroup in portarrays" class="col-sm-4">
+				<!-- ng-repeat="portgroup in [{array: editedObject.inputs, name: 'Inputs'}, {array: editedObject.outputs, name: 'Outputs'}]">-->
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th><div>{$portgroup.name$}</div> <i class="fa fa-plus"
+								ng-click="componentAddPort(editedObject, portgroup.name)"></i></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="port in portgroup.array">
+							<td>
+								<div>
+									<input class="form-control" type="text" ng-model="port.name"
+										placeholder="Port name"><i class="fa fa-remove"
+										ng-click="componentRemovePort(editedObject, portgroup.name, port)"></i>
+								</div>
+							</td>
+
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<button ng-click="componentEditSubmit()" class="btn btn-default">OK</button>
+		<button ng-click="componentEditCancel()" class="btn btn-default">Cancel</button>
+		<button ng-click="componentDelete()" class="btn btn-default">Delete</button>
+	</form>
+</div>
 {% endblock %}

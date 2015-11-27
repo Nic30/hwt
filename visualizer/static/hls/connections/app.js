@@ -1,22 +1,3 @@
-
-var App = angular.module('App', [ 'agGrid' ]);
-
-App
-		.controller(
-				'diagramController',
-				function($scope, $http) {
-					$scope.sidebarCollapsed = true
-					$scope.collapseSidebar = function($event) {
-						//console.log($event.target.className)
-						if($scope.sidebarCollapsed == true)
-							{
-							$scope.sidebarCollapsed = false;
-							}
-						else{
-							$scope.sidebarCollapsed = true;
-						}
-					}
-
 function sizeCellStyle() {
 	return {
 		'text-align' : 'right'
@@ -58,7 +39,7 @@ var columnDefs = [ {
 	width : 200
 } ];
 
-var App = angular.module('App', [ 'agGrid', 'cfp.hotkeys' ]);
+var App = angular.module('App', [ 'agGrid', 'cfp.hotkeys']);
 App.controller(
 		'diagramController',
 		function($scope, $http) {
@@ -76,7 +57,7 @@ App.controller(
 
 				COLUMN_WIDTH = findColumnWidth(nodes);
 				checkDataConsistency(nodes, nets);
-
+				
 				var links = generateLinks(nets);
 				resolveNodesInLinks(nodes, links);
 				components2columns(nodes, links);
@@ -189,7 +170,163 @@ App.controller(
 					return response;
 				});
 			};
+			$scope.editedObject = {}
+			$scope.newObject = {
+					"name": "",
+					//"id": null,
+					//"type" : null,
+					"inputs": [],
+					"outputs": []
+			}
+			$scope.portarrays = []
+			
+			$scope.componentEditDetail = function ()
+			{
+				//console.log("Component Detail")
+				var selection = d3.selectAll(".selected-object");
+				var count = selection[0].length
+				if (count == 0)
+				{
+					console.log("No object selected!")
+				}
+				else if (count > 1)
+				{
+					console.log("Too many objects selected!")
+				}
+				else
+				{
+					d3.selectAll("#componentEdit").style("display" , "block");
+					
+					//console.log(selection[0][0])
+					var object = selection[0][0]
+					var selected = object.getElementsByTagName("g");
+					//console.log(object.__data__)
+					$scope.editedObject = object.__data__;
+					$scope.portarrays = [{'array': $scope.editedObject.inputs, 'name': 'Inputs'}, {'array': $scope.editedObject.outputs, 'name': 'Outputs'}]
+				}
 
+			}
+		
+			$scope.componentRemovePort = function(object, group, port)
+			{
+				console.log("ComponentEditRemovePort")
+				console.log(object, group, port);
+				var portGroup = (group == 'Inputs' ? object.inputs : object.outputs)
+				//console.log(portGroup, port);
+				var index = portGroup.indexOf(port);
+				if(index > -1) {
+					portGroup.splice(index, 1);
+				}
+				else
+					{
+					console.log("Remove port error: port does not exist")
+					}
+				//componentEdit redraw
+				//$scope.redraw();
+			}
+			
+			$scope.componentAddPort = function(object, group)
+			{
+				console.log("ComponentEditAddPort")
+				console.log(group, object)
+				var portGroup = (group == 'Inputs' ? object.inputs : object.outputs)
+				
+				portGroup.unshift({
+                    "name": ""
+					}
+					);
+				//componentEdit redraw
+				//$scope.redraw();
+			}
+			
+			$scope.componentEditSubmit = function ()
+			{
+				$scope.redraw();
+				console.log("Submit")
+				console.log($scope.editedObject.inputs)
+				//d3.selectAll("#componentEdit").style("display", "none");
+			}
+			
+			$scope.componentEditCancel = function ()
+			{
+				console.log("Cancel")
+				d3.selectAll("#componentEdit").style("display", "none");
+			}
+			
+			$scope.componentDelete = function()
+			{
+				var objects = d3.selectAll(".selected-object")[0];
+				//console.log("Selected objects", objects);
+				for (i = 0; i < objects.length; i++)
+				{
+					var obj = objects[i].__data__;
+					console.log(obj)
+					console.log("Nodes: ", $scope.nodes)
+					console.log("Nets: ", $scope.nets)
+					for(var i = 0; i < $scope.nodes.length;i++)
+					{
+						//console.log($scope.nodes[i].name)
+						if ($scope.nodes[i].name == obj.name)
+						{
+							console.log("MATCH", i)
+							$scope.nodes.splice(i, 1);	
+						}
+					}
+					console.log("Nets", obj.id)
+					for(var j = 0; j < $scope.nets.length; j++)
+					{
+						var net = $scope.nets[j];
+						for (var l = 0; l < net.targets.length; l++)
+						{
+							var target = net.targets[l];
+							if ((target.id == obj.id) | (net.source.id == obj.id))
+							{
+								console.log("Net: ", target, net.source)
+								var removed = $scope.nets.splice(j, 1);
+								j--;
+								console.log("Removed: ", removed)
+								break;
+							}
+						}
+					}
+				}
+				console.log($scope.nets)
+				$scope.redraw();
+				return;
+			}
+			
+			$scope.componentAdd = function()
+			{
+				d3.selectAll("#componentAdd").style("display" , "block");
+				$scope.newObject = {
+						"name": "",
+						//"id": null,
+						//"type" : null,
+						"inputs": [],
+						"outputs": []
+				}
+				$scope.portarrays = [{'array': $scope.newObject.inputs, 'name': 'Inputs'}, {'array': $scope.newObject.outputs, 'name': 'Outputs'}]
+			}
+			
+			$scope.componentAddSubmit = function ()
+			{
+				console.log("Submit")
+				console.log("Before: ",$scope.nodes)
+				$scope.nodes.push($scope.newObject);
+				console.log("After: ",$scope.nodes)
+				
+				$scope.redraw();
+				
+				
+				//d3.selectAll("#componentAdd").style("display", "none");
+			}
+			
+			$scope.componentAddCancel = function ()
+			{
+				console.log("Cancel")
+				d3.selectAll("#componentAdd").style("display", "none");
+			}
+			
 			// $scope.fileDialog()
 			$scope.open()
 			      .then($scope.redraw);
@@ -198,4 +335,3 @@ App.controller(
 	$interpolateProvider.startSymbol('{$');
 	$interpolateProvider.endSymbol('$}');
 });
-;

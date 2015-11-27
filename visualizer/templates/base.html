@@ -80,7 +80,10 @@
 			</div>
 		</div>
         <div id="page-wrapper">
+			{% block componentAdd %}{% endblock %}
+			{% block componentEdit %}{% endblock %}
 			{% block content %}{% endblock %}
+
         </div>
         <!-- /#page-wrapper -->
 

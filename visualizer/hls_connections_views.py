@@ -46,7 +46,7 @@ def connections_save():
         nodes = data["nodes"]
         nets = data["nets"]
         with open(path, mode='w') as f:
-            json.dump({"nodes": nodes, "nets": nets}, f)
+            json.dump({"nodes": nodes, "nets": nets}, f, indent=4)
         return jsonify( success = True) 
     else:
         raise Exception("Not implemented")
