@@ -2,36 +2,13 @@
 {% block menu_attrib %}ng-controller="menuCntrl"{% endblock %}
 {% block body_modal_form %}
 <div ng-controller="filebrowserCntrl">
-    <div id="saveDialog" class="modal fade" role="dialog" >
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Save component</h4>
-                </div>
-                <div class="modal-body">
-                     <div style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 800px; height: 20px">
-                    &nbsp; {$ selectedFile $}
-                    </div>
-                    <div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
-                        class="ag-file-browser">
-                    </div> 
-                </div>
-                <div class="modal-footer">
-                    <button ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Save</button>
-                    <button ng-click="componentAddCancel()" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
     <div id="fileDialog" class="modal fade" role="dialog" >
     	<div class="modal-dialog">
     		<div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Open component</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>                    
+                    <h4 ng-if="doSave" class="modal-title">Save component</h4>
+                    <h4 ng-if="!doSave" class="modal-title">Open component</h4>
                 </div>
     			<div class="modal-body">
     				
@@ -43,7 +20,8 @@
                     </div> 
     			</div>
                 <div class="modal-footer">
-                    <button ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Open</button>
+                    <button ng-if="doSave" ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Save</button>
+                    <button ng-if="!doSave" ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Open</button>
                     <button ng-click="componentAddCancel()" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 </div>
     		</div>
@@ -154,7 +132,7 @@
             </a>
         </li>
         <li>
-            <a ng-click="api.fileDialog()" accesskey="o">
+            <a ng-click="api.fileDialog(false)" accesskey="o">
                 <div>
                     <strong>Open</strong>
                     <span class="pull-right text-muted">
@@ -174,7 +152,7 @@
             </a>
         </li>
         <li>
-            <a ng-click="api.saveAs()">
+            <a ng-click="api.fileDialog(true)">
                 <div>
                     <strong>Save as</strong>
                     <span class="pull-right text-muted">
