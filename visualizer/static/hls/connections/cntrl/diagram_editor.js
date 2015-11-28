@@ -49,7 +49,7 @@ function diagramEditorCntrl($scope){
 			console.log("Remove port error: port does not exist")
 		}
 		// componentEdit redraw
-		// $scope.redraw();
+		// api.redraw();
 	}
 
 	$scope.componentAddPort = function(object, group) {
@@ -61,11 +61,11 @@ function diagramEditorCntrl($scope){
 			"name" : ""
 		});
 		// componentEdit redraw
-		// $scope.redraw();
+		// api.redraw();
 	}
 
 	$scope.componentEditSubmit = function() {
-		$scope.redraw();
+		api.redraw();
 		console.log("Submit")
 		console.log($scope.editedObject.inputs)
 		// d3.selectAll("#componentEdit").style("display", "none");
@@ -85,28 +85,28 @@ function diagramEditorCntrl($scope){
 		for (i = 0; i < objects.length; i++) {
 			var obj = objects[i].__data__;
 			// console.log(obj)
-			// console.log("Nodes: ", $scope.nodes)
-			// console.log("Nets: ", $scope.nets)
+			// console.log("Nodes: ", api.nodes)
+			// console.log("Nets: ", api.nets)
 			// console.log("Object check")
 			// For all nodes in scope
-			for (var i = 0; i < $scope.nodes.length; i++) {
-				// console.log($scope.nodes[i].name)
+			for (var i = 0; i < api.nodes.length; i++) {
+				// console.log(api.nodes[i].name)
 				// Delete matching objects
-				if ($scope.nodes[i].name == obj.name) {
-					$scope.nodes.splice(i, 1);
+				if (api.nodes[i].name == obj.name) {
+					api.nodes.splice(i, 1);
 				}
 			}
 			// console.log("Nets", obj.id)
 			// For all nets in scope
-			for (var j = 0; j < $scope.nets.length; j++) {
+			for (var j = 0; j < api.nets.length; j++) {
 				// For all links
-				var net = $scope.nets[j];
+				var net = api.nets[j];
 				for (var l = 0; l < net.targets.length; l++) {
 					// Delete all links from deleted object
 					var target = net.targets[l];
 					if ((target.id == obj.id) | (net.source.id == obj.id)) {
 						// console.log("Net: ", target, net.source)
-						var removed = $scope.nets.splice(j, 1);
+						var removed = api.nets.splice(j, 1);
 						j--;
 						break;
 					}
@@ -118,14 +118,14 @@ function diagramEditorCntrl($scope){
 		// For all selected links
 		for (var m = 0; m < links.length; m++) {
 			var net = links[m].__data__.net;
-			var index = $scope.nets.indexOf(net);
+			var index = api.nets.indexOf(net);
 			// Delete all selected links
 			if (index > -1) {
-				$scope.nets.splice(index, 1);
+				api.nets.splice(index, 1);
 			}
 		}
-		// console.log($scope.nets)
-		$scope.redraw();
+		// console.log(api.nets)
+		api.redraw();
 		return;
 	}
 
@@ -149,11 +149,11 @@ function diagramEditorCntrl($scope){
 
 	$scope.componentAddSubmit = function() {
 		console.log("Submit")
-		console.log("Before: ", $scope.nodes)
-		$scope.nodes.push($scope.newObject);
-		console.log("After: ", $scope.nodes)
+		console.log("Before: ", api.nodes)
+		api.nodes.push($scope.newObject);
+		console.log("After: ", api.nodes)
 
-		$scope.redraw();
+		api.redraw();
 
 		// d3.selectAll("#componentAdd").style("display", "none");
 	}

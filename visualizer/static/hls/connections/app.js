@@ -4,14 +4,7 @@ App.controller('mainController', function($scope, $http) {
 		nodes : [],
 		nets : []
 	};
-
-	/********************************
-	**                              *-
-	**        MENU ACTIONS          *
-	**                              *
-	********************************/
-	
-	// $scope.fileDialog()
+	//$scope.api.open()
 	//$scope.open()
 	//      .then($scope.redraw);
 })
