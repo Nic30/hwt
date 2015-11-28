@@ -71,7 +71,24 @@ function drawComponents(svgGroup, componentNodes){
 	function onPortClick(d)
 	{
 		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
-		scope.portClick(d);	
+		scope.api.portClick(d);	
+		
+		/*function portOnClick() {
+		var exists = !d3.selectAll(".clicked-port").empty()
+		if (exists)
+		{
+			var origin = d3.selectAll("clicked-port");
+			var port = d3.select(this);
+			console.log(origin, port)
+		}
+		removeSelections();
+
+
+		d3.select(this).classed({
+			"clicked-port" : true
+		})
+		console.log("Port clicked")
+	}*/
 	}
 	
 	// [TODO] porty s dratkem ven z komponenty, ruzne typy portu viz stream/bus/wire ve Vivado

@@ -12,24 +12,6 @@ function componentOnClick() {
 	// d3.select(this).style("stroke", "red");
 }
 
-/*function portOnClick() {
-	d3.event.stopPropagation();
-	var exists = !d3.selectAll(".clicked-port").empty()
-	if (exists)
-	{
-		var origin = d3.selectAll("clicked-port");
-		var port = d3.select(this);
-		console.log(origin, port)
-	}
-	removeSelections();
-
-
-	d3.select(this).classed({
-		"clicked-port" : true
-	})
-	console.log("Port clicked")
-}*/
-
 function exPortOnClick() {
 
 	d3.event.stopPropagation();
@@ -57,12 +39,12 @@ function netOnClick() {
 function resetLinks()
 {
 	var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
-	scope.resetLinkingState();	
+	scope.api.resetLinkingState();	
 }
 
 function onBoardClick() 
 {
-	
+	console.log("boardclick")
 	var exists = !d3.selectAll(".clicked-port").empty()
 	var coordinates = d3.mouse(this);
 	var x = coordinates[0];
