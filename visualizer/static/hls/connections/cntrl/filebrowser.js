@@ -1,6 +1,8 @@
 function filebrowserCntrl($scope, $http) {
 	var api = $scope.$parent.api;
 	var fileDialog = $('#fileDialog');
+	var saveDialog = $('#saveDialog');
+	$scope.doSave = false;
 	function sizeCellStyle() {
 		return {
 			'text-align' : 'right'
@@ -118,11 +120,13 @@ function filebrowserCntrl($scope, $http) {
 	}
 
 	$scope.openedFile = 'example1.json';
-	api.fileDialog = function() {
-		d3.selectAll("#chartWrapper").html(""); // [TODO] to different controller
+	api.fileDialog = function(doSave) {
+		//d3.selectAll("#chartWrapper").html(""); // [TODO] to different controller
+		$scope.doSave = doSave;
 		fileDialog.modal('show');
 		filesRowData = [];
 		$scope.loadFolderData("");
+
 	}
 
 	$scope.save = function(path) {
@@ -139,4 +143,11 @@ function filebrowserCntrl($scope, $http) {
 			return response;
 		});
 	};
+
+	api.saveAs = function() {
+		filesRowData = [];
+		$scope.loadFolderData("");
+		saveDialog.modal('show');
+	};
+
 }

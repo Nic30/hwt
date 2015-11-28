@@ -156,7 +156,7 @@ path.debug-link-between-nodes {
 
 body .modal-dialog {
 	/* new custom width */
-	width: 850px;
+	width: 840px;
 	/* must be half of the width, minus scrollbar on the left (30px) */
 }
 
