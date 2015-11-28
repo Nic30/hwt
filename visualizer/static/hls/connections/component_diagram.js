@@ -117,8 +117,7 @@ function addShadows(svg){
 	    .attr("id", "drop-shadow")
 	    .attr("height", "130%");
 
-	// SourceAlpha refers to opacity of graphic that this filter will be applied
-	// to
+	// SourceAlpha refers to opacity of graphic that this filter will be applied to
 	// convolve that with a Gaussian with standard deviation 3 and store result
 	// in blur
 	filter.append("feGaussianBlur")
@@ -221,9 +220,8 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){
 	}
 };
 
-function ComponentDiagram(selector, nodes, links){ // main function for
-													// rendering components
-													// layout
+//main function for rendering components layout
+function ComponentDiagram(selector, nodes, links){ 
 	var wrapper = d3.select(selector);
 	wrapper.selectAll("svg").remove(); // delete old on redraw
 
@@ -235,7 +233,7 @@ function ComponentDiagram(selector, nodes, links){ // main function for
 	
 	addShadows(svg);
 
-	// grid higlight
+    //LINKS
     var linkElements = svgGroup.selectAll(".link")
     	.data(links)
     	.enter()
@@ -258,17 +256,33 @@ function ComponentDiagram(selector, nodes, links){ // main function for
 		// .links(links)
 		// .start();
 		
+	//EXTERNAL PORTS	
 	drawExternalPorts(svgGroup, nodes.filter(function (n){
 			return n.isExternalPort;
 		}))
 		.on("click", exPortOnClick);
 		// .on("dblclick", componentDetail);
-		
+	
+	//COMPONENTS
 	drawComponents(svgGroup, nodes.filter(function (n){
 			return !n.isExternalPort;
 		}))
 		.on("click", componentOnClick)
 		.call(force.drag); // component dragging
+		//.on("dblclick", componentDetail);
+	
+	function onCompClick(d){
+		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
+		scope.compClick(d);	
+		d3.event.stopPropagation();
+		if (!d3.event.shiftKey) {
+			removeSelections();
+		}
+
+		d3.select(this).classed({
+			"selected-object" : true
+		})
+	}
 	
 	function defaultZoom () {
 		svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");   			
@@ -279,6 +293,7 @@ function ComponentDiagram(selector, nodes, links){ // main function for
     	.scaleExtent([0.2, 30])
     	.on("zoom", defaultZoom);
     
+    //ZOOM
 	svgGroup.on("mousedown", function() {
 		if (d3.event.shiftKey) {
 			zoomListener.on("zoom", null);

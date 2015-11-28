@@ -68,12 +68,19 @@ function drawComponents(svgGroup, componentNodes){
 		    return d.name;
 		});
 
+	function onPortClick(d)
+	{
+		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
+		scope.portClick(d);	
+	}
+	
 	// [TODO] porty s dratkem ven z komponenty, ruzne typy portu viz stream/bus/wire ve Vivado
 	// input port wraps
 	var port_inputs = componentWrap.append("g")
 		.attr("transform", function(d) { 
 			return "translate(" + 0 + "," + 2*PORT_HEIGHT + ")"; 
 		})
+		
 		.selectAll("g .port-input")
 		.data(function (d){
 			return d.inputs;
@@ -81,7 +88,7 @@ function drawComponents(svgGroup, componentNodes){
 		.enter()
 		.append('g')
 		.classed({"port-input": true})
-		.on("click", portOnClick);
+		.on("click", onPortClick);
 	
 	// input port icon [TODO] only for special types of connection, this is only example how to use it
 	port_inputs.append("image")
@@ -118,7 +125,7 @@ function drawComponents(svgGroup, componentNodes){
 		.enter()
 		.append('g')
 		.classed({"port-output": true})
-		.on("click", portOnClick);
+		.on("click", onPortClick);
 
 	//  output port image
 	port_out.append("image")
