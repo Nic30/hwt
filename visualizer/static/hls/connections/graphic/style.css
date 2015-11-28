@@ -42,7 +42,6 @@ svg {
 
 .component {
 	/*fill: #AFEEEE;*/
-	
 }
 
 .selected-object rect {
@@ -83,7 +82,7 @@ svg {
 
 path.link {
 	stroke: black;
-	stroke-width: 2px;
+	stroke-width: 1.5px;
 	fill: none;
 }
 
@@ -98,6 +97,9 @@ path.link-hover {
 	text-anchor: end;
 }
 
+
+
+
 div.tooltip {
 	position: absolute;
 	text-align: center;
@@ -109,4 +111,21 @@ div.tooltip {
 	border: 0px;
 	border-radius: 8px;
 	pointer-events: none;
+}
+
+path.debug-link {
+	stroke: green;
+	stroke-width: 1.5px;
+	fill: none;
+}
+
+path.debug-link2component {
+	stroke: green;
+	stroke-width: 1.5px;
+	fill: none;
+}
+path.debug-link-between-nodes {
+	stroke: red;
+	stroke-width: 1.5px;
+	fill: none;
 }
