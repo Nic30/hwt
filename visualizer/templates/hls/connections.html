@@ -1,13 +1,13 @@
 {% extends "base.html" %}
+{% block menu_attrib %}ng-controller="menuCntrl"{% endblock %}
 {% block menu_extra %} 
-
 <li class="dropdown">
     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
         <i class="fa fa-file fa-fw"></i> <i class="fa fa-caret-down"></i>
     </a>
     <ul class="dropdown-menu dropdown-messages">
         <li>
-            <a href="#" class="menu-New" accesskey="n">
+            <a class="menu-New" accesskey="n">
                 <div>
                     <strong>New</strong>
                     <span class="pull-right text-muted">
@@ -16,8 +16,8 @@
                 </div>
             </a>
         </li>
-        <li ng-click="fileDialog()">
-            <a href="javascript:menuOpen();" accesskey="o">
+        <li>
+            <a ng-click="api.fileDialog()" accesskey="o">
                 <div>
                     <strong>Open</strong>
                     <span class="pull-right text-muted">
@@ -37,7 +37,7 @@
             </a>
         </li>
         <li>
-            <a  accesskey="t">
+            <a accesskey="t">
                 <div>
                     <strong>Export</strong>
                     <span class="pull-right text-muted">
@@ -47,7 +47,7 @@
             </a>
         </li>        
         <li>
-            <a  accesskey="l">
+            <a accesskey="l">
                 <div>
                     <strong>Delete</strong>
                     <span class="pull-right text-muted">
@@ -57,7 +57,7 @@
             </a>
         </li>
         <li>
-            <a  accesskey="c">
+            <a accesskey="c">
                 <div>
                     <strong>Close</strong>
                     <span class="pull-right text-muted">
@@ -70,23 +70,22 @@
     </ul>
     <!-- /.dropdown-messages -->
 </li>
-
 <li class="dropdown">
-    <a ng-click="componentAdd()">
+    <a ng-click="api.componentAdd()">
         <i class="fa fa-plus fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->
 </li>
 
 <li class="dropdown">
-    <a class="dropdown-toggle disabled" ng-click="objectDelete()">
+    <a class="dropdown-toggle disabled" ng-click="api.objectDelete()">
         <i class="fa fa-trash fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->
 </li>
 
 <li class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#" ng-click="redraw()">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#" ng-click="api.redraw()">
         <i class="fa fa-refresh fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->
@@ -118,7 +117,7 @@
     </a>
     <ul class="dropdown-menu dropdown-messages">
         <li>
-            <a href="javascript:showShortcuts()">
+            <a ng-click="showShorcuts()">
                 <div>
                     <strong>Show Shortcuts</strong>
                     <span class="pull-right text-muted">
@@ -130,15 +129,15 @@
     <!-- /.dropdown-messages -->
 </li>
 
-<li class="dropdown" ng-click="collapseSidebar($event)" >
+<li class="dropdown" ng-click="api.collapseSidebar($event)" >
     <a class="dropdown-toggle disabled icon-off" data-toggle="collapse" href="#side-bar-Collapsing" aria-expanded="false" aria-controls="side-bar-Collapsing">
-        <i class="fa fa-toggle-off fa-fw" ng-class="{'fa-toggle-on':sidebarCollapsed === false, 'fa-toggle-off':sidebarCollapsed === true}"></i> 
+        <i class="fa fa-toggle-off fa-fw" ng-class="{'fa-toggle-on':api.sidebarCollapsed === false, 'fa-toggle-off':api.sidebarCollapsed === true}"></i> 
     </a>
     <!-- /.dropdown-messages -->
 </li>
 
 <li class="dropdown">
-    <a class="dropdown-toggle disabled" ng-click="componentEditDetail()">
+    <a class="dropdown-toggle disabled" ng-click="api.componentEditDetail()">
         <i class="fa fa-edit fa-fw"></i> 
     </a>
 </li>
@@ -150,7 +149,8 @@
 <link type="text/css" rel="stylesheet" href="/static/hls/connections/graphic/style.css"/>
 <link type="text/css" rel="stylesheet" href="/static/hls/connections/graphic/fileBrowser.css"/>
 
-{% endblock %} {% block js_extra %}
+{% endblock %} 
+{% block js_extra %}
 <script type="text/javascript">
 	var COLUMN_WIDTH = 120;
 	var PORT_HEIGHT = 10;
@@ -172,21 +172,26 @@
 <script type="text/javascript" src="/static/hls/connections/dataprocessing.js"></script>
 <script type="text/javascript" src="/static/hls/connections/net_router.js"></script>
 <script type="text/javascript" src="/static/hls/connections/drawMenu.js"></script>
+<script type="text/javascript" src="/static/hls/connections/filebrowser_cntrl.js"></script>
+<script type="text/javascript" src="/static/hls/connections/menu_cntrl.js"></script>
+<script type="text/javascript" src="/static/hls/connections/diagram_cntrl.js"></script>
+<script type="text/javascript" src="/static/hls/connections/diagram_editor_cntrl.js"></script>
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
 <script type="text/javascript" src="/static/hls/connections/uihandlers.js"></script>
 <script type="text/javascript" src="/static/hls/connections/clickhandlers.js"></script>
 
-{% endblock %} {% block angular_app %} ng-app="App"
-ng-controller="diagramController" {% endblock %} {% block content %}
-<div id="fileDialog" style="display: none;">
-	<div
-		style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
+{% endblock %} 
+{% block angular_app %} ng-app="App" ng-controller="mainController" {% endblock %}
+{% block content %}
+<div id="fileDialog" style="display: none;" ng-controller="filebrowserCntrl">
+	<div style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
 		&nbsp; {$ selectedFile $}</div>
 	<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
 		class="ag-file-browser"></div>
 </div>
-<div id="chartWrapper"></div>
-{% endblock %} {% block componentAdd %}
+<div id="chartWrapper" ng-controller="diagramCntrl" ></div>
+{% endblock %} 
+{% block componentAdd %}
 <div id="componentAdd" class="component-window" style="display: none;">
 	<form role="form" id="componentAddForm" class="form-horizontal"
 		style="background-color: darkgrey;">
@@ -253,7 +258,8 @@ ng-controller="diagramController" {% endblock %} {% block content %}
 		<button class="btn btn-default">Template</button>
 	</form>
 </div>
-{% endblock %} {% block componentEdit %}
+{% endblock %} 
+{% block componentEdit %}
 <div id="componentEdit" class="component-window" style="display: none;">
 	<form role="form" id="componentEditForm" class="form-horizontal"
 		style="background-color: darkgrey;">
@@ -320,7 +326,8 @@ ng-controller="diagramController" {% endblock %} {% block content %}
 		<button ng-click="componentDelete()" class="btn btn-default">Delete</button>
 	</form>
 </div>
-{% endblock %} {% block sidebaritems %}
+{% endblock %} 
+{% block sidebaritems %}
 <ul class="nav nav-second-level" id="side-menu">
 	<li class="dropdown">
 		<div class="side-menu-item">Text</div>
