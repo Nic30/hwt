@@ -174,7 +174,7 @@
 </li>
 
 <li class="dropdown">
-    <a class="dropdown-toggle disabled" ng-click="componentDelete()">
+    <a class="dropdown-toggle disabled" ng-click="objectDelete()">
         <i class="fa fa-trash fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->
@@ -259,6 +259,7 @@
 <script type="text/javascript" src="/static/bower_components/d3/d3.js"></script>
 <script type="text/javascript" src="/static/hls/connections/binaryheap.js"></script>
 <script type="text/javascript" src="/static/hls/connections/a_star.js"></script>
+<script type="text/javascript" src="/static/hls/connections/component_diagram_debug.js"></script>
 <script type="text/javascript" src="/static/hls/connections/component_diagram_objects.js"></script>
 <script type="text/javascript" src="/static/hls/connections/component_diagram.js"></script>
 <script type="text/javascript" src="/static/hls/connections/components2columns.js"></script>
@@ -351,4 +352,11 @@ ng-controller="diagramController" {% endblock %} {% block content %}
 		<button ng-click="componentDelete()" class="btn btn-default">Delete</button>
 	</form>
 </div>
+{% endblock %} {% block sidebaritems %}
+<ul class="nav nav-second-level" id="side-menu">
+	<li class="dropdown">
+		<div class="side-menu-item">Text</div>
+		<div class="side-menu-item">More Text</div>
+	</li>
+</ul>
 {% endblock %}

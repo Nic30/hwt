@@ -12,6 +12,24 @@ function componentOnClick() {
 	// d3.select(this).style("stroke", "red");
 }
 
+/*function portOnClick() {
+	d3.event.stopPropagation();
+	var exists = !d3.selectAll(".clicked-port").empty()
+	if (exists)
+	{
+		var origin = d3.selectAll("clicked-port");
+		var port = d3.select(this);
+		console.log(origin, port)
+	}
+	removeSelections();
+
+
+	d3.select(this).classed({
+		"clicked-port" : true
+	})
+	console.log("Port clicked")
+}*/
+
 function exPortOnClick() {
 
 	d3.event.stopPropagation();
@@ -35,13 +53,25 @@ function netOnClick() {
 	})
 }
 
+//Sets quick link creation state to none
+function resetLinks()
+{
+	var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
+	scope.resetLinkingState();	
+}
+
 function onBoardClick() 
 {
-	removeSelections()
+	
 	var exists = !d3.selectAll(".clicked-port").empty()
+	var coordinates = d3.mouse(this);
+	var x = coordinates[0];
+	var y = coordinates[1];
 	if (exists) {
-		//makePort
+		console.log(x,y)
 	}
+	removeSelections()
+	resetLinks();
 }
 
 function removeSelections() {
@@ -54,6 +84,9 @@ function removeSelections() {
 	d3.selectAll(".selected-link").classed({
 		"selected-link" : false
 	});
+	d3.selectAll(".clicked-port").classed({
+		"clicked-port" : false
+	});
 }
 
 function removePortClicked()
@@ -61,17 +94,6 @@ function removePortClicked()
 	d3.selectAll(".selected-link").classed({
 		"selected-link" : false
 	});
-}
-
-function portOnClick() {
-	/*removeSelections();
-
-	d3.event.stopPropagation();
-	console.log("port Click");
-	d3.select(this).classed({
-		"clicked-port" : true
-	})*/
-	console.log("Port clicked")
 }
 
 function drawLink()
@@ -82,7 +104,7 @@ function drawLink()
 	var x = coordinates[0];
 	var y = coordinates[1];
 	if (exists) {
-		console.log("")
+		//console.log("")
 	}
 }
 

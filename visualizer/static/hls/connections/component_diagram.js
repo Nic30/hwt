@@ -31,11 +31,14 @@ function isOnLineVerticaly(line, point){
 		var lUp = line[1];
 		var lDown = line[0];
 	}
-	if(lUp[0] != lDown[0]){ // if this is not vertical line, point does not lay on vertically 
+	if(lUp[0] != lDown[0]){ // if this is not vertical line, point does not lay
+							// on vertically
 		return false;
 	}
 	if(point[0] == lUp[0]){ // x == line.x
-		return lUp[1] <= point[1] && point[1] <= lDown[1]; // is between lUp and lDown vertically
+		return lUp[1] <= point[1] && point[1] <= lDown[1]; // is between lUp
+															// and lDown
+															// vertically
 	}else{
 		return false;
 	}
@@ -139,7 +142,7 @@ function addShadows(svg){
 	feMerge.append("feMergeNode")
 	    .attr("in", "SourceGraphic");
 
-	//gradient
+	// gradient
 	var minY = 10;
 	var maxY = 210;
 
@@ -177,105 +180,48 @@ function hideTooltip(toolTipDiv){
 		.duration(200)      
 		.style("opacity", 0);
 }
-
-function updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links){ // move component on its positions and redraw links between them
-	//move component on its position
-
-	var router = new NetRouter(nodes, links, false);
-	var grid = router.grid;
-	
-	//create debug dots for routing nodes
-	function debugRouterDots(){
-		var flatenMap = [];
-		grid.visitFromLeftTop(function(c){
-			flatenMap.push(c);
-		});
-		svgGroup.selectAll("circle")
-			.data(flatenMap)
-			.enter().append("circle")
-			.style("fill", "steelblue")
-			.attr("r", 2)
-			.attr("cx", function(d){
-				return d.pos()[0];
-			})
-			.attr("cy", function(d){
-				return d.pos()[1];
-			}) 
-		    .on("mouseover", function(d) {
-		    	var html = d.pos() + "</br><b>horizontal:</b><ol>"
-					d.horizontal.forEach(function (net){
-						if (net)
-							html += "<li>" + net.name  + "</li>";
-					});
-		    	html += "</ol><b>vertical:</b><ol>";
-		    	d.vertical.forEach(function (net){
-		    		if (net)
-		    			html += "<li>" + net.name  + "</li>";
-				});
-		    	html += "</ol>";
-		    	showTooltip(toolTipDiv, html);
-		    	var connectedNets = [];
-		    	d.horizontal.forEach(function (n){
-		    		connectedNets.push(n);
-		    	})
-		    	d.vertical.forEach(function (n){
-		    		connectedNets.push(n);
-		    	})
-		    	higlightNets(connectedNets);
-		    })                  
-		    .on("mouseout", function(d) {       
-		    	hideTooltip(toolTipDiv);   
-		    	netMouseOut();
-		    });
+// move component on its positions and redraw links between them
+function updateNetLayout(svgGroup, linkElements, nodes, links){ 
+	for(var i =0; i< 1; i++){
+		var router = new NetRouter(nodes, links, false);
+		var grid = router.grid;
 		
-		//// line to parent componet
-		//svgGroup.selectAll("#debuglink")
-		//	.data(flatenMap)
-		//	.enter()
-		//	.append("path") 
-		//	.classed({"link": true})
-		//	.attr("d", function (d) {
-		//        var sx = d.pos()[0];
-		//        var sy = d.pos()[1];
-		//        var tx = d.originComponent.x;
-		//        var ty = d.originComponent.y ;
-		//        return "M" + sx + "," + sy + " L " + tx + "," + ty;
-		//    });
-	}
-
-	function drawNet(d){
-		var pos = d.start.pos();
-		var spOffset = offsetInRoutingNode(d.start, d.net);
-		var pathStr = "M " + [pos[0] - COMPONENT_PADDING - d.source.netChannelPadding.right, pos[1]] + "\n"; //connection from port node to port
-		var posWithOffset = pointAdd(pos, spOffset);
-		pathStr += " L " + posWithOffset +"\n";
-
-		router.walkLinkSubPaths(d, function(subPath, dir){
-			var p0 = subPath[0];
-			var p1 = subPath[subPath.length -1];
+		function drawNet(d){
+			var pos = d.start.pos();
+			var spOffset = offsetInRoutingNode(d.start, d.net);
+			// connection from port node to port
+			var pathStr = "M " + [pos[0] - COMPONENT_PADDING - d.source.netChannelPadding.right, pos[1]] + "\n"; 
+			var posWithOffset = pointAdd(pos, spOffset);
+			pathStr += " L " + posWithOffset +"\n";
+	
+			router.walkLinkSubPaths(d, function(subPath, dir){
+				var p0 = subPath[0];
+				var p1 = subPath[subPath.length -1];
+				
+				pathStr += " L " + pointAdd(p0.pos(), offsetInRoutingNode(p0, d.net)); +"\n";
+				pathStr += " L " + pointAdd(p1.pos(), offsetInRoutingNode(p1, d.net)); +"\n";
+			});
 			
-			pathStr += " L " + pointAdd(p0.pos(), offsetInRoutingNode(p0, d.net)); +"\n";
-			pathStr += " L " + pointAdd(p1.pos(), offsetInRoutingNode(p1, d.net)); +"\n";
-		});
-		
-		pos = d.end.pos();
-		pathStr += " L " + [pos[0]+COMPONENT_PADDING +d.target.netChannelPadding.left, pos[1]]+"\n"; //connection from port node to port
-		return pathStr;
-	}
-		
-	router.route();	
-	debugRouterDots()
-	linkElements.attr("d", drawNet);
-
-	links.forEach(function (link){ //rm tmp variables
-		delete link.path;
-		delete link.end;
-		delete link.start;
-	});
+			pos = d.end.pos();
+			// connection from port node to port
+			pathStr += " L " + [pos[0]+COMPONENT_PADDING +d.target.netChannelPadding.left, pos[1]]+"\n";
+			return pathStr;
+		}
+			
+		router.route();	
+		//debugRouterDots(svgGroup, grid)
+		linkElements.attr("d", drawNet);
 	
+		links.forEach(function (link){ // rm tmp variables
+			delete link.path;
+			delete link.end;
+			delete link.start;
+		});
+	}
 };
 
-function ComponentDiagram(selector, nodes, links){ //main function for rendering components layout
+//main function for rendering components layout
+function ComponentDiagram(selector, nodes, links){ 
 	var wrapper = d3.select(selector);
 	wrapper.selectAll("svg").remove(); // delete old on redraw
 
@@ -287,7 +233,7 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 	
 	addShadows(svg);
 
-	//grid higlight
+    //LINKS
     var linkElements = svgGroup.selectAll(".link")
     	.data(links)
     	.enter()
@@ -297,45 +243,57 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
     	.on("mouseover", netMouseOver)
     	.on("mouseout", netMouseOut);
 
-	var toolTipDiv = d3.select("body")
-		.append("div")   
-	    .attr("id", "tooltip")               
-	    .style("opacity", 0);
-    
-	for(var i =0; i< 2; i++)
-	   updateNetLayout(svgGroup, toolTipDiv, linkElements, nodes, links);
+   updateNetLayout(svgGroup, linkElements, nodes, links);
 
     var place = svg.node().getBoundingClientRect();
-	//force for self organizing of diagram
+	// force for self organizing of diagram
 	var force = d3.layout.force()
 		.gravity(.00)
 		.distance(150)
 		.charge(-2000)
 		.size([place.width, place.height])
-		//.nodes(nodes)
-		//.links(links)
-		//.start();
+		// .nodes(nodes)
+		// .links(links)
+		// .start();
 		
+	//EXTERNAL PORTS	
 	drawExternalPorts(svgGroup, nodes.filter(function (n){
 			return n.isExternalPort;
 		}))
 		.on("click", exPortOnClick);
-		//.on("dblclick", componentDetail);
-		
+		// .on("dblclick", componentDetail);
+	
+	//COMPONENTS
 	drawComponents(svgGroup, nodes.filter(function (n){
 			return !n.isExternalPort;
 		}))
 		.on("click", componentOnClick)
-		.call(force.drag); //component dragging
+		.call(force.drag); // component dragging
+		//.on("dblclick", componentDetail);
+	
+	function onCompClick(d){
+		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
+		scope.compClick(d);	
+		d3.event.stopPropagation();
+		if (!d3.event.shiftKey) {
+			removeSelections();
+		}
+
+		d3.select(this).classed({
+			"selected-object" : true
+		})
+	}
 	
 	function defaultZoom () {
 		svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");   			
 	}
-    // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
+    // define the zoomListener which calls the zoom function on the "zoom" event
+	// constrained within the scaleExtents
     var zoomListener = d3.behavior.zoom()
     	.scaleExtent([0.2, 30])
     	.on("zoom", defaultZoom);
     
+    //ZOOM
 	svgGroup.on("mousedown", function() {
 		if (d3.event.shiftKey) {
 			zoomListener.on("zoom", null);
@@ -348,7 +306,7 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 			d3.event.scale = [0, 0];
 		});
 	
-	(function fitDiagram2Screen(zoomListener){
+	function fitDiagram2Screen(zoomListener){
         function diagramSize(){
         	var widthMax = 0;
         	var heigthtMax = 0;
@@ -362,12 +320,13 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
         var scaleX = place.width /size[0] ;
         var scaleY = place.height / size[1];
         var scale = Math.min(scaleX, scaleY); 
-        //this is processiong of zoomListener explicit translate and scale on start
+        // this is processiong of zoomListener explicit translate and scale on
+		// start
         zoomListener.translate([0,0])
         	.scale(scale);
         zoomListener.event(svg.transition()
         					  .duration(100));
-    })(zoomListener);
+    }
+	fitDiagram2Screen(zoomListener);
 	svg.call(zoomListener);
-	
 }
