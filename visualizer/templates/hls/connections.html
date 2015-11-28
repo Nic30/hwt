@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 {% block menu_attrib %}ng-controller="menuCntrl"{% endblock %}
 {% block body_modal_form %}
+<div id="fileDialog" class="modal fade" role="dialog" ng-controller="filebrowserCntrl">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-body">
+				<div style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
+					&nbsp; {$ selectedFile $}</div>
+				<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
+					class="ag-file-browser"></div>
+			</div>
+		</div>
+	</div>
+</div>
 <!-- Modal -->
 <div class="modal fade" id="myModal" role="dialog" ng-controller="diagramEditorCntrl">
     <div class="modal-dialog">
@@ -59,15 +71,15 @@
 										
 									</tr>
 								</thead>
-
 								<tbody>
 									<tr ng-repeat="port in portgroup.array">
 										<td>
-											<div>
-												<input class="form-control " type="text" ng-model="port.name"
+										    <div class="input-group add-on">
+												<input class="form-control" type="text" ng-model="port.name"
 													placeholder="Port name">
-												<i class="fa fa-remove"
-													ng-click="componentRemovePort(newObject, portgroup.name, port)"></i>
+												<div class="input-group-btn">
+													<button class="btn btn-default" type="submit"><i class="fa fa-remove"
+														ng-click="componentRemovePort(newObject, portgroup.name, port)"></i></button>
 											</div>
 										</td>
 									</tr>
@@ -280,19 +292,10 @@
 {% endblock %} 
 {% block angular_app %} ng-app="App" ng-controller="mainController" {% endblock %}
 {% block content %}
-<div id="fileDialog" style="display: none;" ng-controller="filebrowserCntrl">
-	<div style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
-		&nbsp; {$ selectedFile $}</div>
-	<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
-		class="ag-file-browser"></div>
-</div>
+
 <div id="chartWrapper" ng-controller="diagramCntrl" ></div>
 {% endblock %} 
-{% block componentAdd %}
-<div id="componentAdd" class="component-window" style="display: none;">
 
-</div>
-{% endblock %} 
 {% block componentEdit %}
 <div id="componentEdit" class="component-window" style="display: none;">
 	<form role="form" id="componentEditForm" class="form-horizontal"

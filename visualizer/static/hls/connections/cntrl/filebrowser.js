@@ -1,6 +1,6 @@
 function filebrowserCntrl($scope, $http) {
 	var api = $scope.$parent.api;
-	var fileDialog = d3.selectAll("#fileDialog");
+	var fileDialog = $('#fileDialog');
 	function sizeCellStyle() {
 		return {
 			'text-align' : 'right'
@@ -67,9 +67,8 @@ function filebrowserCntrl($scope, $http) {
 			$scope.loadFolderData(path);
 		} else {
 			$scope.openedFile = path;
-			fileDialog.style({
-				"display" : "none"
-			});
+			fileDialog.modal('hide');
+			
 			$scope.open().then(function(){
 				api.redraw();
 			});
@@ -121,9 +120,7 @@ function filebrowserCntrl($scope, $http) {
 	$scope.openedFile = 'example1.json';
 	api.fileDialog = function() {
 		d3.selectAll("#chartWrapper").html(""); // [TODO] to different controller
-		fileDialog.style({
-			"display" : "block"
-		});
+		fileDialog.modal('show');
 		filesRowData = [];
 		$scope.loadFolderData("");
 	}

@@ -10,13 +10,21 @@ svg {
 
 /*Background Grid Lines  */
 #page-wrapper {
-    padding: 0 15px;
-    min-height: 568px;
-    background-color: #fff;
-    background-image: linear-gradient(rgba(255, 255, 255, 0.63), rgba(116, 116, 116, 0.12));
-    background-image: linear-gradient(0deg, rgba(0, 0, 0, 0) 24%, rgba(0,0,0,0.20) 25%, rgba(0, 0, 0, 0.05) 26%, rgba(0, 0, 0, 0) 27%, rgba(0, 0, 0, 0) 74%, rgba(0,0,0,0.20) 75%, rgba(0, 0, 0, 0.05) 76%, rgba(0, 0, 0, 0) 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0,0,0,0.20) 25%, rgba(0, 0, 0, 0) 26%, transparent 27%, transparent 74%, rgba(2,2,2,0.20) 75%, rgba(0, 0, 0, 0) 76%, transparent 77%, transparent);
-    height:100%;
-  	background-size:50px 50px;
+	padding: 0 15px;
+	min-height: 568px;
+	background-color: #fff;
+	background-image: linear-gradient(rgba(255, 255, 255, 0.63),
+		rgba(116, 116, 116, 0.12));
+	background-image: linear-gradient(0deg, rgba(0, 0, 0, 0) 24%,
+		rgba(0, 0, 0, 0.20) 25%, rgba(0, 0, 0, 0.05) 26%, rgba(0, 0, 0, 0) 27%,
+		rgba(0, 0, 0, 0) 74%, rgba(0, 0, 0, 0.20) 75%, rgba(0, 0, 0, 0.05) 76%,
+		rgba(0, 0, 0, 0) 77%, transparent),
+		linear-gradient(90deg, transparent 24%, rgba(0, 0, 0, 0.20) 25%,
+		rgba(0, 0, 0, 0) 26%, transparent 27%, transparent 74%,
+		rgba(2, 2, 2, 0.20) 75%, rgba(0, 0, 0, 0) 76%, transparent 77%,
+		transparent);
+	height: 100%;
+	background-size: 50px 50px;
 }
 
 .node rect {
@@ -53,17 +61,18 @@ svg {
 
 .component {
 	/*fill: #AFEEEE;*/
+	
 }
 
 .selected-object rect {
 	fill: red;
 }
 
-.selected-port text{
+.selected-port text {
 	fill: red;
 }
 
-.selected-link text{
+.selected-link text {
 	stroke: red;
 	stroke-width: 3px;
 }
@@ -108,9 +117,6 @@ path.link-hover {
 	text-anchor: end;
 }
 
-
-
-
 div.tooltip {
 	position: absolute;
 	text-align: center;
@@ -124,9 +130,10 @@ div.tooltip {
 	pointer-events: none;
 }
 
-.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th{
+.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th,
+	.table>thead>tr>td, .table>thead>tr>th {
 	border: 0px solid black;
-	vertical-align: middle;	
+	vertical-align: middle;
 }
 
 path.debug-link {
@@ -140,8 +147,28 @@ path.debug-link2component {
 	stroke-width: 1.5px;
 	fill: none;
 }
+
 path.debug-link-between-nodes {
 	stroke: red;
 	stroke-width: 1.5px;
 	fill: none;
+}
+
+body .modal-dialog {
+	/* new custom width */
+	width: 900px;
+	/* must be half of the width, minus scrollbar on the left (30px) */
+}
+
+.add-on .input-group-btn>.btn {
+	border-left-width: 0;
+	left: -2px;
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+/* stop the glowing blue shadow */
+.add-on .form-control:focus {
+	box-shadow: none;
+	-webkit-box-shadow: none;
+	border-color: #cccccc;
 }
