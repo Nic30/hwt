@@ -1,20 +1,58 @@
 {% extends "base.html" %}
 {% block menu_attrib %}ng-controller="menuCntrl"{% endblock %}
 {% block body_modal_form %}
-<div id="fileDialog" class="modal fade" role="dialog" ng-controller="filebrowserCntrl">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-body">
-				<div style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
-					&nbsp; {$ selectedFile $}</div>
-				<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
-					class="ag-file-browser"></div>
-			</div>
-		</div>
-	</div>
-</div>
+<div ng-controller="filebrowserCntrl">
+    <div id="saveDialog" class="modal fade" role="dialog" >
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Save component</h4>
+                </div>
+                <div class="modal-body">
+                     <div style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 800px; height: 20px">
+                    &nbsp; {$ selectedFile $}
+                    </div>
+                    <div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
+                        class="ag-file-browser">
+                    </div> 
+                </div>
+                <div class="modal-footer">
+                    <button ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Save</button>
+                    <button ng-click="componentAddCancel()" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="fileDialog" class="modal fade" role="dialog" >
+    	<div class="modal-dialog">
+    		<div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Open component</h4>
+                </div>
+    			<div class="modal-body">
+    				
+    				<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
+    					class="ag-file-browser">
+                    </div>
+                    <div style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 800px; height: 20px">
+                    &nbsp; {$ selectedFile $}
+                    </div> 
+    			</div>
+                <div class="modal-footer">
+                    <button ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Open</button>
+                    <button ng-click="componentAddCancel()" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </div>
+    		</div>
+    	</div>
+    </div>
+ </div>
+    
 <!-- Modal -->
-<div class="modal fade" id="myModal" role="dialog" ng-controller="diagramEditorCntrl">
+<div class="modal fade" id="newComponent" role="dialog" ng-controller="diagramEditorCntrl">
     <div class="modal-dialog">
       	<!-- Modal content-->
       	<div class="modal-content">
@@ -78,8 +116,8 @@
 												<input class="form-control" type="text" ng-model="port.name"
 													placeholder="Port name">
 												<div class="input-group-btn">
-													<button class="btn btn-default" type="submit"><i class="fa fa-remove"
-														ng-click="componentRemovePort(newObject, portgroup.name, port)"></i></button>
+													<button class="btn btn-default" ng-click="componentRemovePort(newObject, portgroup.name, port)" type="submit"><i class="fa fa-remove"
+														></i></button>
 											</div>
 										</td>
 									</tr>
@@ -136,6 +174,16 @@
             </a>
         </li>
         <li>
+            <a ng-click="api.saveAs()">
+                <div>
+                    <strong>Save as</strong>
+                    <span class="pull-right text-muted">
+                        <em>No Shortcut</em>
+                    </span>
+                </div>
+            </a>
+        </li>
+        <li>
             <a accesskey="t">
                 <div>
                     <strong>Export</strong>
@@ -170,7 +218,7 @@
     <!-- /.dropdown-messages -->
 </li>
 <li class="dropdown">
-    <a ng-click="api.componentAdd()" data-toggle="modal" data-target="#myModal">
+    <a ng-click="api.componentAdd()" data-toggle="modal" data-target="#newComponent">
         <i class="fa fa-plus fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->

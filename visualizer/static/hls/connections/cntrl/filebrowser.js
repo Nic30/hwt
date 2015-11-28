@@ -1,6 +1,7 @@
 function filebrowserCntrl($scope, $http) {
 	var api = $scope.$parent.api;
 	var fileDialog = $('#fileDialog');
+	var saveDialog = $('#saveDialog')
 	function sizeCellStyle() {
 		return {
 			'text-align' : 'right'
@@ -39,7 +40,7 @@ function filebrowserCntrl($scope, $http) {
 	}, {
 		headerName : "Date Modified",
 		field : "dateModified",
-		width : 200
+		width : 198
 	} ];
 	$scope.open = function() {
 		return $http.get('/hls/connections-data/' + $scope.openedFile).then(
@@ -138,5 +139,11 @@ function filebrowserCntrl($scope, $http) {
 		}).then(function(response) {
 			return response;
 		});
+	};
+
+	api.saveAs = function() {
+		filesRowData = [];
+		$scope.loadFolderData("");
+		saveDialog.modal('show');
 	};
 }
