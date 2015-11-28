@@ -74,7 +74,6 @@ function filebrowserCntrl($scope, $http) {
 				api.redraw();
 			});
 		}
-
 	}
 
 	$scope.rootDir = "";
