@@ -4,12 +4,22 @@
 <div id="fileDialog" class="modal fade" role="dialog" ng-controller="filebrowserCntrl">
 	<div class="modal-dialog">
 		<div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Open component</h4>
+            </div>
 			<div class="modal-body">
-				<div style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 400px; height: 16px">
-					&nbsp; {$ selectedFile $}</div>
+				
 				<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
-					class="ag-file-browser"></div>
+					class="ag-file-browser">
+                </div>
+                <div style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 800px; height: 20px">
+                &nbsp; {$ selectedFile $}
+                </div> 
 			</div>
+            <div class="modal-footer">
+                <button ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Open</button>
+            </div>
 		</div>
 	</div>
 </div>
@@ -78,8 +88,8 @@
 												<input class="form-control" type="text" ng-model="port.name"
 													placeholder="Port name">
 												<div class="input-group-btn">
-													<button class="btn btn-default" type="submit"><i class="fa fa-remove"
-														ng-click="componentRemovePort(newObject, portgroup.name, port)"></i></button>
+													<button class="btn btn-default" ng-click="componentRemovePort(newObject, portgroup.name, port)" type="submit"><i class="fa fa-remove"
+														></i></button>
 											</div>
 										</td>
 									</tr>

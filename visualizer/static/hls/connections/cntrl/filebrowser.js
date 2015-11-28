@@ -39,7 +39,7 @@ function filebrowserCntrl($scope, $http) {
 	}, {
 		headerName : "Date Modified",
 		field : "dateModified",
-		width : 200
+		width : 198
 	} ];
 	$scope.open = function() {
 		return $http.get('/hls/connections-data/' + $scope.openedFile).then(
