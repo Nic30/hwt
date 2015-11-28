@@ -50,6 +50,8 @@ function filebrowserCntrl($scope, $http) {
 					var nodes = res.data.nodes;
 					api.nodes = nodes;
 					api.nets = nets;
+				}, function errorCallback(response) {
+					api.msg.error("Can not open file", $scope.openedFile);
 				});
 	}
 
@@ -96,7 +98,8 @@ function filebrowserCntrl($scope, $http) {
 	};
 
 	$scope.loadFolderData = function(path) {
-		$http.get('/hls/connections-data-ls/' + path).then(function(res) {
+		$http.get('/hls/connections-data-ls/' + path)
+		.then(function(res) {
 			function findDir(path) {
 				if (path == "")
 					return filesRowData
