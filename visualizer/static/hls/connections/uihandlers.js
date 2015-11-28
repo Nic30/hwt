@@ -40,16 +40,6 @@ function menuClose()
 	console.log("Menu Close")
 }
 
-function componentAdd()
-{
-	console.log("Component Add")
-}
-
-function componentDelete()
-{
-	console.log("Component Delete")
-}
-
 function componentSearch()
 {
 	console.log("Component Search")

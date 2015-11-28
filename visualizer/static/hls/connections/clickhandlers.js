@@ -64,47 +64,26 @@ function removePortClicked()
 }
 
 function portOnClick() {
-	removeSelections();
+	/*removeSelections();
 
 	d3.event.stopPropagation();
 	console.log("port Click");
 	d3.select(this).classed({
 		"clicked-port" : true
-	})
+	})*/
+	console.log("Port clicked")
 }
 
 function drawLink()
 {
 	var exists = !d3.selectAll(".clicked-port").empty()
+	var object = d3.selectAll(".clicked-port")[0]
 	var coordinates = d3.mouse(this);
 	var x = coordinates[0];
 	var y = coordinates[1];
 	if (exists) {
-		//drawlink
+		console.log("")
 	}
-}
-
-function componentDetail()
-{
-	console.log("Component Detail")
-	var selection = d3.selectAll(".selected-object")
-	var count = selection[0].length
-	if (count == 0)
-	{
-		console.log("No object selected!")
-	}
-	else if (count > 1)
-	{
-		console.log("Too many objects selected!")
-	}
-	else
-	{
-		console.log(selection[0][0])
-		var object = selection[0][0]
-		var selected = object.getElementsByTagName("g");
-		console.log(object.__data__)
-	}
-
 }
 
 function exPortDetail()
