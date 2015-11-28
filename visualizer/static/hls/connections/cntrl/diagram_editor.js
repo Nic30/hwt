@@ -129,7 +129,7 @@ function diagramEditorCntrl($scope){
 		return;
 	}
 
-	$scope.componentAdd = function() {
+	api.componentAdd = function() {
 		d3.selectAll("#componentAdd").style("display", "block");
 		$scope.newObject = {
 			"name" : "",
