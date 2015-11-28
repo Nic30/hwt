@@ -79,7 +79,7 @@
 </li>
 
 <li class="dropdown">
-    <a class="dropdown-toggle disabled" ng-click="componentDelete()">
+    <a class="dropdown-toggle disabled" ng-click="objectDelete()">
         <i class="fa fa-trash fa-fw"></i> 
     </a>
     <!-- /.dropdown-messages -->
@@ -319,4 +319,11 @@ ng-controller="diagramController" {% endblock %} {% block content %}
 		<button ng-click="componentDelete()" class="btn btn-default">Delete</button>
 	</form>
 </div>
+{% endblock %} {% block sidebaritems %}
+<ul class="nav nav-second-level" id="side-menu">
+	<li class="dropdown">
+		<div class="side-menu-item">Text</div>
+		<div class="side-menu-item">More Text</div>
+	</li>
+</ul>
 {% endblock %}

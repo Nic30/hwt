@@ -279,15 +279,16 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 	var wrapper = d3.select(selector);
 	wrapper.selectAll("svg").remove(); // delete old on redraw
 
+	//SVG
 	var svg = wrapper.append("svg")
-		.on("click", onBoardClick)
-		.on("mousemove", drawLink);
+		.on("click", onBoardClick);
+		//.on("mousemove", drawLink);
 	
 	var svgGroup= svg.append("g"); // because of zooming/moving
 	
 	addShadows(svg);
 
-	//grid higlight
+	//LINKS
     var linkElements = svgGroup.selectAll(".link")
     	.data(links)
     	.enter()
@@ -316,16 +317,32 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
 		//.links(links)
 		//.start();
 		
+	//EXTERNAL PORTS	
 	drawExternalPorts(svgGroup, nodes.filter(function (n){
 			return n.isExternalPort;
 		}))
 		.on("click", exPortOnClick);
 		//.on("dblclick", componentDetail);
-		
+
+	function onCompClick(d)
+	{
+		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
+		scope.compClick(d);	
+		d3.event.stopPropagation();
+		if (!d3.event.shiftKey) {
+			removeSelections();
+		}
+
+		d3.select(this).classed({
+			"selected-object" : true
+		})
+	}
+	
+	//COMPONENTS
 	drawComponents(svgGroup, nodes.filter(function (n){
 			return !n.isExternalPort;
 		}))
-		.on("click", componentOnClick)
+		.on("click", onCompClick)
 		.call(force.drag); //component dragging
 	
 	function defaultZoom () {
@@ -336,6 +353,7 @@ function ComponentDiagram(selector, nodes, links){ //main function for rendering
     	.scaleExtent([0.2, 30])
     	.on("zoom", defaultZoom);
     
+    //ZOOM
 	svgGroup.on("mousedown", function() {
 		if (d3.event.shiftKey) {
 			zoomListener.on("zoom", null);
