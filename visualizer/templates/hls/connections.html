@@ -102,11 +102,9 @@
 									<tr>
 										<th style="text-align:center">
 											<div>{$portgroup.name$} 
-											<i class="fa fa-plus"
-											ng-click="componentAddPort(newObject, portgroup.name)"></i>
+												<i class="fa fa-plus" ng-click="componentAddPort(newObject, portgroup.name)"></i>
 											</div>
 										</th>
-										
 									</tr>
 								</thead>
 								<tbody>
@@ -116,8 +114,10 @@
 												<input class="form-control" type="text" ng-model="port.name"
 													placeholder="Port name">
 												<div class="input-group-btn">
-													<button class="btn btn-default" ng-click="componentRemovePort(newObject, portgroup.name, port)" type="submit"><i class="fa fa-remove"
-														></i></button>
+													<button class="btn btn-default" ng-click="componentRemovePort(newObject, portgroup.name, port)" type="submit">
+														<i class="fa fa-remove"></i>
+													</button>
+												</div>
 											</div>
 										</td>
 									</tr>
