@@ -8,6 +8,17 @@ svg {
 	left: 0;*/
 }
 
+/*Background Grid Lines  */
+#page-wrapper {
+    padding: 0 15px;
+    min-height: 568px;
+    background-color: #fff;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.63), rgba(116, 116, 116, 0.12));
+    background-image: linear-gradient(0deg, rgba(0, 0, 0, 0) 24%, rgba(0,0,0,0.20) 25%, rgba(0, 0, 0, 0.05) 26%, rgba(0, 0, 0, 0) 27%, rgba(0, 0, 0, 0) 74%, rgba(0,0,0,0.20) 75%, rgba(0, 0, 0, 0.05) 76%, rgba(0, 0, 0, 0) 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0,0,0,0.20) 25%, rgba(0, 0, 0, 0) 26%, transparent 27%, transparent 74%, rgba(2,2,2,0.20) 75%, rgba(0, 0, 0, 0) 76%, transparent 77%, transparent);
+    height:100%;
+  	background-size:50px 50px;
+}
+
 .node rect {
 	cursor: move;
 	shape-rendering: crispEdges;
@@ -109,4 +120,9 @@ div.tooltip {
 	border: 0px;
 	border-radius: 8px;
 	pointer-events: none;
+}
+
+.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th{
+	border: 0px solid black;
+	vertical-align: middle;	
 }
