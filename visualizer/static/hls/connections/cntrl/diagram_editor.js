@@ -1,6 +1,6 @@
 function diagramEditorCntrl($scope){
 	var api = $scope.$parent.api;
-	$scope.editedObject = {}
+	api.editedObject = {}
 	$scope.newObject = {
 		"name" : "",
 		// "id": null,
@@ -10,7 +10,7 @@ function diagramEditorCntrl($scope){
 	}
 	$scope.portarrays = [];
 
-	$scope.componentEditDetail = function() {
+	api.componentEditDetail = function() {
 		// console.log("Component Detail")
 		var selection = d3.selectAll(".selected-object");
 		var count = selection[0].length
@@ -76,12 +76,12 @@ function diagramEditorCntrl($scope){
 		d3.selectAll("#componentEdit").style("display", "none");
 	}
 
-	$scope.objectDelete = function() {
+	api.objectDelete = function() {
 		// All selected objects
 		var objects = d3.selectAll(".selected-object")[0];
 		var links = d3.selectAll(".selected-link")[0];
-		// console.log("Selected objects", objects);
-		console.log("Selected links", links.length, links);
+		//console.log("Selected objects", objects);
+		//console.log("Selected links", links.length, links);
 		for (i = 0; i < objects.length; i++) {
 			var obj = objects[i].__data__;
 			// console.log(obj)
@@ -96,7 +96,7 @@ function diagramEditorCntrl($scope){
 					api.nodes.splice(i, 1);
 				}
 			}
-			// console.log("Nets", obj.id)
+			//console.log("Nets", obj.id)
 			// For all nets in scope
 			for (var j = 0; j < api.nets.length; j++) {
 				// For all links
@@ -114,7 +114,7 @@ function diagramEditorCntrl($scope){
 			}// for scope nets
 		}// for selected objects
 
-		// console.log("Link check")
+		//console.log("Link check")
 		// For all selected links
 		for (var m = 0; m < links.length; m++) {
 			var net = links[m].__data__.net;
@@ -173,35 +173,37 @@ function diagramEditorCntrl($scope){
 	};
 	$scope.linkstatus = "none";
 
-	$scope.portClick = function(d) {
-		// console.log("portClick data", d);
+	api.portClick = function(d) {
+		//console.log("portClick data", d);
+		//console.log("Link status", $scope.linkstatus)
 		switch ($scope.linkstatus) {
 		case "none":
-			// console.log("Setting origin")
+			//console.log("Setting origin")
 			$scope.origin.port = d;
 			$scope.linkstatus = "origincomp";
 			break;
 		case "destination":
-			// console.log("Setting destination")
+			//console.log("Setting destination")
 			$scope.destination.port = d;
 			$scope.linkstatus = "destinationcomp";
 			break;
 		}
-		// console.log("Link status", $scope.linkstatus)
-		// console.log("Origin", $scope.origin)
-		// console.log("Destination", $scope.destiantion)
+		//console.log("Link status", $scope.linkstatus)
+		//console.log("Origin", $scope.origin)
+		//console.log("Destination", $scope.destination)
 	}
 
-	$scope.compClick = function(d) {
-		// console.log("Component Click data", d);
+	api.compClick = function(d) {
+		//console.log("Component Click data", d);
+		//console.log("Link status", $scope.linkstatus)
 		switch ($scope.linkstatus) {
 		case "origincomp":
-			// console.log("Setting origin component")
+			//console.log("Setting origin component")
 			$scope.origin.component = d;
 			$scope.linkstatus = "destination";
 			break;
 		case "destinationcomp":
-			// console.log("Setting destination component")
+			//console.log("Setting destination component")
 			$scope.destination.component = d;
 			$scope.linkstatus = "link";
 			break;
@@ -210,18 +212,82 @@ function diagramEditorCntrl($scope){
 			break;
 		}
 
-		// console.log("Link status", $scope.linkstatus)
-		// console.log("Origin", $scope.origin)
-		// console.log("Destination", $scope.destiantion)
-
+		//console.log("Link status", $scope.linkstatus)
+		//console.log("Origin", $scope.origin)
+		//console.log("Destination", $scope.destination)
+		
 		if ($scope.linkstatus == "link") {
-			console.log("Linking");
-			$scope.resetLinkingState();
-		}
+			//console.log("Linking");
+			var originport = $scope.getPortIndexByName($scope.origin.port.name, $scope.origin.component)
+			var destinationport = $scope.getPortIndexByName($scope.destination.port.name, $scope.destination.component)
+			//console.log("Origin portindex", originport)
+			//console.log("Destination portindex", destinationport)			
+			if (originport[1] == "inputs")
+			{
+				var net = {
+						"targets": [
+						           {
+						        	   "portIndex": originport[0],
+						        	   "id": $scope.origin.component.id
+						           }
+						],
+						"source": {
+							"portIndex": destinationport[0],
+				        	 "id": $scope.destination.component.id
+						}
+				}
+			}// if originport inputs
+			else if (originport[1] == "outputs")
+			{
+				var net = {
+						"targets": [
+						           {
+						        	   "portIndex": destinationport[0],
+							        	"id": $scope.destination.component.id
+						           }
+						],
+						"source": {
+							"portIndex": originport[0],
+				        	   "id": $scope.origin.component.id
+						}
+				}
+			}
+			else
+			{
+				var net = ""
+				console.log("Quicklink: Cant construct link, port name corrupted")
+			}
+			//console.log("Net to be added: ", net)
+			api.nets.push(net);
+			api.redraw();
+			api.resetLinkingState();
+		}// if scopestatus link
 
 	}
 
-	$scope.resetLinkingState = function() {
+	$scope.getPortIndexByName = function (name, component)
+	{
+		for (var i = 0; i < component.inputs.length;i++)
+		{
+			if (name == component.inputs[i].name)
+			{
+				//console.log("Match input", name, component.inputs[i].name)
+				return [i, "inputs"];
+			}
+		}
+		
+		for (var j = 0; j < component.outputs.length;j++)
+		{
+			if (name == component.outputs[j].name)
+			{
+				//console.log("Match output", name, component.outputs[i].name)
+				return [j, "outputs"];
+			}
+		}
+		return [null, null];
+	}
+	
+	api.resetLinkingState = function() {
 		$scope.linkstatus = "none";
 	}
 }
