@@ -305,8 +305,8 @@ function ComponentDiagram(selector){
 			d3.event.translate = [0, 0];
 			d3.event.scale = [0, 0];
 		});
-	
 	svg.call(zoomListener);
+
 	var self = {
 		'place': null,
 		'fit2Screen' : function() {
@@ -374,10 +374,10 @@ function ComponentDiagram(selector){
 				//.on("dblclick", componentDetail);
 			
 	
-			},
-			'wrapper':wrapper,
-			'svg': svg,
-			"on":function(ev, fn){return wrapper.on(ev, fn)}
+		},
+		'wrapper':wrapper,
+		'svg': svg,
+		"on":function(ev, fn){return wrapper.on(ev, fn)}
 	};
 	return self;
 	

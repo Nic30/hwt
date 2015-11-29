@@ -15,9 +15,9 @@ function diagramEditorCntrl($scope){
 		var selection = d3.selectAll(".selected-object");
 		var count = selection[0].length
 		if (count == 0) {
-			console.log("No object selected!")
+			api.msg.error("No object selected!")
 		} else if (count > 1) {
-			console.log("Too many objects selected!")
+			api.msg.error("Too many objects selected!")
 		} else {
 			d3.selectAll("#componentEdit").style("display", "block");
 
@@ -52,7 +52,8 @@ function diagramEditorCntrl($scope){
 		// api.redraw();
 	}
 
-	$scope.componentAddPort = function(object, group) {
+//	$scope.componentAddPort = function(object, group) {
+	// [TODO] WHTF is this?
 		console.log("ComponentEditAddPort")
 		console.log(group, object)
 		var portGroup = (group == 'Inputs' ? object.inputs : object.outputs)
