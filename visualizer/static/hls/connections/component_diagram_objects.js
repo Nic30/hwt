@@ -43,16 +43,18 @@ function drawComponents(svgGroup, componentNodes){
 	//alias component body
 	svgGroup.selectAll(".component").remove()
 	var componentWrap = svgGroup.selectAll(".component")
-		.data(componentNodes, function(d) { return d.id; })
+		.data(componentNodes)
 		.enter()
 		.append("g")
-	    .classed({"component": true});
+	    .classed({"component": true})
+	    .attr("transform", function (d) {
+			return "translate(" + d.x + "," + d.y + ")";
+		});
 	
-	// background
+	// body background
 	componentWrap.append("rect")
 	    .attr("rx", 5) // this make rounded corners
 	    .attr("ry", 5)
-	    .classed({"component": true})
 	    .attr("border", 1)
 	    .style("stroke", "#BDBDBD")
 	    .attr("fill", "url(#blue_grad)")
@@ -69,7 +71,6 @@ function drawComponents(svgGroup, componentNodes){
 		.text(function(d) {
 		    return d.name;
 		});
-
 
 	// [TODO] porty s dratkem ven z komponenty, ruzne typy portu viz stream/bus/wire ve Vivado
 	// input port wraps
@@ -111,7 +112,7 @@ function drawComponents(svgGroup, componentNodes){
 	// output port wraps
 	var port_out = componentWrap.append("g")
 		.attr("transform", function(d) { 
-			var componentWidth = d3.select(this).node().parentNode.getBoundingClientRect().width;
+			var componentWidth = d3.select(this).node().parentNode.__data__.width;
 			return "translate(" + componentWidth + "," + 2*PORT_HEIGHT + ")"; 
 		})
 		.selectAll("g .port-group")
@@ -146,9 +147,7 @@ function drawComponents(svgGroup, componentNodes){
 			return port.name; 
 		});
 
-	componentWrap.attr("transform", function (d) {
-        return "translate(" + d.x + "," + d.y + ")";
-    });
+
 	
 	return componentWrap;
 }
