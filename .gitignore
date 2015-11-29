@@ -3,3 +3,5 @@ vhdl_toolkit/synthetisator/__pycache__/
 visualizer/__pycache__/
 visualizer/workspace/__pycache__/
 *.pyc
+vhdl_toolkit/parser.out
+vhdl_toolkit/parsetab.py
