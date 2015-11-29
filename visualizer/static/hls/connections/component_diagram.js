@@ -318,13 +318,13 @@ function ComponentDiagram(selector, nodes, links){
 	drawComponents(svgGroup, nodes.filter(function (n){
 			return !n.isExternalPort;
 		}))
-		.on("click", componentOnClick)
+		.on("click", onCompClick)
 		.call(force.drag); // component dragging
 		//.on("dblclick", componentDetail);
 	
 	function onCompClick(d){
 		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
-		scope.compClick(d);	
+		scope.api.compClick(d);	
 		d3.event.stopPropagation();
 		if (!d3.event.shiftKey) {
 			removeSelections();

@@ -1,0 +1,107 @@
+<li class="dropdown"><a class="dropdown-toggle"
+	data-toggle="dropdown" href="#"> <i class="fa fa-file fa-fw"></i> <i
+		class="fa fa-caret-down"></i>
+</a>
+	<ul class="dropdown-menu dropdown-messages">
+		<li><a class="menu-New" accesskey="n">
+				<div>
+					<strong>New</strong> <span class="pull-right text-muted"> <em>No
+							Shortcut</em>
+					</span>
+				</div>
+		</a></li>
+		<li><a ng-click="api.fileDialog(false)" accesskey="o">
+				<div>
+					<strong>Open</strong> <span class="pull-right text-muted"> <em>No
+							Shortcut</em>
+					</span>
+				</div>
+		</a></li>
+		<li><a ng-click="save(openedFile)" accesskey="s">
+				<div>
+					<strong>Save</strong> <span class="pull-right text-muted"> <em>No
+							Shortcut</em>
+					</span>
+				</div>
+		</a></li>
+		<li><a ng-click="api.fileDialog(true)">
+				<div>
+					<strong>Save as</strong> <span class="pull-right text-muted">
+						<em>No Shortcut</em>
+					</span>
+				</div>
+		</a></li>
+		<li><a accesskey="t">
+				<div>
+					<strong>Export</strong> <span class="pull-right text-muted">
+						<em>No Shortcut</em>
+					</span>
+				</div>
+		</a></li>
+		<li><a accesskey="l">
+				<div>
+					<strong>Delete</strong> <span class="pull-right text-muted">
+						<em>No Shortcut</em>
+					</span>
+				</div>
+		</a></li>
+		<li><a accesskey="c">
+				<div>
+					<strong>Close</strong> <span class="pull-right text-muted">
+						<em>No Shortcut</em>
+					</span>
+				</div>
+		</a></li>
+
+	</ul> <!-- /.dropdown-messages --></li>
+<li class="dropdown"><a ng-click="api.componentAdd()"
+	data-toggle="modal" data-target="#newComponent"> <i
+		class="fa fa-plus fa-fw"></i>
+</a> <!-- /.dropdown-messages --></li>
+
+<li class="dropdown"><a class="dropdown-toggle disabled"
+	ng-click="api.objectDelete()"> <i class="fa fa-trash fa-fw"></i>
+</a> <!-- /.dropdown-messages --></li>
+
+<li class="dropdown"><a class="dropdown-toggle"
+	data-toggle="dropdown" href="#" ng-click="api.redraw()"> <i
+		class="fa fa-refresh fa-fw"></i>
+</a> <!-- /.dropdown-messages --></li>
+
+<li class="dropdown"><a class="dropdown-toggle"
+	data-toggle="dropdown" href="#"> <i class="fa fa-search fa-fw"></i>
+</a>
+	<ul class="dropdown-menu dropdown-messages">
+		<li><a href="#">
+				<div>
+					<strong>msg.title</strong> <span class="pull-right text-muted">
+						<em>msg.info</em>
+					</span>
+				</div>
+				<div>msg.text</div>
+		</a></li>
+	</ul> <!-- /.dropdown-messages --></li>
+
+<li class="dropdown"><a class="dropdown-toggle"
+	data-toggle="dropdown" href="#"> <i class="fa fa-question fa-fw"></i>
+</a>
+	<ul class="dropdown-menu dropdown-messages">
+		<li><a ng-click="showShorcuts()">
+				<div>
+					<strong>Show Shortcuts</strong> <span class="pull-right text-muted">
+					</span>
+				</div>
+		</a></li>
+	</ul> <!-- /.dropdown-messages --></li>
+
+<li class="dropdown" ng-click="api.collapseSidebar($event)"><a
+	class="dropdown-toggle disabled icon-off" data-toggle="collapse"
+	href="#side-bar-Collapsing" aria-expanded="false"
+	aria-controls="side-bar-Collapsing"> <i
+		class="fa fa-toggle-off fa-fw"
+		ng-class="{'fa-toggle-on':api.sidebarCollapsed === false, 'fa-toggle-off':api.sidebarCollapsed === true}"></i>
+</a> <!-- /.dropdown-messages --></li>
+
+<li class="dropdown"><a class="dropdown-toggle disabled"> <i
+		class="fa fa-edit fa-fw"></i>
+</a></li>

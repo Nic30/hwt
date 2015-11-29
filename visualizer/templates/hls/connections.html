@@ -1,280 +1,25 @@
 {% extends "base.html" %}
+
 {% block menu_attrib %}ng-controller="menuCntrl"{% endblock %}
+
 {% block body_modal_form %}
-<div ng-controller="filebrowserCntrl">
-    <div id="fileDialog" class="modal fade" role="dialog" >
-    	<div class="modal-dialog">
-    		<div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>                    
-                    <h4 ng-if="doSave" class="modal-title">Save component</h4>
-                    <h4 ng-if="!doSave" class="modal-title">Open component</h4>
-                </div>
-    			<div class="modal-body">
-    				
-    				<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
-    					class="ag-file-browser">
-                    </div>
-                    <div style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 800px; height: 20px">
-                    &nbsp; {$ selectedFile $}
-                    </div> 
-    			</div>
-                <div class="modal-footer">
-                    <button ng-if="doSave" ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Save</button>
-                    <button ng-if="!doSave" ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Open</button>
-                    <button ng-click="componentAddCancel()" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                </div>
-    		</div>
-    	</div>
-    </div>
- </div>
-    
-<!-- Modal -->
-<div class="modal fade" id="newComponent" role="dialog" ng-controller="diagramEditorCntrl">
-    <div class="modal-dialog">
-      	<!-- Modal content-->
-      	<div class="modal-content">
-        	<div class="modal-header">
-	          	<button type="button" class="close" data-dismiss="modal">&times;</button>
-	          	<h4 class="modal-title">Create component</h4>
-        	</div>
-        
-       		<div class="modal-body">
-          		<form role="form" id="componentAddForm" class="form-horizontal" >
-
-					<!-- Component Name -->
-					<div class="form-group">
-						<label for="componentAddName" class="control-label col-sm-4">Component
-							name: </label>
-						<div class="col-sm-8">
-							<input class="form-control" id="componentAddName" type="text"
-								ng-model="newObject.name" placeholder="Component name">
-						</div>
-					</div>
-
-					<!-- Component ID -->
-					<div class="form-group">
-						<label for="componentAddID" class="control-label col-sm-4">Component
-							ID: </label>
-						<div class="col-sm-8">
-							<input class="form-control" id="componentAddID" type="text"
-								ng-model="newObject.id" placeholder="Component ID">
-						</div>
-					</div>
-
-					<!-- Component type -->
-					<div class="form-group">
-						<label for="componentAddType" class="control-label col-sm-4">Component type: </label>
-						<div class="col-sm-8">
-							<input class="form-control" id="componentAddType" type="text"
-								ng-model="newObject.type" placeholder="Component type">
-						</div>
-					</div>
-
-					<!-- Ports -->
-					<div class="form-group">
-						<div ng-repeat="portgroup in portarrays" class="col-sm-6">
-							<!-- ng-repeat="portgroup in [{array: editedObject.inputs, name: 'Inputs'}, {array: editedObject.outputs, name: 'Outputs'}]">-->
-							<table class="table table-hover">
-								<thead>
-									<tr>
-										<th style="text-align:center">
-											<div>{$portgroup.name$} 
-											<i class="fa fa-plus"
-											ng-click="componentAddPort(newObject, portgroup.name)"></i>
-											</div>
-										</th>
-										
-									</tr>
-								</thead>
-								<tbody>
-									<tr ng-repeat="port in portgroup.array">
-										<td>
-										    <div class="input-group add-on">
-												<input class="form-control" type="text" ng-model="port.name"
-													placeholder="Port name">
-												<div class="input-group-btn">
-													<button class="btn btn-default" ng-click="componentRemovePort(newObject, portgroup.name, port)" type="submit"><i class="fa fa-remove"
-														></i></button>
-											</div>
-										</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</form>
-        	</div>
-	        <div class="modal-footer">
-				<button ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">OK</button>
-				<button ng-click="componentAddCancel()" class="btn btn-default" data-dismiss="modal">Cancel</button>
-				<button class="btn btn-default" data-dismiss="modal">Template</button>
-	        </div>
-      </div>
-    </div>
-</div>
+<div ng-include="'/static/hls/connections/templates/filebrowser.html'"></div>
+<div ng-include="'/static/hls/connections/templates/component_edit.html'"> </div>
 {% endblock %}
 
 {% block menu_extra %} 
-<li class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-        <i class="fa fa-file fa-fw"></i> <i class="fa fa-caret-down"></i>
-    </a>
-    <ul class="dropdown-menu dropdown-messages">
-        <li>
-            <a class="menu-New" accesskey="n">
-                <div>
-                    <strong>New</strong>
-                    <span class="pull-right text-muted">
-                        <em>No Shortcut</em>
-                    </span>
-                </div>
-            </a>
-        </li>
-        <li>
-            <a ng-click="api.fileDialog(false)" accesskey="o">
-                <div>
-                    <strong>Open</strong>
-                    <span class="pull-right text-muted">
-                        <em>No Shortcut</em>
-                    </span>
-                </div>
-            </a>
-        </li>
-        <li>
-            <a ng-click="save(openedFile)" accesskey="s">
-                <div>
-                    <strong>Save</strong>
-                    <span class="pull-right text-muted">
-                        <em>No Shortcut</em>
-                    </span>
-                </div>
-            </a>
-        </li>
-        <li>
-            <a ng-click="api.fileDialog(true)">
-                <div>
-                    <strong>Save as</strong>
-                    <span class="pull-right text-muted">
-                        <em>No Shortcut</em>
-                    </span>
-                </div>
-            </a>
-        </li>
-        <li>
-            <a accesskey="t">
-                <div>
-                    <strong>Export</strong>
-                    <span class="pull-right text-muted">
-                        <em>No Shortcut</em>
-                    </span>
-                </div>
-            </a>
-        </li>        
-        <li>
-            <a accesskey="l">
-                <div>
-                    <strong>Delete</strong>
-                    <span class="pull-right text-muted">
-                        <em>No Shortcut</em>
-                    </span>
-                </div>
-            </a>
-        </li>
-        <li>
-            <a accesskey="c">
-                <div>
-                    <strong>Close</strong>
-                    <span class="pull-right text-muted">
-                        <em>No Shortcut</em>
-                    </span>
-                </div>
-            </a>
-        </li>
-
-    </ul>
-    <!-- /.dropdown-messages -->
-</li>
-<li class="dropdown">
-    <a ng-click="api.componentAdd()" data-toggle="modal" data-target="#newComponent">
-        <i class="fa fa-plus fa-fw"></i> 
-    </a>
-    <!-- /.dropdown-messages -->
-</li>
-
-<li class="dropdown">
-    <a class="dropdown-toggle disabled" ng-click="api.objectDelete()">
-        <i class="fa fa-trash fa-fw"></i> 
-    </a>
-    <!-- /.dropdown-messages -->
-</li>
-
-<li class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#" ng-click="api.redraw()">
-        <i class="fa fa-refresh fa-fw"></i> 
-    </a>
-    <!-- /.dropdown-messages -->
-</li>
-
-<li class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-        <i class="fa fa-search fa-fw"></i> 
-    </a>
-    <ul class="dropdown-menu dropdown-messages">
-        <li>
-            <a href="#">
-                <div>
-                    <strong>msg.title</strong>
-                    <span class="pull-right text-muted">
-                        <em>msg.info</em>
-                    </span>
-                </div>
-                <div> msg.text</div>
-            </a>
-        </li>
-    </ul>
-    <!-- /.dropdown-messages -->
-</li>
-
-<li class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-        <i class="fa fa-question fa-fw"></i> 
-    </a>
-    <ul class="dropdown-menu dropdown-messages">
-        <li>
-            <a ng-click="showShorcuts()">
-                <div>
-                    <strong>Show Shortcuts</strong>
-                    <span class="pull-right text-muted">
-                    </span>
-                </div>
-            </a>
-        </li>
-    </ul>
-    <!-- /.dropdown-messages -->
-</li>
-
-<li class="dropdown" ng-click="api.collapseSidebar($event)" >
-    <a class="dropdown-toggle disabled icon-off" data-toggle="collapse" href="#side-bar-Collapsing" aria-expanded="false" aria-controls="side-bar-Collapsing">
-        <i class="fa fa-toggle-off fa-fw" ng-class="{'fa-toggle-on':api.sidebarCollapsed === false, 'fa-toggle-off':api.sidebarCollapsed === true}"></i> 
-    </a>
-    <!-- /.dropdown-messages -->
-</li>
-
-<li class="dropdown">
-    <a class="dropdown-toggle disabled" ng-click="api.componentEditDetail()">
-        <i class="fa fa-edit fa-fw"></i> 
-    </a>
-</li>
+<div ng-include="'/static/hls/connections/templates/menu.html'" include-replace></div>
 {% endblock %}
 
 
  {% block css_extra %}
 <link type="text/css" rel="stylesheet" href="/static/bower_components/ag-grid/dist/ag-grid.css"/>
+<link type="text/css" rel="stylesheet" href="/static/bower_components/angular-toastr/dist/angular-toastr.min.css"/>
 <link type="text/css" rel="stylesheet" href="/static/hls/connections/graphic/style.css"/>
 <link type="text/css" rel="stylesheet" href="/static/hls/connections/graphic/fileBrowser.css"/>
 
 {% endblock %} 
+
 {% block js_extra %}
 <script type="text/javascript">
 	var COLUMN_WIDTH = 120;
@@ -284,9 +29,12 @@
 </script>
 
 <script type="text/javascript" src="/static/bower_components/angularjs/angular.js"></script>
-<script type="text/javascript" src="/static/bower_components/ag-grid/dist/ag-grid.js"></script>
+<script type="text/javascript" src="/static/bower_components/angular-animate/angular-animate.min.js"></script>
+<script type="text/javascript" src="/static/bower_components/angular-toastr/dist/angular-toastr.min.js"></script>
+<script type="text/javascript" src="/static/bower_components/ag-grid/dist/ag-grid.min.js"></script>
 <script type="text/javascript" src="/static/bower_components/angular-hotkeys/build/hotkeys.min.js"></script>
 <script type="text/javascript" src="/static/bower_components/d3/d3.js"></script>
+
 <script type="text/javascript" src="/static/hls/connections/binaryheap.js"></script>
 <script type="text/javascript" src="/static/hls/connections/a_star.js"></script>
 <script type="text/javascript" src="/static/hls/connections/component_diagram_debug.js"></script>
@@ -304,82 +52,14 @@
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
 <script type="text/javascript" src="/static/hls/connections/uihandlers.js"></script>
 <script type="text/javascript" src="/static/hls/connections/clickhandlers.js"></script>
-
 {% endblock %} 
-{% block angular_app %} ng-app="App" ng-controller="mainController" {% endblock %}
-{% block content %}
 
+{% block angular_app %} ng-app="App" ng-controller="mainController" {% endblock %}
+
+{% block content %}
 <div id="chartWrapper" ng-controller="diagramCntrl" ></div>
 {% endblock %} 
 
-{% block componentEdit %}
-<div id="componentEdit" class="component-window" style="display: none;">
-	<form role="form" id="componentEditForm" class="form-horizontal"
-		style="background-color: darkgrey;">
-
-		<!-- Component Name -->
-		<div class="form-group">
-			<label for="componentEditName" class="control-label col-sm-2">Component
-				name: </label>
-			<div class="col-sm-10">
-				<input class="form-control" id="componentEditName" type="text"
-					ng-model="editedObject.name" placeholder="Component name">
-			</div>
-		</div>
-
-		<!-- Component ID -->
-		<div class="form-group">
-			<label for="componentEditID" class="control-label col-sm-2">Component
-				ID: </label>
-			<div class="col-sm-10">
-				<input class="form-control" id="componentEditID" type="text"
-					ng-model="editedObject.id" placeholder="Component ID">
-			</div>
-		</div>
-
-		<!-- Component type -->
-		<div class="form-group">
-			<label for="componentEditType" class="control-label col-sm-2">Component
-				type: </label>
-			<div class="col-sm-10">
-				<input class="form-control" id="componentEditType" type="text"
-					ng-model="editedObject.type" placeholder="Component type">
-			</div>
-		</div>
-
-		<!-- Ports -->
-		<div class="form-group">
-			<div ng-repeat="portgroup in portarrays" class="col-sm-4">
-				<!-- ng-repeat="portgroup in [{array: editedObject.inputs, name: 'Inputs'}, {array: editedObject.outputs, name: 'Outputs'}]">-->
-				<table class="table table-hover">
-					<thead>
-						<tr>
-							<th><div>{$portgroup.name$}</div> <i class="fa fa-plus"
-								ng-click="componentAddPort(editedObject, portgroup.name)"></i></th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr ng-repeat="port in portgroup.array">
-							<td>
-								<div>
-									<input class="form-control" type="text" ng-model="port.name"
-										placeholder="Port name"><i class="fa fa-remove"
-										ng-click="componentRemovePort(editedObject, portgroup.name, port)"></i>
-								</div>
-							</td>
-
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
-
-		<button ng-click="componentEditSubmit()" class="btn btn-default">OK</button>
-		<button ng-click="componentEditCancel()" class="btn btn-default">Cancel</button>
-		<button ng-click="componentDelete()" class="btn btn-default">Delete</button>
-	</form>
-</div>
-{% endblock %} 
 {% block sidebaritems %}
 <ul class="nav nav-second-level" id="side-menu">
 	<li class="dropdown">
