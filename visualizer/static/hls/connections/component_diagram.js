@@ -376,6 +376,7 @@ function ComponentDiagram(selector){
 	
 			},
 			'wrapper':wrapper,
+			'svg': svg,
 			"on":function(ev, fn){return wrapper.on(ev, fn)}
 	};
 	return self;

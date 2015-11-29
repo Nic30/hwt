@@ -13,11 +13,12 @@ function diagramCntrl($scope) {
 		resolveNodesInLinks(nodes, links);
 		components2columns(nodes, links);
 		diagram.bindData(nodes, links)
-		diagram.on('mousemove', function(event){
+		diagram.on('mousemove', function(){
 			if(api.onMouseroverDiagram){
-				diagram.wrapper.call( api.onMouseroverDiagram, event);
+			    var mousePosition = d3.mouse(diagram.wrapper[0][0].parentElement)
+				diagram.wrapper.call(api.onMouseroverDiagram, mousePosition);
 			}
-		})
-		//ComponentDiagram("#chartWrapper", nodes, links);
+		});
+		api.diagramSvg = diagram.svg;
 	}
 }

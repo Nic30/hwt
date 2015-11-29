@@ -130,7 +130,6 @@ function diagramEditorCntrl($scope){
 	}
 
 	api.componentAdd = function() {
-		d3.selectAll("#componentAdd").style("display", "block");
 		$scope.newObject = {
 			"name" : "",
 			// "id": null,
@@ -165,6 +164,7 @@ function diagramEditorCntrl($scope){
 
 	$scope.origin = {
 		"component" : {},
+		"portElm" : null,
 		"port" : {}
 	};
 	$scope.destination = {
@@ -173,14 +173,19 @@ function diagramEditorCntrl($scope){
 	};
 	$scope.linkstatus = "none";
 	
-	function drawDashedLine2port(event){
-		var coordinates = d3.mouse(this);
-		var x = coordinates[0];
-		var y = coordinates[1];
-		console.log(x,y);
+	function drawDashedLine2port(elm, mousePossition){
+		//console.log(mousePossition); $scope.origin.getPos()
+		var line = api.diagramSvg.selectAll('.routing-help-line');
+		if(line.empty()){
+			line = api.diagramSvg.append("svg:path")
+				       .classed({"routing-help-line": true})
+		}
+		line
+	        .style("stroke-dasharray", ("3, 3"))
+	        .attr("d", 'M '+ [0,0] + "L " + mousePossition );
 	}
 	
-	api.portClick = function(d) {
+	api.portClick = function(d, elm) {
 		//console.log("portClick data", d);
 		//console.log("Link status", $scope.linkstatus)
 		switch ($scope.linkstatus) {

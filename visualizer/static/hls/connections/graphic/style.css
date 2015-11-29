@@ -173,3 +173,8 @@ body .modal-dialog {
 	-webkit-box-shadow: none;
 	border-color: #cccccc;
 }*/
+
+.routing-help-line {
+	stroke: blue;
+}
+
