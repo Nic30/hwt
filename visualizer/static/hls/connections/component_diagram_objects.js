@@ -19,16 +19,16 @@ function drawExternalPorts(svgGroup, exterPortNodes){
 	
 	externalPorts.append("image")
 		.attr("xlink:href", function(d) { 
-			return "/static/hls/connections/graphic/arrow_right.ico"; 
+			return "/static/hls/connections/graphic/INshort.png"; 
 		})
 		.attr("x", function(d) {
-			return (d.inputs.length == 0)?-10:-120;
+			return (d.inputs.length == 0)?-10:-140;
 		})
 		.attr("y", function(d) {
-			return (d.inputs.length == 0)?-5:-5;
+			return (d.inputs.length == 0)?-8:-8;
 		})
-		.attr("width", 10)
-		.attr("height", PORT_HEIGHT);
+		.attr("width", 30)
+		.attr("height", 15);
 
 	externalPorts.attr("transform", function(d) { 
 		return "translate(" + (d.x + d.width) + "," + (d.y + d.height/2) + ")"; 
@@ -53,7 +53,7 @@ function drawComponents(svgGroup, componentNodes){
 	    .classed({"component": true})
 	    .attr("border", 1)
 	    .style("stroke", "#BDBDBD")
-	    .attr("fill", "url(#gradient)")
+	    .attr("fill", "url(#blue_grad)")
 	    .style("filter", "url(#drop-shadow)")
 	    .attr("width", function(d) { return d.width})
 	    .attr("height", function(d) { return d.height});

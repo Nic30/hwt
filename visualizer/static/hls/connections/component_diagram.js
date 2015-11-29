@@ -114,6 +114,36 @@ function addShadows(svg){
 	// create filter with id #drop-shadow
 	// height=130% so that the shadow is not clipped
 	var filter = defs.append("filter")
+	    .attr("id", "drop-shadow-hight")
+	    .attr("height", "500%");
+
+	// SourceAlpha refers to opacity of graphic that this filter will be applied to
+	// convolve that with a Gaussian with standard deviation 3 and store result
+	// in blur
+	filter.append("feGaussianBlur")
+	    .attr("in", "SourceAlpha")
+	    .attr("stdDeviation", 2)
+	    .attr("result", "blur");
+
+	// translate output of Gaussian blur to the right and downwards with 2px
+	// store result in offsetBlur
+	filter.append("feOffset")
+	    .attr("in", "blur")
+	    .attr("dx", 10)
+	    .attr("dy", 10)
+	    .attr("result", "offsetBlur");
+
+	// overlay original SourceGraphic over translated blurred opacity by using
+	// feMerge filter. Order of specifying inputs is important!
+	var feMerge = filter.append("feMerge");
+
+	feMerge.append("feMergeNode")
+	    .attr("in", "offsetBlur")
+	feMerge.append("feMergeNode")
+	    .attr("in", "SourceGraphic");
+
+
+	var filter = defs.append("filter")
 	    .attr("id", "drop-shadow")
 	    .attr("height", "130%");
 
@@ -142,28 +172,49 @@ function addShadows(svg){
 	feMerge.append("feMergeNode")
 	    .attr("in", "SourceGraphic");
 
+
 	// gradient
 	var minY = 10;
 	var maxY = 210;
 
-	var gradient = svg
+	var blue_grad = svg
 		.append("linearGradient")
 		.attr("y1", minY)
 		.attr("y2", maxY)
 		.attr("x1", "0")
 		.attr("x2", "0")
-		.attr("id", "gradient")
+		.attr("id", "blue_grad")
 		.attr("gradientUnits", "userSpaceOnUse")
     
-	gradient
+	blue_grad
 	.append("stop")
 	.attr("offset", "0")
 	.attr("stop-color", "#E6E6E6")
     
-	gradient
+	blue_grad
     .append("stop")
     .attr("offset", "0.5")
     .attr("stop-color", "#A9D0F5")    
+
+
+    var redgrad = svg
+		.append("linearGradient")
+		.attr("y1", minY)
+		.attr("y2", maxY)
+		.attr("x1", "0")
+		.attr("x2", "0")
+		.attr("id", "redgrad")
+		.attr("gradientUnits", "userSpaceOnUse")
+    
+	redgrad
+	.append("stop")
+	.attr("offset", "0")
+	.attr("stop-color", "#97CB97")
+    
+	redgrad
+    .append("stop")
+    .attr("offset", "0.5")
+    .attr("stop-color", "#B8B8B8") 
 }
 
 function showTooltip(toolTipDiv, html){
