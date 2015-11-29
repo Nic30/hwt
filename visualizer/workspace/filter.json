@@ -1,0 +1,547 @@
+{
+    "nodes": [
+        {
+            "px": 274,
+            "outputs": [
+                {
+                    "name": "lanRx"
+                }
+            ],
+            "name": "MAC10GE",
+            "height": 60,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "sbus"
+                },
+                {
+                    "name": "lanIn"
+                },
+                {
+                    "name": "lanTx"
+                }
+            ],
+            "id": 0,
+            "x": 1114,
+            "width": 202,
+            "y": 38,
+            "type": "",
+            "netChannelPadding": {
+                "left": 54,
+                "bottom": 0,
+                "top": 18,
+                "right": 0
+            },
+            "py": 20
+        },
+        {
+            "px": 274,
+            "outputs": [
+                {
+                    "name": "lanOut"
+                },
+                {
+                    "name": "headerFields"
+                }
+            ],
+            "name": "HFE",
+            "height": 50,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "lanIn"
+                }
+            ],
+            "netChannelPadding": {
+                "left": 12,
+                "bottom": 0,
+                "top": 18,
+                "right": 0
+            },
+            "x": 546,
+            "width": 202,
+            "y": 38,
+            "type": "",
+            "id": 1,
+            "py": 132
+        },
+        {
+            "px": 298,
+            "outputs": [
+                {
+                    "name": "dataOut"
+                }
+            ],
+            "name": "packetMicroBuff",
+            "py": 124,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "dataIn"
+                }
+            ],
+            "netChannelPadding": {
+                "left": 18,
+                "bottom": 0,
+                "top": 6,
+                "right": 0
+            },
+            "x": 292,
+            "width": 202,
+            "y": 124,
+            "type": "",
+            "id": 2,
+            "height": 40
+        },
+        {
+            "px": 32,
+            "outputs": [
+                {
+                    "name": "packet2cpu"
+                },
+                {
+                    "name": "passTroughPacket"
+                }
+            ],
+            "name": "packetInternalRoutingUnit",
+            "py": 164,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "lanRx"
+                },
+                {
+                    "name": "routingRmd"
+                }
+            ],
+            "netChannelPadding": {
+                "left": 12,
+                "bottom": 0,
+                "top": 30,
+                "right": 0
+            },
+            "x": 32,
+            "width": 202,
+            "y": 164,
+            "type": "",
+            "id": 3,
+            "height": 50
+        },
+        {
+            "px": 836,
+            "outputs": [
+                {
+                    "name": "lanRx"
+                }
+            ],
+            "name": "MAC10GE",
+            "height": 60,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "sBus"
+                },
+                {
+                    "name": "lanIn"
+                },
+                {
+                    "name": "lanTx"
+                }
+            ],
+            "netChannelPadding": {
+                "left": 30,
+                "bottom": 0,
+                "top": 30,
+                "right": 0
+            },
+            "x": 818,
+            "width": 202,
+            "y": 164,
+            "type": "",
+            "id": 4,
+            "py": 182
+        },
+        {
+            "px": 298,
+            "outputs": [
+                {
+                    "name": "dataOut"
+                }
+            ],
+            "name": "hfBuff",
+            "height": 40,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "dataIn"
+                }
+            ],
+            "netChannelPadding": {
+                "left": 18,
+                "bottom": 0,
+                "top": 18,
+                "right": 0
+            },
+            "x": 292,
+            "width": 202,
+            "y": 38,
+            "type": "",
+            "id": 5,
+            "py": 32
+        },
+        {
+            "px": 32,
+            "outputs": [
+                {
+                    "name": "result"
+                }
+            ],
+            "name": "filterCore",
+            "height": 50,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "headerFields"
+                },
+                {
+                    "name": "sBus"
+                }
+            ],
+            "netChannelPadding": {
+                "left": 12,
+                "bottom": 0,
+                "top": 18,
+                "right": 0
+            },
+            "x": 32,
+            "width": 202,
+            "y": 38,
+            "type": "",
+            "id": 6,
+            "py": 38
+        },
+        {
+            "px": 836,
+            "outputs": [
+                {
+                    "name": "routingCmd"
+                }
+            ],
+            "name": "filterToRoutingCmd",
+            "height": 50,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "sBus"
+                },
+                {
+                    "name": "filterResult"
+                }
+            ],
+            "netChannelPadding": {
+                "left": 30,
+                "bottom": 0,
+                "top": 18,
+                "right": 0
+            },
+            "x": 818,
+            "width": 202,
+            "y": 38,
+            "type": "",
+            "id": 7,
+            "py": 38
+        },
+        {
+            "px": 836,
+            "outputs": [
+                {
+                    "name": "lanTx"
+                }
+            ],
+            "name": "outputResolveUnit",
+            "height": 50,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "packetFromCPU"
+                },
+                {
+                    "name": "passTroughPacket"
+                }
+            ],
+            "netChannelPadding": {
+                "left": 30,
+                "bottom": 0,
+                "top": 30,
+                "right": 0
+            },
+            "x": 818,
+            "width": 202,
+            "y": 330,
+            "type": "",
+            "id": 8,
+            "py": 288
+        },
+        {
+            "px": 818,
+            "outputs": [
+                {
+                    "name": "s0"
+                },
+                {
+                    "name": "s1"
+                },
+                {
+                    "name": "s2"
+                },
+                {
+                    "name": "s3"
+                },
+                {
+                    "name": "s4"
+                },
+                {
+                    "name": "s5"
+                }
+            ],
+            "name": "axiInterconnect",
+            "py": 420,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "m0"
+                }
+            ],
+            "netChannelPadding": {
+                "left": 30,
+                "bottom": 0,
+                "top": 0,
+                "right": 0
+            },
+            "x": 818,
+            "width": 202,
+            "y": 420,
+            "type": "",
+            "id": 9,
+            "height": 90
+        },
+        {
+            "px": 1368,
+            "outputs": [],
+            "name": "statusUnit",
+            "py": 32,
+            "fixed": 0,
+            "inputs": [
+                {
+                    "name": "sBus"
+                }
+            ],
+            "netChannelPadding": {
+                "left": 54,
+                "bottom": 0,
+                "top": 6,
+                "right": 0
+            },
+            "x": 1114,
+            "width": 202,
+            "y": 180,
+            "type": "",
+            "id": 10,
+            "height": 40
+        }
+    ],
+    "nets": [
+        {
+            "targets": [
+                {
+                    "id": 1,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 0,
+                "portIndex": 0
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 2,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 1,
+                "portIndex": 0
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 3,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 2,
+                "portIndex": 0
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 4,
+                    "portIndex": 2
+                }
+            ],
+            "source": {
+                "id": 3,
+                "portIndex": 0
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 6,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 5,
+                "portIndex": 0
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 7,
+                    "portIndex": 1
+                }
+            ],
+            "source": {
+                "id": 6,
+                "portIndex": 0
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 3,
+                    "portIndex": 1
+                }
+            ],
+            "source": {
+                "id": 7,
+                "portIndex": 0
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 0,
+                    "portIndex": 2
+                }
+            ],
+            "source": {
+                "id": 8,
+                "portIndex": 0
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 8,
+                    "portIndex": 1
+                }
+            ],
+            "source": {
+                "id": 3,
+                "portIndex": 1
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 8,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 4,
+                "portIndex": 0
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 5,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 1,
+                "portIndex": 1
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 0,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 9,
+                "portIndex": 0
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 4,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 9,
+                "portIndex": 1
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 6,
+                    "portIndex": 1
+                }
+            ],
+            "source": {
+                "id": 9,
+                "portIndex": 2
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 7,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 9,
+                "portIndex": 3
+            }
+        },
+        {
+            "targets": [
+                {
+                    "id": 10,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 9,
+                "portIndex": 4
+            }
+        }
+    ]
+}
