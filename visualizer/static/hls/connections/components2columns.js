@@ -151,6 +151,8 @@ function components2columns(nodes, links) { // discover component with most
 		if (!triplet.me.isExternalPort)
 			columns.push(baseIndx, triplet.me);
 	}
+	if(!biggestComponent)
+		return columns;
 	makeColumns(0, popTriplet(biggestComponent));
 
 	function heightOfPrevious(column, myIndx) {

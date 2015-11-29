@@ -47,6 +47,11 @@ function filebrowserCntrl($scope, $http) {
 		field : "dateModified",
 		width : 198
 	} ];
+	api.new = function(){
+		api.nodes = [];
+		api.nets = [];
+		api.redraw();
+	} 
 	api.open = function(path) {
 		return $http.get('/hls/connections-data/' + path).then(
 				function(res) {

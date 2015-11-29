@@ -76,17 +76,6 @@ function removePortClicked()
 	});
 }
 
-function drawLink()
-{
-	var exists = !d3.selectAll(".clicked-port").empty()
-	var object = d3.selectAll(".clicked-port")[0]
-	var coordinates = d3.mouse(this);
-	var x = coordinates[0];
-	var y = coordinates[1];
-	if (exists) {
-		//console.log("")
-	}
-}
 function onPortClick(d){
 	var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
 	scope.api.portClick(d, this);	

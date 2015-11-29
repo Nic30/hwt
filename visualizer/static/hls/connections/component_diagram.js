@@ -277,8 +277,7 @@ function ComponentDiagram(selector){
 	wrapper.selectAll("svg").remove(); // delete old on redraw
 
 	var svg = wrapper.append("svg")
-		.on("click", onBoardClick)
-		.on("mousemove", drawLink);
+		.on("click", onBoardClick);
 	
 	var svgGroup= svg.append("g"); // because of zooming/moving
 	
