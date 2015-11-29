@@ -11,22 +11,7 @@ function onCompClick(d){
 		})
 	}
 
-function componentOnClick() {
-	// var selectedObject = console.log(d3.select(this)[0][0].__data__)
-
-	d3.event.stopPropagation();
-	if (!d3.event.shiftKey) {
-		removeSelections();
-	}
-
-	d3.select(this).classed({
-		"selected-object" : true
-	})
-	// d3.select(this).style("stroke", "red");
-}
-
 function exPortOnClick() {
-
 	d3.event.stopPropagation();
 	if (!d3.event.shiftKey) {
 		removeSelections();

@@ -374,7 +374,9 @@ function ComponentDiagram(selector){
 				//.on("dblclick", componentDetail);
 			
 	
-			}
+			},
+			'wrapper':wrapper,
+			"on":function(ev, fn){return wrapper.on(ev, fn)}
 	};
 	return self;
 	

@@ -172,7 +172,14 @@ function diagramEditorCntrl($scope){
 		"port" : {}
 	};
 	$scope.linkstatus = "none";
-
+	
+	function drawDashedLine2port(event){
+		var coordinates = d3.mouse(this);
+		var x = coordinates[0];
+		var y = coordinates[1];
+		console.log(x,y);
+	}
+	
 	api.portClick = function(d) {
 		//console.log("portClick data", d);
 		//console.log("Link status", $scope.linkstatus)
@@ -201,6 +208,7 @@ function diagramEditorCntrl($scope){
 			//console.log("Setting origin component")
 			$scope.origin.component = d;
 			$scope.linkstatus = "destination";
+			api.onMouseroverDiagram = drawDashedLine2port;
 			break;
 		case "destinationcomp":
 			//console.log("Setting destination component")
