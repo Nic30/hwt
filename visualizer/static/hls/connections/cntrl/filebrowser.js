@@ -43,13 +43,15 @@ function filebrowserCntrl($scope, $http) {
 		field : "dateModified",
 		width : 198
 	} ];
-	$scope.open = function() {
-		return $http.get('/hls/connections-data/' + $scope.openedFile).then(
+	$scope.open = function(path) {
+		return $http.get('/hls/connections-data/' + path).then(
 				function(res) {
 					var nets = res.data.nets;
 					var nodes = res.data.nodes;
 					api.nodes = nodes;
 					api.nets = nets;
+				}, function errorCallback(response) {
+					api.msg.error("Can not open file", path);
 				});
 	}
 
@@ -71,8 +73,9 @@ function filebrowserCntrl($scope, $http) {
 			$scope.openedFile = path;
 			fileDialog.modal('hide');
 			
-			$scope.open().then(function(){
+			$scope.open(path).then(function(){
 				api.redraw();
+				api.fitDiagram2Screen();
 			});
 		}
 	}
@@ -96,7 +99,8 @@ function filebrowserCntrl($scope, $http) {
 	};
 
 	$scope.loadFolderData = function(path) {
-		$http.get('/hls/connections-data-ls/' + path).then(function(res) {
+		$http.get('/hls/connections-data-ls/' + path)
+		.then(function(res) {
 			function findDir(path) {
 				if (path == "")
 					return filesRowData

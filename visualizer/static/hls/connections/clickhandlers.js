@@ -1,3 +1,16 @@
+function onCompClick(d){
+		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
+		scope.api.compClick(d);	
+		d3.event.stopPropagation();
+		if (!d3.event.shiftKey) {
+			removeSelections();
+		}
+
+		d3.select(this).classed({
+			"selected-object" : true
+		})
+	}
+
 function componentOnClick() {
 	// var selectedObject = console.log(d3.select(this)[0][0].__data__)
 
@@ -88,6 +101,28 @@ function drawLink()
 	if (exists) {
 		//console.log("")
 	}
+}
+function onPortClick(d)
+{
+	var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
+	scope.api.portClick(d);	
+	
+	/*function portOnClick() {
+	var exists = !d3.selectAll(".clicked-port").empty()
+	if (exists)
+	{
+		var origin = d3.selectAll("clicked-port");
+		var port = d3.select(this);
+		console.log(origin, port)
+	}
+	removeSelections();
+
+
+	d3.select(this).classed({
+		"clicked-port" : true
+	})
+	console.log("Port clicked")
+}*/
 }
 
 function exPortDetail()

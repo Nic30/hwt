@@ -114,6 +114,36 @@ function addShadows(svg){
 	// create filter with id #drop-shadow
 	// height=130% so that the shadow is not clipped
 	var filter = defs.append("filter")
+	    .attr("id", "drop-shadow-hight")
+	    .attr("height", "500%");
+
+	// SourceAlpha refers to opacity of graphic that this filter will be applied to
+	// convolve that with a Gaussian with standard deviation 3 and store result
+	// in blur
+	filter.append("feGaussianBlur")
+	    .attr("in", "SourceAlpha")
+	    .attr("stdDeviation", 2)
+	    .attr("result", "blur");
+
+	// translate output of Gaussian blur to the right and downwards with 2px
+	// store result in offsetBlur
+	filter.append("feOffset")
+	    .attr("in", "blur")
+	    .attr("dx", 10)
+	    .attr("dy", 10)
+	    .attr("result", "offsetBlur");
+
+	// overlay original SourceGraphic over translated blurred opacity by using
+	// feMerge filter. Order of specifying inputs is important!
+	var feMerge = filter.append("feMerge");
+
+	feMerge.append("feMergeNode")
+	    .attr("in", "offsetBlur")
+	feMerge.append("feMergeNode")
+	    .attr("in", "SourceGraphic");
+
+
+	var filter = defs.append("filter")
 	    .attr("id", "drop-shadow")
 	    .attr("height", "130%");
 
@@ -142,28 +172,49 @@ function addShadows(svg){
 	feMerge.append("feMergeNode")
 	    .attr("in", "SourceGraphic");
 
+
 	// gradient
 	var minY = 10;
 	var maxY = 210;
 
-	var gradient = svg
+	var blue_grad = svg
 		.append("linearGradient")
 		.attr("y1", minY)
 		.attr("y2", maxY)
 		.attr("x1", "0")
 		.attr("x2", "0")
-		.attr("id", "gradient")
+		.attr("id", "blue_grad")
 		.attr("gradientUnits", "userSpaceOnUse")
     
-	gradient
+	blue_grad
 	.append("stop")
 	.attr("offset", "0")
 	.attr("stop-color", "#E6E6E6")
     
-	gradient
+	blue_grad
     .append("stop")
     .attr("offset", "0.5")
     .attr("stop-color", "#A9D0F5")    
+
+
+    var redgrad = svg
+		.append("linearGradient")
+		.attr("y1", minY)
+		.attr("y2", maxY)
+		.attr("x1", "0")
+		.attr("x2", "0")
+		.attr("id", "redgrad")
+		.attr("gradientUnits", "userSpaceOnUse")
+    
+	redgrad
+	.append("stop")
+	.attr("offset", "0")
+	.attr("stop-color", "#97CB97")
+    
+	redgrad
+    .append("stop")
+    .attr("offset", "0.5")
+    .attr("stop-color", "#B8B8B8") 
 }
 
 function showTooltip(toolTipDiv, html){
@@ -221,7 +272,7 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){
 };
 
 //main function for rendering components layout
-function ComponentDiagram(selector, nodes, links){ 
+function ComponentDiagram(selector){ 
 	var wrapper = d3.select(selector);
 	wrapper.selectAll("svg").remove(); // delete old on redraw
 
@@ -233,57 +284,6 @@ function ComponentDiagram(selector, nodes, links){
 	
 	addShadows(svg);
 
-    //LINKS
-    var linkElements = svgGroup.selectAll(".link")
-    	.data(links)
-    	.enter()
-    	.append("path")
-    	.classed({"link": true})
-    	.on("click", netOnClick)
-    	.on("mouseover", netMouseOver)
-    	.on("mouseout", netMouseOut);
-
-   updateNetLayout(svgGroup, linkElements, nodes, links);
-
-    var place = svg.node().getBoundingClientRect();
-	// force for self organizing of diagram
-	var force = d3.layout.force()
-		.gravity(.00)
-		.distance(150)
-		.charge(-2000)
-		.size([place.width, place.height])
-		// .nodes(nodes)
-		// .links(links)
-		// .start();
-		
-	//EXTERNAL PORTS	
-	drawExternalPorts(svgGroup, nodes.filter(function (n){
-			return n.isExternalPort;
-		}))
-		.on("click", exPortOnClick);
-		// .on("dblclick", componentDetail);
-	
-	//COMPONENTS
-	drawComponents(svgGroup, nodes.filter(function (n){
-			return !n.isExternalPort;
-		}))
-		.on("click", onCompClick)
-		.call(force.drag); // component dragging
-		//.on("dblclick", componentDetail);
-	
-	function onCompClick(d){
-		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
-		scope.api.compClick(d);	
-		d3.event.stopPropagation();
-		if (!d3.event.shiftKey) {
-			removeSelections();
-		}
-
-		d3.select(this).classed({
-			"selected-object" : true
-		})
-	}
-	
 	function defaultZoom () {
 		svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");   			
 	}
@@ -306,27 +306,76 @@ function ComponentDiagram(selector, nodes, links){
 			d3.event.scale = [0, 0];
 		});
 	
-	function fitDiagram2Screen(zoomListener){
-        function diagramSize(){
-        	var widthMax = 0;
-        	var heigthtMax = 0;
-        	nodes.forEach(function (n){
-        		widthMax = Math.max(n.x + n.width + COMPONENT_PADDING, widthMax);
-        		heigthtMax = Math.max(n.y + n.height +COMPONENT_PADDING, heigthtMax);
-        	});
-        	return [widthMax, heigthtMax];
-        }
-        var size = diagramSize();
-        var scaleX = place.width /size[0] ;
-        var scaleY = place.height / size[1];
-        var scale = Math.min(scaleX, scaleY); 
-        // this is processiong of zoomListener explicit translate and scale on
-		// start
-        zoomListener.translate([0,0])
-        	.scale(scale);
-        zoomListener.event(svg.transition()
-        					  .duration(100));
-    }
-	fitDiagram2Screen(zoomListener);
 	svg.call(zoomListener);
+	var self = {
+		'place': null,
+		'fit2Screen' : function() {
+			function diagramSize() {
+				var widthMax = 0;
+				var heigthtMax = 0;
+				self.nodes.forEach(function(n) {
+					widthMax = Math.max(n.x + n.width + COMPONENT_PADDING,
+							widthMax);
+					heigthtMax = Math.max(n.y + n.height + COMPONENT_PADDING,
+							heigthtMax);
+				});
+				return [ widthMax, heigthtMax ];
+			}
+			var size = diagramSize();
+			var scaleX = self.place.width / size[0];
+			var scaleY = self.place.height / size[1];
+			var scale = Math.min(scaleX, scaleY);
+			// this is processiong of zoomListener explicit translate and scale
+			// on
+			// start
+			zoomListener.translate([ 0, 0 ]).scale(scale);
+			zoomListener.event(svg.transition().duration(100));
+		},
+		'bindData' : function(nodes, links) {
+			self.nodes = nodes;
+			self.links = links;
+		    //LINKS
+			svgGroup.selectAll(".link").remove();
+		    var linkElements = svgGroup.selectAll(".link")
+		    	.data(links)
+		    	.enter()
+		    	.append("path")
+		    	.classed({"link": true})
+		    	.on("click", netOnClick)
+		    	.on("mouseover", netMouseOver)
+		    	.on("mouseout", netMouseOut);
+	
+		    updateNetLayout(svgGroup, linkElements, nodes, links);
+	
+			   self.place = svg.node().getBoundingClientRect();
+			// force for self organizing of diagram
+			var force = d3.layout.force()
+				.gravity(.00)
+				.distance(150)
+				.charge(-2000)
+				.size([self.place.width, self.place.height])
+				// .nodes(nodes)
+				// .links(links)
+				// .start();
+				
+			//EXTERNAL PORTS	
+			drawExternalPorts(svgGroup, self.nodes.filter(function (n){
+					return n.isExternalPort;
+				}))
+				.on("click", exPortOnClick);
+				// .on("dblclick", componentDetail);
+				
+			//COMPONENTS
+			drawComponents(svgGroup, self.nodes.filter(function (n){
+					return !n.isExternalPort;
+				}))
+				.on("click", onCompClick)
+				.call(force.drag); // component dragging
+				//.on("dblclick", componentDetail);
+			
+	
+			}
+	};
+	return self;
+	
 }

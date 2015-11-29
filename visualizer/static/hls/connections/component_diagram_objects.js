@@ -1,4 +1,5 @@
 function drawExternalPorts(svgGroup, exterPortNodes){
+	svgGroup.selectAll(".external-port").remove();
 	var externalPorts = svgGroup.selectAll(".external-port")
 		.data(exterPortNodes)
 		.enter()
@@ -19,16 +20,16 @@ function drawExternalPorts(svgGroup, exterPortNodes){
 	
 	externalPorts.append("image")
 		.attr("xlink:href", function(d) { 
-			return "/static/hls/connections/graphic/arrow_right.ico"; 
+			return "/static/hls/connections/graphic/INshort.png"; 
 		})
 		.attr("x", function(d) {
-			return (d.inputs.length == 0)?-10:-120;
+			return (d.inputs.length == 0)?-10:-140;
 		})
 		.attr("y", function(d) {
-			return (d.inputs.length == 0)?-5:-5;
+			return (d.inputs.length == 0)?-8:-8;
 		})
-		.attr("width", 10)
-		.attr("height", PORT_HEIGHT);
+		.attr("width", 30)
+		.attr("height", 15);
 
 	externalPorts.attr("transform", function(d) { 
 		return "translate(" + (d.x + d.width) + "," + (d.y + d.height/2) + ")"; 
@@ -40,20 +41,23 @@ function drawExternalPorts(svgGroup, exterPortNodes){
 
 function drawComponents(svgGroup, componentNodes){
 	//alias component body
+	svgGroup.selectAll(".component").remove()
 	var componentWrap = svgGroup.selectAll(".component")
 		.data(componentNodes)
 		.enter()
 		.append("g")
-	    .classed({"component": true});
+	    .classed({"component": true})
+	    .attr("transform", function (d) {
+			return "translate(" + d.x + "," + d.y + ")";
+		});
 	
-	// background
+	// body background
 	componentWrap.append("rect")
 	    .attr("rx", 5) // this make rounded corners
 	    .attr("ry", 5)
-	    .classed({"component": true})
 	    .attr("border", 1)
 	    .style("stroke", "#BDBDBD")
-	    .attr("fill", "url(#gradient)")
+	    .attr("fill", "url(#blue_grad)")
 	    .style("filter", "url(#drop-shadow)")
 	    .attr("width", function(d) { return d.width})
 	    .attr("height", function(d) { return d.height});
@@ -68,36 +72,12 @@ function drawComponents(svgGroup, componentNodes){
 		    return d.name;
 		});
 
-	function onPortClick(d)
-	{
-		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
-		scope.api.portClick(d);	
-		
-		/*function portOnClick() {
-		var exists = !d3.selectAll(".clicked-port").empty()
-		if (exists)
-		{
-			var origin = d3.selectAll("clicked-port");
-			var port = d3.select(this);
-			console.log(origin, port)
-		}
-		removeSelections();
-
-
-		d3.select(this).classed({
-			"clicked-port" : true
-		})
-		console.log("Port clicked")
-	}*/
-	}
-	
 	// [TODO] porty s dratkem ven z komponenty, ruzne typy portu viz stream/bus/wire ve Vivado
 	// input port wraps
 	var port_inputs = componentWrap.append("g")
 		.attr("transform", function(d) { 
 			return "translate(" + 0 + "," + 2*PORT_HEIGHT + ")"; 
 		})
-		
 		.selectAll("g .port-input")
 		.data(function (d){
 			return d.inputs;
@@ -132,7 +112,7 @@ function drawComponents(svgGroup, componentNodes){
 	// output port wraps
 	var port_out = componentWrap.append("g")
 		.attr("transform", function(d) { 
-			var componentWidth = d3.select(this).node().parentNode.getBoundingClientRect().width;
+			var componentWidth = d3.select(this).node().parentNode.__data__.width;
 			return "translate(" + componentWidth + "," + 2*PORT_HEIGHT + ")"; 
 		})
 		.selectAll("g .port-group")
@@ -167,9 +147,7 @@ function drawComponents(svgGroup, componentNodes){
 			return port.name; 
 		});
 
-	componentWrap.attr("transform", function (d) {
-        return "translate(" + d.x + "," + d.y + ")";
-    });
+
 	
 	return componentWrap;
 }
