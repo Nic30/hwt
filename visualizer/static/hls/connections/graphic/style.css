@@ -65,14 +65,15 @@ svg {
 }
 
 .selected-object rect {
-	fill: red;
+	fill: url(#redgrad);
+	filter: url(#drop-shadow-hight)!important;
 }
 
 .selected-port text {
 	fill: red;
 }
 
-.selected-link text {
+.selected-link{
 	stroke: red;
 	stroke-width: 3px;
 }
