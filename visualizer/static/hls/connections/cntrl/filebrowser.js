@@ -75,6 +75,7 @@ function filebrowserCntrl($scope, $http) {
 			
 			$scope.open(path).then(function(){
 				api.redraw();
+				api.fitDiagram2Screen();
 			});
 		}
 	}

@@ -1,4 +1,5 @@
 function drawExternalPorts(svgGroup, exterPortNodes){
+	svgGroup.selectAll(".external-port").remove();
 	var externalPorts = svgGroup.selectAll(".external-port")
 		.data(exterPortNodes)
 		.enter()
@@ -40,8 +41,9 @@ function drawExternalPorts(svgGroup, exterPortNodes){
 
 function drawComponents(svgGroup, componentNodes){
 	//alias component body
+	svgGroup.selectAll(".component").remove()
 	var componentWrap = svgGroup.selectAll(".component")
-		.data(componentNodes)
+		.data(componentNodes, function(d) { return d.id; })
 		.enter()
 		.append("g")
 	    .classed({"component": true});
@@ -68,36 +70,13 @@ function drawComponents(svgGroup, componentNodes){
 		    return d.name;
 		});
 
-	function onPortClick(d)
-	{
-		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
-		scope.api.portClick(d);	
-		
-		/*function portOnClick() {
-		var exists = !d3.selectAll(".clicked-port").empty()
-		if (exists)
-		{
-			var origin = d3.selectAll("clicked-port");
-			var port = d3.select(this);
-			console.log(origin, port)
-		}
-		removeSelections();
 
-
-		d3.select(this).classed({
-			"clicked-port" : true
-		})
-		console.log("Port clicked")
-	}*/
-	}
-	
 	// [TODO] porty s dratkem ven z komponenty, ruzne typy portu viz stream/bus/wire ve Vivado
 	// input port wraps
 	var port_inputs = componentWrap.append("g")
 		.attr("transform", function(d) { 
 			return "translate(" + 0 + "," + 2*PORT_HEIGHT + ")"; 
 		})
-		
 		.selectAll("g .port-input")
 		.data(function (d){
 			return d.inputs;
