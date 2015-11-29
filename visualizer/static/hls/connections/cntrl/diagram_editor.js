@@ -164,61 +164,70 @@ function diagramEditorCntrl($scope){
 
 	$scope.origin = {
 		"component" : {},
-		"portElm" : null,
 		"port" : {}
 	};
 	$scope.destination = {
 		"component" : {},
 		"port" : {}
 	};
-	$scope.linkstatus = "none";
+	var LINK_STATUS = {
+			"none":"none",
+			"link" : "link",
+			"destination": "destination",
+			"origincomp": "origincomp",
+			"destinationcomp": "destinationcomp",
+	}
+	
+	$scope.linkstatus = LINK_STATUS.none;
+	
+	function positionOfElmInDiagram(pos){
+		var svg = api.diagramSvg.node()
+		var svgPos =  svg.getBoundingClientRect();
+		return [pos[0] - svgPos.left,  pos[1] - svgPos.top];
+	}
 	
 	function drawDashedLine2port(elm, mousePossition){
-		//console.log(mousePossition); $scope.origin.getPos()
 		var line = api.diagramSvg.selectAll('.routing-help-line');
+		var portBox=$scope.origin.portElm.children[0].getBoundingClientRect()
+		
 		if(line.empty()){
 			line = api.diagramSvg.append("svg:path")
 				       .classed({"routing-help-line": true})
 		}
 		line
 	        .style("stroke-dasharray", ("3, 3"))
-	        .attr("d", 'M '+ [0,0] + "L " + mousePossition );
+	        .attr("d", 'M '+ positionOfElmInDiagram([portBox.right, (portBox.top +portBox.bottom)/2 ]) + "L " + mousePossition );
 	}
 	
-	api.portClick = function(d, elm) {
-		//console.log("portClick data", d);
-		//console.log("Link status", $scope.linkstatus)
+	api.portClick = function(d,elm) {
 		switch ($scope.linkstatus) {
-		case "none":
-			//console.log("Setting origin")
-			$scope.origin.port = d;
-			$scope.linkstatus = "origincomp";
+		case LINK_STATUS.none:
+			$scope.origin.port =d;
+			$scope.origin.portElm= elm;
+			$scope.linkstatus = LINK_STATUS.origincomp;
 			break;
-		case "destination":
-			//console.log("Setting destination")
+		case LINK_STATUS.destination:
 			$scope.destination.port = d;
-			$scope.linkstatus = "destinationcomp";
+			$scope.destination.portElm= elm;
+			$scope.linkstatus = LINK_STATUS.destinationcomp;
 			break;
 		}
-		//console.log("Link status", $scope.linkstatus)
-		//console.log("Origin", $scope.origin)
-		//console.log("Destination", $scope.destination)
 	}
 
 	api.compClick = function(d) {
 		// console.log("Component Click data", d);
 		// console.log("Link status", $scope.linkstatus)
 		switch ($scope.linkstatus) {
-		case "origincomp":
+		case LINK_STATUS.origincomp:
 			// console.log("Setting origin component")
 			$scope.origin.component = d;
-			$scope.linkstatus = "destination";
+			$scope.linkstatus = LINK_STATUS.destination;
 			api.onMouseroverDiagram = drawDashedLine2port;
 			break;
-		case "destinationcomp":
+		case LINK_STATUS.destinationcomp:
 			// console.log("Setting destination component")
 			$scope.destination.component = d;
-			$scope.linkstatus = "link";
+			$scope.linkstatus = LINK_STATUS.link;
 			break;
 		default:
 			// console.log("Breaking")
@@ -229,7 +238,7 @@ function diagramEditorCntrl($scope){
 		// console.log("Origin", $scope.origin)
 		// console.log("Destination", $scope.destination)
 
-		if ($scope.linkstatus == "link") {
+		if ($scope.linkstatus == LINK_STATUS.link) {
 			// console.log("Linking");
 			var originportinfo = $scope.getPortIndexByName(
 					$scope.origin.port.name, $scope.origin.component)
@@ -271,7 +280,6 @@ function diagramEditorCntrl($scope){
 		}
 		// TODO check whether net already exists?
 		if (originport[1] == "inputs") {
-
 			net = {
 				"targets" : [ origin ],
 				"source" : destination
@@ -309,6 +317,9 @@ function diagramEditorCntrl($scope){
 	}
 	
 	api.resetLinkingState = function() {
-		$scope.linkstatus = "none";
+		api.diagramSvg.selectAll('.routing-help-line')
+					  .remove();
+		api.onMouseroverDiagram = null;
+		$scope.linkstatus = LINK_STATUS.none;
 	}
 }
