@@ -240,10 +240,8 @@ function diagramEditorCntrl($scope){
 
 		if ($scope.linkstatus == LINK_STATUS.link) {
 			// console.log("Linking");
-			var originportinfo = $scope.getPortIndexByName(
-					$scope.origin.port.name, $scope.origin.component)
-			var destinationportinfo = $scope.getPortIndexByName(
-					$scope.destination.port.name, $scope.destination.component)
+			var originportinfo = $scope.getPortIndex($scope.origin.port, $scope.origin.component)
+			var destinationportinfo = $scope.getPortIndex($scope.destination.port, $scope.destination.component)
 			var net = $scope.makeNet(originportinfo, destinationportinfo,
 					$scope.origin.component, $scope.destination.component);
 
@@ -294,26 +292,14 @@ function diagramEditorCntrl($scope){
 		return net;
 	}
 	
-	$scope.getPortIndexByName = function (name, component)
-	{
-		for (var i = 0; i < component.inputs.length;i++)
-		{
-			if (name == component.inputs[i].name)
-			{
-				//console.log("Match input", name, component.inputs[i].name)
-				return [i, "inputs"];
-			}
-		}
-		
-		for (var j = 0; j < component.outputs.length;j++)
-		{
-			if (name == component.outputs[j].name)
-			{
-				//console.log("Match output", name, component.outputs[i].name)
-				return [j, "outputs"];
-			}
-		}
-		return [null, null];
+	$scope.getPortIndex= function(port, component){
+		var inputIndx = component.inputs.indexOf(port);
+		if (inputIndx >= 0)
+			return [inputIndx, "inputs"];
+		var outputIndx = component.outputs.indexOf(port);
+		if (outputIndx >= 0)
+			return [outputIndx, "outputs"];
+		throw "Can not find port in component";
 	}
 	
 	api.resetLinkingState = function() {
