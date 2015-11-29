@@ -13,6 +13,11 @@ function diagramCntrl($scope) {
 		resolveNodesInLinks(nodes, links);
 		components2columns(nodes, links);
 		diagram.bindData(nodes, links)
+		diagram.on('mousemove', function(event){
+			if(api.onMouseroverDiagram){
+				diagram.wrapper.call( api.onMouseroverDiagram, event);
+			}
+		})
 		//ComponentDiagram("#chartWrapper", nodes, links);
 	}
 }
