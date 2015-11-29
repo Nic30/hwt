@@ -3,8 +3,8 @@ function diagramEditorCntrl($scope){
 	api.editedObject = {}
 	$scope.newObject = {
 		"name" : "",
-		// "id": null,
-		// "type" : null,
+		"id": "",
+		"type" : "",
 		"inputs" : [],
 		"outputs" : []
 	}
