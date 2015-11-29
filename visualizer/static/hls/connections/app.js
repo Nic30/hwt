@@ -1,4 +1,4 @@
-var App = angular.module('App', [ 'agGrid', 'cfp.hotkeys', 'ngAnimate', 'toastr']);
+var App = angular.module('App', [ 'ngCookies', 'agGrid', 'cfp.hotkeys', 'ngAnimate', 'toastr']);
 App.config(function(toastrConfig) {
   angular.extend(toastrConfig, {
 	    templates: {
@@ -13,11 +13,14 @@ App.config(function(toastrConfig) {
  	$interpolateProvider.endSymbol('$}');
  });
  
-App.controller('mainController', function($scope, $http, toastr) {
+App.controller('mainController', function($scope, $http, toastr, $cookies,$cookieStore) {
 	$scope.api = {
 		nodes : [],
 		nets : [],
-		msg:toastr
+		msg:toastr,
+		unimplemented: function(msg){
+			$scope.api.msg.error("Unimplemented",msg);
+		}
 	};
 	//$scope.api.open()
 	//$scope.open()
@@ -27,10 +30,10 @@ App.controller('mainController', function($scope, $http, toastr) {
 .controller('filebrowserCntrl', filebrowserCntrl)
 .controller('menuCntrl', menuCntrl)
 .controller('diagramEditorCntrl', diagramEditorCntrl)
+.controller('cookieManagerCntrl', cookieManagerCntrl)
 .directive('includeReplace', function () {
     return {
         require: 'ngInclude',
-        restrict: 'A', /* optional */
         link: function (scope, el, attrs) {
             el.replaceWith(el.children());
         }

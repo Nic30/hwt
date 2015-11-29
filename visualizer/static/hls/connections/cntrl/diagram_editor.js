@@ -3,8 +3,8 @@ function diagramEditorCntrl($scope){
 	api.editedObject = {}
 	$scope.newObject = {
 		"name" : "",
-		// "id": null,
-		// "type" : null,
+		"id": "",
+		"type" : "",
 		"inputs" : [],
 		"outputs" : []
 	}
@@ -52,28 +52,23 @@ function diagramEditorCntrl($scope){
 		// api.redraw();
 	}
 
-//	$scope.componentAddPort = function(object, group) {
-	// [TODO] WHTF is this?
-		console.log("ComponentEditAddPort")
-		console.log(group, object)
-		var portGroup = (group == 'Inputs' ? object.inputs : object.outputs)
 
-		portGroup.unshift({
+	$scope.componentAddPort = function(object, group) {
+		var portGroup = (group == 'Inputs' ? object.inputs : object.outputs);
+		portGroup.push({
 			"name" : ""
 		});
-		// componentEdit redraw
-		// api.redraw();
 	}
 
 	$scope.componentEditSubmit = function() {
 		api.redraw();
-		console.log("Submit")
-		console.log($scope.editedObject.inputs)
+		//console.log("Submit")
+		//console.log($scope.editedObject.inputs)
 		// d3.selectAll("#componentEdit").style("display", "none");
 	}
 
 	$scope.componentEditCancel = function() {
-		console.log("Cancel")
+		//console.log("Cancel")
 		d3.selectAll("#componentEdit").style("display", "none");
 	}
 
@@ -130,11 +125,26 @@ function diagramEditorCntrl($scope){
 		return;
 	}
 
+	function getComponentID(){
+		var max = -1;
+		for (var i = 0; i< api.nodes.length; i++)
+		{
+			if (api.nodes[i].id > max)
+			{
+				max = api.nodes[i].id;
+			}
+		}
+		//console.log("Maximum: ", max);
+		return max;
+	}
+	
 	api.componentAdd = function() {
+		d3.selectAll("#componentAdd").style("display", "block");
+		var id = getComponentID();
 		$scope.newObject = {
 			"name" : "",
-			// "id": null,
-			// "type" : null,
+			"id": id+1,
+			"type" : "",
 			"inputs" : [],
 			"outputs" : []
 		}
@@ -150,9 +160,22 @@ function diagramEditorCntrl($scope){
 	$scope.componentAddSubmit = function() {
 		console.log("Submit")
 		console.log("Before: ", api.nodes)
+		$scope.newObject.id = parseInt($scope.newObject.id)
+		if($scope.newObject.name == "")
+		{
+			api.msg.error("Can't create component without name", "Component add error");
+			return;
+		}
+		if(($scope.newObject.inputs.length == 0) && ($scope.newObject.outputs.length == 0))
+		{
+			api.msg.error("Can't create empty component", "Component add error");
+			return;
+		}
+		
 		api.nodes.push($scope.newObject);
 		console.log("After: ", api.nodes)
-
+		$("#newComponent").modal('hide')
+		
 		api.redraw();
 
 		// d3.selectAll("#componentAdd").style("display", "none");

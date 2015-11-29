@@ -1,0 +1,93 @@
+{
+    "nodes": [
+        {
+            "width": 120,
+            "outputs": [
+                {
+                    "name": "clk"
+                }
+            ],
+            "name": "clk",
+            "isExternalPort": true,
+            "y": 20,
+            "direction": "IN",
+            "id": 2,
+            "height": 40,
+            "x": 20,
+            "netChannelPadding": {
+                "left": 0,
+                "bottom": 0,
+                "top": 0,
+                "right": 0
+            },
+            "inputs": []
+        },
+        {
+            "width": 120,
+            "outputs": [
+                {
+                    "name": "rst"
+                }
+            ],
+            "name": "rst",
+            "isExternalPort": true,
+            "y": 100,
+            "direction": "IN",
+            "id": 3,
+            "height": 40,
+            "x": 20,
+            "netChannelPadding": {
+                "left": 0,
+                "bottom": 0,
+                "top": 0,
+                "right": 0
+            },
+            "inputs": []
+        },
+        {
+            "width": 120,
+            "outputs": [],
+            "name": "outA",
+            "isExternalPort": true,
+            "y": 20,
+            "direction": "OUT",
+            "id": 6,
+            "height": 40,
+            "x": 180,
+            "netChannelPadding": {
+                "left": 0,
+                "bottom": 0,
+                "top": 0,
+                "right": 0
+            },
+            "inputs": [
+                {
+                    "name": "outA"
+                }
+            ]
+        },
+        {
+            "width": 120,
+            "outputs": [
+                {
+                    "name": "outA"
+                }
+            ],
+            "name": "inA",
+            "isExternalPort": true,
+            "y": 180,
+            "direction": "IN",
+            "id": 7,
+            "height": 40,
+            "x": 20,
+            "netChannelPadding": {
+                "left": 0,
+                "bottom": 0,
+                "top": 0,
+                "right": 0
+            },
+            "inputs": []
+        }
+    ],
+    "nets": []
+}

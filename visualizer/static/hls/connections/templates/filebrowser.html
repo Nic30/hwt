@@ -11,14 +11,15 @@
 
 				<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
 					class="ag-file-browser"></div>
-				<div
-					style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 800px; height: 20px">
-					&nbsp; {$ selectedFile $}</div>
+				<div class="form-group">
+						<input type="text" class="form-control" 
+						ng-model="api.openedFile">
+				</div>
 			</div>
 			<div class="modal-footer">
-				<button ng-if="doSave" ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Save</button>
-				<button ng-if="!doSave" ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Open</button>
-				<button ng-click="componentAddCancel()" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				<button ng-if="doSave" ng-click="api.save(api.openedFile)" class="btn btn-default" data-dismiss="modal">Save</button>
+				<button ng-if="!doSave" ng-click="api.open()" class="btn btn-default" data-dismiss="modal">Open</button>
+				<button class="btn btn-default" data-dismiss="modal">Cancel</button>
 			</div>
 		</div>
 	</div>

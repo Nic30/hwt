@@ -3,6 +3,10 @@ function filebrowserCntrl($scope, $http) {
 	var fileDialog = $('#fileDialog');
 	var saveDialog = $('#saveDialog');
 	$scope.doSave = false;
+	$scope.rootDir = "";
+	api.openedFile = '';
+	
+	var filesRowData = [];
 	function sizeCellStyle() {
 		return {
 			'text-align' : 'right'
@@ -43,7 +47,7 @@ function filebrowserCntrl($scope, $http) {
 		field : "dateModified",
 		width : 198
 	} ];
-	$scope.open = function(path) {
+	api.open = function(path) {
 		return $http.get('/hls/connections-data/' + path).then(
 				function(res) {
 					var nets = res.data.nets;
@@ -70,18 +74,15 @@ function filebrowserCntrl($scope, $http) {
 			}
 			$scope.loadFolderData(path);
 		} else {
-			$scope.openedFile = path;
+			api.openedFile = path;
 			fileDialog.modal('hide');
 			
-			$scope.open(path).then(function(){
+			api.open(path).then(function(){
 				api.redraw();
 				api.fitDiagram2Screen();
 			});
 		}
 	}
-
-	$scope.rootDir = "";
-	var filesRowData = [];
 
 	$scope.fileGridOptions = {
 		columnDefs : columnDefs,
@@ -123,21 +124,20 @@ function filebrowserCntrl($scope, $http) {
 		});
 	}
 
-	$scope.openedFile = 'example1.json';
+
 	api.fileDialog = function(doSave) {
 		//d3.selectAll("#chartWrapper").html(""); // [TODO] to different controller
 		$scope.doSave = doSave;
 		fileDialog.modal('show');
 		filesRowData = [];
 		$scope.loadFolderData("");
-
 	}
 
-	$scope.save = function(path) {
+	api.save = function(path) {
 		var data = {
 			"path" : path,
-			"nodes" : $scope.nodes,
-			"nets" : $scope.nets
+			"nodes" : api.nodes,
+			"nets" : api.nets
 		};
 		return $http.post("/hls/connections-save", data, {
 			headers : {

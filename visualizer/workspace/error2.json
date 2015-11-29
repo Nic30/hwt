@@ -1,0 +1,93 @@
+{
+    "nodes": [
+        {
+            "width": 120,
+            "outputs": [
+                {
+                    "name": "clk"
+                }
+            ],
+            "name": "clk",
+            "isExternalPort": true,
+            "netChannelPadding": {
+                "left": 0,
+                "bottom": 0,
+                "top": 0,
+                "right": 0
+            },
+            "y": 20,
+            "direction": "IN",
+            "height": 40,
+            "x": 20,
+            "id": 2,
+            "inputs": []
+        },
+        {
+            "width": 120,
+            "outputs": [
+                {
+                    "name": "rst"
+                }
+            ],
+            "name": "rst",
+            "isExternalPort": true,
+            "netChannelPadding": {
+                "left": 0,
+                "bottom": 0,
+                "top": 0,
+                "right": 0
+            },
+            "y": 100,
+            "direction": "IN",
+            "height": 40,
+            "x": 20,
+            "id": 3,
+            "inputs": []
+        },
+        {
+            "width": 120,
+            "outputs": [],
+            "name": "outA",
+            "isExternalPort": true,
+            "netChannelPadding": {
+                "left": 0,
+                "bottom": 0,
+                "top": 0,
+                "right": 0
+            },
+            "y": 20,
+            "direction": "OUT",
+            "height": 40,
+            "x": 180,
+            "id": 6,
+            "inputs": [
+                {
+                    "name": "outA"
+                }
+            ]
+        },
+        {
+            "width": 120,
+            "outputs": [
+                {
+                    "name": "outA"
+                }
+            ],
+            "name": "inA",
+            "isExternalPort": true,
+            "netChannelPadding": {
+                "left": 0,
+                "bottom": 0,
+                "top": 0,
+                "right": 0
+            },
+            "y": 180,
+            "direction": "IN",
+            "height": 40,
+            "x": 20,
+            "id": 7,
+            "inputs": []
+        }
+    ],
+    "nets": []
+}

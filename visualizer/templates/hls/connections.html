@@ -27,7 +27,8 @@
 	var NET_PADDING = 5;
 </script>
 
-<script type="text/javascript" src="/static/bower_components/angularjs/angular.js"></script>
+<script type="text/javascript" src="/static/bower_components/angular/angular.js"></script>
+<script type="text/javascript" src="/static/bower_components/angular-cookies/angular-cookies.min.js"></script>
 <script type="text/javascript" src="/static/bower_components/angular-animate/angular-animate.min.js"></script>
 <script type="text/javascript" src="/static/bower_components/angular-toastr/dist/angular-toastr.min.js"></script>
 <script type="text/javascript" src="/static/bower_components/ag-grid/dist/ag-grid.min.js"></script>
@@ -48,6 +49,7 @@
 <script type="text/javascript" src="/static/hls/connections/cntrl/menu.js"></script>
 <script type="text/javascript" src="/static/hls/connections/cntrl/diagram.js"></script>
 <script type="text/javascript" src="/static/hls/connections/cntrl/diagram_editor.js"></script>
+<script type="text/javascript" src="/static/hls/connections/cntrl/cookie_manger.js"></script>
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
 <script type="text/javascript" src="/static/hls/connections/clickhandlers.js"></script>
 {% endblock %} 
@@ -55,6 +57,7 @@
 {% block angular_app %} ng-app="App" ng-controller="mainController" {% endblock %}
 
 {% block content %}
+<div ng-controller="cookieManagerCntrl" ></div>
 <div id="chartWrapper" ng-controller="diagramCntrl" ></div>
 {% endblock %} 
 

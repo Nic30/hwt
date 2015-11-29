@@ -26,7 +26,7 @@
 							ID: </label>
 						<div class="col-sm-8">
 							<input class="form-control" id="componentAddID" type="text"
-								ng-model="newObject.id" placeholder="Component ID">
+								ng-model="newObject.id" placeholder="Component ID" disabled>
 						</div>
 					</div>
 
@@ -74,7 +74,7 @@
 				</form>
         	</div>
 	        <div class="modal-footer">
-				<button ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">OK</button>
+				<button ng-click="componentAddSubmit()" class="btn btn-default">OK</button>
 				<button ng-click="componentAddCancel()" class="btn btn-default" data-dismiss="modal">Cancel</button>
 				<button class="btn btn-default" data-dismiss="modal">Template</button>
 	        </div>

@@ -17,7 +17,14 @@
 					</span>
 				</div>
 		</a></li>
-		<li><a ng-click="save(openedFile)" accesskey="s">
+		<li><a accesskey="t">
+				<div>
+					<strong>Export</strong> <span class="pull-right text-muted">
+						<em>No Shortcut</em>
+					</span>
+				</div>
+		</a></li>
+		<li><a ng-click="api.save(api.openedFile)" accesskey="s">
 				<div>
 					<strong>Save</strong> <span class="pull-right text-muted"> <em>No
 							Shortcut</em>
@@ -31,13 +38,6 @@
 					</span>
 				</div>
 		</a></li>
-		<li><a accesskey="t">
-				<div>
-					<strong>Export</strong> <span class="pull-right text-muted">
-						<em>No Shortcut</em>
-					</span>
-				</div>
-		</a></li>
 		<li><a accesskey="l">
 				<div>
 					<strong>Delete</strong> <span class="pull-right text-muted">
@@ -45,16 +45,9 @@
 					</span>
 				</div>
 		</a></li>
-		<li><a accesskey="c">
-				<div>
-					<strong>Close</strong> <span class="pull-right text-muted">
-						<em>No Shortcut</em>
-					</span>
-				</div>
-		</a></li>
 
-	</ul> 
-	<!-- /.dropdown-messages -->
+
+	</ul> <!-- /.dropdown-messages -->
 </li>
 <li class="dropdown"><a ng-click="api.componentAdd()"
 	data-toggle="modal" data-target="#newComponent"> <i
