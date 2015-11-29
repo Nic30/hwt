@@ -53,8 +53,8 @@ function diagramEditorCntrl($scope){
 	}
 
 	$scope.componentAddPort = function(object, group) {
-		console.log("ComponentEditAddPort")
-		console.log(group, object)
+		//console.log("ComponentEditAddPort")
+		//console.log(group, object)
 		var portGroup = (group == 'Inputs' ? object.inputs : object.outputs)
 
 		portGroup.unshift({
@@ -66,13 +66,13 @@ function diagramEditorCntrl($scope){
 
 	$scope.componentEditSubmit = function() {
 		api.redraw();
-		console.log("Submit")
-		console.log($scope.editedObject.inputs)
+		//console.log("Submit")
+		//console.log($scope.editedObject.inputs)
 		// d3.selectAll("#componentEdit").style("display", "none");
 	}
 
 	$scope.componentEditCancel = function() {
-		console.log("Cancel")
+		//console.log("Cancel")
 		d3.selectAll("#componentEdit").style("display", "none");
 	}
 
@@ -129,12 +129,26 @@ function diagramEditorCntrl($scope){
 		return;
 	}
 
+	function getComponentID(){
+		var max = -1;
+		for (var i = 0; i< api.nodes.length; i++)
+		{
+			if (api.nodes[i].id > max)
+			{
+				max = api.nodes[i].id;
+			}
+		}
+		//console.log("Maximum: ", max);
+		return max;
+	}
+	
 	api.componentAdd = function() {
 		d3.selectAll("#componentAdd").style("display", "block");
+		var id = getComponentID();
 		$scope.newObject = {
 			"name" : "",
-			// "id": null,
-			// "type" : null,
+			"id": id,
+			"type" : "",
 			"inputs" : [],
 			"outputs" : []
 		}
