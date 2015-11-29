@@ -11,9 +11,10 @@
 
 				<div style="width: 800px; height: 400px;" ag-grid="fileGridOptions"
 					class="ag-file-browser"></div>
-				<div
-					style="border: 1px solid darkgrey; margin-bottom: 2px; background-color: white; width: 800px; height: 20px">
-					&nbsp; {$ selectedFile $}</div>
+				<div class="form-group">
+						<input type="text" class="form-control" 
+						ng-model="selectedFile">
+				</div>
 			</div>
 			<div class="modal-footer">
 				<button ng-if="doSave" ng-click="componentAddSubmit()" class="btn btn-default" data-dismiss="modal">Save</button>

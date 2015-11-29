@@ -144,11 +144,10 @@ function diagramEditorCntrl($scope){
 	
 	api.componentAdd = function() {
 		d3.selectAll("#componentAdd").style("display", "block");
-		var id = "";
-		id = getComponentID();
+		var id = getComponentID();
 		$scope.newObject = {
 			"name" : "",
-			"id": id,
+			"id": id+1,
 			"type" : "",
 			"inputs" : [],
 			"outputs" : []
@@ -165,9 +164,22 @@ function diagramEditorCntrl($scope){
 	$scope.componentAddSubmit = function() {
 		console.log("Submit")
 		console.log("Before: ", api.nodes)
+		$scope.newObject.id = parseInt($scope.newObject.id)
+		if($scope.newObject.name == "")
+		{
+			api.msg.error("Can't create component without name", "Component add error");
+			return;
+		}
+		if(($scope.newObject.inputs.length == 0) && ($scope.newObject.outputs.length == 0))
+		{
+			api.msg.error("Can't create empty component", "Component add error");
+			return;
+		}
+		
 		api.nodes.push($scope.newObject);
 		console.log("After: ", api.nodes)
-
+		$("#newComponent").modal('hide')
+		
 		api.redraw();
 
 		// d3.selectAll("#componentAdd").style("display", "none");
