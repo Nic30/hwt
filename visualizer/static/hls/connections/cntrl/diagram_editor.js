@@ -144,7 +144,8 @@ function diagramEditorCntrl($scope){
 	
 	api.componentAdd = function() {
 		d3.selectAll("#componentAdd").style("display", "block");
-		var id = getComponentID();
+		var id = "";
+		id = getComponentID();
 		$scope.newObject = {
 			"name" : "",
 			"id": id,
