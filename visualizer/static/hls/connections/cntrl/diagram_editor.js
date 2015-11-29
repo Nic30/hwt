@@ -206,17 +206,17 @@ function diagramEditorCntrl($scope){
 	}
 
 	api.compClick = function(d) {
-		//console.log("Component Click data", d);
-		//console.log("Link status", $scope.linkstatus)
+		// console.log("Component Click data", d);
+		// console.log("Link status", $scope.linkstatus)
 		switch ($scope.linkstatus) {
 		case "origincomp":
-			//console.log("Setting origin component")
+			// console.log("Setting origin component")
 			$scope.origin.component = d;
 			$scope.linkstatus = "destination";
 			api.onMouseroverDiagram = drawDashedLine2port;
 			break;
 		case "destinationcomp":
-			//console.log("Setting destination component")
+			// console.log("Setting destination component")
 			$scope.destination.component = d;
 			$scope.linkstatus = "link";
 			break;
@@ -225,53 +225,24 @@ function diagramEditorCntrl($scope){
 			break;
 		}
 
-		//console.log("Link status", $scope.linkstatus)
-		//console.log("Origin", $scope.origin)
-		//console.log("Destination", $scope.destination)
-		
+		// console.log("Link status", $scope.linkstatus)
+		// console.log("Origin", $scope.origin)
+		// console.log("Destination", $scope.destination)
+
 		if ($scope.linkstatus == "link") {
-			//console.log("Linking");
-			var originport = $scope.getPortIndexByName($scope.origin.port.name, $scope.origin.component)
-			var destinationport = $scope.getPortIndexByName($scope.destination.port.name, $scope.destination.component)
-			//console.log("Origin portindex", originport)
-			//console.log("Destination portindex", destinationport)			
-			if (originport[1] == "inputs")
-			{
-				var net = {
-						"targets": [
-						           {
-						        	   "portIndex": originport[0],
-						        	   "id": $scope.origin.component.id
-						           }
-						],
-						"source": {
-							"portIndex": destinationport[0],
-				        	 "id": $scope.destination.component.id
-						}
-				}
-			}// if originport inputs
-			else if (originport[1] == "outputs")
-			{
-				var net = {
-						"targets": [
-						           {
-						        	   "portIndex": destinationport[0],
-							        	"id": $scope.destination.component.id
-						           }
-						],
-						"source": {
-							"portIndex": originport[0],
-				        	   "id": $scope.origin.component.id
-						}
-				}
+			// console.log("Linking");
+			var originportinfo = $scope.getPortIndexByName(
+					$scope.origin.port.name, $scope.origin.component)
+			var destinationportinfo = $scope.getPortIndexByName(
+					$scope.destination.port.name, $scope.destination.component)
+			var net = $scope.makeNet(originportinfo, destinationportinfo,
+					$scope.origin.component, $scope.destination.component);
+
+			// console.log("Net to be added: ", net)
+			if (net != "") {
+				//console.log("Adding net", net)
+				api.nets.push(net);
 			}
-			else
-			{
-				var net = ""
-				console.log("Quicklink: Cant construct link, port name corrupted")
-			}
-			//console.log("Net to be added: ", net)
-			api.nets.push(net);
 			api.resetLinkingState();
 			api.redraw();
 
@@ -279,6 +250,42 @@ function diagramEditorCntrl($scope){
 
 	}
 
+	$scope.makeNet = function(originport, destinationport, origincomponent,
+			destinationcomponent) {
+		var origin = {
+			"portIndex" : originport[0],
+			"id" : origincomponent.id
+		}
+		var destination = {
+			"portIndex" : destinationport[0],
+			"id" : destinationcomponent.id
+		}
+		if (originport[1] == destinationport[1]) {
+			api.msg.error("Can't connect matching port groups",
+					"QuickLink Erorr")
+			return "";
+		} else if ((originport[1] == null | destinationport[1] == null)) {
+			api.msg.error("Can't connect link port name corrupted",
+					"QuickLink Erorr")
+			return "";
+		}
+		// TODO check whether net already exists?
+		if (originport[1] == "inputs") {
+
+			net = {
+				"targets" : [ origin ],
+				"source" : destination
+			}
+		}// if originport inputs
+		else if (originport[1] == "outputs") {
+			net = {
+				"targets" : [ destination ],
+				"source" : origin
+			}
+		}
+		return net;
+	}
+	
 	$scope.getPortIndexByName = function (name, component)
 	{
 		for (var i = 0; i < component.inputs.length;i++)
