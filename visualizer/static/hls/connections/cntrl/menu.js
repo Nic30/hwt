@@ -8,4 +8,9 @@ function menuCntrl($scope){
 			api.sidebarCollapsed = true;
 		}
 	}
+	api.newDiagram = function() {
+		api.nodes = [];
+		api.nets = [];
+		api.redraw();
+	}
 }
