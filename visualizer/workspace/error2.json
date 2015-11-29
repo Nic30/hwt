@@ -1,0 +1,93 @@
+{
+    "nets": [],
+    "nodes": [
+        {
+            "height": 40,
+            "x": 20,
+            "inputs": [],
+            "direction": "IN",
+            "id": 2,
+            "name": "clk",
+            "y": 20,
+            "outputs": [
+                {
+                    "name": "clk"
+                }
+            ],
+            "isExternalPort": true,
+            "width": 120,
+            "netChannelPadding": {
+                "top": 0,
+                "left": 0,
+                "bottom": 0,
+                "right": 0
+            }
+        },
+        {
+            "height": 40,
+            "x": 20,
+            "inputs": [],
+            "direction": "IN",
+            "id": 3,
+            "name": "rst",
+            "y": 100,
+            "outputs": [
+                {
+                    "name": "rst"
+                }
+            ],
+            "isExternalPort": true,
+            "width": 120,
+            "netChannelPadding": {
+                "top": 0,
+                "left": 0,
+                "bottom": 0,
+                "right": 0
+            }
+        },
+        {
+            "height": 40,
+            "x": 180,
+            "inputs": [
+                {
+                    "name": "outA"
+                }
+            ],
+            "direction": "OUT",
+            "id": 6,
+            "name": "outA",
+            "y": 20,
+            "outputs": [],
+            "isExternalPort": true,
+            "width": 120,
+            "netChannelPadding": {
+                "top": 0,
+                "left": 0,
+                "bottom": 0,
+                "right": 0
+            }
+        },
+        {
+            "height": 40,
+            "x": 20,
+            "inputs": [],
+            "direction": "IN",
+            "id": 7,
+            "name": "inA",
+            "y": 180,
+            "outputs": [
+                {
+                    "name": "outA"
+                }
+            ],
+            "isExternalPort": true,
+            "width": 120,
+            "netChannelPadding": {
+                "top": 0,
+                "left": 0,
+                "bottom": 0,
+                "right": 0
+            }
+        }
+    ]
+}
