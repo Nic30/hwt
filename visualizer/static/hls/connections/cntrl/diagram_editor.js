@@ -259,8 +259,9 @@ function diagramEditorCntrl($scope){
 			}
 			//console.log("Net to be added: ", net)
 			api.nets.push(net);
-			api.redraw();
 			api.resetLinkingState();
+			api.redraw();
+
 		}// if scopestatus link
 
 	}
