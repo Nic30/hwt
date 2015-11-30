@@ -81,7 +81,7 @@ function RoutingNodesContainer(nodes) {
 		var pos = rnode.pos();
 		var x = pos[0];
 		var y = pos[1];
-		
+
 		// check if exists
 		var col = grid[x];
 		if (col) {
@@ -179,42 +179,53 @@ function RoutingNodesContainer(nodes) {
 		var node = nodes[ni];
 		insertRectangularBoundry(node.x, node.y, node.width, node.height);
 
-		var leftTop = new RoutingNode();
-		leftTop.originComponent = node;
-		leftTop.pos = function() {
-			var c = this.originComponent;
-			return [
-					this.originComponent.x - COMPONENT_PADDING
-							- c.netChannelPadding.left,
-					this.originComponent.y - COMPONENT_PADDING
-							- c.netChannelPadding.top ];
-		};
-		var leftBottom = new RoutingNode();
-		leftBottom.originComponent = node;
-		leftBottom.pos = function() {
-			var c = this.originComponent;
-			return [
-					c.x - COMPONENT_PADDING - c.netChannelPadding.left,
-					c.y + c.height + COMPONENT_PADDING
-							+ c.netChannelPadding.bottom ];
-		};
-		var rightTop = new RoutingNode();
-		rightTop.originComponent = node;
-		rightTop.pos = function() {
-			var c = this.originComponent;
-			return [ c.x + c.width + COMPONENT_PADDING,
-					c.y - COMPONENT_PADDING - c.netChannelPadding.top ];
-		};
-		var rightBottom = new RoutingNode();
-		rightBottom.originComponent = node;
-		rightBottom.pos = function() {
-			var c = this.originComponent;
-			return [
-					c.x + c.width + COMPONENT_PADDING
-							+ c.netChannelPadding.right,
-					c.y + c.height + COMPONENT_PADDING
-							+ c.netChannelPadding.bottom ];
-		};
+		if (!(node.isExternalPort && node.direction == DIRECTION.IN)) {
+			var leftTop = new RoutingNode();
+			leftTop.originComponent = node;
+			leftTop.pos = function() {
+				var c = this.originComponent;
+				return [
+						this.originComponent.x - COMPONENT_PADDING
+								- c.netChannelPadding.left,
+						this.originComponent.y - COMPONENT_PADDING
+								- c.netChannelPadding.top ];
+			};
+			insertRNode(leftTop, true);
+
+			var leftBottom = new RoutingNode();
+			leftBottom.originComponent = node;
+			leftBottom.pos = function() {
+				var c = this.originComponent;
+				return [
+						c.x - COMPONENT_PADDING - c.netChannelPadding.left,
+						c.y + c.height + COMPONENT_PADDING
+								+ c.netChannelPadding.bottom ];
+			};
+			insertRNode(leftBottom, true);
+		}
+
+		if (!(node.isExternalPort && node.direction == DIRECTION.OUT)) {
+			var rightTop = new RoutingNode();
+			rightTop.originComponent = node;
+			rightTop.pos = function() {
+				var c = this.originComponent;
+				return [ c.x + c.width + COMPONENT_PADDING,
+						c.y - COMPONENT_PADDING - c.netChannelPadding.top ];
+			};
+			insertRNode(rightTop, true);
+
+			var rightBottom = new RoutingNode();
+			rightBottom.originComponent = node;
+			rightBottom.pos = function() {
+				var c = this.originComponent;
+				return [
+						c.x + c.width + COMPONENT_PADDING
+								+ c.netChannelPadding.right,
+						c.y + c.height + COMPONENT_PADDING
+								+ c.netChannelPadding.bottom ];
+			};
+			insertRNode(rightBottom, true);
+		}
 		// insert port nodes
 		node.inputs.forEach(function(port, i) {
 			var pn = new RoutingNode();
@@ -241,10 +252,6 @@ function RoutingNodesContainer(nodes) {
 			insertRNode(pn);
 		});
 
-		insertRNode(leftTop, true);
-		insertRNode(leftBottom, true);
-		insertRNode(rightTop, true);
-		insertRNode(rightBottom, true);
 	}
 
 	return grid;

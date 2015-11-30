@@ -22,9 +22,6 @@ App.controller('mainController', function($scope, $http, toastr, $cookies,$cooki
 			$scope.api.msg.error("Unimplemented",msg);
 		}
 	};
-	//$scope.api.open()
-	//$scope.open()
-	//      .then($scope.redraw);
 })
 .controller('diagramCntrl', diagramCntrl)
 .controller('filebrowserCntrl', filebrowserCntrl)

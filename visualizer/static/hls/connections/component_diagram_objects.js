@@ -1,38 +1,45 @@
 function drawExternalPorts(svgGroup, exterPortNodes){
 	svgGroup.selectAll(".external-port").remove();
+	var IMG_WIDTH = 30;
 	var externalPorts = svgGroup.selectAll(".external-port")
 		.data(exterPortNodes)
 		.enter()
 		.append("g")
 		.classed({"external-port" :true});
+
+	
+	externalPorts.append("image")
+	.attr("xlink:href", function(d) { 
+		return "/static/hls/connections/graphic/INshort.png"; 
+	})
+	.attr("y", -8)
+	.attr("x", function(d) {
+		return (d.direction == DIRECTION.IN)?-IMG_WIDTH:0;
+	})
+	.attr("width", IMG_WIDTH)
+	.attr("height", 15);
 	
 	externalPorts.append("text")
 		.attr("x", function(d) {
-			return (d.inputs.length == 0)?-10:-82;
+			return (d.direction == DIRECTION.IN)?-IMG_WIDTH:IMG_WIDTH;
 		})
-		.attr("y", function(d) {
-			return (d.inputs.length == 0)?4:4;
-		})
+		.attr("y", 4)
 		.text(function(d) {
 			return d.name;
 		})
+		.attr('text-anchor', function(d){
+			return (d.direction == DIRECTION.IN)?"end":'start';
+		})
 	
 	
-	externalPorts.append("image")
-		.attr("xlink:href", function(d) { 
-			return "/static/hls/connections/graphic/INshort.png"; 
-		})
-		.attr("x", function(d) {
-			return (d.inputs.length == 0)?-10:-140;
-		})
-		.attr("y", function(d) {
-			return (d.inputs.length == 0)?-8:-8;
-		})
-		.attr("width", 30)
-		.attr("height", 15);
+
 
 	externalPorts.attr("transform", function(d) { 
-		return "translate(" + (d.x + d.width) + "," + (d.y + d.height/2) + ")"; 
+		if (d.direction == DIRECTION.IN){
+			return "translate(" + (d.x + d.width) + "," + (d.y + 2* PORT_HEIGHT) + ")"; 
+		}else{
+			return "translate(" + d.x + "," +(d.y + 2* PORT_HEIGHT) + ")"; 
+		}
 	})
 	
 	return externalPorts;

@@ -115,7 +115,7 @@ path.link-hover {
 
 .external-port {
 	fill: green;
-	text-anchor: end;
+	/*text-anchor: end;*/
 }
 
 div.tooltip {

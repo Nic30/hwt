@@ -10,7 +10,6 @@ sys.path.append(WORKSPACE_DIR)
 connectionsBp = Blueprint('connections', __name__, template_folder='templates/hls/')
 
 class FSEntry():
-    
     def __init__(self, name, isGroup):
         self.isGroup = isGroup
         self.name = name

@@ -48,6 +48,9 @@ class VHDLUnit(Entity):
             ci.genericMaps.append("%s => %s" % (k, val_str))
         
         return ci
+    @classmethod
+    def fromJson(cls, jsonDict):
+        raise Exception("unimplemented")
     def toJson(self):
         return {"name":self.name, "id":id(self), 
                 "inputs": [{"name":x.name, 

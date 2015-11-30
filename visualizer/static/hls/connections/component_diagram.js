@@ -325,8 +325,7 @@ function ComponentDiagram(selector){
 			var scaleY = self.place.height / size[1];
 			var scale = Math.min(scaleX, scaleY);
 			// this is processiong of zoomListener explicit translate and scale
-			// on
-			// start
+			// on start
 			zoomListener.translate([ 0, 0 ]).scale(scale);
 			zoomListener.event(svg.transition().duration(100));
 		},
