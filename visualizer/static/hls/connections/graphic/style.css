@@ -118,6 +118,10 @@ path.link-hover {
 	/*text-anchor: end;*/
 }
 
+.external-port text {
+	font-size: 10pt;
+}
+
 div.tooltip {
 	position: absolute;
 	text-align: center;

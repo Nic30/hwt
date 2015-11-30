@@ -6,40 +6,39 @@ function drawExternalPorts(svgGroup, exterPortNodes){
 		.enter()
 		.append("g")
 		.classed({"external-port" :true});
-
 	
+	// adding external port icon
 	externalPorts.append("image")
 	.attr("xlink:href", function(d) { 
 		return "/static/hls/connections/graphic/INshort.png"; 
 	})
-	.attr("y", -8)
 	.attr("x", function(d) {
 		return (d.direction == DIRECTION.IN)?-IMG_WIDTH:0;
 	})
 	.attr("width", IMG_WIDTH)
-	.attr("height", 15);
-	
+	.attr("height", PORT_HEIGHT);
+	// adding text for external port
 	externalPorts.append("text")
 		.attr("x", function(d) {
 			return (d.direction == DIRECTION.IN)?-IMG_WIDTH:IMG_WIDTH;
 		})
-		.attr("y", 4)
+		.attr("y", PORT_HEIGHT -1)
 		.text(function(d) {
 			return d.name;
 		})
 		.attr('text-anchor', function(d){
 			return (d.direction == DIRECTION.IN)?"end":'start';
 		})
-	
-	
-
-
-	externalPorts.attr("transform", function(d) { 
+	// positioning whole g of external port
+	externalPorts.attr("transform", function(d) {
 		if (d.direction == DIRECTION.IN){
-			return "translate(" + (d.x + d.width) + "," + (d.y + 2* PORT_HEIGHT) + ")"; 
+			var x = d.x + d.width +10;
+			var y = d.y +1.5* PORT_HEIGHT;
 		}else{
-			return "translate(" + d.x + "," +(d.y + 2* PORT_HEIGHT) + ")"; 
+			var x = d.x -10;
+			var y = d.y + 1.5* PORT_HEIGHT;
 		}
+		return "translate(" + x + "," + y + ")"; 
 	})
 	
 	return externalPorts;
