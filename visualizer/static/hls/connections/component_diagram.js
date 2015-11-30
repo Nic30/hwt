@@ -233,42 +233,43 @@ function hideTooltip(toolTipDiv){
 }
 // move component on its positions and redraw links between them
 function updateNetLayout(svgGroup, linkElements, nodes, links){ 
-	for(var i =0; i< 1; i++){
-		var router = new NetRouter(nodes, links, false);
-		var grid = router.grid;
-		
-		function drawNet(d){
-			var pos = d.start.pos();
-			var spOffset = offsetInRoutingNode(d.start, d.net);
-			// connection from port node to port
-			var pathStr = "M " + [pos[0] - COMPONENT_PADDING - d.source.netChannelPadding.right, pos[1]] + "\n"; 
-			var posWithOffset = pointAdd(pos, spOffset);
-			pathStr += " L " + posWithOffset +"\n";
-	
-			router.walkLinkSubPaths(d, function(subPath, dir){
-				var p0 = subPath[0];
-				var p1 = subPath[subPath.length -1];
-				
-				pathStr += " L " + pointAdd(p0.pos(), offsetInRoutingNode(p0, d.net)); +"\n";
-				pathStr += " L " + pointAdd(p1.pos(), offsetInRoutingNode(p1, d.net)); +"\n";
-			});
-			
-			pos = d.end.pos();
-			// connection from port node to port
-			pathStr += " L " + [pos[0]+COMPONENT_PADDING +d.target.netChannelPadding.left, pos[1]]+"\n";
-			return pathStr;
-		}
-			
-		router.route();	
-		//debugRouterDots(svgGroup, grid)
-		linkElements.attr("d", drawNet);
-	
+	function linksCleanup(){
 		links.forEach(function (link){ // rm tmp variables
 			delete link.path;
 			delete link.end;
 			delete link.start;
 		});
 	}
+	for(var i =0; i< 5; i++){
+		linksCleanup();
+		var router = new NetRouter(nodes, links, false);
+		var grid = router.grid;
+		router.route();	
+	}
+	function drawNet(d){
+		var pos = d.start.pos();
+		var spOffset = offsetInRoutingNode(d.start, d.net);
+		// connection from port node to port
+		var pathStr = "M " + [pos[0] - COMPONENT_PADDING - d.source.netChannelPadding.right, pos[1]] + "\n"; 
+		var posWithOffset = pointAdd(pos, spOffset);
+		pathStr += " L " + posWithOffset +"\n";
+
+		router.walkLinkSubPaths(d, function(subPath, dir){
+			var p0 = subPath[0];
+			var p1 = subPath[subPath.length -1];
+			
+			pathStr += " L " + pointAdd(p0.pos(), offsetInRoutingNode(p0, d.net)); +"\n";
+			pathStr += " L " + pointAdd(p1.pos(), offsetInRoutingNode(p1, d.net)); +"\n";
+		});
+		
+		pos = d.end.pos();
+		// connection from port node to port
+		pathStr += " L " + [pos[0]+COMPONENT_PADDING +d.target.netChannelPadding.left, pos[1]]+"\n";
+		return pathStr;
+	}
+	linkElements.attr("d", drawNet);
+	//debugRouterDots(svgGroup, grid)
+	linksCleanup();
 };
 
 //main function for rendering components layout
