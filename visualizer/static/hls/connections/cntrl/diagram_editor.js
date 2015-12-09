@@ -427,13 +427,31 @@ function diagramEditorCntrl($scope, hotkeys){
 			// console.log("Linking");
 			var originportinfo = $scope.getPortIndex($scope.origin.port, $scope.origin.component)
 			var destinationportinfo = $scope.getPortIndex($scope.destination.port, $scope.destination.component)
-			var net = $scope.makeNet(originportinfo, destinationportinfo,
+			var net = $scope.makeConnection(originportinfo, destinationportinfo,
 					$scope.origin.component, $scope.destination.component);
 
-			// console.log("Net to be added: ", net)
-			if (net != "") {
-				// console.log("Adding net", net)
-				api.nets.push(net);
+			if (net) {
+				var parentNet = api.nets.filter(function(n){ 
+						return n.source.id == net.source.id && n.source.portIndex == net.source.portIndex; 
+					})
+				if (parentNet) {
+					parentNet = parentNet[0];
+					function redo(){
+						parentNet.targets.push(net.targets[0]);
+					}
+					function undo(){
+						parentNet.targets.pop();
+					}
+				} else {
+					function redo(){
+						api.nets.push(net);
+					}
+					function undo(){
+						api.nets.pop();
+					}
+				}
+				redo();
+				api.undoRedoAction(redo, undo);
 			}
 			api.resetLinkingState();
 			api.redraw();
@@ -442,8 +460,17 @@ function diagramEditorCntrl($scope, hotkeys){
 
 	}
 
-	$scope.makeNet = function(originport, destinationport, origincomponent,
+	$scope.makeConnection = function(originport, destinationport, origincomponent,
 			destinationcomponent) {
+		if (originport[1] == destinationport[1]) {
+			api.msg.error("Can't connect matching port groups",
+					"QuickLink Erorr")
+			return;
+		} else if ((originport[1] == null || destinationport[1] == null)) {
+			api.msg.error("Can't connect link port direction corrupted",
+					"QuickLink Erorr")
+			return;
+		}
 		var origin = {
 			"portIndex" : originport[0],
 			"id" : origincomponent.id
@@ -452,23 +479,14 @@ function diagramEditorCntrl($scope, hotkeys){
 			"portIndex" : destinationport[0],
 			"id" : destinationcomponent.id
 		}
-		if (originport[1] == destinationport[1]) {
-			api.msg.error("Can't connect matching port groups",
-					"QuickLink Erorr")
-			return "";
-		} else if ((originport[1] == null | destinationport[1] == null)) {
-			api.msg.error("Can't connect link port name corrupted",
-					"QuickLink Erorr")
-			return "";
-		}
+
 		// TODO check whether net already exists?
 		if (originport[1] == "inputs") {
 			net = {
 				"targets" : [ origin ],
 				"source" : destination
 			}
-		}// if originport inputs
-		else if (originport[1] == "outputs") {
+		} else if (originport[1] == "outputs") {
 			net = {
 				"targets" : [ destination ],
 				"source" : origin
