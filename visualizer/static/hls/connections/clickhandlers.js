@@ -71,7 +71,8 @@ function onPortClick(d) {
 	scope.api.portClick(d, this);	
 	if(d.isExternalPort){
 		d3.select(this).classed({
-			"selected-port" : true
+			"selected-port" : true,
+			"selected-object" : true
 		});
 		d3.event.stopPropagation();
 		d3.select(this).select("image")

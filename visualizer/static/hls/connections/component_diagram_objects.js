@@ -65,7 +65,7 @@ function drawComponents(svgGroup, componentNodes){
 	    .attr("stroke", "#BDBDBD")
 	    .attr("stroke-width", "1")
 	    .attr("fill", "url(#blue_grad)")
-	    //.style("filter", "url(#drop-shadow)")
+	    //.style("filter", "url(#dropShadow)")
 	    .attr("width", function(d) { return d.width})
 	    .attr("height", function(d) { return d.height});
 

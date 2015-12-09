@@ -90,17 +90,18 @@ svg {
 	text-anchor: end;
 }
 
+
 @media screen and (-webkit-min-device-pixel-ratio:0)
 {
 	.selected-object-hover rect {
 		stroke: #87AFCB;
 		stroke-width: 2.5;	
-		filter: url("#drop-shadow");
+		filter: url("#dropShadow");
 	}
 
 	.selected-object rect {
 		fill: url("#red_grad");
-		filter: url("#drop-shadow-hight");
+		filter: url("#dropShadowHight");
 	}
 
 	path.link {
@@ -111,13 +112,13 @@ svg {
 
 	path.link-hover {
 		stroke: #87AFCB;
-		filter: url("#drop-shadow");
+		filter: url("#dropShadow");
 		stroke-width: 2.5px;
 	}
 
 	path.selected-link{
-	stroke: #E20D00;
-	stroke-width: 3.5px;
+		stroke: #E20D00;
+		stroke-width: 3.5px;
 	}
 }
 
