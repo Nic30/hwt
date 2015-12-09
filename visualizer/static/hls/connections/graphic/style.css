@@ -61,7 +61,6 @@ svg {
 
 .component {
 	/*fill: #AFEEEE;*/
-	
 }
 
 .selected-port text {
@@ -94,12 +93,12 @@ svg {
 .selected-object-hover rect {
 	stroke: #87AFCB;
 	stroke-width: 2.5;	
-	filter: url(#drop-shadow);
+	filter: url("#drop-shadow");
 }
 
 .selected-object rect {
-	fill: url(#red_grad);
-	filter: url(#drop-shadow-hight);
+	fill: url("#red_grad");
+	filter: url("#drop-shadow-hight");
 }
 
 path.link {
@@ -110,7 +109,7 @@ path.link {
 
 path.link-hover {
 	stroke: #87AFCB;
-	filter: url(#drop-shadow);
+	filter: url("#drop-shadow");
 	stroke-width: 2.5px;
 }
 
