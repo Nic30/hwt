@@ -249,7 +249,7 @@ function diagramEditorCntrl($scope, hotkeys){
 				var net = rec[0];
 				var targetIndex = rec[1];
 				var target = rec[2];
-				net.splice(targetIndex,0, target);
+				net.targets.splice(targetIndex,0, target);
 			});
 		}
 		api.undoRedoAction(redo, undo);
