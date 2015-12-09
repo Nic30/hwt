@@ -90,32 +90,35 @@ svg {
 	text-anchor: end;
 }
 
-.selected-object-hover rect {
-	stroke: #87AFCB;
-	stroke-width: 2.5;	
-	filter: url("#drop-shadow");
-}
+@media screen and (-webkit-min-device-pixel-ratio:0)
+{
+	.selected-object-hover rect {
+		stroke: #87AFCB;
+		stroke-width: 2.5;	
+		filter: url("#drop-shadow");
+	}
 
-.selected-object rect {
-	fill: url("#red_grad");
-	filter: url("#drop-shadow-hight");
-}
+	.selected-object rect {
+		fill: url("#red_grad");
+		filter: url("#drop-shadow-hight");
+	}
 
-path.link {
-	stroke: black;
-	stroke-width: 2px;
-	fill: none;
-}
+	path.link {
+		stroke: black;
+		stroke-width: 2px;
+		fill: none;
+	}
 
-path.link-hover {
-	stroke: #87AFCB;
-	filter: url("#drop-shadow");
-	stroke-width: 2.5px;
-}
+	path.link-hover {
+		stroke: #87AFCB;
+		filter: url("#drop-shadow");
+		stroke-width: 2.5px;
+	}
 
-path.selected-link{
+	path.selected-link{
 	stroke: #E20D00;
 	stroke-width: 3.5px;
+	}
 }
 
 .external-port {
@@ -193,4 +196,33 @@ body .modal-dialog {
 }
 .tooltip.top .tooltip-arrow {
       border-top-color: red;
+}
+
+@-moz-document url-prefix() {
+    .selected-object-hover rect {
+		stroke: #87AFCB;
+		stroke-width: 2.5;	
+	}
+
+	.selected-object rect {
+		fill: #E20D00;
+	}
+
+	path.link {
+		stroke: black;
+		stroke-width: 2px;
+		fill: none;
+	}
+
+	path.link-hover {
+		stroke: #87AFCB;
+		stroke-width: 2.5px;
+	}
+
+	path.selected-link{
+		stroke: #E20D00;
+		stroke-width: 3.5px;
+	}
+
+
 }
