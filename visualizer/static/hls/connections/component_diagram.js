@@ -268,7 +268,7 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){
 		return pathStr;
 	}
 	linkElements.attr("d", drawNet);
-	debugRouterDots(svgGroup, grid)
+	//debugRouterDots(svgGroup, grid)
 	linksCleanup();
 };
 
