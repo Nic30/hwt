@@ -11,6 +11,10 @@
 <div ng-include="'/static/hls/connections/templates/menu.html'" include-replace></div>
 {% endblock %}
 
+{% block menu_right %} 
+<div ng-include="'/static/hls/connections/templates/menu_right.html'" include-replace></div>
+{% endblock %}
+
  {% block css_extra %}
 
 <link type="text/css" rel="stylesheet" href="/static/bower_components/ag-grid/dist/ag-grid.css"/>
@@ -18,7 +22,6 @@
 <link type="text/css" rel="stylesheet" href="/static/hls/connections/graphic/style.css"/>
 <link type="text/css" rel="stylesheet" href="/static/hls/connections/graphic/fileBrowser.css"/>
 <link type="text/css" rel="stylesheet" href="/static/bower_components/angular-hotkeys/build/hotkeys.css"/>
-
 
 {% endblock %} 
 
@@ -32,6 +35,12 @@
 			"IN" : "IN",
 			"OUT" : "OUT"
 		};
+</script>
+
+<script>
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();   
+});
 </script>
 
 <script type="text/javascript" src="/static/bower_components/angular/angular.js"></script>

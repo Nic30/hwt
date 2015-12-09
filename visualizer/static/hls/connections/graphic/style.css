@@ -187,3 +187,10 @@ body .modal-dialog {
 	stroke: blue;
 }
 
+
+.tooltip.top .tooltip-inner {
+    background-color:red;
+}
+.tooltip.top .tooltip-arrow {
+      border-top-color: red;
+}
