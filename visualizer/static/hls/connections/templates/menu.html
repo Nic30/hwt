@@ -3,28 +3,30 @@
 		class="fa fa-caret-down"></i>
 </a>
 	<ul class="dropdown-menu dropdown-messages">
-		<li><a ng-click="api.new()" accesskey="n">
+		<li><a ng-click="api.new()">
 				<div>
 					<strong>New</strong> <span class="pull-right text-muted"> <em>No
 							Shortcut</em>
 					</span>
 				</div>
 		</a></li>
-		<li><a ng-click="api.fileDialog({'open':true})" accesskey="o">
+
+		<li><a ng-click="api.fileDialog({'open':true})">
+
 				<div>
 					<strong>Open</strong> <span class="pull-right text-muted"> <em>No
 							Shortcut</em>
 					</span>
 				</div>
 		</a></li>
-		<li><a accesskey="t">
+		<li><a>
 				<div>
 					<strong>Export</strong> <span class="pull-right text-muted">
 						<em>No Shortcut</em>
 					</span>
 				</div>
 		</a></li>
-		<li><a ng-click="api.save(api.openedFile)" accesskey="s">
+		<li><a ng-click="api.save(api.openedFile)">
 				<div>
 					<strong>Save</strong> <span class="pull-right text-muted"> <em>No
 							Shortcut</em>
@@ -38,7 +40,7 @@
 					</span>
 				</div>
 		</a></li>
-		<li><a accesskey="l">
+		<li><a>
 				<div>
 					<strong>Delete</strong> <span class="pull-right text-muted">
 						<em>No Shortcut</em>
@@ -47,8 +49,7 @@
 		</a></li>
 	</ul> <!-- /.dropdown-messages -->
 </li>
-<li class="dropdown"><a ng-click="api.componentAdd()"
-	data-toggle="modal" data-target="#newComponent"> <i
+<li class="dropdown"><a ng-click="api.componentAdd()"> <i
 		class="fa fa-plus fa-fw"></i>
 </a></li>
 <li class="dropdown"><a ng-click="api.fileDialog({'import':true})"> <i
@@ -84,9 +85,10 @@
 	data-toggle="dropdown" href="#"><i class="fa fa-question fa-fw"></i>
 </a>
 	<ul class="dropdown-menu dropdown-messages">
-		<li><a ng-click="showShorcuts()">
+		<li><a href="#">
 				<div>
 					<strong>Show Shortcuts</strong> <span class="pull-right text-muted">
+					<em>?</em>
 					</span>
 				</div>
 		</a></li>

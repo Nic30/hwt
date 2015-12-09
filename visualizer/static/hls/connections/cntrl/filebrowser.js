@@ -1,7 +1,6 @@
 function filebrowserCntrl($scope, $http) {
 	var api = $scope.$parent.api;
 	var fileDialog = $('#fileDialog');
-	var saveDialog = $('#saveDialog');
 	$scope.rootDir = "";
 	api.openedFile = '';
 	
@@ -11,7 +10,7 @@ function filebrowserCntrl($scope, $http) {
 			'text-align' : 'right'
 		};
 	}
-
+	
 	function innerCellRenderer(params) {
 		var image;
 		if (params.node.group) {
@@ -65,7 +64,7 @@ function filebrowserCntrl($scope, $http) {
 					api.msg.error("Can not open file", path);
 				});
 	}
-
+	
 	function rowClicked(params) {
 		var node = params.node;
 		var path = node.data.name;
@@ -105,7 +104,7 @@ function filebrowserCntrl($scope, $http) {
 		},
 		onRowClicked : rowClicked
 	};
-
+	
 	$scope.loadFolderData = function(path) {
 		$http.get('/hls/connections-data-ls/' + path)
 		.then(function(res) {
@@ -169,4 +168,8 @@ function filebrowserCntrl($scope, $http) {
 		saveDialog.modal('show');
 	};
 
+	$scope.dismissfileDialog = function() {
+		fileDialog.modal('hide');
+	}
+	
 }
