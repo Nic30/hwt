@@ -376,7 +376,7 @@ function ComponentDiagram(selector){
 			drawExternalPorts(svgGroup, self.nodes.filter(function (n){
 					return n.isExternalPort;
 				}))
-				.on("click", exPortOnClick);
+				.on("click", onPortClick);
 				// .on("dblclick", componentDetail);
 				
 			//COMPONENTS

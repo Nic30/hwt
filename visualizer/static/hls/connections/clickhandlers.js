@@ -1,26 +1,14 @@
 function onCompClick(d) {
-		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
-		scope.api.compClick(d);	
 		d3.event.stopPropagation();
 		if (!d3.event.shiftKey) {
 			removeSelections();
 		}
-
-		d3.select(this).classed({
-			"selected-object" : true
-		})
+		if(!d.isExternalPort){
+			d3.select(this).classed({
+				"selected-object" : true
+			});
+		}
 	}
-
-function exPortOnClick() {
-	d3.event.stopPropagation();
-	if (!d3.event.shiftKey) {
-		removeSelections();
-	}
-
-	d3.select(this).classed({
-		"selected-port" : true
-	})
-}
 
 function netOnClick() {
 	d3.event.stopPropagation();
@@ -76,6 +64,12 @@ function removePortClicked() {
 function onPortClick(d) {
 	var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
 	scope.api.portClick(d, this);	
+	if(d.isExternalPort){
+		d3.select(this).classed({
+			"selected-port" : true
+		});
+		d3.event.stopPropagation();
+	}
 }
 
 function exPortDetail() {
