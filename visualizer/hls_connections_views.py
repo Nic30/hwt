@@ -90,12 +90,11 @@ def connectionData(path):
             module = importlib.reload(sys.modules[path])
         except KeyError:
             module = importlib.import_module(path.replace("/","."))
-        dataDict = serializeUnit(module.interface, module.unit)       
-        data = json.dumps(dataDict, default=_defaultToJson)
+        data = serializeUnit(module.interface, module.unit)       
     
     elif path.endswith(".json"):
         with open(path) as f:
             data =f.read()
     else:
         raise Exception("not implemented")
-    return jsonResp(data)
+    return  Response(response=data, status=200, mimetype="application/json")
