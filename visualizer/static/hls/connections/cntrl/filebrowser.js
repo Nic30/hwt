@@ -1,7 +1,6 @@
 function filebrowserCntrl($scope, $http) {
 	var api = $scope.$parent.api;
 	var fileDialog = $('#fileDialog');
-	var saveDialog = $('#saveDialog');
 	$scope.rootDir = "";
 	api.openedFile = '';
 	
@@ -11,7 +10,7 @@ function filebrowserCntrl($scope, $http) {
 			'text-align' : 'right'
 		};
 	}
-
+	
 	function innerCellRenderer(params) {
 		var image;
 		if (params.node.group) {
@@ -53,17 +52,19 @@ function filebrowserCntrl($scope, $http) {
 		api.openedFile = '';
 	} 
 	api.open = function(path) {
-		return $http.get('/hls/connections-data/' + path).then(
+		$http.get('/hls/connections-data/' + path).then(
 				function(res) {
 					var nets = res.data.nets;
 					var nodes = res.data.nodes;
 					api.nodes = nodes;
 					api.nets = nets;
+					api.redraw();
+					api.fitDiagram2Screen();
 				}, function errorCallback(response) {
 					api.msg.error("Can not open file", path);
 				});
 	}
-
+	
 	function rowClicked(params) {
 		var node = params.node;
 		var path = node.data.name;
@@ -81,11 +82,11 @@ function filebrowserCntrl($scope, $http) {
 		} else {
 			api.openedFile = path;
 			
-			//fileDialog.modal('hide');
-			//api.open(path).then(function(){
-			//	api.redraw();
-			//	api.fitDiagram2Screen();
-			//});
+			// fileDialog.modal('hide');
+			// api.open(path).then(function(){
+			// api.redraw();
+			// api.fitDiagram2Screen();
+			// });
 		}
 	}
 
@@ -103,7 +104,7 @@ function filebrowserCntrl($scope, $http) {
 		},
 		onRowClicked : rowClicked
 	};
-
+	
 	$scope.loadFolderData = function(path) {
 		$http.get('/hls/connections-data-ls/' + path)
 		.then(function(res) {
@@ -138,7 +139,8 @@ function filebrowserCntrl($scope, $http) {
 	}
 
 	api.fileDialog = function(conf) {
-		//d3.selectAll("#chartWrapper").html(""); // [TODO] to different controller
+		// d3.selectAll("#chartWrapper").html(""); // [TODO] to different
+		// controller
 		$scope.conf = conf;
 		fileDialog.modal('show');
 		filesRowData = [];
@@ -166,4 +168,8 @@ function filebrowserCntrl($scope, $http) {
 		saveDialog.modal('show');
 	};
 
+	$scope.dismissfileDialog = function() {
+		fileDialog.modal('hide');
+	}
+	
 }

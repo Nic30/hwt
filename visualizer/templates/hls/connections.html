@@ -12,10 +12,13 @@
 {% endblock %}
 
  {% block css_extra %}
+
 <link type="text/css" rel="stylesheet" href="/static/bower_components/ag-grid/dist/ag-grid.css"/>
 <link type="text/css" rel="stylesheet" href="/static/bower_components/angular-toastr/dist/angular-toastr.min.css"/>
 <link type="text/css" rel="stylesheet" href="/static/hls/connections/graphic/style.css"/>
 <link type="text/css" rel="stylesheet" href="/static/hls/connections/graphic/fileBrowser.css"/>
+<link type="text/css" rel="stylesheet" href="/static/bower_components/angular-hotkeys/build/hotkeys.css"/>
+
 
 {% endblock %} 
 
@@ -49,19 +52,23 @@
 <script type="text/javascript" src="/static/hls/connections/dataprocessing.js"></script>
 <script type="text/javascript" src="/static/hls/connections/net_router.js"></script>
 <script type="text/javascript" src="/static/hls/connections/drawMenu.js"></script>
+<script type="text/javascript" src="/static/hls/connections/clickhandlers.js"></script>
 <script type="text/javascript" src="/static/hls/connections/cntrl/filebrowser.js"></script>
 <script type="text/javascript" src="/static/hls/connections/cntrl/menu.js"></script>
 <script type="text/javascript" src="/static/hls/connections/cntrl/diagram.js"></script>
 <script type="text/javascript" src="/static/hls/connections/cntrl/diagram_editor.js"></script>
 <script type="text/javascript" src="/static/hls/connections/cntrl/cookie_manger.js"></script>
+<script type="text/javascript" src="/static/hls/connections/cntrl/undo_redo.js"></script>
 <script type="text/javascript" src="/static/hls/connections/app.js"></script>
-<script type="text/javascript" src="/static/hls/connections/clickhandlers.js"></script>
+
+
 {% endblock %} 
 
 {% block angular_app %} ng-app="App" ng-controller="mainController" {% endblock %}
 
 {% block content %}
 <div ng-controller="cookieManagerCntrl" ></div>
+<div ng-controller="undoRedoCntrl" ></div>
 <div id="chartWrapper" ng-controller="diagramCntrl" ></div>
 {% endblock %} 
 

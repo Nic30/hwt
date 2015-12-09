@@ -1,5 +1,6 @@
-function diagramEditorCntrl($scope){
+function diagramEditorCntrl($scope, hotkeys){
 	var api = $scope.$parent.api;
+	var addDialog = $("#newComponent");
 	api.editedObject = {}
 	$scope.newObject = {
 		"name" : "",
@@ -9,9 +10,121 @@ function diagramEditorCntrl($scope){
 		"outputs" : []
 	}
 	$scope.portarrays = [];
+
+	
+	hotkeys.template = '<div class="cfp-hotkeys-container fade" ng-class="{in: helpVisible}" style="display: none;"><div class="cfp-hotkeys">' +
+    '<h4 class="cfp-hotkeys-title" ng-if="!header">{$ title $}</h4>' +
+    '<div ng-bind-html="header" ng-if="header"></div>' +
+    '<table><tbody>' +
+      '<tr ng-repeat="hotkey in hotkeys | filter:{ description: \'!$$undefined$$\' }">' +
+        '<td class="cfp-hotkeys-keys">' +
+          '<span ng-repeat="key in hotkey.format() track by $index" class="cfp-hotkeys-key">{$ key $}</span>' +
+        '</td>' +
+        '<td class="cfp-hotkeys-text">{$ hotkey.description $}</td>' +
+      '</tr>' +
+    '</tbody></table>' +
+    '<div ng-bind-html="footer" ng-if="footer"></div>' +
+    '<div class="cfp-hotkeys-close" ng-click="toggleCheatSheet()">×</div>' +
+    '</div></div>';
+    
+	var hkBindings = [
+			{
+				combo: 'ctrl+a',
+				description: 'Add component',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					// console.log("A hotkey");
+					api.componentAdd();
+				}
+			},
+			{
+				combo: 'ctrl+s',
+				description: 'Save file',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					// console.log("S hotkey");
+					api.save(api.openedFile);
+				}
+			},
+			{
+				combo: 'ctrl+shift+s',
+				description: 'Sav file as',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					// console.log("Shift S hotkey");
+					api.fileDialog(true);
+				}
+			},
+			{
+				combo: 'ctrl+d',
+				description: 'Delete component',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					// console.log("D hotkey");
+					api.objectDelete();
+				}
+			},
+			{
+				combo: 'ctrl+q',
+				description: 'Import Component',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					api.synthetize();
+				}
+			},
+			{
+				combo: 'ctrl+e',
+				description: 'Edit component',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					console.log("E hotkey");
+				}
+			},
+			{
+				combo: 'ctrl+o',
+				description: 'Open new file',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					// console.log("O hotkey");
+					api.fileDialog({open: true});
+				}
+			},
+			{
+				combo: 'ctrl+z',
+				description: 'Undo',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					api.undo();// console.log("Ctrl Z");
+				}
+			},
+			{
+				combo: 'ctrl+shift+z',
+				description: 'Redo',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					api.redo();// console.log("Ctrl shift z");
+				}
+			}
+		]
+	hkBindings.forEach(hotkeys.add);
+	
+	
+	$scope.dismissAddDialog = function() {
+		addDialog.modal('hide');
+	}
+		
 	api.insertNode = function(node, x, y){
 		api.nodes.push(node);
-		//[TODO] x,y
+		// [TODO] x,y
 	}
 	
 	api.synthetize = function(){
@@ -25,7 +138,7 @@ function diagramEditorCntrl($scope){
 			api.msg.clear(msg);
 			api.msg.success("Synthetized ",f, {});
 		}, 10000);
-		
+
 	}
 	
 	api.componentEditDetail = function() {
@@ -80,13 +193,10 @@ function diagramEditorCntrl($scope){
 
 	$scope.componentEditSubmit = function() {
 		api.redraw();
-		//console.log("Submit")
-		//console.log($scope.editedObject.inputs)
-		// d3.selectAll("#componentEdit").style("display", "none");
 	}
 
 	$scope.componentEditCancel = function() {
-		//console.log("Cancel")
+		// console.log("Cancel")
 		d3.selectAll("#componentEdit").style("display", "none");
 	}
 
@@ -94,51 +204,90 @@ function diagramEditorCntrl($scope){
 		// All selected objects
 		var objects = d3.selectAll(".selected-object")[0];
 		var links = d3.selectAll(".selected-link")[0];
-		//console.log("Selected objects", objects);
-		//console.log("Selected links", links.length, links);
-		for (i = 0; i < objects.length; i++) {
-			var obj = objects[i].__data__;
-			// console.log(obj)
-			// console.log("Nodes: ", api.nodes)
-			// console.log("Nets: ", api.nets)
-			// console.log("Object check")
-			// For all nodes in scope
-			for (var i = 0; i < api.nodes.length; i++) {
-				// console.log(api.nodes[i].name)
-				// Delete matching objects
-				if (api.nodes[i].name == obj.name) {
-					api.nodes.splice(i, 1);
+		var objects2remove =  [];
+		var nets2remove = new Set();
+		var rmFromTargets = new Set();
+		var netIndexes = {};
+		
+		
+		objects.forEach(function(o){
+			var obj = o.__data__;
+			objects2remove.push([obj, api.nodes.indexOf(obj)]);
+			api.nets.forEach(function(net, netIndx){
+				if(net.source.id == obj.id){
+					nets2remove.add(net);
+					netIndexes[net] = netIndx;
+				}else {
+					 net.targets.forEach(function(target, i){
+						if(target.id == obj.id){
+							if(net.targets.length == 1){
+								nets2remove.add(net);
+							}else{
+								rmFromTargets.add([net, i, target]);
+								netIndexes[net] = netIndx;
+							} 
+						}
+					 });
 				}
-			}
-			//console.log("Nets", obj.id)
-			// For all nets in scope
-			for (var j = 0; j < api.nets.length; j++) {
-				// For all links
-				var net = api.nets[j];
-				for (var l = 0; l < net.targets.length; l++) {
-					// Delete all links from deleted object
-					var target = net.targets[l];
-					if ((target.id == obj.id) | (net.source.id == obj.id)) {
-						// console.log("Net: ", target, net.source)
-						var removed = api.nets.splice(j, 1);
-						j--;
-						break;
-					}
-				}// for net targets
-			}// for scope nets
-		}// for selected objects
-
-		//console.log("Link check")
+			});
+		});
 		// For all selected links
-		for (var m = 0; m < links.length; m++) {
-			var net = links[m].__data__.net;
-			var index = api.nets.indexOf(net);
-			// Delete all selected links
-			if (index > -1) {
-				api.nets.splice(index, 1);
+		links.forEach(function(l){
+			var net = l.__data__.net;
+			nets2remove.add(net);
+		})
+		
+		// remove target removes, for already removed nets
+		var rmFromTargets_fromRmNets = [];
+		rmFromTargets.forEach(function(rec){
+			if(nets2remove.has(rec[0])){
+				rmFromTargets_fromRmNets.push(rec);
 			}
+		});
+		rmFromTargets_fromRmNets.forEach(function(rec){
+			rmFromTargets.delete(rec);
+		})
+		
+		
+		function redo(){
+			nets2remove.forEach(function(net){
+				var index = api.nets.indexOf(net);
+				// Delete all selected links
+				if (index > -1) {
+					api.nets.splice(index, 1);
+				}
+			})
+			rmFromTargets.forEach(function(rec){
+				var net = rec[0];
+				var targetIndex = rec[1];
+				net.targets.splice(targetIndex,1);
+			});
+			objects2remove.forEach(function (o){
+				// var obj = o[0];
+				var objIndx = o[1];
+				api.nodes.splice(objIndx, 1);
+			});
 		}
-		// console.log(api.nets)
+		
+		function undo(){
+			objects2remove.forEach(function (o){
+				var obj = o[0];
+				var objIndx = o[1];
+				api.nodes.splice(objIndx, 0, obj);
+			});
+			nets2remove.forEach(function(net){
+				var netIndx = netIndexes[net];
+				api.nets.splice(netIndx, 0, net);
+			});
+			rmFromTargets.forEach(function(rec){
+				var net = rec[0];
+				var targetIndex = rec[1];
+				var target = rec[2];
+				net.splice(targetIndex,0, target);
+			});
+		}
+		api.undoRedoAction(redo, undo);
+		redo();
 		api.redraw();
 		return;
 	}
@@ -152,12 +301,12 @@ function diagramEditorCntrl($scope){
 				max = api.nodes[i].id;
 			}
 		}
-		//console.log("Maximum: ", max);
+		// console.log("Maximum: ", max);
 		return max;
 	}
-	
+		
 	api.componentAdd = function() {
-		d3.selectAll("#componentAdd").style("display", "block");
+		addDialog.modal('show');
 		var id = getComponentID();
 		$scope.newObject = {
 			"name" : "",
@@ -176,23 +325,18 @@ function diagramEditorCntrl($scope){
 	}
 
 	$scope.componentAddSubmit = function() {
-		console.log("Submit")
-		console.log("Before: ", api.nodes)
 		$scope.newObject.id = parseInt($scope.newObject.id)
-		if($scope.newObject.name == "")
-		{
+		if($scope.newObject.name == "") {
 			api.msg.error("Can't create component without name", "Component add error");
 			return;
 		}
-		if(($scope.newObject.inputs.length == 0) && ($scope.newObject.outputs.length == 0))
-		{
+		if(($scope.newObject.inputs.length == 0) && ($scope.newObject.outputs.length == 0)) {
 			api.msg.error("Can't create empty component", "Component add error");
 			return;
 		}
 		
 		api.nodes.push($scope.newObject);
-		console.log("After: ", api.nodes)
-		$("#newComponent").modal('hide')
+		addDialog.modal('hide')
 		
 		api.redraw();
 
@@ -200,8 +344,7 @@ function diagramEditorCntrl($scope){
 	}
 
 	$scope.componentAddCancel = function() {
-		console.log("Cancel")
-		d3.selectAll("#componentAdd").style("display", "none");
+		addDialog.style("display", "none");
 	}
 
 	$scope.origin = {
@@ -289,7 +432,7 @@ function diagramEditorCntrl($scope){
 
 			// console.log("Net to be added: ", net)
 			if (net != "") {
-				//console.log("Adding net", net)
+				// console.log("Adding net", net)
 				api.nets.push(net);
 			}
 			api.resetLinkingState();
