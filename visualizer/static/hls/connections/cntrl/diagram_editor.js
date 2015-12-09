@@ -11,7 +11,7 @@ function diagramEditorCntrl($scope){
 	$scope.portarrays = [];
 	api.insertNode = function(node, x, y){
 		api.nodes.push(node);
-		//[TODO] x,y
+		// [TODO] x,y
 	}
 	
 	api.synthetize = function(){
@@ -80,13 +80,10 @@ function diagramEditorCntrl($scope){
 
 	$scope.componentEditSubmit = function() {
 		api.redraw();
-		//console.log("Submit")
-		//console.log($scope.editedObject.inputs)
-		// d3.selectAll("#componentEdit").style("display", "none");
 	}
 
 	$scope.componentEditCancel = function() {
-		//console.log("Cancel")
+		// console.log("Cancel")
 		d3.selectAll("#componentEdit").style("display", "none");
 	}
 
@@ -94,51 +91,86 @@ function diagramEditorCntrl($scope){
 		// All selected objects
 		var objects = d3.selectAll(".selected-object")[0];
 		var links = d3.selectAll(".selected-link")[0];
-		//console.log("Selected objects", objects);
-		//console.log("Selected links", links.length, links);
-		for (i = 0; i < objects.length; i++) {
-			var obj = objects[i].__data__;
-			// console.log(obj)
-			// console.log("Nodes: ", api.nodes)
-			// console.log("Nets: ", api.nets)
-			// console.log("Object check")
-			// For all nodes in scope
-			for (var i = 0; i < api.nodes.length; i++) {
-				// console.log(api.nodes[i].name)
-				// Delete matching objects
-				if (api.nodes[i].name == obj.name) {
-					api.nodes.splice(i, 1);
+		var objects2remove =  [];
+		var nets2remove = new Set();
+		var rmFromTargets = new Set();
+		var netIndexes = {};
+		
+		
+		objects.forEach(function(o, objIndx){
+			var obj = o.__data__;
+			objects2remove.push([obj, objIndx]);
+			api.nets.forEach(function(net, netIndx){
+				if(net.source.id == obj.id){
+					nets2remove.add(net);
+					netIndexes[net] = netIndx;
+				}else {
+					 net.targets.forEach(function(target, i){
+						if(target.id == obj.id){
+							rmFromTargets.add([net, i, target]);
+							netIndexes[net] = netIndx;
+						} 
+					 });
 				}
-			}
-			//console.log("Nets", obj.id)
-			// For all nets in scope
-			for (var j = 0; j < api.nets.length; j++) {
-				// For all links
-				var net = api.nets[j];
-				for (var l = 0; l < net.targets.length; l++) {
-					// Delete all links from deleted object
-					var target = net.targets[l];
-					if ((target.id == obj.id) | (net.source.id == obj.id)) {
-						// console.log("Net: ", target, net.source)
-						var removed = api.nets.splice(j, 1);
-						j--;
-						break;
-					}
-				}// for net targets
-			}// for scope nets
-		}// for selected objects
-
-		//console.log("Link check")
+			});
+		});
 		// For all selected links
-		for (var m = 0; m < links.length; m++) {
-			var net = links[m].__data__.net;
-			var index = api.nets.indexOf(net);
-			// Delete all selected links
-			if (index > -1) {
-				api.nets.splice(index, 1);
+		links.forEach(function(l){
+			var net = l.__data__.net;
+			nets2remove.add(net);
+		})
+		
+		// remove target removes, for already removed nets
+		var rmFromTargets_fromRmNets = [];
+		rmFromTargets.forEach(function(rec){
+			if(nets2remove.has(rec[0])){
+				rmFromTargets_fromRmNets.push(rec);
 			}
+		});
+		rmFromTargets_fromRmNets.forEach(function(rec){
+			rmFromTargets.delete(rec);
+		})
+		
+		
+		function redo(){
+			nets2remove.forEach(function(net){
+				var index = api.nets.indexOf(net);
+				// Delete all selected links
+				if (index > -1) {
+					api.nets.splice(index, 1);
+				}
+			})
+			rmFromTargets.forEach(function(rec){
+				var net = rec[0];
+				var targetIndex = rec[1];
+				net.targets.splice(targetIndex,1);
+			});
+			objects2remove.forEach(function (o){
+				//var obj = o[0];
+				var objIndx = o[1];
+				api.nodes.splice(targetIndex, 1);
+			});
 		}
-		// console.log(api.nets)
+		
+		function undo(){
+			objects2remove.forEach(function (o){
+				var obj = o[0];
+				var objIndx = o[1];
+				api.nodes.splice(objIndx, 0, obj);
+			});
+			nets2remove.forEach(function(net){
+				var netIndx = netIndexes[net];
+				api.nets.splice(netIndx, 0, net);
+			});
+			rmFromTargets.forEach(function(rec){
+				var net = rec[0];
+				var targetIndex = rec[1];
+				var target = rec[2];
+				net.splice(targetIndex,0, target);
+			});
+		}
+		api.undoRedoAction(redo, undo);
+		redo();
 		api.redraw();
 		return;
 	}
@@ -152,7 +184,7 @@ function diagramEditorCntrl($scope){
 				max = api.nodes[i].id;
 			}
 		}
-		//console.log("Maximum: ", max);
+		// console.log("Maximum: ", max);
 		return max;
 	}
 	
@@ -289,7 +321,7 @@ function diagramEditorCntrl($scope){
 
 			// console.log("Net to be added: ", net)
 			if (net != "") {
-				//console.log("Adding net", net)
+				// console.log("Adding net", net)
 				api.nets.push(net);
 			}
 			api.resetLinkingState();

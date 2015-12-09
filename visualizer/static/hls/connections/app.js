@@ -28,6 +28,7 @@ App.controller('mainController', function($scope, $http, toastr, $cookies,$cooki
 .controller('menuCntrl', menuCntrl)
 .controller('diagramEditorCntrl', diagramEditorCntrl)
 .controller('cookieManagerCntrl', cookieManagerCntrl)
+.controller('undoRedoCntrl', undoRedoCntrl)
 .directive('includeReplace', function () {
     return {
         require: 'ngInclude',
