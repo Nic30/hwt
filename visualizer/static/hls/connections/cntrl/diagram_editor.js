@@ -20,7 +20,7 @@ function diagramEditorCntrl($scope, hotkeys){
 					e.stopPropagation(this);
 					e.preventDefault(this);
 					// console.log("A hotkey");
-					api.componentAdd();
+					api.componentAddDialog();
 				}
 			}, {combo: 'ctrl+s',
 				description: 'Save file',
@@ -277,7 +277,9 @@ function diagramEditorCntrl($scope, hotkeys){
 			"id": id+1,
 			"type" : "",
 			"inputs" : [],
-			"outputs" : []
+			"outputs" : [],
+			"exPortType" : null,
+			"isExternalPort": false
 		}
 		$scope.portarrays = [ {
 			'array' : $scope.newObject.inputs,
@@ -285,17 +287,54 @@ function diagramEditorCntrl($scope, hotkeys){
 		}, {
 			'array' : $scope.newObject.outputs,
 			'name' : 'Outputs'
-		} ]
+		}]
 	}
 
 	$scope.componentAddSubmit = function() {
 		var o = $scope.newObject;
 		o.id = parseInt(o.id)
 		
+	console.log(o.exPortType)
+		if(o.exPortType == null)
+			{
+			o.exPortType = COMPONENT;
+			}
+		else 
+			{
+			o.isExternalPort = true;
+			o.direction = o.exPortType;
+
+			console.log("Export")
+			}
+	
 		if(o.name == "") {
 			api.msg.error("Can't create component without name", "Component add error");
 			return;
 		}
+		
+		console.log(o.direction)
+		console.log(o.inputs)
+		console.log(o.outputs)
+		if((o.direction == DIRECTION.IN) && ((o.inputs.length != 0)))
+			{
+			api.msg.error("Can't create external input with input ports", "Component add error");
+			return;
+			}
+		
+		//OUT
+		//inputs > 0
+		//outputs == 0
+		//
+		//IN 
+		//inputs == 0
+		//outputs >0
+		
+		if(o.direction == DIRECTION.OUT &&  !(o.outputs.length > 0 && o.inputs.length == 0))
+		{
+			api.msg.error("Can't create external output with output ports", "Component add error");
+			return;
+		}
+		
 		if((o.inputs.length == 0) && (o.outputs.length == 0)) {
 			api.msg.error("Can't create empty component", "Component add error");
 			return;

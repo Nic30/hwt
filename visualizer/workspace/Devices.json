@@ -314,19 +314,19 @@
                 "bottom": 0,
                 "top": 0
             },
-            "id": 7,
             "px": 430,
             "x": 26,
             "name": "Keyboard",
-            "y": 262,
-            "width": 111,
+            "id": 7,
             "type": "Device",
-            "fixed": 0,
+            "width": 111,
+            "y": 262,
             "inputs": [
                 {
                     "name": "Power"
                 }
             ],
+            "fixed": 0,
             "height": 40
         }
     ]
