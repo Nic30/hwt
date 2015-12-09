@@ -53,12 +53,14 @@ function filebrowserCntrl($scope, $http) {
 		api.openedFile = '';
 	} 
 	api.open = function(path) {
-		return $http.get('/hls/connections-data/' + path).then(
+		$http.get('/hls/connections-data/' + path).then(
 				function(res) {
 					var nets = res.data.nets;
 					var nodes = res.data.nodes;
 					api.nodes = nodes;
 					api.nets = nets;
+					api.redraw();
+					api.fitDiagram2Screen();
 				}, function errorCallback(response) {
 					api.msg.error("Can not open file", path);
 				});
@@ -81,11 +83,11 @@ function filebrowserCntrl($scope, $http) {
 		} else {
 			api.openedFile = path;
 			
-			//fileDialog.modal('hide');
-			//api.open(path).then(function(){
-			//	api.redraw();
-			//	api.fitDiagram2Screen();
-			//});
+			// fileDialog.modal('hide');
+			// api.open(path).then(function(){
+			// api.redraw();
+			// api.fitDiagram2Screen();
+			// });
 		}
 	}
 
@@ -138,7 +140,8 @@ function filebrowserCntrl($scope, $http) {
 	}
 
 	api.fileDialog = function(conf) {
-		//d3.selectAll("#chartWrapper").html(""); // [TODO] to different controller
+		// d3.selectAll("#chartWrapper").html(""); // [TODO] to different
+		// controller
 		$scope.conf = conf;
 		fileDialog.modal('show');
 		filesRowData = [];
