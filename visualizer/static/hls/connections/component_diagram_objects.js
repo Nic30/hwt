@@ -92,8 +92,10 @@ function drawComponents(svgGroup, componentNodes){
 		.enter()
 		.append('g')
 		.classed({"port-input": true})
-		.on("click", onPortClick);
-	
+		.on("click", onPortClick)
+		.on("mousemove", onPortMouseMove)
+		.on("mouseout", onPortMouseOut);
+
 	// input port icon [TODO] only for special types of connection, this is only example how to use it
 	port_inputs.append("image")
 		.attr("xlink:href", function(d) { 
@@ -129,7 +131,9 @@ function drawComponents(svgGroup, componentNodes){
 		.enter()
 		.append('g')
 		.classed({"port-output": true})
-		.on("click", onPortClick);
+		.on("click", onPortClick)
+		.on("mousemove", onPortMouseMove)
+		.on("mouseout", onPortMouseOut);
 
 	//  output port image
 	port_out.append("image")

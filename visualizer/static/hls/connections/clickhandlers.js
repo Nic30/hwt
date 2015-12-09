@@ -20,6 +20,10 @@ function exPortOnClick() {
 	d3.select(this).classed({
 		"selected-port" : true
 	})
+	d3.select(this).select("image")
+	.attr("xlink:href", function(d) { 
+		return "/static/hls/connections/graphic/INred.png"; 
+	})
 }
 
 function netOnClick() {
@@ -53,6 +57,10 @@ function onBoardClick() {
 }
 
 function removeSelections() {
+	d3.selectAll(".selected-port").select("image")
+		.attr("xlink:href", function(d) { 
+		return "/static/hls/connections/graphic/INshort.png"; 
+	})
 	d3.selectAll(".selected-port").classed({
 		"selected-port" : false
 	});
