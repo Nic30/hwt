@@ -27,7 +27,7 @@ function diagramEditorCntrl($scope, hotkeys){
     '<div class="cfp-hotkeys-close" ng-click="toggleCheatSheet()">×</div>' +
     '</div></div>';
     
-	hkBindings = [
+	var hkBindings = [
 			{
 				combo: 'ctrl+a',
 				description: 'Add component',
@@ -115,17 +115,7 @@ function diagramEditorCntrl($scope, hotkeys){
 				}
 			}
 		]
-	
-	for (var key in hkBindings)
-	{
-		// console.log(hkBindings[key]);
-		hotkeys.add({
-		    combo: hkBindings[key].combo,
-		    description: hkBindings[key].description,
-		    callback: hkBindings[key].callback
-		  });
-	}
-
+	hkBindings.forEach(hotkeys.add);
 	
 	
 	$scope.dismissAddDialog = function() {
@@ -314,13 +304,9 @@ function diagramEditorCntrl($scope, hotkeys){
 		// console.log("Maximum: ", max);
 		return max;
 	}
-	
-
 		
 	api.componentAdd = function() {
-		
 		addDialog.modal('show');
-		d3.selectAll("#componentAdd").style("display", "block");
 		var id = getComponentID();
 		$scope.newObject = {
 			"name" : "",
@@ -339,23 +325,18 @@ function diagramEditorCntrl($scope, hotkeys){
 	}
 
 	$scope.componentAddSubmit = function() {
-		console.log("Submit")
-		console.log("Before: ", api.nodes)
 		$scope.newObject.id = parseInt($scope.newObject.id)
-		if($scope.newObject.name == "")
-		{
+		if($scope.newObject.name == "") {
 			api.msg.error("Can't create component without name", "Component add error");
 			return;
 		}
-		if(($scope.newObject.inputs.length == 0) && ($scope.newObject.outputs.length == 0))
-		{
+		if(($scope.newObject.inputs.length == 0) && ($scope.newObject.outputs.length == 0)) {
 			api.msg.error("Can't create empty component", "Component add error");
 			return;
 		}
 		
 		api.nodes.push($scope.newObject);
-		console.log("After: ", api.nodes)
-		$("#newComponent").modal('hide')
+		addDialog.modal('hide')
 		
 		api.redraw();
 
@@ -363,8 +344,7 @@ function diagramEditorCntrl($scope, hotkeys){
 	}
 
 	$scope.componentAddCancel = function() {
-		console.log("Cancel")
-		d3.selectAll("#componentAdd").style("display", "none");
+		addDialog.style("display", "none");
 	}
 
 	$scope.origin = {
