@@ -1,4 +1,4 @@
-function onCompClick(d){
+function onCompClick(d) {
 		var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
 		scope.api.compClick(d);	
 		d3.event.stopPropagation();
@@ -34,16 +34,14 @@ function netOnClick() {
 }
 
 //Sets quick link creation state to none
-function resetLinks()
-{
+function resetLinks(){
 	var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
 	scope.api.resetLinkingState();	
 }
 
-function onBoardClick() 
-{
-	console.log("boardclick")
-	var exists = !d3.selectAll(".clicked-port").empty()
+function onBoardClick() {
+	//console.log("boardclick")
+	var exists = !d3.selectAll(".clicked-port").empty();
 	var coordinates = d3.mouse(this);
 	var x = coordinates[0];
 	var y = coordinates[1];
@@ -69,19 +67,17 @@ function removeSelections() {
 	});
 }
 
-function removePortClicked()
-{
+function removePortClicked() {
 	d3.selectAll(".selected-link").classed({
 		"selected-link" : false
 	});
 }
 
-function onPortClick(d){
+function onPortClick(d) {
 	var scope = angular.element(document.getElementsByTagName('body')[0]).scope();
 	scope.api.portClick(d, this);	
 }
 
-function exPortDetail()
-{
-	console.log("ExPort Detail")
+function exPortDetail() {
+	console.log("[TODO]ExPort Detail")
 }
