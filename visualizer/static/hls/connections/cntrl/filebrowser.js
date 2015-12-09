@@ -1,7 +1,7 @@
 function filebrowserCntrl($scope, $http) {
 	var api = $scope.$parent.api;
 	var fileDialog = $('#fileDialog');
-	var saveDialog = $('#saveDialog');
+
 	$scope.doSave = false;
 	$scope.rootDir = "";
 	api.openedFile = '';
@@ -163,7 +163,4 @@ function filebrowserCntrl($scope, $http) {
 		fileDialog.modal('hide');
 	}
 	
-	$scope.dismisssaveDialog = function() {
-		saveDialog.modal('hide');
-	}
 }

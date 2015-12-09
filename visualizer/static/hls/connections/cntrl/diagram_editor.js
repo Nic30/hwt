@@ -1,5 +1,6 @@
 function diagramEditorCntrl($scope, hotkeys){
 	var api = $scope.$parent.api;
+	var addDialog = $("#newComponent");
 	api.editedObject = {}
 	$scope.newObject = {
 		"name" : "",
@@ -242,7 +243,11 @@ function diagramEditorCntrl($scope, hotkeys){
 		return max;
 	}
 	
+
+		
 	api.componentAdd = function() {
+		
+		addDialog.modal('show');
 		d3.selectAll("#componentAdd").style("display", "block");
 		var id = getComponentID();
 		$scope.newObject = {

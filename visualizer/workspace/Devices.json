@@ -155,7 +155,7 @@
             ],
             "id": 2,
             "type": "Device",
-            "py": 122,
+            "py": 244,
             "netChannelPadding": {
                 "top": 0,
                 "bottom": 0,
@@ -209,7 +209,7 @@
         {
             "height": 50,
             "width": 111,
-            "fixed": 4,
+            "fixed": 0,
             "outputs": [
                 {
                     "name": "Audio"
