@@ -70,12 +70,11 @@ function diagramEditorCntrl($scope, hotkeys){
 			},
 			{
 				combo: 'ctrl+q',
-				description: 'Redraw state',
+				description: 'Import Component',
 				callback: function(e) {
 					e.stopPropagation(this);
 					e.preventDefault(this);
-					//console.log("Q hotkey");
-					api.redraw();
+					api.synthetize();
 				}
 			},
 			{
@@ -94,10 +93,28 @@ function diagramEditorCntrl($scope, hotkeys){
 					e.stopPropagation(this);
 					e.preventDefault(this);
 					//console.log("O hotkey");
-					api.fileDialog(false);
+					api.fileDialog({open: true});
+				}
+			},
+			{
+				combo: 'ctrl+z',
+				description: 'Undo',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					console.log("Ctrl Z");
+				}
+			},
+			{
+				combo: 'ctrl+shift+z',
+				description: 'Redo',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					console.log("Ctrl shift z");
 				}
 			}
-	]
+		]
 	
 	for (var key in hkBindings)
 	{
