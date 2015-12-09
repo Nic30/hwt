@@ -1,93 +1,92 @@
 {
-    "name" : "portsOnly",
     "nodes": [
         {
-            "width": 120,
+            "y": 20,
+            "isExternalPort": true,
+            "netChannelPadding": {
+                "right": 0,
+                "top": 0,
+                "left": 0,
+                "bottom": 0
+            },
+            "direction": "IN",
+            "name": "clk",
+            "height": 40,
+            "inputs": [],
             "outputs": [
                 {
                     "name": "clk"
                 }
             ],
-            "name": "clk",
-            "isExternalPort": true,
-            "y": 20,
-            "direction": "IN",
-            "id": 2,
-            "height": 40,
             "x": 20,
-            "netChannelPadding": {
-                "left": 0,
-                "bottom": 0,
-                "top": 0,
-                "right": 0
-            },
-            "inputs": []
+            "width": 48,
+            "id": 2
         },
         {
-            "width": 120,
+            "y": 100,
+            "isExternalPort": true,
+            "netChannelPadding": {
+                "right": 0,
+                "top": 0,
+                "left": 0,
+                "bottom": 0
+            },
+            "direction": "IN",
+            "name": "rst",
+            "height": 40,
+            "inputs": [],
             "outputs": [
                 {
                     "name": "rst"
                 }
             ],
-            "name": "rst",
-            "isExternalPort": true,
-            "y": 100,
-            "direction": "IN",
-            "id": 3,
-            "height": 40,
             "x": 20,
-            "netChannelPadding": {
-                "left": 0,
-                "bottom": 0,
-                "top": 0,
-                "right": 0
-            },
-            "inputs": []
+            "width": 48,
+            "id": 3
         },
         {
-            "width": 120,
-            "outputs": [],
-            "name": "outA",
-            "isExternalPort": true,
             "y": 20,
-            "direction": "OUT",
-            "id": 6,
-            "height": 40,
-            "x": 180,
+            "isExternalPort": true,
             "netChannelPadding": {
-                "left": 0,
-                "bottom": 0,
+                "right": 0,
                 "top": 0,
-                "right": 0
+                "left": 0,
+                "bottom": 0
             },
+            "direction": "OUT",
+            "name": "outA",
+            "height": 40,
             "inputs": [
                 {
                     "name": "outA"
                 }
-            ]
+            ],
+            "outputs": [],
+            "x": 108,
+            "width": 48,
+            "id": 6
         },
         {
-            "width": 120,
+            "y": 180,
+            "isExternalPort": true,
+            "netChannelPadding": {
+                "right": 0,
+                "top": 0,
+                "left": 0,
+                "bottom": 0
+            },
+            "direction": "IN",
+            "name": "inA",
+            "height": 40,
+            "inputs": [],
             "outputs": [
                 {
                     "name": "outA"
                 }
             ],
-            "name": "inA",
-            "isExternalPort": true,
-            "y": 180,
-            "direction": "IN",
-            "id": 7,
-            "height": 40,
             "x": 20,
-            "netChannelPadding": {
-                "left": 0,
-                "bottom": 0,
-                "top": 0,
-                "right": 0
-            },
-            "inputs": []
+            "width": 48,
+            "id": 7
         }
     ],
     "nets": []

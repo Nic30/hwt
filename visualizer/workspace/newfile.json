@@ -1,121 +1,9 @@
 {
-    "nets": [
-        {
-            "targets": [
-                {
-                    "portIndex": 0,
-                    "id": 6
-                }
-            ],
-            "source": {
-                "portIndex": 0,
-                "id": 5
-            },
-            "name": "a"
-        },
-        {
-            "targets": [
-                {
-                    "portIndex": 0,
-                    "id": 0
-                },
-                {
-                    "portIndex": 0,
-                    "id": 1
-                }
-            ],
-            "source": {
-                "portIndex": 0,
-                "id": 2
-            },
-            "name": "clk"
-        },
-        {
-            "targets": [
-                {
-                    "portIndex": 1,
-                    "id": 0
-                },
-                {
-                    "portIndex": 1,
-                    "id": 1
-                }
-            ],
-            "source": {
-                "portIndex": 0,
-                "id": 3
-            },
-            "name": "rst"
-        },
-        {
-            "targets": [
-                {
-                    "portIndex": 2,
-                    "id": 1
-                }
-            ],
-            "source": {
-                "portIndex": 0,
-                "id": 0
-            },
-            "name": "A"
-        },
-        {
-            "targets": [
-                {
-                    "portIndex": 3,
-                    "id": 1
-                }
-            ],
-            "source": {
-                "portIndex": 1,
-                "id": 0
-            },
-            "name": "B"
-        },
-        {
-            "targets": [
-                {
-                    "portIndex": 1,
-                    "id": 5
-                }
-            ],
-            "source": {
-                "portIndex": 0,
-                "id": 5
-            },
-            "name": "C"
-        },
-        {
-            "targets": [
-                {
-                    "portIndex": 2,
-                    "id": 5
-                }
-            ],
-            "source": {
-                "portIndex": 1,
-                "id": 5
-            },
-            "name": "D"
-        },
-        {
-            "targets": [
-                {
-                    "portIndex": 3,
-                    "id": 5
-                }
-            ],
-            "source": {
-                "portIndex": 0,
-                "id": 7
-            }
-        }
-    ],
     "nodes": [
         {
             "height": 50,
-            "px": 210,
+            "id": 0,
+            "width": 76,
             "inputs": [
                 {
                     "name": "clk"
@@ -124,14 +12,7 @@
                     "name": "rst"
                 }
             ],
-            "netChannelPadding": {
-                "right": 0,
-                "left": 30,
-                "top": 0,
-                "bottom": 0
-            },
-            "id": 0,
-            "name": "smaller one",
+            "y": 20,
             "outputs": [
                 {
                     "name": "outA"
@@ -140,15 +21,22 @@
                     "name": "outB"
                 }
             ],
-            "py": 20,
-            "width": 120,
-            "x": 210,
+            "name": "smaller one",
+            "netChannelPadding": {
+                "right": 0,
+                "top": 0,
+                "left": 30,
+                "bottom": 0
+            },
+            "px": 166,
             "fixed": 0,
-            "y": 20
+            "py": 20,
+            "x": 166
         },
         {
             "height": 70,
-            "px": 210,
+            "id": 1,
+            "width": 76,
             "inputs": [
                 {
                     "name": "clk"
@@ -163,14 +51,7 @@
                     "name": "inB"
                 }
             ],
-            "netChannelPadding": {
-                "right": 0,
-                "left": 30,
-                "top": 12,
-                "bottom": 0
-            },
-            "id": 1,
-            "name": "biggest",
+            "y": 128,
             "outputs": [
                 {
                     "name": "outA2"
@@ -179,59 +60,66 @@
                     "name": "outB2"
                 }
             ],
-            "py": 128,
-            "width": 120,
-            "x": 210,
+            "name": "biggest",
+            "netChannelPadding": {
+                "right": 0,
+                "top": 12,
+                "left": 30,
+                "bottom": 0
+            },
+            "px": 166,
             "fixed": 0,
-            "y": 128
+            "py": 128,
+            "x": 166
         },
         {
             "height": 40,
-            "direction": "IN",
-            "width": 120,
-            "inputs": [],
+            "id": 2,
             "netChannelPadding": {
                 "right": 0,
-                "left": 6,
                 "top": 0,
+                "left": 0,
                 "bottom": 0
             },
+            "isExternalPort": true,
+            "direction": "IN",
+            "width": 76,
+            "inputs": [],
+            "name": "clk",
+            "y": 20,
             "outputs": [
                 {
                     "name": "clk"
                 }
             ],
-            "x": 26,
-            "y": 20,
-            "isExternalPort": true,
-            "id": 2,
-            "name": "clk"
+            "x": 20
         },
         {
             "height": 40,
-            "direction": "IN",
-            "width": 120,
-            "inputs": [],
+            "id": 3,
             "netChannelPadding": {
                 "right": 0,
-                "left": 6,
-                "top": 6,
+                "top": 0,
+                "left": 0,
                 "bottom": 0
             },
+            "isExternalPort": true,
+            "direction": "IN",
+            "width": 76,
+            "inputs": [],
+            "name": "rst",
+            "y": 136,
             "outputs": [
                 {
                     "name": "rst"
                 }
             ],
-            "x": 26,
-            "y": 118,
-            "isExternalPort": true,
-            "id": 3,
-            "name": "rst"
+            "x": 20
         },
         {
             "height": 70,
-            "px": 388,
+            "id": 4,
+            "width": 76,
             "inputs": [
                 {
                     "name": "clk"
@@ -240,14 +128,7 @@
                     "name": "rst"
                 }
             ],
-            "netChannelPadding": {
-                "right": 0,
-                "left": 18,
-                "top": 0,
-                "bottom": 0
-            },
-            "id": 4,
-            "name": "dummy",
+            "y": 20,
             "outputs": [
                 {
                     "name": "outA"
@@ -262,15 +143,22 @@
                     "name": "d"
                 }
             ],
-            "py": 20,
-            "width": 120,
-            "x": 388,
+            "name": "dummy",
+            "netChannelPadding": {
+                "right": 0,
+                "top": 0,
+                "left": 12,
+                "bottom": 0
+            },
+            "px": 294,
             "fixed": 0,
-            "y": 20
+            "py": 20,
+            "x": 294
         },
         {
             "height": 70,
-            "px": 388,
+            "id": 5,
+            "width": 76,
             "inputs": [
                 {
                     "name": "clk"
@@ -285,14 +173,7 @@
                     "name": "inE"
                 }
             ],
-            "netChannelPadding": {
-                "right": 0,
-                "left": 18,
-                "top": 0,
-                "bottom": 0
-            },
-            "id": 5,
-            "name": "selfReference",
+            "y": 202,
             "outputs": [
                 {
                     "name": "c"
@@ -301,55 +182,161 @@
                     "name": "d"
                 }
             ],
-            "py": 172,
-            "width": 120,
-            "x": 388,
+            "name": "selfReference",
+            "netChannelPadding": {
+                "right": 0,
+                "top": 0,
+                "left": 12,
+                "bottom": 0
+            },
+            "px": 294,
             "fixed": 0,
-            "y": 172
+            "py": 202,
+            "x": 294
         },
         {
             "height": 40,
+            "id": 6,
+            "netChannelPadding": {
+                "right": 0,
+                "top": 0,
+                "left": 12,
+                "bottom": 0
+            },
+            "isExternalPort": true,
             "direction": "OUT",
-            "width": 120,
+            "width": 76,
             "inputs": [
                 {
                     "name": "outA"
                 }
             ],
-            "netChannelPadding": {
-                "right": 0,
-                "left": 18,
-                "top": 0,
-                "bottom": 0
-            },
-            "outputs": [],
-            "x": 566,
+            "name": "outA",
             "y": 20,
-            "isExternalPort": true,
-            "id": 6,
-            "name": "outA"
+            "outputs": [],
+            "x": 422
         },
         {
             "height": 40,
-            "direction": "IN",
-            "width": 120,
-            "inputs": [],
+            "id": 7,
             "netChannelPadding": {
                 "right": 0,
-                "left": 6,
                 "top": 0,
+                "left": 0,
                 "bottom": 0
             },
+            "isExternalPort": true,
+            "direction": "IN",
+            "width": 76,
+            "inputs": [],
+            "name": "inA",
+            "y": 252,
             "outputs": [
                 {
                     "name": "outA"
                 }
             ],
-            "x": 26,
-            "y": 228,
-            "isExternalPort": true,
-            "id": 7,
-            "name": "inA"
+            "x": 20
+        }
+    ],
+    "nets": [
+        {
+            "targets": [
+                {
+                    "id": 0,
+                    "portIndex": 0
+                },
+                {
+                    "id": 1,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 2,
+                "portIndex": 0
+            },
+            "name": "clk"
+        },
+        {
+            "targets": [
+                {
+                    "id": 0,
+                    "portIndex": 1
+                },
+                {
+                    "id": 1,
+                    "portIndex": 1
+                }
+            ],
+            "source": {
+                "id": 3,
+                "portIndex": 0
+            },
+            "name": "rst"
+        },
+        {
+            "targets": [
+                {
+                    "id": 1,
+                    "portIndex": 2
+                }
+            ],
+            "source": {
+                "id": 0,
+                "portIndex": 0
+            },
+            "name": "A"
+        },
+        {
+            "targets": [
+                {
+                    "id": 1,
+                    "portIndex": 3
+                }
+            ],
+            "source": {
+                "id": 0,
+                "portIndex": 1
+            },
+            "name": "B"
+        },
+        {
+            "targets": [
+                {
+                    "id": 5,
+                    "portIndex": 1
+                }
+            ],
+            "source": {
+                "id": 5,
+                "portIndex": 0
+            },
+            "name": "C"
+        },
+        {
+            "targets": [
+                {
+                    "id": 5,
+                    "portIndex": 2
+                }
+            ],
+            "source": {
+                "id": 5,
+                "portIndex": 1
+            },
+            "name": "D"
+        },
+        {
+            "targets": [
+                {
+                    "id": 6,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 4,
+                "portIndex": 0
+            }
         }
     ]
 }

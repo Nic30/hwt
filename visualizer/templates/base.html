@@ -59,8 +59,11 @@
             <!-- /.navbar-header -->
 
             <ul class="nav navbar-top-links navbar-left" {% block menu_attrib %}{% endblock %}>
-             {% block menu_extra %} {% endblock %}
-			</ul>       
+            {% block menu_extra %} {% endblock %}
+			</ul>
+            <ul class="nav navbar-top-links navbar-right">
+            {% block menu_right %} {% endblock %}   
+            </ul>       
         </nav>
 		<div class="nav navbar-default navbar-fixed-top sidebar" role="navigation">
 

@@ -5,8 +5,7 @@
 	<ul class="dropdown-menu dropdown-messages">
 		<li><a ng-click="api.new()">
 				<div>
-					<strong>New</strong> <span class="pull-right text-muted"> <em>No
-							Shortcut</em>
+					<strong>New</strong> <span class="pull-right text-muted"> <em></em>
 					</span>
 				</div>
 		</a></li>
@@ -14,96 +13,62 @@
 		<li><a ng-click="api.fileDialog({'open':true})">
 
 				<div>
-					<strong>Open</strong> <span class="pull-right text-muted"> <em>No
-							Shortcut</em>
+					<strong>Open</strong> <span class="pull-right text-muted"> <em>ctrl + o</em>
 					</span>
 				</div>
 		</a></li>
 		<li><a ng-click="api.synthetize()">
 				<div>
 					<strong>Export</strong> <span class="pull-right text-muted">
-						<em>No Shortcut</em>
+						<em></em>
 					</span>
 				</div>
 		</a></li>
 		<li><a ng-click="api.save(api.openedFile)">
 				<div>
-					<strong>Save</strong> <span class="pull-right text-muted"> <em>No
-							Shortcut</em>
+					<strong>Save</strong> <span class="pull-right text-muted"> <em>ctrl + s</em>
 					</span>
 				</div>
 		</a></li>
 		<li><a ng-click="api.fileDialog({'save':true})">
 				<div>
 					<strong>Save as</strong> <span class="pull-right text-muted">
-						<em>No Shortcut</em>
+						<em>ctrl + shift + s</em>
 					</span>
 				</div>
 		</a></li>
 		<li><a>
 				<div>
 					<strong>Delete</strong> <span class="pull-right text-muted">
-						<em>No Shortcut</em>
+						<em>ctrl + d</em>
 					</span>
 				</div>
 		</a></li>
 	</ul> <!-- /.dropdown-messages -->
 </li>
-<li class="dropdown"><a ng-click="api.componentAddDialog()"> <i
-		class="fa fa-plus fa-fw"></i>
-</a></li>
-<li class="dropdown"><a ng-click="api.fileDialog({'import':true})"> <i
+
+<li class="dropdown"><a data-toggle="tooltip" title="Import" ng-click="api.fileDialog({'import':true})"> <i
 		class="fa fa-plus-square fa-fw"></i>
 </a></li>
 
-
-
-<li class="dropdown"><a class="dropdown-toggle disabled"
-	ng-click="api.objectDelete()"> <i class="fa fa-trash fa-fw"></i>
+<li class="dropdown"><a ng-click="api.componentAddDialog()" data-toggle="tooltip" title="New component"> <i
+		class="fa fa-plus fa-fw"></i>
 </a></li>
 
-<li class="dropdown"><a class="dropdown-toggle"
-	data-toggle="dropdown" href="#" ng-click="api.redraw()"> <i
-		class="fa fa-refresh fa-fw"></i>
-</a></li>
-
-<li class="dropdown"><a class="dropdown-toggle"
-	data-toggle="dropdown" href="#"> <i class="fa fa-search fa-fw"></i>
-</a>
-	<ul class="dropdown-menu dropdown-messages">
-		<li><a href="#">
-				<div>
-					<strong>msg.title</strong> <span class="pull-right text-muted">
-						<em>msg.info</em>
-					</span>
-				</div>
-				<div>msg.text</div>
-		</a></li>
-	</ul> <!-- /.dropdown-messages --></li>
-
-<li class="dropdown"><a class="dropdown-toggle"
-	data-toggle="dropdown" href="#"><i class="fa fa-question fa-fw"></i>
-</a>
-	<ul class="dropdown-menu dropdown-messages">
-		<li><a href="#">
-				<div>
-					<strong>Show Shortcuts</strong> <span class="pull-right text-muted">
-					<em>?</em>
-					</span>
-				</div>
-		</a></li>
-	</ul> <!-- /.dropdown-messages --></li>
-
-<li class="dropdown" ng-click="api.collapseSidebar($event)"><a
-	class="dropdown-toggle disabled icon-off" data-toggle="collapse"
-	href="#side-bar-Collapsing" aria-expanded="false"
-	aria-controls="side-bar-Collapsing"> <i
-		class="fa fa-toggle-off fa-fw"
-		ng-class="{'fa-toggle-on':api.sidebarCollapsed === false, 'fa-toggle-off':api.sidebarCollapsed === true}"></i>
-</a></li>
-
-<li class="dropdown"><a class="dropdown-toggle disabled"> <i
+<li class="dropdown"><a class="dropdown-toggle disabled" data-toggle="tooltip" title="Edit component" > <i
 		class="fa fa-edit fa-fw"></i>
 </a></li>
+
+<li class="dropdown"><a class="dropdown-toggle disabled" data-toggle="tooltip" title="Undo" ng-click="api.undo()"> <i class="fa fa-rotate-left fa-fw"></i>
+</a></li>
+
+<li class="dropdown"><a class="dropdown-toggle disabled" data-toggle="tooltip" title="Redo" ng-click="api.redo()"> <i class="fa fa-rotate-right fa-fw"></i>
+</a></li>
+
+<li class="dropdown"><a class="dropdown-toggle disabled " data-toggle="tooltip" title="Delete component" ng-click="api.objectDelete()"> <i class="fa fa-trash fa-fw"></i>
+</a></li>
+
+
+
 
 
