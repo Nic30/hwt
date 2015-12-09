@@ -80,12 +80,12 @@ function filebrowserCntrl($scope, $http) {
 			$scope.loadFolderData(path);
 		} else {
 			api.openedFile = path;
-			fileDialog.modal('hide');
 			
-			api.open(path).then(function(){
-				api.redraw();
-				api.fitDiagram2Screen();
-			});
+			//fileDialog.modal('hide');
+			//api.open(path).then(function(){
+			//	api.redraw();
+			//	api.fitDiagram2Screen();
+			//});
 		}
 	}
 
@@ -128,7 +128,14 @@ function filebrowserCntrl($scope, $http) {
 			$scope.fileGridOptions.api.setRowData(filesRowData);
 		});
 	}
-
+	api.import = function(path){
+		$http.get('/hls/connections-view/' + path)
+		.then(function(res) {
+			var node = res.data;
+			api.insertNode(node, 0, 0);
+			api.redraw();
+		});
+	}
 
 	api.fileDialog = function(conf) {
 		//d3.selectAll("#chartWrapper").html(""); // [TODO] to different controller

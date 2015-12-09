@@ -77,7 +77,7 @@ def connectionDataLs(path=""):
 def connectionView(path):
     path = os.path.join(WORKSPACE_DIR, path)
     with open(path) as f:
-        data = Unit.fromJson(f.read(), path)
+        data = Unit.fromJson(json.loads(f.read()), path)
     
     return jsonResp(data)
 

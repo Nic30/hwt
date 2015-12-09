@@ -19,7 +19,7 @@
 			</div>
 			<div class="modal-footer">
 				<button ng-if="conf.save" ng-click="api.save(api.openedFile)" class="btn btn-default" data-dismiss="modal">Save</button>
-				<button ng-if="conf.open" ng-click="api.open()" class="btn btn-default" data-dismiss="modal">Open</button>
+				<button ng-if="conf.open" ng-click="api.open(api.openedFile)" class="btn btn-default" data-dismiss="modal">Open</button>
 				<button ng-if="conf.import" ng-click="api.import(api.openedFile)" class="btn btn-default" data-dismiss="modal">Import</button>
 				
 				<button class="btn btn-default" data-dismiss="modal">Cancel</button>

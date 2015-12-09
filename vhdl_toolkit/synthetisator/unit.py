@@ -10,18 +10,42 @@ from vhdl_toolkit.valueInterpret import ValueInterpreter
 
 
 class Unit():    
+    def __init__(self):
+        self.port = []
+    
     @classmethod
     def fromJson(cls, jsonDict, referenceName):
-        raise Exception("unimplemented")
+        self = Unit()
+        self.name = jsonDict['name']
+
+        ports = list(filter(lambda x : x['isExternalPort'], jsonDict['nodes']))
+        
+        for p in ports:
+            direction = p['direction'] 
+            name = p['name']
+            var_type = None  # p['type'] #[HOTFIX]
+            if  direction == PortItem.typeIn or direction == PortItem.typeOut:
+                self.port.append(PortItem(name, direction, var_type))
+            else:
+                raise  Exception("Invalid port type")
+            
+        return self
     
     def toJson(self):
-        return {"name":self.name, "id":id(self), 
-                "inputs": [{"name":x.name, 
-                            "id" : id(x)} \
-                        for x in where(self.port, lambda p : p.direction == PortItem.typeIn )],
-                "outputs": [{"name":x.name,
-                             "id" : id(x)} \
-                        for x in where(self.port, lambda p : p.direction == PortItem.typeOut)]}
+        inputs = []
+        outputs = []
+        for x in  self.port:
+            p = {"name":x.name, "id" : id(x)}
+            if  x.direction == PortItem.typeIn:
+                inputs.append(p)
+            elif  x.direction == PortItem.typeOut:
+                outputs.append(p)
+            else:
+                raise Exception("Invalid port type")
+        
+        return {"name":self.name, "id":id(self),
+                "inputs": inputs,
+                "outputs": outputs}
         
 class VHDLUnit(Entity, Unit):
     def __init__(self, entity):

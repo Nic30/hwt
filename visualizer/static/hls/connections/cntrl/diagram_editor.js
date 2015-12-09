@@ -9,6 +9,11 @@ function diagramEditorCntrl($scope){
 		"outputs" : []
 	}
 	$scope.portarrays = [];
+	api.insertNode = function(node, x, y){
+		api.nodes.push(node);
+		//[TODO] x,y
+	}
+	
 	api.synthetize = function(){
 		function onHidden(){
 			console.log('goodbye'); 
