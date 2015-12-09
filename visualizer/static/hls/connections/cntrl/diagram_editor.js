@@ -9,7 +9,20 @@ function diagramEditorCntrl($scope){
 		"outputs" : []
 	}
 	$scope.portarrays = [];
-
+	api.synthetize = function(){
+		function onHidden(){
+			console.log('goodbye'); 
+		}
+		var f = api.openedFile;
+		
+		var msg = api.msg.info("Synhetizing", f, {timeOut: 0})
+		setTimeout(function(){
+			api.msg.clear(msg);
+			api.msg.success("Synthetized ",f, {});
+		}, 10000);
+		
+	}
+	
 	api.componentEditDetail = function() {
 		// console.log("Component Detail")
 		var selection = d3.selectAll(".selected-object");
