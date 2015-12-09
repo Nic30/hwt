@@ -1,4 +1,4 @@
-function diagramEditorCntrl($scope){
+function diagramEditorCntrl($scope, hotkeys){
 	var api = $scope.$parent.api;
 	api.editedObject = {}
 	$scope.newObject = {
@@ -9,7 +9,111 @@ function diagramEditorCntrl($scope){
 		"outputs" : []
 	}
 	$scope.portarrays = [];
+	
+	hotkeys.template = '<div class="cfp-hotkeys-container fade" ng-class="{in: helpVisible}" style="display: none;"><div class="cfp-hotkeys">' +
+    '<h4 class="cfp-hotkeys-title" ng-if="!header">{$ title $}</h4>' +
+    '<div ng-bind-html="header" ng-if="header"></div>' +
+    '<table><tbody>' +
+      '<tr ng-repeat="hotkey in hotkeys | filter:{ description: \'!$$undefined$$\' }">' +
+        '<td class="cfp-hotkeys-keys">' +
+          '<span ng-repeat="key in hotkey.format() track by $index" class="cfp-hotkeys-key">{$ key $}</span>' +
+        '</td>' +
+        '<td class="cfp-hotkeys-text">{$ hotkey.description $}</td>' +
+      '</tr>' +
+    '</tbody></table>' +
+    '<div ng-bind-html="footer" ng-if="footer"></div>' +
+    '<div class="cfp-hotkeys-close" ng-click="toggleCheatSheet()">×</div>' +
+    '</div></div>';
+    
+	hkBindings = [
+			{
+				combo: 'ctrl+a',
+				description: 'Add component',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					//console.log("A hotkey");
+					api.componentAdd();
+				}
+			},
+			{
+				combo: 'ctrl+s',
+				description: 'Save file',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					//console.log("S hotkey");
+					api.save(api.openedFile);
+				}
+			},
+			{
+				combo: 'ctrl+shift+s',
+				description: 'Sav file as',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					//console.log("Shift S hotkey");
+					api.fileDialog(true);
+				}
+			},
+			{
+				combo: 'ctrl+d',
+				description: 'Delete component',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					//console.log("D hotkey");
+					api.objectDelete();
+				}
+			},
+			{
+				combo: 'ctrl+q',
+				description: 'Redraw state',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					//console.log("Q hotkey");
+					api.redraw();
+				}
+			},
+			{
+				combo: 'ctrl+e',
+				description: 'Edit component',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					console.log("E hotkey");
+				}
+			},
+			{
+				combo: 'ctrl+o',
+				description: 'Open new file',
+				callback: function(e) {
+					e.stopPropagation(this);
+					e.preventDefault(this);
+					//console.log("O hotkey");
+					api.fileDialog(false);
+				}
+			}
+	]
+	
+	for (var key in hkBindings)
+	{
+		//console.log(hkBindings[key]);
+		hotkeys.add({
+		    combo: hkBindings[key].combo,
+		    description: hkBindings[key].description,
+		    callback: hkBindings[key].callback
+		  });
+	}
 
+	
+	var ComponentModal = $('#newComponent');
+	
+	$scope.dismissComponentModal = function() {
+		ComponentModal.modal('hide');
+	}
+	
 	api.componentEditDetail = function() {
 		// console.log("Component Detail")
 		var selection = d3.selectAll(".selected-object");
