@@ -12,6 +12,7 @@ function debugRouterDots(svgGroup, grid){
 		flatenMap.push(c);
 	});
 
+	svgGroup.selectAll(".debug-link2component").remove();
 	var debugLinks = svgGroup.selectAll(".debug-link2component");
 	// line to parent componet
 	debugLinks
@@ -47,11 +48,12 @@ function debugRouterDots(svgGroup, grid){
 	})
 	
 	//inter nodes connections
+	svgGroup.selectAll(".debug-link-between-nodes").remove();
 	var linkBetweenNodes =	svgGroup.selectAll(".debug-link-between-nodes")
 		.data(interNodeLines)
 		.enter()
 		.append("path")
-		.classed({	"debug-link-between-nodes" : true	})
+		.classed({"debug-link-between-nodes" : true	})
 		.attr("d", function(d) {	
 			return "M" + d.p0[0] + "," + d.p0[1] + " L " + d.p1[0] + "," + d.p1[1];
 		});
@@ -59,24 +61,27 @@ function debugRouterDots(svgGroup, grid){
 	var arrows = [];
 	flatenMap.forEach(function(d){
 		forEveryDirection(function(direction){
-			var angle;
-			switch(direction){ 
-			case "top":
-				angle = -90;
-				break;
-			case "bottom":
-				angle = 90;
-				break;
-			case "left":
-				angle = 180;
-				break;
-			case "right":
-				angle = 0;
-				break;
+			if (d[direction]){
+				var angle;
+				switch(direction){ 
+				case "top":
+					angle = -90;
+					break;
+				case "bottom":
+					angle = 90;
+					break;
+				case "left":
+					angle = 180;
+					break;
+				case "right":
+					angle = 0;
+					break;
+				}
+				arrows.push({"routingNode":d, "angle" : angle});
 			}
-			arrows.push({"routingNode":d, "angle" : angle});
 		})
 	});
+	svgGroup.selectAll(".debug-routing-arrow").remove();
 	svgGroup.selectAll(".debug-routing-arrow")
 		.data(arrows)
 		.enter()
@@ -89,6 +94,7 @@ function debugRouterDots(svgGroup, grid){
 		.attr("d", "M1,-3 L6,0 L1,3");
     
 
+	svgGroup.selectAll(".debug-routing-node").remove();
 	var routingNodes = svgGroup.selectAll(".debug-routing-node")
 		.data(flatenMap)
 		.enter()

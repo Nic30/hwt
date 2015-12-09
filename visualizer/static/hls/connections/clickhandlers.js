@@ -42,7 +42,7 @@ function resetLinks()
 
 function onBoardClick() 
 {
-	console.log("boardclick")
+	//console.log("boardclick")
 	var exists = !d3.selectAll(".clicked-port").empty()
 	var coordinates = d3.mouse(this);
 	var x = coordinates[0];

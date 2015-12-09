@@ -240,7 +240,7 @@ function updateNetLayout(svgGroup, linkElements, nodes, links){
 			delete link.start;
 		});
 	}
-	for(var i =0; i< 5; i++){
+	for(var i =0; i< 4; i++){
 		linksCleanup();
 		var router = new NetRouter(nodes, links, false);
 		var grid = router.grid;

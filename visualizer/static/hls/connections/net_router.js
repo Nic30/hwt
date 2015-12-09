@@ -148,15 +148,15 @@ function NetRouter(nodes, links) {
 			grid.maxNetCntY = [];
 			grid.maxNetCntX = [];
 
-			for (var x = 0; x < grid.length; x++) { // discover sizes of net
-													// channels
+			for (var x = 0; x < grid.length; x++) { 
+				// discover sizes of net channels
 				var col = grid[x];
 				if (col) {
 					if (grid.maxNetCntX[x] === undefined)
 						grid.maxNetCntX[x] = 0;
-					for (var y = 0; y < grid.length; y++) {
+					for (var y = 0; y < col.length; y++) {
 						var n = col[y];
-						if (n) {
+						if (n && !( n instanceof RoutingBoundry)) {
 							var netCntY = n.horizontal.length;
 							var netCntX = n.vertical.length;
 

@@ -1,7 +1,6 @@
 function RoutingBoundry(parentNode) {
-	return {
-		"parent" : parentNode
-	}
+	this.parent = parentNode;
+	return this;
 }
 
 function RoutingNode() {
@@ -26,19 +25,11 @@ function RoutingNode() {
 
 function RoutingNodesContainer(nodes) {
 	var grid = [];
+	grid.rNodes = new Set();
+
 	grid.visitFromLeftTop = function(fn) {
-		for (var x = 0; x < grid.length; x++) {
-			var col = grid[x];
-			if (col) {
-				for (var y = 0; y < col.length; y++) {
-					var comp = col[y];
-					if (comp && !(comp instanceof RoutingBoundry)) {
-						fn(comp);
-					}
-				}
-			}
-		}
-	}
+		grid.rNodes.forEach(fn);
+	};
 	grid.componetOutputNode = function(component, portIndex) {
 		var x = component.x + component.width + COMPONENT_PADDING
 				+ component.netChannelPadding.right;
@@ -52,28 +43,27 @@ function RoutingNodesContainer(nodes) {
 		var y = component.y + (2 + portIndex) * PORT_HEIGHT;
 		return this[x][y];
 	}
-
+	function gridAsign(x, y, item) {
+		if (!grid[x])
+			grid[x] = [];
+		grid[x][y] = item;
+	}
 	function insertRectangularBoundry(node) {
 		var x0 = node.x;
 		var y0 = node.y;
 		var width = node.widht
 		var height = node.height;
 		var boundry = new RoutingBoundry(node);
+		var y_max = y0 + height
+		var x_max = x0 + width;
 
-		for (var y = y0; y < y0 + height; y++) {
-			var col = grid[y];
-			if (col == undefined) {
-				col = [];
-				grid[y] = col;
-			}
-			if (y == y0 || y == y0 + height - 1) {
-				for (var x = x0; x < x0 + width; x++) {
-					col[x] = boundry;
-				}
-			} else {
-				col[x0] = boundry;
-				col[x0 + width - 1] = boundry;
-			}
+		for (var y = y0; y < y_max; y++) {
+			gridAsign(x0, y, boundry);
+			gridAsign(x_max, y, boundry);
+		}
+		for(var x = x0; x < x_max;x++){
+			gridAsign(x, y0, boundry);
+			gridAsign(x, y_max, boundry);
 		}
 	}
 
@@ -92,81 +82,7 @@ function RoutingNodesContainer(nodes) {
 			grid[x] = col;
 		}
 		grid[x][y] = rnode;
-
-		var bottFound = false;
-		var rightFound = false;
-		// connect top
-		for (var i = y - 1; i >= 0; i--) {
-			var tn = col[i];
-			if (tn instanceof RoutingBoundry)
-				break;
-			if (tn) {
-				if (tn.bottom) { // insert rnode between top and its
-					// bottom
-					rnode.bottom = tn.bottom;
-					rnode.bottom.top = rnode;
-					bottFound = true;
-				}
-				tn.bottom = rnode;
-				rnode.top = tn;
-				break;
-			}
-		}
-		// connect bottom
-		if (!bottFound) {
-			for (var i = y + 1; i < col.length; i++) {
-				var bn = col[i];
-				if (bn instanceof RoutingBoundry)
-					break;
-				if (bn) {
-					if (bn.top)
-						throw "Error: top node should be founded recently";
-					bn.top = rnode;
-					rnode.bottom = bn;
-					break;
-				}
-			}
-		}
-
-		// connect left
-		if (canGoLeftAndRight) {
-			for (var i = x - 1; i >= 0; i--) {
-				var col = grid[i];
-				if (col) {
-					var ln = col[y];
-					if (ln instanceof RoutingBoundry)
-						break;
-					if (ln) {
-						if (ln.right) {
-							rnode.right = ln.right;
-							rnode.right.left = rnode;
-							rightFound = true;
-						}
-						ln.right = rnode;
-						rnode.left = ln;
-						break;
-					}
-				}
-			}
-			// find right
-			if (!rightFound) {
-				for (var i = x + 1; i < grid.length; i++) {
-					var col = grid[i];
-					if (col) {
-						var rn = col[y];
-						if (rn instanceof RoutingBoundry)
-							break;
-						if (rn) {
-							if (rnode.right)
-								throw "Error: right should be founded recently";
-							rnode.right = rn;
-							rn.left = rnode;
-							break;
-						}
-					}
-				}
-			}
-		}
+		grid.rNodes.add(rnode)
 	}
 	(function normalizeNodesPosition(nodes) {
 		nodes.forEach(function(n) {
@@ -177,7 +93,7 @@ function RoutingNodesContainer(nodes) {
 	for (var ni = 0; ni < nodes.length; ni++) {
 		// add corner nodes and node for each port
 		var node = nodes[ni];
-		insertRectangularBoundry(node.x, node.y, node.width, node.height);
+		insertRectangularBoundry(node);
 
 		if (!(node.isExternalPort && node.direction == DIRECTION.IN)) {
 			var leftTop = new RoutingNode();
@@ -253,6 +169,48 @@ function RoutingNodesContainer(nodes) {
 		});
 
 	}
+	grid.rNodes.forEach(function(n) {
+		var p = n.pos()
+		var x0 = p[0];
+		var y0 = p[1];
+		for (var x = x0 + 1; x < grid.length; x++) {
+			var row = grid[x];
+			if (row) {
+				var neighbor = row[y0];
+				if (neighbor) {
+					if (neighbor instanceof RoutingBoundry)
+						break;
+					neighbor.left = n;
+					n.right = neighbor;
+					break;
+				}
+			}
+		}
+		var column = grid[x0];
+		var y_max = column.length;
+		for (var y = y0 + 1; y < y_max; y++) {
+			var neighbor = column[y];
+			if (neighbor) {
+				if (neighbor instanceof RoutingBoundry)
+					break;
+				neighbor.top = n;
+				n.bottom = neighbor;
+				break;
+			}
+		}
+	})
+	grid.rNodes.forEach(function(n) {
+		if (!(n.left || n.right || n.top || n.bottom))
+			throw "Node is not connected";
+		if (n.left && !n.left.pos)
+			throw "left is not what was expected";
+		if (n.right && !n.right.pos)
+			throw "right is not what was expected";
+		if (n.top && !n.top.pos)
+			throw "top is not what was expected";
+		if (n.bottom && !n.bottom.pos)
+			throw "bottom is not what was expected";
+	});
 
 	return grid;
 }
