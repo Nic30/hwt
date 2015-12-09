@@ -34,7 +34,7 @@ function diagramEditorCntrl($scope, hotkeys){
 				callback: function(e) {
 					e.stopPropagation(this);
 					e.preventDefault(this);
-					//console.log("A hotkey");
+					// console.log("A hotkey");
 					api.componentAdd();
 				}
 			},
@@ -44,7 +44,7 @@ function diagramEditorCntrl($scope, hotkeys){
 				callback: function(e) {
 					e.stopPropagation(this);
 					e.preventDefault(this);
-					//console.log("S hotkey");
+					// console.log("S hotkey");
 					api.save(api.openedFile);
 				}
 			},
@@ -54,7 +54,7 @@ function diagramEditorCntrl($scope, hotkeys){
 				callback: function(e) {
 					e.stopPropagation(this);
 					e.preventDefault(this);
-					//console.log("Shift S hotkey");
+					// console.log("Shift S hotkey");
 					api.fileDialog(true);
 				}
 			},
@@ -64,7 +64,7 @@ function diagramEditorCntrl($scope, hotkeys){
 				callback: function(e) {
 					e.stopPropagation(this);
 					e.preventDefault(this);
-					//console.log("D hotkey");
+					// console.log("D hotkey");
 					api.objectDelete();
 				}
 			},
@@ -92,7 +92,7 @@ function diagramEditorCntrl($scope, hotkeys){
 				callback: function(e) {
 					e.stopPropagation(this);
 					e.preventDefault(this);
-					//console.log("O hotkey");
+					// console.log("O hotkey");
 					api.fileDialog({open: true});
 				}
 			},
@@ -102,7 +102,7 @@ function diagramEditorCntrl($scope, hotkeys){
 				callback: function(e) {
 					e.stopPropagation(this);
 					e.preventDefault(this);
-					console.log("Ctrl Z");
+					api.undo();// console.log("Ctrl Z");
 				}
 			},
 			{
@@ -111,14 +111,14 @@ function diagramEditorCntrl($scope, hotkeys){
 				callback: function(e) {
 					e.stopPropagation(this);
 					e.preventDefault(this);
-					console.log("Ctrl shift z");
+					api.redo();// console.log("Ctrl shift z");
 				}
 			}
 		]
 	
 	for (var key in hkBindings)
 	{
-		//console.log(hkBindings[key]);
+		// console.log(hkBindings[key]);
 		hotkeys.add({
 		    combo: hkBindings[key].combo,
 		    description: hkBindings[key].description,
@@ -220,9 +220,9 @@ function diagramEditorCntrl($scope, hotkeys){
 		var netIndexes = {};
 		
 		
-		objects.forEach(function(o, objIndx){
+		objects.forEach(function(o){
 			var obj = o.__data__;
-			objects2remove.push([obj, objIndx]);
+			objects2remove.push([obj, api.nodes.indexOf(obj)]);
 			api.nets.forEach(function(net, netIndx){
 				if(net.source.id == obj.id){
 					nets2remove.add(net);
@@ -230,9 +230,13 @@ function diagramEditorCntrl($scope, hotkeys){
 				}else {
 					 net.targets.forEach(function(target, i){
 						if(target.id == obj.id){
-							rmFromTargets.add([net, i, target]);
-							netIndexes[net] = netIndx;
-						} 
+							if(net.targets.length == 1){
+								nets2remove.add(net);
+							}else{
+								rmFromTargets.add([net, i, target]);
+								netIndexes[net] = netIndx;
+							} 
+						}
 					 });
 				}
 			});
@@ -269,9 +273,9 @@ function diagramEditorCntrl($scope, hotkeys){
 				net.targets.splice(targetIndex,1);
 			});
 			objects2remove.forEach(function (o){
-				//var obj = o[0];
+				// var obj = o[0];
 				var objIndx = o[1];
-				api.nodes.splice(targetIndex, 1);
+				api.nodes.splice(objIndx, 1);
 			});
 		}
 		

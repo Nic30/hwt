@@ -109,7 +109,6 @@ function netMouseOut() {
 
 function onCompMouseIn(){
 	var o = d3.select(this)
-	console.log(o);
 	o.classed({
 			"selected-object-hover" : true
 		})

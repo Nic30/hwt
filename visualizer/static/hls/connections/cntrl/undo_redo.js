@@ -10,11 +10,12 @@ function undoRedoCntrl($scope) {
 	}
 
 	api.redo = function() {
-		var rec = $scope.buff[$scope.actualIndx];
+		var rec = $scope.buff[$scope.actualIndx+1];
 		if(rec){
 			rec[0]();
 			$scope.actualIndx++;
 		}
+		api.redraw();
 	}
 	api.undo = function() {
 		var rec = $scope.buff[$scope.actualIndx];
@@ -22,7 +23,7 @@ function undoRedoCntrl($scope) {
 			rec[1](); 
 			$scope.actualIndx--;
 		}
-		
+		api.redraw();
 	}
 
 }
