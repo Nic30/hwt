@@ -85,14 +85,14 @@
             "direction": "IN",
             "width": 76,
             "inputs": [],
+            "name": "clk",
             "y": 20,
-            "x": 20,
             "outputs": [
                 {
                     "name": "clk"
                 }
             ],
-            "name": "clk"
+            "x": 20
         },
         {
             "height": 40,
@@ -107,14 +107,14 @@
             "direction": "IN",
             "width": 76,
             "inputs": [],
+            "name": "rst",
             "y": 136,
-            "x": 20,
             "outputs": [
                 {
                     "name": "rst"
                 }
             ],
-            "name": "rst"
+            "x": 20
         },
         {
             "height": 70,
@@ -150,7 +150,7 @@
                 "left": 12,
                 "bottom": 0
             },
-            "px": 294.7024230957031,
+            "px": 294,
             "fixed": 0,
             "py": 20,
             "x": 294
@@ -189,9 +189,9 @@
                 "left": 12,
                 "bottom": 0
             },
-            "px": 312,
+            "px": 294,
             "fixed": 0,
-            "py": 26,
+            "py": 202,
             "x": 294
         },
         {
@@ -211,10 +211,10 @@
                     "name": "outA"
                 }
             ],
+            "name": "outA",
             "y": 20,
-            "x": 422,
             "outputs": [],
-            "name": "outA"
+            "x": 422
         },
         {
             "height": 40,
@@ -229,14 +229,14 @@
             "direction": "IN",
             "width": 76,
             "inputs": [],
+            "name": "inA",
             "y": 252,
-            "x": 20,
             "outputs": [
                 {
                     "name": "outA"
                 }
             ],
-            "name": "inA"
+            "x": 20
         }
     ],
     "nets": [

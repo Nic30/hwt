@@ -142,7 +142,7 @@ function addShadows(svg){
 	// create filter with id #dropShadow
 	// height=130% so that the shadow is not clipped
 	var filter = defs.append("filter")
-	    .attr("id", "drop-shadow-hight")
+	    .attr("id", "dropShadowDight")
 	    .attr("height", "150%");
 
 	// SourceAlpha refers to opacity of graphic that this filter will be applied to
@@ -172,7 +172,7 @@ function addShadows(svg){
 
 
 	var filter = defs.append("filter")
-	    .attr("id", "drop-shadow")
+	    .attr("id", "dropShadow")
 	    .attr("height", "130%");
 
 	// SourceAlpha refers to opacity of graphic that this filter will be applied to
