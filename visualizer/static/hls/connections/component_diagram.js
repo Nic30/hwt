@@ -139,7 +139,7 @@ function addShadows(svg){
 	// filters go in defs element
 	var defs = svg.append("defs");
 
-	// create filter with id #drop-shadow
+	// create filter with id #dropShadow
 	// height=130% so that the shadow is not clipped
 	var filter = defs.append("filter")
 	    .attr("id", "drop-shadow-hight")

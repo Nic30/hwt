@@ -93,12 +93,12 @@ svg {
 .selected-object-hover rect {
 	stroke: #87AFCB;
 	stroke-width: 2.5;	
-	filter: url("#drop-shadow");
+	filter: url("#dropShadow");
 }
 
 .selected-object rect {
 	fill: url("#red_grad");
-	filter: url("#drop-shadow-hight");
+	filter: url("#dropShadowHight");
 }
 
 path.link {
@@ -109,7 +109,7 @@ path.link {
 
 path.link-hover {
 	stroke: #87AFCB;
-	filter: url("#drop-shadow");
+	filter: url("#dropShadow");
 	stroke-width: 2.5px;
 }
 

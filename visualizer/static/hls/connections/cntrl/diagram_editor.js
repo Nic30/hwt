@@ -249,10 +249,11 @@ function diagramEditorCntrl($scope, hotkeys){
 				var net = rec[0];
 				var targetIndex = rec[1];
 				var target = rec[2];
-				net.targets.splice(targetIndex,0, target);
+				net.targets.splice(targetIndex, 0, target);
 			});
 		}
 		api.undoRedoAction(redo, undo);
+		api.resetLinkingState();
 		redo();
 		api.redraw();
 		return;
@@ -443,6 +444,7 @@ function diagramEditorCntrl($scope, hotkeys){
 	}
 	
 	api.resetLinkingState = function() {
+		$scope.newLink = [];
 		api.diagramSvg.selectAll('.routing-help-line')
 					  .remove();
 		api.onMouseroverDiagram = null;
