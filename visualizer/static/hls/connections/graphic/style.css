@@ -64,18 +64,8 @@ svg {
 	
 }
 
-.selected-object rect {
-	fill: url(#redgrad);
-	filter: url(#drop-shadow-hight)!important;
-}
-
 .selected-port text {
 	fill: red;
-}
-
-.selected-link{
-	stroke: red;
-	stroke-width: 3px;
 }
 
 .component text {
@@ -92,25 +82,41 @@ svg {
 
 .component .port-input text {
 	fill: black;
-	font-variant: small-caps;
+	/*font-variant: small-caps;*/
 }
 
 .component .port-output text {
 	fill: black;
-	font-variant: small-caps;
+	/*font-variant: small-caps;*/
 	text-anchor: end;
+}
+
+.selected-object-hover rect {
+	stroke: #87AFCB;
+	stroke-width: 2.5;	
+	filter: url(#drop-shadow);
+}
+
+.selected-object rect {
+	fill: url(#red_grad);
+	filter: url(#drop-shadow-hight);
 }
 
 path.link {
 	stroke: black;
-	stroke-width: 1.5px;
+	stroke-width: 2px;
 	fill: none;
 }
 
 path.link-hover {
-	stroke: blue;
+	stroke: #87AFCB;
 	filter: url(#drop-shadow);
-	/*stroke-width: 1px;*/
+	stroke-width: 2.5px;
+}
+
+path.selected-link{
+	stroke: #E20D00;
+	stroke-width: 3.5px;
 }
 
 .external-port {
