@@ -12,7 +12,7 @@
                     "name": "rst"
                 }
             ],
-            "y": 26,
+            "y": 20,
             "outputs": [
                 {
                     "name": "outA"
@@ -24,13 +24,13 @@
             "name": "smaller one",
             "netChannelPadding": {
                 "right": 0,
-                "top": 6,
+                "top": 0,
                 "left": 30,
                 "bottom": 0
             },
             "px": 166,
             "fixed": 0,
-            "py": 26,
+            "py": 20,
             "x": 166
         },
         {
@@ -51,7 +51,7 @@
                     "name": "inB"
                 }
             ],
-            "y": 134,
+            "y": 128,
             "outputs": [
                 {
                     "name": "outA2"
@@ -69,7 +69,7 @@
             },
             "px": 166,
             "fixed": 0,
-            "py": 134,
+            "py": 128,
             "x": 166
         },
         {
@@ -77,7 +77,7 @@
             "id": 2,
             "netChannelPadding": {
                 "right": 0,
-                "top": 6,
+                "top": 0,
                 "left": 0,
                 "bottom": 0
             },
@@ -85,14 +85,14 @@
             "direction": "IN",
             "width": 76,
             "inputs": [],
-            "name": "clk",
+            "y": 20,
             "x": 20,
             "outputs": [
                 {
                     "name": "clk"
                 }
             ],
-            "y": 26
+            "name": "clk"
         },
         {
             "height": 40,
@@ -107,14 +107,14 @@
             "direction": "IN",
             "width": 76,
             "inputs": [],
-            "name": "rst",
+            "y": 136,
             "x": 20,
             "outputs": [
                 {
                     "name": "rst"
                 }
             ],
-            "y": 184
+            "name": "rst"
         },
         {
             "height": 70,
@@ -128,7 +128,7 @@
                     "name": "rst"
                 }
             ],
-            "y": 26,
+            "y": 20,
             "outputs": [
                 {
                     "name": "outA"
@@ -146,14 +146,14 @@
             "name": "dummy",
             "netChannelPadding": {
                 "right": 0,
-                "top": 6,
-                "left": 18,
+                "top": 0,
+                "left": 12,
                 "bottom": 0
             },
-            "px": 300,
+            "px": 294.7024230957031,
             "fixed": 0,
-            "py": 26,
-            "x": 300
+            "py": 20,
+            "x": 294
         },
         {
             "height": 70,
@@ -173,7 +173,7 @@
                     "name": "inE"
                 }
             ],
-            "y": 26,
+            "y": 202,
             "outputs": [
                 {
                     "name": "c"
@@ -185,22 +185,22 @@
             "name": "selfReference",
             "netChannelPadding": {
                 "right": 0,
-                "top": 6,
+                "top": 0,
                 "left": 12,
                 "bottom": 0
             },
-            "px": 300,
+            "px": 312,
             "fixed": 0,
-            "py": 202,
-            "x": 428
+            "py": 26,
+            "x": 294
         },
         {
             "height": 40,
             "id": 6,
             "netChannelPadding": {
                 "right": 0,
-                "top": 6,
-                "left": 6,
+                "top": 0,
+                "left": 12,
                 "bottom": 0
             },
             "isExternalPort": true,
@@ -211,10 +211,10 @@
                     "name": "outA"
                 }
             ],
-            "name": "outA",
-            "x": 550,
+            "y": 20,
+            "x": 422,
             "outputs": [],
-            "y": 26
+            "name": "outA"
         },
         {
             "height": 40,
@@ -229,30 +229,17 @@
             "direction": "IN",
             "width": 76,
             "inputs": [],
-            "name": "inA",
+            "y": 252,
             "x": 20,
             "outputs": [
                 {
                     "name": "outA"
                 }
             ],
-            "y": 336
+            "name": "inA"
         }
     ],
     "nets": [
-        {
-            "targets": [
-                {
-                    "id": 6,
-                    "portIndex": 0
-                }
-            ],
-            "source": {
-                "id": 5,
-                "portIndex": 0
-            },
-            "name": "a"
-        },
         {
             "targets": [
                 {
@@ -342,36 +329,12 @@
         {
             "targets": [
                 {
-                    "id": 5,
-                    "portIndex": 3
-                }
-            ],
-            "source": {
-                "id": 7,
-                "portIndex": 0
-            }
-        },
-        {
-            "targets": [
-                {
-                    "id": 4,
+                    "id": 6,
                     "portIndex": 0
                 }
             ],
             "source": {
-                "id": 0,
-                "portIndex": 0
-            }
-        },
-        {
-            "targets": [
-                {
-                    "id": 4,
-                    "portIndex": 1
-                }
-            ],
-            "source": {
-                "id": 1,
+                "id": 4,
                 "portIndex": 0
             }
         }
