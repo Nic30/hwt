@@ -1,6 +1,7 @@
 function diagramEditorCntrl($scope, hotkeys){
 	var api = $scope.$parent.api;
 	var addDialog = $("#newComponent");
+	$scope.newLink = [];
 	api.editedObject = {}
 	$scope.newObject = {
 		"name" : "",
@@ -316,24 +317,6 @@ function diagramEditorCntrl($scope, hotkeys){
 		addDialog.modal('hide')
 	}
 
-	$scope.origin = {
-		"component" : {},
-		"port" : {}
-	};
-	$scope.destination = {
-		"component" : {},
-		"port" : {}
-	};
-	var LINK_STATUS = {
-			"none":"none",
-			"link" : "link",
-			"destination": "destination",
-			"origincomp": "origincomp",
-			"destinationcomp": "destinationcomp",
-	}
-	
-	$scope.linkstatus = LINK_STATUS.none;
-	
 	function positionOfElmInDiagram(pos){
 		var svg = api.diagramSvg.node()
 		var svgPos =  svg.getBoundingClientRect();
@@ -342,7 +325,7 @@ function diagramEditorCntrl($scope, hotkeys){
 	
 	function drawDashedLine2port(elm, mousePossition){
 		var line = api.diagramSvg.selectAll('.routing-help-line');
-		var portBox=$scope.origin.portElm.children[0].getBoundingClientRect()
+		var portBox= $scope.newLink[0].portElm.children[0].getBoundingClientRect()
 		
 		if(line.empty()){
 			line = api.diagramSvg.append("svg:path")
@@ -353,68 +336,65 @@ function diagramEditorCntrl($scope, hotkeys){
 	        .attr("d", 'M '+ positionOfElmInDiagram([portBox.right, (portBox.top +portBox.bottom)/2 ]) + "L " + mousePossition );
 	}
 	
-	api.portClick = function(d,elm) {
-		switch ($scope.linkstatus) {
-		case LINK_STATUS.none:
-			$scope.origin.port =d;
-			$scope.origin.portElm= elm;
-			$scope.linkstatus = LINK_STATUS.origincomp;
-			break;
-		case LINK_STATUS.destination:
-			$scope.destination.port = d;
-			$scope.destination.portElm= elm;
-			$scope.linkstatus = LINK_STATUS.destinationcomp;
-			break;
+	api.portClick = function(d, elm) {
+		if(elm.__data__.isExternalPort ){
+			var componentElm = elm;
+			var component = elm.__data__;
+			if (component.direction == DIRECTION.OUT)
+				var port = component.inputs[0];
+			else
+				var port = component.outputs[0];
+		}else{
+			var componentElm = elm.parentNode.parentNode;
+			var component = componentElm.__data__;
+			var port = d;
 		}
-	}
-
-	api.compClick = function(d) {
-		switch ($scope.linkstatus) {
-		case LINK_STATUS.origincomp:
-			$scope.origin.component = d;
-			$scope.linkstatus = LINK_STATUS.destination;
-			api.onMouseroverDiagram = drawDashedLine2port;
-			break;
-		case LINK_STATUS.destinationcomp:
-			$scope.destination.component = d;
-			$scope.linkstatus = LINK_STATUS.link;
-			break;
-		default:
-			break;
-		}
-
-		if ($scope.linkstatus == LINK_STATUS.link) {
-			var originportinfo = $scope.getPortIndex($scope.origin.port, $scope.origin.component)
-			var destinationportinfo = $scope.getPortIndex($scope.destination.port, $scope.destination.component)
-			var net = $scope.makeConnection(originportinfo, destinationportinfo,
-					$scope.origin.component, $scope.destination.component);
-
-			if (net) {
-				var parentNet = api.nets.filter(function(n){ 
-						return n.source.id == net.source.id && n.source.portIndex == net.source.portIndex; 
-					})
-				if (parentNet) {
-					parentNet = parentNet[0];
-					function redo(){
-						parentNet.targets.push(net.targets[0]);
+		$scope.newLink.push({component: component,
+							 componentElm: componentElm,
+							 port:port,
+							 portElm:elm});
+		switch($scope.newLink.length ){	
+			case 1:
+				api.onMouseroverDiagram = drawDashedLine2port;
+				break;
+			case 2:
+				var destination =   $scope.newLink.pop();
+				var origin = $scope.newLink.pop();
+				
+				var originportinfo = $scope.getPortIndex(origin.port, origin.component)
+				var destinationportinfo = $scope.getPortIndex(destination.port, destination.component)
+				var net = $scope.makeConnection(originportinfo, destinationportinfo, 
+						                        origin.component, destination.component);
+	
+				if (net) {
+					var parentNet = api.nets.filter(function(n){ 
+							return n.source.id == net.source.id && n.source.portIndex == net.source.portIndex; 
+						})
+					if (parentNet) {
+						parentNet = parentNet[0];
+						function redo(){
+							parentNet.targets.push(net.targets[0]);
+						}
+						function undo(){
+							parentNet.targets.pop();
+						}
+					} else {
+						function redo(){
+							api.nets.push(net);
+						}
+						function undo(){
+							api.nets.pop();
+						}
 					}
-					function undo(){
-						parentNet.targets.pop();
-					}
-				} else {
-					function redo(){
-						api.nets.push(net);
-					}
-					function undo(){
-						api.nets.pop();
-					}
+					redo();
+					api.undoRedoAction(redo, undo);
 				}
-				redo();
-				api.undoRedoAction(redo, undo);
-			}
-			api.resetLinkingState();
-			api.redraw();
+				api.resetLinkingState();
+				api.redraw();
+				
+				break;
 		}
+		
 	}
 
 	$scope.makeConnection = function(originport, destinationport, origincomponent,
@@ -466,6 +446,5 @@ function diagramEditorCntrl($scope, hotkeys){
 		api.diagramSvg.selectAll('.routing-help-line')
 					  .remove();
 		api.onMouseroverDiagram = null;
-		$scope.linkstatus = LINK_STATUS.none;
 	}
 }
