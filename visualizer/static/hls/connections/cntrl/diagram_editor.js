@@ -400,31 +400,21 @@ function diagramEditorCntrl($scope, hotkeys){
 	}
 
 	api.compClick = function(d) {
-		// console.log("Component Click data", d);
-		// console.log("Link status", $scope.linkstatus)
 		switch ($scope.linkstatus) {
 		case LINK_STATUS.origincomp:
-			// console.log("Setting origin component")
 			$scope.origin.component = d;
 			$scope.linkstatus = LINK_STATUS.destination;
 			api.onMouseroverDiagram = drawDashedLine2port;
 			break;
 		case LINK_STATUS.destinationcomp:
-			// console.log("Setting destination component")
 			$scope.destination.component = d;
 			$scope.linkstatus = LINK_STATUS.link;
 			break;
 		default:
-			// console.log("Breaking")
 			break;
 		}
 
-		// console.log("Link status", $scope.linkstatus)
-		// console.log("Origin", $scope.origin)
-		// console.log("Destination", $scope.destination)
-
 		if ($scope.linkstatus == LINK_STATUS.link) {
-			// console.log("Linking");
 			var originportinfo = $scope.getPortIndex($scope.origin.port, $scope.origin.component)
 			var destinationportinfo = $scope.getPortIndex($scope.destination.port, $scope.destination.component)
 			var net = $scope.makeConnection(originportinfo, destinationportinfo,
@@ -455,13 +445,12 @@ function diagramEditorCntrl($scope, hotkeys){
 			}
 			api.resetLinkingState();
 			api.redraw();
-
-		}// if scopestatus link
-
+		}
 	}
 
 	$scope.makeConnection = function(originport, destinationport, origincomponent,
 			destinationcomponent) {
+		var net = null;
 		if (originport[1] == destinationport[1]) {
 			api.msg.error("Can't connect matching port groups",
 					"QuickLink Erorr")
@@ -480,7 +469,6 @@ function diagramEditorCntrl($scope, hotkeys){
 			"id" : destinationcomponent.id
 		}
 
-		// TODO check whether net already exists?
 		if (originport[1] == "inputs") {
 			net = {
 				"targets" : [ origin ],
