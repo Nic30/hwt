@@ -83,6 +83,7 @@ function diagramEditorCntrl($scope, hotkeys){
 				callback: function(e) {
 					e.stopPropagation(this);
 					e.preventDefault(this);
+					e.preventDefault(this);
 					console.log("E hotkey");
 				}
 			},

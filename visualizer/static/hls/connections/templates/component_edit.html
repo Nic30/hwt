@@ -38,7 +38,24 @@
 								ng-model="newObject.type" placeholder="Component type">
 						</div>
 					</div>
-
+					<div class="form-group">
+						<div class="checkbox">
+							<label class="col-sm-4"> <input type="checkbox" class="col-sm-8"> Is external port
+							</label>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="radio col-sm-6">
+							<label> <input type="radio" name="optionsRadios"
+								id="optionsRadios1" value="option1" checked> Input
+							</label>
+						</div>
+						<div class="radio col-sm-6" style="vertical-align: middle">
+							<label> <input type="radio" name="optionsRadios"
+								id="optionsRadios2" value="option2"  style="text-align:center"> Output
+							</label>
+						</div>
+					</div>
 					<!-- Ports -->
 					<div class="form-group">
 						<div ng-repeat="portgroup in portarrays" class="col-sm-6">
