@@ -10,6 +10,7 @@ function diagramEditorCntrl($scope, hotkeys){
 		"outputs" : []
 	}
 	$scope.portarrays = [];
+
 	
 	hotkeys.template = '<div class="cfp-hotkeys-container fade" ng-class="{in: helpVisible}" style="display: none;"><div class="cfp-hotkeys">' +
     '<h4 class="cfp-hotkeys-title" ng-if="!header">{$ title $}</h4>' +
@@ -109,10 +110,28 @@ function diagramEditorCntrl($scope, hotkeys){
 	}
 
 	
-	var ComponentModal = $('#newComponent');
 	
-	$scope.dismissComponentModal = function() {
-		ComponentModal.modal('hide');
+	$scope.dismissAddDialog = function() {
+		addDialog.modal('hide');
+	}
+		
+	api.insertNode = function(node, x, y){
+		api.nodes.push(node);
+		//[TODO] x,y
+	}
+	
+	api.synthetize = function(){
+		function onHidden(){
+			console.log('goodbye'); 
+		}
+		var f = api.openedFile;
+		
+		var msg = api.msg.info("Synhetizing", f, {timeOut: 0})
+		setTimeout(function(){
+			api.msg.clear(msg);
+			api.msg.success("Synthetized ",f, {});
+		}, 10000);
+
 	}
 	
 	api.componentEditDetail = function() {

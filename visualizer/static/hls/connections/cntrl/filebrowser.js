@@ -1,8 +1,6 @@
 function filebrowserCntrl($scope, $http) {
 	var api = $scope.$parent.api;
 	var fileDialog = $('#fileDialog');
-
-	$scope.doSave = false;
 	$scope.rootDir = "";
 	api.openedFile = '';
 	
@@ -51,6 +49,7 @@ function filebrowserCntrl($scope, $http) {
 		api.nodes = [];
 		api.nets = [];
 		api.redraw();
+		api.openedFile = '';
 	} 
 	api.open = function(path) {
 		return $http.get('/hls/connections-data/' + path).then(
@@ -80,12 +79,12 @@ function filebrowserCntrl($scope, $http) {
 			$scope.loadFolderData(path);
 		} else {
 			api.openedFile = path;
-			fileDialog.modal('hide');
 			
-			api.open(path).then(function(){
-				api.redraw();
-				api.fitDiagram2Screen();
-			});
+			//fileDialog.modal('hide');
+			//api.open(path).then(function(){
+			//	api.redraw();
+			//	api.fitDiagram2Screen();
+			//});
 		}
 	}
 
@@ -128,11 +127,18 @@ function filebrowserCntrl($scope, $http) {
 			$scope.fileGridOptions.api.setRowData(filesRowData);
 		});
 	}
+	api.import = function(path){
+		$http.get('/hls/connections-view/' + path)
+		.then(function(res) {
+			var node = res.data;
+			api.insertNode(node, 0, 0);
+			api.redraw();
+		});
+	}
 
-
-	api.fileDialog = function(doSave) {
+	api.fileDialog = function(conf) {
 		//d3.selectAll("#chartWrapper").html(""); // [TODO] to different controller
-		$scope.doSave = doSave;
+		$scope.conf = conf;
 		fileDialog.modal('show');
 		filesRowData = [];
 		$scope.loadFolderData("");

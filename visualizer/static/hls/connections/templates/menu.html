@@ -10,7 +10,9 @@
 					</span>
 				</div>
 		</a></li>
-		<li><a ng-click="api.fileDialog(false)">
+
+		<li><a ng-click="api.fileDialog({'open':true})">
+
 				<div>
 					<strong>Open</strong> <span class="pull-right text-muted"> <em>No
 							Shortcut</em>
@@ -31,7 +33,7 @@
 					</span>
 				</div>
 		</a></li>
-		<li><a ng-click="api.fileDialog(true)">
+		<li><a ng-click="api.fileDialog({'save':true})">
 				<div>
 					<strong>Save as</strong> <span class="pull-right text-muted">
 						<em>No Shortcut</em>
@@ -49,18 +51,21 @@
 </li>
 <li class="dropdown"><a ng-click="api.componentAdd()"> <i
 		class="fa fa-plus fa-fw"></i>
-</a> 
-<!-- /.dropdown-messages -->
-</li>
+</a></li>
+<li class="dropdown"><a ng-click="api.fileDialog({'import':true})"> <i
+		class="fa fa-plus-square fa-fw"></i>
+</a></li>
+
+
 
 <li class="dropdown"><a class="dropdown-toggle disabled"
 	ng-click="api.objectDelete()"> <i class="fa fa-trash fa-fw"></i>
-</a> <!-- /.dropdown-messages --></li>
+</a></li>
 
 <li class="dropdown"><a class="dropdown-toggle"
 	data-toggle="dropdown" href="#" ng-click="api.redraw()"> <i
 		class="fa fa-refresh fa-fw"></i>
-</a> <!-- /.dropdown-messages --></li>
+</a></li>
 
 <li class="dropdown"><a class="dropdown-toggle"
 	data-toggle="dropdown" href="#"> <i class="fa fa-search fa-fw"></i>
@@ -77,7 +82,7 @@
 	</ul> <!-- /.dropdown-messages --></li>
 
 <li class="dropdown"><a class="dropdown-toggle"
-	data-toggle="dropdown" href="#"> <i class="fa fa-question fa-fw"></i>
+	data-toggle="dropdown" href="#"><i class="fa fa-question fa-fw"></i>
 </a>
 	<ul class="dropdown-menu dropdown-messages">
 		<li><a href="#">
@@ -95,8 +100,15 @@
 	aria-controls="side-bar-Collapsing"> <i
 		class="fa fa-toggle-off fa-fw"
 		ng-class="{'fa-toggle-on':api.sidebarCollapsed === false, 'fa-toggle-off':api.sidebarCollapsed === true}"></i>
-</a> <!-- /.dropdown-messages --></li>
+</a></li>
 
 <li class="dropdown"><a class="dropdown-toggle disabled"> <i
 		class="fa fa-edit fa-fw"></i>
 </a></li>
+
+<!-- synthetize button  -->
+<li class="dropdown"><a class="dropdown-toggle"
+	data-toggle="dropdown" href="#" ng-click="api.synthetize()"> <i
+		class="fa fa-puzzle-piece fa-fw"></i>
+</a></li>
+

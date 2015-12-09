@@ -1,4 +1,5 @@
 {
+    "name" : "portsOnly",
     "nodes": [
         {
             "width": 120,
