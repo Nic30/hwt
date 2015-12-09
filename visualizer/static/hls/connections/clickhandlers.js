@@ -8,7 +8,8 @@ function onCompClick(d) {
 				"selected-object" : true
 			});
 		}
-	}
+}
+
 
 function netOnClick() {
 	d3.event.stopPropagation();
@@ -41,6 +42,10 @@ function onBoardClick() {
 }
 
 function removeSelections() {
+	d3.selectAll(".selected-port").select("image")
+		.attr("xlink:href", function(d) { 
+		return "/static/hls/connections/graphic/INshort.png"; 
+	})
 	d3.selectAll(".selected-port").classed({
 		"selected-port" : false
 	});
@@ -69,6 +74,10 @@ function onPortClick(d) {
 			"selected-port" : true
 		});
 		d3.event.stopPropagation();
+		d3.select(this).select("image")
+		.attr("xlink:href", function(d) { 
+			return "/static/hls/connections/graphic/INred.png"; 
+		})
 	}
 }
 

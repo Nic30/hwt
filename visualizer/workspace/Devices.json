@@ -71,6 +71,18 @@
                 "id": 6,
                 "portIndex": 0
             }
+        },
+        {
+            "targets": [
+                {
+                    "id": 1,
+                    "portIndex": 0
+                }
+            ],
+            "source": {
+                "id": 7,
+                "portIndex": 0
+            }
         }
     ],
     "nodes": [
@@ -90,14 +102,13 @@
                 "bottom": 0,
                 "top": 6
             },
-            "y": 368,
             "px": 26,
             "x": 26,
             "name": "CAMERA",
             "id": 0,
             "width": 111,
             "type": "device",
-            "fixed": 0,
+            "y": 460,
             "inputs": [
                 {
                     "name": "CAM1"
@@ -112,25 +123,25 @@
                     "name": "POWER"
                 }
             ],
+            "fixed": 0,
             "height": 70
         },
         {
             "outputs": [],
             "py": 26,
             "netChannelPadding": {
-                "left": 18,
+                "left": 24,
                 "right": 0,
                 "bottom": 0,
                 "top": 6
             },
-            "y": 26,
-            "px": 195,
-            "x": 195,
+            "px": 201,
+            "x": 201,
             "name": "DISPLAY",
             "id": 1,
             "width": 111,
             "type": "device",
-            "fixed": 0,
+            "y": 26,
             "inputs": [
                 {
                     "name": "DEV1"
@@ -142,6 +153,7 @@
                     "name": "PWR"
                 }
             ],
+            "fixed": 0,
             "height": 60
         },
         {
@@ -157,19 +169,19 @@
                 "bottom": 0,
                 "top": 0
             },
-            "y": 244,
             "px": 26,
             "x": 26,
             "name": "GPS",
             "id": 2,
             "width": 111,
             "type": "Device",
-            "fixed": 0,
+            "y": 372,
             "inputs": [
                 {
                     "name": "PWR"
                 }
             ],
+            "fixed": 0,
             "height": 40
         },
         {
@@ -188,14 +200,13 @@
                 "bottom": 0,
                 "top": 6
             },
-            "y": 26,
             "px": 26,
             "x": 26,
             "name": "MOUSE",
             "id": 3,
             "width": 111,
             "type": "device",
-            "fixed": 0,
+            "y": 26,
             "inputs": [
                 {
                     "name": "POWER"
@@ -204,6 +215,7 @@
                     "name": "Input"
                 }
             ],
+            "fixed": 0,
             "height": 50
         },
         {
@@ -212,21 +224,20 @@
                     "name": "Audio"
                 }
             ],
-            "py": 168,
+            "py": 192,
             "netChannelPadding": {
-                "left": 18,
+                "left": 24,
                 "right": 0,
                 "bottom": 0,
                 "top": 0
             },
-            "y": 168,
-            "px": 195,
-            "x": 195,
+            "px": 201,
+            "x": 201,
             "name": "Reproductor",
             "id": 4,
             "width": 111,
             "type": "device",
-            "fixed": 0,
+            "y": 192,
             "inputs": [
                 {
                     "name": "Channel1"
@@ -235,6 +246,7 @@
                     "name": "Channel2"
                 }
             ],
+            "fixed": 0,
             "height": 50
         },
         {
@@ -250,15 +262,15 @@
                 "bottom": 0,
                 "top": 0
             },
-            "y": 330,
             "px": 26,
             "x": 26,
             "name": "Microphone",
             "id": 5,
             "width": 111,
             "type": "Device",
-            "fixed": 0,
+            "y": 452,
             "inputs": [],
+            "fixed": 0,
             "height": 40
         },
         {
@@ -267,18 +279,46 @@
                     "name": "Video"
                 }
             ],
-            "py": 122,
+            "py": 128,
             "netChannelPadding": {
                 "left": 6,
                 "right": 0,
                 "bottom": 0,
                 "top": 6
             },
-            "y": 122,
             "px": 26,
             "x": 26,
             "name": "Projector",
             "id": 6,
+            "width": 111,
+            "type": "Device",
+            "y": 128,
+            "inputs": [
+                {
+                    "name": "Power"
+                }
+            ],
+            "fixed": 0,
+            "height": 40
+        },
+        {
+            "outputs": [
+                {
+                    "name": "Keys"
+                }
+            ],
+            "py": 26,
+            "netChannelPadding": {
+                "left": 6,
+                "right": 0,
+                "bottom": 0,
+                "top": 0
+            },
+            "id": 7,
+            "px": 430,
+            "x": 26,
+            "name": "Keyboard",
+            "y": 262,
             "width": 111,
             "type": "Device",
             "fixed": 0,

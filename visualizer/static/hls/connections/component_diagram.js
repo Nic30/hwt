@@ -121,6 +121,20 @@ function onCompMouseOut(){
 		})
 }
 
+function onPortMouseMove() {
+	var o = d3.select(this).select("image")
+		.attr("xlink:href", function(d) { 
+	return "/static/hls/connections/graphic/arrow_red.ico"; 
+	})
+}
+
+function onPortMouseOut() {
+	var o = d3.select(this).select("image")
+		.attr("xlink:href", function(d) { 
+	return "/static/hls/connections/graphic/arrow_right.ico"; 
+	})
+}
+
 function addShadows(svg){
 	// filters go in defs element
 	var defs = svg.append("defs");
