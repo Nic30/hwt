@@ -107,6 +107,21 @@ function netMouseOut() {
 	  .classed("link-hover", false);
 }
 
+function onCompMouseIn(){
+	var o = d3.select(this)
+	console.log(o);
+	o.classed({
+			"selected-object-hover" : true
+		})
+
+}
+
+function onCompMouseOut(){
+	d3.select(this).classed({
+			"selected-object-hover" : false
+		})
+}
+
 function addShadows(svg){
 	// filters go in defs element
 	var defs = svg.append("defs");
@@ -115,22 +130,22 @@ function addShadows(svg){
 	// height=130% so that the shadow is not clipped
 	var filter = defs.append("filter")
 	    .attr("id", "drop-shadow-hight")
-	    .attr("height", "500%");
+	    .attr("height", "150%");
 
 	// SourceAlpha refers to opacity of graphic that this filter will be applied to
 	// convolve that with a Gaussian with standard deviation 3 and store result
 	// in blur
 	filter.append("feGaussianBlur")
 	    .attr("in", "SourceAlpha")
-	    .attr("stdDeviation", 2)
+	    .attr("stdDeviation", 3)
 	    .attr("result", "blur");
 
 	// translate output of Gaussian blur to the right and downwards with 2px
 	// store result in offsetBlur
 	filter.append("feOffset")
 	    .attr("in", "blur")
-	    .attr("dx", 10)
-	    .attr("dy", 10)
+	    .attr("dx", 1)
+	    .attr("dy", 1)
 	    .attr("result", "offsetBlur");
 
 	// overlay original SourceGraphic over translated blurred opacity by using
@@ -197,24 +212,25 @@ function addShadows(svg){
     .attr("stop-color", "#A9D0F5")    
 
 
-    var redgrad = svg
+    var red_grad = svg
 		.append("linearGradient")
 		.attr("y1", minY)
 		.attr("y2", maxY)
 		.attr("x1", "0")
 		.attr("x2", "0")
-		.attr("id", "redgrad")
+		.attr("id", "red_grad")
 		.attr("gradientUnits", "userSpaceOnUse")
     
-	redgrad
+	red_grad
 	.append("stop")
 	.attr("offset", "0")
-	.attr("stop-color", "#97CB97")
-    
-	redgrad
+	.attr("stop-color", "#F1AF9A")
+    //#F1E473   #F19E70
+    //9FF7BA   009E31
+	red_grad
     .append("stop")
     .attr("offset", "0.5")
-    .attr("stop-color", "#B8B8B8") 
+    .attr("stop-color", "#E20D00") 
 }
 
 function showTooltip(toolTipDiv, html){
@@ -369,6 +385,8 @@ function ComponentDiagram(selector){
 					return !n.isExternalPort;
 				}))
 				.on("click", onCompClick)
+				.on("mousemove", onCompMouseIn)
+				.on("mouseout", onCompMouseOut)
 				.call(force.drag); // component dragging
 				//.on("dblclick", componentDetail);
 			

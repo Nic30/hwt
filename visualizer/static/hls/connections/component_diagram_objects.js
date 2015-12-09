@@ -62,9 +62,10 @@ function drawComponents(svgGroup, componentNodes){
 	    .attr("rx", 5) // this make rounded corners
 	    .attr("ry", 5)
 	    .attr("border", 1)
-	    .style("stroke", "#BDBDBD")
+	    .attr("stroke", "#BDBDBD")
+	    .attr("stroke-width", "1")
 	    .attr("fill", "url(#blue_grad)")
-	    .style("filter", "url(#drop-shadow)")
+	    //.style("filter", "url(#drop-shadow)")
 	    .attr("width", function(d) { return d.width})
 	    .attr("height", function(d) { return d.height});
 
