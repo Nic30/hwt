@@ -4,8 +4,9 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal">&times;</button>
-				<h4 ng-if="doSave" class="modal-title">Save component</h4>
-				<h4 ng-if="!doSave" class="modal-title">Open component</h4>
+				<h4 ng-if="conf.save" class="modal-title">Save component</h4>
+				<h4 ng-if="conf.open" class="modal-title">Open component</h4>
+				<h4 ng-if="conf.import" class="modal-title">Import component</h4>
 			</div>
 			<div class="modal-body">
 
@@ -17,8 +18,10 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button ng-if="doSave" ng-click="api.save(api.openedFile)" class="btn btn-default" data-dismiss="modal">Save</button>
-				<button ng-if="!doSave" ng-click="api.open()" class="btn btn-default" data-dismiss="modal">Open</button>
+				<button ng-if="conf.save" ng-click="api.save(api.openedFile)" class="btn btn-default" data-dismiss="modal">Save</button>
+				<button ng-if="conf.open" ng-click="api.open()" class="btn btn-default" data-dismiss="modal">Open</button>
+				<button ng-if="conf.import" ng-click="api.import(api.openedFile)" class="btn btn-default" data-dismiss="modal">Import</button>
+				
 				<button class="btn btn-default" data-dismiss="modal">Cancel</button>
 			</div>
 		</div>

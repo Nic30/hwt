@@ -2,7 +2,6 @@ function filebrowserCntrl($scope, $http) {
 	var api = $scope.$parent.api;
 	var fileDialog = $('#fileDialog');
 	var saveDialog = $('#saveDialog');
-	$scope.doSave = false;
 	$scope.rootDir = "";
 	api.openedFile = '';
 	
@@ -51,6 +50,7 @@ function filebrowserCntrl($scope, $http) {
 		api.nodes = [];
 		api.nets = [];
 		api.redraw();
+		api.openedFile = '';
 	} 
 	api.open = function(path) {
 		return $http.get('/hls/connections-data/' + path).then(
@@ -130,9 +130,9 @@ function filebrowserCntrl($scope, $http) {
 	}
 
 
-	api.fileDialog = function(doSave) {
+	api.fileDialog = function(conf) {
 		//d3.selectAll("#chartWrapper").html(""); // [TODO] to different controller
-		$scope.doSave = doSave;
+		$scope.conf = conf;
 		fileDialog.modal('show');
 		filesRowData = [];
 		$scope.loadFolderData("");

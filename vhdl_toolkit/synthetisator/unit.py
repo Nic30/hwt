@@ -7,9 +7,23 @@ from vhdl_toolkit.valueInterpret import ValueInterpreter
 
 # def intAsVHDLVectorStr(i, len=None):
 #    if len()
-    
 
-class VHDLUnit(Entity):
+
+class Unit():    
+    @classmethod
+    def fromJson(cls, jsonDict, referenceName):
+        raise Exception("unimplemented")
+    
+    def toJson(self):
+        return {"name":self.name, "id":id(self), 
+                "inputs": [{"name":x.name, 
+                            "id" : id(x)} \
+                        for x in where(self.port, lambda p : p.direction == PortItem.typeIn )],
+                "outputs": [{"name":x.name,
+                             "id" : id(x)} \
+                        for x in where(self.port, lambda p : p.direction == PortItem.typeOut)]}
+        
+class VHDLUnit(Entity, Unit):
     def __init__(self, entity):
         self.__dict__.update(entity.__dict__)
         self.entity = entity
@@ -48,17 +62,7 @@ class VHDLUnit(Entity):
             ci.genericMaps.append("%s => %s" % (k, val_str))
         
         return ci
-    @classmethod
-    def fromJson(cls, jsonDict):
-        raise Exception("unimplemented")
-    def toJson(self):
-        return {"name":self.name, "id":id(self), 
-                "inputs": [{"name":x.name, 
-                            "id" : id(x)} \
-                        for x in where(self.port, lambda p : p.direction == PortItem.typeIn )],
-                "outputs": [{"name":x.name,
-                             "id" : id(x)} \
-                        for x in where(self.port, lambda p : p.direction == PortItem.typeOut)]}
+
         
 def portItemByName(entity, name):
     return single(entity.portItem, lambda x: x.name == name) 

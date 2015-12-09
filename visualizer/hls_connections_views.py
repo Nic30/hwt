@@ -3,11 +3,17 @@ from flask.blueprints import Blueprint
 from flask import render_template, Response, request, jsonify
 from hls_connections import serializeUnit, _defaultToJson
 from stat import S_ISDIR
+from vhdl_toolkit.synthetisator.unit import Unit 
+
 
 WORKSPACE_DIR = "workspace/" 
 sys.path.append(WORKSPACE_DIR)
 
 connectionsBp = Blueprint('connections', __name__, template_folder='templates/hls/')
+
+def jsonResp(data):
+    return Response(response=json.dumps(data, default=_defaultToJson), status=200, mimetype="application/json")
+
 
 class FSEntry():
     def __init__(self, name, isGroup):
@@ -65,7 +71,15 @@ def connectionDataLs(path=""):
     path = os.path.join(WORKSPACE_DIR, path) + "/*"
     for f in glob.glob(path):
         data.append(FSEntry.fromFile(f))
-    return Response(response=json.dumps(data, default=_defaultToJson), status=200, mimetype="application/json")
+    return jsonResp(data)
+
+@connectionsBp.route('/hls/connections-view/<path:path>')
+def connectionView(path):
+    path = os.path.join(WORKSPACE_DIR, path)
+    with open(path) as f:
+        data = Unit.fromJson(f.read(), path)
+    
+    return jsonResp(data)
 
 @connectionsBp.route('/hls/connections-data/<path:path>')
 def connectionData(path):
@@ -84,4 +98,4 @@ def connectionData(path):
             data =f.read()
     else:
         raise Exception("not implemented")
-    return Response(response=data, status=200, mimetype="application/json")
+    return jsonResp(data)
