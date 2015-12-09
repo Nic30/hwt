@@ -14,10 +14,7 @@ function cookieManagerCntrl($scope, $cookies, $cookieStore) {
 			// asynchronous initializer
 			if (api.open) {
 				api.openedFile = lastOpened;
-				api.open(api.openedFile).then(function() {
-					api.redraw();
-					api.fitDiagram2Screen();
-				});
+				api.open(api.openedFile)
 				setTimeout(unbindInitializer, 1000);
 			}
 		});
