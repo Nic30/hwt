@@ -23,3 +23,5 @@ if __name__ == '__main__':
     app.register_blueprint(connectionsBp)
     app.debug = True
     app.run()
+
+    #app.run(host='0.0.0.0')

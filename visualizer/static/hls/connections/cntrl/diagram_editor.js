@@ -442,11 +442,11 @@ function diagramEditorCntrl($scope, hotkeys){
 		var net = null;
 		if (originport[1] == destinationport[1]) {
 			api.msg.error("Can't connect matching port groups",
-					"QuickLink Erorr")
+					"QuickLink Error")
 			return;
 		} else if ((originport[1] == null || destinationport[1] == null)) {
 			api.msg.error("Can't connect link port direction corrupted",
-					"QuickLink Erorr")
+					"QuickLink Error")
 			return;
 		}
 		var origin = {
