@@ -298,7 +298,7 @@ function diagramEditorCntrl($scope, hotkeys){
 		o.id = parseInt(o.id)
 		
 	console.log(o.exPortType)
-		if(o.exPortType == null)
+		if((o.exPortType == null)|| (o.exPortType == COMPONENT))
 			{
 			o.exPortType = COMPONENT;
 			}
@@ -318,7 +318,7 @@ function diagramEditorCntrl($scope, hotkeys){
 		console.log(o.direction)
 		console.log(o.inputs)
 		console.log(o.outputs)
-		if((o.direction == DIRECTION.IN) && ((o.inputs.length != 0)))
+		if(o.direction == DIRECTION.IN && !(o.inputs.length == 0 && o.outputs.length > 0))
 			{
 			api.msg.error("Can't create external input with input ports", "Component add error");
 			return;
