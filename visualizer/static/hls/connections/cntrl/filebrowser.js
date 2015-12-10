@@ -165,7 +165,10 @@ function filebrowserCntrl($scope, $http) {
 				'Content-Type' : 'application/json'
 			}
 		}).then(function(response) {
+			api.msg.success("Successfuly saved", path);
 			return response;
+		}, function(){
+			api.msg.error("Error while saving", path);
 		});
 	};
 
