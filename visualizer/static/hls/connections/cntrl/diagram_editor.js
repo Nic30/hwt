@@ -87,6 +87,9 @@ function diagramEditorCntrl($scope, hotkeys){
 		]
 	hkBindings.forEach(hotkeys.add);
 	
+	api.toggleHelp = function() {
+		hotkeys.toggleCheatSheet();
+	}
 	
 	$scope.dismissAddDialog = function() {
 		addDialog.modal('hide');
@@ -145,7 +148,7 @@ function diagramEditorCntrl($scope, hotkeys){
 		if (index > -1) {
 			portGroup.splice(index, 1);
 		} else {
-			console.log("Remove port error: port does not exist")
+			console.log("Remove port error: port does not exist");
 		}
 		// api.redraw();
 	}
