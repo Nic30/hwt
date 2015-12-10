@@ -135,6 +135,8 @@ function filebrowserCntrl($scope, $http) {
 			var node = res.data;
 			api.insertNode(node, 0, 0);
 			api.redraw();
+		}, function errorCallback(response) {
+			api.msg.error("Can not import file", path);
 		});
 	}
 
