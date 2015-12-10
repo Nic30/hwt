@@ -152,7 +152,7 @@ function filebrowserCntrl($scope, $http) {
 	api.save = function(path) {
 		var name = path.split('.')
 		if (name.length > 1){
-			name = name[1];
+			name = name[name.length -2];
 		}
 		var data = {
 			"name" : name,
