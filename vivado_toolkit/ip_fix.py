@@ -1,6 +1,8 @@
 
-from python_toolkit.fileHelpers import applyReplacesOnFile
 import re
+
+from python_toolkit.fileHelpers import applyReplacesOnFile
+
 
 def ipFix_2015_2(componentString):
     s = re.sub(r'spirit:order="[^"]*"', r"", componentString , flags=re.MULTILINE)

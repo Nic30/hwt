@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from vhdl_toolkit.templates import VHDLTemplates
 from python_toolkit.arrayQuery import where, single, arr_any
 from vhdl_toolkit.expr import  Map, Assignment
+from vhdl_toolkit.templates import VHDLTemplates
 from vhdl_toolkit.variables import SignalItem, PortItem
+
 
 def portItem2signal(p):
     return SignalItem(p.name, p.var_type)

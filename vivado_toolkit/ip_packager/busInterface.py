@@ -1,11 +1,11 @@
 
 
+import python_toolkit
+from python_toolkit.arrayQuery import single, where
+from python_toolkit.stringUtils import matchIgnorecase
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
          mkSpiElm, spi_ns_prefix
 from vivado_toolkit.ip_packager.others import Parameter
-from python_toolkit.arrayQuery import single, where
-import python_toolkit
-from python_toolkit.stringUtils import matchIgnorecase
 
 
 DEFAULT_CLOCK = 100000000
@@ -15,7 +15,7 @@ class InterfaceIncompatibilityExc(Exception):
     pass         
          
 class IfConfig():
-    dir_out, dir_in = ("out", "in")
+    dir_out, dir_in = ("OUT", "IN")
     ifMaster, ifSlave = ("master", "slave")
     
     def findPort(self, logName):
@@ -479,7 +479,7 @@ def extractBusInterface(entity, interface, excOnIncompatibilytiy=False):
 
         def firstPortInstances():
             """
-            @return: unit ports whitch probably matches with this interface
+            @return: unit ports witch probably matches with this interface
             """
             for x in entity.port:
                 if not hasattr(x, "ifCls") and x.name.lower().endswith(firstIntfPort.phyName.lower()):
@@ -495,7 +495,7 @@ def extractBusInterface(entity, interface, excOnIncompatibilytiy=False):
             
         def getMap(ifprefix, intfCls, ent):
             """
-            @return:None if intf. cant be mapped othervicese returns (master/slave, {logical : physical})
+            @return:None if intf. can't be mapped otherwise returns (master/slave, {logical : physical})
             """
             allMatch = True
             noneMatch = True

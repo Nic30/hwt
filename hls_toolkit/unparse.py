@@ -1,8 +1,9 @@
 """
 ast -> python code
 """
-import sys
 import ast
+import sys
+
 
 # Large float and imaginary literals get turned into infinities in the AST.
 # We unparse those infinities to INFSTR.

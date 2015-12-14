@@ -1,5 +1,6 @@
-from myhdl import Signal, instance, always, always_seq, ResetSignal, StopSimulation, Simulation, traceSignals, delay
 from hls_toolkit.samples.framerCtrl import ACTIVE_LOW, FramerCtrl, t_State
+from myhdl import Signal, instance, always, always_seq, ResetSignal, StopSimulation, Simulation, traceSignals, delay
+
 
 def testbench():
 

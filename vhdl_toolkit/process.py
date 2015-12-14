@@ -1,6 +1,7 @@
 from vhdl_toolkit.expr import Assignment
 from vhdl_toolkit.templates import VHDLTemplates
 
+
 class HWProcess():
     overloadedMethods = ['write', 'init', 'read', 'readResp', 'writeAccept']
     def __init__(self, name):
@@ -35,7 +36,6 @@ class HWProcess():
         self.bodyBuff.append("wait for clk_period * %d;" % (clkCnt))
     
     def __str__(self):
-        s = VHDLTemplates.process.render({"name": self.name,   \
+        return VHDLTemplates.process.render({"name": self.name,   \
               "sensitivityList": ", ".join(self.sensitivityList), \
               "statements": [ str(s) for s in self.bodyBuff] })
-        return s

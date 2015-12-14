@@ -1,11 +1,11 @@
 
+import hls_toolkit.samples.axi as axi
+from migen.actorlib.sim import *
+from migen.fhdl import verilog
 from migen.flow.network import DataFlowGraph, CompositeActor
 from migen.flow.transactions import *
-from migen.actorlib.sim import *
-import hls_toolkit.samples.axi as axi
-from migen.sim.generic import run_simulation
 from migen.genlib.fsm import FSM, NextState
-from migen.fhdl import verilog
+from migen.sim.generic import run_simulation
 
 
 class AxiLite_slave_rd(Module):

@@ -1,9 +1,11 @@
-import xml.etree.ElementTree as etree
-from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
-         findS, mkSpiElm, ns, spi_ns_prefix
 import re
+
 from python_toolkit.arrayQuery import where
 from vhdl_toolkit.valueInterpret import ValueInterpreter
+from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
+         findS, mkSpiElm, ns, spi_ns_prefix
+import xml.etree.ElementTree as etree
+
 
 class WireTypeDef():
     _requiredVal = ["typeName"]

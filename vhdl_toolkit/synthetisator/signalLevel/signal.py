@@ -1,7 +1,8 @@
-from vhdl_toolkit.variables import SignalItem, PortItem
-from vhdl_toolkit.expr import Assignment, value2vhdlformat
 from python_toolkit.arrayQuery import arr_any, single, first
+from vhdl_toolkit.expr import Assignment, value2vhdlformat
 from vhdl_toolkit.types import VHDLType, VHDLBoolean
+from vhdl_toolkit.variables import SignalItem, PortItem
+
 
 class InvalidOperandExc(Exception):
     pass

@@ -2,7 +2,6 @@
 from hls_toolkit.types import BitSingle, BitVector, Handshake, AxiStream
 
 
-
 class HLSSyntetizatorConfig(object):
     '''
     Config class for hls syntetizator

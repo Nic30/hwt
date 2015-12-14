@@ -1,12 +1,12 @@
-from vhdl_toolkit.synthetisator.context import Context
+from python_toolkit.arrayQuery import single
+from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.parser import entityFromFile
+from vhdl_toolkit.synthetisator.context import Context
+from vhdl_toolkit.synthetisator.example import connectUnits
+from vhdl_toolkit.synthetisator.signal import signalsForInterface
 from vhdl_toolkit.synthetisator.unit import VHDLUnit, automapSigs
 from vivado_toolkit.ip_packager.busInterface import AXILite, Axi_channeled, \
     Ap_rst_n, Ap_clk, HsAXIStream, HS_config_d_V, BlockRamPort
-from vhdl_toolkit.synthetisator.signal import signalsForInterface
-from vhdl_toolkit.synthetisator.example import connectUnits
-from vhdl_toolkit.formater import formatVhdl
-from python_toolkit.arrayQuery import single
 
 
 def superDMA_complex():
@@ -33,8 +33,6 @@ def superDMA_complex():
     axiLite2REGS = signalsForInterface(c, axiLite_interf, "AXI_TO_REGS")
     MBus0 = signalsForInterface(c, ACP_interf, "m_mbus_0")
     MBus1 = signalsForInterface(c, HP_interf, "m_mbus_1")
-    
-    
     
     # connect axiSplit
     def regularAxi2axiOnAxi_regs(name):

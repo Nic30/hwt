@@ -1,5 +1,7 @@
 from ply.lex import LexToken
+
 from vhdl_toolkit.parser_helpers import for_parentBlock
+
 
 class VHDLType():
     """
@@ -55,5 +57,6 @@ def STD_LOGIC():
     t = VHDLType()
     t.str = "std_logic"
     return t
+
 def VHDLBoolean():
     return STD_LOGIC()

@@ -1,7 +1,9 @@
-from vivado_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm,\
-    appendSpiElem, appendStrElements, ns, mkXiElm, appendXiElem
 import os
 from time import gmtime, strftime
+
+from vivado_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
+    appendSpiElem, appendStrElements, ns, mkXiElm, appendXiElem
+
 
 class Value():
     __slots__ = ['id', 'resolve', 'text']

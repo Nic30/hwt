@@ -1,11 +1,13 @@
 
-import ast, os
-import myhdl
-from hls_toolkit.unparse import Unparser
-from hls_toolkit.shotcuts.ast import addSignal, fnFileAst, nodeOfFn, dump
 """
 Abstract tree tweaker module
 """
+
+import ast, os
+
+from hls_toolkit.shotcuts.ast import addSignal, fnFileAst, nodeOfFn, dump
+from hls_toolkit.unparse import Unparser
+import myhdl
 
 
 def import_file(full_path_to_module):

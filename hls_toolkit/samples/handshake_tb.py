@@ -2,6 +2,7 @@
 from hls_toolkit.types import Handshake
 from myhdl import *
 
+
 t_State = enum('SEARCH', 'CONFIRM', 'SYNC')
 
 #def read(self, dataOut, _call):

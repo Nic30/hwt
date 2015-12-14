@@ -1,8 +1,9 @@
-from migen.fhdl.std import *
+from migen.actorlib.structuring import *
 from migen.fhdl import verilog
+from migen.fhdl.std import *
 from migen.flow.actor import *
 from migen.flow.network import *
-from migen.actorlib.structuring import *
+
 
 class Converter(Module):
     def __init__(self, layout_from, layout_to):

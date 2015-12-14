@@ -1,14 +1,13 @@
-from vhdl_toolkit.architecture import ComponentInstance
 from python_toolkit.arrayQuery import single, arr_any, NoValueExc, where
-from vhdl_toolkit.entity import Entity
 from python_toolkit.stringUtils import matchIgnorecase
-from vhdl_toolkit.variables import PortItem
+from vhdl_toolkit.architecture import ComponentInstance
+from vhdl_toolkit.entity import Entity
 from vhdl_toolkit.valueInterpret import ValueInterpreter
+from vhdl_toolkit.variables import PortItem
+
 
 # def intAsVHDLVectorStr(i, len=None):
 #    if len()
-
-
 class Unit():    
     def __init__(self):
         self.port = []

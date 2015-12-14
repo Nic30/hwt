@@ -1,7 +1,7 @@
 
 
 def value2vhdlformat(dst, val):
-    """ @param: dst is variable connected with value """
+    """ @param: dst is VHDLvariable connected with value """
     t = dst.var_type.str.lower()
     if hasattr(val, 'name') :
         return val.name

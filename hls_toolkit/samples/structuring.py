@@ -1,14 +1,14 @@
 from itertools import count
 
-import networkx as nx
 import matplotlib.pyplot as plt
-
-from migen.flow.network import *
-from migen.flow.transactions import *
 from migen.actorlib import structuring
 from migen.actorlib.sim import *
 from migen.flow import perftools
+from migen.flow.network import *
+from migen.flow.transactions import *
 from migen.sim.generic import run_simulation
+import networkx as nx
+
 
 pack_factor = 5
 base_layout = [("value", 32)]

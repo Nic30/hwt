@@ -1,9 +1,10 @@
-from migen.fhdl.std import *
 from migen.fhdl import verilog
-from migen.sim.generic import run_simulation
+from migen.fhdl.std import *
 from migen.sim.generic import Simulator, TopLevel
-# https://github.com/nakengelhardt/kc705_riffa
+from migen.sim.generic import run_simulation
 
+
+# https://github.com/nakengelhardt/kc705_riffa
 class AxiStream():
     def __init__(self, DW):
         self.valid = Signal()

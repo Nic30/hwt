@@ -1,9 +1,9 @@
 from math import cos, pi
 from scipy import signal
-import matplotlib.pyplot as plt
 
-from migen.fhdl.std import *
+import matplotlib.pyplot as plt
 from migen.fhdl import verilog
+from migen.fhdl.std import *
 from migen.genlib.misc import optree
 from migen.sim.generic import run_simulation
 

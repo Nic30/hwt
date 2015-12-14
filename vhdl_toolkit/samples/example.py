@@ -1,11 +1,11 @@
-from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.context import Context
-from vivado_toolkit.ip_packager.busInterface import AXILite, Ap_rst_n, Ap_clk
-from vhdl_toolkit.synthetisator.signal import signalsForInterface
-from python_toolkit.stringUtils import matchIgnorecase
 from python_toolkit.arrayQuery import single
+from python_toolkit.stringUtils import matchIgnorecase
+from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.synthetisator.codeOp import If
+from vhdl_toolkit.synthetisator.context import Context
 from vhdl_toolkit.synthetisator.optimalizator import expr_optimize
+from vhdl_toolkit.synthetisator.signal import signalsForInterface
+from vivado_toolkit.ip_packager.busInterface import AXILite, Ap_rst_n, Ap_clk
 
 
 def connectUnits(sig, unit0, unit1, unit0PortName, unit1PortName):

@@ -1,6 +1,13 @@
-from python_toolkit.arrayQuery import where
 import re
 
+import ply.lex as lex
+import ply.yacc as yacc
+from python_toolkit.arrayQuery import where
+
+"""
+Interpret of vhdl expressions to find out value of generics
+Supports only basic math operators, brackets etc. .. 
+"""
 
 class InterpreterErr(Exception):
     pass
@@ -32,7 +39,6 @@ def t_error(t):
     t.lexer.skip(1)
     
 # Build the lexer
-import ply.lex as lex
 lex.lex()
 
 # Parsing rules
@@ -91,7 +97,6 @@ def p_error(p):
     else:
         raise InterpreterErr("Syntax error at EOF")
 
-import ply.yacc as yacc
 parser = yacc.yacc()
 
 class  ValueInterpreter:

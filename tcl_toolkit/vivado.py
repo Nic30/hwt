@@ -1,5 +1,6 @@
 from _ast import Expression
 
+
 def setReset(name):
     activeInStr = "ACTIVE_"
     if name.lower().endswith("_n"):

@@ -1,6 +1,7 @@
 from migen.flow.network import Sink , Source
-from migen.genlib.record import *
 from migen.genlib.fsm import FSM, NextState, NextValue
+from migen.genlib.record import *
+
 
 # _layout_hs = [
 #    ("valid", 1, DIR_M_TO_S),

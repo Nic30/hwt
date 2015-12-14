@@ -2,8 +2,12 @@
 # -*- coding: utf-8 -*-
 import re
 
+"""
+Simple and stupid implementation of vhdl formater
+"""
 
-indentIncr = ["^entity", "^port\s*\(", "^port\s*map\s*\(", "^generic\s*map\s*\(", "^generic\s*\(", "^architecture", "^if", "^port\s+map\s*\(", "^process", "^while", "^component", "\S+\s*:\s*process"]
+indentIncr = ["^entity", "^port\s*\(", "^port\s*map\s*\(", "^generic\s*map\s*\(", "^generic\s*\(",\
+              "^architecture", "^if", "^port\s+map\s*\(", "^process", "^while", "^component", "\S+\s*:\s*process"]
 indentDecr = ["^end", "^\)"]
 indentPeak = ["^begin", "^elsif", "^else"]
 

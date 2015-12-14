@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import re
-from vhdl_toolkit.testbench_generator import TestbenchCreator, HWProcess
-from vhdl_toolkit.templates import VHDLTemplates as templ
-from vhdl_toolkit.variables import SignalItem
-from vhdl_toolkit.types import VHDLType
 
+from vhdl_toolkit.templates import VHDLTemplates as templ
+from vhdl_toolkit.testbench_generator import TestbenchCreator, HWProcess
+from vhdl_toolkit.types import VHDLType
+from vhdl_toolkit.variables import SignalItem
 
 
 #class HandShake_interface():
@@ -37,8 +37,6 @@ from vhdl_toolkit.types import VHDLType
 #    def write(self, assigmensts=None):
 #        return self._onBouthHigh(self.vld, self.rd) + self._renderAssigments(assigmensts) + self._stop(self.vld)
 #
-
-
 class HandShake_interface():
     def __init__(self, rd, vld, sensitivityList):
         self.vld = vld

@@ -1,6 +1,8 @@
 import  ast
-import myhdl
+
 import hls_toolkit.errors as errors
+import myhdl
+
 
 def dump(node, annotate_fields=True, include_attributes=False, indent='  '):
     """

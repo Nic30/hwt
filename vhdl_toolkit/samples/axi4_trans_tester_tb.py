@@ -1,8 +1,10 @@
 import os
+
 from vhdl_toolkit.axi_testbench import AXI4_slave, AXI_lite_master, AXI_testbench
-from vhdl_toolkit.testbench_generator import entityFromFile
 from vhdl_toolkit.formater import formatVhdl 
+from vhdl_toolkit.testbench_generator import entityFromFile
 from vivado_toolkit.vivado_ip_wrap_fix import axi_m_integer_fix 
+
 
 MODE_INIT = 0
 MODE_R = 1

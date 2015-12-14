@@ -1,5 +1,6 @@
 from myhdl import *
 
+
 ACTIVE_LOW = 0
 FRAME_SIZE = 8
 t_State = enum('SEARCH', 'CONFIRM', 'SYNC')

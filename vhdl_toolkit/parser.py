@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #import ply.lex as lex
-from vhdl_toolkit.lex import VHDL_Lex_parser
-from vhdl_toolkit.entity import Entity
-
 """
 install dependencies by:
 pip3 install ply
 """
-
 #class VHLD_base(object):
 #    def __init__(self):
 #        self.imports = []
@@ -25,7 +21,11 @@ pip3 install ply
 #                    e = Entity()
 #                    e.parse(l)
 #                    return e
- 
+
+from vhdl_toolkit.entity import Entity
+from vhdl_toolkit.lex import VHDL_Lex_parser
+
+
 class CachedLex(object):
     def __init__(self, string):
         self.lex = VHDL_Lex_parser

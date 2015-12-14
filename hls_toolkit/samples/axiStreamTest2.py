@@ -1,12 +1,12 @@
-from migen.fhdl.std import *
+from migen.actorlib import dma_wishbone
 from migen.fhdl import verilog
-from migen.sim.generic import Simulator, TopLevel
+from migen.fhdl.std import *
 from migen.flow.actor import Sink, Source, PipelinedActor
 from migen.genlib.record import *
+from migen.sim.generic import Simulator, TopLevel
+
+
 # https://github.com/nakengelhardt/kc705_riffa
-
-from migen.actorlib import dma_wishbone
-
 _layout = [
     ("data", "DATA_W", DIR_M_TO_S),
     ("strb", "STRB_W", DIR_S_TO_M),

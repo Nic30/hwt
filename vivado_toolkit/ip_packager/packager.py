@@ -1,10 +1,12 @@
 import os, shutil
 from os.path import basename, relpath
-from vhdl_toolkit.parser import entityFromFile
+
 from python_toolkit.fileHelpers import find_files
-from vivado_toolkit.ip_packager.helpers import prettify
-from vivado_toolkit.ip_packager.component import Component
+from vhdl_toolkit.parser import entityFromFile
 from vivado_toolkit.ip_packager.blockRamWrap import blockRamWrap
+from vivado_toolkit.ip_packager.component import Component
+from vivado_toolkit.ip_packager.helpers import prettify
+
 
 def makeDummyXGUIFile(fileName):
     s = """

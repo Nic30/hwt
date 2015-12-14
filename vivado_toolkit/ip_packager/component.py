@@ -1,11 +1,13 @@
-import xml.etree.ElementTree as etree
 from time import  time
+
+from vivado_toolkit.ip_packager.busInterface import defaultBusResolve, extractBusInterface
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
          mkSpiElm, ns, whereEndsWithExt
 from vivado_toolkit.ip_packager.model import Model, Port
-from vivado_toolkit.ip_packager.busInterface import defaultBusResolve, extractBusInterface
 from vivado_toolkit.ip_packager.others import VendorExtensions, FileSet, File, \
     Parameter, Value
+import xml.etree.ElementTree as etree
+
 
 vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
 vhdl_sim_fileSetName = "xilinx_vhdlbehavioralsimulation_view_fileset"

@@ -1,10 +1,12 @@
 # from vhdl_toolkit.types import PortItem
 # from hls_toolkit.errors import InvalidAsign
-from myhdl import Signal, intbv, always_comb
 """
 name and direction atributes are asigned by HLS core
 
 """
+
+from myhdl import Signal, intbv, always_comb
+
 
 class InterfaceType():
     """Template class for interfaces"""

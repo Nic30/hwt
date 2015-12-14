@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 import ply.lex as lex
 
+"""
+Lexical parser for VHDL
+"""
+
 tokens = (
     'WHILE', 'THEN', 'ENTITY', 'END', 'NAME', 'FLOAT', 'NUMBER',
     'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'EQUALS', 'DDOT', 'SEMICOLON',

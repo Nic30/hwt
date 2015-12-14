@@ -1,8 +1,9 @@
-from sympy import Symbol, Or, And, Xor, to_cnf, Not
-from vhdl_toolkit.synthetisator.signal import Signal, OpAnd, OpXor, OpNot, OpOr, \
-    OpEvent, OpOnRisingEdge, OperatorUnary, OperatorBinary, OpEq
 from collections import deque
+from sympy import Symbol, Or, And, Xor, to_cnf, Not
 from sympy.logic.boolalg import simplify_logic
+
+from vhdl_toolkit.synthetisator.signalLevel.signal import Signal, OpAnd, OpXor, OpNot, OpOr, \
+    OpEvent, OpOnRisingEdge, OperatorUnary, OperatorBinary, OpEq
 
 
 binaryOpTransl = [(OpAnd, And), (OpOr, Or), (OpXor, Xor)  ]

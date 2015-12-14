@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from vhdl_toolkit.variables import SignalItem
-from vhdl_toolkit.process import HWProcess
-from vhdl_toolkit.parser import entityFromFile
 from vhdl_toolkit.formater import formatVhdl
+from vhdl_toolkit.parser import entityFromFile
+from vhdl_toolkit.process import HWProcess
 from vhdl_toolkit.templates import VHDLTemplates
- 
+from vhdl_toolkit.variables import SignalItem
+
+"""
+@deprecated: this part  will be replace by signal/interface level tesbench generator 
+"""
+
 class fifo():
     def __init__(self, name):
         self.name = name

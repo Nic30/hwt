@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from vhdl_toolkit.parser_helpers import for_parentBlock
 from vhdl_toolkit.templates import VHDLTemplates 
 from vhdl_toolkit.types import VHDLType
-from vhdl_toolkit.parser_helpers import for_parentBlock
 from vhdl_toolkit.variables import PortItem, VHDLGeneric
-       
-       
+
+
 class Entity(object):
     def __init__(self):
         self.port = []

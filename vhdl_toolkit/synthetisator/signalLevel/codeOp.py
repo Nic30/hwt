@@ -1,5 +1,5 @@
+from vhdl_toolkit.synthetisator.signalLevel.signal import exp__str__, Signal
 from vhdl_toolkit.templates import VHDLTemplates
-from vhdl_toolkit.synthetisator.signal import exp__str__, Signal
 from vhdl_toolkit.types import VHDLBoolean
 
 

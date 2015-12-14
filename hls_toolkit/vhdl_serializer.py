@@ -1,11 +1,11 @@
-from vhdl_toolkit.entity import Entity
-from vhdl_toolkit.types import PortItem, VHDLType, VHDLExtraType
-from vhdl_toolkit.architecture import Architecture
-from hls_toolkit.syntetizator_config import HLSSyntetizatorConfig as config
-
 """
 @attention:  Not used yet
 """
+
+from hls_toolkit.syntetizator_config import HLSSyntetizatorConfig as config
+from vhdl_toolkit.architecture import Architecture
+from vhdl_toolkit.entity import Entity
+from vhdl_toolkit.types import PortItem, VHDLType, VHDLExtraType
 
 
 def portFromVariables(variables):

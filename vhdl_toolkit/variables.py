@@ -1,7 +1,10 @@
-
 from vhdl_toolkit.expr import Assignment, value2vhdlformat
 
+
 def LexToken2Val(token):
+    """
+    @return: actual parsed value of the lex token
+    """
     if isinstance(token, int):
         return token
     elif token.type == 'NUMBER':
@@ -12,9 +15,6 @@ def LexToken2Val(token):
         raise Exception("Unimplemented token type %s" % token.type)
 
 class VHDLVariable():
-    """
-    VHDL generic and 
-    """
     def __init__(self, name, var_type, defaultVal=None):
         self.name = name
         self.var_type = var_type
@@ -46,7 +46,6 @@ class VHDLGeneric(VHDLVariable):
 
 class SignalItem(VHDLVariable):
     """basic vhdl signal"""
-
     def eq(self, src):
         return Assignment(src, self)
     

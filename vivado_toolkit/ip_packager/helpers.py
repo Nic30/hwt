@@ -1,6 +1,8 @@
 import xml.dom.minidom
-import xml.etree.ElementTree as etree
+
 from python_toolkit.arrayQuery import where
+import xml.etree.ElementTree as etree
+
 
 ns = { "spirit" : "http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009",
        "xilinx" :"http://www.xilinx.com",

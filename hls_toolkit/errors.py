@@ -1,5 +1,6 @@
 from hls_toolkit.debug import translate_syntax_error
 
+
 class HLSTeplateErr(BaseException):
     """ error in hls file """
     @classmethod

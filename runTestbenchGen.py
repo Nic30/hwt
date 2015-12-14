@@ -1,10 +1,10 @@
+from python_toolkit.arrayQuery import single
+from vhdl_toolkit.axi_testbench import AXI_lite_master
+from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.parser import entityFromFile
+from vhdl_toolkit.process import HWProcess
 from vhdl_toolkit.testbench_generator import TestbenchCreator, AxiStream, delay, \
     hs, vecAsig, vhdlErr, asUnsigned
-from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.axi_testbench import AXI_lite_master
-from vhdl_toolkit.process import HWProcess
-from python_toolkit.arrayQuery import single
 
 
 class SuperDMA():

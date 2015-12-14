@@ -1,7 +1,9 @@
 
-from myhdl import always, always_comb, Signal, intbv, enum
-from hls_toolkit.syntetizator_config import HLSSyntetizatorConfig as conf
 from hls_toolkit.compParser import HLSparser
+from hls_toolkit.syntetizator_config import HLSSyntetizatorConfig as conf
+from myhdl import always, always_comb, Signal, intbv, enum
+
+
 ifconf = conf.interfaces
 DW = 16
 

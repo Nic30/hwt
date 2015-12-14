@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import sys
-from types import TracebackType, CodeType
-import ctypes
-
 """
 purpose is to fake exception origin and virtualy throw it from template file like jinja2 and other does
 """
+
+import ctypes
+import sys
+from types import TracebackType, CodeType
+
 
 iteritems = lambda d: iter(d.items())
 

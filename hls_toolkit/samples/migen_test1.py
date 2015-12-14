@@ -1,7 +1,4 @@
-from migen.fhdl.std import *from migen.fhdl.specials import SynthesisDirectivefrom migen.fhdl import verilogfrom migen.genlib.cdc import *from migen.genlib.record import *
-from migen.sim.generic import run_simulation
-
-THREAD_ID_WIDTH = 5
+from migen.fhdl import verilogfrom migen.fhdl.specials import SynthesisDirectivefrom migen.fhdl.std import *from migen.genlib.cdc import *from migen.genlib.record import *from migen.sim.generic import run_simulationTHREAD_ID_WIDTH = 5
 DATA_WIDTH = 64
 ADDR_WIDTH = 32
 

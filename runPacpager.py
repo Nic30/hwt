@@ -1,5 +1,6 @@
-from vivado_toolkit.ip_packager.packager import packageMultipleProjects
 from vhdl_toolkit.parser import entityFromFile
+from vivado_toolkit.ip_packager.packager import packageMultipleProjects
+
 
 if __name__ == "__main__":
     ipRepo = "/home/nic30/Documents/ip_repo"

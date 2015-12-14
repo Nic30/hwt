@@ -1,15 +1,16 @@
-from vivado_toolkit.ip_packager.component import Component
-from vivado_toolkit.ip_packager.busInterface import BlockRamPort_withMissing_clk,\
-    BlockRamPort_withMissing_clk2, extractBusInterface
-from vhdl_toolkit.variables import PortItem, SignalItem
-from vhdl_toolkit.formater import formatVhdl
 import re, copy, os
-from vhdl_toolkit.architecture import Architecture, connect
-from vhdl_toolkit.types import STD_LOGIC, VHDLType
+
 from python_toolkit.arrayQuery import single
-from vhdl_toolkit.templates import VHDLTemplates
+from vhdl_toolkit.architecture import Architecture, connect
 from vhdl_toolkit.entity import Entity
 from vhdl_toolkit.expr import Map
+from vhdl_toolkit.formater import formatVhdl
+from vhdl_toolkit.templates import VHDLTemplates
+from vhdl_toolkit.types import STD_LOGIC, VHDLType
+from vhdl_toolkit.variables import PortItem, SignalItem
+from vivado_toolkit.ip_packager.busInterface import BlockRamPort_withMissing_clk, \
+    BlockRamPort_withMissing_clk2, extractBusInterface
+from vivado_toolkit.ip_packager.component import Component
 
 
 # def walk_generics(obj, nameOfGeneric, path=[], root = None):
@@ -37,8 +38,6 @@ from vhdl_toolkit.expr import Map
 #            for m in ci.genericMaps:
 #                if m.
 #        obj.statements
-        
-
 def renameEntity(oldEntityName, newEntityName, fileStr):
     for tmpl in ["entity %s is", "of %s is" ]:
             fileStr = re.sub(tmpl % oldEntityName, tmpl % newEntityName, fileStr, flags=re.MULTILINE) 
@@ -55,7 +54,6 @@ def blockRamWrap(packager, vhdlPath):
         
         p += list(extractBusInterface(e, bi))
     if len(p) == 0:
-        #print("blockRamWrap not aplyed")
         return 
     for pi in e.port:
         if hasattr(pi, "ifCls"):

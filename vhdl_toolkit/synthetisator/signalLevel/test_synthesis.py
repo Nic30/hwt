@@ -1,9 +1,9 @@
-
-
 import unittest
-from vhdl_toolkit.synthetisator.context import Context
+
 from vhdl_toolkit.expr import Assignment
-from vhdl_toolkit.synthetisator.signal import OpOnRisingEdge
+from vhdl_toolkit.synthetisator.signalLevel.context import Context
+from vhdl_toolkit.synthetisator.signalLevel.signal import OpOnRisingEdge
+
 
 class TestCaseSynthesis(unittest.TestCase):
 

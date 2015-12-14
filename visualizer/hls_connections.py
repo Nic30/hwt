@@ -1,5 +1,5 @@
-from vhdl_toolkit.variables import PortItem
 from vhdl_toolkit.synthetisator.signal import PortConnection
+from vhdl_toolkit.variables import PortItem
 
 
 def _defaultToJson(obj):

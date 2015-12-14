@@ -1,8 +1,9 @@
-import json, importlib, sys, os, glob, time
-from flask.blueprints import Blueprint
 from flask import render_template, Response, request, jsonify
-from hls_connections import serializeUnit, _defaultToJson
+from flask.blueprints import Blueprint
+import json, importlib, sys, os, glob, time
 from stat import S_ISDIR
+
+from hls_connections import serializeUnit, _defaultToJson
 from vhdl_toolkit.synthetisator.unit import Unit 
 
 

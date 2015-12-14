@@ -1,7 +1,9 @@
 import re, os
-import zipfile
-import xml.etree.ElementTree as ET
 import tempfile
+import zipfile
+
+import xml.etree.ElementTree as ET
+
 
 GUI_INIT_FN_REGEX = "proc\s+init_gui\s+{\s+IPINST\s+}\s+{([^{]*|(([^}{]*{[^}{]*}[^}{]*)*))}"
 fileNameWithoutExtension = lambda filename : os.path.splitext(os.path.basename(filename))[0]
