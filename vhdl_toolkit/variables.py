@@ -61,7 +61,7 @@ class SignalItem(VHDLVariable):
             return s 
     
     
-class PortItem(object):
+class PortItem(SignalItem):
     typeIn = "IN"
     typeOut = "OUT"
     def __init__(self, name, direction, var_type):

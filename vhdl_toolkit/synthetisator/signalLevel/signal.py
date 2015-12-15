@@ -254,10 +254,10 @@ def ifConfig2Signal(context, ifc, prefix):
     return context.sig(prefix + ifc.phyName, ifc.width)
 
 def signalsForInterface(context, interf, prefix=""):
-    dmaSigs = []
+    sigs = []
     for ifc in interf.port:
-        dmaSigs.append(ifConfig2Signal(context, ifc, prefix))
-    return dmaSigs   
+        sigs.append(ifConfig2Signal(context, ifc, prefix))
+    return sigs   
 
 def walkSigExpr(sig):
     if hasattr(sig, 'originin'):

@@ -3,21 +3,30 @@ from python_toolkit.arrayQuery import single
 from python_toolkit.stringUtils import matchIgnorecase
 from vivado_toolkit.ip_packager.busInterface import IfConfig, \
     InterfaceIncompatibilityExc
-
+from copy import deepcopy
 
 class IfConfMap():
     def __init__(self, phyName=None, masterDir=IfConfig.dir_in, width=None):
         self.width = width
-        self.phyName = phyName.lower()
+        self.phyName = phyName
         self.masterDir = masterDir
  
     def _build(self, logName):
-        self.logName = logName   
+        self.logName = logName  
         if self.phyName is None:
             self.phyName = "_" + self.logName
-       
-
+        else:
+            self.phyName = self.phyName.lower()
+    
+    def _signalsForInterface(self, context, prefix):
+        yield context.sig(prefix + self.phyName, self.width)
+    
 class Interface():
+    def __init__(self):
+        if not self._isBuild():
+            raise Exception("Interface needs to be builded first")
+        self._signalMap = deepcopy(self.__class__._signalMap)
+        
     @classmethod
     def _isBuild(cls):
         return hasattr(cls, "_signalMap")
@@ -90,4 +99,11 @@ class Interface():
                 yield (name, intf) 
             except InterfaceIncompatibilityExc:
                 pass
+    
+    def _signalsForInterface(self, context, prefix):
+        sigs = []
+        for _, ifc in self._signalMap.items():
+            sigs.append(context.sig(prefix + ifc.phyName, ifc.width))
+        return sigs  
+     
                 
