@@ -6,9 +6,6 @@ from vhdl_toolkit.valueInterpret import ValueInterpreter
 from vhdl_toolkit.variables import PortItem
 from vhdl_toolkit.types import DIRECTION
 
-
-# def intAsVHDLVectorStr(i, len=None):
-#    if len()
 class Unit():    
     def __init__(self):
         self.port = []

@@ -4,9 +4,11 @@ from python_toolkit.stringUtils import matchIgnorecase
 from vivado_toolkit.ip_packager.busInterface import IfConfig, \
     InterfaceIncompatibilityExc
 from copy import deepcopy
+from vhdl_toolkit.types import DIRECTION
+
 
 class IfConfMap():
-    def __init__(self, phyName=None, masterDir=IfConfig.dir_in, width=None):
+    def __init__(self, phyName=None, masterDir=DIRECTION.IN, width=None):
         self.width = width
         self.phyName = phyName
         self.masterDir = masterDir
@@ -19,7 +21,8 @@ class IfConfMap():
             self.phyName = self.phyName.lower()
     
     def _signalsForInterface(self, context, prefix):
-        yield context.sig(prefix, self.width)
+        self.sig = context.sig(prefix, self.width) 
+        yield self.sig
     
 class Interface():
     def __init__(self):
@@ -36,6 +39,7 @@ class Interface():
         """
         create a _signalMap from class properties
         """
+        assert(not cls._isBuild())
         cls._signalMap = {}
         for propName, prop in cls.__dict__.items():
             if isinstance(prop, IfConfMap):

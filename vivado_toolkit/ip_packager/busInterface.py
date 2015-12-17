@@ -6,16 +6,17 @@ from python_toolkit.stringUtils import matchIgnorecase
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
          mkSpiElm, spi_ns_prefix
 from vivado_toolkit.ip_packager.others import Parameter
+from vhdl_toolkit.types import DIRECTION
 
 
 DEFAULT_CLOCK = 100000000
          
+D = DIRECTION
          
 class InterfaceIncompatibilityExc(Exception):
     pass         
          
 class IfConfig():
-    dir_out, dir_in = ("OUT", "IN")
     ifMaster, ifSlave = ("master", "slave")
     
     def findPort(self, logName):
@@ -31,10 +32,10 @@ class IfConfig():
 
     @classmethod
     def opositDir(cls, _dir_):
-        if _dir_ == cls.dir_out:
-            return cls.dir_in
-        elif _dir_ == cls.dir_in:
-            return cls.dir_out
+        if _dir_ == D.OUT:
+            return D.IN
+        elif _dir_ == D.IN:
+            return D.OUT
         else:
             raise Exception()
     @classmethod
@@ -66,7 +67,7 @@ class IfConfig():
 
 
 class IfConfMap():
-    def __init__(self, logName, phyName=None, masterDir=IfConfig.dir_in, width=None):
+    def __init__(self, logName, phyName=None, masterDir=DIRECTION.IN, width=None):
         self.logName = logName
         self.width = width
         if phyName is None:
@@ -87,11 +88,11 @@ class BlockRamPort_withMissing_clk(IfConfig):
         self.vendor = None 
         self.library = None
         c = IfConfMap
-        self.port = [c("addr_V", masterDir=self.dir_out),
-                     c("din_V", masterDir=self.dir_out),
-                     c("dout_V", masterDir=self.dir_in),
-                     c("en", masterDir=self.dir_out),
-                     c("we", masterDir=self.dir_out)                     
+        self.port = [c("addr_V", masterDir=D.OUT),
+                     c("din_V", masterDir=D.OUT),
+                     c("dout_V", masterDir=D.IN),
+                     c("en", masterDir=D.OUT),
+                     c("we", masterDir=D.OUT)                     
                      ]
 
 class BlockRamPort_withMissing_clk2(IfConfig):
@@ -104,11 +105,11 @@ class BlockRamPort_withMissing_clk2(IfConfig):
         self.vendor = None 
         self.library = None
         c = IfConfMap
-        self.port = [c("addr_V", masterDir=self.dir_out),
-                     c("din", masterDir=self.dir_out),
-                     c("dout", masterDir=self.dir_in),
-                     c("en", masterDir=self.dir_out),
-                     c("we", masterDir=self.dir_out)                     
+        self.port = [c("addr_V", masterDir=D.OUT),
+                     c("din", masterDir=D.OUT),
+                     c("dout", masterDir=D.IN),
+                     c("en", masterDir=D.OUT),
+                     c("we", masterDir=D.OUT)                     
                      ]
 
 class BlockRamPort(IfConfig):
@@ -118,12 +119,12 @@ class BlockRamPort(IfConfig):
         self.vendor = "xilinx.com"  
         self.library = "interface" 
         c = IfConfMap
-        self.port = [c("ADDR", "_addr_V", masterDir=self.dir_out, width=A_WIDTH),
-                     c("CLK", "_clk", masterDir=self.dir_out, width=1),
-                     c("DIN", "_din_V", masterDir=self.dir_out, width=D_WIDTH),
-                     c("DOUT", "_dout_V", masterDir=self.dir_in, width=D_WIDTH),
-                     c("EN", "_en", masterDir=self.dir_out, width=1),
-                     c("WE", "_we", masterDir=self.dir_out, width=1)                     
+        self.port = [c("ADDR", "_addr_V", masterDir=D.OUT, width=A_WIDTH),
+                     c("CLK", "_clk", masterDir=D.OUT, width=1),
+                     c("DIN", "_din_V", masterDir=D.OUT, width=D_WIDTH),
+                     c("DOUT", "_dout_V", masterDir=D.IN, width=D_WIDTH),
+                     c("EN", "_en", masterDir=D.OUT, width=1),
+                     c("WE", "_we", masterDir=D.OUT, width=1)                     
                      ]
 
 class BlockRamPort2(IfConfig):
@@ -133,12 +134,12 @@ class BlockRamPort2(IfConfig):
         self.vendor = "xilinx.com"  
         self.library = "interface" 
         c = IfConfMap
-        self.port = [c("ADDR", "_addr_V", masterDir=self.dir_out),
-                     c("CLK", "_clk", masterDir=self.dir_out),
-                     c("DIN", "_din", masterDir=self.dir_out),
-                     c("DOUT", "_dout", masterDir=self.dir_in),
-                     c("EN", "_en", masterDir=self.dir_out),
-                     c("WE", "_we", masterDir=self.dir_out)                     
+        self.port = [c("ADDR", "_addr_V", masterDir=D.OUT),
+                     c("CLK", "_clk", masterDir=D.OUT),
+                     c("DIN", "_din", masterDir=D.OUT),
+                     c("DOUT", "_dout", masterDir=D.IN),
+                     c("EN", "_en", masterDir=D.OUT),
+                     c("WE", "_we", masterDir=D.OUT)                     
                      ]
 
 class Handshake(IfConfig):
@@ -148,35 +149,35 @@ class Handshake(IfConfig):
         self.vendor = "nic" 
         self.library = "user"
         c = IfConfMap
-        self.port = [c("ap_vld", masterDir=self.dir_out),
-                     c("ap_ack", masterDir=self.dir_in),
-                     c("data", masterDir=self.dir_out)
+        self.port = [c("ap_vld", masterDir=D.OUT),
+                     c("ap_ack", masterDir=D.IN),
+                     c("data", masterDir=D.OUT)
                      ]
         
 class Handshake2(Handshake):
     def __init__(self):
         super().__init__()
         c = IfConfMap
-        self.port = [c("ap_vld", masterDir=self.dir_out),
-                     c("ap_ack", masterDir=self.dir_in),
-                     c("data", "", masterDir=self.dir_out)
+        self.port = [c("ap_vld", masterDir=D.OUT),
+                     c("ap_ack", masterDir=D.IN),
+                     c("data", "", masterDir=D.OUT)
                      ]
         
 class HS_config_d(Handshake):
     def __init__(self):
         super().__init__()
         c = IfConfMap
-        self.port = [c("ap_vld", masterDir=self.dir_out),
-                     c("ap_ack", masterDir=self.dir_in),
-                     c("data", "_d", masterDir=self.dir_out)
+        self.port = [c("ap_vld", masterDir=D.OUT),
+                     c("ap_ack", masterDir=D.IN),
+                     c("data", "_d", masterDir=D.OUT)
                      ]
 class HS_config_d_V(Handshake):
     def __init__(self, D_WIDTH=0):
         super().__init__()
         c = IfConfMap
-        self.port = [c("ap_vld", masterDir=self.dir_out, width=1),
-                     c("ap_ack", masterDir=self.dir_in, width=1),
-                     c("data", "_d_V", masterDir=self.dir_out, width=D_WIDTH)
+        self.port = [c("ap_vld", masterDir=D.OUT, width=1),
+                     c("ap_ack", masterDir=D.IN, width=1),
+                     c("data", "_d_V", masterDir=D.OUT, width=D_WIDTH)
                      ]
 
 class Ap_clk(IfConfig):
@@ -186,7 +187,7 @@ class Ap_clk(IfConfig):
         self.vendor = "xilinx.com" 
         self.library = "signal"
         c = IfConfMap
-        self.port = [c("CLK", "ap_clk", masterDir=self.dir_out, width=1)
+        self.port = [c("CLK", "ap_clk", masterDir=D.OUT, width=1)
                      ]
             
     def postProcess(self, component, entity, allInterfaces, thisIf):
@@ -207,7 +208,7 @@ class Ap_rst(IfConfig):
         self.vendor = "xilinx.com" 
         self.library = "signal"
         c = IfConfMap
-        self.port = [c("rst", "ap_rst", masterDir=self.dir_out, width=1)]
+        self.port = [c("rst", "ap_rst", masterDir=D.OUT, width=1)]
         
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_HIGH")
@@ -219,7 +220,7 @@ class Ap_rst_n(IfConfig):
         self.vendor = "xilinx.com" 
         self.library = "signal"
         c = IfConfMap
-        self.port = [c("rst", "ap_rst_n", masterDir=self.dir_out, width=1)]
+        self.port = [c("rst", "ap_rst_n", masterDir=D.OUT, width=1)]
         
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_LOW")
@@ -231,11 +232,11 @@ class AXIStream(IfConfig):
         self.vendor = "xilinx.com" 
         self.library = "interface"
         c = IfConfMap
-        self.port = [c("TDATA", masterDir=self.dir_out),
-                     c("TLAST", masterDir=self.dir_out),
-                     c("TVALID", masterDir=self.dir_out),
-                     c("TSTRB", masterDir=self.dir_out),
-                     c("TREADY", masterDir=self.dir_in)
+        self.port = [c("TDATA", masterDir=D.OUT),
+                     c("TLAST", masterDir=D.OUT),
+                     c("TVALID", masterDir=D.OUT),
+                     c("TSTRB", masterDir=D.OUT),
+                     c("TREADY", masterDir=D.IN)
                      ]
 class HsAXIStream(IfConfig):
     def __init__(self, D_WIDTH=0):
@@ -244,11 +245,11 @@ class HsAXIStream(IfConfig):
         self.vendor = "xilinx.com" 
         self.library = "interface"
         c = IfConfMap
-        self.port = [c("TDATA", "_d_DATA_V", masterDir=self.dir_out, width=D_WIDTH),
-                     c("TLAST", "_d_LAST", masterDir=self.dir_out, width=1),
-                     c("TVALID", "_ap_vld" , masterDir=self.dir_out, width=1),
-                     c("TSTRB", "_d_STRB_V" , masterDir=self.dir_out, width=D_WIDTH // 8),
-                     c("TREADY", "_ap_ack", masterDir=self.dir_in, width=1)
+        self.port = [c("TDATA", "_d_DATA_V", masterDir=D.OUT, width=D_WIDTH),
+                     c("TLAST", "_d_LAST", masterDir=D.OUT, width=1),
+                     c("TVALID", "_ap_vld" , masterDir=D.OUT, width=1),
+                     c("TSTRB", "_d_STRB_V" , masterDir=D.OUT, width=D_WIDTH // 8),
+                     c("TREADY", "_ap_ack", masterDir=D.IN, width=1)
                      ]
         
 class AXILite(IfConfig):
@@ -260,27 +261,27 @@ class AXILite(IfConfig):
         self.A_WIDTH = A_WIDTH
         self.D_WIDTH = D_WIDTH
         c = IfConfMap
-        self.port = [c("AWADDR", masterDir=self.dir_out, width=A_WIDTH),
-                     c("AWVALID", masterDir=self.dir_out, width=1),
-                     c("AWREADY", masterDir=self.dir_in, width=1),
+        self.port = [c("AWADDR", masterDir=D.OUT, width=A_WIDTH),
+                     c("AWVALID", masterDir=D.OUT, width=1),
+                     c("AWREADY", masterDir=D.IN, width=1),
                      
-                     c("WDATA", masterDir=self.dir_out, width=D_WIDTH),
-                     c("WSTRB", masterDir=self.dir_out, width=D_WIDTH // 8),
-                     c("WVALID", masterDir=self.dir_out, width=1),
-                     c("WREADY", masterDir=self.dir_in, width=1),
+                     c("WDATA", masterDir=D.OUT, width=D_WIDTH),
+                     c("WSTRB", masterDir=D.OUT, width=D_WIDTH // 8),
+                     c("WVALID", masterDir=D.OUT, width=1),
+                     c("WREADY", masterDir=D.IN, width=1),
                      
-                     c("ARADDR", masterDir=self.dir_out, width=A_WIDTH),
-                     c("ARVALID", masterDir=self.dir_out, width=1),
-                     c("ARREADY", masterDir=self.dir_in, width=1),
+                     c("ARADDR", masterDir=D.OUT, width=A_WIDTH),
+                     c("ARVALID", masterDir=D.OUT, width=1),
+                     c("ARREADY", masterDir=D.IN, width=1),
                      
-                     c("RDATA", masterDir=self.dir_in, width=D_WIDTH),
-                     c("RRESP", masterDir=self.dir_in, width=2),
-                     c("RVALID", masterDir=self.dir_in, width=1),
-                     c("RREADY", masterDir=self.dir_out, width=1),
+                     c("RDATA", masterDir=D.IN, width=D_WIDTH),
+                     c("RRESP", masterDir=D.IN, width=2),
+                     c("RVALID", masterDir=D.IN, width=1),
+                     c("RREADY", masterDir=D.OUT, width=1),
 
-                     c("BVALID", masterDir=self.dir_in, width=1),
-                     c("BREADY", masterDir=self.dir_out, width=1),
-                     c("BRESP", masterDir=self.dir_in, width=2) 
+                     c("BVALID", masterDir=D.IN, width=1),
+                     c("BREADY", masterDir=D.OUT, width=1),
+                     c("BRESP", masterDir=D.IN, width=2) 
 
                      ]
 
@@ -296,27 +297,27 @@ class AXILite_with_V(AXILite):
     def __init__(self):
         super().__init__()
         c = IfConfMap
-        self.port = [c("AWADDR", "AW_ADDR_V", masterDir=self.dir_out),
-                     c("AWVALID", "AW_VALID", masterDir=self.dir_out),
-                     c("AWREADY", "AW_READY", masterDir=self.dir_in),
+        self.port = [c("AWADDR", "AW_ADDR_V", masterDir=D.OUT),
+                     c("AWVALID", "AW_VALID", masterDir=D.OUT),
+                     c("AWREADY", "AW_READY", masterDir=D.IN),
                      
-                     c("WDATA", "W_DATA_V", masterDir=self.dir_out),
-                     c("WSTRB", "W_STRB_V", masterDir=self.dir_out),
-                     c("WVALID", "W_VALID", masterDir=self.dir_out),
-                     c("WREADY", "W_READY", masterDir=self.dir_in),
+                     c("WDATA", "W_DATA_V", masterDir=D.OUT),
+                     c("WSTRB", "W_STRB_V", masterDir=D.OUT),
+                     c("WVALID", "W_VALID", masterDir=D.OUT),
+                     c("WREADY", "W_READY", masterDir=D.IN),
                      
-                     c("ARADDR", "AR_ADDR_V", masterDir=self.dir_out),
-                     c("ARVALID", "AR_VALID", masterDir=self.dir_out),
-                     c("ARREADY", "AR_READY", masterDir=self.dir_in),
+                     c("ARADDR", "AR_ADDR_V", masterDir=D.OUT),
+                     c("ARVALID", "AR_VALID", masterDir=D.OUT),
+                     c("ARREADY", "AR_READY", masterDir=D.IN),
                      
-                     c("RDATA", "R_DATA_V", masterDir=self.dir_in),
-                     c("RRESP", "R_RESP_V", masterDir=self.dir_in),
-                     c("RVALID", "R_VALID", masterDir=self.dir_in),
-                     c("RREADY", "R_READY", masterDir=self.dir_out),
+                     c("RDATA", "R_DATA_V", masterDir=D.IN),
+                     c("RRESP", "R_RESP_V", masterDir=D.IN),
+                     c("RVALID", "R_VALID", masterDir=D.IN),
+                     c("RREADY", "R_READY", masterDir=D.OUT),
 
-                     c("BVALID", "B_VALID", masterDir=self.dir_in),
-                     c("BREADY", "B_READY", masterDir=self.dir_out),
-                     c("BRESP", "B_RESP_V", masterDir=self.dir_in) 
+                     c("BVALID", "B_VALID", masterDir=D.IN),
+                     c("BREADY", "B_READY", masterDir=D.OUT),
+                     c("BRESP", "B_RESP_V", masterDir=D.IN) 
 
                      ]
 
@@ -326,32 +327,32 @@ class Axi(AXILite):
         c = IfConfMap
         self.ID_WIDTH = ID_WIDTH
         self.port += [
-                      c("ARID", masterDir=self.dir_out, width=ID_WIDTH),
-                      c("ARBURST", masterDir=self.dir_out, width=2),
-                      c("ARCACHE", masterDir=self.dir_out, width=4),
-                      c("ARLEN", masterDir=self.dir_out, width=8),
-                      c("ARLOCK", masterDir=self.dir_out, width=2),
-                      c("ARPROT", masterDir=self.dir_out, width=3),
-                      c("ARSIZE", masterDir=self.dir_out, width=3),
-                      c("ARQOS", masterDir=self.dir_out, width=4),
+                      c("ARID", masterDir=D.OUT, width=ID_WIDTH),
+                      c("ARBURST", masterDir=D.OUT, width=2),
+                      c("ARCACHE", masterDir=D.OUT, width=4),
+                      c("ARLEN", masterDir=D.OUT, width=8),
+                      c("ARLOCK", masterDir=D.OUT, width=2),
+                      c("ARPROT", masterDir=D.OUT, width=3),
+                      c("ARSIZE", masterDir=D.OUT, width=3),
+                      c("ARQOS", masterDir=D.OUT, width=4),
                       
-                      c("BID", masterDir=self.dir_in, width=ID_WIDTH),
+                      c("BID", masterDir=D.IN, width=ID_WIDTH),
                       
-                      c("AWID", masterDir=self.dir_out, width=ID_WIDTH),
-                      c("AWBURST", masterDir=self.dir_out, width=2),
-                      c("AWCACHE", masterDir=self.dir_out, width=4),
-                      c("AWLEN", masterDir=self.dir_out, width=8),
-                      c("AWLOCK", masterDir=self.dir_out, width=2),
-                      c("AWPROT", masterDir=self.dir_out, width=3),
-                      c("AWSIZE", masterDir=self.dir_out, width=3),
-                      c("AWQOS", masterDir=self.dir_out, width=4),
+                      c("AWID", masterDir=D.OUT, width=ID_WIDTH),
+                      c("AWBURST", masterDir=D.OUT, width=2),
+                      c("AWCACHE", masterDir=D.OUT, width=4),
+                      c("AWLEN", masterDir=D.OUT, width=8),
+                      c("AWLOCK", masterDir=D.OUT, width=2),
+                      c("AWPROT", masterDir=D.OUT, width=3),
+                      c("AWSIZE", masterDir=D.OUT, width=3),
+                      c("AWQOS", masterDir=D.OUT, width=4),
                       
                       
-                      c("RID", masterDir=self.dir_in, width=ID_WIDTH),
-                      c("RLAST", masterDir=self.dir_in, width=1),
+                      c("RID", masterDir=D.IN, width=ID_WIDTH),
+                      c("RLAST", masterDir=D.IN, width=1),
                       
-                      c("WID", masterDir=self.dir_out, width=ID_WIDTH),
-                      c("WLAST", masterDir=self.dir_out, width=1),
+                      c("WID", masterDir=D.OUT, width=ID_WIDTH),
+                      c("WLAST", masterDir=D.OUT, width=1),
                       ]
                      
     def postProcess(self, component, entity, allInterfaces, thisIf):
