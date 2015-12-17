@@ -4,6 +4,7 @@ from vhdl_toolkit.architecture import ComponentInstance
 from vhdl_toolkit.entity import Entity
 from vhdl_toolkit.valueInterpret import ValueInterpreter
 from vhdl_toolkit.variables import PortItem
+from vhdl_toolkit.types import DIRECTION
 
 
 # def intAsVHDLVectorStr(i, len=None):
@@ -23,7 +24,7 @@ class Unit():
             direction = p['direction'] 
             name = p['name']
             var_type = None  # p['type'] #[HOTFIX]
-            if  direction == PortItem.typeIn or direction == PortItem.typeOut:
+            if  direction == DIRECTION.IN or direction == DIRECTION.OUT:
                 self.port.append(PortItem(name, direction, var_type))
             else:
                 raise  Exception("Invalid port type")
@@ -35,9 +36,9 @@ class Unit():
         outputs = []
         for x in  self.port:
             p = {"name":x.name, "id" : id(x)}
-            if  x.direction == PortItem.typeIn:
+            if  x.direction == DIRECTION.IN:
                 inputs.append(p)
-            elif  x.direction == PortItem.typeOut:
+            elif  x.direction == DIRECTION.OUT:
                 outputs.append(p)
             else:
                 raise Exception("Invalid port type")
@@ -66,7 +67,7 @@ class VHDLUnit(Entity, Unit):
         ci = ComponentInstance(self.name + str(id(self)), self)
         # assert all inputs are connected
         for p in self.entity.port:
-            if p.direction == PortItem.typeIn:
+            if p.direction == DIRECTION.IN:
                 if not arr_any(self.portConnections, lambda x : x.portItem == p) :
                     raise Exception("Missing connection for input %s of component %s", (p.name, self.entity.name))           
         self._updateWidthsFromGenerics()        

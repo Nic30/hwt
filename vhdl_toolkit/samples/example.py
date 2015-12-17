@@ -1,10 +1,10 @@
 from python_toolkit.arrayQuery import single
 from python_toolkit.stringUtils import matchIgnorecase
 from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.codeOp import If
-from vhdl_toolkit.synthetisator.context import Context
-from vhdl_toolkit.synthetisator.optimalizator import expr_optimize
-from vhdl_toolkit.synthetisator.signal import signalsForInterface
+from vhdl_toolkit.synthetisator.signalLevel.codeOp import If
+from vhdl_toolkit.synthetisator.signalLevel.context import Context
+from vhdl_toolkit.synthetisator.signalLevel.optimalizator import expr_optimize
+from vhdl_toolkit.synthetisator.signalLevel.signal import signalsForInterface
 from vivado_toolkit.ip_packager.busInterface import AXILite, Ap_rst_n, Ap_clk
 
 
@@ -15,19 +15,20 @@ def connectUnits(sig, unit0, unit1, unit0PortName, unit1PortName):
 
 class AxiLiteA:
     def __init__(self, axiSignals, prefix, rw='r'):
-        def foundAxiASig(name):
+        def findAxiASig(name):
             return single(axiSignals, lambda x: matchIgnorecase(x.name, prefix + 'a' + rw + name))    
-        self.addr = foundAxiASig("addr")
-        self.vld = foundAxiASig("valid")
-        self.ack = foundAxiASig("ready")
+        self.addr =findAxiASig("addr")
+        self.vld = findAxiASig("valid")
+        self.ack = findAxiASig("ready")
+        
 class AxiLiteR():
     def __init__(self, axiSignals, prefix):
-        def foundAxiRSig(name):
+        def findAxiRSig(name):
             return single(axiSignals, lambda x: matchIgnorecase(x.name, prefix + 'r' + name))  
-        self.data = foundAxiRSig("data")
-        self.resp = foundAxiRSig("resp")
-        self.valid = foundAxiRSig("valid")
-        self.ready = foundAxiRSig("ready")
+        self.data =  findAxiRSig("data")
+        self.resp =  findAxiRSig("resp")
+        self.valid = findAxiRSig("valid")
+        self.ready = findAxiRSig("ready")
         
 if __name__ == "__main__":
     def isPending(pending, done):

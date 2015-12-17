@@ -1,7 +1,7 @@
 import os
 
 from python_toolkit.arrayQuery import single
-from vhdl_toolkit.axi_testbench import AXI_testbench, AXI_lite_master, \
+from vhdl_toolkit.samples.axi_testbench import AXI_testbench, AXI_lite_master, \
     AXI4_slave
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.parser import entityFromFile

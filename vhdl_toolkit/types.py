@@ -2,6 +2,10 @@ from ply.lex import LexToken
 
 from vhdl_toolkit.parser_helpers import for_parentBlock
 
+class DIRECTION():
+    IN = "IN"
+    OUT = "OUT"    
+
 
 class VHDLType():
     """

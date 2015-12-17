@@ -1,4 +1,5 @@
-from vhdl_toolkit.synthetisator.signal import PortConnection
+from vhdl_toolkit.synthetisator.signalLevel.signal import PortConnection
+from vhdl_toolkit.types import DIRECTION
 from vhdl_toolkit.variables import PortItem
 
 
@@ -43,7 +44,7 @@ class PortIndexLookup():
         inIndx = 0
         outIndx = 0
         for pi in unit.port:
-            if pi.direction == PortItem.typeOut:
+            if pi.direction == DIRECTION.OUT:
                 rec.outputs[id(pi)] = outIndx
                 outIndx += 1
             else:
@@ -58,7 +59,7 @@ class PortIndexLookup():
             self._index(unit)
         
         rec = self.cache[unitId]
-        if portItem.direction == PortItem.typeOut:   
+        if portItem.direction == DIRECTION.OUT:   
             portArr = rec.outputs
         else:
             portArr = rec.inputs
@@ -75,7 +76,7 @@ class ExternalPort():
         outputs = []
         
         port = {"name":self.name, "id" : id(self)}
-        if self.direction == PortItem.typeOut:
+        if self.direction == DIRECTION.OUT:
             inputs.append(port)
         else:
             outputs.append(port)
@@ -106,13 +107,13 @@ def serializeUnit(interface, unit):
             n.name = s.name
             n.source = ConnectionInfo(driver.unit, driver.portItem, portIndexLookup=indxLookup)
             for expr in s.expr:
-                if isinstance(expr, PortConnection) and expr.portItem.direction == PortItem.typeIn:
+                if isinstance(expr, PortConnection) and expr.portItem.direction == DIRECTION.IN:
                     t = ConnectionInfo(expr.unit, expr.portItem, portIndexLookup=indxLookup)
                     n.targets.append(t)
             
             isOuterInterface = driver.sig in interface
             if isOuterInterface:
-                outputPort = ExternalPort(driver.sig.name, PortItem.typeOut)
+                outputPort = ExternalPort(driver.sig.name, DIRECTION.OUT)
                 nodes.append(outputPort)
                 t = ConnectionInfo(outputPort, outputPort, index=0)
                 n.targets.append(t)

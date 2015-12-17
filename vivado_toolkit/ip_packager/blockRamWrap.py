@@ -2,15 +2,12 @@ import re, copy, os
 
 from python_toolkit.arrayQuery import single
 from vhdl_toolkit.architecture import Architecture, connect
-from vhdl_toolkit.entity import Entity
-from vhdl_toolkit.expr import Map
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.templates import VHDLTemplates
-from vhdl_toolkit.types import STD_LOGIC, VHDLType
-from vhdl_toolkit.variables import PortItem, SignalItem
+from vhdl_toolkit.types import STD_LOGIC,  DIRECTION
+from vhdl_toolkit.variables import PortItem
 from vivado_toolkit.ip_packager.busInterface import BlockRamPort_withMissing_clk, \
     BlockRamPort_withMissing_clk2, extractBusInterface
-from vivado_toolkit.ip_packager.component import Component
 
 
 # def walk_generics(obj, nameOfGeneric, path=[], root = None):
@@ -62,7 +59,7 @@ def blockRamWrap(packager, vhdlPath):
     bramClkPorts = []
     for bm_port in p:
         name = bm_port.name + "_clk"
-        pi = PortItem(name, PortItem.typeOut, STD_LOGIC())
+        pi = PortItem(name, DIRECTION.OUT, STD_LOGIC())
         bramClkPorts.append(pi)
         e.port.append(pi)
     

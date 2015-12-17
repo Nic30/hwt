@@ -1,5 +1,5 @@
 from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.context import Context
+from vhdl_toolkit.synthetisator.signalLevel.context import Context
 
 
 if __name__ == "__main__":

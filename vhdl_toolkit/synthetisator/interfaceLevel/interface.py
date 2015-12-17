@@ -19,7 +19,7 @@ class IfConfMap():
             self.phyName = self.phyName.lower()
     
     def _signalsForInterface(self, context, prefix):
-        yield context.sig(prefix + self.phyName, self.width)
+        yield context.sig(prefix, self.width)
     
 class Interface():
     def __init__(self):
@@ -103,7 +103,9 @@ class Interface():
     def _signalsForInterface(self, context, prefix):
         sigs = []
         for _, ifc in self._signalMap.items():
-            sigs.append(context.sig(prefix + ifc.phyName, ifc.width))
+            s = context.sig(prefix + ifc.phyName, ifc.width)
+            ifc.sig = s
+            sigs.append(s)
         return sigs  
      
                 

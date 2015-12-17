@@ -1,6 +1,5 @@
 from vhdl_toolkit.expr import Assignment, value2vhdlformat
 
-
 def LexToken2Val(token):
     """
     @return: actual parsed value of the lex token
@@ -59,11 +58,10 @@ class SignalItem(VHDLVariable):
             return s + " := %s" % value2vhdlformat(self, self.defaultVal)
         else:
             return s 
-    
+
     
 class PortItem(SignalItem):
-    typeIn = "IN"
-    typeOut = "OUT"
+    """basic vhdl entity port item"""
     def __init__(self, name, direction, var_type):
         self.name = name
         self.direction = direction

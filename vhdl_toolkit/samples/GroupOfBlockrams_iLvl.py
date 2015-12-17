@@ -2,16 +2,15 @@ from vhdl_toolkit.synthetisator.interfaceLevel.synthetizator import Unit, Connec
 from vhdl_toolkit.formater import formatVhdl
 
 
+c = Connection
+
 class Bram(Unit):
     _origin = "dualportRAM.vhd"
 
-c = Connection
-
-
-class SuperDMA(Unit):
+class GroupOfBlockrams(Unit):
     bramR = Bram()
     bramW = Bram()
-    clk = c(bramR.a.clk, bramR.b.clk,\
+    ap_clk = c(bramR.a.clk, bramR.b.clk,\
             bramW.a.clk, bramW.b.clk,\
             hasExtern=True)
     we = c(bramR.a.we, bramR.b.we,\
@@ -24,7 +23,7 @@ class SuperDMA(Unit):
 
 
 if __name__ == "__main__":
-    dma = SuperDMA()
+    u = GroupOfBlockrams()
     print(formatVhdl(
-                     "\n".join([ str(x) for x in dma._synthetize("superDma")])
+                     "\n".join([ str(x) for x in u._synthetize("superDma")])
                      ))

@@ -1,6 +1,6 @@
 from python_toolkit.arrayQuery import arr_any, single, first
 from vhdl_toolkit.expr import Assignment, value2vhdlformat
-from vhdl_toolkit.types import VHDLType, VHDLBoolean
+from vhdl_toolkit.types import VHDLType, VHDLBoolean, DIRECTION
 from vhdl_toolkit.variables import SignalItem, PortItem
 
 
@@ -94,9 +94,9 @@ class OpMinus():
 
 def PortItemFromSignal(s):
     if s.hasDriver():
-        d = PortItem.typeOut
+        d = DIRECTION.OUT
     else:
-        d = PortItem.typeIn
+        d = DIRECTION.IN
     pi = PortItem(s.name, d , s.var_type)
     pi.sig = s
     return pi
@@ -219,7 +219,7 @@ class Signal(SignalItem):
         def assign2Me(ep):
             if isinstance(ep, Assignment) and ep.dst == self:
                 return ep
-            elif isinstance(ep, PortConnection) and ep.portItem.direction == PortItem.typeOut: 
+            elif isinstance(ep, PortConnection) and ep.portItem.direction == DIRECTION.OUT: 
                 return ep
             elif isinstance(ep, BitRange) and ep.sigSelect.hasDriver():
                 return ep
@@ -267,7 +267,7 @@ def walkSigExpr(sig):
 
 def walkUnitInputs(unit):
     for pc in unit.portConnections:
-        if pc.portItem.direction == PortItem.typeIn:
+        if pc.portItem.direction == DIRECTION.IN:
             yield pc.sig
 
 def walkSignalsInExpr(expr):

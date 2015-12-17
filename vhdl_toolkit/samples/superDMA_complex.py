@@ -1,10 +1,10 @@
 from python_toolkit.arrayQuery import single
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.parser import entityFromFile
-from vhdl_toolkit.synthetisators.signalLevel.context import Context
-from vhdl_toolkit.synthetisators.signalLevel.example import connectUnits
-from vhdl_toolkit.synthetisators.signalLevel.signal import signalsForInterface
-from vhdl_toolkit.synthetisators.signalLevel.unit import VHDLUnit, automapSigs
+from vhdl_toolkit.synthetisator.signalLevel.context import Context
+from vhdl_toolkit.samples.example import connectUnits
+from vhdl_toolkit.synthetisator.signalLevel.signal import signalsForInterface
+from vhdl_toolkit.synthetisator.signalLevel.unit import VHDLUnit, automapSigs
 from vivado_toolkit.ip_packager.busInterface import AXILite, Axi_channeled, \
     Ap_rst_n, Ap_clk, HsAXIStream, HS_config_d_V, BlockRamPort
 

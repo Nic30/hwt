@@ -46,6 +46,7 @@ class Unit():
         """
         Sort out informations about sub units and connections from class body
         """
+        self.name = name
         self._connections = {}
         self._subUnits = {}
         for propName, prop in self.__class__.__dict__.items():
@@ -70,16 +71,16 @@ class Unit():
                 yield from subUnit._synthetize(subUnitName)
                 
             for connectionName, connection in self._connections.items():
-                hasDriver = False
-                if connection.src:
+                if connection.hasExtern:
+                    externInterf.extend(connection.ifObj._signalsForInterface(cntx, connectionName))
+                if not connection.src:
+                    # connection.src = 
                     pass
                 for intf in connection.destinations:
                     pass
-                if connection.hasExtern:
-                    externInterf.extend(connection.ifObj._signalsForInterface(cntx, connectionName))
-            yield from cntx.synthetize(externInterf)
+            s = cntx.synthetize(externInterf)
+            self._entity = s[1]
+            self._architecture = s[2]
+            yield from s
         self._component = Component(self._entity)
                
-                
-                
-                
