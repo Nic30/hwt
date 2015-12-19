@@ -5,8 +5,8 @@ D = DIRECTION
 
 
 class Ap_none(Interface):
-    def __init__(self, *args, masterDir=D.OUT, width=1, src=None, isExtern=False):
-        Interface.__init__(self, *args, src=src, isExtern=isExtern)
+    def __init__(self, *destinations, masterDir=D.OUT, width=1, src=None, isExtern=False):
+        Interface.__init__(self, *destinations, src=src, isExtern=isExtern)
         self._width = width
         self._masterDir = masterDir
     

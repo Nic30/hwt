@@ -20,19 +20,19 @@ class Interface():
     """
     _clsIsBuild = False
     NAME_SEPARATOR = "_"  
-    def __init__(self, *args, src=None, isExtern=False):
+    def __init__(self, *destinations, src=None, isExtern=False):
         """
-        @param *args: interfaces connected to this interface
+        @param *destinations: interfaces connected to this interface
         @param src:  interface whitch is master for this interface (if None isExtern has to be true)
         @param hasExter: if true this interface is specified as interface outside of this unit  
         """
-        self._isExtern = isExtern
+        
         if not self._isBuild():
             self.__class__._build()
         
         # deepcopy interfaces from class
         # problem is that new instances have references on something else than planed
-        self._subInterfaces = deepcopy(self.__class__._subInterfaces)
+        self._subInterfaces = deepcopy(self.__class__._subInterfaces, {})
         for propName, prop in self._subInterfaces.items():
             setattr(self, propName, prop)
             self._subInterfaces[propName] = getattr(self, propName)
@@ -43,8 +43,10 @@ class Interface():
         else:
             self._src = src
             self._direction = INTF_DIRECTION.SLAVE
+        self._isExtern = isExtern
+        
             
-        self._destinations = args
+        self._destinations = list(destinations)
         self._isExtern = isExtern
         
     # def _check(self):
@@ -67,7 +69,7 @@ class Interface():
         """
         assert(not cls._isBuild())
         cls._subInterfaces = {}
-        for propName, prop in cls.__dict__.items():
+        for propName, prop in vars(cls).items():
             pCls = prop.__class__
             if issubclass(pCls, Interface):
                 if not pCls._isBuild():

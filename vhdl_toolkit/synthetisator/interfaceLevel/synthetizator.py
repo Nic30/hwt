@@ -24,8 +24,8 @@ class Unit():
         if not self._clsIsBuild:
             self.__class__._build()
         if self._origin:
-            assert(not self._entity)   # if you specify origin entity should be loaded from it
-            assert(not self._component)# component will be created from entity
+            assert(not self._entity)  # if you specify origin entity should be loaded from it
+            assert(not self._component)  # component will be created from entity
             
             self._entity = entityFromFile(self._origin)
             self._sigLvlUnit = VHDLUnit(self._entity)
@@ -44,7 +44,7 @@ class Unit():
          
         cls._interfaces = {}
         cls._subUnits = {}
-        for propName, prop in cls.__dict__.items():
+        for propName, prop in vars(cls).items():
             if isinstance(prop, Interface):
                 cls._interfaces[propName] = prop
             elif issubclass(prop.__class__, Unit):
@@ -73,6 +73,7 @@ class Unit():
                     raise Exception("Connection %s.%s has no driver" % (name, connectionName))
                 if connection._isExtern:
                     externInterf.extend(connection._signalsForInterface(cntx, connectionName))
+            for _, connection in self._interfaces.items():
                 connection._propagateConnection()
 
             s = cntx.synthetize(externInterf)
