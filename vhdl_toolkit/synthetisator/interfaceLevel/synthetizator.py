@@ -21,12 +21,12 @@ class Unit():
     _clsIsBuild = False
     
     def __init__(self):
+        if not self._clsIsBuild:
+            self.__class__._build()
         if self._origin:
             assert(not self._entity)   # if you specify origin entity should be loaded from it
             assert(not self._component)# component will be created from entity
             
-            baseDir = os.path.dirname(inspect.getfile(self.__class__))
-            self._origin = os.path.join(baseDir, self._origin)
             self._entity = entityFromFile(self._origin)
             self._sigLvlUnit = VHDLUnit(self._entity)
             for intfCls in allInterfaces:
@@ -35,11 +35,13 @@ class Unit():
                         raise  Exception("Already has " + intfName)
                     setattr(self, intfName, interface)
                     self._interfaces[intfName] = interface
-        else:
-            self.__class__._build()
     
     @classmethod
     def _build(cls):
+        if cls._origin:
+            baseDir = os.path.dirname(inspect.getfile(cls))
+            cls._origin = os.path.join(baseDir, cls._origin)
+         
         cls._interfaces = {}
         cls._subUnits = {}
         for propName, prop in cls.__dict__.items():
