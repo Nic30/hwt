@@ -20,19 +20,19 @@ class TestStringMethods(unittest.TestCase):
         
     def test_simplePortDirections(self):
         bram = Bram()
-        self.assertEqual(bram.a._direction, INTF_DIRECTION.SLEAVE)
-        self.assertEqual(bram.a.clk._direction, INTF_DIRECTION.SLEAVE)
-        self.assertEqual(bram.a.addr._direction, INTF_DIRECTION.SLEAVE)
-        self.assertEqual(bram.a.din._direction, INTF_DIRECTION.SLEAVE)
+        self.assertEqual(bram.a._direction, INTF_DIRECTION.SLAVE)
+        self.assertEqual(bram.a.clk._direction, INTF_DIRECTION.SLAVE)
+        self.assertEqual(bram.a.addr._direction, INTF_DIRECTION.SLAVE)
+        self.assertEqual(bram.a.din._direction, INTF_DIRECTION.SLAVE)
         self.assertEqual(bram.a.dout._direction, INTF_DIRECTION.MASTER)
-        self.assertEqual(bram.a.we._direction, INTF_DIRECTION.SLEAVE)
+        self.assertEqual(bram.a.we._direction, INTF_DIRECTION.SLAVE)
         
-        self.assertEqual(bram.b._direction, INTF_DIRECTION.SLEAVE)
-        self.assertEqual(bram.b.clk._direction, INTF_DIRECTION.SLEAVE)
-        self.assertEqual(bram.b.addr._direction, INTF_DIRECTION.SLEAVE)
-        self.assertEqual(bram.b.din._direction, INTF_DIRECTION.SLEAVE)
+        self.assertEqual(bram.b._direction, INTF_DIRECTION.SLAVE)
+        self.assertEqual(bram.b.clk._direction, INTF_DIRECTION.SLAVE)
+        self.assertEqual(bram.b.addr._direction, INTF_DIRECTION.SLAVE)
+        self.assertEqual(bram.b.din._direction, INTF_DIRECTION.SLAVE)
         self.assertEqual(bram.b.dout._direction, INTF_DIRECTION.MASTER)
-        self.assertEqual(bram.b.we._direction, INTF_DIRECTION.SLEAVE)
+        self.assertEqual(bram.b.we._direction, INTF_DIRECTION.SLAVE)
         
     def test_signalInstances(self):
         bram = Simple()

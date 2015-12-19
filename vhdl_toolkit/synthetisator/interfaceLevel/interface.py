@@ -42,7 +42,7 @@ class Interface():
             self._direction = INTF_DIRECTION.MASTER
         else:
             self._src = src
-            self._direction = INTF_DIRECTION.SLEAVE
+            self._direction = INTF_DIRECTION.SLAVE
             
         self._destinations = args
         self._isExtern = isExtern
@@ -128,7 +128,7 @@ class Interface():
         if allDirMatch:
             self._direction = INTF_DIRECTION.MASTER
         elif noneDirMatch:
-            self._direction = INTF_DIRECTION.SLEAVE
+            self._direction = INTF_DIRECTION.SLAVE
         else:
             self._unExtrac()
             raise InterfaceIncompatibilityExc("Direction mismatch")
@@ -157,13 +157,13 @@ class Interface():
                 
                 if ifc._direction == INTF_DIRECTION.MASTER:
                     mIfc._connectTo(ifc)
-                elif ifc._direction == INTF_DIRECTION.SLEAVE:
+                elif ifc._direction == INTF_DIRECTION.SLAVE:
                     ifc._connectTo(mIfc)
                 else:
                     raise Exception("Interface direction improperly configured")
         else:
             if self._isExtern:
-                assert(self._direction == INTF_DIRECTION.SLEAVE)
+                assert(self._direction == INTF_DIRECTION.SLAVE) # slave for outside master for inside 
             self._sig.assignFrom(master._sig)   
     
     def _propagateConnection(self):

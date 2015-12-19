@@ -4,11 +4,11 @@ from vhdl_toolkit.parser_helpers import for_parentBlock
 
 class INTF_DIRECTION():
     MASTER = "MASTER"
-    SLEAVE = "SLEAVE"
+    SLAVE = "SLEAVE"
     
     @classmethod
     def asDirection(cls, val):
-        if val == INTF_DIRECTION.SLEAVE:
+        if val == INTF_DIRECTION.SLAVE:
             return DIRECTION.IN 
         elif val == INTF_DIRECTION.MASTER:
             return DIRECTION.OUT
@@ -17,10 +17,10 @@ class INTF_DIRECTION():
     
     @classmethod
     def oposite(cls, d):
-        if d == cls.SLEAVE:
+        if d == cls.SLAVE:
             return cls.MASTER
         elif d == cls.MASTER:
-            return cls.SLEAVE
+            return cls.SLAVE
         else:
             raise Exception("Parameter is not interface direction")
     
@@ -32,7 +32,7 @@ class DIRECTION():
     @classmethod
     def asIntfDirection(cls, d):
         if d == cls.IN:
-            return INTF_DIRECTION.SLEAVE
+            return INTF_DIRECTION.SLAVE
         elif d == cls.OUT:
             return INTF_DIRECTION.MASTER
         else:
