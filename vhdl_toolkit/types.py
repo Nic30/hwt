@@ -2,9 +2,51 @@ from ply.lex import LexToken
 
 from vhdl_toolkit.parser_helpers import for_parentBlock
 
+class INTF_DIRECTION():
+    MASTER = "MASTER"
+    SLEAVE = "SLEAVE"
+    
+    @classmethod
+    def asDirection(cls, val):
+        if val == INTF_DIRECTION.SLEAVE:
+            return DIRECTION.IN 
+        elif val == INTF_DIRECTION.MASTER:
+            return DIRECTION.OUT
+        else:
+            raise Exception("Parameter is not interface direction")
+    
+    @classmethod
+    def oposite(cls, d):
+        if d == cls.SLEAVE:
+            return cls.MASTER
+        elif d == cls.MASTER:
+            return cls.SLEAVE
+        else:
+            raise Exception("Parameter is not interface direction")
+    
+
 class DIRECTION():
     IN = "IN"
-    OUT = "OUT"    
+    OUT = "OUT"
+    
+    @classmethod
+    def asIntfDirection(cls, d):
+        if d == cls.IN:
+            return INTF_DIRECTION.SLEAVE
+        elif d == cls.OUT:
+            return INTF_DIRECTION.MASTER
+        else:
+            raise Exception("Parameter is not direction")
+    
+    @classmethod
+    def oposite(cls, d):
+        if d == cls.IN:
+            return cls.OUT
+        elif d == cls.OUT:
+            return cls.IN
+        else:
+            raise Exception("Parameter is not direction")
+            
 
 
 class VHDLType():

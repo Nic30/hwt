@@ -23,7 +23,7 @@ def dualportRam(depth, width):
         din = c.sig(p + "din", width)
         dout = c.sig(p + "dout", width)
         
-        If(clk.opOnRisigEdge(), [dout.assign(din)], [dout.assign(0)])
+        If(clk.opOnRisigEdge(), [dout.assignFrom(din)], [dout.assignFrom(0)])
         
         interf.extend([clk, we, en, addr, din, dout])
 

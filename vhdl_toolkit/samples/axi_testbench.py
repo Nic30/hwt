@@ -28,7 +28,7 @@ from vhdl_toolkit.variables import SignalItem
 #        """.format(rd)
 #    def _renderAssigments(self, assigmensts):
 #        if assigmensts is not None or assigmensts == []:
-#            return "\n".join([str(assign) for assign in assigmensts]) + "\n"
+#            return "\n".join([str(assignFrom) for assignFrom in assigmensts]) + "\n"
 #        else:
 #            return ""
 #    def writeAccept(self, assigmensts=None):
@@ -57,7 +57,7 @@ class HandShake_interface():
         """.format(rd)
     def _renderAssigments(self, assigmensts):
         if assigmensts is not None or assigmensts == []:
-            return "\n".join([str(assign) for assign in assigmensts]) + "\n"
+            return "\n".join([str(assignFrom) for assignFrom in assigmensts]) + "\n"
         else:
             return ""
     def writeAccept(self, assigmensts=None):

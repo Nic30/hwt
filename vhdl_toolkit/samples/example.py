@@ -41,7 +41,7 @@ if __name__ == "__main__":
         return ack.opAnd(vld)
 
     def flipOnTrue(synsig, cond):
-        synsig.next.assign(synsig.opNEq(cond)) 
+        synsig.next.assignFrom(synsig.opNEq(cond)) 
     c = Context("axi_lite_interconnect")
     
     ch = 2
@@ -68,17 +68,17 @@ if __name__ == "__main__":
     flipOnTrue(ar0_done, hsActiv(s_ar.vld, m0_ar.ack))
     
     # AR s <-> m0
-    s_ar.ack.assign(isDone(ar0_pendig, ar0_done))
-    m0_ar.addr.assign(s_ar.addr)
-    m0_ar.vld.assign(s_ar.vld)
+    s_ar.ack.assignFrom(isDone(ar0_pendig, ar0_done))
+    m0_ar.addr.assignFrom(s_ar.addr)
+    m0_ar.vld.assignFrom(s_ar.vld)
     # #
     # # # R s<-> m0
-    s_r.ready.assign(isPending(ar0_pendig, ar0_done).opAnd(m0_r.ready))
-    m0_r.valid.assign(isPending(ar0_pendig, ar0_done).opAnd(s_r.valid))
-    If(isPending(ar0_pendig, ar0_done), [s_r.data.assign(m0_r.data),
-                                         s_r.resp.assign(m0_r.resp)],
-                                        [s_r.data.assign(m1_r.data),
-                                         s_r.resp.assign(m1_r.resp)])
+    s_r.ready.assignFrom(isPending(ar0_pendig, ar0_done).opAnd(m0_r.ready))
+    m0_r.valid.assignFrom(isPending(ar0_pendig, ar0_done).opAnd(s_r.valid))
+    If(isPending(ar0_pendig, ar0_done), [s_r.data.assignFrom(m0_r.data),
+                                         s_r.resp.assignFrom(m0_r.resp)],
+                                        [s_r.data.assignFrom(m1_r.data),
+                                         s_r.resp.assignFrom(m1_r.resp)])
     
     interf = [clk, rst] 
     interf.extend(slave)

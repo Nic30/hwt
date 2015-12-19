@@ -90,7 +90,7 @@ def superDMA_complex():
                 return name 
             connections = signalsForInterface(c, BlockRamPort(9, 64), connectionPrefix)
             bramclk = single(connections, lambda x: x.name.endswith("clk"))
-            bramclk.assign(clk[0])
+            bramclk.assignFrom(clk[0])
             # connect DMA and blockRam
             automapSigs(blockRAM, connections, bmInterfName2bmInterf)
             automapSigs(dma, connections)

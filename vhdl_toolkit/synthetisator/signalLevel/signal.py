@@ -138,8 +138,9 @@ class Signal(SignalItem):
         return self.connectToPortItem(unit, portItem)
         
     def connectToPortItem(self, unit, portItem):
-        if arr_any(unit.portConnections, lambda x: x.portItem == portItem):
-            raise Exception("Port %s is already associated with" % (portItem.name))
+        associatedWith = first(unit.portConnections, lambda x: x.portItem == portItem) 
+        if associatedWith:
+            raise Exception("Port %s is already associated with %s" % (portItem.name, str(associatedWith.sig)))
         e = PortConnection(self, unit, portItem)
         unit.portConnections.append(e)
         self.expr.append(e)
@@ -228,7 +229,7 @@ class Signal(SignalItem):
                 
         return first(walkSigExpr(self), assign2Me)
     
-    def assign(self, source):
+    def assignFrom(self, source):
         checkOperand(source)
         a = Assignment(source, self)
         a.cond = set()
@@ -243,7 +244,7 @@ class SyncSignal(Signal):
         super().__init__(name, var_type, defaultVal)
         self.next = Signal(name + "_next", var_type, defaultVal)
         
-    def assign(self, source):
+    def assignFrom(self, source):
         a = Assignment(source, self.next)
         a.cond = set()
         self.expr.append(a)

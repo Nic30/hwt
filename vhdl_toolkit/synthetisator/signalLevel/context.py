@@ -53,10 +53,10 @@ class Context(object):
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None and defVal is not None:
-                r = If(syncRst.opIsOn(), [Signal.assign(s, defVal)] ,
-                                        [Signal.assign(s, s.next)])
+                r = If(syncRst.opIsOn(), [Signal.assignFrom(s, defVal)] ,
+                                        [Signal.assignFrom(s, s.next)])
             else:
-                r = [Signal.assign(s, s.next)]
+                r = [Signal.assignFrom(s, s.next)]
             
             If(clk.opOnRisigEdge(), r)
         else:

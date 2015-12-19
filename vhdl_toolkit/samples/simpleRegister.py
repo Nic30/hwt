@@ -12,8 +12,8 @@ if __name__ == "__main__":
     clk = c.sig("clk")
     syncRst = c.sig("rst")
     val = c.sig("val", width, clk, syncRst,0)
-    val.assign(s_in)
-    s_out.assign(val)
+    val.assignFrom(s_in)
+    s_out.assignFrom(val)
     
     interf = [clk, syncRst, s_in, s_out]
     

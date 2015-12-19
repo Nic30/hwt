@@ -1,4 +1,4 @@
-from python_toolkit.arrayQuery import single, arr_any, NoValueExc, where
+from python_toolkit.arrayQuery import single, arr_any, NoValueExc
 from python_toolkit.stringUtils import matchIgnorecase
 from vhdl_toolkit.architecture import ComponentInstance
 from vhdl_toolkit.entity import Entity
