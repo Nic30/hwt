@@ -3,7 +3,7 @@ from vhdl_toolkit.samples.GroupOfBlockrams_iLvl import Bram
 from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import BramPort
 from vhdl_toolkit.types import INTF_DIRECTION, DIRECTION
 import os
-from vhdl_toolkit.samples.simplest_iLvl import Simple
+from vhdl_toolkit.samples.simplest_iLvl import SimplestUnit
 from python_toolkit.arrayQuery import where
 
 os.chdir("../../../samples/")
@@ -35,7 +35,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(bram.b.we._direction, INTF_DIRECTION.SLAVE)
         
     def test_signalInstances(self):
-        bram = Simple()
+        bram = SimplestUnit()
         for x in bram._synthetize("simple"):
             pass
 

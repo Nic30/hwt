@@ -7,6 +7,7 @@ import os
 import inspect
 from vhdl_toolkit.synthetisator.signalLevel.unit import VHDLUnit
 from vhdl_toolkit.types import INTF_DIRECTION
+from copy import deepcopy
 
 class Unit():
     """
@@ -23,25 +24,32 @@ class Unit():
     def __init__(self):
         if not self._clsIsBuild:
             self.__class__._build()
+        
+        copyDict = {}
+        self._interfaces = deepcopy(self.__class__._interfaces, copyDict)
+        self._subUnits = deepcopy(self.__class__._subUnits, copyDict)
+
         if self._origin:
-            assert(not self._entity)  # if you specify origin entity should be loaded from it
+            assert(not self._entity)     # if you specify origin entity should be loaded from it
             assert(not self._component)  # component will be created from entity
-            
             self._entity = entityFromFile(self._origin)
             self._sigLvlUnit = VHDLUnit(self._entity)
             for intfCls in allInterfaces:
                 for intfName, interface in intfCls._tryToExtract(self._sigLvlUnit):
                     if hasattr(self, intfName):
                         raise  Exception("Already has " + intfName)
-                    setattr(self, intfName, interface)
                     self._interfaces[intfName] = interface
-    
+        for intfName, interface in self._interfaces.items():
+            setattr(self, intfName, interface)
+        for uName, unit in self._subUnits.items():
+            setattr(self, uName, unit)
+        
+        
     @classmethod
     def _build(cls):
         if cls._origin:
             baseDir = os.path.dirname(inspect.getfile(cls))
             cls._origin = os.path.join(baseDir, cls._origin)
-         
         cls._interfaces = {}
         cls._subUnits = {}
         for propName, prop in vars(cls).items():
@@ -73,7 +81,7 @@ class Unit():
                     raise Exception("Connection %s.%s has no driver" % (name, connectionName))
                 if connection._isExtern:
                     externInterf.extend(connection._signalsForInterface(cntx, connectionName))
-            for _, connection in self._interfaces.items():
+            for cName, connection in self._interfaces.items():
                 connection._propagateConnection()
 
             s = cntx.synthetize(externInterf)

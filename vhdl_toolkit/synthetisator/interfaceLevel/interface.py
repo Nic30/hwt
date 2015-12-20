@@ -166,7 +166,7 @@ class Interface():
         else:
             if self._isExtern:
                 assert(self._direction == INTF_DIRECTION.SLAVE) # slave for outside master for inside 
-            self._sig.assignFrom(master._sig)   
+            self._sig.assignFrom(master._sig)
     
     def _propagateConnection(self):
         for d in self._destinations:
