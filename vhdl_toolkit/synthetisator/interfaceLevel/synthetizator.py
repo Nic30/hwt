@@ -8,6 +8,7 @@ import inspect
 from vhdl_toolkit.synthetisator.signalLevel.unit import VHDLUnit
 from vhdl_toolkit.types import INTF_DIRECTION
 from copy import deepcopy
+from python_toolkit.arrayQuery import single
 
 class Unit():
     """
@@ -30,7 +31,7 @@ class Unit():
         self._subUnits = deepcopy(self.__class__._subUnits, copyDict)
 
         if self._origin:
-            assert(not self._entity)     # if you specify origin entity should be loaded from it
+            assert(not self._entity)  # if you specify origin entity should be loaded from it
             assert(not self._component)  # component will be created from entity
             self._entity = entityFromFile(self._origin)
             self._sigLvlUnit = VHDLUnit(self._entity)
@@ -58,6 +59,23 @@ class Unit():
             elif issubclass(prop.__class__, Unit):
                 cls._subUnits[propName] = prop       
         cls._clsIsBuild = True
+    def _cleanAsSubunit(self):
+        for _, i in self._interfaces.items():
+            i._rmSignals()
+            
+    def _signalsForMyEntity(self, context, prefix):
+        for suPortName, suPort in self._interfaces.items():  # generate for all ports of subunit signals in this context
+            suPort._signalsForInterface(context, prefix + Interface.NAME_SEPARATOR + suPortName)
+    #        suPort._connectToItsEntityPort()
+    
+    def _connectMyInterfaceToMyEntity(self, interface):
+            if interface._subInterfaces:
+                for subIntfName, subIntf in interface._subInterfaces:
+                    self._connectMyInterfaceToMyEntity(subIntf)  
+            else:
+                portItem = single(self._entity.port, lambda x : x._interface == interface)
+                interface._originSigLvlUnit = self._sigLvlUnit
+                interface._originEntityPort = portItem
     
     def _synthetize(self, name):
         """
@@ -68,13 +86,13 @@ class Unit():
             assert(self._entity)
             with open(self._origin) as f:
                 yield f.read()  
-        else:  
+        else:
             cntx = Context(name)
             externInterf = [] 
             for subUnitName, subUnit in self._subUnits.items():
                 yield from subUnit._synthetize(subUnitName)
-                for suPortName, suPort in subUnit._interfaces.items():  # generate for all ports of subunit signals in this context
-                    suPort._signalsForInterface(cntx, "sig_" + subUnitName + Interface.NAME_SEPARATOR + suPortName)
+                subUnit._cleanAsSubunit()
+                subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
                 
             for connectionName, connection in self._interfaces.items():
                 if not connection._src:
@@ -86,7 +104,10 @@ class Unit():
 
             s = cntx.synthetize(externInterf)
             self._entity = s[1]
+            self._sigLvlUnit = VHDLUnit(self._entity)
             self._architecture = s[2]
+            for intfName, intf in self._interfaces.items():
+                self._connectMyInterfaceToMyEntity(intf)
             yield from s
         self._component = Component(self._entity)
                

@@ -17,6 +17,8 @@ class Interface():
     @ivar _src: Driver for this interface
     @ivar _desctinations: Interfaces for which this interface is driver
     @ivar _isExtern: If true synthetisator sets it as external port of unit
+    @ivar _originEntityPort: entityPort for which was this interface created
+    @ivar _originSigLvlUnit: VHDL unit for which was this interface created
     """
     _clsIsBuild = False
     NAME_SEPARATOR = "_"  
@@ -27,7 +29,7 @@ class Interface():
         @param hasExter: if true this interface is specified as interface outside of this unit  
         """
         
-        if not self._isBuild():
+        if not self._clsIsBuild:
             self.__class__._build()
         
         # deepcopy interfaces from class
@@ -59,15 +61,11 @@ class Interface():
     #        raise Exception("Can connect only same interfaces (%s), src is %s" % (str(self.__classs__), str(self._src.__class__)))
         
     @classmethod
-    def _isBuild(cls):
-        return cls._clsIsBuild
-    
-    @classmethod
     def _build(cls):
         """
         create a _subInterfaces from class properties
         """
-        assert(not cls._isBuild())
+        assert(not cls._clsIsBuild)
         cls._subInterfaces = {}
         for propName, prop in vars(cls).items():
             pCls = prop.__class__
@@ -76,7 +74,15 @@ class Interface():
                     pCls._build()
                 cls._subInterfaces[propName] = prop
         cls._clsIsBuild = True
-    
+        
+    def _rmSignals(self):
+        """Remove all signals from this interface (used after unit is synthetized
+         and its parent is connecting its interface to this unit)"""
+        if hasattr(self, "_sig"):
+            del self._sig
+        for i in self._subInterfaces:
+            i._rmSignals()
+            
     @classmethod
     def _extractPossibleInstanceNames(cls, entity, prefix=""):
         """
@@ -94,12 +100,13 @@ class Interface():
                 yield p.name[:-len(prefix + firstIntfName)]
     
     def _unExtrac(self):
+        """Revent extracting process for this interface"""
         for _, intfConfMap in self._subInterfaces.items():
-            if hasattr(intfConfMap, "_entityPort"):
-                if hasattr(intfConfMap._entityPort, "ifCls"):
-                    del intfConfMap._entityPort.ifCls
-                del intfConfMap._entityPort
-                del intfConfMap._sigLvlUnit
+            if hasattr(intfConfMap, "_originEntityPort"):
+                if hasattr(intfConfMap._originEntityPort, "ifCls"):
+                    del intfConfMap._originEntityPort.ifCls
+                del intfConfMap._originEntityPort
+                del intfConfMap._originSigLvlUnit
     
       
     def _tryToExtractByName(self, prefix, sigLevelUnit):
@@ -112,10 +119,10 @@ class Interface():
         if self._subInterfaces:
             for intfName, intf in self._subInterfaces.items():
                 try:
-                    intf._entityPort = single(sigLevelUnit.entity.port, lambda p : matchIgnorecase(p.name, prefix + intfName))
-                    intf._entityPort.ifCls = self
-                    intf._sigLvlUnit = sigLevelUnit
-                    dirMatches = intf._entityPort.direction == intf._masterDir
+                    intf._originEntityPort = single(sigLevelUnit.entity.port, lambda p : matchIgnorecase(p.name, prefix + intfName))
+                    intf._originEntityPort.ifCls = self
+                    intf._originSigLvlUnit = sigLevelUnit
+                    dirMatches = intf._originEntityPort.direction == intf._masterDir
                     if dirMatches:
                         intf._direction = DIRECTION.asIntfDirection(intf._masterDir)
                     else:
@@ -151,8 +158,12 @@ class Interface():
                 yield (name, intf) 
             except InterfaceIncompatibilityExc:
                 pass
-
+                   
     def _connectTo(self, master):
+        """
+        connect to another interface interface 
+        works like self <= master in VHDL
+        """
         if self._subInterfaces:
             for nameIfc, ifc in self._subInterfaces.items():
                 mIfc = master._subInterfaces[nameIfc]
@@ -169,6 +180,9 @@ class Interface():
             self._sig.assignFrom(master._sig)
     
     def _propagateConnection(self):
+        """
+        Propagate connections from interface instance to all subinterfaces
+        """
         for d in self._destinations:
             if self != self._src:
                 d._connectTo(self._src)
@@ -178,6 +192,10 @@ class Interface():
             
     
     def _signalsForInterface(self, context, prefix):
+        """
+        generate _sig for each interface which has no subinterface
+        if already has _sig return it instead
+        """
         if self._subInterfaces:
             sigs = []
             for name, ifc in self._subInterfaces.items():
@@ -188,9 +206,10 @@ class Interface():
                 return [self._sig]
             else:
                 s = context.sig(prefix, self._width)
+                s._interface = self
                 self._sig = s
                 
-                if hasattr(self, '_entityPort'):
-                    self._sig.connectToPortItem(self._sigLvlUnit, self._entityPort)
+                if hasattr(self, '_originEntityPort'):
+                    self._sig.connectToPortItem(self._originSigLvlUnit, self._originEntityPort)
                 return [s]
                 

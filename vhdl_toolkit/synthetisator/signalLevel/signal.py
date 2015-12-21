@@ -97,8 +97,9 @@ def PortItemFromSignal(s):
         d = DIRECTION.OUT
     else:
         d = DIRECTION.IN
-    pi = PortItem(s.name, d , s.var_type)
-    pi.sig = s
+    pi = PortItem(s.name, d, s.var_type)
+    pi._interface = s._interface
+    
     return pi
 
 class PortConnection():
@@ -118,7 +119,7 @@ class PortConnection():
         else:
             return " %s => %s" % (self.portItem.name, self.sig.name)
 
-#more like net
+# more like net
 class Signal(SignalItem):
     def __init__(self, name, var_type, defaultVal=None, onIn=True):
         if name is None:
