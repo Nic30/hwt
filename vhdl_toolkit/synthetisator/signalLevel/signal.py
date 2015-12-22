@@ -123,7 +123,7 @@ class PortConnection():
 class Signal(SignalItem):
     def __init__(self, name, var_type, defaultVal=None, onIn=True):
         if name is None:
-            name = "sig" + str(id(self))
+            name = "sig_" + str(id(self))
             self.hasGenericName = True 
         super().__init__(name, var_type, defaultVal)
         self.expr = []
@@ -184,13 +184,11 @@ class Signal(SignalItem):
         op = OpOr(self, operand1)
         self.expr.append(op)
         return op.result
-        
     def opIsOn(self):
         if int(self.onIn) == 0:
             return self.opNot()
         else:
             return self 
-            
     def opEq(self, operand1):
         checkOperand(operand1)
         if self.var_type.width == 1:
@@ -204,16 +202,14 @@ class Signal(SignalItem):
             op = OpEq(self, operand1)
             self.expr.append(op)
             return op.result
-    
     def opNEq(self, operand1):
         return self.opEq(operand1).opNot()
-        
     def indx(self, indexer):
         checkOperand(indexer)
         indx = OpIndx(self, indexer)
         self.expr.append(indx)
         return indx.result
-    
+
     def hasDriver(self):
         return self.getDriver() != None
     

@@ -40,9 +40,15 @@ class Unit():
                     if hasattr(self, intfName):
                         raise  Exception("Already has " + intfName)
                     self._interfaces[intfName] = interface
+
         for intfName, interface in self._interfaces.items():
+            interface._name = intfName
+            interface._parent = self
             setattr(self, intfName, interface)
+        
         for uName, unit in self._subUnits.items():
+            unit._name = uName
+            unit._parent = self
             setattr(self, uName, unit)
         
         
@@ -62,6 +68,7 @@ class Unit():
     def _cleanAsSubunit(self):
         for _, i in self._interfaces.items():
             i._rmSignals()
+            
             
     def _signalsForMyEntity(self, context, prefix):
         for suPortName, suPort in self._interfaces.items():  # generate for all ports of subunit signals in this context
@@ -89,23 +96,37 @@ class Unit():
         else:
             cntx = Context(name)
             externInterf = [] 
+            #prepare subunits
             for subUnitName, subUnit in self._subUnits.items():
                 yield from subUnit._synthetize(subUnitName)
                 subUnit._cleanAsSubunit()
                 subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
-                
+            
+            #prepare connections     
             for connectionName, connection in self._interfaces.items():
-                if not connection._src:
-                    raise Exception("Connection %s.%s has no driver" % (name, connectionName))
                 if connection._isExtern:
                     externInterf.extend(connection._signalsForInterface(cntx, connectionName))
+                else:
+                    connection._signalsForInterface(cntx, connectionName)
+            
+            for intfName, interface in self._interfaces.items():
+                interface._propagateSrc()
+            for subUnitName, subUnit in self._subUnits.items():
+                for suIntfName, suIntf in subUnit._interfaces.items():
+                    suIntf._reverseDirection()
+                    suIntf._propagateConnection()
+
+            #propagate connections on interfaces in this unit
             for cName, connection in self._interfaces.items():
                 connection._propagateConnection()
 
+            #synthetize signal level context
             s = cntx.synthetize(externInterf)
             self._entity = s[1]
             self._sigLvlUnit = VHDLUnit(self._entity)
             self._architecture = s[2]
+            
+            #connect results of synthetized context to interfaces of this unit
             for intfName, intf in self._interfaces.items():
                 self._connectMyInterfaceToMyEntity(intf)
             yield from s

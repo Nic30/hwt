@@ -61,7 +61,7 @@ class VHDLUnit(Entity, Unit):
             pc.portItem.var_type.width = ValueInterpreter.resolveWidth(normalizedGenerics, pc.portItem.var_type.str.lower()) 
         
     def asVHDLComponentInstance(self):
-        ci = ComponentInstance(self.name + str(id(self)), self)
+        ci = ComponentInstance(self.name + "_" +str(id(self)), self)
         # assert all inputs are connected
         for p in self.entity.port:
             if p.direction == DIRECTION.IN:

@@ -5,8 +5,8 @@ from vhdl_toolkit.formater import formatVhdl
 
 class SimpleSubunit(Unit):
     subunit0 = SimplestUnit() 
-    a = Ap_none(subunit0.a ,isExtern=True)
-    b = Ap_none(src=subunit0.b, isExtern=True)
+    a0 = Ap_none(subunit0.a ,isExtern=True)
+    b0 = Ap_none(src=subunit0.b, isExtern=True)
 
 if __name__ == "__main__":
     u = SimpleSubunit()

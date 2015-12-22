@@ -17,8 +17,6 @@ class InterfaceIncompatibilityExc(Exception):
     pass         
          
 class IfConfig():
-    ifMaster, ifSlave = ("master", "slave")
-    
     def findPort(self, logName):
         logName = logName.lower()
         p = single(self.port, lambda x : x.logName.lower() == logName)

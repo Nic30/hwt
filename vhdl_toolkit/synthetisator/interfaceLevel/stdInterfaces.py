@@ -9,9 +9,6 @@ class Ap_none(Interface):
         Interface.__init__(self, *destinations, src=src, isExtern=isExtern)
         self._width = width
         self._masterDir = masterDir
-    
-    def __repr__(self):
-        return "<Ap_none, _width=%s, _masterDir=%s>" % (str(self._width), self._masterDir)
         
 s= Ap_none        
 

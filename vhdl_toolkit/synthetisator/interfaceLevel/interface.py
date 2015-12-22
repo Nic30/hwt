@@ -37,10 +37,12 @@ class Interface():
         self._subInterfaces = deepcopy(self.__class__._subInterfaces, {})
         for propName, prop in self._subInterfaces.items():
             setattr(self, propName, prop)
+            prop._parent = self
+            prop._name = propName
             self._subInterfaces[propName] = getattr(self, propName)
         
         if isExtern and not src:
-            self._src = self
+            self._src = None
             self._direction = INTF_DIRECTION.MASTER
         else:
             self._src = src
@@ -50,7 +52,11 @@ class Interface():
             
         self._destinations = list(destinations)
         self._isExtern = isExtern
-        
+    
+    def _propagateSrc(self):
+        if self._src:
+            self._src._destinations.append(self)
+                
     # def _check(self):
     #    if not self._src and not self._isExtern:
     #        raise Exception("Connection has no driver")
@@ -75,13 +81,16 @@ class Interface():
                 cls._subInterfaces[propName] = prop
         cls._clsIsBuild = True
         
-    def _rmSignals(self):
+    def _rmSignals(self, rmConnetions=True):
         """Remove all signals from this interface (used after unit is synthetized
          and its parent is connecting its interface to this unit)"""
         if hasattr(self, "_sig"):
             del self._sig
         for i in self._subInterfaces:
             i._rmSignals()
+        if rmConnetions:
+            #self._src = None
+            self._destinations = []
             
     @classmethod
     def _extractPossibleInstanceNames(cls, entity, prefix=""):
@@ -184,12 +193,14 @@ class Interface():
         Propagate connections from interface instance to all subinterfaces
         """
         for d in self._destinations:
-            if self != self._src:
-                d._connectTo(self._src)
-            d._propagateConnection()
-        if self != self._src:
-            self._connectTo(self._src)
-            
+            #if self != self._src:
+            d._connectTo(self)
+            #d._propagateConnection()
+        #if self._src == None:
+        #    assert(hasattr(self, "_originEntityPort"))
+        #else:
+        #    if self != self._src:
+        #        self._connectTo(self._src)
     
     def _signalsForInterface(self, context, prefix):
         """
@@ -212,4 +223,36 @@ class Interface():
                 if hasattr(self, '_originEntityPort'):
                     self._sig.connectToPortItem(self._originSigLvlUnit, self._originEntityPort)
                 return [s]
-                
+    
+    def _getFullName(self):
+        name = ""
+        tmp = self
+        while hasattr(tmp, "_parent"):
+            if hasattr(tmp, "_name"):
+                n = tmp._name
+            else:
+                n = ''
+            if name == '':
+                name = n
+            else:
+                name = n + '.' + name
+            tmp = tmp._parent
+        return name
+    
+    def _reverseDirection(self):
+        self._direction = INTF_DIRECTION.oposite(self._direction)
+        for _, intf in self._subInterfaces.items():
+            intf._reverseDirection()
+            
+    def __repr__(self):
+        s = [self.__class__.__name__]
+        s.append("name=%s" % self._getFullName())
+        if hasattr(self, '_width'):
+            s.append("_width=%s" % str(self._width))
+        if hasattr(self, '_masterDir'):
+            s.append("_masterDir=%s" % str(self._masterDir))
+        return "<%s>" % (', '.join(s) )
+    
+    
+    
+    

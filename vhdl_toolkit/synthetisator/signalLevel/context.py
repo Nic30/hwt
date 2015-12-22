@@ -61,6 +61,7 @@ class Context(object):
             If(clk.opOnRisigEdge(), r)
         else:
             s = Signal(name, t, defVal)
+        assert(not arr_any(self.signals, lambda x: x.name == s.name))
         self.signals.append(s)
         return s
     
