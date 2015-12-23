@@ -5,6 +5,7 @@ from vhdl_toolkit.entity import Entity
 from vhdl_toolkit.valueInterpret import ValueInterpreter
 from vhdl_toolkit.variables import PortItem
 from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.synthetisator.param import getParam
 
 class Unit():    
     def __init__(self):
@@ -51,17 +52,19 @@ class VHDLUnit(Entity, Unit):
         self.portConnections = []
         self.discovered = False
         self.genericsValues = {}
+        for g in self.entity.generics:
+            self.genericsValues[g.name] = g.defaultVal
     
     def _updateWidthsFromGenerics(self):
         normalizedGenerics = {}
         for k, v in self.genericsValues.items():
-            normalizedGenerics[k.lower()] = v
+            normalizedGenerics[k.lower()] = getParam(v)
         
         for pc in self.portConnections:
             pc.portItem.var_type.width = ValueInterpreter.resolveWidth(normalizedGenerics, pc.portItem.var_type.str.lower()) 
         
     def asVHDLComponentInstance(self):
-        ci = ComponentInstance(self.name + "_" +str(id(self)), self)
+        ci = ComponentInstance(self.name + "_" + str(id(self)), self)
         # assert all inputs are connected
         for p in self.entity.port:
             if p.direction == DIRECTION.IN:
@@ -79,9 +82,11 @@ class VHDLUnit(Entity, Unit):
             if g.var_type.str.lower().startswith("std_logic_vector") and isinstance(v, int):
                 val_str = 'X"{0:b}"'.format(v)
             else:
-                val_str = str(v)
+                val_str = str(getParam(v))
             ci.genericMaps.append("%s => %s" % (k, val_str))
         
+        ci.portMaps.sort()
+        ci.genericMaps.sort()
         return ci
 
         

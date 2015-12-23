@@ -5,12 +5,13 @@ from vivado_toolkit.ip_packager.busInterface import InterfaceIncompatibilityExc
 from copy import deepcopy
 from vhdl_toolkit.types import DIRECTION, INTF_DIRECTION
 from hls_toolkit.errors import UnimplementedErr
+from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 
 # class Param():
 #    def __init__(self, val):
 #        self.val = val
 
-class Interface():
+class Interface(Buildable):
     """
     @cvar cvar:  NAME_SEPARATOR: separator for nested interface names   
     @cvar _subInterfaces: Dict of sub interfaces (name : interf) 
@@ -20,7 +21,6 @@ class Interface():
     @ivar _isExtern: If true synthetisator sets it as external port of unit
     @ivar _originEntityPort: entityPort for which was this interface created
     @ivar _originSigLvlUnit: VHDL unit for which was this interface created
-    @cvar _clsIsBuild: if class has this attribute and it is True it means class was builded 
     """
     NAME_SEPARATOR = "_"  
     def __init__(self, *destinations, masterDir=DIRECTION.OUT, src=None, isExtern=False):
@@ -49,7 +49,6 @@ class Interface():
             self._src = src
             self._direction = INTF_DIRECTION.SLAVE
         self._isExtern = isExtern
-        
             
         self._destinations = list(destinations)
         self._isExtern = isExtern
@@ -57,14 +56,7 @@ class Interface():
     def _propagateSrc(self):
         if self._src:
             self._src._destinations.append(self)
-                
-    @classmethod
-    def _isBuild(cls):
-        return hasattr(cls, "_clsIsBuild")
-    @classmethod
-    def _builded(cls):
-        if not hasattr(cls, "_clsIsBuild"):
-            cls._build()    
+                 
     @classmethod
     def _build(cls):
         """
@@ -112,15 +104,15 @@ class Interface():
             firstIntfName = ""
             
         for p in entity.port:
-            if not hasattr(p, "ifCls") and p.name.lower().endswith(prefix + firstIntfName):
+            if not hasattr(p, "_interface") and p.name.lower().endswith(prefix + firstIntfName):
                 yield p.name[:-len(prefix + firstIntfName)]
     
     def _unExtrac(self):
         """Revent extracting process for this interface"""
         for _, intfConfMap in self._subInterfaces.items():
             if hasattr(intfConfMap, "_originEntityPort"):
-                if hasattr(intfConfMap._originEntityPort, "ifCls"):
-                    del intfConfMap._originEntityPort.ifCls
+                if hasattr(intfConfMap._originEntityPort, "_interface"):
+                    del intfConfMap._originEntityPort._interface
                 del intfConfMap._originEntityPort
                 del intfConfMap._originSigLvlUnit
     
@@ -136,7 +128,7 @@ class Interface():
             for intfName, intf in self._subInterfaces.items():
                 try:
                     intf._originEntityPort = single(sigLevelUnit.entity.port, lambda p : matchIgnorecase(p.name, prefix + intfName))
-                    intf._originEntityPort.ifCls = self
+                    intf._originEntityPort._interface = intf
                     intf._originSigLvlUnit = sigLevelUnit
                     dirMatches = intf._originEntityPort.direction == intf._masterDir
                     if dirMatches:
@@ -164,8 +156,7 @@ class Interface():
         """
         @return: iterator over tuples (interface name. extracted interface)
         """
-        if not cls._clsIsBuild:
-            cls._build()
+        cls._builded()
         for name in cls._extractPossibleInstanceNames(sigLevelUnit.entity):
             try:
                 intf = cls(isExtern=True)._tryToExtractByName(name, sigLevelUnit)
@@ -201,15 +192,10 @@ class Interface():
         """
         Propagate connections from interface instance to all subinterfaces
         """
+        for _, suIntf in self._subInterfaces.items():
+            suIntf._propagateConnection()
         for d in self._destinations:
-            #if self != self._src:
             d._connectTo(self)
-            #d._propagateConnection()
-        #if self._src == None:
-        #    assert(hasattr(self, "_originEntityPort"))
-        #else:
-        #    if self != self._src:
-        #        self._connectTo(self._src)
     
     def _signalsForInterface(self, context, prefix):
         """

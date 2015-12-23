@@ -74,6 +74,8 @@ class Entity(object):
         for_parentBlock(tokens, read_port_item)
            
     def __str__(self):
+        self.port.sort(key= lambda x: x.name)
+        self.generics.sort(key= lambda x: x.name)
         return VHDLTemplates.entity.render(self.__dict__)
     
     

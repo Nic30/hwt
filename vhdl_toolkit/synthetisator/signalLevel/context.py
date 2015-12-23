@@ -40,6 +40,9 @@ class Context(object):
             raise Exception('signal name "%s" is not unique' % (name))
         
         t = VHDLType()
+        if hasattr(width, 'val'):
+            width = width.val
+        
         t.width = width
         
         if width > 1:

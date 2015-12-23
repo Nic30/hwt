@@ -4,7 +4,7 @@ from vhdl_toolkit.parser_helpers import for_parentBlock
 
 class INTF_DIRECTION():
     MASTER = "MASTER"
-    SLAVE = "SLEAVE"
+    SLAVE = "SLAVE"
     
     @classmethod
     def asDirection(cls, val):
