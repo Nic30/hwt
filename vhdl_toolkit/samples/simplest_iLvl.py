@@ -12,5 +12,5 @@ class SimplestUnit(Unit):
 if __name__ == "__main__":
     u = SimplestUnit()
     print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthetize("simple")])
+                     "\n".join([ str(x) for x in u._synthesise("simple")])
                      ))

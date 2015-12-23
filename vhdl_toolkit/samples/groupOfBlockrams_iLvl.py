@@ -18,10 +18,13 @@ class GroupOfBlockrams(Unit):
     r_b_addr = Ap_none(bramR.b.addr, isExtern=True)
     w_a_addr = Ap_none(bramW.a.addr, isExtern=True)
     w_b_addr = Ap_none(bramW.b.addr, isExtern=True)
-
+    out_w_a = Ap_none(src=bramW.a.dout, isExtern=True)
+    out_w_b = Ap_none(src=bramW.b.dout, isExtern=True)
+    out_r_a = Ap_none(src=bramR.a.dout, isExtern=True)
+    out_r_b = Ap_none(src=bramR.b.dout, isExtern=True)
 
 if __name__ == "__main__":
     u = GroupOfBlockrams()
     print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthetize("superDma")])
+                     "\n".join([ str(x) for x in u._synthesise("GroupOfBlockrams")])
                      ))

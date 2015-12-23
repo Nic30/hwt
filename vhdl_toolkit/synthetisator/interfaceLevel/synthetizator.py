@@ -77,16 +77,16 @@ class Unit():
     
     def _connectMyInterfaceToMyEntity(self, interface):
             if interface._subInterfaces:
-                for subIntfName, subIntf in interface._subInterfaces:
+                for subIntfName, subIntf in interface._subInterfaces.items():
                     self._connectMyInterfaceToMyEntity(subIntf)  
             else:
                 portItem = single(self._entity.port, lambda x : x._interface == interface)
                 interface._originSigLvlUnit = self._sigLvlUnit
                 interface._originEntityPort = portItem
     
-    def _synthetize(self, name):
+    def _synthesise(self, name):
         """
-        synthetize all subunits, make connections between them, build entity and component for this unit
+        synthesize all subunits, make connections between them, build entity and component for this unit
         """
         self._name = name
         if self._origin:
@@ -98,8 +98,7 @@ class Unit():
             externInterf = [] 
             #prepare subunits
             for subUnitName, subUnit in self._subUnits.items():
-                yield from subUnit._synthetize(subUnitName)
-                subUnit._cleanAsSubunit()
+                yield from subUnit._synthesise(subUnitName)
                 subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
             
             #prepare connections     
@@ -113,7 +112,6 @@ class Unit():
                 interface._propagateSrc()
             for subUnitName, subUnit in self._subUnits.items():
                 for suIntfName, suIntf in subUnit._interfaces.items():
-                    suIntf._reverseDirection()
                     suIntf._propagateConnection()
 
             #propagate connections on interfaces in this unit
@@ -131,4 +129,6 @@ class Unit():
                 self._connectMyInterfaceToMyEntity(intf)
             yield from s
         self._component = Component(self._entity)
-               
+        self._cleanAsSubunit()
+        for intfName, intf in self._interfaces.items():
+            intf._reverseDirection()       

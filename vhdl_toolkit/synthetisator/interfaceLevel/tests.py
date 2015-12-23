@@ -36,7 +36,7 @@ class TestStringMethods(unittest.TestCase):
         
     def test_signalInstances(self):
         bram = SimplestUnit()
-        for x in bram._synthetize("simple"):
+        for x in bram._synthesise("simple"):
             pass
 
         self.assertNotEqual(bram.a._sig, bram.b._sig, 'signal instances are properly instanciated')

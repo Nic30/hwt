@@ -11,5 +11,5 @@ class SimpleSubunit(Unit):
 if __name__ == "__main__":
     u = SimpleSubunit()
     print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthetize("SimpleSubunit")])
+                     "\n".join([ str(x) for x in u._synthesise("SimpleSubunit")])
                      ))

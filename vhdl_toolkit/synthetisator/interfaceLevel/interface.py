@@ -4,6 +4,7 @@ from python_toolkit.stringUtils import matchIgnorecase
 from vivado_toolkit.ip_packager.busInterface import InterfaceIncompatibilityExc
 from copy import deepcopy
 from vhdl_toolkit.types import DIRECTION, INTF_DIRECTION
+from hls_toolkit.errors import UnimplementedErr
 
 # class Param():
 #    def __init__(self, val):
@@ -19,21 +20,21 @@ class Interface():
     @ivar _isExtern: If true synthetisator sets it as external port of unit
     @ivar _originEntityPort: entityPort for which was this interface created
     @ivar _originSigLvlUnit: VHDL unit for which was this interface created
+    @cvar _clsIsBuild: if class has this attribute and it is True it means class was builded 
     """
-    _clsIsBuild = False
     NAME_SEPARATOR = "_"  
-    def __init__(self, *destinations, src=None, isExtern=False):
+    def __init__(self, *destinations, masterDir=DIRECTION.OUT, src=None, isExtern=False):
         """
         @param *destinations: interfaces connected to this interface
         @param src:  interface whitch is master for this interface (if None isExtern has to be true)
         @param hasExter: if true this interface is specified as interface outside of this unit  
         """
         
-        if not self._clsIsBuild:
-            self.__class__._build()
+        #build all interface classes for this interface
+        self.__class__._builded()
+        self._masterDir = masterDir
         
         # deepcopy interfaces from class
-        # problem is that new instances have references on something else than planed
         self._subInterfaces = deepcopy(self.__class__._subInterfaces, {})
         for propName, prop in self._subInterfaces.items():
             setattr(self, propName, prop)
@@ -57,27 +58,33 @@ class Interface():
         if self._src:
             self._src._destinations.append(self)
                 
-    # def _check(self):
-    #    if not self._src and not self._isExtern:
-    #        raise Exception("Connection has no driver")
-    #    for d in self._destinations:
-    #        if self.__class__ != d.__class__:
-    #            raise Exception("Can connect only same interfaces (%s), one of destinations is %s" % (str(self.__class__), str(d.__class__)))
-    #    if self._src and self._src.__class__ != self.__class:
-    #        raise Exception("Can connect only same interfaces (%s), src is %s" % (str(self.__classs__), str(self._src.__class__)))
-        
+    @classmethod
+    def _isBuild(cls):
+        return hasattr(cls, "_clsIsBuild")
+    @classmethod
+    def _builded(cls):
+        if not hasattr(cls, "_clsIsBuild"):
+            cls._build()    
     @classmethod
     def _build(cls):
         """
         create a _subInterfaces from class properties
         """
-        assert(not cls._clsIsBuild)
+        assert(not cls._isBuild())
+        assert(cls != Interface) # only derived classes should be builded
         cls._subInterfaces = {}
+        
+        #copy from bases
+        for c in cls.__bases__:
+            if issubclass(c, Interface) and c != Interface: # only derived classes should be builded
+                c._builded()
+                for intfName, intf in c._subInterfaces.items():
+                    cls._subInterfaces[intfName] = intf
+        
         for propName, prop in vars(cls).items():
             pCls = prop.__class__
             if issubclass(pCls, Interface):
-                if not pCls._isBuild():
-                    pCls._build()
+                pCls._builded()
                 cls._subInterfaces[propName] = prop
         cls._clsIsBuild = True
         
@@ -86,10 +93,10 @@ class Interface():
          and its parent is connecting its interface to this unit)"""
         if hasattr(self, "_sig"):
             del self._sig
-        for i in self._subInterfaces:
+        for _, i in self._subInterfaces.items():
             i._rmSignals()
         if rmConnetions:
-            #self._src = None
+            self._src = None
             self._destinations = []
             
     @classmethod
@@ -97,7 +104,7 @@ class Interface():
         """
         @return: iterator over unit ports witch probably matches with this interface
         """        
-        assert(cls._isBuild())
+        assert(cls._clsIsBuild)
         if cls._subInterfaces:
             firstIntfName, firstIntfPort = list(cls._subInterfaces.items())[0]
             assert(not firstIntfPort._subInterfaces)  # only one level of hierarchy is supported for now
@@ -142,7 +149,7 @@ class Interface():
                     self._unExtrac()
                     raise InterfaceIncompatibilityExc("Missing " + prefix + intfName.lower())
         else:
-            pass
+            raise UnimplementedErr()
         if allDirMatch:
             self._direction = INTF_DIRECTION.MASTER
         elif noneDirMatch:
@@ -157,7 +164,7 @@ class Interface():
         """
         @return: iterator over tuples (interface name. extracted interface)
         """
-        if not cls._isBuild():
+        if not cls._clsIsBuild:
             cls._build()
         for name in cls._extractPossibleInstanceNames(sigLevelUnit.entity):
             try:
@@ -177,9 +184,11 @@ class Interface():
             for nameIfc, ifc in self._subInterfaces.items():
                 mIfc = master._subInterfaces[nameIfc]
                 
-                if ifc._direction == INTF_DIRECTION.MASTER:
+                if (ifc._direction == INTF_DIRECTION.MASTER and ifc._masterDir == DIRECTION.OUT) \
+                    or (ifc._direction == INTF_DIRECTION.SLAVE and ifc._masterDir == DIRECTION.IN):
                     mIfc._connectTo(ifc)
-                elif ifc._direction == INTF_DIRECTION.SLAVE:
+                elif (ifc._direction == INTF_DIRECTION.SLAVE and ifc._masterDir == DIRECTION.OUT) \
+                    or (ifc._direction == INTF_DIRECTION.MASTER and ifc._masterDir == DIRECTION.IN):
                     ifc._connectTo(mIfc)
                 else:
                     raise Exception("Interface direction improperly configured")
