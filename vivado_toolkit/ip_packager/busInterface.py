@@ -6,7 +6,7 @@ from python_toolkit.stringUtils import matchIgnorecase
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
          mkSpiElm, spi_ns_prefix
 from vivado_toolkit.ip_packager.others import Parameter
-from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.types import DIRECTION, INTF_DIRECTION
 
 
 DEFAULT_CLOCK = 100000000
@@ -510,9 +510,9 @@ def extractBusInterface(entity, interface, excOnIncompatibilytiy=False):
                 ifMap[bi.logName] = ifprefix + bi.phyName
                 
             if allMatch:
-                ifT = IfConfig.ifMaster
+                ifT = INTF_DIRECTION.MASTER
             elif noneMatch:
-                ifT = IfConfig.ifSlave
+                ifT = INTF_DIRECTION.SLAVE
             else:
                 raise InterfaceIncompatibilityExc("Direction mismatch")
 
@@ -539,7 +539,7 @@ def extractBusInterface(entity, interface, excOnIncompatibilytiy=False):
                     bi.name = m.name
                 else:
                     bi.name = ifName
-                isMaster = ifMap[0] == IfConfig.ifMaster
+                isMaster = ifMap[0] == INTF_DIRECTION.MASTER
                 bi.busType = getBusTypeFromConf(m)
                 bi.abstractionType = getBusTypeFromConf(m)
                 bi.abstractionType.name += "_rtl"

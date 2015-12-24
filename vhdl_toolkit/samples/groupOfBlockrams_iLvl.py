@@ -23,7 +23,8 @@ class GroupOfBlockrams(Unit):
                  bramW.a.we, bramW.b.we, \
                  isExtern=True)
     addr = Ap_none(bramR.a.addr, bramR.b.addr,\
-                   bramW.a.addr, bramW.b.addr, width=ADDR_WIDTH, isExtern=True)
+                   bramW.a.addr, bramW.b.addr,\
+                   width=ADDR_WIDTH, isExtern=True)
     in_w_a = Ap_none(bramW.a.din, width=DATA_WIDTH, isExtern=True)
     in_w_b = Ap_none(bramW.b.din, width=DATA_WIDTH, isExtern=True)
     in_r_a = Ap_none(bramR.a.din, width=DATA_WIDTH, isExtern=True)

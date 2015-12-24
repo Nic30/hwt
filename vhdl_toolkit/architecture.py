@@ -4,6 +4,7 @@ from python_toolkit.arrayQuery import where, single, arr_any
 from vhdl_toolkit.expr import  Map, Assignment
 from vhdl_toolkit.templates import VHDLTemplates
 from vhdl_toolkit.variables import SignalItem, PortItem
+from vhdl_toolkit.types import DIRECTION
 
 
 def portItem2signal(p):
@@ -17,7 +18,7 @@ def connect(a, b):
     dst = None
     for p in [a, b]:
         if isinstance(p, PortItem):
-            if p.direction == PortItem.typeIn:
+            if p.direction == DIRECTION.IN:
                 src = p
             else:
                 dst = p
