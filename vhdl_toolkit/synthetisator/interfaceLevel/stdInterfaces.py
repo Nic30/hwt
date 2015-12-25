@@ -1,5 +1,6 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
 from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.synthetisator.param import Param
 
 D = DIRECTION
 
@@ -13,29 +14,31 @@ class Ap_none(Interface):
 s= Ap_none        
 
 class Ap_clk(Interface):
-    ap_clk = s(masterDir=D.OUT, width=1)
+    ap_clk = s(masterDir=D.OUT)
         
 class Ap_hs(Interface):
-    DATA_WIDTH = 64
+    DATA_WIDTH = Param(64)
     data = s(masterDir=D.OUT, width=DATA_WIDTH)
-    rd = s(masterDir=D.IN, width=1)
-    vld = s(masterDir=D.OUT, width=1)
+    rd = s(masterDir=D.IN)
+    vld = s(masterDir=D.OUT)
 
 class BramPort(Interface):
-    ADDR_WIDTH = 32
-    DATA_WIDTH = 64 
-    clk = s(masterDir=D.OUT, width=1)
+    ADDR_WIDTH = Param(32)
+    DATA_WIDTH = Param(64) 
+    clk = s(masterDir=D.OUT)
     addr = s(masterDir=D.OUT, width=ADDR_WIDTH)
     din = s(masterDir=D.OUT, width=DATA_WIDTH)
     dout = s(masterDir=D.IN, width=DATA_WIDTH)
-    # en = s("_en", masterDir=D.OUT, width=1)
-    we = s(masterDir=D.OUT, width=1)   
+    # en = s("_en", masterDir=D.OUT)
+    we = s(masterDir=D.OUT)   
     
-class AxiStream(Ap_hs):
-    last = s(masterDir=D.OUT, width=1)
-    strb = s(masterDir=D.OUT, width=Ap_hs.DATA_WIDTH)
-
-    
+class AxiStream(Interface):
+    DATA_WIDTH = Param(64)
+    last = s(masterDir=D.OUT)
+    strb = s(masterDir=D.OUT, width=DATA_WIDTH)
+    data = s(masterDir=D.OUT, width=DATA_WIDTH)
+    ready = s(masterDir=D.IN)
+    valid = s(masterDir=D.OUT)
  
 
     

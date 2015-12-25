@@ -105,8 +105,12 @@ class Interface(Buildable):
             
         for p in entity.port:
             if not hasattr(p, "_interface") and p.name.lower().endswith(prefix + firstIntfName):
-                yield p.name[:-len(prefix + firstIntfName)]
-    
+                prefixLen = len(prefix) + len(firstIntfName)
+                if prefixLen == 0:
+                    yield p.name
+                else:
+                    yield p.name[:-prefixLen]
+                
     def _unExtrac(self):
         """Revent extracting process for this interface"""
         for _, intfConfMap in self._subInterfaces.items():
@@ -125,23 +129,30 @@ class Interface(Buildable):
         allDirMatch = True
         noneDirMatch = True
         if self._subInterfaces:
-            for intfName, intf in self._subInterfaces.items():
-                try:
-                    intf._originEntityPort = single(sigLevelUnit.entity.port, lambda p : matchIgnorecase(p.name, prefix + intfName))
-                    intf._originEntityPort._interface = intf
-                    intf._originSigLvlUnit = sigLevelUnit
+            try:
+                for intfName, intf in self._subInterfaces.items():
+                    assert(intf._name == intfName)
+                    intf._tryToExtractByName(prefix + intfName, sigLevelUnit)
                     dirMatches = intf._originEntityPort.direction == intf._masterDir
-                    if dirMatches:
-                        intf._direction = DIRECTION.asIntfDirection(intf._masterDir)
-                    else:
-                        intf._direction = DIRECTION.asIntfDirection(DIRECTION.oposite(intf._masterDir)) 
                     allDirMatch = allDirMatch and dirMatches
                     noneDirMatch = noneDirMatch  and not dirMatches     
-                except python_toolkit.arrayQuery.NoValueExc:
-                    self._unExtrac()
-                    raise InterfaceIncompatibilityExc("Missing " + prefix + intfName.lower())
+            except InterfaceIncompatibilityExc as e:
+                for intfName, intf in self._subInterfaces.items():
+                    intf._unExtrac()
+                raise e
         else:
-            raise UnimplementedErr()
+            try:
+                self._originEntityPort = single(sigLevelUnit.entity.port, lambda p : matchIgnorecase(p.name, prefix))
+                self._originEntityPort._interface = self
+                self._originSigLvlUnit = sigLevelUnit
+                dirMatches = self._originEntityPort.direction == self._masterDir
+                if dirMatches:
+                    self._direction = DIRECTION.asIntfDirection(self._masterDir)
+                else:
+                    self._direction = DIRECTION.asIntfDirection(DIRECTION.oposite(self._masterDir)) 
+            except python_toolkit.arrayQuery.NoValueExc:
+                self._unExtrac()
+                raise InterfaceIncompatibilityExc("Missing " + prefix)
         if allDirMatch:
             self._direction = INTF_DIRECTION.MASTER
         elif noneDirMatch:

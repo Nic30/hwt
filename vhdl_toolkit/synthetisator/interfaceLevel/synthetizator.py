@@ -47,7 +47,8 @@ class Unit(Buildable):
                         raise  Exception("Already has " + intfName)
                     self._interfaces[intfName] = interface
                     setIntfAsExtern(interface)
-                    
+            for p in self._entity.port:
+                assert(hasattr(p, '_interface') and p._interface) #every port should have interface (Ap_none at least)        
         for intfName, interface in self._interfaces.items():
             interface._name = intfName
             interface._parent = self
@@ -122,6 +123,10 @@ class Unit(Buildable):
             # propagate connections on interfaces in this unit
             for _, connection in self._interfaces.items():
                 connection._propagateConnection()
+            
+            if not externInterf:
+                raise  Exception("Can not find any external interface for unit " + name \
+                                  + "- there is no such a thing as unit without interfaces" )
 
             # synthetize signal level context
             s = cntx.synthetize(externInterf)
