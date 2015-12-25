@@ -35,11 +35,55 @@ class BramPort(Interface):
 class AxiStream(Interface):
     DATA_WIDTH = Param(64)
     last = s(masterDir=D.OUT)
-    strb = s(masterDir=D.OUT, width=DATA_WIDTH)
+    strb = s(masterDir=D.OUT, width=DATA_WIDTH.get()//8) # [TODO] Param needs something like expr, this does not work
     data = s(masterDir=D.OUT, width=DATA_WIDTH)
     ready = s(masterDir=D.IN)
     valid = s(masterDir=D.OUT)
- 
 
+
+
+class AxiLite_addr(Interface):
+    ADDR_WIDTH = Param(32)
+    addr =  s(masterDir=D.OUT, width=ADDR_WIDTH)
+    ready = s(masterDir=D.IN)
+    valid = s(masterDir=D.OUT)
+
+class AxiLite_r(Interface):
+    DATA_WIDTH = Param(64)
+    data = s(masterDir=D.IN, width=DATA_WIDTH)
+    resp = s(masterDir=D.IN, width=2)
+    ready = s(masterDir=D.OUT)
+    valid = s(masterDir=D.IN)
+
+class AxiLite_w(Interface):
+    DATA_WIDTH = Param(64)
+    data = s(masterDir=D.OUT, width=DATA_WIDTH)
+    strb = s(masterDir=D.OUT, width=DATA_WIDTH.get()//8) # [TODO] Param needs something like expr, this does not work
+    ready = s(masterDir=D.IN)
+    valid = s(masterDir=D.OUT)
+    
+class AxiLite_b(Interface):
+    resp = s(masterDir=D.IN, width=2)
+    ready = s(masterDir=D.OUT)
+    valid = s(masterDir=D.IN)
+
+def inherieitAllParams(cls):
+    cls._builded()
+    for _, intf in cls._subInterfaces.items():
+        for paramName, param in cls._params.items():
+            if hasattr(intf, paramName):
+                p = getattr(intf, paramName)
+                p.inherieit(param) 
+    
+class AxiLite(Interface):
+    ADDR_WIDTH = Param(32)
+    DATA_WIDTH = Param(64)
+    aw = AxiLite_addr()
+    ar = AxiLite_addr()
+    w = AxiLite_w()
+    r = AxiLite_r()
+    b = AxiLite_b()
+inherieitAllParams(AxiLite)
+    
     
 allInterfaces = [Ap_clk, BramPort,AxiStream, Ap_hs, Ap_none]

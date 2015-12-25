@@ -6,6 +6,7 @@ from copy import deepcopy
 from vhdl_toolkit.types import DIRECTION, INTF_DIRECTION
 from hls_toolkit.errors import UnimplementedErr
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
+from build.lib.vhdl_toolkit.synthetisator.param import Param
 
 # class Param():
 #    def __init__(self, val):
@@ -65,6 +66,7 @@ class Interface(Buildable):
         assert(not cls._isBuild())
         assert(cls != Interface) # only derived classes should be builded
         cls._subInterfaces = {}
+        cls._params = {}
         
         #copy from bases
         for c in cls.__bases__:
@@ -78,6 +80,8 @@ class Interface(Buildable):
             if issubclass(pCls, Interface):
                 pCls._builded()
                 cls._subInterfaces[propName] = prop
+            elif issubclass(pCls, Param):
+                cls._params[propName] = prop
         cls._clsIsBuild = True
         
     def _rmSignals(self, rmConnetions=True):

@@ -5,6 +5,7 @@
 class Param():
     def __init__(self, initval):
         self.val = initval
+        self.parent = None
         a = 1
         for propName in dir(initval):
             prop = getattr(initval, propName)
@@ -13,9 +14,14 @@ class Param():
                     return getattr(self.val, propName)(*args, **kwargs)
                 setattr(self, propName, wrap)
     def get(self):
-        return  self.val
+        if self.parent:
+            return self.parent.get()
+        else:
+            return self.val
+        
     def inherieit(self, param):
-        self.set(param.get())
+        self.parent = param
+    
     def set(self, val):
         self.val = val
         
