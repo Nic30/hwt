@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='HWToolkit',
       version='0.1',
@@ -12,6 +12,7 @@ setup(name='HWToolkit',
         'flask'
       ],
       license='MIT',
-      packages=['hls_toolkit', 'cpp_toolkit', 'python_toolkit', 'tcl_toolkit',\
-                'vivado_toolkit', 'vhdl_toolkit' ],
+      packages = find_packages(),
+      #packages=['hls_toolkit', 'cpp_toolkit', 'python_toolkit', 'tcl_toolkit',\
+      #          'vivado_toolkit', 'vhdl_toolkit' ],
       zip_safe=False)
