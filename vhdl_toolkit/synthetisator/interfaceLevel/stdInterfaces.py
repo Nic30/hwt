@@ -6,16 +6,21 @@ D = DIRECTION
 
 
 class Ap_none(Interface):
-    def __init__(self, *destinations, masterDir=D.OUT, width=1, src=None, isExtern=False):
-        Interface.__init__(self, *destinations,masterDir=masterDir, src=src, isExtern=isExtern)
+    def __init__(self, *destinations, masterDir=D.OUT, width=1, src=None,\
+                  isExtern=False, alternativeNames=None):
+        Interface.__init__(self, *destinations, masterDir=masterDir, src=src, \
+                           isExtern=isExtern, alternativeNames=alternativeNames)
         self._width = width
 
         
-s= Ap_none        
+s = Ap_none        
 
-class Ap_clk(Interface):
-    ap_clk = s(masterDir=D.OUT)
-        
+class Ap_clk(Ap_none):
+    pass
+
+class Ap_rst_n(Ap_none):
+    pass
+    
 class Ap_hs(Interface):
     DATA_WIDTH = Param(64)
     data = s(masterDir=D.OUT, width=DATA_WIDTH)
@@ -35,7 +40,7 @@ class BramPort(Interface):
 class AxiStream(Interface):
     DATA_WIDTH = Param(64)
     last = s(masterDir=D.OUT)
-    strb = s(masterDir=D.OUT, width=DATA_WIDTH.get()//8) # [TODO] Param needs something like expr, this does not work
+    strb = s(masterDir=D.OUT, width=DATA_WIDTH.get() // 8)  # [TODO] Param needs something like expr, this does not work
     data = s(masterDir=D.OUT, width=DATA_WIDTH)
     ready = s(masterDir=D.IN)
     valid = s(masterDir=D.OUT)
@@ -44,26 +49,26 @@ class AxiStream(Interface):
 
 class AxiLite_addr(Interface):
     ADDR_WIDTH = Param(32)
-    addr =  s(masterDir=D.OUT, width=ADDR_WIDTH)
+    addr = s(masterDir=D.OUT, width=ADDR_WIDTH, alternativeNames=['addr_v'])
     ready = s(masterDir=D.IN)
     valid = s(masterDir=D.OUT)
 
 class AxiLite_r(Interface):
     DATA_WIDTH = Param(64)
-    data = s(masterDir=D.IN, width=DATA_WIDTH)
-    resp = s(masterDir=D.IN, width=2)
+    data = s(masterDir=D.IN, width=DATA_WIDTH, alternativeNames=['data_v'])
+    resp = s(masterDir=D.IN, width=2, alternativeNames=['resp_v'])
     ready = s(masterDir=D.OUT)
     valid = s(masterDir=D.IN)
 
 class AxiLite_w(Interface):
     DATA_WIDTH = Param(64)
-    data = s(masterDir=D.OUT, width=DATA_WIDTH)
-    strb = s(masterDir=D.OUT, width=DATA_WIDTH.get()//8) # [TODO] Param needs something like expr, this does not work
+    data = s(masterDir=D.OUT, width=DATA_WIDTH, alternativeNames=['data_v'])
+    strb = s(masterDir=D.OUT, width=DATA_WIDTH.get() // 8, alternativeNames=['strb_v'])  # [TODO] Param needs something like expr, this does not work
     ready = s(masterDir=D.IN)
     valid = s(masterDir=D.OUT)
     
 class AxiLite_b(Interface):
-    resp = s(masterDir=D.IN, width=2)
+    resp = s(masterDir=D.IN, width=2, alternativeNames=['resp_v'])
     ready = s(masterDir=D.OUT)
     valid = s(masterDir=D.IN)
 
@@ -86,4 +91,8 @@ class AxiLite(Interface):
 inherieitAllParams(AxiLite)
     
     
-allInterfaces = [Ap_clk, BramPort,AxiStream, Ap_hs, Ap_none]
+allInterfaces = [
+                 AxiLite,
+                 Ap_clk, Ap_rst_n, 
+                 BramPort, AxiStream, Ap_hs, Ap_none
+                 ]

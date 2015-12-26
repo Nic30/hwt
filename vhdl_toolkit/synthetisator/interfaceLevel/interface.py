@@ -1,16 +1,11 @@
-import python_toolkit
-from python_toolkit.arrayQuery import single
+from copy import deepcopy
+from python_toolkit.arrayQuery import single, NoValueExc
 from python_toolkit.stringUtils import matchIgnorecase
 from vivado_toolkit.ip_packager.busInterface import InterfaceIncompatibilityExc
-from copy import deepcopy
 from vhdl_toolkit.types import DIRECTION, INTF_DIRECTION
-from hls_toolkit.errors import UnimplementedErr
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from build.lib.vhdl_toolkit.synthetisator.param import Param
 
-# class Param():
-#    def __init__(self, val):
-#        self.val = val
 
 class Interface(Buildable):
     """
@@ -22,21 +17,30 @@ class Interface(Buildable):
     @ivar _isExtern: If true synthetisator sets it as external port of unit
     @ivar _originEntityPort: entityPort for which was this interface created
     @ivar _originSigLvlUnit: VHDL unit for which was this interface created
+    @cvar _alternativeNames: [] of alternative names
     """
-    NAME_SEPARATOR = "_"  
-    def __init__(self, *destinations, masterDir=DIRECTION.OUT, src=None, isExtern=False):
+    NAME_SEPARATOR = "_"
+    def __init__(self, *destinations, masterDir=DIRECTION.OUT, src=None, \
+                 isExtern=False, alternativeNames=None):
         """
         @param *destinations: interfaces connected to this interface
         @param src:  interface whitch is master for this interface (if None isExtern has to be true)
         @param hasExter: if true this interface is specified as interface outside of this unit  
         """
         
-        #build all interface classes for this interface
+        # build all interface classes for this interface
         self.__class__._builded()
         self._masterDir = masterDir
+        if not alternativeNames:
+            self._alternativeNames = []
+        else:
+            self._alternativeNames = alternativeNames
+        
         
         # deepcopy interfaces from class
         self._subInterfaces = deepcopy(self.__class__._subInterfaces, {})
+        if self._alternativeNames and self._subInterfaces:
+            raise NotImplementedError('only signals can have alternative names for now') 
         for propName, prop in self._subInterfaces.items():
             setattr(self, propName, prop)
             prop._parent = self
@@ -64,13 +68,13 @@ class Interface(Buildable):
         create a _subInterfaces from class properties
         """
         assert(not cls._isBuild())
-        assert(cls != Interface) # only derived classes should be builded
+        assert(cls != Interface)  # only derived classes should be builded
         cls._subInterfaces = {}
         cls._params = {}
         
-        #copy from bases
+        # copy from bases
         for c in cls.__bases__:
-            if issubclass(c, Interface) and c != Interface: # only derived classes should be builded
+            if issubclass(c, Interface) and c != Interface:  # only derived classes should be builded
                 c._builded()
                 for intfName, intf in c._subInterfaces.items():
                     cls._subInterfaces[intfName] = intf
@@ -101,19 +105,28 @@ class Interface(Buildable):
         @return: iterator over unit ports witch probably matches with this interface
         """        
         assert(cls._clsIsBuild)
+        firstIntfNames = []
         if cls._subInterfaces:
             firstIntfName, firstIntfPort = list(cls._subInterfaces.items())[0]
-            assert(not firstIntfPort._subInterfaces)  # only one level of hierarchy is supported for now
+            _firstIntfName = firstIntfName
+            while firstIntfPort._subInterfaces:
+                _firstIntfName, firstIntfPort = list(firstIntfPort._subInterfaces.items())[0]
+                if firstIntfPort._subInterfaces:
+                    firstIntfName += (cls.NAME_SEPARATOR + _firstIntfName)
+            firstIntfNames.append(firstIntfName + cls.NAME_SEPARATOR + _firstIntfName)
+            for alternativeName in firstIntfPort._alternativeNames:
+                firstIntfNames.append(firstIntfName + cls.NAME_SEPARATOR + alternativeName)
         else:
-            firstIntfName = ""
-            
+            firstIntfNames.append("")
+        
         for p in entity.port:
-            if not hasattr(p, "_interface") and p.name.lower().endswith(prefix + firstIntfName):
-                prefixLen = len(prefix) + len(firstIntfName)
-                if prefixLen == 0:
-                    yield p.name
-                else:
-                    yield p.name[:-prefixLen]
+            for firstIntfName in firstIntfNames:
+                if not hasattr(p, "_interface") and p.name.lower().endswith(prefix + firstIntfName):
+                    prefixLen = len(prefix) + len(firstIntfName)
+                    if prefixLen == 0:
+                        yield p.name
+                    else:
+                        yield p.name[:-prefixLen]
                 
     def _unExtrac(self):
         """Revent extracting process for this interface"""
@@ -132,12 +145,31 @@ class Interface(Buildable):
         """
         allDirMatch = True
         noneDirMatch = True
+        
         if self._subInterfaces:
+            if prefix != '':
+                prefix += self.NAME_SEPARATOR
+ 
             try:
                 for intfName, intf in self._subInterfaces.items():
                     assert(intf._name == intfName)
-                    intf._tryToExtractByName(prefix + intfName, sigLevelUnit)
-                    dirMatches = intf._originEntityPort.direction == intf._masterDir
+                    try:
+                        intf._tryToExtractByName(prefix + intf._name, sigLevelUnit)
+                    except InterfaceIncompatibilityExc as e:
+                        foundFlag = False
+                        for altName in intf._alternativeNames:
+                            try:
+                                intf._tryToExtractByName(prefix + altName, sigLevelUnit)
+                                foundFlag = True
+                                break
+                            except InterfaceIncompatibilityExc:
+                                pass
+                        if not foundFlag:
+                            raise e
+                    if intf._subInterfaces:
+                        dirMatches = intf._direction == INTF_DIRECTION.MASTER
+                    else:
+                        dirMatches = intf._originEntityPort.direction == intf._masterDir
                     allDirMatch = allDirMatch and dirMatches
                     noneDirMatch = noneDirMatch  and not dirMatches     
             except InterfaceIncompatibilityExc as e:
@@ -154,7 +186,7 @@ class Interface(Buildable):
                     self._direction = DIRECTION.asIntfDirection(self._masterDir)
                 else:
                     self._direction = DIRECTION.asIntfDirection(DIRECTION.oposite(self._masterDir)) 
-            except python_toolkit.arrayQuery.NoValueExc:
+            except NoValueExc:
                 self._unExtrac()
                 raise InterfaceIncompatibilityExc("Missing " + prefix)
         if allDirMatch:
@@ -174,11 +206,11 @@ class Interface(Buildable):
         cls._builded()
         for name in cls._extractPossibleInstanceNames(sigLevelUnit.entity):
             try:
-                intf = cls(isExtern=True)._tryToExtractByName(name, sigLevelUnit)
                 if name.endswith('_'):
                     name = name[:-1]  # trim _
+                intf = cls(isExtern=True)._tryToExtractByName(name, sigLevelUnit)
                 yield (name, intf) 
-            except InterfaceIncompatibilityExc:
+            except InterfaceIncompatibilityExc as e:
                 pass
                    
     def _connectTo(self, master):
@@ -200,7 +232,7 @@ class Interface(Buildable):
                     raise Exception("Interface direction improperly configured")
         else:
             if self._isExtern:
-                assert(self._direction == INTF_DIRECTION.SLAVE) # slave for outside master for inside 
+                assert(self._direction == INTF_DIRECTION.SLAVE)  # slave for outside master for inside 
             self._sig.assignFrom(master._sig)
     
     def _propagateConnection(self):
@@ -261,7 +293,7 @@ class Interface(Buildable):
             s.append("_width=%s" % str(self._width))
         if hasattr(self, '_masterDir'):
             s.append("_masterDir=%s" % str(self._masterDir))
-        return "<%s>" % (', '.join(s) )
+        return "<%s>" % (', '.join(s))
     
     
     

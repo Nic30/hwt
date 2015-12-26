@@ -59,7 +59,7 @@ def addSignal(fnNode, name, sigType):
                                  value=Call_simple("intbv", [ast.Num(sigType._val)]),
                                  slice=ast.Slice(lower=ast.Num(sigType._nrbits), upper=None, step=None))]
     else:
-        raise errors.UnimplementedErr()
+        raise NotImplementedError()
     fnNode.body.insert(indx, ast.Assign(targets=[ast.Name(id=name)],
                                         value=Call_simple("Signal", sigType)))
     

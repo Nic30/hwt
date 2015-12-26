@@ -99,7 +99,7 @@ class Unit(Buildable):
         if self._origin:
             assert(self._entity)
             with open(self._origin) as f:
-                s = [f.read()]
+                s = ['--%s' % (self._origin)]#[f.read()]
         else:
             cntx = Context(name)
             externInterf = [] 

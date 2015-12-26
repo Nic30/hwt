@@ -27,6 +27,3 @@ class MissingConfAttribErr(ConfError):
 
 class InvalidAsign(Exception):
     pass
-
-class UnimplementedErr(Exception):
-    pass
