@@ -86,7 +86,7 @@ class Interface(Buildable):
                 cls._subInterfaces[propName] = prop
             elif issubclass(pCls, Param):
                 cls._params[propName] = prop
-        cls._clsIsBuild = True
+        cls._clsBuildFor = cls
         
     def _rmSignals(self, rmConnetions=True):
         """Remove all signals from this interface (used after unit is synthetized
@@ -104,25 +104,27 @@ class Interface(Buildable):
         """
         @return: iterator over unit ports witch probably matches with this interface
         """        
-        assert(cls._clsIsBuild)
+        assert(cls._isBuild())
         firstIntfNames = []
         if cls._subInterfaces:
-            firstIntfName, firstIntfPort = list(cls._subInterfaces.items())[0]
-            _firstIntfName = firstIntfName
-            while firstIntfPort._subInterfaces:
-                _firstIntfName, firstIntfPort = list(firstIntfPort._subInterfaces.items())[0]
-                if firstIntfPort._subInterfaces:
-                    firstIntfName += (cls.NAME_SEPARATOR + _firstIntfName)
-            firstIntfNames.append(firstIntfName + cls.NAME_SEPARATOR + _firstIntfName)
-            for alternativeName in firstIntfPort._alternativeNames:
-                firstIntfNames.append(firstIntfName + cls.NAME_SEPARATOR + alternativeName)
+            parent = cls
+            child= cls
+            while child._subInterfaces:
+                parent = child
+                _childName, child = list(child._subInterfaces.items())[0]
+                if child._subInterfaces:
+                    prefix += (parent.NAME_SEPARATOR + _childName)
+                    
+            firstIntfNames.append(prefix + parent.NAME_SEPARATOR + _childName)
+            for alternativeName in child._alternativeNames:
+                firstIntfNames.append(prefix + parent.NAME_SEPARATOR + alternativeName)
         else:
             firstIntfNames.append("")
         
         for p in entity.port:
             for firstIntfName in firstIntfNames:
-                if not hasattr(p, "_interface") and p.name.lower().endswith(prefix + firstIntfName):
-                    prefixLen = len(prefix) + len(firstIntfName)
+                if not hasattr(p, "_interface") and p.name.lower().endswith(firstIntfName):
+                    prefixLen = len(firstIntfName)
                     if prefixLen == 0:
                         yield p.name
                     else:
@@ -232,7 +234,7 @@ class Interface(Buildable):
                     raise Exception("Interface direction improperly configured")
         else:
             if self._isExtern:
-                assert(self._direction == INTF_DIRECTION.SLAVE)  # slave for outside master for inside 
+                assert(self._direction == INTF_DIRECTION.oposite(master._direction))  # slave for outside master for inside 
             self._sig.assignFrom(master._sig)
     
     def _propagateConnection(self):

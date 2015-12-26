@@ -113,7 +113,7 @@ class PortConnection():
         s_w = self.sig.var_type.width
         if p_w > s_w:  # if port item is wider fill signal with zeros
             diff = p_w - s_w
-            return '%s => %s & X"' + "%0" + str(diff) + 'd"' % (self.portItem.name, self.sig.name, 0) 
+            return ('%s => %s & X"' + "%0" + str(diff) + 'd"') % (self.portItem.name, self.sig.name, 0) 
         elif p_w < s_w:  # if signal is wider take lower part
             return '%s => %s( %d downto 0)' % (self.portItem.name, self.sig.name, p_w - 1)
         else:

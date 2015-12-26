@@ -27,15 +27,19 @@ class Ap_hs(Interface):
     rd = s(masterDir=D.IN)
     vld = s(masterDir=D.OUT)
 
-class BramPort(Interface):
+
+class BramPort_withoutClk(Interface):
     ADDR_WIDTH = Param(32)
     DATA_WIDTH = Param(64) 
-    clk = s(masterDir=D.OUT)
-    addr = s(masterDir=D.OUT, width=ADDR_WIDTH)
-    din = s(masterDir=D.OUT, width=DATA_WIDTH)
-    dout = s(masterDir=D.IN, width=DATA_WIDTH)
-    # en = s("_en", masterDir=D.OUT)
+    addr = s(masterDir=D.OUT, width=ADDR_WIDTH, alternativeNames=['addr_v'])
+    din = s(masterDir=D.OUT, width=DATA_WIDTH, alternativeNames=['din_v'])
+    dout = s(masterDir=D.IN, width=DATA_WIDTH, alternativeNames=['dout_v'])
+    en = s(masterDir=D.OUT)
     we = s(masterDir=D.OUT)   
+
+class BramPort(BramPort_withoutClk):
+    clk = s(masterDir=D.OUT)
+
     
 class AxiStream(Interface):
     DATA_WIDTH = Param(64)
@@ -89,10 +93,68 @@ class AxiLite(Interface):
     r = AxiLite_r()
     b = AxiLite_b()
 inherieitAllParams(AxiLite)
+
+class AxiLite_addr_xil(AxiLite_addr):
+    NAME_SEPARATOR = ''
+
+class AxiLite_r_xil(AxiLite_r):
+    NAME_SEPARATOR = ''
+
+class AxiLite_w_xil(AxiLite_w):
+    NAME_SEPARATOR = ''
+
+class AxiLite_b_xil(AxiLite_b):
+    NAME_SEPARATOR = ''
     
+
+class AxiLite_xil(AxiLite):
+    aw = AxiLite_addr_xil()
+    ar = AxiLite_addr_xil()
+    w = AxiLite_w_xil()
+    r = AxiLite_r_xil()
+    b = AxiLite_b_xil()   
+inherieitAllParams(AxiLite)
+
+
+class Axi4_addr(AxiLite_addr):
+    ID_WIDTH = Param(3)
+    id = s(masterDir=D.OUT, width = ID_WIDTH, alternativeNames=['id_v'])
+    burst = s(masterDir=D.OUT, width=2, alternativeNames=['burst_v'])
+    cache = s(masterDir=D.OUT, width=4, alternativeNames=['cache_v'])
+    len = s(masterDir=D.OUT, width=7, alternativeNames=['len_v'])
+    lock = s(masterDir=D.OUT, width=2, alternativeNames=['lock_v'])
+    prot = s(masterDir=D.OUT, width=3, alternativeNames=['prot_v'])
+    size = s(masterDir=D.OUT, width=3, alternativeNames=['size_v'])
+    qos = s(masterDir=D.OUT, width=4, alternativeNames=['qos_v'])
+
+
+class Axi4_r(AxiLite_r):
+    ID_WIDTH = Param(3)
+    id = s(masterDir=D.IN, width=ID_WIDTH, alternativeNames=['id_v'])
+    last = s(masterDir=D.IN)
+
+class Axi4_w(AxiLite_w):
+    ID_WIDTH = Param(3)
+    id = s(masterDir=D.OUT, width=ID_WIDTH, alternativeNames=['id_v'])
+    last = s(masterDir=D.OUT)
     
-allInterfaces = [
+class Axi4_b(AxiLite_b):
+    ID_WIDTH = Param(3)
+    id = s(masterDir=D.IN, width=ID_WIDTH, alternativeNames=['id_v'])
+
+class Axi4(AxiLite):
+    ID_WIDTH = Param(3)
+    aw = Axi4_addr()
+    ar = Axi4_addr()
+    w = Axi4_w()
+    r = Axi4_r()
+    b = Axi4_b()   
+inherieitAllParams(Axi4) 
+    
+allInterfaces = [Axi4,
                  AxiLite,
+                 AxiLite_xil,
                  Ap_clk, Ap_rst_n, 
-                 BramPort, AxiStream, Ap_hs, Ap_none
+                 BramPort,BramPort_withoutClk,
+                 AxiStream, Ap_hs, Ap_none
                  ]

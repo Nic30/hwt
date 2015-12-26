@@ -5,8 +5,8 @@ class Buildable():
     """
     @classmethod
     def _isBuild(cls):
-        return hasattr(cls, "_clsIsBuild")
+        return hasattr(cls, "_clsBuildFor") and cls._clsBuildFor == cls 
     @classmethod
     def _builded(cls):
-        if not hasattr(cls, "_clsIsBuild"):
+        if not cls._isBuild():
             cls._build()   

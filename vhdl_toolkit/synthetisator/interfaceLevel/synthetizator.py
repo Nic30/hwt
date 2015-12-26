@@ -71,7 +71,7 @@ class Unit(Buildable):
                 cls._interfaces[propName] = prop
             elif issubclass(prop.__class__, Unit):
                 cls._subUnits[propName] = prop       
-        cls._clsIsBuild = True
+        cls._clsBuildFor = cls
     def _cleanAsSubunit(self):
         for _, i in self._interfaces.items():
             i._rmSignals()
