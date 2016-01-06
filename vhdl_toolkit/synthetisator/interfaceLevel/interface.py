@@ -27,6 +27,7 @@ class Interface(Buildable):
         @param src:  interface whitch is master for this interface (if None isExtern has to be true)
         @param hasExter: if true this interface is specified as interface outside of this unit  
         """
+        #[TODO] name for interface if name is specified it should not be overridden
         
         # build all interface classes for this interface
         self.__class__._builded()
@@ -119,7 +120,7 @@ class Interface(Buildable):
             for alternativeName in child._alternativeNames:
                 firstIntfNames.append(prefix + parent.NAME_SEPARATOR + alternativeName)
         else:
-            firstIntfNames.append("")
+            firstIntfNames.append(cls._baseName)
         
         for p in entity.port:
             for firstIntfName in firstIntfNames:
@@ -138,17 +139,17 @@ class Interface(Buildable):
                     del intfConfMap._originEntityPort._interface
                 del intfConfMap._originEntityPort
                 del intfConfMap._originSigLvlUnit
-    
       
     def _tryToExtractByName(self, prefix, sigLevelUnit):
         """
         @return: self if extraction was successful
         @raise InterfaceIncompatibilityExc: if this interface with this prefix does not fit to this entity 
         """
-        allDirMatch = True
-        noneDirMatch = True
+
         
         if self._subInterfaces:
+            allDirMatch = True
+            noneDirMatch = True
             if prefix != '':
                 prefix += self.NAME_SEPARATOR
  
@@ -178,6 +179,14 @@ class Interface(Buildable):
                 for intfName, intf in self._subInterfaces.items():
                     intf._unExtrac()
                 raise e
+            if allDirMatch:
+                self._direction = INTF_DIRECTION.MASTER
+            elif noneDirMatch:
+                self._direction = INTF_DIRECTION.SLAVE
+            else:
+                self._unExtrac()
+                raise InterfaceIncompatibilityExc("Direction mismatch")
+        
         else:
             try:
                 self._originEntityPort = single(sigLevelUnit.entity.port, lambda p : matchIgnorecase(p.name, prefix))
@@ -191,13 +200,7 @@ class Interface(Buildable):
             except NoValueExc:
                 self._unExtrac()
                 raise InterfaceIncompatibilityExc("Missing " + prefix)
-        if allDirMatch:
-            self._direction = INTF_DIRECTION.MASTER
-        elif noneDirMatch:
-            self._direction = INTF_DIRECTION.SLAVE
-        else:
-            self._unExtrac()
-            raise InterfaceIncompatibilityExc("Direction mismatch")
+
         return self
     
     @classmethod        
@@ -296,7 +299,5 @@ class Interface(Buildable):
         if hasattr(self, '_masterDir'):
             s.append("_masterDir=%s" % str(self._masterDir))
         return "<%s>" % (', '.join(s))
-    
-    
     
     

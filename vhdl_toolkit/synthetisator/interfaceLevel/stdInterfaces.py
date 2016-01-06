@@ -4,22 +4,21 @@ from vhdl_toolkit.synthetisator.param import Param
 
 D = DIRECTION
 
-
 class Ap_none(Interface):
-    def __init__(self, *destinations, masterDir=D.OUT, width=1, src=None,\
+    _baseName = ''
+    def __init__(self, *destinations, masterDir=DIRECTION.OUT, width=1, src=None, \
                   isExtern=False, alternativeNames=None):
         Interface.__init__(self, *destinations, masterDir=masterDir, src=src, \
                            isExtern=isExtern, alternativeNames=alternativeNames)
         self._width = width
 
-        
 s = Ap_none        
 
 class Ap_clk(Ap_none):
-    pass
+    _baseName = 'ap_clk'
 
 class Ap_rst_n(Ap_none):
-    pass
+    _baseName = 'ap_rst_n'
     
 class Ap_hs(Interface):
     DATA_WIDTH = Param(64)
@@ -118,7 +117,7 @@ inherieitAllParams(AxiLite)
 
 class Axi4_addr(AxiLite_addr):
     ID_WIDTH = Param(3)
-    id = s(masterDir=D.OUT, width = ID_WIDTH, alternativeNames=['id_v'])
+    id = s(masterDir=D.OUT, width=ID_WIDTH, alternativeNames=['id_v'])
     burst = s(masterDir=D.OUT, width=2, alternativeNames=['burst_v'])
     cache = s(masterDir=D.OUT, width=4, alternativeNames=['cache_v'])
     len = s(masterDir=D.OUT, width=7, alternativeNames=['len_v'])
@@ -154,7 +153,6 @@ inherieitAllParams(Axi4)
 allInterfaces = [Axi4,
                  AxiLite,
                  AxiLite_xil,
-                 Ap_clk, Ap_rst_n, 
-                 BramPort,BramPort_withoutClk,
-                 AxiStream, Ap_hs, Ap_none
+                 BramPort, BramPort_withoutClk,
+                 AxiStream, Ap_hs, Ap_clk, Ap_rst_n, Ap_none
                  ]

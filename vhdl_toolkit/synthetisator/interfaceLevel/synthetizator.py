@@ -21,7 +21,7 @@ class Unit(Buildable):
                 this mean you can connect it to class interface definitions for example 
     """
     _origin = None
-    def __init__(self):
+    def __init__(self, intfClasses=allInterfaces):
         self._component = None
         self._entity = None
         self.__class__._builded()
@@ -41,14 +41,14 @@ class Unit(Buildable):
                 setattr(self, g.name, g.defaultVal)
             self._sigLvlUnit = VHDLUnit(self._entity)
 
-            for intfCls in allInterfaces:
+            for intfCls in intfClasses:
                 for intfName, interface in intfCls._tryToExtract(self._sigLvlUnit):
                     if hasattr(self, intfName):
                         raise  Exception("Already has " + intfName)
                     self._interfaces[intfName] = interface
                     setIntfAsExtern(interface)
             for p in self._entity.port:
-                assert(hasattr(p, '_interface') and p._interface) #every port should have interface (Ap_none at least)        
+                assert(hasattr(p, '_interface') and p._interface)  # every port should have interface (Ap_none at least)        
         for intfName, interface in self._interfaces.items():
             interface._name = intfName
             interface._parent = self
@@ -99,7 +99,7 @@ class Unit(Buildable):
         if self._origin:
             assert(self._entity)
             with open(self._origin) as f:
-                s = ['--%s' % (self._origin)]#[f.read()]
+                s = ['--%s' % (self._origin)]  # [f.read()]
         else:
             cntx = Context(name)
             externInterf = [] 
@@ -126,7 +126,7 @@ class Unit(Buildable):
             
             if not externInterf:
                 raise  Exception("Can not find any external interface for unit " + name \
-                                  + "- there is no such a thing as unit without interfaces" )
+                                  + "- there is no such a thing as unit without interfaces")
 
             # synthetize signal level context
             s = cntx.synthetize(externInterf)
@@ -142,6 +142,7 @@ class Unit(Buildable):
             
         self._component = Component(self._entity)
         self._cleanAsSubunit() 
-        if not self._origin: # already was reversed
-            for _ , intf in self._interfaces.items():
+        if not self._origin:  # already was reversed
+            for _ , intf in self._interfaces.items(): 
+                # reverse because other components looks at this one from outside
                 intf._reverseDirection()       

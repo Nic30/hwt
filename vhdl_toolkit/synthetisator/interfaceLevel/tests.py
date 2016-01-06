@@ -1,12 +1,13 @@
 import unittest
-from vhdl_toolkit.samples.GroupOfBlockrams_iLvl import Bram
 from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import BramPort
 from vhdl_toolkit.types import INTF_DIRECTION, DIRECTION
-import os
-from vhdl_toolkit.samples.simplest_iLvl import SimplestUnit
 from python_toolkit.arrayQuery import where
 
-os.chdir("../../../samples/")
+from vhdl_toolkit.samples.simplest_iLvl import SimplestUnit
+from vhdl_toolkit.samples.bram import Bram
+
+INTF_D = INTF_DIRECTION
+D = DIRECTION
 
 class TestStringMethods(unittest.TestCase):
     def test_bramIntfDiscovered(self):
@@ -20,26 +21,26 @@ class TestStringMethods(unittest.TestCase):
         
     def test_simplePortDirections(self):
         bram = Bram()
-        self.assertEqual(bram.a._direction, INTF_DIRECTION.SLAVE)
-        self.assertEqual(bram.a.clk._direction, INTF_DIRECTION.SLAVE)
-        self.assertEqual(bram.a.addr._direction, INTF_DIRECTION.SLAVE)
-        self.assertEqual(bram.a.din._direction, INTF_DIRECTION.SLAVE)
-        self.assertEqual(bram.a.dout._direction, INTF_DIRECTION.MASTER)
-        self.assertEqual(bram.a.we._direction, INTF_DIRECTION.SLAVE)
+        self.assertEqual(bram.a._direction, INTF_D.SLAVE)
+        self.assertEqual(bram.a.clk._direction, INTF_D.SLAVE)
+        self.assertEqual(bram.a.addr._direction, INTF_D.SLAVE)
+        self.assertEqual(bram.a.din._direction, INTF_D.SLAVE)
+        self.assertEqual(bram.a.dout._direction, INTF_D.MASTER)
+        self.assertEqual(bram.a.we._direction, INTF_D.SLAVE)
         
-        self.assertEqual(bram.b._direction, INTF_DIRECTION.SLAVE)
-        self.assertEqual(bram.b.clk._direction, INTF_DIRECTION.SLAVE)
-        self.assertEqual(bram.b.addr._direction, INTF_DIRECTION.SLAVE)
-        self.assertEqual(bram.b.din._direction, INTF_DIRECTION.SLAVE)
-        self.assertEqual(bram.b.dout._direction, INTF_DIRECTION.MASTER)
-        self.assertEqual(bram.b.we._direction, INTF_DIRECTION.SLAVE)
+        self.assertEqual(bram.b._direction, INTF_D.SLAVE)
+        self.assertEqual(bram.b.clk._direction, INTF_D.SLAVE)
+        self.assertEqual(bram.b.addr._direction, INTF_D.SLAVE)
+        self.assertEqual(bram.b.din._direction, INTF_D.SLAVE)
+        self.assertEqual(bram.b.dout._direction, INTF_D.MASTER)
+        self.assertEqual(bram.b.we._direction, INTF_D.SLAVE)
         
     def test_signalInstances(self):
         bram = SimplestUnit()
         for x in bram._synthesise("simple"):
             pass
-
-        self.assertNotEqual(bram.a._sig, bram.b._sig, 'signal instances are properly instanciated')
+    
+        self.assertNotEqual(bram.a, bram.b, 'instances are properly instanciated')
         
         port_a = list(where(bram._entity.port, lambda x: x.name == "a"))
         port_b = list(where(bram._entity.port, lambda x: x.name == "b"))
@@ -50,9 +51,9 @@ class TestStringMethods(unittest.TestCase):
         port_b = port_b[0]
         
         self.assertEqual(len(bram._entity.port), 2, 'entity has right number of ports')
-
-        self.assertEqual(port_a.direction, DIRECTION.IN, 'port a has src that means it should be input')
-        self.assertEqual(port_b.direction, DIRECTION.OUT, 'port b has no src that means it should be output')
+    
+        self.assertEqual(port_a.direction, D.IN, 'port a has src that means it should be input')
+        self.assertEqual(port_b.direction, D.OUT, 'port b has no src that means it should be output')
 
 
 
