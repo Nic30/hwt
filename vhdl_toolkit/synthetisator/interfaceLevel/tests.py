@@ -55,10 +55,6 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(port_a.direction, D.IN, 'port a has src that means it should be input')
         self.assertEqual(port_b.direction, D.OUT, 'port b has no src that means it should be output')
 
-
-
-        
-        
         
 if __name__ == '__main__':
     unittest.main()

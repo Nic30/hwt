@@ -3,7 +3,7 @@ from vhdl_toolkit.formater import formatVhdl
 
 
 class SimplestUnit_b(Unit):
-    _origin = 'simplest_b.vhd'
+    _origin = 'vhdl/simplest_b.vhd'
 
 if __name__ == "__main__":
     u = SimplestUnit_b()
