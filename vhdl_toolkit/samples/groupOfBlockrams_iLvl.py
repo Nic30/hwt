@@ -2,9 +2,8 @@ from vhdl_toolkit.synthetisator.interfaceLevel.synthetizator import Unit
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import Ap_none
 from vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.samples.bram import Bram
 
-class Bram(Unit):
-    _origin = "dualportRAM.vhd"
 
 class GroupOfBlockrams(Unit):
     ADDR_WIDTH = Param(32)
