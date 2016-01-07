@@ -48,12 +48,12 @@ class Interface(Buildable):
             prop._name = propName
             self._subInterfaces[propName] = getattr(self, propName)
         
+        d = DIRECTION.asIntfDirection(self._masterDir)
+        self._src = src
         if isExtern and not src:
-            self._src = None
-            self._direction = INTF_DIRECTION.MASTER
+            self._direction = d
         else:
-            self._src = src
-            self._direction = INTF_DIRECTION.SLAVE
+            self._direction = INTF_DIRECTION.oposite(d)
         self._isExtern = isExtern
             
         self._destinations = list(destinations)
@@ -237,7 +237,9 @@ class Interface(Buildable):
                     raise Exception("Interface direction improperly configured")
         else:
             if self._isExtern:
-                assert(self._direction == INTF_DIRECTION.oposite(master._direction))  # slave for outside master for inside 
+                if not self._direction == INTF_DIRECTION.oposite(master._direction):
+                    # slave for outside master for inside
+                    raise Exception("Both interfaces has same direction (%s) and can not be connected together (%s <= %s)" % (master._direction, str(self), str(master))) 
             self._sig.assignFrom(master._sig)
     
     def _propagateConnection(self):

@@ -24,7 +24,9 @@ class Param():
     
     def set(self, val):
         self.val = val
-        
+    
+    def __str__(self):
+        return "<%s, val=%s>" %(str(self.__class__), self.get()) 
         
 def getParam(p):
     if isinstance(p,Param):

@@ -4,6 +4,16 @@ from vhdl_toolkit.synthetisator.param import Param
 
 D = DIRECTION
 
+def inherieitAllParams(cls):
+    '''foreach subinterface inheriate parameters'''
+    cls._builded()
+    for _, intf in cls._subInterfaces.items():
+        for paramName, param in cls._params.items():
+            if hasattr(intf, paramName):
+                p = getattr(intf, paramName)
+                p.inherieit(param)
+    return cls
+
 class Ap_none(Interface):
     _baseName = ''
     def __init__(self, *destinations, masterDir=DIRECTION.OUT, width=1, src=None, \
@@ -75,14 +85,8 @@ class AxiLite_b(Interface):
     ready = s(masterDir=D.OUT)
     valid = s(masterDir=D.IN)
 
-def inherieitAllParams(cls):
-    cls._builded()
-    for _, intf in cls._subInterfaces.items():
-        for paramName, param in cls._params.items():
-            if hasattr(intf, paramName):
-                p = getattr(intf, paramName)
-                p.inherieit(param) 
-    
+
+@inherieitAllParams    
 class AxiLite(Interface):
     ADDR_WIDTH = Param(32)
     DATA_WIDTH = Param(64)
@@ -91,7 +95,6 @@ class AxiLite(Interface):
     w = AxiLite_w()
     r = AxiLite_r()
     b = AxiLite_b()
-inherieitAllParams(AxiLite)
 
 class AxiLite_addr_xil(AxiLite_addr):
     NAME_SEPARATOR = ''
@@ -105,15 +108,13 @@ class AxiLite_w_xil(AxiLite_w):
 class AxiLite_b_xil(AxiLite_b):
     NAME_SEPARATOR = ''
     
-
+@inherieitAllParams   
 class AxiLite_xil(AxiLite):
     aw = AxiLite_addr_xil()
     ar = AxiLite_addr_xil()
     w = AxiLite_w_xil()
     r = AxiLite_r_xil()
     b = AxiLite_b_xil()   
-inherieitAllParams(AxiLite)
-
 
 class Axi4_addr(AxiLite_addr):
     ID_WIDTH = Param(3)
@@ -141,6 +142,7 @@ class Axi4_b(AxiLite_b):
     ID_WIDTH = Param(3)
     id = s(masterDir=D.IN, width=ID_WIDTH, alternativeNames=['id_v'])
 
+@inherieitAllParams
 class Axi4(AxiLite):
     ID_WIDTH = Param(3)
     aw = Axi4_addr()
@@ -148,9 +150,28 @@ class Axi4(AxiLite):
     w = Axi4_w()
     r = Axi4_r()
     b = Axi4_b()   
-inherieitAllParams(Axi4) 
+
+class Axi4_addr_xil(Axi4_addr):
+    NAME_SEPARATOR = ''
+class Axi4_r_xil(Axi4_r):
+    NAME_SEPARATOR = ''
+class Axi4_w_xil(Axi4_w):
+    NAME_SEPARATOR = ''
+class Axi4_b_xil(Axi4_b):
+    NAME_SEPARATOR = ''
+
+
+@inherieitAllParams
+class Axi4_xil(Axi4):
+    ar = Axi4_addr_xil()
+    aw = Axi4_addr_xil()
+    r = Axi4_r_xil()
+    w = Axi4_w_xil()
+    b = Axi4_b_xil()  
+
     
 allInterfaces = [Axi4,
+                 Axi4_xil,
                  AxiLite,
                  AxiLite_xil,
                  BramPort, BramPort_withoutClk,

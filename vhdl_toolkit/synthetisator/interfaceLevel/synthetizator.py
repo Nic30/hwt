@@ -91,10 +91,12 @@ class Unit(Buildable):
                 interface._originSigLvlUnit = self._sigLvlUnit
                 interface._originEntityPort = portItem
     
-    def _synthesise(self, name):
+    def _synthesise(self, name=None):
         """
         synthesize all subunits, make connections between them, build entity and component for this unit
         """
+        if not name:
+            name = self.__class__.__name__
         self._name = name
         if self._origin:
             assert(self._entity)

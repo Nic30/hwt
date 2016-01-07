@@ -19,7 +19,7 @@ entity Axi_basic_slave is
 		-- Write channel Protection type. This signal indicates the
 		-- privilege and security level of the transaction, and whether
 		-- the transaction is a data access or an instruction access.
-		S_AXI_AWPROT  : in  std_logic_vector(2 downto 0);
+		--S_AXI_AWPROT  : in  std_logic_vector(2 downto 0);
 		-- Write address valid. This signal indicates that the master signaling
 		-- valid write address and control information.
 		S_AXI_AWVALID : in  std_logic;
@@ -52,7 +52,7 @@ entity Axi_basic_slave is
 		-- Protection type. This signal indicates the privilege
 		-- and security level of the transaction, and whether the
 		-- transaction is a data access or an instruction access.
-		S_AXI_ARPROT  : in  std_logic_vector(2 downto 0);
+		--S_AXI_ARPROT  : in  std_logic_vector(2 downto 0);
 		-- Read address valid. This signal indicates that the channel
 		-- is signaling valid read address and control information.
 		S_AXI_ARVALID : in  std_logic;

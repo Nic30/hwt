@@ -5,39 +5,64 @@ from python_toolkit.arrayQuery import where
 
 from vhdl_toolkit.samples.simplest_iLvl import SimplestUnit
 from vhdl_toolkit.samples.bram import Bram
+from vhdl_toolkit.samples.axi_basic import AxiLiteBasicSlave, AxiLiteSlaveContainer
 
 INTF_D = INTF_DIRECTION
 D = DIRECTION
 
 class TestStringMethods(unittest.TestCase):
+    def assertIsM(self, intf):
+        self.assertEqual(intf._direction, INTF_D.MASTER)
+    def assertIsS(self, intf):
+        self.assertEqual(intf._direction, INTF_D.SLAVE)
     def test_bramIntfDiscovered(self):
         bram = Bram()
         self.assertTrue(hasattr(bram, 'a'), 'port a found')
         self.assertTrue(hasattr(bram, 'b'), 'port b found')
         for p in [bram.a, bram.b]:
             for propName, prop in BramPort._subInterfaces.items():
-                self.assertTrue(hasattr(p, propName), 'bram port has '+ propName)
+                self.assertTrue(hasattr(p, propName), 'bram port has ' + propName)
         
         
     def test_simplePortDirections(self):
         bram = Bram()
-        self.assertEqual(bram.a._direction, INTF_D.SLAVE)
-        self.assertEqual(bram.a.clk._direction, INTF_D.SLAVE)
-        self.assertEqual(bram.a.addr._direction, INTF_D.SLAVE)
-        self.assertEqual(bram.a.din._direction, INTF_D.SLAVE)
-        self.assertEqual(bram.a.dout._direction, INTF_D.MASTER)
-        self.assertEqual(bram.a.we._direction, INTF_D.SLAVE)
+        self.assertIsS(bram.a)
+        self.assertIsS(bram.a.clk)
+        self.assertIsS(bram.a.addr)
+        self.assertIsS(bram.a.din)
+        self.assertIsM(bram.a.dout)
+        self.assertIsS(bram.a.we)
         
-        self.assertEqual(bram.b._direction, INTF_D.SLAVE)
-        self.assertEqual(bram.b.clk._direction, INTF_D.SLAVE)
-        self.assertEqual(bram.b.addr._direction, INTF_D.SLAVE)
-        self.assertEqual(bram.b.din._direction, INTF_D.SLAVE)
-        self.assertEqual(bram.b.dout._direction, INTF_D.MASTER)
-        self.assertEqual(bram.b.we._direction, INTF_D.SLAVE)
+        self.assertIsS(bram.b)
+        self.assertIsS(bram.b.clk)
+        self.assertIsS(bram.b.addr)
+        self.assertIsS(bram.b.din)
+        self.assertIsM(bram.b.dout)
+        self.assertIsS(bram.b.we)
+
         
+    def test_axiPortDirections(self):
+        a = AxiLiteBasicSlave()
+        self.assertIsS(a.S_AXI)
+        self.assertIsS(a.S_AXI.ar)
+        self.assertIsS(a.S_AXI.aw)
+        self.assertIsS(a.S_AXI.r)
+        self.assertIsS(a.S_AXI.w)
+        self.assertIsS(a.S_AXI.b)
+        
+        self.assertIsM(a.S_AXI.b.resp)
+        self.assertIsM(a.S_AXI.b.valid)
+        self.assertIsS(a.S_AXI.b.ready)
+        
+    def test_axiNestedDirections(self):
+        a = AxiLiteSlaveContainer()
+        self.assertIsS(a.b)
+        #[TODO] check subinterfaces
+        #self.assertIs
+               
     def test_signalInstances(self):
         bram = SimplestUnit()
-        for x in bram._synthesise("simple"):
+        for _ in bram._synthesise("simple"):
             pass
     
         self.assertNotEqual(bram.a, bram.b, 'instances are properly instanciated')
