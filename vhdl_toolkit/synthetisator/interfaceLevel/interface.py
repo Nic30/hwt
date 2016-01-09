@@ -4,7 +4,7 @@ from python_toolkit.stringUtils import matchIgnorecase
 from vivado_toolkit.ip_packager.busInterface import InterfaceIncompatibilityExc
 from vhdl_toolkit.types import DIRECTION, INTF_DIRECTION
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
-from build.lib.vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.synthetisator.param import Param
 
 
 class Interface(Buildable):
@@ -27,7 +27,7 @@ class Interface(Buildable):
         @param src:  interface whitch is master for this interface (if None isExtern has to be true)
         @param hasExter: if true this interface is specified as interface outside of this unit  
         """
-        #[TODO] name for interface if name is specified it should not be overridden
+        # [TODO] name for interface if name is specified it should not be overridden
         
         # build all interface classes for this interface
         self.__class__._builded()
@@ -48,14 +48,15 @@ class Interface(Buildable):
             prop._name = propName
             self._subInterfaces[propName] = getattr(self, propName)
         
-        d = DIRECTION.asIntfDirection(self._masterDir)
         self._src = src
-        if isExtern and not src:
-            self._direction = d
+        if src:
+            self._direction = INTF_DIRECTION.SLAVE  # for inside of unit
+            for _, i in self._subInterfaces.items():
+                i._reverseDirection()
         else:
-            self._direction = INTF_DIRECTION.oposite(d)
-        self._isExtern = isExtern
+            self._direction = INTF_DIRECTION.MASTER  # for inside of unit
             
+                
         self._destinations = list(destinations)
         self._isExtern = isExtern
     
@@ -109,7 +110,7 @@ class Interface(Buildable):
         firstIntfNames = []
         if cls._subInterfaces:
             parent = cls
-            child= cls
+            child = cls
             while child._subInterfaces:
                 parent = child
                 _childName, child = list(child._subInterfaces.items())[0]
@@ -194,9 +195,9 @@ class Interface(Buildable):
                 self._originSigLvlUnit = sigLevelUnit
                 dirMatches = self._originEntityPort.direction == self._masterDir
                 if dirMatches:
-                    self._direction = DIRECTION.asIntfDirection(self._masterDir)
+                    self._direction = INTF_DIRECTION.MASTER
                 else:
-                    self._direction = DIRECTION.asIntfDirection(DIRECTION.oposite(self._masterDir)) 
+                    self._direction = INTF_DIRECTION.SLAVE
             except NoValueExc:
                 self._unExtrac()
                 raise InterfaceIncompatibilityExc("Missing " + prefix)

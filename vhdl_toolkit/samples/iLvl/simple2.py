@@ -4,13 +4,13 @@ from vhdl_toolkit.formater import formatVhdl
 
 
 
-class SimplestUnit2(Unit):
+class SimpleUnit2(Unit):
     a = AxiStream(isExtern=True)
     b = AxiStream(src=a, isExtern=True)
 
 
 if __name__ == "__main__":
-    u = SimplestUnit2()
+    u = SimpleUnit2()
     print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise("SimplestUnit2")])
+                     "\n".join([ str(x) for x in u._synthesise()])
                      ))

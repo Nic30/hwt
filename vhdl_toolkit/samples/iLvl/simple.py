@@ -4,13 +4,13 @@ from vhdl_toolkit.formater import formatVhdl
 
 
 
-class SimplestUnit(Unit):
+class SimpleUnit(Unit):
     a = Ap_none(isExtern=True)
     b = Ap_none(src=a, isExtern=True)
 
 
 if __name__ == "__main__":
-    u = SimplestUnit()
+    u = SimpleUnit()
     print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise("SimplestUnit")])
+                     "\n".join([ str(x) for x in u._synthesise("SimpleUnit")])
                      ))

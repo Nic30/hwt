@@ -7,5 +7,5 @@ encoding//vhdl_toolkit/formater.py=utf-8
 encoding//vhdl_toolkit/lex.py=utf-8
 encoding//vhdl_toolkit/parser.py=utf-8
 encoding//vhdl_toolkit/parser_helpers.py=utf-8
-encoding//vhdl_toolkit/samples/axi_testbench.py=utf-8
+encoding//vhdl_toolkit/samples/sLvl/axi_testbench.py=utf-8
 encoding//vhdl_toolkit/testbench_generator.py=utf-8
