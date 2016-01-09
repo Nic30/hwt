@@ -1,3 +1,7 @@
+from copy import deepcopy
+import os
+import inspect
+
 from vhdl_toolkit.parser import entityFromFile
 from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import allInterfaces
 from vhdl_toolkit.synthetisator.signalLevel.context import Context
@@ -9,9 +13,7 @@ from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from python_toolkit.arrayQuery import single
 from vhdl_toolkit.synthetisator.param import Param
 
-from copy import deepcopy
-import os
-import inspect
+
 
 class Unit(Buildable):
     """
@@ -29,6 +31,7 @@ class Unit(Buildable):
         copyDict = {}
         self._interfaces = deepcopy(self.__class__._interfaces, copyDict)
         self._subUnits = deepcopy(self.__class__._subUnits, copyDict)
+        self._params = deepcopy(self.__class__._params, copyDict)
 
         if self._origin:
             def setIntfAsExtern(intf):
@@ -66,11 +69,14 @@ class Unit(Buildable):
             cls._origin = os.path.join(baseDir, cls._origin)
         cls._interfaces = {}
         cls._subUnits = {}
+        cls._params = {}
         for propName, prop in vars(cls).items():
             if isinstance(prop, Interface):
                 cls._interfaces[propName] = prop
             elif issubclass(prop.__class__, Unit):
-                cls._subUnits[propName] = prop       
+                cls._subUnits[propName] = prop
+            elif issubclass(prop.__class__, Param):
+                cls._params[propName] = prop     
         cls._clsBuildFor = cls
     def _cleanAsSubunit(self):
         for _, i in self._interfaces.items():

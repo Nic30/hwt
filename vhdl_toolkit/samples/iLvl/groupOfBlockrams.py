@@ -10,10 +10,10 @@ class GroupOfBlockrams(Unit):
     DATA_WIDTH = Param(64)
     bramR = Bram()
     bramW = Bram()
-    bramR.ADDR_WIDTH.inherieit(ADDR_WIDTH)
-    bramR.DATA_WIDTH.inherieit(DATA_WIDTH)
-    bramW.ADDR_WIDTH.inherieit(ADDR_WIDTH)
-    bramW.DATA_WIDTH.inherieit(DATA_WIDTH)
+    bramR.ADDR_WIDTH.inherit(ADDR_WIDTH)
+    bramR.DATA_WIDTH.inherit(DATA_WIDTH)
+    bramW.ADDR_WIDTH.inherit(ADDR_WIDTH)
+    bramW.DATA_WIDTH.inherit(DATA_WIDTH)
     
     ap_clk = Ap_none(bramR.a.clk, bramR.b.clk, \
                      bramW.a.clk, bramW.b.clk, \

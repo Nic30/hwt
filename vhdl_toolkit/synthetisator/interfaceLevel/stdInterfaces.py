@@ -1,18 +1,8 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
 from vhdl_toolkit.types import DIRECTION
-from vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.synthetisator.param import Param, inheritAllParams
 
 D = DIRECTION
-
-def inherieitAllParams(cls):
-    '''foreach subinterface inheriate parameters'''
-    cls._builded()
-    for _, intf in cls._subInterfaces.items():
-        for paramName, param in cls._params.items():
-            if hasattr(intf, paramName):
-                p = getattr(intf, paramName)
-                p.inherieit(param)
-    return cls
 
 class Ap_none(Interface):
     _baseName = ''
@@ -86,7 +76,7 @@ class AxiLite_b(Interface):
     valid = s(masterDir=D.IN)
 
 
-@inherieitAllParams    
+@inheritAllParams    
 class AxiLite(Interface):
     ADDR_WIDTH = Param(32)
     DATA_WIDTH = Param(64)
@@ -108,7 +98,7 @@ class AxiLite_w_xil(AxiLite_w):
 class AxiLite_b_xil(AxiLite_b):
     NAME_SEPARATOR = ''
     
-@inherieitAllParams   
+@inheritAllParams   
 class AxiLite_xil(AxiLite):
     aw = AxiLite_addr_xil()
     ar = AxiLite_addr_xil()
@@ -142,7 +132,7 @@ class Axi4_b(AxiLite_b):
     ID_WIDTH = Param(3)
     id = s(masterDir=D.IN, width=ID_WIDTH, alternativeNames=['id_v'])
 
-@inherieitAllParams
+@inheritAllParams
 class Axi4(AxiLite):
     ID_WIDTH = Param(3)
     aw = Axi4_addr()
@@ -161,7 +151,7 @@ class Axi4_b_xil(Axi4_b):
     NAME_SEPARATOR = ''
 
 
-@inherieitAllParams
+@inheritAllParams
 class Axi4_xil(Axi4):
     ar = Axi4_addr_xil()
     aw = Axi4_addr_xil()
