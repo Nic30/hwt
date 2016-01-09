@@ -33,7 +33,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertTrue(hasattr(bram, 'b'), 'port b found')
         for p in [bram.a, bram.b]:
             for propName, _ in BramPort._subInterfaces.items():
-                self.assertEqual(p._subInterfaces[propName], getattr(p, propName), "_subInterfaces['%s'] is same object as atribut" %(propName))
+                self.assertEqual(p._subInterfaces[propName], getattr(p, propName), "_subInterfaces['%s'] is same object as atribut" % (propName))
                 self.assertTrue(hasattr(p, propName), 'bram port has ' + propName)
     def test_SimpleUnit2_iLvl(self):
         """
@@ -41,7 +41,7 @@ class TestStringMethods(unittest.TestCase):
         """
         u = SimpleUnit2()
         
-        #inside
+        # inside
         self.assertIsM(u.a)
         self.assertIsM(u.a.data)
         self.assertIsM(u.a.last)
@@ -125,15 +125,25 @@ class TestStringMethods(unittest.TestCase):
         self.assertIsS(a.S_AXI.b.valid)
         self.assertIsS(a.S_AXI.b.ready)
         
-    def test_axiNestedDirections(self):
+    def test_axiParams(self):
         a = AxiLiteSlaveContainer()
-        self.assertIsS(a.b)
-        # [TODO] check subinterfaces
-        # self.assertIs
+        AW = a.ADDR_WIDTH.get()
+        DW = a.DATA_WIDTH.get()
+        
+        self.assertEqual(a.axi.ADDR_WIDTH.get(), AW)
+        self.assertEqual(a.axi.ar.ADDR_WIDTH.get(), AW)
+        self.assertEqual(a.axi.ar.addr._width.get(), AW)
+        
+        self.assertEqual(a.axi.w.strb._width.get(), DW // 8)
+        self.assertEqual(a.slv.C_S_AXI_ADDR_WIDTH.get(), AW)
+        self.assertEqual(a.slv.C_S_AXI_DATA_WIDTH.get(), DW)
+        
+        self.assertEqual(a.slv.S_AXI.ar.addr._width.get(), AW)
+        #[TODO] width of parametrized interfaces from VHDL should be Param with expr
                
     def test_signalInstances(self):
         bram = SimpleUnit()
-        for _ in bram._synthesise("simple"):
+        for _ in bram._synthesise():
             pass
     
         self.assertNotEqual(bram.a, bram.b, 'instances are properly instanciated')

@@ -11,7 +11,7 @@ from vhdl_toolkit.synthetisator.signalLevel.signal import Signal, walkSigSouces,
 from vhdl_toolkit.templates import VHDLTemplates  
 from vhdl_toolkit.types import VHDLType, VHDLBoolean
 from vhdl_toolkit.variables import PortItem
-
+from vhdl_toolkit.synthetisator.param import getParam
 
 def renderIfTree(assigments):
     # optimizedSrc = expr_optimize([dp.src])
@@ -40,9 +40,7 @@ class Context(object):
             raise Exception('signal name "%s" is not unique' % (name))
         
         t = VHDLType()
-        if hasattr(width, 'val'):
-            width = width.val
-        
+        width = getParam(width)
         t.width = width
         
         if width > 1:

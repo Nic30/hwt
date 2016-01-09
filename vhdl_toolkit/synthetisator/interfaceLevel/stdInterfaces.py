@@ -43,7 +43,7 @@ class BramPort(BramPort_withoutClk):
 class AxiStream(Interface):
     DATA_WIDTH = Param(64)
     last = s(masterDir=D.OUT)
-    strb = s(masterDir=D.OUT, width=DATA_WIDTH.get() // 8)  # [TODO] Param needs something like expr, this does not work
+    strb = s(masterDir=D.OUT, width=DATA_WIDTH.expr(lambda x: x // 8))  # [TODO] Param needs something like expr, this does not work
     data = s(masterDir=D.OUT, width=DATA_WIDTH)
     ready = s(masterDir=D.IN)
     valid = s(masterDir=D.OUT)
@@ -66,7 +66,7 @@ class AxiLite_r(Interface):
 class AxiLite_w(Interface):
     DATA_WIDTH = Param(64)
     data = s(masterDir=D.OUT, width=DATA_WIDTH, alternativeNames=['data_v'])
-    strb = s(masterDir=D.OUT, width=DATA_WIDTH.get() // 8, alternativeNames=['strb_v'])  # [TODO] Param needs something like expr, this does not work
+    strb = s(masterDir=D.OUT, width=DATA_WIDTH.expr(lambda x: x // 8), alternativeNames=['strb_v'])  # [TODO] Param needs something like expr, this does not work
     ready = s(masterDir=D.IN)
     valid = s(masterDir=D.OUT)
     

@@ -39,15 +39,21 @@ class Interface(Buildable):
         
         
         # deepcopy interfaces from class
-        self._subInterfaces = deepcopy(self.__class__._subInterfaces, {})
+        copyDict = {}
+        self._params = deepcopy(self.__class__._params, copyDict)
+        self._subInterfaces = deepcopy(self.__class__._subInterfaces, copyDict)
+
+        
         if self._alternativeNames and self._subInterfaces:
-            raise NotImplementedError('only signals can have alternative names for now') 
+            raise NotImplementedError('only signals can have alternative names for now')
+        for propName, prop in self._params.items():
+            setattr(self, propName, prop)
+              
         for propName, prop in self._subInterfaces.items():
             setattr(self, propName, prop)
             prop._parent = self
             prop._name = propName
-            self._subInterfaces[propName] = getattr(self, propName)
-        
+            
         self._src = src
         if src:
             self._direction = INTF_DIRECTION.SLAVE  # for inside of unit

@@ -8,7 +8,6 @@ from vhdl_toolkit.synthetisator.signalLevel.context import Context
 from vhdl_toolkit.architecture import Component
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from vhdl_toolkit.synthetisator.signalLevel.unit import VHDLUnit
-from vhdl_toolkit.types import INTF_DIRECTION
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from python_toolkit.arrayQuery import single
 from vhdl_toolkit.synthetisator.param import Param
@@ -29,9 +28,10 @@ class Unit(Buildable):
         self.__class__._builded()
 
         copyDict = {}
+        self._params = deepcopy(self.__class__._params, copyDict)
         self._interfaces = deepcopy(self.__class__._interfaces, copyDict)
         self._subUnits = deepcopy(self.__class__._subUnits, copyDict)
-        self._params = deepcopy(self.__class__._params, copyDict)
+
 
         if self._origin:
             def setIntfAsExtern(intf):
