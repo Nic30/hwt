@@ -7,9 +7,13 @@ setup(name='HWToolkit',
       author='Michal Orsak',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
-        'slimit', 'sympy',
-        'jinja2', 'ply',
-        'flask'
+        'slimit',
+        'sympy',
+        'jinja2', # vhdl templates renderer, visualizer renderer
+        'ply',    # old parser, vhdl interpret
+        'flask',  # visualizer
+        'antlr4-python3-runtime', # vhdl parser, lexer
+        "dill",   # for creating cache files
       ],
       license='MIT',
       packages = find_packages(),

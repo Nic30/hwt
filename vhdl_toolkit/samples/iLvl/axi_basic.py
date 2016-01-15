@@ -3,6 +3,9 @@ from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import AxiLite, Ap_
     Ap_rst_n
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.synthetisator.param import Param, inheritAllParams
+import cProfile
+import io, sys
+import pstats
 
 class AxiLiteBasicSlave(Unit):
     _origin = "vhdl/axiLite_basic_slave.vhd"
@@ -22,6 +25,19 @@ class AxiLiteSlaveContainer(Unit):
 
 
 if __name__ == "__main__":
-    u = AxiLiteSlaveContainer()
+    sys.setrecursionlimit(3000)
+    pr = cProfile.Profile()
+    pr.enable()
+    u = AxiLiteBasicSlave()
+    # u = AxiLiteSlaveContainer()
+    
+    pr.disable()
+    s = io.StringIO()
+    sortby = 'time'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats(10)
+    print(s.getvalue())
+    
+    
     s = [ formatVhdl(str(x)) for x in u._synthesise()]
-    print("\n".join(s))
+    # print("\n".join(s))
