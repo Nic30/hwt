@@ -1,5 +1,5 @@
 import unittest
-from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import BramPort
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import BramPort
 from vhdl_toolkit.types import INTF_DIRECTION, DIRECTION
 from python_toolkit.arrayQuery import where, single, NoValueExc
 from vhdl_toolkit.samples.iLvl.simple import SimpleUnit

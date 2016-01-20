@@ -10,7 +10,7 @@ from vhdl_toolkit.variables import PortItem, VHDLGeneric
 from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.synthetisator.param import getParam
 
-#rom time import time
+# rom time import time
 import re, dill
 import os
 import hashlib
@@ -24,6 +24,8 @@ https://github.com/antlr/antlr4/blob/master/doc/getting-started.md
 https://github.com/antlr/antlr4
 https://github.com/antlr/grammars-v4/blob/master/vhdl/vhdl.g4
 https://github.com/loranbriggs/Antlr/blob/master/The%20Definitive%20ANTLR%204%20Reference.pdf
+
+# [TODO] this style of using listeners is antipatent
 """
 
 class HDLRedefinitionErr(Exception):
@@ -45,8 +47,80 @@ class HDLCtx(dict):
             raise HDLRedefinitionErr(key)
         dict.__setitem__(self, key, val)
 
-class vhdlGenericListener(vhdlListener):
-    pass
+
+class vhdlExprListener(vhdlListener):
+    def __init__(self, ctxName):
+        vhdlListener.__init__(self)
+        self.exprStr = []
+        self.ctxName = ctxName
+        
+    def _getExprStr(self):
+        return 'lambda  %s : %s' % (self.ctxName, ''.join(self.exprStr))
+    def getExpr(self):
+        return eval(self._getExprStr())
+    def getExprAsWidht(self):
+        return eval(self._getExprStr() + '+1')
+    def enterIdentifier(self, ctx):
+        s = "getParam(%s['%s'])" % (self.ctxName, ctx.getText().lower())
+        self.exprStr.append(s)
+    
+    def enterNumeric_literal(self, ctx):
+        s = ctx.getText()
+        self.exprStr.append(s)
+
+    def enterPrimary(self, ctx):
+        try:
+            if len(ctx.children) == 3 and  ctx.children[0].symbol.type == vhdlParser.LPAREN:
+                s = "("
+                self.exprStr.append(s)
+        except AttributeError:
+            pass
+        
+    def exitPrimary(self, ctx):
+        try:
+            if len(ctx.children) == 3 and ctx.children[2].symbol.type == vhdlParser.RPAREN:
+                s = ")"
+                self.exprStr.append(s)
+        except AttributeError:
+            pass
+        
+    def enterAdding_operator(self, ctx):
+        s = ctx.getText()
+        self.exprStr.append(s)
+        
+    def enterMultiplying_operator(self, ctx):
+        d = {vhdlParser.DIV : "//",
+             vhdlParser.MUL : "*",
+             vhdlParser.MOD: "%"}
+        s = d[ctx.children[0].symbol.type]
+        self.exprStr.append(s)
+
+def parseType(t_ctx, nameCtx):
+        t = VHDLType()
+        t.ctx = nameCtx
+        
+        t_id = t_ctx.children[0].getText().lower() 
+        if t_id == 'std_logic':
+            width = lambda ctx: 1
+        elif t_id == 'std_logic_vector':
+            cntx_name = 'ctx'
+            r = t_ctx.constraint().index_constraint().discrete_range()[0].range().explicit_range()
+            assert(r.direction().getText().lower() == 'downto')
+            r_to, r_from = r.simple_expression()
+            assert(r_from.getText() == '0')
+            
+            l = vhdlExprListener(cntx_name)
+            w = ParseTreeWalker()
+            w.walk(l, r_to)
+
+            width = l.getExprAsWidht()
+        elif t_id == 'integer':
+            width = int
+        else:
+            raise NotImplementedError(('Can not convert type %s from vhdl to internal representation' + 
+                                       ' of vhdl_toolkit') % (t_id))
+        t.width = width  
+        return t 
 
 class vhdlEntityListener(vhdlListener):
     def __init__(self, hdlCtx):
@@ -55,21 +129,21 @@ class vhdlEntityListener(vhdlListener):
     def enterEntity_declaration(self, ctx):
         self.e = Entity()
         self.e.name = ctx.children[1].children[0].getText()
+    
     def enterInterface_constant_declaration(self, ctx):
         ids = []
         w = ParseTreeWalker()
         idListn = vhdlIdListener(ids)
         w.walk(idListn, ctx.children[0])
         
-        var_type = VHDLType()
-        # var_type.ast = ctx.children[2]
-        var_type.str = ctx.children[2].getText()
+        var_type = parseType(ctx.children[2], self.e.ctx)
          
-        defaultVal = 0  # [TODO] first(ctx.children, lambda x : x) 
+        defaultVal = 0
         
         for name in ids:
             g = VHDLGeneric(name, var_type, defaultVal)
             self.e.generics.append(g)
+            self.e.ctx[name.lower()] = defaultVal
             
     def enterInterface_port_declaration(self, ctx):        
         portIds = []
@@ -78,43 +152,8 @@ class vhdlEntityListener(vhdlListener):
         w.walk(idListn, ctx.children[0])
         
         portDirection = ctx.children[2].getText().upper()
-
-        portType = VHDLType()
-        t = ctx.children[3]
-        # portType.str = t.getText()
-        t_id = t.children[0].getText().lower() 
-        if t_id == 'std_logic':
-            width = lambda ctx: 1
-        elif t_id == 'std_logic_vector':
-            cntx_name = 'ctx'
-            def termToStr(t):
-                if hasattr(t, 'factor'):
-                    symbol = t.factor()[0].children[0].children[0].children[0].children[0].children[0].symbol
-                    if symbol.type == vhdlParser.INTEGER: 
-                        return symbol.text 
-                    elif symbol.type == vhdlParser.RULE_index_constraint:
-                        
-                        return "getParam(%s[%s])" % (cntx_name, symbol.text)
-                    else:
-                        raise NotImplementedError()
-                else:
-                    raise NotImplementedError() 
-            r = t.constraint().index_constraint().discrete_range()[0].range().explicit_range()
-            assert(r.direction().getText().lower() == 'downto')
-            r_to, r_from = r.simple_expression()
-            assert(r_from.getText() == '0')
-            width_str = 'lambda  %s : ' % (cntx_name)
-            for ch in r_to.children:
-                if isinstance(ch, vhdlParser.TermContext):
-                    width_str += termToStr(ch)
-                elif isinstance(ch, vhdlParser.Adding_operatorContext):
-                    width_str += ch.getText()
-                else:
-                    NotImplementedError("Can not convert expression %s to python" % (r_to.getText()))
-            width = eval(width_str)
-        else:
-            raise NotImplementedError('Can not convert type %s from vhdl to internal representation of vhdl_toolkit' % (t_id))
-        portType.width = width    
+        t_ctx = ctx.children[3]
+        portType = parseType(t_ctx, self.e.ctx)
         
         # portType.ast = ctx.children[3]
         
@@ -134,14 +173,14 @@ def rmComents(s):
 
 def processFile(fileName, doCacheUpdate=False):
     cacheFile = os.path.join(os.path.dirname(fileName) , '__pycache__', os.path.basename(fileName) + ".dill")
-    with open(fileName,'rb') as f:
+    with open(fileName, 'rb') as f:
         fileHash = hashlib.md5(f.read()).hexdigest()
     try:
         # load from cache file
         with open(cacheFile, 'rb') as f:
             hdlCtx = dill.load(f)
             if hdlCtx.hash != fileHash:
-                print("has is different", )
+                print("has is different",)
                 raise IOError('File was edited', hdlCtx.hash, fileHash)
     except IOError:
         # parse file
@@ -168,24 +207,24 @@ def entityFromFile(fileName):
             
 def process(input_stream):
     hdlCtx = HDLCtx()
-    #s = time()
+    # s = time()
     lexer = vhdlLexer(input_stream)
     stream = CommonTokenStream(lexer)
     parser = vhdlParser(stream)
-    #s2 = time()
-    #print('lex, pars - build', s2 - s)
-    #s = s2
+    # s2 = time()
+    # print('lex, pars - build', s2 - s)
+    # s = s2
     tree = parser.design_file()  # ddesign_file is first rule
-    #s2 = time()
-    #print('parsing          ', s2 - s)
-    #s = s2
+    # s2 = time()
+    # print('parsing          ', s2 - s)
+    # s = s2
     
     walker = ParseTreeWalker();
     listener = vhdlEntityListener(hdlCtx);
     walker.walk(listener, tree);
-    #s2 = time()
-    #print('walking ast      ', s2 - s)
-    #s = s2
+    # s2 = time()
+    # print('walking ast      ', s2 - s)
+    # s = s2
     
     return hdlCtx
 
@@ -197,5 +236,5 @@ if __name__ == "__main__":
     # axi4-stream-bfm-master
     # user
     # axiLite_basic_slave
-    hdlCtx = processFile('samples/iLvl/vhdl/dualportRAM.vhd')
+    hdlCtx = processFile('samples/iLvl/vhdl/entityExample.vhd')
     print(hdlCtx)

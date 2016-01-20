@@ -8,5 +8,5 @@ class SimpleUnit_b(Unit):
 if __name__ == "__main__":
     u = SimpleUnit_b()
     print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise("SimpleUnit_b")])
+                     "\n".join([ str(x) for x in u._synthesise()])
                      ))

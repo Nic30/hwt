@@ -6,11 +6,8 @@ ARCHITECTURE {{ name }} OF {{ entityName }} IS
     {% for c in components %}{{c}}
     {% endfor %} 
 BEGIN
-    {% for s in statements %}{{s}};
-    {% endfor %} 
     {% for c in componentInstances %}{{c}}
     {% endfor %} 
-    {% for p in processes %}
-    {{p}}
+    {% for p in processes %}{{p}}
     {% endfor %}
 END ARCHITECTURE {{ name }};

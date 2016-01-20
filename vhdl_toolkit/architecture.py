@@ -49,7 +49,9 @@ class Component():
                 del(g.defaultVal)
             generics.append(g)
         
-        return VHDLTemplates.component.render({"port":self.entity.port, "generics": generics, 'entity': self.entity})
+        return VHDLTemplates.component.render({"port":self.entity.port,
+                                               "generics": generics,
+                                               'entity': self.entity})
 
 class ComponentInstance():
     def __init__(self, name, component):
@@ -73,7 +75,7 @@ class Architecture(object):
         self.extraTypes = []
         self.processes = []
         self.components = []
-        self.statements = []
+        #self.statements = []
         self.componentInstances = []
         
     def addEntityAsComponent(self, entity):
@@ -88,7 +90,8 @@ class Architecture(object):
         for g in self.entity.generics:
             cg = single(componentInst.component.entity.generics, lambda x: x.name == g.name)
             if not cg:
-                raise Exception("can't resolve generic " + g.name + " for componentInstance " + componentInst.name)
+                raise Exception("can't resolve generic " + g.name + " for componentInstance " + 
+                                 componentInst.name)
             m = Map(cg, g)
             componentInst.genericMaps.append(m)
             
@@ -96,14 +99,16 @@ class Architecture(object):
         for p in componentInst.component.entity.port:
             parentPort = single(componentInst.component.entity.port, lambda x: x.name == p.name)
             if not parentPort:
-                raise Exception("Can't resolve port " + p.name + " from root unit for componentInstance " + componentInst.name)
+                raise Exception("Can't resolve port " + p.name + " from root unit for componentInstance " + 
+                                 componentInst.name)
             s = portItem2signal(p)
             s.name = "s_" + s.name
             if arr_any(self.variables, lambda x : x.name == s.name):
-                raise Exception("Signal " + s.name + " already exists, can't autoroute signals to componentInstance " + componentInst.name)
+                raise Exception("Signal " + s.name + " already exists, can't autoroute signals to componentInstance "
+                                 + componentInst.name)
             self.variables.append(s)
             sigDriver = connect(s, parentPort)
-            self.statements.append(sigDriver)
+            #self.statements.append(sigDriver)
             m = Map(s, p)
             componentInst.portMaps.append(m)
 

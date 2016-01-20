@@ -3,7 +3,7 @@ import os
 import inspect
 
 from vhdl_toolkit.parser import entityFromFile
-from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import allInterfaces
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.all import allInterfaces
 from vhdl_toolkit.synthetisator.signalLevel.context import Context
 from vhdl_toolkit.architecture import Component
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
@@ -109,7 +109,11 @@ class Unit(Buildable):
             with open(self._origin) as f:
                 s = ['--%s' % (self._origin)]  # [f.read()]
         else:
-            cntx = Context(name)
+            # construct globals (generics for entity)
+            globalNames = {}
+            for k, v in self._params.items():
+                globalNames[k.lower()] = v 
+            cntx = Context(name, globalNames=globalNames)
             externInterf = [] 
             # prepare subunits
             for subUnitName, subUnit in self._subUnits.items():

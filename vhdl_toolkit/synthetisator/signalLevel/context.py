@@ -3,15 +3,15 @@ from vhdl_toolkit.architecture import Architecture, Component
 from vhdl_toolkit.entity import Entity
 from vhdl_toolkit.process import HWProcess
 from vhdl_toolkit.synthetisator.signalLevel.codeOp import If, IfContainer
-from vhdl_toolkit.synthetisator.signalLevel.optimalizator import TreeBalancer, expr_optimize, \
+from vhdl_toolkit.synthetisator.signalLevel.optimalizator import TreeBalancer, \
     expr2cond
 from vhdl_toolkit.synthetisator.signalLevel.signal import Signal, walkSigSouces, PortItemFromSignal, PortConnection, \
-    SyncSignal, walkUnitInputs, walkSignalsInExpr, exp__str__, OpAnd, \
+    SyncSignal, walkUnitInputs, walkSignalsInExpr, OpAnd, \
     discoverSensitivity
 from vhdl_toolkit.templates import VHDLTemplates  
-from vhdl_toolkit.types import VHDLType, VHDLBoolean
-from vhdl_toolkit.variables import PortItem
+from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.synthetisator.param import getParam
+from vhdl_toolkit.variables import VHDLGeneric
 
 def renderIfTree(assigments):
     # optimizedSrc = expr_optimize([dp.src])
@@ -29,8 +29,12 @@ def renderIfTree(assigments):
 
 
 class Context(object):
-    """Context for synthetisator"""
-    def __init__(self, name, debug=True):
+    """Container for signals and units"""
+    def __init__(self, name, debug=True, globalNames=None):
+        if not globalNames:
+            self.globals = {}
+        else:
+            self.globals = globalNames
         self.signals = []
         self.name = name
         self.debug = debug
@@ -42,13 +46,8 @@ class Context(object):
         t = VHDLType()
         width = getParam(width)
         t.width = width
-        
-        if width > 1:
-            t.str = 'STD_LOGIC_VECTOR(%d DOWNTO 0)' % (width - 1)
-        elif width == 1:
-            t.str = 'STD_LOGIC'
-        else:
-            raise Exception("Invalid size for signal %s" % (name))
+        t.ctx = self.globals
+
         if clk:
             s = SyncSignal(name, t, defVal)
             if syncRst is not None and defVal is None:
@@ -98,14 +97,25 @@ class Context(object):
         ent = Entity()
         ent.name = self.name
         
+        # create generics
+        ent.ctx = self.globals
+        for k, v in self.globals.items():
+            k = k.upper()
+            var_type = v.getSigType()
+            v.name = k
+            g = VHDLGeneric(k, var_type, v)
+            ent.generics.append(g)
+        
+        # create ports
         for s in interfaces:
+            s.var_type.ctx = ent.ctx
             ent.port.append(PortItemFromSignal(s))
    
         self.discover(interfaces)
         
         arch = Architecture(ent)
-        for s in where(arch.statements, lambda x: isinstance(x, PortConnection)):  # found subUnits
-            self.subUnits.add(self.unit)
+        #for s in where(arch.statements, lambda x: isinstance(x, PortConnection)):  # find subUnits
+        #    self.subUnits.add(self.unit)
         assigments = list(where(self.startsOfDataPaths, lambda x: hasattr(x, 'dst')))
         for sig in set(map(lambda x:x.dst, assigments)):
             dps = list(where(assigments, lambda x: x.dst == sig))

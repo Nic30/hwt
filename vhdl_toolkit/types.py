@@ -1,4 +1,4 @@
-from ply.lex import LexToken
+
 
 class INTF_DIRECTION():
     MASTER = "MASTER"
@@ -51,10 +51,23 @@ class VHDLType():
     """
     Vhdl type container
     """
-    def __init__(self):
-        self.str = None
+    def getWidth(self):
+        if isinstance(self.width, type):
+            self.width
+        elif hasattr(self.width, "__call__"):
+            return self.width(self.ctx)
+        return self.width
+    
     def __str__(self):
-        return self.str
+        w = self.getWidth()
+        if w == int:
+            return 'INTEGER'
+        elif w > 1:
+            return 'STD_LOGIC_VECTOR(%d DOWNTO 0)' % (w - 1)
+        elif w == 1:
+            return 'STD_LOGIC'
+        else:
+            raise Exception("Invalid type, widht is %s" % (str(w)))
 
 
 
@@ -63,14 +76,14 @@ class VHDLExtraType(object):
     user type definition
     """
     @classmethod
-    def createEnum(cls, name, values ):
+    def createEnum(cls, name, values):
         self = cls()
         self.name = name
         self.values = set(values)
         return self
             
     def __str__(self):
-        return "TYPE %s IS (%s);" % (self.name, ", ".join(self.values) )
+        return "TYPE %s IS (%s);" % (self.name, ", ".join(self.values))
 
 def STD_LOGIC():
     t = VHDLType()

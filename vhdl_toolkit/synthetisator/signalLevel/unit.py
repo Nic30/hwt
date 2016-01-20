@@ -2,10 +2,9 @@ from python_toolkit.arrayQuery import single, arr_any, NoValueExc
 from python_toolkit.stringUtils import matchIgnorecase
 from vhdl_toolkit.architecture import ComponentInstance
 from vhdl_toolkit.entity import Entity
-from vhdl_toolkit.valueInterpret import ValueInterpreter
 from vhdl_toolkit.variables import PortItem
 from vhdl_toolkit.types import DIRECTION
-from vhdl_toolkit.synthetisator.param import getParam
+from vhdl_toolkit.synthetisator.param import getParamVhdl
 
 class Unit():    
     def __init__(self):
@@ -13,7 +12,7 @@ class Unit():
     
     @classmethod
     def fromJson(cls, jsonDict, referenceName):
-        self = Unit()
+        self = cls()
         self.name = jsonDict['name']
 
         ports = list(filter(lambda x : x['isExternalPort'], jsonDict['nodes']))
@@ -51,18 +50,19 @@ class VHDLUnit(Entity, Unit):
         self.entity = entity
         self.portConnections = []
         self.discovered = False
-        self.genericsValues = {}
+        self._updateCtxFromGenerics() 
+        
+    def _updateCtxFromGenerics(self):
         for g in self.entity.generics:
-            self.genericsValues[g.name] = g.defaultVal
-    
-    def _updateWidthsFromGenerics(self):
-        normalizedGenerics = {}
-        for k, v in self.genericsValues.items():
-            normalizedGenerics[k.lower()] = getParam(v)
-        
-        for pc in self.portConnections:
-            pc.portItem.var_type.width = ValueInterpreter.resolveWidth(normalizedGenerics, pc.portItem.var_type.str.lower()) 
-        
+            self.entity.ctx[g.name.lower()] = g.defaultVal
+    def _updateGenericsFromCtx(self):
+        for k, v in self.entity.ctx.items():
+            try:
+                g = single(self.entity.generics, lambda x: x.name.lower() == k)
+            except NoValueExc:
+                raise Exception("Entity %s does not have generic %s" % (self.entity.name, k))
+            g.defaultVal = v   
+                
     def asVHDLComponentInstance(self):
         ci = ComponentInstance(self.name + "_" + str(id(self)), self)
         # assert all inputs are connected
@@ -70,20 +70,23 @@ class VHDLUnit(Entity, Unit):
             if p.direction == DIRECTION.IN:
                 if not arr_any(self.portConnections, lambda x : x.portItem == p) :
                     raise Exception("Missing connection for input %s of component %s", (p.name, self.entity.name))           
-        self._updateWidthsFromGenerics()        
+               
             
         ci.portMaps = list(map(lambda x: x.asPortMap(), self.portConnections))
-        
-        for k, v in self.genericsValues.items():
-            try:
-                g = single(self.entity.generics, lambda x: x.name == k)
-            except NoValueExc:
-                raise Exception("Entity %s does not have generic %s" % (self.entity.name, k))
-            if g.var_type.str.lower().startswith("std_logic_vector") and isinstance(v, int):
-                val_str = 'X"{0:b}"'.format(v)
+        self._updateGenericsFromCtx()
+        for g in self.entity.generics:
+            v = getParamVhdl(g.defaultVal)
+            w = g.var_type.getWidth()
+            if isinstance(v, int):
+                if w == int:
+                    val_str = str(v)
+                elif g.var_type.getWidth() > 1:
+                    val_str = 'X"{0:b}"'.format(v)
+                else:
+                    val_str = str(v)
             else:
-                val_str = str(getParam(v))
-            ci.genericMaps.append("%s => %s" % (k, val_str))
+                val_str = str(v)
+            ci.genericMaps.append("%s => %s" % (g.name, val_str)) 
         
         ci.portMaps.sort()
         ci.genericMaps.sort()

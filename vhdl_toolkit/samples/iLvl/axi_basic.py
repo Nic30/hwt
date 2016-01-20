@@ -1,8 +1,9 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.synthetizator import Unit
-from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import AxiLite, Ap_clk, \
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_clk, \
     Ap_rst_n
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba import  AxiLite
 from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.param import Param, inheritAllParams
+from vhdl_toolkit.synthetisator.param import Param
 import cProfile
 import io, sys
 import pstats
@@ -11,7 +12,6 @@ class AxiLiteBasicSlave(Unit):
     _origin = "vhdl/axiLite_basic_slave.vhd"
     
     
-@inheritAllParams
 class AxiLiteSlaveContainer(Unit):
     ADDR_WIDTH = Param(8)
     DATA_WIDTH = Param(8)
@@ -25,19 +25,23 @@ class AxiLiteSlaveContainer(Unit):
 
 
 if __name__ == "__main__":
-    sys.setrecursionlimit(3000)
-    pr = cProfile.Profile()
-    pr.enable()
-    u = AxiLiteBasicSlave()
-    # u = AxiLiteSlaveContainer()
-    
-    pr.disable()
-    s = io.StringIO()
-    sortby = 'time'
-    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    ps.print_stats(10)
-    print(s.getvalue())
-    
-    
-    s = [ formatVhdl(str(x)) for x in u._synthesise()]
-    # print("\n".join(s))
+    u = AxiLiteSlaveContainer()
+    print(formatVhdl(
+                     "\n".join([ str(x) for x in u._synthesise()])
+                     ))
+    #sys.setrecursionlimit(3000)
+    #pr = cProfile.Profile()
+    #pr.enable()
+    #u = AxiLiteBasicSlave()
+    ## u = AxiLiteSlaveContainer()
+    #
+    #pr.disable()
+    #s = io.StringIO()
+    #sortby = 'time'
+    #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    #ps.print_stats(10)
+    #print(s.getvalue())
+    #
+    #
+    #s = [ formatVhdl(str(x)) for x in u._synthesise()]
+    ## print("\n".join(s))

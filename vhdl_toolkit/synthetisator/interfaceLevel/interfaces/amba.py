@@ -1,54 +1,14 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
-from vhdl_toolkit.types import DIRECTION
 from vhdl_toolkit.synthetisator.param import Param, inheritAllParams
-
-D = DIRECTION
-
-class Ap_none(Interface):
-    _baseName = ''
-    def __init__(self, *destinations, masterDir=DIRECTION.OUT, width=1, src=None, \
-                  isExtern=False, alternativeNames=None):
-        Interface.__init__(self, *destinations, masterDir=masterDir, src=src, \
-                           isExtern=isExtern, alternativeNames=alternativeNames)
-        self._width = width
-
-s = Ap_none        
-
-class Ap_clk(Ap_none):
-    _baseName = 'ap_clk'
-
-class Ap_rst_n(Ap_none):
-    _baseName = 'ap_rst_n'
-    
-class Ap_hs(Interface):
-    DATA_WIDTH = Param(64)
-    data = s(masterDir=D.OUT, width=DATA_WIDTH)
-    rd = s(masterDir=D.IN)
-    vld = s(masterDir=D.OUT)
-
-
-class BramPort_withoutClk(Interface):
-    ADDR_WIDTH = Param(32)
-    DATA_WIDTH = Param(64) 
-    addr = s(masterDir=D.OUT, width=ADDR_WIDTH, alternativeNames=['addr_v'])
-    din = s(masterDir=D.OUT, width=DATA_WIDTH, alternativeNames=['din_v'])
-    dout = s(masterDir=D.IN, width=DATA_WIDTH, alternativeNames=['dout_v'])
-    en = s(masterDir=D.OUT)
-    we = s(masterDir=D.OUT)   
-
-class BramPort(BramPort_withoutClk):
-    clk = s(masterDir=D.OUT)
-
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import s, D
     
 class AxiStream(Interface):
     DATA_WIDTH = Param(64)
     last = s(masterDir=D.OUT)
-    strb = s(masterDir=D.OUT, width=DATA_WIDTH.expr(lambda x: x // 8))  # [TODO] Param needs something like expr, this does not work
+    strb = s(masterDir=D.OUT, width=DATA_WIDTH.expr(lambda x: x // 8))
     data = s(masterDir=D.OUT, width=DATA_WIDTH)
     ready = s(masterDir=D.IN)
     valid = s(masterDir=D.OUT)
-
-
 
 class AxiLite_addr(Interface):
     ADDR_WIDTH = Param(32)
@@ -74,7 +34,6 @@ class AxiLite_b(Interface):
     resp = s(masterDir=D.IN, width=2, alternativeNames=['resp_v'])
     ready = s(masterDir=D.OUT)
     valid = s(masterDir=D.IN)
-
 
 @inheritAllParams    
 class AxiLite(Interface):
@@ -158,12 +117,3 @@ class Axi4_xil(Axi4):
     r = Axi4_r_xil()
     w = Axi4_w_xil()
     b = Axi4_b_xil()  
-
-    
-allInterfaces = [Axi4,
-                 Axi4_xil,
-                 AxiLite,
-                 AxiLite_xil,
-                 BramPort, BramPort_withoutClk,
-                 AxiStream, Ap_hs, Ap_clk, Ap_rst_n, Ap_none
-                 ]

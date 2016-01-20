@@ -1,4 +1,4 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.synthetizator import Unit
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.formater import formatVhdl
 
 class Bram(Unit):

@@ -109,8 +109,8 @@ class PortConnection():
         self.portItem = portItem
         
     def asPortMap(self):
-        p_w = self.portItem.var_type.width
-        s_w = self.sig.var_type.width
+        p_w = self.portItem.var_type.getWidth()
+        s_w = self.sig.var_type.getWidth()
         if p_w > s_w:  # if port item is wider fill signal with zeros
             diff = p_w - s_w
             return ('%s => %s & X"' + "%0" + str(diff) + 'd"') % (self.portItem.name, self.sig.name, 0) 

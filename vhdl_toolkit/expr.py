@@ -2,12 +2,12 @@
 
 def value2vhdlformat(dst, val):
     """ @param: dst is VHDLvariable connected with value """
-    t = dst.var_type.str.lower()
     if hasattr(val, 'name') :
         return val.name
-    if t == 'std_logic':
+    w = dst.var_type.getWidth()
+    if w == 1:
         return "'%d'" % (int(val))
-    elif t.startswith("std_logic_vector"):
+    elif w > 1:
         return "STD_LOGIC_VECTOR(TO_UNSIGNED(%d, %s'LENGTH))" % (int(val), dst.name)
     else:
         raise Exception("value2vhdlformat can not resolve type conversion") 
@@ -18,7 +18,7 @@ class Map():
         self.dst = dst
    
     def __str__(self):
-        return "%s => %s" %(self.dst.name, self.src.name)  
+        return "%s => %s" % (self.dst.name, self.src.name)  
         
    
 class Assignment():
@@ -27,4 +27,4 @@ class Assignment():
         self.dst = dst
         
     def __str__(self):
-        return "%s <= %s"% (self.dst.name, value2vhdlformat(self.dst, self.src))
+        return "%s <= %s" % (self.dst.name, value2vhdlformat(self.dst, self.src))

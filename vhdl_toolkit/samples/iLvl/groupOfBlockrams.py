@@ -1,19 +1,15 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.synthetizator import Unit
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import Ap_none
-from vhdl_toolkit.synthetisator.param import Param
-from vhdl_toolkit.samples.bram import Bram
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_none
+from vhdl_toolkit.synthetisator.param import Param, inheritAllParams
+from vhdl_toolkit.samples.iLvl.bram import Bram
 
-
+@inheritAllParams
 class GroupOfBlockrams(Unit):
     ADDR_WIDTH = Param(32)
     DATA_WIDTH = Param(64)
     bramR = Bram()
     bramW = Bram()
-    bramR.ADDR_WIDTH.inherit(ADDR_WIDTH)
-    bramR.DATA_WIDTH.inherit(DATA_WIDTH)
-    bramW.ADDR_WIDTH.inherit(ADDR_WIDTH)
-    bramW.DATA_WIDTH.inherit(DATA_WIDTH)
     
     ap_clk = Ap_none(bramR.a.clk, bramR.b.clk, \
                      bramW.a.clk, bramW.b.clk, \
@@ -37,5 +33,5 @@ class GroupOfBlockrams(Unit):
 if __name__ == "__main__":
     u = GroupOfBlockrams()
     print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise("GroupOfBlockrams")])
+                     "\n".join([ str(x) for x in u._synthesise()])
                      ))

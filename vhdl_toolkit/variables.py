@@ -1,10 +1,15 @@
 from vhdl_toolkit.expr import Assignment, value2vhdlformat
 
+class VHDLId(str):
+    pass
+
 def LexToken2Val(token):
     """
     @return: actual parsed value of the lex token
     """
-    if isinstance(token, int):
+    if issubclass(token.__class__, VHDLId):
+        return token.get()
+    elif isinstance(token, int):
         return token
     elif token.type == 'NUMBER':
         return int(token.value)
@@ -66,5 +71,6 @@ class PortItem(SignalItem):
         self.name = name
         self.direction = direction
         self.var_type = var_type
+        
     def __str__(self):
         return "%s : %s %s" % (self.name, self.direction, str(self.var_type))

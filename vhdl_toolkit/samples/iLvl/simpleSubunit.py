@@ -1,5 +1,5 @@
-from vhdl_toolkit.samples.simplest_iLvl import SimpleUnit
-from vhdl_toolkit.synthetisator.interfaceLevel.synthetizator import Unit
+from vhdl_toolkit.samples.iLvl.simple import SimpleUnit
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import Ap_none
 from vhdl_toolkit.formater import formatVhdl
 

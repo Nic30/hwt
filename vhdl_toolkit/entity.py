@@ -5,6 +5,7 @@ from vhdl_toolkit.templates import VHDLTemplates
 class Entity(object):
     def __init__(self):
         self.port = []
+        self.ctx = {}
         self.generics = []
         self.name = None
         
