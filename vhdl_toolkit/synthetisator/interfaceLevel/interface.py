@@ -41,20 +41,20 @@ class ExtractableInterface():
                 
     def _unExtrac(self):
         """Revent extracting process for this interface"""
-        for _, intfConfMap in self._subInterfaces.items():
-            if hasattr(intfConfMap, "_originEntityPort"):
-                if hasattr(intfConfMap._originEntityPort, "_interface"):
-                    del intfConfMap._originEntityPort._interface
-                del intfConfMap._originEntityPort
-                del intfConfMap._originSigLvlUnit
-      
+        if self._subInterfaces:
+            for _, intfConfMap in self._subInterfaces.items():
+                intfConfMap._unExtrac()
+        else:
+            if hasattr(self, "_originEntityPort"):
+                if hasattr(self._originEntityPort, "_interface"):
+                    del self._originEntityPort._interface
+                del self._originEntityPort
+                del self._originSigLvlUnit
     def _tryToExtractByName(self, prefix, sigLevelUnit):
         """
         @return: self if extraction was successful
         @raise InterfaceIncompatibilityExc: if this interface with this prefix does not fit to this entity 
         """
-
-        
         if self._subInterfaces:
             allDirMatch = True
             noneDirMatch = True
@@ -97,7 +97,8 @@ class ExtractableInterface():
         
         else:
             try:
-                self._originEntityPort = single(sigLevelUnit.entity.port, lambda p : matchIgnorecase(p.name, prefix))
+                self._originEntityPort = single(sigLevelUnit.entity.port,
+                                                lambda p : matchIgnorecase(p.name, prefix))
                 self._originEntityPort._interface = self
                 self._originSigLvlUnit = sigLevelUnit
                 dirMatches = self._originEntityPort.direction == self._masterDir
@@ -252,7 +253,7 @@ class Interface(Buildable, ExtractableInterface):
             if self._isExtern:
                 if not self._getSignalDirection() == DIRECTION.oposite(master._getSignalDirection()):
                     # slave for outside master for inside
-                    raise Exception(("Both interfaces has same direction (%s) and can not be connected together"+
+                    raise Exception(("Both interfaces has same direction (%s) and can not be connected together" + 
                     " (%s <= %s)") % (master._direction, str(self), str(master))) 
             self._sig.assignFrom(master._sig)
     def _getSignalDirection(self):

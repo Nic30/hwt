@@ -143,13 +143,10 @@ class TestStringMethods(unittest.TestCase):
         # [TODO] width of parametrized interfaces from VHDL should be Param with expr
     
     def test_withPartialyInvalidInterfaceNames(self):
-        """
-        Assert that 
-        """
-        class TestUnit(UnitWithSource):
+        class EntityWithPartialyInvalidIntf(UnitWithSource):
             _origin = "../../samples/iLvl/vhdl/entityWithPartialyInvalidIntf.vhd"
             
-        u = TestUnit()
+        u = EntityWithPartialyInvalidIntf()
         
         self.assertEqual(u.descrBM_w_wr_addr_V_123._parent, u)
         self.assertEqual(u.descrBM_w_wr_din_V._parent, u)
