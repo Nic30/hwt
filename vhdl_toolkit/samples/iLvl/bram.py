@@ -1,7 +1,7 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
 from vhdl_toolkit.formater import formatVhdl
 
-class Bram(Unit):
+class Bram(UnitWithSource):
     _origin = "vhdl/dualportRAM.vhd"
     
     

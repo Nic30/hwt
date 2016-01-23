@@ -22,20 +22,32 @@ class Ap_rst_n(Ap_none):
     
 class Ap_hs(Interface):
     DATA_WIDTH = Param(64)
-    data = s(masterDir=D.OUT, width=DATA_WIDTH)
+    data = s(width=DATA_WIDTH)
     rd = s(masterDir=D.IN)
-    vld = s(masterDir=D.OUT)
+    vld = s()
 
 class BramPort_withoutClk(Interface):
     ADDR_WIDTH = Param(32)
     DATA_WIDTH = Param(64) 
-    addr = s(masterDir=D.OUT, width=ADDR_WIDTH, alternativeNames=['addr_v'])
-    din = s(masterDir=D.OUT, width=DATA_WIDTH, alternativeNames=['din_v'])
+    addr = s(width=ADDR_WIDTH, alternativeNames=['addr_v'])
+    din = s(width=DATA_WIDTH, alternativeNames=['din_v'])
     dout = s(masterDir=D.IN, width=DATA_WIDTH, alternativeNames=['dout_v'])
-    en = s(masterDir=D.OUT)
-    we = s(masterDir=D.OUT)   
+    en = s()
+    we = s()   
 
 class BramPort(BramPort_withoutClk):
     clk = s(masterDir=D.OUT)
 
+
+class SPI(Interface):
+    clk = Ap_clk()
+    mosi = Ap_none()
+    miso = Ap_none(masterDir=D.IN)
+    ss = Ap_none()
   
+class RGMII_channel(Interface):
+    DATA_WIDTH = 4
+    c = s()
+    d = s(width=DATA_WIDTH)
+    x_ctl = s()
+    

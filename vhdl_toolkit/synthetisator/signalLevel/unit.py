@@ -69,7 +69,7 @@ class VHDLUnit(Entity, Unit):
         for p in self.entity.port:
             if p.direction == DIRECTION.IN:
                 if not arr_any(self.portConnections, lambda x : x.portItem == p) :
-                    raise Exception("Missing connection for input %s of component %s", (p.name, self.entity.name))           
+                    raise Exception("Missing connection for input %s of component %s" % (p.name, self.entity.name))           
                
             
         ci.portMaps = list(map(lambda x: x.asPortMap(), self.portConnections))

@@ -1,4 +1,14 @@
+from vhdl_toolkit.expr import BinOp
 
+
+class InvalidVHDLTypeExc(Exception):
+    def __init__(self, vhdlType):
+        self.vhdlType = vhdlType
+        
+    def __str__(self, *args, **kwargs):
+        variableName = self.variable.name
+        return "Invalid type, width is %s in the context of variable %s" \
+            % (str(self.vhdlType.getWidth()), variableName)
 
 class INTF_DIRECTION():
     MASTER = "MASTER"
@@ -55,19 +65,25 @@ class VHDLType():
         if isinstance(self.width, type):
             self.width
         elif hasattr(self.width, "__call__"):
-            return self.width(self.ctx)
+            w = self.width()
+            if isinstance(w, list):
+                return (BinOp.getLit(w[0]) - BinOp.getLit(w[1])) + 1
         return self.width
     
     def __str__(self):
         w = self.getWidth()
-        if w == int:
+        if w == str:
+            return "STRING"
+        elif w == int:
             return 'INTEGER'
-        elif w > 1:
-            return 'STD_LOGIC_VECTOR(%d DOWNTO 0)' % (w - 1)
         elif w == 1:
             return 'STD_LOGIC'
+        elif isinstance(w, int) and w > 1:
+            return 'STD_LOGIC_VECTOR(%d DOWNTO 0)' % (w - 1)
+        elif isinstance(w, BinOp):
+            return 'STD_LOGIC_VECTOR(%s)' % str(w)
         else:
-            raise Exception("Invalid type, widht is %s" % (str(w)))
+            raise InvalidVHDLTypeExc(self)
 
 
 

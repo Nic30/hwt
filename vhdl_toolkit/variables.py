@@ -1,4 +1,5 @@
 from vhdl_toolkit.expr import Assignment, value2vhdlformat
+from vhdl_toolkit.types import InvalidVHDLTypeExc
 
 class VHDLId(str):
     pass
@@ -24,8 +25,7 @@ class VHDLVariable():
         self.var_type = var_type
         self.isConstant = False
         self.isShared = False
-        if defaultVal is not None:
-            self.defaultVal = LexToken2Val(defaultVal)
+        self.defaultVal = defaultVal
         
             
     def __str__(self):
@@ -73,4 +73,11 @@ class PortItem(SignalItem):
         self.var_type = var_type
         
     def __str__(self):
-        return "%s : %s %s" % (self.name, self.direction, str(self.var_type))
+        try:
+            return "%s : %s %s" % (self.name, self.direction, str(self.var_type))
+        except InvalidVHDLTypeExc as e:
+            e.variable = self
+            raise e
+        
+        
+        

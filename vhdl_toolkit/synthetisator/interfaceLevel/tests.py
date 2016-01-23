@@ -7,6 +7,7 @@ from vhdl_toolkit.samples.iLvl.bram import Bram
 from vhdl_toolkit.samples.iLvl.axi_basic import AxiLiteBasicSlave, AxiLiteSlaveContainer
 from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
 from vhdl_toolkit.samples.iLvl.simpleSubunit2 import SimpleSubunit2
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
 
 INTF_D = INTF_DIRECTION
 D = DIRECTION
@@ -139,7 +140,24 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(a.slv.C_S_AXI_DATA_WIDTH.get(), DW)
         
         self.assertEqual(a.slv.S_AXI.ar.addr._width.get(), AW)
-        #[TODO] width of parametrized interfaces from VHDL should be Param with expr
+        # [TODO] width of parametrized interfaces from VHDL should be Param with expr
+    
+    def test_withPartialyInvalidInterfaceNames(self):
+        """
+        Assert that 
+        """
+        class TestUnit(UnitWithSource):
+            _origin = "../../samples/iLvl/vhdl/entityWithPartialyInvalidIntf.vhd"
+            
+        u = TestUnit()
+        
+        self.assertEqual(u.descrBM_w_wr_addr_V_123._parent, u)
+        self.assertEqual(u.descrBM_w_wr_din_V._parent, u)
+        self.assertEqual(u.descrBM_w_wr_dout_V._parent, u)
+        self.assertEqual(u.descrBM_w_wr_en._parent, u)
+        self.assertEqual(u.descrBM_w_wr_we._parent, u)
+        
+        
                
     def test_signalInstances(self):
         bram = SimpleUnit()

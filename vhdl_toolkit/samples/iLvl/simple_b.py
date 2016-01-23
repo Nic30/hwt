@@ -1,8 +1,8 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.synthetizator import Unit
 from vhdl_toolkit.formater import formatVhdl
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
 
 
-class SimpleUnit_b(Unit):
+class SimpleUnit_b(UnitWithSource):
     _origin = 'vhdl/simplest_b.vhd'
 
 if __name__ == "__main__":

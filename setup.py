@@ -12,8 +12,6 @@ setup(name='HWToolkit',
         'jinja2', # vhdl templates renderer, visualizer renderer
         'ply',    # old parser, vhdl interpret
         'flask',  # visualizer
-        'antlr4-python3-runtime', # vhdl parser, lexer
-        "dill",   # for creating cache files
       ],
       license='MIT',
       packages = find_packages(),

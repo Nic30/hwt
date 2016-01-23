@@ -8,7 +8,12 @@ class Entity(object):
         self.ctx = {}
         self.generics = []
         self.name = None
-        
+    
+    def ctxFromGenerics(self):
+        ctx = {}
+        for g in self.generics:
+            ctx[g.name.lower()] = g.defaultVal
+        return ctx
     def __str__(self):
         self.port.sort(key=lambda x: x.name)
         self.generics.sort(key=lambda x: x.name)

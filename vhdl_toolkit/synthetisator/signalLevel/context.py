@@ -29,18 +29,31 @@ def renderIfTree(assigments):
 
 
 class Context(object):
-    """Container for signals and units"""
-    def __init__(self, name, debug=True, globalNames=None):
+    """
+    Container for signals and units
+    @ivar signals: dict of all signals in context
+    @ivar startsOfDataPaths: is created by discover(interfaces), is set of nodes where datapaths starts
+    @ivar subUnits:           --------------||---------------------------- all units in this context 
+    """
+    def __init__(self, name, globalNames:dict=None):
+        """
+        @param name: name of context is synthetized as entity name
+        @param globalNames: dictionary of parameters is synthetized as entity generics  
+        """
         if not globalNames:
             self.globals = {}
         else:
             self.globals = globalNames
-        self.signals = []
+        self.signals = {}
         self.name = name
-        self.debug = debug
     
     def sig(self, name, width=1, clk=None, syncRst=None, defVal=None):
-        if self.debug and arr_any(self.signals, lambda x: x.name == name):
+        """
+        generate new signal in context
+        @param clk: clk signal, if specified signal is synthetized as SyncSignal
+        @param syncRst: reset 
+        """
+        if name in self.signals:
             raise Exception('signal name "%s" is not unique' % (name))
         
         t = VHDLType()
@@ -60,12 +73,13 @@ class Context(object):
             
             If(clk.opOnRisigEdge(), r)
         else:
+            if syncRst:
+                raise Exception()
             s = Signal(name, t, defVal)
-        assert(not arr_any(self.signals, lambda x: x.name == s.name))
-        self.signals.append(s)
+        self.signals[name] = s
         return s
     
-    def cloneSignals(self, signals, oldToNewNameFn, cloneAsSync=False):
+    def cloneSignals(self, signals:list, oldToNewNameFn, cloneAsSync=False):
         buff = []
         for s in signals:
             buff.append(self.sig(oldToNewNameFn(s.name), s.vat_type.width))
@@ -78,7 +92,6 @@ class Context(object):
                 for node in walkSigSouces(signal):  
                     if node in self.startsOfDataPaths:
                         return 
-                    # print(str(node.__class__), str(node))
                     if isinstance(node, PortConnection) and not node.unit.discovered:
                         node.unit.discovered = True
                         for s in  walkUnitInputs(node.unit):
@@ -87,7 +100,6 @@ class Context(object):
                     self.startsOfDataPaths.add(node)
                     if hasattr(node, 'src'):
                         for s in  walkSignalsInExpr(node.src):
-                            # print("discovering signal %s" % (str(s)))
                             discoverDatapaths(s)
                     
         for s in where(interfaces, lambda s: s.hasDriver()):  # walk my outputs
@@ -114,7 +126,7 @@ class Context(object):
         self.discover(interfaces)
         
         arch = Architecture(ent)
-        #for s in where(arch.statements, lambda x: isinstance(x, PortConnection)):  # find subUnits
+        # for s in where(arch.statements, lambda x: isinstance(x, PortConnection)):  # find subUnits
         #    self.subUnits.add(self.unit)
         assigments = list(where(self.startsOfDataPaths, lambda x: hasattr(x, 'dst')))
         for sig in set(map(lambda x:x.dst, assigments)):
@@ -124,17 +136,20 @@ class Context(object):
                 p.sensitivityList.update(map(lambda x: x.name, discoverSensitivity(dp)))
             p.bodyBuff.extend(renderIfTree(dps)) 
             arch.processes.append(p)
-        # arch.statements = list(where(arch.statements, lambda x: not isinstance(x, PortConnection))) 
-        
-        for s in self.signals:
+
+        # add signals, variables etc. in architecture
+        for _, s in self.signals.items():
             if s not in interfaces:
+                # [TODO] if has driver
                 arch.variables.append(s)
                 if isinstance(s, SyncSignal):
                     arch.variables.append(s.next)
         
-        for u in self.subUnits:  # instanciate subUnits
+        # instanciate subUnits in architecture
+        for u in self.subUnits:  
             arch.componentInstances.append(u.asVHDLComponentInstance()) 
-            
+        
+        # add components in architecture    
         for su in distinctBy(self.subUnits, lambda x: x.name):
             c = Component(su)
             arch.components.append(c)

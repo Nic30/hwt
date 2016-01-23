@@ -21,37 +21,16 @@ class Unit(Buildable):
     @attention: Current implementation does not control if connections are connected to right interface objects
                 this mean you can connect it to class interface definitions for example 
     """
-    _origin = None
     def __init__(self, intfClasses=allInterfaces):
-        self._component = None
-        self._entity = None
+        self.__class__._intfClasses = intfClasses
         self.__class__._builded()
-
         copyDict = {}
-        self._params = deepcopy(self.__class__._params, copyDict)
-        self._interfaces = deepcopy(self.__class__._interfaces, copyDict)
-        self._subUnits = deepcopy(self.__class__._subUnits, copyDict)
-
-
-        if self._origin:
-            def setIntfAsExtern(intf):
-                intf._isExtern = True
-                for _, subIntf in intf._subInterfaces.items():
-                    setIntfAsExtern(subIntf)
-            self._entity = entityFromFile(self._origin)
-            for g in self._entity.generics:
-                g.defaultVal = Param(g.defaultVal)
-                setattr(self, g.name, g.defaultVal)
-            self._sigLvlUnit = VHDLUnit(self._entity)
-
-            for intfCls in intfClasses:
-                for intfName, interface in intfCls._tryToExtract(self._sigLvlUnit):
-                    if hasattr(self, intfName):
-                        raise  Exception("Already has " + intfName)
-                    self._interfaces[intfName] = interface
-                    setIntfAsExtern(interface)
-            for p in self._entity.port:
-                assert(hasattr(p, '_interface') and p._interface)  # every port should have interface (Ap_none at least)        
+        
+        for pName in  ["_entity", "_sigLvlUnit", "_params", "_interfaces", "_subUnits"]:
+            v = getattr(self.__class__, pName, None)
+            setattr(self, pName, deepcopy(v, copyDict)) 
+            
+        
         for intfName, interface in self._interfaces.items():
             interface._name = intfName
             interface._parent = self
@@ -64,9 +43,6 @@ class Unit(Buildable):
          
     @classmethod
     def _build(cls):
-        if cls._origin:
-            baseDir = os.path.dirname(inspect.getfile(cls))
-            cls._origin = os.path.join(baseDir, cls._origin)
         cls._interfaces = {}
         cls._subUnits = {}
         cls._params = {}
@@ -81,8 +57,7 @@ class Unit(Buildable):
     def _cleanAsSubunit(self):
         for _, i in self._interfaces.items():
             i._rmSignals()
-            
-            
+                    
     def _signalsForMyEntity(self, context, prefix):
         for suPortName, suPort in self._interfaces.items():  # generate for all ports of subunit signals in this context
             suPort._signalsForInterface(context, prefix + Interface.NAME_SEPARATOR + suPortName)
@@ -104,47 +79,42 @@ class Unit(Buildable):
         if not name:
             name = self.__class__.__name__
         self._name = name
-        if self._origin:
-            assert(self._entity)
-            with open(self._origin) as f:
-                s = ['--%s' % (self._origin)]  # [f.read()]
-        else:
-            # construct globals (generics for entity)
-            globalNames = {}
-            for k, v in self._params.items():
-                globalNames[k.lower()] = v 
-            cntx = Context(name, globalNames=globalNames)
-            externInterf = [] 
-            # prepare subunits
-            for subUnitName, subUnit in self._subUnits.items():
-                yield from subUnit._synthesise(subUnitName)
-                subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
-            
-            # prepare connections     
-            for connectionName, connection in self._interfaces.items():
-                signals = connection._signalsForInterface(cntx, connectionName)
-                if connection._isExtern:
-                    externInterf.extend(signals)
-            
-            for _, interface in self._interfaces.items():
-                interface._propagateSrc()
-            for subUnitName, subUnit in self._subUnits.items():
-                for _, suIntf in subUnit._interfaces.items():
-                    suIntf._propagateConnection()
+        # construct globals (generics for entity)
+        globalNames = {}
+        for k, v in self._params.items():
+            globalNames[k.lower()] = v 
+        cntx = Context(name, globalNames=globalNames)
+        externInterf = [] 
+        # prepare subunits
+        for subUnitName, subUnit in self._subUnits.items():
+            yield from subUnit._synthesise(subUnitName)
+            subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
+        
+        # prepare connections     
+        for connectionName, connection in self._interfaces.items():
+            signals = connection._signalsForInterface(cntx, connectionName)
+            if connection._isExtern:
+                externInterf.extend(signals)
+        
+        for _, interface in self._interfaces.items():
+            interface._propagateSrc()
+        for subUnitName, subUnit in self._subUnits.items():
+            for _, suIntf in subUnit._interfaces.items():
+                suIntf._propagateConnection()
 
-            # propagate connections on interfaces in this unit
-            for _, connection in self._interfaces.items():
-                connection._propagateConnection()
-            
-            if not externInterf:
-                raise  Exception("Can not find any external interface for unit " + name \
-                                  + "- there is no such a thing as unit without interfaces")
+        # propagate connections on interfaces in this unit
+        for _, connection in self._interfaces.items():
+            connection._propagateConnection()
+        
+        if not externInterf:
+            raise  Exception("Can not find any external interface for unit " + name \
+                              + "- there is no such a thing as unit without interfaces")
 
-            # synthetize signal level context
-            s = cntx.synthetize(externInterf)
-            self._entity = s[1]
+        # synthetize signal level context
+        s = cntx.synthetize(externInterf)
+        self._entity = s[1]
 
-            self._architecture = s[2]
+        self._architecture = s[2]
             
         self._sigLvlUnit = VHDLUnit(self._entity)
         # connect results of synthetized context to interfaces of this unit
@@ -154,7 +124,47 @@ class Unit(Buildable):
             
         self._component = Component(self._entity)
         self._cleanAsSubunit() 
-        if not self._origin:  # already was reversed
-            for _ , intf in self._interfaces.items(): 
-                # reverse because other components looks at this one from outside
-                intf._reverseDirection()       
+        for _ , intf in self._interfaces.items(): 
+            # reverse because other components looks at this one from outside
+            intf._reverseDirection()
+
+class BlackBox(Unit):
+    pass      
+
+
+class UnitWithSource(Unit):
+    @classmethod
+    def _build(cls):
+        assert(cls._origin)
+        def setIntfAsExtern(intf):
+            intf._isExtern = True
+            for _, subIntf in intf._subInterfaces.items():
+                setIntfAsExtern(subIntf)
+        cls._interfaces = {}
+        cls._subUnits = {}
+        cls._params = {}
+        baseDir = os.path.dirname(inspect.getfile(cls))
+        cls._origin = os.path.join(baseDir, cls._origin)
+
+        cls._entity = entityFromFile(cls._origin)
+        for g in cls._entity.generics:
+            g.defaultVal = Param(g.defaultVal)
+            setattr(cls, g.name, g.defaultVal)
+        cls._sigLvlUnit = VHDLUnit(cls._entity)
+
+        for intfCls in cls._intfClasses:
+            for intfName, interface in intfCls._tryToExtract(cls._sigLvlUnit):
+                if hasattr(cls, intfName):
+                    raise  Exception("Already has " + intfName)
+                cls._interfaces[intfName] = interface
+                setattr(cls, intfName, interface)
+                setIntfAsExtern(interface)
+        for p in cls._entity.port:
+            assert(hasattr(p, '_interface') and p._interface)  # every port should have interface (Ap_none at least)        
+        cls._clsBuildFor = cls
+    
+    def _synthesise(self, name=None):
+        assert(self._entity)
+        with open(self._origin) as f:
+            return ['--%s' % (self._origin)]  # [f.read()]
+            

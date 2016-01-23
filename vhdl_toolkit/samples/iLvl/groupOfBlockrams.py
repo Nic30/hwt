@@ -11,11 +11,11 @@ class GroupOfBlockrams(Unit):
     bramR = Bram()
     bramW = Bram()
     
-    ap_clk = Ap_none(bramR.a.clk, bramR.b.clk, \
-                     bramW.a.clk, bramW.b.clk, \
+    ap_clk = Ap_none(bramR.a.clk, bramR.b.clk,\
+                     bramW.a.clk, bramW.b.clk,\
                      isExtern=True)
-    we = Ap_none(bramR.a.we, bramR.b.we, \
-                 bramW.a.we, bramW.b.we, \
+    we = Ap_none(bramR.a.we, bramR.b.we,\
+                 bramW.a.we, bramW.b.we,\
                  isExtern=True)
     addr = Ap_none(bramR.a.addr, bramR.b.addr,\
                    bramW.a.addr, bramW.b.addr,\

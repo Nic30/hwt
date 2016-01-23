@@ -1,6 +1,6 @@
 from vhdl_toolkit.samples.iLvl.simple import SimpleUnit
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.synthetisator.interfaceLevel.stdInterfaces import Ap_none
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_none
 from vhdl_toolkit.formater import formatVhdl
 
 class SimpleSubunit(Unit):
@@ -11,5 +11,5 @@ class SimpleSubunit(Unit):
 if __name__ == "__main__":
     u = SimpleSubunit()
     print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise("SimpleSubunit")])
+                     "\n".join([ str(x) for x in u._synthesise()])
                      ))
