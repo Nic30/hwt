@@ -185,7 +185,7 @@ class Interface(Buildable, ExtractableInterface):
         self._setAsExtern(isExtern)        
         self._destinations = list(destinations)
         
-    
+
     def _setAsExtern(self, isExtern):
         self._isExtern = isExtern
         for _, prop in self._subInterfaces.items():

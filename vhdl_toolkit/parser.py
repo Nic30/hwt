@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import re
+from subprocess import Popen, PIPE
+import json
+import inspect
+import os
+
 from vhdl_toolkit.entity import Entity
 from vhdl_toolkit.variables import PortItem, VHDLGeneric
 from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.expr import BinOp
-
-# rom time import time
-import re
-from subprocess import Popen
-from threading import Timer
-import subprocess
-import json
-import inspect
-import os
 
 comentRegex = re.compile('--[^\n]*\n')
 
@@ -153,26 +150,16 @@ def process(fileList, hdlCtx=None, timeoutInterval=20):
     
     p_list = []
     for fname in fileList:
-        p = Popen(["java", "-jar", str(convertor) , fname], stdout=subprocess.PIPE) 
+        p = Popen(["java", "-jar", str(convertor) , fname], stdout=PIPE) 
         p.fileName = fname
         p_list.append(p)
-        # def timeout():
-        #    if p.poll() is None:
-        #        p.kill()
-        #        import sys
-        #        sys.stderr.write("Process for parsing %s was killed by timeout" % p.fileName)
-        # tim = Timer(timeoutInterval, timeout)
-        # tim.start()
-        # p.timeout = tim
         
     for p in p_list:
-        # p.wait()
-        stdoutdata, stderrdata = p.communicate(timeout=timeoutInterval)
-        # p.timeout.cancel()
+        stdoutdata, _ = p.communicate(timeout=timeoutInterval)
 
         if p.returncode != 0:
             raise Exception("Failed to parse file %s" % (p.fileName))
-        j = json.loads(stdoutdata.decode("utf-8"),)
+        j = json.loads(stdoutdata.decode("utf-8"))
         hdlCtx.load(j)
     
     return hdlCtx
@@ -182,10 +169,4 @@ def process(fileList, hdlCtx=None, timeoutInterval=20):
 if __name__ == "__main__":
     fl = ['samples/iLvl/vhdl/dualportRAM.vhd']
     hdlCtx = process(fl)
-    # simplest_b
-    # axiLite_basic_slave2
-    # axi4-stream-bfm-master
-    # user
-    # axiLite_basic_slave
-    # hdlCtx = processFile('samples/iLvl/vhdl/entityExample.vhd')
     print(hdlCtx)

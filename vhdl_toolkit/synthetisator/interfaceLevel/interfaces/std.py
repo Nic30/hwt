@@ -37,7 +37,31 @@ class BramPort_withoutClk(Interface):
 
 class BramPort(BramPort_withoutClk):
     clk = s(masterDir=D.OUT)
-
+    @classmethod
+    def fromBramPort_withoutClk(cls, bramPort, clk):
+        assert(isinstance(bramPort, BramPort_withoutClk))
+        assert(isinstance(clk, Ap_clk))
+        self = cls()
+        def overWriteSubIntf(name, intf):
+            setattr(self, name, intf)
+            self._subInterfaces[name] = intf
+        def overWriteParam(name, param):
+            setattr(self, name, param)
+            self._params[name] = param
+                
+        overWriteSubIntf("clk", clk)
+        
+        overWriteParam("ADDR_WIDTH" , bramPort.ADDR_WIDTH)  
+        overWriteParam("DATA_WIDTH" , bramPort.DATA_WIDTH)  
+        
+        overWriteSubIntf("addr", bramPort.addr)     
+        overWriteSubIntf("din" , bramPort.din)     
+        overWriteSubIntf("dout", bramPort.dout)     
+        overWriteSubIntf("en" , bramPort.en)   
+        overWriteSubIntf("we" , bramPort.we)
+        self._masterDir = bramPort._masterDir
+        return self   
+        
 
 class SPI(Interface):
     clk = Ap_clk()

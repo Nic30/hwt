@@ -119,7 +119,8 @@ class Unit(Buildable):
         self._sigLvlUnit = VHDLUnit(self._entity)
         # connect results of synthetized context to interfaces of this unit
         for _, intf in self._interfaces.items():
-            self._connectMyInterfaceToMyEntity(intf)
+            if intf._isExtern:
+                self._connectMyInterfaceToMyEntity(intf)
         yield from s
             
         self._component = Component(self._entity)
