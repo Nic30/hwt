@@ -49,6 +49,18 @@ class Param(VHDLId):
         else:
             return v.get()
     def __str__(self):
+        if not self.parent:
+            return str(self.get())
+        else:
+            s = self
+            while not s.parent:
+                s= s.parent
+                if s._exp:
+                    raise NotImplementedError()
+            return s.name
+        
+        return 
+    def __repr__(self):
         return "<%s, val=%s>" % (self.__class__.__name__, self.get()) 
         
 
