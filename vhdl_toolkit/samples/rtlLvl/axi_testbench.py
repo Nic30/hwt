@@ -8,7 +8,7 @@ from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.variables import SignalItem
 
 
-#class HandShake_interface():
+# class HandShake_interface():
 #    def __init__(self, rd, vld, sensitivityList):
 #        self.vld = vld
 #        self.rd = rd
@@ -98,9 +98,9 @@ class Axi4_d():
     def write(self, data, burstId):
         buff = []
         data_t = VHDLType()
-        data_t.str = "std_logic_vector()"
+        data_t.widht = 64
         bit_t = VHDLType()
-        bit_t.str = "std_logic"
+        bit_t.width = 1
         last = data[-1]
         for d in data:
             buff.append(self.hs.write([

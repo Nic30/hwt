@@ -1,7 +1,7 @@
 import unittest
 
-from vhdl_toolkit.synthetisator.signalLevel.optimalizator import TreeBalancer, expr2cond
-from vhdl_toolkit.synthetisator.signalLevel.signal import OpAnd, Signal, OpEq, OpNot
+from vhdl_toolkit.synthetisator.rtlLevel.optimalizator import TreeBalancer, expr2cond
+from vhdl_toolkit.synthetisator.rtlLevel.signal import OpAnd, Signal, OpEq, OpNot
 from vhdl_toolkit.types import STD_LOGIC
 
 

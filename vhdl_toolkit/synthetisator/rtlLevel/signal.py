@@ -2,6 +2,7 @@ from python_toolkit.arrayQuery import arr_any, single, first
 from vhdl_toolkit.expr import Assignment, value2vhdlformat
 from vhdl_toolkit.types import VHDLType, VHDLBoolean, DIRECTION
 from vhdl_toolkit.variables import SignalItem, PortItem
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_none
 
 
 class InvalidOperandExc(Exception):
@@ -98,6 +99,9 @@ def PortItemFromSignal(s):
     else:
         d = DIRECTION.IN
     pi = PortItem(s.name, d, s.var_type)
+    if not hasattr(s, '_interface'):
+        s._interface = Ap_none()
+        s._interface._width = s.var_type.width
     pi._interface = s._interface
     
     return pi

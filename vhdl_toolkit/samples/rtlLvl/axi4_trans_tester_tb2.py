@@ -1,11 +1,11 @@
 import os
 
 from python_toolkit.arrayQuery import single
-from vhdl_toolkit.samples.axi_testbench import AXI_testbench, AXI_lite_master, \
+from vhdl_toolkit.samples.rtlLvl.axi_testbench import AXI_testbench, AXI_lite_master, \
     AXI4_slave
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.parser import entityFromFile
-from vhdl_toolkit.samples.axi4_trans_tester_tb import axi_tester, \
+from vhdl_toolkit.samples.rtlLvl.axi4_trans_tester_tb import axi_tester, \
     MODE_R, MODE_W, MODE_DELAY_R, MODE_DELAY_W, MODE_INIT
 from vhdl_toolkit.testbench_generator import delay
 

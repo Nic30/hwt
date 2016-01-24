@@ -1,4 +1,4 @@
-from vhdl_toolkit.synthetisator.signalLevel.signal import PortConnection
+from vhdl_toolkit.synthetisator.rtlLevel.signal import PortConnection
 from vhdl_toolkit.types import DIRECTION
 from vhdl_toolkit.variables import PortItem
 
@@ -18,7 +18,7 @@ class NetContainer():
 
 class ConnectionInfo():
     """Net connection info"""
-    def __init__(self, unit, portItem, index=None, portIndexLookup= None):
+    def __init__(self, unit, portItem, index=None, portIndexLookup=None):
         self.portItem = portItem
         self.unit = unit
         if index is not None:
@@ -102,7 +102,7 @@ def serializeUnit(interface, unit):
         driver = s.getDriver()
         
                 
-        if driver and isinstance(driver, PortConnection): # has driver inside schema
+        if driver and isinstance(driver, PortConnection):  # has driver inside schema
             n = NetContainer()
             n.name = s.name
             n.source = ConnectionInfo(driver.unit, driver.portItem, portIndexLookup=indxLookup)
@@ -121,7 +121,7 @@ def serializeUnit(interface, unit):
             if len(n.targets) > 0:
                 n.targets = sorted(n.targets, key=lambda x : (x.unit.name, x.index))
                 nets.append(n)
-        #else: # is input
+        # else: # is input
         #    inputPort = ExternalPort(s.name, PortItem.typeIn)
         #    nodes.append(inputPort)
         #    n = NetContainer()

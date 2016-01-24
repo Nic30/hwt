@@ -1,10 +1,10 @@
 from python_toolkit.arrayQuery import single
 from python_toolkit.stringUtils import matchIgnorecase
 from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.signalLevel.codeOp import If
-from vhdl_toolkit.synthetisator.signalLevel.context import Context
-from vhdl_toolkit.synthetisator.signalLevel.optimalizator import expr_optimize
-from vhdl_toolkit.synthetisator.signalLevel.signal import signalsForInterface
+from vhdl_toolkit.synthetisator.rtlLevel.codeOp import If
+from vhdl_toolkit.synthetisator.rtlLevel.context import Context
+from vhdl_toolkit.synthetisator.rtlLevel.optimalizator import expr_optimize
+from vhdl_toolkit.synthetisator.rtlLevel.signal import signalsForInterface
 from vivado_toolkit.ip_packager.busInterface import AXILite, Ap_rst_n, Ap_clk
 
 
@@ -17,7 +17,7 @@ class AxiLiteA:
     def __init__(self, axiSignals, prefix, rw='r'):
         def findAxiASig(name):
             return single(axiSignals, lambda x: matchIgnorecase(x.name, prefix + 'a' + rw + name))    
-        self.addr =findAxiASig("addr")
+        self.addr = findAxiASig("addr")
         self.vld = findAxiASig("valid")
         self.ack = findAxiASig("ready")
         
@@ -25,8 +25,8 @@ class AxiLiteR():
     def __init__(self, axiSignals, prefix):
         def findAxiRSig(name):
             return single(axiSignals, lambda x: matchIgnorecase(x.name, prefix + 'r' + name))  
-        self.data =  findAxiRSig("data")
-        self.resp =  findAxiRSig("resp")
+        self.data = findAxiRSig("data")
+        self.resp = findAxiRSig("resp")
         self.valid = findAxiRSig("valid")
         self.ready = findAxiRSig("ready")
         
@@ -85,9 +85,8 @@ if __name__ == "__main__":
     for m in masters:
         interf.extend(m)
     
-    with open("/home/nic30/Documents/vivado/toolkitTest/toolkitTest.srcs/sources_1/new/top_test.vhd", "w") as f:
-        for o in c.synthetize("test_top", interf):
-            f.write(formatVhdl(str(o)))
+    for o in c.synthetize(interf):
+        print(formatVhdl(str(o)))
 
     print("done")
     

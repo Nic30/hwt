@@ -2,10 +2,10 @@ from python_toolkit.arrayQuery import arr_any, where, distinctBy
 from vhdl_toolkit.architecture import Architecture, Component
 from vhdl_toolkit.entity import Entity
 from vhdl_toolkit.process import HWProcess
-from vhdl_toolkit.synthetisator.signalLevel.codeOp import If, IfContainer
-from vhdl_toolkit.synthetisator.signalLevel.optimalizator import TreeBalancer, \
+from vhdl_toolkit.synthetisator.rtlLevel.codeOp import If, IfContainer
+from vhdl_toolkit.synthetisator.rtlLevel.optimalizator import TreeBalancer, \
     expr2cond
-from vhdl_toolkit.synthetisator.signalLevel.signal import Signal, walkSigSouces, PortItemFromSignal, PortConnection, \
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, walkSigSouces, PortItemFromSignal, PortConnection, \
     SyncSignal, walkUnitInputs, walkSignalsInExpr, OpAnd, \
     discoverSensitivity
 from vhdl_toolkit.templates import VHDLTemplates  

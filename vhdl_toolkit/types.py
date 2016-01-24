@@ -103,7 +103,7 @@ class VHDLExtraType(object):
 
 def STD_LOGIC():
     t = VHDLType()
-    t.str = "std_logic"
+    t.width = 1
     return t
 
 def VHDLBoolean():

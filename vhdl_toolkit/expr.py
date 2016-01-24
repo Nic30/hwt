@@ -1,7 +1,7 @@
 import types
 
 def value2vhdlformat(dst, val):
-    """ @param: dst is VHDLvariable connected with value """
+    """ @param dst: is VHDLvariable connected with value """
     if hasattr(val, 'name') :
         return val.name
     w = dst.var_type.getWidth()
