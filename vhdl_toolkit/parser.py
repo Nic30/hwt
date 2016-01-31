@@ -11,6 +11,7 @@ from vhdl_toolkit.entity import Entity
 from vhdl_toolkit.variables import PortItem, VHDLGeneric
 from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.expr import BinOp
+from vhdl_toolkit.synthetisator.param import Param
 
 comentRegex = re.compile('--[^\n]*\n')
 
@@ -111,9 +112,11 @@ class HDLCtx():
     @staticmethod
     def genericFromJson(jGeneric):
         t = jGeneric["type"]
-        g = VHDLGeneric(jGeneric['name'], HDLCtx.typeFromJson(t, {}), {})
-        if "value" in jGeneric:
-            g.defaultVal = HDLCtx.exprFromJson(jGeneric['value'], {})
+        name = jGeneric['name'].lower()
+        g = VHDLGeneric(name, HDLCtx.typeFromJson(t, {}), {})
+        g.defaultVal = Param(HDLCtx.exprFromJson(jGeneric['value'], {}))
+        g.defaultVal.name = name
+        g.name = name
         return g
     
     @staticmethod        
@@ -142,7 +145,7 @@ def entityFromFile(fileName):
     return list(ctx.entities.items())[0][1]
 
             
-def process(fileList, hdlCtx=None, timeoutInterval=20):
+def process(fileList:list, hdlCtx=None, timeoutInterval=20):
     baseDir = os.path.dirname(inspect.getfile(process))
     convertor = os.path.join(baseDir, "vhdlConvertor", "vhdlConvertor.jar")
     if not hdlCtx:

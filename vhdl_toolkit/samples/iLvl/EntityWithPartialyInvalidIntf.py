@@ -6,8 +6,7 @@ class EntityWithPartialyInvalidIntf(UnitWithSource):
 
 if __name__ == "__main__":
     u = EntityWithPartialyInvalidIntf()
-    print([ s for s in u._synthesise()])
-    print(u._interfaces.keys())
+    [ s for s in u._synthesise()]
     print(u._entity)
     assert(u.descrBM_w_wr_addr_V_123._parent == u)
     assert(u.descrBM_w_wr_din_V._parent == u)

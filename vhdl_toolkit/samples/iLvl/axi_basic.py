@@ -16,8 +16,8 @@ class AxiLiteSlaveContainer(Unit):
     clk = Ap_clk(slv.S_AXI_ACLK, isExtern=True)
     rst_n = Ap_rst_n(slv.S_AXI_ARESETN, isExtern=True)
     axi = AxiLite(slv.S_AXI, isExtern=True)
-    slv.C_S_AXI_ADDR_WIDTH.inherit(ADDR_WIDTH)
-    slv.C_S_AXI_DATA_WIDTH.inherit(DATA_WIDTH)
+    slv.c_s_axi_addr_width.inherit(ADDR_WIDTH)
+    slv.c_s_axi_data_width.inherit(DATA_WIDTH)
 
 if __name__ == "__main__":
 

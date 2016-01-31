@@ -1,7 +1,5 @@
-from vhdl_toolkit.types import VHDLType
-from vhdl_toolkit.variables import VHDLId
 
-class Param(VHDLId):
+class Param():
     def __init__(self, initval):
         self.val = initval
         self.parent = None
@@ -22,13 +20,7 @@ class Param(VHDLId):
             return self._expr(v)
         else:
             return v
-        
-    def getSigType(self):
-        t = VHDLType()
-        t.ctx = {}
-        t.width = int
-        return t
-    
+  
     def inherit(self, param):
         self.parent = param
     
@@ -49,17 +41,16 @@ class Param(VHDLId):
         else:
             return v.get()
     def __str__(self):
+        if hasattr(self, "name"):
+            return self.name.upper()
         if not self.parent:
             return str(self.get())
         else:
-            s = self
-            while not s.parent:
-                s= s.parent
-                if s._exp:
-                    raise NotImplementedError()
-            return s.name
-        
-        return 
+            if self._expr:
+                return str(self.get())
+                #raise NotImplementedError()
+            return str(self.parent)
+
     def __repr__(self):
         return "<%s, val=%s>" % (self.__class__.__name__, self.get()) 
         

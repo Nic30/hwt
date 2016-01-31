@@ -3,6 +3,7 @@ from vhdl_toolkit.expr import Assignment, value2vhdlformat
 from vhdl_toolkit.types import VHDLType, VHDLBoolean, DIRECTION
 from vhdl_toolkit.variables import SignalItem, PortItem
 from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_none
+from vhdl_toolkit.synthetisator.param import getParam
 
 
 class InvalidOperandExc(Exception):
@@ -113,8 +114,8 @@ class PortConnection():
         self.portItem = portItem
         
     def asPortMap(self):
-        p_w = self.portItem.var_type.getWidth()
-        s_w = self.sig.var_type.getWidth()
+        p_w = getParam(self.portItem.var_type.getWidth())
+        s_w = getParam(self.sig.var_type.getWidth())
         if p_w > s_w:  # if port item is wider fill signal with zeros
             diff = p_w - s_w
             return ('%s => %s & X"' + "%0" + str(diff) + 'd"') % (self.portItem.name, self.sig.name, 0) 

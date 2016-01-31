@@ -1,24 +1,6 @@
 from vhdl_toolkit.expr import Assignment, value2vhdlformat
 from vhdl_toolkit.types import InvalidVHDLTypeExc
 
-class VHDLId(str):
-    pass
-
-def LexToken2Val(token):
-    """
-    @return: actual parsed value of the lex token
-    """
-    if issubclass(token.__class__, VHDLId):
-        return token.get()
-    elif isinstance(token, int):
-        return token
-    elif token.type == 'NUMBER':
-        return int(token.value)
-    elif token.type == 'BOOLEAN':
-        return token.value
-    else:
-        raise Exception("Unimplemented token type %s" % token.type)
-
 class VHDLVariable():
     def __init__(self, name, var_type, defaultVal=None):
         self.name = name
@@ -43,7 +25,8 @@ class VHDLVariable():
 class VHDLGeneric(VHDLVariable):
     def __str__(self):
         if hasattr(self, "defaultVal"):
-            return "%s : %s := %s" % (self.name, str(self.var_type), str(self.defaultVal))
+            return "%s : %s := %s" % (self.name, str(self.var_type),
+                                      value2vhdlformat(self, self.defaultVal))
         else:
             return "%s : %s" % (self.name, str(self.var_type))
 

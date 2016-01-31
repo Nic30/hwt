@@ -9,10 +9,9 @@ from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.all import allInterfac
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.architecture import Component
-
-from python_toolkit.arrayQuery import single
 from vhdl_toolkit.synthetisator.param import Param
 
+from python_toolkit.arrayQuery import single
 
 
 class Unit(Buildable):
@@ -53,7 +52,8 @@ class Unit(Buildable):
             elif issubclass(prop.__class__, Unit):
                 cls._subUnits[propName] = prop
             elif issubclass(prop.__class__, Param):
-                cls._params[propName] = prop     
+                cls._params[propName] = prop
+                prop.name = propName    
         cls._clsBuildFor = cls
     def _cleanAsSubunit(self):
         for _, i in self._interfaces.items():
@@ -132,7 +132,6 @@ class Unit(Buildable):
 
 class BlackBox(Unit):
     pass      
-
 
 class UnitWithSource(Unit):
     @classmethod

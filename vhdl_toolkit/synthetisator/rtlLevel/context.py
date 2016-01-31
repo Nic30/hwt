@@ -57,7 +57,6 @@ class Context(object):
             raise Exception('signal name "%s" is not unique' % (name))
         
         t = VHDLType()
-        width = getParam(width)
         t.width = width
         t.ctx = self.globals
 
@@ -104,7 +103,12 @@ class Context(object):
                     
         for s in where(interfaces, lambda s: s.hasDriver()):  # walk my outputs
             discoverDatapaths(s)
-        
+    @staticmethod
+    def typeForParam(p):
+        t = VHDLType()
+        t.ctx = {}
+        t.width = int
+        return t 
     def synthetize(self, interfaces):
         ent = Entity()
         ent.name = self.name
@@ -113,7 +117,7 @@ class Context(object):
         ent.ctx = self.globals
         for k, v in self.globals.items():
             k = k.upper()
-            var_type = v.getSigType()
+            var_type = Context.typeForParam(v)
             v.name = k
             g = VHDLGeneric(k, var_type, v)
             ent.generics.append(g)

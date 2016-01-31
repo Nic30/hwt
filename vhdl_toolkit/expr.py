@@ -1,12 +1,15 @@
 import types
+from vhdl_toolkit.synthetisator.param import getParam
 
 def value2vhdlformat(dst, val):
     """ @param dst: is VHDLvariable connected with value """
-    if hasattr(val, 'name') :
+    if hasattr(val, 'name') and not dst.defaultVal == val:
         return val.name
     w = dst.var_type.getWidth()
     if w == 1:
         return "'%d'" % (int(val))
+    elif w == int:
+        return "%d" % val.get()
     elif w > 1:
         return "STD_LOGIC_VECTOR(TO_UNSIGNED(%d, %s'LENGTH))" % (int(val), dst.name)
     else:
@@ -35,23 +38,23 @@ class Literal():
         self.val = val
         assert(bool(id) != bool(val))
         if id:
-            self.eval = lambda self, : id.get()
+            self.eval = lambda self : id.get()
         else:
             self.eval = lambda self : self.val
 
 class BinOp():
-    PLUS = '+'
-    MINUS = '-'
-    DIV = '/'
-    MULT = '*'
+    PLUS = 'PLUS'
+    MINUS = 'MINUS'
+    DIV = 'DIV'
+    MULT = 'MULT'
     DOWNTO = "DOWNTO"
     
     @staticmethod
     def getLit(lit):
-        if hasattr(lit, "__call__"):
-            return lit()
+        if hasattr(lit, "__call__"):  # is param
+            return BinOp.getLit(lit())
         else:
-            return lit
+            return getParam(lit)
         
     def __init__(self, op0, operator, op1):
         self.op0 = op0

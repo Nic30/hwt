@@ -1,4 +1,5 @@
 from vhdl_toolkit.expr import BinOp
+from vhdl_toolkit.synthetisator.param import Param
 
 
 class InvalidVHDLTypeExc(Exception):
@@ -68,10 +69,11 @@ class VHDLType():
             w = self.width()
             if isinstance(w, list):
                 return (BinOp.getLit(w[0]) - BinOp.getLit(w[1])) + 1
+            return w
         return self.width
     
     def __str__(self):
-        w = self.getWidth()
+        w = self.width
         if w == str:
             return "STRING"
         elif w == int:
@@ -82,6 +84,8 @@ class VHDLType():
             return 'STD_LOGIC_VECTOR(%d DOWNTO 0)' % (w - 1)
         elif isinstance(w, BinOp):
             return 'STD_LOGIC_VECTOR(%s)' % str(w)
+        elif isinstance(w, Param):
+            return 'STD_LOGIC_VECTOR(%s -1 DOWNTO 0)' % (str(w))
         else:
             raise InvalidVHDLTypeExc(self)
 
