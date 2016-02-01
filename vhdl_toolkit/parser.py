@@ -12,7 +12,7 @@ from vhdl_toolkit.variables import PortItem, VHDLGeneric
 from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.expr import BinOp
 from vhdl_toolkit.synthetisator.param import Param
-
+from vhdl_toolkit.reference import VhdlLocalRef, VhdlReference
 comentRegex = re.compile('--[^\n]*\n')
 
 """
@@ -24,14 +24,33 @@ https://github.com/antlr/grammars-v4/blob/master/vhdl/vhdl.g4
 https://github.com/loranbriggs/Antlr/blob/master/The%20Definitive%20ANTLR%204%20Reference.pdf
 
 """
-
+class BaseVhdlContext():
+    std_logic = VhdlLocalRef(["std_logic"]) 
+    std_logic_vector = VhdlLocalRef(["std_logic_vector"]) 
+    integer = VhdlLocalRef(["integer"])
+    bool = VhdlLocalRef(["bool"])
+    string = VhdlLocalRef(["string"])
+    float = VhdlLocalRef(["float"])
+    
+    @classmethod
+    def getBaseCtx(cls):
+        d = {}
+        for n  in [cls.std_logic, cls.std_logic_vector,
+                   cls.integer, cls.bool, cls.string, cls.float]:
+            d[n] = n
+        return d
+    
+ 
+    
 class HDLRedefinitionErr(Exception):
     pass
 
 class HDLParseErr(Exception):
     pass
 
-
+baseDir = os.path.dirname(inspect.getfile(HDLRedefinitionErr))
+convertor = os.path.join(baseDir, "vhdlConvertor", "vhdlConvertor.jar")
+ 
 class NonRedefDict(dict):
     def __setitem__(self, key, val):
         if key in self:
@@ -43,7 +62,8 @@ class HDLCtx():
     def __init__(self):
         self.entities = NonRedefDict()
         self.architectures = []
-        self.packages = []
+        self.packages = NonRedefDict()
+        self.ctx = BaseVhdlContext.getBaseCtx()
     def __str__(self):
         return "\n".join([
                     "\n".join([str(e) for _, e in self.entities.items()]),
@@ -58,7 +78,7 @@ class HDLCtx():
             t = lit['type']
             v = lit['value']
             if t == 'ID':
-                v = ctx[v.lower()]
+                v = ctx[VhdlLocalRef([v])]
             elif t == 'INT':
                 v = int(v)
             elif t == 'float':
@@ -90,54 +110,70 @@ class HDLCtx():
         var_t = VHDLType()
         var_t.ctx = ctx
         try:
-            t_name = jType['literal']['value'].lower()
-            if t_name == 'integer':
+            t_name = VhdlLocalRef.fromJson(jType['literal']['value'])
+            if t_name == BaseVhdlContext.integer:
                 var_t.width = int
-            elif t_name == 'float':
+            elif t_name == BaseVhdlContext.float:
                 var_t.width = float
-            elif t_name == 'std_logic':
+            elif t_name == BaseVhdlContext.std_logic:
                 var_t.width = 1
+            elif t_name == BaseVhdlContext.string:
+                var_t.width = str
             else:
                 raise HDLParseErr("Unknown type name %s" % (t_name))
         except KeyError:
             # typeName = t[]
             op = jType['binOperator']
-            t_name = op['op0']['literal']['value'].lower()
-            if t_name != 'std_logic_vector':
+            t_name = VhdlLocalRef.fromJson(op['op0']['literal']['value'])
+            if t_name != BaseVhdlContext.std_logic_vector:
                 raise NotImplementedError("Type conversion is not implemented for type %s" % t_name)
             var_t.width = HDLCtx.exprFromJson(op['op1'], ctx)
             
         return var_t
     
-    @staticmethod
-    def genericFromJson(jGeneric):
+    def genericFromJson(self, jGeneric):
         t = jGeneric["type"]
         name = jGeneric['name'].lower()
-        g = VHDLGeneric(name, HDLCtx.typeFromJson(t, {}), {})
-        g.defaultVal = Param(HDLCtx.exprFromJson(jGeneric['value'], {}))
+        g = VHDLGeneric(name, HDLCtx.typeFromJson(t, self.ctx), self.ctx)
+        g.defaultVal = Param(HDLCtx.exprFromJson(jGeneric['value'], self.ctx))
         g.defaultVal.name = name
         g.name = name
         return g
     
-    @staticmethod        
-    def entityFromJson(jEnt):
+    def entityFromJson(self, jEnt):
         e = Entity()
         e.name = jEnt['name']
         for _, jGener in jEnt['generics'].items():
-            g = HDLCtx.genericFromJson(jGener)
+            g = self.genericFromJson(jGener)
             e.generics.append(g)
         ctx = e.ctxFromGenerics()
+        ctx.update(self.ctx)
         for _ , jPort in jEnt['ports'].items():
             p = HDLCtx.portFromJson(jPort, ctx)
             e.port.append(p)
         return e
+                
         
-        
-    def load(self, jsonctx):
+    def load(self, jsonctx, fileName):
+        dependencies = set()
+        for jsnU in jsonctx['usings']:
+            u = VhdlReference.fromJson(jsnU)
+            dependencies.add(u)
         for eName, e in jsonctx["entities"].items():
             ent = self.entityFromJson(e)
+            ent.fileName = fileName
+            ent.dependencies = dependencies
             self.entities[eName] = ent
-            
+        print(dependencies)    
+
+class VhdlLib(HDLCtx):
+    def __init__(self, name):
+        self.name = name
+        self.fileContexts = NonRedefDict()
+        self.packages = NonRedefDict()
+        self.entities = NonRedefDict()
+                
+
         
 def entityFromFile(fileName):
     ctx = process([fileName])
@@ -146,8 +182,7 @@ def entityFromFile(fileName):
 
             
 def process(fileList:list, hdlCtx=None, timeoutInterval=20):
-    baseDir = os.path.dirname(inspect.getfile(process))
-    convertor = os.path.join(baseDir, "vhdlConvertor", "vhdlConvertor.jar")
+
     if not hdlCtx:
         hdlCtx = HDLCtx()
     
@@ -163,7 +198,7 @@ def process(fileList:list, hdlCtx=None, timeoutInterval=20):
         if p.returncode != 0:
             raise Exception("Failed to parse file %s" % (p.fileName))
         j = json.loads(stdoutdata.decode("utf-8"))
-        hdlCtx.load(j)
+        hdlCtx.load(j, p.fileName)
     
     return hdlCtx
 

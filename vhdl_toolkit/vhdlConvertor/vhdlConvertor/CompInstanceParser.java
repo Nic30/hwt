@@ -59,7 +59,7 @@ public class CompInstanceParser {
 			System.err.println(
 					"NotImplemented CompInstanceParser.visitInstantiated_unit - Identifier");
 		}
-		return ExprParser.visitName(ctx.name());
+		return ReferenceParser.visitName(ctx.name());
 	}
 	public static List<Expr> visitGeneric_map_aspect(
 			vhdlParser.Generic_map_aspectContext ctx) {

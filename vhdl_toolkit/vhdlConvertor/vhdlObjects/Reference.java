@@ -11,7 +11,7 @@ public class Reference extends Vector<Expr> implements iJsonable {
 	public JSONArray toJson() throws JSONException {
 		JSONArray a = new JSONArray();
 		for (Expr e : this) {
-			a.put(e.toJson());
+			a.put(e.literal.toJson());
 		}
 		return a;
 	}

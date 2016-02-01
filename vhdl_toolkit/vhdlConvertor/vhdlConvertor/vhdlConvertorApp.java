@@ -15,7 +15,7 @@ import vhdlParser.vhdlParser.Design_fileContext;
 
 public class vhdlConvertorApp {
 	public static void main(String[] args) throws Exception {
-		boolean prettyPrint = false;
+		boolean prettyPrint = true;
 
 		if (args.length != 1) {
 			System.err.print("Can be used only with one source file\n");

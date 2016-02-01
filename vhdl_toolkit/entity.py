@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from vhdl_toolkit.templates import VHDLTemplates 
+from vhdl_toolkit.reference import VhdlLocalRef
 
 class Entity(object):
     def __init__(self):
@@ -12,7 +13,7 @@ class Entity(object):
     def ctxFromGenerics(self):
         ctx = {}
         for g in self.generics:
-            ctx[g.name.lower()] = g.defaultVal
+            ctx[VhdlLocalRef([g.name])] = g.defaultVal
         return ctx
     def __str__(self):
         self.port.sort(key=lambda x: x.name)

@@ -1,5 +1,8 @@
 package vhdlConvertor;
 
+import java.util.List;
+import java.util.Vector;
+
 import vhdlObjects.Arch;
 import vhdlObjects.Context;
 import vhdlObjects.Entity;
@@ -111,7 +114,9 @@ public class DesignFileParser {
 		}
 		vhdlParser.Use_clauseContext u = ctx.use_clause();
 		if (u != null) {
-			context.usings.add(visitUse_clause(u));
+			for (Reference r : visitUse_clause(u)) {
+				context.usings.add(r);
+			}
 		}
 
 	}
@@ -133,14 +138,15 @@ public class DesignFileParser {
 
 		return r;
 	}
-	Reference visitUse_clause(vhdlParser.Use_clauseContext ctx) {
+	List<Reference> visitUse_clause(vhdlParser.Use_clauseContext ctx) {
 		// use_clause
 		// : USE selected_name ( COMMA selected_name )* SEMI
 		// ;
-		Reference r = new Reference();
+		List<Reference> refL = new Vector<Reference>();
 		for (vhdlParser.Selected_nameContext sn : ctx.selected_name()) {
-			r.add(ExprParser.visitSelected_name(sn));
+			Reference r = ReferenceParser.visitSelected_name(sn);
+			refL.add(r);
 		}
-		return r;
+		return refL;
 	}
 }

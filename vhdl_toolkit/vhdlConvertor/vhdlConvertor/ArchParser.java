@@ -1,7 +1,6 @@
 package vhdlConvertor;
 
 import vhdlObjects.Arch;
-import vhdlObjects.CompInstance;
 import vhdlParser.vhdlParser;
 
 public class ArchParser {
@@ -84,7 +83,8 @@ public class ArchParser {
 		vhdlParser.Component_instantiation_statementContext ci = ctx
 				.component_instantiation_statement();
 		if (ci != null) {
-			a.components.add(CompInstanceParser.visitComponent_instantiation_statement(ci));
+			a.components.add(CompInstanceParser
+					.visitComponent_instantiation_statement(ci));
 		} else {
 			System.err.println(
 					"NotImplemented ArchParser.visitArchitecture_statement - unspecified next rule");

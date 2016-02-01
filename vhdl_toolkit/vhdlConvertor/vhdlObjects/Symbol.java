@@ -15,7 +15,11 @@ public class Symbol {
 		s.put("type", SymbolType.asString(type));
 		switch (type) {
 			case ID :
-				s.put("value", (String) value);
+				if (value instanceof Reference)
+					s.put("value", ((Reference) value).toJson());
+				else {
+					s.put("value", (String) value);
+				}
 				break;
 			case FLOAT :
 				s.put("value", (Float) value);

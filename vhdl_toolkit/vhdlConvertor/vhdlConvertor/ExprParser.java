@@ -6,64 +6,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import vhdlObjects.Expr;
 import vhdlObjects.SymbolType;
 import vhdlParser.vhdlParser;
 
 public class ExprParser {
-	public static Expr visitName(vhdlParser.NameContext ctx) {
-		// name
-		// : selected_name
-		// | name_part ( DOT name_part)*
-		// ;
-		vhdlParser.Selected_nameContext sn = ctx.selected_name();
-		if (sn != null)
-			return visitSelected_name(sn);
 
-		Iterator<vhdlParser.Name_partContext> nIt = ctx.name_part().iterator();
-		Expr op0 = visitName_part(nIt.next());
-		while (nIt.hasNext()) {
-			Expr op1 = visitName_part(nIt.next());
-			op0 = new Expr(op0, OperatorType.DOT, op1);
-		}
-		return op0;
-	}
-	public static Expr visitName_part(vhdlParser.Name_partContext ctx) {
-		// name_part
-		// : selected_name (name_attribute_part |
-		// name_function_call_or_indexed_part | name_slice_part)?
-		// ;
-		Expr sn = visitSelected_name(ctx.selected_name());
-
-		vhdlParser.Name_attribute_partContext na = ctx.name_attribute_part();
-		if (na != null) {
-			// name_attribute_part
-			// : APOSTROPHE attribute_designator ( expression ( COMMA expression
-			// )* )?
-			// ;
-			System.err.println(
-					"NotImplemented ExprParser.Name_attribute_partContext");
-			return null;
-		}
-		vhdlParser.Name_function_call_or_indexed_partContext callOrIndx = ctx
-				.name_function_call_or_indexed_part();
-		if (callOrIndx != null) {
-			// name_function_call_or_indexed_part
-			// : LPAREN actual_parameter_part? RPAREN
-			// ;
-			return new Expr(sn, OperatorType.CALL, visitActual_parameter_part(
-					callOrIndx.actual_parameter_part()));
-		}
-		vhdlParser.Name_slice_partContext ns = ctx.name_slice_part();
-		if (ns != null) {
-			System.err.println(
-					"NotImplemented ExprParser.visitName_slice_partContext");
-			return null;
-		}
-		return sn;
-	}
 	public static List<Expr> visitActual_parameter_part(
 			vhdlParser.Actual_parameter_partContext ctx) {
 		List<Expr> l = new Vector<Expr>();
@@ -130,7 +79,7 @@ public class ExprParser {
 		if (er != null)
 			return visitExplicit_range(er);
 
-		return visitName(ctx.name());
+		return ReferenceParser.visitName(ctx.name());
 	}
 	public static Expr visitActual_part(vhdlParser.Actual_partContext ctx) {
 		// actual_part
@@ -140,7 +89,8 @@ public class ExprParser {
 		vhdlParser.NameContext name = ctx.name();
 		Expr ad = visitActual_designator(ctx.actual_designator());
 		if (name != null) {
-			return new Expr(visitName(name), OperatorType.CALL, ad);
+			return new Expr(ReferenceParser.visitName(name), OperatorType.CALL,
+					ad);
 		}
 		return ad;
 	}
@@ -166,41 +116,12 @@ public class ExprParser {
 		if (c != null) {
 			return visitConstraint(ctx.selected_name(0), c);
 		} else {
-			return visitSelected_name(ctx.selected_name(0));
+			return new Expr(
+					ReferenceParser.visitSelected_name(ctx.selected_name(0)));
 		}
 		// [TODO] tolerance_aspect, second selected_name
 	}
-	public static Expr visitSelected_name(vhdlParser.Selected_nameContext ctx) {
-		// selected_name
-		// : identifier (DOT suffix)*
-		// ;
-		Expr e = new Expr(SymbolType.ID, ctx.identifier().getText());
-		for (vhdlParser.SuffixContext s : ctx.suffix()) {
-			e = new Expr(e, OperatorType.DOT, visitSuffix(s));
-		}
-		return e;
-	}
-	public static Expr visitSuffix(vhdlParser.SuffixContext ctx) {
-		// suffix
-		// : identifier
-		// | CHARACTER_LITERAL
-		// | STRING_LITERAL
-		// | ALL
-		// ;
-		vhdlParser.IdentifierContext id = ctx.identifier();
-		if (id != null)
-			return LiteralParser.visitIdentifier(id);
 
-		TerminalNode n = ctx.CHARACTER_LITERAL();
-		if (n != null)
-			return LiteralParser.visitCHARACTER_LITERAL(n);
-		n = ctx.STRING_LITERAL();
-		if (n != null)
-			return LiteralParser.visitSTRING_LITERAL(n);
-
-		assert (ctx.ALL() != null);
-		return new Expr(SymbolType.ALL, null);
-	}
 	public static Expr visitConstraint(
 			vhdlParser.Selected_nameContext selectedName,
 			vhdlParser.ConstraintContext ctx) {
@@ -223,7 +144,9 @@ public class ExprParser {
 			op1 = visitIndex_constraint(i);
 		}
 
-		return new Expr(visitSelected_name(selectedName), op, op1);
+		return new Expr(
+				new Expr(ReferenceParser.visitSelected_name(selectedName)), op,
+				op1);
 
 	}
 	public static Expr visitIndex_constraint(
@@ -404,7 +327,7 @@ public class ExprParser {
 			return visitAggregate(ag);
 		vhdlParser.NameContext n = ctx.name();
 		assert (n != null);
-		return visitName(n);
+		return ReferenceParser.visitName(n);
 	}
 	public static Expr visitQualified_expression(
 			vhdlParser.Qualified_expressionContext ctx) {
