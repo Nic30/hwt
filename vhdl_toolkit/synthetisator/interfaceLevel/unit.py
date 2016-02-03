@@ -166,6 +166,7 @@ class UnitWithSource(Unit):
     
     def _synthesise(self, name=None):
         assert(self._entity)
-        with open(self._origin) as f:
-            return ['--%s' % (self._origin)]  # [f.read()]
-            
+        self._name = name
+        return [self]
+    def __str__(self):
+        return '--%s' % (self._origin)
