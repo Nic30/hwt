@@ -29,6 +29,8 @@ public class Context extends Jsonable {
 		addJsonArr(c, "usings", usings);
 		addJsonObj(c, "entities", entities, e -> e.name);
 		addJsonArr(c, "architectures", architectures);
+		addJsonObj(c, "packages", packages, p -> p.name);
+		addJsonArr(c, "packageHeaders", packageHeaders);
 		return c;
 	}
 
