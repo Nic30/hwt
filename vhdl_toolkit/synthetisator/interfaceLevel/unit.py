@@ -13,6 +13,12 @@ from vhdl_toolkit.synthetisator.param import Param
 
 from python_toolkit.arrayQuery import single
 
+def defaultUnitName(unit, sugestedName=None):
+    if not sugestedName:
+        return unit.__class__.__name__
+    else:
+        return sugestedName
+
 
 class Unit(Buildable):
     """
@@ -77,8 +83,7 @@ class Unit(Buildable):
         """
         synthesize all subunits, make connections between them, build entity and component for this unit
         """
-        if not name:
-            name = self.__class__.__name__
+        name = defaultUnitName(self, name)
         self._name = name
         # construct globals (generics for entity)
         globalNames = {}
@@ -166,7 +171,7 @@ class UnitWithSource(Unit):
     
     def _synthesise(self, name=None):
         assert(self._entity)
-        self._name = name
+        self._name = defaultUnitName(self, name)
         return [self]
     def __str__(self):
         return '--%s' % (self._origin)

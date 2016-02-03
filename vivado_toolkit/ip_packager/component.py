@@ -1,12 +1,14 @@
 from time import  time
 
-from vivado_toolkit.ip_packager.busInterface import defaultBusResolve, extractBusInterface
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
          mkSpiElm, ns, whereEndsWithExt
 from vivado_toolkit.ip_packager.model import Model, Port
 from vivado_toolkit.ip_packager.others import VendorExtensions, FileSet, File, \
     Parameter, Value
 import xml.etree.ElementTree as etree
+from vivado_toolkit.ip_packager.interfaces.all import allBusInterfaces
+from vhdl_toolkit.types import INTF_DIRECTION
+from vivado_toolkit.ip_packager.busInterface import BusInterface
 
 
 vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
@@ -32,7 +34,7 @@ class Component():
         self.parameters = []
         self.vendorExtensions = VendorExtensions()
         self._files = []
-        self._topEntity = None
+        self._topUnit = None
                       
     # @classmethod
     # def load(cls, xmlStr):
@@ -67,8 +69,6 @@ class Component():
         tclFileSet = fileSetFromFiles(tcl_fileSetName, whereEndsWithExt(self._files, ".tcl"))
         for fs in [vhdl_fs, vhdl_sim_fs, tclFileSet]:
             filesets.append(fs.asElem())
-            
-
         
     def _xmlParameters(self, compElem):
         parameters = appendSpiElem(compElem, "parameters")
@@ -88,8 +88,8 @@ class Component():
         appendStrElements(c, self, self._strValues[:-1])
         if len(self.busInterfaces) > 0:
             bi = appendSpiElem(c, "busInterfaces")
-            for b in self.busInterfaces:
-                bi.append(b.asElem())
+            for intf in self.busInterfaces:
+                bi.append(intf._bi.asElem())
         c.append(self.model.asElem())
         self._xmlFileSets(c)
         
@@ -99,10 +99,23 @@ class Component():
         
         return c
    
+    @staticmethod
+    def generatePortMap(biType, intf):
+        def processIntf(mapDict, intf):
+            if not intf._subInterfaces:
+                assert(isinstance(mapDict, str))
+                return {mapDict : intf._getFullName().replace(".", intf.NAME_SEPARATOR)}
+            else:
+                d = {}
+                for k, m in mapDict.items():
+                    i = intf._subInterfaces[k]
+                    d.update(processIntf(m, i))
+                return d
+        return processIntf(biType.map, intf)
     
-    def asignTopEntity(self, e):
-        self._topEntity = e
-        self.name = e.name
+    def asignTopUnit(self, unit):
+        self._topUnit = unit
+        self.name = unit._name
         self.model.addDefaultViews(self.name)
         def trimUnderscores(s):
             while s.endswith("_"):
@@ -113,24 +126,32 @@ class Component():
                 return separator.join([ trimUnderscores(a) for a  in s.split(separator)])
             else:
                 return s
-        for p in self._topEntity.port:
-            self.model.ports.append(Port._entPort2CompPort(e, p))
+        for p in self._topUnit._entity.port:
+            self.model.ports.append(Port._entPort2CompPort(unit._entity, p))
 
-        for c in defaultBusResolve:
-            for bi in extractBusInterface(self._topEntity, c):
-                self.busInterfaces.append(bi)
+        for intfN, intf in unit._interfaces.items():
+            self.busInterfaces.append(intf)
                 
        
-        for bi in self.busInterfaces:
-            bi._ifObj.postProcess(self, self._topEntity, self.busInterfaces, bi)
-                
-        for bi in self.busInterfaces:
-            bi.name = trimUnderscores(bi.name)
-            for p in bi.parameters:
-                
-                p.name = removeUndescores_witSep(p.name, ".")
-                p.value.id = removeUndescores_witSep(p.value.id , ".")
-                p.value.text = removeUndescores_witSep(p.value.text , ".")
+        for intf in self.busInterfaces:
+            biClass = allBusInterfaces[intf.__class__]
+            biType = biClass()
+            bi = BusInterface()
+            bi.name = intf._name
+            bi.busType =  biType
+            bi.abstractionType =  biClass()
+            bi.abstractionType.name += "_rtl"
+            bi.isMaster = intf._direction == INTF_DIRECTION.MASTER
+            bi._portMaps = Component.generatePortMap(biType, intf)
+
+            biType.postProcess(self, self._topUnit, self.busInterfaces, intf)
+            intf._bi = bi
+        #for bi in self.busInterfaces:
+        #    bi.name = trimUnderscores(bi.name)
+        #    for p in bi.parameters:
+        #        p.name = removeUndescores_witSep(p.name, ".")
+        #        p.value.id = removeUndescores_witSep(p.value.id , ".")
+        #        p.value.text = removeUndescores_witSep(p.value.text , ".")
 
             
 

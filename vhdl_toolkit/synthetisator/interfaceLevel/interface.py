@@ -1,11 +1,13 @@
 from copy import deepcopy
 from python_toolkit.arrayQuery import single, NoValueExc
 from python_toolkit.stringUtils import matchIgnorecase
-from vivado_toolkit.ip_packager.busInterface import InterfaceIncompatibilityExc
 from vhdl_toolkit.types import DIRECTION, INTF_DIRECTION
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.synthetisator.param import Param
 
+
+class InterfaceIncompatibilityExc(Exception):
+    pass
 
 class ExtractableInterface():
     @classmethod

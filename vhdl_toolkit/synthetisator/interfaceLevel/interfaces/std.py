@@ -17,6 +17,9 @@ s = Ap_none
 class Ap_clk(Ap_none):
     _baseName = 'ap_clk'
 
+class Ap_rst(Ap_none):
+    _baseName = 'ap_rst'
+
 class Ap_rst_n(Ap_none):
     _baseName = 'ap_rst_n'
     

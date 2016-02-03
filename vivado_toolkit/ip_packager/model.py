@@ -1,10 +1,10 @@
 import re
 
 from python_toolkit.arrayQuery import where
-from vhdl_toolkit.valueInterpret import ValueInterpreter
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
          findS, mkSpiElm, ns, spi_ns_prefix
 import xml.etree.ElementTree as etree
+from vhdl_toolkit.synthetisator.param import getParam
 
 
 class WireTypeDef():
@@ -52,20 +52,10 @@ class Port():
         port.direction = p.direction.lower()
         port.type = WireTypeDef()
         t = port.type
-        t_str = p.var_type.str.upper()
-        if "VECTOR" in t_str:
+        w = getParam(p.var_type.getWidth())
+        if w > 1:
             t.typeName = "STD_LOGIC_VECTOR"
-            m = re.match("STD_LOGIC_VECTOR\s*\((.*)\s+(to|downto)\s+(.*)\s*\)", p.var_type.str, re.IGNORECASE)
-            direction = m.group(2).lower()
-            l = ValueInterpreter.resolveInt(e, m.group(1))
-            r = ValueInterpreter.resolveInt(e, m.group(3))
-            if direction == "downto":
-                port.vector = (l, r)
-            elif direction == "to":
-                port.vector = (r, l)
-            else:
-                raise Exception()
-            
+            port.vector = (0, w - 1)
         else:
             t.typeName = "STD_LOGIC"
             port.vector = False
