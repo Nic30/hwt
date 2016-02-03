@@ -1,6 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+--use ieee.numeric_std.all;
 
 entity Axi_basic_slave is
 	generic(
