@@ -252,8 +252,8 @@ class Interface(Buildable, ExtractableInterface):
                 else:
                     raise Exception("Interface direction improperly configured")
         else:
-            if self._isExtern:
-                if not self._getSignalDirection() == DIRECTION.oposite(master._getSignalDirection()):
+            if self._isExtern and master._isExtern:
+                if not self._getSignalDirection() == DIRECTION.oposite(master._getSignalDirection()) and (master._isExtern or self._isExtern):
                     # slave for outside master for inside
                     raise Exception(("Both interfaces has same direction (%s) and can not be connected together" + 
                     " (%s <= %s)") % (master._direction, str(self), str(master))) 

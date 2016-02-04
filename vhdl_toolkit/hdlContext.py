@@ -20,11 +20,6 @@ def mkType(name, width):
     t.width = width
     return t
 
-class FakeStd_logic_1164():
-    std_logic_vector = mkType("std_logic_vector", None)
-    std_logic_vector_ref = VhdlRef(["ieee", "std_logic_1164", "std_logic_vector"])
-    std_logic = mkType("std_logic", 1)
-    std_logic_ref = VhdlRef(["ieee", "std_logic_1164", "std_logic"])
 
 class BaseVhdlContext():
     integer = mkType("integer", int)
@@ -40,7 +35,7 @@ class BaseVhdlContext():
         ctx.insert(FakeStd_logic_1164.std_logic_ref, FakeStd_logic_1164.std_logic)
         ctx.insert(VhdlRef(['ieee', 'std_logic_unsigned', 'CONV_INTEGER']), None)
         ctx.insert(VhdlRef(['ieee', 'std_logic_arith', 'IS_SIGNED']), None)
-        
+        ctx.insert(FakeStd_logic_1164.numeric_std_ref, FakeStd_logic_1164.numeric_std)
     
     @classmethod
     def getBaseCtx(cls):
@@ -114,4 +109,11 @@ class HDLCtx(NonRedefDict):
                     "\n".join([str(a) for a in self.architectures]),
                     "\n".join([str(p) for p in self.packages]),
                     ])
-          
+class FakeStd_logic_1164():
+    std_logic_vector = mkType("std_logic_vector", None)
+    std_logic_vector_ref = VhdlRef(["ieee", "std_logic_1164", "std_logic_vector"])
+    std_logic = mkType("std_logic", 1)
+    std_logic_ref = VhdlRef(["ieee", "std_logic_1164", "std_logic"])
+    numeric_std_ref = VhdlRef(["ieee", "numeric_std"])
+    numeric_std = HDLCtx('numeric_std', None) 
+        

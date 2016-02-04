@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from vhdl_toolkit.templates import VHDLTemplates 
-from vhdl_toolkit.hdlContext import HDLCtx
 
 class Entity(object):
     def __init__(self):

@@ -88,8 +88,9 @@ class Component():
         appendStrElements(c, self, self._strValues[:-1])
         if len(self.busInterfaces) > 0:
             bi = appendSpiElem(c, "busInterfaces")
-            for intf in self.busInterfaces:
-                bi.append(intf._bi.asElem())
+            for intf in self.busInterfaces:  # for all interfaces which have bus interface class
+                if hasattr(intf, "_bi"):
+                    bi.append(intf._bi.asElem())
         c.append(self.model.asElem())
         self._xmlFileSets(c)
         
@@ -129,24 +130,30 @@ class Component():
         for p in self._topUnit._entity.port:
             self.model.ports.append(Port._entPort2CompPort(unit._entity, p))
 
-        for intfN, intf in unit._interfaces.items():
-            self.busInterfaces.append(intf)
+        for _, intf in unit._interfaces.items():
+            if intf._isExtern:
+                self.busInterfaces.append(intf)
                 
        
         for intf in self.busInterfaces:
-            biClass = allBusInterfaces[intf.__class__]
-            biType = biClass()
-            bi = BusInterface()
-            bi.name = intf._name
-            bi.busType =  biType
-            bi.abstractionType =  biClass()
-            bi.abstractionType.name += "_rtl"
-            bi.isMaster = intf._direction == INTF_DIRECTION.MASTER
-            bi._portMaps = Component.generatePortMap(biType, intf)
-
-            biType.postProcess(self, self._topUnit, self.busInterfaces, intf)
-            intf._bi = bi
-        #for bi in self.busInterfaces:
+            biClass = None
+            try:
+                biClass = allBusInterfaces[intf.__class__]
+            except KeyError:
+                pass
+            if biClass is not None:
+                biType = biClass()
+                bi = BusInterface()
+                bi.name = intf._name
+                bi.busType = biType
+                bi.abstractionType = biClass()
+                bi.abstractionType.name += "_rtl"
+                bi.isMaster = intf._direction == INTF_DIRECTION.MASTER
+                bi._portMaps = Component.generatePortMap(biType, intf)
+    
+                biType.postProcess(self, self._topUnit, self.busInterfaces, intf)
+                intf._bi = bi
+        # for bi in self.busInterfaces:
         #    bi.name = trimUnderscores(bi.name)
         #    for p in bi.parameters:
         #        p.name = removeUndescores_witSep(p.name, ".")
