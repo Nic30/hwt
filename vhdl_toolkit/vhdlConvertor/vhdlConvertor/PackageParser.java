@@ -24,7 +24,6 @@ public class PackageParser {
 		// package_body_declarative_part
 		// : ( package_body_declarative_item )*
 		// ;
-		System.err.println(
-				"NotImplemented PackageParser.visitPackage_body_declarative_part");
+		NotImplementedLogger.print("PackageParser.visitPackage_body_declarative_part");
 	}
 }

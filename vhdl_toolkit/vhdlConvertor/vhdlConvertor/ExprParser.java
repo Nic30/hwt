@@ -155,8 +155,7 @@ public class ExprParser {
 		// : LPAREN discrete_range ( COMMA discrete_range )* RPAREN
 		// ;
 		if (ctx.discrete_range().size() > 1) {
-			System.err.println(
-					"NotImplemented ExprParser.visitIndex_constraint multiple discrete_range");
+			NotImplementedLogger.print("ExprParser.visitIndex_constraint multiple discrete_range");
 		}
 		return visitDiscrete_range(ctx.discrete_range(0));
 	}
@@ -335,15 +334,14 @@ public class ExprParser {
 		// : subtype_indication APOSTROPHE ( aggregate | LPAREN expression
 		// RPAREN )
 		// ;
-		System.err
-				.println("NotImplemented ExprParser visitQualified_expression");
+		NotImplementedLogger.print("ExprParser visitQualified_expression");
 		return null;
 	}
 	public static Expr visitAllocator(vhdlParser.AllocatorContext ctx) {
 		// allocator
 		// : NEW ( qualified_expression | subtype_indication )
 		// ;
-		System.err.println("NotImplemented ExprParser visitAllocator");
+		NotImplementedLogger.print("ExprParser visitAllocator");
 		return null;
 
 	}
@@ -351,7 +349,7 @@ public class ExprParser {
 		// aggregate
 		// : LPAREN element_association ( COMMA element_association )* RPAREN
 		// ;
-		System.err.println("NotImplemented ExprParser visitAggregate");
+		NotImplementedLogger.print("ExprParser visitAggregate");
 		return null;
 	}
 }

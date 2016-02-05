@@ -91,8 +91,7 @@ public class DesignFileParser {
 		vhdlParser.Configuration_declarationContext cd = ctx
 				.configuration_declaration();
 		if (cd != null) {
-			System.err.println(
-					"NotImplemented DesignFileParser.visitConfiguration_declaration");
+			NotImplementedLogger.print("DesignFileParser.visitConfiguration_declaration");
 			return;
 		}
 		vhdlParser.Package_declarationContext pd = ctx.package_declaration();

@@ -62,8 +62,8 @@ public class ArchParser {
 		// | quantity_declaration
 		// | terminal_declaration
 		// ;
-		System.err.println(
-				"NotImplemented ArchParser.visitArchitecture_declarative_part");
+		NotImplementedLogger
+				.print("ArchParser.visitArchitecture_declarative_part");
 	}
 	public void visitArchitecture_statement(
 			vhdlParser.Architecture_statementContext ctx) {
@@ -86,8 +86,8 @@ public class ArchParser {
 			a.components.add(CompInstanceParser
 					.visitComponent_instantiation_statement(ci));
 		} else {
-			System.err.println(
-					"NotImplemented ArchParser.visitArchitecture_statement - unspecified next rule");
+			NotImplementedLogger.print(
+					"ArchParser.visitArchitecture_statement - unspecified next rule");
 		}
 	}
 

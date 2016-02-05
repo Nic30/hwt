@@ -25,7 +25,6 @@ public class PackageHeaderParser {
 		// package_declarative_part
 		// : ( package_declarative_item )*
 		// ;
-		System.err.println(
-				"NotImplemented PackageHeaderParser.visitPackage_declarative_part");
+		NotImplementedLogger.print("PackageHeaderParser.visitPackage_declarative_part");
 	}
 }

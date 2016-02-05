@@ -35,8 +35,7 @@ public class CompInstanceParser {
 	}
 	public static List<Expr> visitPort_map_aspect(
 			vhdlParser.Port_map_aspectContext ctx) {
-		System.err.println(
-				"NotImplemented CompInstanceParser.visitPort_map_aspect");
+		NotImplementedLogger.print("CompInstanceParser.visitPort_map_aspect");
 		return new Vector<Expr>();
 	}
 	public static String visitLabel_colon(vhdlParser.Label_colonContext ctx) {
@@ -56,15 +55,15 @@ public class CompInstanceParser {
 
 		vhdlParser.IdentifierContext id = ctx.identifier();
 		if (id != null) {
-			System.err.println(
-					"NotImplemented CompInstanceParser.visitInstantiated_unit - Identifier");
+			NotImplementedLogger.print(
+					"CompInstanceParser.visitInstantiated_unit - Identifier");
 		}
 		return ReferenceParser.visitName(ctx.name());
 	}
 	public static List<Expr> visitGeneric_map_aspect(
 			vhdlParser.Generic_map_aspectContext ctx) {
-		System.err.println(
-				"NotImplemented CompInstanceParser.visitGeneric_map_aspect");
+		NotImplementedLogger
+				.print("CompInstanceParser.visitGeneric_map_aspect");
 		return new Vector<Expr>();
 	}
 }

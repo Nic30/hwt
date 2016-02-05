@@ -65,7 +65,7 @@ public class LiteralParser {
 		// physical_literal
 		// : abstract_literal (: identifier)
 		// ;
-		System.err.println("NotImplemented ExprParser.visitPhysical_literal");
+		NotImplementedLogger.print("ExprParser.visitPhysical_literal");
 		return null;
 	}
 	public static Expr visitAbstract_literal(

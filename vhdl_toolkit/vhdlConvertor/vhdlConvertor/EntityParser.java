@@ -59,8 +59,7 @@ public class EntityParser {
 		// | terminal_declaration
 		// ;
 
-		System.err.println(
-				"EntityParser.visitEntity_declarative_item NotImplemented");
+		NotImplementedLogger.print("EntityParser.visitEntity_declarative_item");
 	}
 	static void visitEntity_header(Entity e,
 			vhdlParser.Entity_headerContext ctx) {
@@ -175,7 +174,6 @@ public class EntityParser {
 		// entity_statement_part
 		// : ( entity_statement )*
 		// ;
-		System.err.println(
-				"EntityParser.visitEntity_statement_part NotImplemented");
+		NotImplementedLogger.print("EntityParser.visitEntity_statement_part");
 	}
 }

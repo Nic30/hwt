@@ -74,8 +74,7 @@ public class ReferenceParser {
 			// : APOSTROPHE attribute_designator ( expression ( COMMA expression
 			// )* )?
 			// ;
-			System.err.println(
-					"NotImplemented ExprParser.Name_attribute_partContext");
+			NotImplementedLogger.print("ExprParser.Name_attribute_partContext");
 			return null;
 		}
 		vhdlParser.Name_function_call_or_indexed_partContext callOrIndx = ctx
@@ -89,8 +88,7 @@ public class ReferenceParser {
 		}
 		vhdlParser.Name_slice_partContext ns = ctx.name_slice_part();
 		if (ns != null) {
-			System.err.println(
-					"NotImplemented ExprParser.visitName_slice_partContext");
+			NotImplementedLogger.print("ExprParser.visitName_slice_partContext");
 			return null;
 		}
 		return sn;
