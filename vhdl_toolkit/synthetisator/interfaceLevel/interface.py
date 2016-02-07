@@ -11,7 +11,7 @@ class InterfaceIncompatibilityExc(Exception):
 
 class ExtractableInterface():
     @classmethod
-    def _extractPossibleInstanceNames(cls, entity, prefix=""):
+    def _extractPossiblePrefixes(cls, entity, prefix=""):
         """
         @return: iterator over unit ports witch probably matches with this interface
         """        
@@ -20,26 +20,35 @@ class ExtractableInterface():
         if cls._subInterfaces:
             parent = cls
             child = cls
+            # construct prefix
             while child._subInterfaces:
                 parent = child
                 _childName, child = list(child._subInterfaces.items())[0]
                 if child._subInterfaces:
-                    prefix += (parent.NAME_SEPARATOR + _childName)
+                    if prefix == '':
+                        prefix = _childName
+                    else:
+                        prefix += (parent.NAME_SEPARATOR + _childName)
                     
-            firstIntfNames.append(prefix + parent.NAME_SEPARATOR + _childName)
+            
             for alternativeName in child._alternativeNames:
-                firstIntfNames.append(prefix + parent.NAME_SEPARATOR + alternativeName)
+                firstIntfNames.append(prefix + alternativeName)
+            firstIntfNames.append(prefix +  _childName)
         else:
-            firstIntfNames.append(cls._baseName)
+            for n in cls._alternativeNames:
+                firstIntfNames.append(prefix + n)
         
         for p in entity.port:
             for firstIntfName in firstIntfNames:
                 if not hasattr(p, "_interface") and p.name.lower().endswith(firstIntfName):
-                    prefixLen = len(firstIntfName)
-                    if prefixLen == 0:
+                    # cut off prefix
+                    nameLen = len(firstIntfName)
+                    if nameLen == 0:
                         yield p.name
+                        break
                     else:
-                        yield p.name[:-prefixLen]
+                        yield p.name[:-nameLen]
+                        break
                 
     def _unExtrac(self):
         """Revent extracting process for this interface"""
@@ -52,6 +61,7 @@ class ExtractableInterface():
                     del self._originEntityPort._interface
                 del self._originEntityPort
                 del self._originSigLvlUnit
+                
     def _tryToExtractByName(self, prefix, sigLevelUnit):
         """
         @return: self if extraction was successful
@@ -60,25 +70,12 @@ class ExtractableInterface():
         if self._subInterfaces:
             allDirMatch = True
             noneDirMatch = True
-            if prefix != '':
-                prefix += self.NAME_SEPARATOR
- 
+            if hasattr(self, "_name"):
+                prefix += self._name + self.NAME_SEPARATOR
             try:
                 for intfName, intf in self._subInterfaces.items():
                     assert(intf._name == intfName)
-                    try:
-                        intf._tryToExtractByName(prefix + intf._name, sigLevelUnit)
-                    except InterfaceIncompatibilityExc as e:
-                        foundFlag = False
-                        for altName in intf._alternativeNames:
-                            try:
-                                intf._tryToExtractByName(prefix + altName, sigLevelUnit)
-                                foundFlag = True
-                                break
-                            except InterfaceIncompatibilityExc:
-                                pass
-                        if not foundFlag:
-                            raise e
+                    intf._tryToExtractByName(prefix, sigLevelUnit)
                     if intf._subInterfaces:
                         dirMatches = intf._direction == INTF_DIRECTION.MASTER
                     else:
@@ -98,19 +95,29 @@ class ExtractableInterface():
                 raise InterfaceIncompatibilityExc("Direction mismatch")
         
         else:
-            try:
-                self._originEntityPort = single(sigLevelUnit.entity.port,
-                                                lambda p : matchIgnorecase(p.name, prefix))
-                self._originEntityPort._interface = self
-                self._originSigLvlUnit = sigLevelUnit
-                dirMatches = self._originEntityPort.direction == self._masterDir
-                if dirMatches:
-                    self._direction = INTF_DIRECTION.MASTER
-                else:
-                    self._direction = INTF_DIRECTION.SLAVE
-            except NoValueExc:
+            intfNames = []
+            if hasattr(self, "_name"):
+                intfNames.append(self._name)
+            intfNames.extend(self._alternativeNames)
+            for n in intfNames:
+                name = prefix + n
+                try:
+                    self._originEntityPort = single(sigLevelUnit.entity.port,
+                                            lambda p : matchIgnorecase(p.name, name))
+                    break
+                except NoValueExc as e:
+                    pass
+            if not hasattr(self, "_originEntityPort"):
                 self._unExtrac()
-                raise InterfaceIncompatibilityExc("Missing " + prefix)
+                raise  InterfaceIncompatibilityExc("Missing " + prefix + n)
+
+            self._originEntityPort._interface = self
+            self._originSigLvlUnit = sigLevelUnit
+            dirMatches = self._originEntityPort.direction == self._masterDir
+            if dirMatches:
+                self._direction = INTF_DIRECTION.MASTER
+            else:
+                self._direction = INTF_DIRECTION.SLAVE
 
         return self
     
@@ -120,13 +127,19 @@ class ExtractableInterface():
         @return: iterator over tuples (interface name. extracted interface)
         """
         cls._builded()
-        for name in cls._extractPossibleInstanceNames(sigLevelUnit.entity):
+        for name in cls._extractPossiblePrefixes(sigLevelUnit.entity):
             try:
-                if name.endswith('_'):
-                    name = name[:-1]  # trim _
-                intf = cls(isExtern=True)._tryToExtractByName(name, sigLevelUnit)
+                #print("\n_tryToExtract 1 ", name, cls)
+                intfInst = cls(isExtern=True) 
+                intf = intfInst._tryToExtractByName(name, sigLevelUnit)
+                if not intf._subInterfaces:
+                    name += intf._alternativeNames[0]
+                if name.endswith("_"):
+                    name = name[:-1] 
+                #print(("_tryToExtract", name, intf))
                 yield (name, intf) 
             except InterfaceIncompatibilityExc as e:
+                #print(e)
                 pass
                    
 class Interface(Buildable, ExtractableInterface):
@@ -151,17 +164,21 @@ class Interface(Buildable, ExtractableInterface):
         """
         # [TODO] name for interface if name is specified it should not be overridden
         
+        copyDict = {}
         # build all interface classes for this interface
         self.__class__._builded()
         self._masterDir = masterDir
         if not alternativeNames:
-            self._alternativeNames = []
+            if hasattr(self.__class__, "_alternativeNames"):
+                self._alternativeNames = deepcopy(self.__class__._alternativeNames, copyDict)
+            else:
+                self._alternativeNames = []
         else:
             self._alternativeNames = alternativeNames
         
         
         # deepcopy interfaces from class
-        copyDict = {}
+
         self._params = deepcopy(self.__class__._params, copyDict)
         self._subInterfaces = deepcopy(self.__class__._subInterfaces, copyDict)
 
@@ -296,6 +313,11 @@ class Interface(Buildable, ExtractableInterface):
                     self._sig.connectToPortItem(self._originSigLvlUnit, self._originEntityPort)
                 return [s]
     
+    def _getPhysicalName(self):
+        if hasattr(self, "_originEntityPort"):
+            return self._originEntityPort.name
+        else:
+            return self._getFullName().replace('.', self.NAME_SEPARATOR)
     def _getFullName(self):
         name = ""
         tmp = self

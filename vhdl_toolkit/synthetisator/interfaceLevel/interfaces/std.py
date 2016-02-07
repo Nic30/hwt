@@ -5,7 +5,7 @@ from vhdl_toolkit.synthetisator.param import Param
 D = DIRECTION
 
 class Ap_none(Interface):
-    _baseName = ''
+    _alternativeNames = [""]
     def __init__(self, *destinations, masterDir=DIRECTION.OUT, width=1, src=None, \
                   isExtern=False, alternativeNames=None):
         Interface.__init__(self, *destinations, masterDir=masterDir, src=src, \
@@ -15,13 +15,13 @@ class Ap_none(Interface):
 s = Ap_none        
 
 class Ap_clk(Ap_none):
-    _baseName = 'ap_clk'
+    _alternativeNames = ['ap_clk', 'aclk', 'clk', 'clock']
 
 class Ap_rst(Ap_none):
-    _baseName = 'ap_rst'
+    _alternativeNames = ['ap_rst', 'areset', 'reset', 'rst']
 
 class Ap_rst_n(Ap_none):
-    _baseName = 'ap_rst_n'
+    _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn' ]
     
 class Ap_hs(Interface):
     DATA_WIDTH = Param(64)

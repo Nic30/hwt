@@ -63,7 +63,7 @@ def getParamVhdl(p):
     
 def getParam(p):
     if isinstance(p, Param):
-        return p.get()
+        return getParam(p.get())
     else:
         return p
     

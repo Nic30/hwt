@@ -1,5 +1,7 @@
 package vhdlObjects;
 
+import java.math.BigInteger;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -25,7 +27,7 @@ public class Symbol {
 				s.put("value", (Float) value);
 				break;
 			case INT :
-				s.put("value", (Integer) value);
+				s.put("value", (BigInteger) value);
 				break;
 			case STRING :
 				s.put("value", (String) value);

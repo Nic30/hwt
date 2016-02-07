@@ -3,13 +3,12 @@ from os.path import basename, relpath
 
 from python_toolkit.fileHelpers import find_files
 from vhdl_toolkit.parser import entityFromFile
-from vivado_toolkit.ip_packager.component import Component
-from vivado_toolkit.ip_packager.helpers import prettify
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
 from vhdl_toolkit.architecture import Architecture
 from vhdl_toolkit.entity import Entity
 from vhdl_toolkit.formater import formatVhdl
-
+from vivado_toolkit.ip_packager.component import Component
+from vivado_toolkit.ip_packager.helpers import prettify
 
 
 def makeDummyXGUIFile(fileName):
@@ -27,7 +26,7 @@ proc init_gui { IPINST } {
 class Packager(object):
     def __init__(self, topUnit, extraVhdlDirs=[], extraVhdlFiles=[]):
         self.topUnit = topUnit
-        self.name =  defaultUnitName(self.topUnit)
+        self.name = defaultUnitName(self.topUnit)
         self.vhdlFilesToCopy = []
         self.beforeBuilding = []
         self.vhdlFiles = set()
@@ -55,17 +54,17 @@ class Packager(object):
                 filesToCopy.add(o._origin)
             else:
                 toFile = None
-                if isinstance(o, str): # [TODO] hotfix
+                if isinstance(o, str):  # [TODO] hotfix, library includes are just strings
                     header = o
                 elif isinstance(o, Entity):
-                    toFile = os.path.join(srcDir, o.name+'_ent.vhd')
+                    toFile = os.path.join(srcDir, o.name + '_ent.vhd')
                 elif isinstance(o, Architecture):
-                    toFile = os.path.join(srcDir, o.entity.name+'_arch.vhd')
+                    toFile = os.path.join(srcDir, o.entity.name + '_arch.vhd')
                 else:
                     raise NotImplementedError()
                 if toFile:
                     with open(toFile, mode='w') as f:
-                            s = formatVhdl(header + '\n'+ str(o))
+                            s = formatVhdl(header + '\n' + str(o))
                             f.write(s)
                             self.vhdlFiles.add(toFile)
         
@@ -130,28 +129,3 @@ def packageBD(ipRepo, bdPath, repoPath):
     e = entityFromFile(os.path.join(bdSourcesDir, bdName + ".vhd"))
     p = Packager(e, vhldFolders)
     p.createPackage(ipRepo)
-      
-
-if __name__ == "__main__":
-    from vhdl_toolkit.samples.iLvl.bram import Bram
-    from vhdl_toolkit.samples.iLvl.simple2 import  SimpleUnit2
-    repo = '/home/nic30/Documents/test_ip_repo'
-    u = Bram()
-    u2 = SimpleUnit2()
-    p = Packager(u)
-    p.createPackage(repo)
-    
-    p = Packager(u2)
-    p.createPackage(repo)
-    
-    
-    #ipRepo = "/home/nic30/Documents/ip_repo"
-    #packageMultipleProjects("/home/nic30/Documents/vivado_hls/", {  # "axi_custom_master": "axi_custom_master",
-    #                                                             # "axi_trans_tester2": "axi_trans_tester",
-    #                                                             "superDMA": "superDMA",
-    #                                                         #    "SuperDMA_inBuffer":"SuperDMA_inBuffer",
-    #                                                             # "axi_ch_a": "axi_native_intf",
-    #                                                           #  "MultiFIFO_test":"MultiFifo_top"
-    #                                                             },
-    #                                                               ipRepo)
-    ##packageBD("/home/nic30/Documents/vivado/axi_trans_tester2/axi_trans_tester2.srcs/sources_1/bd/axi_tester_complex", ipRepo)

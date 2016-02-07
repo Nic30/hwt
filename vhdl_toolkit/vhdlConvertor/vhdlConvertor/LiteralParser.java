@@ -1,5 +1,7 @@
 package vhdlConvertor;
 
+import java.math.BigInteger;
+
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import vhdlObjects.Expr;
@@ -33,7 +35,7 @@ public class LiteralParser {
 					radix = 16;
 					break;
 			}
-			Integer val = Integer.parseInt(s.substring(2, s.length() - 2),
+			BigInteger val = new BigInteger(s.substring(2, s.length() - 1),
 					radix);
 			return new Expr(SymbolType.INT, val);
 		}
@@ -77,7 +79,7 @@ public class LiteralParser {
 		// ;
 		TerminalNode n = ctx.INTEGER();
 		if (n != null)
-			return new Expr(SymbolType.INT, Integer.parseInt(n.getText()));
+			return new Expr(SymbolType.INT, new BigInteger(n.getText()));
 		n = ctx.REAL_LITERAL();
 		if (n != null)
 			return new Expr(SymbolType.FLOAT, Float.parseFloat(n.getText()));
@@ -96,7 +98,7 @@ public class LiteralParser {
 		// [TODO] exponent
 		n = ctx.BASE_LITERAL();
 		Integer base = Integer.parseInt(n.getChild(0).getText());
-		Integer val = Integer.parseInt(n.getChild(2).getText(), base);
+		BigInteger val = new BigInteger(n.getChild(2).getText(), base);
 		return new Expr(SymbolType.INT, val);
 	}
 	public static Expr visitEnumeration_literal(
@@ -116,7 +118,7 @@ public class LiteralParser {
 	}
 	public static Expr visitSTRING_LITERAL(TerminalNode n) {
 		String s = n.getText();
-		return new Expr(SymbolType.STRING, s.subSequence(1, s.length() - 2));
+		return new Expr(SymbolType.STRING, s.subSequence(1, s.length() - 1));
 
 	}
 	public static Expr visitCHARACTER_LITERAL(TerminalNode ctx) {

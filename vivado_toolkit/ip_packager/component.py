@@ -105,11 +105,11 @@ class Component():
         def processIntf(mapDict, intf):
             if not intf._subInterfaces:
                 assert(isinstance(mapDict, str))
-                return {mapDict : intf._getFullName().replace(".", intf.NAME_SEPARATOR)}
+                return {mapDict : intf._getPhysicalName()}
             else:
                 d = {}
-                for k, m in mapDict.items():
-                    i = intf._subInterfaces[k]
+                for k, i in intf._subInterfaces.items():
+                    m = mapDict[k]
                     d.update(processIntf(m, i))
                 return d
         return processIntf(biType.map, intf)
@@ -118,15 +118,6 @@ class Component():
         self._topUnit = unit
         self.name = unit._name
         self.model.addDefaultViews(self.name)
-        def trimUnderscores(s):
-            while s.endswith("_"):
-                s = s[:-1]
-            return s
-        def removeUndescores_witSep(s, separator):
-            if isinstance(s, str):
-                return separator.join([ trimUnderscores(a) for a  in s.split(separator)])
-            else:
-                return s
         for p in self._topUnit._entity.port:
             self.model.ports.append(Port._entPort2CompPort(unit._entity, p))
 
@@ -134,7 +125,7 @@ class Component():
             if intf._isExtern:
                 self.busInterfaces.append(intf)
                 
-       
+        self.busInterfaces.sort(key=lambda x : x._name)
         for intf in self.busInterfaces:
             biClass = None
             try:

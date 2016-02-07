@@ -137,6 +137,8 @@ class AXIStream(IfConfig):
                      'last':"TLAST",
                      'valid':"TVALID",
                      'strb':"TSTRB",
+                     'keep' : "TKEEP",
+                     'user' : 'TUSER',
                      'ready':"TREADY"
                      }
         
@@ -186,7 +188,13 @@ class Axi4(AXILite):
       
 allBusInterfaces = { interfaces.std.BramPort : BlockRamPort,
                      interfaces.amba.AxiLite : AXILite,
+                     interfaces.amba.AxiLite_xil : AXILite,
                      interfaces.amba.AxiStream : AXIStream,
+                     
+                     interfaces.amba.AxiStream_withoutSTRB :  AXIStream,
+                     interfaces.amba.AxiStream_withUserAndNoStrb : AXIStream,
+                     interfaces.amba.AxiStream_withUserAndStrb : AXIStream,
+                     
                      interfaces.amba.Axi4 : Axi4,
                      interfaces.std.Ap_clk : Ap_clk,
                      interfaces.std.Ap_rst : Ap_rst,

@@ -1,18 +1,20 @@
 import unittest
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import BramPort
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import BramPort, \
+    Ap_rst, Ap_clk, Ap_rst_n
 from vhdl_toolkit.types import INTF_DIRECTION, DIRECTION
 from python_toolkit.arrayQuery import where, single, NoValueExc
-from vhdl_toolkit.samples.iLvl.simple import SimpleUnit
-from vhdl_toolkit.samples.iLvl.bram import Bram
-from vhdl_toolkit.samples.iLvl.axi_basic import AxiLiteBasicSlave, AxiLiteSlaveContainer
-from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
-from vhdl_toolkit.samples.iLvl.simpleSubunit2 import SimpleSubunit2
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba import AxiStream, AxiStream_withoutSTRB, \
+                                                    AxiStream_withUserAndNoStrb, AxiStream_withUserAndStrb, \
+    Axi4_xil, AxiLite_xil
+from vhdl_toolkit.synthetisator.param import getParam
 
 INTF_D = INTF_DIRECTION
 D = DIRECTION
 
-class TestStringMethods(unittest.TestCase):
+ILVL_VHDL = '../../samples/iLvl/vhdl/'
+
+class TestInterfaceSyntherisator(unittest.TestCase):
     def assertIsM(self, intf):
         self.assertEqual(intf._direction, INTF_D.MASTER)
     def assertIsS(self, intf):
@@ -29,6 +31,7 @@ class TestStringMethods(unittest.TestCase):
     def assertOut(self, u, portName):
         self.assertDir(u, portName, D.OUT)
     def test_bramIntfDiscovered(self):
+        from vhdl_toolkit.samples.iLvl.bram import Bram
         bram = Bram()
         self.assertTrue(hasattr(bram, 'a'), 'port a found')
         self.assertTrue(hasattr(bram, 'b'), 'port b found')
@@ -40,6 +43,7 @@ class TestStringMethods(unittest.TestCase):
         """
         Check interface directions pre and after synthesis
         """
+        from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
         u = SimpleUnit2()
         
         # inside
@@ -75,8 +79,8 @@ class TestStringMethods(unittest.TestCase):
         self.assertIsM(u.b.valid)
         self.assertIsM(u.b.strb)
        
-        
     def test_SimpleUnit2(self):
+        from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
         u = SimpleUnit2()
         for _ in u._synthesise():
             pass
@@ -87,6 +91,7 @@ class TestStringMethods(unittest.TestCase):
             self.assertOut(u, pn)
     
     def test_SimpleSubUnit2(self):
+        from vhdl_toolkit.samples.iLvl.simpleSubunit2 import SimpleSubunit2
         u = SimpleSubunit2()
         for _ in u._synthesise():
             pass
@@ -97,6 +102,7 @@ class TestStringMethods(unittest.TestCase):
             self.assertOut(u, pn)
         
     def test_simplePortDirections(self):
+        from vhdl_toolkit.samples.iLvl.bram import Bram
         bram = Bram()
         self.assertIsS(bram.a)
         self.assertIsS(bram.a.clk)
@@ -111,10 +117,10 @@ class TestStringMethods(unittest.TestCase):
         self.assertIsS(bram.b.din)
         self.assertIsS(bram.b.dout)
         self.assertIsS(bram.b.we)
-    
         
     def test_axiPortDirections(self):
-        a = AxiLiteBasicSlave()
+        from vhdl_toolkit.samples.iLvl.axi_basic import AxiLiteBasicSlave
+        a = AxiLiteBasicSlave()  # (intfClasses=[AxiLite_xil, Ap_clk, Ap_rst_n])
         self.assertIsS(a.S_AXI)
         self.assertIsS(a.S_AXI.ar)
         self.assertIsS(a.S_AXI.aw)
@@ -127,6 +133,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertIsS(a.S_AXI.b.ready)
         
     def test_axiParams(self):
+        from vhdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
         a = AxiLiteSlaveContainer()
         AW = a.ADDR_WIDTH.get()
         DW = a.DATA_WIDTH.get()
@@ -144,7 +151,7 @@ class TestStringMethods(unittest.TestCase):
     
     def test_withPartialyInvalidInterfaceNames(self):
         class EntityWithPartialyInvalidIntf(UnitWithSource):
-            _origin = "../../samples/iLvl/vhdl/entityWithPartialyInvalidIntf.vhd"
+            _origin = ILVL_VHDL + "entityWithPartialyInvalidIntf.vhd"
             
         u = EntityWithPartialyInvalidIntf()
         
@@ -153,10 +160,9 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(u.descrBM_w_wr_dout_V._parent, u)
         self.assertEqual(u.descrBM_w_wr_en._parent, u)
         self.assertEqual(u.descrBM_w_wr_we._parent, u)
-        
-        
                
     def test_signalInstances(self):
+        from vhdl_toolkit.samples.iLvl.simple import SimpleUnit
         bram = SimpleUnit()
         for _ in bram._synthesise():
             pass
@@ -176,7 +182,34 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(port_a.direction, D.IN, 'port a has src that means it should be input')
         self.assertEqual(port_b.direction, D.OUT, 'port b has no src that means it should be output')
 
+    def test_axiStreamExtraction(self):
+        class AxiStreamSampleEnt(UnitWithSource):
+            _origin = ILVL_VHDL + "axiStreamSampleEnt.vhd"
+        u = AxiStreamSampleEnt()#(intfClasses=[AxiStream_withUserAndStrb, AxiStream, AxiStream_withUserAndNoStrb, AxiStream_withoutSTRB])
+        self.assertTrue(hasattr(u, "RX0_ETH"))
+        self.assertTrue(hasattr(u, "RX0_CTL"))        
+        self.assertTrue(hasattr(u, "TX0_ETH"))
+        self.assertTrue(hasattr(u, "TX0_CTL"))
+        
+    def test_genericValues(self):
+        class GenericValuesSample(UnitWithSource):
+            _origin = ILVL_VHDL + "genericValuesSample.vhd"
+        u = GenericValuesSample()
+        self.assertEqual(getParam(u.c_baseaddr), (2 ** 32) - 1)
+        self.assertEqual(getParam(u.c_family), 'zynq')
+        
+    def test_ClkAndRstExtraction(self):
+        class ClkRstEnt(UnitWithSource):
+            _origin = ILVL_VHDL + "clkRstEnt.vhd"
+        u = ClkRstEnt(intfClasses=[Ap_clk, Ap_rst_n])
+        self.assertIsInstance(u.ap_rst_n, Ap_rst_n)
+        self.assertIsInstance(u.ap_clk, Ap_clk)  
         
 if __name__ == '__main__':
-    unittest.main()
+    suite = unittest.TestSuite()
+    #suite.addTest(TestInterfaceSyntherisator('test_axiStreamExtraction'))
+    suite.addTest(unittest.makeSuite(TestInterfaceSyntherisator))
+    runner = unittest.TextTestRunner(verbosity=3)
+    runner.run(suite)
+    # unittest.main()
 

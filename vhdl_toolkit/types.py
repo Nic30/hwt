@@ -1,16 +1,19 @@
-from vhdl_toolkit.expr import BinOp
+from vhdl_toolkit.expr import BinOp, Unconstrained
 from vhdl_toolkit.synthetisator.param import Param
 
 
 class InvalidVHDLTypeExc(Exception):
     def __init__(self, vhdlType):
         self.vhdlType = vhdlType
-        
-    def __str__(self, *args, **kwargs):
+    
+    def __str__(self):    
         variableName = self.variable.name
         return "Invalid type, width is %s in the context of variable %s" \
             % (str(self.vhdlType.getWidth()), variableName)
 
+    def __repr__(self):
+        return self.__str__()
+    
 class INTF_DIRECTION():
     MASTER = "MASTER"
     SLAVE = "SLAVE"
@@ -78,6 +81,10 @@ class VHDLType():
             return "STRING"
         elif w == int:
             return 'INTEGER'
+        elif w == bool:
+            return "BOOLEAN"
+        elif w == Unconstrained:
+            return "STD_LOGIC_VECTOR"
         elif w == 1:
             return 'STD_LOGIC'
         elif isinstance(w, int) and w > 1:
@@ -109,6 +116,8 @@ def STD_LOGIC():
     t = VHDLType()
     t.width = 1
     return t
+
+
 
 def VHDLBoolean():
     return STD_LOGIC()

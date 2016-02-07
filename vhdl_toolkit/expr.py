@@ -1,15 +1,24 @@
 import types
 from vhdl_toolkit.synthetisator.param import getParam
 
+class Unconstrained():
+    pass
+
 def value2vhdlformat(dst, val):
     """ @param dst: is VHDLvariable connected with value """
     if hasattr(val, 'name') and not dst.defaultVal == val:
         return val.name
     w = dst.var_type.getWidth()
     if w == 1:
-        return "'%d'" % (int(val))
+        return "'%d'" % (int(getParam(val)))
     elif w == int:
-        return "%d" % val.get()
+        return "%d" % getParam(val.get())
+    elif w == Unconstrained:
+        return 'X"%02x"' % (getParam(val))
+    elif w == str:
+        return '"%s"' % (getParam(val))
+    elif w == bool:
+        return '%s' % (str(bool(getParam(val))))
     elif w > 1:
         return "STD_LOGIC_VECTOR(TO_UNSIGNED(%d, %s'LENGTH))" % (int(val), dst.name)
     else:

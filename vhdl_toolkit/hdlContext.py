@@ -1,6 +1,6 @@
 from vhdl_toolkit.reference import VhdlRef 
 from vhdl_toolkit.nonRedefDict import NonRedefDict
-from vhdl_toolkit.types import VHDLType
+from vhdl_toolkit.types import VHDLType, Unconstrained
 
 
 class RequireImportErr(Exception):
@@ -110,7 +110,7 @@ class HDLCtx(NonRedefDict):
                     "\n".join([str(p) for p in self.packages]),
                     ])
 class FakeStd_logic_1164():
-    std_logic_vector = mkType("std_logic_vector", None)
+    std_logic_vector = mkType("std_logic_vector", Unconstrained)
     std_logic_vector_ref = VhdlRef(["ieee", "std_logic_1164", "std_logic_vector"])
     std_logic = mkType("std_logic", 1)
     std_logic_ref = VhdlRef(["ieee", "std_logic_1164", "std_logic"])

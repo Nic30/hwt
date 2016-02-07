@@ -1,15 +1,32 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
 from vhdl_toolkit.synthetisator.param import Param, inheritAllParams
 from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import s, D
-    
-class AxiStream(Interface):
-    DATA_WIDTH = Param(64)
-    last = s(masterDir=D.OUT)
-    strb = s(masterDir=D.OUT, width=DATA_WIDTH.expr(lambda x: x // 8))
-    data = s(masterDir=D.OUT, width=DATA_WIDTH)
-    ready = s(masterDir=D.IN)
-    valid = s(masterDir=D.OUT)
 
+
+class AxiStream_withoutSTRB(Interface):
+    DATA_WIDTH = Param(64)
+    last = s(masterDir=D.OUT, alternativeNames=['tlast' ])
+    data = s(masterDir=D.OUT, width=DATA_WIDTH, alternativeNames=['tdata' ])
+    ready = s(masterDir=D.IN, alternativeNames=['tready' ])
+    valid = s(masterDir=D.OUT, alternativeNames=['tvalid' ])
+
+class AxiStream(AxiStream_withoutSTRB):
+    strb = s(masterDir=D.OUT,
+             width=AxiStream_withoutSTRB.DATA_WIDTH.expr(lambda x: x // 8),
+             alternativeNames=['tstrb', 'keep', 'tkeep' ])
+
+class Axi_user(Interface):
+    USER_WIDTH = Param(0)
+    user = s(masterDir=D.OUT,
+             width=USER_WIDTH,
+             alternativeNames=['tuser'])   
+
+class AxiStream_withUserAndNoStrb(AxiStream_withoutSTRB, Axi_user):
+    pass
+    
+class AxiStream_withUserAndStrb(AxiStream, Axi_user):
+    pass
+    
 class AxiLite_addr(Interface):
     ADDR_WIDTH = Param(32)
     addr = s(masterDir=D.OUT, width=ADDR_WIDTH, alternativeNames=['addr_v'])
@@ -26,7 +43,8 @@ class AxiLite_r(Interface):
 class AxiLite_w(Interface):
     DATA_WIDTH = Param(64)
     data = s(masterDir=D.OUT, width=DATA_WIDTH, alternativeNames=['data_v'])
-    strb = s(masterDir=D.OUT, width=DATA_WIDTH.expr(lambda x: x // 8), alternativeNames=['strb_v'])  # [TODO] Param needs something like expr, this does not work
+    strb = s(masterDir=D.OUT,
+             width=DATA_WIDTH.expr(lambda x: x // 8), alternativeNames=['strb_v'])
     ready = s(masterDir=D.IN)
     valid = s(masterDir=D.OUT)
     
