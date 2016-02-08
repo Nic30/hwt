@@ -5,7 +5,6 @@ from vhdl_toolkit.synthetisator.param import Param
 D = DIRECTION
 
 class Ap_none(Interface):
-    _alternativeNames = [""]
     def __init__(self, *destinations, masterDir=DIRECTION.OUT, width=1, src=None, \
                   isExtern=False, alternativeNames=None):
         Interface.__init__(self, *destinations, masterDir=masterDir, src=src, \

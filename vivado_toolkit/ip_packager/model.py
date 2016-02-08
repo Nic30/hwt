@@ -55,7 +55,7 @@ class Port():
         w = getParam(p.var_type.getWidth())
         if w > 1:
             t.typeName = "STD_LOGIC_VECTOR"
-            port.vector = (0, w - 1)
+            port.vector = (w - 1, 0)
         else:
             t.typeName = "STD_LOGIC"
             port.vector = False

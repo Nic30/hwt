@@ -161,7 +161,8 @@ class UnitWithSource(Unit):
         for intfCls in cls._intfClasses:
             for intfName, interface in intfCls._tryToExtract(cls._sigLvlUnit):
                 if hasattr(cls, intfName):
-                    raise  Exception("Already has " + intfName)
+                    raise  Exception("Already has %s (old:%s , new:%s)" 
+                                     % (intfName, str(getattr(cls, intfName)), str(interface)))
                 cls._interfaces[intfName] = interface
                 setattr(cls, intfName, interface)
                 setIntfAsExtern(interface)

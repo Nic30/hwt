@@ -37,7 +37,8 @@ class TestInterfaceSyntherisator(unittest.TestCase):
         self.assertTrue(hasattr(bram, 'b'), 'port b found')
         for p in [bram.a, bram.b]:
             for propName, _ in BramPort._subInterfaces.items():
-                self.assertEqual(p._subInterfaces[propName], getattr(p, propName), "_subInterfaces['%s'] is same object as atribut" % (propName))
+                self.assertEqual(p._subInterfaces[propName], getattr(p, propName), 
+                                 "_subInterfaces['%s'] is same object as atribut" % (propName))
                 self.assertTrue(hasattr(p, propName), 'bram port has ' + propName)
     def test_SimpleUnit2_iLvl(self):
         """
