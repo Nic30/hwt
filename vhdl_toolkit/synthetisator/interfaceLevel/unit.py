@@ -139,6 +139,7 @@ class BlackBox(Unit):
     pass      
 
 class UnitWithSource(Unit):
+    
     @classmethod
     def _build(cls):
         assert(cls._origin)
@@ -154,14 +155,20 @@ class UnitWithSource(Unit):
 
         cls._entity = entityFromFile(cls._origin)
         for g in cls._entity.generics:
-            g.defaultVal = Param(g.defaultVal)
+            p = Param(g.defaultVal)
+            g.defaultVal = p 
+            if hasattr(cls, g.name):
+                raise  Exception("Already has param %s (old:%s , new:%s)" 
+                      % (g.name, str(getattr(cls, g.name)), str(g)))
+                
             setattr(cls, g.name, g.defaultVal)
+            cls._params[g.name] = p
         cls._sigLvlUnit = VHDLUnit(cls._entity)
 
         for intfCls in cls._intfClasses:
             for intfName, interface in intfCls._tryToExtract(cls._sigLvlUnit):
                 if hasattr(cls, intfName):
-                    raise  Exception("Already has %s (old:%s , new:%s)" 
+                    raise  Exception("Already has interface %s (old:%s , new:%s)" 
                                      % (intfName, str(getattr(cls, intfName)), str(interface)))
                 cls._interfaces[intfName] = interface
                 setattr(cls, intfName, interface)
@@ -174,5 +181,6 @@ class UnitWithSource(Unit):
         assert(self._entity)
         self._name = defaultUnitName(self, name)
         return [self]
+    
     def __str__(self):
         return '--%s' % (self._origin)

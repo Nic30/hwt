@@ -1,87 +1,7 @@
-import re
-
-from python_toolkit.arrayQuery import where
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
-         findS, mkSpiElm, ns, spi_ns_prefix
+         findS, mkSpiElm, spi_ns_prefix, appendSpiArray
 import xml.etree.ElementTree as etree
-from vhdl_toolkit.synthetisator.param import getParam
-
-
-class WireTypeDef():
-    _requiredVal = ["typeName"]
-    
-    @classmethod
-    def fromElem(cls, elm):
-        self = cls()
-        for s in cls._requiredVal:
-            setattr(self, s, findS(elm, s).text)
-        self.viewNameRefs = []
-        for r in elm.findall("spirit:viewNameRef", ns):
-            self.viewNameRefs.append(r.text)
-        return self
-    
-    def asElem(self):
-        e = mkSpiElm("wireTypeDef")
-        for s in self._requiredVal:
-            appendSpiElem(e, s).text = getattr(self, s)
-        for r in self.viewNameRefs:
-            appendSpiElem(e, "viewNameRef").text = r
-        return e
-    
-class Port():
-    
-    @classmethod
-    def fromElem(cls, elm):
-        self = cls()
-        self.name = findS(elm, "name").text
-        vec = findS(elm, "vector")
-        if vec is not None:
-            self.vector = [findS(vec, "left").text, findS(vec, "right").text]
-        else:
-            self.vector = None
-             
-        wire = findS(elm, "wire")
-        self.direction = findS(wire, "direction").text
-        self.type = WireTypeDef.fromElem(findS(findS(wire, "wireTypeDefs"), "wiretypedef"))
-        return self
-    
-    @staticmethod
-    def _entPort2CompPort(e, p):
-        port = Port()
-        port.name = p.name
-        port.direction = p.direction.lower()
-        port.type = WireTypeDef()
-        t = port.type
-        w = getParam(p.var_type.getWidth())
-        if w > 1:
-            t.typeName = "STD_LOGIC_VECTOR"
-            port.vector = (w - 1, 0)
-        else:
-            t.typeName = "STD_LOGIC"
-            port.vector = False
-            
-        t.viewNameRefs = ["xilinx_vhdlsynthesis", "xilinx_vhdlbehavioralsimulation"]
-        return port
-    
-    def asElem(self):
-        e = mkSpiElm("port")
-        appendSpiElem(e, "name").text = self.name
-        w = appendSpiElem(e, "wire")
-        appendSpiElem(w, "direction").text = self.direction
-        if self.vector:
-            v = appendSpiElem(w, "vector")
-            l = appendSpiElem(v, "left")
-            l.text = str(self.vector[0])
-            r = appendSpiElem(v, "right")
-            r.text = str(self.vector[1])
-            for d in [l, r]:
-                d.attrib["spirit:format"] = "long"
-                d.attrib["spirit:resolve"] = "immediate"
-        td = appendSpiElem(w, "wireTypeDefs")
-        td.append(self.type.asElem())
-        return e
-        
-
+from vivado_toolkit.ip_packager.others import Value
 
 class FileSetRef():
     @classmethod
@@ -94,7 +14,6 @@ class FileSetRef():
         e = etree.Element(spi_ns_prefix + "fileSetRef")
         appendSpiElem(e, "localName").text = self.localName
         return e
-
 
 class View():
     _requiredVal = ["name", "displayName", "envIdentifier"]
@@ -126,16 +45,34 @@ class View():
         e.append(self.fileSetRef.asElem())
         return e
 
+class ModelParameter():
+    def __init__(self, name:str, displayName:str, datatype:str, value:Value):
+        self.name = name
+        self.displayName = displayName
+        self.datatype = datatype
+        self.value = value
+    @classmethod
+    def fromGeneric(cls, g):
+        val = Value.fromGeneric("MODELPARAM_VALUE.", g, Value.RESOLVE_GENERATED)
+        return cls(g.name, g.name.replace("_", " "), str(g.var_type).lower(), val)
+    def asElem(self):
+        e = mkSpiElm("modelParameter")
+        appendStrElements(e, self,
+                          reqPropNames=['name', "displayName"])
+        e.append(self.value.asElem())
+        return e
+
 class Model():
     
     def __init__(self, vhdl_syn_fileSetName, vhdl_sim_fileSetName, tcl_fileSetName):
         self.views = []
         self.ports = []
+        self.modelParameters = []
         self.vhdl_syn_fileSetName = vhdl_syn_fileSetName
         self.vhdl_sim_fileSetName = vhdl_sim_fileSetName
         self.tcl_fileSetName = tcl_fileSetName
         
-    def addDefaultViews(self, compName):
+    def addDefaultViews(self, unit):
         viewsTemplate = ("""
        <views xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <spirit:view>
@@ -167,31 +104,31 @@ class Model():
         </spirit:fileSetRef>
       </spirit:view>
     </views>
-        """).format(compName)
-        views = []
+        """).format(unit._name)
         for v in etree.fromstring(viewsTemplate):
-            views.append(View.fromElem(v))
-        for v in views:
-            v.modelName = compName
+            v = View.fromElem(v)
+            v.modelName = unit._name
             self.views.append(v)
+        for g in unit._entity.generics:
+            mp = ModelParameter.fromGeneric(g)
+            self.modelParameters.append(mp)
+            
     
-    @classmethod
-    def fromElem(cls, elm):
-        self = cls()
-        views = findS(elm, "views")
-        for vElm in views:
-            self.views.append(View.fromElem(vElm))
-        ports = findS(elm, "ports")
-        for p in ports:
-            self.ports.append(Port.fromElem(p))
-        return self
+    # @classmethod
+    # def fromElem(cls, elm):
+    #    self = cls()
+    #    views = findS(elm, "views")
+    #    for vElm in views:
+    #        self.views.append(View.fromElem(vElm))
+    #    ports = findS(elm, "ports")
+    #    for p in ports:
+    #        self.ports.append(Port.fromElem(p))
+    #    return self
     
     def asElem(self):
         e = mkSpiElm("model")
-        views = appendSpiElem(e, "views")
-        for v in self.views:
-            views.append(v.asElem())
-        ports = appendSpiElem(e, "ports")
-        for p in self.ports:
-            ports.append(p.asElem())
+        appendSpiArray(e, 'views', self.views)
+        appendSpiArray(e, 'ports', self.ports)
+        appendSpiArray(e, 'modelParameters', self.modelParameters)
+            
         return e

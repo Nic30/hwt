@@ -37,8 +37,8 @@ class ExtractableInterface():
             firstIntfNames.append(prefix + n)
         firstIntfNames.append(prefix + name)
             
-        for p in entity.port:
-            for firstIntfName in firstIntfNames:
+        for firstIntfName in firstIntfNames:
+            for p in entity.port:
                 if not hasattr(p, "_interface") and p.name.lower().endswith(firstIntfName):
                     # cut off prefix
                     nameLen = len(firstIntfName)
@@ -46,7 +46,6 @@ class ExtractableInterface():
                         yield p.name
                     else:
                         yield p.name[:-nameLen]
-                    break
                 
     def _unExtrac(self):
         """Revent extracting process for this interface"""

@@ -62,9 +62,16 @@ class DIRECTION():
 
 
 class VHDLType():
+    __slots__ = ['width', 'min', 'name', 'ctx']
     """
     Vhdl type container
     """
+    def __init__(self):
+        self.width = None
+        self.min = None
+        self.name = None
+        self.ctx = None
+        
     def getWidth(self):
         if isinstance(self.width, type):
             self.width
@@ -80,7 +87,14 @@ class VHDLType():
         if w == str:
             return "STRING"
         elif w == int:
-            return 'INTEGER'
+            if self.min == None:
+                return 'INTEGER'
+            elif self.min == 0:
+                return 'NATURAL'
+            elif self.min == 1 :
+                return 'POSITIVE'
+            else:
+                raise NotImplementedError()
         elif w == bool:
             return "BOOLEAN"
         elif w == Unconstrained:

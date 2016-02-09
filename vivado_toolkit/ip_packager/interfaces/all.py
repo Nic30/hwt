@@ -37,15 +37,15 @@ class IfConfig(Type):
         p = single(self.port, lambda x : x.logName.lower() == logName)
         return p
 
-    def addSimpleParam(self, thisIf, name, value):
+    def addSimpleParam(self, thisIntf, name, value):
         p_aw = Parameter()
         p_aw.name = name
         p_aw.value.resolve = "immediate"
-        p_aw.value.id = "BUSIFPARAM_VALUE." + thisIf._name.upper() + "." + name.upper()
+        p_aw.value.id = "BUSIFPARAM_VALUE." + thisIntf._name.upper() + "." + name.upper()
         p_aw.value.text = value
         self.parameters.append(p_aw)
     
-    def postProcess(self, component, entity, allInterfaces, thisIfPrefix):
+    def postProcess(self, component, entity, allInterfaces, thisIf):
         pass 
 
 def AxiMap(prefix, listOfNames, d=None):
@@ -94,11 +94,13 @@ class Ap_clk(IfConfig):
             rst = list(where(allInterfaces, lambda intf: isinstance(intf, interfaces.std.Ap_rst_n) 
                                                         or isinstance(intf, interfaces.std.Ap_rst)))
             if len(rst) > 0:
-                self.addSimpleParam(thisIf, "ASSOCIATED_RESET", rst[0]._name)  # getResetPortName
+                rst = rst[0]
+                self.addSimpleParam(thisIf, "ASSOCIATED_RESET", rst._name)  # getResetPortName
+                
             elif len(rst) > 1:
                 raise Exception("Don't know how to work with multiple resets")
             
-            intfs = where(allInterfaces, lambda intf: intf != rst and intf != thisIf)
+            intfs = where(allInterfaces, lambda intf: intf != rst and intf != self)
             self.addSimpleParam(thisIf, "ASSOCIATED_BUSIF", ":".join(map(lambda intf: intf._name, intfs)))
             self.addSimpleParam(thisIf, "FREQ_HZ", str(DEFAULT_CLOCK))
 
@@ -159,7 +161,7 @@ class AXILite(IfConfig):
 
         
     def postProcess(self, component, entity, allInterfaces, thisIf):
-        thisIf.endianness = "little"
+        self.endianness = "little"
         self.addSimpleParam(thisIf, "ADDR_WIDTH", getParam(thisIf.aw.addr._width))
         self.addSimpleParam(thisIf, "DATA_WIDTH", getParam(thisIf.w.data._width))
         self.addSimpleParam(thisIf, "PROTOCOL", "AXI4LITE")
@@ -176,7 +178,7 @@ class Axi4(AXILite):
         AxiMap('w', ['id', 'last'], self.map['w'])
                      
     def postProcess(self, component, entity, allInterfaces, thisIf):
-        thisIf.endianness = "little"
+        self.endianness = "little"
         param = lambda name, val :  self.addSimpleParam(thisIf, name, str(val))
         param("ADDR_WIDTH", getParam(thisIf.aw.addr._width))
         param("MAX_BURST_LENGTH", 256)

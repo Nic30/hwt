@@ -48,4 +48,17 @@ def appendStrElements(root, obj, reqPropNames=[], optPropNames=[]):
             e.text = getattr(obj, p)
 
 whereEndsWithExt = lambda files, extension :\
-             where(files, lambda x : x.lower().endswith(extension))    
+             where(files, lambda x : x.lower().endswith(extension))
+             
+def appendSpiAtribs(obj, elm, prefix='', reqPropNames=[], optPropNames=[]):
+    for p in reqPropNames:
+        elm.attrib[prefix + p] = getattr(obj, p) 
+    for p in optPropNames:
+        if hasattr(obj, p):
+            elm.attrib[prefix + p] = getattr(obj, p) 
+
+def appendSpiArray(root, arrName, arr):
+    if arr:
+        elmArr = appendSpiElem(root, arrName)
+        for o in arr:
+            elmArr.append(o.asElem())

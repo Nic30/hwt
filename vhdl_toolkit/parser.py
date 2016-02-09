@@ -31,7 +31,10 @@ https://github.com/loranbriggs/Antlr/blob/master/The%20Definitive%20ANTLR%204%20
 def entityFromFile(fileName):
     ctx = process([fileName])
     assert(len(ctx.entities.items()) == 1)
-    return list(ctx.entities.items())[0][1]
+    ent = list(ctx.entities.items())[0][1]
+    ent.generics.sort(key=lambda x: x.name)
+    ent.port.sort(key=lambda x: x.name)
+    return ent
 
 baseDir = os.path.dirname(inspect.getfile(entityFromFile))
 convertor = os.path.join(baseDir, "vhdlConvertor", "vhdlConvertor.jar")
@@ -84,7 +87,9 @@ class Parser():
         var_t.ctx = ctx
         try:
             t_name = VhdlRef.fromJson(jType['literal']['value'])
-            var_t.width = ctx.lookupLocal(t_name).width
+            t = ctx.lookupLocal(t_name)
+            var_t.width = t.width
+
         except KeyError:
             op = jType['binOperator']
             t_name = VhdlRef.fromJson(op['op0']['literal']['value'])
@@ -92,7 +97,9 @@ class Parser():
             if t != FakeStd_logic_1164.std_logic_vector:
                 raise NotImplementedError("Type conversion is not implemented for type %s" % t)
             var_t.width = Parser.exprFromJson(op['op1'], ctx)
-            
+        
+        var_t.name = t.name
+        var_t.min = t.min    
         return var_t
     
     @staticmethod
@@ -126,7 +133,7 @@ class Parser():
         for jsnU in jsonctx['usings']:
             u = VhdlRef.fromJson(jsnU)
             dependencies.add(u)
-            #if ctx.lookupGlobal(u) is None:
+            # if ctx.lookupGlobal(u) is None:
             ctx.importLibFromGlobal(u)
         
         for pHeader in jsonctx["packageHeaders"]:
@@ -161,7 +168,7 @@ def process(fileList:list, hdlCtx=None, timeoutInterval=20):
         if p.returncode != 0:
             raise Exception("Failed to parse file %s" % (p.fileName))
         j = json.loads(stdoutdata.decode("utf-8"))
-        Parser.parse(j, p.fileName,hdlCtx)
+        Parser.parse(j, p.fileName, hdlCtx)
     
     return hdlCtx
 

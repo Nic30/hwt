@@ -2,24 +2,75 @@ import os
 from time import gmtime, strftime
 
 from vivado_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
-    appendSpiElem, appendStrElements, ns, mkXiElm, appendXiElem
+    appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
+from vhdl_toolkit.synthetisator.param import getParam
+import math
+from vhdl_toolkit.expr import Unconstrained, BinOp
 
 
 class Value():
-    __slots__ = ['id', 'resolve', 'text']
+    __slots__ = ['id', 'format', 'bitStringLength', 'resolve', 'text']
+    RESOLVE_GENERATED = "generated"
+    RESOLVE_USER = "user"
 
     @classmethod
     def fromElem(cls, elm):
         self = cls()
-        self.text = elm.text
         self.id = elm.attrib[spi_ns_prefix + 'id']
+        self.text = elm.text
         self.resolve = elm.attrib[spi_ns_prefix + 'resolve']
+        for n in ['format', 'bitStringLength']:
+            try:
+                value = elm.attrib[spi_ns_prefix + n]
+                setattr(self, n, value)
+            except KeyError:
+                pass
+        return self
+    @classmethod
+    def fromGeneric(cls, idPrefix, g, resolve):
+        self = cls()
+        self.id = idPrefix + g.name
+        self.resolve = resolve
+        w = g.var_type.width
+        def getVal():
+            if g.defaultVal:
+                return getParam(g.defaultVal)
+            else:
+                return 0  
+        def bitString(w):
+            self.format = "bitString"
+            digits = math.ceil(w / 8)
+            self.text = ('0x%0' + str(digits) + 'X') % getVal() 
+            self.bitStringLength = w
+            
+        if w == 1:
+            raise NotImplementedError()
+        elif w == bool:
+            self.format = "bool"
+            self.text = str(bool(getVal())).lower() 
+        elif w == int:
+            self.format = "long"
+            self.text = str(getVal())
+        elif w == str:
+            self.format = "string"
+            self.text = str(g.defaultVal)
+        elif isinstance(w, int):
+            bitString(w)
+        elif w == Unconstrained:
+            self.format = "bitString"
+            self.text = ('0x%X') % getVal() 
+        elif isinstance(w, BinOp):
+            w = w.evalFn()
+            bitString(w)
+        else:
+            raise NotImplementedError()
         return self
         
     def asElem(self):
         e = mkSpiElm("value")
-        e.attrib[spi_ns_prefix + 'id'] = self.id
-        e.attrib[spi_ns_prefix + 'resolve'] = self.resolve
+        appendSpiAtribs(self, e, spi_ns_prefix, reqPropNames=['id', 'resolve'],
+                        optPropNames=['format', 'bitStringLength'])
+        
         e.text = str(self.text)
         return e
 
@@ -60,18 +111,18 @@ class File():
         return e
     
 class Parameter():
-    __slots__ = ["name", "value"]
+    __slots__ = ["name", 'displayName', "value", 'order']
     def __init__(self):
         self.name = ""
         self.value = Value()
 
-    @classmethod
-    def fromElem(cls, elm):
-        self = cls()
-        self.name = elm.find('spirit:name', ns).text
-        v = elm.find('spirit:value', ns)
-        self.value = Value.fromElem(v)
-        return self
+    # @classmethod
+    # def fromElem(cls, elm):
+    #    self = cls()
+    #    self.name = elm.find('spirit:name', ns).text
+    #    v = elm.find('spirit:value', ns)
+    #    self.value = Value.fromElem(v)
+    #    return self
         
     def asElem(self):
         e = mkSpiElm("parameter")

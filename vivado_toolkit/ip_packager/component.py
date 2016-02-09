@@ -2,12 +2,13 @@ from time import  time
 
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
          mkSpiElm, ns, whereEndsWithExt
-from vivado_toolkit.ip_packager.model import Model, Port
+from vivado_toolkit.ip_packager.model import Model
+from vivado_toolkit.ip_packager.port import Port
+
 from vivado_toolkit.ip_packager.others import VendorExtensions, FileSet, File, \
     Parameter, Value
 import xml.etree.ElementTree as etree
 from vivado_toolkit.ip_packager.interfaces.all import allBusInterfaces
-from vhdl_toolkit.types import INTF_DIRECTION
 from vivado_toolkit.ip_packager.busInterface import BusInterface
 
 
@@ -72,14 +73,8 @@ class Component():
         
     def _xmlParameters(self, compElem):
         parameters = appendSpiElem(compElem, "parameters")
-        compNameParam = Parameter()
-        compNameParam.name = "Component_Name"
-        compNameParam.value = Value()
-        v = compNameParam.value
-        v.id = "PARAM_VALUE.Component_Name"
-        v.resolve = "user"
-        v.text = self.name
-        parameters.append(compNameParam.asElem())
+        for p in self.parameters:
+            parameters.append(p.asElem())
         
     def xml(self):
         for prefix, uri in ns.items():
@@ -100,24 +95,12 @@ class Component():
         
         return c
    
-    @staticmethod
-    def generatePortMap(biType, intf):
-        def processIntf(mapDict, intf):
-            if not intf._subInterfaces:
-                assert(isinstance(mapDict, str))
-                return {mapDict : intf._getPhysicalName()}
-            else:
-                d = {}
-                for k, i in intf._subInterfaces.items():
-                    m = mapDict[k]
-                    d.update(processIntf(m, i))
-                return d
-        return processIntf(biType.map, intf)
+
     
     def asignTopUnit(self, unit):
         self._topUnit = unit
         self.name = unit._name
-        self.model.addDefaultViews(self.name)
+        self.model.addDefaultViews(self._topUnit)
         for p in self._topUnit._entity.port:
             self.model.ports.append(Port._entPort2CompPort(unit._entity, p))
 
@@ -133,17 +116,27 @@ class Component():
             except KeyError:
                 pass
             if biClass is not None:
-                biType = biClass()
-                bi = BusInterface()
-                bi.name = intf._name
-                bi.busType = biType
-                bi.abstractionType = biClass()
-                bi.abstractionType.name += "_rtl"
-                bi.isMaster = intf._direction == INTF_DIRECTION.MASTER
-                bi._portMaps = Component.generatePortMap(biType, intf)
-    
-                biType.postProcess(self, self._topUnit, self.busInterfaces, intf)
+                bi = BusInterface.fromBiClass(intf, biClass)
                 intf._bi = bi
+                bi.busType.postProcess(self, self._topUnit, self.busInterfaces, intf)
+        
+        
+        # generate component parameters
+        compNameParam = Parameter()
+        compNameParam.name = "Component_Name"
+        compNameParam.value = Value()
+        v = compNameParam.value
+        v.id = "PARAM_VALUE.Component_Name"
+        v.resolve = "user"
+        v.text = self.name    
+        self.parameters.append(compNameParam)
+        # generic as parameters
+        for g in self._topUnit._entity.generics:
+            p = Parameter()
+            p.name = g.name
+            p.value = Value.fromGeneric("PARAM_VALUE.",g, Value.RESOLVE_USER)
+            self.parameters.append(p)    
+
         # for bi in self.busInterfaces:
         #    bi.name = trimUnderscores(bi.name)
         #    for p in bi.parameters:

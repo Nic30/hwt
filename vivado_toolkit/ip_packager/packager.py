@@ -9,18 +9,8 @@ from vhdl_toolkit.entity import Entity
 from vhdl_toolkit.formater import formatVhdl
 from vivado_toolkit.ip_packager.component import Component
 from vivado_toolkit.ip_packager.helpers import prettify
+from vivado_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
 
-
-def makeDummyXGUIFile(fileName):
-    s = """
-    # Definitional proc to organize widgets for parameters.
-proc init_gui { IPINST } {
-  #Adding Page
-  ipgui::add_page $IPINST -name "Page 0"
-
-}"""
-    with open(fileName, "w") as f:
-        f.write(s)
 
 
 class Packager(object):
@@ -73,7 +63,19 @@ class Packager(object):
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy(srcF, dst)
             self.vhdlFiles.add(dst)
-    
+            
+    def mkAutoGui(self):
+        gui = GuiBuilder()
+        p0 = gui.page("Page_0")
+        handlers = []
+        for g in  self.topUnit._entity.generics:
+            p0.param(g.name)
+            for fn in paramManipulatorFns(g.name):
+                handlers.append(fn)
+        with open(self.guiFile, "w") as f:
+            s = gui.asTcl() + '\n' + '\n'.join(map(lambda x : str(x), handlers))
+            f.write(s)
+
     def createPackage(self, repoDir):
         
         ip_dir = os.path.join(repoDir, self.name + "/")      
@@ -88,9 +90,8 @@ class Packager(object):
         self.synthetizeAndSave(ip_srcPath)
         for p in self.beforeBuilding:
             p(self, ip_srcPath)
-            
-        makeDummyXGUIFile(guiFile)
-        
+        self.guiFile = guiFile    
+        self.mkAutoGui()
         c = Component()
         c._files = list(
                         map(lambda p : os.path.join("src/" , p),

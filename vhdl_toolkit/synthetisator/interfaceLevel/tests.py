@@ -37,7 +37,7 @@ class TestInterfaceSyntherisator(unittest.TestCase):
         self.assertTrue(hasattr(bram, 'b'), 'port b found')
         for p in [bram.a, bram.b]:
             for propName, _ in BramPort._subInterfaces.items():
-                self.assertEqual(p._subInterfaces[propName], getattr(p, propName), 
+                self.assertEqual(p._subInterfaces[propName], getattr(p, propName),
                                  "_subInterfaces['%s'] is same object as atribut" % (propName))
                 self.assertTrue(hasattr(p, propName), 'bram port has ' + propName)
     def test_SimpleUnit2_iLvl(self):
@@ -132,6 +132,12 @@ class TestInterfaceSyntherisator(unittest.TestCase):
         self.assertIsS(a.S_AXI.b.resp)
         self.assertIsS(a.S_AXI.b.valid)
         self.assertIsS(a.S_AXI.b.ready)
+
+    def test_axiParamsIn_paramsDict(self):
+        from vhdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
+        a = AxiLiteSlaveContainer()
+        self.assertTrue("ADDR_WIDTH" in a._params)
+        self.assertTrue("DATA_WIDTH" in a._params) 
         
     def test_axiParams(self):
         from vhdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
@@ -148,6 +154,8 @@ class TestInterfaceSyntherisator(unittest.TestCase):
         self.assertEqual(a.slv.C_S_AXI_DATA_WIDTH.get(), DW)
         
         self.assertEqual(a.slv.S_AXI.ar.addr._width.get(), AW)
+        
+        
         # [TODO] width of parametrized interfaces from VHDL should be Param with expr
     
     def test_withPartialyInvalidInterfaceNames(self):
@@ -186,7 +194,7 @@ class TestInterfaceSyntherisator(unittest.TestCase):
     def test_axiStreamExtraction(self):
         class AxiStreamSampleEnt(UnitWithSource):
             _origin = ILVL_VHDL + "axiStreamSampleEnt.vhd"
-        u = AxiStreamSampleEnt()#(intfClasses=[AxiStream_withUserAndStrb, AxiStream, AxiStream_withUserAndNoStrb, AxiStream_withoutSTRB])
+        u = AxiStreamSampleEnt()  # (intfClasses=[AxiStream_withUserAndStrb, AxiStream, AxiStream_withUserAndNoStrb, AxiStream_withoutSTRB])
         self.assertTrue(hasattr(u, "RX0_ETH"))
         self.assertTrue(hasattr(u, "RX0_CTL"))        
         self.assertTrue(hasattr(u, "TX0_ETH"))
@@ -205,10 +213,27 @@ class TestInterfaceSyntherisator(unittest.TestCase):
         u = ClkRstEnt(intfClasses=[Ap_clk, Ap_rst_n])
         self.assertIsInstance(u.ap_rst_n, Ap_rst_n)
         self.assertIsInstance(u.ap_clk, Ap_clk)  
+    
+    def test_positiveAndNatural(self):
+        class PositiveAndNatural(UnitWithSource):
+            _origin = ILVL_VHDL + "positiveAndNatural.vhd"
+        u = PositiveAndNatural()
+        natG = single(u._entity.generics, lambda x : x.name == "nat")
+        posG = single(u._entity.generics, lambda x : x.name == "pos")
+        intG = single(u._entity.generics, lambda x : x.name == "int")
+        self.assertTrue(natG.var_type.width == int)
+        self.assertTrue(posG.var_type.width == int) 
+        self.assertTrue(intG.var_type.width == int) 
+        
+        
+        self.assertTrue(natG.var_type.min == 0)
+        self.assertTrue(posG.var_type.min == 1) 
+        self.assertTrue(intG.var_type.min == None) 
+        
         
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(TestInterfaceSyntherisator('test_axiStreamExtraction'))
+    #suite.addTest(TestInterfaceSyntherisator('test_positiveAndNatural'))
     suite.addTest(unittest.makeSuite(TestInterfaceSyntherisator))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

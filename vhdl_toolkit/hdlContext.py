@@ -14,17 +14,18 @@ class RequireImportErr(Exception):
 class HDLParseErr(Exception):
     pass
 
-def mkType(name, width):
+def mkType(name, width, minimum=None):
     t = VHDLType()
     t.name = name
     t.width = width
+    t.min = minimum
     return t
 
 
 class BaseVhdlContext():
     integer = mkType("integer", int)
-    positive = mkType("positive", int)
-    natural = mkType("natural", int)
+    positive = mkType("positive", int, 1)
+    natural = mkType("natural", int, 0)
     boolean = mkType("boolean", bool)
     string = mkType("string", str)
     float = mkType("float", float)
@@ -75,7 +76,7 @@ class HDLCtx(NonRedefDict):
             raise RequireImportErr(ref)
     def lookupGlobal(self, ref):
         p = self
-        n = ref.names[0] #[TODO]
+        n = ref.names[0]  # [TODO]
         while p.parent is not None:
             p = p.parent
         if p is None:
@@ -89,7 +90,7 @@ class HDLCtx(NonRedefDict):
         
     def lookupLocal(self, locRef):
         p = self
-        n = locRef.names[-1] #[TODO]
+        n = locRef.names[-1]  # [TODO]
         while p is not None:
             try:
                 return p[n]

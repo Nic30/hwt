@@ -1,6 +1,7 @@
 
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
-         mkSpiElm, spi_ns_prefix
+         mkSpiElm
+from vhdl_toolkit.types import INTF_DIRECTION
 
      
  
@@ -14,7 +15,6 @@ class BusInterface():
         # logical : physical
         self._portMaps = {}
         self.parameters = [] 
-        self._ifCls = None
         self.endianness = None
     # @classmethod
     # def fromElem(cls, elm):
@@ -39,6 +39,32 @@ class BusInterface():
     #        self.parameters.append(p_obj)
     #        
     #    return self
+    @staticmethod
+    def generatePortMap(biType, intf):
+        def processIntf(mapDict, intf):
+            if not intf._subInterfaces:
+                assert(isinstance(mapDict, str))
+                return {mapDict : intf._getPhysicalName()}
+            else:
+                d = {}
+                for k, i in intf._subInterfaces.items():
+                    m = mapDict[k]
+                    d.update(processIntf(m, i))
+                return d
+        return processIntf(biType.map, intf)
+    
+    @classmethod
+    def fromBiClass(cls, intf, biClass):
+        self = BusInterface()
+        biType = biClass()
+        self.name = intf._name
+        self.busType = biType
+        self.abstractionType = biClass()
+        self.abstractionType.name += "_rtl"
+        self.isMaster = intf._direction == INTF_DIRECTION.MASTER
+        self._portMaps = BusInterface.generatePortMap(biType, intf)
+        self.parameters = biType.parameters
+        return self
     
     def asElem(self):
         def mkPortMap(logicalName, physicalName):
@@ -67,5 +93,6 @@ class BusInterface():
         if len(self.parameters) > 0:
             pm = appendSpiElem(e, "parameters")
             for p in self.parameters:
-                pm.append(p.asElem())
+                pElm = p.asElem() 
+                pm.append(pElm)
         return e
