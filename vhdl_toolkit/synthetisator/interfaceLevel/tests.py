@@ -241,7 +241,7 @@ class TestInterfaceSyntherisator(unittest.TestCase):
         
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(TestInterfaceSyntherisator('test_axiLiteSlave2'))
+    # suite.addTest(TestInterfaceSyntherisator('test_axiLiteSlave2'))
     suite.addTest(unittest.makeSuite(TestInterfaceSyntherisator))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
