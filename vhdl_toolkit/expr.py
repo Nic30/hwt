@@ -1,8 +1,9 @@
 import types
 from vhdl_toolkit.synthetisator.param import getParam
+import math
 
 class Unconstrained():
-    pass
+    __slots__ = ["derivedWidth"]
 
 def value2vhdlformat(dst, val):
     """ @param dst: is VHDLvariable connected with value """
@@ -14,7 +15,12 @@ def value2vhdlformat(dst, val):
     elif w == int:
         return "%d" % getParam(val.get())
     elif w == Unconstrained:
-        return 'X"%02x"' % (getParam(val))
+        v = getParam(val)
+        if hasattr(w, "derivedWidth"):
+            bits = w.derivedWidth
+        else:
+            bits = v.bit_length() 
+        return ('X"%0' + str(math.ceil(bits / 4)) + 'x"') % (getParam(val))
     elif w == str:
         return '"%s"' % (getParam(val))
     elif w == bool:

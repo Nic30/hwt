@@ -9,7 +9,7 @@ import os
 
 from vhdl_toolkit.hdlContext import HDLCtx, BaseVhdlContext, HDLParseErr, FakeStd_logic_1164
 from vhdl_toolkit.reference import VhdlRef
-from vhdl_toolkit.expr import BinOp
+from vhdl_toolkit.expr import BinOp, Unconstrained
 from vhdl_toolkit.variables import PortItem, VHDLGeneric
 from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.synthetisator.param import Param
@@ -110,6 +110,10 @@ class Parser():
         g.defaultVal = Param(Parser.exprFromJson(jGeneric['value'], ctx))
         g.defaultVal.name = name
         g.name = name
+        w = g.var_type.width
+        if w == Unconstrained:
+            w.derivedWidth  = int(jGeneric['value']['literal']["bits"])
+        
         return g
     
     @staticmethod

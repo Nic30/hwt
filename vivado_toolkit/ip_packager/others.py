@@ -39,9 +39,9 @@ class Value():
                 return 0  
         def bitString(w):
             self.format = "bitString"
-            digits = math.ceil(w / 8)
+            digits = math.ceil(w / 4)
             self.text = ('0x%0' + str(digits) + 'X') % getVal() 
-            self.bitStringLength = w
+            self.bitStringLength = str(w)
             
         if w == 1:
             raise NotImplementedError()
@@ -53,12 +53,11 @@ class Value():
             self.text = str(getVal())
         elif w == str:
             self.format = "string"
-            self.text = str(g.defaultVal)
+            self.text = str(g.defaultVal.val.val)
         elif isinstance(w, int):
             bitString(w)
         elif w == Unconstrained:
-            self.format = "bitString"
-            self.text = ('0x%X') % getVal() 
+            bitString(w.derivedWidth)
         elif isinstance(w, BinOp):
             w = w.evalFn()
             bitString(w)

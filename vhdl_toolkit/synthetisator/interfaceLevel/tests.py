@@ -6,7 +6,7 @@ from python_toolkit.arrayQuery import where, single, NoValueExc
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
 from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba import AxiStream, AxiStream_withoutSTRB, \
                                                     AxiStream_withUserAndNoStrb, AxiStream_withUserAndStrb, \
-    Axi4_xil, AxiLite_xil
+    Axi4_xil, AxiLite_xil, AxiLite
 from vhdl_toolkit.synthetisator.param import getParam
 
 INTF_D = INTF_DIRECTION
@@ -104,7 +104,7 @@ class TestInterfaceSyntherisator(unittest.TestCase):
         
     def test_simplePortDirections(self):
         from vhdl_toolkit.samples.iLvl.bram import Bram
-        bram = Bram()
+        bram = Bram(intfClasses=[BramPort])
         self.assertIsS(bram.a)
         self.assertIsS(bram.a.clk)
         self.assertIsS(bram.a.addr)
@@ -229,11 +229,19 @@ class TestInterfaceSyntherisator(unittest.TestCase):
         self.assertTrue(natG.var_type.min == 0)
         self.assertTrue(posG.var_type.min == 1) 
         self.assertTrue(intG.var_type.min == None) 
+    
+    def test_axiLiteSlave2(self):
+        class AxiLiteSlave2(UnitWithSource):
+            _origin = ILVL_VHDL + "axiLite_basic_slave2.vhd"
+        u = AxiLiteSlave2(intfClasses=[AxiLite, Ap_clk, Ap_rst_n])
+        self.assertTrue(hasattr(u, "ap_clk"))
+        self.assertTrue(hasattr(u, "ap_rst_n"))
+        self.assertTrue(hasattr(u, "axilite"))
         
         
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(TestInterfaceSyntherisator('test_positiveAndNatural'))
+    #suite.addTest(TestInterfaceSyntherisator('test_axiLiteSlave2'))
     suite.addTest(unittest.makeSuite(TestInterfaceSyntherisator))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

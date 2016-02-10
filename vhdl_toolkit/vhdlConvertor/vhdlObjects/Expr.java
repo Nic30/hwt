@@ -1,5 +1,6 @@
 package vhdlObjects;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import org.json.JSONException;
@@ -17,6 +18,9 @@ public class Expr {
 	}
 	public Expr(SymbolType type, Object value) {
 		literal = new Symbol(type, value);
+	}
+	public Expr(BigInteger value, int bits) {
+		literal = new Symbol(value, bits);
 	}
 	public Expr(Reference ref) {
 		literal = new Symbol(SymbolType.ID, ref);

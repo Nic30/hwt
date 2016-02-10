@@ -26,6 +26,9 @@ class ExtractableInterface():
                         prefix = _childName
                     else:
                         prefix += (parent.NAME_SEPARATOR + _childName)
+                else:
+                    if prefix != '':
+                        prefix += parent.NAME_SEPARATOR
                     
             o = child
             name = _childName
@@ -126,13 +129,19 @@ class ExtractableInterface():
         cls._builded()
         for name in cls._extractPossiblePrefixes(sigLevelUnit.entity):
             try:
-                #print("\n_tryToExtract 1 ", name, cls)
-                intfInst = cls(isExtern=True) 
-                intf = intfInst._tryToExtractByName(name, sigLevelUnit)
+                # print("\n_tryToExtract 1 ", name, cls)
+                intfInst = cls(isExtern=True)
+                prefix = name 
+                # if cls._subInterfaces: 
+                #    prefix = name + cls.NAME_SEPARATOR
+                # else:
+                #    prefix = name
+                     
+                intf = intfInst._tryToExtractByName(prefix, sigLevelUnit)
                 if not intf._subInterfaces:
                     name += intf._name
                 if name.endswith("_"):
-                    name = name[:-1] 
+                    name = name[:-1]
                 # print(("_tryToExtract", name, intf))
                 yield (name, intf) 
             except InterfaceIncompatibilityExc as e:

@@ -24,20 +24,24 @@ public class LiteralParser {
 		if (n != null) {
 			String s = n.getText().toLowerCase();
 			int radix = 0;
+			int bitRatio = 0;
 			switch (s.charAt(0)) {
 				case 'b' :
 					radix = 2;
+					bitRatio = 1;
 					break;
 				case 'o' :
 					radix = 8;
+					bitRatio = 2;
 					break;
 				case 'x' :
 					radix = 16;
+					bitRatio = 4;
 					break;
 			}
-			BigInteger val = new BigInteger(s.substring(2, s.length() - 1),
-					radix);
-			return new Expr(SymbolType.INT, val);
+			String strVal = s.substring(2, s.length() - 1);
+			BigInteger val = new BigInteger(strVal, radix);
+			return new Expr(val, strVal.length() * bitRatio);
 		}
 		n = ctx.STRING_LITERAL();
 		if (n != null) {

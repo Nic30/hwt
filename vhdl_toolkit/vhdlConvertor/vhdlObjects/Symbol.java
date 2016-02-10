@@ -7,10 +7,17 @@ import org.json.JSONObject;
 
 public class Symbol {
 	public SymbolType type;
+	public Integer bits;
 	public Object value;
+
 	public Symbol(SymbolType type, Object value) {
 		this.type = type;
 		this.value = value;
+	}
+	public Symbol(BigInteger value, int bits) {
+		this.type = SymbolType.INT;
+		this.value = value;
+		this.bits = bits;
 	}
 	public JSONObject toJson() throws JSONException {
 		JSONObject s = new JSONObject();
@@ -28,6 +35,9 @@ public class Symbol {
 				break;
 			case INT :
 				s.put("value", (BigInteger) value);
+				if (bits != null)
+					s.put("bits", bits);
+
 				break;
 			case STRING :
 				s.put("value", (String) value);
