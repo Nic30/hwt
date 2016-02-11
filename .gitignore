@@ -14,3 +14,6 @@ HWToolkit.egg-info/
 vhdl_toolkit/vhdlConvertor/.classpath
 vhdl_toolkit/vhdlConvertor/.project
 vhdl_toolkit/vhdlConvertor/.settings/
+.project
+.pydevproject
+.settings

@@ -12,6 +12,7 @@ setup(name='HWToolkit',
         'jinja2', # vhdl templates renderer, visualizer renderer
         'ply',    # old parser, vhdl interpret
         'flask',  # visualizer
+        'multiprocess',
       ],
       license='MIT',
       packages = find_packages(),

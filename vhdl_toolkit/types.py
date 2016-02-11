@@ -1,4 +1,4 @@
-from vhdl_toolkit.expr import BinOp, Unconstrained
+from vhdl_toolkit.hdlObjects.expr import BinOp, Unconstrained
 from vhdl_toolkit.synthetisator.param import Param
 
 

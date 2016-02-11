@@ -5,6 +5,10 @@ import vhdlParser.vhdlParser;
 
 public class ArchParser {
 	Arch a;
+	boolean hierarchyOnly;
+	public ArchParser(boolean _hierarchyOnly) {
+		hierarchyOnly = _hierarchyOnly;
+	}
 	public Arch visitArchitecture_body(
 			vhdlParser.Architecture_bodyContext ctx) {
 		a = new Arch();
@@ -17,15 +21,15 @@ public class ArchParser {
 		// ;
 		a.name = ctx.identifier(0).getText();
 		a.entityName = ctx.identifier(1).getText();
-
-		for (vhdlParser.Block_declarative_itemContext bi : ctx
-				.architecture_declarative_part().block_declarative_item()) {
-			// architecture_declarative_part
-			// : ( block_declarative_item )*
-			// ;
-			visitBlock_declarative_item(bi);
+		if (!hierarchyOnly) {
+			for (vhdlParser.Block_declarative_itemContext bi : ctx
+					.architecture_declarative_part().block_declarative_item()) {
+				// architecture_declarative_part
+				// : ( block_declarative_item )*
+				// ;
+				visitBlock_declarative_item(bi);
+			}
 		}
-
 		for (vhdlParser.Architecture_statementContext s : ctx
 				.architecture_statement_part().architecture_statement()) {
 			// architecture_statement_part
@@ -83,11 +87,13 @@ public class ArchParser {
 		vhdlParser.Component_instantiation_statementContext ci = ctx
 				.component_instantiation_statement();
 		if (ci != null) {
-			a.components.add(CompInstanceParser
+			a.componentInstances.add(CompInstanceParser
 					.visitComponent_instantiation_statement(ci));
 		} else {
-			NotImplementedLogger.print(
-					"ArchParser.visitArchitecture_statement - unspecified next rule");
+			if (!hierarchyOnly) {
+				NotImplementedLogger.print(
+						"ArchParser.visitArchitecture_statement - unspecified next rule");
+			}
 		}
 	}
 

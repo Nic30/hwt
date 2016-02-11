@@ -12,7 +12,8 @@ public class CompInstance implements iJsonable {
 	public List<Expr> genericMap;
 	public List<Expr> portMap;
 
-	public CompInstance() {
+	public CompInstance(Expr _entityName) {
+		entityName = _entityName;
 		genericMap = new Vector<Expr>();
 		portMap = new Vector<Expr>();
 	}

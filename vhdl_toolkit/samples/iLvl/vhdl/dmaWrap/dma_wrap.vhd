@@ -3,11 +3,8 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.misc_pkg.all;
-use work.conf_pkg.all;
-use work.conf_pkg_common.all;
-use work.rsoc_pkg.all;
 
-entity rsoc_dma is
+entity dma_wrap is
 	generic(
 		C_BASE              : string           := "default";
 		C_ID                : array_of_natural := (0 => 0);

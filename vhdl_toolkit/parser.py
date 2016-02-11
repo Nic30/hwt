@@ -8,12 +8,16 @@ import inspect
 import os
 
 from vhdl_toolkit.hdlContext import HDLCtx, BaseVhdlContext, HDLParseErr, FakeStd_logic_1164
-from vhdl_toolkit.reference import VhdlRef
-from vhdl_toolkit.expr import BinOp, Unconstrained
-from vhdl_toolkit.variables import PortItem, VHDLGeneric
+from vhdl_toolkit.hdlObjects.reference import VhdlRef
+from vhdl_toolkit.hdlObjects.expr import BinOp, Unconstrained
+from vhdl_toolkit.hdlObjects.variables import PortItem, VHDLGeneric
+from vhdl_toolkit.hdlObjects.entity import Entity
+from vhdl_toolkit.hdlObjects.package import Package, PackageHeader, PackageBody
+
 from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.synthetisator.param import Param
-from vhdl_toolkit.entity import Entity
+from vhdl_toolkit.hdlObjects.architecture import Architecture
+from vhdl_toolkit.hdlObjects.component import ComponentInstance 
 
 comentRegex = re.compile('--[^\n]*\n')
 
@@ -29,7 +33,7 @@ https://github.com/loranbriggs/Antlr/blob/master/The%20Definitive%20ANTLR%204%20
 
         
 def entityFromFile(fileName):
-    ctx = process([fileName])
+    ctx = parseVhdl([fileName])
     assert(len(ctx.entities.items()) == 1)
     ent = list(ctx.entities.items())[0][1]
     ent.generics.sort(key=lambda x: x.name)
@@ -112,57 +116,120 @@ class Parser():
         g.name = name
         w = g.var_type.width
         if w == Unconstrained:
-            w.derivedWidth  = int(jGeneric['value']['literal']["bits"])
+            w.derivedWidth = int(jGeneric['value']['literal']["bits"])
         
         return g
     
     @staticmethod
-    def entityFromJson(jEnt, ctx):
+    def entityFromJson(jEnt, ctx, hierarchyOnly=False):
         e = Entity()
         e.name = jEnt['name']
-        for _, jGener in jEnt['generics'].items():
-            g = Parser.genericFromJson(jGener, ctx)
-            e.generics.append(g)
-        entCtx = HDLCtx(e.name, ctx)
-        e.injectCtxWithGenerics(entCtx)
-        entCtx.update(ctx)
-        for _ , jPort in jEnt['ports'].items():
-            p = Parser.portFromJson(jPort, entCtx)
-            e.port.append(p)
+        if not hierarchyOnly:
+            for _, jGener in jEnt['generics'].items():
+                g = Parser.genericFromJson(jGener, ctx)
+                e.generics.append(g)
+            entCtx = HDLCtx(e.name, ctx)
+            e.injectCtxWithGenerics(entCtx)
+            entCtx.update(ctx)
+            for _ , jPort in jEnt['ports'].items():
+                p = Parser.portFromJson(jPort, entCtx)
+                e.port.append(p)
         return e
     
     @staticmethod
-    def parse(jsonctx, fileName, ctx):
+    def componentInstanceFromJson(jComp, ctx, hierarchyOnly=False):
+        ci = ComponentInstance(jComp['name'], None)
+        ci.entityRef = VhdlRef.fromExprJson(jComp['entityName'])
+        if not hierarchyOnly:
+            pass
+            # [TODO] port, generics maps
+        return ci
+    
+    @staticmethod
+    def archFromJson(jArch, ctx, hierarchyOnly=False):
+        a = Architecture(None)
+        a.entityName = jArch["entityName"]
+        a.name = jArch['name']
+        for jComp in jArch['componentInstances']:
+            ci = Parser.componentInstanceFromJson(jComp, ctx)
+            a.componentInstances.append(ci)
+        if not hierarchyOnly:
+            pass
+            # [TODO]
+        return a
+    
+    @staticmethod
+    def packageHeaderFromJson(jPh, ctx, hierarchyOnly=False):
+        ph = PackageHeader(jPh['name'])
+        if not hierarchyOnly:
+            raise NotImplementedError()
+        return ph
+    
+    @staticmethod
+    def packageFromJson(jPack, ctx1, hierarchyOnly=False):
+        pb = PackageBody(jPack['name'])
+        
+        if not hierarchyOnly:
+            raise NotImplementedError()
+        return pb
+        
+    @staticmethod
+    def parse(jsonctx, fileName, ctx, hierarchyOnly=False):
         dependencies = set()
         for jsnU in jsonctx['usings']:
             u = VhdlRef.fromJson(jsnU)
             dependencies.add(u)
             # if ctx.lookupGlobal(u) is None:
-            ctx.importLibFromGlobal(u)
+            if not hierarchyOnly:
+                ctx.importLibFromGlobal(u)
+    
+        for phName, jPh in jsonctx["packageHeaders"].items():
+            ph = Parser.packageHeaderFromJson(jPh, ctx, hierarchyOnly=hierarchyOnly)
+            assert(ph.name == phName)
+            if ph.name not in ctx.packages:
+                ctx.packages[ph.name] = Package(ph, None)
+            else:
+                ctx.packages[ph.name].header = ph
         
-        for pHeader in jsonctx["packageHeaders"]:
-            pass
+        for pbName, jpBody in jsonctx["packages"].items():
+            pb = Parser.packageFromJson(jpBody, ctx, hierarchyOnly=hierarchyOnly)
+            assert(pb.name == pbName)
+            if pb.name not in ctx.packages:
+                ctx.packages[pb.name] = Package(None, pb)
+            else:
+                ctx.packages[pb.name].body = pb
         
-        for pbName, pBody in jsonctx["packages"].items():
-            pass
-        
-        for eName, e in jsonctx["entities"].items():
-            ent = Parser.entityFromJson(e, ctx)
+        for eName, jE in jsonctx["entities"].items():
+            ent = Parser.entityFromJson(jE, ctx, hierarchyOnly=hierarchyOnly)
+            assert(ent.name == eName)
             ent.fileName = fileName
             ent.dependencies = dependencies
             ctx.entities[eName] = ent
+            
+        for jArch in jsonctx['architectures']:
+            arch = Parser.archFromJson(jArch, ctx, hierarchyOnly=hierarchyOnly)
+            arch.fileName = fileName
+            arch.dependencies = dependencies
+            ctx.architectures.append(arch)
 
            
-def process(fileList:list, hdlCtx=None, timeoutInterval=20):
+def parseVhdl(fileList:list, hdlCtx=None, timeoutInterval=20, hierarchyOnly=False):
+    if isinstance(fileList, str):
+        fileList = [fileList]
     topCtx = hdlCtx
     if not hdlCtx:
         topCtx = BaseVhdlContext.getBaseCtx()
         BaseVhdlContext.importFakeIEEELib(topCtx)
         hdlCtx = HDLCtx('work', topCtx)
-        
+        topCtx.insert(VhdlRef(['work']), hdlCtx)
     p_list = []
     for fname in fileList:
-        p = Popen(["java", "-jar", str(convertor) , fname], stdout=PIPE) 
+        cmd = ["java", "-jar", str(convertor) , fname]
+        if hierarchyOnly:
+            cmd.append('-h') 
+            
+        p = Popen(cmd, stdout=PIPE) 
+        
         p.fileName = fname
         p_list.append(p)
         
@@ -171,17 +238,14 @@ def process(fileList:list, hdlCtx=None, timeoutInterval=20):
 
         if p.returncode != 0:
             raise Exception("Failed to parse file %s" % (p.fileName))
-        j = json.loads(stdoutdata.decode("utf-8"))
-        Parser.parse(j, p.fileName, hdlCtx)
+        try:
+            if stdoutdata == b'':
+                j = None 
+            else:
+                j = json.loads(stdoutdata.decode("utf-8"))
+        except ValueError as e:
+            raise Exception("Failed to parse file %s, ValueError while parsing json from convertor" % (p.fileName))
+        if j:
+            Parser.parse(j, p.fileName, hdlCtx, hierarchyOnly=hierarchyOnly)
     
     return hdlCtx
-
-    
-   
-if __name__ == "__main__":
-    fl = [
-          '/home/nic30/Downloads/fpgalibs/src/util/pkg/math_func.vhd',
-          '/home/nic30/Downloads/fpgalibs/src/mem/dp_bram/dp_bram_ent.vhd'
-          ]
-    hdlCtx = process(fl)
-    print(hdlCtx)

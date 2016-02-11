@@ -16,6 +16,14 @@ class VhdlRef():
             elif t == "ALL":
                 allChilds = True
         return cls(names, allChilds)
+    @classmethod
+    def fromExprJson(cls, jExpr):
+        names = []
+        #top = jExpr
+        #while jExpr['TYPE'] == "B"
+        names.append(jExpr['literal']['value'][0]['value']) #[TODO] actualy is expr with reference inside
+        return cls(names)
+        
     #def __hash__(self):
     #    return hash(self.names)
     #    

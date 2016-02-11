@@ -12,7 +12,7 @@ from vhdl_toolkit.synthetisator.param import getParam
 INTF_D = INTF_DIRECTION
 D = DIRECTION
 
-ILVL_VHDL = '../../samples/iLvl/vhdl/'
+ILVL_VHDL = '../../../samples/iLvl/vhdl/'
 
 class TestInterfaceSyntherisator(unittest.TestCase):
     def assertIsM(self, intf):

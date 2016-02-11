@@ -1,7 +1,8 @@
 from python_toolkit.arrayQuery import arr_any, where, distinctBy
-from vhdl_toolkit.architecture import Architecture, Component
-from vhdl_toolkit.entity import Entity
-from vhdl_toolkit.process import HWProcess
+from vhdl_toolkit.hdlObjects.architecture import Architecture, Component
+from vhdl_toolkit.hdlObjects.variables import VHDLGeneric
+from vhdl_toolkit.hdlObjects.entity import Entity
+from vhdl_toolkit.hdlObjects.process import HWProcess
 from vhdl_toolkit.synthetisator.rtlLevel.codeOp import If, IfContainer
 from vhdl_toolkit.synthetisator.rtlLevel.optimalizator import TreeBalancer, \
     expr2cond
@@ -10,8 +11,6 @@ from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, walkSigSouces, Po
     discoverSensitivity
 from vhdl_toolkit.templates import VHDLTemplates  
 from vhdl_toolkit.types import VHDLType
-from vhdl_toolkit.synthetisator.param import getParam
-from vhdl_toolkit.variables import VHDLGeneric
 
 def renderIfTree(assigments):
     # optimizedSrc = expr_optimize([dp.src])

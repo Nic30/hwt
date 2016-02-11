@@ -1,4 +1,4 @@
-from vhdl_toolkit.expr import Assignment
+from vhdl_toolkit.hdlObjects.expr import Assignment
 from vhdl_toolkit.templates import VHDLTemplates
 
 

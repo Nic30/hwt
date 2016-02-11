@@ -5,7 +5,7 @@ from vivado_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
     appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
 from vhdl_toolkit.synthetisator.param import getParam
 import math
-from vhdl_toolkit.expr import Unconstrained, BinOp
+from vhdl_toolkit.hdlObjects.expr import Unconstrained, BinOp
 
 
 class Value():

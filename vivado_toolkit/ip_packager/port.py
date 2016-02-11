@@ -2,7 +2,7 @@ import re
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
          findS, mkSpiElm, ns
 from vhdl_toolkit.synthetisator.param import getParam
-from vhdl_toolkit.expr import BinOp
+from vhdl_toolkit.hdlObjects.expr import BinOp
 
 class WireTypeDef():
     _requiredVal = ["typeName"]
@@ -49,7 +49,7 @@ class Port():
         port.direction = p.direction.lower()
         port.type = WireTypeDef()
         t = port.type
-        w = p.var_type.width
+        w = getParam(p.var_type.width)
         
         if w == 1:
             t.typeName = "STD_LOGIC"
@@ -77,7 +77,7 @@ class Port():
                 
                 d.attrib["spirit:format"] = "long"
                 if isinstance(val, BinOp):  # value is symple type and does not contains generic etc...
-                    resolve = 'dependent' # [HOTFIX] needs to be a custom str method for expr
+                    resolve = 'dependent'  # [HOTFIX] needs to be a custom str method for expr
                     depStr = re.sub("(\A\S*)", "spirit:decode(id('MODELPARAM_VALUE.\g<1>'))", str(val))
                     d.attrib["spirit:dependency"] = "(" + depStr + ")"
                     d.text = str(val.evalFn())

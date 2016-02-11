@@ -11,7 +11,11 @@ import vhdlObjects.Variable;
 import vhdlParser.vhdlParser;
 
 public class EntityParser {
-	public static Entity visitEntity_declaration(
+	boolean hierarchyOnly;
+	public EntityParser(boolean _hierarchyOnly) {
+		hierarchyOnly = _hierarchyOnly;
+	}
+	public Entity visitEntity_declaration(
 			vhdlParser.Entity_declarationContext ctx) {
 
 		// entity_declaration
@@ -25,10 +29,12 @@ public class EntityParser {
 		// entity_declarative_part
 		// : ( entity_declarative_item )*
 		// ;
-		visitEntity_header(e, ctx.entity_header());
-		for (vhdlParser.Entity_declarative_itemContext d : ctx
-				.entity_declarative_part().entity_declarative_item()) {
-			visitEntity_declarative_item(d);
+		if (!hierarchyOnly) {
+			visitEntity_header(e, ctx.entity_header());
+			for (vhdlParser.Entity_declarative_itemContext d : ctx
+					.entity_declarative_part().entity_declarative_item()) {
+				visitEntity_declarative_item(d);
+			}
 		}
 		return e;
 	}

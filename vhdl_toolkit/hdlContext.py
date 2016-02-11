@@ -1,4 +1,4 @@
-from vhdl_toolkit.reference import VhdlRef 
+from vhdl_toolkit.hdlObjects.reference import VhdlRef 
 from vhdl_toolkit.nonRedefDict import NonRedefDict
 from vhdl_toolkit.types import VHDLType, Unconstrained
 
@@ -55,6 +55,7 @@ class HDLCtx(NonRedefDict):
         self.entities = NonRedefDict()
         self.architectures = []
         self.packages = NonRedefDict()
+        self.packageHeaders = NonRedefDict()
         
     def importLibFromGlobal(self, ref):
         """

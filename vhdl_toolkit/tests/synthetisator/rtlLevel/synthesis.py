@@ -1,6 +1,6 @@
 import unittest
 
-from vhdl_toolkit.expr import Assignment
+from vhdl_toolkit.hdlObjects.expr import Assignment
 from vhdl_toolkit.synthetisator.rtlLevel.context import Context
 from vhdl_toolkit.synthetisator.rtlLevel.signal import OpOnRisingEdge
 

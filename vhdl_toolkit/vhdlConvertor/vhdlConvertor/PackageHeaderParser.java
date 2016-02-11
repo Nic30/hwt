@@ -5,6 +5,10 @@ import vhdlParser.vhdlParser;
 
 public class PackageHeaderParser {
 	PackageHeader ph;
+	boolean hierarchyOnly;
+	public PackageHeaderParser(boolean _hierarchyOnly) {
+		hierarchyOnly = _hierarchyOnly;
+	}
 
 	public PackageHeader visitPackage_declaration(
 			vhdlParser.Package_declarationContext ctx) {
@@ -17,7 +21,9 @@ public class PackageHeaderParser {
 
 		ph.name = (String) LiteralParser
 				.visitIdentifier(ctx.identifier(0)).literal.value;
-		visitPackage_declarative_part(ph, ctx.package_declarative_part());
+		if (!hierarchyOnly) {
+			visitPackage_declarative_part(ph, ctx.package_declarative_part());
+		}
 		return ph;
 	}
 	void visitPackage_declarative_part(PackageHeader ph,
@@ -25,6 +31,7 @@ public class PackageHeaderParser {
 		// package_declarative_part
 		// : ( package_declarative_item )*
 		// ;
-		NotImplementedLogger.print("PackageHeaderParser.visitPackage_declarative_part");
+		NotImplementedLogger
+				.print("PackageHeaderParser.visitPackage_declarative_part");
 	}
 }

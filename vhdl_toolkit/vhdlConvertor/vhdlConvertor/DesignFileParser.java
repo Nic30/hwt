@@ -13,7 +13,9 @@ import vhdlParser.vhdlParser;
 
 public class DesignFileParser {
 	public Context context;
-	DesignFileParser() {
+	boolean hierarchyOnly;
+	DesignFileParser(boolean _hierarchyOnly) {
+		hierarchyOnly = _hierarchyOnly;
 		context = new Context();
 	}
 	void visitDesign_file(vhdlParser.Design_fileContext ctx) {
@@ -55,12 +57,14 @@ public class DesignFileParser {
 		// ;
 		vhdlParser.Architecture_bodyContext arch = ctx.architecture_body();
 		if (arch != null) {
-			Arch a = (new ArchParser()).visitArchitecture_body(arch);
+			Arch a = (new ArchParser(hierarchyOnly))
+					.visitArchitecture_body(arch);
 			context.architectures.add(a);
 		}
 		vhdlParser.Package_bodyContext pack = ctx.package_body();
 		if (pack != null) {
-			Package p = (new PackageParser()).visitPackage_body(pack);
+			Package p = (new PackageParser(hierarchyOnly))
+					.visitPackage_body(pack);
 			context.packages.add(p);
 		}
 	}
@@ -84,19 +88,21 @@ public class DesignFileParser {
 		// ;
 		vhdlParser.Entity_declarationContext ed = ctx.entity_declaration();
 		if (ed != null) {
-			Entity e = EntityParser.visitEntity_declaration(ed);
+			Entity e = (new EntityParser(hierarchyOnly))
+					.visitEntity_declaration(ed);
 			context.entities.add(e);
 			return;
 		}
 		vhdlParser.Configuration_declarationContext cd = ctx
 				.configuration_declaration();
 		if (cd != null) {
-			NotImplementedLogger.print("DesignFileParser.visitConfiguration_declaration");
+			NotImplementedLogger
+					.print("DesignFileParser.visitConfiguration_declaration");
 			return;
 		}
 		vhdlParser.Package_declarationContext pd = ctx.package_declaration();
 		if (pd != null) {
-			PackageHeader ph = (new PackageHeaderParser())
+			PackageHeader ph = (new PackageHeaderParser(hierarchyOnly))
 					.visitPackage_declaration(pd);
 			context.packageHeaders.add(ph);
 		}
