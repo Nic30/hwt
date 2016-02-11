@@ -50,6 +50,7 @@ public class vhdlConvertorApp {
 
 				// create a parser that feeds off the tokens buffer
 				vhdlParser parser = new vhdlParser(tokens);
+				parser.removeErrorListeners();
 				parser.addErrorListener(new SyntaxErrorLogger());
 				Design_fileContext tree = parser.design_file(); // begin parsing
 																// at
