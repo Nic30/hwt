@@ -3,7 +3,6 @@ import os
 from hls_toolkit.astTweaker import hlsPreprocess
 from hls_toolkit.errors import MissingConfAttribErr
 from hls_toolkit.helpers import Chdir
-from myhdl import toVHDL, Signal, intbv
 
 
 class HLSparser(object):

@@ -10,7 +10,6 @@ setup(name='HWToolkit',
         'slimit',
         'sympy',
         'jinja2', # vhdl templates renderer, visualizer renderer
-        'ply',    # old parser, vhdl interpret
         'flask',  # visualizer
         'multiprocess',
       ],

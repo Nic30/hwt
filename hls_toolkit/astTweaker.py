@@ -3,11 +3,10 @@
 Abstract tree tweaker module
 """
 
-import ast, os
+import os
 
-from hls_toolkit.shotcuts.ast import addSignal, fnFileAst, nodeOfFn, dump
+from hls_toolkit.shotcuts.ast import addSignal, fnFileAst, nodeOfFn
 from hls_toolkit.unparse import Unparser
-import myhdl
 
 
 def import_file(full_path_to_module):
