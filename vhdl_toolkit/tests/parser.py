@@ -20,7 +20,10 @@ class ParserTC(unittest.TestCase):
         self.assertEqual(len(cis), 1)
         ci = cis[0]
         self.assertEqual(ci.entityRef.names[0], "subunit0")
-        
+    def testPackage(self):
+        ctx = parseVhdl([ILVL_SAMPLES + "dmaWrap/misc.vhd"], hierarchyOnly=True)
+        self.assertEqual(len(ctx.packageHeaders), 1)
+            
         
 if __name__ == '__main__':
     unittest.main()

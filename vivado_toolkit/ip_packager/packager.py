@@ -4,8 +4,8 @@ from os.path import basename, relpath
 from python_toolkit.fileHelpers import find_files
 from vhdl_toolkit.parser import entityFromFile
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
-from vhdl_toolkit.architecture import Architecture
-from vhdl_toolkit.entity import Entity
+from vhdl_toolkit.hdlObjects.architecture import Architecture
+from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.formater import formatVhdl
 from vivado_toolkit.ip_packager.component import Component
 from vivado_toolkit.ip_packager.helpers import prettify
