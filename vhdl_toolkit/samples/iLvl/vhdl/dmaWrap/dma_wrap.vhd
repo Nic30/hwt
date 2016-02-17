@@ -11,7 +11,7 @@ entity dma_wrap is
 		C_CTRL_COUNT        : positive         := 1;
 		C_MBUS_MAX_ID_WIDTH : natural          := 12);
 	port(
-		CTRL_INFO : out std_logic_vector(zeros(C_CTRL_COUNT, 32)'range)
+		CTRL_INFO : out std_logic_vector(C_CTRL_COUNT - 1 downto 0)
 	);
 end entity;
 
