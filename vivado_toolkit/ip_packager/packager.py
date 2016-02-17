@@ -77,7 +77,6 @@ class Packager(object):
             f.write(s)
 
     def createPackage(self, repoDir):
-        
         ip_dir = os.path.join(repoDir, self.name + "/")      
         if os.path.exists(ip_dir):
             shutil.rmtree(ip_dir)
