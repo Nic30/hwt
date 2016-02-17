@@ -7,9 +7,16 @@ class RequireImportErr(Exception):
     def __init__(self, reference):
         super(RequireImportErr, self).__init__()
         self.reference = reference
+        self.fileName = None
     
+    def __repr__(self):
+        return self.__str__()
     def __str__(self):
-        return "<RequireImportErr require to import %s first>" % (str(self.reference))
+        if self.fileName:
+            fileName = 'file %s' % self.fileName
+        else:
+            fileName = '' 
+        return "<RequireImportErr %s require to import %s first>" % (fileName, str(self.reference))
     
 class HDLParseErr(Exception):
     pass
@@ -29,6 +36,15 @@ class BaseVhdlContext():
     boolean = mkType("boolean", bool)
     string = mkType("string", str)
     float = mkType("float", float)
+   
+    @classmethod
+    def importFakeLibs(cls, ctx):
+        BaseVhdlContext.importFakeIEEELib(ctx)
+        BaseVhdlContext.importFakeUnisim(ctx)
+
+    @classmethod
+    def importFakeUnisim(cls, ctx):
+        ctx.insert(VhdlRef(["unisim", "vcomponents", 'ramb4_s16']), None)   
    
     @classmethod 
     def importFakeIEEELib(cls, ctx):
@@ -55,7 +71,6 @@ class HDLCtx(NonRedefDict):
         self.entities = NonRedefDict()
         self.architectures = []
         self.packages = NonRedefDict()
-        self.packageHeaders = NonRedefDict()
         
     def importLibFromGlobal(self, ref):
         """

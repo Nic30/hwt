@@ -6,7 +6,8 @@ import json
 import inspect
 import os
 
-from vhdl_toolkit.hdlContext import HDLCtx, BaseVhdlContext, HDLParseErr, FakeStd_logic_1164
+from vhdl_toolkit.hdlContext import HDLCtx, BaseVhdlContext, HDLParseErr, FakeStd_logic_1164, \
+    RequireImportErr
 from vhdl_toolkit.hdlObjects.reference import VhdlRef
 from vhdl_toolkit.hdlObjects.expr import BinOp, Unconstrained
 from vhdl_toolkit.hdlObjects.variables import PortItem, VHDLGeneric
@@ -164,8 +165,7 @@ class Parser():
     
     @staticmethod
     def packageFromJson(jPack, ctx1, hierarchyOnly=False):
-        pb = PackageBody(jPack['name'])
-        
+        pb = Package(jPack['name'], None)
         if not hierarchyOnly:
             raise NotImplementedError()
         return pb
@@ -173,18 +173,22 @@ class Parser():
     @staticmethod
     def parse(jsonctx, fileName, ctx, hierarchyOnly=False):
         dependencies = set()
-        for jsnU in jsonctx['usings']:
-            u = VhdlRef.fromJson(jsnU)
-            dependencies.add(u)
-            # if ctx.lookupGlobal(u) is None:
-            if not hierarchyOnly:
-                ctx.importLibFromGlobal(u)
+        try:
+            for jsnU in jsonctx['usings']:
+                u = VhdlRef.fromJson(jsnU)
+                dependencies.add(u)
+                # if ctx.lookupGlobal(u) is None:
+                if not hierarchyOnly:
+                    ctx.importLibFromGlobal(u)
+        except RequireImportErr as e:
+            e.fileName = fileName
+            raise e
     
         for phName, jPh in jsonctx["packageHeaders"].items():
             ph = Parser.packageHeaderFromJson(jPh, ctx, hierarchyOnly=hierarchyOnly)
             assert(ph.name == phName)
             if ph.name not in ctx.packages:
-                ctx.packages[ph.name] = Package(ph, None)
+                ctx.packages[ph.name] = Package(ph.name, ph)
             else:
                 ctx.packages[ph.name].header = ph
         
@@ -192,9 +196,9 @@ class Parser():
             pb = Parser.packageFromJson(jpBody, ctx, hierarchyOnly=hierarchyOnly)
             assert(pb.name == pbName)
             if pb.name not in ctx.packages:
-                ctx.packages[pb.name] = Package(None, pb)
+                ctx.packages[pb.name] = pb
             else:
-                ctx.packages[pb.name].body = pb
+                ctx.packages[pb.name].insertBody(pb)
         
         for eName, jE in jsonctx["entities"].items():
             ent = Parser.entityFromJson(jE, ctx, hierarchyOnly=hierarchyOnly)
@@ -216,7 +220,7 @@ def parseVhdl(fileList:list, hdlCtx=None, timeoutInterval=20, hierarchyOnly=Fals
     topCtx = hdlCtx
     if not hdlCtx:
         topCtx = BaseVhdlContext.getBaseCtx()
-        BaseVhdlContext.importFakeIEEELib(topCtx)
+        BaseVhdlContext.importFakeLibs(topCtx)
         hdlCtx = HDLCtx('work', topCtx)
         topCtx.insert(VhdlRef(['work']), hdlCtx)
     p_list = []
@@ -240,7 +244,7 @@ def parseVhdl(fileList:list, hdlCtx=None, timeoutInterval=20, hierarchyOnly=Fals
                 j = None 
             else:
                 j = json.loads(stdoutdata.decode("utf-8"))
-        except ValueError as e:
+        except ValueError:
             raise Exception("Failed to parse file %s, ValueError while parsing json from convertor" % (p.fileName))
         if j:
             Parser.parse(j, p.fileName, hdlCtx, hierarchyOnly=hierarchyOnly)

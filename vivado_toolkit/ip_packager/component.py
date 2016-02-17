@@ -10,6 +10,7 @@ from vivado_toolkit.ip_packager.others import VendorExtensions, FileSet, File, \
 import xml.etree.ElementTree as etree
 from vivado_toolkit.ip_packager.interfaces.all import allBusInterfaces
 from vivado_toolkit.ip_packager.busInterface import BusInterface
+from python_toolkit.arrayQuery import arr_any
 
 
 vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
@@ -77,15 +78,17 @@ class Component():
             parameters.append(p.asElem())
         
     def xml(self):
+        # Vivado 2015.2 bug - order of all elements is NOT optional
         for prefix, uri in ns.items():
             etree.register_namespace(prefix, uri)
         c = mkSpiElm("component")
         appendStrElements(c, self, self._strValues[:-1])
-        if len(self.busInterfaces) > 0:
+        if arr_any(self.busInterfaces, lambda intf: hasattr(intf, "_bi")):
             bi = appendSpiElem(c, "busInterfaces")
             for intf in self.busInterfaces:  # for all interfaces which have bus interface class
                 if hasattr(intf, "_bi"):
                     bi.append(intf._bi.asElem())
+        
         c.append(self.model.asElem())
         self._xmlFileSets(c)
         
@@ -134,7 +137,7 @@ class Component():
         for g in self._topUnit._entity.generics:
             p = Parameter()
             p.name = g.name
-            p.value = Value.fromGeneric("PARAM_VALUE.",g, Value.RESOLVE_USER)
+            p.value = Value.fromGeneric("PARAM_VALUE.", g, Value.RESOLVE_USER)
             self.parameters.append(p)    
 
         # for bi in self.busInterfaces:

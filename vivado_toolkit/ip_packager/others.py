@@ -7,6 +7,7 @@ from vhdl_toolkit.synthetisator.param import getParam
 import math
 from vhdl_toolkit.hdlObjects.expr import Unconstrained, BinOp
 
+XILINX_VERSION = "2014.4.1"
 
 class Value():
     __slots__ = ['id', 'format', 'bitStringLength', 'resolve', 'text']
@@ -133,7 +134,10 @@ class Parameter():
 class CoreExtensions():
     def __init__(self):
         self.supportedFamilies = {
-                                  "zynq" : "Production"
+                                  "zynq" : "Production",
+                                  "atrix7" : "Production",
+                                  "kintex7" : "Production",
+                                  "virtex7" : "Production"
                                   }
         self.taxonomies = [
                            "/BaseIP"
@@ -162,7 +166,7 @@ class CoreExtensions():
 class VendorExtensions():
     def __init__(self):
         self.coreExtensions = CoreExtensions()
-        self.packagingInfo = {"xilinxVersion": "2014.4.1"}
+        self.packagingInfo = {"xilinxVersion": XILINX_VERSION}
     def asElem(self, displayName, revision):
         r = mkSpiElm("vendorExtensions")
         r.append(self.coreExtensions.asElem(displayName, revision))
