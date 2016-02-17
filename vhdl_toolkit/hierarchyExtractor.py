@@ -19,8 +19,9 @@ class DesignFile():
     def allDefinedRefs(self):
         for eName in self.hdlCtx.entities:
             yield VhdlRef([eName])
-        for ph in self.hdlCtx.packageHeaders:
-            yield VhdlRef([ph])
+        for pName, p in self.hdlCtx.packages.items():
+            if p.header:
+                yield VhdlRef([pName])
         
     def allDependencies(self):
         # packageHeader < ent|arch|package
@@ -73,7 +74,7 @@ class DesignFile():
                
 if __name__ == "__main__":
     # projectDir = '/home/nic30/Documents/workspace/sprobe10/core/'
-    #projectDir = "/home/nic30/Downloads/fpgalibs/src/"
+    # projectDir = "/home/nic30/Downloads/fpgalibs/src/"
     projectDir = 'samples/iLvl/vhdl/dmaWrap/'
     
     # ctx= parseVhdl(['/home/nic30/Downloads/fpgalibs/src/flt/sprobe1_filter/comp/config_adapter_arch.vhd'])
@@ -98,7 +99,7 @@ if __name__ == "__main__":
         for df in designFiles:
             for ref in df.allDefinedRefs(): 
                 print(ref, '                ', df.fileName)
-    #allDefined()
+    # allDefined()
     for df in designFiles:
         df.discoverDependentOnFiles(designFiles, ignoredRefs)
         print(df.fileName)
