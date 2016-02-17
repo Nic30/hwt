@@ -70,8 +70,34 @@ class DesignFile():
                 raise Exception("%s: require to import %s and it is not defined in any file" % 
                                 (self.fileName, str(d)))
             self.dependentOnFiles.add(df)
-
-               
+    
+    @staticmethod
+    def loadFiles(files, parallel=True):
+        if parallel:
+            pool = Pool(multiprocessing.cpu_count())
+            designFiles = pool.map(DesignFile.fromFile, files)
+        else:
+            designFiles = []
+            for f in  files:
+                d = DesignFile(f, parseVhdl([f], hierarchyOnly=True))
+                designFiles.append(d)
+        return designFiles
+    
+    @staticmethod
+    def fileDependencyDict(files, parallel=True):
+        designFiles = DesignFile.loadFiles(files, parallel=parallel)
+        
+        ignoredRefs = [VhdlRef(["ieee"])]
+        def allDefined():
+            for df in designFiles:
+                for ref in df.allDefinedRefs(): 
+                    print(ref, '                ', df.fileName)
+        # allDefined()
+        depDict = {}
+        for df in designFiles:
+            df.discoverDependentOnFiles(designFiles, ignoredRefs)
+            depDict[df.fileName] = df.dependentOnFiles            
+        return depDict   
 if __name__ == "__main__":
     # projectDir = '/home/nic30/Documents/workspace/sprobe10/core/'
     # projectDir = "/home/nic30/Downloads/fpgalibs/src/"
@@ -86,25 +112,9 @@ if __name__ == "__main__":
     # e = process([fEnt])
     # projectDir = 'samples/iLvl/vhdl/dependencies0/'
     files = list(find_files(projectDir, "*.vhd"))
-    print(files)
-    # designFiles = []
-    # for f in  files:
-    #    d = DesignFile(f, parseVhdl([f], hierarchyOnly=True))
-    #    designFiles.append(d)
-       
-    pool = Pool(multiprocessing.cpu_count())
-    designFiles = pool.map(DesignFile.fromFile, files)
-    ignoredRefs = [VhdlRef(["ieee"])]
-    def allDefined():
-        for df in designFiles:
-            for ref in df.allDefinedRefs(): 
-                print(ref, '                ', df.fileName)
-    # allDefined()
-    for df in designFiles:
-        df.discoverDependentOnFiles(designFiles, ignoredRefs)
-        print(df.fileName)
-        print(">>> " , df.dependentOnFiles, '\n')
-       
-       # print("defined", list(df.allDefinedRefs()))
-       # print("required", list(df.allDependencies()))
+    
+    depDict = DesignFile.fileDependencyDict(files)
+    print(depDict)
+    # print("defined", list(df.allDefinedRefs()))
+    # print("required", list(df.allDependencies()))
     
