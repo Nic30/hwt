@@ -1,9 +1,6 @@
-
 import os, fnmatch
 
-
 def find_files(directory, pattern, recursive=True):
-    
     if not os.path.isdir(directory):
         if os.path.exists(directory):
             raise IOError(directory + ' is not directory')
