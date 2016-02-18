@@ -1,0 +1,41 @@
+{% extends "base.html" %} {% block css_extra %}
+<style>
+.link {
+	stroke: #ccc;
+}
+
+.node text {
+	pointer-events: none;
+	font: 10px sans-serif;
+}
+</style>
+
+{% endblock %} {% block js_extra %}
+<script type="text/javascript">
+	var links = {{ links|tojson|safe }};
+	var nodes = {{ nodes|tojson|safe }};
+</script>
+
+<script type="text/javascript"
+	src="/static/bower_components/angular/angular.js"></script>
+<script type="text/javascript"
+	src="/static/bower_components/angular-cookies/angular-cookies.min.js"></script>
+<script type="text/javascript"
+	src="/static/bower_components/angular-animate/angular-animate.min.js"></script>
+<script type="text/javascript"
+	src="/static/bower_components/angular-toastr/dist/angular-toastr.min.js"></script>
+<script type="text/javascript"
+	src="/static/bower_components/ag-grid/dist/ag-grid.min.js"></script>
+<script type="text/javascript"
+	src="/static/bower_components/angular-hotkeys/build/hotkeys.min.js"></script>
+<script type="text/javascript" src="/static/bower_components/d3/d3.js"></script>
+
+<script type="text/javascript" src="/static/hls/dependency/app.js"></script>
+
+
+{% endblock %}
+
+
+{% block content %}
+<div id='graphWrap' ></div>
+{% endblock %} 

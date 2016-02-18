@@ -1,6 +1,6 @@
 from vhdl_toolkit.synthetisator.rtlLevel.signal import PortConnection
 from vhdl_toolkit.types import DIRECTION
-from vhdl_toolkit.variables import PortItem
+from vhdl_toolkit.hdlObjects.variables import PortItem
 
 
 def _defaultToJson(obj):

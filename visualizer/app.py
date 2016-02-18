@@ -1,15 +1,18 @@
 from flask import Flask, render_template
 from flask.helpers import send_from_directory
+from vhdl_toolkit.hierarchyExtractor import DesignFile
 import sys
 
 from hls_connections_views import connectionsBp
+from python_toolkit.fileHelpers import find_files
+import os
 
 
 sys.path.append("..")  # [hotfix] to make visualizer run after downloading from git
 
 app = Flask(__name__)
 
-@app.route('/static/<path:path>') # for loading all static files (antipatent, but it is necessary because app is not deployed on webserver )
+@app.route('/static/<path:path>')  # for loading all static files (antipatent, but it is necessary because app is not deployed on webserver )
 def send_static(path):
     return send_from_directory('static', path)
 
@@ -22,9 +25,46 @@ def index():
 def gantt():
     return render_template('hls/gantt_chart.html', ganttTasks=[], ganttTaskNames=[])
 
+# http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
+@app.route('/dependency')
+def dependencyGraph():
+    def convertToRelativePaths(root, depDict):
+        outDict = {}
+        for f, dep in depDict.items():
+            f = os.path.relpath(f, root)
+            depSet = set()
+            outDict[f] = depSet
+            for d in dep:
+                depSet.add(os.path.relpath(d, root))
+        return outDict
+    workspace = "/home/nic30/Downloads/fpgalibs/src/"
+    tsu = workspace + 'tsu/'
+    # workspace = "/home/nic30/Documents/workspace/hw_synthesis/hw_synthesis_helpers/vhdl_toolkit/samples/iLvl/vhdl/dependencies0"
+    files = []
+    # files.extend(find_files(workspace, '*.vhd'))
+    files.extend(find_files(workspace + 'hfex/comp/liberouter/', '*.vhd'))
+    # files.extend(find_files(tsu, '*.vhd'))
+    # files.extend(find_files(workspace + 'util/', '*.vhd'))
+    depDict = DesignFile.fileDependencyDict(files)
+    depDict = convertToRelativePaths(workspace, depDict)
+    nodes = []
+    links = []
+    indexes = {}
+    indx = 0
+    for file in depDict:
+        indexes[file] = indx
+        indx += 1
+        nodes.append({"name":file, 'group':1})
+    
+    for file, connections in depDict.items():
+        for c in connections:
+            links.append({"source":indexes[file],
+                          'target':indexes[c],
+                          "value":1})
+    
+    return render_template('hls/dependency.html', nodes=nodes, links=links)
+
 if __name__ == '__main__':
     app.register_blueprint(connectionsBp)
-    app.debug = True
-    app.run()
-
-    #app.run(host='0.0.0.0')
+    app.run(debug=True)
+    # app.run(host='0.0.0.0')

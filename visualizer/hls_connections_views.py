@@ -4,7 +4,7 @@ import json, importlib, sys, os, glob, time
 from stat import S_ISDIR
 
 from hls_connections import serializeUnit, _defaultToJson
-from vhdl_toolkit.synthetisator.unit import Unit 
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit 
 
 
 WORKSPACE_DIR = "workspace/" 
