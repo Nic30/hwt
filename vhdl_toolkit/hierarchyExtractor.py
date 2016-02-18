@@ -32,6 +32,8 @@ class DesignFile():
         for a in self.hdlCtx.architectures:
             yield from a.dependencies
             yield VhdlRef([a.entityName])
+            for ci in a.componentInstances:
+                yield ci.entityRef
         
         for p in self.hdlCtx.packages:
             yield VhdlRef([p])
@@ -84,10 +86,12 @@ class DesignFile():
         return designFiles
     
     @staticmethod
-    def fileDependencyDict(files, parallel=True):
-        designFiles = DesignFile.loadFiles(files, parallel=parallel)
+    def fileDependencyDict(files=None, designFiles=None, parallel=True):
+        assert(bool(files) != bool(designFiles))  # use only one
+        if files:
+            designFiles = DesignFile.loadFiles(files, parallel=parallel)
         
-        ignoredRefs = [VhdlRef(["ieee"])]
+        ignoredRefs = [VhdlRef(["ieee"]), VhdlRef(['unisim'])] #[TODO] more generic
         def allDefined():
             for df in designFiles:
                 for ref in df.allDefinedRefs(): 
@@ -97,24 +101,12 @@ class DesignFile():
         for df in designFiles:
             df.discoverDependentOnFiles(designFiles, ignoredRefs)
             depDict[df.fileName] = df.dependentOnFiles            
-        return depDict   
-if __name__ == "__main__":
-    # projectDir = '/home/nic30/Documents/workspace/sprobe10/core/'
-    # projectDir = "/home/nic30/Downloads/fpgalibs/src/"
-    projectDir = 'samples/iLvl/vhdl/dmaWrap/'
-    
-    # ctx= parseVhdl(['/home/nic30/Downloads/fpgalibs/src/flt/sprobe1_filter/comp/config_adapter_arch.vhd'])
-    # baseDir = projDir + "mem/dp_bram/"
-    # fEnt = baseDir + "dp_bram_ent.vhd"
-    # fArch = baseDir + "dp_bram_ent.vhd"
-    # fPack = projDir + 'util/pkg/math_func.vhd'
-    # print(fEnt)
-    # e = process([fEnt])
-    # projectDir = 'samples/iLvl/vhdl/dependencies0/'
-    files = list(find_files(projectDir, "*.vhd"))
-    
-    depDict = DesignFile.fileDependencyDict(files)
-    print(depDict)
-    # print("defined", list(df.allDefinedRefs()))
-    # print("required", list(df.allDependencies()))
-    
+        return depDict
+
+def findFileWhereNameIsDefined(designFiles, name):
+    targetRef = VhdlRef([name])
+    for df in designFiles:
+        refs = df.allDefinedRefs()
+        for ref in refs:
+            if DesignFile.refMatch(ref, targetRef):
+                return df
