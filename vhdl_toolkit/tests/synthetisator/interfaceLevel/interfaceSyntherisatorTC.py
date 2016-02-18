@@ -4,6 +4,7 @@ from python_toolkit.arrayQuery import where, single
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import BlackBox
 from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_none
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba import Axi4
 D = DIRECTION
 
 class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
@@ -104,9 +105,30 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         self.assertEqual(a.direction, D.IN)
         self.assertEqual(b.direction, D.OUT)
 
+    def test_blackBoxWithCompositePort(self):
+        class Bb(BlackBox):
+            a = Axi4(isExtern=True)
+            b = Axi4(src=True, isExtern=True)
+            
+        u = Bb()
+        for _ in u._synthesise():
+            pass
+        e = u._entity
+        a_ar_addr = self.getPort(e, 'a_ar_addr')
+        a_ar_ready = self.getPort(e, 'a_ar_ready')
+        
+        b_ar_addr = self.getPort(e, 'b_ar_addr')
+        b_ar_ready = self.getPort(e, "b_ar_ready")
+        
+        self.assertEqual(a_ar_addr.direction, D.IN)
+        self.assertEqual(a_ar_ready.direction, D.OUT)
+       
+        self.assertEqual(b_ar_addr.direction, D.OUT)
+        self.assertEqual(b_ar_ready.direction, D.IN)
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(InterfaceSyntherisatorTC('test_blackBox'))
+    #suite.addTest(InterfaceSyntherisatorTC('test_blackBoxWithCompositePort'))
     suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
