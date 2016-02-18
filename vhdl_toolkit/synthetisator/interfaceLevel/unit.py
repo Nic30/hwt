@@ -12,6 +12,7 @@ from vhdl_toolkit.hdlObjects.architecture import Component
 from vhdl_toolkit.synthetisator.param import Param
 
 from python_toolkit.arrayQuery import single
+from vhdl_toolkit.types import DIRECTION
 
 def defaultUnitName(unit, sugestedName=None):
     if not sugestedName:
@@ -78,19 +79,41 @@ class Unit(Buildable):
                 portItem = single(self._entity.port, lambda x : x._interface == interface)
                 interface._originSigLvlUnit = self._sigLvlUnit
                 interface._originEntityPort = portItem
-    
+    def _contextFromParams(self):
+        # construct globals (generics for entity)
+        globalNames = {}
+        for k, v in self._params.items():
+            globalNames[k.lower()] = v 
+        return Context(self._name, globalNames=globalNames)
+    def _synthetiseContext(self, externInterf, cntx):
+        # synthetize signal level context
+        s = cntx.synthetize(externInterf)
+        self._entity = s[1]
+
+        self._architecture = s[2]
+            
+        self._sigLvlUnit = VHDLUnit(self._entity)
+        # connect results of synthetized context to interfaces of this unit
+        for _, intf in self._interfaces.items():
+            if intf._isExtern:
+                self._connectMyInterfaceToMyEntity(intf)
+        yield from s
+            
+        self._component = Component(self._entity)
+        self._cleanAsSubunit() 
+        for _ , intf in self._interfaces.items(): 
+            # reverse because other components looks at this one from outside
+            intf._reverseDirection()
     def _synthesise(self, name=None):
         """
         synthesize all subunits, make connections between them, build entity and component for this unit
         """
         name = defaultUnitName(self, name)
         self._name = name
-        # construct globals (generics for entity)
-        globalNames = {}
-        for k, v in self._params.items():
-            globalNames[k.lower()] = v 
-        cntx = Context(name, globalNames=globalNames)
+        
+        cntx = self._contextFromParams()
         externInterf = [] 
+        
         # prepare subunits
         for subUnitName, subUnit in self._subUnits.items():
             yield from subUnit._synthesise(subUnitName)
@@ -116,28 +139,29 @@ class Unit(Buildable):
             raise  Exception("Can not find any external interface for unit " + name \
                               + "- there is no such a thing as unit without interfaces")
 
-        # synthetize signal level context
-        s = cntx.synthetize(externInterf)
-        self._entity = s[1]
-
-        self._architecture = s[2]
-            
-        self._sigLvlUnit = VHDLUnit(self._entity)
-        # connect results of synthetized context to interfaces of this unit
-        for _, intf in self._interfaces.items():
-            if intf._isExtern:
-                self._connectMyInterfaceToMyEntity(intf)
-        yield from s
-            
-        self._component = Component(self._entity)
-        self._cleanAsSubunit() 
-        for _ , intf in self._interfaces.items(): 
-            # reverse because other components looks at this one from outside
-            intf._reverseDirection()
+        yield from self._synthetiseContext(externInterf, cntx)
 
 class BlackBox(Unit):
-    pass      
-
+    def _synthesise(self, name=None):
+        name = defaultUnitName(self, name)
+        self._name = name
+        # construct globals (generics for entity)
+        cntx = self._contextFromParams()
+        externInterf = [] 
+        # prepare connections     
+        for connectionName, connection in self._interfaces.items():
+            signals = connection._signalsForInterface(cntx, connectionName)
+            assert(connection._isExtern)
+            externInterf.extend(signals)
+            #connect outputs to dummy value
+            for s in signals:
+                if s._interface._getSignalDirection() == DIRECTION.IN:
+                    s.assignFrom(0)
+        if not externInterf:
+            raise  Exception("Can not find any external interface for unit " + name \
+                              + "- there is no such a thing as unit without interfaces")
+        yield  from self._synthetiseContext(externInterf, cntx)
+        
 class UnitWithSource(Unit):
     
     @classmethod

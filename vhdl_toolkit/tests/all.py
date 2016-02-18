@@ -1,5 +1,6 @@
 from unittest import TestLoader, TextTestRunner, TestSuite
-from vhdl_toolkit.tests.synthetisator.interfaceLevel.basic import TestInterfaceSyntherisator  
+from vhdl_toolkit.tests.synthetisator.interfaceLevel.interfaceSyntherisatorTC import InterfaceSyntherisatorTC 
+from vhdl_toolkit.tests.synthetisator.interfaceLevel.vhdlCodesign import VhdlCodesignTC 
 from vhdl_toolkit.tests.synthetisator.rtlLevel.optimalizator import Expr2CondTC, TreeBalancerTC 
 from vhdl_toolkit.tests.synthetisator.rtlLevel.synthesis import TestCaseSynthesis
 from vhdl_toolkit.tests.hierarchyExtractor import HierarchyExtractorTC
@@ -11,7 +12,8 @@ if __name__ == "__main__":
     suite = TestSuite((
         loader.loadTestsFromTestCase(HierarchyExtractorTC),
         loader.loadTestsFromTestCase(ParserTC),
-        loader.loadTestsFromTestCase(TestInterfaceSyntherisator),
+        loader.loadTestsFromTestCase(InterfaceSyntherisatorTC),
+        loader.loadTestsFromTestCase(VhdlCodesignTC),
         loader.loadTestsFromTestCase(Expr2CondTC),
         loader.loadTestsFromTestCase(TreeBalancerTC),
         loader.loadTestsFromTestCase(TestCaseSynthesis),

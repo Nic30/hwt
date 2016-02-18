@@ -108,6 +108,7 @@ class Context(object):
         t.ctx = {}
         t.width = int
         return t 
+    
     def synthetize(self, interfaces):
         ent = Entity()
         ent.name = self.name
