@@ -1,5 +1,4 @@
 from vhdl_toolkit.parser import parseVhdl
-from python_toolkit.fileHelpers import find_files
 from vhdl_toolkit.hdlObjects.reference import VhdlRef
 import multiprocessing
 from multiprocess.pool import Pool
@@ -91,12 +90,11 @@ class DesignFile():
         if files:
             designFiles = DesignFile.loadFiles(files, parallel=parallel)
         
-        ignoredRefs = [VhdlRef(["ieee"]), VhdlRef(['unisim'])] #[TODO] more generic
+        ignoredRefs = [VhdlRef(["ieee"]), VhdlRef(['unisim'])]  # [TODO] more generic
         def allDefined():
             for df in designFiles:
                 for ref in df.allDefinedRefs(): 
                     print(ref, '                ', df.fileName)
-        # allDefined()
         depDict = {}
         for df in designFiles:
             df.discoverDependentOnFiles(designFiles, ignoredRefs)
