@@ -1,33 +1,6 @@
 from vhdl_toolkit.synthetisator.rtlLevel.signal import PortConnection
 from vhdl_toolkit.types import DIRECTION
-from vhdl_toolkit.hdlObjects.variables import PortItem
-
-
-def _defaultToJson(obj):
-    if hasattr(obj, "toJson"):
-        return obj.toJson()
-    
-    return obj.__dict__
-
-class NetContainer():
-    def __init__(self):
-        self.name = None
-        self.targets = []
-        self.source = None
-    
-
-class ConnectionInfo():
-    """Net connection info"""
-    def __init__(self, unit, portItem, index=None, portIndexLookup=None):
-        self.portItem = portItem
-        self.unit = unit
-        if index is not None:
-            self.index = index
-        else:
-            self.index = portIndexLookup.lookup(unit, portItem)
-        
-    def toJson(self):
-        return {"name": self.portItem.name, "portIndex":  self.index, "id": id(self.unit) }
+from connectionsJsonObj import Net, Connection, ExternalPort, Unit
 
 class PortIndexLookup():
     """ class for searching port indexes of portItems in units"""
@@ -65,31 +38,37 @@ class PortIndexLookup():
             portArr = rec.inputs
         return portArr[id(portItem)]
     
-class ExternalPort():
-    def __init__(self, name, direction):
-        self.name = name
-        self.direction = direction
-        self.index = 0
-        
-    def toJson(self):
-        inputs = []
-        outputs = []
-        
-        port = {"name":self.name, "id" : id(self)}
-        if self.direction == DIRECTION.OUT:
-            inputs.append(port)
-        else:
-            outputs.append(port)
-       
-            
-        
-        return {"name":self.name, "id":id(self),
-                "direction" : self.direction,
-                "isExternalPort" : True,
-                "inputs": inputs,
-                "outputs": outputs}
 
-def serializeUnit(interface, unit):
+def serializeUnit(u):
+    nets = []
+    nodes = []
+    indx = 1
+    u._guiIndex = 0
+    
+    for _, su in u._subUnits.items():
+        su._guiIndex = indx
+        n = Unit.fromIntfUnit(su)
+        nodes.append(n)
+        indx += 1 
+    
+    for _, intf in u._interfaces.items():
+        if intf._isExtern:
+            n = ExternalPort(intf)
+            n._guiIndex = indx
+            intf._guiExternPort = n 
+            nodes.append(n)
+            indx += 1
+        if intf._destinations:
+            n = Net(intf, intf._destinations)
+            nets.append(n)
+            
+            
+    
+    #nets = sorted(nets , key=lambda x : x.name)
+    return {"nodes":nodes, "nets" : nets }
+
+
+def serializeRtlUnit(interface, unit):
     """
     now if driver is assigment input rendering does not work
     """
@@ -103,19 +82,19 @@ def serializeUnit(interface, unit):
         
                 
         if driver and isinstance(driver, PortConnection):  # has driver inside schema
-            n = NetContainer()
+            n = Net()
             n.name = s.name
-            n.source = ConnectionInfo(driver.unit, driver.portItem, portIndexLookup=indxLookup)
+            n.source = Connection(driver.unit, driver.portItem, portIndexLookup=indxLookup)
             for expr in s.expr:
                 if isinstance(expr, PortConnection) and expr.portItem.direction == DIRECTION.IN:
-                    t = ConnectionInfo(expr.unit, expr.portItem, portIndexLookup=indxLookup)
+                    t = Connection(expr.unit, expr.portItem, portIndexLookup=indxLookup)
                     n.targets.append(t)
             
             isOuterInterface = driver.sig in interface
             if isOuterInterface:
                 outputPort = ExternalPort(driver.sig.name, DIRECTION.OUT)
                 nodes.append(outputPort)
-                t = ConnectionInfo(outputPort, outputPort, index=0)
+                t = Connection(outputPort, outputPort, index=0)
                 n.targets.append(t)
             
             if len(n.targets) > 0:
