@@ -97,7 +97,8 @@ class File():
         self = cls()
         extDict = {
                    ".vhd": ("vhdlSource", "IMPORTED_FILE"),
-                   ".tcl": ("tclSource", "XGUI_VERSION_2")
+                   ".tcl": ("tclSource", "XGUI_VERSION_2"),
+                   ".v"  : ("verilogSource", "IMPORTED_FILE")
                    }
         fileType = extDict[os.path.splitext(fileName.lower())[1]]
         self.fileType = fileType[0] 

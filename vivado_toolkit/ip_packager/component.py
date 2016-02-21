@@ -5,7 +5,7 @@ from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements,
 from vivado_toolkit.ip_packager.model import Model
 from vivado_toolkit.ip_packager.port import Port
 
-from vivado_toolkit.ip_packager.others import VendorExtensions, FileSet, File, \
+from vivado_toolkit.ip_packager.otherXmlObjs import VendorExtensions, FileSet, File, \
     Parameter, Value
 import xml.etree.ElementTree as etree
 from vivado_toolkit.ip_packager.interfaces.all import allBusInterfaces

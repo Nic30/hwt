@@ -1,7 +1,7 @@
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
          findS, mkSpiElm, spi_ns_prefix, appendSpiArray
 import xml.etree.ElementTree as etree
-from vivado_toolkit.ip_packager.others import Value
+from vivado_toolkit.ip_packager.otherXmlObjs import Value
 
 class FileSetRef():
     @classmethod

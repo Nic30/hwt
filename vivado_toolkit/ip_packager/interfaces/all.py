@@ -1,5 +1,5 @@
 from vhdl_toolkit.types import DIRECTION
-from vivado_toolkit.ip_packager.others import Parameter
+from vivado_toolkit.ip_packager.otherXmlObjs import Parameter
 from python_toolkit.arrayQuery import single, where
 from vhdl_toolkit.synthetisator.interfaceLevel import interfaces
 import vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std
