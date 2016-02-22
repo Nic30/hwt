@@ -1,76 +1,7 @@
-from subprocess import Popen, PIPE
-import multiprocessing
 from vhdl_toolkit.types import DIRECTION
+import multiprocessing
 
 # http://www.xilinx.com/support/documentation/sw_manuals/xilinx2013_1/ug975-vivado-quick-reference.pdf
-
-def mkPackageIp(verdor, user, name, version):
-    return ':'.join([verdor, user, name, version])
-
-class PartBuilder:
-    class Package():
-        # all kintex7 packages
-        fbv676 = "fbv676"
-        fbv484 = "fbv484"
-        fbg676 = "fbg676"
-        fbg484 = "fbg484"
-        ffg676 = "ffg676"
-        ffv676 = "ffv676"
-        ffg900 = "ffg900"
-        ffv900 = "ffv900"
-        fgb900 = "fgb900"
-        fbg900 = "fbg900"
-        ffv901 = "ffv901"
-        ffg901 = "ffg901"
-        ffv1156 = "ffv1156"
-        ffg1156 = "ffg1156"
-        rf676 = "rf676"
-        rf900 = "rf900"
-    class Size():
-        _70 = "70"
-        _160 = "160"
-        _325 = "325"
-        _355 = "355"
-        _410 = "410"
-        _420 = "420"
-        _480 = "480"
-        # boundary between kintex 7 and virtex 7 
-        _585 = "585"
-        _2000 = "2000"
-        h580 = "h580"
-        h870 = "h870"
-        x330 = "x330" 
-        x415 = "x415"
-        x485 = "x485"
-        x550 = "x550"
-        x680 = "x680"
-        x690 = "x690"
-        x1140 = "x1140" 
-        
-    class Family():
-        zynq7000 = '7z'
-        atrix7 = '7a'
-        kintex7 = '7k'
-        virtex7 = '7v'
-        
-    class Speedgrade():
-        _1 = "-1"
-        _2 = "-2"
-        _3 = "-3"
-        
-    def __init__(self, family, size, package, speedgrade):
-        self.family = family
-        self.size = size
-        self.package = package
-        self.speedgrade = speedgrade
-        
-    def name(self):
-        return "xc" + self.family + self.size + self.package + self.speedgrade
-
-class PorType():
-    clk = "clk"
-    rst = "rst"
-    
 
 class VivadoTCL():
     """
@@ -230,15 +161,6 @@ class VivadoTCL():
         def end():
             return 'endgroup'
     
-    
-    
-    @staticmethod
-    def synthetizeBd(dirOfSources, tclFileOfBd):
-        cmds = []
-        cmds.append(VivadoTCL.cleanOpenOfBd(dirOfSources, tclFile))
-        cmds.append(VivadoTCL.run('synth_1'))
-        # cmds.append(VivadoTCL.launch_runs('impl_1'))
-        return '\n'.join(cmds)
     @staticmethod
     def open_project(filename): 
         return 'open_project %s' % (filename)
@@ -257,64 +179,6 @@ class VivadoTCL():
     @staticmethod    
     def run(jobName):
         return VivadoTCL.reset_run(jobName) + '\n' + VivadoTCL.launch_runs(jobName)
-
-
-# def mkPorts(cmd, names, direction):
-#    for name in names:
-#        i = VivadoTCL.create_bd_port(name, direction)
-#        cmd.append(i)
-#
-        
-# def addConnections(cmd, connections):
-#    """
-#    @attention: if port name starts with # it is marked as interface
-#    @param cmd: is list of tcl comands result will be appended to this list
-#    @param connections: dict of connections value can be name of port or list of names  
-#    """
-#    for k, v in connections.items():
-#        def get(pinName):
-#            if pinName.startswith('/'):
-#                return VivadoTCL.get_bd_pins([pinName])
-#            elif pinName.startswith("#/"):
-#                # trim #
-#                return VivadoTCL.get_bd_intf_pins([pinName[1:]])
-#            elif pinName.startswith("#"):
-#                raise NotImplementedError("poard intf port")
-#            else:
-#                return VivadoTCL.get_bd_ports([pinName])
-#
-#        if not isinstance(v, str):
-#            for vi in v:
-#                c = VivadoTCL.connect_bd_net(get(k), get(vi))
-#                cmd.append(c)
-#        else:
-#            if k.startswith("#"):
-#                c = VivadoTCL.connect_bd_intf_net(get(k), get(v))
-#            else:
-#                c = VivadoTCL.connect_bd_net(get(k), get(v))
-#            cmd.append(c)
-
-
-class VivadoCtrl():
-    def __init__(self, execFile, project):
-        self.execFile = execFile
-        self.project = project
-        self.cmds = []
-        self.jobs = multiprocessing.cpu_count()
-        
-    def run(self, gui=False):
-        if gui:
-            mode = "gui"
-        else:
-            mode = 'tcl'
-        p = Popen(['bash', self.execFile, "-mode", mode ], stdin=PIPE, stdout=PIPE)
-        stdoutdata, stderrdata = p.communicate(input="\n".join(self.cmds).encode(encoding='utf_8'))
-        return (stdoutdata, stderrdata)
-
-
-if __name__ == "__main__":
-    # v = VivadoCtrl('/opt/Xilinx/Vivado/2015.2/vivado.sh', '/home/nic30/Documents/vivado/block_ram_test/block_ram_test.xpr')
-    # print(v.run())
-    dirOfSources = '/home/nic30/Documents/vivado/scriptTest/scriptTest.srcs/sources_1/'
-    tclFile = '/home/nic30/Documents/vivado/scriptTest/test_bd1.tcl'
-    print(VivadoTCL.synthetizeBd(dirOfSources, tclFile))
+    @staticmethod
+    def exit():
+        return "exit"
