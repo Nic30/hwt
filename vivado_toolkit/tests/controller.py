@@ -3,6 +3,8 @@ from unittest.case import TestCase
 from vivado_toolkit.tests.config import defaultVivadoExc
 from vivado_toolkit.controller import VivadoCntrl
 from vivado_toolkit.cmdResult import VivadoErr
+import os
+from vivado_toolkit.tcl import VivadoTCL
 
 class ControllerTC(TestCase):
     def runCmds(self, cmds):
@@ -32,7 +34,16 @@ class ControllerTC(TestCase):
             self.assertEqual(len(res.criticalWarnings), 0)
             self.assertEqual(len(res.warnings), 1)
             self.assertEqual(len(res.infos), 0)
-        
+            
+    def test_ls(self):
+        with VivadoCntrl(defaultVivadoExc) as v: 
+            _pwd, _dir = v.process([VivadoTCL.pwd(), VivadoTCL.ls()])
+            ls = os.listdir(_pwd.resultText)
+            vivadoLs = _dir.resultText.split()
+            ls.sort()
+            vivadoLs.sort()
+            self.assertListEqual(ls, vivadoLs)
+            
 if __name__ == "__main__":
     suite = unittest.TestSuite()
     #suite.addTest(ControllerTC("test_VivadoErrorValidMsg"))
