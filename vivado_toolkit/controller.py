@@ -54,8 +54,15 @@ class VivadoCntrl():
 
        
 if __name__ == "__main__":
-    with VivadoCntrl('/opt/Xilinx/Vivado/2015.2/vivado.sh') as v: 
-        for res in v.process(['dir', 'invalid_cmd_test']):
-            print(res.resultText)
+    from vivado_toolkit.tests.config import defaultVivadoExc
+    import os
+    with VivadoCntrl(defaultVivadoExc) as v: 
+        _pwd, _dir = v.process(['pwd', 'dir'])
+        ls = os.listdir(_pwd.resultText)
+        vivadoLs = _dir.resultText.split()
+        ls.sort()
+        vivadoLs.sort()
+        print(ls)
+        print(vivadoLs)
        
     print('finished')

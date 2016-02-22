@@ -3,10 +3,31 @@ import multiprocessing
 
 # http://www.xilinx.com/support/documentation/sw_manuals/xilinx2013_1/ug975-vivado-quick-reference.pdf
 
-class VivadoTCL():
-    """
-    python wraps for Vivado TCL commands
-    """
+class VivadoFSOpsTCL():
+    @staticmethod
+    def ls():
+        return 'ls'
+    @staticmethod
+    def cd(path):
+        return 'cd %s' % (path)
+    
+    @staticmethod
+    def pwd():
+        return "pwd"
+    
+    class file():
+        # file system manipulator
+        @staticmethod
+        def delete(files, force=True):
+            if force:
+                params = '-force'
+            else:
+                params = "" 
+            return "file delete %s %s" % (params, ' '.join(files))
+
+
+class VivadoBDOpsTCL():
+    # [TODO]
     # copy_bd_objs /  [get_bd_cells {c_accum_0}]
     # delete_bd_objs [get_bd_nets c_accum_0_Q] [get_bd_cells c_accum_0]
     
@@ -76,20 +97,21 @@ class VivadoTCL():
     @staticmethod
     def regenerate_bd_layout():
         return "regenerate_bd_layout"
+
     @staticmethod
-    def set_property(obj, name=None, value=None, valDict=None, valList=None):
-        if valDict != None:
-            valueStr = ' '.join(map(lambda kv : "%s {%s}" % (kv[0], str(kv[1])), valDict.items()))
-            params = "-dict [list %s]" % valueStr
-        elif name != None:
-            params = "%s %s" % (name, str(value))
-        elif valList != None:
-            params = "{%s}" % " ".join(valList)
-        else:
-            raise Exception()
-        
-        return "set_property %s %s" % (params, obj)
-        
+    def save_bd_design():
+        return "save_bd_design"
+    
+    @staticmethod
+    def write_bd_tcl(tclFileName, force=False):
+        """save bd as independent tcl
+           bd has to be saved and opened"""
+        params = []
+        if force:
+            params.append('-force')
+        return "write_bd_tcl %s %s" % (' '.join(params), tclFileName)
+
+class VivadoProjectOpsTCL():
     @staticmethod
     def add_files(files, norecurse=True):
         params = []
@@ -104,34 +126,7 @@ class VivadoTCL():
     @staticmethod
     def generate_target(bdFile):
         return 'generate_target all [get_files  %s]' % (bdFile)
-        
-    @staticmethod
-    def save_bd_design():
-        return "save_bd_design"
     
-    @staticmethod
-    def write_bd_tcl(tclFileName, force=False):
-        """save bd as independent tcl
-           bd has to be saved and opened"""
-        params = []
-        if force:
-            params.append('-force')
-        return "write_bd_tcl %s %s" % (' '.join(params), tclFileName)
-
-
-    @staticmethod
-    def source(scriptPath):
-        return "source %s" % (scriptPath)
-    
-    @staticmethod
-    def update_ip_catalog(rebuild=True, scan_changes=True):
-        params = []
-        if rebuild:
-            params.append('-rebuild')
-        if scan_changes:
-            params.append('-scan_changes')
-        return "update_ip_catalog %s" % (' '.join(params))
-
     class ip_repo_paths():
         @staticmethod
         def add(repoPath): 
@@ -143,24 +138,15 @@ class VivadoTCL():
         '''remove from project'''  
         return "remove_files %s" % (' '.join(files))
     
-    class file():
-        # file system manipulator
-        @staticmethod
-        def delete(files, force=True):
-            if force:
-                params = '-force'
-            else:
-                params = "" 
-            return "file delete %s %s" % (params, ' '.join(files))
-    
-    class group():
-        @staticmethod
-        def start():
-            return 'startgroup'
-        @staticmethod
-        def end():
-            return 'endgroup'
-    
+    @staticmethod
+    def update_ip_catalog(rebuild=True, scan_changes=True):
+        params = []
+        if rebuild:
+            params.append('-rebuild')
+        if scan_changes:
+            params.append('-scan_changes')
+        return "update_ip_catalog %s" % (' '.join(params))
+
     @staticmethod
     def open_project(filename): 
         return 'open_project %s' % (filename)
@@ -179,6 +165,46 @@ class VivadoTCL():
     @staticmethod    
     def run(jobName):
         return VivadoTCL.reset_run(jobName) + '\n' + VivadoTCL.launch_runs(jobName)
+    
+    
+class VivadoTCL(VivadoFSOpsTCL, VivadoBDOpsTCL, VivadoProjectOpsTCL):
+    """
+    python wraps for Vivado TCL commands
+    """
+
+    @staticmethod
+    def set_property(obj, name=None, value=None, valDict=None, valList=None):
+        if valDict != None:
+            valueStr = ' '.join(map(lambda kv : "%s {%s}" % (kv[0], str(kv[1])), valDict.items()))
+            params = "-dict [list %s]" % valueStr
+        elif name != None:
+            params = "%s %s" % (name, str(value))
+        elif valList != None:
+            params = "{%s}" % " ".join(valList)
+        else:
+            raise Exception()
+        
+        return "set_property %s %s" % (params, obj)
+        
+
+    @staticmethod
+    def source(scriptPath):
+        return "source %s" % (scriptPath)
+    
+    
+    class group():
+        @staticmethod
+        def start():
+            return 'startgroup'
+        @staticmethod
+        def end():
+            return 'endgroup'
+    
     @staticmethod
     def exit():
         return "exit"
+    
+
+        
+        
+        
