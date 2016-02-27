@@ -1,4 +1,4 @@
-class PartBuilder:
+class XilinxPartBuilder:
     class Package():
         # all kintex7 packages
         fbv676 = "fbv676"
@@ -18,16 +18,16 @@ class PartBuilder:
         rf676 = "rf676"
         rf900 = "rf900"
     class Size():
-        _70 = "70"
-        _160 = "160"
-        _325 = "325"
-        _355 = "355"
-        _410 = "410"
-        _420 = "420"
-        _480 = "480"
+        _70t = "70t"
+        _160t = "160t"
+        _325t = "325t"
+        _355t = "355t"
+        _410t = "410t"
+        _420t = "420t"
+        _480t = "480t"
         # boundary between kintex 7 and virtex 7 
-        _585 = "585"
-        _2000 = "2000"
+        _585t = "585t"
+        _2000t = "2000t"
         h580 = "h580"
         h870 = "h870"
         x330 = "x330" 

@@ -5,7 +5,7 @@ class VivadoErr(Exception):
         super(VivadoErr, self).__init__()
         self.cmdResult = cmdResult
     def __str__(self):
-        return 'Cmd "%s" caused errors: %s' % (self.cmdResult.cmd, str(self.cmdResult.errors))
+        return 'Cmd "%s" caused errors:\n%s' % (self.cmdResult.cmd, str(self.cmdResult.errors))
 
 class VivadoCmdResult():
     regex_invalidCmd = re.compile("(invalid command name \".*\")")

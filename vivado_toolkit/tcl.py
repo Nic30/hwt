@@ -40,7 +40,7 @@ class VivadoBDOpsTCL():
         return 'get_bd_ports %s' % (' '.join(names))
 
     @staticmethod
-    def create_bd_port(name, direction, typ=None):
+    def create_bd_port(name, direction, typ=None, width=None):
         params = []
         
         if direction == DIRECTION.IN:
@@ -50,6 +50,8 @@ class VivadoBDOpsTCL():
         else:
             raise Exception()
         params.append("-dir %s" % d)
+        if width is not None:
+            params.append('-from %s -to %d' (width - 1), 0)
         
         if typ != None:
             params.append("-type %s" % typ)
@@ -166,6 +168,19 @@ class VivadoProjectOpsTCL():
     def run(jobName):
         return VivadoTCL.reset_run(jobName) + '\n' + VivadoTCL.launch_runs(jobName)
     
+    @staticmethod
+    def create_project(_dir, name, in_memory=False):
+        """
+        @param in_memory:     Create an in-memory project
+        @param name:          Project name
+        @param _dir:          Directory where the project file is saved
+        """
+        params = [name, _dir]
+        if in_memory:
+            params.append('-in_memory')
+        
+        return "create_project %s" % ' '.join(params)
+    
     
 class VivadoTCL(VivadoFSOpsTCL, VivadoBDOpsTCL, VivadoProjectOpsTCL):
     """
@@ -177,10 +192,10 @@ class VivadoTCL(VivadoFSOpsTCL, VivadoBDOpsTCL, VivadoProjectOpsTCL):
         if valDict != None:
             valueStr = ' '.join(map(lambda kv : "%s {%s}" % (kv[0], str(kv[1])), valDict.items()))
             params = "-dict [list %s]" % valueStr
-        elif name != None:
+        elif value != None:
             params = "%s %s" % (name, str(value))
         elif valList != None:
-            params = "{%s}" % " ".join(valList)
+            params = "%s {%s}" % (name, " ".join(valList))
         else:
             raise Exception()
         
@@ -191,6 +206,10 @@ class VivadoTCL(VivadoFSOpsTCL, VivadoBDOpsTCL, VivadoProjectOpsTCL):
     def source(scriptPath):
         return "source %s" % (scriptPath)
     
+    @staticmethod
+    def synth_design(top, part):
+        return "synth_design -top %s -part %s" % (top, part)
+            
     
     class group():
         @staticmethod
@@ -204,7 +223,30 @@ class VivadoTCL(VivadoFSOpsTCL, VivadoBDOpsTCL, VivadoProjectOpsTCL):
     def exit():
         return "exit"
     
-
+    @staticmethod
+    def start_gui():
+        return "start_gui"
+    
+    @staticmethod
+    def set_false_path(to=None, _from=None):
+        assert(bool(to) != bool(_from))  # only one has to be not None 
+        params = []
+        if to is not None:
+            params.append("-to %s" % (to))
+        if _from is not None:
+            params.append("-from %s" % (_from))
+        return "set_false_path %s" % (' '.join(params)) 
+    
+    class sim():
+        # /home/nic30/Documents/vivado/Sprobe10_board_test/Sprobe10_board_test.sim/sim_1/behav/dump.vcd
+        # http://www.xilinx.com/support/answers/53351.html
+        # https://gist.github.com/imrickysu/ad8318229a603f8c7e79
+        # set_property top test_tb [get_filesets sim_1]
+        # set_property top_lib xil_defaultlib [get_filesets sim_1]
+        @staticmethod
+        def launch():
+            return "launch_simulation" 
         
-        
-        
+        @staticmethod
+        def close():
+            return "close_sim"

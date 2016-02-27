@@ -1,5 +1,7 @@
-from vivado_toolkit.vivadoController import VivadoTCL
+from vivado_toolkit.controller import VivadoTCL
+from vivado_toolkit.xdcGen import PackagePin, Comment
 import os
+import shutil
 
 class Pin():
     def __init__(self, bd, name, hasSubIntf=False):
@@ -9,26 +11,72 @@ class Pin():
 
     def get(self):
         if self.hasSubIntf:
-            yield VivadoTCL.get_bd_intf_pins([self.name])
+            return VivadoTCL.get_bd_intf_pins([self.name])
         else:
-            yield VivadoTCL.get_bd_pins([self.name])
+            return VivadoTCL.get_bd_pins([self.name])
 
 class Port():
-    def __init__(self, bd, name, direction=None, typ=None, hasSubIntf=False):
+    def __init__(self, bd, name, direction=None, typ=None, hasSubIntf=False,
+                 config=None, width=None, bitIndx=None):
         self.bd = bd
         self.name = name
         self.direction = direction
         self.typ = typ
         self.hasSubIntf = hasSubIntf
-    
-    def create(self):
-        yield VivadoTCL.create_bd_port(self.name, self.direction, self.typ)    
-            
-    def get(self):
-        if self.hasSubIntf:
-            yield VivadoTCL.get_bd_intf_ports([self.name])
+        self.width = None
+        if config is None:
+            config = {} 
+        self.config = config
+        self.extraXDC = []
+        self.bitIndx = bitIndx
+        if width is not None:
+            assert(not bitIndx)
+            assert(width > 0)
+            self.bits = [Port(bd, name, direction=direction, typ=typ, bitIndx=i) for i in range(width)]
         else:
-            yield VivadoTCL.get_bd_ports([self.name])
+            self.bits = None
+        if bitIndx is None:
+            self.bd.insertPort(self)
+            
+    def create(self):
+        yield VivadoTCL.create_bd_port(self.name, self.direction,
+                                       typ=self.typ, width=self.width)    
+        for k, v in self.config.items():
+            yield VivadoTCL.set_property('[' + self.get() + ']', "CONFIG." + k, v)
+    
+    def forEachBit(self, fn):
+        if self.bits:
+            for bit in self.bits:
+                fn(bit)
+        else:
+            fn(self)
+    
+    def generateXDC(self, portMap):
+        if self.bits:
+            yield Comment(self.name)
+            for b in self.bits:
+                yield from b.generateXDC(portMap)
+        else:
+            pin = portMap[self.name.lower()]
+            if self.bitIndx is not None:
+                yield Comment(self.name + "[%d]" % self.bitIndx)
+                pin = pin[self.bitIndx]
+            else:
+                yield Comment(self.name)
+            yield PackagePin(self, pin)
+        
+        for xdc in self.extraXDC:
+            yield xdc
+                
+    def get(self):
+        if self.bitIndx is not None:
+            indx = "[%d]" % self.bitIndx
+        else:
+            indx = ''
+        if self.hasSubIntf:
+            return VivadoTCL.get_bd_intf_ports([self.name + indx])
+        else:
+            return VivadoTCL.get_bd_ports([self.name + indx])
 
 class Unit():
     def __init__(self, bd, ipCore, name):
@@ -41,7 +89,7 @@ class Unit():
         yield VivadoTCL.create_bd_cell(self.ipCore, self.name)
 
     def get(self):
-        yield VivadoTCL.get_bd_cells([self.name])
+        return VivadoTCL.get_bd_cells([self.name])
 
     def pin(self, name, hasSubIntf=False):
         realPinName = "/%s/%s" % (self.name, name)
@@ -62,8 +110,8 @@ class Net():
         self.dst = dst
         
     def create(self):
-        src = ' '.join(self.src.get())
-        dst = ' '.join(self.dst.get())
+        src = self.src.get()
+        dst = self.dst.get()
         if self.src.hasSubIntf:
             yield VivadoTCL.connect_bd_intf_net(src, dst)
         else:
@@ -88,6 +136,7 @@ class BoardDesign():
         self.bdDir = j(self.project.bdSrcDir, self.name)
         self.bdFile = j(self.bdDir, name + ".bd")
         self.bdWrapperFile = j(self.bdDir , 'hdl', self.name + "_wrapper.vhd")
+        self.ports = {}
             
     def create(self):
         yield  VivadoTCL.create_bd_design(self.name)    
@@ -106,8 +155,12 @@ class BoardDesign():
     def open(self):
         yield VivadoTCL.open_bd_design(self.bdFile)
 
-    def port(self, name):
-        return Port(self, name)
+    def insertPort(self, port):
+        name_l = port.name.lower()
+        if name_l in self.ports:
+            raise Exception("%s port redefinition" % name_l)
+        else:
+            self.ports[name_l] = port
     
     def importFromTcl(self, fileName, refrestIfExists=True):
         """
@@ -162,6 +215,18 @@ class Project():
         self.projFile = os.path.join(path, name, name + ".xpr")
         self.srcDir = os.path.join(path, name, name + ".srcs/sources_1")  # [TODO] needs to be derived from fs or project
         self.bdSrcDir = os.path.join(self.srcDir, 'bd')
+        # self.constrFileSet_name = 'constrs_1'
+        self.part = None
+        self.top = None
+    
+    def create(self, in_memory=False):
+        yield VivadoTCL.create_project(self.path, self.name, in_memory=in_memory)
+    
+    def _exists(self):
+        return os.path.exists(self.path)
+    
+    def _remove(self):
+        shutil.rmtree(self.path)
         
     def get(self):
         return "[current_project]"    
@@ -178,6 +243,9 @@ class Project():
         for s in self.listSynthesis():
             yield from self.run(s)
             
+    def synth(self):
+        yield VivadoTCL.synth_design(self.top, self.part)
+        
     def implemAll(self):
         for s in self.listIpmplementations():
             yield from self.run(s)
@@ -199,10 +267,11 @@ class Project():
             yield os.path.basename(p)
                       
     def setPart(self, partName):
+        self.part = partName
         yield VivadoTCL.set_property(self.get(), "part", partName)
         
     def setIpRepoPaths(self, paths):
-        yield VivadoTCL.set_property(self.get(), valList=paths)
+        yield VivadoTCL.set_property(self.get(), name='ip_repo_paths', valList=paths)
         yield VivadoTCL.update_ip_catalog()              
     
     def open(self):
@@ -214,4 +283,10 @@ class Project():
     def boardDesign(self, name):
         return BoardDesign(self, name)
     
-    
+    def addXDCs(self, name, XDCs):
+        filename = os.path.join(self.srcDir, name + '.tcl') 
+        with open(filename, "w") as f:
+            for xdc in XDCs:
+                f.writeline(xdc.asTcl())
+        yield VivadoTCL.add_files([filename], norecurse=True)
+                
