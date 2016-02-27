@@ -11,23 +11,27 @@ from vivado_toolkit.ip_packager.component import Component
 from vivado_toolkit.ip_packager.helpers import prettify
 from vivado_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
 
-
-
 class Packager(object):
-    def __init__(self, topUnit, extraVhdlDirs=[], extraVhdlFiles=[]):
+    def __init__(self, topUnit, extraVhdlDirs=[], extraVhdlFiles=[],
+                 extraVerilogFiles=[], extraVerilogDirs=[]):
         self.topUnit = topUnit
         self.name = defaultUnitName(self.topUnit)
-        self.vhdlFilesToCopy = []
-        self.beforeBuilding = []
-        self.vhdlFiles = set()
+        self.hdlFiles = set()
+        
         for d in extraVhdlDirs:
             for f in find_files(d, "*.vhd"):
-                self.vhdlFilesToCopy.append(f)
+                self.hdlFiles.add(f)
         for f in extraVhdlFiles:
-            self.vhdlFilesToCopy.append(f)
+            self.hdlFiles.add(f)
+        
+        for d in extraVerilogDirs:
+            for f in find_files(d, "*.v"):
+                self.hdlFiles.add(f)
+        for f in extraVerilogFiles:
+            self.hdlFiles.add(f)
         
         
-    def synthetizeAndSave(self, srcDir):
+    def saveHdlFiles(self, srcDir):
         path = os.path.join(srcDir, self.name)
         try: 
             os.makedirs(path)
@@ -36,12 +40,11 @@ class Packager(object):
             shutil.rmtree(path)
             os.makedirs(path)
         
-        filesToCopy = set()
-        filesToCopy.update(self.vhdlFilesToCopy)
+        files = self.hdlFiles
         header = ''
         for o in self.topUnit._synthesise():
             if hasattr(o, '_origin'):
-                filesToCopy.add(o._origin)
+                files.add(o._origin)
             else:
                 toFile = None
                 if isinstance(o, str):  # [TODO] hotfix, library includes are just strings
@@ -56,13 +59,12 @@ class Packager(object):
                     with open(toFile, mode='w') as f:
                             s = formatVhdl(header + '\n' + str(o))
                             f.write(s)
-                            self.vhdlFiles.add(toFile)
+                            files.add(toFile)
         
-        for srcF in filesToCopy:
+        for srcF in files:
             dst = os.path.join(path, os.path.relpath(srcF, srcDir).replace('../', ''))
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy(srcF, dst)
-            self.vhdlFiles.add(dst)
             
     def mkAutoGui(self):
         gui = GuiBuilder()
@@ -77,6 +79,12 @@ class Packager(object):
             f.write(s)
 
     def createPackage(self, repoDir):
+        '''
+        synthetise hdl if needen
+        copy hdl files
+        create gui file
+        
+        '''
         ip_dir = os.path.join(repoDir, self.name + "/")      
         if os.path.exists(ip_dir):
             shutil.rmtree(ip_dir)
@@ -86,21 +94,19 @@ class Packager(object):
         guiFile = os.path.join(tclPath, "gui.tcl")       
         for d in [ip_dir , ip_srcPath, tclPath]:
             os.makedirs(d)
-        self.synthetizeAndSave(ip_srcPath)
-        for p in self.beforeBuilding:
-            p(self, ip_srcPath)
+        self.saveHdlFiles(ip_srcPath)
+        
         self.guiFile = guiFile    
         self.mkAutoGui()
+        
         c = Component()
-        c._files = list(
-                        map(lambda p : os.path.join("src/" , p),
-                            map(lambda p :basename(p), self.vhdlFiles)) \
-                    ) \
+        c._files = [relpath(p, ip_dir) for p in self.hdlFiles] \
                     + [relpath(guiFile, ip_dir) ]
         c.vendor = "nic"
         c.library = "mylib"
         c.description = self.name + "_v" + c.version
         c.asignTopUnit(self.topUnit)
+        
         xml_str = prettify(c.xml()) 
         with open(ip_dir + "component.xml", "w") as f:
             f.write(xml_str)

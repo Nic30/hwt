@@ -50,6 +50,13 @@ def appendStrElements(root, obj, reqPropNames=[], optPropNames=[]):
 whereEndsWithExt = lambda files, extension :\
              where(files, lambda x : x.lower().endswith(extension))
              
+def whereEndsWithExts(files, extensions):
+    for f in files:
+        for extension in extensions:
+            if f.lower().endswith(extension.lower()):
+                yield f
+             
+             
 def appendSpiAtribs(obj, elm, prefix='', reqPropNames=[], optPropNames=[]):
     for p in reqPropNames:
         elm.attrib[prefix + p] = getattr(obj, p) 

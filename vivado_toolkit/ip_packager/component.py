@@ -1,7 +1,7 @@
 from time import  time
 
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
-         mkSpiElm, ns, whereEndsWithExt
+         mkSpiElm, ns, whereEndsWithExt, whereEndsWithExts
 from vivado_toolkit.ip_packager.model import Model
 from vivado_toolkit.ip_packager.port import Port
 
@@ -66,10 +66,15 @@ class Component():
                 fileSet.files.append(f)
             return fileSet
         filesets = appendSpiElem(componentElem, "fileSets")
-        vhdl_fs = fileSetFromFiles(vhdl_syn_fileSetName, whereEndsWithExt(self._files, ".vhd"))
-        vhdl_sim_fs = fileSetFromFiles(vhdl_sim_fileSetName, whereEndsWithExt(self._files, ".vhd"))
-        tclFileSet = fileSetFromFiles(tcl_fileSetName, whereEndsWithExt(self._files, ".tcl"))
-        for fs in [vhdl_fs, vhdl_sim_fs, tclFileSet]:
+        hdlExtensions = [".vhd", 'v']
+        
+        hdl_fs = fileSetFromFiles(vhdl_syn_fileSetName, 
+                                  whereEndsWithExts(self._files, hdlExtensions))
+        hdl_sim_fs = fileSetFromFiles(vhdl_sim_fileSetName, 
+                                      whereEndsWithExts(self._files, hdlExtensions))
+        tclFileSet = fileSetFromFiles(tcl_fileSetName, 
+                                      whereEndsWithExt(self._files, ".tcl"))
+        for fs in [hdl_fs, hdl_sim_fs, tclFileSet]:
             filesets.append(fs.asElem())
         
     def _xmlParameters(self, compElem):
