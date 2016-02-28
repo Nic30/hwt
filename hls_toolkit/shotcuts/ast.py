@@ -1,9 +1,5 @@
 import  ast
 
-import hls_toolkit.errors as errors
-import myhdl
-
-
 def dump(node, annotate_fields=True, include_attributes=False, indent='  '):
     """
     Return a formatted dump of the tree in *node*.  This is mainly useful for
@@ -44,26 +40,6 @@ def dump(node, annotate_fields=True, include_attributes=False, indent='  '):
 def Call_simple(fn_id, args=[]):
     return ast.Call(func=ast.Name(id=fn_id), args=args, keywords=(), kwargs=(), starargs=None)
 
-def addSignal(fnNode, name, sigType):
-    indx = 0
-    # skip docstring
-    for i in fnNode.body:
-        if isinstance(i, ast.Expr) and isinstance(i.value, ast.Str):
-            indx += 1
-        else:
-            break
-    if isinstance(sigType, bool) or sigType == bool:
-        sigType = [Call_simple("bool", [])]
-    elif isinstance(sigType, myhdl.intbv):
-        sigType = [ast.Subscript(
-                                 value=Call_simple("intbv", [ast.Num(sigType._val)]),
-                                 slice=ast.Slice(lower=ast.Num(sigType._nrbits), upper=None, step=None))]
-    else:
-        raise NotImplementedError()
-    fnNode.body.insert(indx, ast.Assign(targets=[ast.Name(id=name)],
-                                        value=Call_simple("Signal", sigType)))
-    
-    
 def fnFileAst(compFn):
     with open(compFn.__code__.co_filename) as f:
         tree = ast.parse(f.read())
