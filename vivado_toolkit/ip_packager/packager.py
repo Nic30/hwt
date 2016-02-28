@@ -41,6 +41,7 @@ class Packager(object):
             os.makedirs(path)
         
         files = self.hdlFiles
+        self.hdlFiles = set()
         header = ''
         for o in self.topUnit._synthesise():
             if hasattr(o, '_origin'):
@@ -65,6 +66,7 @@ class Packager(object):
             dst = os.path.join(path, os.path.relpath(srcF, srcDir).replace('../', ''))
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy(srcF, dst)
+            self.hdlFiles.add(dst)
             
     def mkAutoGui(self):
         gui = GuiBuilder()
