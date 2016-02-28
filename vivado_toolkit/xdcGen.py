@@ -6,7 +6,7 @@ class SimpleXDCProp():
         self.port = port
         self.mode = mode
     def asTcl(self):
-        return VivadoTCL.set_property(self.port.get(), self._propName, self.mode)
+        return VivadoTCL.set_property('[' + self.port.get(forHdlWrapper=True) + ']', self._propName, self.mode)
 
 class VccAuxIo(SimpleXDCProp):
     _propName = "VCCAUX_IO"
