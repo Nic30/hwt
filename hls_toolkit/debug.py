@@ -152,8 +152,3 @@ def fake_exc_info(exc_info, filename, lineno):
 
 tb_set_next = _init_tb_set_next()
 
-#
-#if __name__ == "__main__":
-#    HLSTeplateErr._raise("wrong syntax", "/home/nic30/Documents/workspace/hw_synthesis/hw_synthesis_helpers/hls_toolkit/debug.py", 99999)
-
-
