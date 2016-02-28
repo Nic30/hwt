@@ -3,6 +3,9 @@ from vivado_toolkit.xdcGen import PackagePin, Comment
 import os
 import shutil
 
+class ConfigErr(Exception):
+    pass
+
 class Pin():
     def __init__(self, bd, name, hasSubIntf=False):
         self.bd = bd
@@ -59,8 +62,13 @@ class Port():
         else:
             pin = portMap[self.name.lower()]
             if self.bitIndx is not None:
+                if isinstance(pin, str):
+                    raise ConfigErr("%s is vector and portMap contains only one bit" % (self.name))
                 yield Comment(self.name + "[%d]" % self.bitIndx)
-                pin = pin[self.bitIndx]
+                try:
+                    pin = pin[self.bitIndx]
+                except IndexError:
+                    raise ConfigErr("%s missing configuration for bit %d" % (self.name, self.bitIndx))
             else:
                 yield Comment(self.name)
             yield PackagePin(self, pin)
@@ -68,15 +76,23 @@ class Port():
         for xdc in self.extraXDC:
             yield xdc
                 
-    def get(self):
+    def get(self, forHdlWrapper=False):
+        name = self.name
         if self.bitIndx is not None:
-            indx = "[%d]" % self.bitIndx
+            name = "{%s[%d]}" % (name, self.bitIndx)
+
+        names = [name]
+
+        if forHdlWrapper:
+            if self.hasSubIntf:
+                raise NotImplemented()
+            else:
+                return VivadoTCL.get_ports(names)
         else:
-            indx = ''
-        if self.hasSubIntf:
-            return VivadoTCL.get_bd_intf_ports([self.name + indx])
-        else:
-            return VivadoTCL.get_bd_ports([self.name + indx])
+            if self.hasSubIntf:
+                return VivadoTCL.get_bd_intf_ports(names)
+            else:
+                return VivadoTCL.get_bd_ports(names)
 
 class Unit():
     def __init__(self, bd, ipCore, name):
@@ -126,8 +142,6 @@ class Net():
             else:
                 yield from cls(src, dst).create()
              
-
-
 class BoardDesign():
     def __init__(self, project, name=None):
         j = os.path.join
@@ -158,7 +172,7 @@ class BoardDesign():
     def insertPort(self, port):
         name_l = port.name.lower()
         if name_l in self.ports:
-            raise Exception("%s port redefinition" % name_l)
+            raise ConfigErr("%s port redefinition" % name_l)
         else:
             self.ports[name_l] = port
     
@@ -203,6 +217,10 @@ class BoardDesign():
     
     def regenerateLayout(self):
         yield VivadoTCL.regenerate_bd_layout()
+
+class Language():
+    verilog = "verilog"
+    vhdl = 'VHDL'
     
 class Project():
     def __init__(self, path, name):
@@ -215,12 +233,13 @@ class Project():
         self.projFile = os.path.join(path, name, name + ".xpr")
         self.srcDir = os.path.join(path, name, name + ".srcs/sources_1")  # [TODO] needs to be derived from fs or project
         self.bdSrcDir = os.path.join(self.srcDir, 'bd')
-        # self.constrFileSet_name = 'constrs_1'
+        self.constrFileSet_name = 'constrs_1'
         self.part = None
         self.top = None
     
     def create(self, in_memory=False):
         yield VivadoTCL.create_project(self.path, self.name, in_memory=in_memory)
+        yield from self.setTargetLangue(Language.vhdl)
     
     def _exists(self):
         return os.path.exists(self.path)
@@ -284,9 +303,14 @@ class Project():
         return BoardDesign(self, name)
     
     def addXDCs(self, name, XDCs):
-        filename = os.path.join(self.srcDir, name + '.tcl') 
+        filename = os.path.join(self.srcDir, name + '.xdc') 
         with open(filename, "w") as f:
-            for xdc in XDCs:
-                f.writeline(xdc.asTcl())
-        yield VivadoTCL.add_files([filename], norecurse=True)
-                
+            f.write('\n'.join(map(lambda xdc : xdc.asTcl(), XDCs)))
+        yield VivadoTCL.add_files([filename], fileSet=self.constrFileSet_name, norecurse=True)
+    
+    def setTargetLangue(self, lang):
+        assert(lang == Language.verilog or lang == Language.vhdl)
+        yield VivadoTCL.set_property(self.get(), "target_language", lang)
+        
+        
+                    
