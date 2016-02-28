@@ -1,6 +1,7 @@
 package vhdlConvertor;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import vhdlObjects.Direction;
@@ -67,16 +68,9 @@ public class EntityParser {
 
 		NotImplementedLogger.print("EntityParser.visitEntity_declarative_item");
 	}
-	static void visitEntity_header(Entity e,
-			vhdlParser.Entity_headerContext ctx) {
-		// entity_header
-		// : ( generic_clause )?
-		// ( port_clause )?
-		// ;
-		//
-
-		vhdlParser.Generic_clauseContext g = ctx.generic_clause();
-		if (g != null) {
+	public static void visitGeneric_clause(vhdlParser.Generic_clauseContext ctx,
+			Map<String, Variable> generics) {
+		if (ctx != null) {
 			// generic_clause
 			// : GENERIC LPAREN generic_list RPAREN SEMI
 			// ;
@@ -84,23 +78,25 @@ public class EntityParser {
 			// : interface_constant_declaration (SEMI
 			// interface_constant_declaration)*
 			// ;
-			vhdlParser.Generic_listContext gl = g.generic_list();
+			vhdlParser.Generic_listContext gl = ctx.generic_list();
 			for (vhdlParser.Interface_constant_declarationContext ic : gl
 					.interface_constant_declaration()) {
 				List<Variable> vl = visitInterface_constant_declaration(ic);
 				for (Variable v : vl)
-					e.generics.put(v.name, v);
+					generics.put(v.name, v);
 			}
 		}
-		vhdlParser.Port_clauseContext pc = ctx.port_clause();
-		if (pc != null) {
+	}
+	public static void visitPort_clause(vhdlParser.Port_clauseContext ctx,
+			Map<String, Port> ports) {
+		if (ctx != null) {
 			// port_clause
 			// : PORT LPAREN port_list RPAREN SEMI
 			// ;
 			// port_list
 			// : interface_port_list
 			// ;
-			vhdlParser.Port_listContext pl = pc.port_list();
+			vhdlParser.Port_listContext pl = ctx.port_list();
 			vhdlParser.Interface_port_listContext ipl = pl
 					.interface_port_list();
 			// interface_port_list
@@ -110,10 +106,21 @@ public class EntityParser {
 			for (vhdlParser.Interface_port_declarationContext ipd : ipl
 					.interface_port_declaration()) {
 				for (Port p : visitInterface_port_declaration(ipd))
-					e.ports.put(p.variable.name, p);
+					ports.put(p.variable.name, p);
 			}
 		}
-
+	}
+	static void visitEntity_header(Entity e,
+			vhdlParser.Entity_headerContext ctx) {
+		// entity_header
+		// : ( generic_clause )?
+		// ( port_clause )?
+		// ;
+		//
+		vhdlParser.Generic_clauseContext g = ctx.generic_clause();
+		visitGeneric_clause(g, e.generics);
+		vhdlParser.Port_clauseContext pc = ctx.port_clause();
+		visitPort_clause(pc, e.ports);
 	}
 	static List<Variable> visitInterface_constant_declaration(
 			vhdlParser.Interface_constant_declarationContext ctx) {
