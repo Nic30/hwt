@@ -61,7 +61,6 @@ public class vhdlConvertorApp {
 				} else {
 					System.out.print(p.context.toJson());
 				}
-				System.out.print("done");
 			} catch (Exception e) {
 				if (e instanceof IOException) {
 					System.err.format("IOException: %s\n", e);
