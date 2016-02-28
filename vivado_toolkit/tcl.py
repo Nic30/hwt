@@ -115,10 +115,12 @@ class VivadoBDOpsTCL():
 
 class VivadoProjectOpsTCL():
     @staticmethod
-    def add_files(files, norecurse=True):
+    def add_files(files, fileSet=None, norecurse=True):
         params = []
         if norecurse:
             params.append('-norecurse')
+        if fileSet is not None:
+            params.append("-fileset %s" % (fileSet))
         return 'add_files %s %s' % (' '.join(params), ' '.join(files))
     
     @staticmethod
@@ -180,9 +182,13 @@ class VivadoProjectOpsTCL():
             params.append('-in_memory')
         
         return "create_project %s" % ' '.join(params)
+
+class VivadoHdlOps():
+    @staticmethod
+    def get_ports(portNames):
+        return "get_ports %s" % (" ".join(portNames))    
     
-    
-class VivadoTCL(VivadoFSOpsTCL, VivadoBDOpsTCL, VivadoProjectOpsTCL):
+class VivadoTCL(VivadoFSOpsTCL, VivadoBDOpsTCL, VivadoProjectOpsTCL, VivadoHdlOps):
     """
     python wraps for Vivado TCL commands
     """
