@@ -52,9 +52,8 @@ public class vhdlConvertorApp {
 				vhdlParser parser = new vhdlParser(tokens);
 				parser.removeErrorListeners();
 				parser.addErrorListener(new SyntaxErrorLogger());
-				Design_fileContext tree = parser.design_file(); // begin parsing
-																// at
-																// init rule
+				// begin parsing at init rule
+				Design_fileContext tree = parser.design_file();
 				DesignFileParser p = new DesignFileParser(hierarchyOnly);
 				p.visitDesign_file(tree);
 				if (prettyPrint) {
@@ -62,6 +61,7 @@ public class vhdlConvertorApp {
 				} else {
 					System.out.print(p.context.toJson());
 				}
+				System.out.print("done");
 			} catch (Exception e) {
 				if (e instanceof IOException) {
 					System.err.format("IOException: %s\n", e);
@@ -71,6 +71,8 @@ public class vhdlConvertorApp {
 							"%s file %s is not parsable due encoding\n", e,
 							file);
 					System.exit(1);
+				} else {
+					throw e;
 				}
 			}
 		} catch (ParseException exc) {
