@@ -1053,6 +1053,13 @@ public class vhdlBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements v
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitName_part_specificator(vhdlParser.Name_part_specificatorContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitName_attribute_part(vhdlParser.Name_attribute_partContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

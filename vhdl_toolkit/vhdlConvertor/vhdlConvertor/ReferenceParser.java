@@ -61,12 +61,13 @@ public class ReferenceParser {
 		}
 		return op0;
 	}
-	public static Expr visitName_part(vhdlParser.Name_partContext ctx) {
-		// name_part
-		// : selected_name (name_attribute_part |
-		// name_function_call_or_indexed_part | name_slice_part)?
+	public static Expr visitName_part_specificator(Expr selectedName,
+			vhdlParser.Name_part_specificatorContext ctx) {
+		// name_part_specificator
+		// : name_attribute_part
+		// | name_function_call_or_indexed_part
+		// | name_slice_part
 		// ;
-		Expr sn = new Expr(visitSelected_name(ctx.selected_name()));
 
 		vhdlParser.Name_attribute_partContext na = ctx.name_attribute_part();
 		if (na != null) {
@@ -83,13 +84,24 @@ public class ReferenceParser {
 			// name_function_call_or_indexed_part
 			// : LPAREN actual_parameter_part? RPAREN
 			// ;
-			return new Expr(sn, OperatorType.CALL, ExprParser.visitActual_parameter_part(
-					callOrIndx.actual_parameter_part()));
+			return new Expr(selectedName, OperatorType.CALL,
+					ExprParser.visitActual_parameter_part(
+							callOrIndx.actual_parameter_part()));
 		}
 		vhdlParser.Name_slice_partContext ns = ctx.name_slice_part();
-		if (ns != null) {
-			NotImplementedLogger.print("ExprParser.visitName_slice_partContext");
-			return null;
+		assert (ns != null);
+		NotImplementedLogger.print("ExprParser.visitName_slice_partContext");
+		return null;
+	}
+
+	public static Expr visitName_part(vhdlParser.Name_partContext ctx) {
+		// name_part
+		// : selected_name (name_part_specificator)*
+		// ;
+		Expr sn = new Expr(visitSelected_name(ctx.selected_name()));
+		for (vhdlParser.Name_part_specificatorContext sp : ctx
+				.name_part_specificator()) {
+			sn = visitName_part_specificator(sn, sp);
 		}
 		return sn;
 	}

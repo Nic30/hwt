@@ -1488,6 +1488,16 @@ public interface vhdlListener extends ParseTreeListener {
 	 */
 	void exitName_part(vhdlParser.Name_partContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link vhdlParser#name_part_specificator}.
+	 * @param ctx the parse tree
+	 */
+	void enterName_part_specificator(vhdlParser.Name_part_specificatorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link vhdlParser#name_part_specificator}.
+	 * @param ctx the parse tree
+	 */
+	void exitName_part_specificator(vhdlParser.Name_part_specificatorContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link vhdlParser#name_attribute_part}.
 	 * @param ctx the parse tree
 	 */

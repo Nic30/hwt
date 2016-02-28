@@ -899,6 +899,12 @@ public interface vhdlVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitName_part(vhdlParser.Name_partContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link vhdlParser#name_part_specificator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitName_part_specificator(vhdlParser.Name_part_specificatorContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link vhdlParser#name_attribute_part}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

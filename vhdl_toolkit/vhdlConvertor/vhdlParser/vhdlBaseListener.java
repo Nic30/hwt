@@ -1792,6 +1792,18 @@ public class vhdlBaseListener implements vhdlListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterName_part_specificator(vhdlParser.Name_part_specificatorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitName_part_specificator(vhdlParser.Name_part_specificatorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterName_attribute_part(vhdlParser.Name_attribute_partContext ctx) { }
 	/**
 	 * {@inheritDoc}
