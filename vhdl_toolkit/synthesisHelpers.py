@@ -5,9 +5,9 @@ import shutil
 from vivado_toolkit.ip_packager.component import Component
 
 def synthetizeAndSave(unit, folderName='.', name=None):
-    pass
+    raise NotImplementedError()
         
 def synthetizeAsIpcore(unit, folderName=".", name=None):
-    pass
+    raise NotImplementedError()
     
     

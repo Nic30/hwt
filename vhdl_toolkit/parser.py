@@ -12,7 +12,7 @@ from vhdl_toolkit.hdlObjects.reference import VhdlRef
 from vhdl_toolkit.hdlObjects.expr import BinOp, Unconstrained
 from vhdl_toolkit.hdlObjects.variables import PortItem, VHDLGeneric
 from vhdl_toolkit.hdlObjects.entity import Entity
-from vhdl_toolkit.hdlObjects.package import Package, PackageHeader
+from vhdl_toolkit.hdlObjects.package import PackageHeader, PackageBody
 
 from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.synthetisator.param import Param
@@ -31,7 +31,7 @@ https://github.com/loranbriggs/Antlr/blob/master/The%20Definitive%20ANTLR%204%20
 
         
 def entityFromFile(fileName):
-    ctx = parseVhdl([fileName])
+    ctx = parseVhdl([fileName], primaryUnitsOnly=True)
     assert(len(ctx.entities.items()) == 1)
     ent = list(ctx.entities.items())[0][1]
     ent.generics.sort(key=lambda x: x.name)
@@ -139,7 +139,7 @@ class Parser():
         ci = ComponentInstance(jComp['name'], None)
         ci.entityRef = VhdlRef.fromExprJson(jComp['entityName'])
         if not hierarchyOnly:
-            pass
+            raise NotImplementedError()
             # [TODO] port, generics maps
         return ci
     
@@ -149,29 +149,38 @@ class Parser():
         a.entityName = jArch["entityName"]
         a.name = jArch['name']
         for jComp in jArch['componentInstances']:
-            ci = Parser.componentInstanceFromJson(jComp, ctx)
+            ci = Parser.componentInstanceFromJson(jComp, ctx, hierarchyOnly=hierarchyOnly)
             a.componentInstances.append(ci)
         if not hierarchyOnly:
-            pass
-            # [TODO]
+            raise NotImplementedError()
         return a
     
     @staticmethod
     def packageHeaderFromJson(jPh, ctx, hierarchyOnly=False):
-        ph = PackageHeader(jPh['name'])
+        ph = PackageHeader(jPh['name'], ctx)
+        for _, jComp in jPh[ 'components'].items():
+            c = Parser.entityFromJson(jComp, ctx, hierarchyOnly=hierarchyOnly)
+            ph.insertObj(c) 
         if not hierarchyOnly:
             raise NotImplementedError()
         return ph
     
     @staticmethod
-    def packageFromJson(jPack, ctx1, hierarchyOnly=False):
-        pb = Package(jPack['name'], None)
+    def packageBodyFromJson(jPack, ctx, hierarchyOnly=False):
+        pb = PackageBody(jPack['name'], ctx)
         if not hierarchyOnly:
             raise NotImplementedError()
         return pb
         
     @staticmethod
-    def parse(jsonctx, fileName, ctx, hierarchyOnly=False):
+    def parse(jsonctx, fileName, ctx, hierarchyOnly=False, primaryUnitsOnly=True):
+        """
+        @param fileName: vhdl filename
+        @param ctx: parent HDL context
+        @param hierarchyOnly: discover only presence of entities, architectures and component instances inside,
+                              packages and components inside, packages 
+        @param primaryUnitsOnly: parse only entities and package headers  
+        """
         dependencies = set()
         try:
             for jsnU in jsonctx['usings']:
@@ -187,18 +196,11 @@ class Parser():
         for phName, jPh in jsonctx["packageHeaders"].items():
             ph = Parser.packageHeaderFromJson(jPh, ctx, hierarchyOnly=hierarchyOnly)
             assert(ph.name == phName)
-            if ph.name not in ctx.packages:
-                ctx.packages[ph.name] = Package(ph.name, ph)
+            n = ph.name.lower() 
+            if n not in ctx.packages:
+                ctx.insertObj(ph)
             else:
-                ctx.packages[ph.name].header = ph
-        
-        for pbName, jpBody in jsonctx["packages"].items():
-            pb = Parser.packageFromJson(jpBody, ctx, hierarchyOnly=hierarchyOnly)
-            assert(pb.name == pbName)
-            if pb.name not in ctx.packages:
-                ctx.packages[pb.name] = pb
-            else:
-                ctx.packages[pb.name].insertBody(pb)
+                ctx.packages[n].update(ph)
         
         for eName, jE in jsonctx["entities"].items():
             ent = Parser.entityFromJson(jE, ctx, hierarchyOnly=hierarchyOnly)
@@ -206,23 +208,44 @@ class Parser():
             ent.fileName = fileName
             ent.dependencies = dependencies
             ctx.entities[eName] = ent
-            
-        for jArch in jsonctx['architectures']:
-            arch = Parser.archFromJson(jArch, ctx, hierarchyOnly=hierarchyOnly)
-            arch.fileName = fileName
-            arch.dependencies = dependencies
-            ctx.architectures.append(arch)
+        
+        if not primaryUnitsOnly:
+            for pbName, jpBody in jsonctx["packages"].items():
+                pb = Parser.packageBodyFromJson(jpBody, ctx, hierarchyOnly=hierarchyOnly)
+                assert(pb.name == pbName)
+                n = pb.name.lower()
+                if n not in ctx.packages:
+                    ph = PackageHeader(n, ctx, isDummy=True)
+                    ph.insertBody(pb)
+                    ctx.insertObj(ph)
+                else:
+                    ctx.packages[n].insertBody(pb)
+        
+            for jArch in jsonctx['architectures']:
+                arch = Parser.archFromJson(jArch, ctx, hierarchyOnly=hierarchyOnly)
+                arch.fileName = fileName
+                arch.dependencies = dependencies
+                ctx.architectures.append(arch)
 
            
-def parseVhdl(fileList:list, hdlCtx=None, timeoutInterval=20, hierarchyOnly=False):
+def parseVhdl(fileList:list, hdlCtx=None, libName="work", timeoutInterval=20, hierarchyOnly=False, primaryUnitsOnly=False):
+    """
+    @param fileList: list of files to parse in same context
+    @param hdlCtx: parent HDL context
+    @param libName: name of actual library
+    @param timeoutInterval: timeout for process of external vhdl parser
+    @param hierarchyOnly: discover only presence of entities, architectures and component instances inside,
+                          packages and components inside, packages 
+    @param primaryUnitsOnly: parse only entities and package headers  
+    """
     if isinstance(fileList, str):
         fileList = [fileList]
     topCtx = hdlCtx
     if not hdlCtx:
         topCtx = BaseVhdlContext.getBaseCtx()
         BaseVhdlContext.importFakeLibs(topCtx)
-        hdlCtx = HDLCtx('work', topCtx)
-        topCtx.insert(VhdlRef(['work']), hdlCtx)
+        hdlCtx = HDLCtx(libName, topCtx)
+        topCtx.insert(VhdlRef([libName]), hdlCtx)
     p_list = []
     for fname in fileList:
         cmd = ["java", "-jar", str(convertor) , fname]
@@ -247,6 +270,6 @@ def parseVhdl(fileList:list, hdlCtx=None, timeoutInterval=20, hierarchyOnly=Fals
         except ValueError:
             raise Exception("Failed to parse file %s, ValueError while parsing json from convertor" % (p.fileName))
         if j:
-            Parser.parse(j, p.fileName, hdlCtx, hierarchyOnly=hierarchyOnly)
+            Parser.parse(j, p.fileName, hdlCtx, hierarchyOnly=hierarchyOnly, primaryUnitsOnly=primaryUnitsOnly)
     
     return hdlCtx

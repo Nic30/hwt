@@ -4,7 +4,6 @@ import multiprocessing
 from multiprocess.pool import Pool
 from python_toolkit.arrayQuery import arr_any
 
-
 class DesignFile():
     def __init__(self, fileName, hdlCtx):
         self.fileName = fileName
@@ -12,14 +11,14 @@ class DesignFile():
         self.dependentOnFiles = set()
         
     @classmethod
-    def fromFile(cls, f):
-        return cls(f, parseVhdl([f], timeoutInterval=180, hierarchyOnly=True))
+    def fromFile(cls, f, libName='work', hdlCtx=None):
+        return cls(f, parseVhdl([f], hdlCtx=hdlCtx, libName=libName, timeoutInterval=180, hierarchyOnly=True))
     
     def allDefinedRefs(self):
         for eName in self.hdlCtx.entities:
             yield VhdlRef([eName])
         for pName, p in self.hdlCtx.packages.items():
-            if p.header:
+            if not p._isDummy:
                 yield VhdlRef([pName])
         
     def allDependencies(self):
@@ -73,10 +72,10 @@ class DesignFile():
             self.dependentOnFiles.add(df)
     
     @staticmethod
-    def loadFiles(files, parallel=True):
+    def loadFiles(files, libName='work', parallel=True):
         if parallel:
             pool = Pool(multiprocessing.cpu_count())
-            designFiles = pool.map(DesignFile.fromFile, files)
+            designFiles = pool.map(lambda f : DesignFile.fromFile(f, libName=libName), files)
         else:
             designFiles = []
             for f in  files:
@@ -85,16 +84,7 @@ class DesignFile():
         return designFiles
     
     @staticmethod
-    def fileDependencyDict(files=None, designFiles=None, parallel=True):
-        assert(bool(files) != bool(designFiles))  # use only one
-        if files:
-            designFiles = DesignFile.loadFiles(files, parallel=parallel)
-        
-        ignoredRefs = [VhdlRef(["ieee"]), VhdlRef(['unisim'])]  # [TODO] more generic
-        def allDefined():
-            for df in designFiles:
-                for ref in df.allDefinedRefs(): 
-                    print(ref, '                ', df.fileName)
+    def fileDependencyDict(designFiles, ignoredRefs=[VhdlRef(["ieee"])]):
         depDict = {}
         for df in designFiles:
             df.discoverDependentOnFiles(designFiles, ignoredRefs)

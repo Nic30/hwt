@@ -40,9 +40,7 @@ public class PackageHeaderParser {
 
 		ph.name = (String) LiteralParser
 				.visitIdentifier(ctx.identifier(0)).literal.value;
-		if (!hierarchyOnly) {
-			visitPackage_declarative_part(ph, ctx.package_declarative_part());
-		}
+		visitPackage_declarative_part(ph, ctx.package_declarative_part());
 		return ph;
 	}
 	void visitPackage_declarative_part(PackageHeader ph,

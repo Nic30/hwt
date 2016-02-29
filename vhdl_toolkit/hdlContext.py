@@ -1,6 +1,7 @@
 from vhdl_toolkit.hdlObjects.reference import VhdlRef 
 from vhdl_toolkit.nonRedefDict import NonRedefDict
 from vhdl_toolkit.types import VHDLType, Unconstrained
+from vhdl_toolkit.hdlObjects.entity import Entity
 
 
 class RequireImportErr(Exception):
@@ -90,6 +91,7 @@ class HDLCtx(NonRedefDict):
                 raise NotImplementedError()
         except KeyError:
             raise RequireImportErr(ref)
+        
     def lookupGlobal(self, ref):
         p = self
         n = ref.names[0]  # [TODO]
@@ -115,11 +117,33 @@ class HDLCtx(NonRedefDict):
         
         raise Exception("Identificator %s not defined" % n)
     
+    def insertObj(self, obj):
+        from vhdl_toolkit.hdlObjects.package import PackageHeader
+        if isinstance(obj, Entity):
+            n = obj.name.lower()
+            self.entities[n] = obj
+            self.insert(VhdlRef([n]), obj)
+        elif isinstance(obj, PackageHeader):
+            n = obj.name.lower()
+            self.packages[n] = obj
+            self.insert(VhdlRef([n]), obj)
+        else:
+            raise NotImplementedError()
+    
     def insert(self, ref, val):
         c = self
+        # for all names create or reuse hiearchy
         for n in ref.names[:-1]:
             c = c.setdefault(n, HDLCtx(n, c))
-        c[ref.names[-1]] = val    
+        # store actual object at the end of hierarhy
+        c[ref.names[-1]] = val
+    
+    def copyFrom(self, other):
+        for _, v in other.items():
+            self.insertObj(v)
+        self.parent = other.parent
+        self.name = other.name
+               
     def __str__(self):
         return "\n".join([
                     "\n".join([str(e) for _, e in self.entities.items()]),

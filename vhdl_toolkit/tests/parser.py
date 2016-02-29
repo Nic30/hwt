@@ -1,6 +1,6 @@
 import unittest
 from vhdl_toolkit.parser import parseVhdl
-from vhdl_toolkit.hdlObjects.package import PackageHeader
+from vhdl_toolkit.hdlObjects.package import PackageHeader, PackageBody
 ILVL_SAMPLES = '../samples/iLvl/vhdl/'
 
 
@@ -11,11 +11,11 @@ class ParserTC(unittest.TestCase):
         self.assertEqual(len(ctx.entities), 1)
     
     def testArchParsing(self):
-        ctx = parseVhdl([ILVL_SAMPLES + "dependencies0/simpleSubunit3_arch.vhd"])
+        ctx = parseVhdl([ILVL_SAMPLES + "dependencies0/simpleSubunit3_arch.vhd"], hierarchyOnly=True)
         self.assertEqual(len(ctx.architectures), 1)
         
     def testArchCompInstance(self):
-        ctx = parseVhdl([ILVL_SAMPLES + "dependencies0/simpleSubunit3_arch.vhd"])
+        ctx = parseVhdl([ILVL_SAMPLES + "dependencies0/simpleSubunit3_arch.vhd"], hierarchyOnly=True)
         cis = ctx.architectures[0].componentInstances
         self.assertEqual(len(cis), 1)
         ci = cis[0]
@@ -26,11 +26,20 @@ class ParserTC(unittest.TestCase):
         self.assertEqual(len(ctx.packages.items()), 1)
         p = ctx.packages['misc_pkg']
         self.assertEqual(p.name, 'misc_pkg')
-        self.assertIsInstance(p.header, PackageHeader)
-        
+        self.assertIsInstance(p, PackageHeader)
+        self.assertIsInstance(p.body, PackageBody)
+    
+    def testCompInPackage(self):
+        ctx = parseVhdl([ILVL_SAMPLES + "packWithComps/package1.vhd"], hierarchyOnly=True)
+        p = ctx['package1']
+        self.assertTrue('ckt_reg' in p)
+        self.assertTrue('shiftreg' in p)
+        self.assertTrue('encode1'  in p)
+        self.assertTrue('decode1'  in p)
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(ParserTC('testPackage'))
-    #suite.addTest(unittest.makeSuite(ParserTC))
+    #suite.addTest(ParserTC('testPackage'))
+    suite.addTest(unittest.makeSuite(ParserTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
