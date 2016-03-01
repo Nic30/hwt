@@ -18,6 +18,10 @@ setup(name='HWToolkit',
       ],
       license='MIT',
       packages = find_packages(),
+      package_data={'vhdl_toolkit': ['*.vhd', '*.jar'],
+                    'visualizer' : ['*.html', '*.js', '*.css', '*.ico', 
+                                    '*.png', '*.oft', '*.eot', '*.svg', '*.ttf', '*.woff']},
+      include_package_data=True,
       #packages=['hls_toolkit', 'cpp_toolkit', 'python_toolkit', 'tcl_toolkit',\
       #          'vivado_toolkit', 'vhdl_toolkit' ],
       zip_safe=False)
