@@ -138,8 +138,8 @@ class DesignFile():
     @staticmethod
     def loadFiles(files, libName='work', parallel=True):
         if parallel:
-            pool = Pool(multiprocessing.cpu_count())
-            designFiles = pool.map(lambda f : DesignFile.fromFile(f, libName=libName), files)
+            with Pool(multiprocessing.cpu_count()) as pool:
+                designFiles = pool.map(lambda f : DesignFile.fromFile(f, libName=libName), files)
         else:
             designFiles = []
             for f in  files:
