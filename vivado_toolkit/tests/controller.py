@@ -1,9 +1,8 @@
-import unittest
+import os, unittest
 from unittest.case import TestCase
-from vivado_toolkit.tests.config import defaultVivadoExc
+from vivado_toolkit.samples.config import defaultVivadoExc
 from vivado_toolkit.controller import VivadoCntrl
 from vivado_toolkit.cmdResult import VivadoErr
-import os
 from vivado_toolkit.tcl import VivadoTCL
 
 class ControllerTC(TestCase):
