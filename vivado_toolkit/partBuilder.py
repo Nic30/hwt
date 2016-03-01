@@ -1,5 +1,8 @@
 class XilinxPartBuilder:
     class Package():
+        #zynq
+        clg484 = "clg484"
+        
         # all kintex7 packages
         fbv676 = "fbv676"
         fbv484 = "fbv484"
@@ -18,6 +21,13 @@ class XilinxPartBuilder:
         rf676 = "rf676"
         rf900 = "rf900"
     class Size():
+        #zynq sizes
+        _010 = "010"
+        _020 = "020"
+        _030 = "030"
+        _035 = "035"
+        _040 = "040"
+        
         _70t = "70t"
         _160t = "160t"
         _325t = "325t"
