@@ -1,16 +1,17 @@
+import os, sys
 from flask import Flask, render_template
 from flask.helpers import send_from_directory
-from vhdl_toolkit.hierarchyExtractor import DesignFile
-import sys
 
+from vhdl_toolkit.hierarchyExtractor import DesignFile
 from hls_connections_views import connectionsBp
 from python_toolkit.fileHelpers import find_files
-import os
+
 sys.path.append("..")  # [hotfix] to make visualizer run after downloading from git
 
-app = Flask(__name__)
+app = Flask("Visualizer")
 
-@app.route('/static/<path:path>')  # for loading all static files (antipatent, but it is necessary because app is not deployed on webserver )
+# for loading all static files (antipatent, but it is necessary because app is not deployed on webserver0
+@app.route('/static/<path:path>')
 def send_static(path):
     return send_from_directory('static', path)
 
@@ -39,7 +40,6 @@ def dependencyGraph():
     workspace = "/home/nic30/Downloads/fpgalibs/src/"
     files = []
     #files.extend(find_files(workspace, '*.vhd'))
-    # files.extend(find_files(tsu, '*.vhd'))
     files.extend(find_files(workspace + 'util/', '*.vhd'))
     unisimDesFiles = DesignFile.loadFiles(unisimFiles, libName='unisim')
     workDesFiles = DesignFile.loadFiles(files)

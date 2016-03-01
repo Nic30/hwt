@@ -10,7 +10,14 @@ from vhdl_toolkit.hdlContext import HDLCtx
 from vhdl_toolkit.nonRedefDict import RedefinitionErr
 
 class DesignFile():
+    """
+    Wrapper around context of file
+    """
     def __init__(self, fileName, hdlCtx):
+        """
+        @param fileName: filename of file that hdlCtx comes from
+        @param hdlCtx: hdl context of file
+        """
         self.fileName = fileName
         self.hdlCtx = hdlCtx
         self.importedNames = HDLCtx("imports", None)
@@ -18,6 +25,11 @@ class DesignFile():
         
     @classmethod
     def fromFile(cls, f, libName='work', hdlCtx=None):
+        """
+        @param f: filename
+        @param libName: library where context of the file will be placed if no hdlCtx is specified
+        @param hdlCtx:  parent hdl context
+        """
         return cls(f, parseVhdl([f], hdlCtx=hdlCtx, libName=libName, timeoutInterval=180, hierarchyOnly=True))
     
     def allDefinedRefs(self):

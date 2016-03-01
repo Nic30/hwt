@@ -1,8 +1,10 @@
 eclipse.preferences.version=1
 encoding//hls_toolkit/debug.py=utf-8
 encoding//vhdl_toolkit/formater.py=utf-8
+encoding//vhdl_toolkit/hdlContext.py=utf-8
 encoding//vhdl_toolkit/hdlObjects/architecture.py=utf-8
 encoding//vhdl_toolkit/hdlObjects/entity.py=utf-8
 encoding//vhdl_toolkit/parser.py=utf-8
 encoding//vhdl_toolkit/samples/rtlLvl/axi_testbench.py=utf-8
+encoding//vhdl_toolkit/synthetisator/param.py=utf-8
 encoding//vhdl_toolkit/testbench_generator.py=utf-8

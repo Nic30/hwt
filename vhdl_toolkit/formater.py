@@ -3,7 +3,7 @@
 import re
 
 """
-Simple and stupid implementation of vhdl formater
+Simple and stupid implementation of vhdl formater, no parser based on regular expressions
 """
 
 indentIncr = ["^entity", "^port\s*\(", "^port\s*map\s*\(", "^generic\s*map\s*\(", "^generic\s*\(",\

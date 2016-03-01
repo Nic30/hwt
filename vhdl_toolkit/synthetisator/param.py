@@ -1,5 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 class Param():
+    """
+    Class used in same way as generics in VHDL, it is wrapper around the value
+    """
     def __init__(self, initval):
         self.val = initval
         self.parent = None
@@ -22,16 +27,26 @@ class Param():
             return v
   
     def inherit(self, param):
+        """
+        self will allways have value of param
+        """
         self.parent = param
     
     def set(self, val):
+        """
+        set value of this param
+        """
         self.val = val
         
     def expr(self, fn):
+        """
+        set value of this param by expression
+        """
         p = Param(self.val)
         p.inherit(self)
         p._expr = fn
         return p
+    
     def toVhdlStr(self):
         v = self
         while v.parent:
@@ -40,6 +55,7 @@ class Param():
             return v.name
         else:
             return v.get()
+    
     def __str__(self):
         if hasattr(self, "name"):
             return self.name.upper()
@@ -62,6 +78,9 @@ def getParamVhdl(p):
         return p
     
 def getParam(p):
+    """
+    get param value or value
+    """
     if isinstance(p, Param):
         return getParam(p.get())
     else:
