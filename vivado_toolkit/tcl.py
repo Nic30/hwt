@@ -209,8 +209,11 @@ class VivadoTCL(VivadoFSOpsTCL, VivadoBDOpsTCL, VivadoProjectOpsTCL, VivadoHdlOp
         
 
     @staticmethod
-    def source(scriptPath):
-        return "source %s" % (scriptPath)
+    def source(scriptPath, noTrace=True):
+        cmd = ["source", scriptPath]
+        if noTrace:
+            cmd.append('-notrace')
+        return " ".join(cmd)
     
     @staticmethod
     def synth_design(top, part):
