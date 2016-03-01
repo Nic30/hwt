@@ -31,3 +31,6 @@ vhdl_toolkit/vhdlConvertor/.settings/
 #log files
 *.jou
 *.log
+
+#test tmp files
+vivado_toolkit/samples/tmp/*
