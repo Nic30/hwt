@@ -17,7 +17,7 @@ if __name__ == "__main__":
         loader.loadTestsFromTestCase(Expr2CondTC),
         loader.loadTestsFromTestCase(TreeBalancerTC),
         loader.loadTestsFromTestCase(TestCaseSynthesis),
-        ))
+    ))
 
     runner = TextTestRunner(verbosity=2)
     runner.run(suite)

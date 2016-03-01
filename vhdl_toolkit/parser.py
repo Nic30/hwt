@@ -32,6 +32,7 @@ https://github.com/loranbriggs/Antlr/blob/master/The%20Definitive%20ANTLR%204%20
         
 def entityFromFile(fileName):
     ctx = parseVhdl([fileName], primaryUnitsOnly=True)
+    ctx = ctx['work']
     assert(len(ctx.entities.items()) == 1)
     ent = list(ctx.entities.items())[0][1]
     ent.generics.sort(key=lambda x: x.name)
@@ -207,7 +208,7 @@ class Parser():
             assert(ent.name == eName)
             ent.fileName = fileName
             ent.dependencies = dependencies
-            ctx.entities[eName] = ent
+            ctx.insertObj(ent)
         
         if not primaryUnitsOnly:
             for pbName, jpBody in jsonctx["packages"].items():
@@ -225,7 +226,7 @@ class Parser():
                 arch = Parser.archFromJson(jArch, ctx, hierarchyOnly=hierarchyOnly)
                 arch.fileName = fileName
                 arch.dependencies = dependencies
-                ctx.architectures.append(arch)
+                ctx.insertObj(arch)
 
            
 def parseVhdl(fileList:list, hdlCtx=None, libName="work", timeoutInterval=20, hierarchyOnly=False, primaryUnitsOnly=False):
@@ -272,4 +273,4 @@ def parseVhdl(fileList:list, hdlCtx=None, libName="work", timeoutInterval=20, hi
         if j:
             Parser.parse(j, p.fileName, hdlCtx, hierarchyOnly=hierarchyOnly, primaryUnitsOnly=primaryUnitsOnly)
     
-    return hdlCtx
+    return topCtx

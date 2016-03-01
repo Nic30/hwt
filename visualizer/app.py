@@ -6,8 +6,6 @@ import sys
 from hls_connections_views import connectionsBp
 from python_toolkit.fileHelpers import find_files
 import os
-
-
 sys.path.append("..")  # [hotfix] to make visualizer run after downloading from git
 
 app = Flask(__name__)
@@ -37,15 +35,15 @@ def dependencyGraph():
             for d in dep:
                 depSet.add(os.path.relpath(d, root))
         return outDict
+    unisimFiles = ['/opt/Xilinx/Vivado/2015.2/data/vhdl/src/unisims/retarget_VCOMP.vhd']
     workspace = "/home/nic30/Downloads/fpgalibs/src/"
-    tsu = workspace + 'tsu/'
-    # workspace = "/home/nic30/Documents/workspace/hw_synthesis/hw_synthesis_helpers/vhdl_toolkit/samples/iLvl/vhdl/dependencies0"
     files = []
-    # files.extend(find_files(workspace, '*.vhd'))
-    files.extend(find_files(workspace + 'hfex/comp/liberouter/', '*.vhd'))
+    #files.extend(find_files(workspace, '*.vhd'))
     # files.extend(find_files(tsu, '*.vhd'))
-    # files.extend(find_files(workspace + 'util/', '*.vhd'))
-    depDict = DesignFile.fileDependencyDict(files)
+    files.extend(find_files(workspace + 'util/', '*.vhd'))
+    unisimDesFiles = DesignFile.loadFiles(unisimFiles, libName='unisim')
+    workDesFiles = DesignFile.loadFiles(files)
+    depDict = DesignFile.fileDependencyDict(workDesFiles + unisimDesFiles)
     depDict = convertToRelativePaths(workspace, depDict)
     nodes = []
     links = []
@@ -63,8 +61,8 @@ def dependencyGraph():
                           "value":1})
     
     return render_template('hls/dependency.html', nodes=nodes, links=links)
-
+app.register_blueprint(connectionsBp)
+    
 if __name__ == '__main__':
-    app.register_blueprint(connectionsBp)
     app.run(debug=True)
     # app.run(host='0.0.0.0')

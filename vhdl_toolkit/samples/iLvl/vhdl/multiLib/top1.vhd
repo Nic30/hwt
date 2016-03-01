@@ -3,7 +3,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
-use work.package1.ALL;
+use packWithComps.package1.ALL; -- stored in   ./..
 
 entity top1 is
 	port(

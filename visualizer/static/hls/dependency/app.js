@@ -1,5 +1,8 @@
+var wrap =d3.select("#page-wrapper") 
+
 //Constants for the SVG
-var width = 500, height = 500;
+var width = wrap[0][0].clientWidth, height =wrap[0][0].clientHeight;
+var svg = wrap.append("svg");
 
 // Set up the colour scale
 var color = d3.scale.category20();
@@ -10,8 +13,8 @@ var force = d3.layout.force().charge(-120).linkDistance(80).size(
 
 // Append a SVG to the body of the html page. Assign this SVG as an object to
 // svg
-var svg = d3.select("#graphWrap").append("svg").attr("width", width).attr(
-		"height", height);
+svg.attr("width", width)
+   .attr("height", height);
 svg.append("defs").selectAll("marker")
 	.data(["suit", "licensing", "resolved"])
 	.enter().append("marker")

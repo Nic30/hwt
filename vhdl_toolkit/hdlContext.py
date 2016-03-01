@@ -2,6 +2,7 @@ from vhdl_toolkit.hdlObjects.reference import VhdlRef
 from vhdl_toolkit.nonRedefDict import NonRedefDict
 from vhdl_toolkit.types import VHDLType, Unconstrained
 from vhdl_toolkit.hdlObjects.entity import Entity
+from vhdl_toolkit.hdlObjects.architecture import Architecture
 
 
 class RequireImportErr(Exception):
@@ -41,12 +42,7 @@ class BaseVhdlContext():
     @classmethod
     def importFakeLibs(cls, ctx):
         BaseVhdlContext.importFakeIEEELib(ctx)
-        BaseVhdlContext.importFakeUnisim(ctx)
 
-    @classmethod
-    def importFakeUnisim(cls, ctx):
-        ctx.insert(VhdlRef(["unisim", "vcomponents", 'ramb4_s16']), None)   
-   
     @classmethod 
     def importFakeIEEELib(cls, ctx):
         ctx.insert(FakeStd_logic_1164.std_logic_vector_ref, FakeStd_logic_1164.std_logic_vector)
@@ -127,6 +123,8 @@ class HDLCtx(NonRedefDict):
             n = obj.name.lower()
             self.packages[n] = obj
             self.insert(VhdlRef([n]), obj)
+        elif isinstance(obj, Architecture):
+            self.architectures.append(obj)
         else:
             raise NotImplementedError()
     
