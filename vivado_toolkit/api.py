@@ -176,7 +176,7 @@ class BoardDesign():
         else:
             self.ports[name_l] = port
     
-    def importFromTcl(self, fileName, refrestIfExists=True):
+    def importFromTcl(self, fileName, refrestTclIfExists=True):
         """
         @param refrestIfExists: refresh tcl file from bd before opening design
         """
@@ -184,7 +184,7 @@ class BoardDesign():
         assert(self.name == p.splitext(p.basename(fileName))[0])  # assert name of bd in tcl is correct
                     
         # update tcl from bd
-        if p.exists(self.bdFile) and refrestIfExists:
+        if p.exists(self.bdFile) and refrestTclIfExists:
             yield from self.open()
             yield from self.exportToTCL(fileName, force=True)
     
@@ -210,6 +210,7 @@ class BoardDesign():
         yield from self.project.updateAllCompileOrders()
 
     def setAsTop(self):
+        self.project.top = self.name
         yield VivadoTCL.set_property("[current_fileset]", 'top', self.name + "_wrapper") 
         
     def unit(self, name, ipCore=None):
@@ -263,6 +264,7 @@ class Project():
             yield from self.run(s)
             
     def synth(self):
+        assert(self.top is not None)
         yield VivadoTCL.synth_design(self.top, self.part)
         
     def implemAll(self):
@@ -277,14 +279,18 @@ class Project():
             
     def listIpmplementations(self):
         # [TODO] not ideal
-        for p in filter(lambda d: d.startswith('impl'),
-                        os.listdir(os.path.join(self.path, self.name + ".runs"))):
-            yield p
-            
+        try:
+            for p in filter(lambda d: d.startswith('impl'),
+                            os.listdir(os.path.join(self.path, self.name + ".runs"))):
+                yield p
+        except FileNotFoundError:
+            yield 'impl_1'  # project was not created yet
     def listFileGroups(self):
-        for p in filter(os.path.isdir, os.listdir(self.srcDir)):
-            yield os.path.basename(p)
-                      
+        try:
+            for p in filter(os.path.isdir, os.listdir(self.srcDir)):
+                yield os.path.basename(p)
+        except FileNotFoundError:
+            yield from ["sources_1", "constrs_1", "sim_1"]
     def setPart(self, partName):
         self.part = partName
         yield VivadoTCL.set_property(self.get(), "part", partName)
