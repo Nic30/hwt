@@ -1,5 +1,5 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba import AxiStream
+from vhdl_toolkit.interfaces.amba import AxiStream
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.synthetisator.param import inheritAllParams, Param
 

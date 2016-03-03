@@ -1,7 +1,7 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_clk, \
+from vhdl_toolkit.interfaces.std import Ap_clk, \
     Ap_rst_n
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba import  AxiLite
+from vhdl_toolkit.interfaces.amba import  AxiLite
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.synthetisator.param import Param
 

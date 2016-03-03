@@ -2,8 +2,8 @@ from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import 
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
 from vhdl_toolkit.synthetisator.param import getParam
 from python_toolkit.arrayQuery import single
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba import AxiLite
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_clk, \
+from vhdl_toolkit.interfaces.amba import AxiLite
+from vhdl_toolkit.interfaces.std import Ap_clk, \
     Ap_rst_n, BramPort
 ILVL_VHDL = '../../../samples/iLvl/vhdl/'
 

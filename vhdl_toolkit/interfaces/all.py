@@ -1,6 +1,6 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import  BramPort, \
+from vhdl_toolkit.interfaces.std import  BramPort, \
                  BramPort_withoutClk, Ap_hs, Ap_clk, Ap_rst_n, Ap_none
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba import Axi4, Axi4_xil, \
+from vhdl_toolkit.interfaces.amba import Axi4, Axi4_xil, \
     AxiLite, AxiLite_xil, AxiStream, AxiStream_withoutSTRB, AxiStream_withUserAndStrb, AxiStream_withUserAndNoStrb 
 
 allInterfaces = [Axi4, Axi4_xil,

@@ -1,6 +1,6 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
 from vhdl_toolkit.synthetisator.param import Param, inheritAllParams
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import s, D
+from vhdl_toolkit.interfaces.std import s, D
 
 
 class AxiStream_withoutSTRB(Interface):

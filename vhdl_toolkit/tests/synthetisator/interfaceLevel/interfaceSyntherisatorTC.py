@@ -3,8 +3,8 @@ from vhdl_toolkit.types import DIRECTION
 from python_toolkit.arrayQuery import where, single
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import BlackBox
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_none
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba import Axi4
+from vhdl_toolkit.interfaces.std import Ap_none
+from vhdl_toolkit.interfaces.amba import Axi4
 D = DIRECTION
 
 class InterfaceSyntherisatorTC(BaseSynthetisatorTC):

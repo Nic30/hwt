@@ -2,7 +2,7 @@ from python_toolkit.arrayQuery import single, first
 from vhdl_toolkit.hdlObjects.expr import Assignment, value2vhdlformat
 from vhdl_toolkit.types import VHDLType, VHDLBoolean, DIRECTION
 from vhdl_toolkit.hdlObjects.variables import SignalItem, PortItem
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_none
+from vhdl_toolkit.interfaces.std import Ap_none
 from vhdl_toolkit.synthetisator.param import getParam
 
 

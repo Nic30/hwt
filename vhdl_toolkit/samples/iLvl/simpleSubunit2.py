@@ -1,6 +1,6 @@
 from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba import AxiStream
+from vhdl_toolkit.interfaces.amba import AxiStream
 from vhdl_toolkit.formater import formatVhdl
 
 class SimpleSubunit2(Unit):
