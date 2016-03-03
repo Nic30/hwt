@@ -69,8 +69,9 @@ class Parser():
         binOp = jExpr['binOperator']
         if binOp:
             op0 = Parser.exprFromJson(binOp['op0'], ctx)
-            operator = binOp['operator']
+            operator = BinOp.opByName(binOp['operator'])
             op1 = Parser.exprFromJson(binOp['op1'], ctx)
+            
             expr = BinOp(op0, operator, op1)
             return expr 
         raise HDLParseErr("Unparsable expression %s" % (str(jExpr)))

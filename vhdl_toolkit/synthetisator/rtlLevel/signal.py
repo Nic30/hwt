@@ -92,7 +92,7 @@ class OpPlus(OperatorBinary):
     mark = "+"
 
 class OpMinus():
-    mark = "1"
+    mark = "-"
 
 def PortItemFromSignal(s):
     if s.hasDriver():
@@ -263,8 +263,8 @@ def signalsForInterface(context, interf, prefix=""):
     return sigs   
 
 def walkSigExpr(sig):
-    if hasattr(sig, 'originin'):
-        yield sig.originin
+    if hasattr(sig, 'origin'):
+        yield sig.origin
     for e in sig.expr:
         yield  e
 

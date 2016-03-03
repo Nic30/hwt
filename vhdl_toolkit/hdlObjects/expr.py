@@ -57,12 +57,37 @@ class Literal():
         else:
             self.eval = lambda self : self.val
 
+class OpDefinition():
+    def __init__(self, _id, precedence, strOperator, evalFn):
+        self.id = _id
+        self.precedence = precedence
+        self.strOperator = strOperator
+        self._evalFn = evalFn
+    
+    def eval(self, operator):
+        it = iter(operator.op)
+        try:
+            initializer = BinOp.getLit(next(it))
+        except StopIteration:
+            raise TypeError('OpDefinition.eval, can not reduce empty sequence ')
+        accum_value = initializer
+        for x in it:
+            accum_value = self._evalFn(accum_value, BinOp.getLit(x))
+        return accum_value
+    
+    def str(self, op):
+        return  self.strOperator.join(self.op)
+       
 class BinOp():
-    PLUS = 'PLUS'
-    MINUS = 'MINUS'
-    DIV = 'DIV'
-    MULT = 'MULT'
-    DOWNTO = "DOWNTO"
+    # https://en.wikipedia.org/wiki/Order_of_operations
+    DIV = OpDefinition('DIV', 3, '/', lambda a, b : a // b)
+    PLUS = OpDefinition('PLUS', 4, '+', lambda a, b : a + b)
+    MINUS = OpDefinition('MINUS', 4, '-', lambda a, b : a - b)
+    MULT = OpDefinition('MULT', 4, '*', lambda a, b : a * b)
+    DOWNTO = OpDefinition("DOWNTO", 13, 'DOWNTO', lambda a, b : [a, b])
+    allOps = {}
+    for op in [PLUS, MINUS, DIV, MULT, DOWNTO]:
+        allOps[op.id] = op
     
     @staticmethod
     def getLit(lit):
@@ -70,32 +95,15 @@ class BinOp():
             return BinOp.getLit(lit())
         else:
             return getParam(lit)
+    @classmethod
+    def opByName(cls, name):
+        return cls.allOps[name]
         
     def __init__(self, op0, operator, op1):
         self.op0 = op0
-        self.operator = operator
-        
         self.op1 = op1
-        
-        if operator == BinOp.PLUS:
-            evalFn = lambda self : BinOp.getLit(self.op0) + BinOp.getLit(self.op1)
-            strOperator = '+'
-        elif operator == BinOp.MINUS:
-            evalFn = lambda self : BinOp.getLit(self.op0) - BinOp.getLit(self.op1)
-            strOperator = '-'
-        elif operator == BinOp.DIV:
-            evalFn = lambda self : BinOp.getLit(self.op0) // BinOp.getLit(self.op1)
-            strOperator = '/'
-        elif operator == BinOp.MULT:
-            evalFn = lambda self : BinOp.getLit(self.op0) * BinOp.getLit(self.op1)
-            strOperator = '*'
-        elif operator == BinOp.DOWNTO:
-            evalFn = lambda self : [BinOp.getLit(self.op0), BinOp.getLit(self.op1)]
-            strOperator = 'DOWNTO'
-        else:
-            raise NotImplementedError("Unimplemented BinOp operator %s" % (operator))
-        self.evalFn = types.MethodType(evalFn, self)
-        self.strOperator = strOperator
+        self.evalFn = types.MethodType(lambda self : self.operator.eval(self), self)
+        self.operator = operator
     def __call__(self):
         return self.evalFn()
     

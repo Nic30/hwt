@@ -24,6 +24,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         class AxiStreamSampleEnt(UnitWithSource):
             _origin = ILVL_VHDL + "axiStreamSampleEnt.vhd"
         u = AxiStreamSampleEnt()  # (intfClasses=[AxiStream_withUserAndStrb, AxiStream, AxiStream_withUserAndNoStrb, AxiStream_withoutSTRB])
+        #[TODO] sometimes resolves as 'RX0_ETH_T'  
         self.assertTrue(hasattr(u, "RX0_ETH"))
         self.assertTrue(hasattr(u, "RX0_CTL"))        
         self.assertTrue(hasattr(u, "TX0_ETH"))

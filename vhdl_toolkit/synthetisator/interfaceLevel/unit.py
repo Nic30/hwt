@@ -28,6 +28,10 @@ class Unit(Buildable):
     @attention: Current implementation does not control if connections are connected to right interface objects
                 this mean you can connect it to class interface definitions for example 
     """
+    _interfaces = {}
+    _subUnits = {}
+    _params = {}
+    _hlsUnits = {}
     def __init__(self, intfClasses=allInterfaces):
         self.__class__._intfClasses = intfClasses
         self.__class__._builded()
@@ -37,7 +41,6 @@ class Unit(Buildable):
             v = getattr(self.__class__, pName, None)
             setattr(self, pName, deepcopy(v, copyDict)) 
             
-        
         for intfName, interface in self._interfaces.items():
             interface._name = intfName
             interface._parent = self
@@ -53,6 +56,7 @@ class Unit(Buildable):
         cls._interfaces = {}
         cls._subUnits = {}
         cls._params = {}
+        cls._hlsUnits = {}
         for propName, prop in vars(cls).items():
             if isinstance(prop, Interface):
                 cls._interfaces[propName] = prop
@@ -60,8 +64,11 @@ class Unit(Buildable):
                 cls._subUnits[propName] = prop
             elif issubclass(prop.__class__, Param):
                 cls._params[propName] = prop
-                prop.name = propName    
+                prop.name = propName
+            elif hasattr(prop, "_synthetisator"):
+                cls._hlsUnits[propName] = prop
         cls._clsBuildFor = cls
+        
     def _cleanAsSubunit(self):
         for _, i in self._interfaces.items():
             i._rmSignals()
@@ -79,12 +86,14 @@ class Unit(Buildable):
                 portItem = single(self._entity.port, lambda x : x._interface == interface)
                 interface._originSigLvlUnit = self._sigLvlUnit
                 interface._originEntityPort = portItem
+   
     def _contextFromParams(self):
         # construct globals (generics for entity)
         globalNames = {}
         for k, v in self._params.items():
             globalNames[k.lower()] = v 
         return Context(self._name, globalNames=globalNames)
+   
     def _synthetiseContext(self, externInterf, cntx):
         # synthetize signal level context
         s = cntx.synthetize(externInterf)
@@ -104,6 +113,7 @@ class Unit(Buildable):
         for _ , intf in self._interfaces.items(): 
             # reverse because other components looks at this one from outside
             intf._reverseDirection()
+    
     def _synthesise(self, name=None):
         """
         synthesize all subunits, make connections between them, build entity and component for this unit
@@ -135,6 +145,12 @@ class Unit(Buildable):
         for _, connection in self._interfaces.items():
             connection._propagateConnection()
         
+        #synthesise all hls object
+        for _, hlsU in self._hlsUnits.items():
+            synthetisator = hlsU._synthetisator(self, cntx, hlsU)
+            synthetisator._synthesise()
+        
+        
         if not externInterf:
             raise  Exception("Can not find any external interface for unit " + name \
                               + "- there is no such a thing as unit without interfaces")
@@ -153,7 +169,7 @@ class BlackBox(Unit):
             signals = connection._signalsForInterface(cntx, connectionName)
             assert(connection._isExtern)
             externInterf.extend(signals)
-            #connect outputs to dummy value
+            # connect outputs to dummy value
             for s in signals:
                 if s._interface._getSignalDirection() == DIRECTION.IN:
                     s.assignFrom(0)

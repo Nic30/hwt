@@ -9,7 +9,6 @@ class Bram(UnitWithSource):
     
 if __name__ == "__main__":
     u = Bram()
-    #print(formatVhdl(
-    #                 "\n".join([ str(x) for x in u._synthesise()])
-    #                 ))
-    synthetizeAsIpcore(u)
+    print(formatVhdl(
+                     "\n".join([ str(x) for x in u._synthesise()])
+                     ))

@@ -15,6 +15,7 @@ class SigSymbol(Symbol):
         self = super().__new__(cls, signal.name, **assumptions)
         self.signal = signal
         return self
+    
 class SpecSymbol(Symbol):
     __slots__ = Symbol.__slots__ + ["data"]
     def __new__(cls, name, data, **assumptions):

@@ -21,12 +21,14 @@ class Ap_rst(Ap_none):
 
 class Ap_rst_n(Ap_none):
     _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn' ]
-    
-class Ap_hs(Interface):
+
+class Ap_vld(Interface):
     DATA_WIDTH = Param(64)
     data = s(width=DATA_WIDTH)
-    rd = s(masterDir=D.IN)
     vld = s()
+
+class Ap_hs(Ap_vld):
+    rd = s(masterDir=D.IN)
 
 class BramPort_withoutClk(Interface):
     ADDR_WIDTH = Param(32)

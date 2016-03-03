@@ -215,4 +215,3 @@ class Interface(Buildable, ExtractableInterface):
             s.append("_masterDir=%s" % str(self._masterDir))
         return "<%s>" % (', '.join(s))
     
-    
