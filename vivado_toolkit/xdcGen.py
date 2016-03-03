@@ -30,9 +30,9 @@ class FalsePath():
     def asTcl(self):
         n = self.network
         if n.direction == DIRECTION.IN: 
-            return  VivadoTCL.set_false_path(_from=self.network.get())
+            return  VivadoTCL.set_false_path(_from="[" + self.network.get(forHdlWrapper=True) + ']')
         elif n.direction == DIRECTION.OUT:
-            return  VivadoTCL.set_false_path(to=self.network.get())
+            return  VivadoTCL.set_false_path(to='[' + self.network.get(forHdlWrapper=True) + ']')
         else:
             raise Exception("Invalid direction (%s) of port %s" % (str(n.direction), n.name))
 
@@ -41,6 +41,8 @@ class IoStandard(SimpleXDCProp):
     Io standard of pin thats mean setting of voltage, open-drain etc... 
     """
     _propName = "IOSTANDARD"
+    LVCMOS12 = "LVCMOS12"
+    LVCMOS15 = "LVCMOS15"
     LVCMOS18 = "LVCMOS18"
     LVCMOS25 = 'LVCMOS25'
     HSTL_I_DCI = "HSTL_I_DCI"

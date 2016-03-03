@@ -26,16 +26,17 @@ class Port():
         self.direction = direction
         self.typ = typ
         self.hasSubIntf = hasSubIntf
-        self.width = None
         if config is None:
             config = {} 
         self.config = config
         self.extraXDC = []
         self.bitIndx = bitIndx
+        self.width = width
         if width is not None:
             assert(not bitIndx)
             assert(width > 0)
             self.bits = [Port(bd, name, direction=direction, typ=typ, bitIndx=i) for i in range(width)]
+            
         else:
             self.bits = None
         if bitIndx is None:
@@ -71,6 +72,7 @@ class Port():
                     raise ConfigErr("%s missing configuration for bit %d" % (self.name, self.bitIndx))
             else:
                 yield Comment(self.name)
+            assert(isinstance(pin, str))
             yield PackagePin(self, pin)
         
         for xdc in self.extraXDC:

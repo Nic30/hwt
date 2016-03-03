@@ -51,7 +51,7 @@ class VivadoBDOpsTCL():
             raise Exception()
         params.append("-dir %s" % d)
         if width is not None:
-            params.append('-from %s -to %d' (width - 1), 0)
+            params.append('-from %s -to %d' % ((width - 1), 0))
         
         if typ != None:
             params.append("-type %s" % typ)
