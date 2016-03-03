@@ -1,9 +1,9 @@
 from vhdl_toolkit.types import DIRECTION
 from vivado_toolkit.ip_packager.otherXmlObjs import Parameter
 from python_toolkit.arrayQuery import single, where
-from vhdl_toolkit.synthetisator.interfaceLevel import interfaces
-import vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std
-import vhdl_toolkit.synthetisator.interfaceLevel.interfaces.amba
+from vhdl_toolkit import interfaces
+import vhdl_toolkit.interfaces.std
+import vhdl_toolkit.interfaces.amba
 
 from vivado_toolkit.ip_packager.helpers import mkSpiElm, spi_ns_prefix
 from vhdl_toolkit.synthetisator.param import getParam
