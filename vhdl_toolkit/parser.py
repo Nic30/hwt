@@ -40,7 +40,8 @@ def entityFromFile(fileName):
     return ent
 
 baseDir = os.path.dirname(inspect.getfile(entityFromFile))
-convertor = os.path.join(baseDir, "vhdlConvertor", "vhdlConvertor.jar")
+JAVA = 'java'
+CONVERTOR = os.path.join(baseDir, "vhdlConvertor", "vhdlConvertor.jar")
 
 class Parser():
     @staticmethod
@@ -249,7 +250,7 @@ def parseVhdl(fileList:list, hdlCtx=None, libName="work", timeoutInterval=20, hi
         topCtx.insert(VhdlRef([libName]), hdlCtx)
     p_list = []
     for fname in fileList:
-        cmd = ["java", "-jar", str(convertor) , fname]
+        cmd = [JAVA, "-jar", str(CONVERTOR) , fname]
         if hierarchyOnly:
             cmd.append('-h') 
             
