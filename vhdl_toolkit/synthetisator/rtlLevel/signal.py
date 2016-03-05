@@ -1,13 +1,18 @@
-from python_toolkit.arrayQuery import single, first
-from vhdl_toolkit.hdlObjects.expr import Assignment, value2vhdlformat
-from vhdl_toolkit.types import VHDLType, VHDLBoolean, DIRECTION
+from python_toolkit.arrayQuery import first, where
+from vhdl_toolkit.hdlObjects.assigment import Assignment
+from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.hdlObjects.typeDefinitions import VHDLBoolean 
 from vhdl_toolkit.hdlObjects.variables import SignalItem, PortItem
 from vhdl_toolkit.interfaces.std import Ap_none
 from vhdl_toolkit.synthetisator.param import getParam
-
+from vhdl_toolkit.hdlObjects.operators import Op
 
 class InvalidOperandExc(Exception):
     pass
+
+def checkOperands(ops):
+    for op in ops:
+        checkOperand(op)
 
 def checkOperand(op):
     if isinstance(op, int) or isinstance(op, Signal):
@@ -15,84 +20,16 @@ def checkOperand(op):
     else:
         raise InvalidOperandExc()
 
-def exp__str__(dst, src):
-    if isinstance(src, OperatorUnary) or isinstance(src, OperatorBinary):
-        return "(" + str(src) + ")"
-    elif isinstance(src, Signal) and hasattr(src, 'origin'):
-        return exp__str__(dst, src.origin)  # consume signal between operators
-    else:
-        return value2vhdlformat(dst, src)
 
-def assigmet__str__(self):
-    return "%s <= %s" % (self.dst.name, exp__str__(self.dst, self.src))
-Assignment.__str__ = assigmet__str__  
+class SignalNode():
 
-
-class OperatorUnary:
-    def __init__(self, operand):
-        self.operand = operand
-        self.result = Signal(None, operand.var_type)
-        self.result.origin = self
-        
-class OpOnRisingEdge(OperatorUnary):
-    def __str__(self):
-        return "RISING_EDGE(" + exp__str__(self.result, self.operand) + ")"
-    
-class OpEvent(OperatorUnary):
-    def __str__(self):
-        return exp__str__(self.result, self.operand) + "'EVENT"
-
-class OpNot(OperatorUnary):
-    def __str__(self):
-        return " NOT(" + exp__str__(self.result, self.operand) + ")"
-
-class BitRange(OperatorUnary):
-    def __init__(self, signal, down, up):
-        self.operand = signal
-        self.sig = signal
-        self.down = down
-        self.up = up
-        self.result = Signal(signal.name + "[%d:%d]" % (down, up))
-        self.result.origin = self
-
-class OperatorBinary:
-    def __init__(self, operand0, operand1):
-        self.operand0 = operand0
-        self.operand1 = operand1
-    def __str__(self):
-        return "%s %s %s" % (exp__str__(self.result, self.operand0), self.mark, exp__str__(self.result, self.operand1)) 
-        
-class OperatorBinaryLogic(OperatorBinary):
-    def __init__(self, operand0, operand1):
-        super().__init__(operand0, operand1)
-        self.result = Signal(None, VHDLBoolean())
-        self.result.origin = self
-
-class OpIndx(OperatorBinary):
-    def __init__(self, arr, index):
-        self.operand0 = arr
-        self.operand1 = index
-
-class OpAnd(OperatorBinaryLogic):
-    mark = "AND"
-
-class OpOr(OperatorBinaryLogic):
-    mark = "OR"
-
-class OpXor(OperatorBinaryLogic):
-    mark = "XOR"
-
-class OpEq(OperatorBinaryLogic):
-    mark = "="
-    
-class OpNEq(OperatorBinaryLogic):
-    mark = "/="
-
-class OpPlus(OperatorBinary):
-    mark = "+"
-
-class OpMinus():
-    mark = "-"
+    @staticmethod
+    def resForOp(op):
+        t = op.getReturnType() 
+        out = Signal(None, t)
+        out.origin = op
+        op.result = out
+        return out
 
 def PortItemFromSignal(s):
     if s.hasDriver():
@@ -101,8 +38,9 @@ def PortItemFromSignal(s):
         d = DIRECTION.IN
     pi = PortItem(s.name, d, s.var_type)
     if not hasattr(s, '_interface'):
-        s._interface = Ap_none()
-        s._interface._width = s.var_type.width
+        w = s.var_type.width
+        s._interface = Ap_none(width=w)
+        s._interface._width = w
     pi._interface = s._interface
     
     return pi
@@ -124,8 +62,59 @@ class PortConnection():
         else:
             return " %s => %s" % (self.portItem.name, self.sig.name)
 
-# more like net
-class Signal(SignalItem):
+class SignalOps():
+    def unaryOp(self, operator):
+        try:
+            o = self._usedOps[operator]
+            return o.result
+        except KeyError:
+            o = Op(operator, [self])
+            self._usedOps[operator] = o
+            return SignalNode.resForOp(o)
+    
+    def naryOp(self, operator, operands):
+        checkOperands(operands)
+        operands = list(operands)
+        operands.insert(0, self)
+        o = Op(operator, operands)
+        return SignalNode.resForOp(o)
+    
+    def opNot(self):
+        return self.unaryOp(Op.NOT)
+        
+    def opOnRisigEdge(self):
+        return self.unaryOp(Op.RISING_EDGE)
+    
+    def opAnd(self, *operands):
+        return self.naryOp(Op.AND_LOG, operands)
+
+    def opXor(self, *operands):
+        return self.naryOp(Op.XOR, operands)
+
+    def opOr(self, *operands):
+        return self.naryOp(Op.OR_LOG, operands)
+
+    def opIsOn(self):
+        if int(self.onIn) == 0:
+            return self.opNot()
+        else:
+            return self 
+        
+    def opEq(self, *operands):
+        return self.naryOp(Op.EQ, operands)
+
+    def opNEq(self, *operands):
+        return self.naryOp(Op.NEQ, operands)
+
+    def assignFrom(self, source):
+        checkOperand(source)
+        a = Assignment(source, self)
+        a.cond = set()
+        self.expr.append(a)
+        return a
+    
+class Signal(SignalItem, SignalOps):
+    # more like net
     def __init__(self, name, var_type, defaultVal=None, onIn=True):
         if name is None:
             name = "sig_" + str(id(self))
@@ -133,16 +122,8 @@ class Signal(SignalItem):
         super().__init__(name, var_type, defaultVal)
         self.expr = []
         self.onIn = onIn
+        self._usedOps = {}
     
-    def bitRange(self, down, up):
-        e = BitRange(self, down, up)
-        self.expr.append(e)
-        return e.sigSelect
-    
-    def connectToPortByName(self, unit, name):
-        portItem = single(unit.port, lambda x: x.name == name)
-        return self.connectToPortItem(unit, portItem)
-        
     def connectToPortItem(self, unit, portItem):
         associatedWith = first(unit.portConnections, lambda x: x.portItem == portItem) 
         if associatedWith:
@@ -152,94 +133,21 @@ class Signal(SignalItem):
         self.expr.append(e)
         return e
     
-    def opEvent(self):
-        op = OpEvent(self)
-        self.expr.append(op)
-        return op.result
-    
-    def opNot(self):
-        if hasattr(self, "_not"):
-            return self._not.result
-        op = OpNot(self)
-        self._not = op
-        self.expr.append(op)
-        return op.result
-    
-    def opOnRisigEdge(self):
-        if hasattr(self, "_onRisingEdge"):
-            return self._onRisingEdge
-        
-        op = OpOnRisingEdge(self)
-        self._onRisingEdge = op
-        self.expr.append(op)
-        return op
-    
-    def opAnd(self, operand1):
-        checkOperand(operand1)
-        op = OpAnd(self, operand1)
-        self.expr.append(op)
-        return op.result
-    def opXor(self, operand1):
-        checkOperand(operand1)
-        op = OpXor(self, operand1)
-        self.expr.append(op)
-        return op.result
-    def opOr(self, operand1):
-        checkOperand(operand1)
-        op = OpOr(self, operand1)
-        self.expr.append(op)
-        return op.result
-    def opIsOn(self):
-        if int(self.onIn) == 0:
-            return self.opNot()
-        else:
-            return self 
-    def opEq(self, operand1):
-        checkOperand(operand1)
-        if self.var_type.width == 1:
-            # And(Or(Not(a), b), Or(Not(b), a))
-            if isinstance(operand1, Signal):
-                op1NotOrSelf = operand1.opNot().opOr(self)
-            else:
-                op1NotOrSelf = self.opOr(not operand1)
-            return self.opNot().opOr(operand1).opAnd(op1NotOrSelf)
-        else:
-            op = OpEq(self, operand1)
-            self.expr.append(op)
-            return op.result
-    def opNEq(self, operand1):
-        return self.opEq(operand1).opNot()
-    def indx(self, indexer):
-        checkOperand(indexer)
-        indx = OpIndx(self, indexer)
-        self.expr.append(indx)
-        return indx.result
-
     def hasDriver(self):
-        return self.getDriver() != None
+        for _ in self.getDrivers():
+            return True
+        return False
     
-    def getDriver(self):
+    def getDrivers(self):
         def assign2Me(ep):
             if isinstance(ep, Assignment) and ep.dst == self:
                 return ep
             elif isinstance(ep, PortConnection) and ep.portItem.direction == DIRECTION.OUT: 
                 return ep
-            elif isinstance(ep, BitRange) and ep.sigSelect.hasDriver():
-                return ep
             else:
                 return None
                 
-        return first(walkSigExpr(self), assign2Me)
-    
-    def assignFrom(self, source):
-        checkOperand(source)
-        a = Assignment(source, self)
-        a.cond = set()
-        self.expr.append(a)
-        return a
-    
-    def toJson(self):
-        return {"name": self.name}
+        return where(walkSigExpr(self), assign2Me)
  
 class SyncSignal(Signal):
     def __init__(self, name, var_type, defaultVal=None):
@@ -251,17 +159,7 @@ class SyncSignal(Signal):
         a.cond = set()
         self.expr.append(a)
         return a
-
  
-def ifConfig2Signal(context, ifc, prefix):
-    return context.sig(prefix + ifc.phyName, ifc.width)
-
-def signalsForInterface(context, interf, prefix=""):
-    sigs = []
-    for ifc in interf.port:
-        sigs.append(ifConfig2Signal(context, ifc, prefix))
-    return sigs   
-
 def walkSigExpr(sig):
     if hasattr(sig, 'origin'):
         yield sig.origin
@@ -276,14 +174,11 @@ def walkUnitInputs(unit):
 def walkSignalsInExpr(expr):
     if isinstance(expr, int):
         return
-    elif isinstance(expr, OperatorBinary):
-        yield from walkSignalsInExpr(expr.operand0)
-        yield from walkSignalsInExpr(expr.operand1)
-    elif isinstance(expr, OperatorUnary):
-        if expr.operand == expr.result:
-            return
-        else:
-            yield from walkSignalsInExpr(expr.operand)
+    elif isinstance(expr, Op):
+        for op in expr.op:
+            if op != expr:
+                yield from walkSignalsInExpr(op)
+
     elif isinstance(expr, Signal):
         if hasattr(expr, "origin"):
             yield from  walkSignalsInExpr(expr.origin)
@@ -303,16 +198,10 @@ def discoverSensitivity(datapath):
 def walkSigSouces(sig, parent=None):    
     if isinstance(sig, int):
         return
-    elif isinstance(sig, OperatorBinary):
-        if sig.operand0 != parent:
-            yield from walkSigSouces(sig.operand0)
-        if sig.operand1 != parent:    
-            yield from walkSigSouces(sig.operand1)
-    elif isinstance(sig, OperatorUnary):
-        if sig.operand == sig.result:
-            return
-        else:
-            yield from walkSigSouces(sig.operand)
+    elif isinstance(sig, Op):
+        for op in sig.op:
+            if op != parent:
+                yield from walkSigSouces(op)
     elif isinstance(sig, Signal):
         if hasattr(sig, 'origin'):  # if this is only internal signal
             yield from walkSigSouces(sig.origin)
@@ -324,7 +213,6 @@ def walkSigSouces(sig, parent=None):
                 yield e
             else:
                 yield from walkSigSouces(e, sig)
-
     else:
         raise Exception("Cant walk node %s" % str(sig))
         

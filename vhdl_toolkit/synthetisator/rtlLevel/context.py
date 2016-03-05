@@ -1,13 +1,11 @@
-from python_toolkit.arrayQuery import arr_any, where, distinctBy
+from python_toolkit.arrayQuery import where, distinctBy
 from vhdl_toolkit.hdlObjects.architecture import Architecture, Component
 from vhdl_toolkit.hdlObjects.variables import VHDLGeneric
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.process import HWProcess
 from vhdl_toolkit.synthetisator.rtlLevel.codeOp import If, IfContainer
-from vhdl_toolkit.synthetisator.rtlLevel.optimalizator import TreeBalancer, \
-    expr2cond
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, walkSigSouces, PortItemFromSignal, PortConnection, \
-    SyncSignal, walkUnitInputs, walkSignalsInExpr, OpAnd, \
+    SyncSignal, walkUnitInputs, walkSignalsInExpr, \
     discoverSensitivity
 from vhdl_toolkit.templates import VHDLTemplates  
 from vhdl_toolkit.types import VHDLType
@@ -19,9 +17,9 @@ def renderIfTree(assigments):
     
     for a in assigments:
         if a.cond:
-            tb = TreeBalancer(OpAnd)
-            cond = expr2cond(tb.balanceExprSet(list(a.cond)))
-            ic = IfContainer(cond, [a])
+            #tb = TreeBalancer(OpAnd)
+            #cond = expr2cond(tb.balanceExprSet(list(a.cond)))
+            ic = IfContainer(a.cond, [a])
             yield ic
         else:
             yield a

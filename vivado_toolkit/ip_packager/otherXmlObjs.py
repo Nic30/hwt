@@ -5,7 +5,8 @@ from vivado_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
     appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
 from vhdl_toolkit.synthetisator.param import getParam
 import math
-from vhdl_toolkit.hdlObjects.expr import Unconstrained, BinOp
+from vhdl_toolkit.types import Unconstrained
+from vhdl_toolkit.hdlObjects.operators import Op
 
 XILINX_VERSION = "2014.4.1"
 
@@ -59,7 +60,7 @@ class Value():
             bitString(w)
         elif w == Unconstrained:
             bitString(w.derivedWidth)
-        elif isinstance(w, BinOp):
+        elif isinstance(w, Op):
             w = w.evalFn()
             bitString(w)
         else:

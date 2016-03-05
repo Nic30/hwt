@@ -1,6 +1,7 @@
-from vhdl_toolkit.synthetisator.rtlLevel.signal import exp__str__, Signal
+from vhdl_toolkit.hdlObjects.expr import exp__str__
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.templates import VHDLTemplates
-from vhdl_toolkit.types import VHDLBoolean
+from vhdl_toolkit.hdlObjects.typeDefinitions import VHDLBoolean
 
 
 def If(cond, ifTrue=[], ifFalse=[]):
@@ -21,7 +22,10 @@ class IfContainer:
         self.cond = cond
         self.ifTrue = ifTrue
         self.ifFalse = ifFalse
+        
     def __str__(self):
         condResult = Signal(None, VHDLBoolean())
-        return VHDLTemplates.If.render(cond=exp__str__(condResult, self.cond), ifTrue=self.ifTrue, ifFalse = self.ifFalse)
+        return VHDLTemplates.If.render(cond=exp__str__(condResult, self.cond),
+                                       ifTrue=self.ifTrue, 
+                                       ifFalse = self.ifFalse)
      

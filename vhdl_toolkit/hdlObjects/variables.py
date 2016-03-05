@@ -1,4 +1,5 @@
-from vhdl_toolkit.hdlObjects.expr import Assignment, value2vhdlformat
+from vhdl_toolkit.hdlObjects.expr import  value2vhdlformat
+from vhdl_toolkit.hdlObjects.assigment import Assignment
 from vhdl_toolkit.types import InvalidVHDLTypeExc
 
 class VHDLVariable():

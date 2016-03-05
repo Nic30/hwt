@@ -1,6 +1,6 @@
-from vhdl_toolkit.hdlObjects.expr import BinOp, Unconstrained
 from vhdl_toolkit.synthetisator.param import Param
-
+from vhdl_toolkit.hdlObjects.literal import Literal
+from vhdl_toolkit.hdlObjects.specialValues import Unconstrained
 
 class InvalidVHDLTypeExc(Exception):
     def __init__(self, vhdlType):
@@ -78,11 +78,12 @@ class VHDLType():
         elif hasattr(self.width, "__call__"):
             w = self.width()
             if isinstance(w, list):
-                return (BinOp.getLit(w[0]) - BinOp.getLit(w[1])) + 1
+                return (Literal.get(w[0]) - Literal.get(w[1])) + 1
             return w
         return self.width
     
     def __str__(self):
+        from vhdl_toolkit.hdlObjects.operators import Op
         w = self.width
         if w == str:
             return "STRING"
@@ -103,14 +104,12 @@ class VHDLType():
             return 'STD_LOGIC'
         elif isinstance(w, int) and w > 1:
             return 'STD_LOGIC_VECTOR(%d DOWNTO 0)' % (w - 1)
-        elif isinstance(w, BinOp):
+        elif isinstance(w, Op):
             return 'STD_LOGIC_VECTOR(%s)' % str(w)
         elif isinstance(w, Param):
             return 'STD_LOGIC_VECTOR(%s -1 DOWNTO 0)' % (str(w))
         else:
             raise InvalidVHDLTypeExc(self)
-
-
 
 class VHDLExtraType(object):
     """
@@ -126,12 +125,5 @@ class VHDLExtraType(object):
     def __str__(self):
         return "TYPE %s IS (%s);" % (self.name, ", ".join(self.values))
 
-def STD_LOGIC():
-    t = VHDLType()
-    t.width = 1
-    return t
-
-
-
-def VHDLBoolean():
-    return STD_LOGIC()
+    
+    

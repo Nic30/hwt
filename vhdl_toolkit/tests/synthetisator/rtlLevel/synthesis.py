@@ -1,9 +1,8 @@
 import unittest
 
-from vhdl_toolkit.hdlObjects.expr import Assignment
+from vhdl_toolkit.hdlObjects.assigment import Assignment
 from vhdl_toolkit.synthetisator.rtlLevel.context import Context
-from vhdl_toolkit.synthetisator.rtlLevel.signal import OpOnRisingEdge
-
+from vhdl_toolkit.hdlObjects.operators import Op
 
 class TestCaseSynthesis(unittest.TestCase):
 
@@ -11,6 +10,10 @@ class TestCaseSynthesis(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.c = Context("test")
 
+    def testOpRisingEdge(self):
+        clk = self.c.sig("ap_clk", 1)
+        self.assertEqual(clk.opOnRisigEdge(), clk.opOnRisigEdge())
+    
     def testSyncSig(self):
         c = self.c
         clk = c.sig("ap_clk", 1)
@@ -22,8 +25,8 @@ class TestCaseSynthesis(unittest.TestCase):
         self.assertEqual(assig.src, a.next)
         self.assertEqual(assig.dst , a)
         onRisE = assig.cond.pop()
-        self.assertIsInstance(onRisE, OpOnRisingEdge)
-        self.assertEqual(onRisE.operand, clk)
+        self.assertEqual(onRisE.origin.operator, Op.RISING_EDGE)
+        self.assertEqual(onRisE.origin.op[0], clk)
     
     def testSyncSigWithReset(self):
         c = self.c

@@ -7,6 +7,9 @@ from vhdl_toolkit.testbench_generator import TestbenchCreator, HWProcess
 from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.variables import SignalItem
 
+"""
+currently disabled 
+"""
 
 # class HandShake_interface():
 #    def __init__(self, rd, vld, sensitivityList):
