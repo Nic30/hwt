@@ -14,6 +14,7 @@ class TestCaseSynthesis(unittest.TestCase):
         clk = self.c.sig("ap_clk", 1)
         self.assertEqual(clk.opOnRisigEdge(), clk.opOnRisigEdge())
     
+    
     def testSyncSig(self):
         c = self.c
         clk = c.sig("ap_clk", 1)

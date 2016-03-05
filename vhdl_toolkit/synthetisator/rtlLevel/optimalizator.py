@@ -2,7 +2,7 @@ from collections import deque
 from sympy import Symbol, Or, And, Xor, to_cnf, Not
 from sympy.logic.boolalg import simplify_logic
 from vhdl_toolkit.hdlObjects.operators import Op
-from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, SignalNode
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 
 Op2Simpy = {Op.AND_LOG: And,
             Op.OR_LOG: Or,
@@ -40,7 +40,7 @@ def toSympyOp(op):
     except KeyError:
         pass
     for specialOp in [Op.EVENT, int, Op.RISING_EDGE ]:
-        if isinstance(op, specialOp):
+        if op.operator == specialOp:
             s = SpecSymbol("ss" + str(id(op)), op)
             return s
     raise Exception("Can not cover token to Sympy token")    
@@ -60,55 +60,11 @@ def fromSympyOp(op):
 def expr_optimize(expr):
     if not expr:
         return expr
-    #tb = TreeBalancer(And)
-    #tb.balanceExprSet()
     condExpr = list(map(lambda x : toSympyOp(x), expr))  # to CNF of terms in cond
     r = simplify_logic(condExpr)
     return fromSympyOp(r)
 
 
-#class TreeBalancer():
-#    def __init__(self, operator):
-#        self.op = operator
-#        self.root = None
-#        
-#    def balanceExprSet(self, nodes, low=None, high=None):
-#        """Creates balanced tree with operator and list of nodes"""
-#        def isOperator(operand, operator):
-#            return isinstance(operand, Op) and operand.operator == operator
-#                 
-#        if not nodes:
-#            return 
-#        root = nodes[0]
-#        fifo = deque([nodes[0]])
-#        nextNode = None
-#        for n in nodes[1:]:
-#            tmp = fifo.pop()
-#            if isOperator(tmp, self.op):
-#                if isOperator(tmp.op[0], self.op) and isOperator(tmp.op[1], self.op):
-#                    raise Exception("Cannot extend finished node")
-#                else:
-#                    tmp_parent = tmp
-#                    if not nextNode:  # extend left child
-#                        tmp = SignalNode.resForOp(Op(self.op, [tmp.op[0], n]))
-#                        tmp_parent.op[0] = tmp.result
-#                        nextNode = tmp_parent
-#                        fifo.appendleft(tmp)
-#                    else:  # extend right child
-#                        tmp = SignalNode.resForOp(Op(self.op, [tmp.op[1], n]))
-#                        tmp_parent.op[1] = tmp.result
-#                        fifo.appendleft(tmp)
-#                        nextNode = None
-#            else:
-#                tmp = SignalNode.resForOp(Op(self.op, [tmp, n]))
-#                root = tmp
-#                fifo.appendleft(tmp)
-#                
-#        if isinstance(root, Op):
-#            return root.result
-#        else:        
-#            return  root
-        
 class ProcessIfOptimalizer:
     def otimize(self, expr):
         pass

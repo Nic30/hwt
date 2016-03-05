@@ -1,38 +1,8 @@
 import unittest
-
-#from vhdl_toolkit.synthetisator.rtlLevel.optimalizator import TreeBalancer
 from vhdl_toolkit.synthetisator.rtlLevel.typeConversions import expr2cond
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.typeDefinitions import STD_LOGIC
 from vhdl_toolkit.hdlObjects.operators import Op
-
-#class TreeBalancerTC(unittest.TestCase):
-#    def setUp(self):
-#        unittest.TestCase.setUp(self)
-#        self.tb = TreeBalancer(Op.AND_LOG)
-#
-#    def testTreeBalancer1(self):
-#        e = [ 1 ]
-#        res = self.tb.balanceExprSet(e)
-#        self.assertEqual(res, 1)
-#        
-#    def testTreeBalancer2(self):
-#        e = [ 1, 2 ]
-#        res = self.tb.balanceExprSet(e)
-#        self.assertTrue(res.origin.operator == Op.AND_LOG)
-#        self.assertEqual(res.origin.op[0], 1)
-#        self.assertEqual(res.origin.op[1], 2)
-#        
-#    def testTreeBalancer3(self):
-#        e = [ 1, 2, 3 ]
-#        res = self.tb.balanceExprSet(e)
-#        self.assertTrue(res.origin.operator == Op.AND_LOG)
-#        self.assertTrue(res.origin.op[0].origin.operator == Op.AND_LOG)
-#        
-#        a = res.origin.op[0].origin
-#        self.assertEqual(a.op[0], 1)
-#        self.assertEqual(a.op[1], 3)
-#        self.assertEqual(res.origin.op[1], 2)
 
 class Expr2CondTC(unittest.TestCase):    
     def setUp(self):

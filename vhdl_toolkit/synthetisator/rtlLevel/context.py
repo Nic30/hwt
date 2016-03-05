@@ -17,8 +17,6 @@ def renderIfTree(assigments):
     
     for a in assigments:
         if a.cond:
-            #tb = TreeBalancer(OpAnd)
-            #cond = expr2cond(tb.balanceExprSet(list(a.cond)))
             ic = IfContainer(a.cond, [a])
             yield ic
         else:
