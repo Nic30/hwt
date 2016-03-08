@@ -1,6 +1,4 @@
-from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.hdlObjects.literal import Literal
-from vhdl_toolkit.hdlObjects.specialValues import Unconstrained
 
 class InvalidVHDLTypeExc(Exception):
     def __init__(self, vhdlType):
@@ -13,52 +11,6 @@ class InvalidVHDLTypeExc(Exception):
 
     def __repr__(self):
         return self.__str__()
-    
-class INTF_DIRECTION():
-    MASTER = "MASTER"
-    SLAVE = "SLAVE"
-    
-    @classmethod
-    def asDirection(cls, val):
-        if val == INTF_DIRECTION.SLAVE:
-            return DIRECTION.IN 
-        elif val == INTF_DIRECTION.MASTER:
-            return DIRECTION.OUT
-        else:
-            raise Exception("Parameter is not interface direction")
-    
-    @classmethod
-    def oposite(cls, d):
-        if d == cls.SLAVE:
-            return cls.MASTER
-        elif d == cls.MASTER:
-            return cls.SLAVE
-        else:
-            raise Exception("Parameter is not interface direction")
-    
-
-class DIRECTION():
-    IN = "IN"
-    OUT = "OUT"
-    
-    @classmethod
-    def asIntfDirection(cls, d):
-        if d == cls.IN:
-            return INTF_DIRECTION.SLAVE
-        elif d == cls.OUT:
-            return INTF_DIRECTION.MASTER
-        else:
-            raise Exception("Parameter is not direction")
-    
-    @classmethod
-    def oposite(cls, d):
-        if d == cls.IN:
-            return cls.OUT
-        elif d == cls.OUT:
-            return cls.IN
-        else:
-            raise Exception("Parameter is not direction")
-            
 
 
 class VHDLType():
@@ -82,35 +34,9 @@ class VHDLType():
             return w
         return self.width
     
-    def __str__(self):
-        from vhdl_toolkit.hdlObjects.operators import Op
-        w = self.width
-        if w == str:
-            return "STRING"
-        elif w == int:
-            if self.min == None:
-                return 'INTEGER'
-            elif self.min == 0:
-                return 'NATURAL'
-            elif self.min == 1 :
-                return 'POSITIVE'
-            else:
-                raise NotImplementedError()
-        elif w == bool:
-            return "BOOLEAN"
-        elif w == Unconstrained:
-            return "STD_LOGIC_VECTOR"
-        elif w == 1:
-            return 'STD_LOGIC'
-        elif isinstance(w, int) and w > 1:
-            return 'STD_LOGIC_VECTOR(%d DOWNTO 0)' % (w - 1)
-        elif isinstance(w, Op):
-            return 'STD_LOGIC_VECTOR(%s)' % str(w)
-        elif isinstance(w, Param):
-            return 'STD_LOGIC_VECTOR(%s -1 DOWNTO 0)' % (str(w))
-        else:
-            raise InvalidVHDLTypeExc(self)
-
+    def __repr__(self):
+        return "<%s width:%s>" % (self.__class__.__name__, str(self.width))
+        
 class VHDLExtraType(object):
     """
     user type definition
@@ -122,8 +48,8 @@ class VHDLExtraType(object):
         self.values = set(values)
         return self
             
-    def __str__(self):
-        return "TYPE %s IS (%s);" % (self.name, ", ".join(self.values))
+    def __repr__(self):
+        return "<%s name:%s values:%s;" % (self.__class__.__name__, self.name, str(self.values))
 
     
     

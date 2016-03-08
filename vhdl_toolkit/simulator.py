@@ -1,5 +1,6 @@
 import simpy
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkAllOriginSignals
 from vhdl_toolkit.hdlObjects.operators import Op
 from vhdl_toolkit.hdlObjects.value import Value
 
@@ -60,3 +61,10 @@ class HdlSimulator():
         self.injectSimToCtx(signals)
         self.env.process(self.initSignals(signals))    
         self.env.run(until=time)
+
+def staticEval(sig):
+    #[TODO] real static evaluation based on expression tree
+    sim = HdlSimulator()
+    sigs = walkAllOriginSignals(sig)
+    sim.simSignals(sigs, time=100 * sim.ms)
+    return sig._val

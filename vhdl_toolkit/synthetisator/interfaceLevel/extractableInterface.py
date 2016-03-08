@@ -1,6 +1,6 @@
 from python_toolkit.arrayQuery import single, NoValueExc
 from python_toolkit.stringUtils import matchIgnorecase
-from vhdl_toolkit.types import INTF_DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
 class InterfaceIncompatibilityExc(Exception):
     pass

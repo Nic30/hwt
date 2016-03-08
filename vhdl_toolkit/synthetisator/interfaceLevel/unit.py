@@ -13,7 +13,7 @@ from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.hdlObjects.value import Value
 
 from python_toolkit.arrayQuery import single
-from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 
 
 

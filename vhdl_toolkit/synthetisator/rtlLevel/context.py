@@ -4,9 +4,11 @@ from vhdl_toolkit.hdlObjects.variables import VHDLGeneric
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.process import HWProcess
 from vhdl_toolkit.synthetisator.rtlLevel.codeOp import If, IfContainer
-from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, walkSigSouces, PortItemFromSignal, PortConnection, \
-    SyncSignal, walkUnitInputs, walkSignalsInExpr, \
-    discoverSensitivity
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, SyncSignal
+from vhdl_toolkit.hdlObjects.portConnection import PortConnection
+from vhdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
+from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkUnitInputs, walkSignalsInExpr, \
+    discoverSensitivity, walkSigSouces, signalHasDriver
 from vhdl_toolkit.templates import VHDLTemplates  
 from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.hdlObjects.value import Value
@@ -99,7 +101,7 @@ class Context():
                         for s in  walkSignalsInExpr(node.src):
                             discoverDatapaths(s)
                     
-        for s in where(interfaces, lambda s: s.hasDriver()):  # walk my outputs
+        for s in where(interfaces, lambda s: signalHasDriver(s)):  # walk my outputs
             discoverDatapaths(s)
     @staticmethod
     def typeForParam(p):
@@ -124,7 +126,7 @@ class Context():
         # create ports
         for s in interfaces:
             s.var_type.ctx = ent.ctx
-            ent.port.append(PortItemFromSignal(s))
+            ent.port.append(portItemfromSignal(s))
    
         self.discover(interfaces)
         

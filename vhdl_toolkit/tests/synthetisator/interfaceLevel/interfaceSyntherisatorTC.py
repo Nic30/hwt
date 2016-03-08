@@ -1,6 +1,6 @@
 import unittest
-from vhdl_toolkit.types import DIRECTION
-from python_toolkit.arrayQuery import where, single
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
+from python_toolkit.arrayQuery import where
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import BlackBox
 from vhdl_toolkit.interfaces.std import Ap_none

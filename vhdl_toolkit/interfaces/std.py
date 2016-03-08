@@ -1,5 +1,5 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
-from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from vhdl_toolkit.synthetisator.param import Param
 
 D = DIRECTION

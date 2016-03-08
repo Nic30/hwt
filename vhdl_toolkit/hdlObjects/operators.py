@@ -1,5 +1,8 @@
 from vhdl_toolkit.simExceptions import SimNotInitialized
 
+class InvalidOperandExc(Exception):
+    pass
+
 class Op():
     """
     class of operator in expression tree

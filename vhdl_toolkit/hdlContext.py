@@ -3,7 +3,8 @@
 
 from vhdl_toolkit.hdlObjects.reference import VhdlRef 
 from vhdl_toolkit.nonRedefDict import NonRedefDict
-from vhdl_toolkit.types import VHDLType, Unconstrained
+from vhdl_toolkit.hdlObjects.specialValues import Unconstrained
+from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
 

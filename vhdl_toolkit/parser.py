@@ -2,25 +2,25 @@
 # -*- coding: utf-8 -*-
 
 from subprocess import Popen, PIPE
-import json
-import inspect
-import os
+import json, inspect, os
 
+from vhdl_toolkit.types import VHDLType
 from vhdl_toolkit.hdlContext import HDLCtx, BaseVhdlContext, HDLParseErr, FakeStd_logic_1164, \
     RequireImportErr
+
 from vhdl_toolkit.hdlObjects.reference import VhdlRef
 from vhdl_toolkit.hdlObjects.operators import Op
 from vhdl_toolkit.hdlObjects.operatorDefinitions import AllOps
-from vhdl_toolkit.hdlObjects.expr import Unconstrained
-from vhdl_toolkit.hdlObjects.variables import PortItem, VHDLGeneric
+from vhdl_toolkit.hdlObjects.specialValues import Unconstrained
+from vhdl_toolkit.hdlObjects.portItem import PortItem 
+from vhdl_toolkit.hdlObjects.variables import VHDLGeneric
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.package import PackageHeader, PackageBody
-
-from vhdl_toolkit.types import VHDLType
-from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.hdlObjects.architecture import Architecture
 from vhdl_toolkit.hdlObjects.component import ComponentInstance 
 from vhdl_toolkit.hdlObjects.value import Value
+
+from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.rtlLevel.signal import SignalNode
 
 """

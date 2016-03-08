@@ -2,8 +2,8 @@ from python_toolkit.arrayQuery import single, arr_any, NoValueExc
 from python_toolkit.stringUtils import matchIgnorecase
 from vhdl_toolkit.hdlObjects.architecture import ComponentInstance
 from vhdl_toolkit.hdlObjects.entity import Entity
-from vhdl_toolkit.hdlObjects.variables import PortItem
-from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.hdlObjects.portItem import PortItem
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from vhdl_toolkit.synthetisator.param import getParamVhdl
 
 class Unit():    

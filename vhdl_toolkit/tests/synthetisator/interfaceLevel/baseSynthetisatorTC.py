@@ -1,5 +1,5 @@
 import unittest
-from vhdl_toolkit.types import INTF_DIRECTION, DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, DIRECTION
 from python_toolkit.arrayQuery import single, NoValueExc
 
 

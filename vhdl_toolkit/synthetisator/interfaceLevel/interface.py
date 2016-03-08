@@ -1,9 +1,9 @@
 from copy import deepcopy
-from vhdl_toolkit.types import DIRECTION, INTF_DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import ExtractableInterface 
-
+from vhdl_toolkit.hdlObjects.portConnection import PortConnection
                    
 class Interface(Buildable, ExtractableInterface):
     """
@@ -178,7 +178,9 @@ class Interface(Buildable, ExtractableInterface):
                 self._sig = s
                 
                 if hasattr(self, '_originEntityPort'):
-                    self._sig.connectToPortItem(self._originSigLvlUnit, self._originEntityPort)
+                    PortConnection.connectSigToPortItem(self._sig,
+                                                        self._originSigLvlUnit,
+                                                        self._originEntityPort)
                 return [s]
     
     def _getPhysicalName(self):
