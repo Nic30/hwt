@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from vhdl_toolkit.templates import VHDLTemplates
 from vhdl_toolkit.hdlObjects.component import Component, ComponentInstance 
-
-  
 
 class Architecture(object):
     """basic vhdl architecture"""
@@ -29,7 +26,6 @@ class Architecture(object):
         self.routeSignalsByName2componentInstance(ci)
         self.componentInstances.append(ci)
         
-    def __str__(self):
-        self.variables.sort(key=lambda x: x.name) 
-        self.processes.sort(key=lambda x: x.name)
-        return VHDLTemplates.architecture.render(self.__dict__)
+    def __repr__(self):
+        from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        return VhdlSerializer.ArchitectureAsVhdl(self)
