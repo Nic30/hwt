@@ -1,103 +1,36 @@
-import types
-from vhdl_toolkit.hdlObjects.typeDefinitions import VHDLBoolean
+from vhdl_toolkit.simExceptions import SimNotInitialized
 
-
-class OpDefinition():
-    
-    @staticmethod
-    def addOperand_default(operator, operand):
-        operator.op.append(operand)
-    
-    @staticmethod
-    def addOperand_logic(operator, operand):
-        from vhdl_toolkit.synthetisator.rtlLevel.typeConversions import expr2cond
-        operator.op.append(expr2cond(operand))
-    
-    def __init__(self, _id, precedence, strOperatorOrFn, evalFn,
-                 getReturnType=lambda op : op.op[0].var_type,
-                 addOperand=addOperand_default.__func__): # (addOperand_default is staticmethod object)
-        self.id = _id
-        self.precedence = precedence
-        self.strOperator = strOperatorOrFn
-        self._evalFn = evalFn
-        self.getReturnType = getReturnType
-        self.addOperand = addOperand
-    
-    def eval(self, operator):
-        it = iter(operator.op)
-        try:
-            initializer = Op.getLit(next(it))
-        except StopIteration:
-            raise TypeError('OpDefinition.eval, can not reduce empty sequence ')
-        accum_value = initializer
-        for x in it:
-            accum_value = self._evalFn(accum_value, Op.getLit(x))
-        return accum_value
-    
-    def str(self, op):
-        def p(op):
-            if isinstance(op, Op) and op.operator.precedence > self.precedence:
-                return "(%s)" % str(op)
-            else:
-                return str(op)
-             
-        if isinstance(self.strOperator, str):
-            return  self.strOperator.join(map(p, self.op))
-        else:
-            return self.strOperator(map(p, op))
-    def __repr__(self):
-        return "<OpDefinition %s>" % (self.strOperator)
-            
-class AllOps():
-    # https://en.wikipedia.org/wiki/Order_of_operations
-    NOT = OpDefinition('NOT', 3, lambda op: "NOT " + str(op),
-                       lambda a : not a, lambda op: VHDLBoolean(),
-                       OpDefinition.addOperand_logic)
-    EVENT = OpDefinition('EVENT', 3, lambda op:  str(op) + "'EVENT", 
-                         lambda a : NotImplemented(),
-                         lambda op: VHDLBoolean())
-    RISING_EDGE = OpDefinition('RISING_EDGE', 3, lambda op: "RISING_EDGE(" + str(op) + ")",
-                       lambda a : NotImplemented())
-    DIV = OpDefinition('DIV', 3, '/', lambda a, b : a // b)
-    PLUS = OpDefinition('PLUS', 4, '+', lambda a, b : a + b)
-    MINUS = OpDefinition('MINUS', 4, '-', lambda a, b : a - b)
-    MULT = OpDefinition('MULT', 4, '*', lambda a, b : a * b)
-    NEQ = OpDefinition('NEQ', 7, '!=', lambda a, b : a != b,
-                        lambda op: VHDLBoolean())
-    XOR = OpDefinition('XOR', 7, 'XOR', lambda a, b : a != b,
-                        lambda op: VHDLBoolean(),
-                       OpDefinition.addOperand_logic)
-    EQ = OpDefinition('EQ', 7, '==', lambda a, b : a == b,
-                        lambda op: VHDLBoolean())
-    AND_LOG = OpDefinition('AND', 11, 'AND', lambda a, b : a and b,
-                        lambda op: VHDLBoolean(),
-                       OpDefinition.addOperand_logic)
-    OR_LOG = OpDefinition('OR', 12, 'OR', lambda a, b : a or b,
-                        lambda op: VHDLBoolean(),
-                       OpDefinition.addOperand_logic)
-    DOWNTO = OpDefinition("DOWNTO", 13, 'DOWNTO', lambda a, b : [a, b],
-                        lambda op: list)
-    allOps = {}
-    for op in [PLUS, MINUS, DIV, MULT, DOWNTO]:
-        assert (op.id not in allOps)
-        allOps[op.id] = op
-        
-    @classmethod
-    def opByName(cls, name):
-        return cls.allOps[name]
-        
-class Op(AllOps):
-
+class Op():
+    """
+    class of operator in expression tree
+    @ivar ops: list of operands
+    @ivar evalFn: function to evaluate this operator
+    @ivar operator: OpDefinition instance 
+    @ivar result: result signal of this operator
+    """
     def __init__(self, operator, operands):
-        self.op = list()
+        self.ops = list()
         for op in operands:
             operator.addOperand(self, op)
-        self.__call__ = types.MethodType(lambda self : self.operator.eval(self), self)
+        self.evalFn = lambda : self.operator.eval(self)
         self.operator = operator
         
-    def __call__(self):
-        return self.evalFn()
-    
+    def simPropagateChanges(self):
+        v = self.evalFn()
+        try:
+            sim = self._simulator
+        except AttributeError:
+            raise SimNotInitialized("Operator '%s' is not bounded to any simulator" % (str(self)))
+        env = sim.env
+        c = sim.config
+        
+        yield env.timeout(c.opPropagDur)
+        
+        if c.log:
+            # [BUG] str method on Op displays new values, but they are not propageted yet
+            c.logger('%d: "%s" -> %s' % (env.now, str(self), str(v))) 
+        yield env.process(self.result.simUpdateVal(v))
+        
     def getReturnType(self):
         return self.operator.getReturnType(self)
     

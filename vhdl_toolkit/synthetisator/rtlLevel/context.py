@@ -9,6 +9,7 @@ from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, walkSigSouces, Po
     discoverSensitivity
 from vhdl_toolkit.templates import VHDLTemplates  
 from vhdl_toolkit.types import VHDLType
+from vhdl_toolkit.hdlObjects.value import Value
 
 def renderIfTree(assigments):
     # optimizedSrc = expr_optimize([dp.src])
@@ -23,7 +24,7 @@ def renderIfTree(assigments):
             yield a
 
 
-class Context(object):
+class Context():
     """
     Container for signals and units
     @ivar signals: dict of all signals in context
@@ -50,6 +51,8 @@ class Context(object):
         """
         if name in self.signals:
             raise Exception('signal name "%s" is not unique' % (name))
+        if defVal is not None and not isinstance(defVal, Value):
+            defVal = Value.fromVal(defVal, defVal.__class__)
         
         t = VHDLType()
         t.width = width
@@ -69,7 +72,7 @@ class Context(object):
         else:
             if syncRst:
                 raise Exception()
-            s = Signal(name, t, defVal)
+            s = Signal(name, t, defaultVal=defVal)
         self.signals[name] = s
         return s
     

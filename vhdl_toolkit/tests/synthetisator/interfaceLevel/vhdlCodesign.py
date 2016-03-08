@@ -5,6 +5,7 @@ from python_toolkit.arrayQuery import single
 from vhdl_toolkit.interfaces.amba import AxiLite
 from vhdl_toolkit.interfaces.std import Ap_clk, \
     Ap_rst_n, BramPort
+import unittest
 ILVL_VHDL = '../../../samples/iLvl/vhdl/'
 
 
@@ -137,3 +138,13 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(a.slv.C_S_AXI_DATA_WIDTH.get(), DW)
         
         self.assertEqual(a.slv.S_AXI.ar.addr._width.get(), AW)        
+        
+if __name__ == '__main__':
+    suite = unittest.TestSuite()
+    #suite.addTest(VhdlCodesignTC('test_simplePortDirections'))
+    suite.addTest(unittest.makeSuite(VhdlCodesignTC))
+    runner = unittest.TextTestRunner(verbosity=3)
+    runner.run(suite)
+        
+        
+        

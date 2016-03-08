@@ -1,6 +1,8 @@
 from vhdl_toolkit.hdlObjects.expr import  value2vhdlformat
 from vhdl_toolkit.hdlObjects.assigment import Assignment
 from vhdl_toolkit.types import InvalidVHDLTypeExc
+from vhdl_toolkit.hdlObjects.value import Value
+from vhdl_toolkit.synthetisator.param import getParam
 
 class VHDLVariable():
     def __init__(self, name, var_type, defaultVal=None):
@@ -9,7 +11,12 @@ class VHDLVariable():
         self.isConstant = False
         self.isShared = False
         self.defaultVal = defaultVal
+        self._setDefValue()
         
+    def _setDefValue(self):
+        self._val = Value.fromVal(getParam(self.defaultVal), self.var_type.width)
+        self._oldVal = self._val.clone()
+        self._oldVal.vldMask = 0
             
     def __str__(self):
         if self.isShared :
@@ -37,17 +44,19 @@ class SignalItem(VHDLVariable):
     def eq(self, src):
         return Assignment(src, self)
     
-    def __str__(self):
-        if self.isConstant:
-            prefix = "CONSTANT"
+    def __str__(self, declaration=False):
+        if declaration:
+            if self.isConstant:
+                prefix = "CONSTANT"
+            else:
+                prefix = "SIGNAL"
+            s = prefix + " %s : %s" % (self.name, str(self.var_type))
+            if hasattr(self, "defaultVal") and self.defaultVal is not None:
+                return s + " := %s" % value2vhdlformat(self, self.defaultVal)
+            else:
+                return s 
         else:
-            prefix = "SIGNAL"
-        s = prefix + " %s : %s" % (self.name, str(self.var_type))
-        if hasattr(self, "defaultVal") and self.defaultVal is not None:
-            return s + " := %s" % value2vhdlformat(self, self.defaultVal)
-        else:
-            return s 
-
+            return self.name
     
 class PortItem(SignalItem):
     """basic vhdl entity port item"""

@@ -9,6 +9,7 @@ from vhdl_toolkit.tests.operators import OperatorTC
 from vhdl_toolkit.tests.synthetisator.rtlLevel.synthesis import TestCaseSynthesis
 from vhdl_toolkit.tests.hierarchyExtractor import HierarchyExtractorTC
 from vhdl_toolkit.tests.parser import ParserTC
+from vhdl_toolkit.tests.synthetisator.value import  ValueTC
 
 if __name__ == "__main__":
 
@@ -21,6 +22,7 @@ if __name__ == "__main__":
         loader.loadTestsFromTestCase(Expr2CondTC),
         loader.loadTestsFromTestCase(OperatorTC),
         loader.loadTestsFromTestCase(TestCaseSynthesis),
+        loader.loadTestsFromTestCase(ValueTC),
     ))
 
     runner = TextTestRunner(verbosity=2)

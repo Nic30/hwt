@@ -2,7 +2,7 @@ import unittest
 
 from vhdl_toolkit.hdlObjects.assigment import Assignment
 from vhdl_toolkit.synthetisator.rtlLevel.context import Context
-from vhdl_toolkit.hdlObjects.operators import Op
+from vhdl_toolkit.hdlObjects.operatorDefinitions import AllOps
 
 class TestCaseSynthesis(unittest.TestCase):
 
@@ -10,33 +10,34 @@ class TestCaseSynthesis(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.c = Context("test")
 
-    def testOpRisingEdge(self):
+    def testOpRisingEdgeMultipletimesSameObj(self):
         clk = self.c.sig("ap_clk", 1)
         self.assertEqual(clk.opOnRisigEdge(), clk.opOnRisigEdge())
     
     
     def testSyncSig(self):
         c = self.c
-        clk = c.sig("ap_clk", 1)
-        a = c.sig("a", 1, clk=clk)
-        self.assertEqual(len(a.expr), 1)
-        assig = a.expr[0]
+        clk = c.sig("ap_clk")
+        a = c.sig("a", width=1, clk=clk)
+        self.assertEqual(len(a.drivers), 1)
+        assig = next(iter(a.drivers))
         self.assertIsInstance(assig, Assignment)
         self.assertEqual(len(assig.cond), 1)
         self.assertEqual(assig.src, a.next)
         self.assertEqual(assig.dst , a)
         onRisE = assig.cond.pop()
-        self.assertEqual(onRisE.origin.operator, Op.RISING_EDGE)
-        self.assertEqual(onRisE.origin.op[0], clk)
+        self.assertEqual(onRisE.origin.operator, AllOps.RISING_EDGE)
+        self.assertEqual(onRisE.origin.ops[0], clk)
     
     def testSyncSigWithReset(self):
         c = self.c
-        clk = c.sig("ap_clk", 1)
-        rst = c.sig("ap_rst", 1)
+        clk = c.sig("ap_clk")
+        rst = c.sig("ap_rst")
         a = c.sig("a", 1, clk=clk, syncRst=rst, defVal=0)
-        self.assertEqual(len(a.expr), 2)
-        a_reset = a.expr[0]
-        a_next = a.expr[1]
+        self.assertEqual(len(a.drivers), 2)
+        d_it = iter(sorted(list(a.drivers), key=lambda o: id(o))) 
+        a_reset = next(d_it)
+        a_next = next(d_it)
         self.assertIsInstance(a_reset, Assignment)
         self.assertIsInstance(a_next, Assignment)
         self.assertEqual(a_reset.cond, {clk.opOnRisigEdge(), rst})

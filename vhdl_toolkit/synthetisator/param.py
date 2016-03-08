@@ -10,12 +10,15 @@ class Param():
         self.parent = None
         self._expr = None
         a = 1
+        self.endpoints = set()
         for propName in dir(initval):
+            #extend param object by initval methods
             prop = getattr(initval, propName)
             if isinstance(prop, a.__abs__.__class__):
                 def wrap(*args, **kwargs):
                     return getattr(self.val, propName)(*args, **kwargs)
                 setattr(self, propName, wrap)
+                
     def get(self):
         if self.parent:
             v = self.parent.get()

@@ -10,9 +10,12 @@ from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.hdlObjects.architecture import Component
 from vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.hdlObjects.value import Value
 
 from python_toolkit.arrayQuery import single
 from vhdl_toolkit.types import DIRECTION
+
+
 
 def defaultUnitName(unit, sugestedName=None):
     if not sugestedName:
@@ -172,7 +175,7 @@ class BlackBox(Unit):
             # connect outputs to dummy value
             for s in signals:
                 if s._interface._getSignalDirection() == DIRECTION.IN:
-                    s.assignFrom(0)
+                    s.assignFrom(Value.fromVal(0, int))
         if not externInterf:
             raise  Exception("Can not find any external interface for unit " + name \
                               + "- there is no such a thing as unit without interfaces")

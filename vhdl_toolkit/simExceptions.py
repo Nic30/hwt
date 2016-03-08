@@ -1,0 +1,3 @@
+
+class SimNotInitialized(Exception):
+    pass
