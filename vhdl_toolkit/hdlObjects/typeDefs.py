@@ -239,11 +239,19 @@ class Std_logic_vector(HdlType):
         width = abs(width[1].val - width[0].val) + 1
         v = val.val
         if val.vldMask is None:
-            if width % 4 == 0:
-                return ('X"%0' + str(width % 4) + 'x"') % (v)
-            else:
-                return ('B"{0:0' + str(width) + 'b}"').format(v)
+            return ('"{0:0' + str(width) + 'b}"').format(v)
         else:
+            buff = []
+            for i in range(width):
+                mask = (1 << i)
+                b = v & mask
+                
+                if val.vldMask & mask:
+                    s = "1" if b else "0"
+                else:
+                    s = "X"
+                buff.append(s)
+            return '"%s"' % (''.join(buff))
             raise NotImplementedError("vldMask not implemented yet")
 
     
