@@ -10,7 +10,7 @@ from vhdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
 from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkUnitInputs, walkSignalsInExpr, \
     discoverSensitivity, walkSigSouces, signalHasDriver
 from vhdl_toolkit.templates import VHDLTemplates  
-from vhdl_toolkit.types import VHDLType
+from vhdl_toolkit.hdlObjects.typeDefs import BIT
 from vhdl_toolkit.hdlObjects.value import Value
 
 def renderIfTree(assigments):
@@ -44,24 +44,22 @@ class Context():
             self.globals = globalNames
         self.signals = {}
         self.name = name
+
     
-    def sig(self, name, width=1, clk=None, syncRst=None, defVal=None):
+    def sig(self, name, typ=BIT, clk=None, syncRst=None, defVal=None):
         """
         generate new signal in context
         @param clk: clk signal, if specified signal is synthetized as SyncSignal
         @param syncRst: reset 
         """
+
         if name in self.signals:
             raise Exception('signal name "%s" is not unique' % (name))
         if defVal is not None and not isinstance(defVal, Value):
-            defVal = Value.fromVal(defVal, defVal.__class__)
-        
-        t = VHDLType()
-        t.width = width
-        t.ctx = self.globals
+            defVal = Value.fromPyVal(defVal, typ)
 
         if clk:
-            s = SyncSignal(name, t, defVal)
+            s = SyncSignal(name, typ, defVal)
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None and defVal is not None:
@@ -74,7 +72,7 @@ class Context():
         else:
             if syncRst:
                 raise Exception()
-            s = Signal(name, t, defaultVal=defVal)
+            s = Signal(name, typ, defaultVal=defVal)
         self.signals[name] = s
         return s
     
@@ -103,12 +101,6 @@ class Context():
                     
         for s in where(interfaces, lambda s: signalHasDriver(s)):  # walk my outputs
             discoverDatapaths(s)
-    @staticmethod
-    def typeForParam(p):
-        t = VHDLType()
-        t.ctx = {}
-        t.width = int
-        return t 
     
     def synthetize(self, interfaces):
         ent = Entity()
@@ -118,14 +110,13 @@ class Context():
         ent.ctx = self.globals
         for k, v in self.globals.items():
             k = k.upper()
-            var_type = Context.typeForParam(v)
-            v.name = k
-            g = VHDLGeneric(k, var_type, v)
+            #v.name = k
+            g = VHDLGeneric(k, v.dtype, v)
             ent.generics.append(g)
         
         # create ports
         for s in interfaces:
-            s.var_type.ctx = ent.ctx
+            #s.dtype.ctx = ent.ctx
             ent.port.append(portItemfromSignal(s))
    
         self.discover(interfaces)

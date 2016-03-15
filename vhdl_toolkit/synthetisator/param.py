@@ -1,91 +1,57 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from vhdl_toolkit.hdlObjects.typeDefs import INT, BOOL, STR
+from vhdl_toolkit.hdlObjects.value import Value
 
-class Param():
+class Param(Signal):
     """
     Class used in same way as generics in VHDL, it is wrapper around the value
     """
     def __init__(self, initval):
+        typeResolution = {int: INT, bool: BOOL, str: STR}
+        if not isinstance(initval, Value):
+            try:
+                t = typeResolution[initval.__class__]
+            except KeyError:
+                raise Exception("Can not resolve type of parameter")
+            initval = Value.fromPyVal(initval, t)
+        super(Param, self).__init__(None, t, defaultVal=initval)
         self.val = initval
         self.parent = None
-        self._expr = None
-        a = 1
-        self.endpoints = set()
-        for propName in dir(initval):
-            #extend param object by initval methods
-            prop = getattr(initval, propName)
-            if isinstance(prop, a.__abs__.__class__):
-                def wrap(*args, **kwargs):
-                    return getattr(self.val, propName)(*args, **kwargs)
-                setattr(self, propName, wrap)
+        self.childs = set()
                 
     def get(self):
-        if self.parent:
-            v = self.parent.get()
-        else:
-            v = self.val
-        if self._expr:
-            return self._expr(v)
-        else:
-            return v
+        return self.val
   
-    def inherit(self, param):
+    def inherit(self, parent):
         """
-        self will allways have value of param
+        self will always have value of parent
         """
-        self.parent = param
+        self.set(parent.get())
+        parent.childs.add(self)
     
     def set(self, val):
         """
         set value of this param
         """
         self.val = val
-        
-    def expr(self, fn):
-        """
-        set value of this param by expression
-        """
-        p = Param(self.val)
-        p.inherit(self)
-        p._expr = fn
-        return p
+        for ch in self.childs:
+            ch.set(val)
     
-    def toVhdlStr(self):
-        v = self
-        while v.parent:
-            v = v.parent
-        if hasattr(v, "name"):
-            return v.name
-        else:
-            return v.get()
-    
-    def __str__(self):
-        if hasattr(self, "name"):
-            return self.name.upper()
-        if not self.parent:
-            return str(self.get())
-        else:
-            if self._expr:
-                return str(self.get())
-                #raise NotImplementedError()
-            return str(self.parent)
-
     def __repr__(self):
-        return "<%s, val=%s>" % (self.__class__.__name__, self.get()) 
+        return "<%s, val=%s>" % (self.__class__.__name__, str(self.get())) 
         
 
-def getParamVhdl(p):
-    if isinstance(p, Param):
-        return p.toVhdlStr()
-    else:
-        return p
-    
 def getParam(p):
     """
     get param value or value
     """
     if isinstance(p, Param):
-        return getParam(p.get())
+        v = p.get()
+        # use param inheritance instead of param as param value
+        assert(not isinstance(v, Param)) 
+        return v
     else:
         return p
     

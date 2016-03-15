@@ -14,5 +14,5 @@ class Entity(object):
     
     def __repr__(self):
         from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
-        return VhdlSerializer.EntityAsVhdl(self)
+        return VhdlSerializer.EntityAsHdl(self)
     

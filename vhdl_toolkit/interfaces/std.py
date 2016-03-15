@@ -1,17 +1,20 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.hdlObjects.typeDefs import BIT
+from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
 
 D = DIRECTION
 
 class Ap_none(Interface):
-    def __init__(self, *destinations, masterDir=DIRECTION.OUT, width=1, src=None, \
+    def __init__(self, *destinations, masterDir=DIRECTION.OUT, dtype=BIT, src=None, \
                   isExtern=False, alternativeNames=None):
         Interface.__init__(self, *destinations, masterDir=masterDir, src=src, \
                            isExtern=isExtern, alternativeNames=alternativeNames)
-        self._width = width
+        self._dtype = dtype
 
-s = Ap_none        
+s = Ap_none
+     
 
 class Ap_clk(Ap_none):
     _alternativeNames = ['ap_clk', 'aclk', 'clk', 'clock']
@@ -24,7 +27,7 @@ class Ap_rst_n(Ap_none):
 
 class Ap_vld(Interface):
     DATA_WIDTH = Param(64)
-    data = s(width=DATA_WIDTH)
+    data = s(dtype=vecT(DATA_WIDTH))
     vld = s()
 
 class Ap_hs(Ap_vld):
@@ -33,9 +36,9 @@ class Ap_hs(Ap_vld):
 class BramPort_withoutClk(Interface):
     ADDR_WIDTH = Param(32)
     DATA_WIDTH = Param(64) 
-    addr = s(width=ADDR_WIDTH, alternativeNames=['addr_v'])
-    din = s(width=DATA_WIDTH, alternativeNames=['din_v'])
-    dout = s(masterDir=D.IN, width=DATA_WIDTH, alternativeNames=['dout_v'])
+    addr = s(dtype=vecT(ADDR_WIDTH), alternativeNames=['addr_v'])
+    din = s(dtype=vecT(DATA_WIDTH), alternativeNames=['din_v'])
+    dout = s(masterDir=D.IN, dtype=vecT(DATA_WIDTH), alternativeNames=['dout_v'])
     en = s()
     we = s()   
 
@@ -76,6 +79,6 @@ class SPI(Interface):
 class RGMII_channel(Interface):
     DATA_WIDTH = 4
     c = s()
-    d = s(width=DATA_WIDTH)
+    d = s(dtype=vecT(DATA_WIDTH))
     x_ctl = s()
     

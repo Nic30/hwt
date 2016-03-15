@@ -4,7 +4,6 @@ from vhdl_toolkit.hdlObjects.architecture import ComponentInstance
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.portItem import PortItem
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
-from vhdl_toolkit.synthetisator.param import getParamVhdl
 
 class Unit():    
     def __init__(self):
@@ -20,9 +19,9 @@ class Unit():
         for p in ports:
             direction = p['direction'] 
             name = p['name']
-            var_type = None  # p['type'] #[HOTFIX]
+            dtype = None  # p['type'] #[HOTFIX]
             if  direction == DIRECTION.IN or direction == DIRECTION.OUT:
-                self.port.append(PortItem(name, direction, var_type))
+                self.port.append(PortItem(name, direction, dtype))
             else:
                 raise  Exception("Invalid port type")
             
@@ -74,13 +73,14 @@ class VHDLUnit(Entity, Unit):
             
         ci.portMaps = list(map(lambda x: x.asPortMap(), self.portConnections))
         self._updateGenericsFromCtx()
+        # [TODO]
         for g in self.entity.generics:
-            v = getParamVhdl(g.defaultVal)
-            w = g.var_type.getWidth()
+            v = g.defaultVal
+            w = g.dtype.getWidth()
             if isinstance(v, int):
                 if w == int:
                     val_str = str(v)
-                elif g.var_type.getWidth() > 1:
+                elif g.dtype.getWidth() > 1:
                     val_str = 'X"{0:b}"'.format(v)
                 else:
                     val_str = str(v)

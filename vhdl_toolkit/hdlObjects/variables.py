@@ -1,63 +1,37 @@
-from vhdl_toolkit.hdlObjects.expr import  value2vhdlformat
-from vhdl_toolkit.hdlObjects.assigment import Assignment
-from vhdl_toolkit.types import InvalidVHDLTypeExc
 from vhdl_toolkit.hdlObjects.value import Value
-from vhdl_toolkit.synthetisator.param import getParam
 
 class VHDLVariable():
-    def __init__(self, name, var_type, defaultVal=None):
+    def __init__(self, name, dtype, defaultVal=None):
         self.name = name
-        self.var_type = var_type
+        self.dtype = dtype
         self.isConstant = False
         self.isShared = False
+        if defaultVal is None:
+            defaultVal = Value.fromPyVal(None, dtype) 
         self.defaultVal = defaultVal
         self._setDefValue()
         
     def _setDefValue(self):
-        self._val = Value.fromVal(getParam(self.defaultVal), self.var_type.width)
+        self._val = self.defaultVal.clone()
         self._oldVal = self._val.clone()
         self._oldVal.vldMask = 0
-            
-    def __str__(self):
-        if self.isShared :
-            prefix = "SHARED VARIABLE"
-        else:
-            prefix = "VARIABLE"
-        s = prefix + " %s : %s" % (self.name, str(self.var_type))
-        if self.defaultVal is not None:
-            return s + " := %s" % value2vhdlformat(self, self.defaultVal)
-        else:
-            return s 
+    
+    def __repr__(self):
+        from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        return VhdlSerializer.VHDLVariable(self)        
             
             
 class VHDLGeneric(VHDLVariable):
-    def __str__(self):
-        if hasattr(self, "defaultVal"):
-            return "%s : %s := %s" % (self.name, str(self.var_type),
-                                      value2vhdlformat(self, self.defaultVal))
-        else:
-            return "%s : %s" % (self.name, str(self.var_type))
+    def __repr__(self):
+        from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        return VhdlSerializer.VHDLGeneric(self)        
 
 
 class SignalItem(VHDLVariable):
     """basic vhdl signal"""
-    def eq(self, src):
-        return Assignment(src, self)
-    
-    def __str__(self, declaration=False):
-        if declaration:
-            if self.isConstant:
-                prefix = "CONSTANT"
-            else:
-                prefix = "SIGNAL"
-            s = prefix + " %s : %s" % (self.name, str(self.var_type))
-            if hasattr(self, "defaultVal") and self.defaultVal is not None:
-                return s + " := %s" % value2vhdlformat(self, self.defaultVal)
-            else:
-                return s 
-        else:
-            return self.name
-    
+    def __repr__(self):
+        from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        return VhdlSerializer.SignalItem(self)        
     
         
         

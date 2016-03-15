@@ -3,10 +3,10 @@
 
 from vhdl_toolkit.hdlObjects.reference import VhdlRef 
 from vhdl_toolkit.nonRedefDict import NonRedefDict
-from vhdl_toolkit.hdlObjects.specialValues import Unconstrained
-from vhdl_toolkit.types import VHDLType
+from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR, VECTOR, BIT, PINT, UINT
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
+from vhdl_toolkit.hdlObjects.value import Value
 
 
 class RequireImportErr(Exception):
@@ -136,30 +136,22 @@ class HDLCtx(NonRedefDict):
                     "\n".join([str(p) for p in self.packages]),
                     ])
 
-def mkType(name, width, minimum=None):
-    t = VHDLType()
-    t.name = name
-    t.width = width
-    t.min = minimum
-    return t
-
 class FakeStd_logic_1164():
     """mock of Std_logic_1164 from vhdl"""
-    std_logic_vector = mkType("std_logic_vector", Unconstrained)
+    std_logic_vector = VECTOR
     std_logic_vector_ref = VhdlRef(["ieee", "std_logic_1164", "std_logic_vector"])
-    std_logic = mkType("std_logic", 1)
+    std_logic = BIT
     std_logic_ref = VhdlRef(["ieee", "std_logic_1164", "std_logic"])
     numeric_std_ref = VhdlRef(["ieee", "numeric_std"])
     numeric_std = HDLCtx('numeric_std', None) 
         
 
 class BaseVhdlContext():
-    integer = mkType("integer", int)
-    positive = mkType("positive", int, 1)
-    natural = mkType("natural", int, 0)
-    boolean = mkType("boolean", bool)
-    string = mkType("string", str)
-    float = mkType("float", float)
+    integer = INT
+    positive = PINT
+    natural = UINT
+    boolean = BOOL
+    string = STR
    
     @classmethod
     def importFakeLibs(cls, ctx):
@@ -177,10 +169,10 @@ class BaseVhdlContext():
     def getBaseCtx(cls):
         d = HDLCtx(None, None)
         for n in [cls.integer, cls.positive, cls.natural,
-                   cls.boolean, cls.string, cls.float]:
+                   cls.boolean, cls.string]:
             d[n.name] = n
-        d['true'] = True
-        d['false'] = False
+        d['true'] = Value.fromPyVal(True, BOOL)
+        d['false'] = Value.fromPyVal(False, BOOL)
         return d
 
 

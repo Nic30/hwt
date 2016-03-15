@@ -128,9 +128,8 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(InterfaceSyntherisatorTC('test_blackBoxWithCompositePort'))
-    suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
+    suite.addTest(InterfaceSyntherisatorTC('test_SimpleUnit2_iLvl'))
+    #suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
-    # unittest.main()
 

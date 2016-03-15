@@ -1,5 +1,4 @@
-from vhdl_toolkit.hdlObjects.assigment import Assignment
-from vhdl_toolkit.templates import VHDLTemplates
+from vhdl_toolkit.hdlObjects.assignment import Assignment
 
 
 class HWProcess():
@@ -35,9 +34,4 @@ class HWProcess():
     def delay(self, clkCnt):
         self.bodyBuff.append("wait for clk_period * %d;" % (clkCnt))
     
-    def __str__(self):
-        hasCondition = not(len(self.bodyBuff) == 1 and self.bodyBuff[0].cond == set())
-        return VHDLTemplates.process.render({"name": self.name,
-                                             "hasCondition": hasCondition,
-              "sensitivityList": ", ".join(self.sensitivityList),
-              "statements": [ str(s) for s in self.bodyBuff] })
+

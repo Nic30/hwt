@@ -8,11 +8,10 @@ def portItemfromSignal(s):
         d = DIRECTION.OUT
     else:
         d = DIRECTION.IN
-    pi = PortItem(s.name, d, s.var_type)
+    pi = PortItem(s.name, d, s.dtype)
     if not hasattr(s, '_interface'):
-        w = s.var_type.width
-        s._interface = Ap_none(width=w)
-        s._interface._width = w
+        t = s.dtype
+        s._interface = Ap_none(dtype=t)
     pi._interface = s._interface
     
     return pi

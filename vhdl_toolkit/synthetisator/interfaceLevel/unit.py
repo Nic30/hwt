@@ -94,7 +94,7 @@ class Unit(Buildable):
         # construct globals (generics for entity)
         globalNames = {}
         for k, v in self._params.items():
-            globalNames[k.lower()] = v 
+            globalNames[k.lower()] = v.get() 
         return Context(self._name, globalNames=globalNames)
    
     def _synthetiseContext(self, externInterf, cntx):

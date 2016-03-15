@@ -1,9 +1,9 @@
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from vhdl_toolkit.hdlObjects.value import Value
-from vhdl_toolkit.hdlObjects.operators import Op
+from vhdl_toolkit.hdlObjects.operators import Operator
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
-from vhdl_toolkit.hdlObjects.assigment import Assignment
+from vhdl_toolkit.hdlObjects.assignment import Assignment
 from python_toolkit.arrayQuery import where
 
 
@@ -35,23 +35,6 @@ def walkUnitInputs(unit):
         if pc.portItem.direction == DIRECTION.IN:
             yield pc.sig
 
-def _walkAllRelatedSignals(obj, discovered=None):
-    """
-    Walk every code element and discover every signal which has any relation to this object 
-    (even not direct)
-    """
-    if isinstance(obj, Value):
-        raise StopIteration()
-    elif isinstance(obj, Op):
-        for op in obj.ops:
-            yield from _walkAllRelatedSignals(op, discovered=discovered)
-    elif isinstance(obj, Signal):
-        yield from walkAllRelatedSignals(obj, discovered=discovered)
-    elif isinstance(obj, Assignment):
-        for s in [obj.src, obj.dst]:
-            yield from _walkAllRelatedSignals(s, discovered=discovered)
-    else:
-        raise NotImplementedError("walkAllRelatedSignals not implemented for node %s" % (str(obj)))
 
 def walkAllOriginSignals(sig, discovered=None):
     """
@@ -66,11 +49,11 @@ def walkAllOriginSignals(sig, discovered=None):
     discovered.add(sig)
     
     if sig.drivers:
-        yield sig
+       
         for obj in sig.drivers:
             if isinstance(obj, Value):
                 raise StopIteration()
-            elif isinstance(obj, Op):
+            elif isinstance(obj, Operator):
                 for op in obj.ops:
                     if isinstance(op, Signal):
                         yield from walkAllOriginSignals(op, discovered=discovered)
@@ -80,7 +63,28 @@ def walkAllOriginSignals(sig, discovered=None):
                 yield from walkAllOriginSignals(obj.src, discovered)
             else:
                 raise NotImplementedError("walkAllOriginSignals not implemented for %s" % (str(obj)))
-    
+    else:
+        yield sig
+
+def _walkAllRelatedSignals(obj, discovered=None):
+    """
+    Walk every code element and discover every signal which has any relation to this object 
+    (even not direct)
+    """
+    if isinstance(obj, Value):
+        raise StopIteration()
+    elif isinstance(obj, Operator):
+        for op in obj.ops:
+            yield from _walkAllRelatedSignals(op, discovered=discovered)
+    elif isinstance(obj, Signal):
+        yield from walkAllRelatedSignals(obj, discovered=discovered)
+    elif isinstance(obj, Assignment):
+        for s in [obj.src, obj.dst]:
+            yield from _walkAllRelatedSignals(s, discovered=discovered)
+    else:
+        raise NotImplementedError("walkAllRelatedSignals not implemented for node %s" % (str(obj)))
+
+        
 def walkAllRelatedSignals(sig, discovered=None):
     """
     Walk every code element and discover every signal which has any relation to this signal 
@@ -101,7 +105,7 @@ def walkAllRelatedSignals(sig, discovered=None):
 def walkSignalsInExpr(expr):
     if isinstance(expr, Value):
         return
-    elif isinstance(expr, Op):
+    elif isinstance(expr, Operator):
         for op in expr.ops:
             if op != expr:
                 yield from walkSignalsInExpr(op)
@@ -124,7 +128,7 @@ def discoverSensitivity(datapath):
 def walkSigSouces(sig, parent=None):    
     if isinstance(sig, int):
         return
-    elif isinstance(sig, Op):
+    elif isinstance(sig, Operator):
         for op in sig.op:
             if op != parent:
                 yield from walkSigSouces(op)

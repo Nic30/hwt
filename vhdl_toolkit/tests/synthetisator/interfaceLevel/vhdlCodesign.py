@@ -6,6 +6,7 @@ from vhdl_toolkit.interfaces.amba import AxiLite
 from vhdl_toolkit.interfaces.std import Ap_clk, \
     Ap_rst_n, BramPort
 import unittest
+from vhdl_toolkit.hdlObjects.typeDefs import INT
 ILVL_VHDL = '../../../samples/iLvl/vhdl/'
 
 
@@ -52,14 +53,14 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         natG = single(u._entity.generics, lambda x : x.name == "nat")
         posG = single(u._entity.generics, lambda x : x.name == "pos")
         intG = single(u._entity.generics, lambda x : x.name == "int")
-        self.assertTrue(natG.var_type.width == int)
-        self.assertTrue(posG.var_type.width == int) 
-        self.assertTrue(intG.var_type.width == int) 
+        self.assertTrue(natG.dtype == INT)
+        self.assertTrue(posG.dtype == INT) 
+        self.assertTrue(intG.dtype == INT) 
         
         
-        self.assertTrue(natG.var_type.min == 0)
-        self.assertTrue(posG.var_type.min == 1) 
-        self.assertTrue(intG.var_type.min == None) 
+        self.assertTrue(natG.dtype.min == 0)
+        self.assertTrue(posG.dtype.min == 1) 
+        self.assertTrue(intG.dtype.min == None) 
     
     def test_axiLiteSlave2(self):
         class AxiLiteSlave2(UnitWithSource):

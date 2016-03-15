@@ -28,4 +28,4 @@ class Architecture(object):
         
     def __repr__(self):
         from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
-        return VhdlSerializer.ArchitectureAsVhdl(self)
+        return VhdlSerializer.ArchitectureAsHdl(self)

@@ -1,7 +1,7 @@
 import simpy
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkAllOriginSignals
-from vhdl_toolkit.hdlObjects.operators import Op
+from vhdl_toolkit.hdlObjects.operators import Operator
 from vhdl_toolkit.hdlObjects.value import Value
 
 class HdlSimulatorConfig():
@@ -32,7 +32,7 @@ class HdlSimulator():
                     o._setDefValue()
                     for e in o.endpoints:
                         injectSignal(e)
-            elif isinstance(o, Op):
+            elif isinstance(o, Operator):
                 o._simulator = self
                 injectSignal(o.result)
             elif isinstance(o, Value):
@@ -62,9 +62,10 @@ class HdlSimulator():
         self.env.process(self.initSignals(signals))    
         self.env.run(until=time)
 
-def staticEval(sig):
-    #[TODO] real static evaluation based on expression tree
+def staticEval(sig, log=False):
+    # [TODO] real static evaluation based on expression tree
     sim = HdlSimulator()
-    sigs = walkAllOriginSignals(sig)
+    sim.config.log = log
+    sigs = list(walkAllOriginSignals(sig))
     sim.simSignals(sigs, time=100 * sim.ms)
     return sig._val

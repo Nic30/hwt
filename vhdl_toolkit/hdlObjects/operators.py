@@ -3,7 +3,7 @@ from vhdl_toolkit.simExceptions import SimNotInitialized
 class InvalidOperandExc(Exception):
     pass
 
-class Op():
+class Operator():
     """
     class of operator in expression tree
     @ivar ops: list of operands
@@ -13,10 +13,11 @@ class Op():
     """
     def __init__(self, operator, operands):
         self.ops = list()
-        for op in operands:
-            operator.addOperand(self, op)
         self.evalFn = lambda : self.operator.eval(self)
         self.operator = operator
+        for op in operands:
+            operator.addOperand(self, op)
+
         
     def simPropagateChanges(self):
         v = self.evalFn()
@@ -37,5 +38,5 @@ class Op():
     def getReturnType(self):
         return self.operator.getReturnType(self)
     
-    def __str__(self):
-        return self.operator.str(self)
+    def asVhdl(self, serializer):
+        return self.operator.str(self, serializer)

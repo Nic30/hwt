@@ -1,24 +1,25 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
 from vhdl_toolkit.synthetisator.param import Param, inheritAllParams
 from vhdl_toolkit.interfaces.std import s, D
+from vhdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 
 
 class AxiStream_withoutSTRB(Interface):
     DATA_WIDTH = Param(64)
     last = s(masterDir=D.OUT, alternativeNames=['tlast' ])
-    data = s(masterDir=D.OUT, width=DATA_WIDTH, alternativeNames=['tdata' ])
+    data = s(masterDir=D.OUT, dtype=vecT(DATA_WIDTH), alternativeNames=['tdata' ])
     ready = s(masterDir=D.IN, alternativeNames=['tready' ])
     valid = s(masterDir=D.OUT, alternativeNames=['tvalid' ])
 
 class AxiStream(AxiStream_withoutSTRB):
     strb = s(masterDir=D.OUT,
-             width=AxiStream_withoutSTRB.DATA_WIDTH.expr(lambda x: x // 8),
+             dtype=vecT(AxiStream_withoutSTRB.DATA_WIDTH.opDiv(hInt(8))),
              alternativeNames=['tstrb', 'keep', 'tkeep' ])
 
 class Axi_user(Interface):
     USER_WIDTH = Param(0)
     user = s(masterDir=D.OUT,
-             width=USER_WIDTH,
+             dtype=vecT(USER_WIDTH),
              alternativeNames=['tuser'])   
 
 class AxiStream_withUserAndNoStrb(AxiStream_withoutSTRB, Axi_user):
@@ -29,27 +30,27 @@ class AxiStream_withUserAndStrb(AxiStream, Axi_user):
     
 class AxiLite_addr(Interface):
     ADDR_WIDTH = Param(32)
-    addr = s(masterDir=D.OUT, width=ADDR_WIDTH, alternativeNames=['addr_v'])
+    addr = s(masterDir=D.OUT, dtype=vecT(ADDR_WIDTH), alternativeNames=['addr_v'])
     ready = s(masterDir=D.IN)
     valid = s(masterDir=D.OUT)
 
 class AxiLite_r(Interface):
     DATA_WIDTH = Param(64)
-    data = s(masterDir=D.IN, width=DATA_WIDTH, alternativeNames=['data_v'])
-    resp = s(masterDir=D.IN, width=2, alternativeNames=['resp_v'])
+    data = s(masterDir=D.IN, dtype=vecT(DATA_WIDTH), alternativeNames=['data_v'])
+    resp = s(masterDir=D.IN, dtype=vecT(2), alternativeNames=['resp_v'])
     ready = s(masterDir=D.OUT)
     valid = s(masterDir=D.IN)
 
 class AxiLite_w(Interface):
     DATA_WIDTH = Param(64)
-    data = s(masterDir=D.OUT, width=DATA_WIDTH, alternativeNames=['data_v'])
+    data = s(masterDir=D.OUT, dtype=vecT(DATA_WIDTH), alternativeNames=['data_v'])
     strb = s(masterDir=D.OUT,
-             width=DATA_WIDTH.expr(lambda x: x // 8), alternativeNames=['strb_v'])
+             dtype=vecT(DATA_WIDTH.opDiv(hInt(8))), alternativeNames=['strb_v'])
     ready = s(masterDir=D.IN)
     valid = s(masterDir=D.OUT)
     
 class AxiLite_b(Interface):
-    resp = s(masterDir=D.IN, width=2, alternativeNames=['resp_v'])
+    resp = s(masterDir=D.IN, dtype=vecT(2), alternativeNames=['resp_v'])
     ready = s(masterDir=D.OUT)
     valid = s(masterDir=D.IN)
 
@@ -85,29 +86,29 @@ class AxiLite_xil(AxiLite):
 
 class Axi4_addr(AxiLite_addr):
     ID_WIDTH = Param(3)
-    id = s(masterDir=D.OUT, width=ID_WIDTH, alternativeNames=['id_v'])
-    burst = s(masterDir=D.OUT, width=2, alternativeNames=['burst_v'])
-    cache = s(masterDir=D.OUT, width=4, alternativeNames=['cache_v'])
-    len = s(masterDir=D.OUT, width=7, alternativeNames=['len_v'])
-    lock = s(masterDir=D.OUT, width=2, alternativeNames=['lock_v'])
-    prot = s(masterDir=D.OUT, width=3, alternativeNames=['prot_v'])
-    size = s(masterDir=D.OUT, width=3, alternativeNames=['size_v'])
-    qos = s(masterDir=D.OUT, width=4, alternativeNames=['qos_v'])
+    id = s(masterDir=D.OUT, dtype=vecT(ID_WIDTH), alternativeNames=['id_v'])
+    burst = s(masterDir=D.OUT, dtype=vecT(2), alternativeNames=['burst_v'])
+    cache = s(masterDir=D.OUT, dtype=vecT(4), alternativeNames=['cache_v'])
+    len = s(masterDir=D.OUT, dtype=vecT(7), alternativeNames=['len_v'])
+    lock = s(masterDir=D.OUT, dtype=vecT(2), alternativeNames=['lock_v'])
+    prot = s(masterDir=D.OUT, dtype=vecT(3), alternativeNames=['prot_v'])
+    size = s(masterDir=D.OUT, dtype=vecT(3), alternativeNames=['size_v'])
+    qos = s(masterDir=D.OUT, dtype=vecT(4), alternativeNames=['qos_v'])
 
 
 class Axi4_r(AxiLite_r):
     ID_WIDTH = Param(3)
-    id = s(masterDir=D.IN, width=ID_WIDTH, alternativeNames=['id_v'])
+    id = s(masterDir=D.IN, dtype=vecT(ID_WIDTH), alternativeNames=['id_v'])
     last = s(masterDir=D.IN)
 
 class Axi4_w(AxiLite_w):
     ID_WIDTH = Param(3)
-    id = s(masterDir=D.OUT, width=ID_WIDTH, alternativeNames=['id_v'])
+    id = s(masterDir=D.OUT, dtype=vecT(ID_WIDTH), alternativeNames=['id_v'])
     last = s(masterDir=D.OUT)
     
 class Axi4_b(AxiLite_b):
     ID_WIDTH = Param(3)
-    id = s(masterDir=D.IN, width=ID_WIDTH, alternativeNames=['id_v'])
+    id = s(masterDir=D.IN, dtype=vecT(ID_WIDTH), alternativeNames=['id_v'])
 
 @inheritAllParams
 class Axi4(AxiLite):

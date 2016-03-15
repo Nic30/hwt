@@ -4,6 +4,8 @@ from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import ExtractableInterface 
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
+from vhdl_toolkit.hdlObjects.typeDefs import BIT
+from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
                    
 class Interface(Buildable, ExtractableInterface):
     """
@@ -173,7 +175,7 @@ class Interface(Buildable, ExtractableInterface):
             if hasattr(self, '_sig'):
                 return [self._sig]
             else:
-                s = context.sig(prefix, self._width)
+                s = context.sig(prefix, self._dtype)
                 s._interface = self
                 self._sig = s
                 

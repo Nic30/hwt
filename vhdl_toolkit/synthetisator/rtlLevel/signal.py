@@ -1,10 +1,11 @@
-from vhdl_toolkit.hdlObjects.assigment import Assignment
-from vhdl_toolkit.types import VHDLType
+from vhdl_toolkit.hdlObjects.assignment import Assignment
+from vhdl_toolkit.hdlObjects.types import HdlType
 from vhdl_toolkit.hdlObjects.variables import SignalItem
-from vhdl_toolkit.hdlObjects.operators import Op, InvalidOperandExc
-from vhdl_toolkit.hdlObjects.operatorDefinitions import AllOps
+from vhdl_toolkit.hdlObjects.operators import Operator, InvalidOperandExc
+from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.simExceptions import SimNotInitialized
+from vhdl_toolkit.hdlObjects.typeDefs import BOOL
 
 def checkOperands(ops):
     for op in ops:
@@ -17,7 +18,7 @@ def checkOperand(op):
         raise InvalidOperandExc("Operands in hdl expressions can be only instance of Value or Signal,"
                                 + "\ngot instance of %s" % (op.__class__))
 
-#[TODO] move to operator definition
+# [TODO] move to operator definition
 class SignalNode():
 
     @staticmethod
@@ -35,7 +36,7 @@ class SignalOps():
             o = self._usedOps[operator]
             return o.result
         except KeyError:
-            o = Op(operator, [self])
+            o = Operator(operator, [self])
             self._usedOps[operator] = o
         
             return SignalNode.resForOp(o)
@@ -44,7 +45,7 @@ class SignalOps():
         checkOperands(operands)
         operands = list(operands)
         operands.insert(0, self)
-        o = Op(operator, operands)
+        o = Operator(operator, operands)
         
         return SignalNode.resForOp(o)
     
@@ -65,10 +66,7 @@ class SignalOps():
         return self.naryOp(AllOps.OR_LOG, operands)
 
     def opIsOn(self):
-        if self.onIn == 0:
-            return self.opNot()
-        else:
-            return self 
+        return self.dtype.convert(self, BOOL)
         
     def opEq(self, *operands):
         return self.naryOp(AllOps.EQ, operands)
@@ -79,6 +77,17 @@ class SignalOps():
     def opAdd(self, *operands):
         return self.naryOp(AllOps.PLUS, operands)
     
+    def opSub(self, *operands):
+        return self.naryOp(AllOps.MINUS, operands)
+    
+    def opDiv(self, divider):
+        return self.naryOp(AllOps.DIV, [divider])
+    
+    def opDownto(self, to):
+        return self.naryOp(AllOps.DOWNTO, [to])
+    
+    
+    
     def assignFrom(self, source):
         checkOperand(source)
         a = Assignment(source, self)
@@ -88,27 +97,22 @@ class SignalOps():
             source.endpoints.add(a)
         return a
     
+    
 class Signal(SignalItem, SignalOps):
     """
     more like net
     @ivar _usedOps: dictionary of used operators which can be reused
     """
-    def __init__(self, name, var_type, defaultVal=None, onIn=None):
+    def __init__(self, name, dtype, defaultVal=None):
         if name is None:
             name = "sig_" + str(id(self))
             self.hasGenericName = True 
-        if onIn == None:
-            onIn = Value.fromVal(True, bool)
-        assert(isinstance(var_type, VHDLType))  # range, downto, to etc.
-        super(Signal, self).__init__(name, var_type, defaultVal)
+       
+        assert(isinstance(dtype, HdlType))  # == can be range, downto, to etc.
+        super(Signal, self).__init__(name, dtype, defaultVal)
         self.endpoints = set()
         self.drivers = set()
-        assert(isinstance(onIn, Value))
-        self.onIn = onIn
         self._usedOps = {}
-        
-    
-
     
     def simPropagateChanges(self):
         if self._oldVal != self._val or self._oldVal.eventMask != self._val.eventMask:
@@ -133,6 +137,7 @@ class Signal(SignalItem, SignalOps):
             c.logger("%d: %s <= %s" % (env.now, self.name, str(newVal)))
         
         yield env.process(self.simPropagateChanges())
+        
 class SyncSignal(Signal):
     def __init__(self, name, var_type, defaultVal=None):
         super().__init__(name, var_type, defaultVal)

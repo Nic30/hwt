@@ -4,7 +4,7 @@ import re
 
 from vhdl_toolkit.templates import VHDLTemplates as templ
 from vhdl_toolkit.testbench_generator import TestbenchCreator, HWProcess
-from vhdl_toolkit.types import VHDLType
+from vhdl_toolkit.types import HdlType
 from vhdl_toolkit.variables import SignalItem
 
 """
@@ -100,9 +100,9 @@ class Axi4_d():
     
     def write(self, data, burstId):
         buff = []
-        data_t = VHDLType()
+        data_t = HdlType()
         data_t.widht = 64
-        bit_t = VHDLType()
+        bit_t = HdlType()
         bit_t.width = 1
         last = data[-1]
         for d in data:
@@ -122,7 +122,7 @@ class Axi4_b():
         process.register(self)
         
     def write(self, resp):
-        data_t = VHDLType()
+        data_t = HdlType()
         data_t.str = "std_logic_vector()"
         return self.hs.write([SignalItem(self.prefix + "BRESP", data_t).eq(resp)])
     def writeAccept(self):
