@@ -228,12 +228,15 @@ class Std_logic_vector(HdlType):
         return Std_logic_vector_contrained(width)
     
     def valAsVhdl(self, val, serializer):
-        if isinstance(self.constrain, Unconstrained):
-            width = [Value.fromPyVal(0, INT), Value.fromPyVal(self.constrain.derivedWidth, INT)]
+        c = self.constrain
+        if isinstance(c, Unconstrained):
+            width = [Value.fromPyVal(0, INT), Value.fromPyVal(c.derivedWidth, INT)]
+        elif isinstance(c, Value):
+            width = c.val
         else:
-            width = self.constrain._staticEval()
+            width = self.constrain._staticEval()._val
         
-        width = width[1].val - width[0].val + 1
+        width = abs(width[1].val - width[0].val) + 1
         v = val.val
         if val.vldMask is None:
             if width % 4 == 0:
@@ -252,7 +255,7 @@ class Std_logic_vector(HdlType):
     class ValueCls(Value, Ops):
         pass
  
-class Std_logic_vector_contrained(HdlType):
+class Std_logic_vector_contrained(Std_logic_vector):
     """
     Std_logic_vector with specified width
     """
