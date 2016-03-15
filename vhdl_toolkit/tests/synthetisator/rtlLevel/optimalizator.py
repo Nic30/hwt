@@ -2,7 +2,7 @@ import unittest
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.typeDefs import BIT, BOOL
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
-from vhdl_toolkit.hdlObjects.typeShortcuts import b
+from vhdl_toolkit.hdlObjects.typeShortcuts import hBool
 
 from vhdl_toolkit.hdlObjects.expr import expr_debug
 
@@ -32,11 +32,11 @@ class Expr2CondTC(unittest.TestCase):
         
         self.assertEqual(aEq1.operator, AllOps.EQ)
         self.assertEqual(aEq1.ops[0], self.a)
-        self.assertEqual(aEq1.ops[1], b(1))
+        self.assertEqual(aEq1.ops[1], hBool(1))
         
         self.assertEqual(bEq1.operator, AllOps.EQ)
         self.assertEqual(bEq1.ops[0], self.b)
-        self.assertEqual(bEq1.ops[1], b(1))
+        self.assertEqual(bEq1.ops[1], hBool(1))
         
         
     def testNotAnd(self):
@@ -55,10 +55,10 @@ class Expr2CondTC(unittest.TestCase):
         self.assertEqual(bEq1.operator, AllOps.EQ)
         
         self.assertEqual(aEq1.ops[0], self.a)
-        self.assertEqual(aEq1.ops[1], b(1))
+        self.assertEqual(aEq1.ops[1], hBool(1))
         
         self.assertEqual(bEq1.ops[0], self.b)
-        self.assertEqual(bEq1.ops[1], b(1))
+        self.assertEqual(bEq1.ops[1], hBool(1))
 
         
         

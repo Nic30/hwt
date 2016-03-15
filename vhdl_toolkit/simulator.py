@@ -1,7 +1,7 @@
 import simpy
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkAllOriginSignals
-from vhdl_toolkit.hdlObjects.operators import Operator
+from vhdl_toolkit.hdlObjects.operator import Operator
 from vhdl_toolkit.hdlObjects.value import Value
 
 class HdlSimulatorConfig():

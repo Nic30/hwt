@@ -20,30 +20,21 @@ class Value():
         self.vldMask = vldMask
         self.eventMask = eventMask
     
-    @classmethod
-    def getValClass(cls, _type):
-        # _type has to be instance or class derived from HdlType
-        if _type.valueCls:
-            c = _type.valueCls
-        else:
-            # dynamically create value class for _type 
-            c = type("%s_val" % _type.__class__.__name__, (cls, _type.Ops,), {})
-            _type.valueCls = c
-        return c
-    
+   
     @classmethod
     def fromPyVal(cls, val, _type):
         """
         @param val: normal python value
         @param _type: instance of HdlType
         """
-        c = cls.getValClass(_type)
+        c = _type.ValueCls
         if isinstance(val, c):
-            assert(val.dtype == _type)
+            assert(val.dtype.convert(val, _type))
             return val
         self = c.fromPy(val, _type)
         return self
-    
+    def staticEval(self):
+        pass
     def clone(self):
         return self.__class__(self.val, self.dtype, self.vldMask, eventMask=self.eventMask)
     

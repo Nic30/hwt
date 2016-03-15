@@ -1,4 +1,4 @@
-# from vhdl_toolkit.types import PortItem
+# from vhdl_toolkit.hdlObjects.types import PortItem
 # from hls_toolkit.errors import InvalidAsign
 """
 name and direction atributes are asigned by HLS core

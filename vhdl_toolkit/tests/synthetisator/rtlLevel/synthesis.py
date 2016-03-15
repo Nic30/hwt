@@ -1,6 +1,6 @@
 import unittest
 
-from vhdl_toolkit.hdlObjects.assigment import Assignment
+from vhdl_toolkit.hdlObjects.assignment import Assignment
 from vhdl_toolkit.synthetisator.rtlLevel.context import Context
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 

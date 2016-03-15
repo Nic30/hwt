@@ -60,9 +60,11 @@ class OpDefinition():
     def eval(self, operator):
         """Load all operands and process them by self._evalFn"""
         it = iter(operator.ops)
-
+        def getVal(v):
+            return v if isinstance(v, Value) else v._val
+            
         try:
-            initializer = next(it)
+            initializer = getVal(next(it))
         except StopIteration:
             raise TypeError('OpDefinition.eval, can not reduce empty sequence ')
         
@@ -72,13 +74,15 @@ class OpDefinition():
         elif argc == 2:
             accum_value = initializer
             for x in it:
-                accum_value = self._evalFn(accum_value, x)
+                accum_value = self._evalFn(accum_value, getVal(x))
             return accum_value
         else:
             raise NotImplementedError()
         
+    #[TODO] rename to asVhdl
     def str(self, operator, serializer):
-        from vhdl_toolkit.hdlObjects.operators import Operator
+        #[TODO] not ideal, serializer should be used
+        from vhdl_toolkit.hdlObjects.operator import Operator
         
         def p(op):
             s = serializer.Value(op)

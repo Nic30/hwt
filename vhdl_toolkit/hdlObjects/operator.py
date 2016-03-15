@@ -34,6 +34,12 @@ class Operator():
             # [BUG] str method on Op displays new values, but they are not propageted yet
             c.logger('%d: "%s" -> %s' % (env.now, str(self), str(v))) 
         yield env.process(self.result.simUpdateVal(v))
+    
+    def staticEval(self):
+        for o in self.ops:
+            o.staticEval()
+        self.result._val = self.evalFn()
+            
         
     def getReturnType(self):
         return self.operator.getReturnType(self)

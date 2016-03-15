@@ -1,8 +1,8 @@
-from vhdl_toolkit.hdlObjects.operators import Operator
+from vhdl_toolkit.hdlObjects.operator import Operator
 
 def expr_debug(expr):
     from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
-    from vhdl_toolkit.hdlObjects.assigment import Assignment
+    from vhdl_toolkit.hdlObjects.assignment import Assignment
     from vhdl_toolkit.hdlObjects.value import Value
     from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import walkAllRelatedSignals
     from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer

@@ -3,6 +3,7 @@ from vhdl_toolkit.hdlObjects.typeOps import TypeOps
 from vhdl_toolkit.hdlObjects.specialValues import Unconstrained
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.bitmask import Bitmask
+from vhdl_toolkit.synthetisator.exceptions import TypeConversionErr
 
 class Boolean(HdlType):
     def __init__(self):
@@ -25,7 +26,8 @@ class Boolean(HdlType):
             return cls(bool(val), typeObj, vld)
                 
         def __eq__(self, other):
-            """
+            """return abs(w.val[0].val - w.val[1].val) + 1
+        
             @attention: ignores eventMask
             """
             self._otherCheck(other)
@@ -62,6 +64,17 @@ class Boolean(HdlType):
         def __bool__(self):
             return bool(self.val and self.vldMask)
 
+#    class ValueCls(Value, Ops):
+#        pass
+
+
+# [TODO] from some reason ValueCls in Boolean can not be serialized by dill, 
+# other classes seems to work
+class Boolean_ValueCls(Value, Boolean.Ops):
+    pass
+Boolean.ValueCls = Boolean_ValueCls
+
+
 class Integer(HdlType):
     
     def __init__(self):
@@ -70,6 +83,26 @@ class Integer(HdlType):
 
     def valAsVhdl(self, val, serializer):
         return str(int(val.val))
+    
+    def convert(self, sigOrVal, toType):
+        if sigOrVal.dtype == toType:
+            return sigOrVal
+        elif toType == PINT:
+            if isinstance(sigOrVal, Value):
+                v = sigOrVal.clone()
+                assert(v.val > 0)
+                v.dtype = PINT
+                return v
+        elif toType == UINT:
+            if isinstance(sigOrVal, Value):
+                v = sigOrVal.clone()
+                assert(v.val >= 0)
+                v.dtype = UINT
+                return v
+            
+                
+        raise TypeConversionErr("Conversion of type %s to type %s is not implemented" % (repr(self), repr(toType)))
+ 
         
     class Ops(TypeOps):
         """
@@ -95,7 +128,7 @@ class Integer(HdlType):
             eq = self.val == other.val and vld
             ev = self.eventMask or other.eventMask
 
-            vCls = Value.getValClass(BOOL)
+            vCls = BOOL.ValueCls
             
             return vCls(eq, BOOL, vld, eventMask=ev)
         
@@ -130,6 +163,9 @@ class Integer(HdlType):
             eventMask = int(self.eventMask or other.eventMask)
 
             return self.__class__(val, INT, vldMask, eventMask=eventMask)
+
+    class ValueCls(Value, Ops):
+        pass
         
 class Std_logic(HdlType):
     """
@@ -175,9 +211,12 @@ class Std_logic(HdlType):
             eq = self.val == other.val and vld
             ev = self.eventMask | other.eventMask
 
-            vCls = Value.getValClass(BOOL)
+            vCls = BOOL.ValueCls
             
             return vCls(eq, BOOL, vld, eventMask=ev)
+
+    class ValueCls(Value, Ops):
+        pass
 
 class Std_logic_vector(HdlType):
     def __init__(self):
@@ -203,10 +242,15 @@ class Std_logic_vector(HdlType):
                 return ('B"{0:0' + str(width) + 'b}"').format(v)
         else:
             raise NotImplementedError("vldMask not implemented yet")
+
     
     class Ops(TypeOps):
+
         def getWidth(self):
             return self.width
+
+    class ValueCls(Value, Ops):
+        pass
  
 class Std_logic_vector_contrained(HdlType):
     """
@@ -216,16 +260,21 @@ class Std_logic_vector_contrained(HdlType):
         super(Std_logic_vector_contrained, self).__init__()
         self.name = 'std_logic_vector'
         self.constrain = width
-    
+    def __eq__(self, other):
+        return super(Std_logic_vector_contrained, self).__eq__(other) \
+                and self.constrain == other.constrain
     def getBitCnt(self):
             return self.getWidth()
         
     def getWidth(self):
         w = self.constrain
-        if isinstance(w, list):
-            return (w.val[0].val - w.val[1].val) + 1
-        return w
-    
+        if w.dtype == RANGE:
+            pass
+        else:
+            w = w.staticEval()
+            
+        return abs(w.val[0].val - w.val[1].val) + 1
+        
     class Ops(Std_logic_vector.Ops):
         
         @classmethod
@@ -245,16 +294,18 @@ class Std_logic_vector_contrained(HdlType):
             eq = self.val == other.val and vld == Bitmask.mask(w)
             ev = self.eventMask | other.eventMask
 
-            vCls = Value.getValClass(BOOL)
+            vCls = BOOL.ValueCls
             
             return vCls(eq, BOOL, vld, eventMask=ev)
-
+    
+    class ValueCls(Value, Ops):
+        pass
 
 class String(HdlType):
     def __init__(self):
         super(String, self).__init__()
         self.name = "string"
-        
+
     class Ops(TypeOps):
         @classmethod
         def fromPy(cls, val, typeObj):
@@ -269,9 +320,12 @@ class String(HdlType):
             eq = self.val == other.val
             vld = int(self.vldMask and other.vldMask)
             ev = self.eventMask | other.eventMask
-            vCls = Value.getValClass(BOOL)
+            vCls = BOOL.ValueCls
             
             return vCls(eq, vCls, vld, eventMask=ev)
+
+    class ValueCls(Value, Ops):
+        pass
 
 class Array(HdlType):
     """
@@ -283,7 +337,7 @@ class Array(HdlType):
         super(Array, self).__init__()
         self.elmType = elmType
         self.size = size
-        
+    
     class Ops(TypeOps):
         @classmethod
         def fromPy(cls, val, typeObj):
@@ -304,7 +358,7 @@ class Array(HdlType):
         def __eq__(self, other):
             assert(self.dtype.elmType == other.dtype.elmType)
             assert(self.dtype.size == other.dtype.size)
-            vCls = Value.getValClass(BOOL)
+            vCls = BOOL.ValueCls
             
             eq = True
             first = self.val[0]
@@ -316,13 +370,16 @@ class Array(HdlType):
                 vld = vld & a.vldMask & b.vldMask
                 ev = ev & a.eventMask & b.eventMask
             return vCls(eq, vCls, vld, eventMask=ev)
-            
+
+    class ValueCls(Value, Ops):
+        pass            
 
 
 class Positive(Integer):
     def __init__(self):
         super(Positive, self).__init__()
         self.name = "positive"
+
 
 class Natural(Integer):
     def __init__(self):

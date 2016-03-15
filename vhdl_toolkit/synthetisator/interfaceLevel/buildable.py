@@ -1,3 +1,4 @@
+import copy
 
 class Buildable():
     """
@@ -5,7 +6,12 @@ class Buildable():
     """
     @classmethod
     def _isBuild(cls):
-        return hasattr(cls, "_clsBuildFor") and cls._clsBuildFor == cls 
+        return hasattr(cls, "_clsBuildFor") and cls._clsBuildFor == cls
+    
+    @classmethod
+    def clsCp(cls):
+        return copy.deepcopy(cls)
+    
     @classmethod
     def _builded(cls):
         if not cls._isBuild():

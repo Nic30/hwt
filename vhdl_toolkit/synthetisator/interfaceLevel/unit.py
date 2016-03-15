@@ -175,7 +175,7 @@ class BlackBox(Unit):
             # connect outputs to dummy value
             for s in signals:
                 if s._interface._getSignalDirection() == DIRECTION.IN:
-                    s.assignFrom(Value.fromVal(0, int))
+                    s.assignFrom(Value.fromPyVal(None, s.dtype))
         if not externInterf:
             raise  Exception("Can not find any external interface for unit " + name \
                               + "- there is no such a thing as unit without interfaces")

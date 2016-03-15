@@ -1,7 +1,7 @@
 from vhdl_toolkit.hdlObjects.assignment import Assignment
 from vhdl_toolkit.hdlObjects.types import HdlType
 from vhdl_toolkit.hdlObjects.variables import SignalItem
-from vhdl_toolkit.hdlObjects.operators import Operator, InvalidOperandExc
+from vhdl_toolkit.hdlObjects.operator import Operator, InvalidOperandExc
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.simExceptions import SimNotInitialized
@@ -124,6 +124,14 @@ class Signal(SignalItem, SignalOps):
                     conf.logger("%d: Signal.simPropagateChanges %s -> %s" % (env.now, self.name, str(e)))
                 yield env.process(e.simPropagateChanges())
         
+    def staticEval(self):
+        # operator writes in self._val new value
+        if self.drivers:
+            self._val = self.defaultVal
+        else:
+            for d in self.drivers:
+                d.staticEval()
+        return self._val
     
     def simUpdateVal(self, newVal):
         assert(isinstance(newVal, Value))

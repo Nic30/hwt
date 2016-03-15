@@ -1,16 +1,27 @@
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
-from vhdl_toolkit.synthetisator.param import getParam
+from vhdl_toolkit.synthetisator.param import getParam, Param
 from python_toolkit.arrayQuery import single
 from vhdl_toolkit.interfaces.amba import AxiLite
 from vhdl_toolkit.interfaces.std import Ap_clk, \
     Ap_rst_n, BramPort
 import unittest
-from vhdl_toolkit.hdlObjects.typeDefs import INT
+from vhdl_toolkit.hdlObjects.typeDefs import INT, UINT, PINT
+from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
+
 ILVL_VHDL = '../../../samples/iLvl/vhdl/'
 
 
 class VhdlCodesignTC(BaseSynthetisatorTC):
+    
+    def testTypeInstances(self):
+        from vhdl_toolkit.hdlObjects import typeDefs
+        from vhdl_toolkit.hdlContext import BaseVhdlContext
+        self.assertIs(INT, typeDefs.INT)
+        ctx = BaseVhdlContext.getBaseCtx()
+        self.assertIs(ctx['integer'], INT)
+        
+
     def test_bramIntfDiscovered(self):
         from vhdl_toolkit.samples.iLvl.bram import Bram
         bram = Bram()
@@ -26,7 +37,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         class AxiStreamSampleEnt(UnitWithSource):
             _origin = ILVL_VHDL + "axiStreamSampleEnt.vhd"
         u = AxiStreamSampleEnt()  # (intfClasses=[AxiStream_withUserAndStrb, AxiStream, AxiStream_withUserAndNoStrb, AxiStream_withoutSTRB])
-        #[TODO] sometimes resolves as 'RX0_ETH_T'  
+        # [TODO] sometimes resolves as 'RX0_ETH_T'  
         self.assertTrue(hasattr(u, "RX0_ETH"))
         self.assertTrue(hasattr(u, "RX0_CTL"))        
         self.assertTrue(hasattr(u, "TX0_ETH"))
@@ -36,8 +47,8 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         class GenericValuesSample(UnitWithSource):
             _origin = ILVL_VHDL + "genericValuesSample.vhd"
         u = GenericValuesSample()
-        self.assertEqual(getParam(u.c_baseaddr), (2 ** 32) - 1)
-        self.assertEqual(getParam(u.c_family), 'zynq')
+        self.assertEqual(u.c_baseaddr._val.val, (2 ** 32) - 1)
+        self.assertEqual(u.c_family._val.val, 'zynq')
         
     def test_ClkAndRstExtraction(self):
         class ClkRstEnt(UnitWithSource):
@@ -53,15 +64,11 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         natG = single(u._entity.generics, lambda x : x.name == "nat")
         posG = single(u._entity.generics, lambda x : x.name == "pos")
         intG = single(u._entity.generics, lambda x : x.name == "int")
-        self.assertTrue(natG.dtype == INT)
-        self.assertTrue(posG.dtype == INT) 
-        self.assertTrue(intG.dtype == INT) 
+        self.assertEqual(natG.dtype, UINT)
+        self.assertEqual(posG.dtype, PINT) 
+        self.assertEqual(intG.dtype, INT) 
         
         
-        self.assertTrue(natG.dtype.min == 0)
-        self.assertTrue(posG.dtype.min == 1) 
-        self.assertTrue(intG.dtype.min == None) 
-    
     def test_axiLiteSlave2(self):
         class AxiLiteSlave2(UnitWithSource):
             _origin = ILVL_VHDL + "axiLite_basic_slave2.vhd"
@@ -139,10 +146,37 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(a.slv.C_S_AXI_DATA_WIDTH.get(), DW)
         
         self.assertEqual(a.slv.S_AXI.ar.addr._width.get(), AW)        
+    
+    def test_interfaceParamInstances(self):
+        from vhdl_toolkit.interfaces.amba import AxiStream, AxiStream_withoutSTRB
+        self.assertFalse(AxiStream_withoutSTRB.DATA_WIDTH.isReplaced)
+        self.assertFalse(AxiStream.DATA_WIDTH.isReplaced)
+        
+        
+        dw = Param(10)
+        a = AxiStream()
+
+        self.assertIsNot(AxiStream_withoutSTRB.DATA_WIDTH, a.DATA_WIDTH)
+        self.assertIsNot(AxiStream.DATA_WIDTH, a.DATA_WIDTH)
+
+        self.assertFalse(AxiStream_withoutSTRB.DATA_WIDTH.isReplaced)
+        self.assertFalse(AxiStream.DATA_WIDTH.isReplaced)
+        
+        a.DATA_WIDTH.replace(dw)
+        b = AxiStream()
+        
+        self.assertFalse(AxiStream_withoutSTRB.DATA_WIDTH.isReplaced)
+        self.assertFalse(AxiStream.DATA_WIDTH.isReplaced)
+        
+        self.assertTrue(a.DATA_WIDTH.isReplaced)
+        self.assertFalse(b.DATA_WIDTH.isReplaced)
+        
+        
+        
         
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(VhdlCodesignTC('test_simplePortDirections'))
+    #suite.addTest(VhdlCodesignTC('test_genericValues'))
     suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

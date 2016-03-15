@@ -1,6 +1,6 @@
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from vhdl_toolkit.hdlObjects.value import Value
-from vhdl_toolkit.hdlObjects.operators import Operator
+from vhdl_toolkit.hdlObjects.operator import Operator
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.assignment import Assignment
@@ -139,7 +139,7 @@ def walkSigSouces(sig, parent=None):
             if isinstance(e, PortConnection):
                 if not e.unit.discovered:
                     yield e
-            elif isinstance(e, Assignment) and e.src != sig:
+            elif isinstance(e, Assignment) and not e.src is sig:
                 yield e
             else:
                 yield from walkSigSouces(e, sig)

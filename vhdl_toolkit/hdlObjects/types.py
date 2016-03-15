@@ -22,6 +22,8 @@ class HdlType():
         self.name = None
         self.valueCls = None
     
+    def __eq__(self, other):
+        return type(self) is type(other)
     
     def convert(self, sigOrVal, toType):
         if sigOrVal.dtype == toType:

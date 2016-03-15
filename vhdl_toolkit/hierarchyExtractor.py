@@ -155,7 +155,7 @@ class DesignFile():
         else:
             designFiles = []
             for f in  files:
-                d = DesignFile(f, parseVhdl([f], hierarchyOnly=True))
+                d = DesignFile.fromFile(f, libName=libName)
                 designFiles.append(d)
         return designFiles
     

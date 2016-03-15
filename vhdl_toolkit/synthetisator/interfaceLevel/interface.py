@@ -4,8 +4,6 @@ from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import ExtractableInterface 
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
-from vhdl_toolkit.hdlObjects.typeDefs import BIT
-from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
                    
 class Interface(Buildable, ExtractableInterface):
     """
@@ -96,12 +94,13 @@ class Interface(Buildable, ExtractableInterface):
         
         # copy from bases
         for c in cls.__bases__:
-            if issubclass(c, Interface) and c != Interface:  # only derived classes should be builded
+            # only derived classes should be builded
+            if issubclass(c, Interface) and c != Interface:  
                 c._builded()
-                for intfName, intf in c._subInterfaces.items():
-                    cls._subInterfaces[intfName] = intf
+
         
-        for propName, prop in vars(cls).items():
+        for propName in dir(cls):
+            prop = getattr(cls, propName)
             pCls = prop.__class__
             if issubclass(pCls, Interface):
                 pCls._builded()

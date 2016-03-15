@@ -16,28 +16,36 @@ class Param(Signal):
             except KeyError:
                 raise Exception("Can not resolve type of parameter")
             initval = Value.fromPyVal(initval, t)
+        else:
+            t = initval.dtype
         super(Param, self).__init__(None, t, defaultVal=initval)
-        self.val = initval
-        self.parent = None
-        self.childs = set()
-                
+        self._val = initval
+        self.isReplaced = False
+        
     def get(self):
-        return self.val
+        assert(not self.isReplaced)
+        return self._val
   
-    def inherit(self, parent):
+    def replace(self, replaceWith):
         """
         self will always have value of parent
         """
-        self.set(parent.get())
-        parent.childs.add(self)
-    
+        assert(not self.isReplaced)
+        for dr in self.drivers:
+            dr.ops = [replaceWith if x == self else x for x in dr.ops]
+                
+        for ep in self.endpoints:
+            ep.ops = [replaceWith if x is self else x for x in ep.ops]
+            
+        
+        self.isReplaced = True
+
     def set(self, val):
         """
         set value of this param
         """
-        self.val = val
-        for ch in self.childs:
-            ch.set(val)
+        assert(not self.isReplaced)
+        self._val = val
     
     def __repr__(self):
         return "<%s, val=%s>" % (self.__class__.__name__, str(self.get())) 
@@ -55,7 +63,6 @@ def getParam(p):
     else:
         return p
     
-    
 def inheritAllParams(cls):
     '''foreach _subInterfaces, _interfaces and _subUnits  inherit parameters'''
     cls._builded()
@@ -64,7 +71,10 @@ def inheritAllParams(cls):
             for paramName, param in cls._params.items():
                 if hasattr(intf, paramName):
                     p = getattr(intf, paramName)
-                    p.inherit(param)
+                    #print(cls.__name__, paramName)
+                    p.replace(param)
+                    setattr(intf, paramName, param)
+                    
     for n in ['_subInterfaces', '_interfaces', '_subUnits']:
         if hasattr(cls, n):
             inherit(getattr(cls, n))
