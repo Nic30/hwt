@@ -1,6 +1,6 @@
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
-from vhdl_toolkit.synthetisator.param import getParam, Param
+from vhdl_toolkit.synthetisator.param import Param
 from python_toolkit.arrayQuery import single
 from vhdl_toolkit.interfaces.amba import AxiLite
 from vhdl_toolkit.interfaces.std import Ap_clk, \
@@ -176,7 +176,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(VhdlCodesignTC('test_genericValues'))
+    # suite.addTest(VhdlCodesignTC('test_genericValues'))
     suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

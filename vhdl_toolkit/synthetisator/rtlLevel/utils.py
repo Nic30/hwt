@@ -14,4 +14,5 @@ def portItemfromSignal(s):
         s._interface = Ap_none(dtype=t)
     pi._interface = s._interface
     
+    
     return pi

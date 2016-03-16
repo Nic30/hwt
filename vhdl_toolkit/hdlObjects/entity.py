@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 class Entity(object):
     def __init__(self):
-        self.port = []
-        self.ctx = {}
-        self.generics = []
         self.name = None
+        self.generics = []
+        self.ports = []
+        self.ctx = {}
+
     
     def injectCtxWithGenerics(self, ctx):
         for g in self.generics:
@@ -14,5 +15,5 @@ class Entity(object):
     
     def __repr__(self):
         from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
-        return VhdlSerializer.EntityAsHdl(self)
+        return VhdlSerializer.Entity(self)
     

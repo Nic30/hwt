@@ -34,7 +34,8 @@ class Value():
         self = c.fromPy(val, _type)
         return self
     def staticEval(self):
-        pass
+        return self
+    
     def clone(self):
         return self.__class__(self.val, self.dtype, self.vldMask, eventMask=self.eventMask)
     

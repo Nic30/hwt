@@ -12,6 +12,7 @@ from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkUnitInputs, w
 from vhdl_toolkit.templates import VHDLTemplates  
 from vhdl_toolkit.hdlObjects.typeDefs import BIT
 from vhdl_toolkit.hdlObjects.value import Value
+from vhdl_toolkit.hdlObjects.assignment import Assignment
 
 def renderIfTree(assigments):
     # optimizedSrc = expr_optimize([dp.src])
@@ -95,8 +96,8 @@ class Context():
                             discoverDatapaths(s)
                         self.subUnits.add(node.unit)
                     self.startsOfDataPaths.add(node)
-                    if hasattr(node, 'src'):
-                        for s in  walkSignalsInExpr(node.src):
+                    if isinstance(node, Assignment):
+                        for s in walkSignalsInExpr(node.src):
                             discoverDatapaths(s)
                     
         for s in where(interfaces, lambda s: signalHasDriver(s)):  # walk my outputs
@@ -117,7 +118,7 @@ class Context():
         # create ports
         for s in interfaces:
             #s.dtype.ctx = ent.ctx
-            ent.port.append(portItemfromSignal(s))
+            ent.ports.append(portItemfromSignal(s))
    
         self.discover(interfaces)
         

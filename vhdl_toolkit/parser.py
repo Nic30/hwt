@@ -43,7 +43,7 @@ def entityFromFile(fileName):
     assert(len(ctx.entities.items()) == 1)
     ent = list(ctx.entities.items())[0][1]
     ent.generics.sort(key=lambda x: x.name)
-    ent.port.sort(key=lambda x: x.name)
+    ent.ports.sort(key=lambda x: x.name)
     return ent
 
 baseDir = os.path.dirname(inspect.getfile(entityFromFile))
@@ -133,7 +133,7 @@ class Parser():
             entCtx.update(ctx)
             for _ , jPort in jEnt['ports'].items():
                 p = Parser.portFromJson(jPort, entCtx)
-                e.port.append(p)
+                e.ports.append(p)
         return e
     
     @staticmethod

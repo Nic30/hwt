@@ -12,10 +12,11 @@ from vhdl_toolkit.tests.synthetisator.value import  ValueTC
 
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.interfaceSyntherisatorTC import InterfaceSyntherisatorTC 
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.vhdlCodesign import VhdlCodesignTC 
+from vhdl_toolkit.tests.synthetisator.interfaceLevel.subunitsSynthesisTC import SubunitsSynthesisTC
+
 
 from vhdl_toolkit.tests.synthetisator.rtlLevel.optimalizator import Expr2CondTC 
 from vhdl_toolkit.tests.synthetisator.rtlLevel.synthesis import TestCaseSynthesis
-
 
 
 if __name__ == "__main__":
@@ -26,6 +27,7 @@ if __name__ == "__main__":
         loader.loadTestsFromTestCase(ParserTC),
         loader.loadTestsFromTestCase(InterfaceSyntherisatorTC),
         loader.loadTestsFromTestCase(VhdlCodesignTC),
+        loader.loadTestsFromTestCase(SubunitsSynthesisTC),
         loader.loadTestsFromTestCase(Expr2CondTC),
         loader.loadTestsFromTestCase(OperatorTC),
         loader.loadTestsFromTestCase(TestCaseSynthesis),

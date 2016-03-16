@@ -78,15 +78,15 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
     
         self.assertNotEqual(bram.a, bram.b, 'instances are properly instanciated')
         
-        port_a = list(where(bram._entity.port, lambda x: x.name == "a"))
-        port_b = list(where(bram._entity.port, lambda x: x.name == "b"))
+        port_a = list(where(bram._entity.ports, lambda x: x.name == "a"))
+        port_b = list(where(bram._entity.ports, lambda x: x.name == "b"))
        
         self.assertEqual(len(port_a), 1, 'entity has single port a')
         port_a = port_a[0]
         self.assertEqual(len(port_b), 1, 'entity has single port b')
         port_b = port_b[0]
         
-        self.assertEqual(len(bram._entity.port), 2, 'entity has right number of ports')
+        self.assertEqual(len(bram._entity.ports), 2, 'entity has right number of ports')
     
         self.assertEqual(port_a.direction, D.IN, 'port a has src that means it should be input')
         self.assertEqual(port_b.direction, D.OUT, 'port b has no src that means it should be output')

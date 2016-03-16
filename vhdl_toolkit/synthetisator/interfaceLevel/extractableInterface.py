@@ -41,7 +41,7 @@ class ExtractableInterface():
         firstIntfNames.append(prefix + name)
             
         for firstIntfName in firstIntfNames:
-            for p in entity.port:
+            for p in entity.ports:
                 if not hasattr(p, "_interface") and p.name.lower().endswith(firstIntfName):
                     # cut off prefix
                     nameLen = len(firstIntfName)
@@ -102,7 +102,7 @@ class ExtractableInterface():
             for n in intfNames:
                 name = prefix + n
                 try:
-                    self._originEntityPort = single(sigLevelUnit.entity.port,
+                    self._originEntityPort = single(sigLevelUnit.entity.ports,
                                             lambda p : matchIgnorecase(p.name, name))
                     break
                 except NoValueExc as e:

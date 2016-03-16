@@ -126,15 +126,11 @@ def discoverSensitivity(datapath):
         
 # walks code but do not cross assignment of precursors 
 def walkSigSouces(sig, parent=None):    
-    if isinstance(sig, int):
-        return
-    elif isinstance(sig, Operator):
+    if isinstance(sig, Operator):
         for op in sig.op:
-            if op != parent:
+            if not op is parent:
                 yield from walkSigSouces(op)
     elif isinstance(sig, Signal):
-        if hasattr(sig, 'origin'):  # if this is only internal signal
-            yield from walkSigSouces(sig.origin)
         for e in sig.drivers:
             if isinstance(e, PortConnection):
                 if not e.unit.discovered:

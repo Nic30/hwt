@@ -86,7 +86,7 @@ class Unit(Buildable):
                 for _, subIntf in interface._subInterfaces.items():
                     self._connectMyInterfaceToMyEntity(subIntf)  
             else:
-                portItem = single(self._entity.port, lambda x : x._interface == interface)
+                portItem = single(self._entity.ports, lambda x : x._interface == interface)
                 interface._originSigLvlUnit = self._sigLvlUnit
                 interface._originEntityPort = portItem
    
@@ -216,7 +216,7 @@ class UnitWithSource(Unit):
                 cls._interfaces[intfName] = interface
                 setattr(cls, intfName, interface)
                 setIntfAsExtern(interface)
-        for p in cls._entity.port:
+        for p in cls._entity.ports:
             assert(hasattr(p, '_interface') and p._interface)  # every port should have interface (Ap_none at least)        
         cls._clsBuildFor = cls
     

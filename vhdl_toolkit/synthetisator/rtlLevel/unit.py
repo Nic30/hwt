@@ -4,6 +4,7 @@ from vhdl_toolkit.hdlObjects.architecture import ComponentInstance
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.portItem import PortItem
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
+from vhdl_toolkit.hdlObjects.assignment import MapExpr
 
 class Unit():    
     def __init__(self):
@@ -54,6 +55,7 @@ class VHDLUnit(Entity, Unit):
     def _updateCtxFromGenerics(self):
         for g in self.entity.generics:
             self.entity.ctx[g.name.lower()] = g.defaultVal
+            
     def _updateGenericsFromCtx(self):
         for k, v in self.entity.ctx.items():
             try:
@@ -65,55 +67,19 @@ class VHDLUnit(Entity, Unit):
     def asVHDLComponentInstance(self):
         ci = ComponentInstance(self.name + "_" + str(id(self)), self)
         # assert all inputs are connected
-        for p in self.entity.port:
+        for p in self.entity.ports:
             if p.direction == DIRECTION.IN:
                 if not arr_any(self.portConnections, lambda x : x.portItem == p) :
                     raise Exception("Missing connection for input %s of component %s" % (p.name, self.entity.name))           
                
             
-        ci.portMaps = list(map(lambda x: x.asPortMap(), self.portConnections))
+        ci.portMaps = [ x for x in self.portConnections]
         self._updateGenericsFromCtx()
         # [TODO]
         for g in self.entity.generics:
             v = g.defaultVal
-            w = g.dtype.getWidth()
-            if isinstance(v, int):
-                if w == int:
-                    val_str = str(v)
-                elif g.dtype.getWidth() > 1:
-                    val_str = 'X"{0:b}"'.format(v)
-                else:
-                    val_str = str(v)
-            else:
-                val_str = str(v)
-            ci.genericMaps.append("%s => %s" % (g.name, val_str)) 
+            ci.genericMaps.append(MapExpr(g, v)) 
         
-        ci.portMaps.sort()
-        ci.genericMaps.sort()
+        ci.portMaps.sort(key=lambda pm :  pm.portItem.name)
+        ci.genericMaps.sort(key=lambda pm :  pm.compSig.name)
         return ci
-
-        
-def portItemByName(entity, name):
-    return single(entity.portItem, lambda x: x.name == name) 
-
-def automapSigs(unit, signals, signal2UnitNameFn=None):
-    def nameMatch(intfName, sigName):
-        _sigName = sigName
-        if signal2UnitNameFn:
-            _sigName = signal2UnitNameFn(sigName)
-        return  matchIgnorecase(intfName, _sigName)
-            
-    for s in signals:
-        try:
-            p = single(unit.port, lambda x: nameMatch(x.name, s.name))
-        except NoValueExc:
-            raise Exception("Can not find port for signal " + s.name)
-        s.connectToPortItem(unit, p)
-        
-
-def unitAutomap(unit, signals, prefix="", suffix=""):
-    for p in unit.port:
-        s = single(signals, lambda x: matchIgnorecase(x.name, prefix + p.name + suffix))
-        if not s:
-            raise Exception("Can not find signal for port " + p.name)
-        s.connectToPortItem(unit, p)

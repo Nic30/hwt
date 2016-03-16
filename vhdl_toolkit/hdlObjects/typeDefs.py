@@ -177,8 +177,10 @@ class Std_logic(HdlType):
         self.name = 'std_logic'
     
     def valAsVhdl(self, val, serializer):
-        return  "'%d'" % int(bool(val.val))
-    
+        if val.vldMask:
+            return  "'%d'" % int(bool(val.val))
+        else:
+            return "'X'"
     def convert(self, sigOrVal, toType):
         isVal = isinstance(sigOrVal, Value)
         
@@ -230,13 +232,14 @@ class Std_logic_vector(HdlType):
     def valAsVhdl(self, val, serializer):
         c = self.constrain
         if isinstance(c, Unconstrained):
-            width = [Value.fromPyVal(0, INT), Value.fromPyVal(c.derivedWidth, INT)]
+            width = [0, c.derivedWidth]
         elif isinstance(c, Value):
-            width = c.val
+            width = [c.val[0].staticEval().val, c.val[1].staticEval().val]
         else:
-            width = self.constrain._staticEval()._val
+            v = self.constrain.staticEval()._val
+            width = [v.val[0].val, v.val[1].val]
         
-        width = abs(width[1].val - width[0].val) + 1
+        width = abs(width[1] - width[0]) + 1
         v = val.val
         if val.vldMask is None:
             return ('"{0:0' + str(width) + 'b}"').format(v)

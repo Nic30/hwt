@@ -12,7 +12,7 @@ class VhdlSerializer():
         if hasattr(obj, "asVhdl"):
             return obj.asVhdl(VhdlSerializer)
         elif isinstance(obj, HdlType):
-            return VhdlSerializer.VHDLTypeAsHdl(obj)
+            return VhdlSerializer.VHDLType(obj)
         elif isinstance(obj, Signal):
             return VhdlSerializer.SignalItem(obj)
         elif isinstance(obj, Value):
@@ -21,18 +21,9 @@ class VhdlSerializer():
             return VhdlSerializer.Assignment(obj)
         else:
             raise NotImplementedError("Not implemented for %s" % (str(obj)))
-    
+
     @staticmethod
-    def VHDLTypeAsHdl(typ):
-        assert(isinstance(typ, HdlType))
-        buff = []
-        buff.append(typ.name.upper())
-        if hasattr(typ, "constrain"):
-            buff.append("(%s)" % VhdlSerializer.Value(typ.constrain))        
-        return "".join(buff)
-        
-    @staticmethod
-    def ArchitectureAsHdl(arch):
+    def Architecture(arch):
         variables = []
         procs = [] 
         for v in sorted(arch.variables, key=lambda x: x.name):
@@ -50,40 +41,66 @@ class VhdlSerializer():
         "components"         :arch.components,
         "componentInstances" :arch.componentInstances} 
         )
+   
+    @staticmethod
+    def Assignment(a):
+        return "%s <= %s" % (VhdlSerializer.asHdl(a.dst), VhdlSerializer.Value(a.src))
 
     @staticmethod
-    def VHDLExtraTypeAsHdl(exTyp):
-        return "TYPE %s IS (%s);" % (exTyp.name, ", ".join(exTyp.values))
-    
+    def Component(c):
+        return VHDLTemplates.component.render(
+               {"ports": [VhdlSerializer.PortItem(pi) for pi in c.entity.ports],
+                "generics": [VhdlSerializer.GenericItem(g) for g in c.entity.generics],
+                'entity': c.entity})      
     @staticmethod
-    def GenericItemAsHdl(g):
-        s = "%s : %s" % (g.name, VhdlSerializer.VHDLTypeAsHdl(g.dtype))
+    def ComponentInstance(ci):
+        if len(ci.portMaps) == 0 and len(ci.genericMaps) == 0:
+            raise Exception("Incomplete component instance")
+        return VHDLTemplates.componentInstance.render(
+               {"name" : ci.name,
+                'entity': ci.entity,
+                'portMaps': [VhdlSerializer.MapExpr(x) for x in   ci.portMaps],
+                'genericMaps': [VhdlSerializer.MapExpr(x) for x in   ci.genericMaps]})     
+
+    @staticmethod
+    def Entity(ent):
+        ent.ports.sort(key=lambda x: x.name)
+        ent.generics.sort(key=lambda x: x.name)
+
+        return VHDLTemplates.entity.render(
+               {"name": ent.name,
+                'ports' : [VhdlSerializer.PortItem(pi) for pi in ent.ports ],
+                'generics' : [VhdlSerializer.GenericItem(g) for g in ent.generics]
+                })    
+    @staticmethod
+    def GenericItem(g):
+        s = "%s : %s" % (g.name, VhdlSerializer.VHDLType(g.dtype))
         if g.defaultVal is None:
             return s
         else:  
             return  "%s := %s" % (s, VhdlSerializer.Value(g.defaultVal))
         
+
+    @staticmethod
+    def isSignalHiddenInExpr(sig):
+        """Some signals are just only conections in expression they done need to be rendered because
+        they are hidden inside expression for example sig. from a+b in a+b+c"""
+        if len(sig.endpoints) <= 1 and len(sig.drivers) == 1:
+            d = list(iter(sig.drivers))[0]
+            return not isinstance(d, Assignment) and d.result == sig
+        else:
+            False
+      
     
     @staticmethod
-    def PortItemAsHdl(pi):
+    def PortItem(pi):
         try:
             return "%s : %s %s" % (pi.name, pi.direction,
-                                   VhdlSerializer.VHDLTypeAsHdl(pi.dtype))
+                                   VhdlSerializer.VHDLType(pi.dtype))
         except InvalidVHDLTypeExc as e:
             e.variable = pi
             raise e
-    @staticmethod
-    def VHDLVariable(v):
-        if v.isShared :
-            prefix = "SHARED VARIABLE"
-        else:
-            prefix = "VARIABLE"
-        s = prefix + " %s : %s" % (v.name, VhdlSerializer.VHDLTypeAsHdl(v.dtype))
-        if v.defaultVal is not None:
-            return s + " := %s" % VhdlSerializer.Value(v, v.defaultVal)
-        else:
-            return s 
-                
+
     @staticmethod
     def SignalItem(si, declaration=False):
         if declaration:
@@ -92,7 +109,7 @@ class VhdlSerializer():
             else:
                 prefix = "SIGNAL"
 
-            s = prefix + " %s : %s" % (si.name, VhdlSerializer.VHDLTypeAsHdl(si.dtype))
+            s = prefix + " %s : %s" % (si.name, VhdlSerializer.VHDLType(si.dtype))
             if si.defaultVal is not None:
                 return s + " := %s" % VhdlSerializer.Value(si.defaultVal)
             else:
@@ -103,22 +120,14 @@ class VhdlSerializer():
             else:
                 return si.name
     
+
+    @staticmethod
+    def VHDLExtraType(exTyp):
+        return "TYPE %s IS (%s);" % (exTyp.name, ", ".join(exTyp.values))
     
     @staticmethod
-    def EntityAsHdl(ent):
-        ent.port.sort(key=lambda x: x.name)
-        ent.generics.sort(key=lambda x: x.name)
-
-        port = list(map(VhdlSerializer.PortItemAsHdl, ent.port))
-        generics = list(map(VhdlSerializer.GenericItemAsHdl, ent.generics))
-        
-        return VHDLTemplates.entity.render({"name": ent.name,
-                                            'port' : port,
-                                            'generics' : generics
-                                            })
-    @staticmethod
     def VHDLGeneric(g):
-        t = VhdlSerializer.VHDLTypeAsHdl(g.dtype)
+        t = VhdlSerializer.VHDLType(g.dtype)
         if hasattr(g, "defaultVal"):
             return "%s : %s := %s" % (g.name, t,
                                       VhdlSerializer.Value(g, g.defaultVal))
@@ -126,9 +135,28 @@ class VhdlSerializer():
             return "%s : %s" % (g.name, t)
 
     
+    
     @staticmethod
-    def Assignment(a):
-        return "%s <= %s" % (VhdlSerializer.asHdl(a.dst), VhdlSerializer.Value(a.src))
+    def VHDLType(typ):
+        assert(isinstance(typ, HdlType))
+        buff = []
+        buff.append(typ.name.upper())
+        if hasattr(typ, "constrain"):
+            buff.append("(%s)" % VhdlSerializer.Value(typ.constrain))        
+        return "".join(buff)
+                
+    @staticmethod
+    def VHDLVariable(v):
+        if v.isShared :
+            prefix = "SHARED VARIABLE"
+        else:
+            prefix = "VARIABLE"
+        s = prefix + " %s : %s" % (v.name, VhdlSerializer.VHDLType(v.dtype))
+        if v.defaultVal is not None:
+            return s + " := %s" % VhdlSerializer.Value(v, v.defaultVal)
+        else:
+            return s 
+                
           
     @staticmethod
     def renderBitString(v, width, vldMask=None):
@@ -150,15 +178,10 @@ class VhdlSerializer():
               "sensitivityList": ", ".join(proc.sensitivityList),
               "statements": [ VhdlSerializer.asHdl(s) for s in proc.bodyBuff] })
     
+      
     @staticmethod
-    def isSignalHiddenInExpr(sig):
-        """Some signals are just only conections in expression they done need to be rendered because
-        they are hidden inside expression for example sig. from a+b in a+b+c"""
-        if len(sig.endpoints) <= 1 and len(sig.drivers) == 1:
-            d = list(iter(sig.drivers))[0]
-            return not isinstance(d, Assignment) and d.result == sig
-        else:
-            False
+    def MapExpr(m):
+        return   "%s => %s" % (m.compSig.name, VhdlSerializer.asHdl(m.val))
     
     @staticmethod
     def Value(val):

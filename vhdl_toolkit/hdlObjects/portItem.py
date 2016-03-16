@@ -9,5 +9,5 @@ class PortItem(SignalItem):
         
     def __repr__(self):
         from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
-        return VhdlSerializer.PortItemAsVhdl(self) 
+        return VhdlSerializer.PortItem(self) 
 

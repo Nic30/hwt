@@ -25,5 +25,5 @@ class BaseSynthetisatorTC(unittest.TestCase):
     
     @staticmethod
     def getPort(entity, portName):
-        return single(entity.port, lambda x: x.name == portName)
+        return single(entity.ports, lambda x: x.name == portName)
         
