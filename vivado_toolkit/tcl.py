@@ -1,4 +1,4 @@
-from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 import multiprocessing
 
 # http://www.xilinx.com/support/documentation/sw_manuals/xilinx2013_1/ug975-vivado-quick-reference.pdf

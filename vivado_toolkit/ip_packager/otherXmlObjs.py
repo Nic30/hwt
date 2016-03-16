@@ -1,12 +1,10 @@
-import os
+import os, math
 from time import gmtime, strftime
 
 from vivado_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
     appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
-from vhdl_toolkit.synthetisator.param import getParam
-import math
-from vhdl_toolkit.types import Unconstrained
-from vhdl_toolkit.hdlObjects.operators import Op
+from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR, VECTOR
+
 
 XILINX_VERSION = "2014.4.1"
 
@@ -33,10 +31,10 @@ class Value():
         self = cls()
         self.id = idPrefix + g.name
         self.resolve = resolve
-        w = g.var_type.width
+        t = g.dtype
         def getVal():
             if g.defaultVal:
-                return getParam(g.defaultVal)
+                return g.defaultVal.staticEval().val
             else:
                 return 0  
         def bitString(w):
@@ -45,24 +43,17 @@ class Value():
             self.text = ('0x%0' + str(digits) + 'X') % getVal() 
             self.bitStringLength = str(w)
             
-        if w == 1:
-            raise NotImplementedError()
-        elif w == bool:
+        if t == BOOL:
             self.format = "bool"
             self.text = str(bool(getVal())).lower() 
-        elif w == int:
+        elif t == INT:
             self.format = "long"
             self.text = str(getVal())
-        elif w == str:
+        elif t == STR:
             self.format = "string"
             self.text = str(g.defaultVal.val.val)
-        elif isinstance(w, int):
-            bitString(w)
-        elif w == Unconstrained:
-            bitString(w.derivedWidth)
-        elif isinstance(w, Op):
-            w = w.evalFn()
-            bitString(w)
+        elif isinstance(t, VECTOR):
+            bitString(t.getWidth())
         else:
             raise NotImplementedError()
         return self

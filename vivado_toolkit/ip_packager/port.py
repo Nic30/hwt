@@ -1,8 +1,19 @@
-import re
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
          findS, mkSpiElm, ns
-from vhdl_toolkit.synthetisator.param import getParam
-from vhdl_toolkit.hdlObjects.operators import Op
+from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
+from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
+
+class VivadoTclExpressionSerializer(VhdlSerializer):
+    @staticmethod
+    def SignalItem(si, declaration=False):
+        assert(declaration == False)
+        if VhdlSerializer.isSignalHiddenInExpr(si):
+            return VhdlSerializer.asHdl(si.origin)
+        else:
+            return "spirit:decode(id('MODELPARAM_VALUE.%s'))" % (si.name)
+
 
 class WireTypeDef():
     _requiredVal = ["typeName"]
@@ -49,19 +60,15 @@ class Port():
         port.direction = p.direction.lower()
         port.type = WireTypeDef()
         t = port.type
-        w = getParam(p.var_type.width)
+        dt = p.dtype
         
-        if w == 1:
+        if dt == BIT:
             t.typeName = "STD_LOGIC"
             port.vector = False
-        else:
+        elif isinstance(dt, Std_logic_vector):
             t.typeName = "STD_LOGIC_VECTOR"
-            if isinstance(w, int):
-                port.vector = (w - 1, 0)
-            elif isinstance(w, Op):
-                port.vector = (w.op0, w.op1)
-            else:
-                raise NotImplementedError()
+            w = dt.getWidth()
+            port.vector = (w - 1, 0)
         t.viewNameRefs = ["xilinx_vhdlsynthesis", "xilinx_vhdlbehavioralsimulation"]
         return port
     
@@ -73,19 +80,20 @@ class Port():
         if self.vector:
             v = appendSpiElem(w, "vector")
             def mkBoundry(name, val):
+                if isinstance(val, int):
+                    val = hInt(val)
                 d = appendSpiElem(v, name)
                 
                 d.attrib["spirit:format"] = "long"
-                if isinstance(val, Op):  # value is symple type and does not contains generic etc...
+                if isinstance(val, Signal):  # value is simple type and does not contains generic etc...
                     resolve = 'dependent'  # [HOTFIX] needs to be a custom str method for expr
-                    depStr = re.sub("(\A\S*)", "spirit:decode(id('MODELPARAM_VALUE.\g<1>'))", str(val))
-                    d.attrib["spirit:dependency"] = "(" + depStr + ")"
-                    d.text = str(val.evalFn())
+                    d.attrib["spirit:dependency"] = "(" + \
+                                                VivadoTclExpressionSerializer.asHdl(val) + ")"
+                    d.text = VivadoTclExpressionSerializer.asHdl(val.staticEval())
                 else:
                     resolve = "immediate"
-                    d.text = str(getParam(val))
+                    d.text = VivadoTclExpressionSerializer.asHdl(val)
                 d.attrib["spirit:resolve"] = resolve
-                    
             mkBoundry("left", self.vector[0])
             mkBoundry("right", self.vector[1])
         td = appendSpiElem(w, "wireTypeDefs")

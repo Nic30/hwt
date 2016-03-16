@@ -109,7 +109,7 @@ class Component():
         self._topUnit = unit
         self.name = unit._name
         self.model.addDefaultViews(self._topUnit)
-        for p in self._topUnit._entity.port:
+        for p in self._topUnit._entity.ports:
             self.model.ports.append(Port._entPort2CompPort(unit._entity, p))
 
         for _, intf in unit._interfaces.items():

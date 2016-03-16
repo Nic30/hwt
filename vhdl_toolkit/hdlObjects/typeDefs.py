@@ -281,12 +281,8 @@ class Std_logic_vector_contrained(Std_logic_vector):
             return self.getWidth()
         
     def getWidth(self):
-        w = self.constrain
-        if w.dtype == RANGE:
-            pass
-        else:
-            w = w.staticEval()
-            
+        w = self.constrain.staticEval()
+         
         return abs(w.val[0].val - w.val[1].val) + 1
         
     class Ops(Std_logic_vector.Ops):
@@ -336,7 +332,7 @@ class String(HdlType):
             ev = self.eventMask | other.eventMask
             vCls = BOOL.ValueCls
             
-            return vCls(eq, vCls, vld, eventMask=ev)
+            return vCls(eq, STR, vld, eventMask=ev)
 
     class ValueCls(Value, Ops):
         pass
@@ -346,6 +342,8 @@ class Array(HdlType):
     vldMask and eventMask on Array_val instance is not used instead of that
     these flags on elements are used
     [TODO] Array in Array
+    [TODO] Array elements should always be instance of Signal
+           to prevent problems in simulation
     """
     def __init__(self, elmType, size):
         super(Array, self).__init__()
@@ -372,7 +370,6 @@ class Array(HdlType):
         def __eq__(self, other):
             assert(self.dtype.elmType == other.dtype.elmType)
             assert(self.dtype.size == other.dtype.size)
-            vCls = BOOL.ValueCls
             
             eq = True
             first = self.val[0]
@@ -383,7 +380,7 @@ class Array(HdlType):
                 eq = eq and a == b
                 vld = vld & a.vldMask & b.vldMask
                 ev = ev & a.eventMask & b.eventMask
-            return vCls(eq, vCls, vld, eventMask=ev)
+            return BOOL.ValueCls(eq, BOOL, vld, eventMask=ev)
 
     class ValueCls(Value, Ops):
         pass            
@@ -408,8 +405,15 @@ class Range(Array):
     def valAsVhdl(self, val, serializer):
         return "%s DOWNTO %s" % (serializer.Value(val.val[0]), serializer.Value(val.val[1]))
 
-    
-     
+    class Ops(Array.Ops):
+        
+        def staticEval(self):
+            _0 = self.val[0].staticEval()
+            _1 = self.val[0].staticEval()
+            return Range.ValueCls([_0, _1], Range.ValueCls, vld=None, eventMask=None)
+        
+    class ValueCls(Array.ValueCls, Ops):
+        pass      
 BOOL = Boolean()
 INT = Integer()
 UINT = Natural()

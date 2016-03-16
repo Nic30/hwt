@@ -127,10 +127,10 @@ class Signal(SignalItem, SignalOps):
     def staticEval(self):
         # operator writes in self._val new value
         if self.drivers:
-            self._val = self.defaultVal
-        else:
             for d in self.drivers:
                 d.staticEval()
+        else:
+            self._val = self.defaultVal
         return self._val
     
     def simUpdateVal(self, newVal):

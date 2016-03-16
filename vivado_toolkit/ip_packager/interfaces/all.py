@@ -1,4 +1,4 @@
-from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from vivado_toolkit.ip_packager.otherXmlObjs import Parameter
 from python_toolkit.arrayQuery import single, where
 from vhdl_toolkit import interfaces
