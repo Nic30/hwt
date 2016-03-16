@@ -3,6 +3,7 @@ from vhdl_toolkit.templates import VHDLTemplates
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.hdlObjects.assignment import Assignment 
+from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 
 
 class VhdlSerializer():
@@ -58,8 +59,8 @@ class VhdlSerializer():
             raise Exception("Incomplete component instance")
         return VHDLTemplates.componentInstance.render(
                {"name" : ci.name,
-                'entity': ci.entity,
-                'portMaps': [VhdlSerializer.MapExpr(x) for x in   ci.portMaps],
+                'component': ci.component,
+                'portMaps': [VhdlSerializer.PortConnection(x) for x in   ci.portMaps],
                 'genericMaps': [VhdlSerializer.MapExpr(x) for x in   ci.genericMaps]})     
 
     @staticmethod
@@ -87,10 +88,15 @@ class VhdlSerializer():
         they are hidden inside expression for example sig. from a+b in a+b+c"""
         if len(sig.endpoints) <= 1 and len(sig.drivers) == 1:
             d = list(iter(sig.drivers))[0]
-            return not isinstance(d, Assignment) and d.result == sig
+            return not isinstance(d, Assignment) \
+                   and not isinstance(d, PortConnection) \
+                   and d.result == sig
         else:
             False
-      
+    
+    @staticmethod
+    def PortConnection(pc):
+        return " %s => %s" % (pc.portItem.name, VhdlSerializer.asHdl(pc.sig))      
     
     @staticmethod
     def PortItem(pi):
@@ -100,6 +106,7 @@ class VhdlSerializer():
         except InvalidVHDLTypeExc as e:
             e.variable = pi
             raise e
+
 
     @staticmethod
     def SignalItem(si, declaration=False):
@@ -119,8 +126,9 @@ class VhdlSerializer():
                 return VhdlSerializer.asHdl(si.origin)
             else:
                 return si.name
-    
 
+        
+        
     @staticmethod
     def VHDLExtraType(exTyp):
         return "TYPE %s IS (%s);" % (exTyp.name, ", ".join(exTyp.values))
@@ -181,7 +189,7 @@ class VhdlSerializer():
       
     @staticmethod
     def MapExpr(m):
-        return   "%s => %s" % (m.compSig.name, VhdlSerializer.asHdl(m.val))
+        return   "%s => %s" % (m.compSig.name, VhdlSerializer.asHdl(m.value))
     
     @staticmethod
     def Value(val):
