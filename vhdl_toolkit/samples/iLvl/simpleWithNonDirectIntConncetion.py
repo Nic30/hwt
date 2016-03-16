@@ -1,5 +1,5 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaces.std import Ap_none
+from vhdl_toolkit.interfaces.std import Ap_none
 from vhdl_toolkit.formater import formatVhdl
 
 

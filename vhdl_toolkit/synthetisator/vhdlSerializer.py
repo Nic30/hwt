@@ -17,7 +17,7 @@ class VhdlSerializer():
         elif isinstance(obj, Signal):
             return VhdlSerializer.SignalItem(obj)
         elif isinstance(obj, Value):
-            return VhdlSerializer.Value(None, obj)
+            return VhdlSerializer.Value(obj)
         elif isinstance(obj, Assignment):
             return VhdlSerializer.Assignment(obj)
         else:
@@ -117,7 +117,7 @@ class VhdlSerializer():
                 prefix = "SIGNAL"
 
             s = prefix + " %s : %s" % (si.name, VhdlSerializer.VHDLType(si.dtype))
-            if si.defaultVal is not None:
+            if si.defaultVal is not None and si.defaultVal.vldMask:
                 return s + " := %s" % VhdlSerializer.Value(si.defaultVal)
             else:
                 return s 
