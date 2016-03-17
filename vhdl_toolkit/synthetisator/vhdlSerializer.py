@@ -4,6 +4,7 @@ from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.hdlObjects.assignment import Assignment 
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
+from vhdl_toolkit.hdlObjects.specialValues import Unconstrained
 
 
 class VhdlSerializer():
@@ -107,7 +108,18 @@ class VhdlSerializer():
             e.variable = pi
             raise e
 
-
+    @staticmethod
+    def renderBitString(v, width, vldMask=None):
+        if vldMask is None:
+            if width == 1:
+                return "'%s'" % (v) 
+            elif width % 4 == 0:
+                return ('X"%0' + str(width % 4) + 'x"') % (v)
+            else:
+                return ('B"{0:0' + str(width) + 'b}"').format(v)
+        else:
+            raise NotImplementedError("vldMask not implemented yet")
+    
     @staticmethod
     def SignalItem(si, declaration=False):
         if declaration:
@@ -149,7 +161,7 @@ class VhdlSerializer():
         assert(isinstance(typ, HdlType))
         buff = []
         buff.append(typ.name.upper())
-        if hasattr(typ, "constrain"):
+        if hasattr(typ, "constrain") and not isinstance(typ.constrain, Unconstrained):
             buff.append("(%s)" % VhdlSerializer.Value(typ.constrain))        
         return "".join(buff)
                 
@@ -166,18 +178,7 @@ class VhdlSerializer():
             return s 
                 
           
-    @staticmethod
-    def renderBitString(v, width, vldMask=None):
-        if vldMask is None:
-            if width == 1:
-                return "'%s'" % (v) 
-            elif width % 4 == 0:
-                return ('X"%0' + str(width % 4) + 'x"') % (v)
-            else:
-                return ('B"{0:0' + str(width) + 'b}"').format(v)
-        else:
-            raise NotImplementedError("vldMask not implemented yet")
-    
+
     @staticmethod
     def HWProcess(proc):
         hasCondition = not(len(proc.bodyBuff) == 1 and proc.bodyBuff[0].cond == set())
@@ -201,4 +202,4 @@ class VhdlSerializer():
         elif isinstance(val, Signal):
             return VhdlSerializer.SignalItem(val)
         else:
-            raise Exception("value2vhdlformat can not resolve type conversion for %s" % (repr(val))) 
+            raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 

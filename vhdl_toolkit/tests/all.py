@@ -20,19 +20,22 @@ from vhdl_toolkit.tests.synthetisator.rtlLevel.synthesis import TestCaseSynthesi
 
 
 if __name__ == "__main__":
-
-    loader = TestLoader()
-    suite = TestSuite((
-        loader.loadTestsFromTestCase(HierarchyExtractorTC),
-        loader.loadTestsFromTestCase(ParserTC),
-        loader.loadTestsFromTestCase(InterfaceSyntherisatorTC),
-        loader.loadTestsFromTestCase(VhdlCodesignTC),
-        loader.loadTestsFromTestCase(SubunitsSynthesisTC),
-        loader.loadTestsFromTestCase(Expr2CondTC),
-        loader.loadTestsFromTestCase(OperatorTC),
-        loader.loadTestsFromTestCase(TestCaseSynthesis),
-        loader.loadTestsFromTestCase(ValueTC),
+    def TestSuiteFromTCs(tcs):
+        loader = TestLoader()
+        loadedTcs = [loader.loadTestsFromTestCase(tc) for tc in tcs]
+        suite = TestSuite(loadedTcs)
+        return suite
+    
+    suite = TestSuiteFromTCs((
+        HierarchyExtractorTC,
+        ParserTC,
+        InterfaceSyntherisatorTC,
+        VhdlCodesignTC,
+        SubunitsSynthesisTC,
+        Expr2CondTC,
+        OperatorTC,
+        TestCaseSynthesis,
+        ValueTC,
     ))
-
     runner = TextTestRunner(verbosity=2)
     runner.run(suite)

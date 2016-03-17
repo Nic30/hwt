@@ -13,6 +13,12 @@ addOperand_logic = convOpsToType(BOOL)
 
 
 class OpDefinition():
+    def __eq__(self, other):
+        return self.id == other.id
+    
+    def  __hash__(self):
+        return hash(self.id)
+    
     @staticmethod
     def addOperand_default(operator, operand):
         t = operand.dtype
@@ -79,9 +85,9 @@ class OpDefinition():
         else:
             raise NotImplementedError()
         
-    #[TODO] rename to asVhdl
+    # [TODO] rename to asVhdl
     def str(self, operator, serializer):
-        #[TODO] not ideal, serializer should be used
+        # [TODO] not ideal, serializer should be used
         from vhdl_toolkit.hdlObjects.operator import Operator
         
         def p(op):

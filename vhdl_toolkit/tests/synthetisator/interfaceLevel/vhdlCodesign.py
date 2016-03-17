@@ -4,10 +4,15 @@ from vhdl_toolkit.synthetisator.param import Param
 from python_toolkit.arrayQuery import single
 from vhdl_toolkit.interfaces.amba import AxiLite
 from vhdl_toolkit.interfaces.std import Ap_clk, \
-    Ap_rst_n, BramPort
+    Ap_rst_n, BramPort, Ap_vld
 import unittest
 from vhdl_toolkit.hdlObjects.typeDefs import INT, UINT, PINT
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
+from vhdl_toolkit.synthetisator.rtlLevel.signal import SignalNode
+from vhdl_toolkit.hdlObjects.operator import Operator
+from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
+from vhdl_toolkit.hdlObjects.expr import ExprComparator
+
 
 ILVL_VHDL = '../../../samples/iLvl/vhdl/'
 
@@ -20,7 +25,6 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertIs(INT, typeDefs.INT)
         ctx = BaseVhdlContext.getBaseCtx()
         self.assertIs(ctx['integer'], INT)
-        
 
     def test_bramIntfDiscovered(self):
         from vhdl_toolkit.samples.iLvl.bram import Bram
@@ -68,7 +72,6 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(posG.dtype, PINT) 
         self.assertEqual(intG.dtype, INT) 
         
-        
     def test_axiLiteSlave2(self):
         class AxiLiteSlave2(UnitWithSource):
             _origin = ILVL_VHDL + "axiLite_basic_slave2.vhd"
@@ -76,8 +79,6 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertTrue(hasattr(u, "ap_clk"))
         self.assertTrue(hasattr(u, "ap_rst_n"))
         self.assertTrue(hasattr(u, "axilite"))
-        
-
     
     def test_withPartialyInvalidInterfaceNames(self):
         class EntityWithPartialyInvalidIntf(UnitWithSource):
@@ -127,56 +128,119 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         a = AxiLiteSlaveContainer()
         self.assertTrue("ADDR_WIDTH" in a._params)
         self.assertTrue("DATA_WIDTH" in a._params) 
-        
 
     def test_axiParams(self):
         from vhdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
-        a = AxiLiteSlaveContainer()
-        AW = a.ADDR_WIDTH.get()
-        DW = a.DATA_WIDTH.get()
+        u = AxiLiteSlaveContainer()
+        AW = u.ADDR_WIDTH.get()
+        DW = u.DATA_WIDTH.get()
+
+        self.assertEqual(u.axi.ADDR_WIDTH.get(), hInt(8))
+        self.assertEqual(u.axi.ar.ADDR_WIDTH.get(), hInt(8))
+        self.assertEqual(u.axi.ar.addr._dtype.getBitCnt(), 8)
         
-        self.assertEqual(a.axi.ADDR_WIDTH.get(), AW)
-        self.assertEqual(a.axi.ar.ADDR_WIDTH.get(), AW)
-        self.assertEqual(a.axi.ar.addr._width.get(), AW)
+        self.assertEqual(u.axi.ADDR_WIDTH.get(), AW)
+        self.assertEqual(u.axi.ar.ADDR_WIDTH.get(), AW)
+        self.assertEqual(u.axi.ar.addr._dtype.getBitCnt(), AW.val)
         # [TODO] width of parametrized interfaces from VHDL should be Param with expr
         
         
-        self.assertEqual(a.axi.w.strb._width.get(), DW // 8)
-        self.assertEqual(a.slv.C_S_AXI_ADDR_WIDTH.get(), AW)
-        self.assertEqual(a.slv.C_S_AXI_DATA_WIDTH.get(), DW)
+        self.assertEqual(u.axi.w.strb._dtype.getBitCnt(), DW.val // 8)
+        self.assertEqual(u.slv.c_s_axi_addr_width.get().get(), AW)
+        self.assertEqual(u.slv.c_s_axi_data_width.get().get(), DW)
         
-        self.assertEqual(a.slv.S_AXI.ar.addr._width.get(), AW)        
+        self.assertEqual(u.slv.S_AXI.ar.addr._dtype.getBitCnt(), AW.val)        
     
+    def test_paramsExtractionSimple(self):
+        class Ap_vldWithParam(UnitWithSource):
+            _origin = ILVL_VHDL + "ap_vldWithParam.vhd"
+        u = Ap_vldWithParam()
+        self.assertIsInstance(u.data, Ap_vld) 
+        # print("Ap_vldWithParam.data_width %d" % id(Ap_vldWithParam.data_width))
+        # print("Ap_vldWithParam.data.DATA_WIDTH %d" % id(Ap_vldWithParam.data.DATA_WIDTH))
+        # print("u.data_width %d" % id(u.data_width))
+        # print("u.data.DATA_WIDTH %d" % id(u.data.DATA_WIDTH))
+        self.assertEqual(u.data_width, u.data.DATA_WIDTH)
+        self.assertEqual(u.data.DATA_WIDTH.get().val, 13) 
+        
+        self.assertEqual(u.data.data._dtype.getBitCnt(), 13)
+        
+    def test_compatibleExpression(self):
+         
+        def mkExpr0(val):
+            return  SignalNode.resForOp(Operator(AllOps.DOWNTO, [val, hInt(0)]))    
+        
+        def mkExpr0WithMinusOne(val):
+            val = SignalNode.resForOp(Operator(AllOps.MINUS, [val, hInt(1)]))
+            return  SignalNode.resForOp(Operator(AllOps.DOWNTO, [val, hInt(0)]))    
+        
+        
+        sig_a = Param(0)
+        sig_b = Param(1)
+        
+        a = mkExpr0(sig_a)
+        b = mkExpr0(sig_b)
+        m = ExprComparator.isSimilar(a, b, sig_a)
+        self.assertTrue(m[0])
+        self.assertEqual(m[1], sig_b)
+        r = list(ExprComparator.findExprDiffInParam(a, b))[0]
+        self.assertSequenceEqual(r, (sig_a, sig_b))
+
+        sig_a = Param(9)
+        sig_b = Param(1)
+        
+        a = mkExpr0WithMinusOne(sig_a)
+        b = mkExpr0WithMinusOne(sig_b)
+        m = ExprComparator.isSimilar(a, b, sig_a)
+        self.assertTrue(m[0])
+        self.assertEqual(m[1], sig_b)
+        r = list(ExprComparator.findExprDiffInParam(a, b))[0]
+        self.assertSequenceEqual(r, (sig_a, sig_b))
+        
+        v = a.staticEval()
+        self.assertSequenceEqual(v.val, [hInt(0), hInt(8)])
+        
+        sig_a.set(hInt(11))
+        v = a.staticEval()
+        self.assertSequenceEqual(v.val, [hInt(0), hInt(10)])
+        
+        v = b.staticEval()
+        self.assertSequenceEqual(v.val, [hInt(0), hInt(0)])      
+
+        sig_b.set(hInt(2))
+        v = b.staticEval()
+        self.assertSequenceEqual(v.val, [hInt(0), hInt(1)])         
+            
     def test_interfaceParamInstances(self):
         from vhdl_toolkit.interfaces.amba import AxiStream, AxiStream_withoutSTRB
-        self.assertFalse(AxiStream_withoutSTRB.DATA_WIDTH.isReplaced)
-        self.assertFalse(AxiStream.DATA_WIDTH.isReplaced)
-        
+        self.assertEqual(AxiStream_withoutSTRB.DATA_WIDTH, AxiStream.DATA_WIDTH)
+        origDW0 = AxiStream.DATA_WIDTH
+        origDW1 = AxiStream_withoutSTRB.DATA_WIDTH
         
         dw = Param(10)
         a = AxiStream()
 
-        self.assertIsNot(AxiStream_withoutSTRB.DATA_WIDTH, a.DATA_WIDTH)
-        self.assertIsNot(AxiStream.DATA_WIDTH, a.DATA_WIDTH)
+        self.assertIsNot(origDW0, a.DATA_WIDTH)
+        self.assertIsNot(origDW1, a.DATA_WIDTH)
+        self.assertEqual(AxiStream.DATA_WIDTH, origDW0)
+        self.assertEqual(AxiStream_withoutSTRB.DATA_WIDTH, origDW1)
+        
 
-        self.assertFalse(AxiStream_withoutSTRB.DATA_WIDTH.isReplaced)
-        self.assertFalse(AxiStream.DATA_WIDTH.isReplaced)
         
         a.DATA_WIDTH.replace(dw)
+        self.assertNotEqual(AxiStream_withoutSTRB.DATA_WIDTH.get(), hInt(10))
+        
         b = AxiStream()
         
-        self.assertFalse(AxiStream_withoutSTRB.DATA_WIDTH.isReplaced)
-        self.assertFalse(AxiStream.DATA_WIDTH.isReplaced)
+        self.assertTrue(AxiStream_withoutSTRB.DATA_WIDTH.replacedWith is None)
+        self.assertTrue(AxiStream.DATA_WIDTH.replacedWith is None)
         
-        self.assertTrue(a.DATA_WIDTH.isReplaced)
-        self.assertFalse(b.DATA_WIDTH.isReplaced)
-        
-        
-        
+        self.assertTrue(a.DATA_WIDTH.replacedWith is dw)
+        self.assertFalse(b.DATA_WIDTH.replacedWith is dw)
         
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    # suite.addTest(VhdlCodesignTC('test_genericValues'))
+    #suite.addTest(VhdlCodesignTC('test_axiParams'))
     suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

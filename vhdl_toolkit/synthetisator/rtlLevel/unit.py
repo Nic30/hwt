@@ -1,6 +1,5 @@
 from python_toolkit.arrayQuery import single, arr_any, NoValueExc
-from python_toolkit.stringUtils import matchIgnorecase
-from vhdl_toolkit.hdlObjects.architecture import ComponentInstance
+from vhdl_toolkit.hdlObjects.component import ComponentInstance
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.portItem import PortItem
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
@@ -77,7 +76,7 @@ class VHDLUnit(Entity, Unit):
         self._updateGenericsFromCtx()
         # [TODO]
         for g in self.entity.generics:
-            v = g.defaultVal
+            v = g._val
             ci.genericMaps.append(MapExpr(g, v)) 
         
         ci.portMaps.sort(key=lambda pm :  pm.portItem.name)

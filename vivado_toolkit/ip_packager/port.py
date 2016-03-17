@@ -1,19 +1,9 @@
 from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
          findS, mkSpiElm, ns
 from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
-from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
-
-class VivadoTclExpressionSerializer(VhdlSerializer):
-    @staticmethod
-    def SignalItem(si, declaration=False):
-        assert(declaration == False)
-        if VhdlSerializer.isSignalHiddenInExpr(si):
-            return VhdlSerializer.asHdl(si.origin)
-        else:
-            return "spirit:decode(id('MODELPARAM_VALUE.%s'))" % (si.name)
-
+from vivado_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
 
 class WireTypeDef():
     _requiredVal = ["typeName"]

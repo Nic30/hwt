@@ -8,7 +8,7 @@ from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from vhdl_toolkit.interfaces.all import allInterfaces
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
-from vhdl_toolkit.hdlObjects.architecture import Component
+from vhdl_toolkit.hdlObjects.component import Component
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.hdlObjects.value import Value
 
@@ -45,9 +45,14 @@ class Unit(Buildable):
             setattr(self, pName, deepcopy(v, copyDict)) 
             
         for intfName, interface in self._interfaces.items():
-            interface._name = intfName
+
             interface._parent = self
             setattr(self, intfName, interface)
+        
+        for paramName, param in self._params.items():
+
+            param._parent = self
+            setattr(self, paramName, param)
         
         for uName, unit in self._subUnits.items():
             unit._name = uName
@@ -62,11 +67,13 @@ class Unit(Buildable):
         cls._hlsUnits = {}
         for propName, prop in vars(cls).items():
             if isinstance(prop, Interface):
+                prop._name = propName
                 cls._interfaces[propName] = prop
             elif issubclass(prop.__class__, Unit):
                 cls._subUnits[propName] = prop
             elif issubclass(prop.__class__, Param):
                 cls._params[propName] = prop
+                prop._name = propName
                 prop.name = propName
             elif hasattr(prop, "_synthetisator"):
                 cls._hlsUnits[propName] = prop
@@ -94,7 +101,7 @@ class Unit(Buildable):
         # construct globals (generics for entity)
         globalNames = {}
         for k, v in self._params.items():
-            globalNames[k.lower()] = v.get() 
+            globalNames[k.lower()] = v 
         return Context(self._name, globalNames=globalNames)
    
     def _synthetiseContext(self, externInterf, cntx):
@@ -148,7 +155,7 @@ class Unit(Buildable):
         for _, connection in self._interfaces.items():
             connection._propagateConnection()
         
-        #synthesise all hls object
+        # synthesise all hls object
         for _, hlsU in self._hlsUnits.items():
             synthetisator = hlsU._synthetisator(self, cntx, hlsU)
             synthetisator._synthesise()
@@ -198,14 +205,12 @@ class UnitWithSource(Unit):
 
         cls._entity = entityFromFile(cls._origin)
         for g in cls._entity.generics:
-            p = Param(g.defaultVal)
-            g.defaultVal = p 
             if hasattr(cls, g.name):
                 raise  Exception("Already has param %s (old:%s , new:%s)" 
                       % (g.name, str(getattr(cls, g.name)), str(g)))
                 
-            setattr(cls, g.name, g.defaultVal)
-            cls._params[g.name] = p
+            setattr(cls, g.name, g)
+            cls._params[g.name] = g
         cls._sigLvlUnit = VHDLUnit(cls._entity)
 
         for intfCls in cls._intfClasses:

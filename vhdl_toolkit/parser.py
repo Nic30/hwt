@@ -13,7 +13,6 @@ from vhdl_toolkit.hdlObjects.operator import Operator
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 from vhdl_toolkit.hdlObjects.specialValues import Unconstrained
 from vhdl_toolkit.hdlObjects.portItem import PortItem 
-from vhdl_toolkit.hdlObjects.variables import VHDLGeneric
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.package import PackageHeader, PackageBody
 from vhdl_toolkit.hdlObjects.architecture import Architecture
@@ -116,8 +115,10 @@ class Parser():
             t.derivedWidth = int(jGeneric['value']['literal']["bits"])
 
         defaultVal = Parser.exprFromJson(jGeneric['value'], ctx)
-        
-        g = VHDLGeneric(name, t, defaultVal=defaultVal)
+            
+        g = Param(defaultVal)
+        g.name = name
+        g._name = name
         return g
     
     @staticmethod

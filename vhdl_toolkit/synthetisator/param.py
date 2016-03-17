@@ -20,31 +20,39 @@ class Param(Signal):
             t = initval.dtype
         super(Param, self).__init__(None, t, defaultVal=initval)
         self._val = initval
-        self.isReplaced = False
+        self.replacedWith = None
         
     def get(self):
-        assert(not self.isReplaced)
+        assert(self.replacedWith is None)
         return self._val
   
     def replace(self, replaceWith):
         """
         self will always have value of parent
         """
-        assert(not self.isReplaced)
+        if self is replaceWith or self.replacedWith is replaceWith:
+            return
+        assert(self.replacedWith is None)
         for dr in self.drivers:
-            dr.ops = [replaceWith if x == self else x for x in dr.ops]
+            dr.ops = [replaceWith if x is self else x for x in dr.ops]
                 
         for ep in self.endpoints:
             ep.ops = [replaceWith if x is self else x for x in ep.ops]
             
         
-        self.isReplaced = True
+        self.replacedWith = replaceWith
+        if hasattr(self, "_parent"):
+            p = self._parent
+            n = self._name
+            p._params[n] = replaceWith
+            setattr(p, n, replaceWith)
 
     def set(self, val):
         """
         set value of this param
         """
-        assert(not self.isReplaced)
+        assert(self.replacedWith is None)
+        self.defaultVal = val
         self._val = val
     
     def __repr__(self):
@@ -71,7 +79,7 @@ def inheritAllParams(cls):
             for paramName, param in cls._params.items():
                 if hasattr(intf, paramName):
                     p = getattr(intf, paramName)
-                    #print(cls.__name__, paramName)
+                    # print(cls.__name__, paramName)
                     p.replace(param)
                     setattr(intf, paramName, param)
                     

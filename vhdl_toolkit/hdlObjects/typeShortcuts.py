@@ -1,10 +1,10 @@
 from vhdl_toolkit.hdlObjects.value import Value
-from vhdl_toolkit.hdlObjects.typeDefs import INT, BOOL, VECTOR, STR, BIT, RANGE
-from vhdl_toolkit.synthetisator.param import getParam
-from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from vhdl_toolkit.hdlObjects.typeDefs import INT, BOOL, VECTOR, STR, BIT
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, SignalNode
+from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
+from vhdl_toolkit.hdlObjects.operator import Operator
 
 def getSignalOrValue(val, pyT, hdlT):
-    val = getParam(val)
     if isinstance(val, Value) or isinstance(val, Signal):
         return val
     else:
@@ -40,7 +40,7 @@ def mkRange(width):
         to = hInt(to) - hInt(1)
     else:
         to = to.opSub(hInt(1))
-    return Value.fromPyVal([to, hInt(0)], RANGE)
+    return SignalNode.resForOp(Operator(AllOps.DOWNTO, [to, hInt(0)]))
 
 def vecT(width):
     """Make contrained vector type"""

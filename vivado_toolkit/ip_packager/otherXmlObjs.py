@@ -3,13 +3,13 @@ from time import gmtime, strftime
 
 from vivado_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
     appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
-from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR, VECTOR
+from vhdl_toolkit.hdlObjects.typeDefs import BOOL, STR, Std_logic_vector, Integer
 
 
 XILINX_VERSION = "2014.4.1"
 
 class Value():
-    __slots__ = ['id', 'format', 'bitStringLength', 'resolve', 'text']
+    __slots__ = ['id', 'format', 'bitStringLength', 'resolve', 'dependency', 'text']
     RESOLVE_GENERATED = "generated"
     RESOLVE_USER = "user"
 
@@ -19,6 +19,7 @@ class Value():
         self.id = elm.attrib[spi_ns_prefix + 'id']
         self.text = elm.text
         self.resolve = elm.attrib[spi_ns_prefix + 'resolve']
+        self.dependency = elm.attrib[spi_ns_prefix + 'dependency']
         for n in ['format', 'bitStringLength']:
             try:
                 value = elm.attrib[spi_ns_prefix + n]
@@ -26,6 +27,7 @@ class Value():
             except KeyError:
                 pass
         return self
+    
     @classmethod
     def fromGeneric(cls, idPrefix, g, resolve):
         self = cls()
@@ -46,16 +48,16 @@ class Value():
         if t == BOOL:
             self.format = "bool"
             self.text = str(bool(getVal())).lower() 
-        elif t == INT:
+        elif isinstance(t, Integer) :
             self.format = "long"
             self.text = str(getVal())
         elif t == STR:
             self.format = "string"
-            self.text = str(g.defaultVal.val.val)
-        elif isinstance(t, VECTOR):
-            bitString(t.getWidth())
+            self.text = g.defaultVal.staticEval().val
+        elif isinstance(t, Std_logic_vector):
+            bitString(g.defaultVal.dtype.getWidth())
         else:
-            raise NotImplementedError()
+            raise NotImplementedError("Not implemented for datatype %s" % repr(t))
         return self
         
     def asElem(self):

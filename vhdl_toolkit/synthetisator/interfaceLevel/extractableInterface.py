@@ -1,11 +1,13 @@
 from python_toolkit.arrayQuery import single, NoValueExc
 from python_toolkit.stringUtils import matchIgnorecase
 from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
+from vhdl_toolkit.hdlObjects.expr import ExprComparator
 
 class InterfaceIncompatibilityExc(Exception):
     pass
 
 class ExtractableInterface():
+    # [TODO] extract interface params as well
     @classmethod
     def _extractPossiblePrefixes(cls, entity, prefix=""):
         """
@@ -67,7 +69,13 @@ class ExtractableInterface():
         @return: self if extraction was successful
         @raise InterfaceIncompatibilityExc: if this interface with this prefix does not fit to this entity 
         """
+        # [TODO] extractions of params as well
+        # I will find it in signal at lowest level
+        # I need to update it all the way up
+        # replacing of params can be a performance hit
+        # 
         if self._subInterfaces:
+            # extract subinterfaces and propagate params
             allDirMatch = True
             noneDirMatch = True
             if hasattr(self, "_name") and self._name != '':
@@ -86,6 +94,11 @@ class ExtractableInterface():
                 for intfName, intf in self._subInterfaces.items():
                     intf._unExtrac()
                 raise e
+            # update all params on this interface
+            for pName, p in self._params.items():
+                if not p.replacedWith is None:
+                    setattr(self, pName, p.replacedWith)
+                
             if allDirMatch:
                 self._direction = INTF_DIRECTION.MASTER
             elif noneDirMatch:
@@ -94,11 +107,21 @@ class ExtractableInterface():
                 self._unExtrac()
                 raise InterfaceIncompatibilityExc("Direction mismatch")
         
+            # update all params which were found in unit
+            # update params on object as well
+            for pName, p in self._params.items():
+                if not p.replacedWith is None:
+                    self._params[pName] = p.replacedWith
+                    setattr(self, pName, p.replacedWith)
+            
         else:
+            # extract signal(Ap_none , etc.)
+            # collect all posible names
             intfNames = []
             if hasattr(self, "_name"):
                 intfNames.append(self._name)
             intfNames.extend(self._alternativeNames)
+            # try find suitable portItem in entity port 
             for n in intfNames:
                 name = prefix + n
                 try:
@@ -111,8 +134,24 @@ class ExtractableInterface():
                 self._unExtrac()
                 raise  InterfaceIncompatibilityExc("Missing " + prefix + n)
 
+            # update interface type from hdl, update generics
+            if hasattr(self._dtype, "constrain"):
+                intfTConstr = self._dtype.constrain
+                unitTConstr = self._originEntityPort.dtype.constrain
+                 
+                for intfParam, unitParam in ExprComparator\
+                                            .findExprDiffInParam(intfTConstr, unitTConstr):
+                    #print()
+                    #print("intfParam.replace(unitParam) %d, %d %s %s" % 
+                    #      (id(intfParam), id(unitParam), unitParam.name, str(unitParam.defaultVal)))
+                    intfParam.replace(unitParam) 
+            
+            self._dtype = self._originEntityPort.dtype
+            
+            # assign references to hdl objects
             self._originEntityPort._interface = self
             self._originSigLvlUnit = sigLevelUnit
+            # resolve direction
             dirMatches = self._originEntityPort.direction == self._masterDir
             if dirMatches:
                 self._direction = INTF_DIRECTION.MASTER
@@ -145,5 +184,5 @@ class ExtractableInterface():
                 # print(("_tryToExtract", name, intf))
                 yield (name, intf) 
             except InterfaceIncompatibilityExc as e:
-                #print(e)
+                # print(e)
                 pass

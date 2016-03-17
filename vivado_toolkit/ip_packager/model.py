@@ -2,6 +2,7 @@ from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements,
          findS, mkSpiElm, spi_ns_prefix, appendSpiArray
 import xml.etree.ElementTree as etree
 from vivado_toolkit.ip_packager.otherXmlObjs import Value
+from vivado_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
 
 class FileSetRef():
     @classmethod
@@ -54,7 +55,7 @@ class ModelParameter():
     @classmethod
     def fromGeneric(cls, g):
         val = Value.fromGeneric("MODELPARAM_VALUE.", g, Value.RESOLVE_GENERATED)
-        return cls(g.name, g.name.replace("_", " "), str(g.var_type).lower(), val)
+        return cls(g.name, g.name.replace("_", " "), VivadoTclExpressionSerializer.asHdl(g.dtype).lower(), val)
     def asElem(self):
         e = mkSpiElm("modelParameter")
         appendStrElements(e, self,

@@ -7,6 +7,9 @@ import vhdl_toolkit.interfaces.amba
 
 from vivado_toolkit.ip_packager.helpers import mkSpiElm, spi_ns_prefix
 from vhdl_toolkit.synthetisator.param import getParam
+from vivado_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
+
          
 DEFAULT_CLOCK = 100000000
 D = DIRECTION
@@ -38,13 +41,20 @@ class IfConfig(Type):
         return p
 
     def addSimpleParam(self, thisIntf, name, value):
-        p_aw = Parameter()
-        p_aw.name = name
-        p_aw.value.resolve = "immediate"
-        p_aw.value.id = "BUSIFPARAM_VALUE." + thisIntf._name.upper() + "." + name.upper()
-        p_aw.value.text = value
-        self.parameters.append(p_aw)
+        p = Parameter()
+        p.name = name
+        p.value.resolve = "immediate"
+        p.value.id = "BUSIFPARAM_VALUE." + thisIntf._name.upper() + "." + name.upper()
+        p.value.text = value
+        self.parameters.append(p)
+        return p
     
+    def addWidthParam(self, thisIntf, name, value):
+        p = self.addSimpleParam(thisIntf, "ADDR_WIDTH",
+                            VivadoTclExpressionSerializer.asHdl(value.staticEval()))
+        if isinstance(value, Signal):
+            p.value.resolve = "user" 
+        
     def postProcess(self, component, entity, allInterfaces, thisIf):
         pass 
 
@@ -162,8 +172,8 @@ class AXILite(IfConfig):
         
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.endianness = "little"
-        self.addSimpleParam(thisIf, "ADDR_WIDTH", getParam(thisIf.aw.addr._width))
-        self.addSimpleParam(thisIf, "DATA_WIDTH", getParam(thisIf.w.data._width))
+        self.addWidthParam(thisIf, "ADDR_WIDTH", thisIf.ADDR_WIDTH)
+        self.addWidthParam(thisIf, "DATA_WIDTH", thisIf.DATA_WIDTH)
         self.addSimpleParam(thisIf, "PROTOCOL", "AXI4LITE")
         self.addSimpleParam(thisIf, "READ_WRITE_MODE", "READ_WRITE")
 
@@ -180,7 +190,7 @@ class Axi4(AXILite):
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.endianness = "little"
         param = lambda name, val :  self.addSimpleParam(thisIf, name, str(val))
-        param("ADDR_WIDTH", getParam(thisIf.aw.addr._width))
+        param("ADDR_WIDTH", thisIf.aw.addr.dtype)
         param("MAX_BURST_LENGTH", 256)
         param("NUM_READ_OUTSTANDING", 5)
         param("NUM_WRITE_OUTSTANDING", 5)

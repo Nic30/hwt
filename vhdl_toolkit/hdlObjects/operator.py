@@ -13,7 +13,6 @@ class Operator():
     """
     def __init__(self, operator, operands):
         self.ops = list()
-        self.evalFn = lambda : self.operator.eval(self)
         self.operator = operator
         for op in operands:
             operator.addOperand(self, op)
@@ -40,6 +39,8 @@ class Operator():
             o.staticEval()
         self.result._val = self.evalFn()
             
+    def evalFn(self):
+        return self.operator.eval(self)
         
     def getReturnType(self):
         return self.operator.getReturnType(self)

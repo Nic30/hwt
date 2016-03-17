@@ -3,8 +3,6 @@ from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
          mkSpiElm
 from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
-     
- 
    
 class BusInterface():
     def __init__(self):

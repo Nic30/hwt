@@ -236,7 +236,7 @@ class Std_logic_vector(HdlType):
         elif isinstance(c, Value):
             width = [c.val[0].staticEval().val, c.val[1].staticEval().val]
         else:
-            v = self.constrain.staticEval()._val
+            v = self.constrain.staticEval()
             width = [v.val[0].val, v.val[1].val]
         
         width = abs(width[1] - width[0]) + 1
@@ -315,6 +315,9 @@ class String(HdlType):
     def __init__(self):
         super(String, self).__init__()
         self.name = "string"
+
+    def valAsVhdl(self, val, serializer):
+        return  '"%s"' % str(val.val)
 
     class Ops(TypeOps):
         @classmethod

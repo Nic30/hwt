@@ -21,12 +21,6 @@ class VHDLVariable():
         return VhdlSerializer.VHDLVariable(self)        
             
             
-class VHDLGeneric(VHDLVariable):
-    def __repr__(self):
-        from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
-        return VhdlSerializer.VHDLGeneric(self)        
-
-
 class SignalItem(VHDLVariable):
     """basic vhdl signal"""
     def __repr__(self):

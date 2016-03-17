@@ -1,6 +1,6 @@
 from python_toolkit.arrayQuery import where, distinctBy
-from vhdl_toolkit.hdlObjects.architecture import Architecture, Component
-from vhdl_toolkit.hdlObjects.variables import VHDLGeneric
+from vhdl_toolkit.hdlObjects.architecture import Architecture
+from vhdl_toolkit.hdlObjects.component import  Component
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.process import HWProcess
 from vhdl_toolkit.synthetisator.rtlLevel.codeOp import If, IfContainer
@@ -109,11 +109,8 @@ class Context():
         
         # create generics
         ent.ctx = self.globals
-        for k, v in self.globals.items():
-            k = k.upper()
-            #v.name = k
-            g = VHDLGeneric(k, v.dtype, v)
-            ent.generics.append(g)
+        for _, v in self.globals.items():
+            ent.generics.append(v)
         
         # create ports
         for s in interfaces:
