@@ -240,23 +240,8 @@ class Std_logic_vector(HdlType):
             width = [v.val[0].val, v.val[1].val]
         
         width = abs(width[1] - width[0]) + 1
-        v = val.val
-        if val.vldMask is None:
-            return ('"{0:0' + str(width) + 'b}"').format(v)
-        else:
-            buff = []
-            for i in range(width):
-                mask = (1 << i)
-                b = v & mask
-                
-                if val.vldMask & mask:
-                    s = "1" if b else "0"
-                else:
-                    s = "X"
-                buff.append(s)
-            return '"%s"' % (''.join(buff))
-            raise NotImplementedError("vldMask not implemented yet")
-
+        return serializer.BitString(val.val, width, val.vldMask)
+        
     
     class Ops(TypeOps):
 

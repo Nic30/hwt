@@ -109,16 +109,35 @@ class VhdlSerializer():
             raise e
 
     @staticmethod
-    def renderBitString(v, width, vldMask=None):
+    def BitString(v, width, vldMask=None):
         if vldMask is None:
-            if width == 1:
-                return "'%s'" % (v) 
-            elif width % 4 == 0:
-                return ('X"%0' + str(width % 4) + 'x"') % (v)
-            else:
-                return ('B"{0:0' + str(width) + 'b}"').format(v)
+            return ('"{0:0' + str(width) + 'b}"').format(v)
         else:
-            raise NotImplementedError("vldMask not implemented yet")
+            buff = []
+            # if can be in hex
+            if width % 4 == 0 and vldMask == (1 << width) - 1:
+                return ('X"%0' + str(width // 4) + 'x"') % (v)
+            else:  # else in binary
+                for i in range(width - 1, -1, -1):
+                    mask = (1 << i)
+                    b = v & mask
+                    
+                    if vldMask & mask:
+                        s = "1" if b else "0"
+                    else:
+                        s = "X"
+                    buff.append(s)
+                return '"%s"' % (''.join(buff))
+
+        # if vldMask is None:
+        #    if width == 1:
+        #        return "'%s'" % (v) 
+        #    elif width % 4 == 0:
+        #        return ('X"%0' + str(width % 4) + 'x"') % (v)
+        #    else:
+        #        return ('B"{0:0' + str(width) + 'b}"').format(v)
+        # else:
+        #    raise NotImplementedError("vldMask not implemented yet")
     
     @staticmethod
     def SignalItem(si, declaration=False):
