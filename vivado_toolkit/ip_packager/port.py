@@ -4,6 +4,8 @@ from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
 from vivado_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+from vhdl_toolkit.hdlObjects.operator import Operator
+from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 class WireTypeDef():
     _requiredVal = ["typeName"]
@@ -52,13 +54,15 @@ class Port():
         t = port.type
         dt = p.dtype
         
+        t.typeName = dt.name.upper()
         if dt == BIT:
-            t.typeName = "STD_LOGIC"
             port.vector = False
         elif isinstance(dt, Std_logic_vector):
-            t.typeName = "STD_LOGIC_VECTOR"
-            w = dt.getWidth()
-            port.vector = (w - 1, 0)
+            #w = dt.getWidth()
+            c = dt.constrain.origin
+            assert(isinstance(c, Operator) and c.operator == AllOps.DOWNTO)
+            
+            port.vector = (c.ops[0], c.ops[1])
         t.viewNameRefs = ["xilinx_vhdlsynthesis", "xilinx_vhdlbehavioralsimulation"]
         return port
     
@@ -76,7 +80,7 @@ class Port():
                 
                 d.attrib["spirit:format"] = "long"
                 if isinstance(val, Signal):  # value is simple type and does not contains generic etc...
-                    resolve = 'dependent'  # [HOTFIX] needs to be a custom str method for expr
+                    resolve = 'dependent' 
                     d.attrib["spirit:dependency"] = "(" + \
                                                 VivadoTclExpressionSerializer.asHdl(val) + ")"
                     d.text = VivadoTclExpressionSerializer.asHdl(val.staticEval())
