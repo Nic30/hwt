@@ -1,5 +1,5 @@
 from vivado_toolkit.tcl import VivadoTCL
-from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 
 class SimpleXDCProp():
     def __init__(self, port, mode):

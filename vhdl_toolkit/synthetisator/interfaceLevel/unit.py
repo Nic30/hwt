@@ -218,6 +218,7 @@ class UnitWithSource(Unit):
                 if hasattr(cls, intfName):
                     raise  Exception("Already has interface %s (old:%s , new:%s)" 
                                      % (intfName, str(getattr(cls, intfName)), str(interface)))
+                interface._name = intfName
                 cls._interfaces[intfName] = interface
                 setattr(cls, intfName, interface)
                 setIntfAsExtern(interface)
