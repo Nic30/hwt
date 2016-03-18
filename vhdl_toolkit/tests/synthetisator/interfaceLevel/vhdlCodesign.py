@@ -237,11 +237,21 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         
         self.assertTrue(a.DATA_WIDTH.replacedWith is dw)
         self.assertFalse(b.DATA_WIDTH.replacedWith is dw)
+    
+    def test_largeBitStrings(self):
+        class BitStringValuesEnt(UnitWithSource):
+            _origin = ILVL_VHDL + "bitStringValuesEnt.vhd"
+        u = BitStringValuesEnt()
+        self.assertEqual(u.c_32b0.defaultVal.val, 0)
+        self.assertEqual(u.c_16b1.defaultVal.val, (1<<16)-1)
+        self.assertEqual(u.c_32b1.defaultVal.val, (1<<32)-1)
+        self.assertEqual(u.c_128b1.defaultVal.val, (1<<128)-1)
+        #print(u._entity)
         
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(VhdlCodesignTC('test_axiParams'))
-    suite.addTest(unittest.makeSuite(VhdlCodesignTC))
+    suite.addTest(VhdlCodesignTC('test_largeBitStrings'))
+    #suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
         

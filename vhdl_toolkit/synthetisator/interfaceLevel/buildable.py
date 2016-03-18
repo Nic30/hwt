@@ -1,5 +1,3 @@
-import copy
-
 class Buildable():
     """
         @cvar _clsIsBuild: if class has this attribute and it is True it means class was builded 
@@ -7,10 +5,6 @@ class Buildable():
     @classmethod
     def _isBuild(cls):
         return hasattr(cls, "_clsBuildFor") and cls._clsBuildFor == cls
-    
-    @classmethod
-    def clsCp(cls):
-        return copy.deepcopy(cls)
     
     @classmethod
     def _builded(cls):
