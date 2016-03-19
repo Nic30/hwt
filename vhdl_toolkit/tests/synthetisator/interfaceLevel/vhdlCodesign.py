@@ -13,7 +13,6 @@ from vhdl_toolkit.hdlObjects.operator import Operator
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 from vhdl_toolkit.hdlObjects.expr import ExprComparator
 
-
 ILVL_VHDL = '../../../samples/iLvl/vhdl/'
 
 
@@ -248,7 +247,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VhdlCodesignTC('test_largeBitStrings'))
+    suite.addTest(VhdlCodesignTC('test_axiStreamExtraction'))
     # suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

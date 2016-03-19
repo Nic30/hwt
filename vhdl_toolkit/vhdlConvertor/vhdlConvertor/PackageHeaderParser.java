@@ -92,7 +92,7 @@ public class PackageHeaderParser {
 		DesignatorContext designator = ctx.designator();
 		Expr returnT = null;
 		boolean isOperator = LiteralParser.isStrDesignator(designator);
-		Expr name = LiteralParser.visitDesignator(designator);
+		String name = LiteralParser.visitDesignator(designator);
 		List<Variable> paramList = visitFormal_parameter_list(
 				ctx.formal_parameter_list());
 
@@ -108,7 +108,7 @@ public class PackageHeaderParser {
 		Expr returnT = ExprParser
 				.visitSubtype_indication(ctx.subtype_indication());
 		boolean isOperator = LiteralParser.isStrDesignator(designator);
-		Expr name = LiteralParser.visitDesignator(designator);
+		String name = LiteralParser.visitDesignator(designator);
 		List<Variable> paramList = visitFormal_parameter_list(
 				ctx.formal_parameter_list());
 

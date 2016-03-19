@@ -142,18 +142,18 @@ public class LiteralParser {
 		// ;
 		return ctx.STRING_LITERAL() != null;
 	}
-	public static Expr visitDesignator(DesignatorContext ctx) {
+	public static String visitDesignator(DesignatorContext ctx) {
 		// designator
 		// : identifier
 		// | STRING_LITERAL
 		// ;
+		Expr e;
 		if (isStrDesignator(ctx)) {
-			Expr s = visitSTRING_LITERAL(ctx.STRING_LITERAL());
-			s.literal.type = SymbolType.ID;
-			return s;
+			e = visitSTRING_LITERAL(ctx.STRING_LITERAL());
 		} else {
-			return visitIdentifier(ctx.identifier());
+			e = visitIdentifier(ctx.identifier());
 		}
+		return (String) e.literal.value;
 	}
 
 }

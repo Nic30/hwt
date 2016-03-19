@@ -6,13 +6,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Function extends Jsonable {
-	Expr name;
+	String name;
 	boolean isOperator;
 	Expr returnT;
 	List<Variable> params;
 	// [TODO] body
 
-	public Function(Expr name, boolean isOperator, Expr returnT,
+	public Function(String name, boolean isOperator, Expr returnT,
 			List<Variable> params) {
 		this.name = name;
 		this.isOperator = isOperator;
@@ -23,9 +23,12 @@ public class Function extends Jsonable {
 	@Override
 	public Object toJson() throws JSONException {
 		JSONObject f = new JSONObject();
-		f.put("name", name.toJson());
+		f.put("name", name);
 		f.put("isOperator", isOperator);
-		f.put("returnT", returnT.toJson());
+		if (returnT != null)
+			f.put("returnT", returnT.toJson());
+		else
+			f.put("returnT", JSONObject.NULL);
 		addJsonArr(f, "params", params);
 
 		return f;

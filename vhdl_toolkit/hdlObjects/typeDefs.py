@@ -99,7 +99,11 @@ class Integer(HdlType):
                 assert(v.val >= 0)
                 v.dtype = UINT
                 return v
-            
+        elif toType == INT:
+            if isinstance(sigOrVal, Value):
+                v = sigOrVal.clone()
+                v.dtype = INT
+                return v
                 
         raise TypeConversionErr("Conversion of type %s to type %s is not implemented" % (repr(self), repr(toType)))
  
@@ -259,9 +263,11 @@ class Std_logic_vector_contrained(Std_logic_vector):
         super(Std_logic_vector_contrained, self).__init__()
         self.name = 'std_logic_vector'
         self.constrain = width
+        
     def __eq__(self, other):
         return super(Std_logic_vector_contrained, self).__eq__(other) \
                 and self.constrain == other.constrain
+                
     def getBitCnt(self):
             return self.getWidth()
         
@@ -269,7 +275,18 @@ class Std_logic_vector_contrained(Std_logic_vector):
         w = self.constrain.staticEval()
          
         return abs(w.val[0].val - w.val[1].val) + 1
-        
+    
+    def convert(self, sigOrVal, toType):
+        if sigOrVal.dtype == toType:
+            return sigOrVal
+        elif type(toType) == Std_logic_vector:
+            if isinstance(sigOrVal, Value):
+                o = sigOrVal.clone()
+                o.dtype = toType
+                return o
+        raise TypeConversionErr("Conversion of type %s to type %s is not implemented" % 
+                                (repr(self), repr(toType)))
+       
     class Ops(Std_logic_vector.Ops):
         
         @classmethod

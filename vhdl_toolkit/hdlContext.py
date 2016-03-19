@@ -7,6 +7,7 @@ from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR, VECTOR, BIT, PINT, 
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
 from vhdl_toolkit.hdlObjects.value import Value
+from vhdl_toolkit.hdlObjects.function import Function, FnContainer
 
 
 class RequireImportErr(Exception):
@@ -56,7 +57,7 @@ class HDLCtx(NonRedefDict):
                 for n in toImport:
                     self[n] = toImport[n]
             else:
-                raise NotImplementedError()
+                self[toImport.name.lower()] = toImport
         except KeyError:
             raise RequireImportErr(ref)
         
@@ -89,9 +90,9 @@ class HDLCtx(NonRedefDict):
             except KeyError:
                 p = p.parent
         
-        raise Exception("Identificator %s not defined" % n)
+        raise KeyError("Identificator %s not defined" % n)
     
-    def insertObj(self, obj):
+    def insertObj(self, obj, hierarchyOnly=False):
         """
         insert Entity, PackageHeader or Architecture in this context
         """
@@ -106,6 +107,15 @@ class HDLCtx(NonRedefDict):
             self.insert(VhdlRef([n]), obj)
         elif isinstance(obj, Architecture):
             self.architectures.append(obj)
+        elif isinstance(obj, Function):
+            # functions are stored in FnContainer object
+            n = obj.name.lower()
+            try:
+                cont = self[n]
+            except KeyError:
+                cont = FnContainer(n)
+                self.insert(VhdlRef([n]), cont)
+            cont.append(obj, suppressRedefinition=hierarchyOnly)
         else:
             raise NotImplementedError()
     

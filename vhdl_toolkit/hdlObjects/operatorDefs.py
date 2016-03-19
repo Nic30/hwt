@@ -1,4 +1,4 @@
-from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, RANGE
+from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, RANGE, PINT, UINT
 from vhdl_toolkit.hdlObjects.value import Value
 
 def convOpsToType(t):
@@ -50,7 +50,11 @@ class OpDefinition():
        
     @staticmethod
     def getReturnType_default(op):
-        return op.ops[0].dtype
+        t = op.ops[0].dtype
+        if(t == UINT or t == PINT):
+            return INT
+        else:
+            return t
 
     def __init__(self, _id, precedence, strOperatorOrFn, evalFn,
                  getReturnType=getReturnType_default.__func__ ,
