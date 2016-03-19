@@ -1,21 +1,31 @@
 package vhdlConvertor;
 
+import java.util.List;
+
 import vhdlObjects.Entity;
+import vhdlObjects.Expr;
+import vhdlObjects.Function;
 import vhdlObjects.PackageHeader;
+import vhdlObjects.Variable;
 import vhdlParser.vhdlParser;
 import vhdlParser.vhdlParser.Alias_declarationContext;
 import vhdlParser.vhdlParser.Attribute_declarationContext;
 import vhdlParser.vhdlParser.Attribute_specificationContext;
 import vhdlParser.vhdlParser.Component_declarationContext;
 import vhdlParser.vhdlParser.Constant_declarationContext;
+import vhdlParser.vhdlParser.DesignatorContext;
 import vhdlParser.vhdlParser.Disconnection_specificationContext;
 import vhdlParser.vhdlParser.File_declarationContext;
+import vhdlParser.vhdlParser.Formal_parameter_listContext;
+import vhdlParser.vhdlParser.Function_specificationContext;
 import vhdlParser.vhdlParser.Group_declarationContext;
 import vhdlParser.vhdlParser.Group_template_declarationContext;
 import vhdlParser.vhdlParser.Nature_declarationContext;
+import vhdlParser.vhdlParser.Procedure_specificationContext;
 import vhdlParser.vhdlParser.Signal_declarationContext;
 import vhdlParser.vhdlParser.Subnature_declarationContext;
 import vhdlParser.vhdlParser.Subprogram_declarationContext;
+import vhdlParser.vhdlParser.Subprogram_specificationContext;
 import vhdlParser.vhdlParser.Subtype_declarationContext;
 import vhdlParser.vhdlParser.Terminal_declarationContext;
 import vhdlParser.vhdlParser.Type_declarationContext;
@@ -53,6 +63,66 @@ public class PackageHeaderParser {
 			visitPackage_declarative_item(i);
 		}
 	}
+	public static Function visitSubprogram_declaration(
+			Subprogram_declarationContext ctx) {
+		// subprogram_declaration
+		// : subprogram_specification SEMI
+		// ;
+		return visitSubprogram_specification(ctx.subprogram_specification());
+	}
+	public static Function visitSubprogram_specification(
+			Subprogram_specificationContext ctx) {
+		// subprogram_specification
+		// : procedure_specification
+		// | function_specification
+		// ;
+
+		Procedure_specificationContext p = ctx.procedure_specification();
+		if (p != null)
+			return visitProcedure_specification(p);
+		else
+			return visitFunction_specification(ctx.function_specification());
+	}
+
+	public static Function visitProcedure_specification(
+			Procedure_specificationContext ctx) {
+		// procedure_specification
+		// : PROCEDURE designator ( LPAREN formal_parameter_list RPAREN )?
+		// ;
+		DesignatorContext designator = ctx.designator();
+		Expr returnT = null;
+		boolean isOperator = LiteralParser.isStrDesignator(designator);
+		Expr name = LiteralParser.visitDesignator(designator);
+		List<Variable> paramList = visitFormal_parameter_list(
+				ctx.formal_parameter_list());
+
+		return new Function(name, isOperator, returnT, paramList);
+	}
+	public static Function visitFunction_specification(
+			Function_specificationContext ctx) {
+		// function_specification
+		// : ( PURE | IMPURE )? FUNCTION designator
+		// ( LPAREN formal_parameter_list RPAREN )? RETURN subtype_indication
+		// ;
+		DesignatorContext designator = ctx.designator();
+		Expr returnT = ExprParser
+				.visitSubtype_indication(ctx.subtype_indication());
+		boolean isOperator = LiteralParser.isStrDesignator(designator);
+		Expr name = LiteralParser.visitDesignator(designator);
+		List<Variable> paramList = visitFormal_parameter_list(
+				ctx.formal_parameter_list());
+
+		return new Function(name, isOperator, returnT, paramList);
+	}
+
+	public static List<Variable> visitFormal_parameter_list(
+			Formal_parameter_listContext ctx) {
+		// formal_parameter_list
+		// : interface_list
+		// ;
+		return InterfaceParser.visitInterface_list(ctx.interface_list());
+	}
+
 	public void visitPackage_declarative_item(
 			vhdlParser.Package_declarative_itemContext ctx) {
 		// package_declarative_item
@@ -77,8 +147,8 @@ public class PackageHeaderParser {
 		// ;
 		Subprogram_declarationContext sp = ctx.subprogram_declaration();
 		if (sp != null) {
-			NotImplementedLogger
-					.print("PackageHeaderParser.visitSubprogram_declaration");
+			ph.functions.add(visitSubprogram_declaration(sp));
+			return;
 		}
 		Type_declarationContext td = ctx.type_declaration();
 		if (td != null) {

@@ -1,12 +1,14 @@
 package vhdlObjects;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Entity implements iJsonable {
+public class Entity extends Jsonable {
 	public String name;
 	public Map<String, Variable> generics;
 	public Map<String, Port> ports;
@@ -16,20 +18,13 @@ public class Entity implements iJsonable {
 	}
 	public JSONObject toJson() throws JSONException {
 
-		JSONObject _generics = new JSONObject();
-		for (Variable g : generics.values()) {
-			_generics.put(g.name, g.toJson());
-		}
-
-		JSONObject _ports = new JSONObject();
-		for (Port p : ports.values()) {
-			_ports.put(p.variable.name, p.toJson());
-		}
-
 		JSONObject e = new JSONObject();
 		e.put("name", name);
-		e.put("generics", _generics);
-		e.put("ports", _ports);
+
+		addJsonObj(e, "generics", new ArrayList<Variable>(generics.values()),
+				g -> g.name);
+		addJsonObj(e, "ports", new ArrayList<Port>(ports.values()),
+				g -> g.variable.name);
 
 		return e;
 	}

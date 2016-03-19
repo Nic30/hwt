@@ -6,10 +6,16 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import vhdlObjects.Expr;
 import vhdlObjects.SymbolType;
-import vhdlParser.vhdlParser;
+import vhdlParser.vhdlParser.Abstract_literalContext;
+import vhdlParser.vhdlParser.DesignatorContext;
+import vhdlParser.vhdlParser.Enumeration_literalContext;
+import vhdlParser.vhdlParser.IdentifierContext;
+import vhdlParser.vhdlParser.LiteralContext;
+import vhdlParser.vhdlParser.Numeric_literalContext;
+import vhdlParser.vhdlParser.Physical_literalContext;
 
 public class LiteralParser {
-	public static Expr visitLiteral(vhdlParser.LiteralContext ctx) {
+	public static Expr visitLiteral(LiteralContext ctx) {
 		// literal
 		// : NULL
 		// | BIT_STRING_LITERAL
@@ -47,35 +53,32 @@ public class LiteralParser {
 		if (n != null) {
 			return visitSTRING_LITERAL(n);
 		}
-		vhdlParser.Enumeration_literalContext el = ctx.enumeration_literal();
+		Enumeration_literalContext el = ctx.enumeration_literal();
 		if (el != null)
 			return visitEnumeration_literal(el);
-		vhdlParser.Numeric_literalContext nl = ctx.numeric_literal();
+		Numeric_literalContext nl = ctx.numeric_literal();
 		assert (nl != null);
 		return visitNumeric_literal(nl);
 	}
-	public static Expr visitNumeric_literal(
-			vhdlParser.Numeric_literalContext ctx) {
+	public static Expr visitNumeric_literal(Numeric_literalContext ctx) {
 		// numeric_literal
 		// : abstract_literal
 		// | physical_literal
 		// ;
-		vhdlParser.Abstract_literalContext al = ctx.abstract_literal();
+		Abstract_literalContext al = ctx.abstract_literal();
 		if (al != null)
 			return visitAbstract_literal(al);
 		else
 			return visitPhysical_literal(ctx.physical_literal());
 	}
-	public static Expr visitPhysical_literal(
-			vhdlParser.Physical_literalContext ctx) {
+	public static Expr visitPhysical_literal(Physical_literalContext ctx) {
 		// physical_literal
 		// : abstract_literal (: identifier)
 		// ;
 		NotImplementedLogger.print("ExprParser.visitPhysical_literal");
 		return null;
 	}
-	public static Expr visitAbstract_literal(
-			vhdlParser.Abstract_literalContext ctx) {
+	public static Expr visitAbstract_literal(Abstract_literalContext ctx) {
 		// abstract_literal
 		// : INTEGER
 		// | REAL_LITERAL
@@ -106,7 +109,7 @@ public class LiteralParser {
 		return new Expr(SymbolType.INT, val);
 	}
 	public static Expr visitEnumeration_literal(
-			vhdlParser.Enumeration_literalContext ctx) {
+			Enumeration_literalContext ctx) {
 		// enumeration_literal
 		// : identifier
 		// | CHARACTER_LITERAL
@@ -114,7 +117,7 @@ public class LiteralParser {
 		// CHARACTER_LITERAL
 		// : APOSTROPHE . APOSTROPHE
 		// ;
-		vhdlParser.IdentifierContext id = ctx.identifier();
+		IdentifierContext id = ctx.identifier();
 		if (id != null)
 			return visitIdentifier(id);
 
@@ -129,7 +132,28 @@ public class LiteralParser {
 		Integer ch = (int) ctx.getText().charAt(1);
 		return new Expr(SymbolType.INT, ch);
 	}
-	public static Expr visitIdentifier(vhdlParser.IdentifierContext ctx) {
+	public static Expr visitIdentifier(IdentifierContext ctx) {
 		return new Expr(SymbolType.ID, ctx.getText());
 	}
+	static boolean isStrDesignator(DesignatorContext ctx) {
+		// designator
+		// : identifier
+		// | STRING_LITERAL
+		// ;
+		return ctx.STRING_LITERAL() != null;
+	}
+	public static Expr visitDesignator(DesignatorContext ctx) {
+		// designator
+		// : identifier
+		// | STRING_LITERAL
+		// ;
+		if (isStrDesignator(ctx)) {
+			Expr s = visitSTRING_LITERAL(ctx.STRING_LITERAL());
+			s.literal.type = SymbolType.ID;
+			return s;
+		} else {
+			return visitIdentifier(ctx.identifier());
+		}
+	}
+
 }

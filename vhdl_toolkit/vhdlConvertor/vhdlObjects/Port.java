@@ -3,7 +3,7 @@ package vhdlObjects;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Port {
+public class Port implements iJsonable {
 	public Direction direction;
 	public Variable variable;
 

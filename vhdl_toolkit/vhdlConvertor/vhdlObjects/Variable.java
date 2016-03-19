@@ -3,7 +3,7 @@ package vhdlObjects;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Variable {
+public class Variable implements iJsonable {
 	public String name;
 	public Expr type;
 	public Expr value;

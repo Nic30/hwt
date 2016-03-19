@@ -2,11 +2,8 @@ package vhdlConvertor;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
-import vhdlObjects.Direction;
 import vhdlObjects.Entity;
-import vhdlObjects.Expr;
 import vhdlObjects.Port;
 import vhdlObjects.Variable;
 import vhdlParser.vhdlParser;
@@ -40,7 +37,6 @@ public class EntityParser {
 		return e;
 	}
 
-	// [TODO]
 	static void visitEntity_declarative_item(
 			vhdlParser.Entity_declarative_itemContext ctx) {
 		// entity_declarative_item
@@ -81,7 +77,7 @@ public class EntityParser {
 			vhdlParser.Generic_listContext gl = ctx.generic_list();
 			for (vhdlParser.Interface_constant_declarationContext ic : gl
 					.interface_constant_declaration()) {
-				List<Variable> vl = visitInterface_constant_declaration(ic);
+				List<Variable> vl = InterfaceParser.visitInterface_constant_declaration(ic);
 				for (Variable v : vl)
 					generics.put(v.name, v);
 			}
@@ -105,7 +101,7 @@ public class EntityParser {
 
 			for (vhdlParser.Interface_port_declarationContext ipd : ipl
 					.interface_port_declaration()) {
-				for (Port p : visitInterface_port_declaration(ipd))
+				for (Port p : InterfaceParser.visitInterface_port_declaration(ipd))
 					ports.put(p.variable.name, p);
 			}
 		}
@@ -122,64 +118,6 @@ public class EntityParser {
 		vhdlParser.Port_clauseContext pc = ctx.port_clause();
 		visitPort_clause(pc, e.ports);
 	}
-	static List<Variable> visitInterface_constant_declaration(
-			vhdlParser.Interface_constant_declarationContext ctx) {
-		// interface_constant_declaration
-		// : ( CONSTANT )? identifier_list COLON ( IN )? subtype_indication
-		// ( VARASGN expression )?
-		// ;
-		return extractVariables(ctx.identifier_list(), ctx.subtype_indication(),
-				ctx.expression());
-
-	}
-	static List<Variable> extractVariables(
-			vhdlParser.Identifier_listContext identifier_list,
-			vhdlParser.Subtype_indicationContext subType,
-			vhdlParser.ExpressionContext _expr) {
-		List<Variable> vl = new Vector<Variable>();
-		Expr type = ExprParser.visitSubtype_indication(subType);
-		Expr expr = null;
-		if (_expr != null)
-			expr = ExprParser.visitExpression(_expr);
-		for (vhdlParser.IdentifierContext i : identifier_list.identifier()) {
-			// identifier_list
-			// : identifier ( COMMA identifier )*
-			// ;
-			Variable v = new Variable();
-			v.name = i.getText();
-			v.type = type;
-			v.value = expr;
-			vl.add(v);
-		}
-		return vl;
-	}
-	static List<Port> visitInterface_port_declaration(
-			vhdlParser.Interface_port_declarationContext ctx) {
-		List<Port> pl = new Vector<Port>();
-		// interface_port_declaration
-		// : identifier_list COLON signal_mode subtype_indication
-		// ( BUS )? ( VARASGN expression )?
-		// ;
-		List<Variable> vl = extractVariables(ctx.identifier_list(),
-				ctx.subtype_indication(), ctx.expression());
-		// signal_mode
-		// : IN
-		// | OUT
-		// | INOUT
-		// | BUFFER
-		// | LINKAGE
-		// ;
-		Direction d = Direction.fromSignal_mode(ctx.signal_mode());
-		for (Variable v : vl) {
-			Port p = new Port();
-			p.direction = d;
-			p.variable = v;
-			pl.add(p);
-		}
-		return pl;
-	}
-
-	// [TODO]
 	void visitEntity_statement_part(
 			vhdlParser.Entity_statement_partContext ctx) {
 		if (ctx == null)
