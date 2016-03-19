@@ -1,10 +1,12 @@
 
 SEPARATOR = '.'
 
+
 class VhdlRef():
     def __init__(self, names, allChilds=False):
-        self.names = tuple([ n.lower() for n in names])
+        self.names = tuple([n.lower() for n in names])
         self.all = allChilds
+
     @classmethod
     def fromJson(cls, jsn):
         allChilds = False
@@ -16,18 +18,20 @@ class VhdlRef():
             elif t == "ALL":
                 allChilds = True
         return cls(names, allChilds)
+
     @classmethod
     def fromExprJson(cls, jExpr):
         names = []
-        #top = jExpr
-        #while jExpr['TYPE'] == "B"
-        names.append(jExpr['literal']['value'][0]['value']) #[TODO] actualy is expr with reference inside
+        for v in jExpr['literal']['value']:
+            assert(v["type"] == "ID")
+            name = v['value']
+            names.append(name)
         return cls(names)
-        
-    #def __hash__(self):
+
+    # def __hash__(self):
     #    return hash(self.names)
-    #    
-    #def __eq__(self, other):
+    #
+    # def __eq__(self, other):
     #    if len(self.names) == len(other.names):
     #        for s, o in zip(self.names, other.names):
     #            if s != o:
@@ -35,13 +39,14 @@ class VhdlRef():
     #        return True
     #    return False
     #
-    #def __ne__(self, other):
+    # def __ne__(self, other):
     #    return not self.__eq__(other)
-    
+
     def __str__(self):
         s = SEPARATOR.join(self.names)
         if self.all:
             s += SEPARATOR + "all"
         return s
+
     def __repr__(self):
         return "<VhdlRef  " + str(self) + ">"
