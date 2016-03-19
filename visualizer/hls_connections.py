@@ -1,5 +1,5 @@
-from vhdl_toolkit.synthetisator.rtlLevel.signal import PortConnection
-from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.hdlObjects.portConnection import PortConnection
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from connectionsJsonObj import Net, Connection, ExternalPort, Unit
 
 class PortIndexLookup():

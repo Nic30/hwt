@@ -1,4 +1,4 @@
-from vhdl_toolkit.types import INTF_DIRECTION, DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, DIRECTION
 from flask.wrappers import Response
 import json
 import os
