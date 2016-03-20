@@ -1,6 +1,6 @@
 import unittest
 from vhdl_toolkit.synthetisator.rtlLevel.context import Context
-from vhdl_toolkit.simulator import HdlSimulator, staticEval
+from vhdl_toolkit.simulator.hdlSimulator import HdlSimulator, staticLikeEval
 from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkAllOriginSignals
 from vhdl_toolkit.hdlObjects.typeDefs import INT, STR, BOOL
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt, hBool, hBit
@@ -41,7 +41,7 @@ class OperatorTC(unittest.TestCase):
         a.defaultVal = hInt(10)
         b = hInt(0)
         r = a.opDownto(b)
-        res = staticEval(r)
+        res = staticLikeEval(r)
         self.assertSequenceEqual(res.val, [hInt(0), hInt(10)])
     
     def testwalkAllOriginSignalsDownto(self):
@@ -90,7 +90,7 @@ class OperatorTC(unittest.TestCase):
                                 (1, 1, 2)]:
             a.defaultVal = hInt(a_in)
             b.defaultVal = hInt(b_in)
-            staticEval(andOp)
+            staticLikeEval(andOp)
             out = hInt(out)
             self.assertEqual(andOp._val, out, "a_in %d, b_in %d, out %d" % (a_in, b_in, out.val))
              

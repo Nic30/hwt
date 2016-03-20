@@ -1,5 +1,5 @@
 from vhdl_toolkit.hdlObjects.types import HdlType, InvalidVHDLTypeExc
-from vhdl_toolkit.templates import VHDLTemplates
+from vhdl_toolkit.synthetisator.templates import VHDLTemplates
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.hdlObjects.assignment import Assignment 
@@ -73,7 +73,13 @@ class VhdlSerializer():
                {"name": ent.name,
                 'ports' : [VhdlSerializer.PortItem(pi) for pi in ent.ports ],
                 'generics' : [VhdlSerializer.GenericItem(g) for g in ent.generics]
-                })    
+                })  
+    
+    @staticmethod
+    def IfContainer(ifc):
+        return VHDLTemplates.If.render(cond=ifc.cond.asVhdl(),
+                                       ifTrue=ifc.ifTrue,
+                                       ifFalse=ifc.ifFalse)  
     @staticmethod
     def GenericItem(g):
         s = "%s : %s" % (g.name, VhdlSerializer.VHDLType(g.dtype))
@@ -109,35 +115,29 @@ class VhdlSerializer():
             raise e
 
     @staticmethod
+    def BitString_binary(v, width, vldMask=None):
+        buff = []
+        for i in range(width - 1, -1, -1):
+            mask = (1 << i)
+            b = v & mask
+            
+            if vldMask & mask:
+                s = "1" if b else "0"
+            else:
+                s = "X"
+            buff.append(s)
+        return '"%s"' % (''.join(buff))
+
+    @staticmethod
     def BitString(v, width, vldMask=None):
         if vldMask is None:
             return ('"{0:0' + str(width) + 'b}"').format(v)
         else:
-            buff = []
             # if can be in hex
             if width % 4 == 0 and vldMask == (1 << width) - 1:
                 return ('X"%0' + str(width // 4) + 'x"') % (v)
             else:  # else in binary
-                for i in range(width - 1, -1, -1):
-                    mask = (1 << i)
-                    b = v & mask
-                    
-                    if vldMask & mask:
-                        s = "1" if b else "0"
-                    else:
-                        s = "X"
-                    buff.append(s)
-                return '"%s"' % (''.join(buff))
-
-        # if vldMask is None:
-        #    if width == 1:
-        #        return "'%s'" % (v) 
-        #    elif width % 4 == 0:
-        #        return ('X"%0' + str(width % 4) + 'x"') % (v)
-        #    else:
-        #        return ('B"{0:0' + str(width) + 'b}"').format(v)
-        # else:
-        #    raise NotImplementedError("vldMask not implemented yet")
+                return VhdlSerializer.BitString_binary(v, width, vldMask)
     
     @staticmethod
     def SignalItem(si, declaration=False):

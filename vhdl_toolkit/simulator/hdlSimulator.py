@@ -24,7 +24,7 @@ class HdlSimulator():
         self.config = HdlSimulatorConfig() 
         self.env = simpy.Environment()
     
-    def injectSimToCtx(self, signals):
+    def _injectSimToCtx(self, signals):
         def injectSignal(o):
             if isinstance(o, Signal):
                 if not hasattr(o, "_simulator") or o._simulator != self:
@@ -43,7 +43,7 @@ class HdlSimulator():
         for s in signals:
             injectSignal(s)
     
-    def initSignals(self, signals):
+    def _initSignals(self, signals):
         e = self.env
 
         for s in signals:
@@ -58,12 +58,12 @@ class HdlSimulator():
             e.process(s.simUpdateVal(v))
         
     def simSignals(self, signals, time):
-        self.injectSimToCtx(signals)
-        self.env.process(self.initSignals(signals))    
+        self._injectSimToCtx(signals)
+        self.env.process(self._initSignals(signals))    
         self.env.run(until=time)
 
-def staticEval(sig, log=False):
-    # [TODO] real static evaluation based on expression tree
+def staticLikeEval(sig, log=False):
+    # is not real static evaluation based on expression tree
     sim = HdlSimulator()
     sim.config.log = log
     sigs = list(walkAllOriginSignals(sig))

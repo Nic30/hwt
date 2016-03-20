@@ -1,5 +1,3 @@
-from vhdl_toolkit.templates import VHDLTemplates
-
 
 def If(cond, ifTrue=[], ifFalse=[]):
     # only assigments are expected there    
@@ -20,8 +18,7 @@ class IfContainer:
         self.ifTrue = ifTrue
         self.ifFalse = ifFalse
         
-    def __str__(self):
-        return VHDLTemplates.If.render(cond=self.cond.asVhdl(),
-                                       ifTrue=self.ifTrue,
-                                       ifFalse=self.ifFalse)
+    def __repr__(self):
+        from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        return VhdlSerializer.IfContainer(self)
      

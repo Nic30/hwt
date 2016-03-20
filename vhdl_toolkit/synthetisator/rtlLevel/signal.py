@@ -4,7 +4,7 @@ from vhdl_toolkit.hdlObjects.variables import SignalItem
 from vhdl_toolkit.hdlObjects.operator import Operator, InvalidOperandExc
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 from vhdl_toolkit.hdlObjects.value import Value
-from vhdl_toolkit.simExceptions import SimNotInitialized
+from vhdl_toolkit.simulator.exceptions import SimNotInitialized
 from vhdl_toolkit.hdlObjects.typeDefs import BOOL
 
 def checkOperands(ops):

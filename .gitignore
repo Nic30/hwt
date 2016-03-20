@@ -34,3 +34,4 @@ vhdl_toolkit/vhdlConvertor/.settings/
 
 #test tmp files
 vivado_toolkit/samples/tmp/*
+vhdl_toolkit/samples/sim/tmp/*

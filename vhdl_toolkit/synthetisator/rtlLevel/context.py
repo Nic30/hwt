@@ -9,10 +9,11 @@ from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 from vhdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
 from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkUnitInputs, walkSignalsInExpr, \
     discoverSensitivity, walkSigSouces, signalHasDriver
-from vhdl_toolkit.templates import VHDLTemplates  
 from vhdl_toolkit.hdlObjects.typeDefs import BIT
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.hdlObjects.assignment import Assignment
+
+from vhdl_toolkit.synthetisator.templates import VHDLTemplates  
 
 def renderIfTree(assigments):
     # optimizedSrc = expr_optimize([dp.src])
@@ -147,6 +148,7 @@ class Context():
         for su in distinctBy(self.subUnits, lambda x: x.name):
             c = Component(su)
             arch.components.append(c)
-         
+        
+        # [TODO] real references based on real ent/arch objects 
         return [ VHDLTemplates.basic_include, ent, arch]
        

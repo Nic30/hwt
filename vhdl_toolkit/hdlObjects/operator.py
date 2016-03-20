@@ -1,4 +1,4 @@
-from vhdl_toolkit.simExceptions import SimNotInitialized
+from vhdl_toolkit.simulator.exceptions import SimNotInitialized
 
 class InvalidOperandExc(Exception):
     pass

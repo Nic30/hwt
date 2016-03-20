@@ -20,13 +20,13 @@ from vhdl_toolkit.tests.synthetisator.rtlLevel.synthesis import TestCaseSynthesi
 
 
 if __name__ == "__main__":
-    def TestSuiteFromTCs(tcs):
+    def testSuiteFromTCs(tcs):
         loader = TestLoader()
         loadedTcs = [loader.loadTestsFromTestCase(tc) for tc in tcs]
         suite = TestSuite(loadedTcs)
         return suite
 
-    suite = TestSuiteFromTCs((
+    suite = testSuiteFromTCs((
         HierarchyExtractorTC,
         ParserTC,
         InterfaceSyntherisatorTC,
