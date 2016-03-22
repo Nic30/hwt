@@ -1,10 +1,10 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.amba import AxiStream
 from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.param import inheritAllParams, Param
+from vhdl_toolkit.synthetisator.param import shareAllParams, Param
 
 
-@inheritAllParams
+@shareAllParams
 class SimpleUnit2(Unit):
     DATA_WIDTH = Param(8)
     a = AxiStream(isExtern=True)

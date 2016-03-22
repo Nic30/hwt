@@ -3,7 +3,7 @@ from vhdl_toolkit.hdlObjects.architecture import Architecture
 from vhdl_toolkit.hdlObjects.component import  Component
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.process import HWProcess
-from vhdl_toolkit.synthetisator.rtlLevel.codeOp import If, IfContainer
+from vhdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, SyncSignal
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 from vhdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
@@ -14,18 +14,7 @@ from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.hdlObjects.assignment import Assignment
 
 from vhdl_toolkit.synthetisator.templates import VHDLTemplates  
-
-def renderIfTree(assigments):
-    # optimizedSrc = expr_optimize([dp.src])
-    # dp.cond = expr_optimize(dp.cond)
-    # dp.src = optimizedSrc
-    
-    for a in assigments:
-        if a.cond:
-            ic = IfContainer(a.cond, [a])
-            yield ic
-        else:
-            yield a
+from vhdl_toolkit.synthetisator.exceptions import SigLvlConfErr
 
 
 class Context():
@@ -64,16 +53,17 @@ class Context():
             s = SyncSignal(name, typ, defVal)
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
-            if syncRst is not None and defVal is not None:
-                r = If(syncRst.opIsOn(), [Signal.assignFrom(s, defVal)] ,
-                                        [Signal.assignFrom(s, s.next)])
+            if syncRst is not None:
+                r = If(syncRst.opIsOn(), 
+                            [Signal.assignFrom(s, defVal)] ,
+                            [Signal.assignFrom(s, s.next)])
             else:
                 r = [Signal.assignFrom(s, s.next)]
             
             If(clk.opOnRisigEdge(), r)
         else:
             if syncRst:
-                raise Exception()
+                raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
             s = Signal(name, typ, defaultVal=defVal)
         self.signals[name] = s
         return s
@@ -107,7 +97,7 @@ class Context():
     def synthetize(self, interfaces):
         ent = Entity()
         ent.name = self.name
-        
+
         # create generics
         ent.ctx = self.globals
         for _, v in self.globals.items():
@@ -115,7 +105,7 @@ class Context():
         
         # create ports
         for s in interfaces:
-            #s.dtype.ctx = ent.ctx
+            # s.dtype.ctx = ent.ctx
             ent.ports.append(portItemfromSignal(s))
    
         self.discover(interfaces)
@@ -129,7 +119,7 @@ class Context():
             p = HWProcess("assig_process_" + sig.name)
             for dp in dps:
                 p.sensitivityList.update(map(lambda x: x.name, discoverSensitivity(dp)))
-            p.bodyBuff.extend(renderIfTree(dps)) 
+            p.bodyBuff.extend(dps) 
             arch.processes.append(p)
 
         # add signals, variables etc. in architecture

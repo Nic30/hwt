@@ -2,9 +2,9 @@ from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.amba import AxiStream
 from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.param import Param, inheritAllParams
+from vhdl_toolkit.synthetisator.param import Param, shareAllParams
 
-@inheritAllParams
+@shareAllParams
 class SimpleSubunit3(Unit):
     DATA_WIDTH = Param(8)
     subunit0 = SimpleUnit2() 

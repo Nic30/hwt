@@ -1,4 +1,5 @@
 from vhdl_toolkit.simulator.exceptions import SimNotInitialized
+from copy import deepcopy
 
 class InvalidOperandExc(Exception):
     pass
@@ -14,6 +15,7 @@ class Operator():
     def __init__(self, operator, operands):
         self.ops = list()
         self.operator = operator
+        self.result = None
         for op in operands:
             operator.addOperand(self, op)
 
@@ -47,3 +49,26 @@ class Operator():
     
     def asVhdl(self, serializer):
         return self.operator.str(self, serializer)
+    
+    def __eq__(self, other):
+        return type(self) == type(other) and self.operator == other.operator \
+            and  self.ops == other.ops
+    
+    def __deepcopy__(self, memo=None):
+        try:
+            return memo[self]
+        except KeyError:
+            o = Operator(None, [])
+            memo[id(self)] = o
+            for k, v in self.__dict__.items():
+                setattr(o, k, deepcopy(v, memo))
+
+            return o
+                
+    def __hash__(self):
+        return hash((self.operator, frozenset(self.ops)))
+    
+        
+    def __repr__(self):
+        return "<%s operator:%s, ops:%s>" % (self.__class__.__name__,
+                                             repr(self.operator), repr(self.ops))

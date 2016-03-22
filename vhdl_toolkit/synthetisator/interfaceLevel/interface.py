@@ -4,29 +4,44 @@ from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import ExtractableInterface 
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
+from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
                    
 class Interface(Buildable, ExtractableInterface):
     """
-    @cvar cvar:  NAME_SEPARATOR: separator for nested interface names   
-    @cvar _subInterfaces: Dict of sub interfaces (name : interf) 
+    Base class for all interfaces in interface synthetisator
+    
+    @cvar NAME_SEPARATOR: separator for nested interface names   
+    
+    @cvar _subInterfaces: dict of sub interfaces (name : interf) 
     @ivar _subInterfaces: deep copy of class _subInterfaces
+    
+    @cvar _alternativeNames: [] of alternative names
+    @ivar _alternativeNames: deep copy of class _alternativeNames
+    
+    @ivar _name: name assigned during synthesis
+    @ivar _parent: parent object (Unit or Interface instance)
     @ivar _src: Driver for this interface
-    @ivar _desctinations: Interfaces for which this interface is driver
+    @ivar _destinations: Interfaces for which this interface is driver
     @ivar _isExtern: If true synthetisator sets it as external port of unit
+    
+    #only interfaces without subinterfaces have:
+    @ivar _sig: rtl level signal instance     
     @ivar _originEntityPort: entityPort for which was this interface created
     @ivar _originSigLvlUnit: VHDL unit for which was this interface created
-    @cvar _alternativeNames: [] of alternative names
+
     """
     NAME_SEPARATOR = "_"
     def __init__(self, *destinations, masterDir=DIRECTION.OUT, src=None, \
                  isExtern=False, alternativeNames=None):
         """
+        This constructor is called when constructing new interface, it is usually done 
+        manually while creating Unit or
+        automatically while extracting interfaces from UnitWithSoure
+         
         @param *destinations: interfaces connected to this interface
-        @param src:  interface whitch is master for this interface (if None isExtern has to be true)
+        @param src:  interface which is master for this interface (if None isExtern has to be true)
         @param hasExter: if true this interface is specified as interface outside of this unit  
         """
-        # [TODO] name for interface if name is specified it should not be overridden
-        
         copyDict = {}
         # build all interface classes for this interface
         self.__class__._builded()
@@ -39,15 +54,19 @@ class Interface(Buildable, ExtractableInterface):
         else:
             self._alternativeNames = alternativeNames
         
-        # deepcopy interfaces from class
-        self._params = deepcopy(self.__class__._params, copyDict)
-        self._subInterfaces = deepcopy(self.__class__._subInterfaces, copyDict)
+        # deepcopy params from class
+        self._params = {}
+        for pName, p in deepcopy(self.__class__._params, copyDict).items():
+            self._addParam(pName, p)
+        
+        # deepcopy subinterfaces
+        self._subInterfaces = {}
+        for iName, i in deepcopy(self.__class__._subInterfaces, copyDict).items():
+            self._addSubIntf(iName, i)
 
         
         if self._alternativeNames and self._subInterfaces:
             raise NotImplementedError('only signals can have alternative names for now')
-        for propName, prop in self._params.items():
-            setattr(self, propName, prop)
             
         # set default name to this interface
         if not hasattr(self, "_name"):
@@ -55,11 +74,6 @@ class Interface(Buildable, ExtractableInterface):
                 self._name = self._alternativeNames[0]
             else:
                 self._name = ''     
-            
-        for propName, prop in self._subInterfaces.items():
-            setattr(self, propName, prop)
-            prop._parent = self
-            prop._name = propName
             
         self._src = src
         if src:
@@ -72,7 +86,26 @@ class Interface(Buildable, ExtractableInterface):
         self._setAsExtern(isExtern)        
         self._destinations = list(destinations)
         
-
+    def _addParam(self, pName, p, allowUpdate=False):
+        p._parent = self
+        p._name = pName
+        if p.hasGenericName:
+            p.name = pName
+        if not allowUpdate and pName in self._params:
+            raise IntfLvlConfErr("Already has param %s old:%s new:%s" % 
+                                 (pName, repr(getattr(self, pName)), p))
+        self._params[pName] = p
+        setattr(self, pName, p)
+        
+    def _addSubIntf(self, iName, i):
+        i._parent = self
+        i._name = iName
+        if iName in self._subInterfaces:
+            raise IntfLvlConfErr("Already has subinterface %s old:%s new:%s" % 
+                                 (iName, repr(getattr(self, iName), i)))
+        self._subInterfaces[iName] = i
+        setattr(self, iName, i)
+              
     def _setAsExtern(self, isExtern):
         self._isExtern = isExtern
         for _, prop in self._subInterfaces.items():
@@ -97,7 +130,6 @@ class Interface(Buildable, ExtractableInterface):
             # only derived classes should be builded
             if issubclass(c, Interface) and c != Interface:  
                 c._builded()
-
         
         for propName in dir(cls):
             prop = getattr(cls, propName)
@@ -107,6 +139,8 @@ class Interface(Buildable, ExtractableInterface):
                 cls._subInterfaces[propName] = prop
             elif issubclass(pCls, Param):
                 cls._params[propName] = prop
+                prop._name = propName
+        
         cls._clsBuildFor = cls
         
     def _rmSignals(self, rmConnetions=True):
@@ -144,13 +178,16 @@ class Interface(Buildable, ExtractableInterface):
                     raise Exception(("Both interfaces has same direction (%s) and can not be connected together" + 
                     " (%s <= %s)") % (master._direction, str(self), str(master))) 
             self._sig.assignFrom(master._sig)
+            
     def _getSignalDirection(self):
         if self._direction == INTF_DIRECTION.MASTER:
             return self._masterDir
         elif self._direction == INTF_DIRECTION.SLAVE:
             return DIRECTION.oposite(self._masterDir)
         else:
-            raise Exception("Invalid interface configuration")
+            raise IntfLvlConfErr("Invalid interface configuration _direction: %s" % 
+                                 (str(self._direction)))
+        
     def _propagateConnection(self):
         """
         Propagate connections from interface instance to all subinterfaces
@@ -189,6 +226,7 @@ class Interface(Buildable, ExtractableInterface):
             return self._originEntityPort.name
         else:
             return self._getFullName().replace('.', self.NAME_SEPARATOR)
+        
     def _getFullName(self):
         name = ""
         tmp = self

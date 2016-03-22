@@ -43,7 +43,9 @@ def walkAllOriginSignals(sig, discovered=None):
     """
     if discovered is None:
         discovered = set()
-    assert(isinstance(sig, Signal))
+    if not isinstance(sig, Signal):
+        raise  AssertionError("Expected only instances of signal, got: %s" % 
+                              (repr(sig)))
     if sig in discovered:
         return
     discovered.add(sig)
@@ -107,7 +109,7 @@ def walkSignalsInExpr(expr):
         return
     elif isinstance(expr, Operator):
         for op in expr.ops:
-            if op != expr:
+            if op is not expr:
                 yield from walkSignalsInExpr(op)
     elif isinstance(expr, Signal):
         if hasattr(expr, "origin"):

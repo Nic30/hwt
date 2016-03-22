@@ -1,4 +1,4 @@
-from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, RANGE, PINT, UINT
+from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, RANGE, PINT, UINT, BIT
 from vhdl_toolkit.hdlObjects.value import Value
 
 def convOpsToType(t):
@@ -11,61 +11,64 @@ def convOpsToType(t):
 
 addOperand_logic = convOpsToType(BOOL)    
 
+def getReturnType_default(op):
+    t = op.ops[0].dtype
+    if(t == UINT or t == PINT):
+        return INT
+    else:
+        return t
+
+
+def addOperand_default(operator, operand):
+    t = operand.dtype
+    try:
+        opType = operator.getReturnType()
+    except IndexError:
+        opType = t
+        
+    typeConvertedOp = t.convert(operand, opType)
+    operator.ops.append(typeConvertedOp)
+    if not isinstance(typeConvertedOp, Value):
+        typeConvertedOp.endpoints.add(operator)
+
+def addOperand_eq(operator, operand):
+    t = operand.dtype
+    try:
+        opType = getReturnType_default(operator)
+    except IndexError:
+        opType = t
+        
+    typeConvertedOp = t.convert(operand, opType)
+    operator.ops.append(typeConvertedOp)
+    if not isinstance(typeConvertedOp, Value):
+        typeConvertedOp.endpoints.add(operator)
+
+def addOperand_event(operator, operand):
+    t = operand.dtype
+    assert(t == BIT)
+        
+    typeConvertedOp = t.convert(operand, t)
+    operator.ops.append(typeConvertedOp)
+    if not isinstance(typeConvertedOp, Value):
+        typeConvertedOp.endpoints.add(operator)
+
 
 class OpDefinition():
-    def __eq__(self, other):
-        return self.id == other.id
-    
-    def  __hash__(self):
-        return hash(self.id)
-    
-    @staticmethod
-    def addOperand_default(operator, operand):
-        t = operand.dtype
-        try:
-            opType = operator.getReturnType()
-        except IndexError:
-            opType = t
-            
-        typeConvertedOp = t.convert(operand, opType)
-        operator.ops.append(typeConvertedOp)
-        if not isinstance(typeConvertedOp, Value):
-            typeConvertedOp.endpoints.add(operator)
-        
-
-    
-    @staticmethod
-    def addOperand_eq(operator, operand):
-        t = operand.dtype
-        try:
-            opType = OpDefinition.getReturnType_default(operator)
-        except IndexError:
-            opType = t
-            
-        typeConvertedOp = t.convert(operand, opType)
-        operator.ops.append(typeConvertedOp)
-        if not isinstance(typeConvertedOp, Value):
-            typeConvertedOp.endpoints.add(operator)
-    
-       
-    @staticmethod
-    def getReturnType_default(op):
-        t = op.ops[0].dtype
-        if(t == UINT or t == PINT):
-            return INT
-        else:
-            return t
-
     def __init__(self, _id, precedence, strOperatorOrFn, evalFn,
-                 getReturnType=getReturnType_default.__func__ ,
-                 addOperand=addOperand_default.__func__):  
-        # (addOperand_default is staticmethod object)
+                 getReturnType=getReturnType_default ,
+                 addOperand=addOperand_default):  
         self.id = _id
         self.precedence = precedence
         self.strOperator = strOperatorOrFn
         self._evalFn = evalFn
         self.getReturnType = getReturnType
         self.addOperand = addOperand
+        
+    def __eq__(self, other):
+        return self.id == other.id
+    
+    def  __hash__(self):
+        return hash(self.id)
     
     def eval(self, operator):
         """Load all operands and process them by self._evalFn"""
@@ -95,7 +98,7 @@ class OpDefinition():
         from vhdl_toolkit.hdlObjects.operator import Operator
         
         def p(op):
-            s = serializer.Value(op)
+            s = serializer.asHdl(op)
             if isinstance(op, Operator) and op.operator.precedence > self.precedence:
                 return " (%s) " % s
             return " %s " % s
@@ -116,14 +119,17 @@ class AllOps():
     @attention: These are internal operators, the are not equal to verilog or vhdl operators
     """
     
-    NOT = OpDefinition('NOT', 3, lambda op: "NOT " + str(op[0]),  # [TODO] [0] has dangerous potential
+    NOT = OpDefinition('NOT', 3, lambda strOps: "NOT " + strOps[0],  # [TODO] [0] has dangerous potential
                        lambda a :~a, lambda op: BOOL,
                        addOperand=addOperand_logic)
-    EVENT = OpDefinition('EVENT', 3, lambda op:  str(op) + "'EVENT",
-                         lambda a : NotImplemented(),
-                         lambda op: BOOL)
-    RISING_EDGE = OpDefinition('RISING_EDGE', 3, lambda op: "RISING_EDGE(" + str(op) + ")",
-                       lambda a : NotImplemented())
+    EVENT = OpDefinition('EVENT', 3, lambda strOps:  strOps[0] + "'EVENT",
+                        lambda a : NotImplemented(),
+                        addOperand=addOperand_event,
+                        getReturnType=lambda op: BOOL)
+    RISING_EDGE = OpDefinition('RISING_EDGE', 3, lambda strOps: "RISING_EDGE(" + strOps[0] + ")",
+                        lambda a : NotImplemented(),
+                        addOperand=addOperand_event,
+                        getReturnType=lambda op: BOOL)
     DIV = OpDefinition('DIV', 3, '/', lambda a, b : a // b)
     PLUS = OpDefinition('PLUS', 4, '+', lambda a, b : a + b)
     MINUS = OpDefinition('MINUS', 4, '-', lambda a, b : a - b)
@@ -135,7 +141,7 @@ class AllOps():
                        addOperand=addOperand_logic)
     EQ = OpDefinition('EQ', 7, '==', lambda a, b : a == b,
                         lambda op: BOOL,
-                        addOperand=OpDefinition.addOperand_eq)
+                        addOperand=addOperand_eq)
     AND_LOG = OpDefinition('AND', 11, 'AND', lambda a, b : a & b,
                         lambda op: BOOL,
                        addOperand=addOperand_logic)

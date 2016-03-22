@@ -1,5 +1,5 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
-from vhdl_toolkit.synthetisator.param import Param, inheritAllParams
+from vhdl_toolkit.synthetisator.param import Param, shareAllParams
 from vhdl_toolkit.interfaces.std import s, D
 from vhdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 
@@ -54,7 +54,7 @@ class AxiLite_b(Interface):
     ready = s(masterDir=D.OUT)
     valid = s(masterDir=D.IN)
 
-@inheritAllParams    
+@shareAllParams    
 class AxiLite(Interface):
     ADDR_WIDTH = Param(32)
     DATA_WIDTH = Param(64)
@@ -76,7 +76,7 @@ class AxiLite_w_xil(AxiLite_w):
 class AxiLite_b_xil(AxiLite_b):
     NAME_SEPARATOR = ''
     
-@inheritAllParams   
+@shareAllParams   
 class AxiLite_xil(AxiLite):
     aw = AxiLite_addr_xil()
     ar = AxiLite_addr_xil()
@@ -110,7 +110,7 @@ class Axi4_b(AxiLite_b):
     ID_WIDTH = Param(3)
     id = s(masterDir=D.IN, dtype=vecT(ID_WIDTH), alternativeNames=['id_v'])
 
-@inheritAllParams
+@shareAllParams
 class Axi4(AxiLite):
     ID_WIDTH = Param(3)
     aw = Axi4_addr()
@@ -129,7 +129,7 @@ class Axi4_b_xil(Axi4_b):
     NAME_SEPARATOR = ''
 
 
-@inheritAllParams
+@shareAllParams
 class Axi4_xil(Axi4):
     ar = Axi4_addr_xil()
     aw = Axi4_addr_xil()

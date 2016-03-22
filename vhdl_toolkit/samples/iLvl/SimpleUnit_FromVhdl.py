@@ -3,7 +3,7 @@ from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
 
 
 class SimpleUnit_FromVhdl(UnitWithSource):
-    _origin = 'vhdl/simplest_b.vhd'
+    _hdlSources = 'vhdl/simplest_b.vhd'
 
 if __name__ == "__main__":
     u = SimpleUnit_FromVhdl()

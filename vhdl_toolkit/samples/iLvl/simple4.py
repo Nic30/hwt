@@ -8,8 +8,9 @@ from vhdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 
 class SimpleUnit4(Unit):
     DATA_WIDTH = Param(16)
-    a = Ap_none(dtype=vecT(DATA_WIDTH.opDiv(hInt(8))), isExtern=True)
-    b = Ap_none(dtype=vecT(DATA_WIDTH.opDiv(hInt(8))), src=a, isExtern=True)
+    dtype = vecT(DATA_WIDTH.opDiv(hInt(8)))
+    a = Ap_none(dtype=dtype, isExtern=True)
+    b = Ap_none(dtype=dtype, src=a, isExtern=True)
 
 
 if __name__ == "__main__":

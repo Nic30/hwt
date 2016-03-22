@@ -1,7 +1,7 @@
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
 from vhdl_toolkit.synthetisator.param import Param
-from python_toolkit.arrayQuery import single
+from python_toolkit.arrayQuery import single, NoValueExc
 from vhdl_toolkit.interfaces.amba import AxiLite
 from vhdl_toolkit.interfaces.std import Ap_clk, \
     Ap_rst_n, BramPort, Ap_vld
@@ -38,7 +38,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
 
     def test_axiStreamExtraction(self):
         class AxiStreamSampleEnt(UnitWithSource):
-            _origin = ILVL_VHDL + "axiStreamSampleEnt.vhd"
+            _hdlSources = ILVL_VHDL + "axiStreamSampleEnt.vhd"
         # (intfClasses=[AxiStream_withUserAndStrb, AxiStream, AxiStream_withUserAndNoStrb,
         #  AxiStream_withoutSTRB])
         u = AxiStreamSampleEnt()
@@ -50,21 +50,21 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
 
     def test_genericValues(self):
         class GenericValuesSample(UnitWithSource):
-            _origin = ILVL_VHDL + "genericValuesSample.vhd"
+            _hdlSources = ILVL_VHDL + "genericValuesSample.vhd"
         u = GenericValuesSample()
-        self.assertEqual(u.c_baseaddr._val.val, (2 ** 32) - 1)
-        self.assertEqual(u.c_family._val.val, 'zynq')
+        self.assertEqual(u.C_BASEADDR._val.val, (2 ** 32) - 1)
+        self.assertEqual(u.C_FAMILY._val.val, 'zynq')
 
     def test_ClkAndRstExtraction(self):
         class ClkRstEnt(UnitWithSource):
-            _origin = ILVL_VHDL + "clkRstEnt.vhd"
+            _hdlSources = ILVL_VHDL + "clkRstEnt.vhd"
         u = ClkRstEnt(intfClasses=[Ap_clk, Ap_rst_n])
         self.assertIsInstance(u.ap_rst_n, Ap_rst_n)
         self.assertIsInstance(u.ap_clk, Ap_clk)
 
     def test_positiveAndNatural(self):
         class PositiveAndNatural(UnitWithSource):
-            _origin = ILVL_VHDL + "positiveAndNatural.vhd"
+            _hdlSources = ILVL_VHDL + "positiveAndNatural.vhd"
         u = PositiveAndNatural()
         natG = single(u._entity.generics, lambda x: x.name == "nat")
         posG = single(u._entity.generics, lambda x: x.name == "pos")
@@ -75,7 +75,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
 
     def test_axiLiteSlave2(self):
         class AxiLiteSlave2(UnitWithSource):
-            _origin = ILVL_VHDL + "axiLite_basic_slave2.vhd"
+            _hdlSources = ILVL_VHDL + "axiLite_basic_slave2.vhd"
         u = AxiLiteSlave2(intfClasses=[AxiLite, Ap_clk, Ap_rst_n])
         self.assertTrue(hasattr(u, "ap_clk"))
         self.assertTrue(hasattr(u, "ap_rst_n"))
@@ -83,7 +83,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
 
     def test_withPartialyInvalidInterfaceNames(self):
         class EntityWithPartialyInvalidIntf(UnitWithSource):
-            _origin = ILVL_VHDL + "entityWithPartialyInvalidIntf.vhd"
+            _hdlSources = ILVL_VHDL + "entityWithPartialyInvalidIntf.vhd"
 
         u = EntityWithPartialyInvalidIntf()
 
@@ -124,17 +124,31 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertIsS(a.S_AXI.b.valid)
         self.assertIsS(a.S_AXI.b.ready)
 
-    def test_axiParamsIn_paramsDict(self):
+    def test_axiParamsIn_Entity(self):
         from vhdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
-        a = AxiLiteSlaveContainer()
-        self.assertTrue("ADDR_WIDTH" in a._params)
-        self.assertTrue("DATA_WIDTH" in a._params)
+        u = AxiLiteSlaveContainer()
+        for _ in u._synthesise():
+            pass
+        aw = None
+        dw = None
+        try:
+            aw = single(u._entity.generics, lambda x: x.name == "AXI_ADDR_WIDTH")
+        except NoValueExc:
+            pass
+
+        try:
+            dw = single(u._entity.generics, lambda x: x.name == "AXI_DATA_WIDTH")
+        except NoValueExc:
+            pass
+        
+        self.assertTrue(aw is not None)
+        self.assertTrue(dw is not None)
 
     def test_axiParams(self):
         from vhdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
         u = AxiLiteSlaveContainer()
-        AW = u.ADDR_WIDTH.get()
-        DW = u.DATA_WIDTH.get()
+        AW = u.axi.ADDR_WIDTH.get()
+        DW = u.axi.DATA_WIDTH.get()
 
         self.assertEqual(u.axi.ADDR_WIDTH.get(), hInt(8))
         self.assertEqual(u.axi.ar.ADDR_WIDTH.get(), hInt(8))
@@ -146,21 +160,21 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         # [TODO] width of parametrized interfaces from VHDL should be Param with expr
 
         self.assertEqual(u.axi.w.strb._dtype.getBitCnt(), DW.val // 8)
-        self.assertEqual(u.slv.c_s_axi_addr_width.get().get(), AW)
-        self.assertEqual(u.slv.c_s_axi_data_width.get().get(), DW)
+        self.assertEqual(u.slv.C_S_AXI_ADDR_WIDTH.get().get(), AW)
+        self.assertEqual(u.slv.C_S_AXI_DATA_WIDTH.get().get(), DW)
 
         self.assertEqual(u.slv.S_AXI.ar.addr._dtype.getBitCnt(), AW.val)
 
     def test_paramsExtractionSimple(self):
         class Ap_vldWithParam(UnitWithSource):
-            _origin = ILVL_VHDL + "ap_vldWithParam.vhd"
+            _hdlSources = ILVL_VHDL + "ap_vldWithParam.vhd"
         u = Ap_vldWithParam()
         self.assertIsInstance(u.data, Ap_vld)
         # print("Ap_vldWithParam.data_width %d" % id(Ap_vldWithParam.data_width))
         # print("Ap_vldWithParam.data.DATA_WIDTH %d" % id(Ap_vldWithParam.data.DATA_WIDTH))
         # print("u.data_width %d" % id(u.data_width))
         # print("u.data.DATA_WIDTH %d" % id(u.data.DATA_WIDTH))
-        self.assertEqual(u.data_width, u.data.DATA_WIDTH)
+        self.assertEqual(u.DATA_WIDTH, u.data.DATA_WIDTH)
         self.assertEqual(u.data.DATA_WIDTH.get().val, 13)
 
         self.assertEqual(u.data.data._dtype.getBitCnt(), 13)
@@ -229,25 +243,25 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
 
         b = AxiStream()
 
-        self.assertTrue(AxiStream_withoutSTRB.DATA_WIDTH.replacedWith is None)
-        self.assertTrue(AxiStream.DATA_WIDTH.replacedWith is None)
+        self.assertIs(AxiStream_withoutSTRB.DATA_WIDTH.replacedWith, None)
+        self.assertIs(AxiStream.DATA_WIDTH.replacedWith, None)
 
-        self.assertTrue(a.DATA_WIDTH.replacedWith is dw)
-        self.assertFalse(b.DATA_WIDTH.replacedWith is dw)
+        self.assertIs(a.DATA_WIDTH, dw)
+        self.assertIsNot(b.DATA_WIDTH, dw)
 
     def test_largeBitStrings(self):
         class BitStringValuesEnt(UnitWithSource):
-            _origin = ILVL_VHDL + "bitStringValuesEnt.vhd"
+            _hdlSources = ILVL_VHDL + "bitStringValuesEnt.vhd"
         u = BitStringValuesEnt()
-        self.assertEqual(u.c_32b0.defaultVal.val, 0)
-        self.assertEqual(u.c_16b1.defaultVal.val, (1 << 16) - 1)
-        self.assertEqual(u.c_32b1.defaultVal.val, (1 << 32) - 1)
-        self.assertEqual(u.c_128b1.defaultVal.val, (1 << 128) - 1)
+        self.assertEqual(u.C_32b0.defaultVal.val, 0)
+        self.assertEqual(u.C_16b1.defaultVal.val, (1 << 16) - 1)
+        self.assertEqual(u.C_32b1.defaultVal.val, (1 << 32) - 1)
+        self.assertEqual(u.C_128b1.defaultVal.val, (1 << 128) - 1)
         # print(u._entity)
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VhdlCodesignTC('test_axiStreamExtraction'))
+    suite.addTest(VhdlCodesignTC('test_axiParamsIn_Entity'))
     # suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

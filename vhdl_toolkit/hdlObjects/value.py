@@ -39,6 +39,9 @@ class Value():
     def clone(self):
         return self.__class__(self.val, self.dtype, self.vldMask, eventMask=self.eventMask)
     
+    def __hash__(self):
+        return hash((self.dtype, self.val, self.vldMask, self.eventMask))
+    
     def __repr__(self):
         return "<Value {0:s}, vldMask {1:b}, eventMask {2:b}>".format(
                     str(self.val), self.vldMask, self.eventMask)    

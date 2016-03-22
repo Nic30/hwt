@@ -21,6 +21,10 @@ class Param(Signal):
         super(Param, self).__init__(None, t, defaultVal=initval)
         self._val = initval
         self.replacedWith = None
+    
+    def setHdlName(self, name):
+        self.hasGenericName = False
+        self.name = name
         
     def get(self):
         assert(self.replacedWith is None)
@@ -65,26 +69,38 @@ def getParam(p):
     """
     if isinstance(p, Param):
         v = p.get()
-        # use param inheritance instead of param as param value
-        assert(not isinstance(v, Param)) 
+        # use rather param inheritance instead of param as param value
+        # assert(not isinstance(v, Param)) 
         return v
     else:
         return p
     
-def inheritAllParams(cls):
+def shareAllParams(cls):
     '''foreach _subInterfaces, _interfaces and _subUnits  inherit parameters'''
     cls._builded()
-    def inherit(subelements):
+    def inheritForSubUnits(subelements):
+        for _, unit in subelements.items():
+            for paramName, param in cls._params.items():
+                p = getattr(unit, paramName, None)
+                if p is not None:
+                    p.set(param)
+    
+    def inheritForInterfaces(subelements):
         for _, intf in subelements.items():
             for paramName, param in cls._params.items():
-                if hasattr(intf, paramName):
-                    p = getattr(intf, paramName)
+                p = getattr(intf, paramName, None)
+                if p is not None:
                     # print(cls.__name__, paramName)
                     p.replace(param)
+                    intf._params[paramName] = param
                     setattr(intf, paramName, param)
                     
-    for n in ['_subInterfaces', '_interfaces', '_subUnits']:
-        if hasattr(cls, n):
-            inherit(getattr(cls, n))
+    for n in ['_subInterfaces', '_interfaces', ]:
+        if hasattr(cls, n):                
+            inheritForInterfaces(getattr(cls, n))
+            
+    if hasattr(cls, '_subUnits'):
+        inheritForSubUnits(cls._subUnits)
+        
         
     return cls

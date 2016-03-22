@@ -1,6 +1,6 @@
 
 def If(cond, ifTrue=[], ifFalse=[]):
-    # only assigments are expected there    
+    # only assignments are expected there    
     for stm in ifTrue:
         stm.cond.add(cond)
     for stm in ifFalse:

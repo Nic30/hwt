@@ -18,7 +18,7 @@ def checkOperand(op):
         raise InvalidOperandExc("Operands in hdl expressions can be only instance of Value or Signal,"
                                 + "\ngot instance of %s" % (op.__class__))
 
-# [TODO] move to operator definition
+# [TODO] move to Operator, problem with reference Signal/Operator
 class SignalNode():
 
     @staticmethod

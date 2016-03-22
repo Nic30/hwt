@@ -211,7 +211,9 @@ class Std_logic(HdlType):
             return cls(int(val), typeObj, vld)
         
         def __eq__(self, other):
-            assert(isinstance(other, Value))
+            if not isinstance(other, Value):
+                raise AssertionError("%s __eq__ operator argument has to be instance of Value, is %s" % 
+                                     (self.__class__.__name__ , repr(other)))
             
             vld = self.vldMask & other.vldMask
             eq = self.val == other.val and vld

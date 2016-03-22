@@ -1,17 +1,20 @@
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.synthetisator.rtlLevel.context import Context
+from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
 
 
 if __name__ == "__main__":
-    width = 8
+    t = vecT(8)
   
     c = Context("simpleRegister")
-    s_out = c.sig("s_out", 8)
-    s_in = c.sig("s_in", 8)
-        
+    
+    s_out = c.sig("s_out", t)
+    s_in = c.sig("s_in", t)    
     clk = c.sig("clk")
     syncRst = c.sig("rst")
-    val = c.sig("val", width, clk, syncRst, 0)
+    
+    
+    val = c.sig("val", t, clk, syncRst, 0)
     val.assignFrom(s_in)
     s_out.assignFrom(val)
     

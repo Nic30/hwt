@@ -7,7 +7,7 @@ class InterfaceIncompatibilityExc(Exception):
     pass
 
 class ExtractableInterface():
-    # [TODO] extract interface params as well
+
     @classmethod
     def _extractPossiblePrefixes(cls, entity, prefix=""):
         """
@@ -17,12 +17,14 @@ class ExtractableInterface():
         
         firstIntfNames = []
         if cls._subInterfaces:
+            # find first signal in this interface
             parent = cls
             child = cls
-            # construct prefix
+           
             while child._subInterfaces:
                 parent = child
                 _childName, child = list(child._subInterfaces.items())[0]
+                # update prefix
                 if child._subInterfaces:
                     if prefix == '':
                         prefix = _childName
@@ -35,13 +37,16 @@ class ExtractableInterface():
             o = child
             name = _childName
         else:
+            # find this interface because it is signal
             o = cls()
             name = o._name
             
+        # search for alternative names as well    
         for n in o._alternativeNames:
             firstIntfNames.append(prefix + n)
         firstIntfNames.append(prefix + name)
-            
+        
+        # search ports names for firstIntfNames  
         for firstIntfName in firstIntfNames:
             for p in entity.ports:
                 if not hasattr(p, "_interface") and p.name.lower().endswith(firstIntfName):
@@ -53,7 +58,7 @@ class ExtractableInterface():
                         yield p.name[:-nameLen]
                 
     def _unExtrac(self):
-        """Revent extracting process for this interface"""
+        """undo extracting process for this interface"""
         if self._subInterfaces:
             for _, intfConfMap in self._subInterfaces.items():
                 intfConfMap._unExtrac()
@@ -69,11 +74,6 @@ class ExtractableInterface():
         @return: self if extraction was successful
         @raise InterfaceIncompatibilityExc: if this interface with this prefix does not fit to this entity 
         """
-        # [TODO] extractions of params as well
-        # I will find it in signal at lowest level
-        # I need to update it all the way up
-        # replacing of params can be a performance hit
-        # 
         if self._subInterfaces:
             # extract subinterfaces and propagate params
             allDirMatch = True
@@ -94,9 +94,10 @@ class ExtractableInterface():
                 for intfName, intf in self._subInterfaces.items():
                     intf._unExtrac()
                 raise e
+            
             # update all params on this interface
             for pName, p in self._params.items():
-                if not p.replacedWith is None:
+                if p.replacedWith is not None:
                     setattr(self, pName, p.replacedWith)
                 
             if allDirMatch:
@@ -111,8 +112,7 @@ class ExtractableInterface():
             # update params on object as well
             for pName, p in self._params.items():
                 if not p.replacedWith is None:
-                    self._params[pName] = p.replacedWith
-                    setattr(self, pName, p.replacedWith)
+                    self._addParam(pName, p.replacedWith, allowUpdate=True)
             
         else:
             # extract signal(Ap_none , etc.)
@@ -135,15 +135,12 @@ class ExtractableInterface():
                 raise  InterfaceIncompatibilityExc("Missing " + prefix + n)
 
             # update interface type from hdl, update generics
-            if hasattr(self._dtype, "constrain"):
+            if self._dtype.constrain is not None:
                 intfTConstr = self._dtype.constrain
                 unitTConstr = self._originEntityPort.dtype.constrain
                  
                 for intfParam, unitParam in ExprComparator\
                                             .findExprDiffInParam(intfTConstr, unitTConstr):
-                    #print()
-                    #print("intfParam.replace(unitParam) %d, %d %s %s" % 
-                    #      (id(intfParam), id(unitParam), unitParam.name, str(unitParam.defaultVal)))
                     intfParam.replace(unitParam) 
             
             self._dtype = self._originEntityPort.dtype

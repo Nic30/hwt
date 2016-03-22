@@ -21,9 +21,13 @@ class HdlType():
     def __init__(self):
         self.name = None
         self.valueCls = None
+        self.constrain = None
     
     def __eq__(self, other):
         return type(self) is type(other)
+    
+    def __hash__(self):
+        return hash((self.name, self.constrain))
     
     def convert(self, sigOrVal, toType):
         if sigOrVal.dtype == toType:

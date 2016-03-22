@@ -57,6 +57,7 @@ class Parser():
             t = lit['type']
             v = lit['value']
             if t == 'ID':
+                v = v.lower()
                 if isinstance(v[0], str):
                     ref = VhdlRef([v])
                 else:
@@ -107,14 +108,17 @@ class Parser():
         return ctx.lookupLocal(t_name)
 
     @staticmethod
-    def varDeclrJson(jGeneric, ctx):
-        t = jGeneric["type"]
-        name = jGeneric['name'].lower()
+    def varDeclrJson(jVar, ctx):
+        """parse generics, const arguments of functions etc.."""
+        t = jVar["type"]
+        name = jVar['name'].lower()
         t = Parser.typeFromJson(t, ctx)
         if type(t) is Std_logic_vector:
-            t.derivedWidth = int(jGeneric['value']['literal']["bits"])
-
-        v = jGeneric['value']
+            try:
+                t.derivedWidth = int(jVar['value']['literal']["bits"])
+            except KeyError:
+                pass
+        v = jVar['value']
         if v is not None:
             defaultVal = Parser.exprFromJson(v, ctx)
             # convert it to t of variable (type can be different for example 1 as Natural or Integer)
@@ -122,7 +126,7 @@ class Parser():
         else:
             defaultVal = Value.fromPyVal(None, t)
         g = Param(defaultVal)
-        g.name = name
+        g.setHdlName(jVar['name'])
         g._name = name
         return g
 
@@ -269,12 +273,15 @@ def parseVhdl(fileList: list, hdlCtx=None, libName="work", timeoutInterval=20,
     """
     if isinstance(fileList, str):
         fileList = [fileList]
+    # if hdlCtx is not specified create base context and "work" contex nested inside 
     topCtx = hdlCtx
     if not hdlCtx:
         topCtx = BaseVhdlContext.getBaseCtx()
         BaseVhdlContext.importFakeLibs(topCtx)
         hdlCtx = HDLCtx(libName, topCtx)
         topCtx.insert(VhdlRef([libName]), hdlCtx)
+    
+    # start parsing all files    
     p_list = []
     for fname in fileList:
         cmd = [JAVA, "-jar", str(CONVERTOR), fname]
@@ -286,6 +293,7 @@ def parseVhdl(fileList: list, hdlCtx=None, libName="work", timeoutInterval=20,
         p.fileName = fname
         p_list.append(p)
 
+    # collect parsed json from java parser and construct python objects
     for p in p_list:
         stdoutdata, _ = p.communicate(timeout=timeoutInterval)
 

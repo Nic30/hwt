@@ -5,6 +5,10 @@ from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.hdlObjects.assignment import Assignment 
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 from vhdl_toolkit.hdlObjects.specialValues import Unconstrained
+from vhdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer
+from vhdl_toolkit.synthetisator.assigRenderer import renderIfTree
+from python_toolkit.arrayQuery import arr_any
+
 
 
 class VhdlSerializer():
@@ -21,8 +25,10 @@ class VhdlSerializer():
             return VhdlSerializer.Value(obj)
         elif isinstance(obj, Assignment):
             return VhdlSerializer.Assignment(obj)
+        elif isinstance(obj, IfContainer):
+            return VhdlSerializer.IfContainer(obj) 
         else:
-            raise NotImplementedError("Not implemented for %s" % (str(obj)))
+            raise NotImplementedError("Not implemented for %s" % (repr(obj)))
 
     @staticmethod
     def Architecture(arch):
@@ -77,9 +83,15 @@ class VhdlSerializer():
     
     @staticmethod
     def IfContainer(ifc):
-        return VHDLTemplates.If.render(cond=ifc.cond.asVhdl(),
+        cond = list(ifc.cond)
+        if len(cond) == 1:
+            cond = VhdlSerializer.asHdl(cond[0])
+        else:
+            cond = " AND ".join(map(VhdlSerializer.asHdl, cond))  
+        return VHDLTemplates.If.render(cond=cond,
                                        ifTrue=ifc.ifTrue,
                                        ifFalse=ifc.ifFalse)  
+  
     @staticmethod
     def GenericItem(g):
         s = "%s : %s" % (g.name, VhdlSerializer.VHDLType(g.dtype))
@@ -88,16 +100,24 @@ class VhdlSerializer():
         else:  
             return  "%s := %s" % (s, VhdlSerializer.Value(g.defaultVal))
         
-
     @staticmethod
     def isSignalHiddenInExpr(sig):
         """Some signals are just only conections in expression they done need to be rendered because
         they are hidden inside expression for example sig. from a+b in a+b+c"""
-        if len(sig.endpoints) <= 1 and len(sig.drivers) == 1:
-            d = list(iter(sig.drivers))[0]
-            return not isinstance(d, Assignment) \
-                   and not isinstance(d, PortConnection) \
-                   and d.result == sig
+        if len(sig.drivers) == 1:
+            if len(sig.endpoints) <= 1:
+                d = list(iter(sig.drivers))[0]
+                return not isinstance(d, Assignment) \
+                       and not isinstance(d, PortConnection) \
+                       and d.result == sig
+            else:
+                for e in sig.endpoints:
+                    if not isinstance(e, Assignment):
+                        return False
+                    if sig is e.src:
+                        return False
+                return True
+                    
         else:
             False
     
@@ -131,13 +151,12 @@ class VhdlSerializer():
     @staticmethod
     def BitString(v, width, vldMask=None):
         if vldMask is None:
-            return ('"{0:0' + str(width) + 'b}"').format(v)
-        else:
-            # if can be in hex
-            if width % 4 == 0 and vldMask == (1 << width) - 1:
-                return ('X"%0' + str(width // 4) + 'x"') % (v)
-            else:  # else in binary
-                return VhdlSerializer.BitString_binary(v, width, vldMask)
+            vldMask = width
+        # if can be in hex
+        if width % 4 == 0 and vldMask == (1 << width) - 1:
+            return ('X"%0' + str(width // 4) + 'x"') % (v)
+        else:  # else in binary
+            return VhdlSerializer.BitString_binary(v, width, vldMask)
     
     @staticmethod
     def SignalItem(si, declaration=False):
@@ -158,8 +177,6 @@ class VhdlSerializer():
             else:
                 return si.name
 
-        
-        
     @staticmethod
     def VHDLExtraType(exTyp):
         return "TYPE %s IS (%s);" % (exTyp.name, ", ".join(exTyp.values))
@@ -180,7 +197,7 @@ class VhdlSerializer():
         assert(isinstance(typ, HdlType))
         buff = []
         buff.append(typ.name.upper())
-        if hasattr(typ, "constrain") and not isinstance(typ.constrain, Unconstrained):
+        if typ.constrain is not None and not isinstance(typ.constrain, Unconstrained):
             buff.append("(%s)" % VhdlSerializer.Value(typ.constrain))        
         return "".join(buff)
                 
@@ -200,11 +217,11 @@ class VhdlSerializer():
 
     @staticmethod
     def HWProcess(proc):
-        hasCondition = not(len(proc.bodyBuff) == 1 and proc.bodyBuff[0].cond == set())
+        hasCondition = arr_any(proc.bodyBuff, lambda x: isinstance(x, IfContainer))
         return VHDLTemplates.process.render({"name": proc.name,
-                                             "hasCondition": hasCondition,
+                                             "hasCond": hasCondition,
               "sensitivityList": ", ".join(proc.sensitivityList),
-              "statements": [ VhdlSerializer.asHdl(s) for s in proc.bodyBuff] })
+              "statements": [ VhdlSerializer.asHdl(s) for s in renderIfTree(proc.bodyBuff)] })
     
       
     @staticmethod

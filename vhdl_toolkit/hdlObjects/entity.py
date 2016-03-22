@@ -10,7 +10,7 @@ class Entity(object):
     
     def injectCtxWithGenerics(self, ctx):
         for g in self.generics:
-            ctx[g.name] = g
+            ctx[g._name] = g
         return ctx
     
     def __repr__(self):
