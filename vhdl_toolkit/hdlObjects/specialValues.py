@@ -30,6 +30,7 @@ class INTF_DIRECTION():
 class DIRECTION():
     IN = "IN"
     OUT = "OUT"
+    INOUT = "INOUT"
     
     @classmethod
     def asIntfDirection(cls, d):
@@ -38,7 +39,7 @@ class DIRECTION():
         elif d == cls.OUT:
             return INTF_DIRECTION.MASTER
         else:
-            raise Exception("Parameter is not direction")
+            raise TypeError("Parameter %s is not direction" % (str(d)))
     
     @classmethod
     def oposite(cls, d):
@@ -46,6 +47,8 @@ class DIRECTION():
             return cls.OUT
         elif d == cls.OUT:
             return cls.IN
+        elif d == cls.INOUT:
+            return cls.INOUT
         else:
             raise Exception("Parameter is not direction")
             
