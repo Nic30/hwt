@@ -7,6 +7,7 @@ vhdl_toolkit/synthetisator/__pycache__/
 visualizer/__pycache__/
 visualizer/workspace/__pycache__/
 vivado_toolkit/ip_packager/__pycache__/
+hls_toolkit/samples/__pycache__/
 vhdl_toolkit/samples/iLvl/vhdl/__pycahe__/
 vhdl_toolkit/samples/sLvl/vhdl/__pycache__/
 
