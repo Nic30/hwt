@@ -4,6 +4,28 @@ from vhdl_toolkit.interfaces.std import s, D
 from vhdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 
 
+BURST_FIXED = 0b00
+BURST_INCR = 0b01
+BURST_WRAP = 0b10
+
+BYTES_IN_TRANS_1 = 0b000
+BYTES_IN_TRANS_2 = 0b001
+BYTES_IN_TRANS_4 = 0b010
+BYTES_IN_TRANS_8 = 0b011
+BYTES_IN_TRANS_16 = 0b100
+BYTES_IN_TRANS_32 = 0b101
+BYTES_IN_TRANS_64 = 0b110
+BYTES_IN_TRANS_128 = 0b111
+
+CACHE_DEFAULT = 3
+PROT_DEFAULT = 0
+QOS_DEFAULT = 0
+LOCK_DEFAULT = 0
+RESP_OKAY = 0
+RESP_EXOKAY = 1
+RESP_SLVERR = 2
+RESP_DECERR = 3
+
 class AxiStream_withoutSTRB(Interface):
     DATA_WIDTH = Param(64)
     last = s(masterDir=D.OUT, alternativeNames=['tlast' ])
