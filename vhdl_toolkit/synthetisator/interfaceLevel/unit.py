@@ -26,8 +26,15 @@ def defaultUnitName(unit, sugestedName=None):
 class Unit(Buildable):
     """
     Class members:
-    @attention: Current implementation does not control if connections are connected to right interface objects
-                this mean you can connect it to class interface definitions for example 
+    @attention: Current implementation does not control if connections are connected
+                to right interface objects this mean you can connect it to class
+                interface definitions for example 
+    
+    #resolved automaticaly:
+    @cvar _interfaces: all interfaces with name in this unit class (IN/OUT/internal)
+    @cvar _subUnits: all units with name in this unit class
+    @cvar _params: all params with name defined at the top of unit class
+    @cvar _hlsUnits: all hls units with name defined in this unit class
     """
     _interfaces = None
     _subUnits = None
@@ -185,7 +192,7 @@ class Unit(Buildable):
             yield from subUnit._synthesise(subUnitName)
             subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
         
-        # prepare connections     
+        # prepare signals for interfaces     
         for connectionName, connection in self._interfaces.items():
             signals = connection._signalsForInterface(cntx, connectionName)
             if connection._isExtern:
@@ -193,6 +200,7 @@ class Unit(Buildable):
         
         for _, interface in self._interfaces.items():
             interface._propagateSrc()
+            
         for subUnitName, subUnit in self._subUnits.items():
             for _, suIntf in subUnit._interfaces.items():
                 suIntf._propagateConnection()

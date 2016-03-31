@@ -54,7 +54,7 @@ class Context():
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
-                r = If(syncRst.opIsOn(), 
+                r = If(syncRst.opIsOn(),
                             [Signal.assignFrom(s, defVal)] ,
                             [Signal.assignFrom(s, s.next)])
             else:
@@ -78,19 +78,19 @@ class Context():
         self.startsOfDataPaths = set()
         self.subUnits = set()
         def discoverDatapaths(signal):
-                for node in walkSigSouces(signal):  
-                    if node in self.startsOfDataPaths:
-                        return 
-                    if isinstance(node, PortConnection) and not node.unit.discovered:
-                        node.unit.discovered = True
-                        for s in  walkUnitInputs(node.unit):
-                            discoverDatapaths(s)
-                        self.subUnits.add(node.unit)
-                    self.startsOfDataPaths.add(node)
-                    if isinstance(node, Assignment):
-                        for s in walkSignalsInExpr(node.src):
-                            discoverDatapaths(s)
-                    
+            for node in walkSigSouces(signal):
+                if node in self.startsOfDataPaths:
+                    return 
+                if isinstance(node, PortConnection) and not node.unit.discovered:
+                    node.unit.discovered = True
+                    for s in  walkUnitInputs(node.unit):
+                        discoverDatapaths(s)
+                    self.subUnits.add(node.unit)
+                self.startsOfDataPaths.add(node)
+                if isinstance(node, Assignment):
+                    for s in walkSignalsInExpr(node.src):
+                        discoverDatapaths(s)
+                
         for s in where(interfaces, lambda s: signalHasDriver(s)):  # walk my outputs
             discoverDatapaths(s)
     

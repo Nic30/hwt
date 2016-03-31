@@ -1,10 +1,10 @@
-from copy import deepcopy
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import ExtractableInterface 
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
+from copy import deepcopy
                    
 class Interface(Buildable, ExtractableInterface):
     """
@@ -21,7 +21,7 @@ class Interface(Buildable, ExtractableInterface):
     @ivar _name: name assigned during synthesis
     @ivar _parent: parent object (Unit or Interface instance)
     @ivar _src: Driver for this interface
-    @ivar _destinations: Interfaces for which this interface is driver
+    @ivar _endpoints: Interfaces for which this interface is driver
     @ivar _isExtern: If true synthetisator sets it as external port of unit
     
     #only interfaces without subinterfaces have:
@@ -74,18 +74,25 @@ class Interface(Buildable, ExtractableInterface):
                 self._name = self._alternativeNames[0]
             else:
                 self._name = ''     
-            
+        self._setAsExtern(isExtern)             
+        self._setSrc(src)           
+       
+        self._endpoints = list(destinations)
+
+    def _setSrc(self, src):
         self._src = src
         if src:
             self._direction = INTF_DIRECTION.SLAVE  # for inside of unit
             for _, i in self._subInterfaces.items():
                 i._reverseDirection()
+            # self._direction = INTF_DIRECTION.oposite(src._direction)
+            # if self._direction == INTF_DIRECTION.SLAVE:
+            #    for _, i in self._subInterfaces.items():
+            #        i._reverseDirection()
+            
         else:
             self._direction = INTF_DIRECTION.MASTER  # for inside of unit
-            
-        self._setAsExtern(isExtern)        
-        self._destinations = list(destinations)
-        
+    
     def _addParam(self, pName, p, allowUpdate=False):
         p._parent = self
         p._name = pName
@@ -112,8 +119,8 @@ class Interface(Buildable, ExtractableInterface):
             prop._setAsExtern(isExtern)
     
     def _propagateSrc(self):
-        if self._src:
-            self._src._destinations.append(self)
+        if self._src is not None:
+            self._src._endpoints.append(self)
                  
     @classmethod
     def _build(cls):
@@ -152,7 +159,7 @@ class Interface(Buildable, ExtractableInterface):
             i._rmSignals()
         if rmConnetions:
             self._src = None
-            self._destinations = []
+            self._endpoints = []
             
     def _connectTo(self, master):
         """
@@ -162,22 +169,15 @@ class Interface(Buildable, ExtractableInterface):
         if self._subInterfaces:
             for nameIfc, ifc in self._subInterfaces.items():
                 mIfc = master._subInterfaces[nameIfc]
-                
-                if (ifc._direction == INTF_DIRECTION.MASTER and ifc._masterDir == DIRECTION.OUT) \
-                    or (ifc._direction == INTF_DIRECTION.SLAVE and ifc._masterDir == DIRECTION.IN):
-                    mIfc._connectTo(ifc)
-                elif (ifc._direction == INTF_DIRECTION.SLAVE and ifc._masterDir == DIRECTION.OUT) \
-                    or (ifc._direction == INTF_DIRECTION.MASTER and ifc._masterDir == DIRECTION.IN):
+                if master._masterDir == mIfc._masterDir:
+                    assert(self._masterDir == ifc._masterDir)
                     ifc._connectTo(mIfc)
                 else:
-                    raise Exception("Interface direction improperly configured")
+                    assert(self._masterDir != ifc._masterDir)
+                    mIfc._connectTo(ifc)
         else:
-            if self._isExtern and master._isExtern:
-                if not self._getSignalDirection() == DIRECTION.oposite(master._getSignalDirection()) and (master._isExtern or self._isExtern):
-                    # slave for outside master for inside
-                    raise Exception(("Both interfaces has same direction (%s) and can not be connected together" + 
-                    " (%s <= %s)") % (master._direction, str(self), str(master))) 
             self._sig.assignFrom(master._sig)
+           
             
     def _getSignalDirection(self):
         if self._direction == INTF_DIRECTION.MASTER:
@@ -194,7 +194,7 @@ class Interface(Buildable, ExtractableInterface):
         """
         for _, suIntf in self._subInterfaces.items():
             suIntf._propagateConnection()
-        for d in self._destinations:
+        for d in self._endpoints:
             d._connectTo(self)
     
     def _signalsForInterface(self, context, prefix):
@@ -230,7 +230,7 @@ class Interface(Buildable, ExtractableInterface):
     def _getFullName(self):
         name = ""
         tmp = self
-        while hasattr(tmp, "_parent"):
+        while isinstance(tmp, Interface):  # hasattr(tmp, "_parent"):
             if hasattr(tmp, "_name"):
                 n = tmp._name
             else:
@@ -239,7 +239,10 @@ class Interface(Buildable, ExtractableInterface):
                 name = n
             else:
                 name = n + '.' + name
-            tmp = tmp._parent
+            if hasattr(tmp, "_parent"):
+                tmp = tmp._parent
+            else:
+                tmp = None
         return name
     
     def _reverseDirection(self):

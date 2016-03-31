@@ -217,11 +217,12 @@ class VhdlSerializer():
 
     @staticmethod
     def HWProcess(proc):
-        hasCondition = arr_any(proc.bodyBuff, lambda x: isinstance(x, IfContainer))
+        body = [s for s in renderIfTree(proc.bodyBuff)]
+        hasCondition = arr_any(body, lambda x: isinstance(x, IfContainer))
         return VHDLTemplates.process.render({"name": proc.name,
                                              "hasCond": hasCondition,
               "sensitivityList": ", ".join(proc.sensitivityList),
-              "statements": [ VhdlSerializer.asHdl(s) for s in renderIfTree(proc.bodyBuff)] })
+              "statements": [ VhdlSerializer.asHdl(s) for s in body] })
     
       
     @staticmethod
