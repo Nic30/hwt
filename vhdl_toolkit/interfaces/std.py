@@ -72,9 +72,9 @@ class BramPort(BramPort_withoutClk):
 
 class SPI(Interface):
     clk = Ap_clk()
-    mosi = Ap_none()
-    miso = Ap_none(masterDir=D.IN)
-    ss = Ap_none()
+    mosi = s()
+    miso = s(masterDir=D.IN)
+    ss = s()
   
 class RGMII_channel(Interface):
     DATA_WIDTH = 4
