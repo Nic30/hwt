@@ -3,7 +3,7 @@ from vhdl_toolkit.formater import formatVhdl
 
 
 class Bram(UnitWithSource):
-    _hdlSources = "vhdl/dualportRAM.vhd"
+    _hdlSources = ["vhdl/dualportRAM.vhd"]
     
 if __name__ == "__main__":
     u = Bram()
