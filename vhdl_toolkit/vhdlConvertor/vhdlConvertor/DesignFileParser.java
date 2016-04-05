@@ -3,22 +3,27 @@ package vhdlConvertor;
 import java.util.List;
 import java.util.Vector;
 
-import vhdlObjects.Arch;
-import vhdlObjects.Context;
-import vhdlObjects.Entity;
-import vhdlObjects.Reference;
-import vhdlObjects.Package;
-import vhdlObjects.PackageHeader;
+import convertorApp.IHdlParser;
+import convertorApp.NotImplementedLogger;
+import hdlObjects.Arch;
+import hdlObjects.Context;
+import hdlObjects.Entity;
+import hdlObjects.Package;
+import hdlObjects.PackageHeader;
+import hdlObjects.Reference;
 import vhdlParser.vhdlParser;
 
-public class DesignFileParser {
+public class DesignFileParser implements IHdlParser {
 	public Context context;
 	boolean hierarchyOnly;
-	DesignFileParser(boolean _hierarchyOnly) {
+	public DesignFileParser(boolean _hierarchyOnly) {
 		hierarchyOnly = _hierarchyOnly;
 		context = new Context();
 	}
-	void visitDesign_file(vhdlParser.Design_fileContext ctx) {
+	public Context getContext(){
+		return context;
+	}
+	public void visitDesign_file(vhdlParser.Design_fileContext ctx) {
 		if (ctx == null)
 			return;
 		// design_file

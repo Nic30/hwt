@@ -420,7 +420,14 @@ class Range(Array):
             return Range.ValueCls([_0, _1], Range.ValueCls, vld=None, eventMask=None)
         
     class ValueCls(Array.ValueCls, Ops):
-        pass      
+        pass
+    
+class Wire(Std_logic):
+    """Verilog wire"""
+    def __call__(self, width):
+        return Std_logic_vector_contrained(width)
+    
+      
 BOOL = Boolean()
 INT = Integer()
 UINT = Natural()

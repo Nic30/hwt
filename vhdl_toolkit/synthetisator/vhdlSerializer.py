@@ -13,31 +13,31 @@ from python_toolkit.arrayQuery import arr_any
 
 class VhdlSerializer():
     
-    @staticmethod
-    def asHdl(obj):
+    @classmethod
+    def asHdl(cls, obj):
         if hasattr(obj, "asVhdl"):
-            return obj.asVhdl(VhdlSerializer)
+            return obj.asVhdl(cls)
         elif isinstance(obj, HdlType):
-            return VhdlSerializer.VHDLType(obj)
+            return cls.VHDLType(obj)
         elif isinstance(obj, Signal):
-            return VhdlSerializer.SignalItem(obj)
+            return cls.SignalItem(obj)
         elif isinstance(obj, Value):
-            return VhdlSerializer.Value(obj)
+            return cls.Value(obj)
         elif isinstance(obj, Assignment):
-            return VhdlSerializer.Assignment(obj)
+            return cls.Assignment(obj)
         elif isinstance(obj, IfContainer):
-            return VhdlSerializer.IfContainer(obj) 
+            return cls.IfContainer(obj) 
         else:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
 
-    @staticmethod
-    def Architecture(arch):
+    @classmethod
+    def Architecture(cls, arch):
         variables = []
         procs = [] 
         for v in sorted(arch.variables, key=lambda x: x.name):
-            variables.append(VhdlSerializer.SignalItem(v, declaration=True))
+            variables.append(cls.SignalItem(v, declaration=True))
         for p in sorted(arch.processes, key=lambda x: x.name):
-            procs.append(VhdlSerializer.HWProcess(p))
+            procs.append(cls.HWProcess(p))
             
              
         return VHDLTemplates.architecture.render(
@@ -50,58 +50,63 @@ class VhdlSerializer():
         "componentInstances" :arch.componentInstances} 
         )
    
-    @staticmethod
-    def Assignment(a):
-        return "%s <= %s" % (VhdlSerializer.asHdl(a.dst), VhdlSerializer.Value(a.src))
+    @classmethod
+    def Assignment(cls, a):
+        return "%s <= %s" % (cls.asHdl(a.dst), cls.Value(a.src))
 
-    @staticmethod
-    def Component(c):
+    @classmethod
+    def comment(cls, comentStr):
+        return "--" + comentStr
+    
+    @classmethod
+    def Component(cls, c):
         return VHDLTemplates.component.render(
-               {"ports": [VhdlSerializer.PortItem(pi) for pi in c.entity.ports],
-                "generics": [VhdlSerializer.GenericItem(g) for g in c.entity.generics],
+               {"ports": [cls.PortItem(pi) for pi in c.entity.ports],
+                "generics": [cls.GenericItem(g) for g in c.entity.generics],
                 'entity': c.entity})      
-    @staticmethod
-    def ComponentInstance(ci):
+
+    @classmethod
+    def ComponentInstance(cls, ci):
         if len(ci.portMaps) == 0 and len(ci.genericMaps) == 0:
             raise Exception("Incomplete component instance")
         return VHDLTemplates.componentInstance.render(
                {"name" : ci.name,
                 'component': ci.component,
-                'portMaps': [VhdlSerializer.PortConnection(x) for x in   ci.portMaps],
-                'genericMaps': [VhdlSerializer.MapExpr(x) for x in   ci.genericMaps]})     
+                'portMaps': [cls.PortConnection(x) for x in   ci.portMaps],
+                'genericMaps': [cls.MapExpr(x) for x in   ci.genericMaps]})     
 
-    @staticmethod
-    def Entity(ent):
+    @classmethod
+    def Entity(cls, ent):
         ent.ports.sort(key=lambda x: x.name)
         ent.generics.sort(key=lambda x: x.name)
 
         return VHDLTemplates.entity.render(
                {"name": ent.name,
-                'ports' : [VhdlSerializer.PortItem(pi) for pi in ent.ports ],
-                'generics' : [VhdlSerializer.GenericItem(g) for g in ent.generics]
+                'ports' : [cls.PortItem(pi) for pi in ent.ports ],
+                'generics' : [cls.GenericItem(g) for g in ent.generics]
                 })  
     
-    @staticmethod
-    def IfContainer(ifc):
+    @classmethod
+    def IfContainer(cls, ifc):
         cond = list(ifc.cond)
         if len(cond) == 1:
-            cond = VhdlSerializer.asHdl(cond[0])
+            cond = cls.asHdl(cond[0])
         else:
-            cond = " AND ".join(map(VhdlSerializer.asHdl, cond))  
+            cond = " AND ".join(map(cls.asHdl, cond))  
         return VHDLTemplates.If.render(cond=cond,
                                        ifTrue=ifc.ifTrue,
                                        ifFalse=ifc.ifFalse)  
   
-    @staticmethod
-    def GenericItem(g):
-        s = "%s : %s" % (g.name, VhdlSerializer.VHDLType(g.dtype))
+    @classmethod
+    def GenericItem(cls, g):
+        s = "%s : %s" % (g.name, cls.VHDLType(g.dtype))
         if g.defaultVal is None:
             return s
         else:  
-            return  "%s := %s" % (s, VhdlSerializer.Value(g.defaultVal))
+            return  "%s := %s" % (s, cls.Value(g.defaultVal))
         
-    @staticmethod
-    def isSignalHiddenInExpr(sig):
+    @classmethod
+    def isSignalHiddenInExpr(cls, sig):
         """Some signals are just only conections in expression they done need to be rendered because
         they are hidden inside expression for example sig. from a+b in a+b+c"""
         if len(sig.drivers) == 1:
@@ -121,15 +126,15 @@ class VhdlSerializer():
         else:
             False
     
-    @staticmethod
-    def PortConnection(pc):
-        return " %s => %s" % (pc.portItem.name, VhdlSerializer.asHdl(pc.sig))      
+    @classmethod
+    def PortConnection(cls, pc):
+        return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig))      
     
-    @staticmethod
-    def PortItem(pi):
+    @classmethod
+    def PortItem(cls, pi):
         try:
             return "%s : %s %s" % (pi.name, pi.direction,
-                                   VhdlSerializer.VHDLType(pi.dtype))
+                                   cls.VHDLType(pi.dtype))
         except InvalidVHDLTypeExc as e:
             e.variable = pi
             raise e
@@ -148,32 +153,32 @@ class VhdlSerializer():
             buff.append(s)
         return '"%s"' % (''.join(buff))
 
-    @staticmethod
-    def BitString(v, width, vldMask=None):
+    @classmethod
+    def BitString(cls, v, width, vldMask=None):
         if vldMask is None:
             vldMask = width
         # if can be in hex
         if width % 4 == 0 and vldMask == (1 << width) - 1:
             return ('X"%0' + str(width // 4) + 'x"') % (v)
         else:  # else in binary
-            return VhdlSerializer.BitString_binary(v, width, vldMask)
+            return cls.BitString_binary(v, width, vldMask)
     
-    @staticmethod
-    def SignalItem(si, declaration=False):
+    @classmethod
+    def SignalItem(cls, si, declaration=False):
         if declaration:
             if si.isConstant:
                 prefix = "CONSTANT"
             else:
                 prefix = "SIGNAL"
 
-            s = prefix + " %s : %s" % (si.name, VhdlSerializer.VHDLType(si.dtype))
+            s = prefix + " %s : %s" % (si.name, cls.VHDLType(si.dtype))
             if si.defaultVal is not None and si.defaultVal.vldMask:
-                return s + " := %s" % VhdlSerializer.Value(si.defaultVal)
+                return s + " := %s" % cls.Value(si.defaultVal)
             else:
                 return s 
         else:
-            if VhdlSerializer.isSignalHiddenInExpr(si):
-                return VhdlSerializer.asHdl(si.origin)
+            if cls.isSignalHiddenInExpr(si):
+                return cls.asHdl(si.origin)
             else:
                 return si.name
 
@@ -181,62 +186,57 @@ class VhdlSerializer():
     def VHDLExtraType(exTyp):
         return "TYPE %s IS (%s);" % (exTyp.name, ", ".join(exTyp.values))
     
-    @staticmethod
-    def VHDLGeneric(g):
-        t = VhdlSerializer.VHDLType(g.dtype)
+    @classmethod
+    def VHDLGeneric(cls, g):
+        t = cls.VHDLType(g.dtype)
         if hasattr(g, "defaultVal"):
             return "%s : %s := %s" % (g.name, t,
-                                      VhdlSerializer.Value(g, g.defaultVal))
+                                      cls.Value(g, g.defaultVal))
         else:
             return "%s : %s" % (g.name, t)
 
-    
-    
-    @staticmethod
-    def VHDLType(typ):
+    @classmethod
+    def VHDLType(cls, typ):
         assert(isinstance(typ, HdlType))
         buff = []
         buff.append(typ.name.upper())
         if typ.constrain is not None and not isinstance(typ.constrain, Unconstrained):
-            buff.append("(%s)" % VhdlSerializer.Value(typ.constrain))        
+            buff.append("(%s)" % cls.Value(typ.constrain))        
         return "".join(buff)
                 
-    @staticmethod
-    def VHDLVariable(v):
+    @classmethod
+    def VHDLVariable(cls, v):
         if v.isShared :
             prefix = "SHARED VARIABLE"
         else:
             prefix = "VARIABLE"
-        s = prefix + " %s : %s" % (v.name, VhdlSerializer.VHDLType(v.dtype))
+        s = prefix + " %s : %s" % (v.name, cls.VHDLType(v.dtype))
         if v.defaultVal is not None:
-            return s + " := %s" % VhdlSerializer.Value(v, v.defaultVal)
+            return s + " := %s" % cls.Value(v, v.defaultVal)
         else:
             return s 
                 
-          
-
-    @staticmethod
-    def HWProcess(proc):
+    @classmethod
+    def HWProcess(cls, proc):
         body = [s for s in renderIfTree(proc.bodyBuff)]
         hasCondition = arr_any(body, lambda x: isinstance(x, IfContainer))
         return VHDLTemplates.process.render({"name": proc.name,
                                              "hasCond": hasCondition,
               "sensitivityList": ", ".join(proc.sensitivityList),
-              "statements": [ VhdlSerializer.asHdl(s) for s in body] })
+              "statements": [ cls.asHdl(s) for s in body] })
     
-      
-    @staticmethod
-    def MapExpr(m):
-        return   "%s => %s" % (m.compSig.name, VhdlSerializer.asHdl(m.value))
+    @classmethod
+    def MapExpr(cls, m):
+        return   "%s => %s" % (m.compSig.name, cls.asHdl(m.value))
     
-    @staticmethod
-    def Value(val):
+    @classmethod
+    def Value(cls, val):
         """ 
         @param dst: is VHDLvariable connected with value 
         @param val: value object, can be instance of Signal or Value    """
         if isinstance(val, Value):
-            return val.dtype.valAsVhdl(val, VhdlSerializer)
+            return val.dtype.valAsVhdl(val, cls)
         elif isinstance(val, Signal):
-            return VhdlSerializer.SignalItem(val)
+            return cls.SignalItem(val)
         else:
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 

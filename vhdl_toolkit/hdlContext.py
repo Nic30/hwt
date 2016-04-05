@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from vhdl_toolkit.hdlObjects.reference import VhdlRef 
+from vhdl_toolkit.hdlObjects.reference import HdlRef 
 from vhdl_toolkit.nonRedefDict import NonRedefDict
-from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR, VECTOR, BIT, PINT, UINT
+from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR, VECTOR, BIT, PINT, UINT, Wire
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
 from vhdl_toolkit.hdlObjects.value import Value
@@ -57,7 +57,7 @@ class HDLCtx(NonRedefDict):
                 for n in toImport:
                     self[n] = toImport[n]
             else:
-                self[toImport.name.lower()] = toImport
+                self[toImport.name] = toImport
         except KeyError:
             raise RequireImportErr(ref)
         
@@ -92,29 +92,41 @@ class HDLCtx(NonRedefDict):
         
         raise KeyError("Identificator %s not defined" % n)
     
-    def insertObj(self, obj, hierarchyOnly=False):
+    def insertObj(self, obj, caseSensitive, hierarchyOnly=False):
         """
         insert Entity, PackageHeader or Architecture in this context
         """
         from vhdl_toolkit.hdlObjects.package import PackageHeader
+        def getName():
+            n = obj.name
+            if not caseSensitive:
+                n = n.lower() 
+            return n
+        
+        def insert(n):
+            self.insert(HdlRef([n], caseSensitive), obj)
+        
         if isinstance(obj, Entity):
-            n = obj.name.lower()
+            n = getName()
             self.entities[n] = obj
-            self.insert(VhdlRef([n]), obj)
+            insert(n)
+            
         elif isinstance(obj, PackageHeader):
-            n = obj.name.lower()
+            n = getName()
             self.packages[n] = obj
-            self.insert(VhdlRef([n]), obj)
+            insert(n)
+            
         elif isinstance(obj, Architecture):
             self.architectures.append(obj)
+            
         elif isinstance(obj, Function):
             # functions are stored in FnContainer object
-            n = obj.name.lower()
+            n = getName()
             try:
                 cont = self[n]
             except KeyError:
                 cont = FnContainer(n)
-                self.insert(VhdlRef([n]), cont)
+                self.insert(HdlRef([n], caseSensitive), cont)
             cont.append(obj, suppressRedefinition=hierarchyOnly)
         else:
             raise NotImplementedError()
@@ -149,10 +161,10 @@ class HDLCtx(NonRedefDict):
 class FakeStd_logic_1164():
     """mock of Std_logic_1164 from vhdl"""
     std_logic_vector = VECTOR
-    std_logic_vector_ref = VhdlRef(["ieee", "std_logic_1164", "std_logic_vector"])
+    std_logic_vector_ref = HdlRef(["ieee", "std_logic_1164", "std_logic_vector"], False)
     std_logic = BIT
-    std_logic_ref = VhdlRef(["ieee", "std_logic_1164", "std_logic"])
-    numeric_std_ref = VhdlRef(["ieee", "numeric_std"])
+    std_logic_ref = HdlRef(["ieee", "std_logic_1164", "std_logic"], False)
+    numeric_std_ref = HdlRef(["ieee", "numeric_std"], False)
     numeric_std = HDLCtx('numeric_std', None) 
         
 
@@ -171,8 +183,8 @@ class BaseVhdlContext():
     def importFakeIEEELib(cls, ctx):
         ctx.insert(FakeStd_logic_1164.std_logic_vector_ref, FakeStd_logic_1164.std_logic_vector)
         ctx.insert(FakeStd_logic_1164.std_logic_ref, FakeStd_logic_1164.std_logic)
-        ctx.insert(VhdlRef(['ieee', 'std_logic_unsigned', 'CONV_INTEGER']), None)
-        ctx.insert(VhdlRef(['ieee', 'std_logic_arith', 'IS_SIGNED']), None)
+        ctx.insert(HdlRef(['ieee', 'std_logic_unsigned', 'CONV_INTEGER'], False), None)
+        ctx.insert(HdlRef(['ieee', 'std_logic_arith', 'IS_SIGNED'], False), None)
         ctx.insert(FakeStd_logic_1164.numeric_std_ref, FakeStd_logic_1164.numeric_std)
     
     @classmethod
@@ -185,4 +197,19 @@ class BaseVhdlContext():
         d['false'] = Value.fromPyVal(False, BOOL)
         return d
 
+class BaseVerilogContext():
+    integer = INT
+    string = STR
+    wire = Wire()
+   
+    @classmethod
+    def importFakeLibs(cls, ctx):
+        pass
 
+    @classmethod
+    def getBaseCtx(cls):
+        d = HDLCtx(None, None)
+        d['integer'] = cls.integer
+        d['__str__'] = cls.string
+        d['wire'] = cls.wire
+        return d

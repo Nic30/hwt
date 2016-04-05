@@ -3,9 +3,10 @@ package vhdlConvertor;
 import java.util.List;
 import java.util.Map;
 
-import vhdlObjects.Entity;
-import vhdlObjects.Port;
-import vhdlObjects.Variable;
+import convertorApp.NotImplementedLogger;
+import hdlObjects.Entity;
+import hdlObjects.Port;
+import hdlObjects.Variable;
 import vhdlParser.vhdlParser;
 
 public class EntityParser {

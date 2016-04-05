@@ -2,13 +2,17 @@
 SEPARATOR = '.'
 
 
-class VhdlRef():
-    def __init__(self, names, allChilds=False):
-        self.names = tuple([n.lower() for n in names])
+class HdlRef():
+    def __init__(self, names, caseSensitive, allChilds=False):
+        if caseSensitive:
+            self.names = tuple([n for n in names])
+        else:
+            self.names = tuple([n.lower() for n in names])
+            
         self.all = allChilds
 
     @classmethod
-    def fromJson(cls, jsn):
+    def fromJson(cls, jsn, caseSensitive):
         allChilds = False
         names = []
         for j in jsn:
@@ -17,16 +21,16 @@ class VhdlRef():
                 names.append(j['value'])
             elif t == "ALL":
                 allChilds = True
-        return cls(names, allChilds)
+        return cls(names, caseSensitive, allChilds=allChilds)
 
     @classmethod
-    def fromExprJson(cls, jExpr):
+    def fromExprJson(cls, jExpr, caseSensitive):
         names = []
         for v in jExpr['literal']['value']:
             assert(v["type"] == "ID")
             name = v['value']
             names.append(name)
-        return cls(names)
+        return cls(names, caseSensitive)
 
     # def __hash__(self):
     #    return hash(self.names)
@@ -49,4 +53,4 @@ class VhdlRef():
         return s
 
     def __repr__(self):
-        return "<VhdlRef  " + str(self) + ">"
+        return "<HdlRef  " + str(self) + ">"

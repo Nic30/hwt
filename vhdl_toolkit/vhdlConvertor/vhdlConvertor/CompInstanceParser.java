@@ -3,8 +3,9 @@ package vhdlConvertor;
 import java.util.List;
 import java.util.Vector;
 
-import vhdlObjects.CompInstance;
-import vhdlObjects.Expr;
+import convertorApp.NotImplementedLogger;
+import hdlObjects.CompInstance;
+import hdlObjects.Expr;
 import vhdlParser.vhdlParser;
 
 public class CompInstanceParser {

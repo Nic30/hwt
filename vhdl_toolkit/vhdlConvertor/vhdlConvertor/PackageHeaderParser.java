@@ -2,11 +2,12 @@ package vhdlConvertor;
 
 import java.util.List;
 
-import vhdlObjects.Entity;
-import vhdlObjects.Expr;
-import vhdlObjects.Function;
-import vhdlObjects.PackageHeader;
-import vhdlObjects.Variable;
+import convertorApp.NotImplementedLogger;
+import hdlObjects.Entity;
+import hdlObjects.Expr;
+import hdlObjects.Function;
+import hdlObjects.PackageHeader;
+import hdlObjects.Variable;
 import vhdlParser.vhdlParser;
 import vhdlParser.vhdlParser.Alias_declarationContext;
 import vhdlParser.vhdlParser.Attribute_declarationContext;

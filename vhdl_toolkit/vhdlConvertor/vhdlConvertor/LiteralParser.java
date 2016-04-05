@@ -4,8 +4,9 @@ import java.math.BigInteger;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import vhdlObjects.Expr;
-import vhdlObjects.SymbolType;
+import convertorApp.NotImplementedLogger;
+import hdlObjects.Expr;
+import hdlObjects.SymbolType;
 import vhdlParser.vhdlParser.Abstract_literalContext;
 import vhdlParser.vhdlParser.DesignatorContext;
 import vhdlParser.vhdlParser.Enumeration_literalContext;
@@ -15,6 +16,7 @@ import vhdlParser.vhdlParser.Numeric_literalContext;
 import vhdlParser.vhdlParser.Physical_literalContext;
 
 public class LiteralParser {
+
 	public static Expr visitLiteral(LiteralContext ctx) {
 		// literal
 		// : NULL
@@ -26,6 +28,7 @@ public class LiteralParser {
 		if (ctx.NULL() != null)
 			return new Expr(SymbolType.NULL, null);
 		TerminalNode n;
+
 		n = ctx.BIT_STRING_LITERAL();
 		if (n != null) {
 			String s = n.getText().toLowerCase();
@@ -49,10 +52,12 @@ public class LiteralParser {
 			BigInteger val = new BigInteger(strVal, radix);
 			return new Expr(val, strVal.length() * bitRatio);
 		}
+
 		n = ctx.STRING_LITERAL();
 		if (n != null) {
 			return visitSTRING_LITERAL(n);
 		}
+
 		Enumeration_literalContext el = ctx.enumeration_literal();
 		if (el != null)
 			return visitEnumeration_literal(el);

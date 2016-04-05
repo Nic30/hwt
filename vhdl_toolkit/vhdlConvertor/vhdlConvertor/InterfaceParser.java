@@ -3,10 +3,11 @@ package vhdlConvertor;
 import java.util.List;
 import java.util.Vector;
 
-import vhdlObjects.Direction;
-import vhdlObjects.Expr;
-import vhdlObjects.Port;
-import vhdlObjects.Variable;
+import convertorApp.NotImplementedLogger;
+import hdlObjects.Direction;
+import hdlObjects.Expr;
+import hdlObjects.Port;
+import hdlObjects.Variable;
 import vhdlParser.vhdlParser;
 import vhdlParser.vhdlParser.Interface_constant_declarationContext;
 import vhdlParser.vhdlParser.Interface_declarationContext;

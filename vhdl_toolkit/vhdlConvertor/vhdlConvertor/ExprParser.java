@@ -1,14 +1,13 @@
 package vhdlConvertor;
 
-import vhdlObjects.OperatorType;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
-
-import vhdlObjects.Expr;
-import vhdlObjects.SymbolType;
+import convertorApp.NotImplementedLogger;
+import hdlObjects.Expr;
+import hdlObjects.OperatorType;
+import hdlObjects.SymbolType;
 import vhdlParser.vhdlParser;
 
 public class ExprParser {
@@ -186,7 +185,7 @@ public class ExprParser {
 				.adding_operator().iterator();
 		Expr op0 = visitTerm(t.next());
 		if (ctx.MINUS() != null) {
-			op0 = new Expr(op0, OperatorType.UNMINUS, (Expr) null);
+			op0 = new Expr(op0, OperatorType.UN_MINUS, (Expr) null);
 		}
 		while (opList.hasNext()) {
 			vhdlParser.Adding_operatorContext op = opList.next();

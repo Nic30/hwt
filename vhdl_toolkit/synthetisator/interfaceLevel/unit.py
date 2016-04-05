@@ -235,7 +235,9 @@ class BlackBox(Unit):
         # prepare connections     
         for connectionName, connection in self._interfaces.items():
             signals = connection._signalsForInterface(cntx, connectionName)
-            assert(connection._isExtern)
+            if not connection._isExtern:
+                raise IntfLvlConfErr("All interfaces in BlackBox has to be extern, %s: %s is not" % 
+                                     (self.__class__.__name__, connection._getFullName()))
             externInterf.extend(signals)
             # connect outputs to dummy value
             for s in signals:

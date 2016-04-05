@@ -1,6 +1,7 @@
 package vhdlConvertor;
 
-import vhdlObjects.Arch;
+import convertorApp.NotImplementedLogger;
+import hdlObjects.Arch;
 import vhdlParser.vhdlParser;
 
 public class ArchParser {

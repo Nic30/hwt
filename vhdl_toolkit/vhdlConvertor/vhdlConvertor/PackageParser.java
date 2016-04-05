@@ -1,7 +1,8 @@
 package vhdlConvertor;
 
-import vhdlObjects.Package;
-import vhdlObjects.aPackage;
+import convertorApp.NotImplementedLogger;
+import hdlObjects.Package;
+import hdlObjects.aPackage;
 import vhdlParser.vhdlParser;
 
 public class PackageParser {

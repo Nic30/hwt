@@ -1,2 +1,2 @@
-Main-Class: vhdlConvertor.vhdlConvertorApp
+Main-Class: convertorApp.ConvertorApp
 Class-Path: lib/antlr-4.5.1-complete.jar lib/java-json.jar lib/commons-cli-1.3.1.jar

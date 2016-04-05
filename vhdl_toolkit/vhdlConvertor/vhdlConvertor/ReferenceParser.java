@@ -4,10 +4,11 @@ import java.util.Iterator;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import vhdlObjects.Expr;
-import vhdlObjects.OperatorType;
-import vhdlObjects.Reference;
-import vhdlObjects.SymbolType;
+import convertorApp.NotImplementedLogger;
+import hdlObjects.Expr;
+import hdlObjects.OperatorType;
+import hdlObjects.Reference;
+import hdlObjects.SymbolType;
 import vhdlParser.vhdlParser;
 
 public class ReferenceParser {
