@@ -1,5 +1,5 @@
 from jinja2 import Environment, PackageLoader
-
+from vhdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
 
 class VHDLTemplates(object):
     '''
@@ -21,10 +21,10 @@ class VHDLTemplates(object):
     axi_lite_read = env.get_template('axi_lite_read.vhd')
     axi_lite_write = env.get_template('axi_lite_write.vhd')
     axi4_init = env.get_template('axi4_init.vhd')
-    basic_include = """
+    basic_include = VhdlCodeWrap("""
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-"""
+""")
         
         

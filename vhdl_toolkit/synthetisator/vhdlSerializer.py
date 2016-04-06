@@ -8,6 +8,8 @@ from vhdl_toolkit.hdlObjects.specialValues import Unconstrained
 from vhdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer
 from vhdl_toolkit.synthetisator.assigRenderer import renderIfTree
 from python_toolkit.arrayQuery import arr_any
+from vhdl_toolkit.hdlObjects.entity import Entity
+from vhdl_toolkit.hdlObjects.architecture import Architecture
 
 
 
@@ -27,6 +29,10 @@ class VhdlSerializer():
             return cls.Assignment(obj)
         elif isinstance(obj, IfContainer):
             return cls.IfContainer(obj) 
+        elif isinstance(obj, Entity):
+            return cls.Entity(obj)
+        elif isinstance(obj, Architecture):
+            return cls.Architecture(obj)
         else:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
 
