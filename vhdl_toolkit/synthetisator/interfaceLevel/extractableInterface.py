@@ -2,6 +2,8 @@ from python_toolkit.arrayQuery import single, NoValueExc
 from python_toolkit.stringUtils import matchIgnorecase
 from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from vhdl_toolkit.hdlObjects.expr import ExprComparator
+from vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.hdlObjects.value import Value
 
 class InterfaceIncompatibilityExc(Exception):
     pass
@@ -141,7 +143,12 @@ class ExtractableInterface():
                  
                 for intfParam, unitParam in ExprComparator\
                                             .findExprDiffInParam(intfTConstr, unitTConstr):
-                    intfParam.replace(unitParam) 
+                    if isinstance(unitParam, Param):
+                        intfParam.replace(unitParam)
+                    elif isinstance(unitParam, Value):
+                        intfParam.set(unitParam)
+                    else:
+                        pass # parameter resolution was not successful
             
             self._dtype = self._originEntityPort.dtype
             

@@ -133,7 +133,7 @@ class AllOps():
     DIV = OpDefinition('DIV', 3, '/', lambda a, b : a // b)
     PLUS = OpDefinition('PLUS', 4, '+', lambda a, b : a + b)
     MINUS = OpDefinition('MINUS', 4, '-', lambda a, b : a - b)
-    MULT = OpDefinition('MULT', 4, '*', lambda a, b : a * b)
+    MUL = OpDefinition('MUL', 4, '*', lambda a, b : a * b)
     NEQ = OpDefinition('NEQ', 7, '!=', lambda a, b : a != b,
                         lambda op: BOOL)
     XOR = OpDefinition('XOR', 7, 'XOR', lambda a, b : a != b,
@@ -153,7 +153,7 @@ class AllOps():
                         lambda op: RANGE,
                         addOperand=convOpsToType(INT))
     allOps = {}
-    for op in [PLUS, MINUS, DIV, MULT, DOWNTO]:
+    for op in [PLUS, MINUS, DIV, MUL, DOWNTO]:
         assert (op.id not in allOps)
         allOps[op.id] = op
         

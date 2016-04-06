@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, areSameSignals
 from vhdl_toolkit.hdlObjects.typeDefs import INT, BOOL, STR
 from vhdl_toolkit.hdlObjects.value import Value
 
@@ -27,16 +27,22 @@ class Param(Signal):
         self.name = name
         
     def get(self):
-        assert(self.replacedWith is None)
+        if self.replacedWith is not None:
+            raise Exception("Trying to read param '%s' which is already replaced by '%s'" % 
+                            (str(self), str(self.replacedWith)))
         return self._val
   
     def replace(self, replaceWith):
         """
         self will always have value of parent
         """
-        if self is replaceWith or self.replacedWith is replaceWith:
+        if areSameSignals(self, replaceWith) or areSameSignals(self.replacedWith, replaceWith):
             return
-        assert(self.replacedWith is None)
+
+        if self.replacedWith is not None:
+            raise Exception("replacing '%s' with '%s' and it was already replaced by '%s'" % 
+                            (str(self), str(replaceWith), str(self.replacedWith)))
+            
         for dr in self.drivers:
             dr.ops = [replaceWith if x is self else x for x in dr.ops]
                 
@@ -60,7 +66,13 @@ class Param(Signal):
         self._val = val
     
     def __repr__(self):
-        return "<%s, val=%s>" % (self.__class__.__name__, str(self.get())) 
+        val = "InvalidVal"
+        try:
+            val = self.get()
+        except Exception:
+            pass 
+        
+        return "<%s, val=%s>" % (self.__class__.__name__, str(val)) 
         
 
 def getParam(p):

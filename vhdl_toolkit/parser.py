@@ -42,7 +42,8 @@ def entityFromFile(fileName):
         lang = Parser.VHDL
     
     ctx = Parser.parseFiles([fileName], lang, primaryUnitsOnly=True)
-    ctx = ctx['work']
+    if lang == Parser.VHDL:
+        ctx = ctx['work']
     
     
     assert(len(ctx.entities.items()) == 1)
