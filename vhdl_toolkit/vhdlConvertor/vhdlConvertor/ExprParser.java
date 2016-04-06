@@ -115,8 +115,7 @@ public class ExprParser {
 		if (c != null) {
 			return visitConstraint(ctx.selected_name(0), c);
 		} else {
-			return new Expr(
-					ReferenceParser.visitSelected_name(ctx.selected_name(0)));
+			return ReferenceParser.visitSelected_name(ctx.selected_name(0));
 		}
 		// [TODO] tolerance_aspect, second selected_name
 	}
@@ -144,7 +143,7 @@ public class ExprParser {
 		}
 
 		return new Expr(
-				new Expr(ReferenceParser.visitSelected_name(selectedName)), op,
+				ReferenceParser.visitSelected_name(selectedName), op,
 				op1);
 
 	}
@@ -154,7 +153,8 @@ public class ExprParser {
 		// : LPAREN discrete_range ( COMMA discrete_range )* RPAREN
 		// ;
 		if (ctx.discrete_range().size() > 1) {
-			NotImplementedLogger.print("ExprParser.visitIndex_constraint multiple discrete_range");
+			NotImplementedLogger.print(
+					"ExprParser.visitIndex_constraint multiple discrete_range");
 		}
 		return visitDiscrete_range(ctx.discrete_range(0));
 	}

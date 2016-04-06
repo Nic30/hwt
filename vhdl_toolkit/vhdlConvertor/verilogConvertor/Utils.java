@@ -9,7 +9,9 @@ import hdlObjects.SymbolType;
 import verilogParser.Verilog2001Parser.RangeContext;
 
 public class Utils {
-
+	public static Expr mkStringT(){
+		return mkId("__str__");
+	}
 	public static Expr mkWireT() {
 		return mkId("wire");
 	}

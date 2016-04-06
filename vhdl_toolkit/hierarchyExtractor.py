@@ -1,5 +1,5 @@
-from vhdl_toolkit.parser import parseVhdl
-from vhdl_toolkit.hdlObjects.reference import VhdlRef
+from vhdl_toolkit.parser import Parser
+from vhdl_toolkit.hdlObjects.reference import HdlRef
 import multiprocessing
 from multiprocess.pool import Pool
 from python_toolkit.arrayQuery import arr_any
@@ -31,7 +31,7 @@ class DesignFile():
                hdlCtx is specified
         @param hdlCtx:  parent hdl context
         """
-        return cls(f, parseVhdl([f], hdlCtx=hdlCtx, libName=libName,
+        return cls(f, Parser.parseFiles([f], Parser.VHDL, hdlCtx=hdlCtx, libName=libName,
                                 timeoutInterval=180, hierarchyOnly=True))
 
     def allDefinedRefs(self):
@@ -41,10 +41,10 @@ class DesignFile():
         def allDefinedRefsInCtx(ctx, nameList):
             for n, obj in ctx.items():
                 if isinstance(obj, Entity):
-                    yield (VhdlRef(nameList + [n]), obj)
+                    yield (HdlRef(nameList + [n], False), obj)
                 elif isinstance(obj, PackageHeader):
                     if not obj._isDummy:
-                        yield (VhdlRef(nameList + [n]), obj)
+                        yield (HdlRef(nameList + [n], False), obj)
                 elif isinstance(obj, HDLCtx):
                     yield from allDefinedRefsInCtx(obj, nameList + [n])
         yield from allDefinedRefsInCtx(self.hdlCtx, [])
@@ -58,7 +58,7 @@ class DesignFile():
                 continue
             imp = DesignFile.findReference(d, allDesignFiles)
             if not imp:
-                raise Exception("%s: require to import %s and it is not defined in any file" %
+                raise Exception("%s: require to import %s and it is not defined in any file" % 
                                 (self.fileName, str(d)))
             if d.all:
                 # imp_ref = imp[1]
@@ -84,12 +84,12 @@ class DesignFile():
                     if hasattr(obj, "dependencies"):
                         yield from obj.dependencies
                 elif isinstance(obj, PackageHeader) and obj._isDummy:
-                    yield VhdlRef(nameList + [obj.name])
+                    yield HdlRef(nameList + [obj.name], False)
                 elif isinstance(obj, HDLCtx):
                     for a in obj.architectures:
                         yield from a.dependencies
                         if not importsOnly:
-                            yield VhdlRef(nameList + [a.entityName])
+                            yield HdlRef(nameList + [a.entityName], False)
                             for ci in a.componentInstances:
                                 yield ci.entityRef
                     yield from allDependenciesForCtx(obj, nameList + [obj.name])
@@ -149,7 +149,7 @@ class DesignFile():
             df = self.findReference(d, allDesignFiles)
             if not df:
                 raise Exception(
-                 "%s: require to import %s and it is not defined in any file" %
+                 "%s: require to import %s and it is not defined in any file" % 
                  (self.fileName, str(d)))
             self.dependentOnFiles.add(df[0])
 
@@ -168,7 +168,7 @@ class DesignFile():
         return designFiles
 
     @staticmethod
-    def fileDependencyDict(designFiles, ignoredRefs=[VhdlRef(["ieee"])]):
+    def fileDependencyDict(designFiles, ignoredRefs=[HdlRef(["ieee"], False)]):
         depDict = {}
         for df in designFiles:
             df.discoverDependentOnFiles(designFiles, ignoredRefs)
@@ -177,7 +177,7 @@ class DesignFile():
 
 
 def findFileWhereNameIsDefined(designFiles, name):
-    targetRef = VhdlRef([name])
+    targetRef = HdlRef([name])
     for df in designFiles:
         refs = df.allDefinedRefs()
         for ref in refs:

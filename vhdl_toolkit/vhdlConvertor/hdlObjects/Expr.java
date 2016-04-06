@@ -6,7 +6,7 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Expr {
+public class Expr implements iJsonable {
 	public Symbol literal;
 	public Operator binOperator;
 	public Expr(Expr op0, OperatorType operatorType, Expr op1) {
@@ -21,9 +21,6 @@ public class Expr {
 	}
 	public Expr(BigInteger value, int bits) {
 		literal = new Symbol(value, bits);
-	}
-	public Expr(Reference ref) {
-		literal = new Symbol(SymbolType.ID, ref);
 	}
 	public JSONObject toJson() throws JSONException {
 		JSONObject e = new JSONObject();

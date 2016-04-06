@@ -1,6 +1,9 @@
 import unittest
 from vhdl_toolkit.parser import Parser 
 from vhdl_toolkit.hdlObjects.package import PackageHeader, PackageBody
+from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
+from vhdl_toolkit.hdlObjects.typeDefs import INT, STR
+
 ILVL_SAMPLES = '../samples/iLvl/vhdl/'
 ILVL_SAMPLES_V = '../samples/iLvl/verilog/'
 
@@ -60,22 +63,36 @@ class ParserTC(unittest.TestCase):
         self.assertIn('max', ctx)
 
     def testVerilogSimpleMuxModule(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES_V + "mux.v"], Parser.VERILOG, hierarchyOnly=True)
+        ctx = Parser.parseFiles([ILVL_SAMPLES_V + "mux.v"], Parser.VERILOG, primaryUnitsOnly=True)
         self.assertEqual(len(ctx.entities), 1)
 
 
     def testVerilogModuleParams(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES_V + "simpleParam.v"], Parser.VERILOG, hierarchyOnly=True)
+        ctx = Parser.parseFiles([ILVL_SAMPLES_V + "simpleParam.v"], Parser.VERILOG, primaryUnitsOnly=True)
         m = ctx.entities['SimpleParamMod']
         self.assertEqual(len(m.generics), 3)
         self.assertEqual(len(m.ports), 2) 
         
+        C_WIDTH = m.generics[0]
+        param_int = m.generics[1]
+        param_str = m.generics[2]
         
+        self.assertEqual(C_WIDTH._name, "C_WIDTH")
+        self.assertEqual(param_int._name, "param_int")
+        self.assertEqual(param_str._name, "param_str")
 
+        self.assertEqual(C_WIDTH.defaultVal.val, 12)
+        self.assertEqual(param_int.defaultVal.val, 3)
+        self.assertEqual(param_str.defaultVal.val, "rtl")
+        
+        self.assertEqual(C_WIDTH.dtype, vecT(32))
+        self.assertEqual(param_int.dtype, INT)
+        self.assertEqual(param_str.dtype, STR)
+        
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(ParserTC('testVerilogModuleParams'))
-    #suite.addTest(unittest.makeSuite(ParserTC))
+    #suite.addTest(ParserTC('testArchCompInstance'))
+    suite.addTest(unittest.makeSuite(ParserTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

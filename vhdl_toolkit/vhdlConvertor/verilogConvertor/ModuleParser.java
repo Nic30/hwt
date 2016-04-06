@@ -105,7 +105,7 @@ public class ModuleParser {
 
 		// [TODO] signed
 
-		Expr t = Utils.mkWireT();
+		Expr t = Utils.mkStringT();
 		ParseTree typeStr = ctx.getChild(1);
 		if (typeStr instanceof TerminalNodeImpl) {
 			t = Utils.mkId(typeStr.getText());
@@ -115,7 +115,7 @@ public class ModuleParser {
 		if (r != null) {
 			List<Expr> operands = new Vector<Expr>();
 			operands.add(ExpressionParser.visitRange(r));
-			t = new Expr(t, OperatorType.CALL, operands);
+			t = new Expr(Utils.mkWireT(), OperatorType.CALL, operands);
 		}
 
 		List<Variable> params = visitList_of_param_assignments(

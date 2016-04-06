@@ -7,22 +7,19 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import convertorApp.NotImplementedLogger;
 import hdlObjects.Expr;
 import hdlObjects.OperatorType;
-import hdlObjects.Reference;
 import hdlObjects.SymbolType;
 import vhdlParser.vhdlParser;
 
 public class ReferenceParser {
-	public static Reference visitSelected_name(
-			vhdlParser.Selected_nameContext ctx) {
+	public static Expr visitSelected_name(vhdlParser.Selected_nameContext ctx) {
 		// selected_name
 		// : identifier (DOT suffix)*
 		// ;
-		Reference r = new Reference();
-		r.add(LiteralParser.visitIdentifier(ctx.identifier()));
+		Expr top = LiteralParser.visitIdentifier(ctx.identifier());
 		for (vhdlParser.SuffixContext s : ctx.suffix()) {
-			r.add(visitSuffix(s));
+			top = new Expr(top, OperatorType.DOT, visitSuffix(s));
 		}
-		return r;
+		return top;
 	}
 	public static Expr visitSuffix(vhdlParser.SuffixContext ctx) {
 		// suffix
@@ -52,7 +49,7 @@ public class ReferenceParser {
 		// ;
 		vhdlParser.Selected_nameContext sn = ctx.selected_name();
 		if (sn != null)
-			return new Expr(visitSelected_name(sn));
+			return visitSelected_name(sn);
 
 		Iterator<vhdlParser.Name_partContext> nIt = ctx.name_part().iterator();
 		Expr op0 = visitName_part(nIt.next());
@@ -99,7 +96,7 @@ public class ReferenceParser {
 		// name_part
 		// : selected_name (name_part_specificator)*
 		// ;
-		Expr sn = new Expr(visitSelected_name(ctx.selected_name()));
+		Expr sn = visitSelected_name(ctx.selected_name());
 		for (vhdlParser.Name_part_specificatorContext sp : ctx
 				.name_part_specificator()) {
 			sn = visitName_part_specificator(sn, sp);

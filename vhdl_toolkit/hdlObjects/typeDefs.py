@@ -268,7 +268,7 @@ class Std_logic_vector_contrained(Std_logic_vector):
         
     def __eq__(self, other):
         return super(Std_logic_vector_contrained, self).__eq__(other) \
-                and self.constrain == other.constrain
+                and (self.constrain == other.constrain or self.getBitCnt() == other.getBitCnt())
                 
     def getBitCnt(self):
             return self.getWidth()

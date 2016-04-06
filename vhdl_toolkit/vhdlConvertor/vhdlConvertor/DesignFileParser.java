@@ -8,9 +8,9 @@ import convertorApp.NotImplementedLogger;
 import hdlObjects.Arch;
 import hdlObjects.Context;
 import hdlObjects.Entity;
+import hdlObjects.Expr;
 import hdlObjects.Package;
 import hdlObjects.PackageHeader;
-import hdlObjects.Reference;
 import vhdlParser.vhdlParser;
 
 public class DesignFileParser implements IHdlParser {
@@ -20,7 +20,7 @@ public class DesignFileParser implements IHdlParser {
 		hierarchyOnly = _hierarchyOnly;
 		context = new Context();
 	}
-	public Context getContext(){
+	public Context getContext() {
 		return context;
 	}
 	public void visitDesign_file(vhdlParser.Design_fileContext ctx) {
@@ -120,41 +120,24 @@ public class DesignFileParser implements IHdlParser {
 		// ;
 		vhdlParser.Library_clauseContext l = ctx.library_clause();
 		if (l != null) {
-			context.libaries.add(visitLibrary_clause(l));
+			return; //libraries are ignored
 		}
 		vhdlParser.Use_clauseContext u = ctx.use_clause();
 		if (u != null) {
-			for (Reference r : visitUse_clause(u)) {
-				context.usings.add(r);
+			for (Expr r : visitUse_clause(u)) {
+				context.imports.add(r);
 			}
 		}
 
 	}
-	Reference visitLibrary_clause(vhdlParser.Library_clauseContext ctx) {
-		// library_clause
-		// : LIBRARY logical_name_list SEMI
-		// ;
-		// logical_name_list
-		// : logical_name ( COMMA logical_name )*
-		// ;
-		// logical_name
-		// : identifier
-		// ;
-		Reference r = new Reference();
-		vhdlParser.Logical_name_listContext c = ctx.logical_name_list();
-		for (vhdlParser.Logical_nameContext ln : c.logical_name()) {
-			r.add(LiteralParser.visitIdentifier(ln.identifier()));
-		}
 
-		return r;
-	}
-	List<Reference> visitUse_clause(vhdlParser.Use_clauseContext ctx) {
+	List<Expr> visitUse_clause(vhdlParser.Use_clauseContext ctx) {
 		// use_clause
 		// : USE selected_name ( COMMA selected_name )* SEMI
 		// ;
-		List<Reference> refL = new Vector<Reference>();
+		List<Expr> refL = new Vector<Expr>();
 		for (vhdlParser.Selected_nameContext sn : ctx.selected_name()) {
-			Reference r = ReferenceParser.visitSelected_name(sn);
+			Expr r = ReferenceParser.visitSelected_name(sn);
 			refL.add(r);
 		}
 		return refL;
