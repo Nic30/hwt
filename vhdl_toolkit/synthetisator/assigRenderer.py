@@ -1,9 +1,12 @@
 from vhdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
+
+
 class DepContainer():
     def __init__(self):
         self.pos = set()  # if cond
         self.neg = set()  # if not cond
+        
     def __repr__(self):
         return "<DepContainer pos:%s, neg:%s>" % (repr(self.pos), repr(self.neg))
 
