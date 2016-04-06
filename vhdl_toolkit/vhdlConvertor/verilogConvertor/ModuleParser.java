@@ -48,18 +48,18 @@ public class ModuleParser {
 		ent.name = ctx.module_identifier().identifier().getText();
 		for (Attribute_instanceContext a : ctx.attribute_instance()) {
 			for (Variable v : AttributeParser.visitAttribute_instance(a))
-				ent.generics.put(v.name, v);
+				ent.generics.add(v);
 		}
 		Module_parameter_port_listContext mppl = ctx
 				.module_parameter_port_list();
 		if (mppl != null)
 			for (Variable v : visitModule_parameter_port_list(mppl))
-				ent.generics.put(v.name, v);
+				ent.generics.add(v);
 
 		List_of_portsContext lop = ctx.list_of_ports();
 		if (lop != null)
 			for (Port p : PortParser.visitList_of_ports(lop)) {
-				ent.ports.put(p.variable.name, p);
+				ent.ports.add(p);
 			}
 
 		for (Module_itemContext mi : ctx.module_item())
@@ -68,7 +68,7 @@ public class ModuleParser {
 		List_of_port_declarationsContext lpd = ctx.list_of_port_declarations();
 		if (lpd != null)
 			for (Port p : PortParser.visitList_of_port_declarations(lpd)) {
-				ent.ports.put(p.variable.name, p);
+				ent.ports.add(p);
 			}
 
 		for (Non_port_module_itemContext npmi : ctx.non_port_module_item())

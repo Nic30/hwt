@@ -1,7 +1,7 @@
 import unittest
 from vhdl_toolkit.parser import Parser 
 from vhdl_toolkit.hdlObjects.package import PackageHeader, PackageBody
-from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
+from vhdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 from vhdl_toolkit.hdlObjects.typeDefs import INT, STR
 
 ILVL_SAMPLES = '../samples/iLvl/vhdl/'
@@ -90,9 +90,28 @@ class ParserTC(unittest.TestCase):
         self.assertEqual(param_str.dtype, STR)
         
 
+    def testVerilogParamSpecifiedByParam(self):
+        ctx = Parser.parseFiles([ILVL_SAMPLES_V + "simpleParam2.v"], Parser.VERILOG, primaryUnitsOnly=True)
+        m = ctx.entities['SimpleParamMod']
+        self.assertEqual(len(m.generics), 4)
+        self.assertEqual(len(m.ports), 2)
+        
+        C_WIDTH = m.generics[0]
+        WIDTH_WIDTH = m.generics[1]
+        # ("Z" < "a")
+        param_int = m.generics[2]
+        param_str = m.generics[3]
+        
+        self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH.dtype.getBitCnt())
+        
+        
+        WIDTH_WIDTH.set(hInt(64)) 
+        self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH.dtype.getBitCnt())
+
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(ParserTC('testArchCompInstance'))
-    suite.addTest(unittest.makeSuite(ParserTC))
+    suite.addTest(ParserTC('testVerilogParamSpecifiedByParam'))
+    #suite.addTest(unittest.makeSuite(ParserTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

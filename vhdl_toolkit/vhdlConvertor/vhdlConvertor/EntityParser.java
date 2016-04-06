@@ -1,7 +1,6 @@
 package vhdlConvertor;
 
 import java.util.List;
-import java.util.Map;
 
 import convertorApp.NotImplementedLogger;
 import hdlObjects.Entity;
@@ -66,7 +65,7 @@ public class EntityParser {
 		NotImplementedLogger.print("EntityParser.visitEntity_declarative_item");
 	}
 	public static void visitGeneric_clause(vhdlParser.Generic_clauseContext ctx,
-			Map<String, Variable> generics) {
+			List<Variable> generics) {
 		if (ctx != null) {
 			// generic_clause
 			// : GENERIC LPAREN generic_list RPAREN SEMI
@@ -78,14 +77,15 @@ public class EntityParser {
 			vhdlParser.Generic_listContext gl = ctx.generic_list();
 			for (vhdlParser.Interface_constant_declarationContext ic : gl
 					.interface_constant_declaration()) {
-				List<Variable> vl = InterfaceParser.visitInterface_constant_declaration(ic);
+				List<Variable> vl = InterfaceParser
+						.visitInterface_constant_declaration(ic);
 				for (Variable v : vl)
-					generics.put(v.name, v);
+					generics.add(v);
 			}
 		}
 	}
 	public static void visitPort_clause(vhdlParser.Port_clauseContext ctx,
-			Map<String, Port> ports) {
+			List<Port> ports) {
 		if (ctx != null) {
 			// port_clause
 			// : PORT LPAREN port_list RPAREN SEMI
@@ -102,8 +102,9 @@ public class EntityParser {
 
 			for (vhdlParser.Interface_port_declarationContext ipd : ipl
 					.interface_port_declaration()) {
-				for (Port p : InterfaceParser.visitInterface_port_declaration(ipd))
-					ports.put(p.variable.name, p);
+				for (Port p : InterfaceParser
+						.visitInterface_port_declaration(ipd))
+					ports.add(p);
 			}
 		}
 	}

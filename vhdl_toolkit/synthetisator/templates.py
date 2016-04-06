@@ -12,8 +12,10 @@ class VHDLTemplates(object):
     component = env.get_template('component.vhd')
     componentInstance = env.get_template('component_instance.vhd')
     
-    tb = env.get_template('tb.vhd')
     If = env.get_template('if.vhd')
+
+    # [TODO] remove in future
+    tb = env.get_template('tb.vhd')
     AXI4_slave_read_resp = env.get_template('AXI4_slave_read_resp.vhd')
     AXI4_slave_write_accept = env.get_template('AXI4_slave_write_accept.vhd')
     axi_lite_read = env.get_template('axi_lite_read.vhd')

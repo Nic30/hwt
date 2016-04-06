@@ -8,11 +8,6 @@ class Entity(object):
         self.ctx = {}
 
     
-    def injectCtxWithGenerics(self, ctx):
-        for g in self.generics:
-            ctx[g._name] = g
-        return ctx
-    
     def __repr__(self):
         from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.Entity(self)

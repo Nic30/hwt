@@ -51,7 +51,7 @@ def entityFromFile(fileName):
     return ent
 
 baseDir = os.path.dirname(inspect.getfile(entityFromFile))
-assert(os.path.dirname(__file__))
+assert(os.path.dirname(__file__)) # [TODO] check if matches under any condition and replace inspect
 JAVA = 'java'
 CONVERTOR = os.path.join(baseDir, "vhdlConvertor", "hdlConvertor.jar")
 
@@ -169,6 +169,7 @@ class Parser(VhdlParser):
         else:
             defaultVal = Value.fromPyVal(None, t)
         g = Param(defaultVal)
+        g.dtype = t
         g.setHdlName(jVar['name'])
         g._name = name
         return g
@@ -177,13 +178,14 @@ class Parser(VhdlParser):
         e = Entity()
         e.name = jEnt['name']
         if not self.hierarchyOnly:
-            for _, jGener in jEnt['generics'].items():
-                g = self.varDeclrJson(jGener, ctx)
-                e.generics.append(g)
             entCtx = HDLCtx(e.name, ctx)
-            e.injectCtxWithGenerics(entCtx)
-            entCtx.update(ctx)
-            for _, jPort in jEnt['ports'].items():
+            for jGener in jEnt['generics']:
+                g = self.varDeclrJson(jGener, entCtx)
+                e.generics.append(g)
+                entCtx[g._name] = g
+                
+            #entCtx.update(ctx)
+            for jPort in jEnt['ports']:
                 p = self.portFromJson(jPort, entCtx)
                 e.ports.append(p)
             

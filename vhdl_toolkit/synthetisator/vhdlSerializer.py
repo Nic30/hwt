@@ -40,15 +40,15 @@ class VhdlSerializer():
             procs.append(cls.HWProcess(p))
             
              
-        return VHDLTemplates.architecture.render(
-        {"entityName"        :arch.entityName,
+        return VHDLTemplates.architecture.render({
+        "entityName"         :arch.entityName,
         "name"               :arch.name,
         "variables"          :variables,
         "extraTypes"         :arch.extraTypes,
         "processes"          :procs,
         "components"         :arch.components,
-        "componentInstances" :arch.componentInstances} 
-        )
+        "componentInstances" :arch.componentInstances
+        })
    
     @classmethod
     def Assignment(cls, a):
