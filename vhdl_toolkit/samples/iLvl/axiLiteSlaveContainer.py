@@ -13,6 +13,12 @@ class AxiLiteSlaveContainer(Unit):
     rst_n = Ap_rst_n(slv.S_AXI_ap_rst_n, isExtern=True)
     axi = AxiLite(slv.S_AXI, isExtern=True)
 
+    ADDR_WIDTH = axi.ADDR_WIDTH
+    DATA_WIDTH = axi.DATA_WIDTH
+    slv.C_S_AXI_ADDR_WIDTH.set(ADDR_WIDTH)
+    slv.C_S_AXI_DATA_WIDTH.set(DATA_WIDTH)
+    ADDR_WIDTH.set(hInt(8))
+    DATA_WIDTH.set(hInt(8))
  
     
 if __name__ == "__main__":

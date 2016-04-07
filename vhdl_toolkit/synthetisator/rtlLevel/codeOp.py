@@ -11,14 +11,43 @@ def If(cond, ifTrue=[], ifFalse=[]):
     ret.extend(ifFalse)
     return ret
 
+class ReturnCalled(Exception):
+    def __init__(self, val):
+        self.val = val
+
+class ReturnContainer():
+    def __init__(self, val=None):
+        self.val = val
+
+    def seqEval(self):
+        raise ReturnCalled(self.val.staticEval())       
 
 class IfContainer:
     def __init__(self, cond, ifTrue=[], ifFalse=[]):
         self.cond = cond
         self.ifTrue = ifTrue
         self.ifFalse = ifFalse
+    
+    def seqEval(self):
+        cond = True
+        for c in self.cond:
+            cond = cond and bool(c.staticEval())
+        
+        if cond:
+            for s in self.ifTrue:
+                s.seqEval()
+        else:
+            for s in self.ifFalse:
+                s.seqEval()
         
     def __repr__(self):
         from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.IfContainer(self)
      
+class WhileContainer():
+    def __init__(self, cond, body):
+        self.cond = cond
+        self.body = body
+    
+    def seqEval(self):
+        raise NotImplementedError() 

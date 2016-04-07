@@ -152,8 +152,12 @@ class AllOps():
                         lambda a, b : Value.fromPyVal([b, a], RANGE),  # [TODO]
                         lambda op: RANGE,
                         addOperand=convOpsToType(INT))
+    GREATERTHAN = OpDefinition('GREATERTHAN', 12, '>', lambda a, b : a > b,
+                        lambda op: BOOL,
+                       addOperand=addOperand_eq)
+    
     allOps = {}
-    for op in [PLUS, MINUS, DIV, MUL, DOWNTO]:
+    for op in [PLUS, MINUS, DIV, MUL, DOWNTO, GREATERTHAN]:
         assert (op.id not in allOps)
         allOps[op.id] = op
         

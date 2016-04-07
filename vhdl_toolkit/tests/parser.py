@@ -104,14 +104,25 @@ class ParserTC(unittest.TestCase):
         
         self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH.dtype.getBitCnt())
         
-        
         WIDTH_WIDTH.set(hInt(64)) 
         self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH.dtype.getBitCnt())
+
+    def testVhdlFn(self):
+        ctx = Parser.parseFiles([ILVL_SAMPLES + "functionImport/package0.vhd"], Parser.VHDL)
+        p = ctx['work']['package0']
+        fnCont = p.body['max']
+        fn = fnCont[0]
+        val = fn.call(hInt(2), hInt(3))
+        self.assertEqual(val, hInt(3))
+        
+        
+        val = fn.call(hInt(86), hInt(3))
+        self.assertEqual(val, hInt(86))
 
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(ParserTC('testVerilogParamSpecifiedByParam'))
-    #suite.addTest(unittest.makeSuite(ParserTC))
+    suite.addTest(ParserTC('testVhdlFn'))
+    # suite.addTest(unittest.makeSuite(ParserTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

@@ -8,6 +8,7 @@ from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.hdlObjects.function import Function, FnContainer
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 
 
 class RequireImportErr(Exception):
@@ -110,7 +111,8 @@ class HDLCtx(NonRedefDict):
             n = getName()
             self.entities[n] = obj
             insert(n)
-            
+        elif  isinstance(obj, Signal):
+            self[obj._name] = obj
         elif isinstance(obj, PackageHeader):
             n = getName()
             self.packages[n] = obj

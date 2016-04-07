@@ -89,8 +89,6 @@ class SignalOps():
     def opDownto(self, to):
         return self.naryOp(AllOps.DOWNTO, [to])
     
-    
-    
     def assignFrom(self, source):
         checkOperand(source)
         a = Assignment(source, self)
