@@ -1,9 +1,10 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.std import Ap_clk, Ap_rst_n
 from vhdl_toolkit.interfaces.amba import  AxiLite
-from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.samples.iLvl.axi_basic import AxiLiteBasicSlave
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
+
+from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls, synthetizeAndSave
 
 class AxiLiteSlaveContainer(Unit):
     slv = AxiLiteBasicSlave()
@@ -21,6 +22,4 @@ class AxiLiteSlaveContainer(Unit):
 if __name__ == "__main__":
 
     u = AxiLiteSlaveContainer()
-    print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise()])
-                     ))
+    synthetizeAndSave(u, "axiLSlvCont")

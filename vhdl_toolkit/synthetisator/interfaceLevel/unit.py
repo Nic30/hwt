@@ -35,6 +35,7 @@ class Unit(Buildable):
     @cvar _subUnits: all units with name in this unit class
     @cvar _params: all params with name defined at the top of unit class
     @cvar _hlsUnits: all hls units with name defined in this unit class
+    @ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
     """
     _interfaces = None
     _subUnits = None
@@ -45,7 +46,8 @@ class Unit(Buildable):
         self.__class__._intfClasses = intfClasses
         self.__class__._builded()
         copyDict = {}
-        
+        self._checkIntferfaces = True
+         
         for pName in  ["_entity", "_sigLvlUnit", "_params", "_interfaces", "_subUnits"]:
             v = getattr(self.__class__, pName, None)
             setattr(self, pName, deepcopy(v, copyDict)) 
@@ -126,6 +128,7 @@ class Unit(Buildable):
         # construct globals (generics for entity)
         globalNames = {}
         def addP(n, p):
+            # [TODO] case sensitivity based on active HDL
             p.name = n.upper()
             n = n.lower()
             if n in globalNames:
@@ -215,7 +218,7 @@ class Unit(Buildable):
             synthetisator._synthesise()
         
         
-        if not externInterf:
+        if self._checkIntferfaces and not externInterf:
             raise  Exception("Can not find any external interface for unit " + name \
                               + "- there is no such a thing as unit without interfaces")
 

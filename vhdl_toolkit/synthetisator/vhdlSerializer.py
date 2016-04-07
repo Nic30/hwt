@@ -10,6 +10,7 @@ from vhdl_toolkit.synthetisator.assigRenderer import renderIfTree
 from python_toolkit.arrayQuery import arr_any
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
+from vhdl_toolkit.synthetisator.param import getParam
 
 
 
@@ -109,7 +110,7 @@ class VhdlSerializer():
         if g.defaultVal is None:
             return s
         else:  
-            return  "%s := %s" % (s, cls.Value(g.defaultVal))
+            return  "%s := %s" % (s, cls.Value(getParam(g.defaultVal)))
         
     @classmethod
     def isSignalHiddenInExpr(cls, sig):

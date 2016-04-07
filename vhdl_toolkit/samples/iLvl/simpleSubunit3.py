@@ -3,10 +3,11 @@ from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.amba import AxiStream
 from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.synthetisator.param import Param, shareAllParams
+from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
 
 @shareAllParams
 class SimpleSubunit3(Unit):
-    DATA_WIDTH = Param(8)
+    DATA_WIDTH = Param(128)
     subunit0 = SimpleUnit2() 
     a0 = AxiStream(subunit0.a ,isExtern=True)
     b0 = AxiStream(src=subunit0.b, isExtern=True)
@@ -14,5 +15,5 @@ class SimpleSubunit3(Unit):
 if __name__ == "__main__":
     u = SimpleSubunit3()
     print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise()])
+                     "\n".join([ VhdlSerializer.asHdl(x) for x in u._synthesise()])
                      ))

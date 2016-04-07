@@ -1,6 +1,6 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.std import Ap_none
-from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls, synthetizeAndSave
 
 
 class SimpleUnit(Unit):
@@ -9,4 +9,4 @@ class SimpleUnit(Unit):
 
 
 if __name__ == "__main__":
-    print(synthetizeCls(SimpleUnit))
+    synthetizeCls(SimpleUnit)
