@@ -9,4 +9,4 @@ class SimpleUnit(Unit):
 
 
 if __name__ == "__main__":
-    synthetizeCls(SimpleUnit)
+    print(synthetizeCls(SimpleUnit))
