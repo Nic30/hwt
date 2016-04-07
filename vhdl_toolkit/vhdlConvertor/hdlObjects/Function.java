@@ -1,6 +1,7 @@
 package hdlObjects;
 
 import java.util.List;
+import java.util.Vector;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,7 +11,8 @@ public class Function extends Jsonable {
 	boolean isOperator;
 	Expr returnT;
 	List<Variable> params;
-	// [TODO] body
+	public List<Variable> locals;
+	public List<Statement> body;
 
 	public Function(String name, boolean isOperator, Expr returnT,
 			List<Variable> params) {
@@ -18,6 +20,8 @@ public class Function extends Jsonable {
 		this.isOperator = isOperator;
 		this.returnT = returnT;
 		this.params = params;
+		locals = new Vector<Variable>();
+		body = new Vector<Statement>();
 	}
 
 	@Override
@@ -30,6 +34,8 @@ public class Function extends Jsonable {
 		else
 			f.put("returnT", JSONObject.NULL);
 		addJsonArr(f, "params", params);
+		addJsonArr(f, "locals", locals);
+		addJsonArr(f, "body", body);
 
 		return f;
 	}

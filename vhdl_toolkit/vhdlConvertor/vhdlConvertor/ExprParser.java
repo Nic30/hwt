@@ -9,6 +9,12 @@ import hdlObjects.Expr;
 import hdlObjects.OperatorType;
 import hdlObjects.SymbolType;
 import vhdlParser.vhdlParser;
+import vhdlParser.vhdlParser.ExpressionContext;
+import vhdlParser.vhdlParser.NameContext;
+import vhdlParser.vhdlParser.Subtype_indicationContext;
+import vhdlParser.vhdlParser.TargetContext;
+import vhdlParser.vhdlParser.WaveformContext;
+import vhdlParser.vhdlParser.Waveform_elementContext;
 
 public class ExprParser {
 
@@ -104,20 +110,26 @@ public class ExprParser {
 
 		return visitExpression(ctx.expression());
 	}
-	public static Expr visitSubtype_indication(
-			vhdlParser.Subtype_indicationContext ctx) {
+	public static Expr visitSubtype_indication(Subtype_indicationContext ctx) {
 		// subtype_indication
 		// : selected_name ( selected_name )? ( constraint )? ( tolerance_aspect
 		// )?
 		// ;
 		vhdlParser.ConstraintContext c = ctx.constraint();
 		assert (ctx.tolerance_aspect() == null);
+
+		if (ctx.selected_name() != null)
+			NotImplementedLogger.print(
+					"ExprParser.visitSubtype_indication - selected_name");
+		if (ctx.tolerance_aspect() != null)
+			NotImplementedLogger.print(
+					"ExprParser.visitSubtype_indication - tolerance_aspect");
+
 		if (c != null) {
 			return visitConstraint(ctx.selected_name(0), c);
 		} else {
 			return ReferenceParser.visitSelected_name(ctx.selected_name(0));
 		}
-		// [TODO] tolerance_aspect, second selected_name
 	}
 
 	public static Expr visitConstraint(
@@ -142,8 +154,7 @@ public class ExprParser {
 			op1 = visitIndex_constraint(i);
 		}
 
-		return new Expr(
-				ReferenceParser.visitSelected_name(selectedName), op,
+		return new Expr(ReferenceParser.visitSelected_name(selectedName), op,
 				op1);
 
 	}
@@ -350,5 +361,52 @@ public class ExprParser {
 		// ;
 		NotImplementedLogger.print("ExprParser visitAggregate");
 		return null;
+	}
+
+	public static Expr visitTarget(TargetContext ctx) {
+		// target
+		// : name
+		// | aggregate
+		// ;
+		NameContext n = ctx.name();
+		if (n != null) {
+			return ReferenceParser.visitName(n);
+		} else {
+			return visitAggregate(ctx.aggregate());
+		}
+
+	}
+	public static Expr visitWaveform(WaveformContext ctx) {
+		// waveform :
+		// waveform_element ( COMMA waveform_element )*
+		// | UNAFFECTED
+		// ;
+		if (ctx.UNAFFECTED() != null) {
+			NotImplementedLogger.print("ExprParser.visitWaveform - UNAFFECTED");
+			return null;
+		}
+		Iterator<Waveform_elementContext> we = ctx.waveform_element()
+				.iterator();
+
+		Expr top = visitWaveform_element(we.next());
+		while (we.hasNext()) {
+			top = new Expr(top, OperatorType.DOT,
+					visitWaveform_element(we.next()));
+		}
+		return top;
+	}
+
+	public static Expr visitWaveform_element(Waveform_elementContext ctx) {
+		// waveform_element :
+		// expression ( AFTER expression )?
+		// ;
+		Iterator<ExpressionContext> e = ctx.expression().iterator();
+		Expr top = visitExpression(e.next());
+		if (e.hasNext()) {
+			NotImplementedLogger.print(
+					"ExprParser.visitWaveform_element - AFTER expression");
+		}
+		return top;
+
 	}
 }

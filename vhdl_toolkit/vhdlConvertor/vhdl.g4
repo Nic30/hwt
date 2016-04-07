@@ -188,14 +188,14 @@ actual_part
   | actual_designator
   ;
 
-adding_operator
-  : PLUS
+adding_operator :
+    PLUS
   | MINUS
   | AMPERSAND
   ;
 
-aggregate
-  : LPAREN element_association ( COMMA element_association )* RPAREN
+aggregate :
+   LPAREN element_association ( COMMA element_association )* RPAREN
   ;
 
 alias_declaration
@@ -789,8 +789,8 @@ identifier_list
   : identifier ( COMMA identifier )*
   ;
 
-if_statement
-  : ( label_colon )? IF condition THEN
+if_statement :
+    ( label_colon )? IF condition THEN
     sequence_of_statements
     ( ELSIF condition THEN sequence_of_statements )* 
     ( ELSE sequence_of_statements )?
@@ -922,8 +922,8 @@ logical_operator
   | XNOR
   ;
 
-loop_statement
-  : ( label_colon )? ( iteration_scheme )?
+loop_statement :
+    ( label_colon )? ( iteration_scheme )?
     LOOP
     sequence_of_statements 
     END LOOP ( identifier )? SEMI
@@ -1288,8 +1288,8 @@ sequence_of_statements
   : ( sequential_statement )*
   ;
 
-sequential_statement
-  : wait_statement
+sequential_statement :
+    wait_statement
   | assertion_statement
   | report_statement
   | signal_assignment_statement
@@ -1319,8 +1319,8 @@ shift_operator
   | ROR
   ;
 
-signal_assignment_statement
-  : ( label_colon )?
+signal_assignment_statement :
+   ( label_colon )?
     target LE ( delay_mechanism )? waveform SEMI
   ;
 
@@ -1415,8 +1415,8 @@ subnature_indication
     ( TOLERANCE expression ACROSS expression THROUGH )?
   ;
 
-subprogram_body
-  : subprogram_specification IS
+subprogram_body :
+    subprogram_specification IS
     subprogram_declarative_part
     BEGIN
     subprogram_statement_part
@@ -1542,12 +1542,12 @@ use_clause
   : USE selected_name ( COMMA selected_name )* SEMI
   ;
 
-variable_assignment_statement
-  : ( label_colon )? target VARASGN expression SEMI
+variable_assignment_statement :
+  ( label_colon )? target VARASGN expression SEMI
   ;
 
-variable_declaration
-  : ( SHARED )? VARIABLE identifier_list COLON
+variable_declaration :
+    ( SHARED )? VARIABLE identifier_list COLON
     subtype_indication ( VARASGN expression )? SEMI
   ;
 
@@ -1556,13 +1556,13 @@ wait_statement
     ( condition_clause )? ( timeout_clause )? SEMI
   ;
 
-waveform
-  : waveform_element ( COMMA waveform_element )*
+waveform :
+    waveform_element ( COMMA waveform_element )*
   | UNAFFECTED
   ;   
 
-waveform_element
-  : expression ( AFTER expression )?
+waveform_element :
+   expression ( AFTER expression )?
   ;
 
 //------------------------------------------Lexer-----------------------------------------
