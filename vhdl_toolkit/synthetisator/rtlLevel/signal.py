@@ -58,7 +58,10 @@ class SignalOps():
     
     def opAnd(self, *operands):
         return self.naryOp(AllOps.AND_LOG, operands)
-
+    
+    def opMul(self, *operands):
+        return self.naryOp(AllOps.MUL, operands)
+    
     def opXor(self, *operands):
         return self.naryOp(AllOps.XOR, operands)
 
