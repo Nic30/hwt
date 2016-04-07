@@ -11,7 +11,7 @@ setup(name='HWToolkit',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
         'myhdl',
-        'pil',    # altium scheme reader
+        'Pillow',    # altium scheme reader
         'sympy',  # symbolic math
         'simpy',  # discrete simulator 
         'jinja2', # hdl templates renderer, visualizer renderer
