@@ -264,5 +264,11 @@ def sameIntfAs(intf):
     for pName, p in intf._params.items():
         _intf._params[pName].set(getParam(p))
     return _intf    
-    
+
+def connect(src, dst):
+    """connect interfaces of two units"""
+    c = sameIntfAs(src)
+    c._endpoints.append(dst)
+    c._setSrc(src)
+    return c
        
