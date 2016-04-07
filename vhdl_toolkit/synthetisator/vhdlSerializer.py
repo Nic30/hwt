@@ -11,6 +11,7 @@ from python_toolkit.arrayQuery import arr_any
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
 from vhdl_toolkit.synthetisator.param import getParam
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
 
 
 
@@ -34,6 +35,8 @@ class VhdlSerializer():
             return cls.Entity(obj)
         elif isinstance(obj, Architecture):
             return cls.Architecture(obj)
+        elif isinstance(obj, UnitWithSource):
+            return str(obj)
         else:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
 
