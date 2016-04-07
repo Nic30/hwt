@@ -1,6 +1,6 @@
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
-from vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.synthetisator.param import Param, getParam
 from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import ExtractableInterface 
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
@@ -258,4 +258,11 @@ class Interface(Buildable, ExtractableInterface):
         if hasattr(self, '_masterDir'):
             s.append("_masterDir=%s" % str(self._masterDir))
         return "<%s>" % (', '.join(s))
+ 
+def sameIntfAs(intf):
+    _intf = intf.__class__()
+    for pName, p in intf._params.items():
+        _intf._params[pName].set(getParam(p))
+    return _intf    
     
+       
