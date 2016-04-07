@@ -228,7 +228,10 @@ class BlackBox(Unit):
     """
     Unit used for prototyping all output interfaces are connected to "X"
     and this is only think which architecture contains 
+    
+    @cvar _defaultValue: this value is used to initialize all signals 
     """
+    _defaultValue = None
     def _synthesise(self, name=None):
         name = defaultUnitName(self, name)
         self._name = name
@@ -245,7 +248,7 @@ class BlackBox(Unit):
             # connect outputs to dummy value
             for s in signals:
                 if s._interface._getSignalDirection() == DIRECTION.IN:
-                    s.assignFrom(Value.fromPyVal(None, s.dtype))
+                    s.assignFrom(Value.fromPyVal(self._defaultValue, s.dtype))
         if not externInterf:
             raise  Exception("Can not find any external interface for unit " + name \
                               + "- there is no such a thing as unit without interfaces")
@@ -320,6 +323,6 @@ class UnitWithSource(Unit):
         assert(self._entity)
         self._name = defaultUnitName(self, name)
         return [self]
-    
+
     def __str__(self):
         return "\n".join(['--%s' % (s) for s in self._hdlSources])
