@@ -1,9 +1,7 @@
 import os
 from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName , \
-    UnitWithSource
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
 import shutil
-from vivado_toolkit.ip_packager.component import Component
 from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
@@ -18,6 +16,8 @@ def synthetizeCls(cls, name=None):
 def synthetizeAndSave(unit, folderName='.', name=None):
     header = None
     os.makedirs(folderName, exist_ok=True)
+    files = set()
+    
     for o in [ x for x in unit._synthesise(name)]:
         if isinstance(o, VhdlCodeWrap):
             header = o
@@ -30,15 +30,19 @@ def synthetizeAndSave(unit, folderName='.', name=None):
             fName = None
             for fn in o._hdlSources:
                 shutil.copy2(fn, folderName)
+                files.add(fn)
         else:
             raise Exception("Do not know how to serialize %s" % (repr(o)))
     
         if fName is not None:
             fp = os.path.join(folderName, fName)
+            files.add(fp)
+            
             with open(fp, 'w') as f:
                 f.write(formatVhdl(
                      "\n".join([ VhdlSerializer.asHdl(x) for x in [header, o]])
                         ))
+    return files
     
 def synthetizeAsIpcore(unit, folderName=".", name=None):
     raise NotImplementedError()
