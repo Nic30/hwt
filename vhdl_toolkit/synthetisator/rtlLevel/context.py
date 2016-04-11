@@ -15,6 +15,8 @@ from vhdl_toolkit.hdlObjects.assignment import Assignment
 
 from vhdl_toolkit.synthetisator.templates import VHDLTemplates  
 from vhdl_toolkit.synthetisator.exceptions import SigLvlConfErr
+from vhdl_toolkit.hdlObjects.operator import Operator
+from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 
 class Context():
@@ -78,7 +80,9 @@ class Context():
         self.startsOfDataPaths = set()
         self.subUnits = set()
         def discoverDatapaths(signal):
+            print(signal)
             for node in walkSigSouces(signal):
+                # print(node)
                 if node in self.startsOfDataPaths:
                     return 
                 if isinstance(node, PortConnection) and not node.unit.discovered:
@@ -86,6 +90,9 @@ class Context():
                     for s in  walkUnitInputs(node.unit):
                         discoverDatapaths(s)
                     self.subUnits.add(node.unit)
+                if isinstance(node, Operator):
+                    assert(node.operator == AllOps.INDEX)
+                    discoverDatapaths(node.result)
                 self.startsOfDataPaths.add(node)
                 if isinstance(node, Assignment):
                     for s in walkSignalsInExpr(node.src):

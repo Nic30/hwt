@@ -8,27 +8,28 @@ from vhdl_toolkit.synthetisator.interfaceLevel.interface import connect
 @shareAllParams
 class SimpleSubunit(Unit):
     DATA_WIDTH = Param(8)
-    a = Ap_vld(isExtern=True)
-    b = Ap_vld(src=a, isExtern=True)
+    c = Ap_vld(isExtern=True)
+    d = Ap_vld(src=c, isExtern=True)
 
 @shareAllParams
 class InterfaceArraySample(Unit):
     DATA_WIDTH = Param(8)
-    a = Ap_vld(multipliedBy=hInt(3), isExtern=True)
-    b = Ap_vld(multipliedBy=hInt(3), isExtern=True)
+    a = Ap_vld(multipliedBy=hInt(2), isExtern=True)
+    b = Ap_vld(multipliedBy=hInt(2), isExtern=True)
 
     u0 = SimpleSubunit() 
     u1 = SimpleSubunit()
-    u2 = SimpleSubunit()
+    #u2 = SimpleSubunit()
     
-    u0in = connect(a[0], u0.a)
-    u1in = connect(a[1], u1.a)
-    u2in = connect(a[2], u2.a)
+    u0in = connect(a[0], u0.c)
+    u1in = connect(a[1], u1.c)
+    #u2in = connect(a[2], u2.c)
 
-    u0out = connect(u0.b, b[0])
-    u1out = connect(u1.b, b[1])
-    u2out = connect(u2.b, b[2])
+    u0out = connect(u0.d, b[0])
+    u1out = connect(u1.d, b[1])
+    #u2out = connect(u2.d, b[2])
 
 if __name__ == "__main__":
-    print(synthetizeCls(InterfaceArraySample))
-
+    print(
+    synthetizeCls(InterfaceArraySample)
+    )

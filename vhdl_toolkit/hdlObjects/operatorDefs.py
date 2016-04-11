@@ -1,5 +1,6 @@
 from vhdl_toolkit.hdlObjects.typeDefs import BOOL, INT, RANGE, PINT, UINT, BIT, \
-    VECTOR, Std_logic, Boolean, Std_logic_vector
+    Std_logic, Boolean, Std_logic_vector, Std_logic_vector_contrained, \
+    Integer
 from vhdl_toolkit.hdlObjects.value import Value
 
 def convOpsToType(t):
@@ -66,6 +67,23 @@ def addOperand_event(operator, operand):
 
 def getReturnType_concat(op):
     raise NotImplementedError()
+
+def getReturnType_index(op):
+    base = op.ops[0]
+    index = op.ops[1]
+    if isinstance(base.dtype, Std_logic_vector):
+        if isinstance(index.dtype, Integer):
+            return BIT
+        if hasattr(index, "dtype") and index.dtype == RANGE:
+            return Std_logic_vector_contrained(index)
+        
+    raise NotImplementedError()
+
+def addOperand_index(operator, operand):
+    if not operator.ops:
+        operand.drivers.add(operator)
+        
+    operator.ops.append(operand)
 
 class OpDefinition():
     
@@ -135,7 +153,7 @@ class AllOps():
     """
     
     NOT = OpDefinition('NOT', 3, lambda strOps: "NOT " + strOps[0],  # [TODO] [0] has dangerous potential
-                       lambda a :~a, 
+                       lambda a :~a,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
     EVENT = OpDefinition('EVENT', 3, lambda strOps:  strOps[0] + "'EVENT",
@@ -158,30 +176,44 @@ class AllOps():
     EQ = OpDefinition('EQ', 7, '==', lambda a, b : a == b,
                         getReturnType=lambda op: BOOL,
                         addOperand=addOperand_eq)
-    AND_LOG = OpDefinition('AND', 11, 'AND', lambda a, b : a & b,
+    
+    AND_LOG = OpDefinition('AND', 11, 'AND',
+                       lambda a, b : a & b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
-    OR_LOG = OpDefinition('OR', 12, 'OR', lambda a, b : a | b,
+    
+    OR_LOG = OpDefinition('OR', 12, 'OR',
+                       lambda a, b : a | b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
+    
     DOWNTO = OpDefinition("DOWNTO", 13, 'DOWNTO',
                         lambda a, b : Value.fromPyVal([b, a], RANGE),  # [TODO]
                         getReturnType=lambda op: RANGE,
                         addOperand=convOpsToType(INT))
-    GREATERTHAN = OpDefinition('GREATERTHAN', 12, '>', lambda a, b : a > b,
+    
+    GREATERTHAN = OpDefinition('GREATERTHAN', 6, '>',
+                       lambda a, b : a > b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_eq)
-    LOWETHAN = OpDefinition('LOWETHAN', 12, '<', lambda a, b : a > b,
+    
+    LOWETHAN = OpDefinition('LOWETHAN', 6, '<',
+                       lambda a, b : a > b,
                        getReturnType=getReturnType_concat,
                        addOperand=addOperand_concat)
     
-    CONCAT = OpDefinition('LOWETHAN', 12, '<', lambda a, b : a > b,
-                        lambda op: BOOL,
+    CONCAT = OpDefinition('LOWETHAN', 6, '&',
+                       lambda a, b : NotImplemented(),
+                       getReturnType=getReturnType_concat,
                        addOperand=addOperand_concat)
-    
+
+    INDEX = OpDefinition('INDEX', 1, lambda strOps : "%s(%s)" % (strOps[0], strOps[1]),
+                       lambda a, b : a[b],
+                       getReturnType=getReturnType_index,
+                       addOperand=addOperand_index)
     
     allOps = {}
-    for op in [PLUS, MINUS, DIV, MUL, DOWNTO, GREATERTHAN, CONCAT]:
+    for op in [PLUS, MINUS, DIV, MUL, DOWNTO, GREATERTHAN, CONCAT, INDEX]:
         assert (op.id not in allOps)
         allOps[op.id] = op
         

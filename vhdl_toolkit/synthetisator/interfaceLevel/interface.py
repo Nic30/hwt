@@ -5,6 +5,9 @@ from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import Extra
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from copy import deepcopy
+from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
+from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
+from vhdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
                    
 class Interface(Buildable, ExtractableInterface):
     """
@@ -171,7 +174,7 @@ class Interface(Buildable, ExtractableInterface):
             self._src = None
             self._endpoints = []
             
-    def _connectTo(self, master):
+    def _connectTo(self, master, masterIndex=None, slaveIndex=None):
         """
         connect to another interface interface (on rtl level)
         works like self <= master in VHDL
@@ -181,10 +184,10 @@ class Interface(Buildable, ExtractableInterface):
                 mIfc = master._subInterfaces[nameIfc]
                 if master._masterDir == mIfc._masterDir:
                     assert(self._masterDir == ifc._masterDir)
-                    ifc._connectTo(mIfc)
+                    ifc._connectTo(mIfc, masterIndex=masterIndex, slaveIndex=slaveIndex)
                 else:
                     assert(self._masterDir != ifc._masterDir)
-                    mIfc._connectTo(ifc)
+                    mIfc._connectTo(ifc, masterIndex=slaveIndex, slaveIndex=masterIndex)
         else:
             try:
                 dstSig = self._sig
@@ -197,8 +200,35 @@ class Interface(Buildable, ExtractableInterface):
                 raise Exception("%s interface does not have rtl level signal created" % 
                                 (repr(master)))
             
+            if masterIndex is not None:
+                if dstSig.dtype == BIT:
+                    srcSig = srcSig.opSlice(hInt(masterIndex))
+                elif isinstance(dstSig.dtype, Std_logic_vector):
+                    w = getWidthExpr(dstSig.dtype)
+                    upper = w.opMul(hInt(masterIndex))
+                    lower = w.opMul(hInt(masterIndex + 1)).opSub(hInt(1))
+
+                    srcSig = srcSig.opSlice(lower.opDownto(upper))
+                else:
+                    raise NotImplementedError()
             
+            if slaveIndex is not None:
+                if srcSig.dtype == BIT:
+                    dstSig = dstSig.opSlice(hInt(slaveIndex))
+                elif isinstance(srcSig.dtype, Std_logic_vector):
+                    w = getWidthExpr(srcSig.dtype)
+                    upper = w.opMul(hInt(slaveIndex))
+                    lower = w.opMul(hInt(slaveIndex + 1)).opSub(hInt(1))
+
+                    dstSig = dstSig.opSlice(lower.opDownto(upper))
+                else:
+                    raise NotImplementedError()
+                            
+                
+            #print(
             dstSig.assignFrom(srcSig)
+            #)
+            
             
     def _getSignalDirection(self):
         if self._direction == INTF_DIRECTION.MASTER:
@@ -215,6 +245,19 @@ class Interface(Buildable, ExtractableInterface):
         """
         for _, suIntf in self._subInterfaces.items():
             suIntf._propagateConnection()
+        
+        for indx, e in enumerate(self._arrayElemCache):
+            if e is not None:
+                # [TODO] find better way how to find out direction of elements
+                e._propagateConnection()
+                hasEp = len(e._endpoints) > 0
+                
+                if hasEp:
+                    e._connectTo(self, masterIndex=indx)
+                else:
+                    self._connectTo(e, slaveIndex=indx)
+                    #print("Unknown direction %s" % (repr(self)))
+                    
         for d in self._endpoints:
             d._connectTo(self)
     
@@ -240,16 +283,18 @@ class Interface(Buildable, ExtractableInterface):
                                                         self._originSigLvlUnit,
                                                         self._originEntityPort)
                 sigs = [s]
+                
         if self._multipliedBy is not None:
             for elemIntf in self._arrayElemCache:
                 if elemIntf is not None:  # if is used
-                    elemPrefix =prefix + self.NAME_SEPARATOR + elemIntf._name 
-                    sigs.extend(
-                        elemIntf._signalsForInterface(context, elemPrefix))
+                    elemPrefix = prefix + self.NAME_SEPARATOR + elemIntf._name 
+                    elemIntf._signalsForInterface(context, elemPrefix)
+                    # they are not in sigs because they are not main signals
+                    
                     
         return sigs
 
-    #def _connectMeToArrayAsElem(self, arrayIntf, inex):
+    # def _connectMeToArrayAsElem(self, arrayIntf, inex):
     #    raise  NotImplementedError()
         
     def _getPhysicalName(self):

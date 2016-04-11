@@ -5,6 +5,7 @@ from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.assignment import Assignment
 from python_toolkit.arrayQuery import where
+from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 
 def signalHasDriver(sig):
@@ -16,6 +17,8 @@ def walkSignalDrivers(sig):
     def assign2Me(ep):
         if isinstance(ep, Assignment) and ep.dst == sig:
             return ep
+        elif isinstance(ep, Operator) and ep.operator == AllOps.INDEX and sig is ep.ops[0]:
+            yield from walkSignalDrivers(ep.result)
         elif isinstance(ep, PortConnection) and ep.portItem.direction == DIRECTION.OUT: 
             return ep
         else:
@@ -128,16 +131,21 @@ def discoverSensitivity(datapath):
         
 # walks code but do not cross assignment of precursors 
 def walkSigSouces(sig, parent=None):    
+    #print(sig)
     if isinstance(sig, Operator):
-        for op in sig.op:
-            if not op is parent:
-                yield from walkSigSouces(op)
+        if sig.operator != AllOps.INDEX: # [TODO] more test to assert this cond. will work
+            #print(sig.operator)
+            for op in sig.ops:
+                if not op is parent:
+                    yield from walkSigSouces(op)
     elif isinstance(sig, Signal):
         for e in sig.drivers:
             if isinstance(e, PortConnection):
                 if not e.unit.discovered:
                     yield e
             elif isinstance(e, Assignment) and not e.src is sig:
+                yield e
+            elif isinstance(e, Operator) and e.operator == AllOps.INDEX and sig is e.ops[0]:
                 yield e
             else:
                 yield from walkSigSouces(e, sig)
