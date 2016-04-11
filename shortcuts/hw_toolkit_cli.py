@@ -1,10 +1,10 @@
 import argparse
 from vhdl_toolkit.hierarchyExtractor import DesignFile, \
     findFileWhereNameIsDefined
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
+from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from vivado_toolkit.ip_packager.packager import Packager
 
-class TopUnitTemplate(UnitWithSource):  # name and entity name does not have to be same
+class TopUnitTemplate(UnitFromHdl):  # name and entity name does not have to be same
     pass
 
 if __name__ == "__main__":
