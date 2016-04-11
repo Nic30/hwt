@@ -1,6 +1,6 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
+from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl 
 
-class EntityWithPartialyInvalidIntf(UnitWithSource):
+class EntityWithPartialyInvalidIntf(UnitFromHdl):
     _hdlSources = "../../samples/iLvl/vhdl/entityWithPartialyInvalidIntf.vhd"
     
 

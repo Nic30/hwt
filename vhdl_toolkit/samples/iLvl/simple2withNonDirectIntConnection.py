@@ -1,7 +1,7 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.amba import AxiStream
-from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.synthetisator.param import shareAllParams, Param
+from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
 
 
 @shareAllParams
@@ -12,7 +12,4 @@ class Simple2withNonDirectIntConnection(Unit):
     b = AxiStream(c, src=a)
     
 if __name__ == "__main__":
-    u = Simple2withNonDirectIntConnection()
-    print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise()])
-                     ))
+    print(synthetizeCls(Simple2withNonDirectIntConnection))

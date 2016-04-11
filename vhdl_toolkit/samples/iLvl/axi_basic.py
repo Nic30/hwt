@@ -1,6 +1,6 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
+from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 
-class AxiLiteBasicSlave(UnitWithSource):
+class AxiLiteBasicSlave(UnitFromHdl):
     _hdlSources = "vhdl/axiLite_basic_slave.vhd"
     
 

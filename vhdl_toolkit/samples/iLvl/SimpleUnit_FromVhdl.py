@@ -1,12 +1,9 @@
-from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
+from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
+from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
 
 
-class SimpleUnit_FromVhdl(UnitWithSource):
+class SimpleUnit_FromVhdl(UnitFromHdl):
     _hdlSources = 'vhdl/simplest_b.vhd'
 
 if __name__ == "__main__":
-    u = SimpleUnit_FromVhdl()
-    print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise()])
-                     ))
+    print(synthetizeCls(SimpleUnit_FromVhdl))

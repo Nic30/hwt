@@ -1,8 +1,5 @@
 from copy import deepcopy
-import os
-import inspect
 
-from vhdl_toolkit.parser import entityFromFile
 from vhdl_toolkit.synthetisator.rtlLevel.context import Context
 from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from vhdl_toolkit.interfaces.all import allInterfaces
@@ -10,10 +7,8 @@ from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.hdlObjects.component import Component
 from vhdl_toolkit.synthetisator.param import Param
-from vhdl_toolkit.hdlObjects.value import Value
 
 from python_toolkit.arrayQuery import single
-from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 
 def defaultUnitName(unit, sugestedName=None):
@@ -194,6 +189,11 @@ class Unit(Buildable):
         for subUnitName, subUnit in self._subUnits.items():
             yield from subUnit._synthesise(subUnitName)
             subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
+
+        # synthesise all hls object
+        for _, hlsU in self._hlsUnits.items():
+            synthetisator = hlsU._synthetisator(self, cntx, hlsU)
+            yield from synthetisator._synthesise()
         
         # prepare signals for interfaces     
         for connectionName, connection in self._interfaces.items():
@@ -212,117 +212,9 @@ class Unit(Buildable):
         for _, connection in self._interfaces.items():
             connection._propagateConnection()
         
-        # synthesise all hls object
-        for _, hlsU in self._hlsUnits.items():
-            synthetisator = hlsU._synthetisator(self, cntx, hlsU)
-            synthetisator._synthesise()
-        
         
         if self._checkIntferfaces and not externInterf:
             raise  Exception("Can not find any external interface for unit " + name \
                               + "- there is no such a thing as unit without interfaces")
 
         yield from self._synthetiseContext(externInterf, cntx)
-
-class BlackBox(Unit):
-    """
-    Unit used for prototyping all output interfaces are connected to "X"
-    and this is only think which architecture contains 
-    
-    @cvar _defaultValue: this value is used to initialize all signals 
-    """
-    _defaultValue = None
-    def _synthesise(self, name=None):
-        name = defaultUnitName(self, name)
-        self._name = name
-        # construct globals (generics for entity)
-        cntx = self._contextFromParams()
-        externInterf = [] 
-        # prepare connections     
-        for connectionName, connection in self._interfaces.items():
-            signals = connection._signalsForInterface(cntx, connectionName)
-            if not connection._isExtern:
-                raise IntfLvlConfErr("All interfaces in BlackBox has to be extern, %s: %s is not" % 
-                                     (self.__class__.__name__, connection._getFullName()))
-            externInterf.extend(signals)
-            # connect outputs to dummy value
-            for s in signals:
-                if s._interface._getSignalDirection() == DIRECTION.IN:
-                    s.assignFrom(Value.fromPyVal(self._defaultValue, s.dtype))
-        if not externInterf:
-            raise  Exception("Can not find any external interface for unit " + name \
-                              + "- there is no such a thing as unit without interfaces")
-        yield  from self._synthetiseContext(externInterf, cntx)
-
-def addSources(fileNameOrList):
-    """
-    decorator which adds sources to UnitWithSource
-    first is 
-    """
-    def _addSources(unitCls):
-        assert(issubclass(unitCls, UnitWithSource))
-        unitCls._hdlSources = fileNameOrList
-    return _addSources
-
-class UnitWithSource(Unit):
-    """
-    @cvar _hdlSources:  str or list of hdl filenames, they can be relative to file 
-        where is *.py file stored and they are automaticaly converted to absolute path
-        first entity in first file is taken as interface template for this unit
-        this is currently supported only for vhdl   
-    """
-    @classmethod
-    def _build(cls):
-        # convert source filenames to absolute paths
-        assert(cls._hdlSources)
-        if isinstance(cls._hdlSources, str):
-            cls._hdlSources = [cls._hdlSources]
-        baseDir = os.path.dirname(inspect.getfile(cls))
-        cls._hdlSources = [os.path.join(baseDir, s) for s in cls._hdlSources]
-
-        # init hdl object containers on this unit       
-        cls._interfaces = {}
-        cls._subUnits = {}
-        cls._params = {}
-
-        # extract params from entity generics
-        cls._entity = entityFromFile(cls._hdlSources[0])
-        for g in cls._entity.generics:
-            if hasattr(cls, g.name):
-                raise  Exception("Already has param %s (old:%s , new:%s)" 
-                      % (g.name, str(getattr(cls, g.name)), str(g)))
-                
-            setattr(cls, g.name, g)
-            cls._params[g.name] = g
-        cls._sigLvlUnit = VHDLUnit(cls._entity)
-
-        def setIntfAsExtern(intf):
-            intf._isExtern = True
-            for _, subIntf in intf._subInterfaces.items():
-                setIntfAsExtern(subIntf)
-
-        # lookup all interfaces
-        for intfCls in cls._intfClasses:
-            for intfName, interface in intfCls._tryToExtract(cls._sigLvlUnit):
-                if hasattr(cls, intfName):
-                    raise  Exception("Already has interface %s (old:%s , new:%s)" 
-                                     % (intfName, str(getattr(cls, intfName)), str(interface)))
-                interface._name = intfName
-                cls._interfaces[intfName] = interface
-                setattr(cls, intfName, interface)
-                setIntfAsExtern(interface)
-
-        for p in cls._entity.ports:
-            # == loading testbenches is not supported by this class 
-            assert(hasattr(p, '_interface') and p._interface)  # every port should have interface (Ap_none at least)        
-        
-        cls._clsBuildFor = cls
-    
-    def _synthesise(self, name=None):
-        """Convert unit to hdl objects"""
-        assert(self._entity)
-        self._name = defaultUnitName(self, name)
-        return [self]
-
-    def __str__(self):
-        return "\n".join(['--%s' % (s) for s in self._hdlSources])

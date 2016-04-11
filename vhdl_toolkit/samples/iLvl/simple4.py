@@ -1,8 +1,8 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.std import Ap_none
-from vhdl_toolkit.formater import formatVhdl
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
+from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
 
 
 
@@ -14,7 +14,4 @@ class SimpleUnit4(Unit):
 
 
 if __name__ == "__main__":
-    u = SimpleUnit4()
-    print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise()])
-                     ))
+    print(synthetizeCls(SimpleUnit4))

@@ -1,6 +1,6 @@
 import os
 from vhdl_toolkit.formater import formatVhdl
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
+from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 import shutil
 from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
 from vhdl_toolkit.hdlObjects.entity import Entity
@@ -26,7 +26,7 @@ def synthetizeAndSave(unit, folderName='.', name=None):
             fName = o.name + "_ent.vhd"
         elif isinstance(o, Architecture):
             fName = o.entityName + "_" + o.name + "_arch.vhd"
-        elif isinstance(o, UnitWithSource):
+        elif isinstance(o, UnitFromHdl):
             fName = None
             for fn in o._hdlSources:
                 shutil.copy2(fn, folderName)

@@ -1,5 +1,5 @@
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
+from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from vhdl_toolkit.synthetisator.param import Param
 from python_toolkit.arrayQuery import single, NoValueExc
 from vhdl_toolkit.interfaces.amba import AxiLite
@@ -37,7 +37,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
                 self.assertTrue(hasattr(p, propName), 'bram port has ' + propName)
 
     def test_axiStreamExtraction(self):
-        class AxiStreamSampleEnt(UnitWithSource):
+        class AxiStreamSampleEnt(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "axiStreamSampleEnt.vhd"
         # (intfClasses=[AxiStream_withUserAndStrb, AxiStream, AxiStream_withUserAndNoStrb,
         #  AxiStream_withoutSTRB])
@@ -49,21 +49,21 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertTrue(hasattr(u, "TX0_CTL"))
 
     def test_genericValues(self):
-        class GenericValuesSample(UnitWithSource):
+        class GenericValuesSample(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "genericValuesSample.vhd"
         u = GenericValuesSample()
         self.assertEqual(u.C_BASEADDR._val.val, (2 ** 32) - 1)
         self.assertEqual(u.C_FAMILY._val.val, 'zynq')
 
     def test_ClkAndRstExtraction(self):
-        class ClkRstEnt(UnitWithSource):
+        class ClkRstEnt(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "clkRstEnt.vhd"
         u = ClkRstEnt(intfClasses=[Ap_clk, Ap_rst_n])
         self.assertIsInstance(u.ap_rst_n, Ap_rst_n)
         self.assertIsInstance(u.ap_clk, Ap_clk)
 
     def test_positiveAndNatural(self):
-        class PositiveAndNatural(UnitWithSource):
+        class PositiveAndNatural(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "positiveAndNatural.vhd"
         u = PositiveAndNatural()
         natG = single(u._entity.generics, lambda x: x.name == "nat")
@@ -74,7 +74,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(intG.dtype, INT)
 
     def test_axiLiteSlave2(self):
-        class AxiLiteSlave2(UnitWithSource):
+        class AxiLiteSlave2(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "axiLite_basic_slave2.vhd"
         u = AxiLiteSlave2(intfClasses=[AxiLite, Ap_clk, Ap_rst_n])
         self.assertTrue(hasattr(u, "ap_clk"))
@@ -82,7 +82,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertTrue(hasattr(u, "axilite"))
 
     def test_withPartialyInvalidInterfaceNames(self):
-        class EntityWithPartialyInvalidIntf(UnitWithSource):
+        class EntityWithPartialyInvalidIntf(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "entityWithPartialyInvalidIntf.vhd"
 
         u = EntityWithPartialyInvalidIntf()
@@ -166,7 +166,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(u.slv.S_AXI.ar.addr._dtype.getBitCnt(), AW.val)
 
     def test_paramsExtractionSimple(self):
-        class Ap_vldWithParam(UnitWithSource):
+        class Ap_vldWithParam(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "ap_vldWithParam.vhd"
         u = Ap_vldWithParam()
         self.assertIsInstance(u.data, Ap_vld)
@@ -250,7 +250,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertIsNot(b.DATA_WIDTH, dw)
 
     def test_largeBitStrings(self):
-        class BitStringValuesEnt(UnitWithSource):
+        class BitStringValuesEnt(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "bitStringValuesEnt.vhd"
         u = BitStringValuesEnt()
         self.assertEqual(u.C_32b0.defaultVal.val, 0)

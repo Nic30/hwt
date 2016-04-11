@@ -11,7 +11,7 @@ from python_toolkit.arrayQuery import arr_any
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
 from vhdl_toolkit.synthetisator.param import getParam
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
+from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from vhdl_toolkit.synthetisator.exceptions import SerializerException
 
 
@@ -36,7 +36,7 @@ class VhdlSerializer():
             return cls.Entity(obj)
         elif isinstance(obj, Architecture):
             return cls.Architecture(obj)
-        elif isinstance(obj, UnitWithSource):
+        elif isinstance(obj, UnitFromHdl):
             return str(obj)
         else:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
@@ -96,10 +96,10 @@ class VhdlSerializer():
         ent.ports.sort(key=lambda x: x.name)
         ent.generics.sort(key=lambda x: x.name)
 
-        return VHDLTemplates.entity.render(
-               {"name": ent.name,
-                'ports' : [cls.PortItem(pi) for pi in ent.ports ],
-                'generics' : [cls.GenericItem(g) for g in ent.generics]
+        return VHDLTemplates.entity.render({
+                "name": ent.name,
+                "ports" : [cls.PortItem(pi) for pi in ent.ports ],
+                "generics" : [cls.GenericItem(g) for g in ent.generics]
                 })  
     
     @classmethod
@@ -237,8 +237,9 @@ class VhdlSerializer():
     def HWProcess(cls, proc):
         body = [s for s in renderIfTree(proc.bodyBuff)]
         hasCondition = arr_any(body, lambda x: isinstance(x, IfContainer))
-        return VHDLTemplates.process.render({"name": proc.name,
-                                             "hasCond": hasCondition,
+        return VHDLTemplates.process.render({
+              "name": proc.name,
+              "hasCond": hasCondition,
               "sensitivityList": ", ".join(proc.sensitivityList),
               "statements": [ cls.asHdl(s) for s in body] })
     

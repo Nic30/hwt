@@ -1,15 +1,12 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import BlackBox
+from vhdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit 
 from vhdl_toolkit.interfaces.std import SPI
-from vhdl_toolkit.formater import formatVhdl
+from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
 
 
 
-class BlackBoxWithSpi(BlackBox):
+class EmptyUnitWithSpi(EmptyUnit):
     spi = SPI(isExtern=True)
     
     
 if __name__ == "__main__":
-    u = BlackBoxWithSpi()
-    print(formatVhdl(
-                     "\n".join([ str(x) for x in u._synthesise()])
-                     ))
+    print(synthetizeCls(EmptyUnitWithSpi))

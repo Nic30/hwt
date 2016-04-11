@@ -80,9 +80,7 @@ class Context():
         self.startsOfDataPaths = set()
         self.subUnits = set()
         def discoverDatapaths(signal):
-            print(signal)
             for node in walkSigSouces(signal):
-                # print(node)
                 if node in self.startsOfDataPaths:
                     return 
                 if isinstance(node, PortConnection) and not node.unit.discovered:

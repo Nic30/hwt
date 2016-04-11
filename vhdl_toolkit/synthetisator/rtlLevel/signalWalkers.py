@@ -131,10 +131,8 @@ def discoverSensitivity(datapath):
         
 # walks code but do not cross assignment of precursors 
 def walkSigSouces(sig, parent=None):    
-    #print(sig)
     if isinstance(sig, Operator):
         if sig.operator != AllOps.INDEX: # [TODO] more test to assert this cond. will work
-            #print(sig.operator)
             for op in sig.ops:
                 if not op is parent:
                     yield from walkSigSouces(op)
