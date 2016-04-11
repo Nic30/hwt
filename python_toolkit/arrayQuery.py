@@ -52,3 +52,11 @@ def last_iter(it):
         prev = item
     # Last item
     yield True, prev
+
+def extendLen(arr, newLen, useValue=None):
+    lenNow = len(arr)
+    toAdd = newLen - lenNow
+    assert(toAdd > 0)
+    arr.extend([useValue for _ in range(toAdd)])
+    
+    
