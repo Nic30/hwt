@@ -88,6 +88,7 @@ class VivadoCntrl():
             os.remove(self.logFile)
         if os.path.exists(self.jurnalFile):
             os.remove(self.jurnalFile)   
+            
 if __name__ == "__main__":
     from vivado_toolkit.tests.config import defaultVivadoExc
     import os

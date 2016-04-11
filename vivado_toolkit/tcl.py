@@ -163,8 +163,13 @@ class VivadoProjectOpsTCL():
         return "reset_run " + name
     
     @staticmethod
-    def launch_runs(names, jobs=multiprocessing.cpu_count()):
-        return "launch_runs %s -jobs %d" % (' '.join(names), jobs)
+    def launch_runs(names, to_step=None, jobs=multiprocessing.cpu_count()):
+        params = []
+        if to_step is not None:
+            params.append("-to_step %s" % to_step)
+        params.append("-jobs %d" % jobs)
+        
+        return "launch_runs %s %s" % (' '.join(names), " ".join(params))
 
     @staticmethod    
     def run(jobName):

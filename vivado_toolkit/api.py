@@ -212,8 +212,7 @@ class BoardDesign():
         yield from self.project.updateAllCompileOrders()
 
     def setAsTop(self):
-        self.project.top = self.name
-        yield VivadoTCL.set_property("[current_fileset]", 'top', self.name + "_wrapper") 
+        yield from self.project.setTop(self.name + "_wrapper")
         
     def unit(self, name, ipCore=None):
         return Unit(name, ipCore=ipCore)
@@ -257,9 +256,9 @@ class Project():
         for g in self.listFileGroups():
             yield VivadoTCL.update_compile_order(g)
     
-    def run(self, jobName):
+    def run(self, jobName, to_step=None):
         yield VivadoTCL.reset_run(jobName)
-        yield VivadoTCL.launch_runs([jobName])
+        yield VivadoTCL.launch_runs([jobName], to_step=to_step)
                 
     def synthAll(self):
         for s in self.listSynthesis():
@@ -272,6 +271,9 @@ class Project():
     def implemAll(self):
         for s in self.listIpmplementations():
             yield from self.run(s)
+    
+    def writeBitstream(self):
+        yield from self.run("impl_1", to_step="write_bitstream")  # impl_1 -to_step write_bitstream -jobs 8
     
     def listSynthesis(self):
         # [TODO] not ideal
@@ -287,12 +289,14 @@ class Project():
                 yield p
         except FileNotFoundError:
             yield 'impl_1'  # project was not created yet
+            
     def listFileGroups(self):
         try:
             for p in filter(os.path.isdir, os.listdir(self.srcDir)):
                 yield os.path.basename(p)
         except FileNotFoundError:
             yield from ["sources_1", "constrs_1", "sim_1"]
+    
     def setPart(self, partName):
         self.part = partName
         yield VivadoTCL.set_property(self.get(), "part", partName)
@@ -309,6 +313,14 @@ class Project():
          
     def boardDesign(self, name):
         return BoardDesign(self, name)
+    
+    def addDesignFiles(self, files):
+        yield VivadoTCL.add_files(files)
+        yield VivadoTCL.update_compile_order("sources_1")
+    
+    def setTop(self, topEntName):
+        self.top = topEntName
+        yield VivadoTCL.set_property("[current_fileset]", 'top', topEntName) 
     
     def addXDCs(self, name, XDCs):
         filename = os.path.join(self.srcDir, name + '.xdc') 
