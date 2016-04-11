@@ -22,12 +22,12 @@ def interleave(inter, f, seq):
             inter()
             f(x)
 
-class Unparser:
+class Unparser():
     """Methods in this class recursively traverse an AST and
     output source code for the abstract syntax; original formatting
     is disregarded. """
 
-    def __init__(self, tree, file = sys.stdout):
+    def __init__(self, tree, file=sys.stdout):
         """Unparser(tree, file=sys.stdout) -> None.
          Print the source for tree to file."""
         self.f = file
@@ -37,9 +37,9 @@ class Unparser:
         self.f.write("")
         self.f.flush()
 
-    def fill(self, text = ""):
+    def fill(self, text=""):
         "Indent a piece of text, according to the current indentation level"
-        self.f.write("\n"+"    "*self._indent + text)
+        self.f.write("\n" + "    "*self._indent + text)
 
     def write(self, text):
         "Append a piece of text to the current line."
@@ -60,7 +60,7 @@ class Unparser:
             for t in tree:
                 self.dispatch(t)
             return
-        meth = getattr(self, "_"+tree.__class__.__name__)
+        meth = getattr(self, "_" + tree.__class__.__name__)
         meth(tree)
 
 
@@ -106,7 +106,7 @@ class Unparser:
     def _AugAssign(self, t):
         self.fill()
         self.dispatch(t.target)
-        self.write(" "+self.binop[t.op.__class__.__name__]+"= ")
+        self.write(" " + self.binop[t.op.__class__.__name__] + "= ")
         self.dispatch(t.value)
 
     def _Return(self, t):
@@ -154,7 +154,7 @@ class Unparser:
             do_comma = True
         for e in t.values:
             if do_comma:self.write(", ")
-            else:do_comma=True
+            else:do_comma = True
             self.dispatch(e)
         if not t.nl:
             self.write(",")
@@ -228,7 +228,7 @@ class Unparser:
         for deco in t.decorator_list:
             self.fill("@")
             self.dispatch(deco)
-        self.fill("class "+t.name)
+        self.fill("class " + t.name)
         if t.bases:
             self.write("(")
             for a in t.bases:
@@ -244,7 +244,7 @@ class Unparser:
         for deco in t.decorator_list:
             self.fill("@")
             self.dispatch(deco)
-        self.fill("def "+t.name + "(")
+        self.fill("def " + t.name + "(")
         self.dispatch(t.args)
         self.write(")")
         self.enter()
@@ -395,7 +395,7 @@ class Unparser:
         self.write(")")
 
     def _Set(self, t):
-        assert(t.elts) # should be at least one element
+        assert(t.elts)  # should be at least one element
         self.write("{")
         interleave(lambda: self.write(", "), self.dispatch, t.elts)
         self.write("}")
@@ -465,7 +465,7 @@ class Unparser:
         interleave(lambda: self.write(s), self.dispatch, t.values)
         self.write(")")
 
-    def _Attribute(self,t):
+    def _Attribute(self, t):
         self.dispatch(t.value)
         # Special case: 3.__abs__() is a syntax error, so if t.value
         # is an integer literal then we need to either parenthesize
@@ -534,7 +534,7 @@ class Unparser:
         first = True
         # normal arguments
         defaults = [None] * (len(t.args) - len(t.defaults)) + t.defaults
-        for a,d in zip(t.args, defaults):
+        for a, d in zip(t.args, defaults):
             if first:first = False
             else: self.write(", ")
             self.dispatch(a),
@@ -553,7 +553,7 @@ class Unparser:
         if t.kwarg:
             if first:first = False
             else: self.write(", ")
-            self.write("**"+t.kwarg)
+            self.write("**" + t.kwarg)
 
     def _keyword(self, t):
         self.write(t.arg)
@@ -571,4 +571,4 @@ class Unparser:
     def _alias(self, t):
         self.write(t.name)
         if t.asname:
-            self.write(" as "+t.asname)
+            self.write(" as " + t.asname)
