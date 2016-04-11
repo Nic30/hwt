@@ -149,7 +149,11 @@ class Signal(SignalItem, SignalOps):
             c.logger("%d: %s <= %s" % (env.now, self.name, str(newVal)))
         
         yield env.process(self.simPropagateChanges())
-        
+     
+    def singleDriver(self):
+        assert(len(self.drivers) == 1)
+        return list(self.drivers)[0]
+            
 class SyncSignal(Signal):
     def __init__(self, name, var_type, defaultVal=None):
         super().__init__(name, var_type, defaultVal)

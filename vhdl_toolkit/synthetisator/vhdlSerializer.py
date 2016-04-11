@@ -12,6 +12,7 @@ from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
 from vhdl_toolkit.synthetisator.param import getParam
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import UnitWithSource
+from vhdl_toolkit.synthetisator.exceptions import SerializerException
 
 
 
@@ -62,28 +63,33 @@ class VhdlSerializer():
    
     @classmethod
     def Assignment(cls, a):
-        return "%s <= %s" % (cls.asHdl(a.dst), cls.Value(a.src))
-
+        if a.dst.dtype == a.src.dtype:
+            return "%s <= %s" % (cls.asHdl(a.dst), cls.Value(a.src))
+        else:
+            raise SerializerException("%s <= %s  is not valid assignment because types are different(%s; %s) " %
+                             (cls.asHdl(a.dst), cls.Value(a.src), repr(a.dst.dtype), repr(a.src.dtype)))
     @classmethod
     def comment(cls, comentStr):
         return "--" + comentStr
     
     @classmethod
     def Component(cls, c):
-        return VHDLTemplates.component.render(
-               {"ports": [cls.PortItem(pi) for pi in c.entity.ports],
+        return VHDLTemplates.component.render({
+                "ports": [cls.PortItem(pi) for pi in c.entity.ports],
                 "generics": [cls.GenericItem(g) for g in c.entity.generics],
-                'entity': c.entity})      
+                "entity": c.entity
+                })      
 
     @classmethod
     def ComponentInstance(cls, ci):
         if len(ci.portMaps) == 0 and len(ci.genericMaps) == 0:
             raise Exception("Incomplete component instance")
-        return VHDLTemplates.componentInstance.render(
-               {"name" : ci.name,
-                'component': ci.component,
-                'portMaps': [cls.PortConnection(x) for x in   ci.portMaps],
-                'genericMaps': [cls.MapExpr(x) for x in   ci.genericMaps]})     
+        return VHDLTemplates.componentInstance.render({
+                "name" : ci.name,
+                "component": ci.component,
+                "portMaps": [cls.PortConnection(x) for x in   ci.portMaps],
+                "genericMaps" : [cls.MapExpr(x) for x in   ci.genericMaps]
+                })     
 
     @classmethod
     def Entity(cls, ent):
@@ -138,6 +144,7 @@ class VhdlSerializer():
     
     @classmethod
     def PortConnection(cls, pc):
+        assert(pc.portItem.dtype == pc.sig.dtype)
         return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig))      
     
     @classmethod

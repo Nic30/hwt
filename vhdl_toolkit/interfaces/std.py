@@ -1,18 +1,34 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from vhdl_toolkit.synthetisator.param import Param
-from vhdl_toolkit.hdlObjects.typeDefs import BIT
+from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector_contrained
 from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
+from vhdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
+
 
 D = DIRECTION
 
 class Ap_none(Interface):
-    def __init__(self, *destinations, masterDir=DIRECTION.OUT, dtype=BIT, src=None, \
-                  isExtern=False, alternativeNames=None):
-        Interface.__init__(self, *destinations, masterDir=masterDir, src=src, \
-                           isExtern=isExtern, alternativeNames=alternativeNames)
+    def __init__(self, *destinations, masterDir=DIRECTION.OUT, multipliedBy=None,
+                   dtype=BIT, src=None, isExtern=False, alternativeNames=None):
+        super(Ap_none, self).__init__(*destinations, masterDir=masterDir,
+            multipliedBy=multipliedBy, src=src, isExtern=isExtern, \
+            alternativeNames=alternativeNames)
         self._dtype = dtype
-
+        
+    def _setMultipliedBy(self, factor):
+        self._multipliedBy = factor
+        if self._multipliedBy is None and factor is None:
+            pass
+        else:
+            t = self._dtype
+            if t == BIT:
+                newT = vecT(factor)
+            elif isinstance(t, Std_logic_vector_contrained):
+                newT = vecT(getWidthExpr(t).opMul(factor))
+            else:
+                raise NotImplementedError("type:%s" % (repr(t)))
+            self._dtype = newT
 s = Ap_none
      
 

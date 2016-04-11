@@ -142,6 +142,6 @@ def walkSigSouces(sig, parent=None):
             else:
                 yield from walkSigSouces(e, sig)
     else:
-        raise Exception("Cant walk node %s" % str(sig))
+        raise Exception("Cant walk node %s" % repr(sig))
         
         

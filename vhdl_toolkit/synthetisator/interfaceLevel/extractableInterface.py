@@ -4,11 +4,12 @@ from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from vhdl_toolkit.hdlObjects.expr import ExprComparator
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.hdlObjects.value import Value
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaceArray import InterfaceArray
 
 class InterfaceIncompatibilityExc(Exception):
     pass
 
-class ExtractableInterface():
+class ExtractableInterface(InterfaceArray):
 
     @classmethod
     def _extractPossiblePrefixes(cls, entity, prefix=""):
@@ -101,6 +102,7 @@ class ExtractableInterface():
             for pName, p in self._params.items():
                 if p.replacedWith is not None:
                     setattr(self, pName, p.replacedWith)
+                    self._params[pName] = p.replacedWith
                 
             if allDirMatch:
                 self._direction = INTF_DIRECTION.MASTER
@@ -148,7 +150,7 @@ class ExtractableInterface():
                     elif isinstance(unitParam, Value):
                         intfParam.set(unitParam)
                     else:
-                        pass # parameter resolution was not successful
+                        pass  # parameter resolution was not successful
             
             self._dtype = self._originEntityPort.dtype
             
@@ -186,7 +188,15 @@ class ExtractableInterface():
                 if name.endswith("_"):
                     name = name[:-1]
                 # print(("_tryToExtract", name, intf))
+                
+                # if interface is actually array of interfaces extract the size of this array 
+                mf = intf._tryExtractMultiplicationFactor()
+                if mf is not None:
+                    intf._removeMultiplerFrommAllParams(mf)
+                    intf._setMultiplyedBy(mf)
+                    
                 yield (name, intf) 
             except InterfaceIncompatibilityExc as e:
+                # pass if intrface does not match the interface on sigLevelUnit
                 # print(e)
                 pass

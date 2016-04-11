@@ -72,7 +72,12 @@ class Param(Signal):
         except Exception:
             pass 
         
-        return "<%s, val=%s>" % (self.__class__.__name__, str(val)) 
+        try:
+            name = self.name
+        except AttributeError:
+            name = ""
+        
+        return "<%s, name=%s, val=%s>" % (self.__class__.__name__, name, str(val)) 
         
 
 def getParam(p):
@@ -102,10 +107,7 @@ def shareAllParams(cls):
             for paramName, param in cls._params.items():
                 p = getattr(intf, paramName, None)
                 if p is not None:
-                    # print(cls.__name__, paramName)
-                    p.replace(param)
-                    intf._params[paramName] = param
-                    setattr(intf, paramName, param)
+                    intf._replaceParam(intf, paramName, param)
                     
     for n in ['_subInterfaces', '_interfaces', ]:
         if hasattr(cls, n):                

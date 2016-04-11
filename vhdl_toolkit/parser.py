@@ -239,9 +239,9 @@ class Parser(VhdlParser):
         params = []
         exprList = []
         _locals = []
+        fnCtx = HDLCtx(name, ctx)
         if not self.hierarchyOnly:
             returnT = self.typeFromJson(jFn['returnT'], ctx)
-            fnCtx = HDLCtx(name, ctx)
             
             for jP in jFn['params']:
                 p = self.varDeclrJson(jP, ctx) 

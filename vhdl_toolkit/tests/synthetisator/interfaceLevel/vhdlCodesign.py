@@ -132,12 +132,12 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         aw = None
         dw = None
         try:
-            aw = single(u._entity.generics, lambda x: x.name == "AXI_ADDR_WIDTH")
+            aw = single(u._entity.generics, lambda x: x.name == "ADDR_WIDTH")
         except NoValueExc:
             pass
 
         try:
-            dw = single(u._entity.generics, lambda x: x.name == "AXI_DATA_WIDTH")
+            dw = single(u._entity.generics, lambda x: x.name == "DATA_WIDTH")
         except NoValueExc:
             pass
         

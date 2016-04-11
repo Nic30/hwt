@@ -105,8 +105,8 @@ class Integer(HdlType):
                 v.dtype = INT
                 return v
                 
-        raise TypeConversionErr("Conversion of type %s to type %s is not implemented" % (repr(self), repr(toType)))
- 
+        return super(Integer, self).convert(sigOrVal, toType)
+
         
     class Ops(TypeOps):
         """
@@ -203,8 +203,7 @@ class Std_logic(HdlType):
                 return sigOrVal == Value.fromPyVal(1, BIT)
             else:
                 return sigOrVal.opEq(Value.fromPyVal(1, BIT))
-        else:
-            return super(Std_logic, self).convert(sigOrVal, toType)
+        return super(Std_logic, self).convert(sigOrVal, toType)
             
     class Ops(TypeOps):
         @classmethod
@@ -282,7 +281,7 @@ class Std_logic_vector_contrained(Std_logic_vector):
                 
     def getBitCnt(self):
             return self.getWidth()
-        
+            
     def getWidth(self):
         w = self.constrain.staticEval()
          
@@ -324,6 +323,11 @@ class Std_logic_vector_contrained(Std_logic_vector):
     
     class ValueCls(Value, Ops):
         pass
+    
+    def __repr__(self):
+        from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        return "<HdlType %s, constrain:%s>" % (
+            self.__class__.__name__, VhdlSerializer.asHdl(self.constrain) )
 
 class String(HdlType):
     def __init__(self):

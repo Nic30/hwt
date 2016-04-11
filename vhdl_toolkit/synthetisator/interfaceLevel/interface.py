@@ -31,7 +31,7 @@ class Interface(Buildable, ExtractableInterface):
 
     """
     NAME_SEPARATOR = "_"
-    def __init__(self, *destinations, masterDir=DIRECTION.OUT, src=None, \
+    def __init__(self, *destinations, masterDir=DIRECTION.OUT, multipliedBy=None, src=None, \
                  isExtern=False, alternativeNames=None):
         """
         This constructor is called when constructing new interface, it is usually done 
@@ -41,7 +41,11 @@ class Interface(Buildable, ExtractableInterface):
         @param *destinations: interfaces connected to this interface
         @param src:  interface which is master for this interface (if None isExtern has to be true)
         @param hasExter: if true this interface is specified as interface outside of this unit  
+        @param multiplyedBy: this can be instance of integer or Param, this mean the interface
+                         is array of the interfaces where multiplyedBy is the size
         """
+        super(Interface, self).__init__()
+        
         copyDict = {}
         # build all interface classes for this interface
         self.__class__._builded()
@@ -74,14 +78,17 @@ class Interface(Buildable, ExtractableInterface):
                 self._name = self._alternativeNames[0]
             else:
                 self._name = ''     
+                
         self._setAsExtern(isExtern)             
         self._setSrc(src)           
        
         self._endpoints = list(destinations)
 
+        self._setMultipliedBy(multipliedBy) 
+    
     def _setSrc(self, src):
         self._src = src
-        if src:
+        if src is not None:
             self._direction = INTF_DIRECTION.SLAVE  # for inside of unit
             for _, i in self._subInterfaces.items():
                 i._reverseDirection()
@@ -93,6 +100,9 @@ class Interface(Buildable, ExtractableInterface):
         else:
             self._direction = INTF_DIRECTION.MASTER  # for inside of unit
     
+    def _addEp(self, endpoint):
+        self._endpoints.append(endpoint)
+        
     def _addParam(self, pName, p, allowUpdate=False):
         p._parent = self
         p._name = pName
@@ -163,7 +173,7 @@ class Interface(Buildable, ExtractableInterface):
             
     def _connectTo(self, master):
         """
-        connect to another interface interface 
+        connect to another interface interface (on rtl level)
         works like self <= master in VHDL
         """
         if self._subInterfaces:
@@ -176,8 +186,19 @@ class Interface(Buildable, ExtractableInterface):
                     assert(self._masterDir != ifc._masterDir)
                     mIfc._connectTo(ifc)
         else:
-            self._sig.assignFrom(master._sig)
-           
+            try:
+                dstSig = self._sig
+            except AttributeError:
+                raise Exception("%s interface does not have rtl level signal created" % 
+                                (repr(self)))
+            try:
+                srcSig = master._sig
+            except AttributeError:
+                raise Exception("%s interface does not have rtl level signal created" % 
+                                (repr(master)))
+            
+            
+            dstSig.assignFrom(srcSig)
             
     def _getSignalDirection(self):
         if self._direction == INTF_DIRECTION.MASTER:
@@ -202,14 +223,13 @@ class Interface(Buildable, ExtractableInterface):
         generate _sig for each interface which has no subinterface
         if already has _sig return it instead
         """
+        sigs = []
         if self._subInterfaces:
-            sigs = []
             for name, ifc in self._subInterfaces.items():
                 sigs.extend(ifc._signalsForInterface(context, prefix + self.NAME_SEPARATOR + name))
-            return sigs  
         else:
             if hasattr(self, '_sig'):
-                return [self._sig]
+                sigs = [self._sig]
             else:
                 s = context.sig(prefix, self._dtype)
                 s._interface = self
@@ -219,8 +239,19 @@ class Interface(Buildable, ExtractableInterface):
                     PortConnection.connectSigToPortItem(self._sig,
                                                         self._originSigLvlUnit,
                                                         self._originEntityPort)
-                return [s]
-    
+                sigs = [s]
+        if self._multipliedBy is not None:
+            for elemIntf in self._arrayElemCache:
+                if elemIntf is not None:  # if is used
+                    elemPrefix =prefix + self.NAME_SEPARATOR + elemIntf._name 
+                    sigs.extend(
+                        elemIntf._signalsForInterface(context, elemPrefix))
+                    
+        return sigs
+
+    #def _connectMeToArrayAsElem(self, arrayIntf, inex):
+    #    raise  NotImplementedError()
+        
     def _getPhysicalName(self):
         if hasattr(self, "_originEntityPort"):
             return self._originEntityPort.name
@@ -249,7 +280,16 @@ class Interface(Buildable, ExtractableInterface):
         self._direction = INTF_DIRECTION.oposite(self._direction)
         for _, intf in self._subInterfaces.items():
             intf._reverseDirection()
-            
+    
+    @staticmethod
+    def _replaceParam(self, name, newParam):
+        p = getattr(self, name, None)
+        p.replace(newParam)
+        self._params[name] = newParam
+        setattr(self, name, newParam)
+        for e in self._arrayElemCache:
+            e._replaceParam(e, name, newParam)
+    
     def __repr__(self):
         s = [self.__class__.__name__]
         s.append("name=%s" % self._getFullName())
@@ -258,7 +298,7 @@ class Interface(Buildable, ExtractableInterface):
         if hasattr(self, '_masterDir'):
             s.append("_masterDir=%s" % str(self._masterDir))
         return "<%s>" % (', '.join(s))
- 
+
 def sameIntfAs(intf):
     _intf = intf.__class__()
     for pName, p in intf._params.items():
@@ -266,9 +306,9 @@ def sameIntfAs(intf):
     return _intf    
 
 def connect(src, dst):
-    """connect interfaces of two units"""
+    """connect interfaces on interface level"""
     c = sameIntfAs(src)
-    c._endpoints.append(dst)
+    c._addEp(dst)
     c._setSrc(src)
     return c
-       
+
