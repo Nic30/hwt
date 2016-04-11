@@ -18,7 +18,7 @@ def walkSignalDrivers(sig):
         if isinstance(ep, Assignment) and ep.dst == sig:
             return ep
         elif isinstance(ep, Operator) and ep.operator == AllOps.INDEX and sig is ep.ops[0]:
-            yield from walkSignalDrivers(ep.result)
+            return signalHasDriver(ep.result)
         elif isinstance(ep, PortConnection) and ep.portItem.direction == DIRECTION.OUT: 
             return ep
         else:
