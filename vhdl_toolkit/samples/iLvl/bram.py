@@ -6,4 +6,4 @@ class Bram(UnitFromHdl):
     _hdlSources = ["vhdl/dualportRAM.vhd"]
     
 if __name__ == "__main__":
-    synthetizeCls(Bram)
+    print(synthetizeCls(Bram))
