@@ -2,7 +2,6 @@ from copy import deepcopy
 
 from vhdl_toolkit.synthetisator.rtlLevel.context import Context
 from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
-from vhdl_toolkit.interfaces.all import allInterfaces
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.hdlObjects.component import Component
@@ -37,8 +36,7 @@ class Unit(Buildable):
     _params = None
     _hlsUnits = None
     
-    def __init__(self, intfClasses=allInterfaces):
-        self.__class__._intfClasses = intfClasses
+    def __init__(self):
         self.__class__._builded()
         copyDict = {}
         self._checkIntferfaces = True

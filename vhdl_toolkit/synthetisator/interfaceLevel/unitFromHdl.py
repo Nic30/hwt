@@ -2,6 +2,7 @@ import inspect, os
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit, defaultUnitName
 from vhdl_toolkit.parser import entityFromFile
 from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
+from vhdl_toolkit.interfaces.all import allInterfaces
 
 def addSources(fileNameOrList):
     """
@@ -18,8 +19,13 @@ class UnitFromHdl(Unit):
     @cvar _hdlSources:  str or list of hdl filenames, they can be relative to file 
         where is *.py file stored and they are automaticaly converted to absolute path
         first entity in first file is taken as interface template for this unit
-        this is currently supported only for vhdl   
+        this is currently supported only for vhdl
+    @cvar _intfClasses: interface classes which are searched on hdl entity 
     """
+    def __init__(self, intfClasses=allInterfaces):
+        self.__class__._intfClasses = intfClasses
+        super(UnitFromHdl, self).__init__()
+        
     @classmethod
     def _build(cls):
         # convert source filenames to absolute paths
