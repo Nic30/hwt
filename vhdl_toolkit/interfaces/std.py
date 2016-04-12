@@ -18,14 +18,15 @@ class Ap_none(Interface):
         
     def _setMultipliedBy(self, factor):
         self._multipliedBy = factor
-        if self._multipliedBy is None and factor is None:
+        if self._multipliedBy is  factor:
             pass
         else:
             t = self._dtype
             if t == BIT:
                 newT = vecT(factor)
             elif isinstance(t, Std_logic_vector_contrained):
-                newT = vecT(getWidthExpr(t).opMul(factor))
+                w = getWidthExpr(t)
+                newT = vecT(w.opMul(factor))
             else:
                 raise NotImplementedError("type:%s" % (repr(t)))
             self._dtype = newT

@@ -5,9 +5,21 @@ from vhdl_toolkit.hdlObjects.expr import ExprComparator
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.synthetisator.interfaceLevel.interfaceArray import InterfaceArray
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 class InterfaceIncompatibilityExc(Exception):
     pass
+
+def updateParam(intfParam, unitParam):
+    if isinstance(unitParam, Param):
+        intfParam.replace(unitParam)
+    elif isinstance(unitParam, Value):
+        intfParam.set(unitParam)
+    else:
+        # parameter resolution was not successful
+        pass
+
 
 class ExtractableInterface(InterfaceArray):
 
@@ -72,6 +84,39 @@ class ExtractableInterface(InterfaceArray):
                 del self._originEntityPort
                 del self._originSigLvlUnit
                 
+    def _extractDtype(self, multipliedBy=None):
+        if self._subInterfaces:
+            for _, si in self._subInterfaces.items():
+                si._extractDtype(multipliedBy=multipliedBy)
+        else:
+            # update interface type from hdl, update generics
+            try:
+                intfTConstr = self._originalIntfDtype.constrain
+            except AttributeError:  
+                intfTConstr = self._dtype.constrain
+            if intfTConstr is not None:
+                
+                unitTConstr = self._originEntityPort.dtype.constrain
+                 
+                for intfParam, unitParam in ExprComparator\
+                                            .findExprDiffInParam(intfTConstr, unitTConstr):
+                    if multipliedBy is not None and isinstance(unitParam, Signal):
+                        mulOp = unitParam.singleDriver()
+                        assert(mulOp.operator == AllOps.MUL)
+                        op0 = mulOp.ops[0]
+                        op1 = mulOp.ops[1]
+                        
+                        if type(op0) == type(multipliedBy) and op0 == multipliedBy:
+                            updateParam(intfParam, op1)
+                        else:
+                            assert(type(op1) == type(multipliedBy) and op1 == multipliedBy)
+                            updateParam(intfParam, op0)
+                    else:
+                        updateParam(intfParam, unitParam)
+            
+            self._originalIntfDtype = self._dtype
+            self._dtype = self._originEntityPort.dtype
+        
     def _tryToExtractByName(self, prefix, sigLevelUnit):
         """
         @return: self if extraction was successful
@@ -138,21 +183,7 @@ class ExtractableInterface(InterfaceArray):
                 self._unExtrac()
                 raise  InterfaceIncompatibilityExc("Missing " + prefix + n)
 
-            # update interface type from hdl, update generics
-            if self._dtype.constrain is not None:
-                intfTConstr = self._dtype.constrain
-                unitTConstr = self._originEntityPort.dtype.constrain
-                 
-                for intfParam, unitParam in ExprComparator\
-                                            .findExprDiffInParam(intfTConstr, unitTConstr):
-                    if isinstance(unitParam, Param):
-                        intfParam.replace(unitParam)
-                    elif isinstance(unitParam, Value):
-                        intfParam.set(unitParam)
-                    else:
-                        pass  # parameter resolution was not successful
-            
-            self._dtype = self._originEntityPort.dtype
+            self._extractDtype()
             
             # assign references to hdl objects
             self._originEntityPort._interface = self
@@ -192,8 +223,8 @@ class ExtractableInterface(InterfaceArray):
                 # if interface is actually array of interfaces extract the size of this array 
                 mf = intf._tryExtractMultiplicationFactor()
                 if mf is not None:
-                    intf._removeMultiplerFrommAllParams(mf)
-                    intf._setMultiplyedBy(mf)
+                    intf._extractDtype(multipliedBy=mf)
+                    intf._setMultipliedBy(mf)
                     
                 yield (name, intf) 
             except InterfaceIncompatibilityExc as e:

@@ -20,7 +20,7 @@ class HdlType():
     """
     def __init__(self):
         self.name = None
-        self.valueCls = None
+        #self.ValueCls = None
         self.constrain = None
     
     def __eq__(self, other):

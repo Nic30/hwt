@@ -258,10 +258,26 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(u.C_32b1.defaultVal.val, (1 << 32) - 1)
         self.assertEqual(u.C_128b1.defaultVal.val, (1 << 128) - 1)
         # print(u._entity)
+    
+    def test_interfaceArrayExtraction(self):
+        class InterfaceArraySample(UnitFromHdl):
+            _hdlSources = ILVL_VHDL + "interfaceArraySample.vhd"        
+        u = InterfaceArraySample(intfClasses=[Ap_vld])
+        width = 3
+        self.assertEqual(u.a._multipliedBy, hInt(width))
+        self.assertEqual(u.a.DATA_WIDTH.get().val, 8)
+        self.assertEqual(u.a.data._dtype.getBitCnt(), 8 * width)
+        self.assertEqual(u.a.vld._dtype.getBitCnt(), width)
 
+        self.assertEqual(u.b._multipliedBy, hInt(width))
+        self.assertEqual(u.b.DATA_WIDTH.get().val, 8)
+        self.assertEqual(u.b.data._dtype.getBitCnt(), 8 * width)
+        self.assertEqual(u.b.vld._dtype.getBitCnt(), width)
+        
+    
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VhdlCodesignTC('test_axiParamsIn_Entity'))
+    suite.addTest(VhdlCodesignTC('test_interfaceArrayExtraction'))
     # suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
