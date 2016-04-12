@@ -13,6 +13,8 @@ from vhdl_toolkit.hdlObjects.architecture import Architecture
 from vhdl_toolkit.synthetisator.param import getParam
 from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from vhdl_toolkit.synthetisator.exceptions import SerializerException
+from vhdl_toolkit.hdlObjects.operator import Operator
+from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 
 
@@ -66,7 +68,7 @@ class VhdlSerializer():
         if a.dst.dtype == a.src.dtype:
             return "%s <= %s" % (cls.asHdl(a.dst), cls.Value(a.src))
         else:
-            raise SerializerException("%s <= %s  is not valid assignment because types are different(%s; %s) " %
+            raise SerializerException("%s <= %s  is not valid assignment because types are different(%s; %s) " % 
                              (cls.asHdl(a.dst), cls.Value(a.src), repr(a.dst.dtype), repr(a.src.dtype)))
     @classmethod
     def comment(cls, comentStr):
@@ -120,27 +122,51 @@ class VhdlSerializer():
             return s
         else:  
             return  "%s := %s" % (s, cls.Value(getParam(g.defaultVal)))
-        
+    
+    @classmethod
+    def isStaticExpression(cls, sig):
+        if isinstance(sig, Value):
+            return True
+        ds = len(sig.drivers)
+        if ds == 1:
+            d = sig.singleDriver()
+            if isinstance(d, Operator):
+                return True
+            if isinstance(d, Assignment):
+                if d.dst is sig and len(sig.endpoints) == 1:
+                    ep = list(sig.endpoints)[0]
+                    if isinstance(ep, Operator) and ep.operator == AllOps.INDEX:
+                        return True
+                #for o in d.ops:
+                #    if not cls.isStaticExpression(o):
+                #        return False
+                #return True
+        if sig.name.startswith("sig_"):
+            pass
+        return False
+            
+            
     @classmethod
     def isSignalHiddenInExpr(cls, sig):
         """Some signals are just only conections in expression they done need to be rendered because
         they are hidden inside expression for example sig. from a+b in a+b+c"""
-        if len(sig.drivers) == 1:
-            if len(sig.endpoints) <= 1:
-                d = list(iter(sig.drivers))[0]
-                return not isinstance(d, Assignment) \
-                       and not isinstance(d, PortConnection) \
-                       and d.result == sig
-            else:
-                for e in sig.endpoints:
-                    if not isinstance(e, Assignment):
-                        return False
-                    if sig is e.src:
-                        return False
-                return True
-                    
-        else:
-            False
+        return cls.isStaticExpression(sig)
+        # if len(sig.drivers) == 1:
+        #    if len(sig.endpoints) <= 1:
+        #        d = list(iter(sig.drivers))[0]
+        #        return not isinstance(d, Assignment) \
+        #               and not isinstance(d, PortConnection) \
+        #               and d.result == sig
+        #    else:
+        #        for e in sig.endpoints:
+        #            if not isinstance(e, Assignment):
+        #                return False
+        #            if sig is e.src:
+        #                return False
+        #        return True
+        #            
+        # else:
+        #    return False
     
     @classmethod
     def PortConnection(cls, pc):

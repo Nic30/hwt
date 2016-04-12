@@ -96,6 +96,14 @@ class SignalOps():
         checkOperand(source)
         a = Assignment(source, self)
         a.cond = set()
+        try:
+            d = self.singleDriver()
+            if isinstance(d, Operator) and d.operator == AllOps.INDEX:
+                self.drivers.remove(d) # data direction is to indexed element
+                self.endpoints.add(d)
+        except AssertionError:
+            pass
+        
         self.drivers.add(a)
         if not isinstance(source, Value):
             source.endpoints.add(a)
