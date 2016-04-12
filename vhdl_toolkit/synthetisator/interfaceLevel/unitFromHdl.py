@@ -22,8 +22,9 @@ class UnitFromHdl(Unit):
         this is currently supported only for vhdl
     @cvar _intfClasses: interface classes which are searched on hdl entity 
     """
-    def __init__(self, intfClasses=allInterfaces):
+    def __init__(self, intfClasses=allInterfaces, debugParser=False):
         self.__class__._intfClasses = intfClasses
+        self.__class__._debugParser = debugParser
         super(UnitFromHdl, self).__init__()
         
     @classmethod
@@ -41,7 +42,7 @@ class UnitFromHdl(Unit):
         cls._params = {}
 
         # extract params from entity generics
-        cls._entity = entityFromFile(cls._hdlSources[0])
+        cls._entity = entityFromFile(cls._hdlSources[0], debug=cls._debugParser)
         for g in cls._entity.generics:
             if hasattr(cls, g.name):
                 raise  Exception("Already has param %s (old:%s , new:%s)" 

@@ -30,6 +30,7 @@ public class Operator {
 		int arity = operator.arity();
 		switch (arity) {
 			case -1 :
+			case 3 :
 				List<JSONObject> opList = new Vector<JSONObject>();
 				for (Expr e : operands)
 					opList.add(e.toJson());
@@ -41,7 +42,7 @@ public class Operator {
 				o.put("op1", op1.toJson());
 				break;
 			default :
-				System.err.println(
+				throw new JSONException(
 						String.format("Invalid arity of operator %s  (%d)",
 								operator.toString(), arity));
 		}

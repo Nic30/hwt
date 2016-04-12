@@ -208,7 +208,7 @@ public class ExprParser {
 				opType = OperatorType.MINUS;
 			} else {
 				assert (op.AMPERSAND() != null);
-				opType = OperatorType.AMPERSAND;
+				opType = OperatorType.CONCAT;
 			}
 			op0 = new Expr(op0, opType, op1);
 		}
@@ -303,7 +303,7 @@ public class ExprParser {
 		Expr op0 = visitPrimary(ctx.primary(0));
 		vhdlParser.PrimaryContext p1 = ctx.primary(1);
 		if (p1 != null)
-			return new Expr(op0, OperatorType.DOUBLESTAR, visitPrimary(p1));
+			return new Expr(op0, OperatorType.POW, visitPrimary(p1));
 		if (ctx.ABS() != null)
 			return new Expr(op0, OperatorType.ABS, (Expr) null);
 		if (ctx.NOT() != null)

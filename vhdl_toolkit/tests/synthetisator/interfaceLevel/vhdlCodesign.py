@@ -273,11 +273,25 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(u.b.DATA_WIDTH.get().val, 8)
         self.assertEqual(u.b.data._dtype.getBitCnt(), 8 * width)
         self.assertEqual(u.b.vld._dtype.getBitCnt(), width)
+    
+    def test_SizeExpressions(self):
+        class SizeExpressionsSample(UnitFromHdl):
+            _hdlSources = ILVL_VHDL + "sizeExpressions.vhd"        
+        u = SizeExpressionsSample()
+        A = u.paramA.get()
+        B = u.paramB.get()
+        self.assertEqual(u.portA._dtype.getBitCnt(), A.val)
+        self.assertEqual(u.portB._dtype.getBitCnt(), A.val)
+        self.assertEqual(u.portC._dtype.getBitCnt(), A.val // 8)
+        self.assertEqual(u.portD._dtype.getBitCnt(), (A.val // 8) * 13)
+        self.assertEqual(u.portE._dtype.getBitCnt(), B.val * (A.val // 8))
+        self.assertEqual(u.portF._dtype.getBitCnt(), B.val * A.val)
+        self.assertEqual(u.portG._dtype.getBitCnt(), B.val * (A.val - 4))
         
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VhdlCodesignTC('test_interfaceArrayExtraction'))
-    #suite.addTest(unittest.makeSuite(VhdlCodesignTC))
+    suite.addTest(VhdlCodesignTC('test_SizeExpressions'))
+    # suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

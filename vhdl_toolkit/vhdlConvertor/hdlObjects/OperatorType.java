@@ -3,7 +3,7 @@ package hdlObjects;
 import vhdlParser.vhdlParser;
 
 public enum OperatorType {
-	INVALID, RANGE, INDEX, DOWNTO, TO, UN_MINUS, UN_PLUS, MINUS, PLUS, DIV, MUL, MOD, REM, AMPERSAND, DOUBLESTAR, ABS, NOT, LOG_AND, LOG_OR, AND, OR, NAND, NOR, XOR, XNOR, EQ, NEQ, LOWERTHAN, LE, GREATERTHAN, GE, SLL, SRL, SLA, SRA, ROL, ROR, TERNARY, DOT, CALL, ARROW;
+	INVALID, RANGE, INDEX, DOWNTO, TO, UN_MINUS, UN_PLUS, MINUS, PLUS, DIV, MUL, MOD, REM, CONCAT, POW, ABS, NOT, LOG_AND, LOG_OR, AND, OR, NAND, NOR, XOR, XNOR, EQ, NEQ, LOWERTHAN, LE, GREATERTHAN, GE, SLL, SRL, SLA, SRA, ROL, ROR, TERNARY, DOT, CALL, ARROW;
 	public String toString() {
 		return this.name();
 	}
@@ -17,6 +17,8 @@ public enum OperatorType {
 			case ABS :
 			case RANGE :
 				return 1;
+			case TERNARY :
+				return 3;
 			default :
 				return 2;
 		}

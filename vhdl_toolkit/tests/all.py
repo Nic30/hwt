@@ -12,6 +12,7 @@ from vhdl_toolkit.tests.synthetisator.value import ValueTC
 
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.interfaceSyntherisatorTC import InterfaceSyntherisatorTC 
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.vhdlCodesign import VhdlCodesignTC
+from vhdl_toolkit.tests.synthetisator.interfaceLevel.verilogCodesign import VerilogCodesignTC
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.subunitsSynthesisTC import SubunitsSynthesisTC
 
 
@@ -31,6 +32,7 @@ if __name__ == "__main__":
         ParserTC,
         InterfaceSyntherisatorTC,
         VhdlCodesignTC,
+        VerilogCodesignTC,
         SubunitsSynthesisTC,
         Expr2CondTC,
         OperatorTC,

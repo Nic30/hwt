@@ -5,10 +5,10 @@ from vhdl_toolkit.hdlObjects.value import Value
 
 def convOpsToType(t):
         def addOperand(operator, operand):
-            opAsBool = operand.dtype.convert(operand, t)
-            if not isinstance(opAsBool, Value):
-                opAsBool.endpoints.add(operator)
-            operator.ops.append(opAsBool)
+            convertedOp = operand.dtype.convert(operand, t)
+            if not isinstance(convertedOp, Value):
+                convertedOp.endpoints.add(operator)
+            operator.ops.append(convertedOp)
         return addOperand
 
 addOperand_logic = convOpsToType(BOOL)    
@@ -84,6 +84,15 @@ def addOperand_index(operator, operand):
         operand.drivers.add(operator)
         
     operator.ops.append(operand)
+    
+def getReturnType_ternary(op):
+    return op.ops[1].dtype
+
+def addOperand_ternary(operator, operand):
+    if not operator.ops:
+        return addOperand_logic(operator, operand)
+    else:
+        operator.ops.append(operand)
 
 class OpDefinition():
     
@@ -105,25 +114,30 @@ class OpDefinition():
     
     def eval(self, operator):
         """Load all operands and process them by self._evalFn"""
-        it = iter(operator.ops)
+        # it = iter(operator.ops)
         def getVal(v):
             return v if isinstance(v, Value) else v._val
-            
-        try:
-            initializer = getVal(next(it))
-        except StopIteration:
-            raise TypeError('OpDefinition.eval, can not reduce empty sequence ')
         
-        argc = self._evalFn.__code__.co_argcount
-        if argc == 1:
-            return self._evalFn(initializer)
-        elif argc == 2:
-            accum_value = initializer
-            for x in it:
-                accum_value = self._evalFn(accum_value, getVal(x))
-            return accum_value
-        else:
-            raise NotImplementedError()
+        ops = list(map(getVal, operator.ops))
+        return self._evalFn(*ops)
+            
+        # try:
+        #    initializer = getVal(next(it))
+        # except StopIteration:
+        #    raise TypeError('OpDefinition.eval, can not reduce empty sequence ')
+        #
+        # argc = self._evalFn.__code__.co_argcount
+        #
+        #
+        # if argc == 1:
+        #    return self._evalFn(initializer)
+        # elif argc == 2:
+        #    accum_value = initializer
+        #    for x in it:
+        #        accum_value = self._evalFn(accum_value, getVal(x))
+        #    return accum_value
+        # else:
+        #    raise NotImplementedError()
         
     # [TODO] rename to asVhdl
     def str(self, operator, serializer):
@@ -142,7 +156,7 @@ class OpDefinition():
             return self.strOperator(list(map(p, operator.ops)))
         
     def __repr__(self):
-        return "<OpDefinition %s>" % (self.strOperator)
+        return "<OpDefinition %s>" % (self.id)
             
 class AllOps():
     """
@@ -212,11 +226,15 @@ class AllOps():
                        getReturnType=getReturnType_index,
                        addOperand=addOperand_index)
     
+    TERNARY = OpDefinition('TERNARY', 13, lambda strOps : "%s when %s else %s" % (strOps[0], strOps[1], strOps[2]),
+                       lambda a, b, c : b if a else c,
+                       getReturnType=getReturnType_ternary,
+                       addOperand=addOperand_ternary)
+     
+    
     allOps = {}
-    for op in [PLUS, MINUS, DIV, MUL, DOWNTO, GREATERTHAN, CONCAT, INDEX]:
-        assert (op.id not in allOps)
-        allOps[op.id] = op
         
     @classmethod
     def opByName(cls, name):
-        return cls.allOps[name]
+        return getattr(cls, name)
+

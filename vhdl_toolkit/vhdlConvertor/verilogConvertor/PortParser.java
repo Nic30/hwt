@@ -85,11 +85,11 @@ public class PortParser {
 
 		Constant_expressionContext c = ctx.constant_expression();
 		if (c != null) {
-			p.variable.type = ExpressionParser.visitConstant_expression(c);
+			p.variable.type = ExprParser.visitConstant_expression(c);
 		}
 		Range_expressionContext r = ctx.range_expression();
 		if (r != null)
-			p.variable.type = ExpressionParser.visitRange_expression(r);
+			p.variable.type = ExprParser.visitRange_expression(r);
 
 		// port_identifier : identifier ;
 		return p;
@@ -192,7 +192,7 @@ public class PortParser {
 		for (ParseTree n : ctx.children) {
 			if (n instanceof Constant_expressionContext) {
 				Constant_expressionContext val = (Constant_expressionContext) n;
-				last.variable.value = ExpressionParser
+				last.variable.value = ExprParser
 						.visitConstant_expression(val);
 			} else {
 				last = visitPort_identifier((Port_identifierContext) n);

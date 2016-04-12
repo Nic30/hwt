@@ -114,7 +114,7 @@ public class ModuleParser {
 		RangeContext r = ctx.range();
 		if (r != null) {
 			List<Expr> operands = new Vector<Expr>();
-			operands.add(ExpressionParser.visitRange(r));
+			operands.add(ExprParser.visitRange(r));
 			t = new Expr(Utils.mkWireT(), OperatorType.CALL, operands);
 		}
 
@@ -140,7 +140,7 @@ public class ModuleParser {
 		// param_assignment : parameter_identifier '=' constant_expression ;
 		Variable p = new Variable();
 		p.name = ctx.parameter_identifier().identifier().getText();
-		p.value = ExpressionParser
+		p.value = ExprParser
 				.visitConstant_expression(ctx.constant_expression());
 		return p;
 	}

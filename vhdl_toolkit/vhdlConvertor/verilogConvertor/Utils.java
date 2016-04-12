@@ -22,7 +22,7 @@ public class Utils {
 	}
 	public static Expr mkWireT(RangeContext range) {
 		if (range != null)
-			return mkWireT(ExpressionParser.visitRange(range));
+			return mkWireT(ExprParser.visitRange(range));
 		else
 			return mkWireT();
 	}

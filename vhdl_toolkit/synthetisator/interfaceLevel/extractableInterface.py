@@ -220,11 +220,12 @@ class ExtractableInterface(InterfaceArray):
                     name = name[:-1]
                 # print(("_tryToExtract", name, intf))
                 
-                # if interface is actually array of interfaces extract the size of this array 
-                mf = intf._tryExtractMultiplicationFactor()
-                if mf is not None:
-                    intf._extractDtype(multipliedBy=mf)
-                    intf._setMultipliedBy(mf, updateTypes=False)
+                if intf._subInterfaces: # if is possible to determine size of this potential intf. array 
+                    # if interface is actually array of interfaces extract the size of this array 
+                    mf = intf._tryExtractMultiplicationFactor()
+                    if mf is not None:
+                        intf._extractDtype(multipliedBy=mf)
+                        intf._setMultipliedBy(mf, updateTypes=False)
                     
                 yield (name, intf) 
             except InterfaceIncompatibilityExc as e:

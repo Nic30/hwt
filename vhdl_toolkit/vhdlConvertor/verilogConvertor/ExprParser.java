@@ -30,7 +30,7 @@ import verilogParser.Verilog2001Parser.System_function_callContext;
 import verilogParser.Verilog2001Parser.TermContext;
 import verilogParser.Verilog2001Parser.Unary_operatorContext;
 
-public class ExpressionParser {
+public class ExprParser {
 	public static Expr visitConstant_expression(
 			Constant_expressionContext ctx) {
 		// constant_expression : expression ;
@@ -91,7 +91,7 @@ public class ExpressionParser {
 			case "||" :
 				return OperatorType.LOG_OR;
 			case "**" :
-				return OperatorType.DOUBLESTAR;
+				return OperatorType.POW;
 			case "<" :
 				return OperatorType.LOWERTHAN;
 			case "<=" :
@@ -138,7 +138,6 @@ public class ExpressionParser {
 		while (childs.hasNext()) {
 			ch = childs.next();
 			if (ch instanceof Binary_operatorContext) {
-
 				while (true) {
 					ch2 = childs.next();
 					if (ch2 instanceof Attribute_instanceContext) {
@@ -152,15 +151,19 @@ public class ExpressionParser {
 						visitBinary_operator((Binary_operatorContext) ch),
 						visitTerm((TermContext) ch2));
 			} else {
-				NotImplementedLogger
-						.print("ExpressionParser.visitExpression - ternary op");
 				while (true) {
 					ch2 = childs.next();
-					if (ch2 instanceof TermContext) {
-						break;
+					if (ch2 instanceof Attribute_instanceContext) {
+						AttributeParser.visitAttribute_instance(
+								(Attribute_instanceContext) ch2);
 					} else {
+						break;
 					}
 				}
+				childs.next(); // consume ":"
+				top = Expr.ternary(top,
+						ExprParser.visitExpression((ExpressionContext) ch2),
+						ExprParser.visitTerm((TermContext) childs.next()));
 			}
 		}
 
