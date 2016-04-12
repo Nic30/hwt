@@ -26,7 +26,7 @@ def forAllParams(intf, discovered=None):
 def splitToTermSet(width):
     try:
         width = width.singleDriver()
-    except AttributeError:
+    except (AttributeError, AssertionError):
         return set([width])
     assert(width.operator == AllOps.MUL)
     return set(width.ops)
@@ -36,18 +36,16 @@ class InterfaceArray():
     def __init__(self):
         self._arrayElemCache = []
         
-    def _setMultipliedBy(self, factor):
+    def _setMultipliedBy(self, factor, updateTypes=True):
         self._multipliedBy = factor
         for _, i in self._subInterfaces.items():
-            i._setMultipliedBy(factor)
+            i._setMultipliedBy(factor, updateTypes=updateTypes)
             
     def _tryExtractMultiplicationFactor(self):
         widths = []
         # collect all widths    
         for i in forAllPhysInterfaces(self):
-            try:
-                i._dtype.constrain
-            except AttributeError:
+            if i._dtype.constrain is None:
                 # if is not constrained vector this can not be a interfaceArray
                 return 
             w = getWidthExpr(i._dtype)

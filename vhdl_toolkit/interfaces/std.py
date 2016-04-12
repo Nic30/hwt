@@ -11,25 +11,27 @@ D = DIRECTION
 class Ap_none(Interface):
     def __init__(self, *destinations, masterDir=DIRECTION.OUT, multipliedBy=None,
                    dtype=BIT, src=None, isExtern=False, alternativeNames=None):
+        self._multipliedBy = None
         super(Ap_none, self).__init__(*destinations, masterDir=masterDir,
             multipliedBy=multipliedBy, src=src, isExtern=isExtern, \
             alternativeNames=alternativeNames)
         self._dtype = dtype
         
-    def _setMultipliedBy(self, factor):
-        self._multipliedBy = factor
-        if self._multipliedBy is  factor:
+    def _setMultipliedBy(self, factor, updateTypes=True):
+        if type(self._multipliedBy) == type(factor) and self._multipliedBy == factor:
             pass
         else:
-            t = self._dtype
-            if t == BIT:
-                newT = vecT(factor)
-            elif isinstance(t, Std_logic_vector_contrained):
-                w = getWidthExpr(t)
-                newT = vecT(w.opMul(factor))
-            else:
-                raise NotImplementedError("type:%s" % (repr(t)))
-            self._dtype = newT
+            self._multipliedBy = factor
+            if updateTypes:
+                t = self._dtype
+                if t == BIT:
+                    newT = vecT(factor)
+                elif isinstance(t, Std_logic_vector_contrained):
+                    w = getWidthExpr(t)
+                    newT = vecT(w.opMul(factor))
+                else:
+                    raise NotImplementedError("type:%s" % (repr(t)))
+                self._dtype = newT
 s = Ap_none
      
 

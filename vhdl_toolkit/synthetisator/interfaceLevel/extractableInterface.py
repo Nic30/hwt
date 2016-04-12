@@ -113,9 +113,9 @@ class ExtractableInterface(InterfaceArray):
                             updateParam(intfParam, op0)
                     else:
                         updateParam(intfParam, unitParam)
-            
-            self._originalIntfDtype = self._dtype
-            self._dtype = self._originEntityPort.dtype
+            if not hasattr(self, "_originalIntfDtype"):
+                self._originalIntfDtype = self._dtype
+                self._dtype = self._originEntityPort.dtype
         
     def _tryToExtractByName(self, prefix, sigLevelUnit):
         """
@@ -224,7 +224,7 @@ class ExtractableInterface(InterfaceArray):
                 mf = intf._tryExtractMultiplicationFactor()
                 if mf is not None:
                     intf._extractDtype(multipliedBy=mf)
-                    intf._setMultipliedBy(mf)
+                    intf._setMultipliedBy(mf, updateTypes=False)
                     
                 yield (name, intf) 
             except InterfaceIncompatibilityExc as e:

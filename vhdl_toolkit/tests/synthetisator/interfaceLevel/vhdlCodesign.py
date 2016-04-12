@@ -250,7 +250,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertIsNot(b.DATA_WIDTH, dw)
 
     def test_largeBitStrings(self):
-        class BitStringValuesEnt(UnitFromHdl):
+        class BitStringValuesEnt(UnitFromHdl):  
             _hdlSources = ILVL_VHDL + "bitStringValuesEnt.vhd"
         u = BitStringValuesEnt()
         self.assertEqual(u.C_32b0.defaultVal.val, 0)
@@ -278,6 +278,6 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(VhdlCodesignTC('test_interfaceArrayExtraction'))
-    # suite.addTest(unittest.makeSuite(VhdlCodesignTC))
+    #suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
