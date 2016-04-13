@@ -10,6 +10,7 @@ from vhdl_toolkit.formater import formatVhdl
 from vivado_toolkit.ip_packager.component import Component
 from vivado_toolkit.ip_packager.helpers import prettify
 from vivado_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
+from vhdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
 
 class Packager(object):
     def __init__(self, topUnit, extraVhdlDirs=[], extraVhdlFiles=[],
@@ -42,26 +43,27 @@ class Packager(object):
         
         files = self.hdlFiles
         self.hdlFiles = set()
-        header = ''
-        for o in self.topUnit._synthesise():
-            if hasattr(o, '_origin'):
-                files.add(o._origin)
-            else:
-                toFile = None
-                if isinstance(o, str):  # [TODO] hotfix, library includes are just strings
-                    header = o
-                elif isinstance(o, Entity):
-                    toFile = os.path.join(srcDir, o.name + '_ent.vhd')
-                elif isinstance(o, Architecture):
-                    toFile = os.path.join(srcDir, o.entity.name + '_arch.vhd')
-                else:
-                    raise NotImplementedError()
-                if toFile:
-                    with open(toFile, mode='w') as f:
-                            s = formatVhdl(header + '\n' + str(o))
-                            f.write(s)
-                            files.add(toFile)
-        
+        self.hdlFiles = set(synthetizeAndSave(self.topUnit, folderName=path))
+        #header = ''
+        #for o in self.topUnit._synthesise():
+        #    if hasattr(o, '_origin'):
+        #        files.add(o._origin)
+        #    else:
+        #        toFile = None
+        #        if isinstance(o, str):  # [TODO] hotfix, library includes are just strings
+        #            header = o
+        #        elif isinstance(o, Entity):
+        #            toFile = os.path.join(srcDir, o.name + '_ent.vhd')
+        #        elif isinstance(o, Architecture):
+        #            toFile = os.path.join(srcDir, o.entity.name + '_arch.vhd')
+        #        else:
+        #            raise NotImplementedError()
+        #        if toFile:
+        #            with open(toFile, mode='w') as f:
+        #                    s = formatVhdl(header + '\n' + str(o))
+        #                    f.write(s)
+        #                    files.add(toFile)
+        #
         for srcF in files:
             dst = os.path.join(path, os.path.relpath(srcF, srcDir).replace('../', ''))
             os.makedirs(os.path.dirname(dst), exist_ok=True)

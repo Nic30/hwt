@@ -5,9 +5,7 @@ from vivado_toolkit.tcl import VivadoTCL
 def mkPackageIp(verdor, user, name, version):
     return ':'.join([verdor, user, name, version])
 
-class PorType():
-    clk = "clk"
-    rst = "rst"
+
     
 class VivadoCntrl():
     def __init__(self, execFile, deleteLogsOnExit=True, timeout=6 * 60 * 60, logComunication=False):

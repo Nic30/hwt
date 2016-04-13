@@ -1,37 +1,10 @@
-from vivado_toolkit.partBuilder import XilinxPartBuilder
-from vivado_toolkit.api import Project
-from vivado_toolkit.controller import VivadoCntrl
-from vivado_toolkit.samples.config import defaultVivadoExc
+from vivado_toolkit.api import portmapXdcForUnit, walkEachBitOnUnit
 from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
-from vhdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
-import os
+from vivado_toolkit.xdcGen import IoStandard
+from vivado_toolkit.shortcuts import buildUnit
 
-tmpDir = 'tmp/'
 
-def xdcForBd(bd, portMap):
-    for _, p in bd.ports.items():
-        yield from p.generateXDC(portMap)
-
-def synthetizeUnit(unit):
-    pb = XilinxPartBuilder
-    part = XilinxPartBuilder(pb.Family.kintex7, pb.Size._160t, pb.Package.ffg676, pb.Speedgrade._2).name()
-    
-    p = Project(tmpDir, "SampleBdProject")
-    if p._exists():
-        p._remove()
-    
-    yield from p.create()
-    yield from p.setPart(part)
-    
-    files = synthetizeAndSave(unit, folderName=os.path.join(tmpDir, "SampleBdProject", 'src'))
-    
-    yield from p.addDesignFiles(files)
-    yield from p.setTop(unit._name)
-    
-    yield from p.synth()
-    yield from p.implemAll()
-    
-def processCommandsAndOpenGui():
+if __name__ == "__main__":
     unit = SimpleUnit2()
     def r(row, start, last):
         a = []
@@ -52,12 +25,13 @@ def processCommandsAndOpenGui():
                unit.b.ready : "D14",
                unit.b.valid : "E10",
                }
-    print(portMap)
+    constrains = list(portmapXdcForUnit(unit, portMap))
+    for b in walkEachBitOnUnit(unit):
+        constrains.append(IoStandard(b, IoStandard.LVCMOS18))
+    # print(portMap)
+    # for xdc in xdcForUnit(unit, portMap):
+    #    print(xdc.asTcl())
+    r = buildUnit(unit, constrains=constrains)
     
-    with VivadoCntrl(defaultVivadoExc, logComunication=True) as v:
-        v.process(synthetizeUnit(unit))
-        v.openGui()
-
-if __name__ == "__main__":
+    print("Bitstream is in file %s" % (r.bitstreamFile))
     
-    processCommandsAndOpenGui()

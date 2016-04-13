@@ -163,17 +163,27 @@ class VivadoProjectOpsTCL():
         return "reset_run " + name
     
     @staticmethod
-    def launch_runs(names, to_step=None, jobs=multiprocessing.cpu_count()):
+    def launch_runs(names, to_step=None, jobs=multiprocessing.cpu_count(), quiet=False):
         params = []
         if to_step is not None:
             params.append("-to_step %s" % to_step)
         params.append("-jobs %d" % jobs)
+        if quiet:
+            params.append("-quiet")
         
         return "launch_runs %s %s" % (' '.join(names), " ".join(params))
 
     @staticmethod    
     def run(jobName):
         return VivadoTCL.reset_run(jobName) + '\n' + VivadoTCL.launch_runs(jobName)
+    
+    @staticmethod 
+    def wait_on_run(run, timeout=None):
+        params = []
+        if timeout is not None:
+            params.append("-timeout %d" % (timeout))
+            
+        return "wait_on_run %s %s" % (" ".join(params), run)
     
     @staticmethod
     def create_project(_dir, name, in_memory=False):
@@ -222,7 +232,7 @@ class VivadoTCL(VivadoFSOpsTCL, VivadoBDOpsTCL, VivadoProjectOpsTCL, VivadoHdlOp
     
     @staticmethod
     def synth_design(top, part):
-        return "synth_design -top %s -part %s" % (top, part)
+        return "synth_design -top %s -part %s -quiet" % (top, part)
             
     
     class group():

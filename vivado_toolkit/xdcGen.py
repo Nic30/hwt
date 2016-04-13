@@ -1,6 +1,10 @@
 from vivado_toolkit.tcl import VivadoTCL
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 
+class PortType():
+    clk = "clk"
+    rst = "rst"
+
 class SimpleXDCProp():
     def __init__(self, port, mode):
         self.port = port
@@ -61,3 +65,4 @@ class Comment(XdcTextWrapper):
     def __init__(self, text):
         super(Comment, self).__init__("#" + text)
     
+

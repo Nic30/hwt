@@ -2,7 +2,7 @@ from vivado_toolkit.partBuilder import XilinxPartBuilder
 from vivado_toolkit.api import Project, Port, Net
 from vivado_toolkit.controller import VivadoCntrl
 from vivado_toolkit.samples.config import defaultVivadoExc
-from vhdl_toolkit.types import DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 
 tmpDir = 'tmp/'
 

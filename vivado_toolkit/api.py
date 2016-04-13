@@ -1,7 +1,10 @@
-from vivado_toolkit.controller import VivadoTCL
-from vivado_toolkit.xdcGen import PackagePin, Comment
 import os
 import shutil
+from vivado_toolkit.controller import VivadoTCL
+from vivado_toolkit.xdcGen import PackagePin, Comment, PortType
+from vhdl_toolkit.interfaces.std import Ap_clk, Ap_rst, Ap_rst_n
+from vhdl_toolkit.hdlObjects.typeDefs import Std_logic_vector
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import walkSignalOnUnit
 
 class ConfigErr(Exception):
     pass
@@ -39,8 +42,27 @@ class Port():
             
         else:
             self.bits = None
-        if bitIndx is None:
+        if bitIndx is None and self.bd is not None:
             self.bd.insertPort(self)
+    
+    @classmethod
+    def fromInterface(cls, interface):
+        if isinstance(interface._dtype, Std_logic_vector):
+            width = interface._dtype.getBitCnt()
+        else:
+            width = None
+        if isinstance(interface, Ap_clk):
+            typ = PortType.clk
+        elif isinstance(interface, (Ap_rst, Ap_rst_n)):
+            typ = PortType.rst
+        else:
+            typ = None
+            
+        return cls(None, interface._getPhysicalName(),
+                    direction=interface._getSignalDirection(),
+                     typ=typ, hasSubIntf=bool(interface._subInterfaces),
+                     width=width)
+        
             
     def create(self):
         yield VivadoTCL.create_bd_port(self.name, self.direction,
@@ -259,6 +281,7 @@ class Project():
     def run(self, jobName, to_step=None):
         yield VivadoTCL.reset_run(jobName)
         yield VivadoTCL.launch_runs([jobName], to_step=to_step)
+        yield VivadoTCL.wait_on_run(jobName)
                 
     def synthAll(self):
         for s in self.listSynthesis():
@@ -324,6 +347,9 @@ class Project():
     
     def addXDCs(self, name, XDCs):
         filename = os.path.join(self.srcDir, name + '.xdc') 
+        
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        
         with open(filename, "w") as f:
             f.write('\n'.join(map(lambda xdc : xdc.asTcl(), XDCs)))
         yield VivadoTCL.add_files([filename], fileSet=self.constrFileSet_name, norecurse=True)
@@ -333,4 +359,41 @@ class Project():
         yield VivadoTCL.set_property(self.get(), "target_language", lang)
         
         
-                    
+class VivadoReport():
+    """
+    This class is output from hardware synthesis made by vivado
+    All attributes are filenames
+    """
+    def __init__(self):
+        self.bitstream = None
+        # impl
+        self.dcrOpted = None
+        self.ioPlaced = None
+        self.dcrRouted = None
+        self.powerRouted = None
+        self.routeStatus = None
+        self.utilizationPlaced = None
+        self.controlSetsPlaced = None
+        self.timingSummaryRouted = None
+        self.clokUtilizationRouted = None
+        # synth
+        self.utilizationSynth = None
+        
+def walkEachBitOnUnit(unit):
+    for s in walkSignalOnUnit(unit):
+        p = Port.fromInterface(s)
+        if p.bits:
+            for b in p.bits:
+                yield b
+        else:
+            yield p
+         
+def portmapXdcForUnit(unit, portMap):
+    for s in walkSignalOnUnit(unit):
+        m = portMap[s]
+        p = Port.fromInterface(s)
+        if p.bits:
+            for b, bm in zip(p.bits, m):
+                yield PackagePin(b, bm)
+        else:
+            yield PackagePin(p, m)                  
