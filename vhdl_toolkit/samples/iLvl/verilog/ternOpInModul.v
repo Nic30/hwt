@@ -1,4 +1,4 @@
-module axi_crossbar_v2_1_axi_crossbar # (
+module ternOpInModul # (
    parameter integer CONDP                 = 0 
 )
 (
