@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vivadoHLSLog:LogRoot xmlns:vivadoHLSLog="www.xilinx.com/vivadoHLSLog">
+  <errorLogs>
+    <logs>
+      <synLog/>
+      <simLog/>
+      <mgLog/>
+      <packageLog/>
+      <csimLog/>
+    </logs>
+  </errorLogs>
+  <warningLogs>
+    <logs>
+      <synLog>
+        <logs message="@W [RTGEN-101] Global scalar 'expr' will not be exposed as RTL port." projectName="exactMatcherVivadoHls" solutionName="solution1" date="2016-04-13T18:59:04.589+0200" type="Warning"/>
+        <logs message="@W [RTGEN-101] Register 'expr' is power-on initialization." projectName="exactMatcherVivadoHls" solutionName="solution1" date="2016-04-13T18:59:04.586+0200" type="Warning"/>
+        <logs message="@W [RTGEN-101] Port 'match' with mode 'ap_none' may require an associated data valid signal to correctly communicate with other blocks or a test bench; automatic C/RTL co-simulation may not be able to verify such a port." projectName="exactMatcherVivadoHls" solutionName="solution1" date="2016-04-13T18:59:04.583+0200" type="Warning"/>
+        <logs message="@W [SYNCHK-23] exactMatcherVivadoHls/src/exactMatcher.cpp:30: variable-indexed range selection may cause suboptimal QoR." projectName="exactMatcherVivadoHls" solutionName="solution1" date="2016-04-13T18:59:04.157+0200" type="Warning"/>
+      </synLog>
+      <simLog/>
+      <mgLog/>
+      <packageLog/>
+      <csimLog/>
+    </logs>
+  </warningLogs>
+</vivadoHLSLog:LogRoot>

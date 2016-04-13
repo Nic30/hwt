@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<autopilotfilemapping:AutoPilotFileMapping xmlns:autopilotfilemapping="www.autoesl.com/autopilotfilemapping">
+  <source>
+    <originFiles name="exactMatcher.cpp" path="/home/nic30/Documents/workspace/hw_synthesis/hw_synthesis_helpers/hls_toolkit/samples/exactMatcherVivadoHls/src/exactMatcher.cpp"/>
+  </source>
+  <testbench/>
+</autopilotfilemapping:AutoPilotFileMapping>
