@@ -47,10 +47,10 @@ class Ap_rst_n(Ap_none):
 class Ap_vld(Interface):
     DATA_WIDTH = Param(64)
     data = s(dtype=vecT(DATA_WIDTH))
-    vld = s()
+    vld = s(alternativeNames=['valid'])
 
 class Ap_hs(Ap_vld):
-    rd = s(masterDir=D.IN)
+    rd = s(masterDir=D.IN, alternativeNames=['ready'])
 
 class BramPort_withoutClk(Interface):
     ADDR_WIDTH = Param(32)
