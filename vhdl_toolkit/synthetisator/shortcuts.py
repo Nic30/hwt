@@ -6,6 +6,9 @@ from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.architecture import Architecture
 from vhdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from python_toolkit.fileHelpers import find_files
+from vhdl_toolkit.parser import Parser
 
 def synthetizeCls(cls, name=None):
     u = cls()
@@ -43,8 +46,36 @@ def synthetizeAndSave(unit, folderName='.', name=None):
                      "\n".join([ VhdlSerializer.asHdl(x) for x in [header, o]])
                         ))
     return files
+
+def fileSyntaxCheck(fileName, lang, timeoutInterval=20):
+    """
+    Perform syntax check on whole file (only in java parser)
+    """
+    p = Parser.spotLoadingProc(fileName, lang, hierarchyOnly=True, debug=False) 
+    stdoutdata, stdErrData = p.communicate(timeout=timeoutInterval)
+
+def syntaxCheck(unitOrFileName):
+    if isinstance(unitOrFileName, Unit):
+        d = "__pycache__/" + unitOrFileName._name
+        synthetizeAndSave(unitOrFileName, d)
+        for f in find_files(d, '*.vhd', recursive=True):
+            fileSyntaxCheck(f, Parser.VHDL)
+        for f in find_files(d, '*.v', recursive=True):
+            fileSyntaxCheck(f, Parser.VERILOG)
+        
+    elif isinstance(unitOrFileName, str):
+        n = unitOrFileName.lower()
+        if n.endswith('.v'):
+            fileSyntaxCheck(f, Parser.VERILOG)
+        elif n.endswith(".vhd"):
+            fileSyntaxCheck(f, Parser.VHDL)
+        else:
+            raise NotImplementedError("Can not resolve type of file")
+    else:
+        raise  NotImplementedError("Not implemented for '%'" % (repr(unitOrFileName)))
     
 def synthetizeAsIpcore(unit, folderName=".", name=None):
+    # too simple to implement -> useless
     raise NotImplementedError()
     
     

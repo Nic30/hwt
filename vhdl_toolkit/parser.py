@@ -326,6 +326,19 @@ class Parser(VhdlParser):
                 ctx.insertObj(arch, self.caseSensitive)
 
     @staticmethod
+    def spotLoadingProc(fname, lang, hierarchyOnly=False, debug=False):
+        cmd = [JAVA, "-jar", str(CONVERTOR), fname]
+        if hierarchyOnly:
+            cmd.append('-h')
+        if debug:
+            cmd.append("-d")
+        cmd.extend(('-langue', lang))
+    
+        p = Popen(cmd, stdout=PIPE)
+        p.fileName = fname
+        return p
+    
+    @staticmethod
     def parseFiles(fileList: list, lang, hdlCtx=None, libName="work", timeoutInterval=20,
                   hierarchyOnly=False, primaryUnitsOnly=False, ignoreErrors=False, debug=False):
         """
@@ -364,16 +377,7 @@ class Parser(VhdlParser):
         # start parsing all files    
         p_list = []
         for fname in fileList:
-            cmd = [JAVA, "-jar", str(CONVERTOR), fname]
-            if hierarchyOnly:
-                cmd.append('-h')
-            if debug:
-                cmd.append("-d")
-            cmd.extend(('-langue', lang))
-    
-            p = Popen(cmd, stdout=PIPE)
-    
-            p.fileName = fname
+            p = Parser.spotLoadingProc(fname, lang, hierarchyOnly=hierarchyOnly, debug=debug)
             p_list.append(p)
     
         # collect parsed json from java parser and construct python objects
