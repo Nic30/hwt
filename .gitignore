@@ -11,6 +11,7 @@ vivado_toolkit/ip_packager/__pycache__/
 hls_toolkit/samples/__pycache__/
 vhdl_toolkit/samples/iLvl/vhdl/__pycahe__/
 vhdl_toolkit/samples/sLvl/vhdl/__pycache__/
+vivado_toolkit/samples/__pycache__/
 
 *.pyc
 *.dill
