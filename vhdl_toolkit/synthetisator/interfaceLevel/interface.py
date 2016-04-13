@@ -357,3 +357,9 @@ def connect(src, dst):
     c._setSrc(src)
     return c
 
+def walkInterfaceSignals(intf):
+    if intf._subInterfaces:
+        for _, i in intf._subInterfaces.items():
+            yield from walkInterfaceSignals(i)
+    else:
+        yield intf 

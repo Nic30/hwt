@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from vhdl_toolkit.synthetisator.rtlLevel.context import Context
 from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
-from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
+from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface, walkInterfaceSignals
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.hdlObjects.component import Component
 from vhdl_toolkit.synthetisator.param import Param
@@ -216,3 +216,12 @@ class Unit(Buildable):
                               + "- there is no such a thing as unit without interfaces")
 
         yield from self._synthetiseContext(externInterf, cntx)
+
+
+def walkSignalOnUnit(unit):
+    for _, i in unit._interfaces.items():
+        yield from walkInterfaceSignals(i)
+
+        
+        
+
