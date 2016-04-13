@@ -127,7 +127,7 @@ class HDLCtx(NonRedefDict):
             try:
                 cont = self[n]
             except KeyError:
-                cont = FnContainer(n)
+                cont = FnContainer(n, self)
                 self.insert(HdlRef([n], caseSensitive), cont)
             cont.append(obj, suppressRedefinition=hierarchyOnly)
         else:

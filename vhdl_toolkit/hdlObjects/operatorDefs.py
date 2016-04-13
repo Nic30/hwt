@@ -94,6 +94,11 @@ def addOperand_ternary(operator, operand):
     else:
         operator.ops.append(operand)
 
+def getReturnType_hdlFn(op):
+    fnCont = op.ops[0]
+    fn = fnCont.lookup(op.ops[1:])
+    return fn.returnT
+
 class OpDefinition():
     
     def __init__(self, _id, precedence, strOperatorOrFn, evalFn,
@@ -118,26 +123,16 @@ class OpDefinition():
         def getVal(v):
             return v if isinstance(v, Value) else v._val
         
-        ops = list(map(getVal, operator.ops))
-        return self._evalFn(*ops)
-            
-        # try:
-        #    initializer = getVal(next(it))
-        # except StopIteration:
-        #    raise TypeError('OpDefinition.eval, can not reduce empty sequence ')
-        #
-        # argc = self._evalFn.__code__.co_argcount
-        #
-        #
-        # if argc == 1:
-        #    return self._evalFn(initializer)
-        # elif argc == 2:
-        #    accum_value = initializer
-        #    for x in it:
-        #        accum_value = self._evalFn(accum_value, getVal(x))
-        #    return accum_value
-        # else:
-        #    raise NotImplementedError()
+        if self == AllOps.CALL:
+            origOps = operator.ops[1:]
+            fnCont = operator.ops[0]
+            fn = fnCont.parent.body[fnCont.name].lookup(origOps)
+            ops = list(map(getVal, origOps))
+            return fn.call(*ops)
+        else:
+            ops = list(map(getVal, operator.ops))
+            return self._evalFn(*ops)
+
         
     # [TODO] rename to asVhdl
     def str(self, operator, serializer):
@@ -230,7 +225,11 @@ class AllOps():
                        lambda a, b, c : b if a else c,
                        getReturnType=getReturnType_ternary,
                        addOperand=addOperand_ternary)
-     
+    
+    CALL = OpDefinition('CALL', 1, lambda strOps : "%s(%s)" % (strOps[0], ", ".join(strOps[1:])),
+                       None,
+                       getReturnType=getReturnType_hdlFn,
+                       addOperand=lambda operator, operand : operator.ops.append(operand))
     
     allOps = {}
         

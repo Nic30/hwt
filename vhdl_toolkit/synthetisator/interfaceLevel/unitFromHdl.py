@@ -1,8 +1,9 @@
 import inspect, os
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit, defaultUnitName
-from vhdl_toolkit.parser import entityFromFile
+from vhdl_toolkit.parser_utils import entityFromFile, loadCntxWithDependencies
 from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from vhdl_toolkit.interfaces.all import allInterfaces
+from vhdl_toolkit.hdlContext import RequireImportErr
 
 def addSources(fileNameOrList):
     """
@@ -42,7 +43,14 @@ class UnitFromHdl(Unit):
         cls._params = {}
 
         # extract params from entity generics
-        cls._entity = entityFromFile(cls._hdlSources[0], debug=cls._debugParser)
+        try:
+            cls._entity = entityFromFile(cls._hdlSources[0], debug=cls._debugParser)
+        except RequireImportErr:
+            ctx = loadCntxWithDependencies(cls._hdlSources, debug=cls._debugParser)
+            ents = ctx.entities
+            assert(len(ents) == 1)
+            cls._entity = ents[list(ents.keys())[0]]
+            
         for g in cls._entity.generics:
             if hasattr(cls, g.name):
                 raise  Exception("Already has param %s (old:%s , new:%s)" 

@@ -45,6 +45,8 @@ class DesignFile():
                 elif isinstance(obj, PackageHeader):
                     if not obj._isDummy:
                         yield (HdlRef(nameList + [n], False), obj)
+                        for k in obj:
+                            yield (HdlRef(nameList + [n, k], False), obj[k])
                 elif isinstance(obj, HDLCtx):
                     yield from allDefinedRefsInCtx(obj, nameList + [n])
         yield from allDefinedRefsInCtx(self.hdlCtx, [])
@@ -60,16 +62,17 @@ class DesignFile():
             if not imp:
                 raise Exception("%s: require to import %s and it is not defined in any file" % 
                                 (self.fileName, str(d)))
+            imp_obj = imp[2]
             if d.all:
                 # imp_ref = imp[1]
-                imp_obj = imp[2]
                 try:
                     for k, v in imp_obj.items():
                         self.importedNames[k] = v
                 except RedefinitionErr:
                     pass
             else:
-                raise NotImplementedError()
+                k = d.names[-1]
+                self.importedNames[k] = imp_obj
 
     def allDependencies(self, importsOnly=False):
         """

@@ -6,9 +6,13 @@ class FnContainer(list):
     """
     Used as container for functions with same name to support function overloading
     """
-    def __init__(self, name):
+    def __init__(self, name, parent):
         super(FnContainer, self).__init__()
         self.name = name
+        self.parent = parent
+    
+    def __hash__(self):
+        return hash((id(self), self.name))
         
     def append(self, fn, suppressRedefinition=False):
         if self:
@@ -31,14 +35,17 @@ class FnContainer(list):
         # check if same definition exists
         for fn in self:
             same = True
-            for _p, p in itertools.zip_longest(args, fn.args):
+            for _p, p in itertools.zip_longest(args, fn.params):
                 if _p.dtype != p.dtype:
                     same = False
                     break
             if same:
                 return fn
-
-
+    
+    def staticEval(self):
+        # function id does not have to be evalueated
+        pass
+    
 class Function():
     def __init__(self, name, returnT, ctx, params, _locals, exprList, isOperator=False):
         """
@@ -61,7 +68,7 @@ class Function():
         self.isOperator = isOperator
 
     def call(self, *args):
-        for p, a in zip(self.params,args):
+        for p, a in zip(self.params, args):
             p.defaultVal = a
         
         try:

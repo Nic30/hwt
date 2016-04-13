@@ -52,7 +52,7 @@ def fileSyntaxCheck(fileName, lang, timeoutInterval=20):
     Perform syntax check on whole file (only in java parser)
     """
     p = Parser.spotLoadingProc(fileName, lang, hierarchyOnly=True, debug=False) 
-    stdoutdata, stdErrData = p.communicate(timeout=timeoutInterval)
+    p.communicate(timeout=timeoutInterval)
 
 def syntaxCheck(unitOrFileName):
     if isinstance(unitOrFileName, Unit):
@@ -64,13 +64,7 @@ def syntaxCheck(unitOrFileName):
             fileSyntaxCheck(f, Parser.VERILOG)
         
     elif isinstance(unitOrFileName, str):
-        n = unitOrFileName.lower()
-        if n.endswith('.v'):
-            fileSyntaxCheck(f, Parser.VERILOG)
-        elif n.endswith(".vhd"):
-            fileSyntaxCheck(f, Parser.VHDL)
-        else:
-            raise NotImplementedError("Can not resolve type of file")
+        fileSyntaxCheck(f, Parser.langFromExtension(unitOrFileName))
     else:
         raise  NotImplementedError("Not implemented for '%'" % (repr(unitOrFileName)))
     

@@ -15,6 +15,7 @@ from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from vhdl_toolkit.synthetisator.exceptions import SerializerException
 from vhdl_toolkit.hdlObjects.operator import Operator
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
+from vhdl_toolkit.hdlObjects.function import FnContainer
 
 
 
@@ -40,9 +41,15 @@ class VhdlSerializer():
             return cls.Architecture(obj)
         elif isinstance(obj, UnitFromHdl):
             return str(obj)
+        elif isinstance(obj, FnContainer):
+            return cls.FnContainer(obj)
         else:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
-
+    
+    @classmethod
+    def FnContainer(cls, fn):
+        return  fn.name
+    
     @classmethod
     def Architecture(cls, arch):
         variables = []
@@ -137,10 +144,10 @@ class VhdlSerializer():
                     ep = list(sig.endpoints)[0]
                     if isinstance(ep, Operator) and ep.operator == AllOps.INDEX:
                         return True
-                #for o in d.ops:
+                # for o in d.ops:
                 #    if not cls.isStaticExpression(o):
                 #        return False
-                #return True
+                # return True
         if sig.name.startswith("sig_"):
             pass
         return False

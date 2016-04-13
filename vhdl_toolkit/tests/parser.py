@@ -58,7 +58,7 @@ class ParserTC(unittest.TestCase):
         self.assertIsInstance(p, PackageHeader)
 
     def testFunctionInPackage(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES + "functionImport/package0.vhd"], Parser.VHDL, hierarchyOnly=True)
+        ctx = Parser.parseFiles([ILVL_SAMPLES + "fnImport/package0.vhd"], Parser.VHDL, hierarchyOnly=True)
         ctx = ctx['work']['package0']
         self.assertIn('max', ctx)
 
@@ -108,7 +108,7 @@ class ParserTC(unittest.TestCase):
         self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH.dtype.getBitCnt())
 
     def testVhdlFn(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES + "functionImport/package0.vhd"], Parser.VHDL)
+        ctx = Parser.parseFiles([ILVL_SAMPLES + "fnImport/package0.vhd"], Parser.VHDL)
         p = ctx['work']['package0']
         fnCont = p.body['max']
         fn = fnCont[0]
@@ -122,7 +122,7 @@ class ParserTC(unittest.TestCase):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(ParserTC('testVhdlFn'))
-    # suite.addTest(unittest.makeSuite(ParserTC))
+    #suite.addTest(ParserTC('testVhdlFn'))
+    suite.addTest(unittest.makeSuite(ParserTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
