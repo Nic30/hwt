@@ -1,25 +1,36 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.interfaces.std import Ap_clk, Ap_rst_n
 from vhdl_toolkit.interfaces.amba import  AxiLite
 from vhdl_toolkit.samples.iLvl.axi_basic import AxiLiteBasicSlave
-from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
 
-from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls, synthetizeAndSave
+from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.synthetisator.interfaceLevel.interface import connect
+
 
 class AxiLiteSlaveContainer(Unit):
-    slv = AxiLiteBasicSlave()
-    
-    clk = Ap_clk(slv.S_AXI_ap_clk, isExtern=True)
-    rst_n = Ap_rst_n(slv.S_AXI_ap_rst_n, isExtern=True)
-    axi = AxiLite(slv.S_AXI, isExtern=True)
+    def _config(self):
+        self.ADDR_WIDTH = Param(13)
+        self.DATA_WIDTH = Param(14)
+        
+    def _declr(self):
+        self.slv = AxiLiteBasicSlave()
+        self.axi = AxiLite(isExtern=True)
+        self._shareAllParams()
+        self.slv.C_S_AXI_ADDR_WIDTH.set(self.ADDR_WIDTH)
+        self.slv.C_S_AXI_DATA_WIDTH.set(self.DATA_WIDTH)
 
-    ADDR_WIDTH = axi.ADDR_WIDTH
-    DATA_WIDTH = axi.DATA_WIDTH
-    slv.C_S_AXI_ADDR_WIDTH.set(ADDR_WIDTH)
-    slv.C_S_AXI_DATA_WIDTH.set(DATA_WIDTH)
-    ADDR_WIDTH.set(hInt(8))
-    DATA_WIDTH.set(hInt(8))
- 
+    def _impl(self):
+        connect(self.axi, self.slv.S_AXI)
     
 if __name__ == "__main__":
+    u = AxiLiteSlaveContainer()
+    u._loadDeclarations()
+    u._loadImplementations()
+    
+    print(u.ADDR_WIDTH.get())
+    #print(u.slv.C_S_AXI_ADDR_WIDTH.get())
+    print(u.slv.S_AXI.ADDR_WIDTH.get())
+    print(u.slv.S_AXI.ar.ADDR_WIDTH.get())
+    print(u.slv.S_AXI.ar.addr._dtype.getBitCnt())
+    
     print(synthetizeCls(AxiLiteSlaveContainer, "axiLSlvCont"))

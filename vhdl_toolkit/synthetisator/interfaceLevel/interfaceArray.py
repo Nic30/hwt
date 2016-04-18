@@ -3,8 +3,8 @@ from vhdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 def forAllPhysInterfaces(intf):
-    if intf._subInterfaces:
-        for _, si in intf._subInterfaces.items():
+    if intf._interfaces:
+        for si in intf._interfaces:
             yield from forAllPhysInterfaces(si)
     else:
         yield intf
@@ -13,10 +13,10 @@ def forAllParams(intf, discovered=None):
     if discovered is None:
         discovered = set()
     
-    for _, si in intf._subInterfaces.items():
+    for si in intf._interfaces:
         yield from forAllParams(si, discovered)
         
-    for _, p in intf._params.items():
+    for p in intf._params:
         if p not in discovered:
             discovered.add(p)
             yield p 
@@ -38,17 +38,17 @@ class InterfaceArray():
         
     def _setMultipliedBy(self, factor, updateTypes=True):
         self._multipliedBy = factor
-        for _, i in self._subInterfaces.items():
+        for i in self._interfaces:
             i._setMultipliedBy(factor, updateTypes=updateTypes)
             
     def _tryExtractMultiplicationFactor(self):
         widths = []
         # collect all widths    
         for i in forAllPhysInterfaces(self):
-            if i._dtype.constrain is None:
-                # if is not constrained vector this can not be a interfaceArray
+            if i._dtypeMatch or i._originEntityPort.dtype.constrain is None:
+                # if is not constrained vector or type was resolved this can not be a interfaceArray
                 return 
-            w = getWidthExpr(i._dtype)
+            w = getWidthExpr(i._originEntityPort.dtype)
             widths.append(w)
             
         # find what have all widths in common
@@ -82,8 +82,7 @@ class InterfaceArray():
     
     def _mkElemItem(self):
         e = self.__class__()
-        for pName, p in self._params.items():
-            pToReplace = e._params[pName]
-            e._replaceParam(e, pName, pToReplace)
+        for p in self._params:
+            e._replaceParam(e, p._name, p)
         return e 
         

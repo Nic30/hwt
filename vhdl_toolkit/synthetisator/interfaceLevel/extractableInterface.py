@@ -24,46 +24,42 @@ def updateParam(intfParam, unitParam):
 class ExtractableInterface(InterfaceArray):
 
     @classmethod
-    def _extractPossiblePrefixes(cls, entity, prefix=""):
+    def _extractPossiblePrefixes(cls, ports, prefix=""):
         """
         @return: iterator over unit ports witch probably matches with this interface
-        """        
-        assert(cls._isBuild())
+        """
+        intfObj = cls()
+        intfObj._loadDeclarations()
         
-        firstIntfNames = []
-        if cls._subInterfaces:
-            # find first signal in this interface
-            parent = cls
-            child = cls
-           
-            while child._subInterfaces:
-                parent = child
-                _childName, child = list(child._subInterfaces.items())[0]
-                # update prefix
-                if child._subInterfaces:
-                    if prefix == '':
-                        prefix = _childName
-                    else:
-                        prefix += (parent.NAME_SEPARATOR + _childName)
+        # find first signal in this interface
+        parent = intfObj
+        child = intfObj
+        
+        while child._interfaces:
+            parent = child
+            child = child._interfaces[0]
+            # update prefix
+            if child._interfaces:
+                if prefix == '':
+                    prefix = child._name
                 else:
-                    if prefix != '':
-                        prefix += parent.NAME_SEPARATOR
-                    
-            o = child
-            name = _childName
-        else:
-            # find this interface because it is signal
-            o = cls()
-            name = o._name
+                    prefix += (parent._NAME_SEPARATOR + child._name)
+            else:
+                if prefix != '':
+                    prefix += parent._NAME_SEPARATOR
+                
+        o = child
+        name = child._name
             
         # search for alternative names as well    
+        firstIntfNames = []
         for n in o._alternativeNames:
             firstIntfNames.append(prefix + n)
         firstIntfNames.append(prefix + name)
         
         # search ports names for firstIntfNames  
         for firstIntfName in firstIntfNames:
-            for p in entity.ports:
+            for p in ports:
                 if not hasattr(p, "_interface") and p.name.lower().endswith(firstIntfName):
                     # cut off prefix
                     nameLen = len(firstIntfName)
@@ -74,32 +70,31 @@ class ExtractableInterface(InterfaceArray):
                 
     def _unExtrac(self):
         """undo extracting process for this interface"""
-        if self._subInterfaces:
-            for _, intfConfMap in self._subInterfaces.items():
+        if self._interfaces:
+            for intfConfMap in self._interfaces:
                 intfConfMap._unExtrac()
         else:
             if hasattr(self, "_originEntityPort"):
                 if hasattr(self._originEntityPort, "_interface"):
                     del self._originEntityPort._interface
                 del self._originEntityPort
-                del self._originSigLvlUnit
                 
     def _extractDtype(self, multipliedBy=None):
-        if self._subInterfaces:
-            for _, si in self._subInterfaces.items():
+        """
+        Compare signal _dtype and _dtype of interface declaration and try match parameters
+        """
+        if self._interfaces:
+            for si in self._interfaces:
                 si._extractDtype(multipliedBy=multipliedBy)
         else:
             # update interface type from hdl, update generics
-            try:
-                intfTConstr = self._originalIntfDtype.constrain
-            except AttributeError:  
-                intfTConstr = self._dtype.constrain
+            intfTConstr = self._dtype.constrain
+
             if intfTConstr is not None:
-                
                 unitTConstr = self._originEntityPort.dtype.constrain
-                 
-                for intfParam, unitParam in ExprComparator\
-                                            .findExprDiffInParam(intfTConstr, unitTConstr):
+                paramDiff = list(ExprComparator.findExprDiffInParam(intfTConstr, unitTConstr))
+                    
+                for intfParam, unitParam in paramDiff:
                     if multipliedBy is not None and isinstance(unitParam, Signal):
                         mulOp = unitParam.singleDriver()
                         assert(mulOp.operator == AllOps.MUL)
@@ -107,47 +102,50 @@ class ExtractableInterface(InterfaceArray):
                         op1 = mulOp.ops[1]
                         
                         if type(op0) == type(multipliedBy) and op0 == multipliedBy:
-                            updateParam(intfParam, op1)
+                            _unitParam = op1
                         else:
                             assert(type(op1) == type(multipliedBy) and op1 == multipliedBy)
-                            updateParam(intfParam, op0)
+                            _unitParam = op0
                     else:
-                        updateParam(intfParam, unitParam)
-            if not hasattr(self, "_originalIntfDtype"):
-                self._originalIntfDtype = self._dtype
-                self._dtype = self._originEntityPort.dtype
+                        assert(multipliedBy is None)
+                        _unitParam = unitParam 
+
+                if len(paramDiff) == 0:
+                    self._dtypeMatch = self._originEntityPort.dtype == self._dtype
+                else:
+                    self._dtypeMatch = isinstance(_unitParam, (Param, Value))
+                    updateParam(intfParam, _unitParam)
+            else:
+                self._dtypeMatch = self._originEntityPort.dtype == self._dtype
+            
+            if not hasattr(self, "_dtypeMatch"):
+                raise AssertionError("Type resolution error on port %s" % (self._originEntityPort))   
         
-    def _tryToExtractByName(self, prefix, sigLevelUnit):
+    def _tryToExtractByName(self, prefix, ports):
         """
         @return: self if extraction was successful
         @raise InterfaceIncompatibilityExc: if this interface with this prefix does not fit to this entity 
         """
-        if self._subInterfaces:
+        if self._interfaces:
             # extract subinterfaces and propagate params
             allDirMatch = True
             noneDirMatch = True
             if hasattr(self, "_name") and self._name != '':
-                prefix += self._name + self.NAME_SEPARATOR
+                prefix += self._name + self._NAME_SEPARATOR
             try:
-                for intfName, intf in self._subInterfaces.items():
-                    assert(intf._name == intfName)
-                    intf._tryToExtractByName(prefix, sigLevelUnit)
-                    if intf._subInterfaces:
+                for intf in self._interfaces:
+                    intf._tryToExtractByName(prefix, ports)
+                    if intf._interfaces:
                         dirMatches = intf._direction == INTF_DIRECTION.MASTER
                     else:
                         dirMatches = intf._originEntityPort.direction == intf._masterDir
                     allDirMatch = allDirMatch and dirMatches
                     noneDirMatch = noneDirMatch  and not dirMatches     
             except InterfaceIncompatibilityExc as e:
-                for intfName, intf in self._subInterfaces.items():
+                for intf in self._interfaces:
                     intf._unExtrac()
                 raise e
             
-            # update all params on this interface
-            for pName, p in self._params.items():
-                if p.replacedWith is not None:
-                    setattr(self, pName, p.replacedWith)
-                    self._params[pName] = p.replacedWith
                 
             if allDirMatch:
                 self._direction = INTF_DIRECTION.MASTER
@@ -157,12 +155,6 @@ class ExtractableInterface(InterfaceArray):
                 self._unExtrac()
                 raise InterfaceIncompatibilityExc("Direction mismatch")
         
-            # update all params which were found in unit
-            # update params on object as well
-            for pName, p in self._params.items():
-                if not p.replacedWith is None:
-                    self._addParam(pName, p.replacedWith, allowUpdate=True)
-            
         else:
             # extract signal(Ap_none , etc.)
             # collect all posible names
@@ -174,11 +166,11 @@ class ExtractableInterface(InterfaceArray):
             for n in intfNames:
                 name = prefix + n
                 try:
-                    self._originEntityPort = single(sigLevelUnit.entity.ports,
+                    self._originEntityPort = single(ports,
                                             lambda p : matchIgnorecase(p.name, name))
                     break
                 except NoValueExc as e:
-                    pass
+                    continue
             if not hasattr(self, "_originEntityPort"):
                 self._unExtrac()
                 raise  InterfaceIncompatibilityExc("Missing " + prefix + n)
@@ -187,7 +179,6 @@ class ExtractableInterface(InterfaceArray):
             
             # assign references to hdl objects
             self._originEntityPort._interface = self
-            self._originSigLvlUnit = sigLevelUnit
             # resolve direction
             dirMatches = self._originEntityPort.direction == self._masterDir
             if dirMatches:
@@ -198,37 +189,30 @@ class ExtractableInterface(InterfaceArray):
         return self
     
     @classmethod        
-    def _tryToExtract(cls, sigLevelUnit):
+    def _tryToExtract(cls, ports):
         """
         @return: iterator over tuples (interface name. extracted interface)
         """
-        cls._builded()
-        for name in cls._extractPossiblePrefixes(sigLevelUnit.entity):
+        # [TODO] ports as dict
+        for name in cls._extractPossiblePrefixes(ports):
             try:
-                # print("\n_tryToExtract 1 ", name, cls)
                 intfInst = cls(isExtern=True)
+                intfInst._loadDeclarations()
                 prefix = name 
-                # if cls._subInterfaces: 
-                #    prefix = name + cls.NAME_SEPARATOR
-                # else:
-                #    prefix = name
                      
-                intf = intfInst._tryToExtractByName(prefix, sigLevelUnit)
-                if not intf._subInterfaces:
+                intf = intfInst._tryToExtractByName(prefix, ports)
+                if not intf._interfaces:
                     name += intf._name
                 if name.endswith("_"):
                     name = name[:-1]
-                # print(("_tryToExtract", name, intf))
                 
-                if intf._subInterfaces: # if is possible to determine size of this potential intf. array 
+                if intf._interfaces:  # if is possible to determine size of this potential intf. array 
                     # if interface is actually array of interfaces extract the size of this array 
                     mf = intf._tryExtractMultiplicationFactor()
                     if mf is not None:
                         intf._extractDtype(multipliedBy=mf)
                         intf._setMultipliedBy(mf, updateTypes=False)
-                    
                 yield (name, intf) 
             except InterfaceIncompatibilityExc as e:
-                # pass if intrface does not match the interface on sigLevelUnit
-                # print(e)
+                # pass if interface was not found in ports
                 pass

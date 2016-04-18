@@ -4,11 +4,7 @@ SEPARATOR = '.'
 
 class HdlRef():
     def __init__(self, names, caseSensitive, allChilds=False):
-        if caseSensitive:
-            self.names = tuple([n for n in names])
-        else:
-            self.names = tuple([n.lower() for n in names])
-            
+        self.names = HdlRef._caseSensitivityForNames(caseSensitive, names)
         self.all = allChilds
 
     @classmethod
@@ -36,6 +32,13 @@ class HdlRef():
             else:
                 raise NotImplementedError("Not implemented for id part of type %s" % (t))
         return cls(names, caseSensitive, allChilds=allChilds)
+    
+    @staticmethod
+    def _caseSensitivityForNames(caseSensitive, names):
+        if caseSensitive:
+            return names
+        else:
+            return tuple([n.lower() for n in names])
 
     @classmethod
     def fromExprJson(cls, jExpr, caseSensitive):
@@ -44,21 +47,8 @@ class HdlRef():
         assert(v["type"] == "ID")
         name = v['value']
         names.append(name)
+        names = HdlRef._caseSensitivityForNames(caseSensitive, names)
         return cls(names, caseSensitive)
-
-    # def __hash__(self):
-    #    return hash(self.names)
-    #
-    # def __eq__(self, other):
-    #    if len(self.names) == len(other.names):
-    #        for s, o in zip(self.names, other.names):
-    #            if s != o:
-    #                return False
-    #        return True
-    #    return False
-    #
-    # def __ne__(self, other):
-    #    return not self.__eq__(other)
 
     def __str__(self):
         s = SEPARATOR.join(self.names)

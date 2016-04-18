@@ -5,6 +5,8 @@ from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import 
 from vhdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit
 from vhdl_toolkit.interfaces.std import Ap_none
 from vhdl_toolkit.interfaces.amba import Axi4
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import synthesised, Unit
+
 D = DIRECTION
 
 class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
@@ -14,6 +16,8 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         """
         from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
         u = SimpleUnit2()
+        u._loadDeclarations()
+        u._loadImplementations()
         
         # inside
         self.assertIsM(u.a)
@@ -30,8 +34,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         self.assertIsS(u.b.valid)
         self.assertIsS(u.b.strb)
         
-        for _ in u._synthesise():
-            pass
+        u = synthesised(u)
         
         # outside
         self.assertIsS(u.a)
@@ -51,8 +54,8 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
     def test_SimpleUnit2(self):
         from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
         u = SimpleUnit2()
-        for _ in u._synthesise():
-            pass
+        u._loadAll()
+        u = synthesised(u)
     
         for pn in ['a_data', 'a_last', 'a_strb', 'a_valid', 'b_ready']:    
             self.assertIn(u, pn)    
@@ -62,8 +65,8 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
     def test_SimpleSubUnit2(self):
         from vhdl_toolkit.samples.iLvl.simpleSubunit2 import SimpleSubunit2
         u = SimpleSubunit2()
-        for _ in u._synthesise():
-            pass
+        u._loadAll()
+        u = synthesised(u)
     
         for pn in ['a0_data', 'a0_last', 'a0_strb', 'a0_valid', 'b0_ready']:    
             self.assertIn(u, pn)    
@@ -73,8 +76,8 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
     def test_signalInstances(self):
         from vhdl_toolkit.samples.iLvl.simple import SimpleUnit
         bram = SimpleUnit()
-        for _ in bram._synthesise():
-            pass
+        bram._loadAll()
+        bram = synthesised(bram)
     
         self.assertNotEqual(bram.a, bram.b, 'instances are properly instanciated')
         
@@ -92,13 +95,18 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         self.assertEqual(port_b.direction, D.OUT, 'port b has no src that means it should be output')
 
     def test_EmptyUnit(self):
-        class Bb(EmptyUnit):
-            a = Ap_none(isExtern=True)
-            b = Ap_none(src=True, isExtern=True)
+        class Bb(Unit):
+            def _declr(self):
+                self.a = Ap_none(isExtern=True)
+                self.b = Ap_none(isExtern=True)
             
+            def _impl(self):
+                self.b._dummyOut()
+                
         u = Bb()
-        for _ in u._synthesise():
-            pass
+        u._loadAll()
+        u = synthesised(u)
+
         e = u._entity
         a = self.getPort(e, 'a')
         b = self.getPort(e, 'b')
@@ -128,8 +136,8 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(InterfaceSyntherisatorTC('test_EmptyUnit'))
-    suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
+    suite.addTest(InterfaceSyntherisatorTC('test_EmptyUnit'))
+    #suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
 

@@ -4,58 +4,86 @@ from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import connect
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from vivado_toolkit.ip_packager.packager import Packager
-from vhdl_toolkit.synthetisator.param import shareAllParams, Param
+from vhdl_toolkit.synthetisator.param import Param
 
-class HFE(EmptyUnit):
-    din = AxiStream(isExtern=True)
-    dout = AxiStream(src=True, isExtern=True)
-    headers = AxiStream(src=True, isExtern=True)
+class HFE(Unit):
+    def _declr(self):
+        self.din = AxiStream(isExtern=True)
+        self.dout = AxiStream(isExtern=True)
+        self.headers = AxiStream(isExtern=True)
     
-class PatternMatch(EmptyUnit):
-    din = AxiStream(isExtern=True)
-    match = AxiStream(src=True, isExtern=True)
-    cfg = AxiLite(isExtern=True)
+    def _impl(self):
+        self.dout._dummyOut()
+        self.headers._dummyOut()
+    
+class PatternMatch(Unit):
+    def _declr(self):
+        self.din = AxiStream(isExtern=True)
+        self.match = AxiStream(isExtern=True)
+        self.cfg = AxiLite(isExtern=True)
+    
+    def _impl(self):
+        self.match._dummyOut()
+    
     
 class Filter(EmptyUnit):
-    headers = AxiStream(isExtern=True)
-    match = AxiStream(isExtern=True, src=True)
-    din = AxiStream(isExtern=True)
-    dout = AxiStream(src=True, isExtern=True)
-    cfg = AxiLite(isExtern=True)
+    def _declr(self):
+        self.headers = AxiStream(isExtern=True)
+        self.match = AxiStream(isExtern=True)
+        self.din = AxiStream(isExtern=True)
+        self.dout = AxiStream(isExtern=True)
+        self.cfg = AxiLite(isExtern=True)
+    
+    def _impl(self):
+        self.match._dummyOut()
+        self.dout._dummyOut()
+
 
 class AxiStreamFork(EmptyUnit):
-    din = AxiStream(isExtern=True)
-    dout0 = AxiStream(src=True, isExtern=True)
-    dout1 = AxiStream(src=True, isExtern=True)
+    def _declr(self):
+        self.din = AxiStream(isExtern=True)
+        self.dout0 = AxiStream(isExtern=True)
+        self.dout1 = AxiStream(isExtern=True)
+
+    def _impl(self):
+        self.dout0._dummyOut()
+        self.dout1._dummyOut()
 
 class Exporter(EmptyUnit):
-    din = AxiStream(isExtern=True)
-    dout = AxiStream(src=True, isExtern=True)
+    def _declr(self):
+        self.din = AxiStream(isExtern=True)
+        self.dout = AxiStream(isExtern=True)
+    def _impl(self):
+        self.dout._dummyOut()
 
 
-@shareAllParams
 class NetFilter(Unit):
-    DATA_WIDTH = Param(64)
+    def _config(self):
+        self.DATA_WIDTH = Param(64)
     
-    din = AxiStream(isExtern=True)
-    export = AxiStream(isExtern=True)
-    cfg = AxiLite(isExtern=True)
-    
-    hfe = HFE()
-    pm = PatternMatch()
-    filter = Filter()
-    exporter = Exporter()
-    
-    forkHfe = AxiStreamFork()
+    def _declr(self):
+        self.din = AxiStream(isExtern=True)
+        self.export = AxiStream(isExtern=True)
+        self.cfg = AxiLite(isExtern=True)
 
-    dinToHfe = connect(din, hfe.din)
-    hfeToFork = connect(hfe.dout, forkHfe.din)
-    forkToPm = connect(forkHfe.dout0, pm.din)
-    forkToFilter = connect(forkHfe.dout1, filter.din)
-    headersToFilter = connect(hfe.headers, filter.headers)
-    matchToFilter = connect(pm.match, filter.match)
-    filterToExport = connect(filter.dout, exporter.din)
-    exporterToExport = connect(exporter.dout, export)
+        self.hfe = HFE()
+        self.pm = PatternMatch()
+        self.filter = Filter()
+        self.exporter = Exporter()
+
+        self.forkHfe = AxiStreamFork()
+        self._shareAllParams()
+        
+    def _impl(self):
+        s = self
+        connect(s.din,       s.hfe.din)
+        connect(s.hfe.dout,     s.forkHfe.din)
+        connect(s.forkHfe.dout0, s.pm.din)
+        connect(s.forkHfe.dout1, s.filter.din)
+        connect(s.hfe.headers,  s.filter.headers)
+        connect(s.pm.match,     s.filter.match)
+        connect(s.filter.dout,  s.exporter.din)
+        connect(s.exporter.dout, s.export)
 
 
 if __name__ == "__main__":

@@ -2,11 +2,22 @@ from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.amba import AxiStream
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from vhdl_toolkit.synthetisator.interfaceLevel.interface import connect
+from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
 
 class SimpleSubunit2(Unit):
-    subunit0 = SimpleUnit2() 
-    a0 = AxiStream(subunit0.a ,isExtern=True)
-    b0 = AxiStream(src=subunit0.b, isExtern=True)
+    def _declr(self):
+        self.subunit0 = SimpleUnit2() 
+        self.a0 = AxiStream(isExtern=True)
+        self.b0 = AxiStream(isExtern=True)
+        
+        self.a0.DATA_WIDTH.set(hInt(8))
+        self.b0.DATA_WIDTH.set(hInt(8))
+    
+    def _impl(self):
+        u = self.subunit0
+        connect(self.a0, u.a)
+        connect(u.b, self.b0)
 
 if __name__ == "__main__":
     print(synthetizeCls(SimpleSubunit2))

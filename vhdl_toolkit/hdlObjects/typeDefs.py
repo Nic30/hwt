@@ -270,10 +270,10 @@ class Std_logic_vector_contrained(Std_logic_vector):
     """
     Std_logic_vector with specified width
     """
-    def __init__(self, width):
+    def __init__(self, widthConstr):
         super(Std_logic_vector_contrained, self).__init__()
         self.name = 'std_logic_vector'
-        self.constrain = width
+        self.constrain = widthConstr
         
     def __eq__(self, other):
         return super(Std_logic_vector_contrained, self).__eq__(other) \

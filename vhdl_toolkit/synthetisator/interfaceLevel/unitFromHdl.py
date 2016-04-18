@@ -1,9 +1,17 @@
 import inspect, os
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit, defaultUnitName
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit, defaultUnitName,\
+    walkSignalOnUnit
 from vhdl_toolkit.parser_utils import entityFromFile, loadCntxWithDependencies
 from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from vhdl_toolkit.interfaces.all import allInterfaces
 from vhdl_toolkit.hdlContext import RequireImportErr
+from vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.synthetisator.interfaceLevel.interface import walkInterfaceSignals
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, SignalNode
+from vhdl_toolkit.hdlObjects.value import Value
+from vhdl_toolkit.hdlObjects.operator import Operator
+import types
+from vhdl_toolkit.hdlObjects.function import FnContainer
 
 def addSources(fileNameOrList):
     """
@@ -14,6 +22,22 @@ def addSources(fileNameOrList):
         assert(issubclass(unitCls, UnitFromHdl))
         unitCls._hdlSources = fileNameOrList
     return _addSources
+
+def cloneExprWithUpdatedParams(expr, paramUpdateDict):
+    if isinstance(expr, Param):
+        return paramUpdateDict[expr]
+    elif isinstance(expr, Value):
+        return expr.clone()
+    elif isinstance(expr, Signal):
+        d = expr.singleDriver()
+        assert(isinstance(d, Operator))
+        ops = [ cloneExprWithUpdatedParams(x, paramUpdateDict) for x in d.ops]
+        o = Operator(d.operator, ops)
+        return SignalNode.resForOp(o)
+    elif isinstance(expr, FnContainer):
+        return expr
+    else:
+        raise NotImplementedError("Not implemented for %s" % (repr(expr)))
 
 class UnitFromHdl(Unit):
     """
@@ -27,7 +51,54 @@ class UnitFromHdl(Unit):
         self.__class__._intfClasses = intfClasses
         self.__class__._debugParser = debugParser
         super(UnitFromHdl, self).__init__()
+    
+    def _config(self):
+        cls = self.__class__
+        self._params = []
+        self._interfaces = []
+        self._paramsOrigToInst = {}
+
+        for p in cls._params:
+            instP = Param(p.defaultVal)
+            self._paramsOrigToInst[p] = instP
+            setattr(self, p.name, instP)
+            
+    def _declr(self):
+        cls = self.__class__
+        for i in cls._interfaces:
+            instI = i.__class__(loadConfig=False)
+            instI._isExtern = i._isExtern 
+            instI._direction = i._direction
+            instI._origI = i
+            def configFromExtractedIntf(instI):
+                for p in instI._origI._params:
+                    pName = p.replacedWith.name
+                    instP = getattr(self, pName)
+                    setattr(instI, p.name, instP)
+            
+            # overload _config function
+            instI._config = types.MethodType(configFromExtractedIntf, instI)
+            instI._loadConfig()
+                  
+            instI._origLoadDeclarations = instI._loadDeclarations
+            def declarationsFromExtractedIntf(instI):
+                instI._origLoadDeclarations()
+                for iSig, instISig in zip(walkInterfaceSignals(instI._origI), walkInterfaceSignals(instI)):
+                    instISig._originEntityPort = iSig._originEntityPort
+                    if not iSig._dtypeMatch:
+                        origT = iSig._originEntityPort.dtype
+                        if origT.constrain is None:
+                            newT = origT.__class__()
+                        else:
+                            newT = origT.__class__(cloneExprWithUpdatedParams(origT.constrain, self._paramsOrigToInst))  
+                        instISig._dtype = newT
+            # overload _loadDeclarations function
+            instI._loadDeclarations = types.MethodType(declarationsFromExtractedIntf, instI) 
+            
+            setattr(self, i._name, instI)
         
+            
+
     @classmethod
     def _build(cls):
         # convert source filenames to absolute paths
@@ -38,9 +109,9 @@ class UnitFromHdl(Unit):
         cls._hdlSources = [os.path.join(baseDir, s) for s in cls._hdlSources]
 
         # init hdl object containers on this unit       
-        cls._interfaces = {}
-        cls._subUnits = {}
-        cls._params = {}
+        cls._params = []
+        cls._interfaces = []
+        cls._units = []
 
         # extract params from entity generics
         try:
@@ -52,33 +123,26 @@ class UnitFromHdl(Unit):
             cls._entity = ents[list(ents.keys())[0]]
             
         for g in cls._entity.generics:
-            if hasattr(cls, g.name):
-                raise  Exception("Already has param %s (old:%s , new:%s)" 
-                      % (g.name, str(getattr(cls, g.name)), str(g)))
-                
-            setattr(cls, g.name, g)
-            cls._params[g.name] = g
-        cls._sigLvlUnit = VHDLUnit(cls._entity)
-
-        def setIntfAsExtern(intf):
-            intf._isExtern = True
-            for _, subIntf in intf._subInterfaces.items():
-                setIntfAsExtern(subIntf)
+            # if hasattr(cls, g.name):
+            #    raise  Exception("Already has param %s (old:%s , new:%s)" 
+            #          % (g.name, str(getattr(cls, g.name)), str(g)))
+            cls._params.append(g)
 
         # lookup all interfaces
         for intfCls in cls._intfClasses:
-            for intfName, interface in intfCls._tryToExtract(cls._sigLvlUnit):
-                if hasattr(cls, intfName):
-                    raise  Exception("Already has interface %s (old:%s , new:%s)" 
-                                     % (intfName, str(getattr(cls, intfName)), str(interface)))
+            for intfName, interface in intfCls._tryToExtract(cls._entity.ports):
+                # if hasattr(cls, intfName):
+                #    raise  Exception("Already has interface %s (old:%s , new:%s)" 
+                #                     % (intfName, str(getattr(cls, intfName)), str(interface)))
                 interface._name = intfName
-                cls._interfaces[intfName] = interface
-                setattr(cls, intfName, interface)
-                setIntfAsExtern(interface)
+                cls._interfaces.append(interface)
+                interface._setAsExtern(True)
 
         for p in cls._entity.ports:
             # == loading testbenches is not supported by this class 
-            assert(hasattr(p, '_interface') and p._interface is not None)  # every port should have interface (Ap_none at least)        
+            if not (hasattr(p, '_interface') and p._interface is not None):
+                raise AssertionError("Port %s does not have any interface assigned" % (p.name))  # every port should have interface (Ap_none at least) 
+  
         
         cls._clsBuildFor = cls
     
@@ -86,6 +150,10 @@ class UnitFromHdl(Unit):
         """Convert unit to hdl objects"""
         assert(self._entity)
         self._name = defaultUnitName(self, name)
+        self._sigLvlUnit = VHDLUnit(self._entity)
+        for s in walkSignalOnUnit(self):
+            s._originSigLvlUnit = self._sigLvlUnit
+            
         return [self]
 
     def __str__(self):

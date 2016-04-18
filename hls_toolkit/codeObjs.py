@@ -1,3 +1,10 @@
+
+"""
+Bernsteins Synthesis Algorithm - database key dependencies
+http://www.risc.jku.at/publications/download/risc_2335/2004-02-18-A.pdf  - Lazy Thinking
+
+
+"""
 class HlsOperation():
     """
     @ivar requirements: set of bool signals which has to be true to execute this stage

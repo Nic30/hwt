@@ -1,3 +1,4 @@
+
 class BaseHlsSynthetisator():
     def __init__(self, iLvUnit, ctx, hlsFn):
         """
@@ -33,7 +34,16 @@ class BaseHlsSynthetisator():
         """
         for intf in self.allInterfaces():
             intf._hlsNodes = []
-        self.hlsFn(self.iLvUnit)
+        # self.hlsFn(self.iLvUnit)
+        fn = self.hlsFn
+
+        c = fn.__code__
+        print(c.code)
+        # Modify the byte code
+        c.code[0] = (LOAD_CONST, 1000)
+        fn.func_code = c.to_code()
+        print(c.code)
+
         for n in self.allNodes():
             n.rValid._sig.assignFrom(n.lValid._sig)
             n.lReady._sig.assignFrom(n.rReady._sig)

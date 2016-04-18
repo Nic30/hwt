@@ -19,7 +19,8 @@ class EmptyUnit(Unit):
         cntx = self._contextFromParams()
         externInterf = [] 
         # prepare connections     
-        for connectionName, connection in self._interfaces.items():
+        for connection in self._interfaces:
+            connectionName = connection._name
             signals = connection._signalsForInterface(cntx, connectionName)
             if not connection._isExtern:
                 raise IntfLvlConfErr("All interfaces in BlackBox has to be extern, %s: %s is not" % 

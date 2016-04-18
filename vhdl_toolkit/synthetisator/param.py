@@ -21,7 +21,9 @@ class Param(Signal):
         super(Param, self).__init__(None, t, defaultVal=initval)
         self._val = initval
         self.replacedWith = None
-    
+        self._parent = None
+        self._names = {}
+         
     def setHdlName(self, name):
         self.hasGenericName = False
         self.name = name
@@ -36,9 +38,9 @@ class Param(Signal):
         """
         self will always have value of parent
         """
-        if areSameSignals(self, replaceWith) or areSameSignals(self.replacedWith, replaceWith):
+        if areSameSignals(self, replaceWith):
             return
-
+        
         if self.replacedWith is not None:
             raise Exception("replacing '%s' with '%s' and it was already replaced by '%s'" % 
                             (str(self), str(replaceWith), str(self.replacedWith)))
@@ -51,11 +53,6 @@ class Param(Signal):
             
         
         self.replacedWith = replaceWith
-        if hasattr(self, "_parent"):
-            p = self._parent
-            n = self._name
-            p._params[n] = replaceWith
-            setattr(p, n, replaceWith)
 
     def set(self, val):
         """
@@ -91,30 +88,3 @@ def getParam(p):
         return v
     else:
         return p
-    
-def shareAllParams(cls):
-    '''foreach _subInterfaces, _interfaces and _subUnits  inherit parameters'''
-    cls._builded()
-    def inheritForSubUnits(subelements):
-        for _, unit in subelements.items():
-            for paramName, param in cls._params.items():
-                p = getattr(unit, paramName, None)
-                if p is not None:
-                    p.set(param)
-    
-    def inheritForInterfaces(subelements):
-        for _, intf in subelements.items():
-            for paramName, param in cls._params.items():
-                p = getattr(intf, paramName, None)
-                if p is not None:
-                    intf._replaceParam(intf, paramName, param)
-                    
-    for n in ['_subInterfaces', '_interfaces', ]:
-        if hasattr(cls, n):                
-            inheritForInterfaces(getattr(cls, n))
-            
-    if hasattr(cls, '_subUnits'):
-        inheritForSubUnits(cls._subUnits)
-        
-        
-    return cls

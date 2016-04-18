@@ -9,13 +9,17 @@ from vhdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 D = DIRECTION
 
 class Ap_none(Interface):
-    def __init__(self, *destinations, masterDir=DIRECTION.OUT, multipliedBy=None,
-                   dtype=BIT, src=None, isExtern=False, alternativeNames=None):
+    def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None,
+                   dtype=BIT, isExtern=False, alternativeNames=None,
+                   loadConfig=True):
         self._multipliedBy = None
-        super(Ap_none, self).__init__(*destinations, masterDir=masterDir,
-            multipliedBy=multipliedBy, src=src, isExtern=isExtern, \
-            alternativeNames=alternativeNames)
+        super().__init__(masterDir=masterDir, multipliedBy=multipliedBy,
+             isExtern=isExtern, alternativeNames=alternativeNames, 
+             loadConfig=loadConfig)
         self._dtype = dtype
+        # make empty containers
+#        self._interfaces = []
+#        self._params = []
         
     def _setMultipliedBy(self, factor, updateTypes=True):
         if type(self._multipliedBy) == type(factor) and self._multipliedBy == factor:
@@ -45,26 +49,37 @@ class Ap_rst_n(Ap_none):
     _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn' ]
 
 class Ap_vld(Interface):
-    DATA_WIDTH = Param(64)
-    data = s(dtype=vecT(DATA_WIDTH))
-    vld = s(alternativeNames=['valid'])
+    def _config(self):
+        self.DATA_WIDTH = Param(64)
+    
+    def _declr(self):
+        self.data = s(dtype=vecT(self.DATA_WIDTH))
+        self.vld = s(alternativeNames=['valid'])
 
 class Ap_hs(Ap_vld):
-    rd = s(masterDir=D.IN, alternativeNames=['ready'])
+    def _declr(self):
+        self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
 
 class BramPort_withoutClk(Interface):
-    ADDR_WIDTH = Param(32)
-    DATA_WIDTH = Param(64) 
-    addr = s(dtype=vecT(ADDR_WIDTH), alternativeNames=['addr_v'])
-    din = s(dtype=vecT(DATA_WIDTH), alternativeNames=['din_v'])
-    dout = s(masterDir=D.IN, dtype=vecT(DATA_WIDTH), alternativeNames=['dout_v'])
-    en = s()
-    we = s()   
+    def _config(self):
+        self.ADDR_WIDTH = Param(32)
+        self.DATA_WIDTH = Param(64) 
+        
+    def _declr(self):
+        self.addr = s(dtype=vecT(self.ADDR_WIDTH), alternativeNames=['addr_v'])
+        self.din = s(dtype=vecT(self.DATA_WIDTH), alternativeNames=['din_v'])
+        self.dout = s(masterDir=D.IN, dtype=vecT(self.DATA_WIDTH), alternativeNames=['dout_v'])
+        self.en = s()
+        self.we = s()   
 
 class BramPort(BramPort_withoutClk):
-    clk = s(masterDir=D.OUT)
+    def _declr(self):
+        super()._declr()
+        self.clk = s(masterDir=D.OUT)
+    
     @classmethod
     def fromBramPort_withoutClk(cls, bramPort, clk):
+        raise NotImplementedError("[TODO]:update")
         assert(isinstance(bramPort, BramPort_withoutClk))
         assert(isinstance(clk, Ap_clk))
         self = cls()
@@ -90,14 +105,18 @@ class BramPort(BramPort_withoutClk):
         
 
 class SPI(Interface):
-    clk = Ap_clk()
-    mosi = s()
-    miso = s(masterDir=D.IN)
-    ss = s()
+    def _declr(self):
+        self.clk = Ap_clk()
+        self.mosi = s()
+        self.miso = s(masterDir=D.IN)
+        self.ss = s()
   
-class RGMII_channel(Interface):
-    DATA_WIDTH = 4
-    c = s()
-    d = s(dtype=vecT(DATA_WIDTH))
-    x_ctl = s()
+#class RGMII_channel(Interface):
+#    def _config(self):
+#        self.DATA_WIDTH = 4
+#        
+#    def _declr(self):
+#        self.c = s()
+#        self.d = s(dtype=vecT(self.DATA_WIDTH))
+#        self.x_ctl = s()
     

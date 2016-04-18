@@ -1,12 +1,8 @@
 import os, shutil
-from os.path import basename, relpath
+from os.path import relpath
 
 from python_toolkit.fileHelpers import find_files
-from vhdl_toolkit.parser import entityFromFile
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
-from vhdl_toolkit.hdlObjects.architecture import Architecture
-from vhdl_toolkit.hdlObjects.entity import Entity
-from vhdl_toolkit.formater import formatVhdl
 from vivado_toolkit.ip_packager.component import Component
 from vivado_toolkit.ip_packager.helpers import prettify
 from vivado_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
@@ -115,27 +111,27 @@ class Packager(object):
         with open(ip_dir + "component.xml", "w") as f:
             f.write(xml_str)
 
-def packageMultipleProjects(workspace, names, ipRepo):
-    for folder, name in names.items():
-        packageVivadoHLSProj(os.path.join(workspace, folder), "solution1", name + ".vhd", ipRepo)
-        print(folder + " packaged")
-
-def packageVivadoHLSProj(projPath, solutionName, mainVhdlFileName, ipRepo):
-    # rm others ip in project
-    vhdlPath = os.path.join(projPath, solutionName, "syn/vhdl")   
-    e = entityFromFile(os.path.join(vhdlPath, mainVhdlFileName))
-    p = Packager(e, [vhdlPath])
-    p.createPackage(ipRepo)
-
-def packageBD(ipRepo, bdPath, repoPath):
-    bdName = os.path.basename(bdPath)
-    bdSourcesDir = os.path.join(bdPath, "hdl")
-    vhldFolders = []
-    ips_path = os.path.join(bdPath, "ip/")
-    vhldFolders += [os.path.join(x[0], "synth") for x in os.walk(ips_path)]  # synth subfolder of each ip 
-    vhldFolders += [bdSourcesDir]
-    # ip folder 
-    vhldFolders += [os.path.join(bdPath, "../../ipshared")]
-    e = entityFromFile(os.path.join(bdSourcesDir, bdName + ".vhd"))
-    p = Packager(e, vhldFolders)
-    p.createPackage(ipRepo)
+#def packageMultipleProjects(workspace, names, ipRepo):
+#    for folder, name in names.items():
+#        packageVivadoHLSProj(os.path.join(workspace, folder), "solution1", name + ".vhd", ipRepo)
+#        print(folder + " packaged")
+#
+#def packageVivadoHLSProj(projPath, solutionName, mainVhdlFileName, ipRepo):
+#    # rm others ip in project
+#    vhdlPath = os.path.join(projPath, solutionName, "syn/vhdl")   
+#    e = entityFromFile(os.path.join(vhdlPath, mainVhdlFileName))
+#    p = Packager(e, [vhdlPath])
+#    p.createPackage(ipRepo)
+#
+#def packageBD(ipRepo, bdPath, repoPath):
+#    bdName = os.path.basename(bdPath)
+#    bdSourcesDir = os.path.join(bdPath, "hdl")
+#    vhldFolders = []
+#    ips_path = os.path.join(bdPath, "ip/")
+#    vhldFolders += [os.path.join(x[0], "synth") for x in os.walk(ips_path)]  # synth subfolder of each ip 
+#    vhldFolders += [bdSourcesDir]
+#    # ip folder 
+#    vhldFolders += [os.path.join(bdPath, "../../ipshared")]
+#    e = entityFromFile(os.path.join(bdSourcesDir, bdName + ".vhd"))
+#    p = Packager(e, vhldFolders)
+#    p.createPackage(ipRepo)

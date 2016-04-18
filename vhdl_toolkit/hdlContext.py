@@ -185,8 +185,8 @@ class BaseVhdlContext():
     def importFakeIEEELib(cls, ctx):
         ctx.insert(FakeStd_logic_1164.std_logic_vector_ref, FakeStd_logic_1164.std_logic_vector)
         ctx.insert(FakeStd_logic_1164.std_logic_ref, FakeStd_logic_1164.std_logic)
-        ctx.insert(HdlRef(['ieee', 'std_logic_unsigned', 'CONV_INTEGER'], False), None)
-        ctx.insert(HdlRef(['ieee', 'std_logic_arith', 'IS_SIGNED'], False), None)
+        ctx.insert(HdlRef(['ieee', 'std_logic_unsigned', 'conv_integer'], False), None)
+        ctx.insert(HdlRef(['ieee', 'std_logic_arith', 'is_signed'], False), None)
         ctx.insert(FakeStd_logic_1164.numeric_std_ref, FakeStd_logic_1164.numeric_std)
     
     @classmethod

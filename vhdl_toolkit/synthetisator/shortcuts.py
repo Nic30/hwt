@@ -12,6 +12,8 @@ from vhdl_toolkit.parser import Parser
 
 def synthetizeCls(cls, name=None):
     u = cls()
+    u._loadDeclarations()
+    u._loadImplementations()
     return formatVhdl(
                      "\n".join([ VhdlSerializer.asHdl(x) for x in u._synthesise(name)])
                      )

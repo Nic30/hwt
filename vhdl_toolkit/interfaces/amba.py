@@ -1,5 +1,5 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
-from vhdl_toolkit.synthetisator.param import Param, shareAllParams
+from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.interfaces.std import s, D
 from vhdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 
@@ -27,134 +27,192 @@ RESP_SLVERR = 2
 RESP_DECERR = 3
 
 class AxiStream_withoutSTRB(Interface):
-    DATA_WIDTH = Param(64)
-    last = s(masterDir=D.OUT, alternativeNames=['tlast' ])
-    data = s(masterDir=D.OUT, dtype=vecT(DATA_WIDTH), alternativeNames=['tdata' ])
-    ready = s(masterDir=D.IN, alternativeNames=['tready' ])
-    valid = s(masterDir=D.OUT, alternativeNames=['tvalid' ])
+    def _config(self):
+        self.DATA_WIDTH = Param(64)
+
+    def _declr(self):
+        self.last = s(masterDir=D.OUT, alternativeNames=['tlast' ])
+        self.data = s(masterDir=D.OUT, dtype=vecT(self.DATA_WIDTH), alternativeNames=['tdata' ])
+        self.ready = s(masterDir=D.IN, alternativeNames=['tready' ])
+        self.valid = s(masterDir=D.OUT, alternativeNames=['tvalid' ])
 
 class AxiStream(AxiStream_withoutSTRB):
-    strb = s(masterDir=D.OUT,
-             dtype=vecT(AxiStream_withoutSTRB.DATA_WIDTH.opDiv(hInt(8))),
-             alternativeNames=['tstrb', 'keep', 'tkeep' ])
-
+    def _declr(self):
+        super(AxiStream, self)._declr()
+        self.strb = s(masterDir=D.OUT,
+                 dtype=vecT(self.DATA_WIDTH.opDiv(hInt(8))),
+                 alternativeNames=['tstrb', 'keep', 'tkeep' ])
+        
 class Axi_user(Interface):
-    USER_WIDTH = Param(0)
-    user = s(masterDir=D.OUT,
-             dtype=vecT(USER_WIDTH),
-             alternativeNames=['tuser'])   
+    def _config(self):
+        self.USER_WIDTH = Param(0)
+        
+    def _declr(self):
+        self.user = s(masterDir=D.OUT,
+                 dtype=vecT(self.USER_WIDTH),
+                 alternativeNames=['tuser'])
 
 class AxiStream_withUserAndNoStrb(AxiStream_withoutSTRB, Axi_user):
-    pass
+    def _config(self):
+        AxiStream_withoutSTRB._config(self)
+        Axi_user._config(self)
+    
+    def _declr(self):
+        AxiStream_withoutSTRB._declr(self)
+        Axi_user._declr(self)
+        
     
 class AxiStream_withUserAndStrb(AxiStream, Axi_user):
-    pass
+    def _config(self):
+        AxiStream._config(self)
+        Axi_user._config(self)
     
+    def _declr(self):
+        AxiStream._declr(self)
+        Axi_user._declr(self)
+        
+            
 class AxiLite_addr(Interface):
-    ADDR_WIDTH = Param(32)
-    addr = s(masterDir=D.OUT, dtype=vecT(ADDR_WIDTH), alternativeNames=['addr_v'])
-    ready = s(masterDir=D.IN)
-    valid = s(masterDir=D.OUT)
+    def _config(self):
+        self.ADDR_WIDTH = Param(32)
+        
+    def _declr(self):
+        self.addr = s(masterDir=D.OUT, dtype=vecT(self.ADDR_WIDTH), alternativeNames=['addr_v'])
+        self.ready = s(masterDir=D.IN)
+        self.valid = s(masterDir=D.OUT)
 
 class AxiLite_r(Interface):
-    DATA_WIDTH = Param(64)
-    data = s(masterDir=D.IN, dtype=vecT(DATA_WIDTH), alternativeNames=['data_v'])
-    resp = s(masterDir=D.IN, dtype=vecT(2), alternativeNames=['resp_v'])
-    ready = s(masterDir=D.OUT)
-    valid = s(masterDir=D.IN)
+    def _config(self):
+        self.DATA_WIDTH = Param(64)
+        
+    def _declr(self):
+        self.data = s(masterDir=D.IN, dtype=vecT(self.DATA_WIDTH), alternativeNames=['data_v'])
+        self.resp = s(masterDir=D.IN, dtype=vecT(2), alternativeNames=['resp_v'])
+        self.ready = s(masterDir=D.OUT)
+        self.valid = s(masterDir=D.IN)
 
 class AxiLite_w(Interface):
-    DATA_WIDTH = Param(64)
-    data = s(masterDir=D.OUT, dtype=vecT(DATA_WIDTH), alternativeNames=['data_v'])
-    strb = s(masterDir=D.OUT,
-             dtype=vecT(DATA_WIDTH.opDiv(hInt(8))), alternativeNames=['strb_v'])
-    ready = s(masterDir=D.IN)
-    valid = s(masterDir=D.OUT)
+    def _config(self):
+        self.DATA_WIDTH = Param(64)
+        
+    def _declr(self):
+        self.data = s(masterDir=D.OUT, dtype=vecT(self.DATA_WIDTH), alternativeNames=['data_v'])
+        self.strb = s(masterDir=D.OUT,
+                      dtype=vecT(self.DATA_WIDTH.opDiv(hInt(8))), alternativeNames=['strb_v'])
+        self.ready = s(masterDir=D.IN)
+        self.valid = s(masterDir=D.OUT)
     
 class AxiLite_b(Interface):
-    resp = s(masterDir=D.IN, dtype=vecT(2), alternativeNames=['resp_v'])
-    ready = s(masterDir=D.OUT)
-    valid = s(masterDir=D.IN)
+    def _declr(self):
+        self.resp = s(masterDir=D.IN, dtype=vecT(2), alternativeNames=['resp_v'])
+        self.ready = s(masterDir=D.OUT)
+        self.valid = s(masterDir=D.IN)
 
-@shareAllParams    
 class AxiLite(Interface):
-    ADDR_WIDTH = Param(32)
-    DATA_WIDTH = Param(64)
-    aw = AxiLite_addr()
-    ar = AxiLite_addr()
-    w = AxiLite_w()
-    r = AxiLite_r()
-    b = AxiLite_b()
-
+    def _config(self):
+        self.ADDR_WIDTH = Param(32)
+        self.DATA_WIDTH = Param(64)
+        
+    def _declr(self):
+        self.aw = AxiLite_addr()
+        self.ar = AxiLite_addr()
+        self.w = AxiLite_w()
+        self.r = AxiLite_r()
+        self.b = AxiLite_b()
+        self._shareAllParams()
+        
 class AxiLite_addr_xil(AxiLite_addr):
-    NAME_SEPARATOR = ''
-
+    _NAME_SEPARATOR = ''
 class AxiLite_r_xil(AxiLite_r):
-    NAME_SEPARATOR = ''
-
+    _NAME_SEPARATOR = ''
 class AxiLite_w_xil(AxiLite_w):
-    NAME_SEPARATOR = ''
-
+    _NAME_SEPARATOR = ''
 class AxiLite_b_xil(AxiLite_b):
-    NAME_SEPARATOR = ''
+    _NAME_SEPARATOR = ''
     
-@shareAllParams   
 class AxiLite_xil(AxiLite):
-    aw = AxiLite_addr_xil()
-    ar = AxiLite_addr_xil()
-    w = AxiLite_w_xil()
-    r = AxiLite_r_xil()
-    b = AxiLite_b_xil()   
-
+    def _declr(self):
+        self.aw = AxiLite_addr_xil()
+        self.ar = AxiLite_addr_xil()
+        self.w = AxiLite_w_xil()
+        self.r = AxiLite_r_xil()
+        self.b = AxiLite_b_xil()   
+        self._shareAllParams()
+        
 class Axi4_addr(AxiLite_addr):
-    ID_WIDTH = Param(3)
-    id = s(masterDir=D.OUT, dtype=vecT(ID_WIDTH), alternativeNames=['id_v'])
-    burst = s(masterDir=D.OUT, dtype=vecT(2), alternativeNames=['burst_v'])
-    cache = s(masterDir=D.OUT, dtype=vecT(4), alternativeNames=['cache_v'])
-    len = s(masterDir=D.OUT, dtype=vecT(7), alternativeNames=['len_v'])
-    lock = s(masterDir=D.OUT, dtype=vecT(2), alternativeNames=['lock_v'])
-    prot = s(masterDir=D.OUT, dtype=vecT(3), alternativeNames=['prot_v'])
-    size = s(masterDir=D.OUT, dtype=vecT(3), alternativeNames=['size_v'])
-    qos = s(masterDir=D.OUT, dtype=vecT(4), alternativeNames=['qos_v'])
+    def _config(self):
+        super(Axi4_addr, self)._config()
+        self.ID_WIDTH = Param(3)
+    
+    def _declr(self):
+        super(Axi4_addr, self)._declr()
+        self.id = s(masterDir=D.OUT, dtype=vecT(self.ID_WIDTH), alternativeNames=['id_v'])
+        self.burst = s(masterDir=D.OUT, dtype=vecT(2), alternativeNames=['burst_v'])
+        self.cache = s(masterDir=D.OUT, dtype=vecT(4), alternativeNames=['cache_v'])
+        self.len = s(masterDir=D.OUT, dtype=vecT(7), alternativeNames=['len_v'])
+        self.lock = s(masterDir=D.OUT, dtype=vecT(2), alternativeNames=['lock_v'])
+        self.prot = s(masterDir=D.OUT, dtype=vecT(3), alternativeNames=['prot_v'])
+        self.size = s(masterDir=D.OUT, dtype=vecT(3), alternativeNames=['size_v'])
+        self.qos = s(masterDir=D.OUT, dtype=vecT(4), alternativeNames=['qos_v'])
 
 
 class Axi4_r(AxiLite_r):
-    ID_WIDTH = Param(3)
-    id = s(masterDir=D.IN, dtype=vecT(ID_WIDTH), alternativeNames=['id_v'])
-    last = s(masterDir=D.IN)
+    def _config(self):
+        super(Axi4_r, self)._config()
+        self.ID_WIDTH = Param(3)
+    
+    def _declr(self):
+        super(Axi4_r, self)._declr()
+        self.id = s(masterDir=D.IN, dtype=vecT(self.ID_WIDTH), alternativeNames=['id_v'])
+        self.last = s(masterDir=D.IN)
 
 class Axi4_w(AxiLite_w):
-    ID_WIDTH = Param(3)
-    id = s(masterDir=D.OUT, dtype=vecT(ID_WIDTH), alternativeNames=['id_v'])
-    last = s(masterDir=D.OUT)
+    def _config(self):
+        super(Axi4_w, self)._config()
+        self.ID_WIDTH = Param(3)
+    
+    def _declr(self):
+        super(Axi4_w, self)._declr()
+        self.id = s(masterDir=D.OUT, dtype=vecT(self.ID_WIDTH), alternativeNames=['id_v'])
+        self.last = s(masterDir=D.OUT)
     
 class Axi4_b(AxiLite_b):
-    ID_WIDTH = Param(3)
-    id = s(masterDir=D.IN, dtype=vecT(ID_WIDTH), alternativeNames=['id_v'])
+    def _config(self):
+        super(Axi4_b, self)._config()
+        self.ID_WIDTH = Param(3)
+    
+    def _declr(self):
+        super(Axi4_b, self)._declr()
+        self.id = s(masterDir=D.IN, dtype=vecT(self.ID_WIDTH), alternativeNames=['id_v'])
 
-@shareAllParams
 class Axi4(AxiLite):
-    ID_WIDTH = Param(3)
-    aw = Axi4_addr()
-    ar = Axi4_addr()
-    w = Axi4_w()
-    r = Axi4_r()
-    b = Axi4_b()   
+    def _config(self):
+        super(Axi4, self)._config()
+        self.ID_WIDTH = Param(3)
+        
+    def _declr(self):
+        self.aw = Axi4_addr()
+        self.ar = Axi4_addr()
+        self.w = Axi4_w()
+        self.r = Axi4_r()
+        self.b = Axi4_b()
+        self._shareAllParams()
 
 class Axi4_addr_xil(Axi4_addr):
-    NAME_SEPARATOR = ''
+    _NAME_SEPARATOR = ''
 class Axi4_r_xil(Axi4_r):
-    NAME_SEPARATOR = ''
+    _NAME_SEPARATOR = ''
 class Axi4_w_xil(Axi4_w):
-    NAME_SEPARATOR = ''
+    _NAME_SEPARATOR = ''
 class Axi4_b_xil(Axi4_b):
-    NAME_SEPARATOR = ''
+    _NAME_SEPARATOR = ''
 
 
-@shareAllParams
 class Axi4_xil(Axi4):
-    ar = Axi4_addr_xil()
-    aw = Axi4_addr_xil()
-    r = Axi4_r_xil()
-    w = Axi4_w_xil()
-    b = Axi4_b_xil()  
+    def _declr(self):
+        self.ar = Axi4_addr_xil()
+        self.aw = Axi4_addr_xil()
+        self.r = Axi4_r_xil()
+        self.w = Axi4_w_xil()
+        self.b = Axi4_b_xil()  
+        self._shareAllParams()

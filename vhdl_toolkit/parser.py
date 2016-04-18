@@ -101,9 +101,7 @@ class Parser(VhdlParser):
             t = lit['type']
             v = lit['value']
             if t == 'ID':
-                if not self.caseSensitive:
-                    v = v.lower()
-                if isinstance(v[0], str):
+                if isinstance(v[0], str):  # [TODO] not clear
                     ref = HdlRef([v], self.caseSensitive)
                 else:
                     ref = HdlRef.fromJson(v, self.caseSensitive)
@@ -162,10 +160,8 @@ class Parser(VhdlParser):
 
     def varDeclrJson(self, jVar, ctx):
         """parse generics, const arguments of functions etc.."""
-        t = jVar["type"]
         name = jVar['name']
-        if not self.caseSensitive:
-            name = name.lower()
+        t = jVar["type"]
         t = self.typeFromJson(t, ctx)
         if type(t) is Std_logic_vector:
             try:
@@ -181,10 +177,16 @@ class Parser(VhdlParser):
             defaultVal = Value.fromPyVal(None, t)
         g = Param(defaultVal)
         g.dtype = t
-        g.setHdlName(jVar['name'])
-        g._name = name
+        g.setHdlName(name)
+        g._name = self._hdlId(name)
         return g
 
+    def _hdlId(self, _id):
+        if self.caseSensitive:
+            return _id
+        else:
+            return _id.lower()
+         
     def entityFromJson(self, jEnt, ctx):
         e = Entity()
         e.name = jEnt['name']
@@ -283,31 +285,25 @@ class Parser(VhdlParser):
             e.fileName = fileName
             raise e
 
-        for phName, jPh in jsonctx["packageHeaders"].items():
+        for _, jPh in jsonctx["packageHeaders"].items():
             ph = self.packageHeaderFromJson(jPh, ctx)
-            assert(ph.name == phName)
-            n = ph.name
-            if not self.caseSensitive:
-                n = n.lower()
+            
+            n = self._hdlId(ph.name) 
             if n not in ctx.packages:
                 ctx.insertObj(ph, self.caseSensitive)
             else:
                 ctx.packages[n].update(ph)
 
-        for eName, jE in jsonctx["entities"].items():
+        for _, jE in jsonctx["entities"].items():
             ent = self.entityFromJson(jE, ctx)
-            assert(ent.name == eName)
             ent.fileName = fileName
             ent.dependencies = dependencies
             ctx.insertObj(ent, self.caseSensitive)
 
         if not self.primaryUnitsOnly:
-            for pbName, jpBody in jsonctx["packages"].items():
+            for _, jpBody in jsonctx["packages"].items():
                 pb = self.packageBodyFromJson(jpBody, ctx)
-                assert(pb.name == pbName)
-                n = pb.name
-                if not self.caseSensitive:
-                    n = n.lower()
+                n = self._hdlId(pb.name) 
                 if n not in ctx.packages:
                     ph = PackageHeader(n, ctx, isDummy=True)
                     ph.insertBody(pb)

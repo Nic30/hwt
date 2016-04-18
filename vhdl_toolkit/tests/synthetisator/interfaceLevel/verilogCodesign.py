@@ -10,6 +10,8 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
         class TernOpInModulSample(UnitFromHdl):
             _hdlSources = ILVL_V + "ternOpInModul.v"        
         u = TernOpInModulSample(debugParser=True)
+        u._loadAll()
+        
         self.assertEquals(u.a._dtype.getBitCnt(), 8)
         self.assertEquals(u.b._dtype.getBitCnt(), 1)
         
@@ -21,6 +23,8 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
         class SizeExpressionsSample(UnitFromHdl):
             _hdlSources = ILVL_V + "sizeExpressions.v"        
         u = SizeExpressionsSample()
+        u._loadAll()
+        
         A = u.paramA.get()
         B = u.paramB.get()
         self.assertEqual(u.portA._dtype.getBitCnt(), A.val)
@@ -35,6 +39,8 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
         class InterfaceArraySample(UnitFromHdl):
             _hdlSources = ILVL_V + "interfaceArrayAxiStream.v"        
         u = InterfaceArraySample()
+        u._loadAll()
+        
         self.assertEqual(u.input_axis._multipliedBy, u.LEN)
     
     
@@ -42,12 +48,13 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
         class InterfaceArraySample(UnitFromHdl):
             _hdlSources = ILVL_V + "interfaceArrayAxi4.v"        
         u = InterfaceArraySample()
-        self.assertEqual(u.s_axi._multipliedBy, u.C_NUM_SLAVE_SLOTS)
+        u._loadAll()
+        self.assertEqual(u.S_AXI._multipliedBy, u.C_NUM_SLAVE_SLOTS)
     
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VerilogCodesignTC('test_InterfaceArray2'))
-    # suite.addTest(unittest.makeSuite(VhdlCodesignTC))
+    #suite.addTest(VerilogCodesignTC('test_InterfaceArray2'))
+    suite.addTest(unittest.makeSuite(VerilogCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

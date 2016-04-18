@@ -5,7 +5,8 @@ from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
 
 
 class EmptyUnitWithSpi(EmptyUnit):
-    spi = SPI(isExtern=True)
+    def _declr(self):
+        self.spi = SPI(isExtern=True)
     
     
 if __name__ == "__main__":

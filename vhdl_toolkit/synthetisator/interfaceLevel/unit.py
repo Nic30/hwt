@@ -1,14 +1,13 @@
-from copy import deepcopy
+from python_toolkit.arrayQuery import single
 
+from vhdl_toolkit.hdlObjects.component import Component
 from vhdl_toolkit.synthetisator.rtlLevel.context import Context
 from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
+from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
+from vhdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase 
+from vhdl_toolkit.synthetisator.interfaceLevel.propertyCollector import PropertyCollector 
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface, walkInterfaceSignals
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
-from vhdl_toolkit.hdlObjects.component import Component
-from vhdl_toolkit.synthetisator.param import Param
-
-from python_toolkit.arrayQuery import single
-from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 
 def defaultUnitName(unit, sugestedName=None):
     if not sugestedName:
@@ -17,7 +16,7 @@ def defaultUnitName(unit, sugestedName=None):
         return sugestedName
 
 
-class Unit(Buildable):
+class Unit(UnitBase, Buildable, PropertyCollector):
     """
     Class members:
     @attention: Current implementation does not control if connections are connected
@@ -31,73 +30,32 @@ class Unit(Buildable):
     @cvar _hlsUnits: all hls units with name defined in this unit class
     @ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
     """
-    _interfaces = None
-    _subUnits = None
-    _params = None
-    _hlsUnits = None
     
     def __init__(self):
         self.__class__._builded()
-        copyDict = {}
         self._checkIntferfaces = True
          
-        for pName in  ["_entity", "_sigLvlUnit", "_params", "_interfaces", "_subUnits"]:
-            v = getattr(self.__class__, pName, None)
-            setattr(self, pName, deepcopy(v, copyDict)) 
-            
-        for intfName, interface in self._interfaces.items():
-            interface._parent = self
-            setattr(self, intfName, interface)
-        
-        for paramName, param in self._params.items():
-            param._parent = self
-            setattr(self, paramName, param)
-        
-        for uName, unit in self._subUnits.items():
-            unit._parent = self
-            setattr(self, uName, unit)
+        self._loadConfig()
          
     @classmethod
     def _build(cls):
-        """
-        Collect all design objects, place them to its containers and set their names
-        """
-        cls._interfaces = {}
-        cls._subUnits = {}
-        cls._params = {}
-        cls._hlsUnits = {}
-        for propName in dir(cls):
-            prop = getattr(cls, propName)
-            
-            if isinstance(prop, Interface):
-                prop._name = propName
-                cls._interfaces[propName] = prop
-            elif issubclass(prop.__class__, Unit):
-                prop._name = propName
-                cls._subUnits[propName] = prop
-            elif issubclass(prop.__class__, Param):
-                cls._params[propName] = prop
-                prop._name = propName
-            elif hasattr(prop, "_synthetisator"):
-                prop._name = propName
-                cls._hlsUnits[propName] = prop
-                
-        cls._clsBuildFor = cls
-        
+        pass        
+
     def _cleanAsSubunit(self):
         """Disconnect internal signals so unit can be reused by parent unit"""
-        for _, i in self._interfaces.items():
+        for i in self._interfaces:
             i._rmSignals()
                     
     def _signalsForMyEntity(self, context, prefix):
         # generate for all ports of subunit signals in this context
-        for suPortName, suPort in self._interfaces.items():  
-            suPort._signalsForInterface(context, prefix + Interface.NAME_SEPARATOR + suPortName)
+        for suPort in self._interfaces:  
+            suPort._signalsForInterface(context, prefix + Interface._NAME_SEPARATOR + suPort._name)
+            # name sep. from intf
             # suPort._connectToItsEntityPort()
     
     def _connectMyInterfaceToMyEntity(self, interface):
-        if interface._subInterfaces:
-            for _, subIntf in interface._subInterfaces.items():
+        if interface._interfaces:
+            for subIntf in interface._interfaces:
                 self._connectMyInterfaceToMyEntity(subIntf)  
         else:
             portItem = single(self._entity.ports, lambda x : x._interface == interface)
@@ -109,14 +67,28 @@ class Unit(Buildable):
         if discovered is None:
             discovered = set()
             
-        for _, p in intf._params.items():
+        for p in intf._params:
             if p not in discovered:
                 discovered.add(p)
                 yield p
                 
-        for _, i in intf._subInterfaces.items():
+        for i in intf._interfaces:
             yield from Unit._walkIntfParams(i, discovered) 
     
+    def _shareAllParams(self):
+        """Update parameters which has same name in sub interfaces"""
+        super(Unit, self)._shareAllParams()
+        for i in self._units:
+            i._updateParamsFrom(self)
+    
+    def _updateParamsFrom(self, parent):
+        for parentP in  parent._params:
+            try:
+                p = getattr(self, parentP._name)
+            except AttributeError:
+                continue
+            p.set(parentP) 
+             
     def _contextFromParams(self):
         # construct globals (generics for entity)
         globalNames = {}
@@ -141,10 +113,11 @@ class Unit(Buildable):
             return n 
                     
         discoveredParams = set()
-        for n, p in self._params.items():
+        for p in self._params:
             discoveredParams.add(p)
-            addP(n, p)
-        for _, intf in self._interfaces.items():
+            addP(p.name, p)
+            
+        for intf in self._interfaces:
             for p in Unit._walkIntfParams(intf, discoveredParams):
                 n = nameForNestedParam(p)
                 addP(n, p)
@@ -161,7 +134,7 @@ class Unit(Buildable):
         self._sigLvlUnit = VHDLUnit(self._entity)
         
         # connect results of synthetized context to interfaces of this unit
-        for _, intf in self._interfaces.items():
+        for intf in self._interfaces:
             if intf._isExtern:
                 self._connectMyInterfaceToMyEntity(intf)
         yield from s
@@ -169,9 +142,10 @@ class Unit(Buildable):
         # after synthesis clean up interface so unit can be used elsewhere
         self._component = Component(self._entity)
         self._cleanAsSubunit() 
-        for _ , intf in self._interfaces.items(): 
+        for intf in self._interfaces: 
             # reverse because other components looks at this one from outside
-            intf._reverseDirection()
+            if intf._isExtern:
+                intf._reverseDirection()
     
     def _synthesise(self, name=None):
         """
@@ -184,30 +158,27 @@ class Unit(Buildable):
         externInterf = [] 
         
         # prepare subunits
-        for subUnitName, subUnit in self._subUnits.items():
+        for subUnit in self._units:
+            subUnitName = subUnit._name
             yield from subUnit._synthesise(subUnitName)
             subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
 
-        # synthesise all hls object
-        for _, hlsU in self._hlsUnits.items():
-            synthetisator = hlsU._synthetisator(self, cntx, hlsU)
-            yield from synthetisator._synthesise()
-        
         # prepare signals for interfaces     
-        for connectionName, connection in self._interfaces.items():
+        for connection in self._interfaces:
+            connectionName = connection._name
             signals = connection._signalsForInterface(cntx, connectionName)
             if connection._isExtern:
                 externInterf.extend(signals)
         
-        for _, interface in self._interfaces.items():
+        for interface in self._interfaces:
             interface._propagateSrc()
             
-        for subUnitName, subUnit in self._subUnits.items():
-            for _, suIntf in subUnit._interfaces.items():
+        for  subUnit in self._units:
+            for suIntf in subUnit._interfaces:
                 suIntf._propagateConnection()
 
         # propagate connections on interfaces in this unit
-        for _, connection in self._interfaces.items():
+        for connection in self._interfaces:
             connection._propagateConnection()
         
         
@@ -217,9 +188,13 @@ class Unit(Buildable):
 
         yield from self._synthetiseContext(externInterf, cntx)
 
+def synthesised(u):
+    for _ in u._synthesise():
+        pass
+    return u
 
 def walkSignalOnUnit(unit):
-    for _, i in unit._interfaces.items():
+    for i in unit._interfaces:
         yield from walkInterfaceSignals(i)
 
         

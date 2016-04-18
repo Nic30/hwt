@@ -8,15 +8,17 @@ from copy import deepcopy
 from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
 from vhdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
+from vhdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
+from vhdl_toolkit.synthetisator.interfaceLevel.propertyCollector import PropertyCollector 
                    
-class Interface(Buildable, ExtractableInterface):
+class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollector):
     """
     Base class for all interfaces in interface synthetisator
     
-    @cvar NAME_SEPARATOR: separator for nested interface names   
+    @cvar _NAME_SEPARATOR: separator for nested interface names   
     
-    @cvar _subInterfaces: dict of sub interfaces (name : interf) 
-    @ivar _subInterfaces: deep copy of class _subInterfaces
+    @cvar _interfaces: dict of sub interfaces (name : interf) 
+    @ivar _interfaces: deep copy of class _interfaces
     
     @cvar _alternativeNames: [] of alternative names
     @ivar _alternativeNames: deep copy of class _alternativeNames
@@ -27,77 +29,64 @@ class Interface(Buildable, ExtractableInterface):
     @ivar _endpoints: Interfaces for which this interface is driver
     @ivar _isExtern: If true synthetisator sets it as external port of unit
     
-    #only interfaces without subinterfaces have:
+    #only interfaces without _interfaces have:
     @ivar _sig: rtl level signal instance     
     @ivar _originEntityPort: entityPort for which was this interface created
     @ivar _originSigLvlUnit: VHDL unit for which was this interface created
 
     """
-    NAME_SEPARATOR = "_"
-    def __init__(self, *destinations, masterDir=DIRECTION.OUT, multipliedBy=None, src=None, \
-                 isExtern=False, alternativeNames=None):
+    _NAME_SEPARATOR = "_"
+    def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None, \
+                 isExtern=False, alternativeNames=None, loadConfig=True):
         """
         This constructor is called when constructing new interface, it is usually done 
         manually while creating Unit or
         automatically while extracting interfaces from UnitWithSoure
          
-        @param *destinations: interfaces connected to this interface
-        @param src:  interface which is master for this interface (if None isExtern has to be true)
         @param hasExter: if true this interface is specified as interface outside of this unit  
         @param multiplyedBy: this can be instance of integer or Param, this mean the interface
                          is array of the interfaces where multiplyedBy is the size
         """
-        super(Interface, self).__init__()
-        
-        copyDict = {}
-        # build all interface classes for this interface
-        self.__class__._builded()
+        self._setAttrListener = None
+        super().__init__()
+        self._multipliedBy = multipliedBy
         self._masterDir = masterDir
+        self._src = None
+        self._direction = INTF_DIRECTION.MASTER
+
+        # resolve alternative names         
         if not alternativeNames:
             if hasattr(self.__class__, "_alternativeNames"):
-                self._alternativeNames = deepcopy(self.__class__._alternativeNames, copyDict)
+                # [TODO] only shallow cp required
+                self._alternativeNames = deepcopy(self.__class__._alternativeNames)
             else:
                 self._alternativeNames = []
         else:
             self._alternativeNames = alternativeNames
-        
-        # deepcopy params from class
-        self._params = {}
-        for pName, p in deepcopy(self.__class__._params, copyDict).items():
-            self._addParam(pName, p)
-        
-        # deepcopy subinterfaces
-        self._subInterfaces = {}
-        for iName, i in deepcopy(self.__class__._subInterfaces, copyDict).items():
-            self._addSubIntf(iName, i)
 
-        
-        if self._alternativeNames and self._subInterfaces:
-            raise NotImplementedError('only signals can have alternative names for now')
-            
         # set default name to this interface
         if not hasattr(self, "_name"):
             if self._alternativeNames: 
                 self._name = self._alternativeNames[0]
             else:
                 self._name = ''     
-                
-        self._setAsExtern(isExtern)             
-        self._setSrc(src)           
+        
+        
+        if loadConfig:
+            self._loadConfig()                
+        self._isExtern = isExtern
        
-        self._endpoints = list(destinations)
-
-        self._setMultipliedBy(multipliedBy) 
-    
+        self._endpoints = []
+                    
     def _setSrc(self, src):
         self._src = src
         if src is not None:
             self._direction = INTF_DIRECTION.SLAVE  # for inside of unit
-            for _, i in self._subInterfaces.items():
+            for i in self._interfaces:
                 i._reverseDirection()
             # self._direction = INTF_DIRECTION.oposite(src._direction)
             # if self._direction == INTF_DIRECTION.SLAVE:
-            #    for _, i in self._subInterfaces.items():
+            #    for _, i in self._interfaces.items():
             #        i._reverseDirection()
             
         else:
@@ -106,69 +95,21 @@ class Interface(Buildable, ExtractableInterface):
     def _addEp(self, endpoint):
         self._endpoints.append(endpoint)
         
-    def _addParam(self, pName, p, allowUpdate=False):
-        p._parent = self
-        p._name = pName
-        if p.hasGenericName:
-            p.name = pName
-        if not allowUpdate and pName in self._params:
-            raise IntfLvlConfErr("Already has param %s old:%s new:%s" % 
-                                 (pName, repr(getattr(self, pName)), p))
-        self._params[pName] = p
-        setattr(self, pName, p)
-        
-    def _addSubIntf(self, iName, i):
-        i._parent = self
-        i._name = iName
-        if iName in self._subInterfaces:
-            raise IntfLvlConfErr("Already has subinterface %s old:%s new:%s" % 
-                                 (iName, repr(getattr(self, iName), i)))
-        self._subInterfaces[iName] = i
-        setattr(self, iName, i)
-              
     def _setAsExtern(self, isExtern):
         self._isExtern = isExtern
-        for _, prop in self._subInterfaces.items():
+        for prop in self._interfaces:
             prop._setAsExtern(isExtern)
     
     def _propagateSrc(self):
         if self._src is not None:
             self._src._endpoints.append(self)
-                 
-    @classmethod
-    def _build(cls):
-        """
-        create a _subInterfaces from class properties
-        """
-        assert(not cls._isBuild())
-        assert(cls != Interface)  # only derived classes should be builded
-        cls._subInterfaces = {}
-        cls._params = {}
-        
-        # copy from bases
-        for c in cls.__bases__:
-            # only derived classes should be builded
-            if issubclass(c, Interface) and c != Interface:  
-                c._builded()
-        
-        for propName in dir(cls):
-            prop = getattr(cls, propName)
-            pCls = prop.__class__
-            if issubclass(pCls, Interface):
-                pCls._builded()
-                cls._subInterfaces[propName] = prop
-            elif issubclass(pCls, Param):
-                cls._params[propName] = prop
-                prop._name = propName
-        
-        cls._clsBuildFor = cls
         
     def _rmSignals(self, rmConnetions=True):
         """Remove all signals from this interface (used after unit is synthetized
          and its parent is connecting its interface to this unit)"""
         if hasattr(self, "_sig"):
             del self._sig
-        for _, i in self._subInterfaces.items():
+        for i in self._interfaces:
             i._rmSignals()
         if rmConnetions:
             self._src = None
@@ -179,9 +120,9 @@ class Interface(Buildable, ExtractableInterface):
         connect to another interface interface (on rtl level)
         works like self <= master in VHDL
         """
-        if self._subInterfaces:
-            for nameIfc, ifc in self._subInterfaces.items():
-                mIfc = master._subInterfaces[nameIfc]
+        if self._interfaces:
+            for ifc in self._interfaces:
+                mIfc = getattr(master, ifc._name)
                 if master._masterDir == mIfc._masterDir:
                     assert(self._masterDir == ifc._masterDir)
                     ifc._connectTo(mIfc, masterIndex=masterIndex, slaveIndex=slaveIndex)
@@ -224,11 +165,7 @@ class Interface(Buildable, ExtractableInterface):
                 else:
                     raise NotImplementedError()
                             
-                
-            #print(
             dstSig.assignFrom(srcSig)
-            #)
-            
             
     def _getSignalDirection(self):
         if self._direction == INTF_DIRECTION.MASTER:
@@ -243,7 +180,7 @@ class Interface(Buildable, ExtractableInterface):
         """
         Propagate connections from interface instance to all subinterfaces
         """
-        for _, suIntf in self._subInterfaces.items():
+        for suIntf in self._interfaces:
             suIntf._propagateConnection()
         
         for indx, e in enumerate(self._arrayElemCache):
@@ -256,7 +193,7 @@ class Interface(Buildable, ExtractableInterface):
                     e._connectTo(self, masterIndex=indx)
                 else:
                     self._connectTo(e, slaveIndex=indx)
-                    #print("Unknown direction %s" % (repr(self)))
+                    # print("Unknown direction %s" % (repr(self)))
                     
         for d in self._endpoints:
             d._connectTo(self)
@@ -267,9 +204,13 @@ class Interface(Buildable, ExtractableInterface):
         if already has _sig return it instead
         """
         sigs = []
-        if self._subInterfaces:
-            for name, ifc in self._subInterfaces.items():
-                sigs.extend(ifc._signalsForInterface(context, prefix + self.NAME_SEPARATOR + name))
+        if self._interfaces:
+            for intf in self._interfaces:
+                if hasattr(intf, "_hdlId"):
+                    intfName = intf._hdlId
+                else:
+                    intfName = prefix + self._NAME_SEPARATOR + intf._name
+                sigs.extend(intf._signalsForInterface(context, intfName))
         else:
             if hasattr(self, '_sig'):
                 sigs = [self._sig]
@@ -287,7 +228,7 @@ class Interface(Buildable, ExtractableInterface):
         if self._multipliedBy is not None:
             for elemIntf in self._arrayElemCache:
                 if elemIntf is not None:  # if is used
-                    elemPrefix = prefix + self.NAME_SEPARATOR + elemIntf._name 
+                    elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name 
                     elemIntf._signalsForInterface(context, elemPrefix)
                     # they are not in sigs because they are not main signals
                     
@@ -301,7 +242,7 @@ class Interface(Buildable, ExtractableInterface):
         if hasattr(self, "_originEntityPort"):
             return self._originEntityPort.name
         else:
-            return self._getFullName().replace('.', self.NAME_SEPARATOR)
+            return self._getFullName().replace('.', self._NAME_SEPARATOR)
         
     def _getFullName(self):
         name = ""
@@ -323,17 +264,18 @@ class Interface(Buildable, ExtractableInterface):
     
     def _reverseDirection(self):
         self._direction = INTF_DIRECTION.oposite(self._direction)
-        for _, intf in self._subInterfaces.items():
+        for intf in self._interfaces:
             intf._reverseDirection()
     
-    @staticmethod
-    def _replaceParam(self, name, newParam):
-        p = getattr(self, name, None)
-        p.replace(newParam)
-        self._params[name] = newParam
-        setattr(self, name, newParam)
-        for e in self._arrayElemCache:
-            e._replaceParam(e, name, newParam)
+    def _replaceParam(self, pName, newP):
+        p = getattr(self, pName)
+        i = self._params.index(p)
+        assert(i > -1)
+        self._params[i] = newP
+        setattr(self, pName, newP) 
+    
+    def _dummyOut(self):
+        raise NotImplementedError()
     
     def __repr__(self):
         s = [self.__class__.__name__]
@@ -346,20 +288,23 @@ class Interface(Buildable, ExtractableInterface):
 
 def sameIntfAs(intf):
     _intf = intf.__class__()
-    for pName, p in intf._params.items():
-        _intf._params[pName].set(getParam(p))
+    for p in intf._params:
+        _intf._replaceParam(p._name, Param(getParam(p)))
     return _intf    
 
-def connect(src, dst):
+def connect(driver, *endpoints):
     """connect interfaces on interface level"""
-    c = sameIntfAs(src)
-    c._addEp(dst)
-    c._setSrc(src)
-    return c
+    # c = sameIntfAs(src)
+    # c._loadDeclarations()
+    for ep in endpoints:
+        ep._setSrc(driver)
+    # c._addEp(dst)
+    # c._setSrc(src)
+    # return c
 
 def walkInterfaceSignals(intf):
-    if intf._subInterfaces:
-        for _, i in intf._subInterfaces.items():
+    if intf._interfaces:
+        for i in intf._interfaces:
             yield from walkInterfaceSignals(i)
     else:
         yield intf 
