@@ -50,10 +50,17 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         u = AxiStreamSampleEnt()
         u._loadAll()
         # [TODO] sometimes resolves as 'RX0_ETH_T' it is not deterministic, need better example
-        self.assertTrue(hasattr(u, "rx0_eth"))
-        self.assertTrue(hasattr(u, "rx0_ctl"))
-        self.assertTrue(hasattr(u, "tx0_eth"))
-        self.assertTrue(hasattr(u, "tx0_ctl"))
+        self.assertTrue(hasattr(u, "RX0_ETH"))
+        self.assertTrue(hasattr(u, "RX0_CTL"))
+        self.assertTrue(hasattr(u, "TX0_ETH"))
+        self.assertTrue(hasattr(u, "TX0_CTL"))
+        
+        self.assertIs(u.RX0_ETH.DATA_WIDTH,  u.C_DATA_WIDTH)
+        self.assertEqual(u.RX0_ETH.data._dtype.getBitCnt(), u.C_DATA_WIDTH.get().val)
+        self.assertIs(u.RX0_ETH.USER_WIDTH,  u.C_USER_WIDTH)
+        self.assertEqual(u.RX0_ETH.user._dtype.getBitCnt(), u.C_USER_WIDTH.get().val)
+        
+        
 
     def test_genericValues(self):
         class GenericValuesSample(UnitFromHdl):
@@ -305,7 +312,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(VhdlCodesignTC('test_axiPortDirections'))
-    suite.addTest(unittest.makeSuite(VhdlCodesignTC))
+    suite.addTest(VhdlCodesignTC('test_axiStreamExtraction'))
+    #suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

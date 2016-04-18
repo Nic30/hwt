@@ -101,6 +101,7 @@ class AxiLite_w(Interface):
                       dtype=vecT(self.DATA_WIDTH.opDiv(hInt(8))), alternativeNames=['strb_v'])
         self.ready = s(masterDir=D.IN)
         self.valid = s(masterDir=D.OUT)
+        
     
 class AxiLite_b(Interface):
     def _declr(self):

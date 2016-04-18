@@ -1,5 +1,5 @@
 import inspect, os
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit, defaultUnitName,\
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit, defaultUnitName, \
     walkSignalOnUnit
 from vhdl_toolkit.parser_utils import entityFromFile, loadCntxWithDependencies
 from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
@@ -60,11 +60,13 @@ class UnitFromHdl(Unit):
 
         for p in cls._params:
             instP = Param(p.defaultVal)
-            self._paramsOrigToInst[p] = instP
             setattr(self, p.name, instP)
             
     def _declr(self):
         cls = self.__class__
+        for p in cls._params:
+            self._paramsOrigToInst[p] = getattr(self, p.name)
+            
         for i in cls._interfaces:
             instI = i.__class__(loadConfig=False)
             instI._isExtern = i._isExtern 
@@ -72,10 +74,15 @@ class UnitFromHdl(Unit):
             instI._origI = i
             def configFromExtractedIntf(instI):
                 for p in instI._origI._params:
-                    pName = p.replacedWith.name
-                    instP = getattr(self, pName)
-                    setattr(instI, p.name, instP)
-            
+                    if p.replacedWith:
+                        pName = p.replacedWith.name
+                        instP = getattr(self, pName)
+                        setattr(instI, p.name, instP)
+                    else:
+                        # parameter was not found
+                        instV = p.defaultVal.clone()
+                        instV.vldMask = 0
+                        setattr(instI, p.name, Param(instV))            
             # overload _config function
             instI._config = types.MethodType(configFromExtractedIntf, instI)
             instI._loadConfig()

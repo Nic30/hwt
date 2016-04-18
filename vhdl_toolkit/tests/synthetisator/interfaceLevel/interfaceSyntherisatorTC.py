@@ -18,22 +18,6 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         u = SimpleUnit2()
         u._loadDeclarations()
         u._loadImplementations()
-        
-        # inside
-        self.assertIsM(u.a)
-        self.assertIsM(u.a.data)
-        self.assertIsM(u.a.last)
-        self.assertIsM(u.a.ready)
-        self.assertIsM(u.a.valid)
-        self.assertIsM(u.a.strb)
-        
-        self.assertIsS(u.b)
-        self.assertIsS(u.b.data)
-        self.assertIsS(u.b.last)
-        self.assertIsS(u.b.ready)
-        self.assertIsS(u.b.valid)
-        self.assertIsS(u.b.strb)
-        
         u = synthesised(u)
         
         # outside
@@ -136,7 +120,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(InterfaceSyntherisatorTC('test_EmptyUnit'))
+    suite.addTest(InterfaceSyntherisatorTC('test_SimpleUnit2_iLvl'))
     #suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

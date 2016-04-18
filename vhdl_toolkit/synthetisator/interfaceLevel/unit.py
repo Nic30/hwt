@@ -25,9 +25,8 @@ class Unit(UnitBase, Buildable, PropertyCollector):
     
     #resolved automaticaly:
     @cvar _interfaces: all interfaces with name in this unit class (IN/OUT/internal)
-    @cvar _subUnits: all units with name in this unit class
+    @cvar _units: all units with name in this unit class
     @cvar _params: all params with name defined at the top of unit class
-    @cvar _hlsUnits: all hls units with name defined in this unit class
     @ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
     """
     

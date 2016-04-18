@@ -76,6 +76,7 @@ class PropertyCollector():
         self._setAttrListener = self.__collectDeclarations
         self._impl()
         self._setAttrListener = None
+        
     def _loadAll(self):
         """
         Loads all parts of design of this unit
@@ -124,12 +125,16 @@ class PropertyCollector():
         """
         for p in otherObj._params:
             try:
-                myP = getattr(self, p._name)
+                onParentName = p._names[otherObj]
+            except KeyError:
+                print("")
+            try:
+                myP = getattr(self, onParentName)
                 if not isinstance(myP, Param):
                     raise KeyError()
             except AttributeError:
                 continue
-            self._replaceParam(p._name, p)
+            self._replaceParam(onParentName, p)
           
     def _shareAllParams(self):
         """Update parameters which has same name in sub interfaces"""

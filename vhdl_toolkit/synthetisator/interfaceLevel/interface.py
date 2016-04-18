@@ -272,6 +272,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
         i = self._params.index(p)
         assert(i > -1)
         self._params[i] = newP
+        del p._names[self]
+        newP._names[self] = pName
         setattr(self, pName, newP) 
     
     def _dummyOut(self):
