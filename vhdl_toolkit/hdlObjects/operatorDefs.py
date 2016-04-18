@@ -206,10 +206,10 @@ class AllOps():
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_eq)
     
-    LOWETHAN = OpDefinition('LOWETHAN', 6, '<',
-                       lambda a, b : a > b,
-                       getReturnType=getReturnType_concat,
-                       addOperand=addOperand_concat)
+    LOWERTHAN = OpDefinition('LOWERTHAN', 6, '<',
+                       lambda a, b : a < b,
+                       getReturnType=lambda op: BOOL,
+                       addOperand=addOperand_eq)
     
     CONCAT = OpDefinition('LOWETHAN', 6, '&',
                        lambda a, b : NotImplemented(),

@@ -167,6 +167,16 @@ class Integer(HdlType):
             eventMask = int(self.eventMask or other.eventMask)
 
             return self.__class__(val, INT, vldMask, eventMask=eventMask)
+        
+        def __lt__(self, other):
+            self._otherCheck(other)  
+            val = self.val < other.val
+            vldMask = int(self.vldMask and other.vldMask)
+            eventMask = int(self.eventMask or other.eventMask)
+            
+            vCls = BOOL.ValueCls
+            
+            return vCls(val, BOOL, vldMask, eventMask=eventMask)
 
         def __gt__(self, other):
             self._otherCheck(other)  

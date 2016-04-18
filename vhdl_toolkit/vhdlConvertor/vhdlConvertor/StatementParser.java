@@ -182,7 +182,7 @@ public class StatementParser {
 			loop = Statement.WHILE(new Expr(SymbolType.ID, "True"),
 					new Vector<Statement>());
 		}
-		loop.ops.set(1,
+		loop.ops.set(0,
 				visitSequence_of_statements(ctx.sequence_of_statements()));
 		return loop;
 	}

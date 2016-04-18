@@ -9,8 +9,10 @@ import hdlObjects.Expr;
 import hdlObjects.OperatorType;
 import hdlObjects.SymbolType;
 import vhdlParser.vhdlParser;
+import vhdlParser.vhdlParser.ConstraintContext;
 import vhdlParser.vhdlParser.ExpressionContext;
 import vhdlParser.vhdlParser.NameContext;
+import vhdlParser.vhdlParser.Selected_nameContext;
 import vhdlParser.vhdlParser.Subtype_indicationContext;
 import vhdlParser.vhdlParser.TargetContext;
 import vhdlParser.vhdlParser.WaveformContext;
@@ -117,24 +119,25 @@ public class ExprParser {
 		// ;
 		vhdlParser.ConstraintContext c = ctx.constraint();
 		assert (ctx.tolerance_aspect() == null);
-
-		if (ctx.selected_name() != null)
+		List<Selected_nameContext> snames = ctx.selected_name();
+		Selected_nameContext mainSelName = snames.get(0);
+		
+		if (snames.size() > 1)
 			NotImplementedLogger.print(
-					"ExprParser.visitSubtype_indication - selected_name");
+					"ExprParser.visitSubtype_indication - selected_name2");
 		if (ctx.tolerance_aspect() != null)
 			NotImplementedLogger.print(
 					"ExprParser.visitSubtype_indication - tolerance_aspect");
 
 		if (c != null) {
-			return visitConstraint(ctx.selected_name(0), c);
+			return visitConstraint(mainSelName, c);
 		} else {
-			return ReferenceParser.visitSelected_name(ctx.selected_name(0));
+			return ReferenceParser.visitSelected_name(mainSelName);
 		}
 	}
 
-	public static Expr visitConstraint(
-			vhdlParser.Selected_nameContext selectedName,
-			vhdlParser.ConstraintContext ctx) {
+	public static Expr visitConstraint(Selected_nameContext selectedName,
+			ConstraintContext ctx) {
 		// constraint
 		// : range_constraint
 		// | index_constraint

@@ -69,7 +69,7 @@ class Function():
 
     def call(self, *args):
         for p, a in zip(self.params, args):
-            p.defaultVal = a
+            p._val = a
         
         try:
             for s in self.exprList:

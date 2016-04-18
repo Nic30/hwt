@@ -50,4 +50,13 @@ class WhileContainer():
         self.body = body
     
     def seqEval(self):
-        raise NotImplementedError() 
+        
+        while True:
+            cond = True
+            for c in self.cond:
+                cond = cond and bool(c.staticEval())
+            if not cond:
+                break
+            
+            for s in self.body:
+                s.seqEval()

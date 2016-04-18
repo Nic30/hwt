@@ -3,6 +3,9 @@ class Assignment():
         self.src = src
         self.dst = dst
    
+    def seqEval(self):
+        self.dst._val = self.src.staticEval() 
+        
     def __repr__(self):
         from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.Assignment(self)    

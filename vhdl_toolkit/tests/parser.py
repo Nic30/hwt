@@ -3,6 +3,7 @@ from vhdl_toolkit.parser import Parser
 from vhdl_toolkit.hdlObjects.package import PackageHeader, PackageBody
 from vhdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 from vhdl_toolkit.hdlObjects.typeDefs import INT, STR
+import math
 
 ILVL_SAMPLES = '../samples/iLvl/vhdl/'
 ILVL_SAMPLES_V = '../samples/iLvl/verilog/'
@@ -120,9 +121,21 @@ class ParserTC(unittest.TestCase):
         self.assertEqual(val, hInt(86))
 
 
+    def testVhdlFnLog2(self):
+        ctx = Parser.parseFiles([ILVL_SAMPLES + "fnImportLog2/package0.vhd"], Parser.VHDL)
+        p = ctx['work']['package0']
+        fnCont = p.body['log2']
+        fn = fnCont[0]
+        for i in [1, 2, 3, 256, 257]:
+            val = fn.call(hInt(i))
+            expected = hInt(math.ceil(math.log2(i)))
+            self.assertEqual(val.val, expected.val, "log2(%d) should be: %s but is: %s" % (i, repr(expected), repr(val)))
+        
+        
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(ParserTC('testVhdlFn'))
-    suite.addTest(unittest.makeSuite(ParserTC))
+    suite.addTest(ParserTC('testVhdlFnLog2'))
+    # suite.addTest(unittest.makeSuite(ParserTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

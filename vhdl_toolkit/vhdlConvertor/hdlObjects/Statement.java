@@ -46,19 +46,14 @@ public class Statement extends Jsonable {
 	}
 	public static Statement ASSIG(Expr dst, Expr src) {
 		Statement s = new Statement(StatementType.ASSIGMENT);
-		List<Statement> v = new Vector<Statement>();
-		v.add(Statement.EXPR(dst));
-		v.add(Statement.EXPR(src));
-		s.ops.add(v);
+		s.op0 = dst;
+		s.op1 = src;
 
 		return s;
 	}
 	public static Statement WHILE(Expr cond, List<Statement> body) {
 		Statement s = new Statement(StatementType.WHILE);
-		List<Statement> c = new Vector<Statement>();
-		c.add(Statement.EXPR(cond));
-
-		s.ops.add(c);
+		s.op0 = cond;
 		s.ops.add(body);
 		return s;
 
@@ -75,7 +70,14 @@ public class Statement extends Jsonable {
 			case IF :
 				o.put("cond", op0.toJson());
 				addJsonArr(o, "ifTrue", ops.get(0));
-				addJsonArr(o, "ifFalse", ops.get(1));
+				List<Statement> ifFalse;
+				if (ops.size() > 1) {
+					ifFalse = ops.get(1);
+				} else {
+					ifFalse = new Vector<Statement>();
+				}
+				addJsonArr(o, "ifFalse", ifFalse);
+
 				break;
 			case RETURN :
 				o.put("val", op0.toJson());
@@ -83,6 +85,10 @@ public class Statement extends Jsonable {
 			case ASSIGMENT :
 				o.put("dst", op0.toJson());
 				o.put("src", op1.toJson());
+				break;
+			case WHILE :
+				o.put("cond", op0.toJson());
+				addJsonArr(o, "body", ops.get(0));
 				break;
 			default :
 				throw new JSONException(
