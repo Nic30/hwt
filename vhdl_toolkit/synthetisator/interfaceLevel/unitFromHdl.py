@@ -1,17 +1,17 @@
 import inspect, os
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit, defaultUnitName, \
-    walkSignalOnUnit
-from vhdl_toolkit.parser_utils import entityFromFile, loadCntxWithDependencies
-from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
-from vhdl_toolkit.interfaces.all import allInterfaces
-from vhdl_toolkit.hdlContext import RequireImportErr
-from vhdl_toolkit.synthetisator.param import Param
-from vhdl_toolkit.synthetisator.interfaceLevel.interface import walkInterfaceSignals
-from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, SignalNode
+import types
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.hdlObjects.operator import Operator
-import types
 from vhdl_toolkit.hdlObjects.function import FnContainer
+from vhdl_toolkit.parser_utils import entityFromFile, loadCntxWithDependencies
+from vhdl_toolkit.hdlContext import RequireImportErr
+from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
+from vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, SignalNode
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName, walkSignalOnUnit
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import walkPhysInterfaces
+from vhdl_toolkit.interfaces.all import allInterfaces
 
 def addSources(fileNameOrList):
     """
@@ -90,7 +90,7 @@ class UnitFromHdl(Unit):
             instI._origLoadDeclarations = instI._loadDeclarations
             def declarationsFromExtractedIntf(instI):
                 instI._origLoadDeclarations()
-                for iSig, instISig in zip(walkInterfaceSignals(instI._origI), walkInterfaceSignals(instI)):
+                for iSig, instISig in zip(walkPhysInterfaces(instI._origI), walkPhysInterfaces(instI)):
                     instISig._originEntityPort = iSig._originEntityPort
                     if not iSig._dtypeMatch:
                         origT = iSig._originEntityPort.dtype

@@ -1,27 +1,7 @@
 from python_toolkit.arrayQuery import extendLen
 from vhdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
-
-def forAllPhysInterfaces(intf):
-    if intf._interfaces:
-        for si in intf._interfaces:
-            yield from forAllPhysInterfaces(si)
-    else:
-        yield intf
-
-def forAllParams(intf, discovered=None):
-    if discovered is None:
-        discovered = set()
-    
-    for si in intf._interfaces:
-        yield from forAllParams(si, discovered)
-        
-    for p in intf._params:
-        if p not in discovered:
-            discovered.add(p)
-            yield p 
-        
-        
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import walkPhysInterfaces
 
 def splitToTermSet(width):
     try:
@@ -44,7 +24,7 @@ class InterfaceArray():
     def _tryExtractMultiplicationFactor(self):
         widths = []
         # collect all widths    
-        for i in forAllPhysInterfaces(self):
+        for i in walkPhysInterfaces(self):
             if i._dtypeMatch or i._originEntityPort.dtype.constrain is None:
                 # if is not constrained vector or type was resolved this can not be a interfaceArray
                 return 

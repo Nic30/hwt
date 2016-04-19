@@ -3,7 +3,7 @@ from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.amba import AxiStream
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from vhdl_toolkit.synthetisator.interfaceLevel.interface import connect
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
 
 class SimpleSubunit3(Unit):
     def _config(self):

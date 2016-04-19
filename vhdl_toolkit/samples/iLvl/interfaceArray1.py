@@ -1,33 +1,44 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.synthetisator.param import shareAllParams, Param
+from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.interfaces.std import Ap_vld
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
-from vhdl_toolkit.synthetisator.interfaceLevel.interface import connect
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
 
-@shareAllParams
 class SimpleSubunit(Unit):
-    DATA_WIDTH = Param(8)
-    c = Ap_vld(isExtern=True)
-    d = Ap_vld(src=c, isExtern=True)
+    def _config(self):
+        self.DATA_WIDTH = Param(8)
+    def _declr(self):
+        self.c = Ap_vld(isExtern=True)
+        self.d = Ap_vld(isExtern=True)
+        self._shareAllParams()
+        
+    def _impl(self):
+        connect(self.c, self.d)
 
-@shareAllParams
 class InterfaceArraySample(Unit):
-    DATA_WIDTH = Param(8)
-    a = Ap_vld(multipliedBy=hInt(2), isExtern=True)
-    b = Ap_vld(multipliedBy=hInt(2), isExtern=True)
-
-    u0 = SimpleSubunit() 
-    u1 = SimpleSubunit()
-    #u2 = SimpleSubunit()
+    def _config(self):
+        self.DATA_WIDTH = Param(8)
+        
+    def _declr(self):
+        LEN = hInt(2)
+        self.a = Ap_vld(multipliedBy=LEN, isExtern=True)
+        self.b = Ap_vld(multipliedBy=LEN, isExtern=True)
     
-    u0in = connect(a[0], u0.c)
-    u1in = connect(a[1], u1.c)
-    #u2in = connect(a[2], u2.c)
-
-    u0out = connect(u0.d, b[0])
-    u1out = connect(u1.d, b[1])
-    #u2out = connect(u2.d, b[2])
+        self.u0 = SimpleSubunit() 
+        self.u1 = SimpleSubunit()
+        # self.u2 = SimpleSubunit()
+        self._shareAllParams()
+        
+    def _impl(self):
+        
+        connect(self.a[0], self.u0.c)
+        connect(self.a[1], self.u1.c)
+        # u2in = connect(a[2], u2.c)
+    
+        connect(self.u0.d, self.b[0])
+        connect(self.u1.d, self.b[1])
+        # u2out = connect(u2.d, b[2])
 
 if __name__ == "__main__":
     print(

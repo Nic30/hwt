@@ -6,14 +6,10 @@ from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from vhdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase 
 from vhdl_toolkit.synthetisator.interfaceLevel.propertyCollector import PropertyCollector 
-from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface, walkInterfaceSignals
+from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
+from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
 
-def defaultUnitName(unit, sugestedName=None):
-    if not sugestedName:
-        return unit.__class__.__name__
-    else:
-        return sugestedName
 
 
 class Unit(UnitBase, Buildable, PropertyCollector):
@@ -27,6 +23,7 @@ class Unit(UnitBase, Buildable, PropertyCollector):
     @cvar _interfaces: all interfaces with name in this unit class (IN/OUT/internal)
     @cvar _units: all units with name in this unit class
     @cvar _params: all params with name defined at the top of unit class
+    
     @ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
     """
     
@@ -188,14 +185,7 @@ class Unit(UnitBase, Buildable, PropertyCollector):
 
         yield from self._synthetiseContext(externInterf, cntx)
 
-def synthesised(u):
-    for _ in u._synthesise():
-        pass
-    return u
 
-def walkSignalOnUnit(unit):
-    for i in unit._interfaces:
-        yield from walkInterfaceSignals(i)
 
         
         

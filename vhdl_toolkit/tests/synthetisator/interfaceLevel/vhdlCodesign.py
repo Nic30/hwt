@@ -5,7 +5,7 @@ from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
 from vhdl_toolkit.hdlObjects.operator import Operator
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 from vhdl_toolkit.hdlObjects.expr import ExprComparator
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import synthesised
+from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import synthesised
 from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.rtlLevel.signal import SignalNode

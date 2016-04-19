@@ -5,7 +5,8 @@ from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import 
 from vhdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit
 from vhdl_toolkit.interfaces.std import Ap_none
 from vhdl_toolkit.interfaces.amba import Axi4
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import synthesised, Unit
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import synthesised
 
 D = DIRECTION
 
@@ -98,11 +99,15 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         self.assertEqual(b.direction, D.OUT)
 
     def test_EmptyUnitWithCompositePort(self):
-        class Bb(EmptyUnit):
-            a = Axi4(isExtern=True)
-            b = Axi4(src=True, isExtern=True)
-            
-        u = Bb()
+        class Dummy(EmptyUnit):
+            def _declr(self):
+                self.a = Axi4(isExtern=True)
+                self.b = Axi4(isExtern=True)
+            def _impl(self):
+                self.b._dummyOut()
+                
+        u = Dummy()
+        u._loadAll()
         for _ in u._synthesise():
             pass
         e = u._entity
@@ -121,7 +126,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(InterfaceSyntherisatorTC('test_SimpleUnit2_iLvl'))
-    #suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
+    # suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
 

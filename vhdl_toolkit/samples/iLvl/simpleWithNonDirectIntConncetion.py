@@ -1,7 +1,7 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.std import Ap_none
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from vhdl_toolkit.synthetisator.interfaceLevel.interface import connect
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
 
 class SimpleWithNonDirectIntConncetion(Unit):
     def _declr(self):

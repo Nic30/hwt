@@ -41,6 +41,7 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
         u = InterfaceArraySample()
         u._loadAll()
         
+        self.assertEqual(u.input_axis.DATA_WIDTH.get().val, 32)
         self.assertEqual(u.input_axis._multipliedBy, u.LEN)
     
     
@@ -54,7 +55,7 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(VerilogCodesignTC('test_InterfaceArray2'))
-    suite.addTest(unittest.makeSuite(VerilogCodesignTC))
+    suite.addTest(VerilogCodesignTC('test_InterfaceArray'))
+    #suite.addTest(unittest.makeSuite(VerilogCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

@@ -1,12 +1,13 @@
 import unittest
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit, synthesised
+from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import  synthesised
 from vhdl_toolkit.interfaces.std import Ap_none
 from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from vhdl_toolkit.synthetisator.exceptions import SerializerException
-from vhdl_toolkit.synthetisator.interfaceLevel.interface import connect
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
 D = DIRECTION
 
 class SubunitsSynthesisTC(BaseSynthetisatorTC):

@@ -1,13 +1,14 @@
-from vhdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
-from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
-from vhdl_toolkit.synthetisator.param import Param, getParam
-from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import ExtractableInterface 
-from vhdl_toolkit.hdlObjects.portConnection import PortConnection
-from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from copy import deepcopy
+
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
 from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
 from vhdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
+from vhdl_toolkit.hdlObjects.portConnection import PortConnection
+
+from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
+from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import ExtractableInterface 
+from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from vhdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
 from vhdl_toolkit.synthetisator.interfaceLevel.propertyCollector import PropertyCollector 
                    
@@ -287,26 +288,3 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
         if hasattr(self, '_masterDir'):
             s.append("_masterDir=%s" % str(self._masterDir))
         return "<%s>" % (', '.join(s))
-
-def sameIntfAs(intf):
-    _intf = intf.__class__()
-    for p in intf._params:
-        _intf._replaceParam(p._name, Param(getParam(p)))
-    return _intf    
-
-def connect(driver, *endpoints):
-    """connect interfaces on interface level"""
-    # c = sameIntfAs(src)
-    # c._loadDeclarations()
-    for ep in endpoints:
-        ep._setSrc(driver)
-    # c._addEp(dst)
-    # c._setSrc(src)
-    # return c
-
-def walkInterfaceSignals(intf):
-    if intf._interfaces:
-        for i in intf._interfaces:
-            yield from walkInterfaceSignals(i)
-    else:
-        yield intf 

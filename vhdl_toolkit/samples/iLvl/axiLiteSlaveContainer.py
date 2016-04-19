@@ -4,7 +4,7 @@ from vhdl_toolkit.samples.iLvl.axi_basic import AxiLiteBasicSlave
 
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from vhdl_toolkit.synthetisator.param import Param
-from vhdl_toolkit.synthetisator.interfaceLevel.interface import connect
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
 
 
 class AxiLiteSlaveContainer(Unit):
