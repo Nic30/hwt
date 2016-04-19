@@ -13,16 +13,6 @@ from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName,
 from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import walkPhysInterfaces
 from vhdl_toolkit.interfaces.all import allInterfaces
 
-def addSources(fileNameOrList):
-    """
-    decorator which adds sources to UnitWithSource
-    first is 
-    """
-    def _addSources(unitCls):
-        assert(issubclass(unitCls, UnitFromHdl))
-        unitCls._hdlSources = fileNameOrList
-    return _addSources
-
 def cloneExprWithUpdatedParams(expr, paramUpdateDict):
     if isinstance(expr, Param):
         return paramUpdateDict[expr]
@@ -82,7 +72,15 @@ class UnitFromHdl(Unit):
                         # parameter was not found
                         instV = p.defaultVal.clone()
                         instV.vldMask = 0
-                        setattr(instI, p.name, Param(instV))            
+                        setattr(instI, p.name, Param(instV))
+                
+                # set array size
+                mulBy = instI._origI._multipliedBy
+                if isinstance(mulBy, Param):
+                    mulBy = self._paramsOrigToInst[mulBy]
+                instI._multipliedBy = mulBy   
+                    
+                             
             # overload _config function
             instI._config = types.MethodType(configFromExtractedIntf, instI)
             instI._loadConfig()

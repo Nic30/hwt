@@ -29,7 +29,17 @@ class Ap_none(Interface):
             newT = vecT(factor)
         elif isinstance(t, Std_logic_vector_contrained):
             w = getWidthExpr(t)
-            newT = vecT(w.opMul(factor))
+            if isinstance(w, Param):
+                # bouth Param or factor Value
+                newW = w.opMul(factor)
+            elif isinstance(factor, Param):
+                # w is Value
+                newW = factor.opMul(w)
+            else:
+                # bouth Value
+                newW = w.clone()
+                newW.val *= factor.val
+            newT = vecT(newW)
         else:
             raise NotImplementedError("type:%s" % (repr(t)))
         self._dtype = newT

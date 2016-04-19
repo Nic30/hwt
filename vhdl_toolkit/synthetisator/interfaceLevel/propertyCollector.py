@@ -106,7 +106,7 @@ class PropertyCollector():
                 p.name = pName
             if p._parent is None:
                 p._parent = self
-            if hasattr(self, pName):
+            if getattr(self, pName, None) is not None:
                 raise IntfLvlConfErr("Already has parameter %s old:%s new:%s" % 
                                      (pName, repr(getattr(self, pName)), p))
             self._params.append(p)
@@ -138,7 +138,7 @@ class PropertyCollector():
             try:
                 myP = getattr(self, onParentName)
                 if not isinstance(myP, Param):
-                    raise KeyError()
+                    raise AttributeError()
             except AttributeError:
                 continue
             self._replaceParam(onParentName, p)

@@ -1,4 +1,4 @@
-from python_toolkit.arrayQuery import single, NoValueExc
+from python_toolkit.arrayQuery import single, NoValueExc, arr_any
 from python_toolkit.stringUtils import matchIgnorecase
 from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from vhdl_toolkit.hdlObjects.expr import ExprComparator
@@ -7,6 +7,7 @@ from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.synthetisator.interfaceLevel.interfaceArray import InterfaceArray
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
+from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import walkSignalsInExpr
 
 class InterfaceIncompatibilityExc(Exception):
     pass
@@ -19,7 +20,13 @@ def updateParam(intfParam, unitParam):
     else:
         # parameter resolution was not successful
         pass
-
+    
+def typeIsParametrized(dtype):
+    c = dtype.constrain
+    if c is None:
+        return False
+    else:
+        return arr_any(list(walkSignalsInExpr(c)), lambda x: True)
 
 class ExtractableInterface(InterfaceArray):
 
@@ -112,7 +119,11 @@ class ExtractableInterface(InterfaceArray):
                         _unitParam = unitParam 
 
                 if len(paramDiff) == 0:
-                    self._dtypeMatch = self._originEntityPort.dtype == self._dtype
+                    
+                    # [TODO] and port is not parametrized
+                    origT = self._originEntityPort.dtype
+                    t = self._dtype
+                    self._dtypeMatch = origT == t and not typeIsParametrized(origT) and not typeIsParametrized(t) 
                 else:
                     self._dtypeMatch = isinstance(_unitParam, (Param, Value))
                     updateParam(intfParam, _unitParam)

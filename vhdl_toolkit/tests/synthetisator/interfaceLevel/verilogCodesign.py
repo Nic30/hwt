@@ -50,12 +50,12 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
             _hdlSources = ILVL_V + "interfaceArrayAxi4.v"        
         u = InterfaceArraySample()
         u._loadAll()
-        self.assertEqual(u.S_AXI._multipliedBy, u.C_NUM_SLAVE_SLOTS)
+        self.assertEqual(u.s_axi._multipliedBy, u.C_NUM_SLAVE_SLOTS)
     
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VerilogCodesignTC('test_InterfaceArray'))
+    suite.addTest(VerilogCodesignTC('test_InterfaceArray2'))
     #suite.addTest(unittest.makeSuite(VerilogCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
