@@ -59,12 +59,19 @@ class PropertyCollector():
         self._setAttrListener = None
         iamInterface = isinstance(self, InterfaceBase)
         for i in self._interfaces:
+            #inherit _multipliedBy and update dtype on physical interfaces
+            if i._multipliedBy is None and iamInterface:
+                i._multipliedBy = self._multipliedBy
             i._loadDeclarations()
+            if not i._interfaces and i._multipliedBy is not None:
+                i._injectMultiplerToDtype()
+                
+            #update direction of subinterfaces
             if iamInterface:
                 i._isExtern = self._isExtern
                 if self._direction != self._masterDir:
                     i._direction = INTF_DIRECTION.oposite(i._direction)
-            
+        # if I am a unit load subunits    
         if isinstance(self, UnitBase):
             for u in self._units:
                 u._loadDeclarations()
@@ -126,8 +133,8 @@ class PropertyCollector():
         for p in otherObj._params:
             try:
                 onParentName = p._names[otherObj]
-            except KeyError:
-                print("")
+            except KeyError as e:
+                raise e
             try:
                 myP = getattr(self, onParentName)
                 if not isinstance(myP, Param):

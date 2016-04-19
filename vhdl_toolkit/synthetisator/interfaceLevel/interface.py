@@ -80,6 +80,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
         self._endpoints = []
                     
     def _setSrc(self, src):
+        """Set driver in implementation stage"""
         self._src = src
         if src is not None:
             self._direction = INTF_DIRECTION.SLAVE  # for inside of unit
@@ -94,14 +95,17 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
             self._direction = INTF_DIRECTION.MASTER  # for inside of unit
     
     def _addEp(self, endpoint):
+        """Add endpoint in implementation stage"""
         self._endpoints.append(endpoint)
         
     def _setAsExtern(self, isExtern):
+        """Set interface as extern"""
         self._isExtern = isExtern
         for prop in self._interfaces:
             prop._setAsExtern(isExtern)
     
     def _propagateSrc(self):
+        """Propagate driver in routing"""
         if self._src is not None:
             self._src._endpoints.append(self)
         
@@ -264,11 +268,13 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
         return name
     
     def _reverseDirection(self):
+        """Reverse direction of this interface in implementation stage"""
         self._direction = INTF_DIRECTION.oposite(self._direction)
         for intf in self._interfaces:
             intf._reverseDirection()
     
     def _replaceParam(self, pName, newP):
+        """Replace parameter in configuration stage"""
         p = getattr(self, pName)
         i = self._params.index(p)
         assert(i > -1)

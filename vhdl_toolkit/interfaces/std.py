@@ -12,30 +12,36 @@ class Ap_none(Interface):
     def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None,
                    dtype=BIT, isExtern=False, alternativeNames=None,
                    loadConfig=True):
-        self._multipliedBy = None
+        #self._multipliedBy = None
         super().__init__(masterDir=masterDir, multipliedBy=multipliedBy,
              isExtern=isExtern, alternativeNames=alternativeNames, 
              loadConfig=loadConfig)
         self._dtype = dtype
+        self._setMultipliedBy(multipliedBy, updateTypes=True)
         # make empty containers
 #        self._interfaces = []
 #        self._params = []
-        
+    
+    def _injectMultiplerToDtype(self):
+        t = self._dtype
+        factor = self._multipliedBy
+        if t == BIT:
+            newT = vecT(factor)
+        elif isinstance(t, Std_logic_vector_contrained):
+            w = getWidthExpr(t)
+            newT = vecT(w.opMul(factor))
+        else:
+            raise NotImplementedError("type:%s" % (repr(t)))
+        self._dtype = newT
+            
     def _setMultipliedBy(self, factor, updateTypes=True):
         if type(self._multipliedBy) == type(factor) and self._multipliedBy == factor:
             pass
         else:
             self._multipliedBy = factor
-            if updateTypes:
-                t = self._dtype
-                if t == BIT:
-                    newT = vecT(factor)
-                elif isinstance(t, Std_logic_vector_contrained):
-                    w = getWidthExpr(t)
-                    newT = vecT(w.opMul(factor))
-                else:
-                    raise NotImplementedError("type:%s" % (repr(t)))
-                self._dtype = newT
+            if updateTypes and factor is not None:
+                self.injectMultiplerToDtype()
+
 s = Ap_none
      
 

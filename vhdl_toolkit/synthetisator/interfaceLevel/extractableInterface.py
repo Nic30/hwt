@@ -83,6 +83,7 @@ class ExtractableInterface(InterfaceArray):
         """
         Compare signal _dtype and _dtype of interface declaration and try match parameters
         """
+        self._multipliedBy = multipliedBy
         if self._interfaces:
             for si in self._interfaces:
                 si._extractDtype(multipliedBy=multipliedBy)
@@ -157,7 +158,7 @@ class ExtractableInterface(InterfaceArray):
         
         else:
             # extract signal(Ap_none , etc.)
-            # collect all posible names
+            # collect all possible names
             intfNames = []
             if hasattr(self, "_name"):
                 intfNames.append(self._name)

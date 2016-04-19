@@ -20,7 +20,7 @@ class InterfaceArray():
         self._multipliedBy = factor
         for i in self._interfaces:
             i._setMultipliedBy(factor, updateTypes=updateTypes)
-            
+    
     def _tryExtractMultiplicationFactor(self):
         widths = []
         # collect all widths    
@@ -62,7 +62,7 @@ class InterfaceArray():
     
     def _mkElemItem(self):
         e = self.__class__()
-        for p in self._params:
-            e._replaceParam(e, p._name, p)
+        e._updateParamsFrom(self)
+        e._loadDeclarations()
         return e 
         
