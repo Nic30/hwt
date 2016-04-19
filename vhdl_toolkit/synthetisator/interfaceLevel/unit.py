@@ -127,6 +127,7 @@ class Unit(UnitBase, Buildable, PropertyCollector):
         # synthetize signal level context
         s = cntx.synthetize(externInterf)
         self._entity = s[1]
+        self._entity.__doc__ = self.__doc__
 
         self._architecture = s[2]
             

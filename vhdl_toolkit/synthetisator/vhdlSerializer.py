@@ -79,7 +79,7 @@ class VhdlSerializer():
                              (cls.asHdl(a.dst), cls.Value(a.src), repr(a.dst.dtype), repr(a.src.dtype)))
     @classmethod
     def comment(cls, comentStr):
-        return "--" + comentStr
+        return "--" + comentStr.replace("\n", "\n--")
     
     @classmethod
     def Component(cls, c):
@@ -105,11 +105,19 @@ class VhdlSerializer():
         ent.ports.sort(key=lambda x: x.name)
         ent.generics.sort(key=lambda x: x.name)
 
-        return VHDLTemplates.entity.render({
+        doc = ent.__doc__
+        if doc:
+            doc = cls.comment(doc) + "\n"
+
+        entVhdl = VHDLTemplates.entity.render({
                 "name": ent.name,
                 "ports" : [cls.PortItem(pi) for pi in ent.ports ],
                 "generics" : [cls.GenericItem(g) for g in ent.generics]
-                })  
+                })
+        if doc:
+            return doc + entVhdl   
+        else:
+            return entVhdl
     
     @classmethod
     def IfContainer(cls, ifc):
