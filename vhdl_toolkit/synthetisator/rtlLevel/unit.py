@@ -64,7 +64,7 @@ class VHDLUnit(Entity, Unit):
             g.defaultVal = v   
                 
     def asVHDLComponentInstance(self):
-        ci = ComponentInstance(self.name + "_" + str(id(self)), self)
+        ci = ComponentInstance(self.name, self)
         # assert all inputs are connected
         for p in self.entity.ports:
             if p.direction == DIRECTION.IN:

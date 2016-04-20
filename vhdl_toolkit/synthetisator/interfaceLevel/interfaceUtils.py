@@ -12,6 +12,7 @@ def connect(driver, *endpoints):
     # c._loadDeclarations()
     for ep in endpoints:
         ep._setSrc(driver)
+    #    driver._endpoints.append(ep)
     # c._addEp(dst)
     # c._setSrc(src)
     # return c

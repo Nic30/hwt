@@ -12,6 +12,10 @@ from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName, walkSignalOnUnit
 from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import walkPhysInterfaces
 from vhdl_toolkit.interfaces.all import allInterfaces
+from vhdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit
+from vhdl_toolkit.hdlObjects.entity import Entity
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
+from vhdl_toolkit.hdlObjects.portItem import PortItem
 
 def cloneExprWithUpdatedParams(expr, paramUpdateDict):
     if isinstance(expr, Param):
@@ -103,7 +107,7 @@ class UnitFromHdl(Unit):
                 if instI._origI._direction != instI._direction:
                     instI._reverseDirection()  
                 for iSig, instISig in zip(walkPhysInterfaces(instI._origI), walkPhysInterfaces(instI)):
-                    instISig._originEntityPort = iSig._originEntityPort
+                    # instISig._originEntityPort = iSig._originEntityPort
                     if not iSig._dtypeMatch:
                         origT = iSig._originEntityPort.dtype
                         if origT.constrain is None:
@@ -164,12 +168,29 @@ class UnitFromHdl(Unit):
     
     def _synthesise(self, name=None):
         """Convert unit to hdl objects"""
-        assert(self._entity)
+
         self._name = defaultUnitName(self, name)
+        self._entity = Entity()
+        generics = self._entity.generics
+        ports = self._entity.ports
         self._sigLvlUnit = VHDLUnit(self._entity)
-        for s in walkSignalOnUnit(self):
-            s._originSigLvlUnit = self._sigLvlUnit
+        self._sigLvlUnit.name = self._name
+        
+        for p in self._params:
+            generics.append(p)
+        
+        for unitIntf in self._interfaces:
+            for i in walkPhysInterfaces(unitIntf):
+                pi = PortItem(i._getPhysicalName(), i._getSignalDirection(), i._dtype)
+                pi._interface = i
+                ports.append(pi)
+                i._originSigLvlUnit = self._sigLvlUnit
+                i._originEntityPort = pi
             
+        # self._sigLvlUnit = VHDLUnit(self._entity)
+        # for s in walkSignalOnUnit(self):
+        #    s._originSigLvlUnit = self._sigLvlUnit
+        #    
         return [self]
 
     def __str__(self):

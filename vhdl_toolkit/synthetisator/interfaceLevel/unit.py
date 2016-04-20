@@ -161,17 +161,16 @@ class Unit(UnitBase, Buildable, PropertyCollector):
             subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
 
         # prepare signals for interfaces     
-        for connection in self._interfaces:
-            connectionName = connection._name
-            signals = connection._signalsForInterface(cntx, connectionName)
-            if connection._isExtern:
+        for i in self._interfaces:
+            connectionName = i._name
+            signals = i._signalsForInterface(cntx, connectionName)
+            i._propagateSrc()
+            if i._isExtern:
                 externInterf.extend(signals)
         
-        for interface in self._interfaces:
-            interface._propagateSrc()
-            
         for  subUnit in self._units:
             for suIntf in subUnit._interfaces:
+                suIntf._propagateSrc()
                 suIntf._propagateConnection()
 
         # propagate connections on interfaces in this unit

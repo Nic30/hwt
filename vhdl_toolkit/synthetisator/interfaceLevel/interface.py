@@ -25,6 +25,18 @@ def indexRange(width, index):
         upper = hInt(width.val * index)
         lower = hInt(width.val * (index + 1) - 1)
         return SignalNode.resForOp(Operator(AllOps.DOWNTO, [lower, upper]))
+
+
+def aplyIndexOnSignal(sig, dstType, index):
+    if sig.dtype == BIT or dstType == BIT:
+        return sig.opSlice(hInt(index))
+    elif isinstance(dstType, Std_logic_vector):
+        w = getWidthExpr(dstType)
+        r = indexRange(w, index)
+        return sig.opSlice(r)
+    else:
+        raise NotImplementedError()
+    
                    
 class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollector):
     """
@@ -101,15 +113,13 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
                 (repr(self), repr(self._src), repr(src)))
         assert(src is not None)
         self._src = src
+        #for i, srcI in zip(self._interfaces, src._interfaces):
+        #    assert(i._name == srcI._name)
+        #    i._setSrc(srcI)
+            
         # [TODO] reverse parent to keep interface consistent
         if self._direction != INTF_DIRECTION.SLAVE:  # for inside of unit
             self._reverseDirection()
-        # for i in self._interfaces:
-        #    i._reverseDirection()
-        # self._direction = INTF_DIRECTION.oposite(src._direction)
-        # if self._direction == INTF_DIRECTION.SLAVE:
-        #    for _, i in self._interfaces.items():
-        #        i._reverseDirection()
             
     
     def _addEp(self, endpoint):
@@ -165,25 +175,11 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
                                 (repr(master)))
             
             if masterIndex is not None:
-                if dstSig.dtype == BIT:
-                    srcSig = srcSig.opSlice(hInt(masterIndex))
-                elif isinstance(dstSig.dtype, Std_logic_vector):
-                    w = getWidthExpr(dstSig.dtype)
-                    r = indexRange(w, masterIndex)
-                    srcSig = srcSig.opSlice(r)
-                else:
-                    raise NotImplementedError()
+                srcSig = aplyIndexOnSignal(srcSig, dstSig.dtype, masterIndex)
             
             if slaveIndex is not None:
-                if srcSig.dtype == BIT:
-                    dstSig = dstSig.opSlice(hInt(slaveIndex))
-                elif isinstance(srcSig.dtype, Std_logic_vector):
-                    w = getWidthExpr(srcSig.dtype)
-                    r = indexRange(w, slaveIndex)
-                    dstSig = dstSig.opSlice(r)
-                else:
-                    raise NotImplementedError()
-                            
+                dstSig = aplyIndexOnSignal(dstSig, srcSig.dtype, slaveIndex)
+                           
             dstSig.assignFrom(srcSig)
             
     def _getSignalDirection(self):
@@ -214,8 +210,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
                     self._connectTo(e, slaveIndex=indx)
                     # print("Unknown direction %s" % (repr(self)))
                     
-        for d in self._endpoints:
-            d._connectTo(self)
+        for e in self._endpoints:
+            e._connectTo(self)
     
     def _signalsForInterface(self, context, prefix):
         """

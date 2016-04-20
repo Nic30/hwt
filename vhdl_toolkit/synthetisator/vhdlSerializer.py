@@ -185,7 +185,9 @@ class VhdlSerializer():
     
     @classmethod
     def PortConnection(cls, pc):
-        assert(pc.portItem.dtype == pc.sig.dtype)
+        if pc.portItem.dtype != pc.sig.dtype:
+            raise SerializerException("Port map %s is nod valid (types does not match)" % (
+                      " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig)) ))
         return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig))      
     
     @classmethod
