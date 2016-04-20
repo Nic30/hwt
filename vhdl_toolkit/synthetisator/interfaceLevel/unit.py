@@ -34,7 +34,7 @@ class Unit(UnitBase, Buildable, PropertyCollector):
         self._loadConfig()
          
     @classmethod
-    def _build(cls):
+    def _build(cls, multithread=True):
         pass        
 
     def _cleanAsSubunit(self):
