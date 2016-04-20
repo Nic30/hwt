@@ -73,7 +73,6 @@ class UnitFromHdl(Unit):
         for i in cls._interfaces:
             instI = i.__class__(loadConfig=False)
             instI._isExtern = i._isExtern 
-            instI._direction = i._direction
             instI._origI = i
             def configFromExtractedIntf(instI):
                 for p in instI._origI._params:
@@ -92,7 +91,7 @@ class UnitFromHdl(Unit):
                 if isinstance(mulBy, Param):
                     mulBy = self._paramsOrigToInst[mulBy]
                 instI._multipliedBy = mulBy   
-                    
+  
                              
             # overload _config function
             instI._config = types.MethodType(configFromExtractedIntf, instI)
@@ -101,6 +100,8 @@ class UnitFromHdl(Unit):
             instI._origLoadDeclarations = instI._loadDeclarations
             def declarationsFromExtractedIntf(instI):
                 instI._origLoadDeclarations()
+                if instI._origI._direction != instI._direction:
+                    instI._reverseDirection()  
                 for iSig, instISig in zip(walkPhysInterfaces(instI._origI), walkPhysInterfaces(instI)):
                     instISig._originEntityPort = iSig._originEntityPort
                     if not iSig._dtypeMatch:
