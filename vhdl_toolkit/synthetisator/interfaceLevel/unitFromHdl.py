@@ -63,6 +63,7 @@ class UnitFromHdl(Unit):
         for p in cls._params:
             instP = Param(p.defaultVal)
             setattr(self, p.name, instP)
+            instP.hasGenericName = False
             
     def _declr(self):
         cls = self.__class__

@@ -11,6 +11,20 @@ from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import Extra
 from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from vhdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
 from vhdl_toolkit.synthetisator.interfaceLevel.propertyCollector import PropertyCollector 
+from vhdl_toolkit.synthetisator.rtlLevel.signal import SignalNode, Signal
+from vhdl_toolkit.hdlObjects.operator import Operator
+from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
+from vhdl_toolkit.synthetisator.param import Param
+
+def indexRange(width, index):
+    if isinstance(width, (Param, Signal)):
+        upper = width.opMul(hInt(index))
+        lower = width.opMul(hInt(index + 1)).opSub(hInt(1))
+        return lower.opDownto(upper)
+    else:
+        upper = hInt(width.val * index)
+        lower = hInt(width.val * (index + 1) - 1)
+        return SignalNode.resForOp(Operator(AllOps.DOWNTO, [lower, upper]))
                    
 class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollector):
     """
@@ -81,13 +95,16 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
                     
     def _setSrc(self, src):
         """Set driver in implementation stage"""
-        assert(self._src is None)
+        if self._src is not None:
+            raise IntfLvlConfErr(
+                "Interface %s already has driver (%s) and can not be connected to other driver (%s)" % 
+                (repr(self), repr(self._src), repr(src)))
         assert(src is not None)
         self._src = src
         # [TODO] reverse parent to keep interface consistent
-        if self._direction != INTF_DIRECTION.SLAVE:   # for inside of unit
+        if self._direction != INTF_DIRECTION.SLAVE:  # for inside of unit
             self._reverseDirection()
-        #for i in self._interfaces:
+        # for i in self._interfaces:
         #    i._reverseDirection()
         # self._direction = INTF_DIRECTION.oposite(src._direction)
         # if self._direction == INTF_DIRECTION.SLAVE:
@@ -152,10 +169,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
                     srcSig = srcSig.opSlice(hInt(masterIndex))
                 elif isinstance(dstSig.dtype, Std_logic_vector):
                     w = getWidthExpr(dstSig.dtype)
-                    upper = w.opMul(hInt(masterIndex))
-                    lower = w.opMul(hInt(masterIndex + 1)).opSub(hInt(1))
-
-                    srcSig = srcSig.opSlice(lower.opDownto(upper))
+                    r = indexRange(w, masterIndex)
+                    srcSig = srcSig.opSlice(r)
                 else:
                     raise NotImplementedError()
             
@@ -164,10 +179,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
                     dstSig = dstSig.opSlice(hInt(slaveIndex))
                 elif isinstance(srcSig.dtype, Std_logic_vector):
                     w = getWidthExpr(srcSig.dtype)
-                    upper = w.opMul(hInt(slaveIndex))
-                    lower = w.opMul(hInt(slaveIndex + 1)).opSub(hInt(1))
-
-                    dstSig = dstSig.opSlice(lower.opDownto(upper))
+                    r = indexRange(w, slaveIndex)
+                    dstSig = dstSig.opSlice(r)
                 else:
                     raise NotImplementedError()
                             
