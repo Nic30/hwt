@@ -8,6 +8,8 @@ def splitToTermSet(width):
         width = width.singleDriver()
     except (AttributeError, AssertionError):
         return set([width])
+    if width.operator == AllOps.DIV:
+        pass
     assert(width.operator == AllOps.MUL)
     return set(width.ops)
 

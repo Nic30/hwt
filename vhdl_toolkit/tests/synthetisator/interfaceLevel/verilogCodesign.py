@@ -3,7 +3,7 @@ from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import 
 from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
 
-ILVL_V = '../../../samples/iLvl/verilog/'
+ILVL_V = '../../../samples/verilogCodesign/verilog/'
 
 class VerilogCodesignTC(BaseSynthetisatorTC):
     def test_TernOpInModul(self):
@@ -50,12 +50,37 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
             _hdlSources = ILVL_V + "interfaceArrayAxi4.v"        
         u = InterfaceArraySample()
         u._loadAll()
+        
         self.assertEqual(u.s_axi._multipliedBy, u.C_NUM_SLAVE_SLOTS)
+        self.assertEqual(u.m_axi._multipliedBy, u.C_NUM_MASTER_SLOTS)
     
+    def test_paramSpecifiedByParam(self):
+        class U(UnitFromHdl):
+            _hdlSources = ILVL_V + "parameterSizeFromParameter.v"        
+        u = U()
+        u._loadAll()
+        
+        self.assertEqual(u.A.get(), hInt(1))
+        self.assertEqual(u.B.get(), hInt(2))
+        
+        
+        self.assertEqual(u.aMultBMult64.dtype.getBitCnt(), 1*2*64)
+        self.assertEqual(u.aMult32.dtype.getBitCnt(), 1*32)
+        
+    
+    def test_axiCrossbar(self):
+        class U(UnitFromHdl):
+            _hdlSources = ILVL_V + "axiCrossbar.v"
+        u = U()
+        u._loadAll()
+        
+        self.assertEqual(u.s_axi._multipliedBy, u.C_NUM_SLAVE_SLOTS)
+        self.assertEqual(u.m_axi._multipliedBy, u.C_NUM_MASTER_SLOTS)
+        
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VerilogCodesignTC('test_InterfaceArray2'))
+    suite.addTest(VerilogCodesignTC('test_axiCrossbar'))
     #suite.addTest(unittest.makeSuite(VerilogCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

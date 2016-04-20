@@ -6,7 +6,7 @@ from vhdl_toolkit.hdlObjects.typeDefs import INT, STR
 import math
 
 ILVL_SAMPLES = '../samples/iLvl/vhdl/'
-ILVL_SAMPLES_V = '../samples/iLvl/verilog/'
+ILVL_SAMPLES_V = '../samples/verilogCodesign/verilog/'
 
 
 
