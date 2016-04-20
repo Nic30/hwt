@@ -318,6 +318,22 @@ class Std_logic_vector_contrained(Std_logic_vector):
                 val = 0
             return cls(val, typeObj, vld)
         
+        def concat(self, other):
+            from vhdl_toolkit.synthetisator.rtlLevel.signal import SignalNode
+            from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
+            from vhdl_toolkit.hdlObjects.operator import Operator
+            v = self.clone()
+            w = self.dtype.getBitCnt()
+            v.val = (v.val << w) | other.val
+            v.vldMask = (v.vldMask << w) | other.vldMask
+            v.eventMask = (v.eventMask << w) | other.eventMask
+            
+            v.dtype = VECTOR(SignalNode.resForOp(
+                                Operator(AllOps.DOWNTO, [ 
+                                           Value.fromPyVal(w + other.dtype.getBitCnt(), INT),
+                                           Value.fromPyVal(0, INT)])))
+            return v
+        
         def __eq__(self, other):
             assert(isinstance(other, Value))
             w = self.dtype.getBitCnt()
@@ -337,7 +353,7 @@ class Std_logic_vector_contrained(Std_logic_vector):
     def __repr__(self):
         from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
         return "<HdlType %s, constrain:%s>" % (
-            self.__class__.__name__, VhdlSerializer.asHdl(self.constrain) )
+            self.__class__.__name__, VhdlSerializer.asHdl(self.constrain))
 
 class String(HdlType):
     def __init__(self):

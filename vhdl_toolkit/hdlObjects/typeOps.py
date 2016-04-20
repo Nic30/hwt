@@ -77,6 +77,9 @@ class TypeOps():
         eq.val = not eq.val
         return eq
     
+    def concat(self, other):
+        raise NotImplementedError()
+    
     def __lt__(self, other):
         raise NotImplementedError()
         
