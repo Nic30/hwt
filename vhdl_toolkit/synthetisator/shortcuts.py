@@ -10,8 +10,8 @@ from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from python_toolkit.fileHelpers import find_files
 from vhdl_toolkit.parser import Parser
 
-def synthetizeCls(cls, name=None):
-    u = cls()
+def synthetizeCls(cls, name=None, multithread=True):
+    u = cls(multithread=multithread)
     u._loadDeclarations()
     u._loadImplementations()
     return formatVhdl(

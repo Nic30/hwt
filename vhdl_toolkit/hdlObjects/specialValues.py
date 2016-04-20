@@ -24,7 +24,7 @@ class INTF_DIRECTION():
         elif d == cls.MASTER:
             return cls.SLAVE
         else:
-            raise Exception("Parameter is not interface direction")
+            raise Exception("%s is not interface direction" % (repr(d)))
     
 
 class DIRECTION():

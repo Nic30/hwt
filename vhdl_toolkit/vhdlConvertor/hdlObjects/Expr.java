@@ -16,10 +16,6 @@ public class Expr implements iJsonable {
 	public Expr(Expr op0, OperatorType operatorType, Expr op1) {
 		this.binOperator = new Operator(op0, operatorType, op1);
 	}
-	public Expr(Expr op0, OperatorType operatorType, List<Expr> operands) {
-		assert (operatorType == OperatorType.CALL);
-		this.binOperator = new Operator(op0, operatorType, operands);
-	}
 	public Expr(SymbolType type, Object value) {
 		literal = new Symbol(type, value);
 	}
@@ -32,6 +28,11 @@ public class Expr implements iJsonable {
 		ops.add(ifTrue);
 		ops.add(ifFalse);
 		e.binOperator = new Operator(cond, OperatorType.TERNARY, ops);
+		return e;
+	}
+	public static Expr call(Expr fnId, List<Expr> operands) {
+		Expr e = new Expr();
+		e.binOperator = new Operator(fnId, OperatorType.CALL, operands);
 		return e;
 	}
 	public JSONObject toJson() throws JSONException {

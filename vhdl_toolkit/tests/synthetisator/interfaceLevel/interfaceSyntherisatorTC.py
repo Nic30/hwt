@@ -18,7 +18,41 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
         u = SimpleUnit2()
         u._loadDeclarations()
+        
+        # inside
+        self.assertIsM(u.a)
+        self.assertIsM(u.a.data)
+        self.assertIsM(u.a.last)
+        self.assertIsM(u.a.ready)
+        self.assertIsM(u.a.valid)
+        self.assertIsM(u.a.strb)
+        
+        # inside
+        self.assertIsM(u.b)
+        self.assertIsM(u.b.data)
+        self.assertIsM(u.b.last)
+        self.assertIsM(u.b.ready)
+        self.assertIsM(u.b.valid)
+        self.assertIsM(u.b.strb)
+        
+        
         u._loadImplementations()
+
+        # inside
+        self.assertIsM(u.a)
+        self.assertIsM(u.a.data)
+        self.assertIsM(u.a.last)
+        self.assertIsM(u.a.ready)
+        self.assertIsM(u.a.valid)
+        self.assertIsM(u.a.strb)
+        
+        self.assertIsS(u.b)
+        self.assertIsS(u.b.data)
+        self.assertIsS(u.b.last)
+        self.assertIsS(u.b.ready)
+        self.assertIsS(u.b.valid)
+        self.assertIsS(u.b.strb)
+       
         u = synthesised(u)
         
         # outside

@@ -7,6 +7,6 @@ class Buildable():
         return hasattr(cls, "_clsBuildFor") and cls._clsBuildFor == cls
     
     @classmethod
-    def _builded(cls):
+    def _builded(cls, multithread=True):
         if not cls._isBuild():
-            cls._build()   
+            cls._build(multithread=multithread)   

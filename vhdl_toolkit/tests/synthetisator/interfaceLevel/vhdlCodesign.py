@@ -312,7 +312,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VhdlCodesignTC('test_axiStreamExtraction'))
+    suite.addTest(VhdlCodesignTC('test_axiPortDirections'))
     #suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

@@ -96,8 +96,9 @@ public class ExprParser {
 		vhdlParser.NameContext name = ctx.name();
 		Expr ad = visitActual_designator(ctx.actual_designator());
 		if (name != null) {
-			return new Expr(ReferenceParser.visitName(name), OperatorType.CALL,
-					ad);
+			List<Expr> ops = new Vector<Expr>();
+			ops.add(ad);
+			return Expr.call(ReferenceParser.visitName(name), ops);
 		}
 		return ad;
 	}

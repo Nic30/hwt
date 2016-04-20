@@ -29,6 +29,18 @@ def cloneExprWithUpdatedParams(expr, paramUpdateDict):
     else:
         raise NotImplementedError("Not implemented for %s" % (repr(expr)))
 
+def toAbsolutePaths(relatibeTo, sources):
+    if isinstance(sources, str):
+        sources = [sources]
+    def updatePath(p):
+        if isinstance(p, str):
+            return os.path.join(relatibeTo, p)
+        else:
+            # tuple (lib, filename)
+            return (p[0], os.path.join(relatibeTo, p[1]))
+    
+    return [ updatePath(s) for s in sources]
+
 class UnitFromHdl(Unit):
     """
     @cvar _hdlSources:  str or list of hdl filenames, they can be relative to file 
@@ -37,10 +49,10 @@ class UnitFromHdl(Unit):
         this is currently supported only for vhdl
     @cvar _intfClasses: interface classes which are searched on hdl entity 
     """
-    def __init__(self, intfClasses=allInterfaces, debugParser=False):
+    def __init__(self, intfClasses=allInterfaces, debugParser=False, multithread=True):
         self.__class__._intfClasses = intfClasses
         self.__class__._debugParser = debugParser
-        super(UnitFromHdl, self).__init__()
+        super(UnitFromHdl, self).__init__(multithread=multithread)
     
     def _config(self):
         cls = self.__class__
@@ -102,16 +114,12 @@ class UnitFromHdl(Unit):
             
             setattr(self, i._name, instI)
         
-            
-
     @classmethod
-    def _build(cls):
+    def _build(cls, multithread=True):
         # convert source filenames to absolute paths
         assert(cls._hdlSources)
-        if isinstance(cls._hdlSources, str):
-            cls._hdlSources = [cls._hdlSources]
         baseDir = os.path.dirname(inspect.getfile(cls))
-        cls._hdlSources = [os.path.join(baseDir, s) for s in cls._hdlSources]
+        cls._hdlSources = toAbsolutePaths(baseDir, cls._hdlSources)
 
         # init hdl object containers on this unit       
         cls._params = []
@@ -122,10 +130,11 @@ class UnitFromHdl(Unit):
         try:
             cls._entity = entityFromFile(cls._hdlSources[0], debug=cls._debugParser)
         except RequireImportErr:
-            ctx = loadCntxWithDependencies(cls._hdlSources, debug=cls._debugParser)
-            ents = ctx.entities
-            assert(len(ents) == 1)
-            cls._entity = ents[list(ents.keys())[0]]
+            ctx = loadCntxWithDependencies(cls._hdlSources, debug=cls._debugParser, multithread=multithread)
+            for _, e in ctx.entities.items():
+                if e._getFileName() == cls._hdlSources[0]:
+                    cls._entity = e
+                    break
             
         for g in cls._entity.generics:
             # if hasattr(cls, g.name):
@@ -162,4 +171,4 @@ class UnitFromHdl(Unit):
         return [self]
 
     def __str__(self):
-        return "\n".join(['--%s' % (s) for s in self._hdlSources])
+        return "\n".join(['--%s' % (repr(s)) for s in self._hdlSources])

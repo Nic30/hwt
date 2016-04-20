@@ -210,7 +210,7 @@ class Parser(VhdlParser):
 
     def componentInstanceFromJson(self, jComp, ctx):
         ci = ComponentInstance(jComp['name'], None)
-        ci.entityRef = HdlRef.fromExprJson(jComp['entityName'], self.caseSensitive)
+        ci.entityRef = HdlRef.fromJson(jComp['entityName'], self.caseSensitive)
         if not self.hierarchyOnly:
             raise NotImplementedError()
             # [TODO] port, generics maps
@@ -356,6 +356,7 @@ class Parser(VhdlParser):
                and component instances inside, packages and components inside, packages
         @param primaryUnitsOnly: parse only entities and package headers
         """
+        assert(not isinstance(fileList, str))
         if lang == Parser.VHDL:
             caseSensitivity = False
             baseCtxCls = BaseVhdlContext
@@ -367,8 +368,6 @@ class Parser(VhdlParser):
         
         parser = Parser(caseSensitivity, hierarchyOnly=hierarchyOnly, primaryUnitsOnly=primaryUnitsOnly)
         
-        if isinstance(fileList, str):
-            fileList = [fileList]
         # if hdlCtx is not specified create base context and "work" contex nested inside 
         if hdlCtx is None:
             topCtx = baseCtxCls.getBaseCtx()

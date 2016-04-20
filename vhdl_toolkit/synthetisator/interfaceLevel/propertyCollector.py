@@ -1,7 +1,7 @@
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from vhdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase, InterfaceBase 
-from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, DIRECTION
 
 
 class PropertyCollector():
@@ -69,7 +69,7 @@ class PropertyCollector():
             #update direction of subinterfaces
             if iamInterface:
                 i._isExtern = self._isExtern
-                if self._direction != self._masterDir:
+                if self._direction != DIRECTION.asIntfDirection(self._masterDir):
                     i._direction = INTF_DIRECTION.oposite(i._direction)
         # if I am a unit load subunits    
         if isinstance(self, UnitBase):

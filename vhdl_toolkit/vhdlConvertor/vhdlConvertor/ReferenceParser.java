@@ -82,7 +82,7 @@ public class ReferenceParser {
 			// name_function_call_or_indexed_part
 			// : LPAREN actual_parameter_part? RPAREN
 			// ;
-			return new Expr(selectedName, OperatorType.CALL,
+			return Expr.call(selectedName,
 					ExprParser.visitActual_parameter_part(
 							callOrIndx.actual_parameter_part()));
 		}

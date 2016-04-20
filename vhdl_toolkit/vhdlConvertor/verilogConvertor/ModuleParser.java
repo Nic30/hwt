@@ -10,7 +10,6 @@ import convertorApp.NotImplementedLogger;
 import hdlObjects.Context;
 import hdlObjects.Entity;
 import hdlObjects.Expr;
-import hdlObjects.OperatorType;
 import hdlObjects.Port;
 import hdlObjects.Variable;
 import verilogParser.Verilog2001Parser;
@@ -115,7 +114,7 @@ public class ModuleParser {
 		if (r != null) {
 			List<Expr> operands = new Vector<Expr>();
 			operands.add(ExprParser.visitRange(r));
-			t = new Expr(Utils.mkWireT(), OperatorType.CALL, operands);
+			t = Expr.call(Utils.mkWireT(), operands);
 		}
 
 		List<Variable> params = visitList_of_param_assignments(

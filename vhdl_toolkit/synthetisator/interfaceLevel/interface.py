@@ -81,18 +81,19 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
                     
     def _setSrc(self, src):
         """Set driver in implementation stage"""
+        assert(self._src is None)
+        assert(src is not None)
         self._src = src
-        if src is not None:
-            self._direction = INTF_DIRECTION.SLAVE  # for inside of unit
-            for i in self._interfaces:
-                i._reverseDirection()
-            # self._direction = INTF_DIRECTION.oposite(src._direction)
-            # if self._direction == INTF_DIRECTION.SLAVE:
-            #    for _, i in self._interfaces.items():
-            #        i._reverseDirection()
+        # [TODO] reverse parent to keep interface consistent
+        if self._direction != INTF_DIRECTION.SLAVE:   # for inside of unit
+            self._reverseDirection()
+        #for i in self._interfaces:
+        #    i._reverseDirection()
+        # self._direction = INTF_DIRECTION.oposite(src._direction)
+        # if self._direction == INTF_DIRECTION.SLAVE:
+        #    for _, i in self._interfaces.items():
+        #        i._reverseDirection()
             
-        else:
-            self._direction = INTF_DIRECTION.MASTER  # for inside of unit
     
     def _addEp(self, endpoint):
         """Add endpoint in implementation stage"""
@@ -240,19 +241,18 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
                     
         return sigs
 
-    # def _connectMeToArrayAsElem(self, arrayIntf, inex):
-    #    raise  NotImplementedError()
-        
     def _getPhysicalName(self):
+        """Get name in HDL """
         if hasattr(self, "_originEntityPort"):
             return self._originEntityPort.name
         else:
             return self._getFullName().replace('.', self._NAME_SEPARATOR)
         
     def _getFullName(self):
+        """get all name hierarchy separated by '.' """
         name = ""
         tmp = self
-        while isinstance(tmp, Interface):  # hasattr(tmp, "_parent"):
+        while isinstance(tmp, Interface):
             if hasattr(tmp, "_name"):
                 n = tmp._name
             else:
@@ -282,9 +282,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
         del p._names[self]
         newP._names[self] = pName
         setattr(self, pName, newP) 
-    
-    def _dummyOut(self):
-        raise NotImplementedError()
     
     def __repr__(self):
         s = [self.__class__.__name__]
