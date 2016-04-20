@@ -148,7 +148,7 @@ class OpDefinition():
         if isinstance(self.strOperator, str):
             return  self.strOperator.join(map(p, operator.ops))
         else:
-            return self.strOperator(list(map(p, operator.ops)))
+            return self.strOperator(operator, list(map(p, operator.ops)))
         
     def __repr__(self):
         return "<OpDefinition %s>" % (self.id)
@@ -161,15 +161,15 @@ class AllOps():
     @attention: These are internal operators, the are not equal to verilog or vhdl operators
     """
     
-    NOT = OpDefinition('NOT', 3, lambda strOps: "NOT " + strOps[0],  # [TODO] [0] has dangerous potential
+    NOT = OpDefinition('NOT', 3, lambda self, strOps: "NOT " + strOps[0],  # [TODO] [0] has dangerous potential
                        lambda a :~a,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
-    EVENT = OpDefinition('EVENT', 3, lambda strOps:  strOps[0] + "'EVENT",
+    EVENT = OpDefinition('EVENT', 3, lambda self, strOps:  strOps[0] + "'EVENT",
                         lambda a : NotImplemented(),
                         getReturnType=lambda op: BOOL,
                         addOperand=addOperand_event)
-    RISING_EDGE = OpDefinition('RISING_EDGE', 3, lambda strOps: "RISING_EDGE(" + strOps[0] + ")",
+    RISING_EDGE = OpDefinition('RISING_EDGE', 3, lambda self, strOps: "RISING_EDGE(" + strOps[0] + ")",
                         lambda a : NotImplemented(),
                         getReturnType=lambda op: BOOL,
                         addOperand=addOperand_event)  # unnecessary
@@ -216,17 +216,18 @@ class AllOps():
                        getReturnType=getReturnType_concat,
                        addOperand=addOperand_concat)
 
-    INDEX = OpDefinition('INDEX', 1, lambda strOps : "%s(%s)" % (strOps[0], strOps[1]),
+    INDEX = OpDefinition('INDEX', 1, lambda self, strOps : "%s(%s)" % (strOps[0], strOps[1]),
                        lambda a, b : a[b],
                        getReturnType=getReturnType_index,
                        addOperand=addOperand_index)
     
-    TERNARY = OpDefinition('TERNARY', 13, lambda strOps : "%s when %s else %s" % (strOps[0], strOps[1], strOps[2]),
+    TERNARY = OpDefinition('TERNARY', 13, 
+                       lambda self, strOps :  strOps[1] if self.ops[0].staticEval() else strOps[2],
                        lambda a, b, c : b if a else c,
                        getReturnType=getReturnType_ternary,
                        addOperand=addOperand_ternary)
     
-    CALL = OpDefinition('CALL', 1, lambda strOps : "%s(%s)" % (strOps[0], ", ".join(strOps[1:])),
+    CALL = OpDefinition('CALL', 1, lambda self, strOps : "%s(%s)" % (strOps[0], ", ".join(strOps[1:])),
                        None,
                        getReturnType=getReturnType_hdlFn,
                        addOperand=lambda operator, operand : operator.ops.append(operand))
