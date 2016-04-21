@@ -112,7 +112,7 @@ class Component():
         for p in self._topUnit._entity.ports:
             self.model.ports.append(Port._entPort2CompPort(unit._entity, p))
 
-        for _, intf in unit._interfaces.items():
+        for intf in unit._interfaces:
             if intf._isExtern:
                 self.busInterfaces.append(intf)
                 
