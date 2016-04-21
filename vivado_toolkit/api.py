@@ -4,7 +4,7 @@ from vivado_toolkit.controller import VivadoTCL
 from vivado_toolkit.xdcGen import PackagePin, Comment, PortType
 from vhdl_toolkit.interfaces.std import Ap_clk, Ap_rst, Ap_rst_n
 from vhdl_toolkit.hdlObjects.typeDefs import Std_logic_vector
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import walkSignalOnUnit
+from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import walkSignalOnUnit
 
 class ConfigErr(Exception):
     pass
