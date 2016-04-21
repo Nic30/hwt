@@ -12,13 +12,13 @@ from vhdl_toolkit.parser import Parser
 
 def synthetizeCls(cls, name=None, multithread=True):
     u = cls(multithread=multithread)
-    u._loadDeclarations()
-    u._loadImplementations()
+    u._loadAll()
     return formatVhdl(
                      "\n".join([ VhdlSerializer.asHdl(x) for x in u._synthesise(name)])
                      )
 
 def synthetizeAndSave(unit, folderName='.', name=None):
+    unit._loadAll()
     header = None
     os.makedirs(folderName, exist_ok=True)
     files = set()
@@ -34,8 +34,9 @@ def synthetizeAndSave(unit, folderName='.', name=None):
         elif isinstance(o, UnitFromHdl):
             fName = None
             for fn in o._hdlSources:
-                shutil.copy2(fn, folderName)
-                files.add(fn)
+                if isinstance(fn, str):
+                    shutil.copy2(fn, folderName)
+                    files.add(fn)
         else:
             raise Exception("Do not know how to serialize %s" % (repr(o)))
     
