@@ -40,14 +40,15 @@ class BusInterface():
     @staticmethod
     def generatePortMap(biType, intf):
         def processIntf(mapDict, intf):
-            if not intf._subInterfaces:
+            if not intf._interfaces:
                 assert(isinstance(mapDict, str))
                 return {mapDict : intf._getPhysicalName()}
             else:
                 d = {}
-                for k, i in intf._subInterfaces.items():
-                    m = mapDict[k]
-                    d.update(processIntf(m, i))
+                for i in intf._interfaces:
+                    if i._isExtern:
+                        m = mapDict[i._name]
+                        d.update(processIntf(m, i))
                 return d
         return processIntf(biType.map, intf)
     
