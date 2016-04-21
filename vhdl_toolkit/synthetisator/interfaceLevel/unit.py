@@ -9,6 +9,7 @@ from vhdl_toolkit.synthetisator.interfaceLevel.propertyCollector import Property
 from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
+from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import forAllParams
 
 
 
@@ -58,19 +59,6 @@ class Unit(UnitBase, Buildable, PropertyCollector):
             interface._originSigLvlUnit = self._sigLvlUnit
             interface._originEntityPort = portItem
     
-    @staticmethod
-    def _walkIntfParams(intf, discovered=None):
-        if discovered is None:
-            discovered = set()
-            
-        for p in intf._params:
-            if p not in discovered:
-                discovered.add(p)
-                yield p
-                
-        for i in intf._interfaces:
-            yield from Unit._walkIntfParams(i, discovered) 
-    
     def _shareAllParams(self):
         """Update parameters which has same name in sub interfaces"""
         super(Unit, self)._shareAllParams()
@@ -114,7 +102,7 @@ class Unit(UnitBase, Buildable, PropertyCollector):
             addP(p.name, p)
             
         for intf in self._interfaces:
-            for p in Unit._walkIntfParams(intf, discoveredParams):
+            for p in forAllParams(intf, discoveredParams):
                 n = nameForNestedParam(p)
                 addP(n, p)
                 

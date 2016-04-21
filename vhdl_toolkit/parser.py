@@ -24,7 +24,7 @@ from vhdl_toolkit.synthetisator.rtlLevel.signal import SignalNode
 from vhdl_toolkit.hdlObjects.typeDefs import STR, Std_logic_vector, Wire
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
 from vhdl_toolkit.hdlObjects.function import Function
-from vhdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer, ReturnContainer,\
+from vhdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer, ReturnContainer, \
     WhileContainer
 from vhdl_toolkit.hdlObjects.assignment import Assignment
 
@@ -53,9 +53,10 @@ class VhdlParser():
 
     def packageHeaderFromJson(self, jPh, ctx):
         ph = PackageHeader(jPh['name'], ctx)
-        for _, jComp in jPh['components'].items():
-            c = self.entityFromJson(jComp, ctx)
-            ph.insertObj(c, self.caseSensitive)
+        if not self.functionsOnly:
+            for _, jComp in jPh['components'].items():
+                c = self.entityFromJson(jComp, ctx)
+                ph.insertObj(c, self.caseSensitive)
         for jFn in jPh['functions']:
             fn = self.functionFromJson(jFn, ctx)
             ph.insertObj(fn, self.caseSensitive, hierarchyOnly=self.hierarchyOnly)
@@ -80,10 +81,11 @@ class Parser(VhdlParser):
     VERILOG = 'verilog'
     VHDL = 'vhdl'
     
-    def __init__(self, caseSensitive, hierarchyOnly=False, primaryUnitsOnly=True):
+    def __init__(self, caseSensitive, hierarchyOnly=False, primaryUnitsOnly=True, functionsOnly=False):
         self.caseSensitive = caseSensitive
         self.hierarchyOnly = hierarchyOnly
         self.primaryUnitsOnly = primaryUnitsOnly
+        self.functionsOnly = functionsOnly
     
     @staticmethod
     def langFromExtension(fileName):
@@ -94,7 +96,6 @@ class Parser(VhdlParser):
             return Parser.VHDL
         else:
             raise NotImplementedError("Can not resolve type of file")
-
     
     def exprFromJson(self, jExpr, ctx):
         lit = jExpr.get("literal", None)
@@ -212,7 +213,8 @@ class Parser(VhdlParser):
         ci = ComponentInstance(jComp['name'], None)
         ci.entityRef = HdlRef.fromJson(jComp['entityName'], self.caseSensitive)
         if not self.hierarchyOnly:
-            raise NotImplementedError()
+            pass
+            # raise NotImplementedError()
             # [TODO] port, generics maps
         return ci
 
@@ -224,7 +226,8 @@ class Parser(VhdlParser):
             ci = self.componentInstanceFromJson(jComp, ctx)
             a.componentInstances.append(ci)
         if not self.hierarchyOnly:
-            raise NotImplementedError()
+            pass  # [TODO]
+            # raise NotImplementedError()
         return a
     
     def statementFromJson(self, jStm, ctx):
@@ -238,7 +241,7 @@ class Parser(VhdlParser):
             return Assignment(src, dst)                        
         elif t == 'IF':
             cond = [expr('cond')]    
-            ifTrue =  stList('ifTrue')
+            ifTrue = stList('ifTrue')
             ifFalse = stList('ifFalse')
             return IfContainer(cond, ifTrue, ifFalse)
         elif t == 'RETURN':
@@ -306,12 +309,12 @@ class Parser(VhdlParser):
                 ctx.insertObj(ph, self.caseSensitive)
             else:
                 ctx.packages[n].update(ph)
-
-        for _, jE in jsonctx["entities"].items():
-            ent = self.entityFromJson(jE, ctx)
-            ent.fileName = fileName
-            ent.dependencies = dependencies
-            ctx.insertObj(ent, self.caseSensitive)
+        if not self.functionsOnly:
+            for _, jE in jsonctx["entities"].items():
+                ent = self.entityFromJson(jE, ctx)
+                ent.fileName = fileName
+                ent.dependencies = dependencies
+                ctx.insertObj(ent, self.caseSensitive)
 
         if not self.primaryUnitsOnly:
             for _, jpBody in jsonctx["packages"].items():
@@ -323,12 +326,12 @@ class Parser(VhdlParser):
                     ctx.insertObj(ph, self.caseSensitive)
                 else:
                     ctx.packages[n].insertBody(pb)
-
-            for jArch in jsonctx['architectures']:
-                arch = self.archFromJson(jArch, ctx)
-                arch.fileName = fileName
-                arch.dependencies = dependencies
-                ctx.insertObj(arch, self.caseSensitive)
+            if not self.functionsOnly:
+                for jArch in jsonctx['architectures']:
+                    arch = self.archFromJson(jArch, ctx)
+                    arch.fileName = fileName
+                    arch.dependencies = dependencies
+                    ctx.insertObj(arch, self.caseSensitive)
 
     @staticmethod
     def spotLoadingProc(fname, lang, hierarchyOnly=False, debug=False):
@@ -345,7 +348,8 @@ class Parser(VhdlParser):
     
     @staticmethod
     def parseFiles(fileList: list, lang, hdlCtx=None, libName="work", timeoutInterval=20,
-                  hierarchyOnly=False, primaryUnitsOnly=False, ignoreErrors=False, debug=False):
+                  hierarchyOnly=False, primaryUnitsOnly=False, functionsOnly=False,
+                 ignoreErrors=False, debug=False):
         """
         @param fileList: list of files to parse in same context
         @param lang: hdl language name (currently supported are vhdl and verilog)
@@ -366,7 +370,9 @@ class Parser(VhdlParser):
         else:
             raise ParserException("Invalid lang specification \"%s\" is not supported" % (str(lang)))
         
-        parser = Parser(caseSensitivity, hierarchyOnly=hierarchyOnly, primaryUnitsOnly=primaryUnitsOnly)
+        parser = Parser(caseSensitivity, hierarchyOnly=hierarchyOnly,
+                        primaryUnitsOnly=primaryUnitsOnly,
+                        functionsOnly=functionsOnly)
         
         # if hdlCtx is not specified create base context and "work" contex nested inside 
         if hdlCtx is None:

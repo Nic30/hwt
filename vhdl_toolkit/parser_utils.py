@@ -1,6 +1,7 @@
 from vhdl_toolkit.parser import Parser
 from vhdl_toolkit.hierarchyExtractor import DesignFile
 from python_toolkit.arrayQuery import where
+from vhdl_toolkit.hdlContext import HDLCtx, BaseVhdlContext
 
 
 def entityFromFile(fileName, debug=False):
@@ -57,10 +58,30 @@ def loadCntxWithDependencies(hdlFiles, debug=False, multithread=True):
     dependencies = []
     dep_resolve(mainFile, dependencies, set())
 
+    def getLib(f):
+        if f in hdlFiles:
+            return 'work'
+        else:
+            return list(where(hdlFiles, lambda x : not isinstance(x, str) and x[1] == f))[0][0]
+
+    topCtx = BaseVhdlContext.getBaseCtx()
+    BaseVhdlContext.importFakeLibs(topCtx)
+    
     for d in dependencies:
-        ctx = Parser.parseFiles([d], lang, hdlCtx=ctx, debug=debug, hierarchyOnly=True)
+        libName = getLib(d)
+        try:
+            ctx = topCtx[libName]
+        except KeyError:
+            ctx = HDLCtx(libName, topCtx)
+            topCtx[libName] = ctx
+            
+        Parser.parseFiles([d], lang, hdlCtx=ctx,
+                debug=debug, hierarchyOnly=False,
+                functionsOnly=(mainFile != d))
         if firstTime:
             firstTime = False
-            if lang == Parser.VHDL:
-                ctx = ctx['work']
-    return ctx
+    
+    if lang == Parser.VHDL:
+        return topCtx['work']
+    else:
+        return ctx

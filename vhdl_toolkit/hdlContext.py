@@ -164,6 +164,8 @@ class FakeStd_logic_1164():
     """mock of Std_logic_1164 from vhdl"""
     std_logic_vector = VECTOR
     std_logic_vector_ref = HdlRef(["ieee", "std_logic_1164", "std_logic_vector"], False)
+    std_ulogic_vector_ref = HdlRef(["ieee", "std_logic_1164", "std_ulogic"], False)
+    
     std_logic = BIT
     std_logic_ref = HdlRef(["ieee", "std_logic_1164", "std_logic"], False)
     numeric_std_ref = HdlRef(["ieee", "numeric_std"], False)
@@ -184,6 +186,7 @@ class BaseVhdlContext():
     @classmethod 
     def importFakeIEEELib(cls, ctx):
         ctx.insert(FakeStd_logic_1164.std_logic_vector_ref, FakeStd_logic_1164.std_logic_vector)
+        ctx.insert(FakeStd_logic_1164.std_ulogic_vector_ref, FakeStd_logic_1164.std_logic_vector)
         ctx.insert(FakeStd_logic_1164.std_logic_ref, FakeStd_logic_1164.std_logic)
         ctx.insert(HdlRef(['ieee', 'std_logic_unsigned', 'conv_integer'], False), None)
         ctx.insert(HdlRef(['ieee', 'std_logic_arith', 'is_signed'], False), None)
