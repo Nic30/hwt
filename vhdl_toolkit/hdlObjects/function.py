@@ -1,6 +1,8 @@
 import itertools
 from vhdl_toolkit.synthetisator.rtlLevel.codeOp import ReturnCalled
-
+from vhdl_toolkit.hdlObjects.typeDefs import areIntegers
+ 
+        
 
 class FnContainer(list):
     """
@@ -36,12 +38,12 @@ class FnContainer(list):
         for fn in self:
             same = True
             for _p, p in itertools.zip_longest(args, fn.params):
-                if _p.dtype != p.dtype:
+                if _p.dtype != p.dtype and not areIntegers(_p.dtype, p.dtype):  # [FPGAlibs] vhdl antipatent
                     same = False
                     break
             if same:
                 return fn
-    
+        raise KeyError("Function was not found")
     def staticEval(self):
         # function id does not have to be evalueated
         pass

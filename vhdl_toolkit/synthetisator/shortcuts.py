@@ -9,6 +9,7 @@ from vhdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from python_toolkit.fileHelpers import find_files
 from vhdl_toolkit.parser import Parser
+from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
 
 def synthetizeCls(cls, name=None, multithread=True):
     u = cls(multithread=multithread)
@@ -59,7 +60,12 @@ def fileSyntaxCheck(fileName, lang, timeoutInterval=20):
 
 def syntaxCheck(unitOrFileName):
     if isinstance(unitOrFileName, Unit):
-        d = "__pycache__/" + unitOrFileName._name
+        try:
+            unitName = unitOrFileName._name
+        except AttributeError:
+            unitName = defaultUnitName(unitOrFileName)
+        
+        d = "__pycache__/" + unitName
         synthetizeAndSave(unitOrFileName, d)
         for f in find_files(d, '*.vhd', recursive=True):
             fileSyntaxCheck(f, Parser.VHDL)

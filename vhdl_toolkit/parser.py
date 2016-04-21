@@ -171,6 +171,8 @@ class Parser(VhdlParser):
                 t.derivedWidth = int(jVar['value']['literal']["bits"])
             except KeyError:
                 pass
+            except TypeError:
+                pass
         v = jVar['value']
         if v is not None:
             defaultVal = self.exprFromJson(v, ctx)

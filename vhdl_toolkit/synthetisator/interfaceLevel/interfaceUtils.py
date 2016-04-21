@@ -24,6 +24,19 @@ def walkPhysInterfaces(intf):
     else:
         yield intf
 
+def convert(intf, intfCls, paramsLikeIntf):
+    i = intfCls()
+    for p in paramsLikeIntf._params:
+        raise NotImplementedError()
+    i._loadDeclarations()
+    
+    #for i in 
+    
+    return i
+    
+    raise NotImplementedError()
+
+
 def forAllParams(intf, discovered=None):
     if discovered is None:
         discovered = set()

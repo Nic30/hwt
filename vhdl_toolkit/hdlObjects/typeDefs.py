@@ -104,6 +104,8 @@ class Integer(HdlType):
                 v = sigOrVal.clone()
                 v.dtype = INT
                 return v
+            else:
+                return sigOrVal
                 
         return super(Integer, self).convert(sigOrVal, toType)
 
@@ -251,6 +253,8 @@ class Std_logic_vector(HdlType):
         self.name = 'std_logic_vector'
         self.constrain = Unconstrained()
     
+    
+    
     def __call__(self, width):
         return Std_logic_vector_contrained(width)
     
@@ -269,7 +273,11 @@ class Std_logic_vector(HdlType):
         
     
     class Ops(TypeOps):
-
+        @classmethod
+        def fromPy(cls, val, typeObj):
+            assert(val is None)
+            v = VECTOR.ValueCls(0, VECTOR, 0, eventMask=0)
+            return v 
         def getWidth(self):
             return self.width
 
@@ -467,7 +475,17 @@ class Wire(Std_logic):
     """Verilog wire"""
     def __call__(self, width):
         return Std_logic_vector_contrained(width)
-    
+
+
+def areIntegers(a, b):
+    for t in [a, b]:
+        isInt = False
+        for _t in [INT, UINT, PINT]:
+            if t == _t:
+                isInt = True
+        if not isInt:
+            return False
+    return True   
       
 BOOL = Boolean()
 INT = Integer()
