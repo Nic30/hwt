@@ -146,7 +146,14 @@ class VhdlSerializer():
         if ds == 1:
             d = sig.singleDriver()
             if isinstance(d, Operator):
-                return True
+                if d.operator == AllOps.INDEX:
+                    for e in sig.endpoints:
+                        if isinstance(e, Assignment) and e.src == sig:
+                            return True
+                            
+                    return False
+                else:
+                    return True
             if isinstance(d, Assignment):
                 if d.dst is sig and len(sig.endpoints) == 1:
                     ep = list(sig.endpoints)[0]
@@ -238,6 +245,8 @@ class VhdlSerializer():
                 return s 
         else:
             if cls.isSignalHiddenInExpr(si):
+                if not hasattr(si, "origin"):
+                    pass
                 return cls.asHdl(si.origin)
             else:
                 return si.name

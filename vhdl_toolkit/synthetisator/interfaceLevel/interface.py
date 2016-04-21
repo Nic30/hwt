@@ -136,6 +136,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
         """Propagate driver in routing"""
         if self._src is not None:
             self._src._endpoints.append(self)
+        for e in self._arrayElemCache:
+            e._propagateSrc()
         
     def _rmSignals(self, rmConnetions=True):
         """Remove all signals from this interface (used after unit is synthetized
