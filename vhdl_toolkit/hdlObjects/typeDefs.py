@@ -328,9 +328,10 @@ class Std_logic_vector_contrained(Std_logic_vector):
             v.vldMask = (v.vldMask << w) | other.vldMask
             v.eventMask = (v.eventMask << w) | other.eventMask
             
+            resWidth = w + other.dtype.getBitCnt()
             v.dtype = VECTOR(SignalNode.resForOp(
                                 Operator(AllOps.DOWNTO, [ 
-                                           Value.fromPyVal(w + other.dtype.getBitCnt(), INT),
+                                           Value.fromPyVal(resWidth -1, INT),
                                            Value.fromPyVal(0, INT)])))
             return v
         
