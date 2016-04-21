@@ -80,6 +80,7 @@ class VhdlParser():
 class Parser(VhdlParser):
     VERILOG = 'verilog'
     VHDL = 'vhdl'
+    _cache = {}  # key = (hierarchyOnly, primaryUnitsOnly, functionsOnly, fileName) 
     
     def __init__(self, caseSensitive, hierarchyOnly=False, primaryUnitsOnly=True, functionsOnly=False):
         self.caseSensitive = caseSensitive
@@ -349,6 +350,10 @@ class Parser(VhdlParser):
         return p
     
     @staticmethod
+    def mkCacheKey(hierarchyOnly, primaryUnitsOnly, functionsOnly, fileName):
+        return (hierarchyOnly, primaryUnitsOnly, functionsOnly, fileName)
+        
+    @staticmethod
     def parseFiles(fileList: list, lang, hdlCtx=None, libName="work", timeoutInterval=20,
                   hierarchyOnly=False, primaryUnitsOnly=False, functionsOnly=False,
                  ignoreErrors=False, debug=False):
@@ -391,28 +396,41 @@ class Parser(VhdlParser):
         # start parsing all files    
         p_list = []
         for fname in fileList:
-            p = Parser.spotLoadingProc(fname, lang, hierarchyOnly=hierarchyOnly, debug=debug)
+            k = Parser.mkCacheKey(hierarchyOnly, primaryUnitsOnly, functionsOnly, fname)
+            if k in Parser._cache:
+                p = k
+            else:
+                p = Parser.spotLoadingProc(fname, lang,
+                            hierarchyOnly=hierarchyOnly, debug=debug)
             p_list.append(p)
     
         # collect parsed json from java parser and construct python objects
         for p in p_list:
-            stdoutdata, stdErrData = p.communicate(timeout=timeoutInterval)
-    
-            if p.returncode != 0:
-                raise ParserException("Failed to parse file %s" % (p.fileName))
-            try:
-                if stdoutdata == b'':
-                    j = None
-                else:
-                    j = json.loads(stdoutdata.decode("utf-8"))
-            except ValueError:
-                raise ParserException(("Failed to parse file %s, ValueError while parsing" + 
-                                " json from convertor\n%s") % (p.fileName, stdErrData.decode()))
-                
-            if not ignoreErrors and (stdErrData != b'' and stdErrData is not None):
-                sys.stderr.write(stdErrData.decode()) 
-                
+            if isinstance(p, tuple):
+                j = Parser._cache[p]
+                fileName = p[3] 
+            else:    
+                stdoutdata, stdErrData = p.communicate(timeout=timeoutInterval)
+                fileName = p.fileName
+        
+                if p.returncode != 0:
+                    raise ParserException("Failed to parse file %s" % (fileName))
+                try:
+                    if stdoutdata == b'':
+                        j = None
+                    else:
+                        j = json.loads(stdoutdata.decode("utf-8"))
+                        k = Parser.mkCacheKey(hierarchyOnly, primaryUnitsOnly,
+                                               functionsOnly, fileName)
+                        Parser._cache[k] = j
+                except ValueError:
+                    raise ParserException(("Failed to parse file %s, ValueError while parsing" + 
+                                    " json from convertor\n%s") % (p.fileName, stdErrData.decode()))
+                    
+                if not ignoreErrors and (stdErrData != b'' and stdErrData is not None):
+                    sys.stderr.write(stdErrData.decode()) 
+                    
             if j:
-                parser.parse(j, p.fileName, hdlCtx)
+                parser.parse(j, fileName, hdlCtx)
     
         return topCtx
