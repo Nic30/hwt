@@ -12,9 +12,9 @@ class Ap_none(Interface):
     def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None,
                    dtype=BIT, isExtern=False, alternativeNames=None,
                    loadConfig=True):
-        #self._multipliedBy = None
+        # self._multipliedBy = None
         super().__init__(masterDir=masterDir, multipliedBy=multipliedBy,
-             isExtern=isExtern, alternativeNames=alternativeNames, 
+             isExtern=isExtern, alternativeNames=alternativeNames,
              loadConfig=loadConfig)
         self._dtype = dtype
         self._setMultipliedBy(multipliedBy, updateTypes=True)
@@ -94,29 +94,26 @@ class BramPort(BramPort_withoutClk):
         self.clk = s(masterDir=D.OUT)
     
     @classmethod
-    def fromBramPort_withoutClk(cls, bramPort, clk):
-        raise NotImplementedError("[TODO]:update")
+    def fromBramPort_withoutClk(cls, intfContainter, bramPort, clk):
         assert(isinstance(bramPort, BramPort_withoutClk))
         assert(isinstance(clk, Ap_clk))
         self = cls()
-        def overWriteSubIntf(name, intf):
+        rp = self._replaceParam
+        def setIntf(name, intf):
             setattr(self, name, intf)
-            self._subInterfaces[name] = intf
-        def overWriteParam(name, param):
-            setattr(self, name, param)
-            self._params[name] = param
-                
-        overWriteSubIntf("clk", clk)
+            self._interfaces.append(intf)
         
-        overWriteParam("ADDR_WIDTH" , bramPort.ADDR_WIDTH)  
-        overWriteParam("DATA_WIDTH" , bramPort.DATA_WIDTH)  
+        rp("ADDR_WIDTH" , bramPort.ADDR_WIDTH)  
+        rp("DATA_WIDTH" , bramPort.DATA_WIDTH)  
+
+        self._interfaces = []
+        for iName in ["addr", "din", "dout", "en", "we" ]:
+            intf = getattr(bramPort, iName)
+            setIntf(iName, intf)
+        setIntf("clk", clk)
         
-        overWriteSubIntf("addr", bramPort.addr)     
-        overWriteSubIntf("din" , bramPort.din)     
-        overWriteSubIntf("dout", bramPort.dout)     
-        overWriteSubIntf("en" , bramPort.en)   
-        overWriteSubIntf("we" , bramPort.we)
-        self._masterDir = bramPort._masterDir
+        self._direction = bramPort._direction
+        intfContainter._interfaces.append(self)
         return self   
         
 
@@ -127,7 +124,7 @@ class SPI(Interface):
         self.miso = s(masterDir=D.IN)
         self.ss = s()
   
-#class RGMII_channel(Interface):
+# class RGMII_channel(Interface):
 #    def _config(self):
 #        self.DATA_WIDTH = 4
 #        

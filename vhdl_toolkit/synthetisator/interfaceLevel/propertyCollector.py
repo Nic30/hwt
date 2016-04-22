@@ -45,7 +45,7 @@ class PropertyCollector():
         if not hasattr(self, '_params'):
             self._params = []
 
-        self._setAttrListener = self.__collectParams
+        self._setAttrListener = self._paramCollector
         self._config()
         self._setAttrListener = None 
 
@@ -54,7 +54,7 @@ class PropertyCollector():
             self._interfaces = []
         if isinstance(self, UnitBase) and not hasattr(self, "_units"):
             self._units = []    
-        self._setAttrListener = self.__collectDeclarations
+        self._setAttrListener = self._declrCollector
         self._declr()
         self._setAttrListener = None
         iamInterface = isinstance(self, InterfaceBase)
@@ -80,7 +80,7 @@ class PropertyCollector():
         for i in self._units:
             i._loadImplementations()
 
-        self._setAttrListener = self.__collectDeclarations
+        self._setAttrListener = self._declrCollector
         self._impl()
         self._setAttrListener = None
         
@@ -92,7 +92,7 @@ class PropertyCollector():
         self._loadDeclarations()
         self._loadImplementations()
             
-    def __collectParams(self, pName, p):
+    def _paramCollector(self, pName, p):
         if isinstance(p, Param):
             try:
                 hasName = p._name is not None
@@ -111,7 +111,7 @@ class PropertyCollector():
                                      (pName, repr(getattr(self, pName)), p))
             self._params.append(p)
     
-    def __collectDeclarations(self, iName, i):
+    def _declrCollector(self, iName, i):
         isIntf = isinstance(i, InterfaceBase)
         isUnit = isinstance(i, UnitBase)
         if isIntf or isUnit:

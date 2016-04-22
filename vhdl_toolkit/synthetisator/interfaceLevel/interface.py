@@ -113,10 +113,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
                 (repr(self), repr(self._src), repr(src)))
         assert(src is not None)
         self._src = src
-        #for i, srcI in zip(self._interfaces, src._interfaces):
-        #    assert(i._name == srcI._name)
-        #    i._setSrc(srcI)
-            
+  
         # [TODO] reverse parent to keep interface consistent
         if self._direction != INTF_DIRECTION.SLAVE:  # for inside of unit
             self._reverseDirection()
