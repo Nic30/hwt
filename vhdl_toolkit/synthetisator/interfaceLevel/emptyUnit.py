@@ -1,8 +1,17 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit, defaultUnitName
 from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from vhdl_toolkit.hdlObjects.value import Value
-from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
 
+
+def _setOutIntf(intf):
+    intf._direction = INTF_DIRECTION.SLAVE
+    for i in intf._interfaces:
+        _setOutIntf(i)
+
+def setOut(*intfs):
+    for intf in intfs:
+        _setOutIntf(intf)
 
 class EmptyUnit(Unit):
     """

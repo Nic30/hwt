@@ -5,8 +5,8 @@ from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import 
 from vhdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit
 from vhdl_toolkit.interfaces.std import Ap_none
 from vhdl_toolkit.interfaces.amba import Axi4
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import synthesised
+from vhdl_toolkit.synthetisator.interfaceLevel.emptyUnit import setOut
 
 D = DIRECTION
 
@@ -114,15 +114,14 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         self.assertEqual(port_b.direction, D.OUT, 'port b has no src that means it should be output')
 
     def test_EmptyUnit(self):
-        class Bb(Unit):
+        class Eu(EmptyUnit):
             def _declr(self):
                 self.a = Ap_none(isExtern=True)
                 self.b = Ap_none(isExtern=True)
-            
             def _impl(self):
-                self.b._dummyOut()
+                setOut(self.b)
                 
-        u = Bb()
+        u = Eu()
         u._loadAll()
         u = synthesised(u)
 
@@ -137,29 +136,31 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
             def _declr(self):
                 self.a = Axi4(isExtern=True)
                 self.b = Axi4(isExtern=True)
+            
             def _impl(self):
-                self.b._dummyOut()
+                setOut(self.b)
                 
         u = Dummy()
         u._loadAll()
         for _ in u._synthesise():
             pass
         e = u._entity
+        
         a_ar_addr = self.getPort(e, 'a_ar_addr')
-        a_ar_ready = self.getPort(e, 'a_ar_ready')
-        
-        b_ar_addr = self.getPort(e, 'b_ar_addr')
-        b_ar_ready = self.getPort(e, "b_ar_ready")
-        
         self.assertEqual(a_ar_addr.direction, D.IN)
+
+        a_ar_ready = self.getPort(e, 'a_ar_ready')
         self.assertEqual(a_ar_ready.direction, D.OUT)
        
+        b_ar_addr = self.getPort(e, 'b_ar_addr')
         self.assertEqual(b_ar_addr.direction, D.OUT)
+
+        b_ar_ready = self.getPort(e, "b_ar_ready")
         self.assertEqual(b_ar_ready.direction, D.IN)
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(InterfaceSyntherisatorTC('test_SimpleUnit2_iLvl'))
+    suite.addTest(InterfaceSyntherisatorTC('test_EmptyUnitWithCompositePort'))
     # suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
