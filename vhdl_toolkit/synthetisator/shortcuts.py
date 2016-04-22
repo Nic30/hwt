@@ -9,7 +9,10 @@ from vhdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from python_toolkit.fileHelpers import find_files
 from vhdl_toolkit.parser import Parser
+from vhdl_toolkit.parserLoader import langFromExtension, ParserFileInfo
 from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
+from vhdl_toolkit.parserLoader import ParserLoader
+from itertools import chain
 
 def synthetizeCls(cls, name=None, multithread=True):
     u = cls(multithread=multithread)
@@ -51,15 +54,33 @@ def synthetizeAndSave(unit, folderName='.', name=None):
                         ))
     return files
 
-def fileSyntaxCheck(fileName, lang, timeoutInterval=20):
+def fileSyntaxCheck(fileInfo, timeoutInterval=20):
     """
     Perform syntax check on whole file (only in java parser)
     """
-    p = Parser.spotLoadingProc(fileName, lang, hierarchyOnly=True, debug=False) 
+    p = ParserLoader.spotLoadingProc(fileInfo) 
     p.communicate(timeout=timeoutInterval)
 
+
+def _syntaxCheckUnitFromHdl(u):
+    for f in u._hdlSources:
+        if isinstance(f, str):
+            fi = ParserFileInfo(f, 'work')
+        else:
+            fi = ParserFileInfo(f[1], f[0])
+        fileSyntaxCheck(fi)
+
+
 def syntaxCheck(unitOrFileName):
-    if isinstance(unitOrFileName, Unit):
+
+    
+    if issubclass(unitOrFileName, UnitFromHdl):
+        unitOrFileName._buildFileNames()
+        _syntaxCheckUnitFromHdl(unitOrFileName)
+        
+    elif isinstance(unitOrFileName, UnitFromHdl):
+        _syntaxCheckUnitFromHdl(unitOrFileName)
+    elif isinstance(unitOrFileName, Unit):
         try:
             unitName = unitOrFileName._name
         except AttributeError:
@@ -67,13 +88,11 @@ def syntaxCheck(unitOrFileName):
         
         d = "__pycache__/" + unitName
         synthetizeAndSave(unitOrFileName, d)
-        for f in find_files(d, '*.vhd', recursive=True):
-            fileSyntaxCheck(f, Parser.VHDL)
-        for f in find_files(d, '*.v', recursive=True):
-            fileSyntaxCheck(f, Parser.VERILOG)
+        for f in chain(find_files(d, '*.vhd', recursive=True), find_files(d, '*.v', recursive=True)):
+            fileSyntaxCheck(ParserFileInfo(d, 'work'))
         
     elif isinstance(unitOrFileName, str):
-        fileSyntaxCheck(f, Parser.langFromExtension(unitOrFileName))
+        fileSyntaxCheck(f, langFromExtension(unitOrFileName))
     else:
         raise  NotImplementedError("Not implemented for '%'" % (repr(unitOrFileName)))
     

@@ -7,9 +7,6 @@ class Entity(object):
         self.ports = []
         self.ctx = {}
 
-    def _getFileName(self):
-        return self.fileName
-    
     def __repr__(self):
         from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.Entity(self)

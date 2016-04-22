@@ -42,6 +42,7 @@ class HDLCtx(NonRedefDict):
         self.entities = NonRedefDict()
         self.architectures = []
         self.packages = NonRedefDict()
+        self.fileInfo = None
         
     def importLibFromGlobal(self, ref):
         """
@@ -97,7 +98,7 @@ class HDLCtx(NonRedefDict):
         """
         insert Entity, PackageHeader or Architecture in this context
         """
-        from vhdl_toolkit.hdlObjects.package import PackageHeader
+        from vhdl_toolkit.hdlObjects.package import PackageHeader  # [TODO] rm dependency
         def getName():
             n = obj.name
             if not caseSensitive:

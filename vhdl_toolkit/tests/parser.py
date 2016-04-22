@@ -4,36 +4,51 @@ from vhdl_toolkit.hdlObjects.package import PackageHeader, PackageBody
 from vhdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 from vhdl_toolkit.hdlObjects.typeDefs import INT, STR
 import math
+from vhdl_toolkit.parserLoader import ParserFileInfo, ParserLoader
 
 ILVL_SAMPLES = '../samples/iLvl/vhdl/'
 ILVL_SAMPLES_V = '../samples/verilogCodesign/verilog/'
 
+def mkFileInfo(*fileNames, lib="work"):
+    fis = []
+    for f in fileNames:
+        fi = ParserFileInfo(ILVL_SAMPLES + f, lib)
+        fis.append(fi)
+    return fis
 
 
 class ParserTC(unittest.TestCase):
 
     def testEntityParsing(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES + "entityExample.vhd"], Parser.VHDL)
+        fis = mkFileInfo("entityExample.vhd")
+        ctx, _ = ParserLoader.parseFiles(fis)
         ctx = ctx['work']
         self.assertEqual(len(ctx.entities), 1)
 
     def testArchParsing(self):
-        f = ILVL_SAMPLES + "dependencies0/simpleSubunit3_arch.vhd"
-        ctx = Parser.parseFiles([f], Parser.VHDL, hierarchyOnly=True)
-        ctx = ctx['work']
+        f = mkFileInfo("dependencies0/simpleSubunit3_arch.vhd")
+        f[0].hierarchyOnly = True
+        
+        _, fCtxs = ParserLoader.parseFiles(f)
+        ctx = fCtxs[0]
         self.assertEqual(len(ctx.architectures), 1)
 
     def testArchCompInstance(self):
-        f = ILVL_SAMPLES + "dependencies0/simpleSubunit3_arch.vhd"
-        ctx = Parser.parseFiles([f], Parser.VHDL, hierarchyOnly=True)
-        ctx = ctx['work']
+        f = mkFileInfo("dependencies0/simpleSubunit3_arch.vhd")
+        f[0].hierarchyOnly = True
+        
+        topCtx, fCtxs = ParserLoader.parseFiles(f)
+        ctx = fCtxs[0]
         cis = ctx.architectures[0].componentInstances
         self.assertEqual(len(cis), 1)
         ci = cis[0]
         self.assertEqual(ci.entityRef.names[0], "subunit0")
 
     def testPackage(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES + "dmaWrap/misc.vhd"], Parser.VHDL, hierarchyOnly=True)
+        f = mkFileInfo("dmaWrap/misc.vhd")
+        f[0].hierarchyOnly = True
+        
+        ctx, _ = ParserLoader.parseFiles(f)
         ctx = ctx['work']
         self.assertEqual(len(ctx.packages.items()), 1)
         p = ctx.packages['misc_pkg']
@@ -42,7 +57,10 @@ class ParserTC(unittest.TestCase):
         self.assertIsInstance(p.body, PackageBody)
 
     def testCompInPackage(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES + "packWithComps/package1.vhd"], Parser.VHDL, hierarchyOnly=True)
+        f = mkFileInfo("packWithComps/package1.vhd")
+        f[0].hierarchyOnly = True
+        
+        ctx, _ = ParserLoader.parseFiles(f)
         ctx = ctx['work']
         p = ctx['package1']
         self.assertIn('ckt_reg', p)
@@ -52,24 +70,35 @@ class ParserTC(unittest.TestCase):
 
     def testLibrary(self):
         libName = 'packwithcomps'
-        ctx = Parser.parseFiles([ILVL_SAMPLES + 'packWithComps/package1.vhd'], Parser.VHDL,
-                        libName=libName, hierarchyOnly=True)
+        f = mkFileInfo('packWithComps/package1.vhd', lib=libName)
+        f[0].hierarchyOnly = True
+        
+        ctx, _ = ParserLoader.parseFiles(f)
         ctx = ctx[libName]
         p = ctx['package1']
         self.assertIsInstance(p, PackageHeader)
 
     def testFunctionInPackage(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES + "fnImport/package0.vhd"], Parser.VHDL, hierarchyOnly=True)
+        f = mkFileInfo("fnImport/package0.vhd")
+        f[0].hierarchyOnly = True
+        
+        ctx, _ = ParserLoader.parseFiles(f)
         ctx = ctx['work']['package0']
         self.assertIn('max', ctx)
 
     def testVerilogSimpleMuxModule(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES_V + "mux.v"], Parser.VERILOG, primaryUnitsOnly=True)
+        fi = ParserFileInfo(ILVL_SAMPLES_V + "mux.v", None)
+        fi.primaryUnitsOnly = True
+        
+        ctx, _ = ParserLoader.parseFiles([fi])
         self.assertEqual(len(ctx.entities), 1)
 
 
     def testVerilogModuleParams(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES_V + "simpleParam.v"], Parser.VERILOG, primaryUnitsOnly=True)
+        fi = ParserFileInfo(ILVL_SAMPLES_V + "simpleParam.v", None)
+        fi.primaryUnitsOnly = True
+        
+        ctx, _ = ParserLoader.parseFiles([fi])
         m = ctx.entities['SimpleParamMod']
         self.assertEqual(len(m.generics), 3)
         self.assertEqual(len(m.ports), 2) 
@@ -90,9 +119,12 @@ class ParserTC(unittest.TestCase):
         self.assertEqual(param_int.dtype, INT)
         self.assertEqual(param_str.dtype, STR)
         
-
     def testVerilogParamSpecifiedByParam(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES_V + "simpleParam2.v"], Parser.VERILOG, primaryUnitsOnly=True)
+        fi = ParserFileInfo(ILVL_SAMPLES_V + "simpleParam2.v", None)
+        fi.primaryUnitsOnly = True        
+        
+        topCtx, fCtx = ParserLoader.parseFiles([fi])
+        ctx = fCtx[0]
         m = ctx.entities['SimpleParamMod']
         self.assertEqual(len(m.generics), 4)
         self.assertEqual(len(m.ports), 2)
@@ -109,7 +141,10 @@ class ParserTC(unittest.TestCase):
         self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH.dtype.getBitCnt())
 
     def testVhdlFn(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES + "fnImport/package0.vhd"], Parser.VHDL)
+        f = mkFileInfo("fnImport/package0.vhd")
+        
+        
+        ctx, _ = ParserLoader.parseFiles(f)
         p = ctx['work']['package0']
         fnCont = p.body['max']
         fn = fnCont[0]
@@ -119,9 +154,10 @@ class ParserTC(unittest.TestCase):
         val = fn.call(hInt(86), hInt(3))
         self.assertEqual(val, hInt(86))
 
-
     def testVhdlFnLog2(self):
-        ctx = Parser.parseFiles([ILVL_SAMPLES + "fnImportLog2/package0.vhd"], Parser.VHDL)
+        f = mkFileInfo("fnImportLog2/package0.vhd")
+        
+        ctx, _ = ParserLoader.parseFiles(f)
         p = ctx['work']['package0']
         fnCont = p.body['log2']
         fn = fnCont[0]
@@ -134,7 +170,7 @@ class ParserTC(unittest.TestCase):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(ParserTC('testVhdlFnLog2'))
-    #suite.addTest(unittest.makeSuite(ParserTC))
+    #suite.addTest(ParserTC('testArchCompInstance'))
+    suite.addTest(unittest.makeSuite(ParserTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

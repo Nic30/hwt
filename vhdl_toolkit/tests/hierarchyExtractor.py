@@ -1,34 +1,39 @@
 import unittest
 from vhdl_toolkit.hierarchyExtractor import DesignFile
+from vhdl_toolkit.parserLoader import ParserFileInfo
 
 SAMPLES_DIR = '../samples/iLvl/vhdl/'
 package1 = SAMPLES_DIR + 'packWithComps/package1.vhd'
 top1 = SAMPLES_DIR + 'packWithComps/top1.vhd'
+
+p = lambda fn, lib :  ParserFileInfo(fn, lib)
         
 class HierarchyExtractorTC(unittest.TestCase):
     paraler = True
     def testDependentOnPackage(self):
-        desFiles = DesignFile.loadFiles([package1, top1], parallel=self.paraler)
+        desFiles = DesignFile.loadFiles([p(package1, "work"), p(top1, "work")], parallel=self.paraler)
         depDict = DesignFile.fileDependencyDict(desFiles)
         
         self.assertEqual(len(depDict[package1]), 0)
-        self.assertEqual(len(depDict[top1]), 2)
-        self.assertTrue(top1 in depDict[top1])
-        self.assertTrue(package1 in depDict[top1])
+        # self.assertIn(top1, depDict[top1])
+        self.assertIn(package1, depDict[top1])
 
     def testDependetOnPackageFromDiferentLib(self):
         
         top1 = SAMPLES_DIR + 'multiLib/top1.vhd'
-        libDesFiles = DesignFile.loadFiles([package1], libName='packWithComps',
-                                            parallel=self.paraler)
-        self.assertTrue('work' not in  libDesFiles[0].hdlCtx)
-        desFiles = DesignFile.loadFiles([top1], parallel=self.paraler)
+        libDesFiles = DesignFile.loadFiles([p(package1, 'packWithComps')], parallel=self.paraler)
+        top = libDesFiles[0].hdlCtx.parent.parent
+        self.assertTrue('work' not in  top)
+        self.assertTrue('packwithcomps' in top)
+        
+        
+        desFiles = DesignFile.loadFiles([p(top1, 'work')], parallel=self.paraler)
         depDict = DesignFile.fileDependencyDict(desFiles + libDesFiles)
         
         self.assertEqual(len(depDict[package1]), 0)
-        self.assertEqual(len(depDict[top1]), 2)
-        self.assertTrue(top1 in depDict[top1])
-        self.assertTrue(package1 in depDict[top1])
+        # self.assertEqual(len(depDict[top1]), 2)
+        #self.assertIn(top1, depDict[top1])
+        self.assertIn(package1, depDict[top1])
         
 
 if __name__ == '__main__':

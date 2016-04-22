@@ -1,13 +1,13 @@
-from vhdl_toolkit.parser import Parser
-from vhdl_toolkit.hdlObjects.reference import HdlRef
-import multiprocessing
-from multiprocess.pool import Pool
 from python_toolkit.arrayQuery import arr_any
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.package import PackageHeader
-from vhdl_toolkit.hdlContext import HDLCtx
+from vhdl_toolkit.hdlObjects.reference import HdlRef
 from vhdl_toolkit.nonRedefDict import RedefinitionErr
+from vhdl_toolkit.hdlContext import HDLCtx, RequireImportErr
+from vhdl_toolkit.parserLoader import ParserLoader, getFileInfoFromObj 
 
+
+        
 
 class DesignFile():
     """
@@ -22,17 +22,6 @@ class DesignFile():
         self.hdlCtx = hdlCtx
         self.importedNames = HDLCtx("imports", None)
         self.dependentOnFiles = set()
-
-    @classmethod
-    def fromFile(cls, f, libName='work', hdlCtx=None):
-        """
-        @param f: filename
-        @param libName: library where context of the file will be placed if no
-               hdlCtx is specified
-        @param hdlCtx:  parent hdl context
-        """
-        return cls(f, Parser.parseFiles([f], Parser.VHDL, hdlCtx=hdlCtx, libName=libName,
-                                timeoutInterval=180, hierarchyOnly=True))
 
     def allDefinedRefs(self):
         """
@@ -50,29 +39,53 @@ class DesignFile():
                 elif isinstance(obj, HDLCtx):
                     yield from allDefinedRefsInCtx(obj, nameList + [n])
         yield from allDefinedRefsInCtx(self.hdlCtx, [])
+        
+    @staticmethod
+    def getAllTopCtxs(designFiles):
+        def getTopCtx(df):
+            top = df.hdlCtx
+            while top.parent is not None:
+                top = top.parent
+            return top
+        
+        def uniq(seq): 
+            seen = {}
+            for item in seq:
+                marker = id(item)
+                seen[marker] = item
+                
+            return list(seen.values())        
+        return uniq(map(getTopCtx, designFiles))
 
     def discoverImports(self, allDesignFiles, ignoredRefs=[]):
         """
         discover all imported names in design file
         """
+        topCtxs = DesignFile.getAllTopCtxs(allDesignFiles)
+        
         for d in self.allDependencies(importsOnly=True):
             if arr_any(ignoredRefs, lambda x: DesignFile.refMatch(d, x)):
                 continue
-            imp = DesignFile.findReference(d, allDesignFiles)
+            
+            imp = None
+            for c in topCtxs:
+                try:
+                    imp = c.lookupGlobal(d)
+                    break
+                except RequireImportErr:
+                    pass
             if not imp:
                 raise Exception("%s: require to import %s and it is not defined in any file" % 
                                 (self.fileName, str(d)))
-            imp_obj = imp[2]
             if d.all:
-                # imp_ref = imp[1]
                 try:
-                    for k, v in imp_obj.items():
+                    for k, v in imp.items():
                         self.importedNames[k] = v
                 except RedefinitionErr:
                     pass
             else:
-                k = d.names[-1]
-                self.importedNames[k] = imp_obj
+                k = imp.name
+                self.importedNames[k] = imp
 
     def allDependencies(self, importsOnly=False):
         """
@@ -123,21 +136,23 @@ class DesignFile():
             except StopIteration:
                 return True
 
-    @staticmethod
-    def findReference(ref, allDesignFiles):
-        """
-        find reference in allDesignFiles
-        @return: iterator over tuples (filename, reference, defined object)
-        """
-        for df in allDesignFiles:
-                for defDep, obj in df.allDefinedRefs():
-                    if DesignFile.refMatch(defDep, ref):
-                        return (df.fileName, defDep, obj)
-
+    # @staticmethod
+    # def findReference(ref, allDesignFiles):
+    #    """
+    #    find reference in allDesignFiles
+    #    @return: iterator over tuples (filename, reference, defined object)
+    #    """
+    #    for df in allDesignFiles:
+    #            for defDep, obj in df.allDefinedRefs():
+    #                if DesignFile.refMatch(defDep, ref):
+    #                    return (df.fileName, defDep, obj)
+    #
     def discoverDependentOnFiles(self, allDesignFiles, ignoredRefs=[]):
         """
         Discover on which files is this file dependent
         """
+        topCtxs = DesignFile.getAllTopCtxs(allDesignFiles)
+        
         def isAlreadyImported(ref):
             if len(ref.names) != 1:
                 return False
@@ -149,25 +164,31 @@ class DesignFile():
                 continue
             if isAlreadyImported(d):
                 continue
-            df = self.findReference(d, allDesignFiles)
+            df = None
+            for c in topCtxs:
+                try:
+                    df = c.lookupGlobal(d)
+                except RequireImportErr:
+                    pass
+
             if not df:
                 raise Exception(
                  "%s: require to import %s and it is not defined in any file" % 
                  (self.fileName, str(d)))
-            self.dependentOnFiles.add(df[0])
+            fi = getFileInfoFromObj(df)
+            self.dependentOnFiles.add(fi.fileName)
 
     @staticmethod
-    def loadFiles(files, libName='work', parallel=True):
-        if parallel:
-            with Pool(multiprocessing.cpu_count()) as pool:
-                designFiles = pool.map(
-                                lambda f: DesignFile.fromFile(f, libName=libName),
-                                files)
-        else:
-            designFiles = []
-            for f in files:
-                d = DesignFile.fromFile(f, libName=libName)
-                designFiles.append(d)
+    def loadFiles(filesInfos, parallel=True):
+        for fi in filesInfos:
+            fi.hierarchyOnly = True
+        
+        _, fileContexts = ParserLoader.parseFiles(filesInfos, timeoutInterval=180)
+        designFiles = []
+        for fCtx in fileContexts:
+            d = DesignFile(fCtx.name, fCtx)
+            designFiles.append(d)
+        
         return designFiles
 
     @staticmethod

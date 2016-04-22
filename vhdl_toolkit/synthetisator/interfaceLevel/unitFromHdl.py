@@ -3,7 +3,7 @@ import types
 from vhdl_toolkit.hdlObjects.value import Value
 from vhdl_toolkit.hdlObjects.operator import Operator
 from vhdl_toolkit.hdlObjects.function import FnContainer
-from vhdl_toolkit.parser_utils import entityFromFile, loadCntxWithDependencies
+from vhdl_toolkit.parserUtils import entityFromFile, loadCntxWithDependencies
 from vhdl_toolkit.hdlContext import RequireImportErr
 from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from vhdl_toolkit.synthetisator.param import Param
@@ -119,14 +119,18 @@ class UnitFromHdl(Unit):
             instI._loadDeclarations = types.MethodType(declarationsFromExtractedIntf, instI) 
             
             setattr(self, i._name, instI)
-        
+    
     @classmethod
-    def _build(cls, multithread=True):
+    def _buildFileNames(cls):
         # convert source filenames to absolute paths
         assert(cls._hdlSources)
         baseDir = os.path.dirname(inspect.getfile(cls))
         cls._hdlSources = toAbsolutePaths(baseDir, cls._hdlSources)
-
+        
+    @classmethod
+    def _build(cls, multithread=True):
+        cls._buildFileNames()
+        
         # init hdl object containers on this unit       
         cls._params = []
         cls._interfaces = []
@@ -138,7 +142,7 @@ class UnitFromHdl(Unit):
         except RequireImportErr:
             ctx = loadCntxWithDependencies(cls._hdlSources, debug=cls._debugParser, multithread=multithread)
             for _, e in ctx.entities.items():
-                if e._getFileName() == cls._hdlSources[0]:
+                if e.parent == ctx:
                     cls._entity = e
                     break
             
