@@ -74,6 +74,7 @@ class Ap_vld(Interface):
 
 class Ap_hs(Ap_vld):
     def _declr(self):
+        super()._declr()
         self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
 
 class BramPort_withoutClk(Interface):
