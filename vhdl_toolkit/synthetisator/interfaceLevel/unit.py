@@ -180,7 +180,6 @@ class Unit(UnitBase, Buildable, PropertyCollector):
                               + "- there is no such a thing as unit without interfaces")
 
         yield from self._synthetiseContext(externInterf, cntx)
-        print(self._name, "done")
 
 
         
