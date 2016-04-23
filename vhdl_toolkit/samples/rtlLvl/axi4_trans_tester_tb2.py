@@ -103,7 +103,7 @@ def axi4_tester():
     s = formatVhdl(tb.render())
     with open(outputFile, "w") as f:
         f.write(s)
-    # axi_m_integer_fix(os.path.join(projectSrcPath, "sources_1/bd/top/ip/top_axi4_trans_tester_0_0/sim/top_axi4_trans_tester_0_0.vhd"))
+    # axi_m_integer_fix(os.path.join(projectSrcPath, "sources_1/bd/uSonda10gTop/ip/top_axi4_trans_tester_0_0/sim/top_axi4_trans_tester_0_0.vhd"))
     #print(s)
 
 if __name__ == "__main__":

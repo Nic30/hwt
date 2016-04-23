@@ -50,12 +50,8 @@ class UnitFromHdl(Unit):
         first entity in first file is taken as interface template for this unit
         this is currently supported only for vhdl
     @cvar _intfClasses: interface classes which are searched on hdl entity 
+    @cvar _debugParser: flag to run hdl parser in debug mode
     """
-    def __init__(self, intfClasses=allInterfaces, debugParser=False, multithread=True):
-        self.__class__._intfClasses = intfClasses
-        self.__class__._debugParser = debugParser
-        super(UnitFromHdl, self).__init__(multithread=multithread)
-    
     def _config(self):
         cls = self.__class__
         self._params = []
@@ -128,6 +124,10 @@ class UnitFromHdl(Unit):
     @classmethod
     def _build(cls, multithread=True):
         cls._buildFileNames()
+        if not hasattr(cls, "_intfClasses"):
+            cls._intfClasses = allInterfaces
+        if not hasattr(cls, "_debugParser"):
+            cls._debugParser = False
         
         # init hdl object containers on this unit       
         cls._params = []
@@ -168,10 +168,12 @@ class UnitFromHdl(Unit):
         
         cls._clsBuildFor = cls
     
-    def _synthesise(self):
+    def _toRtl(self):
         """Convert unit to hdl objects"""
+        
         if not hasattr(self, '_name'):
             self._name = defaultUnitName(self)
+        self._loadMyImplementations()
         self._entity = Entity()
         self._entity.name = self.__class__._entity.name
         generics = self._entity.generics

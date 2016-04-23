@@ -63,7 +63,7 @@ def connectionData(path):
         #    module = importlib.import_module(path.replace("/", "."))
     from vhdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
     u = AxiLiteSlaveContainer()
-    #for _ in u._synthesise():
+    #for _ in u._toRtl():
     #    pass
     data = serializeUnit(u)       
     

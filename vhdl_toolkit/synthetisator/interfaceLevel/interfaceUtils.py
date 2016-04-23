@@ -8,14 +8,10 @@ def sameIntfAs(intf):
 
 def connect(driver, *endpoints):
     """connect interfaces on interface level"""
-    # c = sameIntfAs(src)
-    # c._loadDeclarations()
+    assert(driver._isAccessible)
     for ep in endpoints:
         ep._setSrc(driver)
-    #    driver._endpoints.append(ep)
-    # c._addEp(dst)
-    # c._setSrc(src)
-    # return c
+
 
 def walkPhysInterfaces(intf):
     if intf._interfaces:

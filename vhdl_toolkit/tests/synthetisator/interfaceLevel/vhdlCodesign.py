@@ -29,7 +29,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     def test_bramIntfDiscovered(self):
         from vhdl_toolkit.samples.iLvl.bram import Bram
         bram = Bram()
-        bram._loadAll()
+        bram._loadDeclarations()
         self.assertTrue(hasattr(bram, 'a'), 'port a found')
         self.assertTrue(hasattr(bram, 'b'), 'port b found')
         bp = BramPort()
@@ -48,16 +48,16 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         # (intfClasses=[AxiStream_withUserAndStrb, AxiStream, AxiStream_withUserAndNoStrb,
         #  AxiStream_withoutSTRB])
         u = AxiStreamSampleEnt()
-        u._loadAll()
+        u._loadDeclarations()
         # [TODO] sometimes resolves as 'RX0_ETH_T' it is not deterministic, need better example
         self.assertTrue(hasattr(u, "RX0_ETH"))
         self.assertTrue(hasattr(u, "RX0_CTL"))
         self.assertTrue(hasattr(u, "TX0_ETH"))
         self.assertTrue(hasattr(u, "TX0_CTL"))
         
-        self.assertIs(u.RX0_ETH.DATA_WIDTH,  u.C_DATA_WIDTH)
+        self.assertIs(u.RX0_ETH.DATA_WIDTH, u.C_DATA_WIDTH)
         self.assertEqual(u.RX0_ETH.data._dtype.getBitCnt(), u.C_DATA_WIDTH.get().val)
-        self.assertIs(u.RX0_ETH.USER_WIDTH,  u.C_USER_WIDTH)
+        self.assertIs(u.RX0_ETH.USER_WIDTH, u.C_USER_WIDTH)
         self.assertEqual(u.RX0_ETH.user._dtype.getBitCnt(), u.C_USER_WIDTH.get().val)
         
         
@@ -72,8 +72,9 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     def test_ClkAndRstExtraction(self):
         class ClkRstEnt(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "clkRstEnt.vhd"
-        u = ClkRstEnt(intfClasses=[Ap_clk, Ap_rst_n])
-        u._loadAll()
+            _intfClasses = [Ap_clk, Ap_rst_n]
+        u = ClkRstEnt()
+        u._loadDeclarations()
         
         self.assertIsInstance(u.ap_rst_n, Ap_rst_n)
         self.assertIsInstance(u.ap_clk, Ap_clk)
@@ -92,8 +93,9 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     def test_axiLiteSlave2(self):
         class AxiLiteSlave2(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "axiLite_basic_slave2.vhd"
-        u = AxiLiteSlave2(intfClasses=[AxiLite, Ap_clk, Ap_rst_n])
-        u._loadAll()
+            _intfClasses = [AxiLite, Ap_clk, Ap_rst_n]
+        u = AxiLiteSlave2()
+        u._loadDeclarations()
         
         self.assertTrue(hasattr(u, "ap_clk"))
         self.assertTrue(hasattr(u, "ap_rst_n"))
@@ -104,7 +106,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
             _hdlSources = ILVL_VHDL + "entityWithPartialyInvalidIntf.vhd"
 
         u = EntityWithPartialyInvalidIntf()
-        u._loadAll()
+        u._loadDeclarations()
 
         self.assertEqual(u.descrBM_w_wr_addr_V_123._parent, u)
         self.assertEqual(u.descrBM_w_wr_din_V._parent, u)
@@ -114,8 +116,8 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
 
     def test_simplePortDirections(self):
         from vhdl_toolkit.samples.iLvl.bram import Bram
-        bram = Bram(intfClasses=[BramPort])
-        bram._loadAll()
+        bram = Bram()
+        bram._loadDeclarations()
         
         self.assertIsS(bram.a)
         self.assertIsS(bram.a.clk)
@@ -134,7 +136,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     def test_axiPortDirections(self):
         from vhdl_toolkit.samples.iLvl.axi_basic import AxiLiteBasicSlave
         a = AxiLiteBasicSlave()  # (intfClasses=[AxiLite_xil, Ap_clk, Ap_rst_n])
-        a._loadAll()
+        a._loadDeclarations()
         
         self.assertIsS(a.S_AXI)
         self.assertIsS(a.S_AXI.ar)
@@ -150,7 +152,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     def test_axiParamsIn_Entity(self):
         from vhdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
         u = AxiLiteSlaveContainer()
-        u._loadAll()
+        u._loadDeclarations()
         u = synthesised(u)
 
         aw = None
@@ -171,7 +173,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     def test_axiParams(self):
         from vhdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
         u = AxiLiteSlaveContainer()
-        u._loadAll()
+        u._loadDeclarations()
         AW_p = u.axi.ADDR_WIDTH
         DW_p = u.axi.DATA_WIDTH
         
@@ -206,7 +208,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         class Ap_vldWithParam(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "ap_vldWithParam.vhd"
         u = Ap_vldWithParam()
-        u._loadAll()
+        u._loadDeclarations()
         
         self.assertIsInstance(u.data, Ap_vld)
         # print("Ap_vldWithParam.data_width %d" % id(Ap_vldWithParam.data_width))
@@ -268,7 +270,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         class BitStringValuesEnt(UnitFromHdl):  
             _hdlSources = ILVL_VHDL + "bitStringValuesEnt.vhd"
         u = BitStringValuesEnt()
-        u._loadAll()
+        u._loadDeclarations()
         
         self.assertEqual(u.C_32b0.defaultVal.val, 0)
         self.assertEqual(u.C_16b1.defaultVal.val, (1 << 16) - 1)
@@ -278,9 +280,10 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     
     def test_interfaceArrayExtraction(self):
         class InterfaceArraySample(UnitFromHdl):
-            _hdlSources = ILVL_VHDL + "interfaceArraySample.vhd"        
-        u = InterfaceArraySample(intfClasses=[Ap_vld])
-        u._loadAll()
+            _hdlSources = ILVL_VHDL + "interfaceArraySample.vhd"  
+            _intfClasses=[Ap_vld]      
+        u = InterfaceArraySample()
+        u._loadDeclarations()
         
         width = 3
         self.assertEqual(u.a._multipliedBy, hInt(width))
@@ -297,7 +300,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         class SizeExpressionsSample(UnitFromHdl):
             _hdlSources = ILVL_VHDL + "sizeExpressions.vhd"        
         u = SizeExpressionsSample()
-        u._loadAll()
+        u._loadDeclarations()
         
         A = u.param_A.get()
         B = u.param_B.get()
@@ -312,7 +315,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VhdlCodesignTC('test_axiPortDirections'))
-    #suite.addTest(unittest.makeSuite(VhdlCodesignTC))
+    # suite.addTest(VhdlCodesignTC('test_axiPortDirections'))
+    suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

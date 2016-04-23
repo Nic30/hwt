@@ -19,8 +19,8 @@ class UnitToUnitConnection(Unit):
         
     def _impl(self):
         connect(self.a, self.u0.a)
-        connect(self.u0.b, self.u1.a)
-        connect(self.u1.b, self.b)
+        connect(self.u0.c, self.u1.a)
+        connect(self.u1.c, self.b)
     
 if __name__ == "__main__":
-    print(synthetizeCls(UnitToUnitConnection))
+    print(synthetizeCls(UnitToUnitConnection) )

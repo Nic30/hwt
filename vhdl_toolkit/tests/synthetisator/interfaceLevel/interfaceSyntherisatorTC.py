@@ -38,23 +38,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         m(u.b.strb)
         
         
-        u._loadImplementations()
-
-        # inside
-        m(u.a)
-        m(u.a.data)
-        m(u.a.last)
-        m(u.a.ready)
-        m(u.a.valid)
-        m(u.a.strb)
-        
-        s(u.b)
-        s(u.b.data)
-        s(u.b.last)
-        s(u.b.ready)
-        s(u.b.valid)
-        s(u.b.strb)
-       
+          
         u = synthesised(u)
         
         # outside
@@ -75,7 +59,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
     def test_SimpleUnit2(self):
         from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
         u = SimpleUnit2()
-        u._loadAll()
+        u._loadDeclarations()
         ex = lambda i : self.assertTrue(i._isExtern)
         
         ex(u.a)
@@ -103,7 +87,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
     def test_SimpleSubUnit2(self):
         from vhdl_toolkit.samples.iLvl.simpleSubunit2 import SimpleSubunit2
         u = SimpleSubunit2()
-        u._loadAll()
+        u._loadDeclarations()
         u = synthesised(u)
     
         for pn in ['a0_data', 'a0_last', 'a0_strb', 'a0_valid', 'b0_ready']:    
@@ -114,7 +98,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
     def test_signalInstances(self):
         from vhdl_toolkit.samples.iLvl.simple import SimpleUnit
         bram = SimpleUnit()
-        bram._loadAll()
+        bram._loadDeclarations()
         bram = synthesised(bram)
     
         self.assertNotEqual(bram.a, bram.b, 'instances are properly instanciated')
@@ -141,7 +125,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
                 setOut(self.b)
                 
         u = Eu()
-        u._loadAll()
+        u._loadDeclarations()
         u = synthesised(u)
 
         e = u._entity
@@ -160,7 +144,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
                 setOut(self.b)
                 
         u = Dummy()
-        u._loadAll()
+        u._loadDeclarations()
         self.assertTrue(u.a.ar.addr._isExtern)
         
         u = synthesised(u)
@@ -181,8 +165,8 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(InterfaceSyntherisatorTC('test_EmptyUnitWithCompositePort'))
-    #suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
+    #suite.addTest(InterfaceSyntherisatorTC('test_EmptyUnitWithCompositePort'))
+    suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
 

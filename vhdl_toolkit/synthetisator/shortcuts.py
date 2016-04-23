@@ -16,18 +16,21 @@ from itertools import chain
 
 def synthetizeCls(cls, name=None, multithread=True):
     u = cls(multithread=multithread)
-    u._loadAll()
+    u._loadDeclarations()
+    if name is not None:
+        u._name = name
     return formatVhdl(
-                     "\n".join([ VhdlSerializer.asHdl(x) for x in u._synthesise(name)])
+                     "\n".join([ VhdlSerializer.asHdl(x) for x in u._toRtl()])
                      )
 
 def synthetizeAndSave(unit, folderName='.', name=None):
-    unit._loadAll()
+    unit._loadDeclarations()
     header = None
     os.makedirs(folderName, exist_ok=True)
     files = set()
-    
-    for o in [ x for x in unit._synthesise(name)]:
+    if name is not None:
+        unit._name= name
+    for o in [ x for x in unit._toRtl()]:
         if isinstance(o, VhdlCodeWrap):
             header = o
             fName = None

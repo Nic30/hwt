@@ -76,21 +76,11 @@ class PropertyCollector():
             for u in self._units:
                 u._loadDeclarations()
         
-    def _loadImplementations(self):
-        for i in self._units:
-            i._loadImplementations()
-
+    def _loadMyImplementations(self):
         self._setAttrListener = self._declrCollector
         self._impl()
         self._setAttrListener = None
         
-    def _loadAll(self):
-        """
-        Loads all parts of design of this unit
-        """
-        # _loadConfig is called in constructor
-        self._loadDeclarations()
-        self._loadImplementations()
             
     def _paramCollector(self, pName, p):
         if isinstance(p, Param):

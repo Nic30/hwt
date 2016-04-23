@@ -7,7 +7,7 @@ def defaultUnitName(unit, sugestedName=None):
         return sugestedName
 
 def synthesised(u):
-    for _ in u._synthesise():
+    for _ in u._toRtl():
         pass
     return u
 

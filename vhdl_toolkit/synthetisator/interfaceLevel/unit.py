@@ -16,14 +16,10 @@ from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import forAllParam
 class Unit(UnitBase, Buildable, PropertyCollector):
     """
     Class members:
-    @attention: Current implementation does not control if connections are connected
-                to right interface objects this mean you can connect it to class
-                interface definitions for example 
-    
-    #resolved automaticaly:
-    @cvar _interfaces: all interfaces with name in this unit class (IN/OUT/internal)
-    @cvar _units: all units with name in this unit class
-    @cvar _params: all params with name defined at the top of unit class
+    #resolved automaticaly durning configuration/declaration:
+    @ivar _interfaces: all interfaces 
+    @ivar _units: all units defined on this obj in configuration/declaration
+    @ivar _params: all params defined on this obj in configuration/declaration
     
     @ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
     """
@@ -41,7 +37,7 @@ class Unit(UnitBase, Buildable, PropertyCollector):
     def _cleanAsSubunit(self):
         """Disconnect internal signals so unit can be reused by parent unit"""
         for i in self._interfaces:
-            i._rmSignals()
+            i._clean()
                     
     def _signalsForMyEntity(self, context, prefix):
         # generate for all ports of subunit signals in this context
@@ -132,39 +128,51 @@ class Unit(UnitBase, Buildable, PropertyCollector):
             # reverse because other components looks at this one from outside
             if intf._isExtern:
                 intf._reverseDirection()
+
+    def _initName(self):
+        if not hasattr(self, "_name"):
+            self._name = defaultUnitName(self)
+         
     
-    def _synthesise(self, name=None):
+    def _toRtl(self):
         """
         synthesize all subunits, make connections between them, build entity and component for this unit
         """
-        if not hasattr(self, "_name"):
-            self._name = defaultUnitName(self, name)
-        
+        self._initName()
         cntx = self._contextFromParams()
         externInterf = [] 
         
         # prepare subunits
-        for subUnit in self._units:
-            subUnitName = subUnit._name
-            yield from subUnit._synthesise()
-            subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
-
+        for u in self._units:
+            yield from u._toRtl()
+            subUnitName = u._name
+            u._signalsForMyEntity(cntx, "sig_" + subUnitName)
+        
+        self._loadMyImplementations()
+        
         # prepare signals for interfaces     
         for i in self._interfaces:
             connectionName = i._name
             signals = i._signalsForInterface(cntx, connectionName)
-            i._propagateSrc()
             if i._isExtern:
                 externInterf.extend(signals)
         
-        for  subUnit in self._units:
-            for suIntf in subUnit._interfaces:
-                suIntf._propagateSrc()
-                suIntf._propagateConnection()
+
+        for i in self._interfaces:
+            i._propagateSrc()
+            
+        for  u in self._units:
+            for i in u._interfaces:
+                if i._isExtern:
+                    i._propagateSrc()
 
         # propagate connections on interfaces in this unit
-        for connection in self._interfaces:
-            connection._propagateConnection()
+        for i in self._interfaces:
+            i._propagateConnection()
+        for  u in self._units:
+            for i in u._interfaces:
+                if i._isExtern:
+                    i._propagateConnection()
         
         
         if self._checkIntferfaces and not externInterf:
@@ -172,7 +180,7 @@ class Unit(UnitBase, Buildable, PropertyCollector):
                               + "- there is no such a thing as unit without interfaces")
 
         yield from self._synthetiseContext(externInterf, cntx)
-
+        print(self._name, "done")
 
 
         

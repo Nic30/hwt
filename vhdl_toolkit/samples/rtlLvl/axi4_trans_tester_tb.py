@@ -97,7 +97,7 @@ SPEP_DELAY_RESULTS_DATA = ADDR_DELAY_RESULTS_1_DATA - ADDR_DELAY_RESULTS_0_DATA
 
 # def coordinator():
 #    projectSrcPath = "/home/nic30/Documents/vivado/axi4_tester_coordinator_simple/axi4_tester_coordinator_simple.srcs/"
-#    fileName = os.path.join(projectSrcPath, "sources_1/bd/top/hdl/top_wrapper.vhd")
+#    fileName = os.path.join(projectSrcPath, "sources_1/bd/uSonda10gTop/hdl/top_wrapper.vhd")
 #    outputFile = os.path.join(projectSrcPath, "sim_1/new/axi4_tester_coordinator_tb.vhd")
 #    entity = entityFromFile(fileName)
 #    # listAxiIterfaces(entity)
@@ -117,7 +117,7 @@ SPEP_DELAY_RESULTS_DATA = ADDR_DELAY_RESULTS_1_DATA - ADDR_DELAY_RESULTS_0_DATA
 #    s = formatVhdl(tb.render())
 #    with open(outputFile, "w") as f:
 #        f.write(s)
-#    axi_m_integer_fix(os.path.join(projectSrcPath, "sources_1/bd/top/ip/top_axi4_trans_tester_coordinator_0_0/sim/top_axi4_trans_tester_coordinator_0_0.vhd"))
+#    axi_m_integer_fix(os.path.join(projectSrcPath, "sources_1/bd/uSonda10gTop/ip/top_axi4_trans_tester_coordinator_0_0/sim/top_axi4_trans_tester_coordinator_0_0.vhd"))
 #    print(s)
 
 
@@ -145,7 +145,7 @@ class axi_tester():
 
 def axi4_tester():
     projectSrcPath = "/home/nic30/Documents/vivado/axi4_tester_simple/axi4_tester_simple.srcs"
-    fileName = os.path.join(projectSrcPath, "sources_1/bd/top/hdl/top_wrapper.vhd")
+    fileName = os.path.join(projectSrcPath, "sources_1/bd/uSonda10gTop/hdl/top_wrapper.vhd")
     outputFile = os.path.join(projectSrcPath, "sim_1/new/top_wraper_tb.vhd")
     entity = entityFromFile(fileName)
     # listAxiIterfaces(entity)
@@ -166,7 +166,7 @@ def axi4_tester():
     s = formatVhdl(tb.render())
     with open(outputFile, "w") as f:
         f.write(s)
-    axi_m_integer_fix(os.path.join(projectSrcPath, "sources_1/bd/top/ip/top_axi4_trans_tester_0_0/sim/top_axi4_trans_tester_0_0.vhd"))
+    axi_m_integer_fix(os.path.join(projectSrcPath, "sources_1/bd/uSonda10gTop/ip/top_axi4_trans_tester_0_0/sim/top_axi4_trans_tester_0_0.vhd"))
     print(s)
 
 if __name__ == "__main__":

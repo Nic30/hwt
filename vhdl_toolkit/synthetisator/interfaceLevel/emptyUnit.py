@@ -6,6 +6,8 @@ from vhdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
 
 def _setOutIntf(intf):
     intf._direction = INTF_DIRECTION.SLAVE
+    if not hasattr(intf, "_interfaces"):
+        raise AttributeError("%s has not attribute _interfaces use this function after declaration of interface" % (repr(intf)))
     for i in intf._interfaces:
         _setOutIntf(i)
 
@@ -21,9 +23,9 @@ class EmptyUnit(Unit):
     @cvar _defaultValue: this value is used to initialize all signals 
     """
     _defaultValue = None
-    def _synthesise(self, name=None):
-        name = defaultUnitName(self, name)
-        self._name = name
+    def _toRtl(self):
+        self._initName()
+        self._loadMyImplementations()
         # construct globals (generics for entity)
         cntx = self._contextFromParams()
         externInterf = [] 
@@ -40,6 +42,6 @@ class EmptyUnit(Unit):
                 if s._interface._getSignalDirection() == DIRECTION.IN:
                     s.assignFrom(Value.fromPyVal(self._defaultValue, s.dtype))
         if not externInterf:
-            raise  Exception("Can not find any external interface for unit " + name \
+            raise  Exception("Can not find any external interface for unit " + self._name \
                               + "- there is no such a thing as unit without interfaces")
         yield  from self._synthetiseContext(externInterf, cntx)

@@ -83,18 +83,21 @@ class Context():
             for node in walkSigSouces(signal):
                 if node in self.startsOfDataPaths:
                     return 
+                self.startsOfDataPaths.add(node)
                 if isinstance(node, PortConnection) and not node.unit.discovered:
                     node.unit.discovered = True
-                    for s in  walkUnitInputs(node.unit):
+                    for s in walkUnitInputs(node.unit):
                         discoverDatapaths(s)
                     self.subUnits.add(node.unit)
-                if isinstance(node, Operator):
+                elif isinstance(node, Operator):
                     assert(node.operator == AllOps.INDEX)
                     discoverDatapaths(node.result)
-                self.startsOfDataPaths.add(node)
-                if isinstance(node, Assignment):
+                elif isinstance(node, Assignment):
                     for s in walkSignalsInExpr(node.src):
                         discoverDatapaths(s)
+                        
+            if signal in interfaces:
+                self.startsOfDataPaths.add(signal)
                 
         for s in where(interfaces, lambda s: signalHasDriver(s)):  # walk my outputs
             discoverDatapaths(s)
@@ -118,7 +121,7 @@ class Context():
         arch = Architecture(ent)
         # for s in where(arch.statements, lambda x: isinstance(x, PortConnection)):  # find subUnits
         #    self.subUnits.add(self.unit)
-        assigments = list(where(self.startsOfDataPaths, lambda x: hasattr(x, 'dst')))
+        assigments = list(where(self.startsOfDataPaths, lambda x: isinstance(x, Assignment)))
         for sig in set(map(lambda x:x.dst, assigments)):
             dps = list(where(assigments, lambda x: x.dst == sig))
             p = HWProcess("assig_process_" + sig.name)

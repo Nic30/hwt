@@ -102,11 +102,13 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
         if loadConfig:
             self._loadConfig()                
         self._isExtern = isExtern
-       
-        self._endpoints = []
+        self._isAccessible = True
+        self._endpoints = set()
                     
     def _setSrc(self, src):
         """Set driver in implementation stage"""
+        assert(self._isAccessible)
+    
         if self._src is not None:
             raise IntfLvlConfErr(
                 "Interface %s already has driver (%s) and can not be connected to other driver (%s)" % 
@@ -121,7 +123,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
     
     def _addEp(self, endpoint):
         """Add endpoint in implementation stage"""
-        self._endpoints.append(endpoint)
+        self._endpoints.add(endpoint)
         
     def _setAsExtern(self, isExtern):
         """Set interface as extern"""
@@ -131,21 +133,28 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
     
     def _propagateSrc(self):
         """Propagate driver in routing"""
+        assert(self is not self._src)
         if self._src is not None:
-            self._src._endpoints.append(self)
+            self._src._endpoints.add(self)
+        for sIntf in self._interfaces:
+            sIntf._propagateSrc()
+            
         for e in self._arrayElemCache:
             e._propagateSrc()
         
-    def _rmSignals(self, rmConnetions=True):
+        
+    def _clean(self, rmConnetions=True, lockNonExternal=True):
         """Remove all signals from this interface (used after unit is synthetized
          and its parent is connecting its interface to this unit)"""
         if hasattr(self, "_sig"):
             del self._sig
         for i in self._interfaces:
-            i._rmSignals()
+            i._clean()
         if rmConnetions:
             self._src = None
-            self._endpoints = []
+            self._endpoints = set()
+        if lockNonExternal and not self._isExtern:
+            self._isAccessible = False
             
     def _connectTo(self, master, masterIndex=None, slaveIndex=None):
         """
@@ -178,7 +187,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
             
             if slaveIndex is not None:
                 dstSig = aplyIndexOnSignal(dstSig, srcSig.dtype, slaveIndex)
-                           
             dstSig.assignFrom(srcSig)
             
     def _getSignalDirection(self):

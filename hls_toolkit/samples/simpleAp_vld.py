@@ -33,6 +33,6 @@ class SimpleAp_vld(Unit):
 
 if __name__ == "__main__":
     u = SimpleAp_vld()
-    for o in u._synthesise():
+    for o in u._toRtl():
         print(str(o))
 

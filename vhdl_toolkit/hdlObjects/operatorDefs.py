@@ -121,7 +121,10 @@ class OpDefinition():
         """Load all operands and process them by self._evalFn"""
         # it = iter(operator.ops)
         def getVal(v):
-            return v if isinstance(v, Value) else v._val
+            while not isinstance(v, Value):
+                v = v._val
+            
+            return v
         
         if self == AllOps.CALL:
             origOps = operator.ops[1:]
@@ -221,7 +224,7 @@ class AllOps():
                        getReturnType=getReturnType_index,
                        addOperand=addOperand_index)
     
-    TERNARY = OpDefinition('TERNARY', 13, 
+    TERNARY = OpDefinition('TERNARY', 13,
                        lambda self, strOps :  strOps[1] if self.ops[0].staticEval() else strOps[2],
                        lambda a, b, c : b if a else c,
                        getReturnType=getReturnType_ternary,

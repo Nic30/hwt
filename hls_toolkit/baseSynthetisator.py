@@ -28,7 +28,7 @@ class BaseHlsSynthetisator():
         for intf in self.allInterfaces():
             yield from intf._hlsNodes
         
-    def _synthesise(self):
+    def _toRtl(self):
         """
         dump all operations to signal level context
         """
