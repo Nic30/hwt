@@ -137,7 +137,7 @@ class Context():
         
         # instanciate subUnits in architecture
         for u in self.subUnits:  
-            arch.componentInstances.append(u.asVHDLComponentInstance()) 
+            arch.componentInstances.append(u.asVHDLComponentInstance(u._name)) 
         
         # add components in architecture    
         for su in distinctBy(self.subUnits, lambda x: x.name):

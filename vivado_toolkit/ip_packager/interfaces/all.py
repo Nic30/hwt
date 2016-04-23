@@ -190,7 +190,7 @@ class Axi4(AXILite):
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.endianness = "little"
         param = lambda name, val :  self.addSimpleParam(thisIf, name, str(val))
-        param("ADDR_WIDTH", thisIf.aw.addr.dtype)
+        param("ADDR_WIDTH", thisIf.aw.addr._dtype.getBitCnt()) # [TODO] width expression
         param("MAX_BURST_LENGTH", 256)
         param("NUM_READ_OUTSTANDING", 5)
         param("NUM_WRITE_OUTSTANDING", 5)

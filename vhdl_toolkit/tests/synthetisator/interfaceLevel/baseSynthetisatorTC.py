@@ -17,10 +17,10 @@ class BaseSynthetisatorTC(unittest.TestCase):
             self.assertTrue(False, "port %s exists" % portName)
         self.assertEqual(p.direction, direction, "port %s should have direction %s" % (portName, direction))
     
-    def assertIn(self, u, portName):
+    def assertDirIn(self, u, portName):
         self.assertDir(u, portName, DIRECTION.IN)
     
-    def assertOut(self, u, portName):
+    def assertDirOut(self, u, portName):
         self.assertDir(u, portName, DIRECTION.OUT)
     
     @staticmethod

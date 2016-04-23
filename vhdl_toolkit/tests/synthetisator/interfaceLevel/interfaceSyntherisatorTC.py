@@ -18,68 +18,87 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
         u = SimpleUnit2()
         u._loadDeclarations()
+        m = self.assertIsM
+        s = self.assertIsS
         
         # inside
-        self.assertIsM(u.a)
-        self.assertIsM(u.a.data)
-        self.assertIsM(u.a.last)
-        self.assertIsM(u.a.ready)
-        self.assertIsM(u.a.valid)
-        self.assertIsM(u.a.strb)
+        m(u.a)
+        m(u.a.data)
+        m(u.a.last)
+        m(u.a.ready)
+        m(u.a.valid)
+        m(u.a.strb)
         
         # inside
-        self.assertIsM(u.b)
-        self.assertIsM(u.b.data)
-        self.assertIsM(u.b.last)
-        self.assertIsM(u.b.ready)
-        self.assertIsM(u.b.valid)
-        self.assertIsM(u.b.strb)
+        m(u.b)
+        m(u.b.data)
+        m(u.b.last)
+        m(u.b.ready)
+        m(u.b.valid)
+        m(u.b.strb)
         
         
         u._loadImplementations()
 
         # inside
-        self.assertIsM(u.a)
-        self.assertIsM(u.a.data)
-        self.assertIsM(u.a.last)
-        self.assertIsM(u.a.ready)
-        self.assertIsM(u.a.valid)
-        self.assertIsM(u.a.strb)
+        m(u.a)
+        m(u.a.data)
+        m(u.a.last)
+        m(u.a.ready)
+        m(u.a.valid)
+        m(u.a.strb)
         
-        self.assertIsS(u.b)
-        self.assertIsS(u.b.data)
-        self.assertIsS(u.b.last)
-        self.assertIsS(u.b.ready)
-        self.assertIsS(u.b.valid)
-        self.assertIsS(u.b.strb)
+        s(u.b)
+        s(u.b.data)
+        s(u.b.last)
+        s(u.b.ready)
+        s(u.b.valid)
+        s(u.b.strb)
        
         u = synthesised(u)
         
         # outside
-        self.assertIsS(u.a)
-        self.assertIsS(u.a.data)
-        self.assertIsS(u.a.last)
-        self.assertIsS(u.a.ready)
-        self.assertIsS(u.a.valid)
-        self.assertIsS(u.a.strb)
+        s(u.a)
+        s(u.a.data)
+        s(u.a.last)
+        s(u.a.ready)
+        s(u.a.valid)
+        s(u.a.strb)
         
-        self.assertIsM(u.b)
-        self.assertIsM(u.b.data)
-        self.assertIsM(u.b.last)
-        self.assertIsM(u.b.ready)
-        self.assertIsM(u.b.valid)
-        self.assertIsM(u.b.strb)
+        m(u.b)
+        m(u.b.data)
+        m(u.b.last)
+        m(u.b.ready)
+        m(u.b.valid)
+        m(u.b.strb)
        
     def test_SimpleUnit2(self):
         from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
         u = SimpleUnit2()
         u._loadAll()
+        ex = lambda i : self.assertTrue(i._isExtern)
+        
+        ex(u.a)
+        ex(u.a.data)
+        ex(u.a.last)
+        ex(u.a.ready)
+        ex(u.a.strb)
+        ex(u.a.valid)
+        ex(u.b)
+        ex(u.b.data)
+        ex(u.b.last)
+        ex(u.b.ready)
+        ex(u.b.strb)
+        ex(u.b.valid)
+        
         u = synthesised(u)
     
         for pn in ['a_data', 'a_last', 'a_strb', 'a_valid', 'b_ready']:    
-            self.assertIn(u, pn)    
+            self.assertDirIn(u, pn)    
         for pn in ['a_ready', 'b_data', 'b_last', 'b_strb', 'b_valid' ]:
-            self.assertOut(u, pn)
+            self.assertDirOut(u, pn)
+            
+        
     
     def test_SimpleSubUnit2(self):
         from vhdl_toolkit.samples.iLvl.simpleSubunit2 import SimpleSubunit2
@@ -88,9 +107,9 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         u = synthesised(u)
     
         for pn in ['a0_data', 'a0_last', 'a0_strb', 'a0_valid', 'b0_ready']:    
-            self.assertIn(u, pn)    
+            self.assertDirIn(u, pn)    
         for pn in ['a0_ready', 'b0_data', 'b0_last', 'b0_strb', 'b0_valid' ]:
-            self.assertOut(u, pn)
+            self.assertDirOut(u, pn)
         
     def test_signalInstances(self):
         from vhdl_toolkit.samples.iLvl.simple import SimpleUnit
@@ -142,9 +161,11 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
                 
         u = Dummy()
         u._loadAll()
-        for _ in u._synthesise():
-            pass
+        self.assertTrue(u.a.ar.addr._isExtern)
+        
+        u = synthesised(u)
         e = u._entity
+        
         
         a_ar_addr = self.getPort(e, 'a_ar_addr')
         self.assertEqual(a_ar_addr.direction, D.IN)
@@ -161,7 +182,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(InterfaceSyntherisatorTC('test_EmptyUnitWithCompositePort'))
-    # suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
+    #suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
 

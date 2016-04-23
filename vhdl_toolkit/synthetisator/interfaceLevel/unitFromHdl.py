@@ -9,12 +9,10 @@ from vhdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, SignalNode
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName, walkSignalOnUnit
+from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
 from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import walkPhysInterfaces
 from vhdl_toolkit.interfaces.all import allInterfaces
-from vhdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit
 from vhdl_toolkit.hdlObjects.entity import Entity
-from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 from vhdl_toolkit.hdlObjects.portItem import PortItem
 
 def cloneExprWithUpdatedParams(expr, paramUpdateDict):
@@ -170,15 +168,16 @@ class UnitFromHdl(Unit):
         
         cls._clsBuildFor = cls
     
-    def _synthesise(self, name=None):
+    def _synthesise(self):
         """Convert unit to hdl objects"""
-
-        self._name = defaultUnitName(self, name)
+        if not hasattr(self, '_name'):
+            self._name = defaultUnitName(self)
         self._entity = Entity()
+        self._entity.name = self.__class__._entity.name
         generics = self._entity.generics
         ports = self._entity.ports
         self._sigLvlUnit = VHDLUnit(self._entity)
-        self._sigLvlUnit.name = self._name
+        self._sigLvlUnit._name = self._name
         
         for p in self._params:
             generics.append(p)

@@ -117,6 +117,7 @@ class Unit(UnitBase, Buildable, PropertyCollector):
         self._architecture = s[2]
             
         self._sigLvlUnit = VHDLUnit(self._entity)
+        self._sigLvlUnit._name = self._name
         
         # connect results of synthetized context to interfaces of this unit
         for intf in self._interfaces:
@@ -136,8 +137,8 @@ class Unit(UnitBase, Buildable, PropertyCollector):
         """
         synthesize all subunits, make connections between them, build entity and component for this unit
         """
-        name = defaultUnitName(self, name)
-        self._name = name
+        if not hasattr(self, "_name"):
+            self._name = defaultUnitName(self, name)
         
         cntx = self._contextFromParams()
         externInterf = [] 
@@ -145,7 +146,7 @@ class Unit(UnitBase, Buildable, PropertyCollector):
         # prepare subunits
         for subUnit in self._units:
             subUnitName = subUnit._name
-            yield from subUnit._synthesise(subUnitName)
+            yield from subUnit._synthesise()
             subUnit._signalsForMyEntity(cntx, "sig_" + subUnitName)
 
         # prepare signals for interfaces     
@@ -167,7 +168,7 @@ class Unit(UnitBase, Buildable, PropertyCollector):
         
         
         if self._checkIntferfaces and not externInterf:
-            raise  Exception("Can not find any external interface for unit " + name \
+            raise  Exception("Can not find any external interface for unit " + self._name \
                               + "- there is no such a thing as unit without interfaces")
 
         yield from self._synthetiseContext(externInterf, cntx)

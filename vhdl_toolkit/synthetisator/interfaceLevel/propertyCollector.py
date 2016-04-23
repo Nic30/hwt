@@ -62,15 +62,15 @@ class PropertyCollector():
             #inherit _multipliedBy and update dtype on physical interfaces
             if i._multipliedBy is None and iamInterface:
                 i._multipliedBy = self._multipliedBy
-            i._loadDeclarations()
-            if not i._interfaces and i._multipliedBy is not None:
-                i._injectMultiplerToDtype()
-                
             #update direction of subinterfaces
             if iamInterface:
                 i._isExtern = self._isExtern
                 if self._direction != DIRECTION.asIntfDirection(self._masterDir):
                     i._direction = INTF_DIRECTION.oposite(i._direction)
+            i._loadDeclarations()
+            if not i._interfaces and i._multipliedBy is not None:
+                i._injectMultiplerToDtype()
+                
         # if I am a unit load subunits    
         if isinstance(self, UnitBase):
             for u in self._units:

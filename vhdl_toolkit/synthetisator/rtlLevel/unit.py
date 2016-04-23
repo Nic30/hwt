@@ -63,8 +63,8 @@ class VHDLUnit(Entity, Unit):
                 raise Exception("Entity %s does not have generic %s" % (self.entity.name, k))
             g.defaultVal = v   
                 
-    def asVHDLComponentInstance(self):
-        ci = ComponentInstance(self.name, self)
+    def asVHDLComponentInstance(self, name):
+        ci = ComponentInstance(name, self)
         # assert all inputs are connected
         for p in self.entity.ports:
             if p.direction == DIRECTION.IN:

@@ -24,6 +24,8 @@ class ParserTC(unittest.TestCase):
         ctx, _ = ParserLoader.parseFiles(fis)
         ctx = ctx['work']
         self.assertEqual(len(ctx.entities), 1)
+        e =  ctx.entities["entityexample"]
+        self.assertEqual(e.name, "EntityExample")
 
     def testArchParsing(self):
         f = mkFileInfo("dependencies0/simpleSubunit3_arch.vhd")
@@ -170,7 +172,7 @@ class ParserTC(unittest.TestCase):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(ParserTC('testArchCompInstance'))
-    suite.addTest(unittest.makeSuite(ParserTC))
+    suite.addTest(ParserTC('testEntityParsing'))
+    #suite.addTest(unittest.makeSuite(ParserTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
