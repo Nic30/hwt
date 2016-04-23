@@ -74,7 +74,7 @@ class DesignFile():
                     break
                 except RequireImportErr:
                     pass
-            if not imp:
+            if imp is None:
                 raise Exception("%s: require to import %s and it is not defined in any file" % 
                                 (self.fileName, str(d)))
             if d.all:
@@ -171,7 +171,7 @@ class DesignFile():
                 except RequireImportErr:
                     pass
 
-            if not df:
+            if df is None:
                 raise Exception(
                  "%s: require to import %s and it is not defined in any file" % 
                  (self.fileName, str(d)))

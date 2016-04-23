@@ -11,7 +11,7 @@ def depResolve(dep, k, resolved, unresolved):
                     continue
                 else:
                     raise Exception('Circular reference detected: %s -&gt; %s' % (k, child))
-            depResolve(dep, child.fileName, resolved, unresolved)
+            depResolve(dep, child, resolved, unresolved)
     resolved.append(k)
     unresolved.remove(k)
 
