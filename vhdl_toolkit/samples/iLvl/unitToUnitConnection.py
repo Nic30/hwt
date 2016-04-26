@@ -1,9 +1,7 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.interfaces.amba import AxiStream
-from vhdl_toolkit.synthetisator.param import Param
-from vhdl_toolkit.samples.iLvl.simple2withNonDirectIntConnection import Simple2withNonDirectIntConnection
+from vhdl_toolkit.intfLvl import connect, Param, Unit
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
+from vhdl_toolkit.interfaces.amba import AxiStream
+from vhdl_toolkit.samples.iLvl.simple2withNonDirectIntConnection import Simple2withNonDirectIntConnection
 
 class UnitToUnitConnection(Unit):
     def _config(self):

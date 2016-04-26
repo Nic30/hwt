@@ -1,7 +1,7 @@
 from python_toolkit.arrayQuery import extendLen
 from vhdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import walkPhysInterfaces
+from vhdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 
 def splitToTermSet(width):
     try:

@@ -10,10 +10,11 @@ from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal, SignalNode
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import walkPhysInterfaces
+from vhdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 from vhdl_toolkit.interfaces.all import allInterfaces
 from vhdl_toolkit.hdlObjects.entity import Entity
 from vhdl_toolkit.hdlObjects.portItem import PortItem
+from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
 def cloneExprWithUpdatedParams(expr, paramUpdateDict):
     if isinstance(expr, Param):
@@ -98,8 +99,7 @@ class UnitFromHdl(Unit):
             instI._origLoadDeclarations = instI._loadDeclarations
             def declarationsFromExtractedIntf(instI):
                 instI._origLoadDeclarations()
-                if instI._origI._direction != instI._direction:
-                    instI._reverseDirection()  
+                instI._setDirectionsLikeIn(instI._origI._direction)
                 for iSig, instISig in zip(walkPhysInterfaces(instI._origI), walkPhysInterfaces(instI)):
                     # instISig._originEntityPort = iSig._originEntityPort
                     if not iSig._dtypeMatch:
@@ -186,7 +186,7 @@ class UnitFromHdl(Unit):
         
         for unitIntf in self._interfaces:
             for i in walkPhysInterfaces(unitIntf):
-                pi = PortItem(i._getPhysicalName(), i._getSignalDirection(), i._dtype)
+                pi = PortItem(i._getPhysicalName(), INTF_DIRECTION.asDirection(i._direction), i._dtype)
                 pi._interface = i
                 ports.append(pi)
                 i._originSigLvlUnit = self._sigLvlUnit

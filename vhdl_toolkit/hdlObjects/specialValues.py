@@ -7,6 +7,7 @@ class Unconstrained():
 class INTF_DIRECTION():
     MASTER = "MASTER"
     SLAVE = "SLAVE"
+    UNKNOWN = "UNKNOWN"
     
     @classmethod
     def asDirection(cls, val):
@@ -15,7 +16,7 @@ class INTF_DIRECTION():
         elif val == INTF_DIRECTION.MASTER:
             return DIRECTION.OUT
         else:
-            raise Exception("Parameter is not interface direction")
+            raise Exception("Parameter (%s) is not interface direction" % (repr(val)))
     
     @classmethod
     def oposite(cls, d):

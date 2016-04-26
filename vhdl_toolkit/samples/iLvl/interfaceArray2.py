@@ -1,8 +1,5 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
+from vhdl_toolkit.intfLvl import connect, hInt, Unit, Param
 from vhdl_toolkit.interfaces.amba import AxiStream
 
 class SimpleSubunit(Unit):

@@ -4,7 +4,7 @@ from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from vhdl_toolkit.hdlObjects.expr import ExprComparator
 from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.hdlObjects.value import Value
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceArray import InterfaceArray
+from vhdl_toolkit.synthetisator.interfaceLevel.interface.array import InterfaceArray
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
 from vhdl_toolkit.synthetisator.rtlLevel.signalWalkers import walkSignalsInExpr

@@ -123,14 +123,14 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertIsS(bram.a.clk)
         self.assertIsS(bram.a.addr)
         self.assertIsS(bram.a.din)
-        self.assertIsS(bram.a.dout)
+        self.assertIsM(bram.a.dout)
         self.assertIsS(bram.a.we)
 
         self.assertIsS(bram.b)
         self.assertIsS(bram.b.clk)
         self.assertIsS(bram.b.addr)
         self.assertIsS(bram.b.din)
-        self.assertIsS(bram.b.dout)
+        self.assertIsM(bram.b.dout)
         self.assertIsS(bram.b.we)
 
     def test_axiPortDirections(self):
@@ -145,8 +145,8 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertIsS(a.S_AXI.w)
         self.assertIsS(a.S_AXI.b)
 
-        self.assertIsS(a.S_AXI.b.resp)
-        self.assertIsS(a.S_AXI.b.valid)
+        self.assertIsM(a.S_AXI.b.resp)
+        self.assertIsM(a.S_AXI.b.valid)
         self.assertIsS(a.S_AXI.b.ready)
 
     def test_axiParamsIn_Entity(self):

@@ -1,9 +1,8 @@
-from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.interfaces.amba import AxiStream
-from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
+from vhdl_toolkit.intfLvl import connect, Unit
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
+from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
+from vhdl_toolkit.interfaces.amba import AxiStream
 
 class SimpleSubunit2(Unit):
     def _declr(self):

@@ -1,8 +1,7 @@
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.amba import AxiStream
-from vhdl_toolkit.synthetisator.param import Param
+from vhdl_toolkit.intfLvl import Param, connect
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
 
 
 class Simple2withNonDirectIntConnection(Unit):

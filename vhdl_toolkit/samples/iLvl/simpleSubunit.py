@@ -1,8 +1,7 @@
-from vhdl_toolkit.samples.iLvl.simple import SimpleUnit
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.interfaces.std import Ap_none
+from vhdl_toolkit.intfLvl import connect, Unit
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
+from vhdl_toolkit.interfaces.std import Ap_none
+from vhdl_toolkit.samples.iLvl.simple import SimpleUnit
 
 class SimpleSubunit(Unit):
     def _declr(self):

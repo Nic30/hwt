@@ -4,6 +4,7 @@ from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector_contrained
 from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
 from vhdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 
 
 D = DIRECTION
@@ -29,10 +30,10 @@ class Ap_none(Interface):
             newT = vecT(factor)
         elif isinstance(t, Std_logic_vector_contrained):
             w = getWidthExpr(t)
-            if isinstance(w, Param):
+            if isinstance(w, Signal):
                 # bouth Param or factor Value
                 newW = w.opMul(factor)
-            elif isinstance(factor, Param):
+            elif isinstance(factor, Signal):
                 # w is Value
                 newW = factor.opMul(w)
             else:

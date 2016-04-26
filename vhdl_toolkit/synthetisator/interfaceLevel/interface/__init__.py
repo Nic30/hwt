@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy
 
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
 from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
@@ -7,10 +7,11 @@ from vhdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from vhdl_toolkit.hdlObjects.portConnection import PortConnection
 
 from vhdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
-from vhdl_toolkit.synthetisator.interfaceLevel.extractableInterface import ExtractableInterface 
+from vhdl_toolkit.synthetisator.interfaceLevel.interface.hdlExtraction import ExtractableInterface
+from vhdl_toolkit.synthetisator.interfaceLevel.interface.directionFns import InterfaceDirectionFns 
 from vhdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from vhdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
-from vhdl_toolkit.synthetisator.interfaceLevel.propertyCollector import PropertyCollector 
+from vhdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
 from vhdl_toolkit.synthetisator.rtlLevel.signal import SignalNode, Signal
 from vhdl_toolkit.hdlObjects.operator import Operator
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
@@ -38,7 +39,7 @@ def aplyIndexOnSignal(sig, dstType, index):
         raise NotImplementedError()
     
                    
-class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollector):
+class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """
     Base class for all interfaces in interface synthetisator
     
@@ -61,6 +62,13 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
     @ivar _originEntityPort: entityPort for which was this interface created
     @ivar _originSigLvlUnit: VHDL unit for which was this interface created
 
+    
+    
+    
+    Agenda of direction:
+    @ivar _masterDir: specifies which direction has this interface at master
+    @ivar _direction: means actual direction of this interface resolved by its drivers
+    
     """
     _NAME_SEPARATOR = "_"
     def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None, \
@@ -79,13 +87,13 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
         self._multipliedBy = multipliedBy
         self._masterDir = masterDir
         self._src = None
-        self._direction = INTF_DIRECTION.MASTER
+        self._direction = INTF_DIRECTION.UNKNOWN
 
         # resolve alternative names         
         if not alternativeNames:
             if hasattr(self.__class__, "_alternativeNames"):
                 # [TODO] only shallow cp required
-                self._alternativeNames = deepcopy(self.__class__._alternativeNames)
+                self._alternativeNames = copy(self.__class__._alternativeNames)
             else:
                 self._alternativeNames = []
         else:
@@ -103,45 +111,26 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
             self._loadConfig()                
         self._isExtern = isExtern
         self._isAccessible = True
+        self._dirLocked = False
         self._endpoints = set()
+        
+    def _loadDeclarations(self):
+        if not hasattr(self, "_interfaces"):
+            self._interfaces = []
+        self._setAttrListener = self._declrCollector
+        self._declr()
+        self._setAttrListener = None
+        for i in self._interfaces:
+            # inherit _multipliedBy and update dtype on physical interfaces
+            if i._multipliedBy is None:
+                i._multipliedBy = self._multipliedBy
+            i._isExtern = self._isExtern
+            i._loadDeclarations()
+            
+            # apply multiplier at dtype of signals
+            if not i._interfaces and i._multipliedBy is not None:
+                i._injectMultiplerToDtype()
                     
-    def _setSrc(self, src):
-        """Set driver in implementation stage"""
-        assert(self._isAccessible)
-    
-        if self._src is not None:
-            raise IntfLvlConfErr(
-                "Interface %s already has driver (%s) and can not be connected to other driver (%s)" % 
-                (repr(self), repr(self._src), repr(src)))
-        assert(src is not None)
-        self._src = src
-  
-        # [TODO] reverse parent to keep interface consistent
-        if self._direction != INTF_DIRECTION.SLAVE:  # for inside of unit
-            self._reverseDirection()
-            
-    
-    def _addEp(self, endpoint):
-        """Add endpoint in implementation stage"""
-        self._endpoints.add(endpoint)
-        
-    def _setAsExtern(self, isExtern):
-        """Set interface as extern"""
-        self._isExtern = isExtern
-        for prop in self._interfaces:
-            prop._setAsExtern(isExtern)
-    
-    def _propagateSrc(self):
-        """Propagate driver in routing"""
-        assert(self is not self._src)
-        if self._src is not None:
-            self._src._endpoints.add(self)
-        for sIntf in self._interfaces:
-            sIntf._propagateSrc()
-            
-        for e in self._arrayElemCache:
-            e._propagateSrc()
-        
         
     def _clean(self, rmConnetions=True, lockNonExternal=True):
         """Remove all signals from this interface (used after unit is synthetized
@@ -153,8 +142,9 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
         if rmConnetions:
             self._src = None
             self._endpoints = set()
+        self._dirLocked = False
         if lockNonExternal and not self._isExtern:
-            self._isAccessible = False
+            self._isAccessible = False  # [TODO] mv to signal lock
             
     def _connectTo(self, master, masterIndex=None, slaveIndex=None):
         """
@@ -164,11 +154,13 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
         if self._interfaces:
             for ifc in self._interfaces:
                 mIfc = getattr(master, ifc._name)
-                if master._masterDir == mIfc._masterDir:
-                    assert(self._masterDir == ifc._masterDir)
+                if mIfc._masterDir == DIRECTION.OUT:
+                    if ifc._masterDir != mIfc._masterDir:
+                        raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(ifc), repr(mIfc)))
                     ifc._connectTo(mIfc, masterIndex=masterIndex, slaveIndex=slaveIndex)
                 else:
-                    assert(self._masterDir != ifc._masterDir)
+                    if ifc._masterDir != mIfc._masterDir:
+                        raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(mIfc), repr(ifc)))
                     mIfc._connectTo(ifc, masterIndex=slaveIndex, slaveIndex=masterIndex)
         else:
             try:
@@ -188,16 +180,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
             if slaveIndex is not None:
                 dstSig = aplyIndexOnSignal(dstSig, srcSig.dtype, slaveIndex)
             dstSig.assignFrom(srcSig)
-            
-    def _getSignalDirection(self):
-        if self._direction == INTF_DIRECTION.MASTER:
-            return self._masterDir
-        elif self._direction == INTF_DIRECTION.SLAVE:
-            return DIRECTION.oposite(self._masterDir)
-        else:
-            raise IntfLvlConfErr("Invalid interface configuration _direction: %s" % 
-                                 (str(self._direction)))
-        
+   
     def _propagateConnection(self):
         """
         Propagate connections from interface instance to all subinterfaces
@@ -215,7 +198,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
                     e._connectTo(self, masterIndex=indx)
                 else:
                     self._connectTo(e, slaveIndex=indx)
-                    # print("Unknown direction %s" % (repr(self)))
                     
         for e in self._endpoints:
             e._connectTo(self)
@@ -282,12 +264,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropertyCollecto
             else:
                 tmp = None
         return name
-    
-    def _reverseDirection(self):
-        """Reverse direction of this interface in implementation stage"""
-        self._direction = INTF_DIRECTION.oposite(self._direction)
-        for intf in self._interfaces:
-            intf._reverseDirection()
     
     def _replaceParam(self, pName, newP):
         """Replace parameter in configuration stage"""

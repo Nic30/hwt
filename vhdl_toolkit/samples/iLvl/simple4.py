@@ -1,9 +1,7 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.std import Ap_none
-from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
+from vhdl_toolkit.intfLvl import connect, Param, Unit
 
 
 

@@ -1,10 +1,11 @@
 import unittest
-from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
 from python_toolkit.arrayQuery import where
 from vhdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
 from vhdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit
 from vhdl_toolkit.interfaces.std import Ap_none
 from vhdl_toolkit.interfaces.amba import Axi4
+from vhdl_toolkit.interfaces.ambaOthers import FullDuplexAxiStream 
 from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import synthesised
 from vhdl_toolkit.synthetisator.interfaceLevel.emptyUnit import setOut
 
@@ -21,11 +22,15 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         m = self.assertIsM
         s = self.assertIsS
         
+        u.a._resolveDirections()
+        u.b._resolveDirections()
+        
+        
         # inside
         m(u.a)
         m(u.a.data)
         m(u.a.last)
-        m(u.a.ready)
+        s(u.a.ready)
         m(u.a.valid)
         m(u.a.strb)
         
@@ -33,7 +38,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         m(u.b)
         m(u.b.data)
         m(u.b.last)
-        m(u.b.ready)
+        s(u.b.ready)
         m(u.b.valid)
         m(u.b.strb)
         
@@ -45,14 +50,14 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         s(u.a)
         s(u.a.data)
         s(u.a.last)
-        s(u.a.ready)
+        m(u.a.ready)
         s(u.a.valid)
         s(u.a.strb)
         
         m(u.b)
         m(u.b.data)
         m(u.b.last)
-        m(u.b.ready)
+        s(u.b.ready)
         m(u.b.valid)
         m(u.b.strb)
        
@@ -163,9 +168,157 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         b_ar_ready = self.getPort(e, "b_ar_ready")
         self.assertEqual(b_ar_ready.direction, D.IN)
 
+    def test_IntfDirections_multistream(self):
+        s = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.SLAVE)
+        m = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.MASTER)
+
+
+        i = FullDuplexAxiStream()
+        i._loadDeclarations()
+        i._resolveDirections()
+        
+        m(i)
+        s(i.rx)
+        s(i.rx.data)
+        s(i.rx.last)
+        s(i.rx.valid)
+        m(i.rx.ready)
+        
+        m(i.tx)
+        m(i.tx.data)
+        m(i.tx.last)
+        m(i.tx.valid)
+        s(i.tx.ready)
+        
+        
+        i = FullDuplexAxiStream()
+        i._loadDeclarations()
+        self.assertRaises(Exception, i._reverseDirection) 
+        i._setDirectionsLikeIn(INTF_DIRECTION.MASTER)
+        
+        s(i.rx)
+        s(i.rx.data)
+        s(i.rx.last)
+        s(i.rx.valid)
+        m(i.rx.ready)
+        
+        
+        m(i.tx)
+        m(i.tx.data)
+        m(i.tx.last)
+        m(i.tx.valid)
+        s(i.tx.ready)
+
+    def test_IntfDirections_multistream_setSrc(self):
+        m = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.MASTER)
+        s = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.SLAVE)
+        
+        i = FullDuplexAxiStream()
+        i._name = 'i'
+        i._loadDeclarations()
+        
+        i2 = FullDuplexAxiStream()
+        i2._name = 'i2'
+        i2._loadDeclarations()
+        
+        i2._setSrc(i)
+        i._resolveDirections()
+        i2._resolveDirections()
+        
+        m(i)
+        
+        s(i.rx.data)
+        s(i.rx.last)
+        s(i.rx.valid)
+        m(i.rx.ready)
+        
+        m(i.tx.data)
+        m(i.tx.last)
+        m(i.tx.valid)
+        s(i.tx.ready)
+
+
+        m(i2.rx.data)
+        m(i2.rx.last)
+        m(i2.rx.valid)
+        s(i2.rx.ready)
+        
+        s(i2.tx.data)
+        s(i2.tx.last)
+        s(i2.tx.valid)
+        m(i2.tx.ready)        
+
+    def test_IntfDirections_multistream_setSrc2(self):
+        m = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.MASTER)
+        s = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.SLAVE)
+        
+        i = FullDuplexAxiStream()
+        i._name = 'i'
+        i._loadDeclarations()
+        
+        i2 = FullDuplexAxiStream()
+        i2._name = 'i2'
+        i2._loadDeclarations()
+        
+        i.rx._setSrc(i2.rx)
+        i2.tx._setSrc(i.tx)
+        i._resolveDirections()
+        i2._resolveDirections()
+        
+        m(i)
+        s(i.rx)
+        s(i.rx.data)
+        s(i.rx.last)
+        s(i.rx.valid)
+        m(i.rx.ready)
+        
+        m(i.tx.data)
+        m(i.tx.last)
+        m(i.tx.valid)
+        s(i.tx.ready)
+
+        s(i2)
+        m(i2.rx.data)
+        m(i2.rx.last)
+        m(i2.rx.valid)
+        s(i2.rx.ready)
+        
+        s(i2.tx.data)
+        s(i2.tx.last)
+        s(i2.tx.valid)
+        m(i2.tx.ready)     
+        
+        i._reverseDirection()
+        i2._reverseDirection()
+           
+        s(i)
+        m(i.rx)
+        m(i.rx.data)
+        m(i.rx.last)
+        m(i.rx.valid)
+        s(i.rx.ready)
+        
+        s(i.tx.data)
+        s(i.tx.last)
+        s(i.tx.valid)
+        m(i.tx.ready)
+
+        m(i2)
+        s(i2.rx.data)
+        s(i2.rx.last)
+        s(i2.rx.valid)
+        m(i2.rx.ready)
+        
+        m(i2.tx.data)
+        m(i2.tx.last)
+        m(i2.tx.valid)
+        s(i2.tx.ready)     
+
+        
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(InterfaceSyntherisatorTC('test_EmptyUnitWithCompositePort'))
+    #suite.addTest(InterfaceSyntherisatorTC('test_EmptyUnit'))
     suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

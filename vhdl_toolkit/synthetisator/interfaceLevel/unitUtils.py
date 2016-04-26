@@ -1,4 +1,4 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import walkPhysInterfaces
+from vhdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 
 def defaultUnitName(unit, sugestedName=None):
     if not sugestedName:

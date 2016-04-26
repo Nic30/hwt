@@ -1,10 +1,8 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from vhdl_toolkit.intfLvl import connect, Param, Unit
 from vhdl_toolkit.interfaces.std import Ap_none
-from vhdl_toolkit.synthetisator.param import Param
 from vhdl_toolkit.samples.iLvl.bram import Bram
-from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
+from vhdl_toolkit.hdlObjects.typeShortcuts import vecT
 
 class GroupOfBlockrams(Unit):
     def _config(self):
@@ -28,6 +26,7 @@ class GroupOfBlockrams(Unit):
         self.out_w_b =extData()
         self.out_r_a =extData()
         self.out_r_b =extData()
+        self._shareAllParams()
     
     def _impl(self):
         s = self

@@ -1,7 +1,6 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from vhdl_toolkit.interfaces.std import Ap_none
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls, synthetizeAndSave
-from vhdl_toolkit.synthetisator.interfaceLevel.interfaceUtils import connect
+from vhdl_toolkit.intfLvl import connect, Unit
 
 
 class SimpleUnit(Unit):
