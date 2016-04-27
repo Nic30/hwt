@@ -1,10 +1,11 @@
 import os
 import shutil
-from vivado_toolkit.controller import VivadoTCL
-from vivado_toolkit.xdcGen import PackagePin, Comment, PortType
+from cli_toolkit.vivado.controller import VivadoTCL
+from cli_toolkit.xdcGen import PackagePin, Comment, PortType
 from vhdl_toolkit.interfaces.std import Ap_clk, Ap_rst, Ap_rst_n
 from vhdl_toolkit.hdlObjects.typeDefs import Std_logic_vector
 from vhdl_toolkit.synthetisator.interfaceLevel.unitUtils import walkSignalOnUnit
+from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
 class ConfigErr(Exception):
     pass
@@ -59,7 +60,7 @@ class Port():
             typ = None
             
         return cls(None, interface._getPhysicalName(),
-                    direction=interface._getSignalDirection(),
+                    direction=INTF_DIRECTION.asDirection(interface._direction),
                      typ=typ, hasSubIntf=bool(interface._subInterfaces),
                      width=width)
         

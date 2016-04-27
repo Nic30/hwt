@@ -1,7 +1,7 @@
 import os, math
 from time import gmtime, strftime
 
-from vivado_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
+from cli_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
     appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
 from vhdl_toolkit.hdlObjects.typeDefs import BOOL, STR, Std_logic_vector, Integer
 

@@ -1,14 +1,14 @@
-from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
-from vivado_toolkit.ip_packager.otherXmlObjs import Parameter
 from python_toolkit.arrayQuery import single, where
+from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
+from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit import interfaces
 import vhdl_toolkit.interfaces.std
 import vhdl_toolkit.interfaces.amba
 
-from vivado_toolkit.ip_packager.helpers import mkSpiElm, spi_ns_prefix
 from vhdl_toolkit.synthetisator.param import getParam
-from vivado_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
-from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from cli_toolkit.ip_packager.otherXmlObjs import Parameter
+from cli_toolkit.ip_packager.helpers import mkSpiElm, spi_ns_prefix
+from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
 
          
 DEFAULT_CLOCK = 100000000

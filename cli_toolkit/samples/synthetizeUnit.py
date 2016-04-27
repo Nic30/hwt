@@ -1,11 +1,13 @@
-from vivado_toolkit.api import portmapXdcForUnit, walkEachBitOnUnit
 from vhdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
-from vivado_toolkit.xdcGen import IoStandard
-from vivado_toolkit.shortcuts import buildUnit
+from cli_toolkit.vivado.api import portmapXdcForUnit, walkEachBitOnUnit
+from cli_toolkit.xdcGen import IoStandard
+from cli_toolkit.shortcuts import buildUnit
 
 
 if __name__ == "__main__":
     unit = SimpleUnit2()
+    unit._loadDeclarations()
+    unit._loadMyImplementations()
     def r(row, start, last):
         a = []
         for x in range(start, last + 1):

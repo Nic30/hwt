@@ -1,4 +1,4 @@
-from vivado_toolkit.tcl import VivadoTCL
+from cli_toolkit.vivado.tcl import VivadoTCL
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
 
 class PortType():

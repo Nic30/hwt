@@ -1,13 +1,13 @@
 import os, unittest
 from unittest.case import TestCase
-from vivado_toolkit.samples.config import defaultVivadoExc
-from vivado_toolkit.controller import VivadoCntrl
-from vivado_toolkit.cmdResult import VivadoErr
-from vivado_toolkit.tcl import VivadoTCL
+from cli_toolkit.vivado.controller import VivadoCntrl
+from cli_toolkit.vivado.cmdResult import VivadoErr
+from cli_toolkit.vivado.tcl import VivadoTCL
+
 
 class ControllerTC(TestCase):
     def runCmds(self, cmds):
-        with VivadoCntrl(defaultVivadoExc) as v: 
+        with VivadoCntrl() as v: 
             for res in v.process(cmds):
                 pass
     
@@ -25,7 +25,7 @@ class ControllerTC(TestCase):
 
     
     def test_warningParsing(self):
-        with VivadoCntrl(defaultVivadoExc) as v: 
+        with VivadoCntrl() as v: 
             res = list(v.process(['dir']))
             self.assertEqual(len(res), 1)
             res = res[0]
@@ -35,7 +35,7 @@ class ControllerTC(TestCase):
             self.assertEqual(len(res.infos), 0)
             
     def test_ls(self):
-        with VivadoCntrl(defaultVivadoExc) as v: 
+        with VivadoCntrl() as v: 
             _pwd, _dir = v.process([VivadoTCL.pwd(), VivadoTCL.ls()])
             ls = os.listdir(_pwd.resultText)
             vivadoLs = _dir.resultText.split()
@@ -45,7 +45,7 @@ class ControllerTC(TestCase):
             
 if __name__ == "__main__":
     suite = unittest.TestSuite()
-    #suite.addTest(ControllerTC("test_VivadoErrorValidMsg"))
+    # suite.addTest(ControllerTC("test_VivadoErrorValidMsg"))
     suite.addTest(unittest.makeSuite(ControllerTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

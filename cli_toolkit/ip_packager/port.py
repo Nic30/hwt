@@ -1,11 +1,11 @@
-from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
-         findS, mkSpiElm, ns
 from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
 from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
-from vivado_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
 from vhdl_toolkit.hdlObjects.operator import Operator
 from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
+from cli_toolkit.ip_packager.helpers import appendSpiElem, \
+         findS, mkSpiElm, ns
+from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
 
 class WireTypeDef():
     _requiredVal = ["typeName"]

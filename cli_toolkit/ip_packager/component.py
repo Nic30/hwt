@@ -1,16 +1,16 @@
 from time import  time
+from python_toolkit.arrayQuery import arr_any
 
-from vivado_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
+from cli_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
          mkSpiElm, ns, whereEndsWithExt, whereEndsWithExts
-from vivado_toolkit.ip_packager.model import Model
-from vivado_toolkit.ip_packager.port import Port
+from cli_toolkit.ip_packager.model import Model
+from cli_toolkit.ip_packager.port import Port
 
-from vivado_toolkit.ip_packager.otherXmlObjs import VendorExtensions, FileSet, File, \
+from cli_toolkit.ip_packager.otherXmlObjs import VendorExtensions, FileSet, File, \
     Parameter, Value
 import xml.etree.ElementTree as etree
-from vivado_toolkit.ip_packager.interfaces.all import allBusInterfaces
-from vivado_toolkit.ip_packager.busInterface import BusInterface
-from python_toolkit.arrayQuery import arr_any
+from cli_toolkit.ip_packager.interfaces.all import allBusInterfaces
+from cli_toolkit.ip_packager.busInterface import BusInterface
 
 
 vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
@@ -68,11 +68,11 @@ class Component():
         filesets = appendSpiElem(componentElem, "fileSets")
         hdlExtensions = [".vhd", 'v']
         
-        hdl_fs = fileSetFromFiles(vhdl_syn_fileSetName, 
+        hdl_fs = fileSetFromFiles(vhdl_syn_fileSetName,
                                   whereEndsWithExts(self._files, hdlExtensions))
-        hdl_sim_fs = fileSetFromFiles(vhdl_sim_fileSetName, 
+        hdl_sim_fs = fileSetFromFiles(vhdl_sim_fileSetName,
                                       whereEndsWithExts(self._files, hdlExtensions))
-        tclFileSet = fileSetFromFiles(tcl_fileSetName, 
+        tclFileSet = fileSetFromFiles(tcl_fileSetName,
                                       whereEndsWithExt(self._files, ".tcl"))
         for fs in [hdl_fs, hdl_sim_fs, tclFileSet]:
             filesets.append(fs.asElem())

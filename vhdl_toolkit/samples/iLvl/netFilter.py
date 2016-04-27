@@ -1,6 +1,6 @@
 from vhdl_toolkit.interfaces.amba import AxiStream, AxiLite
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from vivado_toolkit.ip_packager.packager import Packager
+from cli_toolkit.ip_packager.packager import Packager
 from vhdl_toolkit.intfLvl import Param, connect, Unit, EmptyUnit
 from vhdl_toolkit.synthetisator.interfaceLevel.emptyUnit import setOut
 

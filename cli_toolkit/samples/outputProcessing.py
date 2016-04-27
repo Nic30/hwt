@@ -1,10 +1,9 @@
-from vivado_toolkit.samples.config import defaultVivadoExc
-from vivado_toolkit.controller import VivadoCntrl
-from vivado_toolkit.cmdResult import VivadoErr
+from cli_toolkit.vivado.controller import VivadoCntrl
+from cli_toolkit.vivado.cmdResult import VivadoErr
 
 
 if __name__ == "__main__":
-    with VivadoCntrl(defaultVivadoExc) as v:
+    with VivadoCntrl(VivadoConfig.getExec()) as v:
         # process and show result
         for cmdRes in  v.process(['dir', 'pwd'], iterator=True):
             print(cmdRes.resultText)

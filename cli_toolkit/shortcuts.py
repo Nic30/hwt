@@ -1,10 +1,11 @@
 import os
-from vivado_toolkit.partBuilder import XilinxPartBuilder
-from vivado_toolkit.api import Project, VivadoReport
-from vivado_toolkit.controller import VivadoCntrl
-from vivado_toolkit.samples.config import defaultVivadoExc
 from vhdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
 from vhdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
+
+from cli_toolkit.partBuilder import XilinxPartBuilder
+from cli_toolkit.vivado.api import Project, VivadoReport
+from cli_toolkit.vivado.controller import VivadoCntrl
+from cli_toolkit.vivado.config import VivadoConfig
 
         
 pb = XilinxPartBuilder
@@ -49,7 +50,7 @@ def buildUnit(unit, synthetize=True, implement=True, writeBitstream=True, constr
             yield from p.writeBitstream()
             r.bitstreamFile = os.path.join(impl, unit._name + ".bit")
              
-    with VivadoCntrl(defaultVivadoExc, logComunication=log) as v:
+    with VivadoCntrl(VivadoConfig.getVivadoExec(), logComunication=log) as v:
         v.process(synthetizeCmds())
         if openGui:
             v.openGui()

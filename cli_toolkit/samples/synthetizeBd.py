@@ -1,8 +1,7 @@
-from vivado_toolkit.partBuilder import XilinxPartBuilder
-from vivado_toolkit.api import Project, Port, Net
-from vivado_toolkit.controller import VivadoCntrl
-from vivado_toolkit.samples.config import defaultVivadoExc
-from vivado_toolkit.samples.createBdProject import populateBd
+from cli_toolkit.partBuilder import XilinxPartBuilder
+from cli_toolkit.vivado.api import Project, Port, Net
+from cli_toolkit.vivado.controller import VivadoCntrl
+from cli_toolkit.samples.createBdProject import populateBd
 
 tmpDir = 'tmp/'
 
@@ -30,7 +29,7 @@ def createSampleBdProject():
     yield from p.synth()
     
 def processCommandsAndOpenGui():
-    with VivadoCntrl(defaultVivadoExc, logComunication=True) as v:
+    with VivadoCntrl(VivadoConfig.getExec(), logComunication=True) as v:
         v.process(createSampleBdProject())
         v.openGui()
 

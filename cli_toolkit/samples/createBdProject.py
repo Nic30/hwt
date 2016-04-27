@@ -1,8 +1,7 @@
-from vivado_toolkit.partBuilder import XilinxPartBuilder
-from vivado_toolkit.api import Project, Port, Net
-from vivado_toolkit.controller import VivadoCntrl
-from vivado_toolkit.samples.config import defaultVivadoExc
 from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
+from cli_toolkit.partBuilder import XilinxPartBuilder
+from cli_toolkit.vivado.api import Project, Port, Net
+from cli_toolkit.vivado.controller import VivadoCntrl
 
 tmpDir = 'tmp/'
 
@@ -38,11 +37,11 @@ def showCommands():
         print(cmd)      
     
 def processCommandsWithOpenedLogger():
-    with VivadoCntrl(defaultVivadoExc, logComunication=True) as v:
+    with VivadoCntrl(VivadoConfig.getExec(), logComunication=True) as v:
         v.process(createSampleBdProject())
     
 def processCommandsAndOpenGui():
-    with VivadoCntrl(defaultVivadoExc, logComunication=True) as v:
+    with VivadoCntrl(VivadoConfig.getExec(), logComunication=True) as v:
         v.process(createSampleBdProject())
         v.openGui()
 

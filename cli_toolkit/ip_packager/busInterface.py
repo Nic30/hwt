@@ -1,7 +1,6 @@
-
-from vivado_toolkit.ip_packager.helpers import appendSpiElem, \
-         mkSpiElm
 from vhdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
+from cli_toolkit.ip_packager.helpers import appendSpiElem, \
+         mkSpiElm
 
    
 class BusInterface():

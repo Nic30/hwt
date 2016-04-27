@@ -1,7 +1,5 @@
-from vivado_toolkit.partBuilder import XilinxPartBuilder
-from vivado_toolkit.api import Project
-from vivado_toolkit.samples.config import defaultVivadoExc
-from vivado_toolkit.controller import VivadoCntrl
+from cli_toolkit.partBuilder import XilinxPartBuilder
+from cli_toolkit.vivado.api import Project
 
 
 tmpDir = 'tmp/'
@@ -22,6 +20,6 @@ def importSampleBdProject():
     
     
 if __name__ == "__main__":
-    with VivadoCntrl(defaultVivadoExc, logComunication=True) as v:
+    with VivadoCntrl(VivadoConfig.getExec(), logComunication=True) as v:
         v.process(importSampleBdProject())
         v.openGui()
