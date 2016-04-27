@@ -5,6 +5,7 @@
 # internal files
 altium_toolkit/__pycache__/
 cli_toolkit/__pycache__/
+cli_toolkit/vivado/samples/__pycache__/
 cli_toolkit/ip_packager/__pycache__/
 cli_toolkit/samples/__pycache__/
 hls_toolkit/samples/__pycache__/
@@ -38,6 +39,6 @@ hdl_toolkit/vhdlConvertor/.settings/
 *.log
 
 #test/samples tmp files
-cli_toolkit/samples/tmp/*
+cli_toolkit/vivado/samples/tmp/*
 hls_toolkit/samples/ft245ToAxi
 hdl_toolkit/samples/sim/tmp/*

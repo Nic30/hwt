@@ -1,5 +1,5 @@
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from cli_toolkit.partBuilder import XilinxPartBuilder
+from cli_toolkit.vivado.partBuilder import XilinxPartBuilder
 from cli_toolkit.vivado.api import Project, Port, Net
 from cli_toolkit.vivado.controller import VivadoCntrl
 
@@ -37,11 +37,11 @@ def showCommands():
         print(cmd)      
     
 def processCommandsWithOpenedLogger():
-    with VivadoCntrl(VivadoConfig.getExec(), logComunication=True) as v:
+    with VivadoCntrl(logComunication=True) as v:
         v.process(createSampleBdProject())
     
 def processCommandsAndOpenGui():
-    with VivadoCntrl(VivadoConfig.getExec(), logComunication=True) as v:
+    with VivadoCntrl(logComunication=True) as v:
         v.process(createSampleBdProject())
         v.openGui()
 

@@ -3,7 +3,7 @@ from cli_toolkit.vivado.cmdResult import VivadoErr
 
 
 if __name__ == "__main__":
-    with VivadoCntrl(VivadoConfig.getExec()) as v:
+    with VivadoCntrl() as v:
         # process and show result
         for cmdRes in  v.process(['dir', 'pwd'], iterator=True):
             print(cmdRes.resultText)

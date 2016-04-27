@@ -1,6 +1,6 @@
 from hdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
 from cli_toolkit.vivado.api import portmapXdcForUnit, walkEachBitOnUnit
-from cli_toolkit.xdcGen import IoStandard
+from cli_toolkit.vivado.xdcGen import IoStandard
 from cli_toolkit.shortcuts import buildUnit
 
 

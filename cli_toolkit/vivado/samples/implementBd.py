@@ -1,7 +1,7 @@
-from cli_toolkit.partBuilder import XilinxPartBuilder
+from cli_toolkit.vivado.partBuilder import XilinxPartBuilder
 from cli_toolkit.vivado.api import Project, Port, Net
 from cli_toolkit.vivado.controller import VivadoCntrl
-from cli_toolkit.samples.createBdProject import populateBd
+from cli_toolkit.vivado.samples.createBdProject import populateBd
 
 tmpDir = 'tmp/'
 
@@ -26,14 +26,14 @@ def createSampleBdProject(part):
     yield from bd.setAsTop()
     
     yield from p.synth()
-    portMap = {"portin":"A8",
+    portMap = {"portin":  "A8",
                "portout": "A9"}
     
     yield from p.addXDCs('pinConstr', xdcForBd(bd, portMap))
     yield from p.implemAll()
     
 def processCommandsAndOpenGui(part):
-    with VivadoCntrl(VivadoConfig.getExec(), logComunication=True) as v:
+    with VivadoCntrl(logComunication=True) as v:
         v.process(createSampleBdProject(part))
         v.openGui()
 

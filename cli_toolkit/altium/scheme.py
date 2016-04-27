@@ -5,7 +5,7 @@ from warnings import warn
 # may differs in python3
 from PIL.OleFileIO import OleFileIO
 
-from altium_toolkit.schemeObjs import Record 
+from cli_toolkit.altium.schemeObjs import Record 
 
 #http://www.eurointech.ru/products/Altium/Protel99SE_PCB_ASCII_File_Format.pdf
 

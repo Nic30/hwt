@@ -2,7 +2,7 @@ import os
 from hdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
 from hdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
 
-from cli_toolkit.partBuilder import XilinxPartBuilder
+from cli_toolkit.vivado.partBuilder import XilinxPartBuilder
 from cli_toolkit.vivado.api import Project, VivadoReport
 from cli_toolkit.vivado.controller import VivadoCntrl
 from cli_toolkit.vivado.config import VivadoConfig

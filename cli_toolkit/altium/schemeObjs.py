@@ -1,4 +1,4 @@
-from altium_toolkit.schemeTypes import RecordTypes 
+from cli_toolkit.altium.schemeTypes import RecordTypes 
 
 #https://github.com/vadmium/python-altium/blob/master/format.md
 

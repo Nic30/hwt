@@ -1,5 +1,6 @@
-from cli_toolkit.partBuilder import XilinxPartBuilder
+from cli_toolkit.vivado.partBuilder import XilinxPartBuilder
 from cli_toolkit.vivado.api import Project
+from cli_toolkit.vivado.controller import VivadoCntrl
 
 
 tmpDir = 'tmp/'
@@ -16,10 +17,10 @@ def importSampleBdProject():
     yield from p.setPart(part)
     
     bd = p.boardDesign("test1")
-    yield from bd.importFromTcl(tmpDir+'test1.tcl', refrestTclIfExists=False)
+    yield from bd.importFromTcl(tmpDir + 'test1.tcl', refrestTclIfExists=False)
     
     
 if __name__ == "__main__":
-    with VivadoCntrl(VivadoConfig.getExec(), logComunication=True) as v:
+    with VivadoCntrl(logComunication=True) as v:
         v.process(importSampleBdProject())
         v.openGui()
