@@ -166,8 +166,8 @@ class SubunitsSynthesisTC(BaseSynthetisatorTC):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(SubunitsSynthesisTC('test_unitWithIntfPartsConnectedSeparately'))
-    # suite.addTest(unittest.makeSuite(SubunitsSynthesisTC))
+    #suite.addTest(SubunitsSynthesisTC('test_subUnitWithArrIntf'))
+    suite.addTest(unittest.makeSuite(SubunitsSynthesisTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
 

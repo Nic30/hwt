@@ -128,9 +128,10 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
             i._loadDeclarations()
             
             # apply multiplier at dtype of signals
-            if not i._interfaces and i._multipliedBy is not None:
-                i._injectMultiplerToDtype()
-                    
+            if i._multipliedBy is not None:
+                if not i._interfaces:
+                    i._injectMultiplerToDtype()
+                    i._initArrayItems()    
         
     def _clean(self, rmConnetions=True, lockNonExternal=True):
         """Remove all signals from this interface (used after unit is synthetized
@@ -231,10 +232,9 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
                 
         if self._multipliedBy is not None:
             for elemIntf in self._arrayElemCache:
-                if elemIntf is not None:  # if is used
-                    elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name 
-                    elemIntf._signalsForInterface(context, elemPrefix)
-                    # they are not in sigs because they are not main signals
+                elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name 
+                elemIntf._signalsForInterface(context, elemPrefix)
+                # they are not in sigs because they are not main signals
                     
                     
         return sigs

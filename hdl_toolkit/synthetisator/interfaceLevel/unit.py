@@ -45,7 +45,6 @@ class Unit(UnitBase, Buildable, PropDeclrCollector):
             yield from u._toRtl()
 
         
-        self._loadMyImplementations()
         for u in self._units:
             subUnitName = u._name
             u._signalsForMyEntity(cntx, "sig_" + subUnitName)
@@ -57,6 +56,7 @@ class Unit(UnitBase, Buildable, PropDeclrCollector):
             if i._isExtern:
                 externInterf.extend(signals)
         
+        self._loadMyImplementations()
 
         for i in self._interfaces:
             i._propagateSrc()
@@ -120,8 +120,11 @@ class Unit(UnitBase, Buildable, PropDeclrCollector):
         for i in self._interfaces:
             i._loadDeclarations()
             
-            if not i._interfaces and i._multipliedBy is not None:
-                i._injectMultiplerToDtype()
+            if i._multipliedBy is not None:
+                if i._interfaces:
+                    i._initArrayItems() 
+                else:
+                    i._injectMultiplerToDtype()
                 
         # if I am a unit load subunits    
         for u in self._units:

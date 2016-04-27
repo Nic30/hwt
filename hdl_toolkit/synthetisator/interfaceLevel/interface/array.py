@@ -48,6 +48,14 @@ class InterfaceArray():
     def __len__(self):
         return self._multipliedBy
     
+    def _initArrayItems(self):
+        self._arrayElemCache =[]
+        for index in range(self._multipliedBy.staticEval().val):
+            e = self._mkElemItem()
+            e._name = "%d" % index
+            e._parent = self
+            self._arrayElemCache.append(e)
+    
     def __getitem__(self, index):
         if index < self._multipliedBy.staticEval().val:
             try:
