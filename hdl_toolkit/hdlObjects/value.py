@@ -9,12 +9,12 @@ class Value():
         if isinstance(val, Value):
             val = val.val
         
-        assert(val is None or isinstance(val, int) 
-               or isinstance(val, bool) 
-               or isinstance(val, str) 
-               or isinstance(val, float) 
-               or isinstance(val, Value) 
-               or isinstance(val, list))
+        #assert(val is None or isinstance(val, int) 
+        #       or isinstance(val, bool) 
+        #       or isinstance(val, str) 
+        #       or isinstance(val, float) 
+        #       or isinstance(val, Value) 
+        #       or isinstance(val, list))
         self.val = val
         self.dtype = _type
         self.vldMask = vldMask

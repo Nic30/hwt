@@ -12,6 +12,7 @@ from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthetisator.exceptions import SerializerException
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.typeDefs import Enum
 
 # keep in mind that there is no such a thing in vhdl itself
 opPrecedence = {AllOps.NOT : 2,
@@ -62,9 +63,13 @@ class VhdlSerializer():
     @classmethod
     def Architecture(cls, arch):
         variables = []
-        procs = [] 
+        procs = []
+        extraTypes = set()
         for v in sorted(arch.variables, key=lambda x: x.name):
             variables.append(cls.SignalItem(v, declaration=True))
+            if isinstance(v.dtype, Enum):
+                extraTypes.add(v.dtype)
+            
         for p in sorted(arch.processes, key=lambda x: x.name):
             procs.append(cls.HWProcess(p))
             
@@ -73,7 +78,7 @@ class VhdlSerializer():
         "entityName"         :arch.entityName,
         "name"               :arch.name,
         "variables"          :variables,
-        "extraTypes"         :arch.extraTypes,
+        "extraTypes"         :map(lambda typ: cls.VHDLType(typ, declaration=True), extraTypes),
         "processes"          :procs,
         "components"         :arch.components,
         "componentInstances" :arch.componentInstances
@@ -274,12 +279,21 @@ class VhdlSerializer():
             return "%s : %s" % (g.name, t)
 
     @classmethod
-    def VHDLType(cls, typ):
+    def VHDLType(cls, typ, declaration=False):
         assert(isinstance(typ, HdlType))
         buff = []
-        buff.append(typ.name.upper())
-        if typ.constrain is not None and not isinstance(typ.constrain, Unconstrained):
-            buff.append("(%s)" % cls.Value(typ.constrain))        
+        if declaration:
+            if isinstance(typ, Enum):
+                buff.extend(["TYPE ", typ.name.upper(), ' IS ('])
+                buff.append(", ".join(typ._allValues))
+                buff.append(")")
+            else:
+                raise NotImplementedError("type declaration is not impleneted for type %s" % 
+                                          (typ.name))
+        else:    
+            buff.append(typ.name.upper())
+            if typ.constrain is not None and not isinstance(typ.constrain, Unconstrained):
+                buff.append("(%s)" % cls.Value(typ.constrain))        
         return "".join(buff)
                 
     @classmethod
@@ -335,44 +349,44 @@ class VhdlSerializer():
         
         ops = op.ops
         o = op.operator
-        def bin(name):
+        def _bin(name):
             return (" " + name + " ").join(map(lambda x: x.strip(), map(p, ops)))
         
         if o == AllOps.AND_LOG:
-            return bin('AND')
+            return _bin('AND')
         elif o == AllOps.CALL:
             return "%s(%s)" % (cls.FnContainer(ops[0]), ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
-            return bin('&')
+            return _bin('&')
         elif o == AllOps.DIV:
-            return bin('/')
+            return _bin('/')
         elif o == AllOps.DOWNTO:
-            return bin('DOWNTO')
+            return _bin('DOWNTO')
         elif o == AllOps.EQ:
-            return bin('=')
+            return _bin('=')
         elif o == AllOps.EVENT:
             assert(len(ops) == 1)
             return p(ops[0]) + "'EVENT"
         elif o == AllOps.GREATERTHAN:
-            return bin('>')
+            return _bin('>')
         elif o == AllOps.INDEX:
             assert(len(ops) == 2)
             return "%s(%s)" % (p(ops[0]), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
-            return bin('<')
+            return _bin('<')
         elif o == AllOps.MINUS:
-            return bin('-')
+            return _bin('-')
         elif o == AllOps.MUL:
-            return bin('*')
+            return _bin('*')
         elif o == AllOps.NEQ:
-            return bin('/=')
+            return _bin('/=')
         elif o == AllOps.NOT:
             assert(len(ops) == 1)
             return "NOT " + p(ops[0])
         elif o == AllOps.OR_LOG:
-            return bin('OR')
+            return _bin('OR')
         elif o == AllOps.PLUS:
-            return bin('+')
+            return _bin('+')
         elif o == AllOps.TERNARY:
             return p(ops[1]) + " WHEN " + p(ops[0]) + " ELSE " + p(ops[2])
         elif o == AllOps.RISING_EDGE:

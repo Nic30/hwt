@@ -12,7 +12,6 @@ class Architecture(object):
             self.entityName = None
         self.name = "rtl"
         self.variables = []
-        self.extraTypes = []
         self.processes = []
         self.components = []
         self.componentInstances = []

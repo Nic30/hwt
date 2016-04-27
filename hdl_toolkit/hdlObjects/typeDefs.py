@@ -442,18 +442,15 @@ class Array(HdlType):
     class ValueCls(Value, Ops):
         pass            
 
-
 class Positive(Integer):
     def __init__(self):
         super(Positive, self).__init__()
         self.name = "positive"
 
-
 class Natural(Integer):
     def __init__(self):
         super(Natural, self).__init__()
         self.name = "natural"
-
 
 class Range(Array):
     def __init__(self):
@@ -477,6 +474,49 @@ class Wire(Std_logic):
     def __call__(self, width):
         return Std_logic_vector_contrained(width)
 
+class Enum(HdlType):
+    class Container(object):
+        pass
+    def __init__(self, name, valueNames):
+        super(Enum, self).__init__()
+        self.name = name
+        self.values = Enum.Container()
+        self._allValues = valueNames
+        for n in valueNames:
+            setattr(self.values, n, Enum.ValueCls(n, self, 1, eventMask=0))
+            
+    def valAsVhdl(self, val, serializer):
+        return  '%s' % str(val.val)
+    class Ops(TypeOps):
+        @classmethod
+        def fromPy(cls, val, typeObj):
+            """
+            @param val: value of python type bool or None
+            @param typeObj: instance of HdlType
+            """
+            if val is None:
+                val = Enum.Member(None, self)
+            assert(isinstance(val, Enum.Member) and val.parentT == typeObj)
+            
+            return cls(val, typeObj, val.name is not None)
+                
+        def __eq__(self, other):
+            """return abs(w.val[0].val - w.val[1].val) + 1
+        
+            @attention: ignores eventMask
+            """
+            self._otherCheck(other)
+    
+            eq = self.val == other.val \
+                and self.vldMask == other.vldMask == 1
+            
+            vldMask = int(self.vldMask == other.vldMask == 1)
+            evMask = self.eventMask | other.eventMask
+            return self.__class__(eq, BOOL, vldMask, eventMask=evMask)
+    
+    class ValueCls(Value, Ops):
+        pass
+    
 
 def areIntegers(a, b):
     for t in [a, b]:
