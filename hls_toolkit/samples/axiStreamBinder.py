@@ -1,32 +1,18 @@
-from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from hdl_toolkit.intfLvl import Unit, Param
 from hdl_toolkit.interfaces.amba import AxiStream
 from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from hdl_toolkit.interfaces.std import Ap_rst_n, Ap_clk
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.hdlObjects.typeShortcuts import hBit
-from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
-from hdl_toolkit.synthetisator.param import Param
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig
+from hdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit, setOut
 
-def connectSig(a, b):
-    if isinstance(a, Interface):
-        a = a._sig
-    b._src = a
-    return b._sig.assignFrom(a)
-
-def connectAxiStremSig(a, b):
-    c = connectSig
-    return [
-        c(a.data, b.data),
-        c(a.strb, b.strb),
-        c(a.last, b.last),
-        c(a.valid, b.valid),
-        c(b.ready, a.ready)
-    ]
 
 def axiStreamDec(sel, in0, in1, out):
-    If(sel.opEq(hBit(1)),
-       connectAxiStremSig(in0, out) + [connectSig(hBit(0), in1.ready)],
-       connectAxiStremSig(in1, out) + [connectSig(hBit(0), in0.ready)])
+    If(sel.opIsOn(),
+       out._connectTo(in0) + [connectSig(hBit(0), in1.ready)],
+       out._connectTo(in1) + [connectSig(hBit(0), in0.ready)])
+    out._src = True  # _connectTo does not setup _src it only makes assignments
 
 
 class AxiStreamBinder(Unit):
@@ -86,7 +72,14 @@ class AxiStreamBinder(Unit):
         )
         
         
-    
+class AxiStreamBinderEmpty(EmptyUnit):
+    def _config(self):
+        AxiStreamBinder._config(self)
+    def _declr(self):
+        AxiStreamBinder._declr(self)
+        
+    def _impl(self):        
+        setOut(self.dataOut)    
     
 if __name__ == "__main__":
     print(synthetizeCls(AxiStreamBinder))
