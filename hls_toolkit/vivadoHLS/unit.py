@@ -1,10 +1,11 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
+import sys
 import os
 import inspect
 import subprocess
 import hashlib
+
 from python_toolkit.fileHelpers import find_files
-import sys
+from hdl_toolkit.intfLvl import UnitFromHdl
 
 class VivadoHlsConfig():
     EXECUTABLE = ["bash", "/opt/Xilinx/Vivado_HLS/2015.2/vivado_hls.sh"]

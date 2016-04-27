@@ -1,8 +1,8 @@
-from vhdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
-from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
-from vhdl_toolkit.hdlObjects.typeShortcuts import hInt
-from vhdl_toolkit.hdlObjects.operator import Operator
-from vhdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
+from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.hdlObjects.typeShortcuts import hInt
+from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from cli_toolkit.ip_packager.helpers import appendSpiElem, \
          findS, mkSpiElm, ns
 from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer

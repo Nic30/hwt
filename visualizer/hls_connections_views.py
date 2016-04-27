@@ -1,12 +1,12 @@
 from flask import render_template, request, jsonify
 from flask.blueprints import Blueprint
 import json, importlib, sys, os, glob
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit 
+from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit 
 from hls_connections import serializeUnit 
 from connectionsJsonObj import FSEntry, jsonResp 
 
 
-WORKSPACE_DIR = "../vhdl_toolkit/samples/" 
+WORKSPACE_DIR = "../hdl_toolkit/samples/" 
 sys.path.append(WORKSPACE_DIR)
 
 connectionsBp = Blueprint('connections', __name__, template_folder='templates/hls/')
@@ -61,7 +61,7 @@ def connectionData(path):
         #    module = importlib.reload(sys.modules[path])
         # except KeyError:
         #    module = importlib.import_module(path.replace("/", "."))
-    from vhdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
+    from hdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
     u = AxiLiteSlaveContainer()
     #for _ in u._toRtl():
     #    pass

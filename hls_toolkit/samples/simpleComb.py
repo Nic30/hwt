@@ -1,7 +1,7 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.interfaces.std import Ap_none
+from hdl_toolkit.intfLvl import Unit
+from hdl_toolkit.interfaces.std import Ap_none
 from hls_toolkit.baseSynthetisator import hls
-from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 
 
 

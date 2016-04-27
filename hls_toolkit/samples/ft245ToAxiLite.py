@@ -1,10 +1,10 @@
 from myhdl import always_seq, always_comb, Signal, modbv, ResetSignal, enum
-from vhdl_toolkit.synthetisator.interfaceLevel.interface import Interface
-from vhdl_toolkit.interfaces.std import s, D
-from vhdl_toolkit.interfaces.amba import AxiLite_b, AxiLite_addr, AxiLite_r, AxiLite_w, RESP_OKAY
-from vhdl_toolkit.synthetisator.param import Param
-from vhdl_toolkit.hdlObjects.typeShortcuts import hInt, vecT
-from vhdl_toolkit.hdlObjects.typeDefs import BIT
+from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
+from hdl_toolkit.interfaces.std import s, D
+from hdl_toolkit.interfaces.amba import AxiLite_b, AxiLite_addr, AxiLite_r, AxiLite_w, RESP_OKAY
+from hdl_toolkit.synthetisator.param import Param
+from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vecT
+from hdl_toolkit.hdlObjects.typeDefs import BIT
 from hls_toolkit.myhdlSynthesiser import toMyHdlInterface, convert
 
 class ft245syncIntf(Interface):

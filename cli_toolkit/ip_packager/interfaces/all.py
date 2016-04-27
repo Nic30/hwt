@@ -1,11 +1,11 @@
 from python_toolkit.arrayQuery import single, where
-from vhdl_toolkit.hdlObjects.specialValues import DIRECTION
-from vhdl_toolkit.synthetisator.rtlLevel.signal import Signal
-from vhdl_toolkit import interfaces
-import vhdl_toolkit.interfaces.std
-import vhdl_toolkit.interfaces.amba
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit import interfaces
+import hdl_toolkit.interfaces.std
+import hdl_toolkit.interfaces.amba
 
-from vhdl_toolkit.synthetisator.param import getParam
+from hdl_toolkit.synthetisator.param import getParam
 from cli_toolkit.ip_packager.otherXmlObjs import Parameter
 from cli_toolkit.ip_packager.helpers import mkSpiElm, spi_ns_prefix
 from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer

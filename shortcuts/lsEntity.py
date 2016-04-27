@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import argparse
-from vhdl_toolkit.hierarchyExtractor import DesignFile
+from hdl_toolkit.hierarchyExtractor import DesignFile
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Check syntax of vhdl files.')

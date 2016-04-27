@@ -3,7 +3,7 @@ from time import gmtime, strftime
 
 from cli_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
     appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
-from vhdl_toolkit.hdlObjects.typeDefs import BOOL, STR, Std_logic_vector, Integer
+from hdl_toolkit.hdlObjects.typeDefs import BOOL, STR, Std_logic_vector, Integer
 
 
 XILINX_VERSION = "2014.4.1"

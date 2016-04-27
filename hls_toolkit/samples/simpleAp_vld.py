@@ -1,5 +1,5 @@
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from vhdl_toolkit.interfaces.std import Ap_vld
+from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from hdl_toolkit.interfaces.std import Ap_vld
 from hls_toolkit.codeObjs import HlsOperation
 from hls_toolkit.baseSynthetisator import hls
 

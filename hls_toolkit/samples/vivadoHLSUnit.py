@@ -1,5 +1,5 @@
 from hls_toolkit.vivadoHLS.unit import VivadoHLSUnit
-from vhdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 
 
 class ExactMatcher(VivadoHLSUnit):

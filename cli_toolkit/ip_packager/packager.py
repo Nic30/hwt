@@ -2,11 +2,11 @@ import os, shutil
 from os.path import relpath
 
 from python_toolkit.fileHelpers import find_files
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
+from hdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
+from hdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
 from cli_toolkit.ip_packager.component import Component
 from cli_toolkit.ip_packager.helpers import prettify
 from cli_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
-from vhdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
 
 class Packager(object):
     def __init__(self, topUnit, extraVhdlDirs=[], extraVhdlFiles=[],

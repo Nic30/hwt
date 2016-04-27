@@ -4,12 +4,12 @@ HLS syntetizator, HDL parser writen in python
 This library allows you rapidly speedup design creation by abstraction over HDL lanuages, 
 it allows you write clean design using hi-level interfaces, 
 so you do not have to mess with every signal separately (for the rest of functionality I did not made public examples yet).
-Currently library is used for gluing things together. Examples showing this features are placed in /vhdl_toolkit/samples/iLvl.
+Currently library is used for gluing things together. Examples showing this features are placed in /hdl_toolkit/samples/iLvl.
 
-Automatic interface/parameter extraction is implemented take look at /vhdl_toolkit/interfaces
+Automatic interface/parameter extraction is implemented take look at /hdl_toolkit/interfaces
 
 Libary has vhdl, verilog, vivado hls/hlx support, object from this langues (entity, architecture, package, function, module ...) 
-can be imported and used (take look at  /vhdl_toolkit/samples/) like any others. 
+can be imported and used (take look at  /hdl_toolkit/samples/) like any others. 
 
 ## Library components
 

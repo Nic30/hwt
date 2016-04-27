@@ -1,8 +1,8 @@
-from vhdl_toolkit.interfaces.std import Ap_hs
+from hdl_toolkit.interfaces.std import Ap_hs
+from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from hdl_toolkit.formater import formatVhdl
 from hls_toolkit.codeObjs import FsmNode
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from hls_toolkit.baseSynthetisator import hls
-from vhdl_toolkit.formater import formatVhdl
 
 class HlsHs(Ap_hs):
     def __init__(self, *args, **kwargs):

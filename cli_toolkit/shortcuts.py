@@ -1,6 +1,6 @@
 import os
-from vhdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
-from vhdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
+from hdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
+from hdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
 
 from cli_toolkit.partBuilder import XilinxPartBuilder
 from cli_toolkit.vivado.api import Project, VivadoReport

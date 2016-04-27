@@ -1,5 +1,5 @@
-recursive-include vhdl_toolkit/samples *.vhd
-recursive-include vhdl_toolkit/synthetisator/templates_vhdl *.vhd
+recursive-include hdl_toolkit/samples *.vhd
+recursive-include hdl_toolkit/synthetisator/templates_vhdl *.vhd
 recursive-include templates_vhdl *.vhd 
-recursive-include vhdl_toolkit/vhdlConvertor *.jar
+recursive-include hdl_toolkit/vhdlConvertor *.jar
 recursive-include visualizer *.js *.html *.css 

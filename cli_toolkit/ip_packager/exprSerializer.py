@@ -1,4 +1,4 @@
-from vhdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
 
 
 class VivadoTclExpressionSerializer(VhdlSerializer):

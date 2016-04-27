@@ -1,7 +1,7 @@
 import argparse
-from vhdl_toolkit.hierarchyExtractor import DesignFile, \
+from hdl_toolkit.hierarchyExtractor import DesignFile, \
     findFileWhereNameIsDefined
-from vhdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
+from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from cli_toolkit.ip_packager.packager import Packager
 
 class TopUnitTemplate(UnitFromHdl):  # name and entity name does not have to be same

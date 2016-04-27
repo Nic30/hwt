@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import argparse
-from vhdl_toolkit.hierarchyExtractor import DesignFile, findFileWhereNameIsDefined 
+from hdl_toolkit.hierarchyExtractor import DesignFile, findFileWhereNameIsDefined 
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate dictionary of dependencies between files.')

@@ -9,9 +9,9 @@ cli_toolkit/ip_packager/__pycache__/
 cli_toolkit/samples/__pycache__/
 hls_toolkit/samples/__pycache__/
 hls_toolkit/samples/exactMatcherVivadoHls/solution1/.autopilot/
-vhdl_toolkit/synthetisator/__pycache__/
-vhdl_toolkit/samples/iLvl/vhdl/__pycahe__/
-vhdl_toolkit/samples/sLvl/vhdl/__pycache__/
+hdl_toolkit/synthetisator/__pycache__/
+hdl_toolkit/samples/iLvl/vhdl/__pycahe__/
+hdl_toolkit/samples/sLvl/vhdl/__pycache__/
 visualizer/__pycache__/
 visualizer/workspace/__pycache__/
 
@@ -29,9 +29,9 @@ HWToolkit.egg-info/
 .pydevproject
 .settings
 
-vhdl_toolkit/vhdlConvertor/.classpath
-vhdl_toolkit/vhdlConvertor/.project
-vhdl_toolkit/vhdlConvertor/.settings/
+hdl_toolkit/vhdlConvertor/.classpath
+hdl_toolkit/vhdlConvertor/.project
+hdl_toolkit/vhdlConvertor/.settings/
 
 #log files
 *.jou
@@ -40,4 +40,4 @@ vhdl_toolkit/vhdlConvertor/.settings/
 #test/samples tmp files
 cli_toolkit/samples/tmp/*
 hls_toolkit/samples/ft245ToAxi
-vhdl_toolkit/samples/sim/tmp/*
+hdl_toolkit/samples/sim/tmp/*

@@ -2,7 +2,7 @@ import os, sys
 from flask import Flask, render_template
 from flask.helpers import send_from_directory
 
-from vhdl_toolkit.hierarchyExtractor import DesignFile
+from hdl_toolkit.hierarchyExtractor import DesignFile
 from hls_connections_views import connectionsBp
 from python_toolkit.fileHelpers import find_files
 

@@ -2,7 +2,7 @@
 from myhdl import always_seq, always_comb, Signal, modbv, ResetSignal, enum
 from myhdl.conversion._toVHDL import _ToVHDLConvertor
 import os
-from vhdl_toolkit.hdlObjects.typeDefs import BIT
+from hdl_toolkit.hdlObjects.typeDefs import BIT
 
 def toMyHdlInterface(interfaceCls):
     interface = interfaceCls()
