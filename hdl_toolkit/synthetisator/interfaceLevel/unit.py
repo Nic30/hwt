@@ -37,7 +37,7 @@ class Unit(UnitBase, Buildable, PropDeclrCollector):
         synthesize all subunits, make connections between them, build entity and component for this unit
         """
         self._initName()
-        cntx = self._contextFromParams()
+        self._cntx = self._contextFromParams()
         externInterf = [] 
         
         # prepare subunits
@@ -47,12 +47,12 @@ class Unit(UnitBase, Buildable, PropDeclrCollector):
         
         for u in self._units:
             subUnitName = u._name
-            u._signalsForMyEntity(cntx, "sig_" + subUnitName)
+            u._signalsForMyEntity(self._cntx, "sig_" + subUnitName)
 
         # prepare signals for interfaces     
         for i in self._interfaces:
             connectionName = i._name
-            signals = i._signalsForInterface(cntx, connectionName)
+            signals = i._signalsForInterface(self._cntx, connectionName)
             if i._isExtern:
                 externInterf.extend(signals)
         
@@ -79,7 +79,7 @@ class Unit(UnitBase, Buildable, PropDeclrCollector):
             raise  Exception("Can not find any external interface for unit " + self._name \
                               + "- there is no such a thing as unit without interfaces")
 
-        yield from self._synthetiseContext(externInterf, cntx)
+        yield from self._synthetiseContext(externInterf, self._cntx)
         self._checkArchCompInstances()
     
     def _synthetiseContext(self, externInterf, cntx):

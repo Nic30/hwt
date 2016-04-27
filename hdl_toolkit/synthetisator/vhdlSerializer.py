@@ -3,21 +3,38 @@ from hdl_toolkit.synthetisator.templates import VHDLTemplates
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment 
-from hdl_toolkit.hdlObjects.portConnection import PortConnection
 from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
 from python_toolkit.arrayQuery import arr_any
-from hdl_toolkit.hdlObjects.entity import Entity
-from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.synthetisator.param import getParam
 from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthetisator.exceptions import SerializerException
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.hdlObjects.function import FnContainer
 
-
+# keep in mind that there is no such a thing in vhdl itself
+opPrecedence = {AllOps.NOT : 2,
+                AllOps.EVENT: 1,
+                AllOps.RISING_EDGE: 1,
+                AllOps.DIV: 3,
+                AllOps.PLUS : 3,
+                AllOps.MINUS: 3,
+                AllOps.MUL: 3,
+                AllOps.MUL: 3,
+                AllOps.XOR: 2,
+                AllOps.EQ: 2,
+                AllOps.NEQ: 2,
+                AllOps.AND_LOG: 2,
+                AllOps.OR_LOG: 2,
+                AllOps.DOWNTO: 2,
+                AllOps.GREATERTHAN: 2,
+                AllOps.LOWERTHAN: 2,
+                AllOps.CONCAT: 2,
+                AllOps.INDEX: 1,
+                AllOps.TERNARY: 1,
+                AllOps.CALL: 1,
+                }
 
 class VhdlSerializer():
     
@@ -25,26 +42,18 @@ class VhdlSerializer():
     def asHdl(cls, obj):
         if hasattr(obj, "asVhdl"):
             return obj.asVhdl(cls)
-        elif isinstance(obj, HdlType):
-            return cls.VHDLType(obj)
+        elif isinstance(obj, UnitFromHdl):
+            return str(obj)
         elif isinstance(obj, Signal):
             return cls.SignalItem(obj)
         elif isinstance(obj, Value):
             return cls.Value(obj)
-        elif isinstance(obj, Assignment):
-            return cls.Assignment(obj)
-        elif isinstance(obj, IfContainer):
-            return cls.IfContainer(obj) 
-        elif isinstance(obj, Entity):
-            return cls.Entity(obj)
-        elif isinstance(obj, Architecture):
-            return cls.Architecture(obj)
-        elif isinstance(obj, UnitFromHdl):
-            return str(obj)
-        elif isinstance(obj, FnContainer):
-            return cls.FnContainer(obj)
         else:
-            raise NotImplementedError("Not implemented for %s" % (repr(obj)))
+            try:
+                serFn = getattr(cls, obj.__class__.__name__)
+            except AttributeError:
+                raise NotImplementedError("Not implemented for %s" % (repr(obj)))
+            return serFn(obj)
     
     @classmethod
     def FnContainer(cls, fn):
@@ -194,7 +203,7 @@ class VhdlSerializer():
     def PortConnection(cls, pc):
         if pc.portItem.dtype != pc.sig.dtype:
             raise SerializerException("Port map %s is nod valid (types does not match)" % (
-                      " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig)) ))
+                      " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig))))
         return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig))      
     
     @classmethod
@@ -310,3 +319,69 @@ class VhdlSerializer():
             return cls.SignalItem(val)
         else:
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 
+
+    @classmethod
+    def Operator(cls, op):
+        def p(operand):
+            s = cls.asHdl(operand)
+            if isinstance(operand, Signal):
+                try:
+                    o = operand.singleDriver()
+                    if opPrecedence[o.operator] <= opPrecedence[op.operator]:
+                        return " (%s) " % s
+                except Exception:
+                    pass
+            return " %s " % s
+        
+        ops = op.ops
+        o = op.operator
+        def bin(name):
+            return (" " + name + " ").join(map(lambda x: x.strip(), map(p, ops)))
+        
+        if o == AllOps.AND_LOG:
+            return bin('AND')
+        elif o == AllOps.CALL:
+            return "%s(%s)" % (cls.FnContainer(ops[0]), ", ".join(map(p, ops[1:])))
+        elif o == AllOps.CONCAT:
+            return bin('&')
+        elif o == AllOps.DIV:
+            return bin('/')
+        elif o == AllOps.DOWNTO:
+            return bin('DOWNTO')
+        elif o == AllOps.EQ:
+            return bin('=')
+        elif o == AllOps.EVENT:
+            assert(len(ops) == 1)
+            return p(ops[0]) + "'EVENT"
+        elif o == AllOps.GREATERTHAN:
+            return bin('>')
+        elif o == AllOps.INDEX:
+            assert(len(ops) == 2)
+            return "%s(%s)" % (p(ops[0]), p(ops[1]))
+        elif o == AllOps.LOWERTHAN:
+            return bin('<')
+        elif o == AllOps.MINUS:
+            return bin('-')
+        elif o == AllOps.MUL:
+            return bin('*')
+        elif o == AllOps.NEQ:
+            return bin('/=')
+        elif o == AllOps.NOT:
+            assert(len(ops) == 1)
+            return "NOT " + p(ops[0])
+        elif o == AllOps.OR_LOG:
+            return bin('OR')
+        elif o == AllOps.PLUS:
+            return bin('+')
+        elif o == AllOps.TERNARY:
+            return p(ops[1]) + " WHEN " + p(ops[0]) + " ELSE " + p(ops[2])
+        elif o == AllOps.RISING_EDGE:
+            assert(len(ops) == 1)
+            return "RISING_EDGE(" + p(ops[0]) + ")"
+        else:
+            raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))
+        #     
+        # if isinstance(self.strOperator, str):
+        #    return  self.strOperator.join(map(p, operator.ops))
+        # else:
+        #    return self.strOperator(operator, list(map(p, operator.ops)))

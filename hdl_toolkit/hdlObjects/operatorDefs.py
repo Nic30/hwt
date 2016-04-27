@@ -101,12 +101,10 @@ def getReturnType_hdlFn(op):
 
 class OpDefinition():
     
-    def __init__(self, _id, precedence, strOperatorOrFn, evalFn,
+    def __init__(self, evalFn,
                  getReturnType=getReturnType_default ,
-                 addOperand=addOperand_default):  
-        self.id = _id
-        self.precedence = precedence
-        self.strOperator = strOperatorOrFn
+                 addOperand=addOperand_default):
+        self.id = None  # assigned automatically in AllOps  
         self._evalFn = evalFn
         self.getReturnType = getReturnType
         self.addOperand = addOperand
@@ -136,102 +134,72 @@ class OpDefinition():
             ops = list(map(getVal, operator.ops))
             return self._evalFn(*ops)
 
-        
-    # [TODO] rename to asVhdl
-    def str(self, operator, serializer):
-        # [TODO] not ideal, serializer should be used
-        from hdl_toolkit.hdlObjects.operator import Operator
-        
-        def p(op):
-            s = serializer.asHdl(op)
-            if isinstance(op, Operator) and op.operator.precedence > self.precedence:
-                return " (%s) " % s
-            return " %s " % s
-             
-        if isinstance(self.strOperator, str):
-            return  self.strOperator.join(map(p, operator.ops))
-        else:
-            return self.strOperator(operator, list(map(p, operator.ops)))
-        
     def __repr__(self):
         return "<OpDefinition %s>" % (self.id)
             
 class AllOps():
+    _idsInited = False
     """
-    https://en.wikipedia.org/wiki/Order_of_operations
     @attention: Remember that and operator is & and or is |, 'and' and 'or' can not be used because
     they can not be overloaded
-    @attention: These are internal operators, the are not equal to verilog or vhdl operators
+    @attention: These are operators of internal AST, the are not equal to verilog or vhdl operators
     """
     
-    NOT = OpDefinition('NOT', 3, lambda self, strOps: "NOT " + strOps[0],  # [TODO] [0] has dangerous potential
-                       lambda a :~a,
+    NOT = OpDefinition(lambda a :~a,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
-    EVENT = OpDefinition('EVENT', 3, lambda self, strOps:  strOps[0] + "'EVENT",
-                        lambda a : NotImplemented(),
+    EVENT = OpDefinition(lambda a : NotImplemented(),
                         getReturnType=lambda op: BOOL,
                         addOperand=addOperand_event)
-    RISING_EDGE = OpDefinition('RISING_EDGE', 3, lambda self, strOps: "RISING_EDGE(" + strOps[0] + ")",
-                        lambda a : NotImplemented(),
+    RISING_EDGE = OpDefinition(lambda a : NotImplemented(),
                         getReturnType=lambda op: BOOL,
                         addOperand=addOperand_event)  # unnecessary
-    DIV = OpDefinition('DIV', 3, '/', lambda a, b : a // b)
-    PLUS = OpDefinition('PLUS', 4, '+', lambda a, b : a + b)
-    MINUS = OpDefinition('MINUS', 4, '-', lambda a, b : a - b)
-    MUL = OpDefinition('MUL', 4, '*', lambda a, b : a * b)
-    NEQ = OpDefinition('NEQ', 7, '!=', lambda a, b : a != b,
+    DIV = OpDefinition(lambda a, b : a // b)
+    PLUS = OpDefinition(lambda a, b : a + b)
+    MINUS = OpDefinition(lambda a, b : a - b)
+    MUL = OpDefinition(lambda a, b : a * b)
+    NEQ = OpDefinition(lambda a, b : a != b,
                         getReturnType=lambda op: BOOL)
-    XOR = OpDefinition('XOR', 7, 'XOR', lambda a, b : a != b,
+    XOR = OpDefinition(lambda a, b : a != b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
-    EQ = OpDefinition('EQ', 7, '==', lambda a, b : a == b,
+    EQ = OpDefinition(lambda a, b : a == b,
                         getReturnType=lambda op: BOOL,
                         addOperand=addOperand_eq)
     
-    AND_LOG = OpDefinition('AND', 11, 'AND',
-                       lambda a, b : a & b,
+    AND_LOG = OpDefinition(lambda a, b : a & b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
     
-    OR_LOG = OpDefinition('OR', 12, 'OR',
-                       lambda a, b : a | b,
+    OR_LOG = OpDefinition(lambda a, b : a | b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
     
-    DOWNTO = OpDefinition("DOWNTO", 13, 'DOWNTO',
-                        lambda a, b : Value.fromPyVal([b, a], RANGE),  # [TODO]
+    DOWNTO = OpDefinition(lambda a, b : Value.fromPyVal([b, a], RANGE),  # [TODO]
                         getReturnType=lambda op: RANGE,
                         addOperand=convOpsToType(INT))
     
-    GREATERTHAN = OpDefinition('GREATERTHAN', 6, '>',
-                       lambda a, b : a > b,
+    GREATERTHAN = OpDefinition(lambda a, b : a > b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_eq)
     
-    LOWERTHAN = OpDefinition('LOWERTHAN', 6, '<',
-                       lambda a, b : a < b,
+    LOWERTHAN = OpDefinition(lambda a, b : a < b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_eq)
     
-    CONCAT = OpDefinition('LOWETHAN', 6, '&',
-                       lambda a, b : NotImplemented(),
+    CONCAT = OpDefinition(lambda a, b : NotImplemented(),
                        getReturnType=getReturnType_concat,
                        addOperand=addOperand_concat)
 
-    INDEX = OpDefinition('INDEX', 1, lambda self, strOps : "%s(%s)" % (strOps[0], strOps[1]),
-                       lambda a, b : a[b],
+    INDEX = OpDefinition(lambda a, b : a[b],
                        getReturnType=getReturnType_index,
                        addOperand=addOperand_index)
     
-    TERNARY = OpDefinition('TERNARY', 13,
-                       lambda self, strOps :  strOps[1] if self.ops[0].staticEval() else strOps[2],
-                       lambda a, b, c : b if a else c,
+    TERNARY = OpDefinition(lambda a, b, c : b if a else c,
                        getReturnType=getReturnType_ternary,
                        addOperand=addOperand_ternary)
     
-    CALL = OpDefinition('CALL', 1, lambda self, strOps : "%s(%s)" % (strOps[0], ", ".join(strOps[1:])),
-                       None,
+    CALL = OpDefinition(None,
                        getReturnType=getReturnType_hdlFn,
                        addOperand=lambda operator, operand : operator.ops.append(operand))
     
@@ -240,4 +208,11 @@ class AllOps():
     @classmethod
     def opByName(cls, name):
         return getattr(cls, name)
-
+    
+if not AllOps._idsInited:
+    for a in dir(AllOps):
+        o = getattr(AllOps, a)
+        if isinstance(o, OpDefinition):
+            o.id = a
+            
+    AllOps._idsInited = True

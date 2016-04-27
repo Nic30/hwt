@@ -51,7 +51,7 @@ class Context():
         if defVal is not None and not isinstance(defVal, Value):
             defVal = Value.fromPyVal(defVal, typ)
 
-        if clk:
+        if clk is not None:
             s = SyncSignal(name, typ, defVal)
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
@@ -95,6 +95,10 @@ class Context():
                 elif isinstance(node, Assignment):
                     for s in walkSignalsInExpr(node.src):
                         discoverDatapaths(s)
+                    assert(isinstance(node.cond, set))
+                    for c in node.cond:
+                        for s in  walkSignalsInExpr(c):
+                            discoverDatapaths(s)
                         
             if signal in interfaces:
                 self.startsOfDataPaths.add(signal)

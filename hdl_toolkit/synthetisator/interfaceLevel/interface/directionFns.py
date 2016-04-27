@@ -1,5 +1,6 @@
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, DIRECTION
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 
 
 class InterfaceDirectionFns():
@@ -88,7 +89,7 @@ class InterfaceDirectionFns():
     def _propagateSrc(self):
         """Propagate driver in routing"""
         assert(self is not self._src)
-        if self._src is not None:
+        if self._src is not None and isinstance(self._src, InterfaceBase):
             self._src._endpoints.add(self)
         for sIntf in self._interfaces:
             sIntf._propagateSrc()

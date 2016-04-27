@@ -47,9 +47,6 @@ class Operator():
     def getReturnType(self):
         return self.operator.getReturnType(self)
     
-    def asVhdl(self, serializer):
-        return self.operator.str(self, serializer)
-    
     def __eq__(self, other):
         return type(self) == type(other) and self.operator == other.operator \
             and  self.ops == other.ops
