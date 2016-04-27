@@ -4,14 +4,14 @@ from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from hdl_toolkit.interfaces.std import Ap_rst_n, Ap_clk
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.hdlObjects.typeShortcuts import hBit
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig, connectBool2Log
 from hdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit, setOut
 
 
 def axiStreamDec(sel, in0, in1, out):
     If(sel.opIsOn(),
-       out._connectTo(in0) + [connectSig(hBit(0), in1.ready)],
-       out._connectTo(in1) + [connectSig(hBit(0), in0.ready)])
+       out._connectTo(in0) + connectSig(hBit(0), in1.ready),
+       out._connectTo(in1) + connectSig(hBit(0), in0.ready))
     out._src = True  # _connectTo does not setup _src it only makes assignments
 
 
@@ -42,11 +42,7 @@ class AxiStreamBinder(Unit):
                            syncRst=self.rst_n._sig,
                            defVal=hBit(0))
         
-        def cond2Log(cond, sig):
-            return If(cond,
-               [sig.assignFrom(hBit(1)) ],
-               [sig.assignFrom(hBit(0)) ]
-               )
+
         
         transInProgress = syncBit('transInProgress')
         prefer1 = syncBit('prefer1')
@@ -68,7 +64,7 @@ class AxiStreamBinder(Unit):
                   [prefer1.assignFrom(prefer1)]
                   )
                ),
-           cond2Log(outRd.opAnd(in0vld.opOr(in1vld)), transInProgress)
+           connectBool2Log(outRd.opAnd(in0vld.opOr(in1vld)), transInProgress)
         )
         
         
