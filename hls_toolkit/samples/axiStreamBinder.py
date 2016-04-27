@@ -7,7 +7,6 @@ from hdl_toolkit.hdlObjects.typeShortcuts import hBit
 from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from hdl_toolkit.synthetisator.param import Param
 
-
 def connectSig(a, b):
     if isinstance(a, Interface):
         a = a._sig
@@ -31,6 +30,12 @@ def axiStreamDec(sel, in0, in1, out):
 
 
 class AxiStreamBinder(Unit):
+    """
+    This unit merges two axi stream inputs into one output
+    Round-Robin like scheduling 
+    Latency : 0
+    Delay   : 0
+    """
     def _config(self):
         self.DATA_WIDTH = Param(64)
     

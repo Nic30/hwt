@@ -64,6 +64,11 @@ class Ap_rst(Ap_none):
 
 class Ap_rst_n(Ap_none):
     _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn' ]
+    def _signalsForInterface(self, context, prefix):
+        sigs = Ap_none._signalsForInterface(self, context, prefix)
+        for s in sigs:
+            s.negated = True
+        return sigs
 
 class Ap_vld(Interface):
     def _config(self):

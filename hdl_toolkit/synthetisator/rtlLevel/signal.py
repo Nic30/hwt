@@ -125,6 +125,7 @@ class Signal(SignalItem, SignalOps):
         self.endpoints = set()
         self.drivers = set()
         self._usedOps = {}
+        self.negated = False
     
     def simPropagateChanges(self):
         if self._oldVal != self._val or self._oldVal.eventMask != self._val.eventMask:

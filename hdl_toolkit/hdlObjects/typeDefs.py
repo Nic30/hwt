@@ -214,7 +214,8 @@ class Std_logic(HdlType):
             if isVal:
                 return sigOrVal == Value.fromPyVal(1, BIT)
             else:
-                return sigOrVal.opEq(Value.fromPyVal(1, BIT))
+                v = 0 if sigOrVal.negated else 1
+                return sigOrVal.opEq(Value.fromPyVal(v, BIT))
         return super(Std_logic, self).convert(sigOrVal, toType)
             
     class Ops(TypeOps):
@@ -339,7 +340,7 @@ class Std_logic_vector_contrained(Std_logic_vector):
             resWidth = w + other.dtype.getBitCnt()
             v.dtype = VECTOR(SignalNode.resForOp(
                                 Operator(AllOps.DOWNTO, [ 
-                                           Value.fromPyVal(resWidth -1, INT),
+                                           Value.fromPyVal(resWidth - 1, INT),
                                            Value.fromPyVal(0, INT)])))
             return v
         
