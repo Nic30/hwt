@@ -146,23 +146,19 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         self._dirLocked = False
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
-            
-    def _connectTo(self, master, masterIndex=None, slaveIndex=None):
-        """
-        connect to another interface interface (on rtl level)
-        works like self <= master in VHDL
-        """
+    
+    def _connectToIter(self, master, masterIndex=None, slaveIndex=None):
         if self._interfaces:
             for ifc in self._interfaces:
                 mIfc = getattr(master, ifc._name)
                 if mIfc._masterDir == DIRECTION.OUT:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(ifc), repr(mIfc)))
-                    ifc._connectTo(mIfc, masterIndex=masterIndex, slaveIndex=slaveIndex)
+                    yield from ifc._connectTo(mIfc, masterIndex=masterIndex, slaveIndex=slaveIndex)
                 else:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(mIfc), repr(ifc)))
-                    mIfc._connectTo(ifc, masterIndex=slaveIndex, slaveIndex=masterIndex)
+                    yield from mIfc._connectTo(ifc, masterIndex=slaveIndex, slaveIndex=masterIndex)
         else:
             try:
                 dstSig = self._sig
@@ -180,7 +176,15 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
             
             if slaveIndex is not None:
                 dstSig = aplyIndexOnSignal(dstSig, srcSig.dtype, slaveIndex)
-            dstSig.assignFrom(srcSig)
+            yield dstSig.assignFrom(srcSig)
+        
+            
+    def _connectTo(self, master, masterIndex=None, slaveIndex=None):
+        """
+        connect to another interface interface (on rtl level)
+        works like self <= master in VHDL
+        """
+        return list(self._connectToIter(master, masterIndex, slaveIndex))
    
     def _propagateConnection(self):
         """
