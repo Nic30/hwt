@@ -8,20 +8,21 @@ from vhdl_toolkit.hdlObjects.typeDefs import BIT
 from hls_toolkit.myhdlSynthesiser import toMyHdlInterface, convert
 
 class ft245syncIntf(Interface):
-    DATA_WIDTH = Param(hInt(8))
-    
-    dataIn  = s(masterDir=D.IN, dtype=vecT(DATA_WIDTH)) #Data writen from controller
-    dataOut = s(dtype=vecT(DATA_WIDTH)) #Data read from controller 
-    rw = s(dtype=BIT) #data direction 0 read, 1 write
-    busy = s(masterDir=D.IN, dtype=BIT) # busy flag
-    strobe = s(masterDir=D.IN, dtype=BIT) #strobe of RW flag
+    def _config(self):
+        self.DATA_WIDTH = Param(hInt(8))
+    def _declr(self):
+        self.dataIn = s(masterDir=D.IN, dtype=vecT(self.DATA_WIDTH))  # Data writen from controller
+        self.dataOut = s(dtype=vecT(self.DATA_WIDTH))  # Data read from controller 
+        self.rw = s(dtype=BIT)  # data direction 0 read, 1 write
+        self.busy = s(masterDir=D.IN, dtype=BIT)  # busy flag
+        self.strobe = s(masterDir=D.IN, dtype=BIT)  # strobe of RW flag
 
 
 LEN_W = 7
 ADDR_W = 32
 WORD_W = 32
 
-#class ft245AxiFrame():
+# class ft245AxiFrame():
 #    rw = Signal(bool())
 #    len = Signal(modbv(0)[LEN_W:])
 #    addr = Signal(modbv(0)[ADDR_W:])
@@ -29,15 +30,15 @@ WORD_W = 32
 
 t_stPackReader = enum("RD_LEN", "RD_ADDR", "RD_DATA", "SUSPENDED")
 t_stDataWLoader = enum("")
-t_MainSt = enum("IDLE", 
+t_MainSt = enum("IDLE",
                "AXI_AR", "AXI_R",
                "AXI_AW", "AXI_W", "AXI_WAIT_B", "RESPOND_B")
 
 def ft245ToAxi(clk, rst, ft245sIf, axiAr, axiR, axiAw, axiW, axiB):
-    pReaderSt    = Signal(t_stPackReader.RD_LEN)
+    pReaderSt = Signal(t_stPackReader.RD_LEN)
     pReaderSt_next = Signal(t_stPackReader.RD_LEN)
-    mainSt       = Signal(t_MainSt.IDLE)
-    mainSt_next  = Signal(t_MainSt.IDLE)
+    mainSt = Signal(t_MainSt.IDLE)
+    mainSt_next = Signal(t_MainSt.IDLE)
 
     rw = Signal(bool())
     en = Signal(bool())                   
@@ -50,8 +51,8 @@ def ft245ToAxi(clk, rst, ft245sIf, axiAr, axiR, axiAw, axiW, axiB):
 
     newPacket = Signal(bool())
     
-    addrLdIndexer = Signal(modbv(0)[ADDR_W//8:])
-    addrLdIndexer_next = Signal(modbv(0)[ADDR_W//8:])    
+    addrLdIndexer = Signal(modbv(0)[ADDR_W // 8:])
+    addrLdIndexer_next = Signal(modbv(0)[ADDR_W // 8:])    
     
     lenRem = Signal(modbv(0)[LEN_W:])
 
@@ -115,21 +116,21 @@ def ft245ToAxi(clk, rst, ft245sIf, axiAr, axiR, axiAw, axiW, axiB):
             ft245sIf.rw.next = False 
             ft245sIf.strobe.next = True
         else:
-            ft245sIf.rw.next =  rw
+            ft245sIf.rw.next = rw
             ft245sIf.strobe.next = en
     
     @always_comb
     def packetLoader():
-        rw_next.next =   rw
-        len_next.next =  len
+        rw_next.next = rw
+        len_next.next = len
         addr_next.next = addr
         
         if pReaderSt == t_stPackReader.RD_LEN:
-            rw_next.next =  ft245sIf.dataIn[LEN_W]
+            rw_next.next = ft245sIf.dataIn[LEN_W]
             len_next.next = ft245sIf.dataIn
             en.next = True
         elif pReaderSt == t_stPackReader.RD_ADDR:
-            addr_next.next[addrLdIndexer*8:8] = ft245sIf.dataIn
+            addr_next.next[addrLdIndexer * 8:8] = ft245sIf.dataIn
             en.next = True
         elif pReaderSt == t_stPackReader.RD_DATA:
             pass
@@ -157,7 +158,7 @@ def ft245ToAxi(clk, rst, ft245sIf, axiAr, axiR, axiAw, axiW, axiB):
                 if addrLdIndexer == 3:
                     pReaderSt_next.next = t_stPackReader.RD_DATA
             elif pReaderSt == t_stPackReader.RD_DATA:
-                if lenRem ==0:
+                if lenRem == 0:
                     pReaderSt_next.next = t_stPackReader.SUSPENDED
             elif pReaderSt == t_stPackReader.SUSPENDED:
                 if newPacket:
@@ -179,8 +180,8 @@ def ft245ToAxi(clk, rst, ft245sIf, axiAr, axiR, axiAw, axiW, axiB):
     def stateShift():
         pReaderSt.next = pReaderSt_next
         addrLdIndexer.next = addrLdIndexer_next
-        rw.next =   rw_next
-        len.next =  len_next
+        rw.next = rw_next
+        len.next = len_next
         addr.next = addr_next
         mainSt.next = mainSt_next
    
@@ -190,7 +191,7 @@ def ft245ToAxi(clk, rst, ft245sIf, axiAr, axiR, axiAw, axiW, axiB):
             axiAr_sender,
             axiAw_sender,
             axiW_sender,
-            packetLoader, 
+            packetLoader,
             addrLdIndexer_incrementer,
             packetLoaderStateChange,
             dataToft245,
@@ -200,12 +201,12 @@ def ft245ToAxi(clk, rst, ft245sIf, axiAr, axiR, axiAw, axiW, axiB):
 if __name__ == "__main__":
     clk = Signal(bool(0))
     rst = ResetSignal(0, active=0, async=False)
-    ft245sIf = toMyHdlInterface(ft245syncIntf())
-    axiAr = toMyHdlInterface(AxiLite_addr())
-    axiAw = toMyHdlInterface(AxiLite_addr())
-    axiR = toMyHdlInterface(AxiLite_r())
-    axiW = toMyHdlInterface(AxiLite_w())
-    axiB = toMyHdlInterface(AxiLite_b())
+    ft245sIf = toMyHdlInterface(ft245syncIntf)
+    axiAr = toMyHdlInterface(AxiLite_addr)
+    axiAw = toMyHdlInterface(AxiLite_addr)
+    axiR = toMyHdlInterface(AxiLite_r)
+    axiW = toMyHdlInterface(AxiLite_w)
+    axiB = toMyHdlInterface(AxiLite_b)
     
     convert(ft245ToAxi, clk, rst, ft245sIf, axiAr, axiR, axiAw, axiW, axiB)
 
