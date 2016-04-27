@@ -5,7 +5,7 @@ import os
 from vhdl_toolkit.samples.rtlLvl.axi_testbench import AXI4_slave, AXI_lite_master, AXI_testbench
 from vhdl_toolkit.formater import formatVhdl 
 from vhdl_toolkit.parserUtils import entityFromFile
-from vivado_toolkit.vivado_ip_wrap_fix import axi_m_integer_fix 
+from cli_toolkit.vivado_ip_wrap_fix import axi_m_integer_fix 
 
 
 MODE_INIT = 0
