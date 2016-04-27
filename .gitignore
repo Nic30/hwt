@@ -37,6 +37,7 @@ vhdl_toolkit/vhdlConvertor/.settings/
 *.jou
 *.log
 
-#test tmp files
+#test/samples tmp files
 cli_toolkit/samples/tmp/*
+hls_toolkit/samples/ft245ToAxi
 vhdl_toolkit/samples/sim/tmp/*
