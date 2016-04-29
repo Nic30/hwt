@@ -58,21 +58,19 @@ class Unit(UnitBase, Buildable, PropDeclrCollector):
         
         self._loadMyImplementations()
 
-        for i in self._interfaces:
-            i._propagateSrc()
-            
-        for  u in self._units:
-            for i in u._interfaces:
-                if i._isExtern:
-                    i._propagateSrc()
-
+        def forAllInterfaces(fn):
+            for i in self._interfaces:
+                fn(i)
+                
+            for  u in self._units:
+                for i in u._interfaces:
+                    if i._isExtern:
+                        fn(i)
+                        
+        forAllInterfaces(lambda i : i._propagateSrc())
         # propagate connections on interfaces in this unit
-        for i in self._interfaces:
-            i._propagateConnection()
-        for  u in self._units:
-            for i in u._interfaces:
-                if i._isExtern:
-                    i._propagateConnection()
+        forAllInterfaces(lambda i : i._propagateConnection())
+        forAllInterfaces(lambda i : i._connectMyElems())
         
         
         if self._checkIntferfaces and not externInterf:

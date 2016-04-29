@@ -193,17 +193,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         for suIntf in self._interfaces:
             suIntf._propagateConnection()
         
-        for indx, e in enumerate(self._arrayElemCache):
-            if e is not None:
-                # [TODO] find better way how to find out direction of elements
-                e._propagateConnection()
-                hasEp = len(e._endpoints) > 0
-                
-                if hasEp:
-                    e._connectTo(self, masterIndex=indx)
-                else:
-                    self._connectTo(e, slaveIndex=indx)
-                    
         for e in self._endpoints:
             e._connectTo(self)
     

@@ -49,9 +49,10 @@ class PropDeclrCollector():
 
         
     def _loadMyImplementations(self):
-        self._setAttrListener = self._declrCollector
+        # [TODO] initialize or properties should be initialized externally?
+        # self._setAttrListener = self._declrCollector
         self._impl()
-        self._setAttrListener = None
+        # self._setAttrListener = None
         
             
     def _paramCollector(self, pName, p):

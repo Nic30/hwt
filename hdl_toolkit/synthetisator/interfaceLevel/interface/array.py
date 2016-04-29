@@ -49,24 +49,33 @@ class InterfaceArray():
         return self._multipliedBy
     
     def _initArrayItems(self):
-        self._arrayElemCache =[]
+        self._arrayElemCache = []
         for index in range(self._multipliedBy.staticEval().val):
             e = self._mkElemItem()
             e._name = "%d" % index
             e._parent = self
             self._arrayElemCache.append(e)
     
+    def _connectMyElems(self):
+        if self._src is not None or self._endpoints:
+            # [TODO] assert no element is connected to anything
+            pass
+        else:
+            if self._arrayElemCache: 
+                for indx, e in enumerate(self._arrayElemCache):
+                    # [TODO] find better way how to find out direction of elements
+                    e._propagateConnection()
+                    hasEp = len(e._endpoints) > 0
+                    
+                    if hasEp:
+                        e._connectTo(self, masterIndex=indx)
+                    else:
+                        self._connectTo(e, slaveIndex=indx)
+            
+    
     def __getitem__(self, index):
         if index < self._multipliedBy.staticEval().val:
-            try:
-                return self._arrayElemCache[index]
-            except IndexError:
-                extendLen(self._arrayElemCache, index + 1)
-                e = self._mkElemItem()
-                e._name = "%d" % index
-                e._parent = self
-                self._arrayElemCache[index] = e
-                return e
+            return self._arrayElemCache[index]
         else:
             raise IndexError()
     
