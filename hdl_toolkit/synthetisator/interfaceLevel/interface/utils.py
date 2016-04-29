@@ -33,9 +33,9 @@ def convert(intf, intfCls, paramsLikeIntf):
     
     # for i in 
     
+    raise NotImplementedError()
     return i
     
-    raise NotImplementedError()
 
 
 def forAllParams(intf, discovered=None):
