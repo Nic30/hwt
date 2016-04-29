@@ -272,10 +272,17 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         u = BitStringValuesEnt()
         u._loadDeclarations()
         
+        self.assertEqual(u.C_1.defaultVal.val, 1)
+        self.assertEqual(u.C_0.defaultVal.val, 0)
+        self.assertEqual(u.C_1b1.defaultVal.val, 1)
+        self.assertEqual(u.C_1b0.defaultVal.val, 0)
+        
         self.assertEqual(u.C_32b0.defaultVal.val, 0)
         self.assertEqual(u.C_16b1.defaultVal.val, (1 << 16) - 1)
         self.assertEqual(u.C_32b1.defaultVal.val, (1 << 32) - 1)
         self.assertEqual(u.C_128b1.defaultVal.val, (1 << 128) - 1)
+        
+        
         # print(u._entity)
     
     def test_interfaceArrayExtraction(self):
@@ -315,7 +322,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    # suite.addTest(VhdlCodesignTC('test_axiPortDirections'))
-    suite.addTest(unittest.makeSuite(VhdlCodesignTC))
+    suite.addTest(VhdlCodesignTC('test_largeBitStrings'))
+    #suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
