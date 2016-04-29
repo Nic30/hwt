@@ -192,7 +192,8 @@ class DesignFile():
         return designFiles
 
     @staticmethod
-    def fileDependencyDict(designFiles, ignoredRefs=[HdlRef(["ieee"], False)]):
+    def fileDependencyDict(designFiles, ignoredRefs=[HdlRef(["ieee"], False),
+                                                     HdlRef(["std"], False)]):
         depDict = {}
         for df in designFiles:
             df.discoverDependentOnFiles(designFiles, ignoredRefs)
