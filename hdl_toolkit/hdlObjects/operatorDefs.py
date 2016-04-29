@@ -166,16 +166,18 @@ class AllOps():
     DIV = OpDefinition(lambda a, b : a // b)
     PLUS = OpDefinition(lambda a, b : a + b)
     MINUS = OpDefinition(lambda a, b : a - b)
+    UN_MINUS = OpDefinition(lambda a :-a)
     MUL = OpDefinition(lambda a, b : a * b)
     NEQ = OpDefinition(lambda a, b : a != b,
-                        getReturnType=lambda op: BOOL)
+                        getReturnType=lambda op: BOOL,
+                        addOperand=addOperand_eq)
     XOR = OpDefinition(lambda a, b : a != b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
     EQ = OpDefinition(lambda a, b : a == b,
                         getReturnType=lambda op: BOOL,
                         addOperand=addOperand_eq)
-    
+    DOT = OpDefinition(lambda a, name : getattr(a, name), getReturnType=lambda op: INT)  # [TODO]
     AND_LOG = OpDefinition(lambda a, b : a & b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
@@ -184,7 +186,7 @@ class AllOps():
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
     
-    DOWNTO = OpDefinition(lambda a, b : Value.fromPyVal([b, a], RANGE),  # [TODO]
+    DOWNTO = OpDefinition(lambda a, b : Value.fromPyVal([b, a], RANGE),
                         getReturnType=lambda op: RANGE,
                         addOperand=convOpsToType(INT))
     
@@ -211,6 +213,8 @@ class AllOps():
     CALL = OpDefinition(None,
                        getReturnType=getReturnType_hdlFn,
                        addOperand=lambda operator, operand : operator.ops.append(operand))
+    
+    
     
     allOps = {}
         
