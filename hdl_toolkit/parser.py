@@ -15,7 +15,7 @@ from hdl_toolkit.hdlObjects.component import ComponentInstance
 from hdl_toolkit.hdlObjects.value import Value
 
 from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.synthetisator.rtlLevel.signal import SignalNode
+from hdl_toolkit.synthetisator.rtlLevel.signal import SignalNode, Signal
 
 from hdl_toolkit.hdlObjects.typeDefs import STR, Std_logic_vector, Wire
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
@@ -105,8 +105,16 @@ class Parser(VhdlParser):
                 for jOperand in binOp['operands']:
                     operand = self.exprFromJson(jOperand, ctx) 
                     ops.append(operand)
+                # [TODO] extract this vhdl stuff somewhere else
+                if isinstance(ops[0], Signal):
+                    operator = AllOps.INDEX
             else:
-                ops.append(self.exprFromJson(binOp['op1'], ctx)) 
+                if operator == AllOps.DOT:
+                    l = binOp['op1']['literal']
+                    assert(l['type'] == "ID")
+                    ops.append(l['value'])
+                else:
+                    ops.append(self.exprFromJson(binOp['op1'], ctx)) 
             return SignalNode.resForOp(Operator(operator, ops))
         raise HDLParseErr("Unparsable expression %s" % (str(jExpr)))
 
@@ -127,12 +135,12 @@ class Parser(VhdlParser):
             op = jType['binOperator']
             t_name = HdlRef.fromJson(op['op0'], self.caseSensitive)
             t = ctx.lookupLocal(t_name)
-            if t != FakeStd_logic_1164.std_logic_vector and not isinstance(t, Wire):
+            if not isinstance(t, Std_logic_vector):
                 raise NotImplementedError("Type conversion is not implemented for type %s" % t)
-            if t == FakeStd_logic_1164.std_logic_vector:
-                width = self.exprFromJson(op['op1'], ctx)
-            else:
+            if isinstance(t, Wire):
                 width = self.exprFromJson(op['operands'][0], ctx)
+            else:
+                width = self.exprFromJson(op['op1'], ctx)
             return t(width)
         t_name = HdlRef([t_name_str], self.caseSensitive)
         return ctx.lookupLocal(t_name)
@@ -240,15 +248,15 @@ class Parser(VhdlParser):
         _locals = []
         fnCtx = HDLCtx(name, ctx)
         if not self.hierarchyOnly:
-            returnT = self.typeFromJson(jFn['returnT'], ctx)
+            returnT = self.typeFromJson(jFn['returnT'], fnCtx)
             
             for jP in jFn['params']:
-                p = self.varDeclrJson(jP, ctx) 
+                p = self.varDeclrJson(jP, fnCtx) 
                 params.append(p)
                 fnCtx.insertObj(p, self.caseSensitive, self.hierarchyOnly)
                 
             for jL in jFn['locals']:
-                l = self.varDeclrJson(jL, ctx)
+                l = self.varDeclrJson(jL, fnCtx)
                 _locals.append(l)
                 fnCtx.insertObj(l, self.caseSensitive, self.hierarchyOnly)
                 
