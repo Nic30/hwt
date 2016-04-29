@@ -4,19 +4,18 @@
 from setuptools import setup, find_packages
 
 setup(name='HWToolkit',
-      version='0.1',
+      version='0.2',
       description='hdl synthesis toolkit',
       url='https://github.com/Nic30/HWToolkit',
       author='Michal Orsak',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
-        'myhdl',
-        'Pillow',    # altium scheme reader
+        'myhdl',  # optional hls synthetisator (but used in some samples)
+        'Pillow', # altium scheme reader
         'sympy',  # symbolic math
         'simpy',  # discrete simulator 
         'jinja2', # hdl templates renderer, visualizer renderer
         'flask',  # visualizer
-        'multiprocess', # used instead of multiprocessing (can serialize functions) in parser
       ],
       license='MIT',
       packages = find_packages(),
