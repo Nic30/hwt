@@ -1,15 +1,23 @@
 
-from myhdl import always_seq, always_comb, Signal, modbv, ResetSignal, enum
-from myhdl.conversion._toVHDL import _ToVHDLConvertor
 import os
-from hdl_toolkit.hdlObjects.typeDefs import BIT
+from myhdl import always_seq, always_comb, Signal, modbv, ResetSignal
+from myhdl.conversion._toVHDL import _ToVHDLConvertor
 
-def toMyHdlInterface(interfaceCls):
-    interface = interfaceCls()
-    interface._loadDeclarations()
+from hdl_toolkit.hdlObjects.typeDefs import BIT
+from hdl_toolkit.interfaces.std import Ap_rst_n, Ap_rst
+import types
+
+def toMyHdlIntf(interface):
+    if isinstance(interface, type):
+        interface = interface()
+        interface._loadDeclarations()
     return _toMyHdlInterface(interface)
 
-def _toMyHdlInterface(interface):
+def _toMyHdlInterface(interface, signalMap=None):
+    if isinstance(interface, (Ap_rst, Ap_rst_n)):
+        activeIn = isinstance(interface, Ap_rst)
+        return ResetSignal(0, active=int(activeIn), async=False)
+    
     if interface._interfaces:
         class MyHdlInterface():
             pass
@@ -17,14 +25,16 @@ def _toMyHdlInterface(interface):
         myhdlIntf = MyHdlInterface()
         for intf  in  interface._interfaces:
             setattr(myhdlIntf, intf._name, _toMyHdlInterface(intf))
-        return myhdlIntf
     else:
         # convert type to myhdl signal
         t = interface._dtype
         if  t == BIT:
-            return Signal(bool(0))
+            myhdlIntf = Signal(bool(0))
         else:
-            return Signal(modbv(0)[t.getBitCnt():])
+            myhdlIntf = Signal(modbv(0)[t.getBitCnt():])
+    if signalMap is not None:    
+        signalMap[interface] = myhdlIntf 
+    return myhdlIntf
 
 def convert(u, *params):
     convertor = _ToVHDLConvertor()
