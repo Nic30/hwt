@@ -5,6 +5,8 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.synthetisator.exceptions import TypeConversionErr
 
+# [TODO] split to separate file for each type type, cleanup types/typeOps
+
 class Boolean(HdlType):
     def __init__(self):
         super(Boolean, self).__init__()
@@ -106,6 +108,32 @@ class Integer(HdlType):
                 return v
             else:
                 return sigOrVal
+        elif toType == BIT:
+            if isinstance(sigOrVal, Value):
+                _v = sigOrVal.val 
+                assert(_v == 1 or _v == 0)
+                v = sigOrVal.clone()
+                v.dtype = BIT
+                return v
+            else:
+                return sigOrVal
+        elif isinstance(toType, Std_logic_vector):
+            # [TODO] this code is dangerous whole type conversion system needs to be separate from types
+            if hasattr(toType, "getBitCnt"):
+                w = toType.getBitCnt()
+            else:
+                w = None
+            if isinstance(sigOrVal, Value):
+                v = sigOrVal.clone()
+                v.dtype = toType
+                if w is None:
+                    v.vldMask = -1 if v.vldMask else 0
+                    v.eventMask = -1 if v.eventMask else 0 
+                else:
+                    m = Bitmask.mask(w)
+                    v.vldMask = m if v.vldMask else 0
+                    v.eventMask = m if v.eventMask else 0 
+                return v
                 
         return super(Integer, self).convert(sigOrVal, toType)
 
@@ -249,16 +277,35 @@ class Std_logic(HdlType):
         pass
 
 class Std_logic_vector(HdlType):
-    def __init__(self):
+    def __init__(self, signed=None):
         super(Std_logic_vector, self).__init__()
-        self.name = 'std_logic_vector'
+        if signed is None:
+            self.name = 'std_logic_vector'
+        elif signed:
+            self.name = "signed"
+        else:
+            self.name = 'unsigned'
+        self.signed = signed
         self.constrain = Unconstrained()
     
+    def __call__(self, width, signed=None):
+        return Std_logic_vector_contrained(width, signed=signed)
     
+    def __eq__(self, other):
+        return super().__eq__(other) and self.signed == other.signed
     
-    def __call__(self, width):
-        return Std_logic_vector_contrained(width)
-    
+    def __hash__(self):
+        return hash((self.name, self.signed, self.constrain))
+    def convert(self, sigOrVal, toType):
+        if sigOrVal.dtype == toType:
+            return sigOrVal
+        elif isinstance(toType, Integer):
+            if isinstance(sigOrVal, Value):
+                v = sigOrVal.clone()
+                v.dtype = toType
+                return v
+        super(Std_logic_vector, self).convert(sigOrVal, toType)
+            
     def valAsVhdl(self, val, serializer):
         c = self.constrain
         if isinstance(c, Unconstrained):
@@ -271,7 +318,6 @@ class Std_logic_vector(HdlType):
         
         width = abs(width[1] - width[0]) + 1
         return serializer.BitString(val.val, width, val.vldMask)
-        
     
     class Ops(TypeOps):
         @classmethod
@@ -289,9 +335,8 @@ class Std_logic_vector_contrained(Std_logic_vector):
     """
     Std_logic_vector with specified width
     """
-    def __init__(self, widthConstr):
-        super(Std_logic_vector_contrained, self).__init__()
-        self.name = 'std_logic_vector'
+    def __init__(self, widthConstr, signed=None):
+        super(Std_logic_vector_contrained, self).__init__(signed=signed)
         self.constrain = widthConstr
         
     def __eq__(self, other):
@@ -314,8 +359,7 @@ class Std_logic_vector_contrained(Std_logic_vector):
                 o = sigOrVal.clone()
                 o.dtype = toType
                 return o
-        raise TypeConversionErr("Conversion of type %s to type %s is not implemented" % 
-                                (repr(self), repr(toType)))
+        return super().convert(sigOrVal, toType)
        
     class Ops(Std_logic_vector.Ops):
         
@@ -365,6 +409,8 @@ class Std_logic_vector_contrained(Std_logic_vector):
         return "<HdlType %s, constrain:%s>" % (
             self.__class__.__name__, VhdlSerializer.asHdl(self.constrain))
 
+def pushBit(v, b):
+    return (v << 1) | b
 class String(HdlType):
     def __init__(self):
         super(String, self).__init__()
@@ -372,6 +418,30 @@ class String(HdlType):
 
     def valAsVhdl(self, val, serializer):
         return  '"%s"' % str(val.val)
+    def convert(self, sigOrVal, toType):
+        if sigOrVal.dtype == toType:
+            return sigOrVal
+        elif toType == VECTOR:
+            if isinstance(sigOrVal, Value):
+                v = sigOrVal.clone()
+                _v = v.val
+                v.val = 0
+                v.vldMask = 0
+                v.dtype = toType
+                for ch in reversed(_v): 
+                    if ch == '1':
+                        v.val = pushBit(v.val, 1)
+                        v.vldMask = pushBit(v.vldMask, 1)
+                    elif ch == '0':
+                        v.val = pushBit(v.val, 0)
+                        v.vldMask = pushBit(v.vldMask, 1)
+                    elif ch == 'x':
+                        v.val = pushBit(v.val, 0)
+                        v.vldMask = pushBit(v.vldMask, 0)
+                    else:
+                        raise NotImplementedError("found %s in bitstring literal" % (ch))
+                return v
+                
 
     class Ops(TypeOps):
         @classmethod
@@ -487,6 +557,7 @@ class Enum(HdlType):
             
     def valAsVhdl(self, val, serializer):
         return  '%s' % str(val.val)
+    
     class Ops(TypeOps):
         @classmethod
         def fromPy(cls, val, typeObj):
@@ -516,7 +587,6 @@ class Enum(HdlType):
     
     class ValueCls(Value, Ops):
         pass
-    
 
 def areIntegers(a, b):
     for t in [a, b]:
