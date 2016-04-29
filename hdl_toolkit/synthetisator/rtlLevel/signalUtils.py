@@ -26,3 +26,19 @@ def connectBool2Log(a, b):
        [b.assignFrom(hBit(1)) ],
        [b.assignFrom(hBit(0)) ]
        )
+
+
+def intfDataPack(intf, masterDirEqTo, exclude=set()):
+    res = None
+    for i in intf._interfaces:
+        if i in exclude:
+            continue
+        if i._interfaces:
+            raise NotImplementedError() 
+        if intf._masterDir == masterDirEqTo:
+            if res is None:
+                res = intf._sig
+            else:
+                res = res.opConcat(intf._sig)
+        
+    return res
