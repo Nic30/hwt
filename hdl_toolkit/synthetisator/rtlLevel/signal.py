@@ -92,6 +92,9 @@ class SignalOps():
     def opSlice(self, index):
         return self.naryOp(AllOps.INDEX, [index])
     
+    def opConcat(self, *operands):
+        return self.naryOp(AllOps.CONCAT, operands)
+    
     def assignFrom(self, source):
         checkOperand(source)
         a = Assignment(source, self)
