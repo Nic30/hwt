@@ -17,6 +17,7 @@ class InterfaceDirectionFns():
         self._src = src
     
     def _setDirectionsLikeIn(self, intfDir):
+        # [TODO] array elements
         d = DIRECTION.asIntfDirection(self._masterDir)
         if intfDir == INTF_DIRECTION.MASTER:
             self._direction = d
@@ -28,7 +29,21 @@ class InterfaceDirectionFns():
             for i in self._interfaces:
                 i._setDirectionsLikeIn(opDir)
         
-        
+    @staticmethod    
+    def __directionProbe(interfaces):
+        allInMasterConf = True
+        allInSlaveConf = True
+        for i in interfaces:
+            i._resolveDirections(updateDir=False)
+            md = DIRECTION.asIntfDirection(i._masterDir)
+            d = i._direction
+            if d != INTF_DIRECTION.UNKNOWN:
+                isLikeInM = d == md
+                isLikeInS = d == INTF_DIRECTION.oposite(md)
+                allInMasterConf = allInMasterConf and isLikeInM
+                allInSlaveConf = allInSlaveConf and isLikeInS
+        return  (allInMasterConf, allInSlaveConf)  
+            
     def _resolveDirections(self, updateDir=True):
         """
         if have src -> slave
@@ -54,27 +69,21 @@ class InterfaceDirectionFns():
                 assertHasNotSrc(i)
             self._direction = INTF_DIRECTION.SLAVE
         else:
-            allInMasterConf = True
-            allInSlaveConf = True
-            if self._interfaces:
-                for i in self._interfaces:
-                    i._resolveDirections(updateDir=False)
-                    md = DIRECTION.asIntfDirection(i._masterDir)
-                    d = i._direction
-                    if d != INTF_DIRECTION.UNKNOWN:
-                        isLikeInM = d == md
-                        isLikeInS = d == INTF_DIRECTION.oposite(md)
-                        allInMasterConf = allInMasterConf and isLikeInM
-                        allInSlaveConf = allInSlaveConf and isLikeInS
-            if allInMasterConf and allInSlaveConf:
+            allM, allS = InterfaceDirectionFns.__directionProbe(self._interfaces)
+            if allM and allS:
+                allM, allS = InterfaceDirectionFns.__directionProbe(self._arrayElemCache)
+
+            if allM and allS:
                 self._direction = INTF_DIRECTION.UNKNOWN
-            elif allInMasterConf:
+            elif allM:
                 self._direction = INTF_DIRECTION.MASTER
-            elif allInSlaveConf:
+            elif allS:
                 self._direction = INTF_DIRECTION.SLAVE
             else:
                 raise IntfLvlConfErr("Subinterfaces on %s have not consistent directions\n%s" % 
                         (repr(self), '\n'.join([str((i._direction, repr(i))) for i in self._interfaces])))
+        
+        
         if updateDir:
             if self._direction == INTF_DIRECTION.UNKNOWN:
                 self._direction = INTF_DIRECTION.MASTER

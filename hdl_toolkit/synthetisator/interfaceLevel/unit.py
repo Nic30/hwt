@@ -11,6 +11,8 @@ from hdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import forAllParams
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
+from hdl_toolkit.hdlObjects.typeDefs import Std_logic_vector
+from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 
 
 
@@ -139,9 +141,17 @@ class Unit(UnitBase, Buildable, PropDeclrCollector):
                     
     def _signalsForMyEntity(self, context, prefix):
         # generate for all ports of subunit signals in this context
+        def lockTypeWidth(t):
+            # [TODO] only read parameter instead of full evaluation
+            if isinstance(t, Std_logic_vector):
+                return vecT(t.getBitCnt())
+            else:
+                return t
+        
         for i in self._interfaces:
             if i._isExtern:  
-                i._signalsForInterface(context, prefix + Interface._NAME_SEPARATOR + i._name)
+                i._signalsForInterface(context, prefix + Interface._NAME_SEPARATOR + i._name,
+                                       typeTransform=lockTypeWidth)
     
     def _connectMyInterfaceToMyEntity(self, interface):
         if interface._interfaces:

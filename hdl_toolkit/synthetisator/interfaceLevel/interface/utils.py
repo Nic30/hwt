@@ -1,4 +1,5 @@
 from hdl_toolkit.synthetisator.param import Param, getParam
+from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 
 def sameIntfAs(intf):
     _intf = intf.__class__()
@@ -8,7 +9,11 @@ def sameIntfAs(intf):
 
 def connect(driver, *endpoints):
     """connect interfaces on interface level"""
-    assert(driver._isAccessible)
+    if not driver._isAccessible:
+        reason = ""
+        if not driver._isExtern:
+            reason = "(brobalbly because it is not external interface)"
+        raise IntfLvlConfErr("Can not use %s because it is not accessible %s" % (repr(driver), reason))
     for ep in endpoints:
         ep._setSrc(driver)
 
@@ -26,7 +31,7 @@ def convert(intf, intfCls, paramsLikeIntf):
         raise NotImplementedError()
     i._loadDeclarations()
     
-    #for i in 
+    # for i in 
     
     return i
     

@@ -139,14 +139,17 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         if hasattr(self, "_sig"):
             del self._sig
         for i in self._interfaces:
-            i._clean()
+            i._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
         if rmConnetions:
             self._src = None
             self._endpoints = set()
         self._dirLocked = False
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
-    
+        for e in self._arrayElemCache:
+            e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
+        
+        
     def _connectToIter(self, master, masterIndex=None, slaveIndex=None):
         if self._interfaces:
             for ifc in self._interfaces:
@@ -196,7 +199,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         for e in self._endpoints:
             e._connectTo(self)
     
-    def _signalsForInterface(self, context, prefix):
+    def _signalsForInterface(self, context, prefix, typeTransform=lambda x: x):
         """
         generate _sig for each interface which has no subinterface
         if already has _sig return it instead
@@ -208,12 +211,13 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
                     intfName = intf._hdlId
                 else:
                     intfName = prefix + self._NAME_SEPARATOR + intf._name
-                sigs.extend(intf._signalsForInterface(context, intfName))
+                sigs.extend(intf._signalsForInterface(context, intfName,
+                                                      typeTransform=typeTransform))
         else:
             if hasattr(self, '_sig'):
                 sigs = [self._sig]
             else:
-                s = context.sig(prefix, self._dtype)
+                s = context.sig(prefix, typeTransform(self._dtype))
                 s._interface = self
                 self._sig = s
                 
@@ -226,7 +230,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         if self._multipliedBy is not None:
             for elemIntf in self._arrayElemCache:
                 elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name 
-                elemIntf._signalsForInterface(context, elemPrefix)
+                elemIntf._signalsForInterface(context, elemPrefix,
+                                               typeTransform=typeTransform)
                 # they are not in sigs because they are not main signals
                     
                     

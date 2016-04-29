@@ -2,6 +2,7 @@ from python_toolkit.arrayQuery import extendLen
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
+from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
 def splitToTermSet(width):
     try:
@@ -54,6 +55,7 @@ class InterfaceArray():
             e = self._mkElemItem()
             e._name = "%d" % index
             e._parent = self
+            e._isExtern = self._isExtern
             self._arrayElemCache.append(e)
     
     def _connectMyElems(self):
@@ -64,10 +66,11 @@ class InterfaceArray():
             if self._arrayElemCache: 
                 for indx, e in enumerate(self._arrayElemCache):
                     # [TODO] find better way how to find out direction of elements
-                    e._propagateConnection()
-                    hasEp = len(e._endpoints) > 0
+                    #e._propagateConnection()
+                    #hasEp = len(e._endpoints) > 0
+                    e._resolveDirections()
                     
-                    if hasEp:
+                    if e._direction == INTF_DIRECTION.MASTER:
                         e._connectTo(self, masterIndex=indx)
                     else:
                         self._connectTo(e, slaveIndex=indx)
