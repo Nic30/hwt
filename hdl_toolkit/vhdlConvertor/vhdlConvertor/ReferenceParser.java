@@ -1,6 +1,7 @@
 package vhdlConvertor;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -9,6 +10,11 @@ import hdlObjects.Expr;
 import hdlObjects.OperatorType;
 import hdlObjects.SymbolType;
 import vhdlParser.vhdlParser;
+import vhdlParser.vhdlParser.Attribute_designatorContext;
+import vhdlParser.vhdlParser.ExpressionContext;
+import vhdlParser.vhdlParser.IdentifierContext;
+import vhdlParser.vhdlParser.Name_attribute_partContext;
+import vhdlParser.vhdlParser.Name_part_specificatorContext;
 
 public class ReferenceParser {
 	public static Expr visitSelected_name(vhdlParser.Selected_nameContext ctx) {
@@ -59,22 +65,51 @@ public class ReferenceParser {
 		}
 		return op0;
 	}
+	public static Expr visitAttribute_designator(Expr selectedName,
+			Attribute_designatorContext ctx) {
+		// attribute_designator
+		// : identifier
+		// | RANGE
+		// | REVERSE_RANGE
+		// | ACROSS
+		// | THROUGH
+		// | REFERENCE
+		// | TOLERANCE
+		// ;
+		IdentifierContext idctx = ctx.identifier();
+		if (idctx != null) {
+			Expr id = LiteralParser.visitIdentifier(idctx);
+			return new Expr(selectedName, OperatorType.DOT, id);
+		}
+		NotImplementedLogger
+				.print("ExprParser.visitAttribute_designator - non identifier");
+		return null;
+	}
+	public static Expr visitName_attribute_part(Expr selectedName,
+			Name_attribute_partContext ctx) {
+		// name_attribute_part
+		// : APOSTROPHE attribute_designator ( expression ( COMMA expression
+		// )* )?
+		// ;
+		List<ExpressionContext> expressions = ctx.expression();
+		if (expressions.size() > 0)
+			NotImplementedLogger
+					.print("ExprParser.visitName_attribute_part - expression");
+		return visitAttribute_designator(selectedName,
+				ctx.attribute_designator());
+	}
 	public static Expr visitName_part_specificator(Expr selectedName,
-			vhdlParser.Name_part_specificatorContext ctx) {
+			Name_part_specificatorContext ctx) {
 		// name_part_specificator
 		// : name_attribute_part
 		// | name_function_call_or_indexed_part
 		// | name_slice_part
 		// ;
 
-		vhdlParser.Name_attribute_partContext na = ctx.name_attribute_part();
+		Name_attribute_partContext na = ctx.name_attribute_part();
 		if (na != null) {
-			// name_attribute_part
-			// : APOSTROPHE attribute_designator ( expression ( COMMA expression
-			// )* )?
-			// ;
-			NotImplementedLogger.print("ExprParser.Name_attribute_partContext");
-			return null;
+
+			return visitName_attribute_part(selectedName, na);
 		}
 		vhdlParser.Name_function_call_or_indexed_partContext callOrIndx = ctx
 				.name_function_call_or_indexed_part();
