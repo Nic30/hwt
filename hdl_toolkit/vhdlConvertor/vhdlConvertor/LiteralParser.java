@@ -134,7 +134,8 @@ public class LiteralParser {
 
 	}
 	public static Expr visitCHARACTER_LITERAL(TerminalNode ctx) {
-		BigInteger ch = BigInteger.valueOf((int) ctx.getText().charAt(1));
+		BigInteger ch = BigInteger
+				.valueOf((int) (ctx.getText().charAt(1) - '0'));
 		return new Expr(SymbolType.INT, ch);
 	}
 	public static Expr visitIdentifier(IdentifierContext ctx) {
