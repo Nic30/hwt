@@ -3,12 +3,14 @@
 
 from hdl_toolkit.hdlObjects.reference import HdlRef 
 from hdl_toolkit.nonRedefDict import NonRedefDict
-from hdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR, VECTOR, BIT, PINT, UINT, Wire
+from hdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR, VECTOR, BIT, PINT, UINT, Wire, \
+    Std_logic_vector
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.function import Function, FnContainer
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from myhdl.conversion._toVHDL import _shortversion
 
 
 class RequireImportErr(Exception):
@@ -169,9 +171,20 @@ class FakeStd_logic_1164():
     
     std_logic = BIT
     std_logic_ref = HdlRef(["ieee", "std_logic_1164", "std_logic"], False)
-    numeric_std_ref = HdlRef(["ieee", "numeric_std"], False)
-    numeric_std = HDLCtx('numeric_std', None) 
-        
+    
+    signed_ref = HdlRef(["ieee", "numeric_std", 'signed'], False)
+    signed = Std_logic_vector(signed=True)
+
+    unsigned_ref = HdlRef(["ieee", "numeric_std", 'unsigned'], False)
+    unsigned = Std_logic_vector(signed=False)
+    
+    resize_ref = HdlRef(["ieee", "numeric_std", 'resize'], False)
+    resize = FnContainer('resize', None)
+
+class FakeMyHdl():
+    p_name = "pck_myhdl_%s" % _shortversion
+    package_ref = HdlRef(["work", p_name ], False)
+    package_fake = HDLCtx(p_name, None)
 
 class BaseVhdlContext():
     integer = INT
@@ -179,19 +192,29 @@ class BaseVhdlContext():
     natural = UINT
     boolean = BOOL
     string = STR
+    
    
     @classmethod
     def importFakeLibs(cls, ctx):
         BaseVhdlContext.importFakeIEEELib(ctx)
+        BaseVhdlContext.importFakeTextIo(ctx)
+        ctx.insert(FakeMyHdl.package_ref, FakeMyHdl.package_fake)
+        
+    @classmethod
+    def importFakeTextIo(cls, ctx):
+        ctx.insert(HdlRef(['std', 'textio', 'read'], False), None)
 
     @classmethod 
     def importFakeIEEELib(cls, ctx):
-        ctx.insert(FakeStd_logic_1164.std_logic_vector_ref, FakeStd_logic_1164.std_logic_vector)
-        ctx.insert(FakeStd_logic_1164.std_ulogic_vector_ref, FakeStd_logic_1164.std_logic_vector)
-        ctx.insert(FakeStd_logic_1164.std_logic_ref, FakeStd_logic_1164.std_logic)
+        f = FakeStd_logic_1164
+        ctx.insert(f.std_logic_vector_ref, f.std_logic_vector)
+        ctx.insert(f.std_ulogic_vector_ref, f.std_logic_vector)
+        ctx.insert(f.std_logic_ref, f.std_logic)
         ctx.insert(HdlRef(['ieee', 'std_logic_unsigned', 'conv_integer'], False), None)
         ctx.insert(HdlRef(['ieee', 'std_logic_arith', 'is_signed'], False), None)
-        ctx.insert(FakeStd_logic_1164.numeric_std_ref, FakeStd_logic_1164.numeric_std)
+        ctx.insert(f.signed_ref, f.signed)
+        ctx.insert(f.unsigned_ref, f.unsigned)
+        ctx.insert(f.resize_ref, f.resize)
     
     @classmethod
     def getBaseCtx(cls):
