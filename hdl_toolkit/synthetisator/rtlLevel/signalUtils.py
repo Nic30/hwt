@@ -42,3 +42,14 @@ def intfDataPack(intf, masterDirEqTo, exclude=set()):
                 res = res.opConcat(intf._sig)
         
     return res
+
+def And(*ops):
+    top = None 
+    for s in ops:
+        if isinstance(s, Interface):
+            s = s._sig
+        if top is None:
+            top = s
+        else:
+            top = top.opAnd(s)
+    return top
