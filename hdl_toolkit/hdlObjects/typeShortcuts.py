@@ -49,3 +49,7 @@ def vecT(width):
 def vec(val, width):
     """create hdl vector value"""
     return Value.fromPyVal(val, vecT(width))
+
+def hRange(upper, lower):
+    #[TODO] param conversion if necessary
+    return SignalNode.resForOp(Operator(AllOps.DOWNTO, [lower, upper]))
