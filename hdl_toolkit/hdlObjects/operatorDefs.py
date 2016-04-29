@@ -1,6 +1,6 @@
 from hdl_toolkit.hdlObjects.typeDefs import BOOL, INT, RANGE, PINT, UINT, BIT, \
     Std_logic, Boolean, Std_logic_vector, Std_logic_vector_contrained, \
-    Integer
+    Integer, VECTOR
 from hdl_toolkit.hdlObjects.value import Value
 
 def convOpsToType(t):
@@ -14,8 +14,8 @@ def convOpsToType(t):
 addOperand_logic = convOpsToType(BOOL)    
 
 def addOperand_concat(operator, operand):
-    if isinstance(operand.dtype, (Std_logic, Boolean)):
-        opAsVec = operand.convert()
+    if isinstance(operand.dtype, Std_logic):  # [TODO] boolean
+        opAsVec = operand
     elif isinstance(operand.dtype, Std_logic_vector):
         opAsVec = operand
     else:
@@ -66,7 +66,16 @@ def addOperand_event(operator, operand):
 
 
 def getReturnType_concat(op):
-    raise NotImplementedError()
+    w = 0
+    for o in op.ops:
+        if o.dtype == BIT:
+            _w = 1
+        else:
+            _w = o.dtype.getBitCnt()
+        w += _w
+    assert(w > 0)
+    from hdl_toolkit.hdlObjects.typeShortcuts import vecT
+    return vecT(w)
 
 def getReturnType_index(op):
     base = op.ops[0]
