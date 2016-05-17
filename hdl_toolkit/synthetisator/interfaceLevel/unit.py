@@ -1,22 +1,17 @@
-from python_toolkit.arrayQuery import single
-
 from hdl_toolkit.hdlObjects.component import Component
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
 from hdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase 
 from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
-from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from hdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
+from hdl_toolkit.synthetisator.interfaceLevel.unitImplHelpers import UnitImplHelpers
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import forAllParams
-from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
-from hdl_toolkit.hdlObjects.typeDefs import Std_logic_vector
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 
 
 
-class Unit(UnitBase, Buildable, PropDeclrCollector):
+class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
     """
     Class members:
     #resolved automaticaly durning configuration/declaration:
@@ -134,52 +129,6 @@ class Unit(UnitBase, Buildable, PropDeclrCollector):
     def _build(cls, multithread=True):
         pass        
 
-    def _cleanAsSubunit(self):
-        """Disconnect internal signals so unit can be reused by parent unit"""
-        for i in self._interfaces:
-            i._clean()
-                    
-    def _signalsForMyEntity(self, context, prefix):
-        # generate for all ports of subunit signals in this context
-        def lockTypeWidth(t):
-            # [TODO] only read parameter instead of full evaluation
-            if isinstance(t, Std_logic_vector):
-                return vecT(t.getBitCnt())
-            else:
-                return t
-        
-        for i in self._interfaces:
-            if i._isExtern:  
-                i._signalsForInterface(context, prefix + Interface._NAME_SEPARATOR + i._name,
-                                       typeTransform=lockTypeWidth)
-    
-    def _connectMyInterfaceToMyEntity(self, interface):
-        if interface._interfaces:
-            for subIntf in interface._interfaces:
-                self._connectMyInterfaceToMyEntity(subIntf)  
-        else:
-            portItem = single(self._entity.ports, lambda x : x._interface == interface)
-            interface._originSigLvlUnit = self._sigLvlUnit
-            interface._originEntityPort = portItem
-            d = INTF_DIRECTION.asDirection(interface._direction)
-            if portItem.direction != d:
-                raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
-                                     (self._name, portItem.name, repr(interface), portItem.direction, d))
-    
-    def _shareAllParams(self):
-        """Update parameters which has same name in sub interfaces"""
-        super(Unit, self)._shareAllParams()
-        for i in self._units:
-            i._updateParamsFrom(self)
-    
-    def _updateParamsFrom(self, parent):
-        for parentP in  parent._params:
-            try:
-                p = getattr(self, parentP._name)
-            except AttributeError:
-                continue
-            p.set(parentP) 
-             
     def _contextFromParams(self):
         # construct globals (generics for entity)
         globalNames = {}
