@@ -23,7 +23,7 @@ class HierarchyExtractorTC(unittest.TestCase):
         top1 = SAMPLES_DIR + 'multiLib/top1.vhd'
         libDesFiles = DesignFile.loadFiles([p(package1, 'packWithComps')], parallel=self.paraler)
         top = libDesFiles[0].hdlCtx.parent.parent
-        self.assertTrue('work' not in  top)
+        #self.assertTrue('work' not in  top) # myhdl has to be parsed in this lib
         self.assertTrue('packwithcomps' in top)
         
         
