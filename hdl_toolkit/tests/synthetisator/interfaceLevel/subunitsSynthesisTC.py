@@ -1,10 +1,9 @@
-import unittest
 from hdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import  synthesised
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from hdl_toolkit.synthetisator.shortcuts import synthetizeCls, toRtl
 from hdl_toolkit.synthetisator.exceptions import SerializerException
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import connect
 from hdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit, setOut
@@ -165,9 +164,12 @@ class SubunitsSynthesisTC(BaseSynthetisatorTC):
         u = synthesised(u)        
 
 if __name__ == '__main__':
-    suite = unittest.TestSuite()
+    
+    print(toRtl(UnitWithArrIntfParent))
+    
+    #suite = unittest.TestSuite()
     #suite.addTest(SubunitsSynthesisTC('test_subUnitWithArrIntf'))
-    suite.addTest(unittest.makeSuite(SubunitsSynthesisTC))
-    runner = unittest.TextTestRunner(verbosity=3)
-    runner.run(suite)
+    ##suite.addTest(unittest.makeSuite(SubunitsSynthesisTC))
+    #runner = unittest.TextTestRunner(verbosity=3)
+    #runner.run(suite)
 

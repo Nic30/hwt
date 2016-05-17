@@ -3,6 +3,8 @@ import unittest
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.samples.rtlLvl.indexOps import IndexOps
+from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
 
 class TestCaseSynthesis(unittest.TestCase):
 
@@ -48,6 +50,12 @@ class TestCaseSynthesis(unittest.TestCase):
         #self.assertEqual(a_next.src, a.next)
         
 
+    def test_indexOps(self):
+        c, interf = IndexOps()
+        s = ""
+        for o in c.synthetize(interf):
+            s+=VhdlSerializer.asHdl(o)
+        self.assertNotIn("sig_", s)
         
 
 if __name__ == '__main__':
