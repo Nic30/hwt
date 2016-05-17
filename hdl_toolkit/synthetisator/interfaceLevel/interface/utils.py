@@ -12,7 +12,7 @@ def connect(driver, *endpoints):
     if not driver._isAccessible:
         reason = ""
         if not driver._isExtern:
-            reason = "(brobalbly because it is not external interface)"
+            reason = "(probably because it is not external interface)"
         raise IntfLvlConfErr("Can not use %s because it is not accessible %s" % (repr(driver), reason))
     for ep in endpoints:
         ep._setSrc(driver)
@@ -25,16 +25,16 @@ def walkPhysInterfaces(intf):
     else:
         yield intf
 
-def convert(intf, intfCls, paramsLikeIntf):
-    i = intfCls()
-    for p in paramsLikeIntf._params:
-        raise NotImplementedError()
-    i._loadDeclarations()
-    
-    # for i in 
-    
-    raise NotImplementedError()
-    return i
+#def convert(intf, intfCls, paramsLikeIntf):
+#    i = intfCls()
+#    for p in paramsLikeIntf._params:
+#        raise NotImplementedError()
+#    i._loadDeclarations()
+#    
+#    # for i in 
+#    
+#    raise NotImplementedError()
+#    return i
     
 
 
