@@ -65,7 +65,7 @@ def AxiMap(prefix, listOfNames, d=None):
         d[n] = (prefix + n).upper()
     return d
 
-class BlockRamPort(IfConfig):
+class IP_BlockRamPort(IfConfig):
     def __init__(self):
         super().__init__()
         self.name = "bram"
@@ -80,7 +80,7 @@ class BlockRamPort(IfConfig):
                     'we': "WE",
                     } 
 
-class Handshake(IfConfig):
+class IP_Handshake(IfConfig):
     def __init__(self):
         super().__init__()
         self.name = "handshake"
@@ -91,7 +91,7 @@ class Handshake(IfConfig):
                      'rd': "ap_ack",
                      "data":"data"   }
         
-class Ap_clk(IfConfig):
+class IP_Ap_clk(IfConfig):
     def __init__(self):
         super().__init__()
         self.name = "clock"
@@ -114,7 +114,7 @@ class Ap_clk(IfConfig):
             self.addSimpleParam(thisIf, "ASSOCIATED_BUSIF", ":".join(map(lambda intf: intf._name, intfs)))
             self.addSimpleParam(thisIf, "FREQ_HZ", str(DEFAULT_CLOCK))
 
-class Ap_rst(IfConfig):
+class IP_Ap_rst(IfConfig):
     def __init__(self):
         super().__init__()
         self.name = "reset"
@@ -126,7 +126,7 @@ class Ap_rst(IfConfig):
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_HIGH")
 
-class Ap_rst_n(IfConfig):
+class IP_Ap_rst_n(IfConfig):
     def __init__(self):
         super().__init__()
         self.name = "reset"
@@ -138,7 +138,7 @@ class Ap_rst_n(IfConfig):
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_LOW")
         
-class AXIStream(IfConfig):
+class IP_AXIStream(IfConfig):
     def __init__(self):
         super().__init__()
         self.name = "axis"
@@ -154,7 +154,7 @@ class AXIStream(IfConfig):
                      'ready':"TREADY"
                      }
         
-class AXILite(IfConfig):
+class IP_AXILite(IfConfig):
     def __init__(self):
         super().__init__()
         self.name = "aximm"
@@ -177,7 +177,7 @@ class AXILite(IfConfig):
         self.addSimpleParam(thisIf, "PROTOCOL", "AXI4LITE")
         self.addSimpleParam(thisIf, "READ_WRITE_MODE", "READ_WRITE")
 
-class Axi4(AXILite):
+class IP_Axi4(IP_AXILite):
     def __init__(self,):
         super().__init__()
         a_sigs = ['id', 'burst', 'cache', 'len', 'lock', 'prot', 'size', 'qos']
@@ -198,17 +198,17 @@ class Axi4(AXILite):
         param("READ_WRITE_MODE", "READ_WRITE")
         param("SUPPORTS_NARROW_BURST", 0)
       
-allBusInterfaces = { interfaces.std.BramPort : BlockRamPort,
-                     interfaces.amba.AxiLite : AXILite,
-                     interfaces.amba.AxiLite_xil : AXILite,
-                     interfaces.amba.AxiStream : AXIStream,
+allBusInterfaces = { interfaces.std.BramPort : IP_BlockRamPort,
+                     interfaces.amba.AxiLite : IP_AXILite,
+                     interfaces.amba.AxiLite_xil : IP_AXILite,
+                     interfaces.amba.AxiStream : IP_AXIStream,
                      
-                     interfaces.amba.AxiStream_withoutSTRB :  AXIStream,
-                     interfaces.amba.AxiStream_withUserAndNoStrb : AXIStream,
-                     interfaces.amba.AxiStream_withUserAndStrb : AXIStream,
+                     interfaces.amba.AxiStream_withoutSTRB :  IP_AXIStream,
+                     interfaces.amba.AxiStream_withUserAndNoStrb : IP_AXIStream,
+                     interfaces.amba.AxiStream_withUserAndStrb : IP_AXIStream,
                      
-                     interfaces.amba.Axi4 : Axi4,
-                     interfaces.std.Ap_clk : Ap_clk,
-                     interfaces.std.Ap_rst : Ap_rst,
-                     interfaces.std.Ap_rst_n : Ap_rst_n
+                     interfaces.amba.Axi4 : IP_Axi4,
+                     interfaces.std.Ap_clk : IP_Ap_clk,
+                     interfaces.std.Ap_rst : IP_Ap_rst,
+                     interfaces.std.Ap_rst_n : IP_Ap_rst_n
                     }
