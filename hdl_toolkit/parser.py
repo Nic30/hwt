@@ -135,12 +135,13 @@ class Parser(VhdlParser):
             op = jType['binOperator']
             t_name = HdlRef.fromJson(op['op0'], self.caseSensitive)
             t = ctx.lookupLocal(t_name)
-            if not isinstance(t, Std_logic_vector):
-                raise NotImplementedError("Type conversion is not implemented for type %s" % t)
             if isinstance(t, Wire):
                 width = self.exprFromJson(op['operands'][0], ctx)
-            else:
+            elif isinstance(t, Std_logic_vector):
                 width = self.exprFromJson(op['op1'], ctx)
+            else:
+                raise NotImplementedError("Type conversion is not implemented for type %s" % t)
+                
             return t(width)
         t_name = HdlRef([t_name_str], self.caseSensitive)
         return ctx.lookupLocal(t_name)
