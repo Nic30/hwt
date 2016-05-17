@@ -3,36 +3,8 @@ from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.rtlLevel.signalWalkers import walkAllOriginSignals
 
-def expr_debug(expr):
-    from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
-    from hdl_toolkit.hdlObjects.assignment import Assignment
-    from hdl_toolkit.hdlObjects.value import Value
-    from hdl_toolkit.synthetisator.rtlLevel.signalWalkers import walkAllRelatedSignals
-    from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
-  
-    def dumpSignalDrivers(sig):
-        for d in sig.drivers:
-            if isinstance(d, Operator):
-                print(Assignment(d, sig).__repr__())
-                for op in d.ops:
-                    if isinstance(op, Value):
-                        continue
-                    dumpSignalDrivers(op)
-            else:
-                assert(isinstance(d, Assignment))
-                print(d.__repr__())
-    
-    for s in  walkAllRelatedSignals(expr):
-        print(VhdlSerializer.SignalItem(s, declaration=True))
-      
-    if isinstance(expr, Signal):
-        print(VhdlSerializer.SignalItem(expr))
-        dumpSignalDrivers(expr)
-    elif isinstance(expr, Operator):
-        expr_debug(expr.result)
-    else:
-        print(VhdlSerializer.asHdl(expr))
-
+def areInstanceOf(a, b, cls):
+    return isinstance(a, cls) and isinstance(b, cls)
 
 class ExprComparator():
     @staticmethod
@@ -44,14 +16,14 @@ class ExprComparator():
         """
         if exprA  is diffInA:
             return (True, exprB)
-        elif isinstance(exprA, Signal) and isinstance(exprB, Signal):
+        elif areInstanceOf(exprA, exprB, Signal):
             try:
                 originA = exprA.origin
                 originB = exprB.origin
             except AttributeError:
                 return (False, None)
             return ExprComparator.isSimilar(originA, originB, diffInA)
-        elif isinstance(exprA, Operator) and isinstance(exprB, Operator):
+        elif areInstanceOf(exprA, exprB, Operator):
             if exprA.operator == exprB.operator:
                 diff = None
                 for opA, opB in zip(exprA.ops, exprB.ops):
@@ -62,7 +34,7 @@ class ExprComparator():
                         assert(diff is m[1] or diff is None)
                         diff = m[1]
                 return (True, diff)
-        elif isinstance(exprA, Value) and isinstance(exprB, Value) and exprA == exprB:
+        elif areInstanceOf(exprA, exprB, Value) and exprA == exprB:
             return (True, None)
         return (False, None)
     
@@ -78,8 +50,6 @@ class ExprComparator():
                 yield (params[0], m[1])
         else:
             raise NotImplementedError("Searching for multiple differences in expression")
-
-
 
 class Map():
     def __init__(self, src, dst):

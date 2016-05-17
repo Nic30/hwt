@@ -48,8 +48,10 @@ class Operator():
         return self.operator.getReturnType(self)
     
     def __eq__(self, other):
-        return type(self) == type(other) and self.operator == other.operator \
-            and  self.ops == other.ops
+        return self is other or (
+             type(self) == type(other) 
+            and self.operator == other.operator \
+            and  self.ops == other.ops)
     
     def __deepcopy__(self, memo=None):
         try:
