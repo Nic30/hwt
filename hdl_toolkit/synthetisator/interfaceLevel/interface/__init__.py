@@ -179,6 +179,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
             
             if slaveIndex is not None:
                 dstSig = aplyIndexOnSignal(dstSig, srcSig.dtype, slaveIndex)
+
             yield dstSig.assignFrom(srcSig)
         
             
@@ -198,6 +199,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         
         for e in self._endpoints:
             e._connectTo(self)
+        for e in self._arrayElemCache:
+            e._propagateConnection()
     
     def _signalsForInterface(self, context, prefix, typeTransform=lambda x: x):
         """
