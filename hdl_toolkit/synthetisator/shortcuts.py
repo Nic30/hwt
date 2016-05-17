@@ -1,19 +1,35 @@
 import os
-from hdl_toolkit.formater import formatVhdl
-from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 import shutil
-from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+from itertools import chain
+from python_toolkit.fileHelpers import find_files
+
+from hdl_toolkit.formater import formatVhdl
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.architecture import Architecture
-from hdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
-from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from python_toolkit.fileHelpers import find_files
-from hdl_toolkit.parser import Parser
 from hdl_toolkit.parserLoader import langFromExtension, ParserFileInfo
+from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
+from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
+from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
 from hdl_toolkit.parserLoader import ParserLoader
-from itertools import chain
 
+
+def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
+    if not isinstance(unitOrCls, Unit):
+        u = unitOrCls()
+    else:
+        u = unitOrCls
+    
+    u._loadDeclarations()
+    if name is not None:
+        u._name = name
+        
+    return formatVhdl(
+                     "\n".join([ serializer.asHdl(x) for x in u._toRtl()])
+                     )
+    
+    
 def synthetizeCls(cls, name=None, multithread=True):
     u = cls(multithread=multithread)
     u._loadDeclarations()
