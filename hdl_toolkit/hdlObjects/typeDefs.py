@@ -155,7 +155,12 @@ class Integer(HdlType):
             assert(isinstance(val, int))
             
             return cls(int(val), typeObj, vld)
-        
+        def __int__(self):
+            if self.vldMask:
+                return self.val
+            else:
+                return None
+            
         def __eq__(self, other):
             self._otherCheck(other)
             vld = self.vldMask and other.vldMask
@@ -342,7 +347,8 @@ class Std_logic_vector_contrained(Std_logic_vector):
     def __eq__(self, other):
         return super(Std_logic_vector_contrained, self).__eq__(other) \
                 and (self.constrain == other.constrain or self.getBitCnt() == other.getBitCnt())
-                
+    def __hash__(self):
+        return hash((self.name, self.signed, self.constrain))            
     def getBitCnt(self):
             return self.getWidth()
             
@@ -545,15 +551,12 @@ class Wire(Std_logic):
         return Std_logic_vector_contrained(width)
 
 class Enum(HdlType):
-    class Container(object):
-        pass
     def __init__(self, name, valueNames):
         super(Enum, self).__init__()
         self.name = name
-        self.values = Enum.Container()
         self._allValues = valueNames
         for n in valueNames:
-            setattr(self.values, n, Enum.ValueCls(n, self, 1, eventMask=0))
+            setattr(self, n, Enum.ValueCls(n, self, 1, eventMask=0))
             
     def valAsVhdl(self, val, serializer):
         return  '%s' % str(val.val)
@@ -566,10 +569,13 @@ class Enum(HdlType):
             @param typeObj: instance of HdlType
             """
             if val is None:
-                val = Enum.Member(None, self)
-            assert(isinstance(val, Enum.Member) and val.parentT == typeObj)
+                valid = False
+                val = typeObj._allValues[0]
+            else:
+                valid = True
+            assert(isinstance(val, str))
             
-            return cls(val, typeObj, val.name is not None)
+            return cls(val, typeObj, valid)
                 
         def __eq__(self, other):
             """return abs(w.val[0].val - w.val[1].val) + 1
@@ -588,15 +594,26 @@ class Enum(HdlType):
     class ValueCls(Value, Ops):
         pass
 
+def isInteger(t):
+    isInt = False
+    for _t in [INT, UINT, PINT]:
+        if t == _t:
+            isInt = True
+    return isInt
+
 def areIntegers(a, b):
     for t in [a, b]:
-        isInt = False
-        for _t in [INT, UINT, PINT]:
-            if t == _t:
-                isInt = True
-        if not isInt:
+        if not isInteger(t):
             return False
     return True   
+
+
+def getBitCnt(t):
+    if t == BIT:
+        return 1
+    else:
+        return t.getBitCnt()
+              
       
 BOOL = Boolean()
 INT = Integer()
