@@ -13,6 +13,7 @@ from hdl_toolkit.synthetisator.exceptions import SerializerException
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.typeDefs import Enum
+from hdl_toolkit.hdlObjects.portConnection import PortConnection
 
 # keep in mind that there is no such a thing in vhdl itself
 opPrecedence = {AllOps.NOT : 2,
@@ -160,15 +161,8 @@ class VhdlSerializer():
         if ds == 1:
             d = sig.singleDriver()
             if isinstance(d, Operator):
-                if d.operator == AllOps.INDEX:
-                    for e in sig.endpoints:
-                        if isinstance(e, Assignment) and e.src == sig:
-                            return True
-                            
-                    return False
-                else:
-                    return True
-            if isinstance(d, Assignment):
+                return True
+            elif isinstance(d, Assignment):
                 if d.dst is sig and len(sig.endpoints) == 1:
                     ep = list(sig.endpoints)[0]
                     if isinstance(ep, Operator) and ep.operator == AllOps.INDEX:
@@ -177,8 +171,15 @@ class VhdlSerializer():
                 #    if not cls.isStaticExpression(o):
                 #        return False
                 # return True
-        if sig.name.startswith("sig_"):
-            pass
+        elif len(sig.endpoints) == 1:
+            e = sig.endpoints[0]
+            if isinstance(e, Operator) and e.operator == AllOps.INDEX:
+                return True
+            
+            
+                    
+        if sig.name.startswith("sig_1"):
+            print("")
         return False
             
             
@@ -260,7 +261,7 @@ class VhdlSerializer():
         else:
             if cls.isSignalHiddenInExpr(si):
                 if not hasattr(si, "origin"):
-                    pass
+                    raise Exception("Signal missing origin, there is unconnected signal %s" % (si.name))
                 return cls.asHdl(si.origin)
             else:
                 return si.name
@@ -337,6 +338,8 @@ class VhdlSerializer():
     @classmethod
     def Operator(cls, op):
         def p(operand):
+            if cls.asHdl(operand).startswith("sig_1"):
+                print()
             s = cls.asHdl(operand)
             if isinstance(operand, Signal):
                 try:
@@ -371,7 +374,7 @@ class VhdlSerializer():
             return _bin('>')
         elif o == AllOps.INDEX:
             assert(len(ops) == 2)
-            return "%s(%s)" % (p(ops[0]), p(ops[1]))
+            return "%s(%s)" % ((p(ops[0])).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('<')
         elif o == AllOps.MINUS:
