@@ -6,6 +6,7 @@ from hdl_toolkit.intfLvl import connect, Unit, Param
 class SimpleSubunit(Unit):
     def _config(self):
         self.DATA_WIDTH = Param(8)
+        
     def _declr(self):
         self.c = Ap_vld(isExtern=True)
         self.d = Ap_vld(isExtern=True)

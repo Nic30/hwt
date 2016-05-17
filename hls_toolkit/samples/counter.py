@@ -1,7 +1,6 @@
 from myhdl import always_seq, Signal, modbv
 from hdl_toolkit.interfaces.std import Ap_clk, Ap_rst, Ap_none
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
-from hls_toolkit.myhdlSynthesiser import toMyHdlIntf
 from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from hls_toolkit.myhdlSynthesiser.unitMyHdl import UnitMyHdl
 

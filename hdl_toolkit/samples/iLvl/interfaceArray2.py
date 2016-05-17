@@ -1,6 +1,7 @@
-from hdl_toolkit.intfLvl import connect, hInt, Unit, Param
+from hdl_toolkit.intfLvl import connect, Unit, Param
 from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from hdl_toolkit.interfaces.amba import AxiStream
+from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 
 class SimpleSubunit(Unit):
     def _config(self):

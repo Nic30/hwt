@@ -10,7 +10,6 @@ def w(dst, src):
 if __name__ == "__main__":
     t = vecT(8)
     fsmT = Enum('fsmT', ['send0', 'send1'])
-    fsmTv = fsmT.values
     
     c = Context("simpleRegister")
     
@@ -21,13 +20,13 @@ if __name__ == "__main__":
     syncRst = c.sig("rst")
     
     
-    fsmSt = c.sig("fsmSt", fsmT, clk, syncRst, fsmTv.send0)
-    If(fsmSt.opEq(fsmTv.send0),
+    fsmSt = c.sig("fsmSt", fsmT, clk, syncRst, fsmT.send0)
+    If(fsmSt.opEq(fsmT.send0),
        [ w(s_out, s_in0),
-         w(fsmSt, fsmTv.send1)]
+         w(fsmSt, fsmT.send1)]
        ,
        [w(s_out, s_in1),
-        w(fsmSt, fsmTv.send0)]
+        w(fsmSt, fsmT.send0)]
        )
     
     interf = [clk, syncRst, s_in0, s_in1, s_out]
