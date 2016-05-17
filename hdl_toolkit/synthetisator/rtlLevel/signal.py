@@ -7,6 +7,7 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.exceptions import SimNotInitialized
 from hdl_toolkit.hdlObjects.typeDefs import BOOL
 
+
 def checkOperands(ops):
     for op in ops:
         checkOperand(op)
@@ -18,6 +19,12 @@ def checkOperand(op):
         raise InvalidOperandExc("Operands in hdl expressions can be only instance of Value or Signal,"
                                 + "\ngot instance of %s" % (op.__class__))
 
+class UniqList(list):
+    def append(self, obj):
+        if obj in self:
+            pass
+        return list.append(self, obj)
+
 # [TODO] move to Operator, problem with reference Signal/Operator -> signal and operators have to be separated
 class SignalNode():
 
@@ -25,7 +32,7 @@ class SignalNode():
     def resForOp(op):
         t = op.getReturnType() 
         out = Signal(None, t)
-        out.drivers.add(op)
+        out.drivers.append(op)
         out.origin = op
         op.result = out
         return out
@@ -100,16 +107,28 @@ class SignalOps():
         a = Assignment(source, self)
         a.cond = set()
         try:
+            # now I am result of the index  self[xx] <= source
+            # get index op
             d = self.singleDriver()
             if isinstance(d, Operator) and d.operator == AllOps.INDEX:
-                self.drivers.remove(d) # data direction is to indexed element
-                self.endpoints.add(d)
+                # get singla on which is signal applied
+                indexedOn = d.ops[0]
+                if isinstance(indexedOn, Signal):
+                    # change direction of index for me and for indexed on
+                    # print(d, 'to driver of', indexedOn)
+                    indexedOn.endpoints.remove(d)
+                    indexedOn.drivers.append(d)
+                     
+                    # print(d, "to endpoint of")    
+                    self.drivers.remove(d)
+                    self.endpoints.append(d)
         except AssertionError:
             pass
         
-        self.drivers.add(a)
+        self.drivers.append(a)
         if not isinstance(source, Value):
-            source.endpoints.add(a)
+            source.endpoints.append(a)
+        
         return a
     
     
@@ -125,8 +144,9 @@ class Signal(SignalItem, SignalOps):
        
         assert(isinstance(dtype, HdlType))  # == can be range, downto, to etc.
         super(Signal, self).__init__(name, dtype, defaultVal)
-        self.endpoints = set()
-        self.drivers = set()
+        # set can not be used because hash of items are changign
+        self.endpoints = UniqList()
+        self.drivers = UniqList()
         self._usedOps = {}
         self.negated = False
     
@@ -149,7 +169,7 @@ class Signal(SignalItem, SignalOps):
                 if isinstance(self.defaultVal, Signal):
                         self._val = self.defaultVal._val
                 else:
-                    if not self._val.vldMask: # [TODO] find better way how to find out if was initialized
+                    if not self._val.vldMask:  # [TODO] find better way how to find out if was initialized
                         self._val = self.defaultVal
         return self._val
     
@@ -178,9 +198,9 @@ class SyncSignal(Signal):
     def assignFrom(self, source):
         a = Assignment(source, self.next)
         a.cond = set()
-        self.next.drivers.add(a)
+        self.next.drivers.append(a)
         if not isinstance(source, Value):
-            self.endpoints.add(source)
+            self.endpoints.append(source)
              
         return a
 

@@ -21,7 +21,12 @@ class PortConnection():
         
         
         if portItem.direction == DIRECTION.IN:
-            signal.endpoints.add(e)
+            signal.endpoints.append(e)
         elif portItem.direction == DIRECTION.OUT:
-            signal.drivers.add(e)
-        return e        
+            signal.drivers.append(e)
+        else:
+            raise NotImplementedError()
+        return e
+    
+    def __repr__(self):
+        return "<PortConnection %s => %s>" % (self.portItem.name, self.sig.name)        

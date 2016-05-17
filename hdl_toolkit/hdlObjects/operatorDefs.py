@@ -1,13 +1,13 @@
 from hdl_toolkit.hdlObjects.typeDefs import BOOL, INT, RANGE, PINT, UINT, BIT, \
     Std_logic, Boolean, Std_logic_vector, Std_logic_vector_contrained, \
-    Integer, VECTOR
+    Integer, VECTOR, Wire
 from hdl_toolkit.hdlObjects.value import Value
 
 def convOpsToType(t):
         def addOperand(operator, operand):
             convertedOp = operand.dtype.convert(operand, t)
             if not isinstance(convertedOp, Value):
-                convertedOp.endpoints.add(operator)
+                convertedOp.endpoints.append(operator)
             operator.ops.append(convertedOp)
         return addOperand
 
@@ -41,7 +41,7 @@ def addOperand_default(operator, operand):
     typeConvertedOp = t.convert(operand, opType)
     operator.ops.append(typeConvertedOp)
     if not isinstance(typeConvertedOp, Value):
-        typeConvertedOp.endpoints.add(operator)
+        typeConvertedOp.endpoints.append(operator)
 
 def addOperand_eq(operator, operand):
     t = operand.dtype
@@ -53,7 +53,7 @@ def addOperand_eq(operator, operand):
     typeConvertedOp = t.convert(operand, opType)
     operator.ops.append(typeConvertedOp)
     if not isinstance(typeConvertedOp, Value):
-        typeConvertedOp.endpoints.add(operator)
+        typeConvertedOp.endpoints.append(operator)
 
 def addOperand_event(operator, operand):
     t = operand.dtype
@@ -62,7 +62,7 @@ def addOperand_event(operator, operand):
     typeConvertedOp = t.convert(operand, t)
     operator.ops.append(typeConvertedOp)
     if not isinstance(typeConvertedOp, Value):
-        typeConvertedOp.endpoints.add(operator)
+        typeConvertedOp.endpoints.append(operator)
 
 
 def getReturnType_concat(op):
@@ -80,7 +80,7 @@ def getReturnType_concat(op):
 def getReturnType_index(op):
     base = op.ops[0]
     index = op.ops[1]
-    if isinstance(base.dtype, Std_logic_vector):
+    if isinstance(base.dtype, (Std_logic_vector, Wire)):
         if isinstance(index.dtype, Integer):
             return BIT
         if hasattr(index, "dtype") and index.dtype == RANGE:
@@ -89,8 +89,9 @@ def getReturnType_index(op):
     raise NotImplementedError()
 
 def addOperand_index(operator, operand):
-    if not operator.ops:
-        operand.drivers.add(operator)
+    # if not operator.ops:
+    if not isinstance(operand, Value):
+        operand.endpoints.append(operator)
         
     operator.ops.append(operand)
     
@@ -119,7 +120,7 @@ class OpDefinition():
         self.addOperand = addOperand
         
     def __eq__(self, other):
-        return self.id == other.id
+        return type(self) == type(other) and self.id == other.id
     
     def  __hash__(self):
         return hash(self.id)
@@ -149,7 +150,7 @@ class OpDefinition():
 class AllOps():
     _idsInited = False
     """
-    @attention: Remember that and operator is & and or is |, 'and' and 'or' can not be used because
+    @attention: Remember that and operator "and" is & and "or" is |, "and" and "or" can not be used because
     they can not be overloaded
     @attention: These are operators of internal AST, the are not equal to verilog or vhdl operators
     """
