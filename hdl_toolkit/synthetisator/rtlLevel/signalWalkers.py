@@ -14,17 +14,21 @@ def signalHasDriver(sig):
     return False
 
 def walkSignalDrivers(sig):
+    # print(repr(sig))
     def assign2Me(ep):
         if isinstance(ep, Assignment) and ep.dst == sig:
-            return ep
-        elif isinstance(ep, Operator) and ep.operator == AllOps.INDEX and sig is ep.ops[0]:
-            return signalHasDriver(ep.result)
+            return True
+        elif isinstance(ep, Operator) and ep.operator == AllOps.INDEX:
+            if sig is ep.ops[0]:
+                return signalHasDriver(ep.result)
+            else:
+                return signalHasDriver(ep.ops[0])
         elif isinstance(ep, PortConnection) and ep.portItem.direction == DIRECTION.OUT: 
-            return ep
+            return True
         else:
             return None
             
-    return where(walkSigExpr(sig), assign2Me)
+    return where(sig.drivers, assign2Me)
  
 def walkSigExpr(sig):
     """
@@ -132,7 +136,7 @@ def discoverSensitivity(datapath):
 # walks code but do not cross assignment of precursors 
 def walkSigSouces(sig, parent=None):    
     if isinstance(sig, Operator):
-        if sig.operator != AllOps.INDEX: # [TODO] more test to assert this cond. will work
+        if sig.operator != AllOps.INDEX:  # [TODO] more test to assert this cond. will work
             for op in sig.ops:
                 if not op is parent:
                     yield from walkSigSouces(op)
@@ -143,8 +147,9 @@ def walkSigSouces(sig, parent=None):
                     yield e
             elif isinstance(e, Assignment) and not e.src is sig:
                 yield e
-            elif isinstance(e, Operator) and e.operator == AllOps.INDEX and sig is e.ops[0]:
-                yield e
+            elif isinstance(e, Operator) and e.operator == AllOps.INDEX:
+                if e in sig.drivers:
+                    yield from walkSigSouces(e.result, sig)   
             else:
                 yield from walkSigSouces(e, sig)
     else:
