@@ -11,6 +11,22 @@ def If(cond, ifTrue=[], ifFalse=[]):
     ret.extend(ifFalse)
     return ret
 
+def Switch(val, *cases):
+    top = None
+    for c in reversed(cases):
+        if top is None:
+            top = c[1]
+        else:
+            assert(c[0] is not None)
+            top = If(val.opEq(c[0]),
+                     c[1]
+                     ,
+                     top
+                    )
+        
+    return top
+
+
 class ReturnCalled(Exception):
     def __init__(self, val):
         self.val = val
