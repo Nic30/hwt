@@ -81,7 +81,7 @@ class PropDeclrCollector():
             i._parent = self
             i._name = iName
             if hasattr(self, iName):
-                raise IntfLvlConfErr("Already has %s old:%s new:%s" % 
+                raise IntfLvlConfErr("Already has atribute '%s' old:%s new:%s" % 
                                      (iName, repr(getattr(self, iName)), i))
         if isIntf:
             self._interfaces.append(i)
@@ -110,4 +110,9 @@ class PropDeclrCollector():
         """Update parameters which has same name in sub interfaces"""
         for i in self._interfaces:
             i._updateParamsFrom(self)
+        if hasattr(self, "_units"):
+            for u in self._units:
+                for p in self._params:
+                    if hasattr(u, p._name):
+                        getattr(u, p._name).set(p)
         
