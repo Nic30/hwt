@@ -8,17 +8,19 @@ class Param(Signal):
     """
     Class used in same way as generics in VHDL, it is wrapper around the value
     """
-    def __init__(self, initval):
+    def _toHVal(self, val):
         typeResolution = {int: INT, bool: BOOL, str: STR}
-        if not isinstance(initval, Value):
+        if not isinstance(val, Value):
             try:
-                t = typeResolution[initval.__class__]
+                t = typeResolution[val.__class__]
             except KeyError:
                 raise Exception("Can not resolve type of parameter")
-            initval = Value.fromPyVal(initval, t)
-        else:
-            t = initval.dtype
-        super(Param, self).__init__(None, t, defaultVal=initval)
+            return Value.fromPyVal(val, t)
+        return val
+    
+    def __init__(self, initval):
+        initval = self._toHVal(initval)
+        super(Param, self).__init__(None, initval.dtype, defaultVal=initval)
         self._val = initval
         self.replacedWith = None
         self._parent = None
@@ -77,14 +79,19 @@ class Param(Signal):
         return "<%s, name=%s, val=%s>" % (self.__class__.__name__, name, str(val)) 
         
 
+def evalParam(p):
+    while isinstance(p, Param):
+        p = p.get()
+        # use rather param inheritance instead of param as param value
+        # assert(not isinstance(v, Param)) 
+    return p
+
 def getParam(p):
     """
     get param value or value
     """
     if isinstance(p, Param):
-        v = p.get()
+        p = p.get()
         # use rather param inheritance instead of param as param value
         # assert(not isinstance(v, Param)) 
-        return v
-    else:
-        return p
+    return p

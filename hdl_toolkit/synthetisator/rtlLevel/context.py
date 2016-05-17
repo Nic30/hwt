@@ -89,9 +89,6 @@ class Context():
                     for s in walkUnitInputs(node.unit):
                         discoverDatapaths(s)
                     self.subUnits.add(node.unit)
-                elif isinstance(node, Operator):
-                    assert(node.operator == AllOps.INDEX)
-                    discoverDatapaths(node.result)
                 elif isinstance(node, Assignment):
                     for s in walkSignalsInExpr(node.src):
                         discoverDatapaths(s)
@@ -99,6 +96,8 @@ class Context():
                     for c in node.cond:
                         for s in  walkSignalsInExpr(c):
                             discoverDatapaths(s)
+                else:
+                    raise NotImplementedError()
                         
             if signal in interfaces:
                 self.startsOfDataPaths.add(signal)
@@ -133,6 +132,10 @@ class Context():
                 p.sensitivityList.update(map(lambda x: x.name, discoverSensitivity(dp)))
             p.bodyBuff.extend(dps) 
             arch.processes.append(p)
+            
+            # [TODO] support for dynamically created signals
+            #if sig.name not in self.signals:
+            #    self.signals[sig.name] = sig
 
         # add signals, variables etc. in architecture
         for _, s in self.signals.items():

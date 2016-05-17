@@ -2,13 +2,14 @@ from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl, \
     toAbsolutePaths
 import os
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
-from python_toolkit.arrayQuery import single
+from python_toolkit.arrayQuery import single, NoValueExc
 from myhdl.conversion._toVHDL import _ToVHDLConvertor, _shortversion
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 import types
 import copy
-from hls_toolkit.myhdlSynthesiser import toMyHdlIntf
+from hls_toolkit.myHdlSynthesiser import toMyHdlIntf
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 
 
 class UnitMyHdl(UnitFromHdl):
@@ -18,30 +19,43 @@ class UnitMyHdl(UnitFromHdl):
     
     def _declr(self):
         pass
-    
-    def _loadMyImplementations(self):
+    def _myhdlWrap(self):
         myhdlWrap = copy.copy(self)
         
         myhdlWrap._interfaces = []
         for i in self._interfaces:
             setattr(myhdlWrap, i._name, toMyHdlIntf(i))
             myhdlWrap._interfaces.append(myhdlWrap)
-         
-        myHdlFnAndArgs = myhdlWrap._impl()
+        return myhdlWrap
+    
+    def _loadMyImplementations(self):
+        myHdlFnAndArgs = self._myhdlWrap()._impl()
         if not isinstance(myHdlFnAndArgs, tuple) or type(myHdlFnAndArgs[0]) != types.FunctionType \
             or not isinstance(myHdlFnAndArgs[1], (list, tuple)):
-            raise TypeError("_impl method has to return function and tuple of parameters, optionally keyword dict. (it returned %s)" % (repr(myHdlFnAndArgs)))
+            raise TypeError("_impl method has to return function and tuple of parameters, " + 
+                                "optionally keyword dict. (it returned %s)" % (repr(myHdlFnAndArgs)))
             
         files = self._MyHdltoRtl(myHdlFnAndArgs)
+        self._myhdlFn = myHdlFnAndArgs[0]
+        self._myhdlFnArgs = myHdlFnAndArgs[1]
+        
         self._hdlSources = toAbsolutePaths(os.getcwd(), files)
         self._entity = UnitFromHdl._loadEntity(self)
         ports = self._entity.ports
         for unitIntf in self._interfaces:
             for i in walkPhysInterfaces(unitIntf):
-                pi = single(ports, lambda p : p.name == i._getPhysicalName())
+                try:
+                    pi = single(ports, lambda p : p.name == i._getPhysicalName())
+                except NoValueExc:
+                    raise Exception("Can not find port %s on entity:\n%s" % 
+                                    (i._getPhysicalName(), repr(self._entity)))
                 pi._interface = i
-        # update directions of interfaces
-        # [TODO]
+                if pi.direction == DIRECTION.OUT:
+                    i._src = True
+                    
+        for unitIntf in self._interfaces:
+            unitIntf._resolveDirections()
+            unitIntf._reverseDirection()
 
     @classmethod
     def _build(cls, multithread=True):
@@ -64,7 +78,7 @@ class UnitMyHdl(UnitFromHdl):
         if UnitMyHdl._myhdl_package:
             convertor.no_myhdl_package = True
             
-        convertor.no_myhdl_header = True
+        convertor.no_myhdl_header = True # this actualy does not work in myhdl 0.9
         convertor.std_logic_ports = True
         convertor.directory = tmp
         convertor(func, *args, **kwargs)
@@ -75,7 +89,14 @@ class UnitMyHdl(UnitFromHdl):
             UnitMyHdl._myhdl_package = os.path.join(tmp, "pck_myhdl_%s.vhd" % _shortversion)
         
         return [vpath, UnitMyHdl._myhdl_package]
-      
+    
+    def _takeArgsFromMe(self, fn):
+        """
+        Name of arguments has to be same as interface properties of this unit
+        """
+        c = fn.__code__
+        return fn, [ getattr(self, n) for n in c.co_varnames[:c.co_argcount] ]
+  
     def _impl(self):
         pass
 
