@@ -79,7 +79,7 @@ class VhdlSerializer():
         "entityName"         :arch.entityName,
         "name"               :arch.name,
         "variables"          :variables,
-        "extraTypes"         :map(lambda typ: cls.VHDLType(typ, declaration=True), extraTypes),
+        "extraTypes"         :map(lambda typ: cls.HdlType(typ, declaration=True), extraTypes),
         "processes"          :procs,
         "components"         :arch.components,
         "componentInstances" :arch.componentInstances
@@ -135,19 +135,41 @@ class VhdlSerializer():
             return entVhdl
     
     @classmethod
-    def IfContainer(cls, ifc):
-        cond = list(ifc.cond)
+    def condAsHdl(cls, cond):
+        if isinstance(cond, Signal):
+            return cls.asHdl(cond)
+        cond = list(cond)
         if len(cond) == 1:
-            cond = cls.asHdl(cond[0])
+            return cls.asHdl(cond[0])
         else:
-            cond = " AND ".join(map(cls.asHdl, cond))  
+            return " AND ".join(map(cls.asHdl, cond))
+    
+    @classmethod
+    def IfContainer(cls, ifc):
+        cond = cls.condAsHdl(ifc.cond)
+        elIfs = []
+        for c, statements in ifc.elIfs:
+            elIfs.append((cls.condAsHdl(c), statements))
+        
         return VHDLTemplates.If.render(cond=cond,
                                        ifTrue=ifc.ifTrue,
+                                       elIfs=elIfs,
                                        ifFalse=ifc.ifFalse)  
+    @classmethod
+    def SwitchContainer(cls, sw):
+        switchOn = cls.condAsHdl(sw.switchOn)
+        
+        cases = []
+        for key, statements in sw.cases:
+            if key is not None: # None is default
+                key = cls.asHdl(key)
+            cases.append((key, statements))  
+        return VHDLTemplates.Switch.render(switchOn=switchOn,
+                                           cases=cases)  
   
     @classmethod
     def GenericItem(cls, g):
-        s = "%s : %s" % (g.name, cls.VHDLType(g.dtype))
+        s = "%s : %s" % (g.name, cls.HdlType(g.dtype))
         if g.defaultVal is None:
             return s
         else:  
@@ -208,15 +230,16 @@ class VhdlSerializer():
     @classmethod
     def PortConnection(cls, pc):
         if pc.portItem.dtype != pc.sig.dtype:
-            raise SerializerException("Port map %s is nod valid (types does not match)" % (
-                      " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig))))
+            raise SerializerException("Port map %s is nod valid (types does not match)  (%s, %s)" % (
+                      "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig)),
+                      repr(pc.portItem.dtype), repr(pc.sig.dtype)))
         return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig))      
     
     @classmethod
     def PortItem(cls, pi):
         try:
             return "%s : %s %s" % (pi.name, pi.direction,
-                                   cls.VHDLType(pi.dtype))
+                                   cls.HdlType(pi.dtype))
         except InvalidVHDLTypeExc as e:
             e.variable = pi
             raise e
@@ -253,7 +276,7 @@ class VhdlSerializer():
             else:
                 prefix = "SIGNAL"
 
-            s = prefix + " %s : %s" % (si.name, cls.VHDLType(si.dtype))
+            s = prefix + " %s : %s" % (si.name, cls.HdlType(si.dtype))
             if si.defaultVal is not None and si.defaultVal.vldMask:
                 return s + " := %s" % cls.Value(si.defaultVal)
             else:
@@ -272,7 +295,7 @@ class VhdlSerializer():
     
     @classmethod
     def VHDLGeneric(cls, g):
-        t = cls.VHDLType(g.dtype)
+        t = cls.HdlType(g.dtype)
         if hasattr(g, "defaultVal"):
             return "%s : %s := %s" % (g.name, t,
                                       cls.Value(g, g.defaultVal))
@@ -280,7 +303,7 @@ class VhdlSerializer():
             return "%s : %s" % (g.name, t)
 
     @classmethod
-    def VHDLType(cls, typ, declaration=False):
+    def HdlType(cls, typ, declaration=False):
         assert(isinstance(typ, HdlType))
         buff = []
         if declaration:
@@ -303,7 +326,7 @@ class VhdlSerializer():
             prefix = "SHARED VARIABLE"
         else:
             prefix = "VARIABLE"
-        s = prefix + " %s : %s" % (v.name, cls.VHDLType(v.dtype))
+        s = prefix + " %s : %s" % (v.name, cls.HdlType(v.dtype))
         if v.defaultVal is not None:
             return s + " := %s" % cls.Value(v, v.defaultVal)
         else:

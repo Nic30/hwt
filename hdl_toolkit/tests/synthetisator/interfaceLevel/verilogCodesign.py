@@ -82,7 +82,7 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(VerilogCodesignTC('test_axiCrossbar'))
+    #suite.addTest(VerilogCodesignTC('test_TernOpInModul'))
     suite.addTest(unittest.makeSuite(VerilogCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

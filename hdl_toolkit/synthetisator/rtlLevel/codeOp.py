@@ -38,28 +38,47 @@ class ReturnContainer():
     def seqEval(self):
         raise ReturnCalled(self.val.staticEval())       
 
+def evalCond(cond):
+    _cond = True
+    for c in cond:
+        _cond = _cond and bool(c.staticEval())
+        
+    return _cond
+
+
 class IfContainer:
-    def __init__(self, cond, ifTrue=[], ifFalse=[]):
+    def __init__(self, cond, ifTrue=[], ifFalse=[], elIfs=[]):
         self.cond = cond
         self.ifTrue = ifTrue
+        self.elIfs = elIfs
         self.ifFalse = ifFalse
     
     def seqEval(self):
-        cond = True
-        for c in self.cond:
-            cond = cond and bool(c.staticEval())
-        
-        if cond:
+        if evalCond(self.cond):
             for s in self.ifTrue:
                 s.seqEval()
         else:
+            for c in self.elIfs:
+                if evalCond(c[0]):
+                    for s in c[1]:
+                        s.seqEval()
+                    return
+            
             for s in self.ifFalse:
                 s.seqEval()
         
     def __repr__(self):
         from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.IfContainer(self)
-     
+
+class SwitchContainer():
+    def __init__(self, switchOn, cases):
+        self.switchOn = switchOn
+        self.cases = cases
+    def __repr__(self):
+        from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        return VhdlSerializer.SwitchContainer(self)
+ 
 class WhileContainer():
     def __init__(self, cond, body):
         self.cond = cond

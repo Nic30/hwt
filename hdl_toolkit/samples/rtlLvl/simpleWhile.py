@@ -9,7 +9,7 @@ w = connectSig
 
 if __name__ == "__main__":
     t = vecT(8)
-    c = Context("simpleFor")
+    c = Context("simpleWhile")
     
     boundry = c.sig("boundry", t, defVal=8)
     s_out = c.sig("s_out", t)

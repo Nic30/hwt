@@ -76,8 +76,8 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         u = ClkRstEnt()
         u._loadDeclarations()
         
-        self.assertIsInstance(u.ap_rst_n, Ap_rst_n)
-        self.assertIsInstance(u.ap_clk, Ap_clk)
+        self.assertIsInstance(u.ARESETN, Ap_rst_n)
+        self.assertIsInstance(u.ACLK, Ap_clk)
 
     def test_positiveAndNatural(self):
         class PositiveAndNatural(UnitFromHdl):
@@ -322,7 +322,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VhdlCodesignTC('test_largeBitStrings'))
+    suite.addTest(VhdlCodesignTC('test_ClkAndRstExtraction'))
     #suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

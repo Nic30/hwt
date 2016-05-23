@@ -7,6 +7,8 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.exceptions import SimNotInitialized
 from hdl_toolkit.hdlObjects.typeDefs import BOOL
 
+class MultipleDriversExc(Exception):
+    pass
 
 def checkOperands(ops):
     for op in ops:
@@ -122,7 +124,7 @@ class SignalOps():
                     # print(d, "to endpoint of")    
                     self.drivers.remove(d)
                     self.endpoints.append(d)
-        except AssertionError:
+        except MultipleDriversExc:
             pass
         
         self.drivers.append(a)
@@ -187,7 +189,8 @@ class Signal(SignalItem, SignalOps):
         yield env.process(self.simPropagateChanges())
      
     def singleDriver(self):
-        assert(len(self.drivers) == 1)
+        if len(self.drivers) != 1:
+            raise MultipleDriversExc()
         return list(self.drivers)[0]
             
 class SyncSignal(Signal):

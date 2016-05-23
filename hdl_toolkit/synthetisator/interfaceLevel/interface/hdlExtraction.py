@@ -214,7 +214,11 @@ class ExtractableInterface(InterfaceArray):
                      
                 intf = intfInst._tryToExtractByName(prefix, ports)
                 if not intf._interfaces:
-                    name += intf._name
+                    if name == "":
+                        name = intf._originEntityPort.name
+                    else:
+                        name += intf._name
+                    
                 if name.endswith("_"):
                     name = name[:-1]
                 

@@ -10,6 +10,7 @@ import types
 import copy
 from hls_toolkit.myHdlSynthesiser import toMyHdlIntf
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.parser import Parser
 
 
 class UnitMyHdl(UnitFromHdl):
@@ -40,6 +41,8 @@ class UnitMyHdl(UnitFromHdl):
         self._myhdlFnArgs = myHdlFnAndArgs[1]
         
         self._hdlSources = toAbsolutePaths(os.getcwd(), files)
+        mFile = self._hdlSources[0]
+        Parser.invalidateCacheFor(mFile)
         self._entity = UnitFromHdl._loadEntity(self)
         ports = self._entity.ports
         for unitIntf in self._interfaces:
@@ -69,7 +72,7 @@ class UnitMyHdl(UnitFromHdl):
         except IndexError:
             kwargs = {}
             
-        name = self._name
+        name = self._name + "_%d" % (id(self))
         tmp = os.path.join(os.getcwd(), "__pycache__", name)
         os.makedirs(tmp, exist_ok=True)
         convertor = _ToVHDLConvertor()
@@ -78,7 +81,7 @@ class UnitMyHdl(UnitFromHdl):
         if UnitMyHdl._myhdl_package:
             convertor.no_myhdl_package = True
             
-        convertor.no_myhdl_header = True # this actualy does not work in myhdl 0.9
+        convertor.no_myhdl_header = True  # this actualy does not work in myhdl 0.9
         convertor.std_logic_ports = True
         convertor.directory = tmp
         convertor(func, *args, **kwargs)

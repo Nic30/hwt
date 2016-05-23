@@ -32,15 +32,15 @@ def cloneExprWithUpdatedParams(expr, paramUpdateDict):
     else:
         raise NotImplementedError("Not implemented for %s" % (repr(expr)))
 
-def toAbsolutePaths(relatibeTo, sources):
+def toAbsolutePaths(relativeTo, sources):
     if isinstance(sources, str):
         sources = [sources]
     def updatePath(p):
         if isinstance(p, str):
-            return os.path.join(relatibeTo, p)
+            return os.path.join(relativeTo, p)
         else:
             # tuple (lib, filename)
-            return (p[0], os.path.join(relatibeTo, p[1]))
+            return (p[0], os.path.join(relativeTo, p[1]))
     
     return [ updatePath(s) for s in sources]
 
@@ -122,7 +122,7 @@ class UnitFromHdl(Unit):
         cls._hdlSources = toAbsolutePaths(baseDir, cls._hdlSources)
     
     @staticmethod
-    def _loadEntity(cls, multithread=True):
+    def _loadEntity(cls, multithread=True, ignoreCache=False):
         if not hasattr(cls, "_debugParser"):
             cls._debugParser = False
         # extract params from entity generics

@@ -67,6 +67,18 @@ class Parser(VhdlParser):
     VERILOG = 'verilog'
     VHDL = 'vhdl'
     _cache = {}  # key = (hierarchyOnly, fileName) 
+    @classmethod
+    def invalidateCacheFor(cls, file):
+        try:
+            del cls._cache[(file, True)]
+        except KeyError:
+            pass
+        
+        try:
+            del cls._cache[(file, False)]
+        except KeyError:
+            pass
+        
     def __init__(self, caseSensitive, hierarchyOnly=False, primaryUnitsOnly=True, functionsOnly=False):
         self.caseSensitive = caseSensitive
         self.hierarchyOnly = hierarchyOnly
@@ -106,7 +118,7 @@ class Parser(VhdlParser):
                     operand = self.exprFromJson(jOperand, ctx) 
                     ops.append(operand)
                 # [TODO] extract this vhdl stuff somewhere else
-                if isinstance(ops[0], Signal):
+                if operator == AllOps.CALL and isinstance(ops[0], Signal):
                     operator = AllOps.INDEX
             else:
                 if operator == AllOps.DOT:
