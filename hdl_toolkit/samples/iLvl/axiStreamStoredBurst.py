@@ -45,7 +45,7 @@ class AxiStreamStoredBurst(Unit):
         
         DATA_LEN = len(self.DATA)
         
-        wordIndex_w = int(math.log2(len(self.DATA)) + 1)
+        wordIndex_w = int(math.log2(DATA_LEN) + 1)
         wordIndex = self._reg("wordIndex", vecT(wordIndex_w), defVal=0)
   
         Switch(wordIndex,
