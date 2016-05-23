@@ -1,23 +1,21 @@
 from python_toolkit.arrayQuery import where, distinctBy
+
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.component import  Component
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.process import HWProcess
-from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, SyncSignal
 from hdl_toolkit.hdlObjects.portConnection import PortConnection
-from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
-from hdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkUnitInputs, walkSignalsInExpr, \
-    discoverSensitivity, walkSigSouces, signalHasDriver
 from hdl_toolkit.hdlObjects.typeDefs import BIT
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment
 
+from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, SyncSignal
+from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
+from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
+from hdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkUnitInputs, walkSignalsInExpr, \
+    discoverSensitivity, walkSigSouces, signalHasDriver
 from hdl_toolkit.synthetisator.templates import VHDLTemplates  
 from hdl_toolkit.synthetisator.exceptions import SigLvlConfErr
-from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-
 
 class Context():
     """
@@ -56,13 +54,13 @@ class Context():
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
-                r = If(syncRst.opIsOn(),
-                            [Signal.assignFrom(s, defVal)] ,
-                            [Signal.assignFrom(s, s.next)])
+                r = If(syncRst._isOn(),
+                            [Signal._assignFrom(s, defVal)] ,
+                            [Signal._assignFrom(s, s.next)])
             else:
-                r = [Signal.assignFrom(s, s.next)]
+                r = [Signal._assignFrom(s, s.next)]
             
-            If(clk.opOnRisigEdge(), r)
+            If(clk._onRisingEdge(), r)
         else:
             if syncRst:
                 raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
@@ -116,7 +114,6 @@ class Context():
         
         # create ports
         for s in interfaces:
-            # s.dtype.ctx = ent.ctx
             ent.ports.append(portItemfromSignal(s))
    
         self.discover(interfaces)

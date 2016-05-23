@@ -5,7 +5,7 @@ class PortItem(SignalItem):
     def __init__(self, name, direction, dtype):
         self.name = name
         self.direction = direction
-        self.dtype = dtype
+        self._dtype = dtype
         
     def __repr__(self):
         from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer

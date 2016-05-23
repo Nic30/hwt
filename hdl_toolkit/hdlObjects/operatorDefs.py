@@ -5,7 +5,7 @@ from hdl_toolkit.hdlObjects.value import Value
 
 def convOpsToType(t):
         def addOperand(operator, operand):
-            convertedOp = operand.dtype.convert(operand, t)
+            convertedOp = operand._dtype.convert(operand, t)
             if not isinstance(convertedOp, Value):
                 convertedOp.endpoints.append(operator)
             operator.ops.append(convertedOp)
@@ -14,17 +14,17 @@ def convOpsToType(t):
 addOperand_logic = convOpsToType(BOOL)    
 
 def addOperand_concat(operator, operand):
-    if isinstance(operand.dtype, Std_logic):  # [TODO] boolean
+    if isinstance(operand._dtype, Std_logic):  # [TODO] boolean
         opAsVec = operand
-    elif isinstance(operand.dtype, Std_logic_vector):
+    elif isinstance(operand._dtype, Std_logic_vector):
         opAsVec = operand
     else:
         raise NotImplementedError("Not implemented for type %s of %s" % 
-                                  (repr(operand.dtype), repr(operand)))
+                                  (repr(operand._dtype), repr(operand)))
     operator.ops.append(opAsVec)
 
 def getReturnType_default(op):
-    t = op.ops[0].dtype
+    t = op.ops[0]._dtype
     if(t == UINT or t == PINT):
         return INT
     else:
@@ -32,7 +32,7 @@ def getReturnType_default(op):
 
 
 def addOperand_default(operator, operand):
-    t = operand.dtype
+    t = operand._dtype
     try:
         opType = operator.getReturnType()
     except IndexError:
@@ -44,7 +44,7 @@ def addOperand_default(operator, operand):
         typeConvertedOp.endpoints.append(operator)
 
 def addOperand_eq(operator, operand):
-    t = operand.dtype
+    t = operand._dtype
     try:
         opType = getReturnType_default(operator)
     except IndexError:
@@ -56,7 +56,7 @@ def addOperand_eq(operator, operand):
         typeConvertedOp.endpoints.append(operator)
 
 def addOperand_event(operator, operand):
-    t = operand.dtype
+    t = operand._dtype
     assert(t == BIT)
         
     typeConvertedOp = t.convert(operand, t)
@@ -68,10 +68,10 @@ def addOperand_event(operator, operand):
 def getReturnType_concat(op):
     w = 0
     for o in op.ops:
-        if o.dtype == BIT:
+        if o._dtype == BIT:
             _w = 1
         else:
-            _w = o.dtype.getBitCnt()
+            _w = o._dtype.getBitCnt()
         w += _w
     assert(w > 0)
     from hdl_toolkit.hdlObjects.typeShortcuts import vecT
@@ -80,10 +80,10 @@ def getReturnType_concat(op):
 def getReturnType_index(op):
     base = op.ops[0]
     index = op.ops[1]
-    if isinstance(base.dtype, (Std_logic_vector, Wire)):
-        if isinstance(index.dtype, Integer):
+    if isinstance(base._dtype, (Std_logic_vector, Wire)):
+        if isinstance(index._dtype, Integer):
             return BIT
-        if hasattr(index, "dtype") and index.dtype == RANGE:
+        if hasattr(index, "_dtype") and index._dtype == RANGE:
             return Std_logic_vector_contrained(index)
         
     raise NotImplementedError()
@@ -96,7 +96,7 @@ def addOperand_index(operator, operand):
     operator.ops.append(operand)
     
 def getReturnType_ternary(op):
-    return op.ops[1].dtype
+    return op.ops[1]._dtype
 
 def addOperand_ternary(operator, operand):
     if not operator.ops:

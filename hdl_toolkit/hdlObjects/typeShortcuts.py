@@ -15,7 +15,7 @@ def fromPyValToValueFn(pyT, hdlT):
     def fn(val):
         """create hdl value from hdl Value or Param or python value"""
         val = getSignalOrValue(val, pyT, hdlT)
-        assert(val.dtype == hdlT)
+        assert(val._dtype == hdlT)
         return val
     return fn
 
@@ -39,7 +39,7 @@ def mkRange(width):
     if isinstance(to, Value):
         to = hInt(to) - hInt(1)
     else:
-        to = to.opSub(hInt(1))
+        to = to - 1
     return SignalNode.resForOp(Operator(AllOps.DOWNTO, [to, hInt(0)]))
 
 def vecT(width):
@@ -51,5 +51,5 @@ def vec(val, width):
     return Value.fromPyVal(val, vecT(width))
 
 def hRange(upper, lower):
-    #[TODO] param conversion if necessary
+    # [TODO] param conversion if necessary
     return SignalNode.resForOp(Operator(AllOps.DOWNTO, [lower, upper]))

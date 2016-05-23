@@ -1,7 +1,6 @@
 from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
-from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
-from hdl_toolkit.hdlObjects.typeShortcuts import hBit, hInt, vec
-from hdl_toolkit.hdlObjects.typeDefs import BOOL, BIT
+from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
+from hdl_toolkit.hdlObjects.typeDefs import BIT
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.synthetisator.param import Param
@@ -17,23 +16,15 @@ def _connectSig(src, dst):
             if isinstance(dst, Interface):
                 dst._src = True
             return dst._connectTo(src)
-        else:
-            src = src._sig
         
     dst._src = src
     if isinstance(dst, Interface):
         dst._src = src
         dst = dst._sig 
     
-    if isinstance(dst, Interface):
-        dstDtype = dst._dtype
-    else:
-        dstDtype = dst.dtype
-        
-    if src.dtype == BOOL and dstDtype == BIT:
-        return connectBool2Log(src, dst)
-    else:
-        return [dst.assignFrom(src)]
+    src =  src._dtype.convert(src, dst._dtype)
+    
+    return [dst._assignFrom(src)]
 
 def connectSig(src, *destinations):
     """
@@ -43,16 +34,6 @@ def connectSig(src, *destinations):
     for dst in destinations:
         assignemnts.extend(_connectSig(src, dst))
     return assignemnts
-
-def connectBool2Log(a, b):
-    """
-    Connect bool signal to logical signal (BIT)
-    """
-    assert(a.dtype == BOOL)
-    return If(a,
-       [b.assignFrom(hBit(1)) ],
-       [b.assignFrom(hBit(0)) ]
-       )
 
 def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
     """
@@ -117,7 +98,7 @@ def connectUnpacked(src, dst):
     connections = []
     for i in walkPhysInterfaces(dst):
         sig = i._sig
-        t = sig.dtype
+        t = sig._dtype
         if t == BIT:
             s = src.opSlice(hInt(offset))
             offset += 1
@@ -126,7 +107,7 @@ def connectUnpacked(src, dst):
             s = vecWithOffset(src, w, offset)
             offset += t.getBitCnt()
         i._src = s    
-        connections.append(sig.assignFrom(s))
+        connections.append(sig._assignFrom(s))
     
     return connections
     
@@ -162,8 +143,8 @@ def fitTo(what, to):
     little endian impl.
     """
 
-    whatWidth = what.dtype.getBitCnt()
-    toWidth = to.dtype.getBitCnt()
+    whatWidth = what._dtype.getBitCnt()
+    toWidth = to._dtype.getBitCnt()
     if toWidth == whatWidth:
         return what
     elif toWidth < whatWidth:

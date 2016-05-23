@@ -5,7 +5,7 @@ from hdl_toolkit.hdlObjects.typeDefs import Enum
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 
 def w(dst, src):
-    return  dst.assignFrom(src) 
+    return  dst._assignFrom(src) 
 
 if __name__ == "__main__":
     t = vecT(8)

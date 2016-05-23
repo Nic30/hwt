@@ -60,3 +60,9 @@ def extendLen(arr, newLen, useValue=None):
     arr.extend([useValue for _ in range(toAdd)])
     
     
+def indexUsigIs(iterable, item):
+    i = 0
+    for v in iterable:
+        if v is item:
+            return i
+        i += 1

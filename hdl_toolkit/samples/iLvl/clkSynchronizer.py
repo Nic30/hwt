@@ -1,8 +1,8 @@
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.hdlObjects.typeDefs import Std_logic
+from hdl_toolkit.hdlObjects.typeDefs import BIT
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig
 from hdl_toolkit.interfaces.std import Ap_rst, Ap_none, Ap_clk
+from hdl_toolkit.synthetisator.shortcuts import toRtl
 
 c = connectSig
 
@@ -13,7 +13,7 @@ class ClkSynchronizer(Unit):
     """
     
     def _config(self):
-        self.DATA_TYP = Std_logic
+        self.DATA_TYP = BIT
         
     def _declr(self):
         self.rst = Ap_rst()
@@ -23,6 +23,8 @@ class ClkSynchronizer(Unit):
         
         self.outData = Ap_none(dtype=self.DATA_TYP)
         self.outClk = Ap_clk()
+        
+        self._mkIntfExtern()
         
     def _impl(self):
         inReg = self._cntx.sig("inReg", self.DATA_TYP, clk=self.inClk, syncRst=self.rst, defVal=0)
@@ -36,3 +38,6 @@ class ClkSynchronizer(Unit):
         c(outReg0, outReg1)
         
         c(outReg1, self.outData)
+        
+if __name__ == "__main__":
+    print(toRtl(ClkSynchronizer))

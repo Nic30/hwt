@@ -52,7 +52,7 @@ class Port():
         port.direction = p.direction.lower()
         port.type = WireTypeDef()
         t = port.type
-        dt = p.dtype
+        dt = p._dtype
         
         t.typeName = dt.name.upper()
         if dt == BIT:

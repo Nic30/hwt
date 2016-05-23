@@ -16,13 +16,13 @@ class Expr2CondTC(unittest.TestCase):
     
     def testSTD_LOGIC2BoolConversion(self):
         e = self.a
-        cond = e.dtype.convert(e, BOOL)
+        cond = e._dtype.convert(e, BOOL)
         self.assertTrue(cond.origin.operator == AllOps.EQ)
         self.assertEqual(cond.origin.ops[0], self.a, 1)
         
     def testAndWithToBoolConversion(self):
         e = self.a.opAnd(self.b)
-        cond = e.dtype.convert(e, BOOL)
+        cond = e._dtype.convert(e, BOOL)
         self.assertTrue(cond.origin.operator == AllOps.AND_LOG)
         andop = cond.origin
         aEq1 = andop.ops[0].origin
@@ -39,7 +39,7 @@ class Expr2CondTC(unittest.TestCase):
         
     def testNotAnd(self):
         e = self.a.opAnd(self.b).opNot()
-        cond = e.dtype.convert(e, BOOL)
+        cond = e._dtype.convert(e, BOOL)
         # expr_debug(e)
         
         self.assertEqual(cond.origin.operator, AllOps.NOT)

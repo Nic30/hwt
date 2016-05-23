@@ -99,7 +99,7 @@ class ExtractableInterface(InterfaceArray):
             intfTConstr = self._dtype.constrain
 
             if intfTConstr is not None:
-                unitTConstr = self._originEntityPort.dtype.constrain
+                unitTConstr = self._originEntityPort._dtype.constrain
                 paramDiff = list(ExprComparator.findExprDiffInParam(intfTConstr, unitTConstr))
                     
                 for intfParam, unitParam in paramDiff:
@@ -121,14 +121,14 @@ class ExtractableInterface(InterfaceArray):
                 if len(paramDiff) == 0:
                     
                     # [TODO] and port is not parametrized
-                    origT = self._originEntityPort.dtype
+                    origT = self._originEntityPort._dtype
                     t = self._dtype
                     self._dtypeMatch = origT == t and not typeIsParametrized(origT) and not typeIsParametrized(t) 
                 else:
                     self._dtypeMatch = isinstance(_unitParam, (Param, Value))
                     updateParam(intfParam, _unitParam)
             else:
-                self._dtypeMatch = self._originEntityPort.dtype == self._dtype
+                self._dtypeMatch = self._originEntityPort._dtype == self._dtype
             
             if not hasattr(self, "_dtypeMatch"):
                 raise AssertionError("Type resolution error on port %s" % (self._originEntityPort))   

@@ -68,8 +68,8 @@ class VhdlSerializer():
         extraTypes = set()
         for v in sorted(arch.variables, key=lambda x: x.name):
             variables.append(cls.SignalItem(v, declaration=True))
-            if isinstance(v.dtype, Enum):
-                extraTypes.add(v.dtype)
+            if isinstance(v._dtype, Enum):
+                extraTypes.add(v._dtype)
             
         for p in sorted(arch.processes, key=lambda x: x.name):
             procs.append(cls.HWProcess(p))
@@ -87,11 +87,11 @@ class VhdlSerializer():
    
     @classmethod
     def Assignment(cls, a):
-        if a.dst.dtype == a.src.dtype:
+        if a.dst._dtype == a.src._dtype:
             return "%s <= %s" % (cls.asHdl(a.dst), cls.Value(a.src))
         else:
             raise SerializerException("%s <= %s  is not valid assignment because types are different(%s; %s) " % 
-                             (cls.asHdl(a.dst), cls.Value(a.src), repr(a.dst.dtype), repr(a.src.dtype)))
+                             (cls.asHdl(a.dst), cls.Value(a.src), repr(a.dst._dtype), repr(a.src._dtype)))
     @classmethod
     def comment(cls, comentStr):
         return "--" + comentStr.replace("\n", "\n--")
@@ -169,7 +169,7 @@ class VhdlSerializer():
   
     @classmethod
     def GenericItem(cls, g):
-        s = "%s : %s" % (g.name, cls.HdlType(g.dtype))
+        s = "%s : %s" % (g.name, cls.HdlType(g._dtype))
         if g.defaultVal is None:
             return s
         else:  
@@ -229,17 +229,17 @@ class VhdlSerializer():
     
     @classmethod
     def PortConnection(cls, pc):
-        if pc.portItem.dtype != pc.sig.dtype:
+        if pc.portItem._dtype != pc.sig._dtype:
             raise SerializerException("Port map %s is nod valid (types does not match)  (%s, %s)" % (
                       "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig)),
-                      repr(pc.portItem.dtype), repr(pc.sig.dtype)))
+                      repr(pc.portItem._dtype), repr(pc.sig._dtype)))
         return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig))      
     
     @classmethod
     def PortItem(cls, pi):
         try:
             return "%s : %s %s" % (pi.name, pi.direction,
-                                   cls.HdlType(pi.dtype))
+                                   cls.HdlType(pi._dtype))
         except InvalidVHDLTypeExc as e:
             e.variable = pi
             raise e
@@ -276,7 +276,7 @@ class VhdlSerializer():
             else:
                 prefix = "SIGNAL"
 
-            s = prefix + " %s : %s" % (si.name, cls.HdlType(si.dtype))
+            s = prefix + " %s : %s" % (si.name, cls.HdlType(si._dtype))
             if si.defaultVal is not None and si.defaultVal.vldMask:
                 return s + " := %s" % cls.Value(si.defaultVal)
             else:
@@ -295,7 +295,7 @@ class VhdlSerializer():
     
     @classmethod
     def VHDLGeneric(cls, g):
-        t = cls.HdlType(g.dtype)
+        t = cls.HdlType(g._dtype)
         if hasattr(g, "defaultVal"):
             return "%s : %s := %s" % (g.name, t,
                                       cls.Value(g, g.defaultVal))
@@ -326,7 +326,7 @@ class VhdlSerializer():
             prefix = "SHARED VARIABLE"
         else:
             prefix = "VARIABLE"
-        s = prefix + " %s : %s" % (v.name, cls.HdlType(v.dtype))
+        s = prefix + " %s : %s" % (v.name, cls.HdlType(v._dtype))
         if v.defaultVal is not None:
             return s + " := %s" % cls.Value(v, v.defaultVal)
         else:
@@ -352,7 +352,7 @@ class VhdlSerializer():
         @param dst: is VHDLvariable connected with value 
         @param val: value object, can be instance of Signal or Value    """
         if isinstance(val, Value):
-            return val.dtype.valAsVhdl(val, cls)
+            return val._dtype.valAsVhdl(val, cls)
         elif isinstance(val, Signal):
             return cls.SignalItem(val)
         else:

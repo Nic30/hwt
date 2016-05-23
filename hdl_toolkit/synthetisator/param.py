@@ -20,7 +20,7 @@ class Param(Signal):
     
     def __init__(self, initval):
         initval = self._toHVal(initval)
-        super(Param, self).__init__(None, initval.dtype, defaultVal=initval)
+        super(Param, self).__init__(None, initval._dtype, defaultVal=initval)
         self._val = initval
         self.replacedWith = None
         self._parent = None

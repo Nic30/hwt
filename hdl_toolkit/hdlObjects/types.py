@@ -30,7 +30,7 @@ class HdlType():
         return hash((self.name, self.constrain))
     
     def convert(self, sigOrVal, toType):
-        if sigOrVal.dtype == toType:
+        if sigOrVal._dtype == toType:
             return sigOrVal
         else:
             raise TypeConversionErr("Conversion of type %s to type %s is not implemented" % (repr(self), repr(toType)))

@@ -33,7 +33,7 @@ class Value():
         self = cls()
         self.id = idPrefix + g.name
         self.resolve = resolve
-        t = g.dtype
+        t = g._dtype
         def getVal():
             if g.defaultVal:
                 return g.defaultVal.staticEval().val
@@ -55,7 +55,7 @@ class Value():
             self.format = "string"
             self.text = g.defaultVal.staticEval().val
         elif isinstance(t, Std_logic_vector):
-            bitString(g.defaultVal.dtype.getWidth())
+            bitString(g.defaultVal._dtype.getWidth())
         else:
             raise NotImplementedError("Not implemented for datatype %s" % repr(t))
         return self

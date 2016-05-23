@@ -1,15 +1,19 @@
 from hdl_toolkit.intfLvl import Unit
 from hdl_toolkit.interfaces.amba import AxiLite, RESP_OKAY
 from hdl_toolkit.interfaces.std import Ap_clk, Ap_none, Ap_rst_n, Ap_vld
-from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig, And
-from hdl_toolkit.hdlObjects.typeDefs import Enum, BIT
+from hdl_toolkit.synthetisator.rtlLevel.codeOp import If, Switch
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig
+from hdl_toolkit.hdlObjects.typeDefs import Enum
 from hdl_toolkit.synthetisator.shortcuts import toRtl
 from hdl_toolkit.hdlObjects.typeShortcuts import vec, vecT
 from hdl_toolkit.synthetisator.param import Param, evalParam
 
-
+c = connectSig
+        
 class AxiLiteRegs(Unit):
+    """
+    Axi lite register generator
+    """
     def _config(self):
         self.ADDR_WIDTH = Param(8)
         self.DATA_WIDTH = Param(32)
@@ -25,24 +29,23 @@ class AxiLiteRegs(Unit):
     
     def _declr(self):
         assert(len(self.ADRESS_MAP) > 0)
-        self.clk = Ap_clk(isExtern=True)
-        self.rst_n = Ap_rst_n(isExtern=True)
         
-        self.axi = AxiLite(isExtern=True)
+        self.clk = Ap_clk()
+        self.rst_n = Ap_rst_n()
+        
+        self.axi = AxiLite()
         
         for _, name in self.ADRESS_MAP:
-            out = Ap_vld(isExtern=True)
+            out = Ap_vld()
             setattr(self, name + self.OUT_SUFFIX, out)
             
-            _in = Ap_none(dtype=vecT(self.DATA_WIDTH), isExtern=True)
+            _in = Ap_none(dtype=vecT(self.DATA_WIDTH))
             setattr(self, name + self.IN_SUFFIX, _in)
 
+        self._mkIntfExtern()
         self._shareAllParams()
     
-    
-    
     def readPart(self):
-        c = connectSig
         sig = self._sig
         reg = self._reg
         
@@ -60,16 +63,16 @@ class AxiLiteRegs(Unit):
         arRd = sig('arRd')
         rVld = sig('rVld')
         
-        c(rSt.opEq(rSt_t.rdIdle), arRd)
+        c(rSt._eq(rSt_t.rdIdle), arRd)
         c(arRd, ar.ready)
-        c(And(ar.valid, arRd), ar_hs)
+        c(ar.valid & arRd, ar_hs)
         
-        c(rSt.opEq(rSt_t.rdData), rVld)
+        c(rSt._eq(rSt_t.rdData), rVld)
         c(rVld, r.valid)
         c(vec(RESP_OKAY, 2), r.resp)
         
         # save ar addr
-        If(And(arRd.opIsOn(), ar.valid._sig.opIsOn()),
+        If(arRd & ar.valid,
             c(ar.addr, arAddr)
             ,
             c(arAddr, arAddr)
@@ -78,16 +81,16 @@ class AxiLiteRegs(Unit):
         
         
         # ar fsm next
-        If(arRd.opIsOn(),
+        If(arRd,
            # rdIdle
-            If(ar.valid._sig.opIsOn(),
+            If(ar.valid,
                c(rSt_t.rdData, rSt) 
                ,
                c(rSt_t.rdIdle, rSt)
             )
             ,
             # rdData
-            If(And(r.ready, rVld),
+            If(r.ready & rVld,
                c(rSt_t.rdIdle, rSt)
                ,
                c(rSt_t.rdData, rSt) 
@@ -95,30 +98,22 @@ class AxiLiteRegs(Unit):
         )
         
         # build read data output mux
-        rAssigTop = None
-        for addr, name in self.ADRESS_MAP:
-            _in = getattr(self, name + self.IN_SUFFIX)
-            if rAssigTop is None:
-                # data response
-                rAssigTop = If(ar.addr._sig.opEq(vec(addr, addrWidth)),
-                               c(_in, r.data)
-                               ,
-                               c(vec(0, dataWidth), r.data)
-                            )
-            else:
-                rAssigTop = If(ar.addr._sig.opEq(vec(addr, addrWidth)),
-                               c(_in, r.data)
-                               ,
-                               rAssigTop
-                            )
+        def inputByName(name):
+            return getattr(self, name + self.IN_SUFFIX)
+            
+        rAssigTop = Switch(ar.addr,
+               *[(vec(addr, addrWidth), c(inputByName(name), r.data)) \
+                      for addr, name in self.ADRESS_MAP],
+               (None, c(vec(0, dataWidth), r.data)))
                 
-        If(ar_hs.opIsOn(),
+        If(ar_hs,
            rAssigTop
+           ,
+           c(vec(0, dataWidth), r.data)
         )
 
     
     def writePart(self):
-        c = connectSig
         sig = self._sig
         reg = self._reg
         addrWidth = evalParam(self.ADDR_WIDTH).val
@@ -134,41 +129,44 @@ class AxiLiteRegs(Unit):
         awAddr = reg('awAddr', aw.addr._dtype) 
         wRd = sig('wRd')
         w_hs = sig('w_hs')
-        c(wSt.opEq(wSt_t.wrResp), b.valid)
+        c(wSt._eq(wSt_t.wrResp), b.valid)
   
-        c(wSt.opEq(wSt_t.wrIdle), awRd)
+        c(wSt._eq(wSt_t.wrIdle), awRd)
         c(awRd, aw.ready)
-        c(wSt.opEq(wSt_t.wrData), wRd)
+        c(wSt._eq(wSt_t.wrData), wRd)
         c(wRd, w.ready)
         
         c(vec(RESP_OKAY, 2), self.axi.b.resp)
-        c(wSt.opEq(wSt_t.wrResp))
-        c(And(aw.valid, awRd), aw_hs) 
-        c(And(w.valid, wRd), w_hs)
+        c(aw.valid & awRd, aw_hs) 
+        c(w.valid & wRd, w_hs)
         
         # save aw addr
-        If(And(awRd.opIsOn(), aw.valid._sig.opIsOn()),
+        If(awRd & aw.valid,
             c(aw.addr, awAddr)
             ,
             c(awAddr, awAddr)
         )
         
         # write fsm
-        If(wSt.opEq(wSt_t.wrIdle),  # wrIdle
-            If(aw.valid._sig.opIsOn(),
-                c(wSt_t.wrData, wSt)
-                ,
-                c(wSt, wSt)
+        Switch(wSt,
+            (wSt_t.wrIdle,
+                If(aw.valid,
+                    c(wSt_t.wrData, wSt)
+                    ,
+                    c(wSt, wSt)
+                )
             )
             ,
-            If(wSt.opEq(wSt_t.wrData),  # wrData
-                If(w.valid._sig.opIsOn(),
+            (wSt_t.wrData,
+                If(w.valid,
                     c(wSt_t.wrResp, wSt)
                     ,
                     c(wSt, wSt)
                 )
-                ,  # wrResp
-                If(self.axi.b.ready._sig.opIsOn(),
+            )
+            ,
+            (wSt_t.wrResp,
+                If(self.axi.b.ready,
                     c(wSt_t.wrIdle, wSt)
                     ,
                     c(wSt, wSt)
@@ -179,7 +177,7 @@ class AxiLiteRegs(Unit):
         for addr, name in self.ADRESS_MAP:
             out = getattr(self, name + self.OUT_SUFFIX)
             c(w.data, out.data)
-            c(And(w_hs, awAddr.opEq(vec(addr, addrWidth))), out.vld)
+            c(w_hs & (awAddr._eq(vec(addr, addrWidth))), out.vld)
     
     def _impl(self):
         self.readPart()

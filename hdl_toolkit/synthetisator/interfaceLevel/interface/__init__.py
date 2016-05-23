@@ -29,7 +29,7 @@ def indexRange(width, index):
 
 
 def aplyIndexOnSignal(sig, dstType, index):
-    if sig.dtype == BIT or dstType == BIT:
+    if sig._dtype == BIT or dstType == BIT:
         return sig.opSlice(hInt(index))
     elif isinstance(dstType, Std_logic_vector):
         w = getWidthExpr(dstType)
@@ -175,12 +175,12 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
                                 (repr(master)))
             
             if masterIndex is not None:
-                srcSig = aplyIndexOnSignal(srcSig, dstSig.dtype, masterIndex)
+                srcSig = aplyIndexOnSignal(srcSig, dstSig._dtype, masterIndex)
             
             if slaveIndex is not None:
-                dstSig = aplyIndexOnSignal(dstSig, srcSig.dtype, slaveIndex)
+                dstSig = aplyIndexOnSignal(dstSig, srcSig._dtype, slaveIndex)
 
-            yield dstSig.assignFrom(srcSig)
+            yield dstSig._assignFrom(srcSig)
         
             
     def _connectTo(self, master, masterIndex=None, slaveIndex=None):
@@ -272,7 +272,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         i = self._params.index(p)
         assert(i > -1)
         self._params[i] = newP
-        del p._names[self]
+        del p._names[self] # remove reference from old param
         newP._names[self] = pName
         setattr(self, pName, newP) 
     

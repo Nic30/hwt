@@ -117,9 +117,9 @@ class ParserTC(unittest.TestCase):
         self.assertEqual(param_int.defaultVal.val, 3)
         self.assertEqual(param_str.defaultVal.val, "rtl")
         
-        self.assertEqual(C_WIDTH.dtype, vecT(32))
-        self.assertEqual(param_int.dtype, INT)
-        self.assertEqual(param_str.dtype, STR)
+        self.assertEqual(C_WIDTH._dtype, vecT(32))
+        self.assertEqual(param_int._dtype, INT)
+        self.assertEqual(param_str._dtype, STR)
         
     def testVerilogParamSpecifiedByParam(self):
         fi = ParserFileInfo(ILVL_SAMPLES_V + "simpleParam2.v", None)
@@ -137,10 +137,10 @@ class ParserTC(unittest.TestCase):
         param_int = m.generics[2]
         param_str = m.generics[3]
         
-        self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH.dtype.getBitCnt())
+        self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH._dtype.getBitCnt())
         
         WIDTH_WIDTH.set(hInt(64)) 
-        self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH.dtype.getBitCnt())
+        self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH._dtype.getBitCnt())
 
     def testVhdlFn(self):
         f = mkFileInfo("fnImport/package0.vhd")

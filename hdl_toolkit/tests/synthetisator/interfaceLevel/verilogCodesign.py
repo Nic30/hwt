@@ -66,8 +66,8 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(u.B.get(), hInt(2))
         
         
-        self.assertEqual(u.aMultBMult64.dtype.getBitCnt(), 1*2*64)
-        self.assertEqual(u.aMult32.dtype.getBitCnt(), 1*32)
+        self.assertEqual(u.aMultBMult64._dtype.getBitCnt(), 1*2*64)
+        self.assertEqual(u.aMult32._dtype.getBitCnt(), 1*32)
         
     
     def test_axiCrossbar(self):

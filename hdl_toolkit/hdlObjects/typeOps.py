@@ -69,7 +69,7 @@ class TypeOps():
         raise NotImplementedError()
     def __xor__(self, other):
         raise NotImplementedError()
-    def __eq__(self, other):
+    def _eq(self, other):
         raise NotImplementedError()
     
     def __ne__(self, other):

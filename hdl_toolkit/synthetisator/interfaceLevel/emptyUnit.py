@@ -34,7 +34,7 @@ class EmptyUnit(Unit):
             # connect outputs to dummy value
             for s in signals:
                 if s._interface._direction == INTF_DIRECTION.SLAVE:
-                    s.assignFrom(Value.fromPyVal(self._defaultValue, s.dtype))
+                    s._assignFrom(Value.fromPyVal(self._defaultValue, s._dtype))
         if not externInterf:
             raise  Exception("Can not find any external interface for unit " + self._name \
                               + "- there is no such a thing as unit without interfaces")

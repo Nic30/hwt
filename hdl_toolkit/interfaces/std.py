@@ -5,11 +5,12 @@ from hdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector_contrained
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.interfaces.ap_noneOps import Ap_noneOps
 
 
 D = DIRECTION
 
-class Ap_none(Interface):
+class Ap_none(Interface, Ap_noneOps):
     def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None,
                    dtype=BIT, isExtern=False, alternativeNames=None,
                    loadConfig=True):
@@ -32,10 +33,10 @@ class Ap_none(Interface):
             w = getWidthExpr(t)
             if isinstance(w, Signal):
                 # bouth Param or factor Value
-                newW = w.opMul(factor)
+                newW = w * factor
             elif isinstance(factor, Signal):
                 # w is Value
-                newW = factor.opMul(w)
+                newW = factor * w
             else:
                 # bouth Value
                 newW = w.clone()

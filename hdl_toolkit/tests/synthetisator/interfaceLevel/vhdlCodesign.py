@@ -86,9 +86,9 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         natG = single(u._entity.generics, lambda x: x.name == "nat")
         posG = single(u._entity.generics, lambda x: x.name == "pos")
         intG = single(u._entity.generics, lambda x: x.name == "int")
-        self.assertEqual(natG.dtype, UINT)
-        self.assertEqual(posG.dtype, PINT)
-        self.assertEqual(intG.dtype, INT)
+        self.assertEqual(natG._dtype, UINT)
+        self.assertEqual(posG._dtype, PINT)
+        self.assertEqual(intG._dtype, INT)
 
     def test_axiLiteSlave2(self):
         class AxiLiteSlave2(UnitFromHdl):

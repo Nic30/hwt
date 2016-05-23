@@ -1,7 +1,7 @@
 from hdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
 from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.interfaces.std import s, D
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
+from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 
 
 BURST_FIXED = 0b00
@@ -40,7 +40,7 @@ class AxiStream(AxiStream_withoutSTRB):
     def _declr(self):
         super(AxiStream, self)._declr()
         self.strb = s(masterDir=D.OUT,
-                 dtype=vecT(self.DATA_WIDTH.opDiv(hInt(8))),
+                 dtype=vecT(self.DATA_WIDTH // 8),
                  alternativeNames=['tstrb', 'keep', 'tkeep' ])
         
 class Axi_user(Interface):
@@ -98,7 +98,7 @@ class AxiLite_w(Interface):
     def _declr(self):
         self.data = s(masterDir=D.OUT, dtype=vecT(self.DATA_WIDTH), alternativeNames=['data_v'])
         self.strb = s(masterDir=D.OUT,
-                      dtype=vecT(self.DATA_WIDTH.opDiv(hInt(8))), alternativeNames=['strb_v'])
+                      dtype=vecT(self.DATA_WIDTH // 8), alternativeNames=['strb_v'])
         self.ready = s(masterDir=D.IN)
         self.valid = s(masterDir=D.OUT)
         

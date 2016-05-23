@@ -4,7 +4,7 @@ from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, MultipleDriversExc
 from hdl_toolkit.hdlObjects.value import Value
 
-SWITCH_THRENDSHOOD = 1  # (max count of elsifs with eq on same variable)
+SWITCH_THRENDSHOOD = 2  # (max count of elsifs with eq on same variable)
 
 class DepContainer():
     def __init__(self):

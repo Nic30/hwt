@@ -22,7 +22,7 @@ class VcdVarInfo():
     def __init__(self, _id, dtype):
         self.width = 1 if dtype == BIT else dtype.getBitCnt()
         self.id = _id
-        self.dtype = dtype
+        self._dtype = dtype
 
 class VcdVarContext(dict):
     """Map of signals registered in this unit"""
@@ -50,7 +50,7 @@ class VcdVarContext(dict):
         var_id = self.idToStr(self.nextId)
         if var in self:
             raise KeyError("%s is already registered" % (repr(var)))
-        vInf = VcdVarInfo(var_id, var.dtype)
+        vInf = VcdVarInfo(var_id, var._dtype)
         self[var] = vInf 
         self.nextId += 1
         return vInf
@@ -127,7 +127,7 @@ class VcdWritter():
         val = VhdlSerializer.BitString_binary(newVal.val, varInfo.width, newVal.vldMask)
         val = val.replace('"', "")
          
-        if varInfo.dtype == BIT:
+        if varInfo._dtype == BIT:
             frmt = "%s%s"
         else:
             frmt = "b%s %s" 

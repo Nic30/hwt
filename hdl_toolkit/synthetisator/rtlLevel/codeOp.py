@@ -1,10 +1,13 @@
+from hdl_toolkit.hdlObjects.typeDefs import BOOL
 
 def If(cond, ifTrue=[], ifFalse=[]):
-    # only assignments are expected there    
+    # only assignments are expected there  
+    if cond._dtype != BOOL:
+        cond = cond._isOn()  
     for stm in ifTrue:
         stm.cond.add(cond)
     for stm in ifFalse:
-        stm.cond.add(cond.opNot())
+        stm.cond.add(cond._not())
     
     ret = []
     ret.extend(ifTrue)
@@ -18,7 +21,7 @@ def Switch(val, *cases):
             top = c[1]
         else:
             assert(c[0] is not None)
-            top = If(val.opEq(c[0]),
+            top = If(val._eq(c[0]),
                      c[1]
                      ,
                      top

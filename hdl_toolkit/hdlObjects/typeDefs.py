@@ -15,6 +15,17 @@ class Boolean(HdlType):
     def valAsVhdl(self, val, serializer):
         return str(bool(val.val))
     
+    def convert(self, sigOrVal, toType):
+        if sigOrVal._dtype == toType:
+            return sigOrVal
+        elif toType == BIT:
+            if isinstance(sigOrVal, Value):
+                pass
+            else:
+                return sigOrVal._ternary(Value.fromPyVal(1, BIT), Value.fromPyVal(0, BIT))
+            
+        return super(Boolean, self).convert(sigOrVal, toType)
+    
     class Ops(TypeOps):
         @classmethod
         def fromPy(cls, val, typeObj):
@@ -27,7 +38,7 @@ class Boolean(HdlType):
                 val = False
             return cls(bool(val), typeObj, vld)
                 
-        def __eq__(self, other):
+        def _eq(self, other):
             """return abs(w.val[0].val - w.val[1].val) + 1
         
             @attention: ignores eventMask
@@ -87,24 +98,24 @@ class Integer(HdlType):
         return str(int(val.val))
     
     def convert(self, sigOrVal, toType):
-        if sigOrVal.dtype == toType:
+        if sigOrVal._dtype == toType:
             return sigOrVal
         elif toType == PINT:
             if isinstance(sigOrVal, Value):
                 v = sigOrVal.clone()
                 assert(v.val > 0)
-                v.dtype = PINT
+                v._dtype = PINT
                 return v
         elif toType == UINT:
             if isinstance(sigOrVal, Value):
                 v = sigOrVal.clone()
                 assert(v.val >= 0)
-                v.dtype = UINT
+                v._dtype = UINT
                 return v
         elif toType == INT:
             if isinstance(sigOrVal, Value):
                 v = sigOrVal.clone()
-                v.dtype = INT
+                v._dtype = INT
                 return v
             else:
                 return sigOrVal
@@ -113,7 +124,7 @@ class Integer(HdlType):
                 _v = sigOrVal.val 
                 assert(_v == 1 or _v == 0)
                 v = sigOrVal.clone()
-                v.dtype = BIT
+                v._dtype = BIT
                 return v
             else:
                 return sigOrVal
@@ -125,7 +136,7 @@ class Integer(HdlType):
                 w = None
             if isinstance(sigOrVal, Value):
                 v = sigOrVal.clone()
-                v.dtype = toType
+                v._dtype = toType
                 if w is None:
                     v.vldMask = -1 if v.vldMask else 0
                     v.eventMask = -1 if v.eventMask else 0 
@@ -161,7 +172,7 @@ class Integer(HdlType):
             else:
                 return None
             
-        def __eq__(self, other):
+        def _eq(self, other):
             self._otherCheck(other)
             vld = self.vldMask and other.vldMask
             eq = self.val == other.val and vld
@@ -248,7 +259,7 @@ class Std_logic(HdlType):
                 return sigOrVal == Value.fromPyVal(1, BIT)
             else:
                 v = 0 if sigOrVal.negated else 1
-                return sigOrVal.opEq(Value.fromPyVal(v, BIT))
+                return sigOrVal._eq(Value.fromPyVal(v, BIT))
         return super(Std_logic, self).convert(sigOrVal, toType)
             
     class Ops(TypeOps):
@@ -265,9 +276,9 @@ class Std_logic(HdlType):
             
             return cls(int(val), typeObj, vld)
         
-        def __eq__(self, other):
+        def _eq(self, other):
             if not isinstance(other, Value):
-                raise AssertionError("%s __eq__ operator argument has to be instance of Value, is %s" % 
+                raise AssertionError("%s _eq operator argument has to be instance of Value, is %s" % 
                                      (self.__class__.__name__ , repr(other)))
             
             vld = self.vldMask & other.vldMask
@@ -301,13 +312,14 @@ class Std_logic_vector(HdlType):
     
     def __hash__(self):
         return hash((self.name, self.signed, self.constrain))
+    
     def convert(self, sigOrVal, toType):
-        if sigOrVal.dtype == toType:
+        if sigOrVal._dtype == toType:
             return sigOrVal
         elif isinstance(toType, Integer):
             if isinstance(sigOrVal, Value):
                 v = sigOrVal.clone()
-                v.dtype = toType
+                v._dtype = toType
                 return v
         super(Std_logic_vector, self).convert(sigOrVal, toType)
             
@@ -358,12 +370,12 @@ class Std_logic_vector_contrained(Std_logic_vector):
         return abs(w.val[0].val - w.val[1].val) + 1
     
     def convert(self, sigOrVal, toType):
-        if sigOrVal.dtype == toType:
+        if sigOrVal._dtype == toType:
             return sigOrVal
         elif type(toType) == Std_logic_vector:
             if isinstance(sigOrVal, Value):
                 o = sigOrVal.clone()
-                o.dtype = toType
+                o._dtype = toType
                 return o
         return super().convert(sigOrVal, toType)
        
@@ -382,22 +394,22 @@ class Std_logic_vector_contrained(Std_logic_vector):
             from hdl_toolkit.hdlObjects.operatorDefs import AllOps
             from hdl_toolkit.hdlObjects.operator import Operator
             v = self.clone()
-            w = self.dtype.getBitCnt()
+            w = self._dtype.getBitCnt()
             v.val = (v.val << w) | other.val
             v.vldMask = (v.vldMask << w) | other.vldMask
             v.eventMask = (v.eventMask << w) | other.eventMask
             
-            resWidth = w + other.dtype.getBitCnt()
-            v.dtype = VECTOR(SignalNode.resForOp(
+            resWidth = w + other._dtype.getBitCnt()
+            v._dtype = VECTOR(SignalNode.resForOp(
                                 Operator(AllOps.DOWNTO, [ 
                                            Value.fromPyVal(resWidth - 1, INT),
                                            Value.fromPyVal(0, INT)])))
             return v
         
-        def __eq__(self, other):
+        def _eq(self, other):
             assert(isinstance(other, Value))
-            w = self.dtype.getBitCnt()
-            assert(w == other.dtype.getBitCnt())
+            w = self._dtype.getBitCnt()
+            assert(w == other._dtype.getBitCnt())
             
             vld = self.vldMask & other.vldMask
             eq = self.val == other.val and vld == Bitmask.mask(w)
@@ -425,7 +437,7 @@ class String(HdlType):
     def valAsVhdl(self, val, serializer):
         return  '"%s"' % str(val.val)
     def convert(self, sigOrVal, toType):
-        if sigOrVal.dtype == toType:
+        if sigOrVal._dtype == toType:
             return sigOrVal
         elif toType == VECTOR:
             if isinstance(sigOrVal, Value):
@@ -433,7 +445,7 @@ class String(HdlType):
                 _v = v.val
                 v.val = 0
                 v.vldMask = 0
-                v.dtype = toType
+                v._dtype = toType
                 for ch in reversed(_v): 
                     if ch == '1':
                         v.val = pushBit(v.val, 1)
@@ -458,7 +470,7 @@ class String(HdlType):
                 val = ""
             return cls(val, typeObj, vld)
             
-        def __eq__(self, other):
+        def _eq(self, other):
             self._otherCheck(other)
             eq = self.val == other.val
             vld = int(self.vldMask and other.vldMask)
@@ -492,7 +504,7 @@ class Array(HdlType):
             elements = []
             for v in val:
                 if hasattr(v, "name"):  # is signal
-                    assert(v.dtype == typeObj.elmType)
+                    assert(v._dtype == typeObj.elmType)
                     e = v
                 else:   
                     e = Value.fromPyVal(v, typeObj.elmType)
@@ -500,9 +512,9 @@ class Array(HdlType):
             
             
             return cls(elements, typeObj, 1)
-        def __eq__(self, other):
-            assert(self.dtype.elmType == other.dtype.elmType)
-            assert(self.dtype.size == other.dtype.size)
+        def _eq(self, other):
+            assert(self._dtype.elmType == other._dtype.elmType)
+            assert(self._dtype.size == other._dtype.size)
             
             eq = True
             first = self.val[0]
@@ -577,7 +589,7 @@ class Enum(HdlType):
             
             return cls(val, typeObj, valid)
                 
-        def __eq__(self, other):
+        def _eq(self, other):
             """return abs(w.val[0].val - w.val[1].val) + 1
         
             @attention: ignores eventMask
@@ -623,3 +635,7 @@ BIT = Std_logic()
 VECTOR = Std_logic_vector()
 STR = String()    
 RANGE = Range()
+
+
+
+

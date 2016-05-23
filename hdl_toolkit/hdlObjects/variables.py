@@ -3,7 +3,7 @@ from hdl_toolkit.hdlObjects.value import Value
 class VHDLVariable():
     def __init__(self, name, dtype, defaultVal=None):
         self.name = name
-        self.dtype = dtype
+        self._dtype = dtype
         self.isConstant = False
         self.isShared = False
         if defaultVal is None:

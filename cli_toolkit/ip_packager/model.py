@@ -55,7 +55,7 @@ class ModelParameter():
     @classmethod
     def fromGeneric(cls, g):
         val = Value.fromGeneric("MODELPARAM_VALUE.", g, Value.RESOLVE_GENERATED)
-        return cls(g.name, g.name.replace("_", " "), VivadoTclExpressionSerializer.HdlType(g.dtype).lower(), val)
+        return cls(g.name, g.name.replace("_", " "), VivadoTclExpressionSerializer.HdlType(g._dtype).lower(), val)
     def asElem(self):
         e = mkSpiElm("modelParameter")
         appendStrElements(e, self,

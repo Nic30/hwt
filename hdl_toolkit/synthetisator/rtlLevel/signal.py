@@ -5,21 +5,42 @@ from hdl_toolkit.hdlObjects.operator import Operator, InvalidOperandExc
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.exceptions import SimNotInitialized
-from hdl_toolkit.hdlObjects.typeDefs import BOOL
+from hdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 
 class MultipleDriversExc(Exception):
     pass
 
+defaultConversions = {int: INT,
+                      str: STR,
+                      bool: BOOL}
+def pyToH(pythonicValue):
+    """Convert python value object to object of hdl type value"""
+    
+    
+    
+
 def checkOperands(ops):
+    _ops = []
     for op in ops:
-        checkOperand(op)
+        _ops.append(checkOperand(op))
+    return _ops
 
 def checkOperand(op):
     if isinstance(op, Value) or isinstance(op, Signal):
-        return
+        return op
+    elif isinstance(op, InterfaceBase):
+        return op._sig
     else:
-        raise InvalidOperandExc("Operands in hdl expressions can be only instance of Value or Signal,"
-                                + "\ngot instance of %s" % (op.__class__))
+        try:
+            hType = defaultConversions[type(op)]
+        except KeyError:
+            hType = None
+        
+        if hType is None:
+            raise TypeError("%s" % (op.__class__))
+        return  Value.fromPyVal(op, hType)
+            
 
 class UniqList(list):
     def append(self, obj):
@@ -51,61 +72,63 @@ class SignalOps():
             return SignalNode.resForOp(o)
     
     def naryOp(self, operator, operands):
-        checkOperands(operands)
-        operands = list(operands)
+        operands = checkOperands(operands)
         operands.insert(0, self)
         o = Operator(operator, operands)
         
         return SignalNode.resForOp(o)
     
-    
-    def opNot(self):
+    def _not(self):
         return self.unaryOp(AllOps.NOT)
         
-    def opOnRisigEdge(self):
+    def _onRisingEdge(self):
         return self.unaryOp(AllOps.RISING_EDGE)
     
-    def opAnd(self, *operands):
+    def __and__(self, *operands):
         return self.naryOp(AllOps.AND_LOG, operands)
     
-    def opMul(self, *operands):
+    def __mul__(self, *operands):
         return self.naryOp(AllOps.MUL, operands)
     
-    def opXor(self, *operands):
+    def _xor(self, *operands):
         return self.naryOp(AllOps.XOR, operands)
 
-    def opOr(self, *operands):
+    def _or(self, *operands):
         return self.naryOp(AllOps.OR_LOG, operands)
 
-    def opIsOn(self):
-        return self.dtype.convert(self, BOOL)
+    def _isOn(self):
+        return self._dtype.convert(self, BOOL)
         
-    def opEq(self, *operands):
+    def _eq(self, *operands):
+        """Eq is not overloaded because it will destroy hashability of object"""
         return self.naryOp(AllOps.EQ, operands)
 
-    def opNEq(self, *operands):
+    def __ne__(self, *operands):
         return self.naryOp(AllOps.NEQ, operands)
     
-    def opAdd(self, *operands):
+    def __add__(self, *operands):
         return self.naryOp(AllOps.PLUS, operands)
     
-    def opSub(self, *operands):
+    def __sub__(self, *operands):
         return self.naryOp(AllOps.MINUS, operands)
     
-    def opDiv(self, divider):
+    def __floordiv__(self, divider):
         return self.naryOp(AllOps.DIV, [divider])
     
-    def opDownto(self, to):
+    def _downto(self, to):
         return self.naryOp(AllOps.DOWNTO, [to])
     
-    def opSlice(self, index):
+    def _slice(self, index):
         return self.naryOp(AllOps.INDEX, [index])
     
-    def opConcat(self, *operands):
+    def _concat(self, *operands):
         return self.naryOp(AllOps.CONCAT, operands)
     
-    def assignFrom(self, source):
-        checkOperand(source)
+    def _ternary(self, ifTrue, ifFalse):
+        return self.naryOp(AllOps.TERNARY, (ifTrue, ifFalse))
+    
+    def _assignFrom(self, source):
+        source = checkOperand(source)
         a = Assignment(source, self)
         a.cond = set()
         try:
@@ -198,7 +221,8 @@ class SyncSignal(Signal):
         super().__init__(name, var_type, defaultVal)
         self.next = Signal(name + "_next", var_type, defaultVal)
         
-    def assignFrom(self, source):
+    def _assignFrom(self, source):
+        source = checkOperand(source)
         a = Assignment(source, self.next)
         a.cond = set()
         self.next.drivers.append(a)

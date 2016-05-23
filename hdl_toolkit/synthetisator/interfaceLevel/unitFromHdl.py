@@ -103,7 +103,7 @@ class UnitFromHdl(Unit):
                 for iSig, instISig in zip(walkPhysInterfaces(instI._origI), walkPhysInterfaces(instI)):
                     # instISig._originEntityPort = iSig._originEntityPort
                     if not iSig._dtypeMatch:
-                        origT = iSig._originEntityPort.dtype
+                        origT = iSig._originEntityPort._dtype
                         if origT.constrain is None:
                             newT = origT.__class__()
                         else:

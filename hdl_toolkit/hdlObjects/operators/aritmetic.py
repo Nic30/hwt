@@ -6,14 +6,14 @@ from hdl_toolkit.hdlObjects.value import Value
 
 
 def getReturnType(op):
-    t = op.ops[0].dtype
+    t = op.ops[0]._dtype
     if(t == UINT or t == PINT):
         return INT
     else:
         return t
     
 def addOperand(operator, operand):
-    t = operand.dtype
+    t = operand._dtype
     try:
         opType = operator.getReturnType()
     except IndexError:

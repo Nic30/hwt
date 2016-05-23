@@ -45,9 +45,9 @@ class BaseHlsSynthetisator():
         print(c.code)
 
         for n in self.allNodes():
-            n.rValid._sig.assignFrom(n.lValid._sig)
-            n.lReady._sig.assignFrom(n.rReady._sig)
-            n.rData._sig.assignFrom(n.ldata._sig)
+            n.rValid._sig._assignFrom(n.lValid._sig)
+            n.lReady._sig._assignFrom(n.rReady._sig)
+            n.rData._sig._assignFrom(n.ldata._sig)
             renderHlsContainers(n)
 
 

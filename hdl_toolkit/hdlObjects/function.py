@@ -23,7 +23,7 @@ class FnContainer(list):
             for _fn in self:  # check if same definition exists
                 same = True
                 for _p, p in itertools.zip_longest(_fn.params, fn.params):
-                    if _p.dtype != p.dtype:
+                    if _p._dtype != p._dtype:
                         same = False
                         break
                 assert(not same)
@@ -38,7 +38,7 @@ class FnContainer(list):
         for fn in self:
             same = True
             for _p, p in itertools.zip_longest(args, fn.params):
-                if _p.dtype != p.dtype and not areIntegers(_p.dtype, p.dtype):  # [FPGAlibs] vhdl antipatent
+                if _p._dtype != p._dtype and not areIntegers(_p._dtype, p._dtype):  # [FPGAlibs] vhdl antipatent
                     same = False
                     break
             if same:

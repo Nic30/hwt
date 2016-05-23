@@ -15,8 +15,8 @@ if __name__ == "__main__":
     
     
     val = c.sig("val", t, clk, syncRst, 0)
-    val.assignFrom(s_in)
-    s_out.assignFrom(val)
+    val._assignFrom(s_in)
+    s_out._assignFrom(val)
     
     interf = [clk, syncRst, s_in, s_out]
     

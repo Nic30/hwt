@@ -174,11 +174,11 @@ class Parser(VhdlParser):
         if v is not None:
             defaultVal = self.exprFromJson(v, ctx)
             # convert it to t of variable (type can be different for example 1 as Natural or Integer)
-            defaultVal = defaultVal.dtype.convert(defaultVal, t)
+            defaultVal = defaultVal._dtype.convert(defaultVal, t)
         else:
             defaultVal = Value.fromPyVal(None, t)
         g = Param(defaultVal)
-        g.dtype = t
+        g._dtype = t
         g.setHdlName(name)
         g._name = self._hdlId(name)
         return g
