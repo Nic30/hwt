@@ -48,6 +48,7 @@ def vecT(width):
 
 def vec(val, width):
     """create hdl vector value"""
+    assert(val < 2 ** width)
     return Value.fromPyVal(val, vecT(width))
 
 def hRange(upper, lower):
