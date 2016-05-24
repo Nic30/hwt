@@ -17,6 +17,7 @@ from hdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkUnitInputs, wa
 from hdl_toolkit.synthetisator.templates import VHDLTemplates  
 from hdl_toolkit.synthetisator.exceptions import SigLvlConfErr
 
+# [TODO] rename to RtlNetlist
 class Context():
     """
     Container for signals and units

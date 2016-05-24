@@ -1,11 +1,16 @@
 from hdl_toolkit.hdlObjects.typeDefs import BOOL
 
 def If(cond, ifTrue=[], ifFalse=[]):
-    # only assignments are expected there  
+    """
+    If statement
+    """
+    
     if cond._dtype != BOOL:
         cond = cond._isOn()  
+        
     for stm in ifTrue:
         stm.cond.add(cond)
+        
     for stm in ifFalse:
         stm.cond.add(cond._not())
     
@@ -15,6 +20,9 @@ def If(cond, ifTrue=[], ifFalse=[]):
     return ret
 
 def Switch(val, *cases):
+    """
+    Switch statement
+    """
     top = None
     for c in reversed(cases):
         if top is None:
@@ -29,6 +37,7 @@ def Switch(val, *cases):
         
     return top
 
+# [TODO] code containers to hdlObjects
 
 class ReturnCalled(Exception):
     def __init__(self, val):
@@ -48,8 +57,10 @@ def evalCond(cond):
         
     return _cond
 
-
 class IfContainer:
+    """
+    Structural container for hdl rendering
+    """
     def __init__(self, cond, ifTrue=[], ifFalse=[], elIfs=[]):
         self.cond = cond
         self.ifTrue = ifTrue
@@ -75,6 +86,9 @@ class IfContainer:
         return VhdlSerializer.IfContainer(self)
 
 class SwitchContainer():
+    """
+    Structural container for hdl rendering
+    """
     def __init__(self, switchOn, cases):
         self.switchOn = switchOn
         self.cases = cases
@@ -83,6 +97,9 @@ class SwitchContainer():
         return VhdlSerializer.SwitchContainer(self)
  
 class WhileContainer():
+    """
+    Structural container for hdl rendering
+    """
     def __init__(self, cond, body):
         self.cond = cond
         self.body = body
