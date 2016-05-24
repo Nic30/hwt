@@ -20,11 +20,13 @@ class AxiLiteRegs(Unit):
         self.IN_SUFFIX = "_in"
         self.OUT_SUFFIX = "_out"
         
-        self.ADRESS_MAP = [
-                           (0x0, "data"),
-                           (0x4, "data2"),
-                           (0x8, "data3"),
-                           (0x12, "data4"),
+        self.ADRESS_MAP = [ 
+                           *[(i * 4 , "data%d" % i) for i in range(4)]
+                           
+                           # (0x0, "data"),
+                           # (0x4, "data2"),
+                           # (0x8, "data3"),
+                           # (0x12, "data4"),
                            ]
     
     def _declr(self):
@@ -174,6 +176,7 @@ class AxiLiteRegs(Unit):
             )
         )
         
+        # output vld
         for addr, name in self.ADRESS_MAP:
             out = getattr(self, name + self.OUT_SUFFIX)
             c(w.data, out.data)
