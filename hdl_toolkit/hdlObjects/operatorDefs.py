@@ -175,7 +175,7 @@ class AllOps():
     XOR = OpDefinition(lambda a, b : a != b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
-    EQ = OpDefinition(lambda a, b : a == b,
+    EQ = OpDefinition(lambda a, b : a._eq(b),
                         getReturnType=lambda op: BOOL,
                         addOperand=addOperand_eq)
     DOT = OpDefinition(lambda a, name : getattr(a, name), getReturnType=lambda op: INT)  # [TODO]

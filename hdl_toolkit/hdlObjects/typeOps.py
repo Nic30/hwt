@@ -73,7 +73,7 @@ class TypeOps():
         raise NotImplementedError()
     
     def __ne__(self, other):
-        eq = self == other
+        eq = self._eq(other)
         eq.val = not eq.val
         return eq
     

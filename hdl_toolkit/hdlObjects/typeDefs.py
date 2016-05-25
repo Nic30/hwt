@@ -429,6 +429,7 @@ class Std_logic_vector_contrained(Std_logic_vector):
 
 def pushBit(v, b):
     return (v << 1) | b
+
 class String(HdlType):
     def __init__(self):
         super(String, self).__init__()
@@ -588,7 +589,7 @@ class Enum(HdlType):
             assert(isinstance(val, str))
             
             return cls(val, typeObj, valid)
-                
+        
         def _eq(self, other):
             """return abs(w.val[0].val - w.val[1].val) + 1
         

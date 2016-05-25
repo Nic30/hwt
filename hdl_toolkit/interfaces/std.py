@@ -10,7 +10,7 @@ from hdl_toolkit.interfaces.ap_noneOps import Ap_noneOps
 
 D = DIRECTION
 
-class Ap_none(Interface, Ap_noneOps):
+class Ap_none(Ap_noneOps, Interface):
     def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None,
                    dtype=BIT, isExtern=False, alternativeNames=None,
                    loadConfig=True):
