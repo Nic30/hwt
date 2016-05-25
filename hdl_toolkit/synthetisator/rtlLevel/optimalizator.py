@@ -1,13 +1,15 @@
 from collections import deque
 from sympy import Symbol, Or, And, Xor, to_cnf, Not
 from sympy.logic.boolalg import simplify_logic
-from hdl_toolkit.hdlObjects.operators import Op
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 
-Op2Simpy = {Op.AND_LOG: And,
-            Op.OR_LOG: Or,
-            Op.NEQ: Xor,
-            Op.NOT: Not}
+
+
+Op2Simpy = {AllOps.AND_LOG: And,
+            AllOps.OR_LOG: Or,
+            AllOps.NEQ: Xor,
+            AllOps.NOT: Not}
 Simpy2Op = {}
 for k, v in Op2Simpy.items():
     Simpy2Op[v] = k
@@ -39,7 +41,7 @@ def toSympyOp(op):
         return sop(map(lambda x : toSympyOp(x), op.op))
     except KeyError:
         pass
-    for specialOp in [Op.EVENT, int, Op.RISING_EDGE ]:
+    for specialOp in [AllOps.EVENT, int, AllOps.RISING_EDGE ]:
         if op.operator == specialOp:
             s = SpecSymbol("ss" + str(id(op)), op)
             return s
