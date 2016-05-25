@@ -11,10 +11,17 @@ import copy
 from hls_toolkit.myHdlSynthesiser import toMyHdlIntf
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.parser import Parser
+from hdl_toolkit.hdlObjects.value import Value
 
+
+class DirectionInfoCont():
+    def __init__(self):
+        self.endpoints = set()
+        self.drivers = set()
 
 class UnitMyHdl(UnitFromHdl):
     _myhdl_package = None
+    
     def _config(self):
         pass
     
@@ -53,12 +60,15 @@ class UnitMyHdl(UnitFromHdl):
                     raise Exception("Can not find port %s on entity:\n%s" % 
                                     (i._getPhysicalName(), repr(self._entity)))
                 pi._interface = i
+                i._sig = DirectionInfoCont()
                 if pi.direction == DIRECTION.OUT:
-                    i._src = True
+                    i._sig.drivers.add(True)  # dummy driver to satisfy direction probes
                     
         for unitIntf in self._interfaces:
             unitIntf._resolveDirections()
             unitIntf._reverseDirection()
+            for i in walkPhysInterfaces(unitIntf): 
+                del i._sig
 
     @classmethod
     def _build(cls, multithread=True):
