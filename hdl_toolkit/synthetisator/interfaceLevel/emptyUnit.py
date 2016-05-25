@@ -4,9 +4,8 @@ from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 
-def setOut(*intfs):
-    for intf in intfs:
-        intf._src = True
+def setOut(*interfaces):
+    raise NotImplementedError()
 
 class EmptyUnit(Unit):
     """

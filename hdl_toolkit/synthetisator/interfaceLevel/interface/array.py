@@ -3,6 +3,7 @@ from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
+from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 
 def splitToTermSet(width):
     try:
@@ -59,15 +60,19 @@ class InterfaceArray():
             self._arrayElemCache.append(e)
     
     def _connectMyElems(self):
-        if self._src is not None or self._endpoints:
-            # [TODO] assert no element is connected to anything
+        wholeArrayIsConnected = False
+        for i in walkPhysInterfaces(self):
+            if i._sig.drivers or i._sig.endpoints:
+                wholeArrayIsConnected = True
+                break
+        
+        if wholeArrayIsConnected:
             pass
         else:
             if self._arrayElemCache: 
                 for indx, e in enumerate(self._arrayElemCache):
                     # [TODO] find better way how to find out direction of elements
-                    #e._propagateConnection()
-                    #hasEp = len(e._endpoints) > 0
+                    # e._propagateConnection()
                     e._resolveDirections()
                     
                     if e._direction == INTF_DIRECTION.MASTER:
@@ -76,9 +81,9 @@ class InterfaceArray():
                         self._connectTo(e, slaveIndex=indx)
             
     
-    def __getitem__(self, index):
-        if index < self._multipliedBy.staticEval().val:
-            return self._arrayElemCache[index]
+    def __getitem__(self, key):
+        if key < self._multipliedBy.staticEval().val:
+            return self._arrayElemCache[key]
         else:
             raise IndexError()
     

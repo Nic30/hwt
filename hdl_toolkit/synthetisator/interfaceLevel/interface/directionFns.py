@@ -1,21 +1,9 @@
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, DIRECTION
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 
 
 class InterfaceDirectionFns():
-    def _setSrc(self, src):
-        """Set driver in implementation stage"""
-        assert(self._isAccessible)
-        srcCls = src.__class__
-        selfCls = self.__class__
-        assert(issubclass(selfCls, src.__class__) or issubclass(srcCls, selfCls))  # assert intf classes are related
-        if self._src is not None:
-            raise IntfLvlConfErr(
-                "Interface %s already has driver (%s) and can not be connected to other driver (%s)" % 
-                (repr(self), repr(self._src), repr(src)))
-        self._src = src
-    
+
     def _setDirectionsLikeIn(self, intfDir):
         # [TODO] array elements
         d = DIRECTION.asIntfDirection(self._masterDir)
@@ -29,14 +17,18 @@ class InterfaceDirectionFns():
             for i in self._interfaces:
                 i._setDirectionsLikeIn(opDir)
         
-    @staticmethod    
-    def __directionProbe(interfaces):
+    def __directionProbe(self):
+        if not self._interfaces:
+            s = self._sig
+            d = self._masterDir
+            return (not bool(s.drivers), bool(s.drivers))
+        
         allInMasterConf = True
         allInSlaveConf = True
-        for i in interfaces:
+        for i in self._interfaces:
             i._resolveDirections(updateDir=False)
-            md = DIRECTION.asIntfDirection(i._masterDir)
             d = i._direction
+            md = DIRECTION.asIntfDirection(i._masterDir)
             if d != INTF_DIRECTION.UNKNOWN:
                 isLikeInM = d == md
                 isLikeInS = d == INTF_DIRECTION.oposite(md)
@@ -45,43 +37,20 @@ class InterfaceDirectionFns():
         return  (allInMasterConf, allInSlaveConf)  
             
     def _resolveDirections(self, updateDir=True):
-        """
-        if have src -> slave
-            check no subinterface has src
-            reverse directions because master is default
-        else
-           check subinterfaces if all of them can be master or slave 
-           if all are masters:
-               let directions like they are, master is default
-           elif all are slaves:
-               reverse directions of me 
-           
-        """
-        def assertHasNotSrc(i):
-            if i._src is not None:
-                raise IntfLvlConfErr("Interface %s has driver %s, but is already driven by parent (%s) driver (%s)" % 
-                                     (repr(i), repr(i._src), repr(self), repr(self._src)))
-            for si in i._interfaces:
-                assertHasNotSrc(si)
-            
-        if self._src is not None:
-            for i in self._interfaces:
-                assertHasNotSrc(i)
+        allM, allS = self.__directionProbe()
+        
+        if allM and allS and self._arrayElemCache:  # if direction is nod clear from this intf. and it has elems.
+            allM, allS = self._arrayElemCache[0].__directionProbe()
+
+        if allM and allS:
+            self._direction = INTF_DIRECTION.UNKNOWN
+        elif allM:
+            self._direction = INTF_DIRECTION.MASTER
+        elif allS:
             self._direction = INTF_DIRECTION.SLAVE
         else:
-            allM, allS = InterfaceDirectionFns.__directionProbe(self._interfaces)
-            if allM and allS:
-                allM, allS = InterfaceDirectionFns.__directionProbe(self._arrayElemCache)
-
-            if allM and allS:
-                self._direction = INTF_DIRECTION.UNKNOWN
-            elif allM:
-                self._direction = INTF_DIRECTION.MASTER
-            elif allS:
-                self._direction = INTF_DIRECTION.SLAVE
-            else:
-                raise IntfLvlConfErr("Subinterfaces on %s have not consistent directions\n%s" % 
-                        (repr(self), '\n'.join([str((i._direction, repr(i))) for i in self._interfaces])))
+            raise IntfLvlConfErr("Subinterfaces on %s have not consistent directions\n%s" % 
+                    (repr(self), '\n'.join([str((i._direction, repr(i))) for i in self._interfaces])))
         
         
         if updateDir:
@@ -95,18 +64,6 @@ class InterfaceDirectionFns():
         for prop in self._interfaces:
             prop._setAsExtern(isExtern)
     
-    def _propagateSrc(self):
-        """Propagate driver in routing"""
-        assert(self is not self._src)
-        if self._src is not None and isinstance(self._src, InterfaceBase):
-            self._src._endpoints.add(self)
-        for sIntf in self._interfaces:
-            sIntf._propagateSrc()
-            
-        for e in self._arrayElemCache:
-            if e is not None:
-                e._propagateSrc()
-
     def _setDirLock(self, dirLock):
         self._dirLocked = dirLock
         for intf in self._interfaces:

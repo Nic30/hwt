@@ -17,11 +17,13 @@ from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.param import Param
 
+
+# [TODO] indexRange and aplyIndexOnSignal has equivalent in signal utils and signal/ap_none ops
 def indexRange(width, index):
     if isinstance(width, (Param, Signal)):
-        upper = width.opMul(hInt(index))
-        lower = width.opMul(hInt(index + 1)).opSub(hInt(1))
-        return lower.opDownto(upper)
+        upper = width * hInt(index)
+        lower = width * hInt(index + 1) - hInt(1)
+        return lower._downto(upper)
     else:
         upper = hInt(width.val * index)
         lower = hInt(width.val * (index + 1) - 1)
@@ -30,11 +32,11 @@ def indexRange(width, index):
 
 def aplyIndexOnSignal(sig, dstType, index):
     if sig._dtype == BIT or dstType == BIT:
-        return sig.opSlice(hInt(index))
+        return sig[hInt(index)]
     elif isinstance(dstType, Std_logic_vector):
         w = getWidthExpr(dstType)
         r = indexRange(w, index)
-        return sig.opSlice(r)
+        return sig[r]
     else:
         raise NotImplementedError()
     
@@ -53,8 +55,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
     
     @ivar _name: name assigned during synthesis
     @ivar _parent: parent object (Unit or Interface instance)
-    @ivar _src: Driver for this interface
-    @ivar _endpoints: Interfaces for which this interface is driver
     @ivar _isExtern: If true synthetisator sets it as external port of unit
     
     #only interfaces without _interfaces have:
@@ -86,7 +86,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         super().__init__()
         self._multipliedBy = multipliedBy
         self._masterDir = masterDir
-        self._src = None
         self._direction = INTF_DIRECTION.UNKNOWN
 
         # resolve alternative names         
@@ -112,7 +111,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         self._isExtern = isExtern
         self._isAccessible = True
         self._dirLocked = False
-        self._endpoints = set()
         
     def _loadDeclarations(self):
         if not hasattr(self, "_interfaces"):
@@ -136,13 +134,12 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
     def _clean(self, rmConnetions=True, lockNonExternal=True):
         """Remove all signals from this interface (used after unit is synthetized
          and its parent is connecting its interface to this unit)"""
-        if hasattr(self, "_sig"):
+        try:
             del self._sig
+        except AttributeError:
+            pass
         for i in self._interfaces:
             i._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
-        if rmConnetions:
-            self._src = None
-            self._endpoints = set()
         self._dirLocked = False
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
@@ -197,8 +194,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         for suIntf in self._interfaces:
             suIntf._propagateConnection()
         
-        for e in self._endpoints:
-            e._connectTo(self)
         for e in self._arrayElemCache:
             e._propagateConnection()
     
@@ -272,7 +267,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         i = self._params.index(p)
         assert(i > -1)
         self._params[i] = newP
-        del p._names[self] # remove reference from old param
+        del p._names[self]  # remove reference from old param
         newP._names[self] = pName
         setattr(self, pName, newP) 
     

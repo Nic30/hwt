@@ -64,7 +64,7 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
                     if i._isExtern:
                         fn(i)
                         
-        forAllInterfaces(lambda i : i._propagateSrc())
+        #forAllInterfaces(lambda i : i._propagateSrc())
         # propagate connections on interfaces in this unit
         forAllInterfaces(lambda i : i._propagateConnection())
         forAllInterfaces(lambda i : i._connectMyElems())
