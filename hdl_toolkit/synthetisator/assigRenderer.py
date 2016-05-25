@@ -149,6 +149,9 @@ def sortCondsByMostImpact(countedConds):
         yield c[0]
         
 def renderIfTree(assigments):
+    """
+    Walk assignments and resolve if tree from conditions
+    """
     termMap = {}
 
     def insertToMap(condSig, assigment, isNegated):
@@ -173,42 +176,38 @@ def renderIfTree(assigments):
 
     top = IfTreeNode()
     
-    def toTree():
-        """register assignments in tree of IfTreeNodes"""
-        for a in assigments:
-            _top = top.pos
-            topNode = top
-            # build cond path in node tree
-            realCond = [ getBaseCond(c) for c in a.cond ]
-            sortedCond = sorted(realCond,
-                                key=lambda x: condOrder.index(x[0]),
-                                reverse=True)
-            isNegated = False
+    #register assignments in tree of IfTreeNodes
+    for a in assigments:
+        _top = top.pos
+        topNode = top
+        # build cond path in node tree
+        realCond = [ getBaseCond(c) for c in a.cond ]
+        sortedCond = sorted(realCond,
+                            key=lambda x: condOrder.index(x[0]),
+                            reverse=True)
+        isNegated = False
 
-            # walk cond path in node tree
-            for c, isNegated in sortedCond:
-                try:
-                    _top = _top[c]
-                except KeyError:
-                    t = IfTreeNode()
-                    _top[c] = t
-                    _top = t
-                    
-                topNode = _top
-                if isNegated:
-                    _top = _top.neg
-                else:
-                    _top = _top.pos
-                    
-            # register this assigment at the end of cond path        
+        # walk cond path in node tree
+        for c, isNegated in sortedCond:
+            try:
+                _top = _top[c]
+            except KeyError:
+                t = IfTreeNode()
+                _top[c] = t
+                _top = t
+                
+            topNode = _top
             if isNegated:
-                topNode.negSt.append(a)
+                _top = _top.neg
             else:
-                topNode.posSt.append(a)
-    toTree()
+                _top = _top.pos
+                
+        # register this assigment at the end of cond path        
+        if isNegated:
+            topNode.negSt.append(a)
+        else:
+            topNode.posSt.append(a)
 
-
-        
     if condOrder:
         for k, v in top.pos.items():
             yield from _renderIfTree(k, v)
