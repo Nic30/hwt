@@ -21,7 +21,7 @@ class Expr2CondTC(unittest.TestCase):
         self.assertEqual(cond.origin.ops[0], self.a, 1)
         
     def testAndWithToBoolConversion(self):
-        e = self.a.opAnd(self.b)
+        e = self.a & self.b
         cond = e._dtype.convert(e, BOOL)
         self.assertTrue(cond.origin.operator == AllOps.AND_LOG)
         andop = cond.origin
@@ -30,15 +30,15 @@ class Expr2CondTC(unittest.TestCase):
         
         self.assertEqual(aEq1.operator, AllOps.EQ)
         self.assertEqual(aEq1.ops[0], self.a)
-        self.assertEqual(aEq1.ops[1], hBool(1))
+        self.assertEqual(aEq1.ops[1].val, 1)
         
         self.assertEqual(bEq1.operator, AllOps.EQ)
         self.assertEqual(bEq1.ops[0], self.b)
-        self.assertEqual(bEq1.ops[1], hBool(1))
+        self.assertEqual(bEq1.ops[1].val, 1)
         
         
     def testNotAnd(self):
-        e = self.a.opAnd(self.b).opNot()
+        e = ~(self.a & self.b)
         cond = e._dtype.convert(e, BOOL)
         # expr_debug(e)
         
@@ -53,10 +53,10 @@ class Expr2CondTC(unittest.TestCase):
         self.assertEqual(bEq1.operator, AllOps.EQ)
         
         self.assertEqual(aEq1.ops[0], self.a)
-        self.assertEqual(aEq1.ops[1], hBool(1))
+        self.assertEqual(aEq1.ops[1].val, 1)
         
         self.assertEqual(bEq1.ops[0], self.b)
-        self.assertEqual(bEq1.ops[1], hBool(1))
+        self.assertEqual(bEq1.ops[1].val, 1)
 
         
         

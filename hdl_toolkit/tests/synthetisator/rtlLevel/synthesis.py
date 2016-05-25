@@ -14,7 +14,7 @@ class TestCaseSynthesis(unittest.TestCase):
 
     def testOpRisingEdgeMultipletimesSameObj(self):
         clk = self.c.sig("ap_clk")
-        self.assertEqual(clk.opOnRisigEdge(), clk.opOnRisigEdge())
+        self.assertEqual(clk._onRisingEdge(), clk._onRisingEdge())
     
     
     def testSyncSig(self):

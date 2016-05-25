@@ -1,7 +1,7 @@
 import unittest
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator, staticLikeEval
-from hdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkAllOriginSignals
+from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkAllOriginSignals
 from hdl_toolkit.hdlObjects.typeDefs import INT, STR, BOOL
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, hBool, hBit
 from hdl_toolkit.synthetisator.exceptions import TypeConversionErr
@@ -19,20 +19,20 @@ class OperatorTC(unittest.TestCase):
             a.defaultVal = hBool(v)
             sim = HdlSimulator()
             sim.simSignals([a], time=100 * HdlSimulator.ms)
-            self.assertEqual(a._val, hBool(v))
+            self.assertEqual(a._val.val, v)
             self.assertEqual(a._val.vldMask, 1)
             self.assertEqual(a._val.eventMask, 0)
             
     def testNotBOOL(self):
         a = self.c.sig('a', typ=BOOL)
-        res = a.opNot()
+        res = ~a
         for v in [False, True]:
             a.defaultVal = hBool(v)
             
             sim = HdlSimulator()
-            # sim.config.log = True
+            #sim.config.log = True
             sim.simSignals([a], time=100 * HdlSimulator.ms)
-            self.assertEqual(res._val, hBool(not v))
+            self.assertTrue(res._val._eq(hBool(not v)).val)
             self.assertEqual(res._val.vldMask, 1)
             self.assertEqual(res._val.eventMask, 0, "v=%d" % (v))
                     
@@ -40,15 +40,16 @@ class OperatorTC(unittest.TestCase):
         a = self.c.sig('a', typ=INT)
         a.defaultVal = hInt(10)
         b = hInt(0)
-        r = a.opDownto(b)
+        r = a._downto(b)
         res = staticLikeEval(r)
-        self.assertSequenceEqual(res.val, [hInt(0), hInt(10)])
+        self.assertEqual(res.val[0].val, 0)
+        self.assertEqual(res.val[1].val, 10)
     
     def testwalkAllOriginSignalsDownto(self):
         a = self.c.sig('a', typ=INT)
         a.defaultVal = hInt(10)
         b = hInt(0)
-        r = a.opDownto(b)
+        r = a._downto(b)
         origins = set(walkAllOriginSignals(r))
         self.assertSetEqual(origins, set([a]))
     
@@ -56,20 +57,20 @@ class OperatorTC(unittest.TestCase):
         a = self.c.sig('a', typ=INT)
         a.defaultVal = hInt(10)
         b = hInt(0)
-        am = a.opAdd(hInt(5))
-        r = am.opDownto(b)
+        am = a + hInt(5)
+        r = am._downto(b)
         origins = set(walkAllOriginSignals(r))
         self.assertSetEqual(origins, set([a]))
     
     def testADD_InvalidOperands(self):
         a = self.c.sig('a', typ=STR)
         b = self.c.sig('b')
-        self.assertRaises(TypeConversionErr, lambda : a.opAdd(b)) 
+        self.assertRaises(TypeConversionErr, lambda : a + b) 
         
     def testAND_LOG_eval(self):
         s0 = self.c.sig('s0')
         s1 = self.c.sig('s1')
-        andOp = s0.opAnd(s1)
+        andOp = s0 & s1
         for a_in, b_in, out in [(0, 0, 0),
                                 (0, 1, 0),
                                 (1, 0, 0),
@@ -78,12 +79,12 @@ class OperatorTC(unittest.TestCase):
             s1.defaultVal = hBit(b_in)
             sim = HdlSimulator()
             sim.simSignals([s0, s1], time=1 * sim.ms)
-            self.assertEqual(andOp._val, hBool(out), "a_in %d, b_in %d, out %d" % (a_in, b_in, out))
+            self.assertEqual(andOp._val.val, out, "a_in %d, b_in %d, out %d" % (a_in, b_in, out))
     
     def testADD_eval(self):
         a = self.c.sig('a', typ=INT)
         b = self.c.sig('b', typ=INT)
-        andOp = a.opAdd(b)
+        andOp = a + b
         for a_in, b_in, out in [(0, 0, 0),
                                 (0, 1, 1),
                                 (1, 0, 1),
@@ -92,11 +93,11 @@ class OperatorTC(unittest.TestCase):
             b.defaultVal = hInt(b_in)
             staticLikeEval(andOp)
             out = hInt(out)
-            self.assertEqual(andOp._val, out, "a_in %d, b_in %d, out %d" % (a_in, b_in, out.val))
+            self.assertTrue(andOp._val._eq(out).val, "a_in %d, b_in %d, out %d" % (a_in, b_in, out.val))
              
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    # suite.addTest(OperatorTC('testADD_eval'))
+    #suite.addTest(OperatorTC('testNotBOOL'))
     suite.addTest(unittest.makeSuite(OperatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

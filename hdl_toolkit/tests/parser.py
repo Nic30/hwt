@@ -151,10 +151,10 @@ class ParserTC(unittest.TestCase):
         fnCont = p.body['max']
         fn = fnCont[0]
         val = fn.call(hInt(2), hInt(3))
-        self.assertEqual(val, hInt(3))
+        self.assertEqual(val.val, 3)
         
         val = fn.call(hInt(86), hInt(3))
-        self.assertEqual(val, hInt(86))
+        self.assertEqual(val.val, 86)
 
     def testVhdlFnLog2(self):
         f = mkFileInfo("fnImportLog2/package0.vhd")
@@ -172,7 +172,7 @@ class ParserTC(unittest.TestCase):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(ParserTC('testEntityParsing'))
-    #suite.addTest(unittest.makeSuite(ParserTC))
+    #suite.addTest(ParserTC('testEntityParsing'))
+    suite.addTest(unittest.makeSuite(ParserTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
