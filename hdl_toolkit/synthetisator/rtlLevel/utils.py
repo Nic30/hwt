@@ -1,4 +1,4 @@
-from hdl_toolkit.synthetisator.rtlLevel.signalWalkers import signalHasDriver
+from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import signalHasDriver
 from hdl_toolkit.interfaces.std import Ap_none
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.hdlObjects.portItem import PortItem

@@ -12,7 +12,7 @@ from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, SyncSignal
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
-from hdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkUnitInputs, walkSignalsInExpr, \
+from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkUnitInputs, walkSignalsInExpr, \
     discoverSensitivity, walkSigSouces, signalHasDriver
 from hdl_toolkit.synthetisator.templates import VHDLTemplates  
 from hdl_toolkit.synthetisator.exceptions import SigLvlConfErr

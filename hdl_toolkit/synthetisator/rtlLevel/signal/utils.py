@@ -13,20 +13,14 @@ from copy import deepcopy
 def _connectSig(src, dst):
     if isinstance(src, Interface):
         if isinstance(dst, Interface):
-            if isinstance(dst, Interface):
-                dst._src = True
             return dst._connectTo(src)
+        src = src._sig
         
-    dst._src = src
-    if isinstance(dst, Interface):
-        dst._src = src
-        dst = dst._sig 
-    
-    src =  src._dtype.convert(src, dst._dtype)
+    src = src._dtype.convert(src, dst._dtype)
     
     return [dst._assignFrom(src)]
 
-def connectSig(src, *destinations):
+def connect(src, *destinations):
     """
     Connect all signals works with interfaces as well
     """
@@ -65,7 +59,7 @@ def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
             if res is None:
                 res = s
             else:
-                res = res.opConcat(s)
+                res = Concat(res, s)
         
     return res
 
@@ -82,31 +76,28 @@ def vecWithOffset(src, width, offset):
         width = hInt(width)
         
     if isinstance(width, (Param, Signal)):
-        upper = width.opAdd(hInt(offset)).opSub(hInt(1))
-        r = lower.opDownto(upper)
+        upper = width + hInt(offset) - hInt(1)
+        r = lower._downto(upper)
     else:
         upper = hInt(width.val + offset - 1)
         r = SignalNode.resForOp(Operator(AllOps.DOWNTO, [upper, lower]))
-    return src.opSlice(r)
+    return src._slice(r)
 
 def connectUnpacked(src, dst):
     """src is packed and it is unpacked and connected to dst"""
     # [TODO] parametrized offsets
-    if isinstance(src, Interface):
-        src = src._sig
     offset = 0
     connections = []
     for i in walkPhysInterfaces(dst):
         sig = i._sig
         t = sig._dtype
         if t == BIT:
-            s = src.opSlice(hInt(offset))
+            s = src[hInt(offset)]
             offset += 1
         else:
             w = getWidthExpr(t)
             s = vecWithOffset(src, w, offset)
             offset += t.getBitCnt()
-        i._src = s    
         connections.append(sig._assignFrom(s))
     
     return connections
@@ -155,13 +146,10 @@ def fitTo(what, to):
         return Concat(what, vec(0, toWidth - whatWidth))
        
 
-
 def mkOp(fn): 
     def op(*ops):
         top = None 
         for s in ops:
-            if isinstance(s, Interface):
-                s = s._sig
             if top is None:
                 top = s
             else:
@@ -169,7 +157,8 @@ def mkOp(fn):
         return top
     return op
 
-And = mkOp(lambda top, s: top.opAnd(s))
-Or = mkOp(lambda top, s: top.opOr(s))
-Concat = mkOp(lambda top, s: top.opConcat(s))
+
+And = mkOp(lambda top, s: top & s)
+Or = mkOp(lambda top, s: top | s)
+Concat = mkOp(lambda top, s: top._concat(s))
 

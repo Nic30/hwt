@@ -12,7 +12,7 @@ def If(cond, ifTrue=[], ifFalse=[]):
         stm.cond.add(cond)
         
     for stm in ifFalse:
-        stm.cond.add(cond._not())
+        stm.cond.add(~cond)
     
     ret = []
     ret.extend(ifTrue)
