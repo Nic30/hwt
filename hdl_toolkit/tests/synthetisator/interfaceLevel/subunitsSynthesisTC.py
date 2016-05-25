@@ -1,11 +1,12 @@
+import unittest
+
 from hdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import  synthesised
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls, toRtl
+from hdl_toolkit.synthetisator.shortcuts import toRtl
 from hdl_toolkit.synthetisator.exceptions import SerializerException
-from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import connect
 from hdl_toolkit.synthetisator.interfaceLevel.emptyUnit import EmptyUnit, setOut
 from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.interfaces.std import Ap_none
@@ -13,8 +14,11 @@ from hdl_toolkit.interfaces.ambaOthers import FullDuplexAxiStream
 from hdl_toolkit.interfaces.amba import AxiStream
 from hdl_toolkit.samples.iLvl.unitToUnitConnection import UnitToUnitConnection
 from hdl_toolkit.samples.iLvl.simple2withNonDirectIntConnection import Simple2withNonDirectIntConnection
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 
 D = DIRECTION
+c = connect
+
 
 class UnitWithArrIntf(EmptyUnit):
     def _config(self):
@@ -40,9 +44,9 @@ class UnitWithArrIntfParent(Unit):
         self._shareAllParams()
     
     def _impl(self):
-        connect(self.a, self.u0.a)
-        connect(self.u0.b[0], self.b0)
-        connect(self.u0.b[1], self.b1)
+        c(self.a, self.u0.a)
+        c(self.u0.b[0], self.b0)
+        c(self.u0.b[1], self.b1)
 
 class SubunitsSynthesisTC(BaseSynthetisatorTC):
     def test_GroupOfBlockrams(self):
@@ -63,7 +67,7 @@ class SubunitsSynthesisTC(BaseSynthetisatorTC):
                 self.b = Ap_none(dtype=dt, isExtern=True)
             
             def _impl(self):
-                connect(self.a, self.b)
+                c(self.a, self.b)
                 
 
         class OuterUnit(Unit):
@@ -74,10 +78,10 @@ class SubunitsSynthesisTC(BaseSynthetisatorTC):
                 self.iu = InternUnit()
 
             def _impl(self):
-                connect(self.a, self.iu.a)
-                connect(self.iu.b, self.b)
+                c(self.a, self.iu.a)
+                c(self.iu.b, self.b)
 
-        self.assertRaises(SerializerException, lambda : synthetizeCls(OuterUnit))
+        self.assertRaises(SerializerException, lambda : toRtl(OuterUnit))
         
     def test_twoSubUnits(self):
         u = UnitToUnitConnection()
@@ -101,10 +105,10 @@ class SubunitsSynthesisTC(BaseSynthetisatorTC):
                 self._shareAllParams()
                 
             def _impl(self):
-                connect(self.a, self.u0.a)
-                connect(self.u0.c, self.u1.a)
-                connect(self.u1.c, self.u2.a)
-                connect(self.u2.c, self.b)
+                c(self.a, self.u0.a)
+                c(self.u0.c, self.u1.a)
+                c(self.u1.c, self.u2.a)
+                c(self.u2.c, self.b)
         
         u = ThreeSubunits()
         u._loadDeclarations()
@@ -135,7 +139,6 @@ class SubunitsSynthesisTC(BaseSynthetisatorTC):
                 self._shareAllParams()
                 
             def _impl(self):
-                c = connect 
                 c(self.a, self.u0.a)
                 c(self.u0.c, self.u1.a)
                 
@@ -156,8 +159,8 @@ class SubunitsSynthesisTC(BaseSynthetisatorTC):
                 self.dataIn = FullDuplexAxiStream(isExtern=True)
                 self.dataOut = FullDuplexAxiStream(isExtern=True)
             def _impl(self):
-                connect(self.dataIn.tx, self.dataOut.tx)
-                connect(self.dataOut.rx, self.dataIn.rx)
+                c(self.dataIn.tx, self.dataOut.tx)
+                c(self.dataOut.rx, self.dataIn.rx)
 
         u = FDStreamConnection()
         u._loadDeclarations()
@@ -165,11 +168,11 @@ class SubunitsSynthesisTC(BaseSynthetisatorTC):
 
 if __name__ == '__main__':
     
-    print(toRtl(UnitWithArrIntfParent))
+    #print(toRtl(UnitWithArrIntfParent))
     
-    #suite = unittest.TestSuite()
+    suite = unittest.TestSuite()
     #suite.addTest(SubunitsSynthesisTC('test_subUnitWithArrIntf'))
-    ##suite.addTest(unittest.makeSuite(SubunitsSynthesisTC))
-    #runner = unittest.TextTestRunner(verbosity=3)
-    #runner.run(suite)
+    suite.addTest(unittest.makeSuite(SubunitsSynthesisTC))
+    runner = unittest.TextTestRunner(verbosity=3)
+    runner.run(suite)
 
