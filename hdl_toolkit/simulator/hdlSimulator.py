@@ -1,6 +1,6 @@
 import simpy
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
-from hdl_toolkit.synthetisator.rtlLevel.signalWalkers import  walkAllOriginSignals
+from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkAllOriginSignals
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.value import Value
 
