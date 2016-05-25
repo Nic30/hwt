@@ -1,3 +1,5 @@
+class SimException(Exception):
+    pass
 
-class SimNotInitialized(Exception):
+class SimNotInitialized(SimException):
     pass
