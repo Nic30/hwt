@@ -1,5 +1,4 @@
 from hdl_toolkit.intfLvl import connect, Param, Unit
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from hdl_toolkit.interfaces.amba import AxiStream
 from hdl_toolkit.samples.iLvl.simple2withNonDirectIntConnection import Simple2withNonDirectIntConnection
 
@@ -21,4 +20,5 @@ class UnitToUnitConnection(Unit):
         connect(self.u1.c, self.b)
     
 if __name__ == "__main__":
-    print(synthetizeCls(UnitToUnitConnection) )
+    from hdl_toolkit.synthetisator.shortcuts import toRtl
+    print(toRtl(UnitToUnitConnection) )

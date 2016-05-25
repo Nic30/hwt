@@ -4,7 +4,7 @@ class AxiLiteBasicSlave(UnitFromHdl):
     _hdlSources = "vhdl/axiLite_basic_slave.vhd"
     
 if __name__ == "__main__":
+    from hdl_toolkit.synthetisator.shortcuts import toRtl
     u = AxiLiteBasicSlave()
-    u._loadDeclarations()
-    print(u)
+    print(toRtl(u))
     

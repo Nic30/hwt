@@ -1,5 +1,4 @@
 from hdl_toolkit.intfLvl import connect, Unit, Param
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from hdl_toolkit.interfaces.amba import AxiStream
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 
@@ -40,6 +39,7 @@ class InterfaceArraySample(Unit):
         # u2out = connect(u2.d, b[2])
         
 if __name__ == "__main__":
+    from hdl_toolkit.synthetisator.shortcuts import toRtl
     print(
-        synthetizeCls(InterfaceArraySample)
+        toRtl(InterfaceArraySample)
     )

@@ -2,7 +2,7 @@ import math
 
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from hdl_toolkit.synthetisator.param import Param, evalParam
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 from hdl_toolkit.interfaces.amba import AxiStream
 from hdl_toolkit.hdlObjects.typeShortcuts import vec, hBit, vecT
 from hdl_toolkit.bitmask import Bitmask
@@ -10,7 +10,7 @@ from hdl_toolkit.synthetisator.rtlLevel.codeOp import If, Switch
 from hdl_toolkit.interfaces.std import Ap_clk, Ap_rst_n
 from hdl_toolkit.synthetisator.shortcuts import toRtl
 
-c = connectSig
+c = connect
 
 class AxiStreamStoredBurst(Unit):
     def _config(self):
@@ -30,7 +30,7 @@ class AxiStreamStoredBurst(Unit):
                c(hBit(False), self.dataOut.valid)
     
     def dataRd(self):
-        return self.dataOut.ready._sig.opIsOn()
+        return self.dataOut.ready
     
     def _declr(self):
         self.clk = Ap_clk()
@@ -48,16 +48,17 @@ class AxiStreamStoredBurst(Unit):
         wordIndex_w = int(math.log2(DATA_LEN) + 1)
         wordIndex = self._reg("wordIndex", vecT(wordIndex_w), defVal=0)
   
+        # [TODO] refactor
         Switch(wordIndex,
-               *[(vec(i, wordIndex_w), 
-                  self.writeData(d, vldAll, i == DATA_LEN -1) +
-                  If(self.dataRd(),
-                      c(vec(i+1, wordIndex_w), wordIndex)
-                      ,
-                      c(wordIndex, wordIndex)
-                  )
-                 ) for i, d in enumerate(self.DATA)],
-               (None, self.writeStop())
+            *[(vec(i, wordIndex_w), 
+               self.writeData(d, vldAll, i == DATA_LEN -1) +
+               If(self.dataRd(),
+                   c(vec(i+1, wordIndex_w), wordIndex)
+                   ,
+                   c(wordIndex, wordIndex)
+               )
+              ) for i, d in enumerate(self.DATA)],
+            (None, self.writeStop())
         )
             
         

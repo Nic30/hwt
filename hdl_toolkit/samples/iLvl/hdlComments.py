@@ -1,6 +1,6 @@
 from hdl_toolkit.intfLvl import connect, Unit
 from hdl_toolkit.interfaces.std import Ap_none
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from hdl_toolkit.synthetisator.shortcuts import toRtl
 
 
 class SimpleComentedUnit(Unit):
@@ -29,6 +29,6 @@ SimpleComentedUnit3.__doc__ = "dynamically generated, for example loaded from fi
 
 
 if __name__ == "__main__":
-    print(synthetizeCls(SimpleComentedUnit))
-    print(synthetizeCls(SimpleComentedUnit2))
-    print(synthetizeCls(SimpleComentedUnit3))
+    print(toRtl(SimpleComentedUnit))
+    print(toRtl(SimpleComentedUnit2))
+    print(toRtl(SimpleComentedUnit3))

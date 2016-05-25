@@ -1,6 +1,5 @@
 from hdl_toolkit.intfLvl import connect, Unit
 from hdl_toolkit.interfaces.std import Ap_none
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls, synthetizeAndSave
 
 
 class SimpleUnit(Unit):
@@ -13,4 +12,5 @@ class SimpleUnit(Unit):
 
 
 if __name__ == "__main__":
-    print(synthetizeCls(SimpleUnit))
+    from hdl_toolkit.synthetisator.shortcuts import toRtl
+    print(toRtl(SimpleUnit))

@@ -1,6 +1,5 @@
 from hdl_toolkit.intfLvl import connect, Unit, Param
 from hdl_toolkit.interfaces.std import Ap_vld
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 
 
@@ -19,5 +18,6 @@ class InterfaceArraySample(Unit):
 
 
 if __name__ == "__main__":
-    print(synthetizeCls(InterfaceArraySample))
+    from hdl_toolkit.synthetisator.shortcuts import toRtl
+    print(toRtl(InterfaceArraySample))
 

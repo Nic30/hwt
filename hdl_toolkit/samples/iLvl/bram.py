@@ -1,5 +1,5 @@
 from hdl_toolkit.intfLvl import UnitFromHdl
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from hdl_toolkit.synthetisator.shortcuts import toRtl
 from hdl_toolkit.interfaces.std import BramPort
 
 
@@ -12,4 +12,4 @@ class BramSp(UnitFromHdl):
     _intfClasses = [BramPort]
     
 if __name__ == "__main__":
-    print(synthetizeCls(Bram))
+    print(toRtl(Bram))

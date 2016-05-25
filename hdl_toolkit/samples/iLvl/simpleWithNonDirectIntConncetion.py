@@ -1,6 +1,5 @@
 from hdl_toolkit.intfLvl import connect, Unit
 from hdl_toolkit.interfaces.std import Ap_none
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 
 class SimpleWithNonDirectIntConncetion(Unit):
     def _declr(self):
@@ -13,4 +12,5 @@ class SimpleWithNonDirectIntConncetion(Unit):
         connect(self.b, self.c)
 
 if __name__ == "__main__":
-    print(synthetizeCls(SimpleWithNonDirectIntConncetion))
+    from hdl_toolkit.synthetisator.shortcuts import toRtl
+    print(toRtl(SimpleWithNonDirectIntConncetion))

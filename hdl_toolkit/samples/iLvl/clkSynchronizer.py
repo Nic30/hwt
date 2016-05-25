@@ -1,10 +1,8 @@
-from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from hdl_toolkit.intfLvl import connect, Unit
 from hdl_toolkit.hdlObjects.typeDefs import BIT
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig
 from hdl_toolkit.interfaces.std import Ap_rst, Ap_none, Ap_clk
-from hdl_toolkit.synthetisator.shortcuts import toRtl
 
-c = connectSig
+c = connect
 
 class ClkSynchronizer(Unit):
     """
@@ -27,9 +25,11 @@ class ClkSynchronizer(Unit):
         self._mkIntfExtern()
         
     def _impl(self):
-        inReg = self._cntx.sig("inReg", self.DATA_TYP, clk=self.inClk, syncRst=self.rst, defVal=0)
-        outReg0 = self._cntx.sig("outReg0", self.DATA_TYP, clk=self.outClk, syncRst=self.rst, defVal=0)
-        outReg1 = self._cntx.sig("outReg1", self.DATA_TYP, clk=self.outClk, syncRst=self.rst, defVal=0)
+        def reg(name, clk):
+            return self._cntx.sig(name, self.DATA_TYP, clk=clk, syncRst=self.rst, defVal=0)
+        inReg =   reg("inReg",   self.inClk )
+        outReg0 = reg("outReg0", self.outClk)
+        outReg1 = reg("outReg1", self.outClk)
         
         
         c(self.inData, inReg)
@@ -40,4 +40,5 @@ class ClkSynchronizer(Unit):
         c(outReg1, self.outData)
         
 if __name__ == "__main__":
+    from hdl_toolkit.synthetisator.shortcuts import toRtl
     print(toRtl(ClkSynchronizer))

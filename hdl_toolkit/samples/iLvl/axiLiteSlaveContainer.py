@@ -1,9 +1,6 @@
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
-from hdl_toolkit.intfLvl import Param, connect, Unit
-
+from hdl_toolkit.intfLvl import Param, Unit, connect
 from hdl_toolkit.interfaces.amba import  AxiLite
 from hdl_toolkit.samples.iLvl.axi_basic import AxiLiteBasicSlave
-
 
 
 class AxiLiteSlaveContainer(Unit):
@@ -22,9 +19,9 @@ class AxiLiteSlaveContainer(Unit):
         connect(self.axi, self.slv.S_AXI)
     
 if __name__ == "__main__":
+    from hdl_toolkit.synthetisator.shortcuts import toRtl
     u = AxiLiteSlaveContainer()
-    u._loadDeclarations()
-    u._loadMyImplementations()
+    toRtl(u)
     
     print(u.ADDR_WIDTH.get())
     # print(u.slv.C_S_AXI_ADDR_WIDTH.get())
@@ -32,4 +29,4 @@ if __name__ == "__main__":
     print(u.slv.S_AXI.ar.ADDR_WIDTH.get())
     print(u.slv.S_AXI.ar.addr._dtype.getBitCnt())
     
-    print(synthetizeCls(AxiLiteSlaveContainer, "axiLSlvCont"))
+    print(toRtl(AxiLiteSlaveContainer, "axiLSlvCont"))

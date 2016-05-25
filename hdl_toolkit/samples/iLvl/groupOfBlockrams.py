@@ -1,8 +1,10 @@
-from hdl_toolkit.intfLvl import connect, Param, Unit
+from hdl_toolkit.intfLvl import Param, Unit, connect
 from hdl_toolkit.interfaces.std import Ap_none
 from hdl_toolkit.samples.iLvl.bram import Bram
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from hdl_toolkit.synthetisator.shortcuts import toRtl
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
+
+c = connect
 
 class GroupOfBlockrams(Unit):
     def _config(self):
@@ -32,7 +34,6 @@ class GroupOfBlockrams(Unit):
         s = self
         bramR = s.bramR
         bramW = s.bramW
-        c = connect
         
         c(s.ap_clk,
             bramR.a.clk, bramR.b.clk,
@@ -55,4 +56,4 @@ class GroupOfBlockrams(Unit):
         
 
 if __name__ == "__main__":
-    print(synthetizeCls(GroupOfBlockrams))
+    print(toRtl(GroupOfBlockrams))

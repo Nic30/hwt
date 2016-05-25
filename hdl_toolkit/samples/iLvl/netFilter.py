@@ -1,6 +1,6 @@
 from hdl_toolkit.intfLvl import Param, connect, Unit, EmptyUnit
 from hdl_toolkit.interfaces.amba import AxiStream, AxiLite
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
+from hdl_toolkit.synthetisator.shortcuts import toRtl
 from cli_toolkit.ip_packager.packager import Packager
 from hdl_toolkit.synthetisator.interfaceLevel.emptyUnit import setOut
 
@@ -82,9 +82,9 @@ class NetFilter(Unit):
 
 
 if __name__ == "__main__":
-    print(synthetizeCls(NetFilter))
+    print(toRtl(NetFilter))
     
-    # s = uSonda()
+    # s = NetFilter()
     # p = Packager(s)
     # p.createPackage("project/ip/")
 

@@ -1,10 +1,10 @@
 from hdl_toolkit.formater import formatVhdl
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT, vec, hInt
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig, trim, \
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect, trim, \
     Concat, vecWithOffset
 
-w = connectSig
+w = connect
 
 
 def IndexOps():

@@ -2,6 +2,7 @@ from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from hdl_toolkit.interfaces.std import Ap_none, Ap_clk
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 
 class CameraIntf(Interface):
     """
@@ -23,3 +24,7 @@ class CameraIntf(Interface):
         self.reset = Ap_none(masterDir=DIRECTION.IN)
         self.pwdn = Ap_none(masterDir=DIRECTION.IN)
 
+
+
+class CameraToAxiStream(Unit):
+    pass
