@@ -1,10 +1,11 @@
 from hdl_toolkit.hdlObjects.types import HdlType, InvalidVHDLTypeExc
 from hdl_toolkit.synthetisator.templates import VHDLTemplates
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, MultipleDriversExc
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment 
 from hdl_toolkit.hdlObjects.specialValues import Unconstrained
-from hdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer
+from hdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer, \
+    SwitchContainer, WhileContainer
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
 from python_toolkit.arrayQuery import arr_any
 from hdl_toolkit.synthetisator.param import getParam
@@ -13,7 +14,10 @@ from hdl_toolkit.synthetisator.exceptions import SerializerException
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.typeDefs import Enum
-from hdl_toolkit.hdlObjects.portConnection import PortConnection
+
+class VhdlVersion():
+    v2002 = 2002
+    v2008 = 2008
 
 # keep in mind that there is no such a thing in vhdl itself
 opPrecedence = {AllOps.NOT : 2,
@@ -38,7 +42,37 @@ opPrecedence = {AllOps.NOT : 2,
                 AllOps.CALL: 1,
                 }
 
+class DoesNotContainsTernary(Exception):
+    pass
+def ternaryOpsToIf(statements):
+    """Convert all ternary operators to IfContainers"""
+    stms = []
+    
+    for st in statements:
+        if isinstance(st, Assignment):
+            try:
+                if not isinstance(st.src, Signal):
+                    raise DoesNotContainsTernary()
+                d = st.src.singleDriver()
+                if not isinstance(d, Operator) or d.operator != AllOps.TERNARY:
+                    raise DoesNotContainsTernary()
+                else:
+                    ifc = IfContainer(d.ops[0],
+                                      [Assignment(d.ops[1], st.dst)]
+                                      ,
+                                      [Assignment(d.ops[2], st.dst)]
+                           )
+                    stms.append(ifc)
+                
+            except (MultipleDriversExc, DoesNotContainsTernary):
+                stms.append(st)
+        else:
+            stms.append(st)
+    return stms
+
+
 class VhdlSerializer():
+    VHDL_VER = VhdlVersion.v2002
     
     @classmethod
     def asHdl(cls, obj):
@@ -148,21 +182,35 @@ class VhdlSerializer():
     def IfContainer(cls, ifc):
         cond = cls.condAsHdl(ifc.cond)
         elIfs = []
+        if cls.VHDL_VER < VhdlVersion.v2008:
+            ifTrue = ternaryOpsToIf(ifc.ifTrue)
+            ifFalse = ternaryOpsToIf(ifc.ifFalse)
+        else:
+            ifTrue = ifc.ifTrue
+            ifFalse = ifc.ifFalse
+        
         for c, statements in ifc.elIfs:
+            if cls.VHDL_VER < VhdlVersion.v2008:
+                statements = ternaryOpsToIf(statements)
+                
             elIfs.append((cls.condAsHdl(c), statements))
         
         return VHDLTemplates.If.render(cond=cond,
-                                       ifTrue=ifc.ifTrue,
+                                       ifTrue=ifTrue,
                                        elIfs=elIfs,
-                                       ifFalse=ifc.ifFalse)  
+                                       ifFalse=ifFalse)  
     @classmethod
     def SwitchContainer(cls, sw):
         switchOn = cls.condAsHdl(sw.switchOn)
         
         cases = []
         for key, statements in sw.cases:
-            if key is not None: # None is default
+            if key is not None:  # None is default
                 key = cls.asHdl(key)
+                
+            if cls.VHDL_VER < VhdlVersion.v2008:
+                statements = ternaryOpsToIf(statements)
+                
             cases.append((key, statements))  
         return VHDLTemplates.Switch.render(switchOn=switchOn,
                                            cases=cases)  
@@ -282,9 +330,7 @@ class VhdlSerializer():
             else:
                 return s 
         else:
-            if cls.isSignalHiddenInExpr(si):
-                if not hasattr(si, "origin"):
-                    raise Exception("Signal missing origin, there is unconnected signal %s" % (si.name))
+            if cls.isSignalHiddenInExpr(si) and hasattr(si, "origin"):
                 return cls.asHdl(si.origin)
             else:
                 return si.name
@@ -335,10 +381,10 @@ class VhdlSerializer():
     @classmethod
     def HWProcess(cls, proc):
         body = [s for s in renderIfTree(proc.bodyBuff)]
-        hasCondition = arr_any(body, lambda x: isinstance(x, IfContainer))
+        hasToBeVhdlProcess = arr_any(body, lambda x: isinstance(x, (IfContainer, SwitchContainer, WhileContainer)))
         return VHDLTemplates.process.render({
               "name": proc.name,
-              "hasCond": hasCondition,
+              "hasToBeVhdlProcess": hasToBeVhdlProcess,
               "sensitivityList": ", ".join(proc.sensitivityList),
               "statements": [ cls.asHdl(s) for s in body] })
     
