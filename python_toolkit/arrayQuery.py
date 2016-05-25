@@ -1,4 +1,6 @@
 
+# select = map, groupBy = itertools.groupby
+
 class DuplicitValueExc(Exception):
     pass
 
