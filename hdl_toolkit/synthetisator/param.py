@@ -1,25 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, areSameSignals
-from hdl_toolkit.hdlObjects.typeDefs import INT, BOOL, STR
-from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, toHVal, areSameSignals
 
 class Param(Signal):
     """
     Class used in same way as generics in VHDL, it is wrapper around the value
     """
-    def _toHVal(self, val):
-        typeResolution = {int: INT, bool: BOOL, str: STR}
-        if not isinstance(val, Value):
-            try:
-                t = typeResolution[val.__class__]
-            except KeyError:
-                raise Exception("Can not resolve type of parameter")
-            return Value.fromPyVal(val, t)
-        return val
     
     def __init__(self, initval):
-        initval = self._toHVal(initval)
+        initval = toHVal(initval)
         super(Param, self).__init__(None, initval._dtype, defaultVal=initval)
         self._val = initval
         self.replacedWith = None
@@ -61,6 +50,7 @@ class Param(Signal):
         set value of this param
         """
         assert(self.replacedWith is None)
+        val = toHVal(val)
         self.defaultVal = val
         self._val = val
     
