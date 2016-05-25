@@ -28,16 +28,6 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
     return formatVhdl(
                      "\n".join([ serializer.asHdl(x) for x in u._toRtl()])
                      )
-    
-    
-def synthetizeCls(cls, name=None, multithread=True):
-    u = cls(multithread=multithread)
-    u._loadDeclarations()
-    if name is not None:
-        u._name = name
-    return formatVhdl(
-                     "\n".join([ VhdlSerializer.asHdl(x) for x in u._toRtl()])
-                     )
 
 def synthetizeAndSave(unit, folderName='.', name=None):
     unit._loadDeclarations()
