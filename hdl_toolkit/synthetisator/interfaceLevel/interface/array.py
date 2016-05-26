@@ -4,11 +4,12 @@ from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
+from hdl_toolkit.synthetisator.rtlLevel.signal import MultipleDriversExc
 
 def splitToTermSet(width):
     try:
         width = width.singleDriver()
-    except (AttributeError, AssertionError):
+    except (AttributeError, MultipleDriversExc):
         return set([width])
     if width.operator == AllOps.DIV:
         pass

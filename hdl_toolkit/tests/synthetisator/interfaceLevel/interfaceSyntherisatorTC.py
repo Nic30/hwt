@@ -8,8 +8,24 @@ from hdl_toolkit.interfaces.amba import Axi4
 from hdl_toolkit.interfaces.ambaOthers import FullDuplexAxiStream 
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import synthesised
 from hdl_toolkit.synthetisator.interfaceLevel.emptyUnit import setOut
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
+from hdl_toolkit.synthetisator.rtlLevel.context import Context
 
 D = DIRECTION
+
+def createTwoAxiDuplexStreams():
+        i = FullDuplexAxiStream()
+        i._name = 'i'
+        i._loadDeclarations()
+        
+        i2 = FullDuplexAxiStream()
+        i2._name = 'i2'
+        i2._loadDeclarations()
+        
+        c = Context("test")
+        for _i in [i, i2]:
+            _i._signalsForInterface(c, _i._name)
+        return i, i2
 
 class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
     def test_SimpleUnit2_iLvl(self):
@@ -22,25 +38,25 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         m = self.assertIsM
         s = self.assertIsS
         
-        u.a._resolveDirections()
-        u.b._resolveDirections()
-        
-        
-        # inside
-        m(u.a)
-        m(u.a.data)
-        m(u.a.last)
-        s(u.a.ready)
-        m(u.a.valid)
-        m(u.a.strb)
-        
-        # inside
-        m(u.b)
-        m(u.b.data)
-        m(u.b.last)
-        s(u.b.ready)
-        m(u.b.valid)
-        m(u.b.strb)
+        #u.a._resolveDirections()
+        #u.b._resolveDirections()
+        #
+        #
+        ## inside
+        #m(u.a)
+        #m(u.a.data)
+        #m(u.a.last)
+        #s(u.a.ready)
+        #m(u.a.valid)
+        #m(u.a.strb)
+        #
+        ## inside
+        #m(u.b)
+        #m(u.b.data)
+        #m(u.b.last)
+        #s(u.b.ready)
+        #m(u.b.valid)
+        #m(u.b.strb)
         
         
           
@@ -172,25 +188,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         s = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.SLAVE)
         m = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.MASTER)
 
-
-        i = FullDuplexAxiStream()
-        i._loadDeclarations()
-        i._resolveDirections()
-        
-        m(i)
-        s(i.rx)
-        s(i.rx.data)
-        s(i.rx.last)
-        s(i.rx.valid)
-        m(i.rx.ready)
-        
-        m(i.tx)
-        m(i.tx.data)
-        m(i.tx.last)
-        m(i.tx.valid)
-        s(i.tx.ready)
-        
-        
+       
         i = FullDuplexAxiStream()
         i._loadDeclarations()
         self.assertRaises(Exception, i._reverseDirection) 
@@ -213,15 +211,9 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         m = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.MASTER)
         s = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.SLAVE)
         
-        i = FullDuplexAxiStream()
-        i._name = 'i'
-        i._loadDeclarations()
+        i, i2 = createTwoAxiDuplexStreams()
         
-        i2 = FullDuplexAxiStream()
-        i2._name = 'i2'
-        i2._loadDeclarations()
-        
-        i2._setSrc(i)
+        connect(i, i2)
         i._resolveDirections()
         i2._resolveDirections()
         
@@ -252,16 +244,10 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         m = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.MASTER)
         s = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.SLAVE)
         
-        i = FullDuplexAxiStream()
-        i._name = 'i'
-        i._loadDeclarations()
+        i, i2 = createTwoAxiDuplexStreams()
         
-        i2 = FullDuplexAxiStream()
-        i2._name = 'i2'
-        i2._loadDeclarations()
-        
-        i.rx._setSrc(i2.rx)
-        i2.tx._setSrc(i.tx)
+        connect(i2.rx, i.rx)
+        connect(i.tx, i2.tx)
         i._resolveDirections()
         i2._resolveDirections()
         
@@ -318,7 +304,7 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(InterfaceSyntherisatorTC('test_EmptyUnit'))
+    # suite.addTest(InterfaceSyntherisatorTC('test_IntfDirections_multistream'))
     suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

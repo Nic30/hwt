@@ -67,8 +67,13 @@ class TypeOps():
         raise NotImplementedError()
     def __or__(self, other):
         raise NotImplementedError()
+    
     def __xor__(self, other):
         raise NotImplementedError()
+    
+    def __eq__(self, other):
+        return bool(self._eq(other))
+    
     def _eq(self, other):
         raise NotImplementedError()
     

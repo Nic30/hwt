@@ -34,7 +34,7 @@ class ExprComparator():
                         assert(diff is m[1] or diff is None)
                         diff = m[1]
                 return (True, diff)
-        elif areInstanceOf(exprA, exprB, Value) and exprA == exprB:
+        elif areInstanceOf(exprA, exprB, Value) and exprA._eq(exprB).val:
             return (True, None)
         return (False, None)
     
