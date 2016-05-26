@@ -9,8 +9,10 @@ from cli_toolkit.vivado.config import VivadoConfig
 
         
 pb = XilinxPartBuilder
-def buildUnit(unit, synthetize=True, implement=True, writeBitstream=True, constrains=[], log=True, openGui=False,
-                   part=XilinxPartBuilder(pb.Family.kintex7, pb.Size._160t, pb.Package.ffg676, pb.Speedgrade._2).name()):
+defaultPart = XilinxPartBuilder(pb.Family.kintex7, pb.Size._160t, pb.Package.ffg676, pb.Speedgrade._2).name()
+
+def buildUnit(unit, synthetize=True, implement=True, writeBitstream=True, getConstrains=None, 
+              log=True, openGui=False, part=defaultPart):
     r = VivadoReport()
     uName = defaultUnitName(unit)
     def synthetizeCmds():
@@ -25,7 +27,8 @@ def buildUnit(unit, synthetize=True, implement=True, writeBitstream=True, constr
         
         yield from p.addDesignFiles(files)
         yield from p.setTop(unit._name)
-        yield from p.addXDCs("constrains0", constrains)
+        if getConstrains is not None:
+            yield from p.addXDCs("constrains0", getConstrains(unit))
         
         if synthetize:
             yield from p.synth()
@@ -50,7 +53,7 @@ def buildUnit(unit, synthetize=True, implement=True, writeBitstream=True, constr
             yield from p.writeBitstream()
             r.bitstreamFile = os.path.join(impl, unit._name + ".bit")
              
-    with VivadoCntrl(VivadoConfig.getVivadoExec(), logComunication=log) as v:
+    with VivadoCntrl(VivadoConfig.getExec(), logComunication=log) as v:
         v.process(synthetizeCmds())
         if openGui:
             v.openGui()
