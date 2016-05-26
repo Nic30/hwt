@@ -173,13 +173,13 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
         units = len(self._units)
         if cInstances != units:
             inRtl = set(map(lambda x: x.name, self._architecture.componentInstances))
-            inIntf = set(map(lambda x: x._name, self._units))
+            inIntf = set(map(lambda x: x._name + "_inst", self._units))
             if cInstances > units:
                 raise IntfLvlConfErr("_toRtl unit(s) %s were found in rtl but were not registered at %s" % 
                                      (str(inRtl - inIntf), self._name))
             elif cInstances < units:
-                raise IntfLvlConfErr("_toRtl unit(s) %s were lost during rtl conversion of %s" % 
-                                     (str(inIntf - inRtl), self._name))
+                raise IntfLvlConfErr("_toRtl of %s: unit(s) %s were lost" % 
+                                     (self._name, str(inIntf - inRtl)))
     
 
         

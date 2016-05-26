@@ -1,4 +1,4 @@
-from python_toolkit.arrayQuery import extendLen
+from python_toolkit.arrayQuery import extendLen, arr_any
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
@@ -61,26 +61,19 @@ class InterfaceArray():
             self._arrayElemCache.append(e)
     
     def _connectMyElems(self):
-        wholeArrayIsConnected = False
-        for i in walkPhysInterfaces(self):
-            if i._sig.drivers or i._sig.endpoints:
-                wholeArrayIsConnected = True
-                break
-        
-        if wholeArrayIsConnected:
-            pass
-        else:
-            if self._arrayElemCache: 
-                for indx, e in enumerate(self._arrayElemCache):
-                    # [TODO] find better way how to find out direction of elements
-                    # e._propagateConnection()
+        if self._arrayElemCache: 
+            for indx, e in enumerate(self._arrayElemCache):
+                elemHasConnections = arr_any(walkPhysInterfaces(e),
+                                             lambda x: bool(x._sig.endpoints) 
+                                                       or bool(x._sig.drivers))
+                if elemHasConnections:
                     e._resolveDirections()
                     
                     if e._direction == INTF_DIRECTION.MASTER:
                         e._connectTo(self, masterIndex=indx)
                     else:
                         self._connectTo(e, slaveIndex=indx)
-            
+        
     
     def __getitem__(self, key):
         if key < self._multipliedBy.staticEval().val:
