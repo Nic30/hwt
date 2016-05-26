@@ -16,7 +16,7 @@ class BaseHlsSynthetisator():
         """
         def forIntf(intf):
             yield intf
-            for _, subInt in intf._subInterfaces.items():
+            for _, subInt in intf._interfaces.items():
                 forIntf(subInt)
         for _, intf in self.iLvUnit._interfaces.items():
             yield from forIntf(intf)
