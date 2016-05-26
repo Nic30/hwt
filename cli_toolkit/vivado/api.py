@@ -61,7 +61,7 @@ class Port():
             
         return cls(None, interface._getPhysicalName(),
                     direction=INTF_DIRECTION.asDirection(interface._direction),
-                     typ=typ, hasSubIntf=bool(interface._subInterfaces),
+                     typ=typ, hasSubIntf=bool(interface._interfaces),
                      width=width)
         
             
