@@ -33,16 +33,30 @@ def cloneExprWithUpdatedParams(expr, paramUpdateDict):
         raise NotImplementedError("Not implemented for %s" % (repr(expr)))
 
 def toAbsolutePaths(relativeTo, sources):
+    paths = []
+    
     if isinstance(sources, str):
         sources = [sources]
-    def updatePath(p):
+    def collectPaths(p):
         if isinstance(p, str):
-            return os.path.join(relativeTo, p)
+            _p = os.path.join(relativeTo, p)
+            paths.append(_p)
+        elif issubclass(p, UnitFromHdl):
+            p._buildFileNames()
+            paths.extend(p._hdlSources)
         else:
             # tuple (lib, filename)
-            return (p[0], os.path.join(relativeTo, p[1]))
+            _p = (p[0], os.path.join(relativeTo, p[1]))
+            paths.append(_p)
+    for s in sources:
+        collectPaths(s)
     
-    return [ updatePath(s) for s in sources]
+    # unique files only
+    _paths = list(set(paths))  
+    _paths.sort(key=paths.index)
+    paths = _paths
+    
+    return paths 
 
 class UnitFromHdl(Unit):
     """
@@ -101,7 +115,7 @@ class UnitFromHdl(Unit):
                 instI._origLoadDeclarations()
                 instI._setDirectionsLikeIn(instI._origI._direction)
                 for iSig, instISig in zip(walkPhysInterfaces(instI._origI), walkPhysInterfaces(instI)):
-                    instISig._originEntityPort = iSig._originEntityPort # currently used only for name
+                    instISig._originEntityPort = iSig._originEntityPort  # currently used only for name
                     if not iSig._dtypeMatch:
                         origT = iSig._originEntityPort._dtype
                         if origT.constrain is None:
