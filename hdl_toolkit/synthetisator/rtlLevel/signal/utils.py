@@ -77,18 +77,20 @@ def vecWithOffset(src, width, offset):
         
     if isinstance(width, (Param, Signal)):
         upper = width + hInt(offset) - hInt(1)
-        r = lower._downto(upper)
+        r = upper._downto(lower)
     else:
         upper = hInt(width.val + offset - 1)
         r = SignalNode.resForOp(Operator(AllOps.DOWNTO, [upper, lower]))
     return src._slice(r)
 
-def connectUnpacked(src, dst):
+def connectUnpacked(src, dst, exclude=[]):
     """src is packed and it is unpacked and connected to dst"""
     # [TODO] parametrized offsets
     offset = 0
     connections = []
     for i in walkPhysInterfaces(dst):
+        if i in exclude:
+            continue
         sig = i._sig
         t = sig._dtype
         if t == BIT:
