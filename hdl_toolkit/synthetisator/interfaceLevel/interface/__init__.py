@@ -197,7 +197,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         for e in self._arrayElemCache:
             e._propagateConnection()
     
-    def _signalsForInterface(self, context, prefix, typeTransform=lambda x: x):
+    def _signalsForInterface(self, context, prefix='', typeTransform=lambda x: x):
         """
         generate _sig for each interface which has no subinterface
         if already has _sig return it instead
@@ -205,17 +205,13 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         sigs = []
         if self._interfaces:
             for intf in self._interfaces:
-                if hasattr(intf, "_hdlId"):
-                    intfName = intf._hdlId
-                else:
-                    intfName = prefix + self._NAME_SEPARATOR + intf._name
-                sigs.extend(intf._signalsForInterface(context, intfName,
+                sigs.extend(intf._signalsForInterface(context, prefix,
                                                       typeTransform=typeTransform))
         else:
             if hasattr(self, '_sig'):
                 sigs = [self._sig]
             else:
-                s = context.sig(prefix, typeTransform(self._dtype))
+                s = context.sig(prefix + self._getPhysicalName(), typeTransform(self._dtype))
                 s._interface = self
                 self._sig = s
                 
@@ -227,8 +223,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
                 
         if self._multipliedBy is not None:
             for elemIntf in self._arrayElemCache:
-                elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name 
-                elemIntf._signalsForInterface(context, elemPrefix,
+                #elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name 
+                elemIntf._signalsForInterface(context, prefix,
                                                typeTransform=typeTransform)
                 # they are not in sigs because they are not main signals
                     

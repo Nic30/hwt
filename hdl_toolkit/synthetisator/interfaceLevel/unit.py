@@ -48,8 +48,7 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
 
         # prepare signals for interfaces     
         for i in self._interfaces:
-            connectionName = i._name
-            signals = i._signalsForInterface(self._cntx, connectionName)
+            signals = i._signalsForInterface(self._cntx)
             if i._isExtern:
                 externInterf.extend(signals)
         

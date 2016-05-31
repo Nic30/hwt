@@ -101,7 +101,7 @@ class UnitFromHdl(Unit):
                 instI._origLoadDeclarations()
                 instI._setDirectionsLikeIn(instI._origI._direction)
                 for iSig, instISig in zip(walkPhysInterfaces(instI._origI), walkPhysInterfaces(instI)):
-                    # instISig._originEntityPort = iSig._originEntityPort
+                    instISig._originEntityPort = iSig._originEntityPort # currently used only for name
                     if not iSig._dtypeMatch:
                         origT = iSig._originEntityPort._dtype
                         if origT.constrain is None:

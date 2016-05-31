@@ -38,7 +38,7 @@ class UnitImplHelpers():
         
         for i in self._interfaces:
             if i._isExtern:  
-                i._signalsForInterface(context, prefix + i._NAME_SEPARATOR + i._name,
+                i._signalsForInterface(context, prefix + i._NAME_SEPARATOR,
                                        typeTransform=lockTypeWidth)
     
     def _connectMyInterfaceToMyEntity(self, interface):

@@ -136,7 +136,7 @@ class ExtractableInterface(InterfaceArray):
     def _tryToExtractByName(self, prefix, ports):
         """
         @return: self if extraction was successful
-        @raise InterfaceIncompatibilityExc: if this interface with this prefix does not fit to this entity 
+        @raise InterfaceIncompatibilityExc: if this interface with this prefix does not fit for this entity 
         """
         if self._interfaces:
             # extract subinterfaces and propagate params
@@ -213,12 +213,14 @@ class ExtractableInterface(InterfaceArray):
                 prefix = name 
                      
                 intf = intfInst._tryToExtractByName(prefix, ports)
-                if not intf._interfaces:
-                    if name == "":
-                        name = intf._originEntityPort.name
+                if name == "":
+                    if intf._interfaces:
+                        name = cls.__name__.lower()
                     else:
-                        name += intf._name
-                    
+                        name = intf._originEntityPort.name
+                else:
+                    name += intf._name
+                
                 if name.endswith("_"):
                     name = name[:-1]
                 

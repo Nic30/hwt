@@ -24,7 +24,7 @@ def createTwoAxiDuplexStreams():
         
         c = Context("test")
         for _i in [i, i2]:
-            _i._signalsForInterface(c, _i._name)
+            _i._signalsForInterface(c)
         return i, i2
 
 class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
