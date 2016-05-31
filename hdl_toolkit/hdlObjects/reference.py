@@ -25,7 +25,7 @@ class HdlRef():
         # [TODO]
         for j in flattern(jsn, 'DOT'):
             t = j["type"]
-            if t == 'ID':
+            if t == 'ID' or t == "STRING":
                 names.append(j['value'])
             elif t == "ALL":
                 allChilds = True
