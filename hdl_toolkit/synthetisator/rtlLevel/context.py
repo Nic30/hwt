@@ -46,7 +46,7 @@ class Context():
         """
 
         if name in self.signals:
-            raise Exception('signal name "%s" is not unique' % (name))
+            raise Exception('%s:signal name "%s" is not unique' % (self.name, name))
         if defVal is not None and not isinstance(defVal, Value):
             defVal = Value.fromPyVal(defVal, typ)
 
@@ -127,12 +127,12 @@ class Context():
             dps = list(where(assigments, lambda x: x.dst == sig))
             p = HWProcess("assig_process_" + sig.name)
             for dp in dps:
-                p.sensitivityList.update(map(lambda x: x.name, discoverSensitivity(dp)))
+                p.sensitivityList.update(discoverSensitivity(dp))
             p.bodyBuff.extend(dps) 
             arch.processes.append(p)
             
             # [TODO] support for dynamically created signals
-            #if sig.name not in self.signals:
+            # if sig.name not in self.signals:
             #    self.signals[sig.name] = sig
 
         # add signals, variables etc. in architecture

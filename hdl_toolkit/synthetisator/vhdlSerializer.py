@@ -7,8 +7,8 @@ from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer, \
     SwitchContainer, WhileContainer
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
-from python_toolkit.arrayQuery import arr_any
-from hdl_toolkit.synthetisator.param import getParam
+from python_toolkit.arrayQuery import arr_any, where
+from hdl_toolkit.synthetisator.param import getParam, Param
 from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthetisator.exceptions import SerializerException
 from hdl_toolkit.hdlObjects.operator import Operator
@@ -382,10 +382,11 @@ class VhdlSerializer():
     def HWProcess(cls, proc):
         body = [s for s in renderIfTree(proc.bodyBuff)]
         hasToBeVhdlProcess = arr_any(body, lambda x: isinstance(x, (IfContainer, SwitchContainer, WhileContainer)))
+        sensitifityList = list(where(proc.sensitivityList, lambda x : not isinstance(x, Param)))
         return VHDLTemplates.process.render({
               "name": proc.name,
               "hasToBeVhdlProcess": hasToBeVhdlProcess,
-              "sensitivityList": ", ".join(proc.sensitivityList),
+              "sensitivityList": ", ".join([cls.asHdl(s) for s in sensitifityList]),
               "statements": [ cls.asHdl(s) for s in body] })
     
     @classmethod
