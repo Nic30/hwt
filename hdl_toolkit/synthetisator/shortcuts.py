@@ -81,7 +81,6 @@ def _syntaxCheckUnitFromHdl(u):
 
 
 def syntaxCheck(unitOrFileName):
-
     
     if issubclass(unitOrFileName, UnitFromHdl):
         unitOrFileName._buildFileNames()
