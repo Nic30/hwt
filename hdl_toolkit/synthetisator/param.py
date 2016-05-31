@@ -72,6 +72,9 @@ class Param(Signal):
 def evalParam(p):
     while isinstance(p, Param):
         p = p.get()
+    
+    if isinstance(p, Signal):
+        return p.staticEval()
         # use rather param inheritance instead of param as param value
         # assert(not isinstance(v, Param)) 
     return p
