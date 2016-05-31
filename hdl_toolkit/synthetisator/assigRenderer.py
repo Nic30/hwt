@@ -68,7 +68,7 @@ def _renderIfTree(cond, node):
             __renderIfTree(elIfN.negSt, elIfN.neg, ifFalse)
             break
     
-    #__renderIfTree(node.negSt, node.neg, ifFalse)
+    # __renderIfTree(node.negSt, node.neg, ifFalse)
     if len(elIfs) >= SWITCH_THRENDSHOOD:
         cases = []
         switchOn = None
@@ -92,11 +92,17 @@ def _renderIfTree(cond, node):
                         op1 = op.ops[1]
                         if op.ops[0] is switchOn and isinstance(op1, Value):
                             cases.append((op1, elIf[1]))
-                        else:
-                            canBeConvertedToSwitch = False
-                            break
+                            continue
+                    canBeConvertedToSwitch = False
+                    break
                 except MultipleDriversExc:
                     canBeConvertedToSwitch = False
+            
+            # if only last can not be part of the swicht case it can be default 
+            if not canBeConvertedToSwitch and len(elIfs) == len(cases):
+                default = elIfs[-1]
+                ifFalse = [ IfContainer(default[0], default[1], ifFalse)]
+                canBeConvertedToSwitch = True
                     
             if canBeConvertedToSwitch:
                 cases.append((None, ifFalse))
@@ -176,7 +182,7 @@ def renderIfTree(assigments):
 
     top = IfTreeNode()
     
-    #register assignments in tree of IfTreeNodes
+    # register assignments in tree of IfTreeNodes
     for a in assigments:
         _top = top.pos
         topNode = top
