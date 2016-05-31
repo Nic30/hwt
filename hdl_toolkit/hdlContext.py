@@ -169,6 +169,9 @@ class FakeStd_logic_1164():
     std_logic_vector_ref = HdlRef(["ieee", "std_logic_1164", "std_logic_vector"], False)
     std_ulogic_vector_ref = HdlRef(["ieee", "std_logic_1164", "std_ulogic"], False)
     
+    std_logic_unsigned_sub_ref = HdlRef(["ieee", "std_logic_unsigned", "-"], False)
+    std_logic_unsigned_sub = FnContainer('-', None)
+
     std_logic = BIT
     std_logic_ref = HdlRef(["ieee", "std_logic_1164", "std_logic"], False)
     
@@ -212,6 +215,7 @@ class BaseVhdlContext():
         ctx.insert(f.std_logic_ref, f.std_logic)
         ctx.insert(HdlRef(['ieee', 'std_logic_unsigned', 'conv_integer'], False), None)
         ctx.insert(HdlRef(['ieee', 'std_logic_arith', 'is_signed'], False), None)
+        ctx.insert(f.std_logic_unsigned_sub_ref, f.std_logic_unsigned_sub)
         ctx.insert(f.signed_ref, f.signed)
         ctx.insert(f.unsigned_ref, f.unsigned)
         ctx.insert(f.resize_ref, f.resize)
