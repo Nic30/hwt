@@ -7,4 +7,4 @@ class TrimmedAp_hs(Ap_hs):
         super()._declr()
         self.data._alternativeNames.append("")
         self.vld._alternativeNames.append("_vld")
-        self.rd._alternativeNames.append("_rd")
+        self.rd._alternativeNames.extend(["_rd", "_ack"])
