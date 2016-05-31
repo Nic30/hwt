@@ -326,7 +326,7 @@ class Std_logic_vector(HdlType):
     def valAsVhdl(self, val, serializer):
         c = self.constrain
         if isinstance(c, Unconstrained):
-            width = [0, c.derivedWidth]
+            width = [val._dtype.derivedWidth-1, 0]
         elif isinstance(c, Value):
             width = [c.val[0].staticEval().val, c.val[1].staticEval().val]
         else:
@@ -389,22 +389,29 @@ class Std_logic_vector_contrained(Std_logic_vector):
                 val = 0
             return cls(val, typeObj, vld)
         
-        def concat(self, other):
-            from hdl_toolkit.synthetisator.rtlLevel.signal import SignalNode
+        def _concat(self, other):
+            from hdl_toolkit.synthetisator.rtlLevel.signal import SignalNode, Signal
             from hdl_toolkit.hdlObjects.operatorDefs import AllOps
             from hdl_toolkit.hdlObjects.operator import Operator
-            v = self.clone()
             w = self._dtype.getBitCnt()
-            v.val = (v.val << w) | other.val
-            v.vldMask = (v.vldMask << w) | other.vldMask
-            v.eventMask = (v.eventMask << w) | other.eventMask
-            
             resWidth = w + other._dtype.getBitCnt()
-            v._dtype = VECTOR(SignalNode.resForOp(
-                                Operator(AllOps.DOWNTO, [ 
-                                           Value.fromPyVal(resWidth - 1, INT),
-                                           Value.fromPyVal(0, INT)])))
-            return v
+            if isinstance(other, Value):
+                v = self.clone()
+                v.val = (v.val << w) | other.val
+                v.vldMask = (v.vldMask << w) | other.vldMask
+                v.eventMask = (v.eventMask << w) | other.eventMask
+                v._dtype = VECTOR(SignalNode.resForOp(
+                                    Operator(AllOps.DOWNTO, [ 
+                                               Value.fromPyVal(resWidth - 1, INT),
+                                               Value.fromPyVal(0, INT)])))
+                return v    
+            else:
+                # is instance of signal
+                if not isinstance(other, Signal):
+                    other = other._src
+                op = Operator(AllOps.CONCAT, [self, other])
+                return SignalNode.resForOp(op)
+             
         
         def _eq(self, other):
             assert(isinstance(other, Value))
