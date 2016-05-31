@@ -59,6 +59,9 @@ class Ap_noneOps(object):
         """
         return self._sig.__getitem__(key)
     
+    def _ternary(self, ifTrue, ifFalse):
+        return self._sig._ternary(ifTrue, ifFalse)
+    
     def _slice(self, index):
         """
         functional form of __getitem__

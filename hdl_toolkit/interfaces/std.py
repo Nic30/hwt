@@ -64,8 +64,8 @@ class Ap_rst(Ap_none):
     _alternativeNames = ['ap_rst', 'areset', 'reset', 'rst']
 
 class Ap_rst_n(Ap_none):
-    _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn' ]
-    def _signalsForInterface(self, context, prefix, typeTransform=lambda x:x):
+    _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn', 'rst_n' ]
+    def _signalsForInterface(self, context, prefix='', typeTransform=lambda x:x):
         sigs = Ap_none._signalsForInterface(self, context, prefix, 
                                             typeTransform=typeTransform)
         for s in sigs:
