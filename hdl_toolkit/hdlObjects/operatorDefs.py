@@ -168,6 +168,7 @@ class AllOps():
     PLUS = OpDefinition(lambda a, b : a + b)
     MINUS = OpDefinition(lambda a, b : a - b)
     UN_MINUS = OpDefinition(lambda a :-a)
+    MOD = OpDefinition(lambda a, b : a % b)
     MUL = OpDefinition(lambda a, b : a * b)
     NEQ = OpDefinition(lambda a, b : a != b,
                         getReturnType=lambda op: BOOL,
@@ -182,6 +183,7 @@ class AllOps():
     AND_LOG = OpDefinition(lambda a, b : a & b,
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
+    
     
     OR_LOG = OpDefinition(lambda a, b : a | b,
                        getReturnType=lambda op: BOOL,
