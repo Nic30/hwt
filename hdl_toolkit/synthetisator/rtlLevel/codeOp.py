@@ -92,6 +92,8 @@ class SwitchContainer():
     def __init__(self, switchOn, cases):
         self.switchOn = switchOn
         self.cases = cases
+    def seqEval(self):
+        raise NotImplementedError()
     def __repr__(self):
         from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.SwitchContainer(self)
