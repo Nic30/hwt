@@ -215,6 +215,7 @@ class BaseVhdlContext():
         ctx.insert(f.std_logic_ref, f.std_logic)
         ctx.insert(HdlRef(['ieee', 'std_logic_unsigned', 'conv_integer'], False), None)
         ctx.insert(HdlRef(['ieee', 'std_logic_arith', 'is_signed'], False), None)
+        ctx.insert(HdlRef(["ieee", "std_logic_misc", "and_reduce"], False), None)
         ctx.insert(f.std_logic_unsigned_sub_ref, f.std_logic_unsigned_sub)
         ctx.insert(f.signed_ref, f.signed)
         ctx.insert(f.unsigned_ref, f.unsigned)
