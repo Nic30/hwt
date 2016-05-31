@@ -10,12 +10,14 @@ entity Fifo is
 	Port ( 
 		clk		: in  STD_LOGIC;
 		rst_n		: in  STD_LOGIC;
-		data_inEn	: in  STD_LOGIC;
-		data_in	        : in  STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
-		data_inWait	: out STD_LOGIC;
-		data_outEn	: in  STD_LOGIC;
-		data_out	: out STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
-		data_outWait	: out STD_LOGIC
+
+		data_in_en	: in  STD_LOGIC;
+		data_in_data     : in  STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
+		data_in_wait	: out STD_LOGIC;
+
+		data_out_en	: in  STD_LOGIC;
+		data_out_data	: out STD_LOGIC_VECTOR (DATA_WIDTH - 1 downto 0);
+		data_out_wait	: out STD_LOGIC
 	);
 end Fifo;
  
@@ -40,13 +42,13 @@ begin
 				
 				Looped := false;
 				
-				data_inWait  <= '0';
-				data_outWait <= '1';
+				data_in_wait  <= '0';
+				data_out_wait <= '1';
 			else
-				if (data_outEn = '1') then
+				if (data_out_en = '1') then
 					if ((Looped = true) or (Head /= Tail)) then
 						-- Update data output
-						data_out <= Memory(Tail);
+						data_out_data <= Memory(Tail);
 						
 						-- Update Tail pointer as needed
 						if (Tail = DEPTH - 1) then
@@ -61,10 +63,10 @@ begin
 					end if;
 				end if;
 				
-				if (data_inEn = '1') then
+				if (data_in_en = '1') then
 					if ((Looped = false) or (Head /= Tail)) then
 						-- Write Data to Memory
-						Memory(Head) := data_in;
+						Memory(Head) := data_in_data;
 						
 						-- Increment Head pointer as needed
 						if (Head = DEPTH - 1) then
@@ -80,13 +82,13 @@ begin
 				-- Update Empty and Full flags
 				if (Head = Tail) then
 					if Looped then
-						data_inWait <= '1';
+						data_in_wait <= '1';
 					else
-						data_outWait <= '1';
+						data_out_wait <= '1';
 					end if;
 				else
-					data_outWait	<= '0';
-					data_inWait	<= '0';
+					data_out_wait	<= '0';
+					data_in_wait	<= '0';
 				end if;
 			end if;
 		end if;

@@ -1,11 +1,11 @@
 
 from hdl_toolkit.formater import formatVhdl
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.hdlObjects.typeDefs import Enum
 
-w = connectSig
+w = connect
 
 
 def axiReaderCore():
