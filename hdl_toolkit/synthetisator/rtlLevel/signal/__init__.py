@@ -125,7 +125,7 @@ class SignalOps():
             stop = toHVal(key.stop)
             start = toHVal(key.start)
             
-            key = SignalNode.resForOp(Operator(AllOps.DOWNTO, [stop - Value.fromPyVal(1, INT), start]))
+            key = SignalNode.resForOp(Operator(AllOps.DOWNTO, [start - Value.fromPyVal(1, INT), stop]))
         
         return self._slice(key)
     
