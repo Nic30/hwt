@@ -24,7 +24,7 @@ class Boolean(HdlType):
             else:
                 return sigOrVal._ternary(Value.fromPyVal(1, BIT), Value.fromPyVal(0, BIT))
             
-        return super(Boolean, self).convert(sigOrVal, toType)
+        return super().convert(sigOrVal, toType)
     
     class Ops(TypeOps):
         @classmethod
@@ -98,9 +98,7 @@ class Integer(HdlType):
         return str(int(val.val))
     
     def convert(self, sigOrVal, toType):
-        if sigOrVal._dtype == toType:
-            return sigOrVal
-        elif toType == PINT:
+        if toType == PINT:
             if isinstance(sigOrVal, Value):
                 v = sigOrVal.clone()
                 assert(v.val > 0)
@@ -146,7 +144,7 @@ class Integer(HdlType):
                     v.eventMask = m if v.eventMask else 0 
                 return v
                 
-        return super(Integer, self).convert(sigOrVal, toType)
+        return super().convert(sigOrVal, toType)
 
         
     class Ops(TypeOps):
@@ -260,7 +258,7 @@ class Std_logic(HdlType):
             else:
                 v = 0 if sigOrVal.negated else 1
                 return sigOrVal._eq(Value.fromPyVal(v, BIT))
-        return super(Std_logic, self).convert(sigOrVal, toType)
+        return super().convert(sigOrVal, toType)
             
     class Ops(TypeOps):
         @classmethod
@@ -314,19 +312,17 @@ class Std_logic_vector(HdlType):
         return hash((self.name, self.signed, self.constrain))
     
     def convert(self, sigOrVal, toType):
-        if sigOrVal._dtype == toType:
-            return sigOrVal
-        elif isinstance(toType, Integer):
+        if isinstance(toType, Integer):
             if isinstance(sigOrVal, Value):
                 v = sigOrVal.clone()
                 v._dtype = toType
                 return v
-        super(Std_logic_vector, self).convert(sigOrVal, toType)
+        return super().convert(sigOrVal, toType)
             
     def valAsVhdl(self, val, serializer):
         c = self.constrain
         if isinstance(c, Unconstrained):
-            width = [val._dtype.derivedWidth-1, 0]
+            width = [val._dtype.derivedWidth - 1, 0]
         elif isinstance(c, Value):
             width = [c.val[0].staticEval().val, c.val[1].staticEval().val]
         else:
@@ -368,17 +364,7 @@ class Std_logic_vector_contrained(Std_logic_vector):
         w = self.constrain.staticEval()
          
         return abs(w.val[0].val - w.val[1].val) + 1
-    
-    def convert(self, sigOrVal, toType):
-        if sigOrVal._dtype == toType:
-            return sigOrVal
-        elif type(toType) == Std_logic_vector:
-            if isinstance(sigOrVal, Value):
-                o = sigOrVal.clone()
-                o._dtype = toType
-                return o
-        return super().convert(sigOrVal, toType)
-       
+          
     class Ops(Std_logic_vector.Ops):
         
         @classmethod
@@ -445,9 +431,7 @@ class String(HdlType):
     def valAsVhdl(self, val, serializer):
         return  '"%s"' % str(val.val)
     def convert(self, sigOrVal, toType):
-        if sigOrVal._dtype == toType:
-            return sigOrVal
-        elif toType == VECTOR:
+        if isinstance(toType, VECTOR.__class__):
             if isinstance(sigOrVal, Value):
                 v = sigOrVal.clone()
                 _v = v.val
@@ -467,7 +451,7 @@ class String(HdlType):
                     else:
                         raise NotImplementedError("found %s in bitstring literal" % (ch))
                 return v
-                
+        return super().convert(sigOrVal, toType)  
 
     class Ops(TypeOps):
         @classmethod
