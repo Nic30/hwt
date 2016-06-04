@@ -3,14 +3,15 @@
 
 from hdl_toolkit.hdlObjects.reference import HdlRef 
 from hdl_toolkit.nonRedefDict import NonRedefDict
-from hdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR, VECTOR, BIT, PINT, UINT, Wire, \
-    Std_logic_vector
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.function import Function, FnContainer
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from myhdl.conversion._toVHDL import _shortversion
+from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, STR, BIT
+from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.integer import Integer
 
 
 class RequireImportErr(Exception):
@@ -165,7 +166,7 @@ class HDLCtx(NonRedefDict):
 
 class FakeStd_logic_1164():
     """mock of Std_logic_1164 from vhdl"""
-    std_logic_vector = VECTOR
+    std_logic_vector = Bits(forceVector=True)
     std_logic_vector_ref = HdlRef(["ieee", "std_logic_1164", "std_logic_vector"], False)
     std_ulogic_vector_ref = HdlRef(["ieee", "std_logic_1164", "std_ulogic"], False)
     
@@ -176,10 +177,10 @@ class FakeStd_logic_1164():
     std_logic_ref = HdlRef(["ieee", "std_logic_1164", "std_logic"], False)
     
     signed_ref = HdlRef(["ieee", "numeric_std", 'signed'], False)
-    signed = Std_logic_vector(signed=True)
+    signed = Bits(signed=True)
 
     unsigned_ref = HdlRef(["ieee", "numeric_std", 'unsigned'], False)
-    unsigned = Std_logic_vector(signed=False)
+    unsigned = Bits(signed=False)
     
     resize_ref = HdlRef(["ieee", "numeric_std", 'resize'], False)
     resize = FnContainer('resize', None)
@@ -191,8 +192,8 @@ class FakeMyHdl():
 
 class BaseVhdlContext():
     integer = INT
-    positive = PINT
-    natural = UINT
+    natural = Integer(_min=0)
+    positive = Integer(_min=1)
     boolean = BOOL
     string = STR
     
@@ -224,17 +225,17 @@ class BaseVhdlContext():
     @classmethod
     def getBaseCtx(cls):
         d = HDLCtx(None, None)
-        for n in [cls.integer, cls.positive, cls.natural,
+        for t in [cls.integer, cls.positive, cls.natural,
                    cls.boolean, cls.string]:
-            d[n.name] = n
-        d['true'] = Value.fromPyVal(True, BOOL)
-        d['false'] = Value.fromPyVal(False, BOOL)
+            d[t.name.lower()] = t
+        d['true'] = BOOL.fromPy(True)
+        d['false'] = BOOL.fromPy(False)
         return d
 
 class BaseVerilogContext():
     integer = INT
     string = STR
-    wire = Wire()
+    wire = Bits()
    
     @classmethod
     def importFakeLibs(cls, ctx):

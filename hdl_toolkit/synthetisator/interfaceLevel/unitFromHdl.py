@@ -3,7 +3,7 @@ import types
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.function import FnContainer
-from hdl_toolkit.parserUtils import entityFromFile, loadCntxWithDependencies
+from hdl_toolkit.parser.utils import entityFromFile, loadCntxWithDependencies
 from hdl_toolkit.hdlContext import RequireImportErr
 from hdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from hdl_toolkit.synthetisator.param import Param
@@ -14,7 +14,8 @@ from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInt
 from hdl_toolkit.interfaces.all import allInterfaces
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.portItem import PortItem
-from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
+from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, Unconstrained
+from copy import copy
 
 def cloneExprWithUpdatedParams(expr, paramUpdateDict):
     if isinstance(expr, Param):
@@ -29,32 +30,37 @@ def cloneExprWithUpdatedParams(expr, paramUpdateDict):
         return SignalNode.resForOp(o)
     elif isinstance(expr, FnContainer):
         return expr
+    elif isinstance(expr, Unconstrained):
+        return copy(expr)
     else:
         raise NotImplementedError("Not implemented for %s" % (repr(expr)))
+
+def addPath(paths, p):
+    if p not in paths:
+        paths.append(p)
 
 def toAbsolutePaths(relativeTo, sources):
     paths = []
     
     if isinstance(sources, str):
         sources = [sources]
+    
+
     def collectPaths(p):
         if isinstance(p, str):
             _p = os.path.join(relativeTo, p)
-            paths.append(_p)
-        elif issubclass(p, UnitFromHdl):
+            addPath(paths, _p)
+        elif isinstance(p, type) and issubclass(p, UnitFromHdl):
             p._buildFileNames()
-            paths.extend(p._hdlSources)
+            for _p in p._hdlSources:
+                addPath(paths, _p)
         else:
             # tuple (lib, filename)
             _p = (p[0], os.path.join(relativeTo, p[1]))
-            paths.append(_p)
+            addPath(paths, _p)
+    
     for s in sources:
         collectPaths(s)
-    
-    # unique files only
-    _paths = list(set(paths))  
-    _paths.sort(key=paths.index)
-    paths = _paths
     
     return paths 
 
@@ -118,10 +124,9 @@ class UnitFromHdl(Unit):
                     instISig._originEntityPort = iSig._originEntityPort  # currently used only for name
                     if not iSig._dtypeMatch:
                         origT = iSig._originEntityPort._dtype
-                        if origT.constrain is None:
-                            newT = origT.__class__()
-                        else:
-                            newT = origT.__class__(cloneExprWithUpdatedParams(origT.constrain, self._paramsOrigToInst))  
+                        newT = copy(origT)
+                        if origT.constrain is not None:
+                            newT.constrain = cloneExprWithUpdatedParams(origT.constrain, self._paramsOrigToInst)  
                         instISig._dtype = newT
             # overload _loadDeclarations function
             instI._loadDeclarations = types.MethodType(declarationsFromExtractedIntf, instI) 

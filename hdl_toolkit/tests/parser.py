@@ -1,10 +1,9 @@
 import unittest
 import math
-from hdl_toolkit.parser import Parser 
 from hdl_toolkit.hdlObjects.package import PackageHeader, PackageBody
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
-from hdl_toolkit.hdlObjects.typeDefs import INT, STR
-from hdl_toolkit.parserLoader import ParserFileInfo, ParserLoader
+from hdl_toolkit.hdlObjects.types.defs import INT, STR
+from hdl_toolkit.parser.loader import ParserFileInfo, ParserLoader
 
 ILVL_SAMPLES = '../samples/iLvl/vhdl/'
 ILVL_SAMPLES_V = '../samples/verilogCodesign/verilog/'
@@ -137,10 +136,10 @@ class ParserTC(unittest.TestCase):
         param_int = m.generics[2]
         param_str = m.generics[3]
         
-        self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH._dtype.getBitCnt())
+        self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH._dtype.bit_length())
         
         WIDTH_WIDTH.set(hInt(64)) 
-        self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH._dtype.getBitCnt())
+        self.assertEqual(WIDTH_WIDTH.defaultVal.val, C_WIDTH._dtype.bit_length())
 
     def testVhdlFn(self):
         f = mkFileInfo("fnImport/package0.vhd")

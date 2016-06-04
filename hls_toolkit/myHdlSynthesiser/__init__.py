@@ -1,11 +1,11 @@
 
 import os
+import types
 from myhdl import always_seq, always_comb, Signal, modbv, ResetSignal
 from myhdl.conversion._toVHDL import _ToVHDLConvertor
 
-from hdl_toolkit.hdlObjects.typeDefs import BIT
+from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.interfaces.std import Ap_rst_n, Ap_rst
-import types
 
 def toMyHdlIntf(interface):
     if isinstance(interface, type):
@@ -31,7 +31,7 @@ def _toMyHdlInterface(interface, signalMap=None):
         if  t == BIT:
             myhdlIntf = Signal(bool(0))
         else:
-            myhdlIntf = Signal(modbv(0)[t.getBitCnt():])
+            myhdlIntf = Signal(modbv(0)[t.bit_length():])
     if signalMap is not None:    
         signalMap[interface] = myhdlIntf 
     return myhdlIntf

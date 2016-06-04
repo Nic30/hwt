@@ -1,11 +1,10 @@
-from hdl_toolkit.formater import formatVhdl
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT, vec
-from hdl_toolkit.hdlObjects.typeDefs import Enum, BIT
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
+from hdl_toolkit.formater import formatVhdl
 
-w = connectSig
+w = connect
 
 if __name__ == "__main__":
     t = vecT(8)
@@ -22,11 +21,11 @@ if __name__ == "__main__":
     
     
     counter = c.sig("counter", t, clk, syncRst, 0)
-    If(start.opIsOn(),
+    If(start,
        w(boundry, counter)
        ,
-       If(en.opIsOn(),
-           w(counter.opSub(vec(1, 8)), counter)
+       If(en,
+           w(counter - vec(1, 8), counter)
            ,
            w(counter, counter)
         )

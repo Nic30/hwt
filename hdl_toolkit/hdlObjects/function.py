@@ -1,8 +1,6 @@
 import itertools
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import ReturnCalled
-from hdl_toolkit.hdlObjects.typeDefs import areIntegers
- 
-        
+from hdl_toolkit.hdlObjects.types.integer import Integer
 
 class FnContainer(list):
     """
@@ -38,7 +36,8 @@ class FnContainer(list):
         for fn in self:
             same = True
             for _p, p in itertools.zip_longest(args, fn.params):
-                if _p._dtype != p._dtype and not areIntegers(_p._dtype, p._dtype):  # [FPGAlibs] vhdl antipatent
+                if _p._dtype != p._dtype and \
+                 not (isinstance(_p._dtype, Integer), isinstance(p._dtype, Integer)):
                     same = False
                     break
             if same:

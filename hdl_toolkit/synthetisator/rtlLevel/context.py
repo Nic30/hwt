@@ -5,7 +5,7 @@ from hdl_toolkit.hdlObjects.component import  Component
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.process import HWProcess
 from hdl_toolkit.hdlObjects.portConnection import PortConnection
-from hdl_toolkit.hdlObjects.typeDefs import BIT
+from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment
 
@@ -48,7 +48,7 @@ class Context():
         if name in self.signals:
             raise Exception('%s:signal name "%s" is not unique' % (self.name, name))
         if defVal is not None and not isinstance(defVal, Value):
-            defVal = Value.fromPyVal(defVal, typ)
+            defVal = typ.fromPy(defVal)
 
         if clk is not None:
             s = SyncSignal(name, typ, defVal)

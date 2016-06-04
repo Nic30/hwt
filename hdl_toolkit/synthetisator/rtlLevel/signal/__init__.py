@@ -1,11 +1,11 @@
 from hdl_toolkit.hdlObjects.assignment import Assignment
-from hdl_toolkit.hdlObjects.types import HdlType
+from hdl_toolkit.hdlObjects.types.hdlType import HdlType
 from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.hdlObjects.operator import Operator, InvalidOperandExc
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.exceptions import SimNotInitialized, SimException
-from hdl_toolkit.hdlObjects.typeDefs import BOOL, INT, STR
+from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, STR
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 
 class MultipleDriversExc(Exception):
@@ -28,7 +28,7 @@ def toHVal(op):
         
         if hType is None:
             raise TypeError("%s" % (op.__class__))
-        return  Value.fromPyVal(op, hType)
+        return  hType.fromPy(op)
     
 def checkOperands(ops):
     _ops = []
@@ -125,7 +125,7 @@ class SignalOps():
             stop = toHVal(key.stop)
             start = toHVal(key.start)
             
-            key = SignalNode.resForOp(Operator(AllOps.DOWNTO, [start - Value.fromPyVal(1, INT), stop]))
+            key = SignalNode.resForOp(Operator(AllOps.DOWNTO, [start - INT.fromPy(1), stop]))
         
         return self._slice(key)
     

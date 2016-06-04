@@ -1,17 +1,16 @@
 
 from hdl_toolkit.formater import formatVhdl
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT, vec, hInt, hBit
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig, trim, \
-    Concat, vecWithOffset
+from hdl_toolkit.hdlObjects.typeShortcuts import vecT, vec, hBit
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 
-w = connectSig
+w = connect
 
 
-def IndexOps():
+def LeadingZero():
     t = vecT(8)
-    c = Context("IndexOps")
+    c = Context("LeadingZero")
     
     s_in = c.sig("s_in", t)
     index = c.sig("s_indexOfFirstZero", t)
@@ -22,7 +21,7 @@ def IndexOps():
         if leadingZeroTop is None:
             leadingZeroTop = connections 
         else:
-            leadingZeroTop = If(s_in.opSlice(hInt(i)).opEq(hBit(False)),
+            leadingZeroTop = If(s_in[i]._eq(hBit(False)),
                connections
                ,
                leadingZeroTop
@@ -33,7 +32,7 @@ def IndexOps():
     return c, interf
 
 if __name__ == "__main__":
-    c, interf = IndexOps()
+    c, interf = LeadingZero()
     
     for o in c.synthetize(interf):
             print(formatVhdl(str(o)))

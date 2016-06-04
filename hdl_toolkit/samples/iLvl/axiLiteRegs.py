@@ -2,7 +2,7 @@ from hdl_toolkit.intfLvl import Unit, connect
 from hdl_toolkit.interfaces.amba import AxiLite, RESP_OKAY
 from hdl_toolkit.interfaces.std import Ap_clk, Ap_none, Ap_rst_n, Ap_vld
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If, Switch
-from hdl_toolkit.hdlObjects.typeDefs import Enum
+from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.synthetisator.shortcuts import toRtl
 from hdl_toolkit.hdlObjects.typeShortcuts import vec, vecT
 from hdl_toolkit.synthetisator.param import Param, evalParam
@@ -78,9 +78,8 @@ class AxiLiteRegs(Unit):
             ,
             c(arAddr, arAddr)
         )
-        
-        
-        
+
+
         # ar fsm next
         If(arRd,
            # rdIdle

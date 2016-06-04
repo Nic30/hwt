@@ -1,15 +1,16 @@
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.hdlObjects.typeDefs import INT, BOOL, VECTOR, STR, BIT
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, SignalNode
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.hdlObjects.types.defs import INT, BOOL, STR, BIT
+from hdl_toolkit.hdlObjects.types.bits import Bits
 
 def getSignalOrValue(val, pyT, hdlT):
     if isinstance(val, Value) or isinstance(val, Signal):
         return val
     else:
         v = pyT(val)
-        return Value.fromPyVal(v, hdlT)
+        return hdlT.fromPy(v)
 
 def fromPyValToValueFn(pyT, hdlT):
     def fn(val):
@@ -42,14 +43,14 @@ def mkRange(width):
         to = to - 1
     return SignalNode.resForOp(Operator(AllOps.DOWNTO, [to, hInt(0)]))
 
-def vecT(width):
+def vecT(width, signed=None):
     """Make contrained vector type"""
-    return VECTOR(mkRange(width))
+    return Bits(widthConstr=mkRange(width), signed=signed, forceVector=True)
 
 def vec(val, width):
     """create hdl vector value"""
     assert(val < 2 ** width)
-    return Value.fromPyVal(val, vecT(width))
+    return vecT(width).fromPy(val)
 
 def hRange(upper, lower):
     # [TODO] param conversion if necessary

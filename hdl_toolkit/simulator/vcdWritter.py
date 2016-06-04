@@ -2,7 +2,6 @@
 from functools import wraps
 from datetime import datetime
 import sys
-from hdl_toolkit.hdlObjects.typeDefs import BIT
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hBit, vec
 from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
@@ -20,7 +19,7 @@ def dumpMethod(func):
 class VcdVarInfo():
     """Info about signal registered in vcd"""
     def __init__(self, _id, dtype):
-        self.width = 1 if dtype == BIT else dtype.getBitCnt()
+        self.width = dtype.bit_length()
         self.id = _id
         self._dtype = dtype
 

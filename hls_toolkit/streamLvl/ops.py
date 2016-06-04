@@ -1,6 +1,5 @@
 from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from collections import deque
-from hdl_toolkit.hdlObjects.typeDefs import getBitCnt
 from hls_toolkit.streamLvl.valObj import valObj
 from hdl_toolkit.bitmask import Bitmask
 
@@ -58,7 +57,7 @@ def _packVal(val, intf):
                 
         return width, packedVal
     else:
-        w = getBitCnt(intf._dtype)
+        w = intf._dtype.bit_length()
         return w, val
     
 def unpackVal(packedVal, intf, exclude=set()):
@@ -77,5 +76,5 @@ def _unpackVal(packedVal, intf, exclude=set()):
                 width += w
         return width, unpackedVal
     else:
-        w = getBitCnt(intf._dtype)
+        w = intf._dtype.bit_length()
         return w, Bitmask.mask(w) & packedVal    

@@ -13,14 +13,9 @@ class InvalidVHDLTypeExc(Exception):
         return self.__str__()
 
 class HdlType():
-    __slots__ = ['name', 'valueCls']
-    """
-    Hdl type container
-    @cvar Ops: class with defined operators for values derived from this type  
-    """
+    #__slots__ = ['name', "constrain", "_valCls", "_convertor"]
+
     def __init__(self):
-        self.name = None
-        #self.ValueCls = None
         self.constrain = None
     
     def __eq__(self, other):
@@ -29,11 +24,28 @@ class HdlType():
     def __hash__(self):
         return hash((self.name, self.constrain))
     
+    def fromPy(self, v):
+        return self.getValueCls().fromPy(v, self)
+    
     def convert(self, sigOrVal, toType):
         if sigOrVal._dtype == toType:
             return sigOrVal
-        else:
-            raise TypeConversionErr("Conversion of type %s to type %s is not implemented" % (repr(self), repr(toType)))
+        
+        try:
+            c = self._convert
+        except AttributeError:
+            c = self.getConvertor()
+            self._convertor = c
+
+        return c(self, sigOrVal, toType)
+    
+    @classmethod
+    def getConvertor(cls):
+        return HdlType.defaultConvert
+    
+    def defaultConvert(self, sigOrVal, toType):
+        raise TypeConversionErr("Conversion of type %s to type %s is not implemented" 
+                                   % (repr(self), repr(toType)))
     
     def valAsVhdl(self, val, serializer):
         raise SerializerException("Serialization of type %s is not implemented" % (repr(self)))

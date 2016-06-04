@@ -1,7 +1,6 @@
-from hdl_toolkit.hdlObjects.typeDefs import BOOL, INT, RANGE, PINT, UINT, BIT, \
-    Std_logic, Boolean, Std_logic_vector, Std_logic_vector_contrained, \
-    Integer, VECTOR, Wire
+from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, BIT, Bits, SLICE, Integer
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.types.slice import Slice
 
 def convOpsToType(t):
         def addOperand(operator, operand):
@@ -14,9 +13,7 @@ def convOpsToType(t):
 addOperand_logic = convOpsToType(BOOL)    
 
 def addOperand_concat(operator, operand):
-    if isinstance(operand._dtype, Std_logic):  # [TODO] boolean
-        opAsVec = operand
-    elif isinstance(operand._dtype, Std_logic_vector):
+    if isinstance(operand._dtype, Bits):  # [TODO] boolean
         opAsVec = operand
     else:
         raise NotImplementedError("Not implemented for type %s of %s" % 
@@ -25,7 +22,7 @@ def addOperand_concat(operator, operand):
 
 def getReturnType_default(op):
     t = op.ops[0]._dtype
-    if(t == UINT or t == PINT):
+    if(isinstance(t, Integer)):
         return INT
     else:
         return t
@@ -57,8 +54,8 @@ def addOperand_eq(operator, operand):
 
 def addOperand_event(operator, operand):
     t = operand._dtype
-    assert(t == BIT)
-        
+    assert(isinstance(t, Bits)) 
+
     typeConvertedOp = t.convert(operand, t)
     operator.ops.append(typeConvertedOp)
     if not isinstance(typeConvertedOp, Value):
@@ -68,10 +65,7 @@ def addOperand_event(operator, operand):
 def getReturnType_concat(op):
     w = 0
     for o in op.ops:
-        if o._dtype == BIT:
-            _w = 1
-        else:
-            _w = o._dtype.getBitCnt()
+        _w = o._dtype.bit_length()
         w += _w
     assert(w > 0)
     from hdl_toolkit.hdlObjects.typeShortcuts import vecT
@@ -80,11 +74,11 @@ def getReturnType_concat(op):
 def getReturnType_index(op):
     base = op.ops[0]
     index = op.ops[1]
-    if isinstance(base._dtype, (Std_logic_vector, Wire)):
+    if isinstance(base._dtype, (Bits)):
         if isinstance(index._dtype, Integer):
             return BIT
-        if hasattr(index, "_dtype") and index._dtype == RANGE:
-            return Std_logic_vector_contrained(index)
+        if isinstance(index._dtype, Slice):
+            return Bits(widthConstr=index, forceVector=True)
         
     raise NotImplementedError()
 
@@ -189,8 +183,8 @@ class AllOps():
                        getReturnType=lambda op: BOOL,
                        addOperand=addOperand_logic)
     
-    DOWNTO = OpDefinition(lambda a, b : Value.fromPyVal([b, a], RANGE),
-                        getReturnType=lambda op: RANGE,
+    DOWNTO = OpDefinition(lambda a, b : SLICE.fromPy([b, a]),
+                        getReturnType=lambda op: SLICE,
                         addOperand=convOpsToType(INT))
     
     GREATERTHAN = OpDefinition(lambda a, b : a > b,

@@ -27,6 +27,6 @@ if __name__ == "__main__":
     # print(u.slv.C_S_AXI_ADDR_WIDTH.get())
     print(u.slv.S_AXI.ADDR_WIDTH.get())
     print(u.slv.S_AXI.ar.ADDR_WIDTH.get())
-    print(u.slv.S_AXI.ar.addr._dtype.getBitCnt())
+    print(u.slv.S_AXI.ar.addr._dtype.bit_length())
     
     print(toRtl(AxiLiteSlaveContainer, "axiLSlvCont"))

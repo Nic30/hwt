@@ -1,5 +1,5 @@
 from hdl_toolkit.intfLvl import connect, Unit
-from hdl_toolkit.hdlObjects.typeDefs import BIT
+from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.interfaces.std import Ap_rst, Ap_none, Ap_clk
 
 c = connect

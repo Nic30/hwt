@@ -13,5 +13,5 @@ if __name__ == "__main__":
     u = EntWithFnRequired()
     u._loadDeclarations()
     print(u)
-    print(u.sig._dtype.getBitCnt())
+    print(u.sig._dtype.bit_length())
     # print(synthetizeCls(EntWithFnRequired))

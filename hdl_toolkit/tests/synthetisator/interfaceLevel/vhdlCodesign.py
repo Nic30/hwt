@@ -1,6 +1,6 @@
 import unittest
 from python_toolkit.arrayQuery import single, NoValueExc
-from hdl_toolkit.hdlObjects.typeDefs import INT, UINT, PINT
+from hdl_toolkit.hdlObjects.types.defs import INT, UINT, PINT
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
@@ -20,9 +20,9 @@ ILVL_VHDL = '../../../samples/iLvl/vhdl/'
 class VhdlCodesignTC(BaseSynthetisatorTC):
 
     def testTypeInstances(self):
-        from hdl_toolkit.hdlObjects import typeDefs
+        from hdl_toolkit.hdlObjects.types import defs
         from hdl_toolkit.hdlContext import BaseVhdlContext
-        self.assertIs(INT, typeDefs.INT)
+        self.assertIs(INT, defs.INT)
         ctx = BaseVhdlContext.getBaseCtx()
         self.assertIs(ctx['integer'], INT)
 
@@ -56,9 +56,9 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertTrue(hasattr(u, "TX0_CTL"))
         
         self.assertIs(u.RX0_ETH.DATA_WIDTH, u.C_DATA_WIDTH)
-        self.assertEqual(u.RX0_ETH.data._dtype.getBitCnt(), u.C_DATA_WIDTH.get().val)
+        self.assertEqual(u.RX0_ETH.data._dtype.bit_length(), u.C_DATA_WIDTH.get().val)
         self.assertIs(u.RX0_ETH.USER_WIDTH, u.C_USER_WIDTH)
-        self.assertEqual(u.RX0_ETH.user._dtype.getBitCnt(), u.C_USER_WIDTH.get().val)
+        self.assertEqual(u.RX0_ETH.user._dtype.bit_length(), u.C_USER_WIDTH.get().val)
         
         
 
@@ -191,18 +191,18 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         
         self.assertEqual(u.axi.ADDR_WIDTH.get(), hInt(13))
         self.assertEqual(u.axi.ar.ADDR_WIDTH.get(), hInt(13))
-        self.assertEqual(u.axi.ar.addr._dtype.getBitCnt(), 13)
+        self.assertEqual(u.axi.ar.addr._dtype.bit_length(), 13)
 
         self.assertEqual(u.axi.ADDR_WIDTH.get(), AW)
         self.assertEqual(u.axi.ar.ADDR_WIDTH.get(), AW)
-        self.assertEqual(u.axi.ar.addr._dtype.getBitCnt(), AW.val)
+        self.assertEqual(u.axi.ar.addr._dtype.bit_length(), AW.val)
         # [TODO] width of parametrized interfaces from VHDL should be Param with expr
 
-        self.assertEqual(u.axi.w.strb._dtype.getBitCnt(), DW.val // 8)
+        self.assertEqual(u.axi.w.strb._dtype.bit_length(), DW.val // 8)
         self.assertEqual(u.slv.C_S_AXI_ADDR_WIDTH.get().get(), AW)
         self.assertEqual(u.slv.C_S_AXI_DATA_WIDTH.get().get(), DW)
 
-        self.assertEqual(u.slv.S_AXI.ar.addr._dtype.getBitCnt(), AW.val)
+        self.assertEqual(u.slv.S_AXI.ar.addr._dtype.bit_length(), AW.val)
 
     def test_paramsExtractionSimple(self):
         class Ap_vldWithParam(UnitFromHdl):
@@ -218,7 +218,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(u.DATA_WIDTH, u.data.DATA_WIDTH)
         self.assertEqual(u.data.DATA_WIDTH.get().val, 13)
 
-        self.assertEqual(u.data.data._dtype.getBitCnt(), 13)
+        self.assertEqual(u.data.data._dtype.bit_length(), 13)
 
     def test_compatibleExpression(self):
 
@@ -295,13 +295,13 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         width = 3
         self.assertEqual(u.a._multipliedBy, hInt(width))
         self.assertEqual(u.a.DATA_WIDTH.get().val, 8)
-        self.assertEqual(u.a.data._dtype.getBitCnt(), 8 * width)
-        self.assertEqual(u.a.vld._dtype.getBitCnt(), width)
+        self.assertEqual(u.a.data._dtype.bit_length(), 8 * width)
+        self.assertEqual(u.a.vld._dtype.bit_length(), width)
 
         self.assertEqual(u.b._multipliedBy, hInt(width))
         self.assertEqual(u.b.DATA_WIDTH.get().val, 8)
-        self.assertEqual(u.b.data._dtype.getBitCnt(), 8 * width)
-        self.assertEqual(u.b.vld._dtype.getBitCnt(), width)
+        self.assertEqual(u.b.data._dtype.bit_length(), 8 * width)
+        self.assertEqual(u.b.vld._dtype.bit_length(), width)
     
     def test_SizeExpressions(self):
         class SizeExpressionsSample(UnitFromHdl):
@@ -311,18 +311,18 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         
         A = u.param_A.get()
         B = u.param_B.get()
-        self.assertEqual(u.portA._dtype.getBitCnt(), A.val)
-        self.assertEqual(u.portB._dtype.getBitCnt(), A.val)
-        self.assertEqual(u.portC._dtype.getBitCnt(), A.val // 8)
-        self.assertEqual(u.portD._dtype.getBitCnt(), (A.val // 8) * 13)
-        self.assertEqual(u.portE._dtype.getBitCnt(), B.val * (A.val // 8))
-        self.assertEqual(u.portF._dtype.getBitCnt(), B.val * A.val)
-        self.assertEqual(u.portG._dtype.getBitCnt(), B.val * (A.val - 4))
+        self.assertEqual(u.portA._dtype.bit_length(), A.val)
+        self.assertEqual(u.portB._dtype.bit_length(), A.val)
+        self.assertEqual(u.portC._dtype.bit_length(), A.val // 8)
+        self.assertEqual(u.portD._dtype.bit_length(), (A.val // 8) * 13)
+        self.assertEqual(u.portE._dtype.bit_length(), B.val * (A.val // 8))
+        self.assertEqual(u.portF._dtype.bit_length(), B.val * A.val)
+        self.assertEqual(u.portG._dtype.bit_length(), B.val * (A.val - 4))
         
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(VhdlCodesignTC('test_compatibleExpression'))
-    suite.addTest(unittest.makeSuite(VhdlCodesignTC))
+    suite.addTest(VhdlCodesignTC('test_genericValues'))
+    #suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

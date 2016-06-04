@@ -3,7 +3,9 @@ from time import gmtime, strftime
 
 from cli_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
     appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
-from hdl_toolkit.hdlObjects.typeDefs import BOOL, STR, Std_logic_vector, Integer
+from hdl_toolkit.hdlObjects.types.defs import BOOL, STR
+from hdl_toolkit.hdlObjects.types.integer import Integer
+from hdl_toolkit.hdlObjects.types.bits import Bits
 
 
 XILINX_VERSION = "2014.4.1"
@@ -54,8 +56,8 @@ class Value():
         elif t == STR:
             self.format = "string"
             self.text = g.defaultVal.staticEval().val
-        elif isinstance(t, Std_logic_vector):
-            bitString(g.defaultVal._dtype.getWidth())
+        elif isinstance(t, Bits):
+            bitString(g.defaultVal._dtype.bit_length())
         else:
             raise NotImplementedError("Not implemented for datatype %s" % repr(t))
         return self

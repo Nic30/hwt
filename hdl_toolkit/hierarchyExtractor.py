@@ -4,7 +4,7 @@ from hdl_toolkit.hdlObjects.package import PackageHeader
 from hdl_toolkit.hdlObjects.reference import HdlRef
 from hdl_toolkit.nonRedefDict import RedefinitionErr
 from hdl_toolkit.hdlContext import HDLCtx, RequireImportErr
-from hdl_toolkit.parserLoader import ParserLoader, getFileInfoFromObj 
+from hdl_toolkit.parser.loader import ParserLoader, getFileInfoFromObj 
 
 
         

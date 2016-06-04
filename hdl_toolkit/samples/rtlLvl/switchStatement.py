@@ -1,11 +1,10 @@
 from hdl_toolkit.formater import formatVhdl
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT, vec
-from hdl_toolkit.hdlObjects.typeDefs import Enum, BIT
-from hdl_toolkit.synthetisator.rtlLevel.codeOp import If, Switch
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig
+from hdl_toolkit.synthetisator.rtlLevel.codeOp import Switch
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 
-w = connectSig
+w = connect
 
 if __name__ == "__main__":
     t = vecT(8)
@@ -14,8 +13,8 @@ if __name__ == "__main__":
     In = c.sig("input", t, defVal=8)
     Out = c.sig("output", t)
     
-    Switch(In, 
-           *[(vec(i, 8), w(vec(i+1, 8), Out)) for i in range(8)]
+    Switch(In,
+           *[(vec(i, 8), w(vec(i + 1, 8), Out)) for i in range(8)]
     )
     
     

@@ -5,7 +5,6 @@ class Value():
     http://www.rafekettler.com/magicmethods.html
     
     operators are overloaded in every type separately
-    
     """
     def __init__(self, val, _type, vldMask, eventMask=0):
         if isinstance(val, Value):
@@ -15,20 +14,7 @@ class Value():
         self._dtype = _type
         self.vldMask = vldMask
         self.eventMask = eventMask
-    
-   
-    @classmethod
-    def fromPyVal(cls, val, _type):
-        """
-        @param val: normal python value
-        @param _type: instance of HdlType
-        """
-        c = _type.ValueCls
-        if isinstance(val, c):
-            assert(val._dtype.convert(val, _type))
-            return val
-        self = c.fromPy(val, _type)
-        return self
+
     def staticEval(self):
         return self
     
@@ -41,3 +27,75 @@ class Value():
     def __repr__(self):
         return "<Value {0:s}, vldMask {1:b}, eventMask {2:b}>".format(
                     str(self.val), self.vldMask, self.eventMask)    
+
+    @classmethod
+    def fromPy(cls, val, typeObj):
+        raise NotImplementedError("fromPy fn is not implemented for %s" % (str(cls)))
+   
+    @classmethod
+    def _otherCheck(cls, other):
+        assert(isinstance(other, Value))
+        assert(issubclass(other.__class__, cls))
+        
+    def __pos__(self):
+        raise NotImplementedError()
+    def __neg__(self):
+        raise NotImplementedError()    
+    def __abs__(self):
+        raise NotImplementedError()
+    def __invert__(self):
+        raise NotImplementedError()
+    def __round__(self, n):
+        raise NotImplementedError()
+    def __floor__(self):
+        raise NotImplementedError()
+    def __ceil__(self):
+        raise NotImplementedError()
+    def __trunc__(self):
+        raise NotImplementedError()
+    def __add__(self, other):
+        raise NotImplementedError()
+    def __sub__(self, other):
+        raise NotImplementedError()
+    def __mul__(self, other):
+        raise NotImplementedError()
+    def __floordiv__(self, other):
+        raise NotImplementedError()
+    def __div__(self, other):
+        raise NotImplementedError()
+    def __truediv__(self, other):
+        raise NotImplementedError()
+    def __mod__(self, other):
+        raise NotImplementedError()
+    def __divmod__(self, other):
+        raise NotImplementedError()
+    def __pow__(self, other):
+        raise NotImplementedError()
+    def __lshift__(self, other):
+        raise NotImplementedError()
+    def __rshift__(self, other):
+        raise NotImplementedError()
+    def __and__(self, other):
+        raise NotImplementedError()
+    def __or__(self, other):
+        raise NotImplementedError()
+    def __xor__(self, other):
+        raise NotImplementedError()
+    def __eq__(self, other):
+        return bool(self._eq(other))
+    def _eq(self, other):
+        raise NotImplementedError()
+    def __ne__(self, other):
+        eq = self._eq(other)
+        eq.val = not eq.val
+        return eq
+    def _concat(self, other):
+        raise NotImplementedError()
+    def __lt__(self, other):
+        raise NotImplementedError()
+    def ___le__(self, other):
+        raise NotImplementedError()
+    def __gt__(self, other):
+        raise NotImplementedError()
+    def __ge__(self, other):
+        raise NotImplementedError()

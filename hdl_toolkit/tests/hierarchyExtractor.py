@@ -1,6 +1,6 @@
 import unittest
 from hdl_toolkit.hierarchyExtractor import DesignFile
-from hdl_toolkit.parserLoader import ParserFileInfo
+from hdl_toolkit.parser.loader import ParserFileInfo
 
 SAMPLES_DIR = '../samples/iLvl/vhdl/'
 package1 = SAMPLES_DIR + 'packWithComps/package1.vhd'

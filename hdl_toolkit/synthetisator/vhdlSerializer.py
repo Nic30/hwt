@@ -1,4 +1,5 @@
-from hdl_toolkit.hdlObjects.types import HdlType, InvalidVHDLTypeExc
+from python_toolkit.arrayQuery import arr_any, where
+from hdl_toolkit.hdlObjects.types.hdlType import HdlType, InvalidVHDLTypeExc
 from hdl_toolkit.synthetisator.templates import VHDLTemplates
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, MultipleDriversExc
 from hdl_toolkit.hdlObjects.value import Value
@@ -7,13 +8,14 @@ from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer, \
     SwitchContainer, WhileContainer
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
-from python_toolkit.arrayQuery import arr_any, where
 from hdl_toolkit.synthetisator.param import getParam, Param
 from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthetisator.exceptions import SerializerException
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.hdlObjects.typeDefs import Enum
+from hdl_toolkit.hdlObjects.types.enum import Enum
+from hdl_toolkit.bitmask import Bitmask
+from hdl_toolkit.hdlObjects.types.bits import Bits
 
 class VhdlVersion():
     v2002 = 2002
@@ -44,6 +46,7 @@ opPrecedence = {AllOps.NOT : 2,
 
 class DoesNotContainsTernary(Exception):
     pass
+
 def ternaryOpsToIf(statements):
     """Convert all ternary operators to IfContainers"""
     stms = []
@@ -317,6 +320,33 @@ class VhdlSerializer():
             return cls.BitString_binary(v, width, vldMask)
     
     @classmethod
+    def BitLiteral(cls, v, vldMask):
+        if vldMask:
+            return  "'%d'" % int(bool(v))
+        else:
+            return "'X'"
+    
+    @classmethod
+    def SignedBitString(cls, v, width, vldMask):
+        if vldMask != Bitmask.mask(vldMask):
+            raise SerializerException(
+            "Value %s can not be serialized as signed bit string literal due not all bits are valid" % 
+             repr(v))
+        else:
+            # [TODO] parametrized width
+            return "TO_SIGNED(%d, %d)" % (v, width)
+
+    @classmethod
+    def UnsignedBitString(cls, v, width, vldMask):
+        if vldMask != Bitmask.mask(vldMask):
+            raise SerializerException(
+            "Value %s can not be serialized as signed bit string literal due not all bits are valid" % 
+             repr(v))
+        else:
+            # [TODO] parametrized width
+            return "TO_UNSIGNED(%d, %d)" % (v, width)
+    
+    @classmethod
     def SignalItem(cls, si, declaration=False):
         if declaration:
             if si.isConstant:
@@ -360,10 +390,12 @@ class VhdlSerializer():
             else:
                 raise NotImplementedError("type declaration is not impleneted for type %s" % 
                                           (typ.name))
-        else:    
-            buff.append(typ.name.upper())
-            if typ.constrain is not None and not isinstance(typ.constrain, Unconstrained):
-                buff.append("(%s)" % cls.Value(typ.constrain))        
+        else:
+            if isinstance(typ, Bits):
+                return typ.asVhdl(cls)
+            else:
+                buff.append(typ.name.upper())
+   
         return "".join(buff)
                 
     @classmethod

@@ -1,6 +1,6 @@
 from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
-from hdl_toolkit.hdlObjects.typeDefs import BIT
+from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.synthetisator.param import Param
@@ -10,7 +10,7 @@ from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from copy import deepcopy
 
-def _connectSig(src, dst):
+def _connect(src, dst):
     if isinstance(src, Interface):
         if isinstance(dst, Interface):
             return dst._connectTo(src)
@@ -26,7 +26,7 @@ def connect(src, *destinations):
     """
     assignemnts = []
     for dst in destinations:
-        assignemnts.extend(_connectSig(src, dst))
+        assignemnts.extend(_connect(src, dst))
     return assignemnts
 
 def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
@@ -99,7 +99,7 @@ def connectUnpacked(src, dst, exclude=[]):
         else:
             w = getWidthExpr(t)
             s = vecWithOffset(src, w, offset)
-            offset += t.getBitCnt()
+            offset += t.bit_length()
         connections.append(sig._assignFrom(s))
     
     return connections
@@ -125,7 +125,7 @@ def packedWidth(intf):
         t = intf._dtype
         if t == BIT:
             return 1
-        return t.getBitCnt()
+        return t.bit_length()
 
 def fitTo(what, to):
     """
@@ -136,8 +136,8 @@ def fitTo(what, to):
     little endian impl.
     """
 
-    whatWidth = what._dtype.getBitCnt()
-    toWidth = to._dtype.getBitCnt()
+    whatWidth = what._dtype.bit_length()
+    toWidth = to._dtype.bit_length()
     if toWidth == whatWidth:
         return what
     elif toWidth < whatWidth:

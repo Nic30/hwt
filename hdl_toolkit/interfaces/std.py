@@ -1,11 +1,12 @@
 from hdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector_contrained
+from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from hdl_toolkit.interfaces.ap_noneOps import Ap_noneOps
+from hdl_toolkit.hdlObjects.types.bits import Bits
 
 
 D = DIRECTION
@@ -29,7 +30,7 @@ class Ap_none(Ap_noneOps, Interface):
         factor = self._multipliedBy
         if t == BIT:
             newT = vecT(factor)
-        elif isinstance(t, Std_logic_vector_contrained):
+        elif isinstance(t, Bits):
             w = getWidthExpr(t)
             if isinstance(w, Signal):
                 # bouth Param or factor Value

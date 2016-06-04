@@ -1,5 +1,6 @@
-from hdl_toolkit.hdlObjects.typeDefs import UINT, PINT, INT
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.types.integer import Integer
+from hdl_toolkit.hdlObjects.types.defs import INT
 
 # [TODO] +,-,*,/   for INT, signed, unsigned
 
@@ -7,7 +8,7 @@ from hdl_toolkit.hdlObjects.value import Value
 
 def getReturnType(op):
     t = op.ops[0]._dtype
-    if(t == UINT or t == PINT):
+    if isinstance(t, Integer):
         return INT
     else:
         return t

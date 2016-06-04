@@ -1,4 +1,4 @@
-from hdl_toolkit.parserLoader import ParserFileInfo, ParserLoader
+from hdl_toolkit.parser.loader import ParserFileInfo, ParserLoader
 from hdl_toolkit.hierarchyExtractor import DesignFile
 from python_toolkit.arrayQuery import single
 

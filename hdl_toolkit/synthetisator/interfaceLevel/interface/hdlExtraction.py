@@ -98,7 +98,7 @@ class ExtractableInterface(InterfaceArray):
             # update interface type from hdl, update generics
             intfTConstr = self._dtype.constrain
 
-            if intfTConstr is not None:
+            if intfTConstr is not None and isinstance(intfTConstr, Signal):
                 unitTConstr = self._originEntityPort._dtype.constrain
                 paramDiff = list(ExprComparator.findExprDiffInParam(intfTConstr, unitTConstr))
                     

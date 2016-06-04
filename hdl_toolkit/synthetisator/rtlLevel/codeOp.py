@@ -1,4 +1,4 @@
-from hdl_toolkit.hdlObjects.typeDefs import BOOL
+from hdl_toolkit.hdlObjects.types.defs import BOOL
 
 def If(cond, ifTrue=[], ifFalse=[]):
     """

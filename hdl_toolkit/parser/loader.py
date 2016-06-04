@@ -3,9 +3,9 @@ import sys
 import json
 from subprocess import Popen, PIPE
 
-from python_toolkit.arrayQuery import where
-
-from hdl_toolkit.parser import Parser, ParserException
+from hdl_toolkit.parser.baseParser import BaseParser, ParserException
+from hdl_toolkit.parser.vhdlParser import VhdlParser
+from hdl_toolkit.parser.verilogParser import VerilogParser
 from hdl_toolkit.hdlContext import BaseVhdlContext, HDLCtx, BaseVerilogContext
 
 baseDir = os.path.dirname(__file__)
@@ -24,6 +24,19 @@ class ParserFileInfo():
         self.hierarchyOnly = False
         self.primaryUnitsOnly = False
         self.functionsOnly = False
+    
+    def getParser(self):
+        if self.lang == BaseParser.VERILOG:
+            pcls = VerilogParser
+        elif self.lang == BaseParser.VHDL:
+            pcls = VhdlParser
+        else:
+            raise NotImplementedError()
+         
+        return pcls(self.caseSensitive, self.hierarchyOnly, self.primaryUnitsOnly, self.functionsOnly)
+    
+    def __repr__(self):
+        return "<%s: %s>" % (self.__class__.__name__, self.fileName)
         
     def getCacheKey(self):
         return (self.fileName, self.hierarchyOnly)
@@ -39,15 +52,16 @@ def getFileInfoFromObj(obj):
 def langFromExtension(fileName):
     n = fileName.lower()
     if n.endswith('.v'):
-        return Parser.VERILOG
+        return BaseParser.VERILOG
     elif n.endswith(".vhd"):
-        return Parser.VHDL
+        return BaseParser.VHDL
     else:
         raise NotImplementedError("Can not resolve type of file")
+    
 def isCaseSecsitiveLang(lang):
-    if  lang == Parser.VHDL:
+    if  lang == BaseParser.VHDL:
         return False
-    elif lang == Parser.VERILOG:
+    elif lang == BaseParser.VERILOG:
         return True
     else:
         raise ParserException("Invalid lang specification \"%s\" is not supported" % (str(lang)))
@@ -58,7 +72,7 @@ def getJson(byteData, fileInfo):
     else:
         j = json.loads(byteData.decode("utf-8"))
     k = fileInfo.getCacheKey()
-    Parser._cache[k] = j
+    BaseParser._cache[k] = j
     return j
 
 def collectJsonFromProc(p, timeoutInterval, hierarchyOnly, ignoreErrors):
@@ -93,6 +107,19 @@ class ParserLoader():
         return p
     
     @staticmethod
+    def getTopCtx(lang):
+        if lang == BaseParser.VHDL:
+            topCtxCls = BaseVhdlContext
+        elif lang == BaseParser.VERILOG:
+            topCtxCls = BaseVerilogContext
+        else:
+            raise NotImplementedError    
+        
+        topCtx = topCtxCls.getBaseCtx()
+        topCtxCls.importFakeLibs(topCtx)
+        return topCtx
+    
+    @staticmethod
     def parseFiles(fileList, timeoutInterval=20, ignoreErrors=False, debug=False):
         """
         @param fileList: list of files to parse in same context
@@ -109,18 +136,13 @@ class ParserLoader():
         for f in fileList:
             assert(f.lang == lang)
         
-        if lang == Parser.VHDL:
-            topCtx = BaseVhdlContext.getBaseCtx()
-            BaseVhdlContext.importFakeLibs(topCtx)
-        else:
-            topCtx = BaseVerilogContext.getBaseCtx()
-            BaseVerilogContext.importFakeLibs(topCtx)
-            
+        topCtx = ParserLoader.getTopCtx(lang)
+        
         # start parsing all files    
         p_list = []
         for fInfo in fileList:
             k = fInfo.getCacheKey()
-            if k in Parser._cache:
+            if k in BaseParser._cache:
                 p = fInfo
             else:
                 p = ParserLoader.spotLoadingProc(fInfo, debug=debug)
@@ -130,7 +152,7 @@ class ParserLoader():
         # collect parsed json from java parser and construct python objects
         for p in p_list:
             if isinstance(p, ParserFileInfo):  # result is in cache
-                j = Parser._cache[p.getCacheKey()]
+                j = BaseParser._cache[p.getCacheKey()]
                 fileInfo = p
             else:  # parser process was spooted
                 fileInfo = p.fileInfo
@@ -138,7 +160,7 @@ class ParserLoader():
             if j:
                 lib = fileInfo.lib
                 fName = fileInfo.fileName
-                parser = Parser(fileInfo.caseSensitive, fileInfo.hierarchyOnly, fileInfo.primaryUnitsOnly, fileInfo.functionsOnly)
+                parser = fileInfo.getParser()
                 if lib is None:
                     ctx = topCtx
                 else:

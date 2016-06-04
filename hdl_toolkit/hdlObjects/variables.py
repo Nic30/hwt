@@ -1,5 +1,3 @@
-from hdl_toolkit.hdlObjects.value import Value
-
 class VHDLVariable():
     def __init__(self, name, dtype, defaultVal=None):
         self.name = name
@@ -7,7 +5,7 @@ class VHDLVariable():
         self.isConstant = False
         self.isShared = False
         if defaultVal is None:
-            defaultVal = Value.fromPyVal(None, dtype) 
+            defaultVal = dtype.fromPy(None) 
         self.defaultVal = defaultVal
         self._setDefValue()
         

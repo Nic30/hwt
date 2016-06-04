@@ -22,7 +22,7 @@ class AxiStreamMux(Unit):
         self._mkIntfExtern()
     
     def _impl(self):
-        selBits = self.sel._dtype.getBitCnt()
+        selBits = self.sel._dtype.bit_length()
         In = self.dataIn
         for index, outIntf in enumerate(self.dataOut):
             for ini, outi in zip(In._interfaces, outIntf._interfaces):

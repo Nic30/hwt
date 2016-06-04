@@ -14,12 +14,12 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
         u = TernOpInModulSample()
         u._loadDeclarations()
         
-        self.assertEquals(u.a._dtype.getBitCnt(), 8)
-        self.assertEquals(u.b._dtype.getBitCnt(), 1)
+        self.assertEquals(u.a._dtype.bit_length(), 8)
+        self.assertEquals(u.b._dtype.bit_length(), 1)
         
         u.CONDP.set(hInt(1))
-        self.assertEquals(u.a._dtype.getBitCnt(), 4)
-        self.assertEquals(u.b._dtype.getBitCnt(), 2)
+        self.assertEquals(u.a._dtype.bit_length(), 4)
+        self.assertEquals(u.b._dtype.bit_length(), 2)
         
     def test_SizeExpressions(self):
         class SizeExpressionsSample(UnitFromHdl):
@@ -29,13 +29,13 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
         
         A = u.paramA.get()
         B = u.paramB.get()
-        self.assertEqual(u.portA._dtype.getBitCnt(), A.val)
-        self.assertEqual(u.portB._dtype.getBitCnt(), A.val)
-        self.assertEqual(u.portC._dtype.getBitCnt(), A.val // 8)
-        self.assertEqual(u.portD._dtype.getBitCnt(), (A.val // 8) * 13)
-        self.assertEqual(u.portE._dtype.getBitCnt(), B.val * (A.val // 8))
-        self.assertEqual(u.portF._dtype.getBitCnt(), B.val * A.val)
-        self.assertEqual(u.portG._dtype.getBitCnt(), B.val * (A.val - 4))
+        self.assertEqual(u.portA._dtype.bit_length(), A.val)
+        self.assertEqual(u.portB._dtype.bit_length(), A.val)
+        self.assertEqual(u.portC._dtype.bit_length(), A.val // 8)
+        self.assertEqual(u.portD._dtype.bit_length(), (A.val // 8) * 13)
+        self.assertEqual(u.portE._dtype.bit_length(), B.val * (A.val // 8))
+        self.assertEqual(u.portF._dtype.bit_length(), B.val * A.val)
+        self.assertEqual(u.portG._dtype.bit_length(), B.val * (A.val - 4))
     
     def test_InterfaceArray(self):
         class InterfaceArraySample(UnitFromHdl):
@@ -66,8 +66,8 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(u.B.get(), hInt(2))
         
         
-        self.assertEqual(u.aMultBMult64._dtype.getBitCnt(), 1*2*64)
-        self.assertEqual(u.aMult32._dtype.getBitCnt(), 1*32)
+        self.assertEqual(u.aMultBMult64._dtype.bit_length(), 1*2*64)
+        self.assertEqual(u.aMult32._dtype.bit_length(), 1*32)
         
     
     def test_axiCrossbar(self):

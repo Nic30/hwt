@@ -1,4 +1,4 @@
-from hdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
+from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.operator import Operator
@@ -6,6 +6,7 @@ from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from cli_toolkit.ip_packager.helpers import appendSpiElem, \
          findS, mkSpiElm, ns
 from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+from hdl_toolkit.hdlObjects.types.bits import Bits
 
 class WireTypeDef():
     _requiredVal = ["typeName"]
@@ -57,8 +58,7 @@ class Port():
         t.typeName = dt.name.upper()
         if dt == BIT:
             port.vector = False
-        elif isinstance(dt, Std_logic_vector):
-            #w = dt.getWidth()
+        elif isinstance(dt, Bits):
             c = dt.constrain.origin
             assert(isinstance(c, Operator) and c.operator == AllOps.DOWNTO)
             

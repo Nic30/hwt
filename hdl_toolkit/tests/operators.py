@@ -2,7 +2,7 @@ import unittest
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator, staticLikeEval
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkAllOriginSignals
-from hdl_toolkit.hdlObjects.typeDefs import INT, STR, BOOL
+from hdl_toolkit.hdlObjects.types.defs import INT, STR, BOOL
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, hBool, hBit
 from hdl_toolkit.synthetisator.exceptions import TypeConversionErr
 

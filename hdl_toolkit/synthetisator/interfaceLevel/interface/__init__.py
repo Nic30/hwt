@@ -1,7 +1,7 @@
 from copy import copy
 
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
-from hdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
+from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.hdlObjects.portConnection import PortConnection
@@ -16,6 +16,7 @@ from hdl_toolkit.synthetisator.rtlLevel.signal import SignalNode, Signal
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.param import Param
+from hdl_toolkit.hdlObjects.types.bits import Bits
 
 
 # [TODO] indexRange and aplyIndexOnSignal has equivalent in signal utils and signal/ap_none ops
@@ -33,7 +34,7 @@ def indexRange(width, index):
 def aplyIndexOnSignal(sig, dstType, index):
     if sig._dtype == BIT or dstType == BIT:
         return sig[hInt(index)]
-    elif isinstance(dstType, Std_logic_vector):
+    elif isinstance(dstType, Bits):
         w = getWidthExpr(dstType)
         r = indexRange(w, index)
         return sig[r]

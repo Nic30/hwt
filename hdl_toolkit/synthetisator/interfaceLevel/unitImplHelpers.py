@@ -1,6 +1,7 @@
 from python_toolkit.arrayQuery import single
 from hdl_toolkit.interfaces.std import Ap_clk, Ap_rst, Ap_rst_n
-from hdl_toolkit.hdlObjects.typeDefs import BIT, Std_logic_vector
+from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
@@ -31,8 +32,8 @@ class UnitImplHelpers():
         # generate for all ports of subunit signals in this context
         def lockTypeWidth(t):
             # [TODO] only read parameter instead of full evaluation
-            if isinstance(t, Std_logic_vector):
-                return vecT(t.getBitCnt())
+            if isinstance(t, Bits):
+                return vecT(t.bit_length())
             else:
                 return t
         
