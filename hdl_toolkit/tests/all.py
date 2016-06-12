@@ -21,13 +21,13 @@ from hdl_toolkit.tests.synthetisator.rtlLevel.synthesis import TestCaseSynthesis
 
 
 if __name__ == "__main__":
-    def testSuiteFromTCs(tcs):
+    def testSuiteFromTCs(*tcs):
         loader = TestLoader()
         loadedTcs = [loader.loadTestsFromTestCase(tc) for tc in tcs]
         suite = TestSuite(loadedTcs)
         return suite
 
-    suite = testSuiteFromTCs((
+    suite = testSuiteFromTCs(
         HierarchyExtractorTC,
         ParserTC,
         InterfaceSyntherisatorTC,
@@ -38,6 +38,6 @@ if __name__ == "__main__":
         OperatorTC,
         TestCaseSynthesis,
         ValueTC,
-    ))
+    )
     runner = TextTestRunner(verbosity=2)
     runner.run(suite)
