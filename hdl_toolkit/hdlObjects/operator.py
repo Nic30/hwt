@@ -51,7 +51,7 @@ class Operator():
         return self is other or (
              type(self) == type(other) 
             and self.operator == other.operator \
-            and  self.ops == other.ops)
+            and self.ops == other.ops)
     
     def __deepcopy__(self, memo=None):
         try:
