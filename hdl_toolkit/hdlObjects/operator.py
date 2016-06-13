@@ -1,5 +1,7 @@
-from hdl_toolkit.simulator.exceptions import SimNotInitialized
 from copy import deepcopy
+from hdl_toolkit.simulator.exceptions import SimNotInitialized
+from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.hdlObjects.value import Value
 
 class InvalidOperandExc(Exception):
     pass
@@ -13,12 +15,9 @@ class Operator():
     @ivar result: result signal of this operator
     """
     def __init__(self, operator, operands):
-        self.ops = list()
+        self.ops = list(operands)
         self.operator = operator
         self.result = None
-        for op in operands:
-            operator.addOperand(self, op)
-
         
     def simPropagateChanges(self):
         v = self.evalFn()
@@ -36,6 +35,18 @@ class Operator():
             c.logger('%d: "%s" -> %s' % (env.now, str(self), str(v))) 
         yield env.process(self.result.simUpdateVal(v))
     
+    def registerSignals(self, outputs=[]):
+        for o in self.ops:
+            if o in outputs:
+                o.drivers.append(self)
+            elif isinstance(o, Signal):
+                o.endpoints.append(self)
+            elif isinstance(o, Value):
+                pass
+            else:
+                raise NotImplementedError("Operator operands can be only signal or values got:%s" % repr(o))
+                
+    
     def staticEval(self):
         for o in self.ops:
             o.staticEval()
@@ -43,15 +54,23 @@ class Operator():
             
     def evalFn(self):
         return self.operator.eval(self)
-        
-    def getReturnType(self):
-        return self.operator.getReturnType(self)
     
     def __eq__(self, other):
         return self is other or (
              type(self) == type(other) 
             and self.operator == other.operator \
             and self.ops == other.ops)
+    
+    @staticmethod
+    def withRes(opDef, operands, resT, outputs=[]):
+        op = Operator(opDef, operands)
+        out = Signal(None, resT)
+        out.drivers.append(op)
+        out.origin = op
+        op.result = out
+        op.registerSignals(outputs)
+        
+        return out
     
     def __deepcopy__(self, memo=None):
         try:

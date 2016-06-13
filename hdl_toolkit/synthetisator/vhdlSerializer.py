@@ -26,8 +26,8 @@ opPrecedence = {AllOps.NOT : 2,
                 AllOps.EVENT: 1,
                 AllOps.RISING_EDGE: 1,
                 AllOps.DIV: 3,
-                AllOps.PLUS : 3,
-                AllOps.MINUS: 3,
+                AllOps.ADD : 3,
+                AllOps.SUB: 3,
                 AllOps.MUL: 3,
                 AllOps.MUL: 3,
                 AllOps.XOR: 2,
@@ -436,6 +436,11 @@ class VhdlSerializer():
             return cls.SignalItem(val)
         else:
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 
+        
+    @classmethod
+    def BitToBool(cls, cast):
+        v = 0 if cast.sig.negated else 1
+        return cls.asHdl(cast.sig) + "=='%d'" % v
 
     @classmethod
     def Operator(cls, op):
@@ -459,6 +464,11 @@ class VhdlSerializer():
         
         if o == AllOps.AND_LOG:
             return _bin('AND')
+        elif o == AllOps.OR_LOG:
+            return _bin('OR')
+        elif o == AllOps.NOT:
+            assert(len(ops) == 1)
+            return "NOT " + p(ops[0])
         elif o == AllOps.CALL:
             return "%s(%s)" % (cls.FnContainer(ops[0]), ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
@@ -479,18 +489,13 @@ class VhdlSerializer():
             return "%s(%s)" % ((p(ops[0])).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('<')
-        elif o == AllOps.MINUS:
+        elif o == AllOps.SUB:
             return _bin('-')
         elif o == AllOps.MUL:
             return _bin('*')
         elif o == AllOps.NEQ:
             return _bin('/=')
-        elif o == AllOps.NOT:
-            assert(len(ops) == 1)
-            return "NOT " + p(ops[0])
-        elif o == AllOps.OR_LOG:
-            return _bin('OR')
-        elif o == AllOps.PLUS:
+        elif o == AllOps.ADD:
             return _bin('+')
         elif o == AllOps.TERNARY:
             return p(ops[1]) + " WHEN " + p(ops[0]) + " ELSE " + p(ops[2])

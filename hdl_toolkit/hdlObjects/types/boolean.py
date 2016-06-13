@@ -13,6 +13,9 @@ class Boolean(HdlType):
         from hdl_toolkit.hdlObjects.types.booleanConversions import convertBoolean
         return convertBoolean
 
+    def bit_length(self):
+        return 1
+    
     @classmethod
     def getValueCls(cls):
         try:

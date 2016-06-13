@@ -4,7 +4,6 @@
 from hdl_toolkit.hdlContext import HDLCtx, HDLParseErr, RequireImportErr
 
 from hdl_toolkit.hdlObjects.reference import HdlRef
-from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.entity import Entity
@@ -13,7 +12,7 @@ from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.component import ComponentInstance
 
 from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.synthetisator.rtlLevel.signal import SignalNode, Signal
+from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 
 from hdl_toolkit.hdlObjects.types.defs import STR 
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
@@ -126,7 +125,7 @@ class BaseParser(object):
                     ops.append(l['value'])
                 else:
                     ops.append(self.exprFromJson(binOp['op1'], ctx)) 
-            return SignalNode.resForOp(Operator(operator, ops))
+            return operator._evalFn(*ops)
         raise HDLParseErr("Unparsable expression %s" % (str(jExpr)))
 
     def portFromJson(self, jPort, ctx):

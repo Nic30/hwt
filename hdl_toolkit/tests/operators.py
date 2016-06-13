@@ -4,7 +4,6 @@ from hdl_toolkit.simulator.hdlSimulator import HdlSimulator, staticLikeEval
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkAllOriginSignals
 from hdl_toolkit.hdlObjects.types.defs import INT, STR, BOOL
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, hBool, hBit
-from hdl_toolkit.synthetisator.exceptions import TypeConversionErr
 
 
 class OperatorTC(unittest.TestCase):
@@ -65,7 +64,7 @@ class OperatorTC(unittest.TestCase):
     def testADD_InvalidOperands(self):
         a = self.c.sig('a', typ=STR)
         b = self.c.sig('b')
-        self.assertRaises(TypeConversionErr, lambda : a + b) 
+        self.assertRaises(NotImplementedError, lambda : a + b) 
         
     def testAND_LOG_eval(self):
         s0 = self.c.sig('s0')
@@ -97,7 +96,7 @@ class OperatorTC(unittest.TestCase):
              
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(OperatorTC('testNotBOOL'))
+    #suite.addTest(OperatorTC('testAND_LOG_eval'))
     suite.addTest(unittest.makeSuite(OperatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

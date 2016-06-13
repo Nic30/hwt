@@ -1,5 +1,32 @@
 from hdl_toolkit.hdlObjects.types.defs import BOOL
-from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.value import Value, areValues
+from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+
+def boolLogOp(self, other, op):
+    other = toHVal(other)
+
+    if areValues(self, other):
+        v = bool(op._evalFn(bool(self.val), (other.val)))
+        return BooleanVal(v, BOOL,
+                self.vldMask & other.vldMask,
+                self.eventMask | other.eventMask)
+    else:
+        return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
+
+def boolCmpOp(self, other, op, evalFn=None):
+    other = toHVal(other)
+    if evalFn is None:
+        evalFn = op._evalFn
+    
+    if areValues(self, other):
+        v =evalFn(bool(self.val), (other.val)) and self.vldMask == other.vldMask == 1
+        return BooleanVal(v, BOOL,
+                self.vldMask & other.vldMask,
+                self.eventMask | other.eventMask)
+    else:
+        return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
 
 class BooleanVal(Value):
     
@@ -17,40 +44,37 @@ class BooleanVal(Value):
         return cls(val, typeObj, vld)
             
     def _eq(self, other):
-        """return abs(w.val[0].val - w.val[1].val) + 1
-    
-        @attention: ignores eventMask
         """
-        self._otherCheck(other)
+        @attention: for value ignores eventMask
+        """
+        return boolCmpOp(self, other, AllOps.EQ, evalFn=lambda a, b: a == b)
 
-        eq = self.val == other.val \
-            and self.vldMask == other.vldMask == 1
-        
-        vldMask = int(self.vldMask == other.vldMask == 1)
-        evMask = self.eventMask | other.eventMask
-        return self.__class__(eq, BOOL, vldMask, eventMask=evMask)
+    def __ne__(self, other):
+        """
+        @attention: for value ignores eventMask
+        """
+        return boolCmpOp(self, other, AllOps.NEQ)
 
     def __invert__(self):
-        v = self.clone()
-        v.val = not v.val
-        return v
+        if isinstance(self, Value):
+            v = self.clone()
+            v.val = not v.val
+            return v
+        else:
+            return Operator.withRes(AllOps.NOT, [self], BOOL)
 
     # logic
     def __and__(self, other):
-        self._otherCheck(other)
         # [VHDL-BUG-LIKE] X and 0 should be 0 now is X (in vhdl is now this function correct)
-        v = self.val and other.val
-        return self.__class__(v, BOOL,
-                self.vldMask & other.vldMask,
-                self.eventMask | other.eventMask)
+        return boolLogOp(self, other, AllOps.AND_LOG)
         
     def __or__(self, other):
-        self._otherCheck(other)
         # [VHDL-BUG-LIKE] X or 1 should be 1 now is X (in vhdl is now this function correct) 
-        v = bool(self.val) or bool(other.val)
-        return self.__class__(v, BOOL,
-                self.vldMask & other.vldMask,
-                self.eventMask | other.eventMask)
+        return boolLogOp(self, other, AllOps.OR_LOG)
 
+    # for evaluating only, not convertible to hdl
+    
     def __bool__(self):
+        assert(isinstance(self, Value))
         return bool(self.val and self.vldMask)
+    

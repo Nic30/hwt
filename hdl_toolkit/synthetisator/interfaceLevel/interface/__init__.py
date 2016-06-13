@@ -12,36 +12,13 @@ from hdl_toolkit.synthetisator.interfaceLevel.interface.directionFns import Inte
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
 from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
-from hdl_toolkit.synthetisator.rtlLevel.signal import SignalNode, Signal
+from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import aplyIndexOnSignal
 
-
-# [TODO] indexRange and aplyIndexOnSignal has equivalent in signal utils and signal/ap_none ops
-def indexRange(width, index):
-    if isinstance(width, (Param, Signal)):
-        upper = width * hInt(index)
-        lower = width * hInt(index + 1) - hInt(1)
-        return lower._downto(upper)
-    else:
-        upper = hInt(width.val * index)
-        lower = hInt(width.val * (index + 1) - 1)
-        return SignalNode.resForOp(Operator(AllOps.DOWNTO, [lower, upper]))
-
-
-def aplyIndexOnSignal(sig, dstType, index):
-    if sig._dtype == BIT or dstType == BIT:
-        return sig[hInt(index)]
-    elif isinstance(dstType, Bits):
-        w = getWidthExpr(dstType)
-        r = indexRange(w, index)
-        return sig[r]
-    else:
-        raise NotImplementedError()
-    
-                   
 class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """
     Base class for all interfaces in interface synthetisator

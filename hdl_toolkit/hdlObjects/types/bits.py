@@ -21,7 +21,7 @@ class Bits(HdlType):
             and self.signed == other.signed and self.forceVector == other.forceVector
     
     def __hash__(self):
-        return hash((self.name, self.signed, self.bit_length(), self.forceVector))
+        return hash((self.signed, id(self.constrain), self.forceVector))
     
     def asVhdl(self, serializer):
         disableRange = False

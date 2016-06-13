@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, toHVal, areSameSignals
+from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, areSameSignals
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 
 class Param(Signal):
     """
