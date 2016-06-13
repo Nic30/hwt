@@ -1,5 +1,7 @@
-from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.hdlObjects.types.defs import BOOL
+from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 BoolVal = BOOL.getValueCls()
 
@@ -24,11 +26,28 @@ class EnumVal(Value):
     
         @attention: ignores eventMask
         """
-        self._otherCheck(other)
-
-        eq = self.val == other.val \
-            and self.vldMask == other.vldMask == 1
+        assert(self._dtype is other._dtype)
         
-        vldMask = int(self.vldMask == other.vldMask == 1)
-        evMask = self.eventMask | other.eventMask
-        return BoolVal(eq, BOOL, vldMask, eventMask=evMask)
+        if areValues(self, other):
+            eq = self.val == other.val \
+                and self.vldMask == other.vldMask == 1
+            
+            vldMask = int(self.vldMask == other.vldMask == 1)
+            evMask = self.eventMask | other.eventMask
+            return BoolVal(eq, BOOL, vldMask, eventMask=evMask)
+        else:
+            return Operator.withRes(AllOps.EQ, [self, other], BOOL)
+        
+    def __ne__(self, other):
+        assert(self._dtype is other._dtype)
+        
+        if areValues(self, other):
+            neq = self.val != other.val \
+                and self.vldMask == other.vldMask == 1
+            
+            vldMask = int(self.vldMask == other.vldMask == 1)
+            evMask = self.eventMask | other.eventMask
+            return BoolVal(neq, BOOL, vldMask, eventMask=evMask)
+        else:
+            return Operator.withRes(AllOps.NEQ, [self, other], BOOL)
+        

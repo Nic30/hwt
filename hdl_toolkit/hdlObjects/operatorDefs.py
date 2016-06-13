@@ -64,7 +64,7 @@ class AllOps():
     AND_LOG = OpDefinition(lambda a, b : a & b)
     OR_LOG = OpDefinition(lambda a, b : a | b)
 
-    DOWNTO = OpDefinition(lambda a, b : a._downto(a))
+    DOWNTO = OpDefinition(lambda a, b : a._downto(b))
     
     GREATERTHAN = OpDefinition(lambda a, b : a > b)
     GE = OpDefinition(lambda a, b : a >= b)

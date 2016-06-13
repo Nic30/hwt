@@ -41,8 +41,8 @@ class OperatorTC(unittest.TestCase):
         b = hInt(0)
         r = a._downto(b)
         res = staticLikeEval(r)
-        self.assertEqual(res.val[0].val, 0)
-        self.assertEqual(res.val[1].val, 10)
+        self.assertEqual(res.val[0].val, 10)
+        self.assertEqual(res.val[1].val, 0)
     
     def testwalkAllOriginSignalsDownto(self):
         a = self.c.sig('a', typ=INT)
@@ -96,7 +96,7 @@ class OperatorTC(unittest.TestCase):
              
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(OperatorTC('testAND_LOG_eval'))
+    suite.addTest(OperatorTC('testDownto'))
     suite.addTest(unittest.makeSuite(OperatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

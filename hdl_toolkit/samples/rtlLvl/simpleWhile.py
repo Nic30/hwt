@@ -1,5 +1,5 @@
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT, vec
+from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 from hdl_toolkit.formater import formatVhdl
@@ -25,7 +25,7 @@ if __name__ == "__main__":
        w(boundry, counter)
        ,
        If(en,
-           w(counter - vec(1, 8), counter)
+           w(counter - 1, counter)
            ,
            w(counter, counter)
         )
