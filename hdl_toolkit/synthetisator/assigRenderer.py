@@ -171,9 +171,11 @@ def renderIfTree(assigments):
         else:
             cont.pos.add(assigment)
     def registerToMap(assigment):
+        # walk all assignments and register them in term map
         for c in assigment.cond:
             realC, isNegated = getBaseCond(c)
             insertToMap(realC, assigment, isNegated)
+            
     # resolve main hierarchy of conditions
     for a in assigments:
         registerToMap(a)

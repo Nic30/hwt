@@ -40,6 +40,8 @@ def bitsCmp(self, other, op, evalFn=None):
             self = self._convert(BOOL)
         elif self._dtype == other._dtype:
             pass
+        elif isinstance(other._dtype, Integer):
+            other = other._convert(self._dtype) 
         else:
             raise NotImplementedError("Types are not comparable (%s, %s)" % (repr(self._dtype), repr(other._dtype)))
         

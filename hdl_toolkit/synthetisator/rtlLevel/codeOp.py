@@ -1,7 +1,16 @@
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
+
+def intfToSig(obj):
+    if isinstance(obj, InterfaceBase):
+        return obj._sig
+    else:
+        return obj
+
 def If(cond, ifTrue=[], ifFalse=[]):
     """
     If statement
     """
+    cond = intfToSig(cond)
     
     for stm in ifTrue:
         stm.cond.add(cond)

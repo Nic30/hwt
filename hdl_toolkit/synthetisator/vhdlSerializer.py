@@ -175,14 +175,15 @@ class VhdlSerializer():
     @classmethod
     def condAsHdl(cls, cond, forceBool):
         if isinstance(cond, Signal):
-            return cls.asHdl(cond)
-        cond = list(cond)
+            cond = [cond]
+        else:
+            cond = list(cond)
         if len(cond) == 1:
             c = cond[0]
             if not forceBool or c._dtype == BOOL:
                 return cls.asHdl(c)
             elif c._dtype == BIT:
-                return "(" + cls.asHdl(c) + ")='1' " 
+                return "(" + cls.asHdl(c) + ")='1'" 
             else:
                 raise NotImplementedError()
             

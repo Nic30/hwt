@@ -15,7 +15,7 @@ def complexConds():
     rst = c.sig("rst")
     
     st = c.sig('st', stT, clk=clk, syncRst=rst, defVal=stT.idle)
-    idle = c.sig('idle')
+    s_idle = c.sig('s_idle')
     sd0 = c.sig('sd0')
     sd1 = c.sig('sd1')
     cntrlFifoVld = c.sig('ctrlFifoVld')
@@ -70,12 +70,12 @@ def complexConds():
             )
         )
     )
-    w(st._eq(stT.idle), idle)
+    w(st._eq(stT.idle), s_idle)
     
-    return c, [sd0, sd1, cntrlFifoVld, cntrlFifoLast, idle]
+    return c, [sd0, sd1, cntrlFifoVld, cntrlFifoLast, s_idle]
     
 if __name__ == "__main__":
     c, interf = complexConds()
     
     for o in c.synthetize(interf):
-            print(formatVhdl(str(o)))
+        print(formatVhdl(str(o)))
