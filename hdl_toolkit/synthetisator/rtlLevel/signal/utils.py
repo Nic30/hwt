@@ -69,15 +69,7 @@ def trim(src, targetWidth):
     return vecWithOffset(src, targetWidth, 0)
 
 def vecWithOffset(src, width, offset):
-    """
-    Slice out signal of width with offset.
-    """
-    # [TODO] parametrizable offset
-    lower = toHVal(offset)
-    width = toHVal(width)
-    upper = width + hInt(offset) - hInt(1)
-
-    return src[upper:lower]
+    return src[(width + offset):offset]
 
 def connectUnpacked(src, dst, exclude=[]):
     """src is packed and it is unpacked and connected to dst"""

@@ -1,13 +1,8 @@
-from hdl_toolkit.hdlObjects.types.defs import BOOL
-
 def If(cond, ifTrue=[], ifFalse=[]):
     """
     If statement
     """
     
-    if cond._dtype != BOOL:
-        cond = cond._isOn()  
-        
     for stm in ifTrue:
         stm.cond.add(cond)
         

@@ -27,7 +27,7 @@ class Signal(SignalItem, SignalOps):
             name = "sig_" + str(id(self))
             self.hasGenericName = True 
        
-        assert(isinstance(dtype, HdlType))  # == can be range, downto, to etc.
+        assert(isinstance(dtype, HdlType))
         super(Signal, self).__init__(name, dtype, defaultVal)
         # set can not be used because hash of items are changign
         self.endpoints = UniqList()

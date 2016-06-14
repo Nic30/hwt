@@ -38,7 +38,22 @@ class SignalOps():
     
     def _isOn(self):
         return self._dtype.convert(self, BOOL)
-        
+    
+    
+    # conversions
+    def _convSign(self, signed):
+        return tv(self)._convSign(self, signed)
+    
+    def _signed(self):
+        return tv(self)._signed(self)
+    
+    def _unsigned(self):
+        return tv(self)._unsigned(self)
+    
+    def _vec(self):
+        return tv(self)._vec(self)
+       
+    # logic    
     def __and__(self, other):
         return self.naryOp(AllOps.AND_LOG, tv(self).__and__, other)
     
@@ -48,6 +63,7 @@ class SignalOps():
     def __or__(self, other):
         return self.naryOp(AllOps.OR_LOG, tv(self).__or__, other)
 
+    # cmp
     def _eq(self, other):
         """__eq__ is not overloaded because it will destroy hashability of object"""
         return self.naryOp(AllOps.EQ, tv(self)._eq, other)
@@ -55,6 +71,20 @@ class SignalOps():
     def __ne__(self, other):
         return self.naryOp(AllOps.NEQ, tv(self).__ne__, other)
     
+    def __ge__(self, other):
+        return self.naryOp(AllOps.GE, tv(self).__ge__, other)
+    
+    def __gt__(self, other):
+        return self.naryOp(AllOps.GREATERTHAN, tv(self).__gt__, other)
+    
+    def __lt__(self, other):
+        return self.naryOp(AllOps.LOWERTHAN, tv(self).__lt__, other)
+    
+    def __le__(self, other):
+        return self.naryOp(AllOps.LE, tv(self).__le__, other)
+    
+    
+    # arithmetic
     def __add__(self, other):
         return self.naryOp(AllOps.ADD, tv(self).__add__, other)
     
@@ -67,14 +97,30 @@ class SignalOps():
     def __floordiv__(self, divider):
         return self.naryOp(AllOps.DIV, tv(self).__floordiv__, divider)
     
+    # selections
     def _downto(self, to):
         return self.naryOp(AllOps.DOWNTO, tv(self)._downto, to)
     
     def __getitem__(self, key):
-        return self.binOp(AllOps.INDEX, tv(self).__getitem__, key)
+        operator = AllOps.INDEX
+        if isinstance(key, slice):
+            hashableKey = (key.start, key.stop, key.step)
+        else:
+            hashableKey = key
+        k = (operator, hashableKey)
+        try:
+            return self._usedOps[k]
+        except KeyError:
+            o = tv(self).__getitem__(self, key)
+            self._usedOps[k] = o
+            return o  
+        
+        return o
+
 
     def _concat(self, *operands):
         return self.naryOp(AllOps.CONCAT, tv(self)._concat, *operands)
+    
     
     def _ternary(self, ifTrue, ifFalse):
         return self.naryOp(AllOps.TERNARY, tv(self)._ternary, ifTrue, ifFalse)

@@ -82,6 +82,9 @@ class AllOps():
     BitsToInt = OpDefinition(lambda a : a._convert())
     IntToBits = OpDefinition(lambda a : a._convert())
     
+    BitsAsSigned = OpDefinition(lambda a : a._signed())
+    BitsAsUnsigned = OpDefinition(lambda a : a._unsigned())
+    BitsAsVec = OpDefinition(lambda a : a._vec())
     
     allOps = {}
         
