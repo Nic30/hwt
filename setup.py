@@ -12,7 +12,6 @@ setup(name='HWToolkit',
       install_requires=[
         'myhdl',  # optional hls synthetisator (but used in some samples)
         'Pillow', # altium scheme reader
-        'sympy',  # symbolic math
         'simpy',  # discrete simulator 
         'jinja2', # hdl templates renderer, visualizer renderer
         'flask',  # visualizer

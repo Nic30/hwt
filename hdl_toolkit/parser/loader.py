@@ -75,7 +75,7 @@ def getJson(byteData, fileInfo):
     BaseParser._cache[k] = j
     return j
 
-def collectJsonFromProc(p, timeoutInterval, hierarchyOnly, ignoreErrors):
+def collectJsonFromProc(p, timeoutInterval, ignoreErrors):
     stdoutdata, stdErrData = p.communicate(timeout=timeoutInterval)
     fileName = p.fileInfo.fileName
     
@@ -156,7 +156,7 @@ class ParserLoader():
                 fileInfo = p
             else:  # parser process was spooted
                 fileInfo = p.fileInfo
-                j = collectJsonFromProc(p, timeoutInterval, fileInfo.hierarchyOnly, ignoreErrors)
+                j = collectJsonFromProc(p, timeoutInterval, ignoreErrors)
             if j:
                 lib = fileInfo.lib
                 fName = fileInfo.fileName

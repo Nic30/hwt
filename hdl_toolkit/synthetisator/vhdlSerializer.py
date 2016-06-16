@@ -5,7 +5,7 @@ from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, MultipleDriversExc
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment 
 from hdl_toolkit.hdlObjects.specialValues import Unconstrained
-from hdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer, \
+from hdl_toolkit.hdlObjects.statements import IfContainer, \
     SwitchContainer, WhileContainer
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
 from hdl_toolkit.synthetisator.param import getParam, Param
@@ -96,7 +96,7 @@ class VhdlSerializer():
             return serFn(obj)
     
     @classmethod
-    def FnContainer(cls, fn):
+    def FunctionContainer(cls, fn):
         return  fn.name
     
     @classmethod
@@ -477,7 +477,7 @@ class VhdlSerializer():
             assert(len(ops) == 1)
             return "NOT " + p(ops[0])
         elif o == AllOps.CALL:
-            return "%s(%s)" % (cls.FnContainer(ops[0]), ", ".join(map(p, ops[1:])))
+            return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
             return _bin('&')
         elif o == AllOps.DIV:

@@ -2,7 +2,7 @@ import inspect, os
 import types
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.function import FnContainer
+from hdl_toolkit.hdlObjects.function import Function
 from hdl_toolkit.parser.utils import entityFromFile, loadCntxWithDependencies
 from hdl_toolkit.hdlContext import RequireImportErr
 from hdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
@@ -27,7 +27,7 @@ def cloneExprWithUpdatedParams(expr, paramUpdateDict):
         assert(isinstance(d, Operator))
         ops = [ cloneExprWithUpdatedParams(x, paramUpdateDict) for x in d.ops]
         return Operator.withRes(d.operator, ops, d.result._dtype)
-    elif isinstance(expr, FnContainer):
+    elif isinstance(expr, Function):
         return expr
     elif isinstance(expr, Unconstrained):
         return copy(expr)

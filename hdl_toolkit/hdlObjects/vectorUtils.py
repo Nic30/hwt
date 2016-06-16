@@ -17,7 +17,7 @@ def getWidthExpr(vectorTypeInst):
         return w
     else:
         widthMinOne = widthMinOne.singleDriver()
-    assert(widthMinOne.operator == AllOps.MINUS)
+    assert(widthMinOne.operator == AllOps.SUB)
     assert(widthMinOne.ops[1].val == 1)
     
     return widthMinOne.ops[0]

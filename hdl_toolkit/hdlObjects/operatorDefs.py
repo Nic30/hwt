@@ -1,4 +1,5 @@
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.function import Function
 #def getReturnType_hdlFn(op):
 #    fnCont = op.ops[0]
 #    fn = fnCont.lookup(op.ops[1:])
@@ -20,21 +21,13 @@ class OpDefinition():
         """Load all operands and process them by self._evalFn"""
         # it = iter(operator.ops)
         def getVal(v):
-            while not isinstance(v, Value):
+            while not isinstance(v, (Value, Function)):
                 v = v._val
             
             return v
-        
-        if self == AllOps.CALL:
-            # resolve function overload
-            origOps = operator.ops[1:]
-            fnCont = operator.ops[0]
-            fn = fnCont.parent.body[fnCont.name].lookup(origOps)
-            ops = list(map(getVal, origOps))
-            return self._evalFn(fn, ops)
-        else:
-            ops = list(map(getVal, operator.ops))
-            return self._evalFn(*ops)
+
+        ops = list(map(getVal, operator.ops))
+        return self._evalFn(*ops)
 
     def __repr__(self):
         return "<OpDefinition %s>" % (self.id)
@@ -77,7 +70,7 @@ class AllOps():
     
     TERNARY = OpDefinition(lambda a, b, c : b if a else c)
     
-    CALL = OpDefinition(lambda a, ops: a.call(ops))
+    CALL = OpDefinition(lambda a, *ops: a.call(*ops))
     
     BitsToInt = OpDefinition(lambda a : a._convert())
     IntToBits = OpDefinition(lambda a : a._convert())

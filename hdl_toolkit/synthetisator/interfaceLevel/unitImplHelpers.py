@@ -4,7 +4,8 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT
+from hdl_toolkit.hdlObjects.typeShortcuts import vecT, mkRange
+from copy import copy
 
 
 class UnitImplHelpers():
@@ -33,7 +34,9 @@ class UnitImplHelpers():
         def lockTypeWidth(t):
             # [TODO] only read parameter instead of full evaluation
             if isinstance(t, Bits):
-                return vecT(t.bit_length())
+                t = copy(t)
+                t.constrain = mkRange(t.bit_length())
+                return t
             else:
                 return t
         

@@ -226,7 +226,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
             return SignalNode.resForOp(Operator(AllOps.DOWNTO, [val, hInt(0)]))
 
         def mkExpr0WithMinusOne(val):
-            val = SignalNode.resForOp(Operator(AllOps.MINUS, [val, hInt(1)]))
+            val = SignalNode.resForOp(Operator(AllOps.SUB, [val, hInt(1)]))
             return SignalNode.resForOp(Operator(AllOps.DOWNTO, [val, hInt(0)]))
 
         sig_a = Param(0)

@@ -2,6 +2,7 @@ from copy import deepcopy
 from hdl_toolkit.simulator.exceptions import SimNotInitialized
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.function import Function
 
 class InvalidOperandExc(Exception):
     pass
@@ -41,7 +42,7 @@ class Operator():
                 o.drivers.append(self)
             elif isinstance(o, Signal):
                 o.endpoints.append(self)
-            elif isinstance(o, Value):
+            elif isinstance(o, (Value, Function)):
                 pass
             else:
                 raise NotImplementedError("Operator operands can be only signal or values got:%s" % repr(o))
