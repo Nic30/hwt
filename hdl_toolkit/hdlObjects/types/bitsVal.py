@@ -11,6 +11,7 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.slice import Slice
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from copy import copy
+from hdl_toolkit.hdlObjects.types.integerVal import IntegerVal
 
 BoolVal = BOOL.getValueCls()
 
@@ -197,7 +198,7 @@ class BitsVal(Value):
                 key = (start - INT.fromPy(1))._downto(stop)
                 resT = Bits(widthConstr=key, forceVector=True, signed=st.signed)
                 
-        elif isinstance(key, (int, Integer)):
+        elif isinstance(key, (int, IntegerVal)):
             key = toHVal(key)
             resT = BIT
             
