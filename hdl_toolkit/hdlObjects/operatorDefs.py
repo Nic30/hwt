@@ -1,6 +1,6 @@
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.function import Function
-#def getReturnType_hdlFn(op):
+# def getReturnType_hdlFn(op):
 #    fnCont = op.ops[0]
 #    fn = fnCont.lookup(op.ops[1:])
 #    return fn.returnT
@@ -68,7 +68,7 @@ class AllOps():
 
     INDEX = OpDefinition(lambda a, b : a[b])
     
-    TERNARY = OpDefinition(lambda a, b, c : b if a else c)
+    TERNARY = OpDefinition(lambda a, b, c : a._ternary(b, c))
     
     CALL = OpDefinition(lambda a, *ops: a.call(*ops))
     
