@@ -64,6 +64,9 @@ class BooleanVal(Value):
             return Operator.withRes(AllOps.NOT, [self], BOOL)
 
     def _ternary(self, ifTrue, ifFalse):
+        ifTrue = toHVal(ifTrue)
+        ifFalse = toHVal(ifFalse)
+        
         if isinstance(self, Value):
             if self.val:
                 return ifTrue
