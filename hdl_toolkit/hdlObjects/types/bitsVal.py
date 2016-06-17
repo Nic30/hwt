@@ -29,7 +29,7 @@ def bitsCmp(self, other, op, evalFn=None):
     
     if iamVal and otherIsVal:
         w = self._dtype.bit_length()
-        assert(w == other._dtype.bit_length())
+        assert(w == other._dtype.bit_length(), "%d, %d" % (w, other._dtype.bit_length()))
         
         vld = self.vldMask & other.vldMask
         res = evalFn(self.val, other.val) and vld == Bitmask.mask(w)
@@ -174,22 +174,28 @@ class BitsVal(Value):
             
         # [TODO] what about Slice hdl class?
         # [TODO] boundary check
-        if isinstance(key, slice):
-            if key.step is not None:
-                raise NotImplementedError()
-            start = key.start
-            stop = key.stop
-            
-            if key.start is None:
-                start = boundryFromType(self, 0) + 1
-            else:
-                start = toHVal(key.start)
-            
-            if key.stop is None:
-                stop = boundryFromType(self, 1)
-            else:
-                stop = toHVal(key.stop)
+        isSlice = isinstance(key, slice)
+        isSLICE = isinstance(key, Slice.getValueCls())
+        
+        if isSlice or isSLICE:
+            if isSlice:
+                if key.step is not None:
+                    raise NotImplementedError()
+                start = key.start
+                stop = key.stop
                 
+                if key.start is None:
+                    start = boundryFromType(self, 0) + 1
+                else:
+                    start = toHVal(key.start)
+                
+                if key.stop is None:
+                    stop = boundryFromType(self, 1)
+                else:
+                    stop = toHVal(key.stop)
+            else:
+                start = key.val[0]
+                stop = key.val[1]
 
             isVal = iamVal and isinstance(start, Value) and isinstance(stop, Value) 
             if isVal:
