@@ -81,7 +81,7 @@ class IntegerVal(Value):
         if areValues(self, other):
             vldMask = int(self.vldMask and other.vldMask)
             eventMask = int(self.eventMask or other.eventMask)
-            return SLICE.getValueCls()([self, other], SLICE, vldMask, eventMask)
+            return SLICE.getValueCls()((self, other), SLICE, vldMask, eventMask)
         else:
             return Operator.withRes(AllOps.DOWNTO, [self, other], SLICE)
     
