@@ -85,7 +85,11 @@ class Value():
     def __xor__(self, other):
         raise NotImplementedError()
     def __eq__(self, other):
-        return bool(self._eq(other))
+        if areValues(self, other):
+            return bool(self._eq(other))
+        else:
+            super().__eq__(other)
+    
     def _eq(self, other):
         raise NotImplementedError()
     def __ne__(self, other):
