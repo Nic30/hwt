@@ -1,6 +1,6 @@
 import unittest
 from python_toolkit.arrayQuery import single, NoValueExc
-from hdl_toolkit.hdlObjects.types.defs import INT, UINT, PINT
+from hdl_toolkit.hdlObjects.types.defs import INT, UINT, PINT, SLICE
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
@@ -8,7 +8,6 @@ from hdl_toolkit.hdlObjects.expr import ExprComparator
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import synthesised
 from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.synthetisator.rtlLevel.signal import SignalNode
 from hdl_toolkit.interfaces.amba import AxiLite
 from hdl_toolkit.interfaces.std import Ap_clk, \
     Ap_rst_n, BramPort, Ap_vld
@@ -223,11 +222,11 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     def test_compatibleExpression(self):
 
         def mkExpr0(val):
-            return SignalNode.resForOp(Operator(AllOps.DOWNTO, [val, hInt(0)]))
+            return Operator.withRes(AllOps.DOWNTO, [val, hInt(0)], SLICE)
 
         def mkExpr0WithMinusOne(val):
-            val = SignalNode.resForOp(Operator(AllOps.SUB, [val, hInt(1)]))
-            return SignalNode.resForOp(Operator(AllOps.DOWNTO, [val, hInt(0)]))
+            val = Operator.withRes(AllOps.SUB, [val, hInt(1)], INT)
+            return Operator.withRes(AllOps.DOWNTO, [val, hInt(0)], INT)
 
         sig_a = Param(0)
         sig_b = Param(1)
