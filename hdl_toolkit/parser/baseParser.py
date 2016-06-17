@@ -21,7 +21,6 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlContext import HDLCtx, HDLParseErr, RequireImportErr
 
 from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 
 
 """
@@ -83,13 +82,10 @@ class BaseParser(object):
         # if not self.hierarchyOnly:
         #    raise NotImplementedError()
         return pb
-
-    def exprFromJson(self, jExpr, ctx):
-        lit = jExpr.get("literal", None)
-        if lit:
-            # vhldConvertor.vhdlSymbolType
-            t = lit['type']
-            v = lit['value']
+    
+    def litFromJson(self, jLit, ctx):
+            t = jLit['type']
+            v = jLit['value']
             if t == 'ID':
                 if isinstance(v[0], str):  # [TODO] not clear
                     ref = HdlRef([v], self.caseSensitive)
@@ -97,7 +93,7 @@ class BaseParser(object):
                     ref = HdlRef.fromJson(v, self.caseSensitive)
                 v = ctx.lookupLocal(ref)
             elif t == 'INT':
-                bits = lit.get("bits", None)
+                bits = jLit.get("bits", None)
                 if bits is None:
                     v = hInt(v)
                 else:
@@ -107,26 +103,33 @@ class BaseParser(object):
             else:
                 raise HDLParseErr("Unknown type of literal %s" % (t))
             return v
+        
+    def opFromJson(self, jOp, ctx):
+        operator = AllOps.opByName(jOp['operator'])
+        op0 = self.exprFromJson(jOp['op0'], ctx)
+        ops = [op0]
+        if operator == AllOps.TERNARY or operator == AllOps.CALL:
+            for jOperand in jOp['operands']:
+                operand = self.exprFromJson(jOperand, ctx) 
+                ops.append(operand)
+        else:
+            if operator == AllOps.DOT:
+                l = jOp['op1']['literal']
+                assert(l['type'] == "ID")
+                ops.append(l['value'])
+            else:
+                ops.append(self.exprFromJson(jOp['op1'], ctx)) 
+        return operator._evalFn(*ops)
+        
+    def exprFromJson(self, jExpr, ctx):
+        lit = jExpr.get("literal", None)
+        if lit:
+            return self.litFromJson(lit, ctx)
+        
         binOp = jExpr['binOperator']
         if binOp:
-            operator = AllOps.opByName(binOp['operator'])
-            op0 = self.exprFromJson(binOp['op0'], ctx)
-            ops = [op0]
-            if operator == AllOps.TERNARY or operator == AllOps.CALL:
-                for jOperand in binOp['operands']:
-                    operand = self.exprFromJson(jOperand, ctx) 
-                    ops.append(operand)
-                # [TODO] extract this vhdl stuff somewhere else
-                if operator == AllOps.CALL and isinstance(ops[0], Signal):
-                    operator = AllOps.INDEX
-            else:
-                if operator == AllOps.DOT:
-                    l = binOp['op1']['literal']
-                    assert(l['type'] == "ID")
-                    ops.append(l['value'])
-                else:
-                    ops.append(self.exprFromJson(binOp['op1'], ctx)) 
-            return operator._evalFn(*ops)
+            return self.opFromJson(binOp, ctx)
+        
         raise HDLParseErr("Unparsable expression %s" % (str(jExpr)))
 
     def portFromJson(self, jPort, ctx):
