@@ -5,6 +5,8 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.types.defs import BOOL
+from hdl_toolkit.hdlObjects.types.booleanVal import BooleanVal
 
 
 
@@ -20,6 +22,14 @@ def convertInteger(self, sigOrVal, toType):
                 
             v._dtype = toType
             return v
+        else:
+            return sigOrVal # [TODO] use convertor op
+    elif toType == BOOL:
+        if isVal:
+            v = sigOrVal.val
+            assert(v == 0 or v == 1)
+            return BooleanVal(v, BOOL, sigOrVal.vldMask, sigOrVal.eventMask)
+            
     elif isinstance(toType, Bits):
         if isVal:
             _v = sigOrVal.val 
