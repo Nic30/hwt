@@ -10,6 +10,7 @@ from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 
 
 def _connect(src, dst, srcExclude, dstExclude):
+    src = toHVal(src)
     if srcExclude or dstExclude:
         raise NotImplementedError("[TODO]")
         
