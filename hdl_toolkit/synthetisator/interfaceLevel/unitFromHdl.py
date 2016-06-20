@@ -119,7 +119,7 @@ class UnitFromHdl(Unit):
                 mulBy = instI._origI._multipliedBy
                 if isinstance(mulBy, Param):
                     mulBy = self._paramsOrigToInst[mulBy]
-                instI._multipliedBy = mulBy   
+                instI._setMultipliedBy(mulBy)  
                 
                 for iSig, instISig in zip(walkPhysInterfaces(instI._origI), walkPhysInterfaces(instI)):
                     instISig._originEntityPort = iSig._originEntityPort  # currently used only for name
@@ -185,21 +185,6 @@ class UnitFromHdl(Unit):
   
         
         cls._clsBuildFor = cls
-    
-    def _loadDeclarations(self):
-        if not hasattr(self, "_interfaces"):
-            self._interfaces = []
-        if not hasattr(self, "_units"):
-            self._units = []    
-        self._setAttrListener = self._declrCollector
-        self._declr()
-        self._setAttrListener = None
-        for i in self._interfaces:
-            i._loadDeclarations()
-                
-        # if I am a unit load subunits    
-        for u in self._units:
-            u._loadDeclarations()
     
     def _toRtl(self):
         """Convert unit to hdl objects"""

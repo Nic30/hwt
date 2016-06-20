@@ -1,9 +1,8 @@
-from python_toolkit.arrayQuery import extendLen, arr_any
+from python_toolkit.arrayQuery import arr_any
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
-from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
+from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.synthetisator.rtlLevel.signal import MultipleDriversExc
 
 def splitToTermSet(width):

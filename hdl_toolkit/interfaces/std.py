@@ -52,7 +52,7 @@ class Ap_none(Ap_noneOps, Interface):
         else:
             self._multipliedBy = factor
             if updateTypes and factor is not None:
-                self.injectMultiplerToDtype()
+                self._injectMultiplerToDtype()
 
 s = Ap_none
      
