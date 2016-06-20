@@ -124,7 +124,7 @@ def walkSignalsInExpr(expr):
         else:
             yield expr
     else:
-        raise Exception("Unknown node type %s" % str(expr.__class__))
+        raise Exception("Unknown node '%s' type %s" % (repr(expr), str(expr.__class__)))
 
 def discoverSensitivity(datapath):
     if not isinstance(datapath, Assignment):

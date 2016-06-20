@@ -19,43 +19,24 @@ class Expr2CondTC(unittest.TestCase):
         self.assertTrue(cond.origin.operator == AllOps.EQ)
         self.assertEqual(cond.origin.ops[0], self.a, 1)
         
-    def testAndWithToBoolConversion(self):
-        e = self.a & self.b
-        cond = e._dtype.convert(e, BOOL)
-        self.assertTrue(cond.origin.operator == AllOps.AND_LOG)
-        andop = cond.origin
-        aEq1 = andop.ops[0].origin
-        bEq1 = andop.ops[1].origin
-        
-        self.assertEqual(aEq1.operator, AllOps.EQ)
-        self.assertEqual(aEq1.ops[0], self.a)
-        self.assertEqual(aEq1.ops[1].val, 1)
-        
-        self.assertEqual(bEq1.operator, AllOps.EQ)
-        self.assertEqual(bEq1.ops[0], self.b)
-        self.assertEqual(bEq1.ops[1].val, 1)
-        
-        
     def testNotAnd(self):
         e = ~(self.a & self.b)
-        cond = e._dtype.convert(e, BOOL)
-        # expr_debug(e)
+        self.assertEqual(e.origin.operator, AllOps.NOT)
+        cond = e._convert(BOOL)
         
-        self.assertEqual(cond.origin.operator, AllOps.NOT)
-        andOp = cond.origin.ops[0].origin
+        self.assertEqual(cond.origin.operator, AllOps.EQ)
+        _e = cond.origin.ops[0]
+        self.assertEqual(e, _e)
+        
+        andOp = e.origin.ops[0].origin
         self.assertEqual(andOp.operator, AllOps.AND_LOG)
         
-        aEq1 = andOp.ops[0].origin
-        bEq1 = andOp.ops[1].origin
+        op0 = andOp.ops[0]
+        op1 = andOp.ops[1]
         
-        self.assertEqual(aEq1.operator, AllOps.EQ)
-        self.assertEqual(bEq1.operator, AllOps.EQ)
+        self.assertEqual(op0, self.a)
+        self.assertEqual(op1, self.b)
         
-        self.assertEqual(aEq1.ops[0], self.a)
-        self.assertEqual(aEq1.ops[1].val, 1)
-        
-        self.assertEqual(bEq1.ops[0], self.b)
-        self.assertEqual(bEq1.ops[1].val, 1)
 
         
         

@@ -5,7 +5,7 @@ from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, MultipleDriversExc
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment 
 from hdl_toolkit.hdlObjects.specialValues import Unconstrained
-from hdl_toolkit.synthetisator.rtlLevel.codeOp import IfContainer, \
+from hdl_toolkit.hdlObjects.statements import IfContainer, \
     SwitchContainer, WhileContainer
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
 from hdl_toolkit.synthetisator.param import getParam, Param
@@ -16,6 +16,7 @@ from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import BOOL, BIT
 
 class VhdlVersion():
     v2002 = 2002
@@ -26,8 +27,8 @@ opPrecedence = {AllOps.NOT : 2,
                 AllOps.EVENT: 1,
                 AllOps.RISING_EDGE: 1,
                 AllOps.DIV: 3,
-                AllOps.PLUS : 3,
-                AllOps.MINUS: 3,
+                AllOps.ADD : 3,
+                AllOps.SUB: 3,
                 AllOps.MUL: 3,
                 AllOps.MUL: 3,
                 AllOps.XOR: 2,
@@ -95,7 +96,7 @@ class VhdlSerializer():
             return serFn(obj)
     
     @classmethod
-    def FnContainer(cls, fn):
+    def FunctionContainer(cls, fn):
         return  fn.name
     
     @classmethod
@@ -172,18 +173,26 @@ class VhdlSerializer():
             return entVhdl
     
     @classmethod
-    def condAsHdl(cls, cond):
+    def condAsHdl(cls, cond, forceBool):
         if isinstance(cond, Signal):
-            return cls.asHdl(cond)
-        cond = list(cond)
-        if len(cond) == 1:
-            return cls.asHdl(cond[0])
+            cond = [cond]
         else:
-            return " AND ".join(map(cls.asHdl, cond))
+            cond = list(cond)
+        if len(cond) == 1:
+            c = cond[0]
+            if not forceBool or c._dtype == BOOL:
+                return cls.asHdl(c)
+            elif c._dtype == BIT:
+                return "(" + cls.asHdl(c) + ")='1'" 
+            else:
+                raise NotImplementedError()
+            
+        else:
+            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool), cond))
     
     @classmethod
     def IfContainer(cls, ifc):
-        cond = cls.condAsHdl(ifc.cond)
+        cond = cls.condAsHdl(ifc.cond, True)
         elIfs = []
         if cls.VHDL_VER < VhdlVersion.v2008:
             ifTrue = ternaryOpsToIf(ifc.ifTrue)
@@ -196,7 +205,7 @@ class VhdlSerializer():
             if cls.VHDL_VER < VhdlVersion.v2008:
                 statements = ternaryOpsToIf(statements)
                 
-            elIfs.append((cls.condAsHdl(c), statements))
+            elIfs.append((cls.condAsHdl(c, True), statements))
         
         return VHDLTemplates.If.render(cond=cond,
                                        ifTrue=ifTrue,
@@ -204,7 +213,7 @@ class VhdlSerializer():
                                        ifFalse=ifFalse)  
     @classmethod
     def SwitchContainer(cls, sw):
-        switchOn = cls.condAsHdl(sw.switchOn)
+        switchOn = cls.condAsHdl(sw.switchOn, False)
         
         cases = []
         for key, statements in sw.cases:
@@ -436,12 +445,15 @@ class VhdlSerializer():
             return cls.SignalItem(val)
         else:
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 
+        
+    @classmethod
+    def BitToBool(cls, cast):
+        v = 0 if cast.sig.negated else 1
+        return cls.asHdl(cast.sig) + "=='%d'" % v
 
     @classmethod
     def Operator(cls, op):
         def p(operand):
-            if cls.asHdl(operand).startswith("sig_1"):
-                print()
             s = cls.asHdl(operand)
             if isinstance(operand, Signal):
                 try:
@@ -459,8 +471,13 @@ class VhdlSerializer():
         
         if o == AllOps.AND_LOG:
             return _bin('AND')
+        elif o == AllOps.OR_LOG:
+            return _bin('OR')
+        elif o == AllOps.NOT:
+            assert(len(ops) == 1)
+            return "NOT " + p(ops[0])
         elif o == AllOps.CALL:
-            return "%s(%s)" % (cls.FnContainer(ops[0]), ", ".join(map(p, ops[1:])))
+            return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
             return _bin('&')
         elif o == AllOps.DIV:
@@ -479,24 +496,28 @@ class VhdlSerializer():
             return "%s(%s)" % ((p(ops[0])).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('<')
-        elif o == AllOps.MINUS:
+        elif o == AllOps.SUB:
             return _bin('-')
         elif o == AllOps.MUL:
             return _bin('*')
         elif o == AllOps.NEQ:
             return _bin('/=')
-        elif o == AllOps.NOT:
-            assert(len(ops) == 1)
-            return "NOT " + p(ops[0])
-        elif o == AllOps.OR_LOG:
-            return _bin('OR')
-        elif o == AllOps.PLUS:
+        elif o == AllOps.ADD:
             return _bin('+')
         elif o == AllOps.TERNARY:
-            return p(ops[1]) + " WHEN " + p(ops[0]) + " ELSE " + p(ops[2])
+            return p(ops[1]) + " WHEN " + cls.condAsHdl([ops[0]], True) + " ELSE " + p(ops[2])
         elif o == AllOps.RISING_EDGE:
             assert(len(ops) == 1)
             return "RISING_EDGE(" + p(ops[0]) + ")"
+        elif o == AllOps.BitsAsSigned:
+            assert(len(ops) == 1)
+            return  "SIGNED(" + p(ops[0]) + ")"
+        elif o == AllOps.BitsAsUnsigned:
+            assert(len(ops) == 1)
+            return  "UNSIGNED(" + p(ops[0]) + ")"
+        elif o == AllOps.BitsAsVec:
+            assert(len(ops) == 1)
+            return  "STD_LOGIC_VECTOR(" + p(ops[0]) + ")"
         else:
             raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))
         #     

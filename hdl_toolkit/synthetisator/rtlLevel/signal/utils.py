@@ -1,18 +1,21 @@
-from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
+from copy import deepcopy
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, SignalNode
-from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from copy import deepcopy
+from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 
-def _connect(src, dst):
-    if isinstance(src, Interface):
-        if isinstance(dst, Interface):
+
+def _connect(src, dst, srcExclude, dstExclude):
+    src = toHVal(src)
+    if srcExclude or dstExclude:
+        raise NotImplementedError("[TODO]")
+        
+    if isinstance(src, InterfaceBase):
+        if isinstance(dst, InterfaceBase):
             return dst._connectTo(src)
         src = src._sig
         
@@ -20,13 +23,13 @@ def _connect(src, dst):
     
     return [dst._assignFrom(src)]
 
-def connect(src, *destinations):
+def connect(src, *destinations, srcExclude=[], dstExclude=[]):
     """
     Connect all signals works with interfaces as well
     """
     assignemnts = []
     for dst in destinations:
-        assignemnts.extend(_connect(src, dst))
+        assignemnts.extend(_connect(src, dst, srcExclude, dstExclude))
     return assignemnts
 
 def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
@@ -67,21 +70,7 @@ def trim(src, targetWidth):
     return vecWithOffset(src, targetWidth, 0)
 
 def vecWithOffset(src, width, offset):
-    """
-    Slice out signal of width with offset.
-    """
-    # [TODO] parametrizable offset
-    lower = hInt(offset)
-    if isinstance(width, int):
-        width = hInt(width)
-        
-    if isinstance(width, (Param, Signal)):
-        upper = width + hInt(offset) - hInt(1)
-        r = upper._downto(lower)
-    else:
-        upper = hInt(width.val + offset - 1)
-        r = SignalNode.resForOp(Operator(AllOps.DOWNTO, [upper, lower]))
-    return src._slice(r)
+    return src[(width + offset):offset]
 
 def connectUnpacked(src, dst, exclude=[]):
     """src is packed and it is unpacked and connected to dst"""
@@ -110,8 +99,8 @@ def packedWidth(intf):
         # interface class
         intf = intf()
         intf._loadDeclarations()
-    elif isinstance(intf, Interface) and not hasattr(intf, "_interfaces"):
-        # not loaaded interface
+    elif isinstance(intf, InterfaceBase) and not hasattr(intf, "_interfaces"):
+        # not loaded interface
         intf = deepcopy(intf)
         intf._loadDeclarations()
         
@@ -158,6 +147,24 @@ def mkOp(fn):
                 top = fn(top, s)
         return top
     return op
+
+# [TODO] rm duplications
+def indexRange(width, index):
+    width = toHVal(width)
+    index = toHVal(index)
+    upper = width * index
+    lower = width * (index + 1) - 1
+    return lower._downto(upper)
+
+def aplyIndexOnSignal(sig, dstType, index):
+    if sig._dtype == BIT or dstType == BIT:
+        return sig[hInt(index)]
+    elif isinstance(dstType, Bits):
+        w = getWidthExpr(dstType)
+        r = indexRange(w, index)
+        return sig[r]
+    else:
+        raise NotImplementedError()
 
 
 And = mkOp(lambda top, s: top & s)

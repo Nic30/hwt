@@ -3,9 +3,8 @@ from hdl_toolkit.synthetisator.rtlLevel.context import Context
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
-
-def w(dst, src):
-    return  dst._assignFrom(src) 
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
+w = connect
 
 if __name__ == "__main__":
     t = vecT(8)
@@ -22,11 +21,11 @@ if __name__ == "__main__":
     
     fsmSt = c.sig("fsmSt", fsmT, clk, syncRst, fsmT.send0)
     If(fsmSt._eq(fsmT.send0),
-       [ w(s_out, s_in0),
-         w(fsmSt, fsmT.send1)]
+         w(s_in0, s_out) + 
+         w(fsmT.send1, fsmSt)
        ,
-       [w(s_out, s_in1),
-        w(fsmSt, fsmT.send0)]
+         w(s_in1, s_out) + 
+         w(fsmT.send0, fsmSt)
        )
     
     interf = [clk, syncRst, s_in0, s_in1, s_out]

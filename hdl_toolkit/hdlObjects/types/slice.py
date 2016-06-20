@@ -8,6 +8,9 @@ class Slice(Array):
     def valAsVhdl(self, val, serializer):
         return "%s DOWNTO %s" % (serializer.Value(val.val[0]), serializer.Value(val.val[1]))
 
+    def __hash__(self):
+        return hash(self.constrain)
+
     @classmethod
     def getValueCls(cls):
         try:

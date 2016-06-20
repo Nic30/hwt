@@ -1,44 +1,15 @@
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType
 from hdl_toolkit.hdlObjects.variables import SignalItem
-from hdl_toolkit.hdlObjects.operator import Operator, InvalidOperandExc
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.exceptions import SimNotInitialized, SimException
 from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, STR
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDriversExc
+from hdl_toolkit.synthetisator.rtlLevel.signal.ops import SignalOps
 
-class MultipleDriversExc(Exception):
-    pass
-
-defaultConversions = {int: INT,
-                      str: STR,
-                      bool: BOOL}
-def toHVal(op):
-    """Convert python value object to object of hdl type value"""
-    if isinstance(op, Value) or isinstance(op, Signal):
-        return op
-    elif isinstance(op, InterfaceBase):
-        return op._sig
-    else:
-        try:
-            hType = defaultConversions[type(op)]
-        except KeyError:
-            hType = None
-        
-        if hType is None:
-            raise TypeError("%s" % (op.__class__))
-        return  hType.fromPy(op)
-    
-def checkOperands(ops):
-    _ops = []
-    for op in ops:
-        _ops.append(checkOperand(op))
-    return _ops
-
-def checkOperand(op):
-    return toHVal(op)
-            
 
 class UniqList(list):
     def append(self, obj):
@@ -46,128 +17,6 @@ class UniqList(list):
             pass
         return list.append(self, obj)
 
-# [TODO] move to Operator, problem with reference Signal/Operator -> signal and operators have to be separated
-class SignalNode():
-
-    @staticmethod
-    def resForOp(op):
-        t = op.getReturnType() 
-        out = Signal(None, t)
-        out.drivers.append(op)
-        out.origin = op
-        op.result = out
-        return out
-
-class SignalOps():
-    def unaryOp(self, operator):
-        try:
-            o = self._usedOps[operator]
-            return o.result
-        except KeyError:
-            o = Operator(operator, [self])
-            self._usedOps[operator] = o
-        
-            return SignalNode.resForOp(o)
-    
-    def naryOp(self, operator, operands):
-        operands = checkOperands(operands)
-        operands.insert(0, self)
-        o = Operator(operator, operands)
-        
-        return SignalNode.resForOp(o)
-    
-    def __invert__(self):
-        return self.unaryOp(AllOps.NOT)
-        
-    def _onRisingEdge(self):
-        return self.unaryOp(AllOps.RISING_EDGE)
-    
-    def _isOn(self):
-        return self._dtype.convert(self, BOOL)
-        
-    def __and__(self, *operands):
-        return self.naryOp(AllOps.AND_LOG, operands)
-    
-    def __xor__(self, *operands):
-        return self.naryOp(AllOps.XOR, operands)
-
-    def __or__(self, *operands):
-        return self.naryOp(AllOps.OR_LOG, operands)
-
-    def _eq(self, *operands):
-        """Eq is not overloaded because it will destroy hashability of object"""
-        return self.naryOp(AllOps.EQ, operands)
-
-    def __ne__(self, *operands):
-        return self.naryOp(AllOps.NEQ, operands)
-    
-    def __add__(self, *operands):
-        return self.naryOp(AllOps.PLUS, operands)
-    
-    def __sub__(self, *operands):
-        return self.naryOp(AllOps.MINUS, operands)
-    
-    def __mul__(self, *operands):
-        return self.naryOp(AllOps.MUL, operands)
-
-    def __floordiv__(self, divider):
-        return self.naryOp(AllOps.DIV, [divider])
-    
-    def _downto(self, to):
-        return self.naryOp(AllOps.DOWNTO, [to])
-    
-    def __getitem__(self, key):
-        if isinstance(key, slice):
-            if key.step is not None or key.start is None or key.stop is None:
-                raise NotImplementedError()
-            
-            # [TODO] endianity current impl. for litle endian only
-            stop = toHVal(key.stop)
-            start = toHVal(key.start)
-            
-            key = SignalNode.resForOp(Operator(AllOps.DOWNTO, [start - INT.fromPy(1), stop]))
-        
-        return self._slice(key)
-    
-    def _slice(self, index):
-        return self.naryOp(AllOps.INDEX, [index])
-    
-    def _concat(self, *operands):
-        return self.naryOp(AllOps.CONCAT, operands)
-    
-    def _ternary(self, ifTrue, ifFalse):
-        return self.naryOp(AllOps.TERNARY, (ifTrue, ifFalse))
-    
-    def _assignFrom(self, source):
-        source = checkOperand(source)
-        a = Assignment(source, self)
-        a.cond = set()
-        try:
-            # now I am result of the index  self[xx] <= source
-            # get index op
-            d = self.singleDriver()
-            if isinstance(d, Operator) and d.operator == AllOps.INDEX:
-                # get singla on which is signal applied
-                indexedOn = d.ops[0]
-                if isinstance(indexedOn, Signal):
-                    # change direction of index for me and for indexed on
-                    # print(d, 'to driver of', indexedOn)
-                    indexedOn.endpoints.remove(d)
-                    indexedOn.drivers.append(d)
-                     
-                    # print(d, "to endpoint of")    
-                    self.drivers.remove(d)
-                    self.endpoints.append(d)
-        except MultipleDriversExc:
-            pass
-        
-        self.drivers.append(a)
-        if not isinstance(source, Value):
-            source.endpoints.append(a)
-        
-        return a
-    
-    
 class Signal(SignalItem, SignalOps):
     """
     more like net
@@ -178,7 +27,7 @@ class Signal(SignalItem, SignalOps):
             name = "sig_" + str(id(self))
             self.hasGenericName = True 
        
-        assert(isinstance(dtype, HdlType))  # == can be range, downto, to etc.
+        assert(isinstance(dtype, HdlType))
         super(Signal, self).__init__(name, dtype, defaultVal)
         # set can not be used because hash of items are changign
         self.endpoints = UniqList()
@@ -207,6 +56,8 @@ class Signal(SignalItem, SignalOps):
                 else:
                     if not self._val.vldMask:  # [TODO] find better way how to find out if was initialized
                         self._val = self.defaultVal
+        if not isinstance(self._val, Value):
+            raise SimException("Evaluation of signal returned not supported object (%s)" % (repr(self._val)))
         return self._val
     
     def simUpdateVal(self, newVal):
@@ -234,7 +85,7 @@ class SyncSignal(Signal):
         self.next = Signal(name + "_next", var_type, defaultVal)
         
     def _assignFrom(self, source):
-        source = checkOperand(source)
+        source = toHVal(source)
         a = Assignment(source, self.next)
         a.cond = set()
         self.next.drivers.append(a)

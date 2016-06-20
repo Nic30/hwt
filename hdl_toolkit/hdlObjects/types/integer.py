@@ -11,6 +11,13 @@ class Integer(HdlType):
     def valAsVhdl(self, val, serializer):
         return str(int(val.val))
     
+    def __eq__(self, other):
+        return self is other or (
+            type(self) == type(other) and self.max == other.max and self.min == other.min
+                                 )
+    def __hash__(self):
+        return hash((self.max, self.min))
+    
     @property
     def name(self):
         ma = self.max

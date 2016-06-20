@@ -1,7 +1,7 @@
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType 
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.types.boolean import Boolean
-
+from hdl_toolkit.hdlObjects.types.bits import Bits
 
 def convertBits(self, sigOrVal, toType):
     isVal = isinstance(sigOrVal, Value)
@@ -9,9 +9,13 @@ def convertBits(self, sigOrVal, toType):
     if isinstance(toType, Boolean):
         if isVal:
             return sigOrVal == self.getValueCls().fromPy(1, self)
-        else:
+        elif self.bit_length() == 1:
             v = 0 if sigOrVal.negated else 1
             return sigOrVal._eq(self.getValueCls().fromPy(v, self))
+    elif isinstance(toType, Bits):
+        if self.bit_length() == toType.bit_length():
+            return sigOrVal._convSign(toType.signed)
+        
     # if isinstance(toType, Integer):
     #    if isinstance(sigOrVal, Value):
     #        v = sigOrVal.clone()

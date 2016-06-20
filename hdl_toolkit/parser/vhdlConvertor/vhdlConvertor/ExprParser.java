@@ -207,9 +207,9 @@ public class ExprParser {
 			Expr op1 = visitTerm(t.next());
 			OperatorType opType;
 			if (op.PLUS() != null)
-				opType = OperatorType.PLUS;
+				opType = OperatorType.ADD;
 			else if (op.MINUS() != null) {
-				opType = OperatorType.MINUS;
+				opType = OperatorType.SUB;
 			} else {
 				assert (op.AMPERSAND() != null);
 				opType = OperatorType.CONCAT;

@@ -51,4 +51,4 @@ class HdlType():
         raise SerializerException("Serialization of type %s is not implemented" % (repr(self)))
 
     def __repr__(self):
-        return "<HdlType %s>" % (self.name)
+        return "<HdlType %s>" % (self.__class__.__name__)

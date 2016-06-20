@@ -71,9 +71,9 @@ public class ExprParser {
 		String op = ctx.getText();
 		switch (op) {
 			case "+" :
-				return OperatorType.PLUS;
+				return OperatorType.ADD;
 			case "-" :
-				return OperatorType.MINUS;
+				return OperatorType.SUB;
 			case "*" :
 				return OperatorType.MUL;
 			case "/" :

@@ -15,6 +15,9 @@ class Value():
         self.vldMask = vldMask
         self.eventMask = eventMask
 
+    def _convert(self, toT):
+        return self._dtype.convert(self, toT)
+
     def staticEval(self):
         return self
     
@@ -32,10 +35,10 @@ class Value():
     def fromPy(cls, val, typeObj):
         raise NotImplementedError("fromPy fn is not implemented for %s" % (str(cls)))
    
-    @classmethod
-    def _otherCheck(cls, other):
-        assert(isinstance(other, Value))
-        assert(issubclass(other.__class__, cls))
+    #@classmethod
+    #def _otherCheck(cls, other):
+    #    assert(isinstance(other, Value))
+    #    assert(issubclass(other.__class__, cls))
         
     def __pos__(self):
         raise NotImplementedError()
@@ -82,7 +85,11 @@ class Value():
     def __xor__(self, other):
         raise NotImplementedError()
     def __eq__(self, other):
-        return bool(self._eq(other))
+        if areValues(self, other):
+            return bool(self._eq(other))
+        else:
+            super().__eq__(other)
+    
     def _eq(self, other):
         raise NotImplementedError()
     def __ne__(self, other):
@@ -93,9 +100,16 @@ class Value():
         raise NotImplementedError()
     def __lt__(self, other):
         raise NotImplementedError()
-    def ___le__(self, other):
+    def __le__(self, other):
         raise NotImplementedError()
     def __gt__(self, other):
         raise NotImplementedError()
     def __ge__(self, other):
         raise NotImplementedError()
+    
+    
+def areValues(*items):
+    res = True
+    for i in items:
+        res = res and isinstance(i, Value)
+    return res

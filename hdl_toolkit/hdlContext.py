@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from myhdl.conversion._toVHDL import _shortversion
 
 from hdl_toolkit.hdlObjects.reference import HdlRef 
 from hdl_toolkit.nonRedefDict import NonRedefDict
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.architecture import Architecture
-from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.hdlObjects.function import Function, FnContainer
+from hdl_toolkit.hdlObjects.function import Function
+from hdl_toolkit.hdlObjects.functionContainer import FunctionContainer
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
-from myhdl.conversion._toVHDL import _shortversion
 from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, STR, BIT
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.integer import Integer
+
 
 
 class RequireImportErr(Exception):
@@ -126,12 +127,12 @@ class HDLCtx(NonRedefDict):
             self.architectures.append(obj)
             
         elif isinstance(obj, Function):
-            # functions are stored in FnContainer object
+            # functions are stored in FunctionContainer object
             n = getName()
             try:
                 cont = self[n]
             except KeyError:
-                cont = FnContainer(n, self)
+                cont = FunctionContainer(n, self)
                 self.insert(HdlRef([n], caseSensitive), cont)
             cont.append(obj, suppressRedefinition=hierarchyOnly)
         else:
@@ -171,7 +172,7 @@ class FakeStd_logic_1164():
     std_ulogic_vector_ref = HdlRef(["ieee", "std_logic_1164", "std_ulogic"], False)
     
     std_logic_unsigned_sub_ref = HdlRef(["ieee", "std_logic_unsigned", "-"], False)
-    std_logic_unsigned_sub = FnContainer('-', None)
+    std_logic_unsigned_sub = FunctionContainer('-', None)
 
     std_logic = BIT
     std_logic_ref = HdlRef(["ieee", "std_logic_1164", "std_logic"], False)
@@ -183,7 +184,7 @@ class FakeStd_logic_1164():
     unsigned = Bits(signed=False)
     
     resize_ref = HdlRef(["ieee", "numeric_std", 'resize'], False)
-    resize = FnContainer('resize', None)
+    resize = FunctionContainer('resize', None)
 
 class FakeMyHdl():
     p_name = "pck_myhdl_%s" % _shortversion
