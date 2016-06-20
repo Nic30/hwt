@@ -104,11 +104,6 @@ class UnitFromHdl(Unit):
                         instV.vldMask = 0
                         setattr(instI, p.name, Param(instV))
                 
-                # set array size
-                mulBy = instI._origI._multipliedBy
-                if isinstance(mulBy, Param):
-                    mulBy = self._paramsOrigToInst[mulBy]
-                instI._multipliedBy = mulBy   
   
                              
             # overload _config function
@@ -119,6 +114,13 @@ class UnitFromHdl(Unit):
             def declarationsFromExtractedIntf(instI):
                 instI._origLoadDeclarations()
                 instI._setDirectionsLikeIn(instI._origI._direction)
+                
+                # set array size
+                mulBy = instI._origI._multipliedBy
+                if isinstance(mulBy, Param):
+                    mulBy = self._paramsOrigToInst[mulBy]
+                instI._multipliedBy = mulBy   
+                
                 for iSig, instISig in zip(walkPhysInterfaces(instI._origI), walkPhysInterfaces(instI)):
                     instISig._originEntityPort = iSig._originEntityPort  # currently used only for name
                     if not iSig._dtypeMatch:
@@ -167,17 +169,11 @@ class UnitFromHdl(Unit):
         cls._entity = cls._loadEntity(cls, multithread=multithread)
             
         for g in cls._entity.generics:
-            # if hasattr(cls, g.name):
-            #    raise  Exception("Already has param %s (old:%s , new:%s)" 
-            #          % (g.name, str(getattr(cls, g.name)), str(g)))
             cls._params.append(g)
 
         # lookup all interfaces
         for intfCls in cls._intfClasses:
             for intfName, interface in intfCls._tryToExtract(cls._entity.ports):
-                # if hasattr(cls, intfName):
-                #    raise  Exception("Already has interface %s (old:%s , new:%s)" 
-                #                     % (intfName, str(getattr(cls, intfName)), str(interface)))
                 interface._name = intfName
                 cls._interfaces.append(interface)
                 interface._setAsExtern(True)
@@ -189,6 +185,21 @@ class UnitFromHdl(Unit):
   
         
         cls._clsBuildFor = cls
+    
+    def _loadDeclarations(self):
+        if not hasattr(self, "_interfaces"):
+            self._interfaces = []
+        if not hasattr(self, "_units"):
+            self._units = []    
+        self._setAttrListener = self._declrCollector
+        self._declr()
+        self._setAttrListener = None
+        for i in self._interfaces:
+            i._loadDeclarations()
+                
+        # if I am a unit load subunits    
+        for u in self._units:
+            u._loadDeclarations()
     
     def _toRtl(self):
         """Convert unit to hdl objects"""

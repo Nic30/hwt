@@ -8,6 +8,7 @@ from hdl_toolkit.synthetisator.interfaceLevel.interface.array import InterfaceAr
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import walkSignalsInExpr
+from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
 
 class InterfaceIncompatibilityExc(Exception):
     pass
@@ -98,7 +99,7 @@ class ExtractableInterface(InterfaceArray):
             # update interface type from hdl, update generics
             intfTConstr = self._dtype.constrain
 
-            if intfTConstr is not None and isinstance(intfTConstr, Signal):
+            if intfTConstr is not None and isinstance(intfTConstr, (Signal, SliceVal)):
                 unitTConstr = self._originEntityPort._dtype.constrain
                 paramDiff = list(ExprComparator.findExprDiffInParam(intfTConstr, unitTConstr))
                     
@@ -129,9 +130,6 @@ class ExtractableInterface(InterfaceArray):
                     updateParam(intfParam, _unitParam)
             else:
                 self._dtypeMatch = self._originEntityPort._dtype == self._dtype
-            
-            if not hasattr(self, "_dtypeMatch"):
-                raise AssertionError("Type resolution error on port %s" % (self._originEntityPort))   
         
     def _tryToExtractByName(self, prefix, ports):
         """

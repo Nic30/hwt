@@ -50,6 +50,8 @@ def walkAllOriginSignals(sig, discovered=None):
     """
     if discovered is None:
         discovered = set()
+    if isinstance(sig, Value):
+        raise StopIteration()
     if not isinstance(sig, Signal):
         raise  AssertionError("Expected only instances of signal, got: %s" % 
                               (repr(sig)))

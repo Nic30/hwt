@@ -53,8 +53,8 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
         u = InterfaceArraySample()
         u._loadDeclarations()
         
-        self.assertEqual(u.s_axi._multipliedBy, u.C_NUM_SLAVE_SLOTS)
         self.assertEqual(u.m_axi._multipliedBy, u.C_NUM_MASTER_SLOTS)
+        self.assertEqual(u.s_axi._multipliedBy, u.C_NUM_SLAVE_SLOTS)
     
     def test_paramSpecifiedByParam(self):
         class U(UnitFromHdl):
@@ -82,7 +82,7 @@ class VerilogCodesignTC(BaseSynthetisatorTC):
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTest(VerilogCodesignTC('test_TernOpInModul'))
+    #suite.addTest(VerilogCodesignTC('test_InterfaceArray2'))
     suite.addTest(unittest.makeSuite(VerilogCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

@@ -15,7 +15,6 @@ class Ap_none(Ap_noneOps, Interface):
     def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None,
                    dtype=BIT, isExtern=False, alternativeNames=None,
                    loadConfig=True):
-        # self._multipliedBy = None
         super().__init__(masterDir=masterDir, multipliedBy=multipliedBy,
              isExtern=isExtern, alternativeNames=alternativeNames,
              loadConfig=loadConfig)
