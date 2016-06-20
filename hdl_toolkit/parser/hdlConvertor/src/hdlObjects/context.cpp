@@ -1,6 +1,6 @@
 #include "context.h"
 
-PyObject * Context::toJson() {
+PyObject * Context::toJson() const {
 	PyObject * c = PyDict_New();
 	addJsonArr(c, "imports", imports);
 	addJsonArr(c, "entities", entities);

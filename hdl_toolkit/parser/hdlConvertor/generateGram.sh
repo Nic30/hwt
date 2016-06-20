@@ -28,8 +28,8 @@ set -o errexit
 #java -cp $CLASSPATH org.antlr.v4.Tool -Dlanguage=Java -listener -visitor -o generated/ TLexer.g4 TParser.g4
 
 rm -f hdlConvertor.jar
-java -Xmx500M -cp "./lib/antlr4-4.5.4-SNAPSHOT.jar:$CLASSPATH" org.antlr.v4.Tool -Dlanguage=Cpp -visitor vhdl.g4 -o vhdlParser -package vhdlParser
-java -Xmx500M -cp "./lib/antlr4-4.5.4-SNAPSHOT.jar:$CLASSPATH" org.antlr.v4.Tool -Dlanguage=Cpp -visitor Verilog2001.g4 -o verilogParser -package verilogParser
+java -Xmx500M -cp "./lib/antlr4-4.5.4-SNAPSHOT.jar:$CLASSPATH" org.antlr.v4.Tool -Dlanguage=Cpp -visitor vhdl.g4 -o VhdlParser -package vhdl
+java -Xmx500M -cp "./lib/antlr4-4.5.4-SNAPSHOT.jar:$CLASSPATH" org.antlr.v4.Tool -Dlanguage=Cpp -visitor Verilog2001.g4 -o VerilogParser -package verilog
 
 
 #javac -classpath lib/*:.                        hdlObjects/*.java vhdlParser/*.java  vhdlConvertor/*.java verilogConvertor/*.java verilogParser/*.java convertorApp/*.java

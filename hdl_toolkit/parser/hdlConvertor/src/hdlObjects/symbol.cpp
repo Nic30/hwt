@@ -10,7 +10,7 @@ Symbol::Symbol(BigInteger value, int bits) {
 	this->value._int = value;
 	this->bits = bits;
 }
-PyObject * Symbol::toJson() {
+PyObject * Symbol::toJson() const {
 	PyObject * d = PyDict_New();
 
 	PyDict_SetItemString(d, "type",

@@ -29,7 +29,7 @@ Operator * Operator::ternary(Expr cond, Expr ifTrue, Expr ifFalse){
 
 	return op;
 }
-PyObject * Operator::toJson() {
+PyObject * Operator::toJson() const {
 	PyObject *d = PyDict_New();
 	PyDict_SetItemString(d, "op0", op0.toJson());
 	PyDict_SetItemString(d, "operator",

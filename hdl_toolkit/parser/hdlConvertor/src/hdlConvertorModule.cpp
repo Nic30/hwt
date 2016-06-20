@@ -1,12 +1,18 @@
 #include "hdlConvertorModule.h"
 
-#include <iostream>
-
 #define ch(str) ((const char *) str)
+
+char * toLowercase(char * str) {
+	while (*str) {
+		*str = tolower(*str);
+		str++;
+	}
+	return str;
+}
 
 static PyMethodDef hdlConvertorMethods[] =
 		{
-				{ "parse", (PyCFunction)hdlConvertor_parse,
+				{ "parse", (PyCFunction) hdlConvertor_parse,
 				METH_VARARGS | METH_KEYWORDS,
 						"parse(filename, language, lexErrorHandler=lambda..., hierarchyOnly=False, debug=False)"
 								"@param filename: name of file to parse\n"
@@ -24,39 +30,44 @@ static PyMethodDef hdlConvertorMethods[] =
 								"              and all includes. \n"
 								"@param debug: If this flag is set internal Error/NotImplemented/Unexpected exceptions"
 								"              are printed on stderr\n" }, {
-						NULL, NULL, 0, NULL } /* Sentinel */
+				NULL, NULL, 0, NULL } /* Sentinel */
 		};
 
 static struct PyModuleDef hdlConvertor = {
-	PyModuleDef_HEAD_INIT,
-	ch("hdlConvertor"), /* name of module */
-	NULL, //spam_doc, /* module documentation, may be NULL */
-	-1, /* size of per-interpreter state of the module,
-	 or -1 if the module keeps state in global variables. */
-	hdlConvertorMethods };
+PyModuleDef_HEAD_INIT, ch("hdlConvertor"), /* name of module */
+NULL, //spam_doc, /* module documentation, may be NULL */
+		-1, /* size of per-interpreter state of the module,
+		 or -1 if the module keeps state in global variables. */
+		hdlConvertorMethods };
 
 PyObject *
 hdlConvertor_parse(PyObject *self, PyObject *args, PyObject *keywds) {
 	const char *filename, *langue;
 	bool debug, hierarchyOnly;
+	Langue _lang;
 	PyObject * syntaxErrorHandler, *_debug, *_hierarchyOnly;
 
-	static  char * kwlist[] = { "filename", "language", "syntaxErrorHandler",
-			"hierarchyOnly", "debug", NULL };
+	static const char* const kwlist[] = { "filename", "language",
+			"syntaxErrorHandler", "hierarchyOnly", "debug", NULL };
 
-	if (!PyArg_ParseTupleAndKeywords(args, keywds, "ss|OOO", kwlist, &filename,
-			&langue, &syntaxErrorHandler, &_hierarchyOnly, &_debug))
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "ss|OOO", (char **) kwlist,
+			&filename, &langue, &syntaxErrorHandler, &_hierarchyOnly, &_debug))
 		return NULL;
 	hierarchyOnly = PyObject_IsTrue(_hierarchyOnly);
 	debug = PyObject_IsTrue(_debug);
-	if (debug)
-		std::cout << "debug is on";
 
-	return PyLong_FromLong(0);
+	langue = toLowercase((char *) langue);
+	if (strcmp(langue, "vhdl") == 0) {
+		_lang = VHDL;
+	} else if (strcmp(langue, "verilog") == 0) {
+		_lang = VERILOG;
+	} else {
+		PyErr_SetString(PyExc_TypeError,
+				"Invalid language specified, only vhdl and verilog is available");
+		return NULL;
+	}
+	return convertToPyDict(filename, _lang, hierarchyOnly, debug);
 }
-
-PyMODINIT_FUNC PyInit_hdlConvertor(void)
-{
+PyMODINIT_FUNC PyInit_hdlConvertor(void) {
 	return PyModule_Create(&hdlConvertor);
 }
-
