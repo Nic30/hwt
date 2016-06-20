@@ -212,6 +212,12 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         s = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.SLAVE)
         
         i, i2 = createTwoAxiDuplexStreams()
+        c = Context("test")
+        
+        i._signalsForInterface(c)
+        i2._signalsForInterface(c)
+        
+        
         
         connect(i, i2)
         i._resolveDirections()
@@ -304,8 +310,8 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    # suite.addTest(InterfaceSyntherisatorTC('test_IntfDirections_multistream'))
-    suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
+    suite.addTest(InterfaceSyntherisatorTC('test_IntfDirections_multistream_setSrc'))
+    #suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
 

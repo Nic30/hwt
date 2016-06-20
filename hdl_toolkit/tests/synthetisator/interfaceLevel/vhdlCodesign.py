@@ -251,18 +251,18 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertSequenceEqual(r, (sig_a, sig_b))
 
         v = a.staticEval()
-        self.assertSequenceEqual(v.val, [hInt(0), hInt(8)])
+        self.assertSequenceEqual(v.val, [hInt(8), hInt(0)])
 
         sig_a.set(hInt(11))
         v = a.staticEval()
-        self.assertSequenceEqual(v.val, [hInt(0), hInt(10)])
+        self.assertSequenceEqual(v.val, [hInt(10), hInt(0)])
 
         v = b.staticEval()
         self.assertSequenceEqual(v.val, [hInt(0), hInt(0)])
 
         sig_b.set(hInt(2))
         v = b.staticEval()
-        self.assertSequenceEqual(v.val, [hInt(0), hInt(1)])
+        self.assertSequenceEqual(v.val, [hInt(1), hInt(0)])
 
 
     def test_largeBitStrings(self):
@@ -321,7 +321,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
     
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(VhdlCodesignTC('test_genericValues'))
+    suite.addTest(VhdlCodesignTC('test_compatibleExpression'))
     #suite.addTest(unittest.makeSuite(VhdlCodesignTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)

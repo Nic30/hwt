@@ -18,6 +18,7 @@ from hdl_toolkit.tests.synthetisator.interfaceLevel.subunitsSynthesisTC import S
 
 from hdl_toolkit.tests.synthetisator.rtlLevel.optimalizator import Expr2CondTC
 from hdl_toolkit.tests.synthetisator.rtlLevel.synthesis import TestCaseSynthesis
+from hdl_toolkit.tests.statementTrees import StatementTreesTC
 
 
 if __name__ == "__main__":
@@ -38,6 +39,7 @@ if __name__ == "__main__":
         OperatorTC,
         TestCaseSynthesis,
         ValueTC,
+        StatementTreesTC,
     )
     runner = TextTestRunner(verbosity=2)
     runner.run(suite)
