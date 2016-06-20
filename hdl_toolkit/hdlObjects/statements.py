@@ -18,7 +18,7 @@ def evalCond(cond):
         
     return _cond
 
-class IfContainer:
+class IfContainer():
     """
     Structural container for hdl rendering
     """
