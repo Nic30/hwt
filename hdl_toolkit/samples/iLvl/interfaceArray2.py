@@ -41,5 +41,5 @@ class InterfaceArraySample(Unit):
 if __name__ == "__main__":
     from hdl_toolkit.synthetisator.shortcuts import toRtl
     print(
-        toRtl(InterfaceArraySample)
+        toRtl(InterfaceArraySample())
     )
