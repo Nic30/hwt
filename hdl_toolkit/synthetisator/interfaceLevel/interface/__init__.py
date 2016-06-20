@@ -18,6 +18,7 @@ from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import aplyIndexOnSignal
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 
 class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """
@@ -138,16 +139,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(mIfc), repr(ifc)))
                     yield from mIfc._connectTo(ifc, masterIndex=slaveIndex, slaveIndex=masterIndex)
         else:
-            try:
-                dstSig = self._sig
-            except AttributeError:
-                raise Exception("%s interface does not have rtl level signal created" % 
-                                (repr(self)))
-            try:
-                srcSig = master._sig
-            except AttributeError:
-                raise Exception("%s interface does not have rtl level signal created" % 
-                                (repr(master)))
+            dstSig = toHVal(self)
+            srcSig = toHVal(master)
             
             if masterIndex is not None:
                 srcSig = aplyIndexOnSignal(srcSig, dstSig._dtype, masterIndex)

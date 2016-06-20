@@ -10,7 +10,6 @@ from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 
 
 def _connect(src, dst, srcExclude, dstExclude):
-    src = toHVal(src)
     if srcExclude or dstExclude:
         raise NotImplementedError("[TODO]")
         
@@ -19,6 +18,7 @@ def _connect(src, dst, srcExclude, dstExclude):
             return dst._connectTo(src)
         src = src._sig
         
+    src = toHVal(src)
     src = src._dtype.convert(src, dst._dtype)
     
     return [dst._assignFrom(src)]
