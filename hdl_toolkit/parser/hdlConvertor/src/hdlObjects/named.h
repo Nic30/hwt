@@ -5,7 +5,7 @@
 
 class Named {
 public:
-	char * name;
+	const char * name;
 	Named();
 	PyObject * toJson() const;
 };

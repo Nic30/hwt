@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#define ch(str) ((const char *) str)
+
 static PyMethodDef hdlConvertorMethods[] =
 		{
 				{ "parse", (PyCFunction)hdlConvertor_parse,
@@ -27,7 +29,7 @@ static PyMethodDef hdlConvertorMethods[] =
 
 static struct PyModuleDef hdlConvertor = {
 	PyModuleDef_HEAD_INIT,
-	"hdlConvertor", /* name of module */
+	ch("hdlConvertor"), /* name of module */
 	NULL, //spam_doc, /* module documentation, may be NULL */
 	-1, /* size of per-interpreter state of the module,
 	 or -1 if the module keeps state in global variables. */
@@ -39,7 +41,7 @@ hdlConvertor_parse(PyObject *self, PyObject *args, PyObject *keywds) {
 	bool debug, hierarchyOnly;
 	PyObject * syntaxErrorHandler, *_debug, *_hierarchyOnly;
 
-	static char *kwlist[] = { "filename", "language", "syntaxErrorHandler",
+	static  char * kwlist[] = { "filename", "language", "syntaxErrorHandler",
 			"hierarchyOnly", "debug", NULL };
 
 	if (!PyArg_ParseTupleAndKeywords(args, keywds, "ss|OOO", kwlist, &filename,
