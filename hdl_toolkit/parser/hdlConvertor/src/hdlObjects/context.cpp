@@ -2,11 +2,11 @@
 
 PyObject * Context::toJson() const {
 	PyObject * c = PyDict_New();
-	addJsonArr(c, "imports", imports);
-	addJsonArr(c, "entities", entities);
-	addJsonArr(c, "architectures", architectures);
-	addJsonArr(c, "packages", packages);
-	addJsonArr(c, "packageHeaders", packageHeaders);
+	addJsonArrP(c, "imports", imports);
+	addJsonArrP(c, "entities", entities);
+	addJsonArrP(c, "architectures", architectures);
+	addJsonArrP(c, "packages", packages);
+	addJsonArrP(c, "packageHeaders", packageHeaders);
 	return c;
 }
 

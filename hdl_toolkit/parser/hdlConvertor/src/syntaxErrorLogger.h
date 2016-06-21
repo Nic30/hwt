@@ -4,6 +4,7 @@
 using namespace antlr4;
 
 class SyntaxErrorLogger: public ANTLRErrorListener {
+public:
 	void syntaxError(
 			IRecognizer *recognizer,
 			Token *offendingSymbol,

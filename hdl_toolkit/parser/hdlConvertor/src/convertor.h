@@ -50,4 +50,5 @@ parserT * initParser(ANTLRInputStream * input) {
 
 	parser->removeErrorListeners();
 	parser->addErrorListener(new SyntaxErrorLogger());
+	return parser;
 }

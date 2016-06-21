@@ -25,6 +25,8 @@ Context * Convertor::parse(
 		return p->getContext();
 
 	} else if (lang == VERILOG) {
+		//verilogParser * parser = initParser<verilogLexer, verilogParser>(input);
+
 		return NULL;
 	}
 }

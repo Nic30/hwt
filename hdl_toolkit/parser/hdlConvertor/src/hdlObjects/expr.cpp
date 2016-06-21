@@ -6,7 +6,7 @@ Expr::Expr() {
 	data = NULL;
 }
 
-Expr::Expr(Expr op0, OperatorType operatorType, Expr op1) {
+Expr::Expr(Expr * op0, OperatorType operatorType, Expr * op1) {
 	data = new Operator(op0, operatorType, op1);
 }
 Expr::Expr(SymbolType type, LiteralVal value) {
@@ -15,12 +15,12 @@ Expr::Expr(SymbolType type, LiteralVal value) {
 Expr::Expr(BigInteger value, int bits) {
 	data = new Symbol(value, bits);
 }
-Expr * Expr::ternary(Expr cond, Expr ifTrue, Expr ifFalse) {
+Expr* Expr::ternary(Expr* cond, Expr* ifTrue, Expr* ifFalse) {
 	Expr * e = new Expr();
 	e->data = Operator::ternary(cond, ifTrue, ifFalse);
 	return e;
 }
-Expr * Expr::call(Expr fnId, std::vector<Expr> * operands) {
+Expr * Expr::call(Expr * fnId, std::vector<Expr*> * operands) {
 	Expr * e = new Expr();
 	e->data = Operator::call(fnId, operands);
 	return e;
@@ -38,4 +38,19 @@ PyObject * Expr::toJson() const {
 			throw "vhdlExpr is improperly initialized";
 	}
 	return d;
+}
+
+Expr * Expr::all() {
+	Expr * e = new Expr();
+	LiteralVal v;
+	v._str = NULL;
+	e->data = new Symbol(symb_ALL, v);
+	return e;
+}
+Expr * Expr::null() {
+	Expr * e = new Expr();
+	LiteralVal v;
+	v._str = NULL;
+	e->data = new Symbol(symb_NULL, v);
+	return e;
 }
