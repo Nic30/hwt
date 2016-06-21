@@ -20,34 +20,36 @@ const char * StatementType_toString(StatementType type) {
 Statement::Statement(StatementType type) {
 	this->type = type;
 	this->ops = NULL;
+	this->op0 = NULL;
+	this->op1 = NULL;
 }
 
-Statement * Statement::EXPR(Expr e) {
+Statement * Statement::EXPR(Expr * e) {
 	Statement * s = new Statement(s_EXPR);
 	s->op0 = e;
 	return s;
 }
-Statement* Statement::IF(Expr cond, std::vector<Statement> ifTrue) {
+Statement* Statement::IF(Expr * cond, std::vector<Statement*> * ifTrue) {
 	Statement * s = new Statement(s_IF);
 	s->op0 = cond;
-	s->ops = new std::vector< std::vector<Statement> >(1);
+	s->ops = new std::vector<std::vector<Statement*>*>(1);
 	s->ops->push_back(ifTrue);
 
 	return s;
 }
 Statement* Statement::IF(
-		Expr cond,
-		std::vector<Statement> ifTrue,
-		std::vector<Statement> ifFalse) {
+		Expr * cond,
+		std::vector<Statement*>* ifTrue,
+		std::vector<Statement*>* ifFalse) {
 	Statement * s = new Statement(s_IF);
 	s->op0 = cond;
-	s->ops = new std::vector< std::vector<Statement> >(2);
+	s->ops = new std::vector<std::vector<Statement*>*>(2);
 	s->ops->push_back(ifTrue);
 	s->ops->push_back(ifFalse);
 
 	return s;
 }
-Statement* Statement::RETURN(Expr val) {
+Statement* Statement::RETURN(Expr * val) {
 	Statement * s = RETURN();
 	s->op0 = val;
 	return s;
@@ -55,17 +57,17 @@ Statement* Statement::RETURN(Expr val) {
 Statement* Statement::RETURN() {
 	return new Statement(s_RETURN);
 }
-Statement* Statement::ASSIG(Expr dst, Expr src) {
+Statement* Statement::ASSIG(Expr * dst, Expr * src) {
 	Statement * s = new Statement(s_ASSIGMENT);
 	s->op0 = dst;
 	s->op1 = src;
 
 	return s;
 }
-Statement* Statement::WHILE(Expr cond, std::vector<Statement> body) {
+Statement* Statement::WHILE(Expr * cond, std::vector<Statement*> * body) {
 	Statement * s = new Statement(s_WHILE);
 	s->op0 = cond;
-	s->ops = new std::vector< std::vector<Statement> >(1);
+	s->ops = new std::vector<std::vector<Statement*> *>(1);
 	s->ops->push_back(body);
 	return s;
 
@@ -77,28 +79,28 @@ PyObject * Statement::toJson() const {
 
 	switch (type) {
 	case s_EXPR:
-		return op0.toJson();
+		return op0->toJson();
 	case s_IF:
-		PyDict_SetItemString(d, "cond", op0.toJson());
-		addJsonArr(d, "ifTrue", (*ops)[0]);
+		PyDict_SetItemString(d, "cond", op0->toJson());
+		addJsonArrP(d, "ifTrue", *(*ops)[0]);
 		if (ops->size() > 1) {
-			std::vector<Statement> ifFalse = (*ops)[1];
-			addJsonArr(d, "ifFalse", ifFalse);
+			std::vector<Statement*> ifFalse = *(*ops)[1];
+			addJsonArrP(d, "ifFalse", ifFalse);
 		} else {
 			addJsonArr_empty(d, "ifFalse");
 		}
 
 		break;
 	case s_RETURN:
-		PyDict_SetItemString(d, "val", op0.toJson());
+		PyDict_SetItemString(d, "val", op0->toJson());
 		break;
 	case s_ASSIGMENT:
-		PyDict_SetItemString(d, "dst", op0.toJson());
-		PyDict_SetItemString(d, "src", op1.toJson());
+		PyDict_SetItemString(d, "dst", op0->toJson());
+		PyDict_SetItemString(d, "src", op1->toJson());
 		break;
 	case s_WHILE:
-		PyDict_SetItemString(d, "cond", op0.toJson());
-		addJsonArr(d, "body", (*ops)[0]);
+		PyDict_SetItemString(d, "cond", op0->toJson());
+		addJsonArrP(d, "body", *(*ops)[0]);
 		break;
 	default:
 		throw "Invalid StatementType ";

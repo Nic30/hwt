@@ -13,13 +13,13 @@ Entity * EntityParser::visitEntity_declaration(
 	// END ( ENTITY )? ( identifier )? SEMI
 	// ;
 	Entity * e = new Entity();
-	e->name = ctx->identifier(0).getText();
+	e->name = ctx->identifier(0)->getText().c_str();
 	// entity_declarative_part
 	// : ( entity_declarative_item )*
 	// ;
 	if (!hierarchyOnly) {
 		visitEntity_header(e, ctx->entity_header());
-		for (auto d : ctx->entity_declarative_part().entity_declarative_item()) {
+		for (auto d : ctx->entity_declarative_part()->entity_declarative_item()) {
 			visitEntity_declarative_item(d);
 		}
 	}
@@ -65,11 +65,12 @@ void EntityParser::visitGeneric_clause(
 		// interface_constant_declaration)*
 		// ;
 		auto gl = ctx->generic_list();
-		for (auto ic : gl.interface_constant_declaration()) {
+		for (auto ic : gl->interface_constant_declaration()) {
 			std::vector<Variable*> * vl =
 					InterfaceParser::visitInterface_constant_declaration(ic);
-			for (Variable v : vl)
+			for (auto v : *vl)
 				generics->push_back(v);
+			delete vl;
 		}
 	}
 }
@@ -84,15 +85,16 @@ void EntityParser::visitPort_clause(
 		// : interface_port_list
 		// ;
 		auto pl = ctx->port_list();
-		auto ipl = pl.interface_port_list();
+		auto ipl = pl->interface_port_list();
 		// interface_port_list
 		// : interface_port_declaration ( SEMI interface_port_declaration )*
 		// ;
 
 		for (auto ipd : ipl->interface_port_declaration()) {
-			for (Port * p : InterfaceParser::visitInterface_port_declaration(
-					ipd))
+			auto ps = InterfaceParser::visitInterface_port_declaration(ipd);
+			for (Port * p : *ps)
 				ports->push_back(p);
+			delete ps;
 		}
 	}
 }
@@ -105,9 +107,9 @@ void EntityParser::visitEntity_header(
 // ;
 //
 	auto g = ctx->generic_clause();
-	visitGeneric_clause(g, e.generics);
+	visitGeneric_clause(g, &e->generics);
 	auto pc = ctx->port_clause();
-	visitPort_clause(pc, e.ports);
+	visitPort_clause(pc, &e->ports);
 }
 void EntityParser::visitEntity_statement_part(
 		Ref<vhdlParser::Entity_statement_partContext> ctx) {

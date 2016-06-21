@@ -2,10 +2,13 @@
 
 #include <vector>
 #include <stdlib.h>
+#include <algorithm>
+#include <string>
+#include "antlr4-runtime.h"
 #include "../VhdlParser/vhdlParser.h"
 #include "../notImplementedLogger.h"
 #include "../hdlObjects/operatorType.h"
-#include "../hdlObjects/symbolType.h"
+#include "../hdlObjects/symbol.h"
 #include "../hdlObjects/expr.h"
 
 using namespace antlr4;

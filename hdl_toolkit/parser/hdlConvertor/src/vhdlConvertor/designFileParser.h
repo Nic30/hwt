@@ -5,6 +5,10 @@
 #include "../notImplementedLogger.h"
 #include "referenceParser.h"
 #include "archParser.h"
+#include "packageParser.h"
+#include "entityParser.h"
+#include "packageHeaderParser.h"
+
 
 using namespace antlr4;
 using namespace vhdl;

@@ -20,14 +20,14 @@ Expr * ReferenceParser::visitSuffix(Ref<vhdlParser::SuffixContext> ctx) {
 	// ;
 	auto id = ctx->identifier();
 	if (id)
-		return LiteralParser.visitIdentifier(id);
+		return LiteralParser::visitIdentifier(id);
 
 	auto n = ctx->CHARACTER_LITERAL();
 	if (n)
-		return LiteralParser.visitCHARACTER_LITERAL(n);
+		return LiteralParser::visitCHARACTER_LITERAL(n);
 	n = ctx->STRING_LITERAL();
 	if (n)
-		return LiteralParser.visitSTRING_LITERAL(n);
+		return LiteralParser::visitSTRING_LITERAL(n);
 
 	return Expr::all();
 }

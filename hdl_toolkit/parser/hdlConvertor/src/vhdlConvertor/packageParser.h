@@ -10,9 +10,12 @@
 #include "../hdlObjects/expr.h"
 #include "../hdlObjects/statement.h"
 #include "../hdlObjects/package.h"
+#include "../hdlObjects/packageHeader.h"
 
 #include "literalParser.h"
 #include "interfaceParser.h"
+#include "packageHeaderParser.h"
+#include "statementParser.h"
 
 using namespace antlr4;
 using namespace vhdl;
@@ -24,7 +27,7 @@ public:
 	PackageParser(bool _hierarchyOnly);
 	Package * visitPackage_body(Ref<vhdlParser::Package_bodyContext> ctx);
 	void visitPackage_body_declarative_part(
-			aPackage p,
+			aPackage * p,
 			Ref<vhdlParser::Package_body_declarative_partContext> ctx);
 	void visitPackage_body_declarative_item(
 			Ref<vhdlParser::Package_body_declarative_itemContext> ctx);

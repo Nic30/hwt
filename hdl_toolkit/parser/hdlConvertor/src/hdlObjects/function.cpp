@@ -1,10 +1,10 @@
 #include "function.h"
 
 Function::Function(
-		char * name,
+		const char * name,
 		bool isOperator,
 		Expr * returnT,
-		std::vector<Variable> * params) {
+		std::vector<Variable*> * params) {
 	this->name = name;
 	this->isOperator = isOperator;
 	this->returnT = returnT;
@@ -19,9 +19,9 @@ PyObject * Function::toJson() const {
 	} else {
 		Py_IncRef(Py_None);
 		PyDict_SetItemString(d, "returnT", Py_None);
-		addJsonArr(d, "params", *params);
-		addJsonArr(d, "locals", locals);
-		addJsonArr(d, "body", body);
+		addJsonArrP(d, "params", *params);
+		addJsonArrP(d, "locals", locals);
+		addJsonArrP(d, "body", body);
 	}
 	return d;
 }

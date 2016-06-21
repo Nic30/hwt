@@ -8,12 +8,13 @@ Expr * LiteralParser::visitLiteral(Ref<vhdlParser::LiteralContext> ctx) {
 	// | enumeration_literal
 	// | numeric_literal
 	// ;
-	if (ctx->NULL())
+	if (ctx->T_NULL())
 		return Expr::null();
 
 	auto n = ctx->BIT_STRING_LITERAL();
 	if (n) {
-		std::string s = n.getText().toLowerCase();
+		std::string s = n->getText();
+		std::transform(s.begin(), s.end(), s.begin(), ::tolower);
 		int radix = 0;
 		int bitRatio = 0;
 		switch (s[0]) {
@@ -31,7 +32,7 @@ Expr * LiteralParser::visitLiteral(Ref<vhdlParser::LiteralContext> ctx) {
 			break;
 		}
 		std::string strVal = s.substr(2, s.length() - 1);
-		BigInteger * val = new BigInteger(strVal, radix);
+		BigInteger val = BigInteger_fromStr(strVal, radix);
 		return new Expr(val, strVal.length() * bitRatio);
 	}
 
@@ -75,10 +76,10 @@ Expr * LiteralParser::visitAbstract_literal(
 	// ;
 	auto n = ctx->INTEGER();
 	if (n)
-		return new Expr(symb_INT, BigInteger_fromStr(n.getText()), 10);
+		return Expr::INT(n->getText(), 10);
 	n = ctx->REAL_LITERAL();
 	if (n)
-		return new Expr(symb_FLOAT, atof(n.getText()));
+		return Expr::FLOAT(atof(n->getText().c_str()));
 
 	// INTEGER must be checked to be between and including 2 and 16
 	// (included) i.e. INTEGER >=2 and INTEGER <=16
@@ -93,8 +94,9 @@ Expr * LiteralParser::visitAbstract_literal(
 	// ;
 	// [TODO] exponent
 	n = ctx->BASE_LITERAL();
-	long long base = BigInteger_fromStr((n.getChild(0).getText(), 10);
-	BigInteger val = BigInteger_fromStr((n.getChild(2).getText(), base);
+	int base = atoi(n->getChild(0)->getText().c_str());
+	BigInteger val = BigInteger_fromStr(n->getChild(2)->getText().c_str(),
+			base);
 	return new Expr(val);
 }
 Expr * LiteralParser::visitEnumeration_literal(
@@ -113,23 +115,23 @@ Expr * LiteralParser::visitEnumeration_literal(
 	return visitCHARACTER_LITERAL(ctx->CHARACTER_LITERAL());
 }
 Expr * LiteralParser::visitSTRING_LITERAL(Ref<tree::TerminalNode> n) {
-	std::string s = n.getText();
-	return new Expr(symb_STRING, s.substr(1, s.length() - 1));
+	std::string s = n->getText();
+	std::string str = s.substr(1, s.length() - 1);
+	return Expr::STR(str);
 
 }
 Expr * LiteralParser::visitCHARACTER_LITERAL(Ref<tree::TerminalNode> ctx) {
-	BigInteger ch = BigInteger.valueOf((int) (ctx->getText().charAt(1) - '0'));
-	return new Expr(symb_INT, ch);
+	return Expr::INT(ctx->getText()[1] - '0');
 }
 Expr * LiteralParser::visitIdentifier(Ref<vhdlParser::IdentifierContext> ctx) {
-	return new Expr(symb_ID, ctx->getText());
+	return Expr::id(ctx->getText());
 }
 bool LiteralParser::isStrDesignator(Ref<vhdlParser::DesignatorContext> ctx) {
 	// designator
 	// : identifier
 	// | STRING_LITERAL
 	// ;
-	return ctx->STRING_LITERAL();
+	return ctx->STRING_LITERAL() != NULL;
 }
 const char * LiteralParser::visitDesignator(
 		Ref<vhdlParser::DesignatorContext> ctx) {
@@ -144,5 +146,5 @@ const char * LiteralParser::visitDesignator(
 		e = visitIdentifier(ctx->identifier());
 	}
 	Symbol* s = dynamic_cast<Symbol*>(e->data);
-	return s->value;
+	return s->value._str;
 }

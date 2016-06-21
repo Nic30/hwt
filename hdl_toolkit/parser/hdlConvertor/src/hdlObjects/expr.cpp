@@ -15,6 +15,44 @@ Expr::Expr(SymbolType type, LiteralVal value) {
 Expr::Expr(BigInteger value, int bits) {
 	data = new Symbol(value, bits);
 }
+Expr::Expr(BigInteger value) {
+	LiteralVal v;
+	v._int = value;
+	data = new Symbol(symb_INT, v);
+}
+Expr * Expr::INT(std::string strVal, int base) {
+	return Expr::INT(strVal, base);
+}
+Expr * Expr::INT(const char * strVal, int base) {
+	LiteralVal v;
+	v._int = BigInteger_fromStr(strVal, base);
+	return new Expr(symb_INT, v);
+}
+Expr * Expr::INT(long long val) {
+	LiteralVal v;
+	v._int = BigInteger_fromLong(val);
+
+	return new Expr(symb_INT, v);
+}
+Expr * Expr::FLOAT(double val) {
+	LiteralVal v;
+	v._float = val;
+	return new Expr(symb_FLOAT, v);
+}
+
+Expr * Expr::STR(std::string strVal) {
+	LiteralVal v;
+	v._str = strVal.c_str();
+	return new Expr(symb_STRING, v);
+}
+
+Expr * Expr::OPEN() {
+	Expr * e = new Expr();
+	LiteralVal v;
+	v._str = NULL;
+	e->data = new Symbol(symb_OPEN, v);
+	return e;
+}
 Expr* Expr::ternary(Expr* cond, Expr* ifTrue, Expr* ifFalse) {
 	Expr * e = new Expr();
 	e->data = Operator::ternary(cond, ifTrue, ifFalse);
@@ -40,6 +78,14 @@ PyObject * Expr::toJson() const {
 	return d;
 }
 
+Expr * Expr::id(const char * value) {
+	LiteralVal v;
+	v._str = value;
+	return new Expr(symb_ID, v);
+}
+Expr * Expr::id(std::string value) {
+	return Expr::id(value.c_str());
+}
 Expr * Expr::all() {
 	Expr * e = new Expr();
 	LiteralVal v;
@@ -53,4 +99,10 @@ Expr * Expr::null() {
 	v._str = NULL;
 	e->data = new Symbol(symb_NULL, v);
 	return e;
+}
+
+const char * Expr::extractStr() {
+	Symbol * literal = dynamic_cast<Symbol*>(data);
+	return literal->value._str;
+
 }

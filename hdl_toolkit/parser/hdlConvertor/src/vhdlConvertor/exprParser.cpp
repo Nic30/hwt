@@ -11,7 +11,7 @@ std::vector<Expr*> * ExprParser::visitActual_parameter_part(
 	// association_list
 	// : association_element ( COMMA association_element )*
 	// ;
-	for (auto e : ctx->association_list().association_element()) {
+	for (auto e : ctx->association_list()->association_element()) {
 		l->push_back(visitAssociation_element(e));
 	}
 	return l;
@@ -33,7 +33,7 @@ Expr* ExprParser::visitFormal_part(Ref<vhdlParser::Formal_partContext> ctx) {
 	// : identifier
 	// | identifier LPAREN explicit_range RPAREN
 	// ;
-	Expr * id = LiteralParser.visitIdentifier(ctx->identifier());
+	Expr * id = LiteralParser::visitIdentifier(ctx->identifier());
 	auto er = ctx->explicit_range();
 	if (er) {
 		return new Expr(id, RANGE, visitExplicit_range(er));
@@ -47,7 +47,7 @@ Expr* ExprParser::visitExplicit_range(
 	// : simple_expression direction simple_expression
 	// ;
 	OperatorType op;
-	if (ctx->direction().DOWNTO()) {
+	if (ctx->direction()->DOWNTO()) {
 		op = DOWNTO;
 	} else {
 		op = TO;
@@ -88,7 +88,7 @@ Expr* ExprParser::visitActual_designator(
 	// | OPEN
 	// ;
 	if (ctx->OPEN())
-		return new Expr(SymbolType.OPEN, NULL);
+		return Expr::OPEN();
 
 	return visitExpression(ctx->expression());
 }
@@ -101,7 +101,7 @@ Expr* ExprParser::visitSubtype_indication(
 	auto c = ctx->constraint();
 	assert(ctx->tolerance_aspect() == NULL);
 	auto snames = ctx->selected_name();
-	auto mainSelName = snames.get(0);
+	auto mainSelName = snames[0];
 
 	if (snames.size() > 1)
 		NotImplementedLogger::print(
@@ -132,7 +132,7 @@ Expr* ExprParser::visitConstraint(
 		// : RANGE range
 		// ;
 		op = RANGE;
-		op1 = visitRange(r.range());
+		op1 = visitRange(r->range());
 	} else {
 		auto i = ctx->index_constraint();
 		op = INDEX;
@@ -175,23 +175,27 @@ Expr* ExprParser::visitSimple_expression(
 	// | AMPERSAND
 	// ;
 
-	auto t = ctx->term().begin();
-	auto opList = ctx->adding_operator().begin();
-	Expr* op0 = visitTerm(t++);
+	auto t = ctx->term();
+	auto tIt = t.begin();
+	auto opList = ctx->adding_operator();
+	auto opListIt = opList.begin();
+	Expr* op0 = visitTerm(*tIt);
+	++tIt;
 	if (ctx->MINUS()) {
 		op0 = new Expr(op0, UN_MINUS, NULL);
 	}
-	while (opList.hasNext()) {
-		vhdlParser.Adding_operatorContext
-		op = opList.next();
-		Expr* op1 = visitTerm(t.next());
+	while (opListIt != opList.end()) {
+		auto op = *opListIt;
+		++opListIt;
+		Expr* op1 = visitTerm(*tIt);
+		++tIt;
 		OperatorType opType;
-		if (op.PLUS())
+		if (op->PLUS())
 			opType = ADD;
-		else if (op.MINUS()) {
+		else if (op->MINUS()) {
 			opType = SUB;
 		} else {
-			assert(op.AMPERSAND());
+			assert(op->AMPERSAND());
 			opType = CONCAT;
 		}
 		op0 = new Expr(op0, opType, op1);
@@ -202,12 +206,17 @@ Expr* ExprParser::visitExpression(Ref<vhdlParser::ExpressionContext> ctx) {
 	// expression
 	// : relation ( : logical_operator relation )*
 	// ;
-	auto relIt = ctx->relation().begin();
-	auto opIt = ctx->logical_operator().begin();
-	Expr* op0 = visitRelation(relIt.next());
-	while (opIt.hasNext()) {
-		Expr * op1 = visitRelation(relIt.next());
-		op0 = new Expr(op0, OperatorType.from(opIt.next()), op1);
+	auto rel = ctx->relation();
+	auto relIt = rel.begin();
+	auto ops = ctx->logical_operator();
+	auto opIt = ops.begin();
+	Expr* op0 = visitRelation(*relIt);
+	++relIt;
+	while (opIt != ops.end()) {
+		Expr * op1 = visitRelation(*relIt);
+		++relIt;
+		op0 = new Expr(op0, OperatorType_from(*opIt), op1);
+		++opIt;
 	}
 	return op0;
 }
@@ -223,7 +232,7 @@ Expr* ExprParser::visitRelation(Ref<vhdlParser::RelationContext> ctx) {
 	auto op = ctx->relational_operator();
 	if (op) {
 		Expr * op1 = visitShift_expression(ctx->shift_expression(1));
-		op0 = new Expr(op0, OperatorType.from(op), op1);
+		op0 = new Expr(op0, OperatorType_from(op), op1);
 	}
 
 	return op0;
@@ -236,11 +245,10 @@ Expr* ExprParser::visitShift_expression(
 	// ( : shift_operator simple_expression )?
 	// ;
 	Expr * op0 = visitSimple_expression(ctx->simple_expression(0));
-	vhdlParser.Shift_operatorContext
-	op = ctx->shift_operator();
+	auto op = ctx->shift_operator();
 	if (op) {
 		Expr * op1 = visitSimple_expression(ctx->simple_expression(1));
-		op0 = new Expr(op0, OperatorType.from(op), op1);
+		op0 = new Expr(op0, OperatorType_from(op), op1);
 	}
 	return op0;
 }
@@ -256,21 +264,25 @@ Expr * ExprParser::visitTerm(Ref<vhdlParser::TermContext> ctx) {
 	// | REM
 	// ;
 	auto t = ctx->factor().begin();
-	auto opList = ctx->multiplying_operator().begin();
-	Expr * op0 = visitFactor(t++);
+	auto opList = ctx->multiplying_operator();
+	auto opListIt = opList.begin();
+	Expr * op0 = visitFactor(*t);
+	++t;
 
-	while (opList.hasNext()) {
-		auto op = opList.next();
-		Expr * op1 = visitFactor(t.next());
+	while (opListIt != opList.end()) {
+		auto op = *opListIt;
+		++opListIt;
+		Expr * op1 = visitFactor(*t);
+		++t;
 		OperatorType opType;
-		if (op.MUL())
+		if (op->MUL())
 			opType = MUL;
-		else if (op.DIV())
+		else if (op->DIV())
 			opType = DIV;
-		else if (op.MOD())
+		else if (op->MOD())
 			opType = MOD;
 		else {
-			assert(op.REM());
+			assert(op->REM());
 			opType = REM;
 		}
 		op0 = new Expr(op0, opType, op1);
@@ -286,11 +298,11 @@ Expr* ExprParser::visitFactor(Ref<vhdlParser::FactorContext> ctx) {
 	Expr * op0 = visitPrimary(ctx->primary(0));
 	auto p1 = ctx->primary(1);
 	if (p1)
-		return new Expr(op0, OperatorType.POW, visitPrimary(p1));
+		return new Expr(op0, POW, visitPrimary(p1));
 	if (ctx->ABS())
-		return new Expr(op0, OperatorType.ABS, (Expr) NULL);
+		return new Expr(op0, ABS, NULL);
 	if (ctx->NOT())
-		return new Expr(op0, OperatorType.NOT, (Expr) NULL);
+		return new Expr(op0, NOT, NULL);
 	return op0;
 }
 Expr * ExprParser::visitPrimary(Ref<vhdlParser::PrimaryContext> ctx) {
@@ -318,7 +330,7 @@ Expr * ExprParser::visitPrimary(Ref<vhdlParser::PrimaryContext> ctx) {
 	if (ag)
 		return visitAggregate(ag);
 	auto n = ctx->name();
-	return ReferenceParser.visitName(n);
+	return ReferenceParser::visitName(n);
 }
 Expr* ExprParser::visitQualified_expression(
 		Ref<vhdlParser::Qualified_expressionContext> ctx) {
@@ -352,7 +364,7 @@ Expr* ExprParser::visitTarget(Ref<vhdlParser::TargetContext> ctx) {
 	// ;
 	auto n = ctx->name();
 	if (n) {
-		return ReferenceParser.visitName(n);
+		return ReferenceParser::visitName(n);
 	} else {
 		return visitAggregate(ctx->aggregate());
 	}
@@ -367,11 +379,14 @@ Expr * ExprParser::visitWaveform(Ref<vhdlParser::WaveformContext> ctx) {
 		NotImplementedLogger::print("ExprParser.visitWaveform - UNAFFECTED");
 		return NULL;
 	}
-	auto we = ctx->waveform_element().begin();
+	auto we = ctx->waveform_element();
+	auto weIt = we.begin();
 
-	Expr* top = visitWaveform_element(we.next());
-	while (we.hasNext()) {
-		top = new Expr(top, OperatorType.DOT, visitWaveform_element(we.next()));
+	Expr* top = visitWaveform_element(*weIt);
+	++weIt;
+	while (weIt != we.end()) {
+		top = new Expr(top, DOT, visitWaveform_element(*weIt));
+		++weIt;
 	}
 	return top;
 }
@@ -383,8 +398,9 @@ Expr *ExprParser::visitWaveform_element(
 	// ;
 	auto ex = ctx->expression();
 	auto e = ex.begin();
-	Expr* top = visitExpression(e++);
-	if (ex != ex.end()) {
+	Expr* top = visitExpression(*e);
+	++e;
+	if (e != ex.end()) {
 		NotImplementedLogger::print(
 				"ExprParser.visitWaveform_element - AFTER expression");
 	}

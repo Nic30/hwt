@@ -51,13 +51,17 @@ void DesignFileParser::visitSecondary_unit(
 	// ;
 	auto arch = ctx->architecture_body();
 	if (arch) {
-		Arch * a = (new ArchParser(hierarchyOnly))->visitArchitecture_body(arch);
+		Arch * a = (new ArchParser(hierarchyOnly))->visitArchitecture_body(
+				arch);
 		context->architectures.push_back(a);
 	}
 	auto pack = ctx->package_body();
 	if (pack) {
-		Package * p = (new PackageParser(hierarchyOnly))->visitPackage_body(pack);
+		PackageParser * pparser = new PackageParser(hierarchyOnly);
+		Package * p = pparser->visitPackage_body(pack);
+		delete pparser;
 		context->packages.push_back(p);
+
 	}
 }
 void DesignFileParser::visitContext_clause(
@@ -82,9 +86,10 @@ void DesignFileParser::visitPrimary_unit(
 	// ;
 	auto ed = ctx->entity_declaration();
 	if (ed) {
-		Entity * e = (new EntityParser(hierarchyOnly))->visitEntity_declaration(
-				ed);
+		auto eParser = new EntityParser(hierarchyOnly);
+		Entity * e = eParser->visitEntity_declaration(ed);
 		context->entities.push_back(e);
+		delete eParser;
 		return;
 	}
 	auto cd = ctx->configuration_declaration();
@@ -95,9 +100,8 @@ void DesignFileParser::visitPrimary_unit(
 	}
 	auto pd = ctx->package_declaration();
 	if (pd) {
-		PackageHeader * ph =
-				(new PackageHeaderParser(hierarchyOnly)).visitPackage_declaration(
-						pd);
+		auto php = new PackageHeaderParser(hierarchyOnly);
+		PackageHeader * ph = php->visitPackage_declaration(pd);
 		context->packageHeaders.push_back(ph);
 	}
 

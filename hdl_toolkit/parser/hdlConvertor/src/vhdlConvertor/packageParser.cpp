@@ -11,8 +11,10 @@ Package * PackageParser::visitPackage_body(
 	// package_body_declarative_part
 	// END ( PACKAGE BODY )? ( identifier )? SEMI
 	// ;
-	p->name =
-			(String) LiteralParser::visitIdentifier(ctx->identifier(0)).literal.value;
+	Expr * id = LiteralParser::visitIdentifier(ctx->identifier(0));
+	p->name = id->extractStr();
+	delete id;
+
 	if (!hierarchyOnly) {
 		visitPackage_body_declarative_part(p,
 				ctx->package_body_declarative_part());
@@ -20,7 +22,7 @@ Package * PackageParser::visitPackage_body(
 	return p;
 }
 void PackageParser::visitPackage_body_declarative_part(
-		aPackage p,
+		aPackage * p,
 		Ref<vhdlParser::Package_body_declarative_partContext> ctx) {
 	// package_body_declarative_part
 	// : ( package_body_declarative_item )*
@@ -52,15 +54,16 @@ void PackageParser::visitPackage_body_declarative_item(
 
 	auto sb = ctx->subprogram_body();
 	if (sb) {
-		p.functions.add(visitSubprogram_body(sb));
+		Function * f = visitSubprogram_body(sb);
+		p->functions.push_back(f);
 		return;
 	}
 
 	NotImplementedLogger::print(
 			"PackageParser.visitPackage_body_declarative_item");
 }
-static Function * PackageParser::visitSubprogram_body(
-		Ref<vhdlParser.Subprogram_bodyContext> ctx) {
+Function * PackageParser::visitSubprogram_body(
+		Ref<vhdlParser::Subprogram_bodyContext> ctx) {
 	// subprogram_body :
 	// subprogram_specification IS
 	// subprogram_declarative_part
@@ -70,29 +73,35 @@ static Function * PackageParser::visitSubprogram_body(
 	// ;
 	Function * f = PackageHeaderParser::visitSubprogram_specification(
 			ctx->subprogram_specification());
-	for (Variable * v : visitSubprogram_declarative_part(
-			ctx->subprogram_declarative_part())) {
-		f->locals->push_back(v);
+	auto vs = visitSubprogram_declarative_part(
+			ctx->subprogram_declarative_part());
+	for (auto v : *vs) {
+		f->locals.push_back(v);
 	}
-	for (Statement * s : visitSubprogram_statement_part(
-			ctx->subprogram_statement_part())) {
-		f->body->push_back(s);
+	delete vs;
+	auto stmts = visitSubprogram_statement_part(
+			ctx->subprogram_statement_part());
+	for (auto s : *stmts) {
+		f->body.push_back(s);
 	}
+	delete stmts;
 	return f;
 }
-static std::vector<Variable*>* PackageParser::PackageParser::visitSubprogram_declarative_part(
+std::vector<Variable*>* PackageParser::PackageParser::visitSubprogram_declarative_part(
 		Ref<vhdlParser::Subprogram_declarative_partContext> ctx) {
 	// subprogram_declarative_part
 	// : ( subprogram_declarative_item )*
 	// ;
 	std::vector<Variable*> * vars = new std::vector<Variable*>();
 	for (auto sd : ctx->subprogram_declarative_item()) {
-		vars.addAll(visitSubprogram_declarative_item(sd));
+		auto spdi = visitSubprogram_declarative_item(sd);
+		vars->insert(spdi->end(), spdi->begin(), spdi->end());
+		delete spdi;
 	}
 
 	return vars;
 }
-static std::vector<Variable *> * PackageParser::visitSubprogram_declarative_item(
+std::vector<Variable *> * PackageParser::visitSubprogram_declarative_item(
 		Ref<vhdlParser::Subprogram_declarative_itemContext> ctx) {
 	// subprogram_declarative_item
 	// : subprogram_declaration
@@ -116,10 +125,10 @@ static std::vector<Variable *> * PackageParser::visitSubprogram_declarative_item
 
 	NotImplementedLogger::print(
 			"PackageParser.visitSubprogram_declarative_item");
-	return new std::vector<Variable>();
+	return new std::vector<Variable*>();
 }
 
-static std::vector<Variable*> * PackageParser::visitVariable_declaration(
+std::vector<Variable*> * PackageParser::visitVariable_declaration(
 		Ref<vhdlParser::Variable_declarationContext> ctx) {
 	// variable_declaration :
 	// ( SHARED )? VARIABLE identifier_list COLON
@@ -143,7 +152,7 @@ void PackageParser::visitSubprogram_declaration(
 	NotImplementedLogger::print("PackageParser.visitSubprogram_declaration");
 }
 
-static std::vector<Statement *> * PackageParser::visitSubprogram_statement_part(
+std::vector<Statement *> * PackageParser::visitSubprogram_statement_part(
 		Ref<vhdlParser::Subprogram_statement_partContext> ctx) {
 	// subprogram_statement_part
 	// : ( sequential_statement )*

@@ -8,8 +8,8 @@ Entity::Entity() :
 
 PyObject * Entity::toJson() const {
 	PyObject * d = Named::toJson();
-	addJsonArr(d, "generics", generics);
-	addJsonArr(d, "ports", ports);
+	addJsonArrP(d, "generics", generics);
+	addJsonArrP(d, "ports", ports);
 
 	return d;
 }

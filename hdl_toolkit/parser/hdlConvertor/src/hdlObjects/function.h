@@ -5,19 +5,19 @@
 #include "variable.h"
 #include "statement.h"
 
-class Function: Named {
+class Function: public Named {
 	bool isOperator;
 	Expr * returnT;
-	std::vector<Variable> * params;
+	std::vector<Variable*> * params;
 public:
-	std::vector<Variable>  locals;
-	std::vector<Statement>  body;
+	std::vector<Variable*>  locals;
+	std::vector<Statement*>  body;
 
 	Function(
-			char * name,
+			const char * name,
 			bool isOperator,
 			Expr * returnT,
-			std::vector<Variable> * params);
+			std::vector<Variable*> * params);
 
 	PyObject * toJson() const;
 };

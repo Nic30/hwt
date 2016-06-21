@@ -8,8 +8,8 @@
 
 class aPackage: public Named {
 public:
-	std::vector<Entity> components;
-	std::vector<Function> functions;
+	std::vector<Entity*> components;
+	std::vector<Function*> functions;
 
 	aPackage();
 

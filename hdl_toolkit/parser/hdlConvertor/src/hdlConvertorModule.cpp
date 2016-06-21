@@ -1,4 +1,7 @@
 #include "hdlConvertorModule.h"
+#include "langue.h"
+#include "convertor.h"
+
 
 #define ch(str) ((const char *) str)
 
@@ -66,7 +69,8 @@ hdlConvertor_parse(PyObject *self, PyObject *args, PyObject *keywds) {
 				"Invalid language specified, only vhdl and verilog is available");
 		return NULL;
 	}
-	return convertToPyDict(filename, _lang, hierarchyOnly, debug);
+	Context * c = Convertor::parse(filename, _lang, hierarchyOnly, debug);
+	return c->toJson();
 }
 PyMODINIT_FUNC PyInit_hdlConvertor(void) {
 	return PyModule_Create(&hdlConvertor);

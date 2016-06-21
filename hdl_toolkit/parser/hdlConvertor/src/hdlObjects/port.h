@@ -6,7 +6,7 @@
 class Port {
 public:
 	Direction direction;
-	Variable variable;
+	Variable * variable;
 
 	PyObject * toJson() const;
 };

@@ -8,6 +8,7 @@
 #include "../hdlObjects/symbolType.h"
 #include "../hdlObjects/expr.h"
 #include "../hdlObjects/entity.h"
+#include "interfaceParser.h"
 
 
 using namespace antlr4;

@@ -10,7 +10,7 @@
 #include "VerilogParser/Verilog2001Parser.h"
 #include "syntaxErrorLogger.h"
 #include "langue.h"
-#include "vhdlConvertor/designFileParser.h"
+//#include "vhdlConvertor/designFileParser.h"
 
 
 using namespace antlr4;

@@ -7,7 +7,7 @@
 class Arch: public Named {
 public:
 	const char * entityName;
-	std::vector<CompInstance> componentInstances;
+	std::vector<CompInstance*> componentInstances;
 
 	PyObject * toJson() const;
 };

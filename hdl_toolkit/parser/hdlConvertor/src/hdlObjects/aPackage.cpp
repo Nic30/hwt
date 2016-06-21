@@ -9,7 +9,7 @@ aPackage::aPackage() :
 
 PyObject * aPackage::toJson() const {
 	PyObject *d = Named::toJson();
-	addJsonArr(d, "components", components);
-	addJsonArr(d, "functions", functions);
+	addJsonArrP(d, "components", components);
+	addJsonArrP(d, "functions", functions);
 	return d;
 }

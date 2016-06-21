@@ -4,11 +4,13 @@
 #include "../hdlObjects/context.h"
 #include "../notImplementedLogger.h"
 #include "referenceParser.h"
+#include "../hdlObjects/named.h"
+#include "compInstanceParser.h"
 
 using namespace antlr4;
 using namespace vhdl;
 
-class ArchParser {
+class ArchParser : public Named {
 public:
 	Arch * a;
 	bool hierarchyOnly;

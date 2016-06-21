@@ -14,17 +14,17 @@ Arch * ArchParser::visitArchitecture_body(
 	// architecture_statement_part
 	// END ( ARCHITECTURE )? ( identifier )? SEMI
 	// ;
-	a.name = ctx.identifier(0).getText();
-	a.entityName = ctx.identifier(1).getText();
+	a->name = ctx->identifier(0)->getText().c_str();
+	a->entityName = ctx->identifier(1)->getText().c_str();
 	if (!hierarchyOnly) {
-		for (auto bi : ctx.architecture_declarative_part().block_declarative_item()) {
+		for (auto bi : ctx->architecture_declarative_part()->block_declarative_item()) {
 			// architecture_declarative_part
 			// : ( block_declarative_item )*
 			// ;
 			visitBlock_declarative_item(bi);
 		}
 	}
-	for (auto s : ctx.architecture_statement_part().architecture_statement()) {
+	for (auto s : ctx->architecture_statement_part()->architecture_statement()) {
 		// architecture_statement_part
 		// : ( architecture_statement )*
 		// ;
@@ -77,10 +77,10 @@ void ArchParser::visitArchitecture_statement(
 	// | simultaneous_statement
 	// ;
 	// [TODO]
-	auto ci = ctx.component_instantiation_statement();
+	auto ci = ctx->component_instantiation_statement();
 	if (ci) {
-		a.componentInstances.add(
-				CompInstanceParser.visitComponent_instantiation_statement(ci));
+		a->componentInstances.push_back(
+				CompInstanceParser::visitComponent_instantiation_statement(ci));
 	} else {
 		if (!hierarchyOnly) {
 			NotImplementedLogger::print(

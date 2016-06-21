@@ -9,8 +9,10 @@
 #include "../hdlObjects/expr.h"
 #include "../hdlObjects/variable.h"
 #include "../hdlObjects/port.h"
+#include "../hdlObjects/direction.h"
 
 #include "exprParser.h"
+#include "directionParser.h"
 
 class InterfaceParser {
 public:
@@ -24,7 +26,7 @@ public:
 			Ref<vhdlParser::Interface_constant_declarationContext> ctx);
 	static std::vector<Variable*> * visitInterface_signal_declaration(
 			Ref<vhdlParser::Interface_signal_declarationContext> ctx);
-	static std::vector<Variable*> visitInterface_variable_declaration(
+	static std::vector<Variable*> * visitInterface_variable_declaration(
 			Ref<vhdlParser::Interface_variable_declarationContext> ctx);
 	static std::vector<Variable*> * visitInterface_file_declaration(
 			Ref<vhdlParser::Interface_file_declarationContext> ctx);

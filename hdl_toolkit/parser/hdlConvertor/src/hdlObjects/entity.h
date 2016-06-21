@@ -5,8 +5,8 @@
 
 class Entity: public Named {
 public:
-	std::vector<Variable> generics;
-	std::vector<Port> ports;
+	std::vector<Variable*> generics;
+	std::vector<Port*> ports;
 	Entity();
 
 	PyObject * toJson() const;

@@ -8,11 +8,13 @@
 #include "../hdlObjects/symbolType.h"
 #include "../hdlObjects/expr.h"
 #include "../hdlObjects/statement.h"
+#include "exprParser.h"
 
 using namespace antlr4;
 using namespace vhdl;
 
 class StatementParser {
+public:
 	static Statement * visitSequential_statement(
 			Ref<vhdlParser::Sequential_statementContext> ctx);
 	static Statement * visitSignal_assignment_statement(

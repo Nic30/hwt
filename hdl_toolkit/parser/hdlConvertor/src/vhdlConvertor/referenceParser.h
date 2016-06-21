@@ -1,10 +1,14 @@
 #pragma once
+
 #include <vector>
+#include <cstddef>
 #include "../VhdlParser/vhdlParser.h"
 #include "../notImplementedLogger.h"
 #include "../hdlObjects/operatorType.h"
 #include "../hdlObjects/symbolType.h"
 #include "../hdlObjects/expr.h"
+#include "literalParser.h"
+#include "exprParser.h"
 
 using namespace antlr4;
 using namespace vhdl;

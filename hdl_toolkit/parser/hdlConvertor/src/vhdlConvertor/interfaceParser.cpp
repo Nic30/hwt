@@ -1,5 +1,6 @@
 #include "interfaceParser.h"
-static std::vector<Variable*> * InterfaceParser::extractVariables(
+
+std::vector<Variable*> * InterfaceParser::extractVariables(
 		Ref<vhdlParser::Identifier_listContext> identifier_list,
 		Ref<vhdlParser::Subtype_indicationContext> subType,
 		Ref<vhdlParser::ExpressionContext> _expr) {
@@ -8,21 +9,21 @@ static std::vector<Variable*> * InterfaceParser::extractVariables(
 	Expr * expr = NULL;
 	if (_expr)
 		expr = ExprParser::visitExpression(_expr);
-	for (auto i : identifier_list.identifier()) {
+	for (auto i : identifier_list->identifier()) {
 		// identifier_list
 		// : identifier ( COMMA identifier )*
 		// ;
 		Variable * v = new Variable();
-		v->name = i->getText();
+		v->name = i->getText().c_str();
 		v->type = type;
 		v->value = expr;
 		vl->push_back(v);
 	}
 	return vl;
 }
-static std::vector<Port*> * InterfaceParser::visitInterface_port_declaration(
+std::vector<Port*> * InterfaceParser::visitInterface_port_declaration(
 		Ref<vhdlParser::Interface_port_declarationContext> ctx) {
-	std::vector<Port*> * pl = new std::vector<Port>();
+	std::vector<Port*> * pl = new std::vector<Port*>();
 	// interface_port_declaration
 	// : identifier_list COLON signal_mode subtype_indication
 	// ( BUS )? ( VARASGN expression )?
@@ -36,8 +37,8 @@ static std::vector<Port*> * InterfaceParser::visitInterface_port_declaration(
 	// | BUFFER
 	// | LINKAGE
 	// ;
-	Direction d = Direction.fromSignal_mode(ctx->signal_mode());
-	for (Variable v : vl) {
+	Direction d = Direction_from(ctx->signal_mode());
+	for (auto v : *vl) {
 		Port * p = new Port();
 		p->direction = d;
 		p->variable = v;
@@ -45,8 +46,8 @@ static std::vector<Port*> * InterfaceParser::visitInterface_port_declaration(
 	}
 	return pl;
 }
-static std::vector<Variable*> * InterfaceParser::visitInterface_constant_declaration(
-		vhdlParser.Interface_constant_declarationContext ctx) {
+std::vector<Variable*> * InterfaceParser::visitInterface_constant_declaration(
+		Ref<vhdlParser::Interface_constant_declarationContext> ctx) {
 	// interface_constant_declaration
 	// : ( CONSTANT )? identifier_list COLON ( IN )? subtype_indication
 	// ( VARASGN expression )?
@@ -55,7 +56,7 @@ static std::vector<Variable*> * InterfaceParser::visitInterface_constant_declara
 			ctx->expression());
 
 }
-static std::vector<Variable*> * InterfaceParser::visitInterface_signal_declaration(
+std::vector<Variable*> * InterfaceParser::visitInterface_signal_declaration(
 		Ref<vhdlParser::Interface_signal_declarationContext> ctx) {
 	// interface_signal_declaration
 	// : SIGNAL identifier_list COLON subtype_indication
@@ -63,7 +64,7 @@ static std::vector<Variable*> * InterfaceParser::visitInterface_signal_declarati
 	// ;
 	return new std::vector<Variable*>();
 }
-static std::vector<Variable*> * InterfaceParser::visitInterface_variable_declaration(
+std::vector<Variable*> * InterfaceParser::visitInterface_variable_declaration(
 		Ref<vhdlParser::Interface_variable_declarationContext> ctx) {
 	// interface_variable_declaration
 	// : ( VARIABLE )? identifier_list COLON
@@ -73,7 +74,7 @@ static std::vector<Variable*> * InterfaceParser::visitInterface_variable_declara
 			"InterfaceParser.visitInterface_variable_declaration");
 	return new std::vector<Variable*>();
 }
-static std::vector<Variable*> * InterfaceParser::visitInterface_file_declaration(
+std::vector<Variable*> * InterfaceParser::visitInterface_file_declaration(
 		Ref<vhdlParser::Interface_file_declarationContext> ctx) {
 	// interface_file_declaration
 	// : FILE identifier_list COLON subtype_indication
@@ -82,16 +83,16 @@ static std::vector<Variable*> * InterfaceParser::visitInterface_file_declaration
 			"InterfaceParser.visitInterface_file_declaration");
 	return new std::vector<Variable*>();
 }
-static std::vector<Variable*> * InterfaceParser::visitInterface_terminal_declaration(
+std::vector<Variable*> * InterfaceParser::visitInterface_terminal_declaration(
 		Ref<vhdlParser::Interface_terminal_declarationContext> ctx) {
 	// interface_terminal_declaration
 	// : TERMINAL identifier_list COLON subnature_indication
 	// ;
 	NotImplementedLogger::print(
 			"InterfaceParser.visitInterface_terminal_declaration");
-	return new std::vector<Variable>();
+	return new std::vector<Variable*>();
 }
-static std::vector<Variable*> * InterfaceParser::visitInterface_quantity_declaration(
+std::vector<Variable*> * InterfaceParser::visitInterface_quantity_declaration(
 		Ref<vhdlParser::Interface_quantity_declarationContext> ctx) {
 	// interface_quantity_declaration
 	// : QUANTITY identifier_list COLON ( IN | OUT )? subtype_indication
@@ -101,7 +102,7 @@ static std::vector<Variable*> * InterfaceParser::visitInterface_quantity_declara
 			"InterfaceParser.visitInterface_quantity_declaration");
 	return new std::vector<Variable*>();
 }
-static std::vector<Variable*> * InterfaceParser::visitInterface_declaration(
+std::vector<Variable*> * InterfaceParser::visitInterface_declaration(
 		Ref<vhdlParser::Interface_declarationContext> ctx) {
 	// interface_declaration
 	// : interface_constant_declaration
@@ -135,18 +136,20 @@ static std::vector<Variable*> * InterfaceParser::visitInterface_declaration(
 		return visitInterface_quantity_declaration(q);
 	}
 }
-static std::vector<Variable*> * InterfaceParser::visitInterface_list(
+std::vector<Variable*> * InterfaceParser::visitInterface_list(
 		Ref<vhdlParser::Interface_listContext> ctx) {
 	// interface_list
 	// : interface_element ( SEMI interface_element )*
 	// ;
 	std::vector<Variable*> * elems = new std::vector<Variable*>();
 	for (auto ie : ctx->interface_element()) {
-		elems.addAll(visitInterface_element(ie));
+		std::vector<Variable*> *_elements = visitInterface_element(ie);
+		elems->insert(_elements->end(), _elements->begin(), _elements->end());
+		delete _elements;
 	}
 	return elems;
 }
-static std::vector<Variable*> * InterfaceParser::visitInterface_element(
+std::vector<Variable*> * InterfaceParser::visitInterface_element(
 		Ref<vhdlParser::Interface_elementContext> ctx) {
 	// interface_element
 	// : interface_declaration
