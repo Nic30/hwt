@@ -180,7 +180,8 @@ Expr* ExprParser::visitSimple_expression(
 	auto opList = ctx->adding_operator();
 	auto opListIt = opList.begin();
 	Expr* op0 = visitTerm(*tIt);
-	++tIt;
+	if (t.size() > 1)
+		tIt++;
 	if (ctx->MINUS()) {
 		op0 = new Expr(op0, UN_MINUS, NULL);
 	}
@@ -263,11 +264,14 @@ Expr * ExprParser::visitTerm(Ref<vhdlParser::TermContext> ctx) {
 	// | MOD
 	// | REM
 	// ;
-	auto t = ctx->factor().begin();
+	auto fac = ctx->factor();
+	auto t = fac.begin();
+
 	auto opList = ctx->multiplying_operator();
 	auto opListIt = opList.begin();
 	Expr * op0 = visitFactor(*t);
-	++t;
+	if (fac.size() > 1)
+		t++;
 
 	while (opListIt != opList.end()) {
 		auto op = *opListIt;

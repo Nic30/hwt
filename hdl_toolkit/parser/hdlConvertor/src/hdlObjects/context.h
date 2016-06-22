@@ -19,4 +19,5 @@ public:
 
 	PyObject * toJson() const;
 	void dump(int indent) const;
+	~Context();
 };

@@ -35,4 +35,5 @@ public:
 	const char * extractStr();
 	PyObject * toJson() const;
 	void dump(int indent) const;
+	~Expr();
 };

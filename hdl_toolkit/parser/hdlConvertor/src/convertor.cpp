@@ -44,6 +44,7 @@ Context * Convertor::parse(
 		//verilogParser * parser = initParser<verilogLexer, verilogParser>(input);
 	} else {
 	}
+	delete input;
 	return c;
 }
 

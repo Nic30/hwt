@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[]) {
 	auto c = new Convertor();
-	const char * f = "../../samples/iLvl/vhdl/clkRstEnt.vhd";
+	const char * f = "../../samples/iLvl/vhdl/packWithComps/top1.vhd";
 	Context * ctx = c->parse(f, VHDL, false, true);
 
 	//PyObject* ctxDict = PyObject_Repr(ctx->toJson());

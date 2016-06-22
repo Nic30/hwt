@@ -32,6 +32,19 @@ Operator * Operator::ternary(Expr* cond, Expr* ifTrue, Expr* ifFalse) {
 
 	return op;
 }
+Operator::~Operator() {
+	if (operands) {
+		for (auto o : *operands) {
+			delete o;
+		}
+		delete operands;
+	}
+	if (op0)
+		delete op0;
+	if (op1)
+		delete op1;
+}
+
 PyObject * Operator::toJson() const {
 	PyObject *d = PyDict_New();
 	PyDict_SetItemString(d, "op0", op0->toJson());

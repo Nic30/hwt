@@ -54,14 +54,15 @@ CompInstance * CompInstanceParser::visitInstantiated_unit(
 
 	auto _id = ctx->identifier();
 	if (_id) {
+		Expr * id = LiteralParser::visitIdentifier(_id);
 		NotImplementedLogger::print(
 				"CompInstanceParser.visitInstantiated_unit - Identifier");
+		delete id;
 	}
-	Expr * id = LiteralParser::visitIdentifier(_id);
 
 	Expr * ent = ReferenceParser::visitName(ctx->name());
 
-	CompInstance * ci = new CompInstance(id->extractStr(), ent);
+	CompInstance * ci = new CompInstance(NULL, ent);
 	return ci;
 }
 std::vector<Expr*> * CompInstanceParser::visitGeneric_map_aspect(

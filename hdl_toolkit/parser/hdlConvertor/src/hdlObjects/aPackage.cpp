@@ -18,7 +18,7 @@ PyObject * aPackage::toJson() const {
 void aPackage::dump(int indent) const {
 	Named::dump(indent);
 	indent += INDENT_INCR;
-	dumpArrP("components", indent, components) << "\n,";
+	dumpArrP("components", indent, components) << ",\n";
 	dumpArrP("functions", indent, functions) << "\n";
 	indent -= INDENT_INCR;
 	mkIndent(indent) << "}";

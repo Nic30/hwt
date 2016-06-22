@@ -14,4 +14,6 @@ public:
 	Symbol(BigInteger value, int bits);
 	PyObject * toJson() const;
 	void dump(int indent) const;
+
+	~Symbol();
 };

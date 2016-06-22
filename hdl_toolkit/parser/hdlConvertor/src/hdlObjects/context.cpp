@@ -7,7 +7,7 @@ PyObject * Context::toJson() const {
 	addJsonArrP(c, "architectures", architectures);
 	addJsonArrP(c, "packages", packages);
 	addJsonArrP(c, "packageHeaders", packageHeaders);
-	Py_INCREF(c);
+	Py_IncRef(c);
 	return c;
 }
 
@@ -21,4 +21,22 @@ void Context::dump(int indent) const {
 	dumpArrP("packageHeaders", indent, packageHeaders) << ",\n";
 	indent -= INDENT_INCR;
 	mkIndent(indent) << "}";
+}
+
+Context::~Context() {
+	for (auto i : imports) {
+		delete i;
+	}
+	for (auto i : entities) {
+		delete i;
+	}
+	for (auto i : architectures) {
+		delete i;
+	}
+	for (auto i : packages) {
+		delete i;
+	}
+	for (auto i : packageHeaders) {
+		delete i;
+	}
 }

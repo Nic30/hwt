@@ -8,21 +8,6 @@
 
 PyObject * addJsonArr_empty(PyObject * parent, const char * name);
 
-//template<typename T>
-//void addJsonArr(
-//		PyObject * parent,
-//		const char * name,
-//		std::vector<T> const & objects) {
-//	PyObject * objList = PyList_New(objects.size());
-//
-//	for (unsigned i = 0; i < objects.size(); i++) {
-//		PyObject * o = objects[i].toJson();
-//		PyList_SetItem(objList, i, o);
-//	}
-//	Py_IncRef(objList);
-//	PyDict_SetItemString(parent, name, objList);
-//}
-
 template<typename T>
 void addJsonArrP(
 		PyObject * parent,

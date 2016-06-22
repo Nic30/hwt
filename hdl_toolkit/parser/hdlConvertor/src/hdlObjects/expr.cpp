@@ -22,7 +22,7 @@ Expr::Expr(BigInteger value) {
 	data = new Symbol(symb_INT, v);
 }
 Expr * Expr::INT(std::string strVal, int base) {
-	return Expr::INT(strVal, base);
+	return Expr::INT(strVal.c_str(), base);
 }
 Expr * Expr::INT(const char * strVal, int base) {
 	LiteralVal v;
@@ -92,6 +92,10 @@ const char * Expr::extractStr() {
 	Symbol * literal = dynamic_cast<Symbol*>(data);
 	return literal->value._str;
 
+}
+
+Expr::~Expr() {
+	delete data;
 }
 
 PyObject * Expr::toJson() const {

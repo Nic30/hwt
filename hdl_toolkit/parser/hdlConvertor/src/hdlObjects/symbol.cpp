@@ -10,6 +10,19 @@ Symbol::Symbol(BigInteger value, int bits) {
 	this->value._int = value;
 	this->bits = bits;
 }
+Symbol::~Symbol() {
+	switch (type) {
+	case symb_INT:
+		free(value._int);
+		break;
+		//case symb_STRING:
+		//	free(value._str);
+		//	break;
+	default:
+		break;
+	}
+}
+
 PyObject * Symbol::toJson() const {
 	PyObject * d = PyDict_New();
 

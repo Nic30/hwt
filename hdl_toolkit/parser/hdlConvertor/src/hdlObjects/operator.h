@@ -20,4 +20,5 @@ public:
 	static Operator * ternary(Expr* cond, Expr* ifTrue, Expr* ifFalse);
 	PyObject * toJson() const;
 	void dump(int indent) const;
+	~Operator();
 };
