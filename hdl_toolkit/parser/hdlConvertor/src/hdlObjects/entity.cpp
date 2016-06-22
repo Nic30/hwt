@@ -16,9 +16,8 @@ PyObject * Entity::toJson() const {
 
 void Entity::dump(int indent) const {
 	Named::dump(indent);
-	std::cout << "\n,";
 	indent += INDENT_INCR;
-	dumpArrP("generics", indent, generics) << "\n,";
+	dumpArrP("generics", indent, generics) << ",\n";
 	dumpArrP("ports", indent, ports) << "\n";
-	mkIndent(indent - INDENT_INCR);
+	mkIndent(indent - INDENT_INCR) << "}";
 }

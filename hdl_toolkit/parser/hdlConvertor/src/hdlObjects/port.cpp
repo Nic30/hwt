@@ -10,10 +10,11 @@ PyObject * Port::toJson() const {
 }
 
 void Port::dump(int indent) const {
-	mkIndent(indent) << "{\n";
+	std::cout << "{\n";
 	indent += INDENT_INCR;
 	dumpVal("direction", indent, Direction_toString(direction)) << ",\n";
 	dumpKey("variable", indent);
 	variable->dump(indent);
-	mkIndent(indent - INDENT_INCR) << "\n}";
+	std::cout << "\n";
+	mkIndent(indent - INDENT_INCR) << "}";
 }

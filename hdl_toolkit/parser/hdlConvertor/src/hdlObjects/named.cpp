@@ -14,7 +14,6 @@ PyObject * Named::toJson() const {
 }
 
 void Named::dump(int indent) const {
-	mkIndent(indent) << "{\n";
-	indent += INDENT_INCR;
-	mkIndent(indent) << "\"name\":\"" << name << "\",\n" ;
+	std::cout << "{\n";
+	mkIndent(indent + INDENT_INCR) << "\"name\":\"" << name << "\",\n";
 }

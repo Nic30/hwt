@@ -66,15 +66,15 @@ void Operator::dump(int indent) const {
 	switch (arity) {
 	case -1:
 	case 3:
-		dumpArrP("operands", indent, *operands);
+		dumpArrP("operands", indent, *operands) << "\n";
 		break;
 	case 1:
 		break;
 	case 2:
-		dumpItemP("op1", indent, op1);
+		dumpItemP("op1", indent, op1) << "\n";
 		break;
 	default:
 		throw "Invalid arity of operator";
 	}
-	mkIndent(indent - INDENT_INCR) << "\n}";
+	mkIndent(indent - INDENT_INCR) << "}";
 }

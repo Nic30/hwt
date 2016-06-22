@@ -25,10 +25,10 @@ void Variable::dump(int indent) const {
 	std::cout << ",\n";
 
 	if (value) {
-		dumpKey("value", indent);
+		dumpKey("value", indent) << "\n";
 		value->dump(indent);
 	} else {
-		dumpVal("value", indent, "None");
+		dumpVal("value", indent, "None") << "\n";
 	}
 	mkIndent(indent - INDENT_INCR) << "}";
 }

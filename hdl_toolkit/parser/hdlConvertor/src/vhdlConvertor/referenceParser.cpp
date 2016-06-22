@@ -9,6 +9,7 @@ Expr * ReferenceParser::visitSelected_name(
 	for (auto s : ctx->suffix()) {
 		top = new Expr(top, DOT, visitSuffix(s));
 	}
+	assert(top);
 	return top;
 }
 Expr * ReferenceParser::visitSuffix(Ref<vhdlParser::SuffixContext> ctx) {
@@ -52,6 +53,7 @@ Expr * ReferenceParser::visitName(Ref<vhdlParser::NameContext> ctx) {
 			op0 = new Expr(op0, DOT, op1);
 		}
 	}
+	assert(op0);
 	return op0;
 }
 Expr * ReferenceParser::visitAttribute_designator(

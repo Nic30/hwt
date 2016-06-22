@@ -48,20 +48,20 @@ void Symbol::dump(int indent) const {
 	switch (type) {
 	case symb_ID:
 	case symb_STRING:
-		dumpVal("value", indent, value._str);
+		dumpVal("value", indent, value._str) << "\n";
 		break;
 	case symb_FLOAT:
-		dumpVal("value", indent, value._float);
+		dumpVal("value", indent, value._float) << "\n";
 		break;
 	case symb_INT:
 		if (bits > 0)
 			dumpVal("bits", indent, bits) << ",\n";
-		dumpVal("value", indent, value._int);
+		dumpVal("value", indent, value._int) << "\n";
 		break;
+	case symb_ALL:
 	case symb_OPEN:
 	default:
-		dumpVal("value", indent, NULL);
 		break;
 	}
-	mkIndent(indent - INDENT_INCR) << "\n}";
+	mkIndent(indent - INDENT_INCR) << "}";
 }

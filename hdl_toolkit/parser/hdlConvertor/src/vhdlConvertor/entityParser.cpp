@@ -68,8 +68,10 @@ void EntityParser::visitGeneric_clause(
 		for (auto ic : gl->interface_constant_declaration()) {
 			std::vector<Variable*> * vl =
 					InterfaceParser::visitInterface_constant_declaration(ic);
-			for (auto v : *vl)
+			for (auto v : *vl){
+				assert(v);
 				generics->push_back(v);
+			}
 			delete vl;
 		}
 	}
