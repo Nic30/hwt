@@ -7,6 +7,7 @@ void SyntaxErrorLogger::syntaxError(
 		int charPositionInLine,
 		const std::string &msg,
 		std::exception_ptr e) {
+	std::cerr << line << ":" << charPositionInLine << ":Error:" << msg << "\n";
 }
 
 void SyntaxErrorLogger::reportAmbiguity(

@@ -2,8 +2,6 @@
 
 Entity::Entity() :
 		Named() {
-	//generics = new std::vector<Variable>();
-	//ports = new std::vector<Port>();
 }
 
 PyObject * Entity::toJson() const {

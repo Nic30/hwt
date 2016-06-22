@@ -85,9 +85,9 @@ hdlConvertor_parse(PyObject *self, PyObject *args, PyObject *keywds) {
 				"Converter::parse did not returned correct context for file");
 		return NULL;
 	}
-	std::cout << "cntx loaded\n";
+	//std::cout << "cntx loaded\n";
 	PyObject * d = c->toJson();
-	std::cout << "cntx in json\n";
+	//std::cout << "cntx in json\n";
 	return d;
 }
 PyMODINIT_FUNC PyInit_hdlConvertor(void) {

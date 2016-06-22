@@ -73,18 +73,21 @@ Function * PackageParser::visitSubprogram_body(
 	// ;
 	Function * f = PackageHeaderParser::visitSubprogram_specification(
 			ctx->subprogram_specification());
+
 	auto vs = visitSubprogram_declarative_part(
 			ctx->subprogram_declarative_part());
 	for (auto v : *vs) {
 		f->locals.push_back(v);
 	}
 	delete vs;
+
 	auto stmts = visitSubprogram_statement_part(
 			ctx->subprogram_statement_part());
 	for (auto s : *stmts) {
 		f->body.push_back(s);
 	}
 	delete stmts;
+
 	return f;
 }
 std::vector<Variable*>* PackageParser::PackageParser::visitSubprogram_declarative_part(

@@ -31,7 +31,9 @@ Expr * LiteralParser::visitLiteral(Ref<vhdlParser::LiteralContext> ctx) {
 			bitRatio = 4;
 			break;
 		}
-		std::string strVal = s.substr(2, s.length() - 1);
+
+		s[s.length()-2] = 0;
+		std::string strVal = s.substr(2, s.length() - 2);
 		BigInteger val = BigInteger_fromStr(strVal, radix);
 		return new Expr(val, strVal.length() * bitRatio);
 	}

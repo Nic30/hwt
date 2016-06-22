@@ -1,4 +1,6 @@
 #pragma once
+#include <iostream>
+#include "convertor.h"
 
 class NotImplementedLogger {
 public:

@@ -134,6 +134,7 @@ std::vector<Variable*> * InterfaceParser::visitInterface_declaration(
 		return visitInterface_terminal_declaration(t);
 	} else {
 		auto q = ctx->interface_quantity_declaration();
+		assert(q);
 		return visitInterface_quantity_declaration(q);
 	}
 }
@@ -145,7 +146,9 @@ std::vector<Variable*> * InterfaceParser::visitInterface_list(
 	std::vector<Variable*> * elems = new std::vector<Variable*>();
 	for (auto ie : ctx->interface_element()) {
 		std::vector<Variable*> *_elements = visitInterface_element(ie);
-		elems->insert(_elements->end(), _elements->begin(), _elements->end());
+		for (unsigned i = 0; i < _elements->size(); i++) {
+			elems->push_back((*_elements)[i]);
+		}
 		delete _elements;
 	}
 	return elems;
@@ -155,5 +158,6 @@ std::vector<Variable*> * InterfaceParser::visitInterface_element(
 	// interface_element
 	// : interface_declaration
 	// ;
-	return visitInterface_declaration(ctx->interface_declaration());
+	auto intfDec = ctx->interface_declaration();
+	return visitInterface_declaration(intfDec);
 }
