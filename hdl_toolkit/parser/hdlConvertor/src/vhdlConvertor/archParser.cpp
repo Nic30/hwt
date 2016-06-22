@@ -14,8 +14,8 @@ Arch * ArchParser::visitArchitecture_body(
 	// architecture_statement_part
 	// END ( ARCHITECTURE )? ( identifier )? SEMI
 	// ;
-	a->name = ctx->identifier(0)->getText().c_str();
-	a->entityName = ctx->identifier(1)->getText().c_str();
+	a->name = strdup(ctx->identifier(0)->getText().c_str());
+	a->entityName = strdup(ctx->identifier(1)->getText().c_str());
 	if (!hierarchyOnly) {
 		for (auto bi : ctx->architecture_declarative_part()->block_declarative_item()) {
 			// architecture_declarative_part

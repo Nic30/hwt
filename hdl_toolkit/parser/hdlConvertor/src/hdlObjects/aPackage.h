@@ -5,6 +5,7 @@
 #include "named.h"
 #include "entity.h"
 #include "function.h"
+#include <assert.h>
 
 class aPackage: public Named {
 public:
@@ -14,4 +15,5 @@ public:
 	aPackage();
 
 	PyObject * toJson() const;
+	void dump(int indent) const;
 };

@@ -13,7 +13,7 @@ Entity * EntityParser::visitEntity_declaration(
 	// END ( ENTITY )? ( identifier )? SEMI
 	// ;
 	Entity * e = new Entity();
-	e->name = ctx->identifier(0)->getText().c_str();
+	e->name = strdup(ctx->identifier(0)->getText().c_str());
 	// entity_declarative_part
 	// : ( entity_declarative_item )*
 	// ;

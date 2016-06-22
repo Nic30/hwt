@@ -14,7 +14,7 @@ std::vector<Variable*> * InterfaceParser::extractVariables(
 		// : identifier ( COMMA identifier )*
 		// ;
 		Variable * v = new Variable();
-		v->name = i->getText().c_str();
+		v->name = strdup(i->getText().c_str());
 		v->type = type;
 		v->value = expr;
 		vl->push_back(v);
@@ -44,6 +44,7 @@ std::vector<Port*> * InterfaceParser::visitInterface_port_declaration(
 		p->variable = v;
 		pl->push_back(p);
 	}
+	delete vl;
 	return pl;
 }
 std::vector<Variable*> * InterfaceParser::visitInterface_constant_declaration(

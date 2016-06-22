@@ -9,4 +9,5 @@ public:
 	Variable * variable;
 
 	PyObject * toJson() const;
+	void dump(int indent) const;
 };

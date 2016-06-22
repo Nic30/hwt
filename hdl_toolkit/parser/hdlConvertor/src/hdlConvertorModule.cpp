@@ -2,16 +2,17 @@
 #include "langue.h"
 #include "convertor.h"
 
-
 #define ch(str) ((const char *) str)
-
-char * toLowercase(char * str) {
-	while (*str) {
-		*str = tolower(*str);
-		str++;
-	}
-	return str;
-}
+//inline char * __str__(PyObject* obj) {
+//	return PyUnicode_AsUTF8(PyObject_Str(obj));
+//}
+//char * toLowercase(char * str) {
+//	while (*str) {
+//		*str = tolower(*str);
+//		str++;
+//	}
+//	return str;
+//}
 
 static PyMethodDef hdlConvertorMethods[] =
 		{
@@ -45,7 +46,7 @@ NULL, //spam_doc, /* module documentation, may be NULL */
 
 PyObject *
 hdlConvertor_parse(PyObject *self, PyObject *args, PyObject *keywds) {
-	const char *filename, *langue;
+	char *filename = NULL, *langue = NULL;
 	bool debug, hierarchyOnly;
 	Langue _lang;
 	PyObject * syntaxErrorHandler, *_debug, *_hierarchyOnly;
@@ -59,17 +60,29 @@ hdlConvertor_parse(PyObject *self, PyObject *args, PyObject *keywds) {
 	hierarchyOnly = PyObject_IsTrue(_hierarchyOnly);
 	debug = PyObject_IsTrue(_debug);
 
-	langue = toLowercase((char *) langue);
+	//toLowercase((char *) langue);
+
+	std::cout << "HierarchyOnly: " << hierarchyOnly << "\n";
+	std::cout << "debug: " << debug << "\n";
+	std::cout << "langue:" << langue << "\n";
+
 	if (strcmp(langue, "vhdl") == 0) {
 		_lang = VHDL;
+
 	} else if (strcmp(langue, "verilog") == 0) {
 		_lang = VERILOG;
+		PyErr_SetString(PyExc_TypeError, "Verilog parser not implemented");
 	} else {
 		PyErr_SetString(PyExc_TypeError,
 				"Invalid language specified, only vhdl and verilog is available");
 		return NULL;
 	}
 	Context * c = Convertor::parse(filename, _lang, hierarchyOnly, debug);
+	if (!c) {
+		PyErr_SetString(PyExc_TypeError,
+				"Convertor::parse did not returned correct context for file");
+		return NULL;
+	}
 	return c->toJson();
 }
 PyMODINIT_FUNC PyInit_hdlConvertor(void) {

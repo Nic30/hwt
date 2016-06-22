@@ -3,6 +3,7 @@
 #include <Python.h>
 #include <vector>
 #include <string>
+#include <strings.h>
 
 #include "bigInteger.h"
 #include "symbolType.h"
@@ -19,8 +20,8 @@ public:
 	Expr(BigInteger value, int bits);
 	Expr(BigInteger value);
 
-	static Expr * id(const char * value);
-	static Expr * id(std::string value);
+	static Expr * ID(const char * value);
+	static Expr * ID(std::string value);
 	static Expr * INT(long long val);
 	static Expr * INT(std::string strVal, int base = 10);
 	static Expr * INT(const char * strVal, int base=10);
@@ -33,5 +34,5 @@ public:
 	static Expr * null();
 	const char * extractStr();
 	PyObject * toJson() const;
-
+	void dump(int indent) const;
 };

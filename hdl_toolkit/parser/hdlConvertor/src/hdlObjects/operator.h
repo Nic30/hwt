@@ -19,4 +19,5 @@ public:
 	static Operator * call(Expr* fn, std::vector<Expr*> * operands);
 	static Operator * ternary(Expr* cond, Expr* ifTrue, Expr* ifFalse);
 	PyObject * toJson() const;
+	void dump(int indent) const;
 };

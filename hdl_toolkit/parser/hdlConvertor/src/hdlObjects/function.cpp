@@ -23,5 +23,6 @@ PyObject * Function::toJson() const {
 		addJsonArrP(d, "locals", locals);
 		addJsonArrP(d, "body", body);
 	}
+	Py_IncRef(d);
 	return d;
 }

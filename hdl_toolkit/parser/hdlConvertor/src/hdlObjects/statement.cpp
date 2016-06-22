@@ -105,6 +105,6 @@ PyObject * Statement::toJson() const {
 	default:
 		throw "Invalid StatementType ";
 	}
-
+	Py_IncRef(d);
 	return d;
 }

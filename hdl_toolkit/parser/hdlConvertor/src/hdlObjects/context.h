@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 #include "jsonable.h"
 #include "expr.h"
 #include "entity.h"
@@ -17,4 +18,5 @@ public:
 	std::vector<PackageHeader*> packageHeaders;
 
 	PyObject * toJson() const;
+	void dump(int indent) const;
 };

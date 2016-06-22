@@ -5,6 +5,15 @@ Langue Convertor::lang = VHDL;
 bool Convertor::hierarchyOnly = false;
 bool Convertor::debug = false;
 
+inline bool file_exists(const char * name) {
+	if (FILE *file = fopen(name, "r")) {
+		fclose(file);
+		return true;
+	} else {
+		return false;
+	}
+}
+
 Context * Convertor::parse(
 		const char * _fileName,
 		Langue _lang,
@@ -14,28 +23,28 @@ Context * Convertor::parse(
 	lang = _lang;
 	hierarchyOnly = _hierarchyOnly;
 	debug = _debug;
-
-	std::wifstream hdlFile(fileName);
-
-	//// create a CharStream that reads from standard input
-	ANTLRInputStream * input = new ANTLRInputStream(hdlFile);
-	input->name = fileName;
+	Context * c = NULL;
+	// create a CharStream that reads from standard input
+	if (!file_exists(fileName))
+		return NULL;
+	ANTLRFileStream * input = new ANTLRFileStream(fileName);
+	//input->ANTLRFileStreamname = fileName;
 
 	if (lang == VHDL) {
 		vhdlParser * parser = initParser<vhdlLexer, vhdlParser>(input);
 		// begin parsing at init rule
 		Ref<vhdlParser::Design_fileContext> tree = parser->design_file();
-		//DesignFileParser * p = new DesignFileParser(hierarchyOnly);
-		//p->visitDesign_file(tree);
-		//return p->getContext();
-		return NULL;
+		DesignFileParser * p = new DesignFileParser(hierarchyOnly);
+		p->visitDesign_file(tree);
+		c = p->getContext();
+		delete p;
+		delete parser;
+
 	} else if (lang == VERILOG) {
 		//verilogParser * parser = initParser<verilogLexer, verilogParser>(input);
-
-		return NULL;
 	} else {
-		return NULL;
 	}
+	return c;
 }
 
 //Context * Convertor::parseString(

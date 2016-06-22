@@ -7,5 +7,6 @@ CompInstance::CompInstance(const char * name, Expr * _entityName) {
 PyObject * CompInstance::toJson() const {
 	PyObject * d = PyDict_New();
 	PyDict_SetItemString(d, "entityName", entityName->toJson());
+	Py_INCREF(d);
 	return d;
 }

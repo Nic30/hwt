@@ -36,5 +36,32 @@ PyObject * Symbol::toJson() const {
 		break;
 	}
 	PyDict_SetItemString(d, "value", val);
+	Py_INCREF(d);
 	return d;
+}
+
+void Symbol::dump(int indent) const {
+	std::cout << "{\n";
+	indent += INDENT_INCR;
+	dumpVal("type", indent, SymbolType_toString(type)) << ",\n";
+
+	switch (type) {
+	case symb_ID:
+	case symb_STRING:
+		dumpVal("value", indent, value._str);
+		break;
+	case symb_FLOAT:
+		dumpVal("value", indent, value._float);
+		break;
+	case symb_INT:
+		if (bits > 0)
+			dumpVal("bits", indent, bits) << ",\n";
+		dumpVal("value", indent, value._int);
+		break;
+	case symb_OPEN:
+	default:
+		dumpVal("value", indent, NULL);
+		break;
+	}
+	mkIndent(indent - INDENT_INCR) << "\n}";
 }

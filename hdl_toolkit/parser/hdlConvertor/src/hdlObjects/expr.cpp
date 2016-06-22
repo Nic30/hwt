@@ -7,6 +7,7 @@ Expr::Expr() {
 }
 
 Expr::Expr(Expr * op0, OperatorType operatorType, Expr * op1) {
+	assert(op0);
 	data = new Operator(op0, operatorType, op1);
 }
 Expr::Expr(SymbolType type, LiteralVal value) {
@@ -42,7 +43,7 @@ Expr * Expr::FLOAT(double val) {
 
 Expr * Expr::STR(std::string strVal) {
 	LiteralVal v;
-	v._str = strVal.c_str();
+	v._str = strdup(strVal.c_str());
 	return new Expr(symb_STRING, v);
 }
 
@@ -63,28 +64,14 @@ Expr * Expr::call(Expr * fnId, std::vector<Expr*> * operands) {
 	e->data = Operator::call(fnId, operands);
 	return e;
 }
-PyObject * Expr::toJson() const {
-	PyObject *d = PyDict_New();
-	Operator * op = dynamic_cast<Operator*>(data);
-	if (op) {
-		PyDict_SetItemString(d, "binOperator", op->toJson());
-	} else {
-		Symbol * literal = dynamic_cast<Symbol*>(data);
-		if (literal)
-			PyDict_SetItemString(d, "literal", literal->toJson());
-		else
-			throw "vhdlExpr is improperly initialized";
-	}
-	return d;
-}
 
-Expr * Expr::id(const char * value) {
+Expr * Expr::ID(const char * value) {
 	LiteralVal v;
-	v._str = value;
+	v._str = strdup(value);
 	return new Expr(symb_ID, v);
 }
-Expr * Expr::id(std::string value) {
-	return Expr::id(value.c_str());
+Expr * Expr::ID(std::string value) {
+	return Expr::ID(value.c_str());
 }
 Expr * Expr::all() {
 	Expr * e = new Expr();
@@ -105,4 +92,38 @@ const char * Expr::extractStr() {
 	Symbol * literal = dynamic_cast<Symbol*>(data);
 	return literal->value._str;
 
+}
+
+PyObject * Expr::toJson() const {
+	PyObject *d = PyDict_New();
+	Operator * op = dynamic_cast<Operator*>(data);
+	if (op) {
+		PyDict_SetItemString(d, "binOperator", op->toJson());
+	} else {
+		Symbol * literal = dynamic_cast<Symbol*>(data);
+		if (literal)
+			PyDict_SetItemString(d, "literal", literal->toJson());
+		else
+			throw "vhdlExpr is improperly initialized";
+	}
+	Py_INCREF(d);
+	return d;
+}
+
+void Expr::dump(int indent) const {
+	Operator * op = dynamic_cast<Operator*>(data);
+	if (op) {
+		mkIndent(indent) << "{\n";
+		dumpItemP("binOperator", indent + INDENT_INCR, op) << "\n";
+		mkIndent(indent) << "}";
+	} else {
+		Symbol * literal = dynamic_cast<Symbol*>(data);
+		if (literal) {
+			mkIndent(indent) << "{\n";
+			dumpItemP("literal", indent + INDENT_INCR, literal) << "\n";
+			mkIndent(indent) << "}";
+		} else
+			throw "vhdlExpr is improperly initialized";
+	}
+	mkIndent(indent) << "}";
 }

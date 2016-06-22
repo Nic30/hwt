@@ -124,7 +124,8 @@ Expr * LiteralParser::visitCHARACTER_LITERAL(Ref<tree::TerminalNode> ctx) {
 	return Expr::INT(ctx->getText()[1] - '0');
 }
 Expr * LiteralParser::visitIdentifier(Ref<vhdlParser::IdentifierContext> ctx) {
-	return Expr::id(ctx->getText());
+	std::string s = ctx->getText();
+	return Expr::ID(s);
 }
 bool LiteralParser::isStrDesignator(Ref<vhdlParser::DesignatorContext> ctx) {
 	// designator

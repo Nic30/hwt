@@ -5,5 +5,6 @@ PyObject * Arch::toJson() const {
 	PyDict_SetItemString(o, "name", PyUnicode_FromString(name));
 	PyDict_SetItemString(o, "entityName", PyUnicode_FromString(entityName));
 	addJsonArrP(o, "componentInstances", componentInstances);
+	Py_INCREF(o);
 	return o;
 }

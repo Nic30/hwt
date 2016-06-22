@@ -207,7 +207,7 @@ Entity * PackageHeaderParser::visitComponent_declaration(
 	// END COMPONENT ( identifier )? SEMI
 	// ;
 	Entity * e = new Entity();
-	e->name = ctx->identifier(0)->getText().c_str();
+	e->name = strdup(ctx->identifier(0)->getText().c_str());
 	if (!hierarchyOnly) {
 		EntityParser::visitGeneric_clause(ctx->generic_clause(), &e->generics);
 		EntityParser::visitPort_clause(ctx->port_clause(), &e->ports);

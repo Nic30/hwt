@@ -160,7 +160,7 @@ Statement * StatementParser::visitLoop_statement(
 	if (is)
 		loop = visitIteration_scheme(is);
 	else {
-		loop = Statement::WHILE(Expr::id("True"),
+		loop = Statement::WHILE(Expr::ID("True"),
 				visitSequence_of_statements(ctx->sequence_of_statements()));
 	}
 	return loop;

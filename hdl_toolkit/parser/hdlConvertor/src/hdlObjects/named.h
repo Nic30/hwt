@@ -8,4 +8,5 @@ public:
 	const char * name;
 	Named();
 	PyObject * toJson() const;
+	void dump(int indent) const;
 };
