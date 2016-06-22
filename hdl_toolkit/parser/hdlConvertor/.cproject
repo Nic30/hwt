@@ -18,17 +18,16 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.1906077637." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.503786055" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.2024569816" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
-							<builder buildPath="${workspace_loc:/hdlConvertor}/Debug" id="cdt.managedbuild.target.gnu.builder.base.886322496" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.target.gnu.builder.base"/>
+							<builder buildPath="${workspace_loc:/hdlConvertor}/Debug" id="cdt.managedbuild.target.gnu.builder.base.886322496" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.target.gnu.builder.base">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Release"/>
+								</outputEntries>
+							</builder>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.554542601" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1075942593" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.1994835443" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/include/python3.5"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/hdlConvertor/antlr4-runtime-cpp/}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/hdlConvertor/antlr4-runtime-cpp/atn}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/hdlConvertor/antlr4-runtime-cpp/dfa}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/hdlConvertor/antlr4-runtime-cpp/tree}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/hdlConvertor/antlr4-runtime-cpp/misc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/hdlConvertor/antlr4-runtime-cpp//support}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.1563262245" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.623126369" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
@@ -46,10 +45,12 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.2053872116" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.1801380027" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
 								<option id="gnu.cpp.link.option.libs.1129553689" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="libantlr4-runtime"/>
 									<listOptionValue builtIn="false" value="python3.5"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1747297895" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/usr/lib/python3.5/config-3.5m-x86_64-linux-gnu"/>
+									<listOptionValue builtIn="false" value="/usr/local/lib"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1657498913" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -65,8 +66,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="antlr4-runtime-cpp" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="antlr4-runtime-cpp"/>
+						<entry excluding="antlr4-runtime-cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

@@ -8,20 +8,20 @@
 
 PyObject * addJsonArr_empty(PyObject * parent, const char * name);
 
-template<typename T>
-void addJsonArr(
-		PyObject * parent,
-		const char * name,
-		std::vector<T> const & objects) {
-	PyObject * objList = PyList_New(objects.size());
-
-	for (auto it : objects) {
-		PyObject * o = it.toJson();
-		PyList_Append(objList, o);
-	}
-	Py_INCREF(objList);
-	PyDict_SetItem(parent, PyUnicode_FromString(name), objList);
-}
+//template<typename T>
+//void addJsonArr(
+//		PyObject * parent,
+//		const char * name,
+//		std::vector<T> const & objects) {
+//	PyObject * objList = PyList_New(objects.size());
+//
+//	for (unsigned i = 0; i < objects.size(); i++) {
+//		PyObject * o = objects[i].toJson();
+//		PyList_SetItem(objList, i, o);
+//	}
+//	Py_IncRef(objList);
+//	PyDict_SetItemString(parent, name, objList);
+//}
 
 template<typename T>
 void addJsonArrP(
@@ -30,14 +30,12 @@ void addJsonArrP(
 		std::vector<T> const & objects) {
 	PyObject * objList = PyList_New(objects.size());
 
-	for (auto i : objects) {
-		PyObject * o = i->toJson();
-		assert(o);
-		Py_IncRef(o);
-		PyList_Append(objList, o);
+	for (unsigned i = 0; i < objects.size(); i++) {
+		PyObject * o = objects[i]->toJson();
+		PyList_SetItem(objList, i, o);
 	}
-	Py_INCREF(objList);
-	PyDict_SetItem(parent, PyUnicode_FromString(name), objList);
+	Py_IncRef(objList);
+	PyDict_SetItemString(parent, name, objList);
 }
 
 inline std::ostream& mkIndent(int indent) {
@@ -55,7 +53,6 @@ template<typename T>
 std::ostream & dumpVal(const char * key, int indent, T val) {
 	return dumpKey(key, indent) << "\"" << val << "\"";
 }
-
 
 template<typename T>
 std::ostream & dumpArrP(
