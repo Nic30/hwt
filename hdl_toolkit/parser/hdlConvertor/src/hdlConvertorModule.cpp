@@ -73,7 +73,6 @@ hdlConvertor_parse(PyObject *self, PyObject *args, PyObject *keywds) {
 
 	} else if (strcmp(langue, "verilog") == 0) {
 		_lang = VERILOG;
-		PyErr_SetString(PyExc_TypeError, "Verilog parser not implemented");
 	} else {
 		PyErr_SetString(PyExc_TypeError,
 				"Invalid language specified, only vhdl and verilog is available");

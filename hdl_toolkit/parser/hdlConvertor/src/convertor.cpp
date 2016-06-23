@@ -41,7 +41,14 @@ Context * Convertor::parse(
 		delete parser;
 
 	} else if (lang == VERILOG) {
-		//verilogParser * parser = initParser<verilogLexer, verilogParser>(input);
+		Verilog2001Parser * parser = initParser<Verilog2001Lexer,
+				Verilog2001Parser>(input);
+		Ref<Verilog2001Parser::Source_textContext> tree = parser->source_text();
+		Source_textParser * p = new Source_textParser(hierarchyOnly);
+		p->visitSource_text(tree);
+		c = p->getContext();
+		delete p;
+		delete parser;
 	} else {
 	}
 	delete input;

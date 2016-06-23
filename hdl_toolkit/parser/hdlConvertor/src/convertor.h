@@ -6,12 +6,17 @@
 
 #include "hdlObjects/context.h"
 #include "antlr4-runtime.h"
-#include "VhdlParser/vhdlParser.h"
+
 #include "VhdlParser/vhdlLexer.h"
+#include "VhdlParser/vhdlParser.h"
+#include "vhdlConvertor/designFileParser.h"
+
+#include "VerilogParser/Verilog2001Lexer.h"
 #include "VerilogParser/Verilog2001Parser.h"
+#include "verilogConvertor/source_textParser.h"
+
 #include "syntaxErrorLogger.h"
 #include "langue.h"
-#include "vhdlConvertor/designFileParser.h"
 
 using namespace antlr4;
 using namespace vhdl;
@@ -40,7 +45,7 @@ public:
 template<class lexerT, class parserT, class inputStreamT>
 parserT * initParser(inputStreamT * input) {
 	// create a lexer that feeds off of input CharStream
-	lexerT * lexer = new vhdlLexer(input);
+	lexerT * lexer = new lexerT(input);
 	// create a buffer of tokens pulled from the lexer
 
 	//CommonTokenStream tokens;

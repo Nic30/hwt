@@ -29,6 +29,10 @@ Expr * Expr::INT(const char * strVal, int base) {
 	v._int = BigInteger_fromStr(strVal, base);
 	return new Expr(symb_INT, v);
 }
+Expr * Expr::INT(const char * strVal, int bits, int base) {
+	auto val = BigInteger_fromStr(strVal, base);
+	return new Expr(val, bits);
+}
 Expr * Expr::INT(long long val) {
 	LiteralVal v;
 	v._int = BigInteger_fromLong(val);

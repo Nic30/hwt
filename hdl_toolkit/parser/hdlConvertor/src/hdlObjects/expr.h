@@ -22,9 +22,12 @@ public:
 
 	static Expr * ID(const char * value);
 	static Expr * ID(std::string value);
+
 	static Expr * INT(long long val);
-	static Expr * INT(std::string strVal, int base = 10);
-	static Expr * INT(const char * strVal, int base=10);
+	static Expr * INT(std::string strVal, int base);
+	static Expr * INT(const char * strVal, int base);
+	static Expr * INT(const char * strVal, int size, int base);
+
 	static Expr * FLOAT(double val);
 	static Expr * STR(std::string strVal);
 	static Expr * OPEN();
