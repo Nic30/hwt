@@ -15,9 +15,10 @@ Symbol::~Symbol() {
 	case symb_INT:
 		free(value._int);
 		break;
-		//case symb_STRING:
-		//	free(value._str);
-		//	break;
+	case symb_ID:
+	case symb_STRING:
+		free((char *) value._str);
+		break;
 	default:
 		break;
 	}
@@ -33,6 +34,7 @@ PyObject * Symbol::toJson() const {
 	switch (type) {
 	case symb_ID:
 	case symb_STRING:
+		assert(value._str);
 		val = PyUnicode_FromString(value._str);
 		break;
 	case symb_FLOAT:
@@ -46,6 +48,7 @@ PyObject * Symbol::toJson() const {
 	case symb_OPEN:
 	default:
 		val = Py_None;
+		Py_INCREF(val);
 		break;
 	}
 	PyDict_SetItemString(d, "value", val);
@@ -57,6 +60,7 @@ void Symbol::dump(int indent) const {
 	std::cout << "{\n";
 	indent += INDENT_INCR;
 	dumpVal("type", indent, SymbolType_toString(type)) << ",\n";
+	char * _v;
 
 	switch (type) {
 	case symb_ID:
@@ -69,7 +73,8 @@ void Symbol::dump(int indent) const {
 	case symb_INT:
 		if (bits > 0)
 			dumpVal("bits", indent, bits) << ",\n";
-		dumpVal("value", indent, value._int) << "\n";
+		_v = PyUnicode_AsUTF8(PyObject_Str(value._int));
+		dumpVal("value", indent, _v) << "\n";
 		break;
 	case symb_ALL:
 	case symb_OPEN:

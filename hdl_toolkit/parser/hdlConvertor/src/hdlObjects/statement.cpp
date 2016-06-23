@@ -76,16 +76,19 @@ PyObject * Statement::toJson() const {
 	PyObject * d = PyDict_New();
 	PyDict_SetItemString(d, "type",
 			PyUnicode_FromString(StatementType_toString(type)));
+	std::vector<Statement*> * _case = NULL;
 
 	switch (type) {
 	case s_EXPR:
 		return op0->toJson();
 	case s_IF:
 		PyDict_SetItemString(d, "cond", op0->toJson());
-		addJsonArrP(d, "ifTrue", *(*ops)[0]);
+		assert(ops);
+		_case = (*ops)[0];
+		addJsonArrP(d, "ifTrue", *_case);
 		if (ops->size() > 1) {
-			std::vector<Statement*> ifFalse = *(*ops)[1];
-			addJsonArrP(d, "ifFalse", ifFalse);
+			_case = (*ops)[1];
+			addJsonArrP(d, "ifFalse", *_case);
 		} else {
 			addJsonArr_empty(d, "ifFalse");
 		}

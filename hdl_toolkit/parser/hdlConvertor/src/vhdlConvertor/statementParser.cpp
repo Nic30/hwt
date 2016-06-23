@@ -120,7 +120,6 @@ Statement * StatementParser::visitIf_statement(
 	++sIt;
 	if (sIt != s.end()) {
 		return Statement::IF(cond, ifTrue, visitSequence_of_statements(*sIt));
-		++sIt;
 	} else {
 		return Statement::IF(cond, ifTrue);
 	}

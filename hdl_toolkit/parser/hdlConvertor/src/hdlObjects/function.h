@@ -10,11 +10,11 @@ class Function: public Named {
 	Expr * returnT;
 	std::vector<Variable*> * params;
 public:
-	std::vector<Variable*>  locals;
-	std::vector<Statement*>  body;
+	std::vector<Variable*> locals;
+	std::vector<Statement*> body;
 
 	Function(
-			const char * name,
+			char * name,
 			bool isOperator,
 			Expr * returnT,
 			std::vector<Variable*> * params);

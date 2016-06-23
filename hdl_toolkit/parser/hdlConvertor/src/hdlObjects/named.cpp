@@ -17,3 +17,7 @@ void Named::dump(int indent) const {
 	std::cout << "{\n";
 	mkIndent(indent + INDENT_INCR) << "\"name\":\"" << name << "\",\n";
 }
+
+Named::~Named() {
+	free(name);
+}

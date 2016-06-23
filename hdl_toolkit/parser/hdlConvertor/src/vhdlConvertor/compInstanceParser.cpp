@@ -7,7 +7,7 @@ CompInstance * CompInstanceParser::visitComponent_instantiation_statement(
 	// ( generic_map_aspect )?
 	// ( port_map_aspect )? SEMI
 	// ;
-	const char * name = visitLabel_colon(ctx->label_colon());
+	char * name = visitLabel_colon(ctx->label_colon());
 	CompInstance * ci = visitInstantiated_unit(ctx->instantiated_unit());
 	ci->name = name;
 	auto gma = ctx->generic_map_aspect();
@@ -34,13 +34,13 @@ std::vector<Expr*> * CompInstanceParser::visitPort_map_aspect(
 	NotImplementedLogger::print("CompInstanceParser.visitPort_map_aspect");
 	return new std::vector<Expr*>();
 }
-const char * CompInstanceParser::visitLabel_colon(
+char * CompInstanceParser::visitLabel_colon(
 		Ref<vhdlParser::Label_colonContext> ctx) {
 	// label_colon
 	// : identifier COLON
 	// ;
 	Expr * e = LiteralParser::visitIdentifier(ctx->identifier());
-	const char * s = dynamic_cast<Symbol*>(e->data)->value._str;
+	char * s = strdup(dynamic_cast<Symbol*>(e->data)->value._str);
 	delete e;
 	return s;
 }

@@ -43,7 +43,7 @@ OperatorType VerExprParser::visitBinary_operator(
 
 	if (op.compare("+") == 0)
 		return ADD;
-	else if (op.compare("-"))
+	else if (op.compare("-")==0)
 		return SUB;
 	else if (op.compare("*") == 0)
 		return MUL;

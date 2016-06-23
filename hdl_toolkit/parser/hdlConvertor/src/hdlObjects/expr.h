@@ -24,8 +24,11 @@ public:
 	static Expr * ID(std::string value);
 
 	static Expr * INT(long long val);
+
 	static Expr * INT(std::string strVal, int base);
 	static Expr * INT(const char * strVal, int base);
+
+	static Expr * INT(std::string strVal, int bits, int base);
 	static Expr * INT(const char * strVal, int size, int base);
 
 	static Expr * FLOAT(double val);
@@ -35,7 +38,7 @@ public:
 	static Expr * call(Expr * fnId, std::vector<Expr*> * operands);
 	static Expr * all();
 	static Expr * null();
-	const char * extractStr();
+	char * extractStr();
 	PyObject * toJson() const;
 	void dump(int indent) const;
 	~Expr();

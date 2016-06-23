@@ -32,20 +32,20 @@ Expr * LiteralParser::visitLiteral(Ref<vhdlParser::LiteralContext> ctx) {
 			break;
 		}
 
-		s[s.length()-2] = 0;
-		std::string strVal = s.substr(2, s.length() - 2);
+		s[s.length() - 1] = 0; // cut of "
+		char * strVal = (char*) s.c_str() + 2; // cut off radix"
 		BigInteger val = BigInteger_fromStr(strVal, radix);
-		return new Expr(val, strVal.length() * bitRatio);
+		return new Expr(val, strlen(strVal) * bitRatio);
 	}
 
 	n = ctx->STRING_LITERAL();
-	if (n) {
+	if (n)
 		return visitSTRING_LITERAL(n);
-	}
 
 	auto el = ctx->enumeration_literal();
 	if (el)
 		return visitEnumeration_literal(el);
+
 	auto nl = ctx->numeric_literal();
 	return visitNumeric_literal(nl);
 }
@@ -118,7 +118,7 @@ Expr * LiteralParser::visitEnumeration_literal(
 }
 Expr * LiteralParser::visitSTRING_LITERAL(Ref<tree::TerminalNode> n) {
 	std::string s = n->getText();
-	std::string str = s.substr(1, s.length() - 1);
+	std::string str = s.substr(1, s.length() - 2);
 	return Expr::STR(str);
 
 }
@@ -136,8 +136,7 @@ bool LiteralParser::isStrDesignator(Ref<vhdlParser::DesignatorContext> ctx) {
 	// ;
 	return ctx->STRING_LITERAL() != NULL;
 }
-const char * LiteralParser::visitDesignator(
-		Ref<vhdlParser::DesignatorContext> ctx) {
+char * LiteralParser::visitDesignator(Ref<vhdlParser::DesignatorContext> ctx) {
 	// designator
 	// : identifier
 	// | STRING_LITERAL

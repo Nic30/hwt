@@ -1,6 +1,7 @@
 #include "literalParser.h"
 
-Expr * VerLiteralParser::visitNumber(Ref<Verilog2001Parser::NumberContext> ctx) {
+Expr * VerLiteralParser::visitNumber(
+		Ref<Verilog2001Parser::NumberContext> ctx) {
 	// number :
 	// Decimal_number
 	// | Octal_number
@@ -61,15 +62,16 @@ Expr * VerLiteralParser::parseIntNumber(
 			valuePartStart += 1;
 	}
 
-	char * strVal = ((char *) s.c_str()) + valuePartStart;
+	std::string strVal = s.substr(valuePartStart, s.length());
 	for (int i = 0; strVal[i]; i++) {
 		char ch = strVal[i];
 		if (ch == 'x' || ch == 'z') {
 			strVal[i] = '0';
 		}
 	}
+
 	if (size != -1)
-		return Expr::INT(strVal, radix, size);
+		return Expr::INT(strVal, size, radix);
 
 	return Expr::INT(strVal, radix);
 }
@@ -85,5 +87,5 @@ Expr * VerLiteralParser::parseIntNumber(
 // Hex_number : ( Size )? Hex_base Hex_value ;
 Expr * VerLiteralParser::visitString(Ref<antlr4::tree::TerminalNode> n) {
 	std::string s = n->getText();
-	return Expr::STR(s.substr(1, s.length() - 1));
+	return Expr::STR(s.substr(1, s.length() - 2)); // skipping " at the end
 }

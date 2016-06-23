@@ -29,6 +29,5 @@ public:
 	static Expr * visitCHARACTER_LITERAL(Ref<tree::TerminalNode> ctx);
 	static Expr * visitIdentifier(Ref<vhdlParser::IdentifierContext> ctx);
 	static bool isStrDesignator(Ref<vhdlParser::DesignatorContext> ctx);
-	static const char * visitDesignator(Ref<vhdlParser::DesignatorContext> ctx);
-
+	static char * visitDesignator(Ref<vhdlParser::DesignatorContext> ctx);
 };

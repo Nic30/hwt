@@ -146,8 +146,8 @@ std::vector<Variable*> * InterfaceParser::visitInterface_list(
 	std::vector<Variable*> * elems = new std::vector<Variable*>();
 	for (auto ie : ctx->interface_element()) {
 		std::vector<Variable*> *_elements = visitInterface_element(ie);
-		for (unsigned i = 0; i < _elements->size(); i++) {
-			elems->push_back((*_elements)[i]);
+		for (auto e : *_elements) {
+			elems->push_back(e);
 		}
 		delete _elements;
 	}

@@ -18,7 +18,7 @@ public:
 			Ref<vhdlParser::Component_instantiation_statementContext> ctx);
 	static std::vector<Expr*> * visitPort_map_aspect(
 			Ref<vhdlParser::Port_map_aspectContext> ctx);
-	static const char * visitLabel_colon(
+	static char * visitLabel_colon(
 			Ref<vhdlParser::Label_colonContext> ctx);
 	static CompInstance * visitInstantiated_unit(
 			Ref<vhdlParser::Instantiated_unitContext> ctx);

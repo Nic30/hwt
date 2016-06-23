@@ -4,14 +4,21 @@ const char * Convertor::fileName = NULL;
 Langue Convertor::lang = VHDL;
 bool Convertor::hierarchyOnly = false;
 bool Convertor::debug = false;
+ParserErrors Convertor::err = PERR_OK;
 
-inline bool file_exists(const char * name) {
-	if (FILE *file = fopen(name, "r")) {
-		fclose(file);
-		return true;
-	} else {
-		return false;
-	}
+void parseFnVerilog(
+		Verilog2001Parser * antlrParser,
+		Source_textParser * hdlParser) {
+	Ref<Verilog2001Parser::Source_textContext> tree =
+			antlrParser->source_text();
+	hdlParser->visitSource_text(tree);
+	tree.reset();
+}
+
+void parseFnVHDL(vhdlParser * antlrParser, DesignFileParser * hdlParser) {
+	Ref<vhdlParser::Design_fileContext> tree = antlrParser->design_file();
+	hdlParser->visitDesign_file(tree);
+	tree.reset();
 }
 
 Context * Convertor::parse(
@@ -24,41 +31,21 @@ Context * Convertor::parse(
 	hierarchyOnly = _hierarchyOnly;
 	debug = _debug;
 	Context * c = NULL;
-	// create a CharStream that reads from standard input
-	if (!file_exists(fileName))
-		return NULL;
-	ANTLRFileStream * input = new ANTLRFileStream(fileName);
-	//input->ANTLRFileStreamname = fileName;
 
 	if (lang == VHDL) {
-		vhdlParser * parser = initParser<vhdlLexer, vhdlParser>(input);
-		// begin parsing at init rule
-		Ref<vhdlParser::Design_fileContext> tree = parser->design_file();
-		DesignFileParser * p = new DesignFileParser(hierarchyOnly);
-		p->visitDesign_file(tree);
-		c = p->getContext();
-		delete p;
-		delete parser;
+		auto pc =
+				new ParserContainer<vhdlLexer, vhdlParser, DesignFileParser>();
+		err = pc->parseFile(fileName, hierarchyOnly, debug, parseFnVHDL);
+		c = pc->context;
+		delete pc;
 
 	} else if (lang == VERILOG) {
-		Verilog2001Parser * parser = initParser<Verilog2001Lexer,
-				Verilog2001Parser>(input);
-		Ref<Verilog2001Parser::Source_textContext> tree = parser->source_text();
-		Source_textParser * p = new Source_textParser(hierarchyOnly);
-		p->visitSource_text(tree);
-		c = p->getContext();
-		delete p;
-		delete parser;
-	} else {
+		auto pc = new ParserContainer<Verilog2001Lexer, Verilog2001Parser,
+				Source_textParser>();
+		err = pc->parseFile(fileName, hierarchyOnly, debug, parseFnVerilog);
+		c = pc->context;
+		delete pc;
+
 	}
-	delete input;
 	return c;
 }
-
-//Context * Convertor::parseString(
-//		const char * _str,
-//		Langue _lang,
-//		bool _hierarchyOnly,
-//		bool _debug) {
-//
-//}

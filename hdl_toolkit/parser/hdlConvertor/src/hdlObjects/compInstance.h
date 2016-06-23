@@ -9,6 +9,6 @@ public:
 	std::vector<Expr*> genericMap;
 	std::vector<Expr*> portMap;
 
-	CompInstance(const char * name, Expr * _entityName);
+	CompInstance(char * name, Expr * _entityName);
 	PyObject * toJson() const;
 };

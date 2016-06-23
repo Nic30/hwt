@@ -3,6 +3,7 @@
 #include <Python.h>
 #include <vector>
 #include <iostream>
+#include "../debugConfig.h"
 
 #define INDENT_INCR 2
 

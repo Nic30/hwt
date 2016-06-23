@@ -33,6 +33,9 @@ Expr * Expr::INT(const char * strVal, int bits, int base) {
 	auto val = BigInteger_fromStr(strVal, base);
 	return new Expr(val, bits);
 }
+Expr * Expr::INT(std::string strVal, int bits, int base) {
+	return INT(strVal.c_str(), bits, base);
+}
 Expr * Expr::INT(long long val) {
 	LiteralVal v;
 	v._int = BigInteger_fromLong(val);
@@ -92,7 +95,7 @@ Expr * Expr::null() {
 	return e;
 }
 
-const char * Expr::extractStr() {
+char * Expr::extractStr() {
 	Symbol * literal = dynamic_cast<Symbol*>(data);
 	return literal->value._str;
 

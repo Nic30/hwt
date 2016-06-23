@@ -49,7 +49,8 @@ hdlConvertor_parse(PyObject *self, PyObject *args, PyObject *keywds) {
 	char *filename = NULL, *langue = NULL;
 	bool debug, hierarchyOnly;
 	Langue _lang;
-	PyObject * syntaxErrorHandler, *_debug, *_hierarchyOnly;
+	PyObject * syntaxErrorHandler = NULL, *_debug = NULL,
+			*_hierarchyOnly = NULL;
 
 	static const char* const kwlist[] = { "filename", "language",
 			"syntaxErrorHandler", "hierarchyOnly", "debug", NULL };
@@ -59,14 +60,15 @@ hdlConvertor_parse(PyObject *self, PyObject *args, PyObject *keywds) {
 			&_debug)) {
 		return NULL;
 	}
-	hierarchyOnly = PyObject_IsTrue(_hierarchyOnly);
-	debug = PyObject_IsTrue(_debug);
+	if (_hierarchyOnly)
+		hierarchyOnly = PyObject_IsTrue(_hierarchyOnly);
+	if (_debug)
+		debug = PyObject_IsTrue(_debug);
 
 	//toLowercase((char *) langue);
-
-	//std::cout << "HierarchyOnly: " << hierarchyOnly << "\n";
-	//std::cout << "debug: " << debug << "\n";
-	//std::cout << "langue:" << langue << "\n";
+	MOD_DEBUG("hierarchyOnly: " << hierarchyOnly);
+	MOD_DEBUG("debug: " << debug);
+	MOD_DEBUG("langue:" << langue);
 
 	if (strcmp(langue, "vhdl") == 0) {
 		_lang = VHDL;
@@ -84,9 +86,11 @@ hdlConvertor_parse(PyObject *self, PyObject *args, PyObject *keywds) {
 				"Converter::parse did not returned correct context for file");
 		return NULL;
 	}
-	//std::cout << "cntx loaded\n";
+
+	MOD_DEBUG("cntx loaded");
 	PyObject * d = c->toJson();
-	//std::cout << "cntx in json\n";
+	delete c;
+	MOD_DEBUG("cntx in json");
 	return d;
 }
 PyMODINIT_FUNC PyInit_hdlConvertor(void) {

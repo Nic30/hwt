@@ -22,5 +22,14 @@ void aPackage::dump(int indent) const {
 	dumpArrP("functions", indent, functions) << "\n";
 	indent -= INDENT_INCR;
 	mkIndent(indent) << "}";
+}
+
+aPackage::~aPackage() {
+
+	for (auto c : components)
+		delete c;
+
+	for (auto f : functions)
+		delete f;
 
 }

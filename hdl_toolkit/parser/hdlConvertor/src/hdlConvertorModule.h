@@ -2,7 +2,7 @@
 
 #include <string.h>
 #include <Python.h>
-
+#include "debugConfig.h"
 
 #ifdef __cplusplus
 #define EXTERNC extern "C"

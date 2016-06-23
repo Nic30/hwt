@@ -1,7 +1,7 @@
 #include "function.h"
 
 Function::Function(
-		const char * name,
+		char * name,
 		bool isOperator,
 		Expr * returnT,
 		std::vector<Variable*> * params) {

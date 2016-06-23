@@ -103,6 +103,7 @@ void DesignFileParser::visitPrimary_unit(
 		auto php = new PackageHeaderParser(hierarchyOnly);
 		PackageHeader * ph = php->visitPackage_declaration(pd);
 		context->packageHeaders.push_back(ph);
+		delete php;
 	}
 
 }

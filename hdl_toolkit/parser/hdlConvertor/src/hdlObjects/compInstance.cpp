@@ -1,8 +1,8 @@
 #include "compInstance.h"
 
-CompInstance::CompInstance(const char * name, Expr * _entityName) {
+CompInstance::CompInstance(char * _name, Expr * _entityName) {
 	entityName = _entityName;
-	this->name = name;
+	name = _name;
 }
 PyObject * CompInstance::toJson() const {
 	PyObject * d = Named::toJson();

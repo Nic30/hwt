@@ -5,7 +5,7 @@
 union LiteralVal {
 	BigInteger _int;
 	double _float;
-	const char * _str;
+	char * _str;
 };
 
 enum SymbolType {

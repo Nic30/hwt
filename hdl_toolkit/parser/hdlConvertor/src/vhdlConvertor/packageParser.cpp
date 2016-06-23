@@ -12,7 +12,7 @@ Package * PackageParser::visitPackage_body(
 	// END ( PACKAGE BODY )? ( identifier )? SEMI
 	// ;
 	Expr * id = LiteralParser::visitIdentifier(ctx->identifier(0));
-	p->name = id->extractStr();
+	p->name = strdup(id->extractStr());
 	delete id;
 
 	if (!hierarchyOnly) {
@@ -27,7 +27,8 @@ void PackageParser::visitPackage_body_declarative_part(
 	// package_body_declarative_part
 	// : ( package_body_declarative_item )*
 	// ;
-	for (auto i : ctx->package_body_declarative_item()) {
+	auto pbdi = ctx->package_body_declarative_item();
+	for (auto i : pbdi) {
 		visitPackage_body_declarative_item(i);
 	}
 }
@@ -97,9 +98,10 @@ std::vector<Variable*>* PackageParser::PackageParser::visitSubprogram_declarativ
 	// ;
 	std::vector<Variable*> * vars = new std::vector<Variable*>();
 	for (auto sd : ctx->subprogram_declarative_item()) {
-		auto spdi = visitSubprogram_declarative_item(sd);
-		vars->insert(spdi->end(), spdi->begin(), spdi->end());
-		delete spdi;
+		auto spdis = visitSubprogram_declarative_item(sd);
+		for (auto spdi : *spdis)
+			vars->push_back(spdi);
+		delete spdis;
 	}
 
 	return vars;

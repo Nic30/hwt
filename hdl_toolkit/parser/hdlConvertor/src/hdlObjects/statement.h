@@ -12,7 +12,7 @@ enum StatementType {
 class Statement {
 public:
 	StatementType type;
-	std::vector<std::vector<Statement*>*> * ops;
+	std::vector< std::vector<Statement*> * > * ops;
 	Expr* op0; // expr, cond, return, dst
 	Expr* op1; // src
 

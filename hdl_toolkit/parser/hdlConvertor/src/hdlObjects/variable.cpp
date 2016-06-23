@@ -28,7 +28,7 @@ void Variable::dump(int indent) const {
 		dumpKey("value", indent) << "\n";
 		value->dump(indent);
 	} else {
-		dumpVal("value", indent, "None") << "\n";
+		dumpVal("value", indent, "None");
 	}
 	mkIndent(indent - INDENT_INCR) << "}";
 }

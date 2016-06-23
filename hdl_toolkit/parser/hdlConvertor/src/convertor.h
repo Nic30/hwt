@@ -17,9 +17,11 @@
 
 #include "syntaxErrorLogger.h"
 #include "langue.h"
+#include "parserContainer.h"
 
 using namespace antlr4;
 using namespace vhdl;
+
 
 class Convertor {
 
@@ -28,36 +30,12 @@ public:
 	static Langue lang;
 	static bool hierarchyOnly;
 	static bool debug;
+	static ParserErrors err;
 
 	static Context * parse(
 			const char * fileName,
 			Langue lang,
 			bool hierarchyOnly,
 			bool debug);
-	//Context * Convertor::parseString(
-	//		const char * _str,
-	//		Langue _lang,
-	//		bool _hierarchyOnly,
-	//		bool _debug);
 
 };
-
-template<class lexerT, class parserT, class inputStreamT>
-parserT * initParser(inputStreamT * input) {
-	// create a lexer that feeds off of input CharStream
-	lexerT * lexer = new lexerT(input);
-	// create a buffer of tokens pulled from the lexer
-
-	//CommonTokenStream tokens;
-	CommonTokenStream * tokens = new CommonTokenStream(lexer);
-	//tokens->fill();
-	//for (auto token : tokens->getTokens()) {
-	//	std::cout << token->toString() << std::endl;
-	//}
-	// create a parser that feeds off the tokens buffer
-	parserT * parser = new parserT(tokens);
-
-	parser->removeErrorListeners();
-	parser->addErrorListener(new SyntaxErrorLogger());
-	return parser;
-}
