@@ -10,7 +10,7 @@ const char *pycode = "from pprint import pprint\n"
 		"\n"
 		"pprint(c)";
 
-#define PY
+//#define PY
 
 void printInPprint(Context * c) {
 	PyObject *main_module, *main_dict;
@@ -33,7 +33,9 @@ int main(int argc, char *argv[]) {
 	//const char * f = "../../samples/verilogCodesign/verilog/axiCrossbar.v";
 	//const char * f = "../../samples/verilogCodesign/verilog/simpleParam.v";
 	//const char * f = "../../samples/iLvl/vhdl/fnImportLog2/package0.vhd";
-	const char * f = "../../samples/iLvl/vhdl/dmaWrap/misc.vhd";
+	//const char * f = "../../samples/iLvl/vhdl/dmaWrap/misc.vhd";
+	//const char * f = "../../samples/iLvl/vhdl/dependencies0/simpleSubunit3_arch.vhd";
+	const char * f = "../../samples/iLvl/vhdl/sizeExpressions.vhd";
 	//const char * f = "../../samples/iLvl/vhdl/bitStringValuesEnt.vhd";
 
 	//const char * f = "../../samples/verilogCodesign/verilog/interfaceArrayAxi4.v";
