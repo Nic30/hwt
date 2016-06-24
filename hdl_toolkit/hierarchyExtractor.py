@@ -102,7 +102,7 @@ class DesignFile():
                 except RequireImportErr:
                     pass
             if imp is None:
-                raise Exception("%s: require to import %s and it is not defined in any file" % 
+                raise RequireImportErr("%s: require to import %s and it is not defined in any file" % 
                                 (self.fileName, str(d)))
             if d.all:
                 try:
@@ -199,7 +199,7 @@ class DesignFile():
                     pass
 
             if df is None:
-                raise Exception(
+                raise RequireImportErr(
                  "%s: require to import %s and it is not defined in any file" % 
                  (self.fileName, str(d)))
             fi = getFileInfoFromObj(df)
@@ -207,6 +207,9 @@ class DesignFile():
 
     @staticmethod
     def loadFiles(filesInfos, parallel=True):
+        """
+        load FileInfo and build DesignFile for it 
+        """
         for fi in filesInfos:
             fi.hierarchyOnly = True
         
@@ -221,6 +224,9 @@ class DesignFile():
     @staticmethod
     def fileDependencyDict(designFiles, ignoredRefs=[HdlRef(["ieee"], False),
                                                      HdlRef(["std"], False)]):
+        """
+        build dictionary file : [files on which this file depends on] 
+        """
         depDict = {}
         for df in designFiles:
             df.discoverDependentOnFiles(designFiles, ignoredRefs)
