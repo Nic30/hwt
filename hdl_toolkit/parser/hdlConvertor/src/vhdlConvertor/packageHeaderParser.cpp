@@ -71,6 +71,8 @@ Function * PackageHeaderParser::visitFunction_specification(
 	auto designator = ctx->designator();
 	Expr * returnT = ExprParser::visitSubtype_indication(
 			ctx->subtype_indication());
+	assert(returnT);
+
 	bool isOperator = LiteralParser::isStrDesignator(designator);
 	char * name = LiteralParser::visitDesignator(designator);
 	std::vector<Variable*> * paramList = visitFormal_parameter_list(

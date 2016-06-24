@@ -62,7 +62,7 @@ Expr * VerLiteralParser::parseIntNumber(
 			valuePartStart += 1;
 	}
 
-	std::string strVal = s.substr(valuePartStart, s.length());
+	std::string strVal = s.substr(valuePartStart, s.length()); // cut off prefix
 	for (int i = 0; strVal[i]; i++) {
 		char ch = strVal[i];
 		if (ch == 'x' || ch == 'z') {

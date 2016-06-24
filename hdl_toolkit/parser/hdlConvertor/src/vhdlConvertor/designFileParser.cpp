@@ -51,12 +51,14 @@ void DesignFileParser::visitSecondary_unit(
 	// ;
 	auto arch = ctx->architecture_body();
 	if (arch) {
-		Arch * a = (new ArchParser(hierarchyOnly))->visitArchitecture_body(
-				arch);
+		auto aparser = new ArchParser(hierarchyOnly);
+		Arch * a = aparser->visitArchitecture_body(arch);
+		delete aparser;
 		context->architectures.push_back(a);
 	}
 	auto pack = ctx->package_body();
-	if (pack) {
+	bool ie =  ! pack->isEmpty();
+	if (pack && ie) {
 		PackageParser * pparser = new PackageParser(hierarchyOnly);
 		Package * p = pparser->visitPackage_body(pack);
 		delete pparser;

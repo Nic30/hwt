@@ -43,7 +43,7 @@ OperatorType VerExprParser::visitBinary_operator(
 
 	if (op.compare("+") == 0)
 		return ADD;
-	else if (op.compare("-")==0)
+	else if (op.compare("-") == 0)
 		return SUB;
 	else if (op.compare("*") == 0)
 		return MUL;
@@ -137,13 +137,15 @@ Expr * VerExprParser::visitExpression(
 				}
 			}
 			childs++; // consume ":"
-			top = Expr::ternary(top,
-					visitExpression(
-							std::dynamic_pointer_cast<
-									Verilog2001Parser::ExpressionContext>(ch2)),
-					visitTerm(
-							std::dynamic_pointer_cast<
-									Verilog2001Parser::TermContext>(*childs)));
+			auto ifTrue = visitExpression(
+					std::dynamic_pointer_cast<
+							Verilog2001Parser::ExpressionContext>(ch2));
+			assert(ifTrue);
+			auto ifFalse = visitTerm(
+					std::dynamic_pointer_cast<Verilog2001Parser::TermContext>(
+							*childs));
+			assert(ifFalse);
+			top = Expr::ternary(top, ifTrue, ifFalse);
 			childs++;
 		}
 	}

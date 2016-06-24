@@ -14,7 +14,7 @@ Function::Function(
 PyObject * Function::toJson() const {
 	PyObject *d = Named::toJson();
 	PyDict_SetItemString(d, "isOperator", PyBool_FromLong(isOperator));
-	if (!returnT) {
+	if (returnT) {
 		PyDict_SetItemString(d, "returnT", returnT->toJson());
 	} else {
 		Py_IncRef(Py_None);

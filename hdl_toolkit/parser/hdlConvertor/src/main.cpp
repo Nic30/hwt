@@ -10,7 +10,7 @@ const char *pycode = "from pprint import pprint\n"
 		"\n"
 		"pprint(c)";
 
-//#define PY
+#define PY
 
 void printInPprint(Context * c) {
 	PyObject *main_module, *main_dict;
@@ -35,6 +35,8 @@ int main(int argc, char *argv[]) {
 	//const char * f = "../../samples/iLvl/vhdl/fnImportLog2/package0.vhd";
 	const char * f = "../../samples/iLvl/vhdl/dmaWrap/misc.vhd";
 	//const char * f = "../../samples/iLvl/vhdl/bitStringValuesEnt.vhd";
+
+	//const char * f = "../../samples/verilogCodesign/verilog/interfaceArrayAxi4.v";
 #ifdef PY
 	Py_SetProgramName((wchar_t*) "test"); /* optional but recommended */
 	Py_Initialize();

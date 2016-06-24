@@ -17,7 +17,9 @@ void addJsonArrP(
 	PyObject * objList = PyList_New(objects.size());
 
 	for (unsigned i = 0; i < objects.size(); i++) {
-		PyObject * o = objects[i]->toJson();
+		auto _o = objects[i];
+		assert(_o);
+		PyObject * o = _o->toJson();
 		PyList_SetItem(objList, i, o);
 	}
 	Py_IncRef(objList);

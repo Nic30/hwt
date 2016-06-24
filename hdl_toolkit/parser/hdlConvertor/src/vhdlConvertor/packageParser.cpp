@@ -16,8 +16,9 @@ Package * PackageParser::visitPackage_body(
 	delete id;
 
 	if (!hierarchyOnly) {
-		visitPackage_body_declarative_part(p,
-				ctx->package_body_declarative_part());
+		auto pdp = ctx->package_body_declarative_part();
+		if (pdp)
+			visitPackage_body_declarative_part(p, pdp);
 	}
 	return p;
 }

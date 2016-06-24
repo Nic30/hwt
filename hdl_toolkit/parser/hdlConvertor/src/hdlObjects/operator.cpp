@@ -26,8 +26,8 @@ Operator * Operator::ternary(Expr* cond, Expr* ifTrue, Expr* ifFalse) {
 	op->op0 = cond;
 
 	std::vector<Expr*> * ops = new std::vector<Expr*>(2);
-	ops->push_back(ifTrue);
-	ops->push_back(ifFalse);
+	(*ops)[0] = ifTrue;
+	(*ops)[1] = ifFalse;
 	op->operands = ops;
 
 	return op;
