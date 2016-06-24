@@ -15,13 +15,12 @@ def depResolve(dep, k, resolved, unresolved):
     Converts dependency dictionary to list of files in which they should be parsed.
     
     example:
-    dfs = DesignFile.loadFiles(fileInfos)
-    
-    dep = DesignFile.fileDependencyDict(dfs)
-    mainFile = hdlFiles[0]
+    dfs = DesignFile.loadFiles(fileInfos) # get design file contexts
+    dep = DesignFile.fileDependencyDict(dfs) # discovery dependeny between files 
+    mainFile = hdlFiles[0] # choose our top file
     
     dependencies = []
-    depResolve(dep, mainFile, dependencies, set())
+    depResolve(dep, mainFile, dependencies, set()) # sort files for parser (top file is at the end)
     # now in dependencies are sorted fileInfos
     
     """
