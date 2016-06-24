@@ -19,10 +19,10 @@ PyObject * Function::toJson() const {
 	} else {
 		Py_IncRef(Py_None);
 		PyDict_SetItemString(d, "returnT", Py_None);
-		addJsonArrP(d, "params", *params);
-		addJsonArrP(d, "locals", locals);
-		addJsonArrP(d, "body", body);
 	}
+	addJsonArrP(d, "params", *params);
+	addJsonArrP(d, "locals", locals);
+	addJsonArrP(d, "body", body);
 	Py_IncRef(d);
 	return d;
 }
