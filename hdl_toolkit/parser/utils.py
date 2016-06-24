@@ -1,20 +1,6 @@
 from hdl_toolkit.parser.loader import ParserFileInfo, ParserLoader
-from hdl_toolkit.hierarchyExtractor import DesignFile
+from hdl_toolkit.hierarchyExtractor import DesignFile, depResolve
 from python_toolkit.arrayQuery import single
-
-def depResolve(dep, k, resolved, unresolved):
-    unresolved.add(k)
-    for child in dep[k]:
-        if child not in resolved:
-            if child in unresolved:
-                if k == child:
-                    continue
-                else:
-                    raise Exception('Circular reference detected: %s -&gt; %s' % (k, child))
-            depResolve(dep, child, resolved, unresolved)
-    resolved.append(k)
-    unresolved.remove(k)
-
 
 def getLib(fileName, fileInfos):
     return single(fileInfos, lambda x: x.fileName == fileName).lib

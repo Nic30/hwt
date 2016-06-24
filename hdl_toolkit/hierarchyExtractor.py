@@ -6,8 +6,36 @@ from hdl_toolkit.nonRedefDict import RedefinitionErr
 from hdl_toolkit.hdlContext import HDLCtx, RequireImportErr
 from hdl_toolkit.parser.loader import ParserLoader, getFileInfoFromObj 
 
+class CircularReferenceError(Exception):
+    pass
 
-        
+
+def depResolve(dep, k, resolved, unresolved):
+    """
+    Converts dependency dictionary to list of files in which they should be parsed.
+    
+    example:
+    dfs = DesignFile.loadFiles(fileInfos)
+    
+    dep = DesignFile.fileDependencyDict(dfs)
+    mainFile = hdlFiles[0]
+    
+    dependencies = []
+    depResolve(dep, mainFile, dependencies, set())
+    # now in dependencies are sorted fileInfos
+    
+    """
+    unresolved.add(k)
+    for child in dep[k]:
+        if child not in resolved:
+            if child in unresolved:
+                if k == child:
+                    continue
+                else:
+                    raise CircularReferenceError('Circular reference detected: %s -&gt; %s' % (k, child))
+            depResolve(dep, child, resolved, unresolved)
+    resolved.append(k)
+    unresolved.remove(k)        
 
 class DesignFile():
     """

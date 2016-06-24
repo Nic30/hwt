@@ -38,7 +38,6 @@ class ParserException(Exception):
 class BaseParser(object):
     VERILOG = 'verilog'
     VHDL = 'vhdl'
-    _cache = {}  # key = (hierarchyOnly, fileName) 
 
     def __init__(self, caseSensitive, hierarchyOnly=False, primaryUnitsOnly=True, functionsOnly=False):
         self.caseSensitive = caseSensitive
@@ -46,22 +45,10 @@ class BaseParser(object):
         self.primaryUnitsOnly = primaryUnitsOnly
         self.functionsOnly = functionsOnly
     
-    @classmethod
-    def invalidateCacheFor(cls, file):
-        try:
-            del cls._cache[(file, True)]
-        except KeyError:
-            pass
-        
-        try:
-            del cls._cache[(file, False)]
-        except KeyError:
-            pass
-        
     def packageHeaderFromJson(self, jPh, ctx):
         ph = PackageHeader(jPh['name'], ctx)
         if not self.functionsOnly:
-            for _, jComp in jPh['components'].items():
+            for jComp in jPh['components']:
                 c = self.entityFromJson(jComp, ctx)
                 ph.insertObj(c, self.caseSensitive)
         for jFn in jPh['functions']:
@@ -296,7 +283,7 @@ class BaseParser(object):
             e.fileName = fileName
             raise e
 
-        for _, jPh in jsonctx["packageHeaders"].items():
+        for jPh in jsonctx["packageHeaders"]:
             ph = self.packageHeaderFromJson(jPh, ctx)
             
             n = self._hdlId(ph.name) 
@@ -306,14 +293,14 @@ class BaseParser(object):
                 ctx.packages[n].update(ph)
                 
         if not self.functionsOnly:
-            for _, jE in jsonctx["entities"].items():
+            for jE in jsonctx["entities"]:
                 ent = self.entityFromJson(jE, ctx)
                 ent.parent = ctx
                 ent.dependencies = dependencies
                 ctx.insertObj(ent, self.caseSensitive)
 
         if not self.primaryUnitsOnly:
-            for _, jpBody in jsonctx["packages"].items():
+            for jpBody in jsonctx["packages"]:
                 pb = self.packageBodyFromJson(jpBody, ctx)
                 n = self._hdlId(pb.name) 
                 if n not in ctx.packages:
