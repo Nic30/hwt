@@ -57,8 +57,7 @@ void DesignFileParser::visitSecondary_unit(
 		context->architectures.push_back(a);
 	}
 	auto pack = ctx->package_body();
-	bool ie =  ! pack->isEmpty();
-	if (pack && ie) {
+	if (pack) {
 		PackageParser * pparser = new PackageParser(hierarchyOnly);
 		Package * p = pparser->visitPackage_body(pack);
 		delete pparser;
