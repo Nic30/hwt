@@ -3,7 +3,6 @@
 
 from unittest import TestLoader, TextTestRunner, TestSuite
 
-
 from hdl_toolkit.tests.hierarchyExtractor import HierarchyExtractorTC
 from hdl_toolkit.tests.operators import OperatorTC
 from hdl_toolkit.tests.parser import ParserTC

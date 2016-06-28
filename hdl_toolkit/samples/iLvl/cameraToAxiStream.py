@@ -4,6 +4,7 @@ from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 
+# [TODO] this is only torso
 class CameraIntf(Interface):
     """
     http://www.voti.nl/docs/OV7670.pdf p.7

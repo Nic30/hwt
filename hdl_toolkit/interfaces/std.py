@@ -126,6 +126,21 @@ class BramPort(BramPort_withoutClk):
         return self   
         
 
+class FifoWriter(Interface):
+    def _config(self):
+        self.DATA_WIDTH = Param(8)
+        
+    def _declr(self):
+        self.en = Ap_none()
+        self.wait = Ap_none(masterDir=DIRECTION.IN)
+        self.data = Ap_none(dtype=vecT(self.DATA_WIDTH), alternativeNames=[''])
+
+class FifoReader(FifoWriter):
+    def _declr(self):
+        super()._declr()
+        self.en._masterDir = DIRECTION.IN
+        self.wait._masterDir = DIRECTION.OUT
+
 class SPI(Interface):
     def _declr(self):
         self.clk = Ap_clk()
