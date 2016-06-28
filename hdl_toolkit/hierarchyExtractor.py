@@ -206,9 +206,9 @@ class DesignFile():
             self.dependentOnFiles.add(fi.fileName)
 
     @staticmethod
-    def loadFiles(filesInfos, parallel=True):
+    def loadFiles(filesInfos):
         """
-        load FileInfo and build DesignFile for it 
+        load ParserFileInfo and build DesignFile for it 
         """
         for fi in filesInfos:
             fi.hierarchyOnly = True

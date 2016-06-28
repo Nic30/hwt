@@ -1,15 +1,9 @@
-import os
-import sys
+import hdlConvertor
 
 from hdl_toolkit.parser.baseParser import BaseParser, ParserException
 from hdl_toolkit.parser.vhdlParser import VhdlParser
 from hdl_toolkit.parser.verilogParser import VerilogParser
 from hdl_toolkit.hdlContext import BaseVhdlContext, HDLCtx, BaseVerilogContext
-
-baseDir = os.path.dirname(__file__)
-sys.path.append(baseDir + "/hdlConvertor/build/lib.linux-x86_64-3.5") 
-import hdlConvertor
-print("[TODO] proper hdlCovertor import")
 
 
 class ParserFileInfo():
