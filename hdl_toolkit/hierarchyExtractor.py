@@ -10,7 +10,7 @@ class CircularReferenceError(Exception):
     pass
 
 
-def depResolve(dep, k, resolved, unresolved):
+def resolveComplileOrder(fileDependencyDict, topFile):
     """
     Converts dependency dictionary to list of files in which they should be parsed.
     
@@ -19,11 +19,15 @@ def depResolve(dep, k, resolved, unresolved):
     dep = DesignFile.fileDependencyDict(dfs) # discovery dependeny between files 
     mainFile = hdlFiles[0] # choose our top file
     
-    dependencies = []
-    depResolve(dep, mainFile, dependencies, set()) # sort files for parser (top file is at the end)
+    # sort files for parser (top file is at the end)
+    dependencies = resolveComplileOrder(dep, mainFile, dependencies) 
     # now in dependencies are sorted fileInfos
-    
     """
+    dependencies = []
+    _resolveComplileOrder(fileDependencyDict, topFile, dependencies, set())
+    return dependencies
+
+def _resolveComplileOrder(dep, k, resolved, unresolved):
     unresolved.add(k)
     for child in dep[k]:
         if child not in resolved:
@@ -32,7 +36,7 @@ def depResolve(dep, k, resolved, unresolved):
                     continue
                 else:
                     raise CircularReferenceError('Circular reference detected: %s -&gt; %s' % (k, child))
-            depResolve(dep, child, resolved, unresolved)
+            _resolveComplileOrder(dep, child, resolved, unresolved)
     resolved.append(k)
     unresolved.remove(k)        
 
