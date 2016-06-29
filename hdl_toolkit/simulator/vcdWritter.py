@@ -5,6 +5,7 @@ import sys
 from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hBit, vec
 from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.hdlObjects.types.defs import BIT
 
 def dumpMethod(func):
     """decorator which takes functions return and write it as line to dumpFile"""
@@ -143,6 +144,7 @@ if __name__ == "__main__":
         m.var(s1)
         m.var(s2)
     log.enddefinitions()
+    
     log.change(0, s1, hBit(0))
     log.change(10000, s2, vec(0, 3))
     log.change(10000, s1, hBit(1))

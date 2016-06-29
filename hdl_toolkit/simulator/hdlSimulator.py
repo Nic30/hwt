@@ -3,6 +3,7 @@ from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkAllOriginSignals
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.assignment import Assignment
 
 class HdlSimulatorConfig():
     def __init__(self):
@@ -23,11 +24,20 @@ class HdlSimulator():
     def __init__(self):
         self.config = HdlSimulatorConfig() 
         self.env = simpy.Environment()
+        
+        # unit :  signal | unit
+        self.registeredUnits = {}
+    
+    def _registerSignal(self, sig):
+        pass
     
     def _injectSimToCtx(self, signals):
+        
         def injectSignal(o):
+            
             if isinstance(o, Signal):
                 if not hasattr(o, "_simulator") or o._simulator != self:
+                    self._registerSignal(o)
                     o._simulator = self
                     o._setDefValue()
                     for e in o.endpoints:
@@ -35,10 +45,15 @@ class HdlSimulator():
             elif isinstance(o, Operator):
                 o._simulator = self
                 injectSignal(o.result)
+                for op in o.ops:
+                    injectSignal(op)
             elif isinstance(o, Value):
                 pass
+            elif isinstance(o, Assignment):
+                injectSignal(o.src)
+                injectSignal(o.dst) 
             else:
-                raise NotImplementedError()
+                raise NotImplementedError("%s instance of %s" % (repr(o), repr(o.__class__)))
                 
         for s in signals:
             injectSignal(s)

@@ -104,6 +104,9 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
         self._cleanAsSubunit() 
         
     def _loadDeclarations(self):
+        """
+        Load all declarations from _decl() method, recursively for all interfaces/units.
+        """
         if not hasattr(self, "_interfaces"):
             self._interfaces = []
         if not hasattr(self, "_units"):
@@ -126,6 +129,9 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
 
     @classmethod
     def _build(cls, multithread=True):
+        """
+        This Unit implementation does not require any preprocessing
+        """
         pass        
 
     def _contextFromParams(self):

@@ -38,6 +38,9 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
     
     #only interfaces without _interfaces have:
     @ivar _sig: rtl level signal instance     
+    @ival _sigInside : _sig after toRtl conversion is made (after toRtl conversion
+                    _sig is signal for parent unit and _sigInside is signal 
+                    in original unit, this separates process of translating units) 
     @ivar _originEntityPort: entityPort for which was this interface created
     @ivar _originSigLvlUnit: VHDL unit for which was this interface created
 
@@ -113,12 +116,13 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
     def _clean(self, rmConnetions=True, lockNonExternal=True):
         """Remove all signals from this interface (used after unit is synthetized
          and its parent is connecting its interface to this unit)"""
-        try:
+        if self._interfaces:
+            for i in self._interfaces:
+                i._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
+        else:
+            self._sigInside = self._sig 
             del self._sig
-        except AttributeError:
-            pass
-        for i in self._interfaces:
-            i._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
+
         self._dirLocked = False
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
