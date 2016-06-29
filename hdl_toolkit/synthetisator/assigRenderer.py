@@ -125,7 +125,7 @@ def countCondOccurrences(termMap):
         yield (cond, cnt)
 
 def sortCondsByMostImpact(countedConds):
-    for c in sorted(countedConds, key=lambda x: (x[1], isEventDependent(x)),
+    for c in sorted(countedConds, key=lambda x: (x[1], isEventDependent(x[0])),
                      reverse=True):
         yield c[0]
 
