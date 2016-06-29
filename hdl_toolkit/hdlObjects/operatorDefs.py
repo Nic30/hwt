@@ -1,12 +1,12 @@
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.function import Function
-# def getReturnType_hdlFn(op):
-#    fnCont = op.ops[0]
-#    fn = fnCont.lookup(op.ops[1:])
-#    return fn.returnT
 
 class OpDefinition():
-    
+    """
+    OperatorDefinition
+    @ivar id: name of operator
+    @ivar _evalFn: function which evaluates operands
+    """
     def __init__(self, evalFn):
         self.id = None  # assigned automatically in AllOps  
         self._evalFn = evalFn
@@ -19,7 +19,6 @@ class OpDefinition():
     
     def eval(self, operator):
         """Load all operands and process them by self._evalFn"""
-        # it = iter(operator.ops)
         def getVal(v):
             while not isinstance(v, (Value, Function)):
                 v = v._val
@@ -41,8 +40,8 @@ class AllOps():
     """
     
     NOT = OpDefinition(lambda a :~a)
-    EVENT = OpDefinition(lambda a : NotImplemented())
-    RISING_EDGE = OpDefinition(lambda a : a._hasEvent())  # unnecessary
+    EVENT = OpDefinition(lambda a : a._hasEvent())
+    RISING_EDGE = OpDefinition(lambda a : a._onRisingEdge())  # unnecessary
     DIV = OpDefinition(lambda a, b : a // b)
     ADD = OpDefinition(lambda a, b : a + b)
     SUB = OpDefinition(lambda a, b : a - b)

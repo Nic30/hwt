@@ -13,10 +13,15 @@ def If(cond, ifTrue=[], ifFalse=[]):
     cond = intfToSig(cond)
     
     for stm in ifTrue:
+        cond.endpoints.append(stm)
         stm.cond.add(cond)
-        
-    for stm in ifFalse:
-        stm.cond.add(~cond)
+    
+    if ifFalse:
+        # to prevent creating ~cond without reason
+        ncond = ~cond
+        for stm in ifFalse:
+            ncond.endpoints.append(stm)
+            stm.cond.add(ncond)
     
     ret = []
     ret.extend(ifTrue)

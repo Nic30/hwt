@@ -88,6 +88,7 @@ class VcdWritter():
         self.dumpFile = dumpFile
         self.vars = VcdVarContext()
         self.lastTime = -1
+        self.defaultTop = None 
     
     @dumpMethod
     def date(self, text):

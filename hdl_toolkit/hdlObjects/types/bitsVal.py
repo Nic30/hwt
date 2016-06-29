@@ -264,13 +264,19 @@ class BitsVal(Value):
        
     def _hasEvent(self):
         if isinstance(self, Value):
-            return BoolVal(bool(self.eventMask), BOOL, self.vldMask, eventMask=self.eventMask)
+            return BoolVal(bool(self.eventMask),
+                            BOOL,
+                            self.vldMask,
+                            eventMask=self.eventMask)
         else:
             return Operator.withRes(AllOps.EVENT, [self], BOOL)
     
     def _onRisingEdge(self):
         if isinstance(self, Value):
-            return BoolVal(bool(self.eventMask) and self.val, BOOL, self.vldMask, eventMask=self.eventMask)
+            return BoolVal(bool(self.eventMask) and self.val,
+                            BOOL,
+                            self.vldMask,
+                            eventMask=self.eventMask)
         else:
             return Operator.withRes(AllOps.RISING_EDGE, [self], BOOL)
 

@@ -1,14 +1,18 @@
 from hdl_toolkit.samples.iLvl.simple import SimpleUnit
-from hdl_toolkit.synthetisator.shortcuts import toRtl
+from hdl_toolkit.simulator.shortcuts import simUnitVcd, write
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
-from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import walkSignalOnUnit
 
+if __name__ == "__main__":
+    u = SimpleUnit()
+    s = HdlSimulator
 
-
-u = SimpleUnit()
-toRtl(u)
-
-sim = HdlSimulator()
-sim.config.log = True
-sigs = list(map( lambda x: x._sigInside, walkSignalOnUnit(u)))
-sim.simSignals(sigs, time=100 * sim.ms)
+    def stimulus(env):
+        aIn = True
+        while True:
+            # alias wait in VHDL
+            yield env.timeout(10*s.ns)    
+            yield from write(aIn, u.clk)
+            aIn = not aIn
+    
+    simUnitVcd(u, [stimulus], "simpleUnit.vcd", time= s.us)
+    print("done")

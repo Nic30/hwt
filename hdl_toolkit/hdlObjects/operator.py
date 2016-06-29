@@ -9,7 +9,7 @@ class InvalidOperandExc(Exception):
 
 class Operator():
     """
-    class of operator in expression tree
+    Class of operator in expression tree
     @ivar ops: list of operands
     @ivar evalFn: function to evaluate this operator
     @ivar operator: OpDefinition instance 
@@ -21,22 +21,29 @@ class Operator():
         self.result = None
         
     def simPropagateChanges(self):
+        """
+        Called by simulator on input change
+        """
         v = self.evalFn()
         try:
             sim = self._simulator
         except AttributeError:
-            raise SimNotInitialized("Operator '%s' is not bounded to any simulator" % (str(self)))
+            raise SimNotInitialized("Operator '%s' is not bounded to any simulator" %
+                                     (str(self)))
         env = sim.env
         c = sim.config
         
-        yield env.timeout(c.opPropagDur)
+        yield env.timeout(c.propagDelay(self))
         
-        if c.log:
+        if c.logPropagation:
             # [BUG] str method on Op displays new values, but they are not propageted yet
-            c.logger('%d: "%s" -> %s' % (env.now, str(self), str(v))) 
+            c.logPropagation('%d: "%s" -> %s' % (env.now, str(self), str(v))) 
         yield env.process(self.result.simUpdateVal(v))
     
     def registerSignals(self, outputs=[]):
+        """
+        Register potential signals to drivers/endpoints
+        """
         for o in self.ops:
             if o in outputs:
                 o.drivers.append(self)
@@ -49,11 +56,17 @@ class Operator():
                 
     
     def staticEval(self):
+        """
+        Recursively statistically evaluate result of this operator
+        """
         for o in self.ops:
             o.staticEval()
         self.result._val = self.evalFn()
             
     def evalFn(self):
+        """
+        Syntax sugar
+        """
         return self.operator.eval(self)
     
     def __eq__(self, other):
@@ -64,6 +77,9 @@ class Operator():
     
     @staticmethod
     def withRes(opDef, operands, resT, outputs=[]):
+        """
+        Create operator with result signal
+        """
         op = Operator(opDef, operands)
         out = Signal(None, resT)
         out.drivers.append(op)

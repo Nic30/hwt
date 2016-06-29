@@ -9,6 +9,7 @@ from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDriversExc
 from hdl_toolkit.synthetisator.rtlLevel.signal.ops import SignalOps
+from hdl_toolkit.simulator.utils import valHasChanged
 
 
 class UniqList(list):
@@ -21,6 +22,10 @@ class Signal(SignalItem, SignalOps):
     """
     more like net
     @ivar _usedOps: dictionary of used operators which can be reused
+    @ivar endpoints: UniqList of operators and statements for which this signal is driver.
+    @ivar drivers: UniqList of operators and statements which can drive this signal.
+    @ivar negated: this value represents that the value of signal has opposite meaning
+           [TODO] mv negated to Bits hdl type.
     """
     def __init__(self, name, dtype, defaultVal=None):
         if name is None:
@@ -36,13 +41,13 @@ class Signal(SignalItem, SignalOps):
         self.negated = False
     
     def simPropagateChanges(self):
-        if self._oldVal != self._val or self._oldVal.eventMask != self._val.eventMask:
+        if valHasChanged(self):
             conf = self._simulator.config
             env = self._simulator.env
             self._oldVal = self._val
             for e in self.endpoints:
-                if conf.log:
-                    conf.logger("%d: Signal.simPropagateChanges %s -> %s" % (env.now, self.name, str(e)))
+                if conf.logPropagation:
+                    conf.logPropagation("%d: Signal.simPropagateChanges %s -> %s" % (env.now, self.name, str(e)))
                 yield env.process(e.simPropagateChanges())
         
     def staticEval(self):
@@ -51,17 +56,22 @@ class Signal(SignalItem, SignalOps):
             for d in self.drivers:
                 d.staticEval()
         else:
-                if isinstance(self.defaultVal, Signal):
-                        self._val = self.defaultVal._val
-                else:
-                    if not self._val.vldMask:  # [TODO] find better way how to find out if was initialized
-                        self._val = self.defaultVal
+            if isinstance(self.defaultVal, Signal):
+                self._val = self.defaultVal._val
+            else:
+                if not self._val.vldMask:  # [TODO] find better way how to find out if was initialized
+                    self._val = self.defaultVal
+        
         if not isinstance(self._val, Value):
             raise SimException("Evaluation of signal returned not supported object (%s)" % (repr(self._val)))
         return self._val
     
     def simUpdateVal(self, newVal):
-        if not  isinstance(newVal, Value):
+        """
+        Method called by simulator to update new value for this object
+        """
+        
+        if not isinstance(newVal, Value):
             raise SimException("new value is instance of %s it should be instance of value" % (str(newVal.__class__)))
         self._val = newVal
         try:
@@ -70,16 +80,25 @@ class Signal(SignalItem, SignalOps):
             raise SimNotInitialized("Singal %s does not contains reference to its simulator" % (str(self)))
         c = self._simulator.config
         if  c.log:
-            c.logger("%d: %s <= %s" % (env.now, self.name, str(newVal)))
+            c.logChange(env.now, self, newVal)
         
         yield env.process(self.simPropagateChanges())
      
     def singleDriver(self):
+        """
+        Returns a first driver if signal has only one driver.
+        """
         if len(self.drivers) != 1:
             raise MultipleDriversExc()
         return list(self.drivers)[0]
             
 class SyncSignal(Signal):
+    """
+    Syntax sugar,
+    every write is made to next signal, "next" is assigned
+    to main signal on every clock rising edge
+    """
+    
     def __init__(self, name, var_type, defaultVal=None):
         super().__init__(name, var_type, defaultVal)
         self.next = Signal(name + "_next", var_type, defaultVal)
