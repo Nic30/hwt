@@ -1,8 +1,8 @@
 from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, BIT
-from hdl_toolkit.hdlObjects.typeShortcuts import mkRange, vecT
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.hdlObjects.typeShortcuts import vecT
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
@@ -208,7 +208,7 @@ class BitsVal(Value):
             key = toHVal(key)
             resT = BIT
             
-        elif isinstance(key, Signal):
+        elif isinstance(key, RtlSignalBase):
             t = key._dtype
             if isinstance(t, Integer):
                 resT = BIT
@@ -264,13 +264,19 @@ class BitsVal(Value):
        
     def _hasEvent(self):
         if isinstance(self, Value):
-            return BoolVal(bool(self.eventMask), BOOL, self.vldMask, eventMask=self.eventMask)
+            return BoolVal(bool(self.eventMask),
+                            BOOL,
+                            self.vldMask,
+                            eventMask=self.eventMask)
         else:
             return Operator.withRes(AllOps.EVENT, [self], BOOL)
     
     def _onRisingEdge(self):
         if isinstance(self, Value):
-            return BoolVal(bool(self.eventMask) and self.val, BOOL, self.vldMask, eventMask=self.eventMask)
+            return BoolVal(bool(self.eventMask) and self.val,
+                            BOOL,
+                            self.vldMask,
+                            eventMask=self.eventMask)
         else:
             return Operator.withRes(AllOps.RISING_EDGE, [self], BOOL)
 

@@ -21,7 +21,7 @@ def boolCmpOp(self, other, op, evalFn=None):
         evalFn = op._evalFn
     
     if areValues(self, other):
-        v = evalFn(bool(self.val), (other.val)) and self.vldMask == other.vldMask == 1
+        v = evalFn(bool(self.val), bool(other.val)) and (self.vldMask == other.vldMask == 1)
         return BooleanVal(v, BOOL,
                 self.vldMask & other.vldMask,
                 self.eventMask | other.eventMask)
@@ -74,6 +74,13 @@ class BooleanVal(Value):
                 return ifFalse
         else:
             return Operator.withRes(AllOps.TERNARY, [self, ifTrue, ifFalse], ifTrue._dtype)
+
+    def _hasEvent(self):
+        if isinstance(self, Value):
+            return BooleanVal(bool(self.eventMask), BOOL, self.vldMask, eventMask=self.eventMask)
+        else:
+            return Operator.withRes(AllOps.EVENT, [self], BOOL)
+    
 
 
     # logic

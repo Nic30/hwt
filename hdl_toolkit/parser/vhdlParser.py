@@ -1,6 +1,6 @@
 from hdl_toolkit.parser.baseParser import BaseParser 
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 
 class VhdlParser(BaseParser):
 
@@ -12,7 +12,7 @@ class VhdlParser(BaseParser):
             for jOperand in jOp['operands']:
                 operand = self.exprFromJson(jOperand, ctx) 
                 ops.append(operand)
-            if operator == AllOps.CALL and isinstance(ops[0], Signal):
+            if operator == AllOps.CALL and isinstance(ops[0], RtlSignalBase):
                 operator = AllOps.INDEX
         else:
             if operator == AllOps.DOT:

@@ -8,7 +8,7 @@ from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.function import Function
 from hdl_toolkit.hdlObjects.functionContainer import FunctionContainer
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, STR, BIT
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.integer import Integer
@@ -116,7 +116,7 @@ class HDLCtx(NonRedefDict):
             n = getName()
             self.entities[n] = obj
             insert(n)
-        elif  isinstance(obj, Signal):
+        elif  isinstance(obj, RtlSignalBase):
             self[obj._name] = obj
         elif isinstance(obj, PackageHeader):
             n = getName()

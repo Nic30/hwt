@@ -108,7 +108,6 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
     def test_SimpleSubUnit2(self):
         from hdl_toolkit.samples.iLvl.simpleSubunit2 import SimpleSubunit2
         u = SimpleSubunit2()
-        u._loadDeclarations()
         u = synthesised(u)
     
         for pn in ['a0_data', 'a0_last', 'a0_strb', 'a0_valid', 'b0_ready']:    
@@ -310,8 +309,8 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(InterfaceSyntherisatorTC('test_IntfDirections_multistream_setSrc'))
-    #suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
+    # suite.addTest(InterfaceSyntherisatorTC('test_IntfDirections_multistream_setSrc'))
+    suite.addTest(unittest.makeSuite(InterfaceSyntherisatorTC))
     runner = unittest.TextTestRunner(verbosity=3)
     runner.run(suite)
 

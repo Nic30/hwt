@@ -9,7 +9,8 @@ from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment
 
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, SyncSignal
+from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal
+from hdl_toolkit.synthetisator.rtlLevel.memory import RtlSyncSignal
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkUnitInputs, walkSignalsInExpr, \
@@ -51,21 +52,21 @@ class Context():
             defVal = typ.fromPy(defVal)
 
         if clk is not None:
-            s = SyncSignal(name, typ, defVal)
+            s = RtlSyncSignal(name, typ, defVal)
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                            [Signal._assignFrom(s, defVal)] ,
-                            [Signal._assignFrom(s, s.next)])
+                            [RtlSignal._assignFrom(s, defVal)] ,
+                            [RtlSignal._assignFrom(s, s.next)])
             else:
-                r = [Signal._assignFrom(s, s.next)]
+                r = [RtlSignal._assignFrom(s, s.next)]
             
             If(clk._onRisingEdge(), r)
         else:
             if syncRst:
                 raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
-            s = Signal(name, typ, defaultVal=defVal)
+            s = RtlSignal(name, typ, defaultVal=defVal)
         self.signals[name] = s
         return s
     
@@ -140,7 +141,7 @@ class Context():
             if s not in interfaces:
                 # [TODO] if has driver
                 arch.variables.append(s)
-                if isinstance(s, SyncSignal):
+                if isinstance(s, RtlSyncSignal):
                     arch.variables.append(s.next)
         
         # instanciate subUnits in architecture

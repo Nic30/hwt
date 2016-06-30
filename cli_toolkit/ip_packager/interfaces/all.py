@@ -1,11 +1,10 @@
 from python_toolkit.arrayQuery import single, where
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit import interfaces
 import hdl_toolkit.interfaces.std
 import hdl_toolkit.interfaces.amba
 
-from hdl_toolkit.synthetisator.param import getParam
 from cli_toolkit.ip_packager.otherXmlObjs import Parameter
 from cli_toolkit.ip_packager.helpers import mkSpiElm, spi_ns_prefix
 from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
@@ -52,7 +51,7 @@ class IfConfig(Type):
     def addWidthParam(self, thisIntf, name, value):
         p = self.addSimpleParam(thisIntf, "ADDR_WIDTH",
                             VivadoTclExpressionSerializer.asHdl(value.staticEval()))
-        if isinstance(value, Signal):
+        if isinstance(value, RtlSignalBase):
             p.value.resolve = "user" 
         
     def postProcess(self, component, entity, allInterfaces, thisIf):

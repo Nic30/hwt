@@ -1,17 +1,12 @@
 import simpy
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkAllOriginSignals
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.assignment import Assignment
+from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 
-class HdlSimulatorConfig():
-    def __init__(self):
-        self.risFalDur = 100
-        self.opPropagDur = 1000
-        self.log = False
-        
-    def logger(self, x):
-        print(x)
+
 
 class HdlSimulator():
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
@@ -20,14 +15,26 @@ class HdlSimulator():
     us = ns * 1000
     ms = us * 1000
     s = ms * 1000
-    def __init__(self):
-        self.config = HdlSimulatorConfig() 
+    def __init__(self, config=None):
+        if config == None:
+            config = HdlSimConfig() 
+        self.config = config
         self.env = simpy.Environment()
+        
+        # unit :  signal | unit
+        # signal : None
+        self.registered = {}
+    
+    def _registerSignal(self, sig):
+        self.registered[sig] = None
     
     def _injectSimToCtx(self, signals):
+        
         def injectSignal(o):
-            if isinstance(o, Signal):
+            
+            if isinstance(o, RtlSignalBase):
                 if not hasattr(o, "_simulator") or o._simulator != self:
+                    self._registerSignal(o)
                     o._simulator = self
                     o._setDefValue()
                     for e in o.endpoints:
@@ -35,10 +42,16 @@ class HdlSimulator():
             elif isinstance(o, Operator):
                 o._simulator = self
                 injectSignal(o.result)
+                for op in o.ops:
+                    injectSignal(op)
             elif isinstance(o, Value):
                 pass
+            elif isinstance(o, Assignment):
+                o._simulator = self
+                injectSignal(o.src)
+                injectSignal(o.dst) 
             else:
-                raise NotImplementedError()
+                raise NotImplementedError("%s instance of %s" % (repr(o), repr(o.__class__)))
                 
         for s in signals:
             injectSignal(s)
@@ -57,9 +70,14 @@ class HdlSimulator():
             v.eventMask = 0
             e.process(s.simUpdateVal(v))
         
-    def simSignals(self, signals, time):
+    def simSignals(self, signals, time, extraProcesses=[]):
         self._injectSimToCtx(signals)
-        self.env.process(self._initSignals(signals))    
+        self.config.beforeSim(self)
+        self.env.process(self._initSignals(signals))  
+       
+        for p in extraProcesses:
+            self.env.process(p(self.env))
+       
         self.env.run(until=time)
 
 def staticLikeEval(sig, log=False):

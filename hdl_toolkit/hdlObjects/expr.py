@@ -1,5 +1,5 @@
 from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import walkAllOriginSignals
 
@@ -16,7 +16,7 @@ class ExprComparator():
         """
         if exprA  is diffInA:
             return (True, exprB)
-        elif areInstanceOf(exprA, exprB, Signal):
+        elif areInstanceOf(exprA, exprB, RtlSignalBase):
             try:
                 originA = exprA.origin
                 originB = exprB.origin
