@@ -57,8 +57,8 @@ def write(val, sig):
     v = toHVal(val)
     if isinstance(sig, InterfaceBase):
         sig = sig._sigInside
-    assert(isinstance(v, Value))
-    assert(v.eventMask == 0)
+    assert isinstance(v, Value)
+    assert v.eventMask == 0
     v = v._convert(sig._dtype)
     
     sim = sig._simulator

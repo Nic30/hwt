@@ -29,7 +29,7 @@ def bitsCmp(self, other, op, evalFn=None):
     
     if iamVal and otherIsVal:
         w = self._dtype.bit_length()
-        assert(w == other._dtype.bit_length(), "%d, %d" % (w, other._dtype.bit_length()))
+        assert w == other._dtype.bit_length(), "%d, %d" % (w, other._dtype.bit_length())
         
         vld = self.vldMask & other.vldMask
         res = evalFn(self.val, other.val) and vld == Bitmask.mask(w)
@@ -59,7 +59,7 @@ def bitsBitOp(self, other, op):
     
     if iamVal and otherIsVal:
         w = self._dtype.bit_length()
-        assert(w == other._dtype.bit_length())
+        assert w == other._dtype.bit_length()
         
         vld = self.vldMask & other.vldMask
         res = op._evalFn(self.val, other.val) & vld
@@ -78,7 +78,7 @@ def bitsBitOp(self, other, op):
 
 def bitsArithOp(self, other, op):
     other = toHVal(other)
-    assert(isinstance(other._dtype, (Integer, Bits)))
+    assert isinstance(other._dtype, (Integer, Bits))
     if areValues(self, other):
         v = self.clone()
         v.val = op._evalFn(self.val, other.val)
@@ -139,7 +139,7 @@ class BitsVal(Value):
                 
     @classmethod
     def fromPy(cls, val, typeObj):
-        assert(isinstance(val, (int, bool)) or val is None)
+        assert isinstance(val, (int, bool)) or val is None
         vld = 0 if val is None else Bitmask.mask(typeObj.bit_length())
         if not vld:
             val = 0
@@ -170,7 +170,7 @@ class BitsVal(Value):
         st = self._dtype
         l = st.bit_length()
         if l == 1:
-            assert(st.forceVector)  # assert not indexing on single bit
+            assert st.forceVector  # assert not indexing on single bit
             
         # [TODO] what about Slice hdl class?
         # [TODO] boundary check

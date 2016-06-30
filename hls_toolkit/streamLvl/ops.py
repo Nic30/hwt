@@ -4,7 +4,7 @@ from hls_toolkit.streamLvl.valObj import valObj
 from hdl_toolkit.bitmask import Bitmask
 
 def write(val, intf):
-    assert(isinstance(intf, Interface))
+    assert isinstance(intf, Interface)
     if not hasattr(intf, "_streamLvlSimData"):
         intf._streamLvlSimData = deque()
     intf._streamLvlSimData.appendleft(val)
@@ -13,7 +13,6 @@ def read(intf):
     """
     @return: valid, value
     """
-    # assert(isinstance(intf, Ap_hs))
     if hasattr(intf, "_streamLvlSimData") and intf._streamLvlSimData:
         return True, intf._streamLvlSimData.pop()
     else:
@@ -23,7 +22,6 @@ def lookAt(intf):
     """
     @return: valid, value
     """
-    # assert(isinstance(intf, Ap_hs))
     if hasattr(intf, "_streamLvlSimData") and intf._streamLvlSimData:
         return True, intf._streamLvlSimData[-1]
     else:

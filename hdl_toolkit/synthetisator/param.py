@@ -52,7 +52,7 @@ class Param(RtlSignal):
         """
         set value of this param
         """
-        assert(self.replacedWith is None)
+        assert self.replacedWith is None
         val = toHVal(val)
         self.defaultVal = val
         self._val = val
@@ -79,7 +79,6 @@ def evalParam(p):
     if isinstance(p, RtlSignalBase):
         return p.staticEval()
         # use rather param inheritance instead of param as param value
-        # assert(not isinstance(v, Param)) 
     return p
 
 def getParam(p):
@@ -89,5 +88,4 @@ def getParam(p):
     if isinstance(p, Param):
         p = p.get()
         # use rather param inheritance instead of param as param value
-        # assert(not isinstance(v, Param)) 
     return p

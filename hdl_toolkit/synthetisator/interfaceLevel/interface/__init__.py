@@ -229,7 +229,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         """Replace parameter in configuration stage"""
         p = getattr(self, pName)
         i = self._params.index(p)
-        assert(i > -1)
+        assert i > -1
         self._params[i] = newP
         del p._names[self]  # remove reference from old param
         newP._names[self] = pName

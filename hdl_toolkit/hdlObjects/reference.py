@@ -44,7 +44,7 @@ class HdlRef():
     def fromExprJson(cls, jExpr, caseSensitive):
         names = []
         v = jExpr['literal']
-        assert(v["type"] == "ID")
+        assert v["type"] == "ID"
         name = v['value']
         names.append(name)
         names = HdlRef._caseSensitivityForNames(caseSensitive, names)

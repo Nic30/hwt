@@ -35,11 +35,6 @@ class Value():
     def fromPy(cls, val, typeObj):
         raise NotImplementedError("fromPy fn is not implemented for %s" % (str(cls)))
    
-    #@classmethod
-    #def _otherCheck(cls, other):
-    #    assert(isinstance(other, Value))
-    #    assert(issubclass(other.__class__, cls))
-        
     def __pos__(self):
         raise NotImplementedError()
     def __neg__(self):

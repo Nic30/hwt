@@ -58,7 +58,7 @@ def last_iter(it):
 def extendLen(arr, newLen, useValue=None):
     lenNow = len(arr)
     toAdd = newLen - lenNow
-    assert(toAdd > 0)
+    assert toAdd > 0
     arr.extend([useValue for _ in range(toAdd)])
     
     

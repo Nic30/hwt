@@ -17,7 +17,7 @@ class FunctionContainer(list):
         
     def append(self, fn, suppressRedefinition=False):
         if self:
-            assert(self[0].name == fn.name)  # assert every appended function has same name
+            assert self[0].name == fn.name  # assert every appended function has same name
         if not suppressRedefinition:
             for _fn in self:  # check if same definition exists
                 same = True
@@ -25,7 +25,7 @@ class FunctionContainer(list):
                     if _p._dtype != p._dtype:
                         same = False
                         break
-                assert(not same)
+                assert not same
 
         return list.append(self, fn)
 

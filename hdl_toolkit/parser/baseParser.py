@@ -102,7 +102,7 @@ class BaseParser(object):
         else:
             if operator == AllOps.DOT:
                 l = jOp['op1']['literal']
-                assert(l['type'] == "ID")
+                assert l['type'] == "ID"
                 ops.append(l['value'])
             else:
                 ops.append(self.exprFromJson(jOp['op1'], ctx)) 

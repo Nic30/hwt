@@ -24,7 +24,7 @@ def _renderIfTree(node):
     if number of elsifs is higher than SWITCH_THRESHOLD and all conditions are if format signal == value
     render this as switch statement
     """
-    assert(isinstance(node, IfTreeNode))    
+    assert isinstance(node, IfTreeNode)   
     ifTrue = []
     __renderStatements(node.pos, ifTrue)
     
@@ -199,7 +199,7 @@ def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
     topNeg = []
     for a in assignments:
         c = list(where(a._unresolvedConds, lambda cond: cond[0] == topCond))
-        assert(len(c) == 0 or len(c) == 1)
+        assert len(c) == 0 or len(c) == 1
         for _c in c:
             a._unresolvedConds.remove(_c)
             

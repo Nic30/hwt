@@ -24,7 +24,7 @@ def cloneExprWithUpdatedParams(expr, paramUpdateDict):
         return expr.clone()
     elif isinstance(expr, RtlSignalBase):
         d = expr.singleDriver()
-        assert(isinstance(d, Operator))
+        assert isinstance(d, Operator)
         ops = [ cloneExprWithUpdatedParams(x, paramUpdateDict) for x in d.ops]
         return Operator.withRes(d.operator, ops, d.result._dtype)
     elif isinstance(expr, Function):
@@ -137,7 +137,7 @@ class UnitFromHdl(Unit):
     @classmethod
     def _buildFileNames(cls):
         # convert source filenames to absolute paths
-        assert(cls._hdlSources)
+        assert cls._hdlSources
         baseDir = os.path.dirname(inspect.getfile(cls))
         cls._hdlSources = toAbsolutePaths(baseDir, cls._hdlSources)
     

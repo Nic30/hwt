@@ -21,7 +21,7 @@ class IntfValueCont(Value):
         return v
     
     def __eq__(self, other):
-        assert(isinstance(other, IntfValueCont))
+        assert isinstance(other, IntfValueCont)
         for i in self._interfaces:
             _a = getattr(self, i._name)
             _b = getattr(other, i._name)

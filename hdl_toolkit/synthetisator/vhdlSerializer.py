@@ -389,7 +389,7 @@ class VhdlSerializer():
 
     @classmethod
     def HdlType(cls, typ, declaration=False):
-        assert(isinstance(typ, HdlType))
+        assert isinstance(typ, HdlType)
         buff = []
         if declaration:
             if isinstance(typ, Enum):
@@ -474,7 +474,7 @@ class VhdlSerializer():
         elif o == AllOps.OR_LOG:
             return _bin('OR')
         elif o == AllOps.NOT:
-            assert(len(ops) == 1)
+            assert len(ops) == 1
             return "NOT " + p(ops[0])
         elif o == AllOps.CALL:
             return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
@@ -487,12 +487,12 @@ class VhdlSerializer():
         elif o == AllOps.EQ:
             return _bin('=')
         elif o == AllOps.EVENT:
-            assert(len(ops) == 1)
+            assert len(ops) == 1
             return p(ops[0]) + "'EVENT"
         elif o == AllOps.GREATERTHAN:
             return _bin('>')
         elif o == AllOps.INDEX:
-            assert(len(ops) == 2)
+            assert len(ops) == 2
             return "%s(%s)" % ((p(ops[0])).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('<')
@@ -507,16 +507,16 @@ class VhdlSerializer():
         elif o == AllOps.TERNARY:
             return p(ops[1]) + " WHEN " + cls.condAsHdl([ops[0]], True) + " ELSE " + p(ops[2])
         elif o == AllOps.RISING_EDGE:
-            assert(len(ops) == 1)
+            assert len(ops) == 1
             return "RISING_EDGE(" + p(ops[0]) + ")"
         elif o == AllOps.BitsAsSigned:
-            assert(len(ops) == 1)
+            assert len(ops) == 1
             return  "SIGNED(" + p(ops[0]) + ")"
         elif o == AllOps.BitsAsUnsigned:
-            assert(len(ops) == 1)
+            assert len(ops) == 1
             return  "UNSIGNED(" + p(ops[0]) + ")"
         elif o == AllOps.BitsAsVec:
-            assert(len(ops) == 1)
+            assert len(ops) == 1
             return  "STD_LOGIC_VECTOR(" + p(ops[0]) + ")"
         else:
             raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))

@@ -95,6 +95,6 @@ class BooleanVal(Value):
     # for evaluating only, not convertible to hdl
     
     def __bool__(self):
-        assert(isinstance(self, Value))
+        assert isinstance(self, Value)
         return bool(self.val and self.vldMask)
     

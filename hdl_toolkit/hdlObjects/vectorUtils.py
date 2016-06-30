@@ -10,8 +10,8 @@ def getWidthExpr(vectorTypeInst):
         return c.val[0] + 1
     downto = c.singleDriver()
     
-    assert(downto.operator == AllOps.DOWNTO)
-    assert(downto.ops[1].val == 0)
+    assert downto.operator == AllOps.DOWNTO
+    assert downto.ops[1].val == 0
     
     
     widthMinOne = downto.ops[0]
@@ -21,7 +21,7 @@ def getWidthExpr(vectorTypeInst):
         return w
     else:
         widthMinOne = widthMinOne.singleDriver()
-    assert(widthMinOne.operator == AllOps.SUB)
-    assert(widthMinOne.ops[1].val == 1)
+    assert widthMinOne.operator == AllOps.SUB
+    assert widthMinOne.ops[1].val == 1
     
     return widthMinOne.ops[0]

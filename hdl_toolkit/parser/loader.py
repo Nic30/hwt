@@ -8,7 +8,7 @@ from hdl_toolkit.hdlContext import BaseVhdlContext, HDLCtx, BaseVerilogContext
 
 class ParserFileInfo():
     def __init__(self, fileName, lib):
-        assert(isinstance(fileName, str))
+        assert isinstance(fileName, str)
         self.fileName = fileName
         self.lang = langFromExtension(fileName)
         self.caseSensitive = isCaseSecsitiveLang(self.lang)
@@ -90,7 +90,7 @@ class ParserLoader():
         
         lang = fileList[0].lang
         for f in fileList:
-            assert(f.lang == lang)
+            assert f.lang == lang
         
         topCtx = ParserLoader.getTopCtx(lang)
         

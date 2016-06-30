@@ -16,9 +16,9 @@ def convertInteger(self, sigOrVal, toType):
         if isVal:
             v = sigOrVal.clone()
             if toType.min is not None:
-                assert(v.val >= toType.min)
+                assert v.val >= toType.min
             if toType.max is not None:
-                assert(v.val <= toType.max)
+                assert v.val <= toType.max
                 
             v._dtype = toType
             return v
@@ -27,14 +27,14 @@ def convertInteger(self, sigOrVal, toType):
     elif toType == BOOL:
         if isVal:
             v = sigOrVal.val
-            assert(v == 0 or v == 1)
+            assert v == 0 or v == 1
             return BooleanVal(v, BOOL, sigOrVal.vldMask, sigOrVal.eventMask)
             
     elif isinstance(toType, Bits):
         if isVal:
             _v = sigOrVal.val 
             w = toType.bit_length()
-            assert(_v.bit_length() <= w)
+            assert _v.bit_length() <= w
             v = toType.fromPy(_v)
             
             m= Bitmask.mask(w)

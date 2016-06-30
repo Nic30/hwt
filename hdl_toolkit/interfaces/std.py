@@ -104,8 +104,8 @@ class BramPort(BramPort_withoutClk):
     
     @classmethod
     def fromBramPort_withoutClk(cls, intfContainter, bramPort, clk):
-        assert(isinstance(bramPort, BramPort_withoutClk))
-        assert(isinstance(clk, Ap_clk))
+        assert isinstance(bramPort, BramPort_withoutClk)
+        assert isinstance(clk, Ap_clk)
         self = cls()
         rp = self._replaceParam
         def setIntf(name, intf):

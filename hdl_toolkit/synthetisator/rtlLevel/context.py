@@ -92,7 +92,7 @@ class Context():
                 elif isinstance(node, Assignment):
                     for s in walkSignalsInExpr(node.src):
                         discoverDatapaths(s)
-                    assert(isinstance(node.cond, set))
+                    assert isinstance(node.cond, set)
                     for c in node.cond:
                         for s in  walkSignalsInExpr(c):
                             discoverDatapaths(s)

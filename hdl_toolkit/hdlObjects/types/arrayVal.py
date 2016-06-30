@@ -8,11 +8,11 @@ class ArrayVal(Value):
     def fromPy(cls, val, typeObj):
         if val is None:
             val = [None for _ in range(typeObj.size)]
-        assert(len(val) == typeObj.size)
+        assert len(val) == typeObj.size
         elements = []
         for v in val:
             if hasattr(v, "name"):  # is signal
-                assert(v._dtype == typeObj.elmType)
+                assert v._dtype == typeObj.elmType
                 e = v
             else:   
                 e = typeObj.elmType.fromPy(v)
@@ -22,8 +22,8 @@ class ArrayVal(Value):
         return cls(elements, typeObj, 1)
     
     def _eq(self, other):
-        assert(self._dtype.elmType == other._dtype.elmType)
-        assert(self._dtype.size == other._dtype.size)
+        assert self._dtype.elmType == other._dtype.elmType
+        assert self._dtype.size == other._dtype.size
         
         eq = True
         first = self.val[0]

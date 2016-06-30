@@ -37,7 +37,7 @@ def Switch(val, *cases):
         if top is None:
             top = c[1]
         else:
-            assert(c[0] is not None)
+            assert c[0] is not None
             top = If(val._eq(c[0]),
                      c[1]
                      ,

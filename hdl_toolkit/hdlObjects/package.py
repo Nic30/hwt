@@ -14,7 +14,7 @@ class PackageHeader(HDLCtx):
         body.header = self
     
     def copyFrom(self, other):
-        assert(self._isDummy)
+        assert self._isDummy
         HDLCtx.copyFrom(self, other)
         self._isDummy = False
         

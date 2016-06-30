@@ -12,7 +12,7 @@ def entityFromFile(fileName, debug=False):
     _, fileCtxs = ParserLoader.parseFiles([fi], debug=debug)
     c = fileCtxs[0]
     
-    assert(len(c.entities.items()) == 1)
+    assert len(c.entities.items()) == 1
     ent = list(c.entities.items())[0][1]
     return ent
 

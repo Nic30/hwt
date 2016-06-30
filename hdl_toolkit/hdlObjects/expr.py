@@ -31,7 +31,7 @@ class ExprComparator():
                     if not m[0]:
                         return (False, None)
                     if not m[1] is None:
-                        assert(diff is m[1] or diff is None)
+                        assert diff is m[1] or diff is None
                         diff = m[1]
                 return (True, diff)
         elif areInstanceOf(exprA, exprB, Value) and exprA._eq(exprB).val:

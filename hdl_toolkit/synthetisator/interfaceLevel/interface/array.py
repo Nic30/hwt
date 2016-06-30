@@ -12,7 +12,7 @@ def splitToTermSet(width):
         return set([width])
     if width.operator == AllOps.DIV:
         pass
-    assert(width.operator == AllOps.MUL)
+    assert width.operator == AllOps.MUL
     return set(width.ops)
 
 

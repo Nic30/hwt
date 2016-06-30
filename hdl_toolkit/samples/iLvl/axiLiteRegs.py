@@ -29,7 +29,7 @@ class AxiLiteRegs(Unit):
                            ]
     
     def _declr(self):
-        assert(len(self.ADRESS_MAP) > 0)
+        assert len(self.ADRESS_MAP) > 0
         
         self.clk = Ap_clk()
         self.rst_n = Ap_rst_n()

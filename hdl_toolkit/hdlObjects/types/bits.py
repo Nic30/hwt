@@ -46,7 +46,7 @@ class Bits(HdlType):
         return name + constr
     
     def applySpecificator(self, const):
-        assert(isinstance(self.constrain, Unconstrained))
+        assert isinstance(self.constrain, Unconstrained)
         s = copy(self)
         s.constrain = const
         return s

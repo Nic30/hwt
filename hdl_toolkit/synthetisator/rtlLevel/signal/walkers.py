@@ -104,7 +104,7 @@ def walkAllRelatedSignals(sig, discovered=None):
     
     if discovered is None:
         discovered = set()
-    assert(isinstance(sig, RtlSignalBase))
+    assert isinstance(sig, RtlSignalBase)
     if sig in discovered:
         return
 

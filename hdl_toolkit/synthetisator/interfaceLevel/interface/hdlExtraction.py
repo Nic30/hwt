@@ -106,17 +106,17 @@ class ExtractableInterface(InterfaceArray):
                 for intfParam, unitParam in paramDiff:
                     if multipliedBy is not None and isinstance(unitParam, RtlSignalBase):
                         mulOp = unitParam.singleDriver()
-                        assert(mulOp.operator == AllOps.MUL)
+                        assert mulOp.operator == AllOps.MUL
                         op0 = mulOp.ops[0]
                         op1 = mulOp.ops[1]
                         
                         if type(op0) == type(multipliedBy) and op0 == multipliedBy:
                             _unitParam = op1
                         else:
-                            assert(type(op1) == type(multipliedBy) and op1 == multipliedBy)
+                            assert type(op1) == type(multipliedBy) and op1 == multipliedBy
                             _unitParam = op0
                     else:
-                        assert(multipliedBy is None)
+                        assert multipliedBy is None
                         _unitParam = unitParam 
 
                 if len(paramDiff) == 0:

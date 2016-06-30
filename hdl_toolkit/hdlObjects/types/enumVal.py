@@ -17,7 +17,7 @@ class EnumVal(Value):
             val = typeObj._allValues[0]
         else:
             valid = True
-        assert(isinstance(val, str))
+        assert isinstance(val, str)
         
         return cls(val, typeObj, valid)
     
@@ -26,7 +26,7 @@ class EnumVal(Value):
     
         @attention: ignores eventMask
         """
-        assert(self._dtype is other._dtype)
+        assert self._dtype is other._dtype
         
         if areValues(self, other):
             eq = self.val == other.val \
@@ -39,7 +39,7 @@ class EnumVal(Value):
             return Operator.withRes(AllOps.EQ, [self, other], BOOL)
         
     def __ne__(self, other):
-        assert(self._dtype is other._dtype)
+        assert self._dtype is other._dtype
         
         if areValues(self, other):
             neq = self.val != other.val \

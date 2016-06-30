@@ -33,7 +33,7 @@ class RtlSignal(SignalItem, SignalOps, RtlSignalBase):
             name = "sig_" + str(id(self))
             self.hasGenericName = True 
        
-        assert(isinstance(dtype, HdlType))
+        assert isinstance(dtype, HdlType)
         super(RtlSignal, self).__init__(name, dtype, defaultVal)
         # set can not be used because hash of items are changign
         self.endpoints = UniqList()

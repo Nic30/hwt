@@ -17,8 +17,8 @@ class HlsHs(Ap_hs):
         return rNode
         
     def write(self, fsmReadNode):
-        assert(fsmReadNode.rValid is None)
-        assert(fsmReadNode.rReady is None)
+        assert fsmReadNode.rValid is None
+        assert fsmReadNode.rReady is None
         
         fsmReadNode.rValid = self.vld
         fsmReadNode.rReady = self.rd

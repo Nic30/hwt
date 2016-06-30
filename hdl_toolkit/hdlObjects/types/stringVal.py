@@ -7,7 +7,7 @@ class StringVal(Value):
     
     @classmethod
     def fromPy(cls, val, typeObj):
-        assert(isinstance(val, str) or val is None)
+        assert isinstance(val, str) or val is None
         vld = 0 if val is None else 1
         if not vld:
             val = ""

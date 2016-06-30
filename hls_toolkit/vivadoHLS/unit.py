@@ -95,8 +95,8 @@ class VivadoHLSUnit(UnitFromHdl):
     @classmethod
     def _build(cls):
         # convert source filenames to absolute paths
-        assert(cls._project)
-        assert(cls._top)
+        assert cls._project
+        assert cls._top
         baseDir = os.path.dirname(inspect.getfile(cls))
         cls._project = os.path.join(baseDir, cls._project) 
         

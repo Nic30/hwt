@@ -37,7 +37,7 @@ class IntegerVal(Value):
         @param val: value of python type int or None
         @param typeObj: instance of HdlType
         """
-        assert(isinstance(typeObj, Integer))
+        assert isinstance(typeObj, Integer)
         vld = int(val is not None)
         if not vld:
             val = 0

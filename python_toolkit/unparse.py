@@ -395,7 +395,7 @@ class Unparser():
         self.write(")")
 
     def _Set(self, t):
-        assert(t.elts)  # should be at least one element
+        assert t.elts  # should be at least one element
         self.write("{")
         interleave(lambda: self.write(", "), self.dispatch, t.elts)
         self.write("}")

@@ -4,7 +4,7 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlMemoryBase
 
 def hasDiferentVal(reference, sigOrVal):
-    assert(isinstance(reference, Value))
+    assert isinstance(reference, Value)
     if isinstance(sigOrVal, Value):
         v = sigOrVal
     else:
