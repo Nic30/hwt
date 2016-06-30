@@ -1,6 +1,6 @@
 from hdl_toolkit.intfLvl import Param, Unit, connect
 from hdl_toolkit.interfaces.amba import  AxiLite
-from hdl_toolkit.samples.iLvl.axi_basic import AxiLiteBasicSlave
+from hdl_toolkit.samples.vhdlCodesign.axiLiteBasicSlave import AxiLiteBasicSlave
 
 
 class AxiLiteSlaveContainer(Unit):

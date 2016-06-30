@@ -1,6 +1,6 @@
 from hdl_toolkit.intfLvl import Param, Unit, connect
 from hdl_toolkit.interfaces.std import Ap_none
-from hdl_toolkit.samples.iLvl.bram import Bram
+from hdl_toolkit.samples.vhdlCodesign.bram import Bram
 from hdl_toolkit.synthetisator.shortcuts import toRtl
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 

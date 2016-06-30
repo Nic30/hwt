@@ -5,7 +5,7 @@ from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 from hdl_toolkit.hdlObjects.types.defs import INT, STR
 from hdl_toolkit.parser.loader import ParserFileInfo, ParserLoader
 
-ILVL_SAMPLES = '../samples/iLvl/vhdl/'
+ILVL_SAMPLES = '../samples/vhdlCodesign/vhdl/'
 ILVL_SAMPLES_V = '../samples/verilogCodesign/verilog/'
 
 def mkFileInfo(*fileNames, lib="work"):

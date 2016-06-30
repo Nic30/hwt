@@ -53,6 +53,9 @@ class Exporter(EmptyUnit):
 
 
 class NetFilter(Unit):
+    """
+    This unit has actually no functionality it is just example of hierarchical design.
+    """
     def _config(self):
         self.DATA_WIDTH = Param(64)
     

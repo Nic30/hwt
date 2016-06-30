@@ -13,7 +13,7 @@ from hdl_toolkit.interfaces.std import Ap_clk, \
     Ap_rst_n, BramPort, Ap_vld
 from hdl_toolkit.tests.synthetisator.interfaceLevel.baseSynthetisatorTC import BaseSynthetisatorTC
 
-ILVL_VHDL = '../../../samples/iLvl/vhdl/'
+ILVL_VHDL = '../../../samples/vhdlCodesign/vhdl/'
 
 
 class VhdlCodesignTC(BaseSynthetisatorTC):
@@ -26,7 +26,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertIs(ctx['integer'], INT)
 
     def test_bramIntfDiscovered(self):
-        from hdl_toolkit.samples.iLvl.bram import Bram
+        from hdl_toolkit.samples.vhdlCodesign.bram import Bram
         bram = Bram()
         bram._loadDeclarations()
         self.assertTrue(hasattr(bram, 'a'), 'port a found')
@@ -114,7 +114,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertEqual(u.descrBM_w_wr_we._parent, u)
 
     def test_simplePortDirections(self):
-        from hdl_toolkit.samples.iLvl.bram import Bram
+        from hdl_toolkit.samples.vhdlCodesign.bram import Bram
         bram = Bram()
         bram._loadDeclarations()
         
@@ -133,7 +133,7 @@ class VhdlCodesignTC(BaseSynthetisatorTC):
         self.assertIsS(bram.b.we)
 
     def test_axiPortDirections(self):
-        from hdl_toolkit.samples.iLvl.axi_basic import AxiLiteBasicSlave
+        from hdl_toolkit.samples.vhdlCodesign.axiLiteBasicSlave import AxiLiteBasicSlave
         a = AxiLiteBasicSlave()  # (intfClasses=[AxiLite_xil, Ap_clk, Ap_rst_n])
         a._loadDeclarations()
         
