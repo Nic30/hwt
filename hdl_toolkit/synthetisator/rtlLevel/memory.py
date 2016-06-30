@@ -4,14 +4,9 @@ from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlMemoryBase
 
-class RtlMemory(RtlSignal, RtlMemoryBase):
-    """
-    Rtl memory is latching its value.
-    This mean when there is no driver value will stay same.
-    """
-    pass
 
-class RtlSyncSignal(RtlMemory):
+
+class RtlMemory(RtlSignal, RtlMemoryBase):
     """
     Syntax sugar,
     every write is made to next signal, "next" is assigned

@@ -1,5 +1,3 @@
-
-
 class RtlSignalBase():
     pass
 

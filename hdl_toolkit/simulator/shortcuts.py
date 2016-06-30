@@ -7,6 +7,9 @@ from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.synthetisator.shortcuts import toRtl
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import walkSignalOnUnit
+from hdl_toolkit.hdlObjects.types.integer import Integer
+from hdl_toolkit.hdlObjects.types.boolean import Boolean
+from hdl_toolkit.hdlObjects.types.bits import Bits
 
 def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.us):
     """
@@ -39,7 +42,8 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.
     sim.config = VcdHdlSimConfig(outputFile)
     
     # collect signals for simulation
-    sigs = list(map( lambda x: x._sigInside, walkSignalOnUnit(unit)))
+    sigs = list(filter(lambda s: isinstance(s._dtype, (Integer, Boolean, Bits)),  
+                   map( lambda x: x._sigInside, walkSignalOnUnit(unit))))
 
     # run simulation, stimul processes are register after initial inicialization
     sim.simSignals(sigs, time=time, extraProcesses=stimulFunctions) 

@@ -5,6 +5,7 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import INT
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.bitmask import Bitmask
 
 def convertBits(self, sigOrVal, toType):
     isVal = isinstance(sigOrVal, Value)
@@ -20,7 +21,11 @@ def convertBits(self, sigOrVal, toType):
             return sigOrVal._convSign(toType.signed)
     elif toType == INT:
         if isVal:
-            raise NotImplementedError()
+            if self.signed:
+                raise NotImplementedError()
+            else:
+                fullMask = Bitmask.mask(self.bit_length())
+                return INT.getValueCls()(sigOrVal.val, INT, sigOrVal.vldMask == fullMask, eventMask=int(bool(sigOrVal.eventMask)))
         else:
             return Operator.withRes(AllOps.BitsToInt, [sigOrVal], toType)
         

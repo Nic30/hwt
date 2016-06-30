@@ -46,6 +46,8 @@ class UnitImplHelpers():
                                        typeTransform=lockTypeWidth)
     
     def _connectMyInterfaceToMyEntity(self, interface):
+        # [TODO] reverse walk entity port and register it on interfaces
+        # then check if all interfaces are configured
         if interface._interfaces:
             for subIntf in interface._interfaces:
                 self._connectMyInterfaceToMyEntity(subIntf)  

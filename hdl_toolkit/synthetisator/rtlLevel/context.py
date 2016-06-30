@@ -10,7 +10,7 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment
 
 from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal
-from hdl_toolkit.synthetisator.rtlLevel.memory import RtlSyncSignal
+from hdl_toolkit.synthetisator.rtlLevel.memory import RtlMemory
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkUnitInputs, walkSignalsInExpr, \
@@ -52,7 +52,7 @@ class Context():
             defVal = typ.fromPy(defVal)
 
         if clk is not None:
-            s = RtlSyncSignal(name, typ, defVal)
+            s = RtlMemory(name, typ, defVal)
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
@@ -141,7 +141,7 @@ class Context():
             if s not in interfaces:
                 # [TODO] if has driver
                 arch.variables.append(s)
-                if isinstance(s, RtlSyncSignal):
+                if isinstance(s, RtlMemory):
                     arch.variables.append(s.next)
         
         # instanciate subUnits in architecture

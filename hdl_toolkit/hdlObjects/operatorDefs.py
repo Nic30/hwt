@@ -1,5 +1,6 @@
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.function import Function
+from hdl_toolkit.hdlObjects.types.defs import INT
 
 class OpDefinition():
     """
@@ -72,7 +73,7 @@ class AllOps():
     
     CALL = OpDefinition(lambda a, *ops: a.call(*ops))
     
-    BitsToInt = OpDefinition(lambda a : a._convert())
+    BitsToInt = OpDefinition(lambda a : a._convert(INT))
     IntToBits = OpDefinition(lambda a : a._convert())
     
     BitsAsSigned = OpDefinition(lambda a : a._signed())

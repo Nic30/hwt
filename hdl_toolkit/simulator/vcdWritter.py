@@ -5,7 +5,11 @@ import sys
 from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
 
 from hdl_toolkit.hdlObjects.types.defs import BIT
+from hdl_toolkit.hdlObjects.types.boolean import Boolean
+from hdl_toolkit.hdlObjects.types.bits import Bits
 
+class UnsupportedTypeExec(Exception):
+    pass
 
 def dumpMethod(func):
     """decorator which takes functions return and write it as line to dumpFile"""
@@ -47,6 +51,9 @@ class VcdVarContext(dict):
         return ''.join(digits)
     
     def register(self, var):
+        if not isinstance(var._dtype, (Boolean, Bits)):
+            raise UnsupportedTypeExec(var)
+        
         var_id = self.idToStr(self.nextId)
         if var in self:
             raise KeyError("%s is already registered" % (repr(var)))

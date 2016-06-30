@@ -17,7 +17,7 @@ class HdlType():
 
     def __init__(self):
         self.constrain = None
-    
+        
     def __eq__(self, other):
         return type(self) is type(other)
     

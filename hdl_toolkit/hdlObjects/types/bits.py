@@ -9,6 +9,7 @@ class Bits(HdlType):
         @param forceVector: use always hdl vector type 
             (for example std_logic_vector(0 downto 0) instead of std_logic)
         """
+        super().__init__()
         self.forceVector = forceVector
         self.signed = signed
         if widthConstr is None:

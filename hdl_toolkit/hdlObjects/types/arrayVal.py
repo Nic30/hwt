@@ -17,7 +17,8 @@ class ArrayVal(Value):
             size = size.val
         
         if val is None:
-            elements = [typeObj.elmType.fromPy(None) for _ in range(size)]
+            v = typeObj.elmType.fromPy(None)
+            elements = [v.clone() for _ in range(size)]
         else:
             elements = []
             for v in val:
@@ -40,6 +41,8 @@ class ArrayVal(Value):
             raise NotImplementedError()
         elif isinstance(key, RtlSignalBase):
             key = key._convert(INT)
+        elif isinstance(key, Value):
+            pass
         else:
             raise NotImplementedError("Index operation not implemented for index %s" %
                                        (repr(key)))
@@ -47,7 +50,7 @@ class ArrayVal(Value):
         # [TODO] eventmask should be shared for all items
         # [TODO] dirty flag is required
         if iamVal and isinstance(key, Value):
-            return self._val[key]
+            return self.val[key.val]
         
         
         return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.elmType)
