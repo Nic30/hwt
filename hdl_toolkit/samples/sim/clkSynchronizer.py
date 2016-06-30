@@ -16,7 +16,7 @@ if __name__ == "__main__":
         while True:
             # alias wait in VHDL
             yield env.timeout(CLK_PERIOD)    
-            yield from write(not read(u.inClk), u.inClk)
+            yield from write(~read(u.inClk), u.inClk)
 
     def clkOutStimul(env):
         yield from write(False, u.outClk)
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         while True:
             # alias wait in VHDL
             yield env.timeout(CLK_PERIOD)    
-            yield from write(not read(u.outClk), u.outClk)
+            yield from write(~read(u.outClk), u.outClk)
     
 
     

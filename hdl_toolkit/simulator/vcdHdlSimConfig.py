@@ -1,6 +1,6 @@
 import sys
 from hdl_toolkit.simulator.vcdWritter import VcdWritter
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from datetime import datetime
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
@@ -20,7 +20,7 @@ class VcdHdlSimConfig(HdlSimConfig):
     def vcdRegisterUnit(self, unit_name, sublements):
         with self.vcdWritter.module(unit_name) as m:
             for se , ssitems in sublements.items():
-                if isinstance(se, Signal):
+                if isinstance(se, RtlSignalBase):
                     m.var(se)
                 else:
                     raise NotImplementedError(se)

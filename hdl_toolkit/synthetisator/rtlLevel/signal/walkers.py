@@ -2,7 +2,7 @@ from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.portConnection import PortConnection
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from python_toolkit.arrayQuery import where
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
@@ -52,7 +52,7 @@ def walkAllOriginSignals(sig, discovered=None):
         discovered = set()
     if isinstance(sig, Value):
         raise StopIteration()
-    if not isinstance(sig, Signal):
+    if not isinstance(sig, RtlSignalBase):
         raise  AssertionError("Expected only instances of signal, got: %s" % 
                               (repr(sig)))
     if sig in discovered:
@@ -66,9 +66,9 @@ def walkAllOriginSignals(sig, discovered=None):
                 raise StopIteration()
             elif isinstance(obj, Operator):
                 for op in obj.ops:
-                    if isinstance(op, Signal):
+                    if isinstance(op, RtlSignalBase):
                         yield from walkAllOriginSignals(op, discovered=discovered)
-            elif isinstance(obj, Signal):
+            elif isinstance(obj, RtlSignalBase):
                 yield from walkAllOriginSignals(obj, discovered)
             elif isinstance(obj, Assignment):
                 yield from walkAllOriginSignals(obj.src, discovered)
@@ -87,7 +87,7 @@ def _walkAllRelatedSignals(obj, discovered=None):
     elif isinstance(obj, Operator):
         for op in obj.ops:
             yield from _walkAllRelatedSignals(op, discovered=discovered)
-    elif isinstance(obj, Signal):
+    elif isinstance(obj, RtlSignalBase):
         yield from walkAllRelatedSignals(obj, discovered=discovered)
     elif isinstance(obj, Assignment):
         for s in [obj.src, obj.dst]:
@@ -104,7 +104,7 @@ def walkAllRelatedSignals(sig, discovered=None):
     
     if discovered is None:
         discovered = set()
-    assert(isinstance(sig, Signal))
+    assert(isinstance(sig, RtlSignalBase))
     if sig in discovered:
         return
 
@@ -120,7 +120,7 @@ def walkSignalsInExpr(expr):
         for op in expr.ops:
             if op is not expr:
                 yield from walkSignalsInExpr(op)
-    elif isinstance(expr, Signal):
+    elif isinstance(expr, RtlSignalBase):
         if hasattr(expr, "origin"):
             yield from  walkSignalsInExpr(expr.origin)
         else:
@@ -142,7 +142,7 @@ def walkSigSouces(sig, parent=None):
             for op in sig.ops:
                 if not op is parent:
                     yield from walkSigSouces(op)
-    elif isinstance(sig, Signal):
+    elif isinstance(sig, RtlSignalBase):
         for e in sig.drivers:
             if isinstance(e, PortConnection):
                 if not e.unit.discovered:

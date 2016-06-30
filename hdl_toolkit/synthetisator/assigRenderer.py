@@ -1,7 +1,8 @@
 from hdl_toolkit.hdlObjects.statements import IfContainer, SwitchContainer
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, MultipleDriversExc
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase 
+from hdl_toolkit.synthetisator.rtlLevel.signal import MultipleDriversExc
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.synthetisator.assigRendererContainers import DepContainer, IfTreeNode
 from python_toolkit.arrayQuery import where
@@ -55,7 +56,7 @@ def _renderIfTree(node):
             if isinstance(op, Operator) and op.operator == AllOps.EQ:
                 op0 = op.ops[0]
                 op1 = op.ops[1]
-                if isinstance(op0, Signal) and isinstance(op1, Value):
+                if isinstance(op0, RtlSignalBase) and isinstance(op1, Value):
                     switchOn = op0
                     cases.append((op1, ifTrue))
         except MultipleDriversExc:
@@ -239,37 +240,6 @@ def renderIfTree(assignments):
         topCond = condOrder[0]
         top = splitIfTreeOnCond(assignments, topCond, condOrder)
         
-            # _top = top.pos
-            # topNode = top
-            # # build cond path in node tree
-            # realCond = [ getBaseCond(c) for c in a.cond ]
-            # sortedCond = sorted(realCond,
-            #                    key=lambda x: condOrder.index(x[0]),
-            #                    reverse=True)
-            # condIsNegated = False
-            #
-            # # walk cond path in node tree
-            # for c, condIsNegated in sortedCond:
-            #    try:
-            #        _top = _top[c]
-            #    except KeyError:
-            #        t = IfTreeNode()
-            #        _top[c] = t
-            #        _top = t
-            #        
-            #    topNode = _top
-            #    if condIsNegated:
-            #        _top = _top.neg
-            #    else:
-            #        _top = _top.pos
-            #        
-            # # register this assigment at the end of cond path        
-            # 
-            # if condIsNegated:
-            #    c = topNode.negSt
-            # else:
-            #    c = topNode.posSt
-            # c.append(a)
         yield from _renderIfTree(top)
     else:
         # none of assignments has condition no If or switch is needed

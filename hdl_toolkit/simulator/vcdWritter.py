@@ -2,10 +2,10 @@
 from functools import wraps
 from datetime import datetime
 import sys
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hBit, vec
 from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+
 from hdl_toolkit.hdlObjects.types.defs import BIT
+
 
 def dumpMethod(func):
     """decorator which takes functions return and write it as line to dumpFile"""
@@ -136,12 +136,14 @@ class VcdWritter():
         return frmt % (val, varInfo.id)
     
 if __name__ == "__main__":
-    
+    from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal
+    from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hBit, vec
+
     log = VcdWritter()
     log.date(datetime.now())
     with log.module("module0") as m:
-        s1 = Signal('s1', BIT)
-        s2 = Signal('s2', vecT(3))
+        s1 = RtlSignal('s1', BIT)
+        s2 = RtlSignal('s2', vecT(3))
         m.var(s1)
         m.var(s2)
     log.enddefinitions()

@@ -1,7 +1,7 @@
 from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.simulator.exceptions import SimNotInitialized
 from hdl_toolkit.hdlObjects.value import Value
-
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlMemoryBase
 
 def hasDiferentVal(reference, sigOrVal):
     assert(isinstance(reference, Value))
@@ -42,7 +42,7 @@ class Assignment():
                 cond = cond & c._val
         
         return cond
-
+    
     def simPropagateChanges(self):
         activeAsignments = []
         for d in self.dst.drivers:
@@ -54,6 +54,8 @@ class Assignment():
         if l == 0:
             # print(">> %s disconnected"  % (repr(self)))
             # disconnected
+            if isinstance(self.dst, RtlMemoryBase):
+                return # value is latched when there is no driver
             nextVal = self.dst._val.clone()
             nextVal.vldMask = 0
         elif l == 1:

@@ -9,6 +9,7 @@ from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDriversExc
 from hdl_toolkit.synthetisator.rtlLevel.signal.ops import SignalOps
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.simulator.utils import valHasChanged
 
 
@@ -18,7 +19,7 @@ class UniqList(list):
             pass
         return list.append(self, obj)
 
-class Signal(SignalItem, SignalOps):
+class RtlSignal(SignalItem, SignalOps, RtlSignalBase):
     """
     more like net
     @ivar _usedOps: dictionary of used operators which can be reused
@@ -33,7 +34,7 @@ class Signal(SignalItem, SignalOps):
             self.hasGenericName = True 
        
         assert(isinstance(dtype, HdlType))
-        super(Signal, self).__init__(name, dtype, defaultVal)
+        super(RtlSignal, self).__init__(name, dtype, defaultVal)
         # set can not be used because hash of items are changign
         self.endpoints = UniqList()
         self.drivers = UniqList()
@@ -56,7 +57,7 @@ class Signal(SignalItem, SignalOps):
             for d in self.drivers:
                 d.staticEval()
         else:
-            if isinstance(self.defaultVal, Signal):
+            if isinstance(self.defaultVal, RtlSignal):
                 self._val = self.defaultVal._val
             else:
                 if not self._val.vldMask:  # [TODO] find better way how to find out if was initialized
@@ -92,28 +93,6 @@ class Signal(SignalItem, SignalOps):
             raise MultipleDriversExc()
         return list(self.drivers)[0]
             
-class SyncSignal(Signal):
-    """
-    Syntax sugar,
-    every write is made to next signal, "next" is assigned
-    to main signal on every clock rising edge
-    """
-    
-    def __init__(self, name, var_type, defaultVal=None):
-        super().__init__(name, var_type, defaultVal)
-        self.next = Signal(name + "_next", var_type, defaultVal)
-        
-    def _assignFrom(self, source):
-        source = toHVal(source)
-        a = Assignment(source, self.next)
-        a.cond = set()
-        self.next.drivers.append(a)
-        if not isinstance(source, Value):
-            source.endpoints.append(a)
-             
-        return a
-
-
 def areSameSignals(a, b):
     if a is b:
         return True

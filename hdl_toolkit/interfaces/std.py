@@ -4,7 +4,7 @@ from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.interfaces.ap_noneOps import Ap_noneOps
 from hdl_toolkit.hdlObjects.types.bits import Bits
 
@@ -31,10 +31,10 @@ class Ap_none(Ap_noneOps, Interface):
             newT = vecT(factor)
         elif isinstance(t, Bits):
             w = getWidthExpr(t)
-            if isinstance(w, Signal):
+            if isinstance(w, RtlSignalBase):
                 # bouth Param or factor Value
                 newW = w * factor
-            elif isinstance(factor, Signal):
+            elif isinstance(factor, RtlSignalBase):
                 # w is Value
                 newW = factor * w
             else:

@@ -1,5 +1,5 @@
 import simpy
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkAllOriginSignals
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.value import Value
@@ -32,7 +32,7 @@ class HdlSimulator():
         
         def injectSignal(o):
             
-            if isinstance(o, Signal):
+            if isinstance(o, RtlSignalBase):
                 if not hasattr(o, "_simulator") or o._simulator != self:
                     self._registerSignal(o)
                     o._simulator = self

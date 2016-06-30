@@ -1,5 +1,5 @@
 from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
@@ -79,7 +79,7 @@ class Port():
                 d = appendSpiElem(v, name)
                 
                 d.attrib["spirit:format"] = "long"
-                if isinstance(val, Signal):  # value is simple type and does not contains generic etc...
+                if isinstance(val, RtlSignalBase):  # value is simple type and does not contains generic etc...
                     resolve = 'dependent' 
                     d.attrib["spirit:dependency"] = "(" + \
                                                 VivadoTclExpressionSerializer.asHdl(val) + ")"

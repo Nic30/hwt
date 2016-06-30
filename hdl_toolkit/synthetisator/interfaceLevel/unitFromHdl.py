@@ -7,7 +7,7 @@ from hdl_toolkit.parser.utils import entityFromFile, loadCntxWithDependencies
 from hdl_toolkit.hdlContext import RequireImportErr
 from hdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
@@ -22,7 +22,7 @@ def cloneExprWithUpdatedParams(expr, paramUpdateDict):
         return paramUpdateDict[expr]
     elif isinstance(expr, Value):
         return expr.clone()
-    elif isinstance(expr, Signal):
+    elif isinstance(expr, RtlSignalBase):
         d = expr.singleDriver()
         assert(isinstance(d, Operator))
         ops = [ cloneExprWithUpdatedParams(x, paramUpdateDict) for x in d.ops]

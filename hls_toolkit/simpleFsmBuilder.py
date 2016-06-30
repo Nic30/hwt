@@ -1,8 +1,8 @@
 from itertools import groupby
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils import connectSig
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 
 
-c = connectSig
+c = connect
 
 class FsmBuilder(object):
     def __init__(self, fsmReg, transitions):

@@ -1,8 +1,6 @@
 from copy import copy
 
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
-from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.hdlObjects.portConnection import PortConnection
 
@@ -12,11 +10,6 @@ from hdl_toolkit.synthetisator.interfaceLevel.interface.directionFns import Inte
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
 from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
-from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import aplyIndexOnSignal
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 

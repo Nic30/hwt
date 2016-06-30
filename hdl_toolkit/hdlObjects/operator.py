@@ -1,6 +1,6 @@
 from copy import deepcopy
 from hdl_toolkit.simulator.exceptions import SimNotInitialized
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal, RtlSignalBase 
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.function import Function
 
@@ -47,7 +47,7 @@ class Operator():
         for o in self.ops:
             if o in outputs:
                 o.drivers.append(self)
-            elif isinstance(o, Signal):
+            elif isinstance(o, RtlSignalBase):
                 o.endpoints.append(self)
             elif isinstance(o, (Value, Function)):
                 pass
@@ -81,7 +81,7 @@ class Operator():
         Create operator with result signal
         """
         op = Operator(opDef, operands)
-        out = Signal(None, resT)
+        out = RtlSignal(None, resT)
         out.drivers.append(op)
         out.origin = op
         op.result = out

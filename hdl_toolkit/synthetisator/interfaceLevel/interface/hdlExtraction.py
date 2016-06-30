@@ -5,7 +5,7 @@ from hdl_toolkit.hdlObjects.expr import ExprComparator
 from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.interfaceLevel.interface.array import InterfaceArray
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import walkSignalsInExpr
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
@@ -99,12 +99,12 @@ class ExtractableInterface(InterfaceArray):
             # update interface type from hdl, update generics
             intfTConstr = self._dtype.constrain
 
-            if intfTConstr is not None and isinstance(intfTConstr, (Signal, SliceVal)):
+            if intfTConstr is not None and isinstance(intfTConstr, (RtlSignalBase, SliceVal)):
                 unitTConstr = self._originEntityPort._dtype.constrain
                 paramDiff = list(ExprComparator.findExprDiffInParam(intfTConstr, unitTConstr))
                     
                 for intfParam, unitParam in paramDiff:
-                    if multipliedBy is not None and isinstance(unitParam, Signal):
+                    if multipliedBy is not None and isinstance(unitParam, RtlSignalBase):
                         mulOp = unitParam.singleDriver()
                         assert(mulOp.operator == AllOps.MUL)
                         op0 = mulOp.ops[0]

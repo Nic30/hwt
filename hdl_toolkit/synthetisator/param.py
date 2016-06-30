@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, areSameSignals
+
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal, areSameSignals
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 
-class Param(Signal):
+class Param(RtlSignal):
     """
     Class used in same way as generics in VHDL, it is wrapper around the value
     """
@@ -74,7 +76,7 @@ def evalParam(p):
     while isinstance(p, Param):
         p = p.get()
     
-    if isinstance(p, Signal):
+    if isinstance(p, RtlSignalBase):
         return p.staticEval()
         # use rather param inheritance instead of param as param value
         # assert(not isinstance(v, Param)) 

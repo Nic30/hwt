@@ -1,10 +1,10 @@
 from python_toolkit.arrayQuery import arr_any, where
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType, InvalidVHDLTypeExc
 from hdl_toolkit.synthetisator.templates import VHDLTemplates
-from hdl_toolkit.synthetisator.rtlLevel.signal import Signal, MultipleDriversExc
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthetisator.rtlLevel.signal import MultipleDriversExc
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment 
-from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from hdl_toolkit.hdlObjects.statements import IfContainer, \
     SwitchContainer, WhileContainer
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
@@ -55,7 +55,7 @@ def ternaryOpsToIf(statements):
     for st in statements:
         if isinstance(st, Assignment):
             try:
-                if not isinstance(st.src, Signal):
+                if not isinstance(st.src, RtlSignalBase):
                     raise DoesNotContainsTernary()
                 d = st.src.singleDriver()
                 if not isinstance(d, Operator) or d.operator != AllOps.TERNARY:
@@ -84,7 +84,7 @@ class VhdlSerializer():
             return obj.asVhdl(cls)
         elif isinstance(obj, UnitFromHdl):
             return str(obj)
-        elif isinstance(obj, Signal):
+        elif isinstance(obj, RtlSignalBase):
             return cls.SignalItem(obj)
         elif isinstance(obj, Value):
             return cls.Value(obj)
@@ -174,7 +174,7 @@ class VhdlSerializer():
     
     @classmethod
     def condAsHdl(cls, cond, forceBool):
-        if isinstance(cond, Signal):
+        if isinstance(cond, RtlSignalBase):
             cond = [cond]
         else:
             cond = list(cond)
@@ -441,7 +441,7 @@ class VhdlSerializer():
         @param val: value object, can be instance of Signal or Value    """
         if isinstance(val, Value):
             return val._dtype.valAsVhdl(val, cls)
-        elif isinstance(val, Signal):
+        elif isinstance(val, RtlSignalBase):
             return cls.SignalItem(val)
         else:
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 
@@ -455,7 +455,7 @@ class VhdlSerializer():
     def Operator(cls, op):
         def p(operand):
             s = cls.asHdl(operand)
-            if isinstance(operand, Signal):
+            if isinstance(operand, RtlSignalBase):
                 try:
                     o = operand.singleDriver()
                     if opPrecedence[o.operator] <= opPrecedence[op.operator]:
