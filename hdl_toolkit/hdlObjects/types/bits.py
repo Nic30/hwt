@@ -23,28 +23,6 @@ class Bits(HdlType):
     def __hash__(self):
         return hash((self.signed, id(self.constrain), self.forceVector))
     
-    def asVhdl(self, serializer):
-        disableRange = False
-        if self.signed is None:
-            if self.forceVector or self.bit_length() > 1:
-                name = 'STD_LOGIC_VECTOR'
-            else:
-                name = 'STD_LOGIC'
-                disableRange = True
-        elif self.signed:
-            name = "SIGNED"
-        else:
-            name = 'UNSIGNED'     
-            
-        c = self.constrain
-        if disableRange or c is None or isinstance(c, Unconstrained):
-            constr = ""
-        elif isinstance(c, (int, float)):
-            constr = "%d DOWNOT 0" % c
-        else:        
-            constr = "(%s)" % serializer.Value(c)     
-        return name + constr
-    
     def applySpecificator(self, const):
         assert isinstance(self.constrain, Unconstrained)
         s = copy(self)

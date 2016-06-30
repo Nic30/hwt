@@ -27,7 +27,7 @@ class VcdVarInfo():
 class VcdVarContext(dict):
     """Map of signals registered in this unit"""
     def __init__(self):
-        super(VcdVarContext, self).__init__()
+        super().__init__()
         self.nextId = 0
         self.idChars = [ chr(i) for i in range(ord("!"), ord("~") + 2) ]
         self.idCharsCnt = len(self.idChars)

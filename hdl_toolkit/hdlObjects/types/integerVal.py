@@ -70,6 +70,9 @@ class IntegerVal(Value):
     def __mul__(self, other):
         return intAritmeticOp(self, other, AllOps.MUL)
 
+    def __pow__(self, other):
+        return intAritmeticOp(self, other, AllOps.POW)
+
     def __floordiv__(self, other):
         return intAritmeticOp(self, other, AllOps.DIV)
     

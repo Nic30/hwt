@@ -72,7 +72,8 @@ def bitsBitOp(self, other, op):
         elif self._dtype == other._dtype:
             pass
         else:
-            raise NotImplementedError("Types are not comparable (%s, %s)" % (repr(self._dtype), repr(other._dtype)))
+            raise NotImplementedError("Types are not comparable (%s, %s)" %
+                                       (repr(self._dtype), repr(other._dtype)))
         
         return Operator.withRes(op, [self, other], self._dtype) 
 
@@ -146,7 +147,6 @@ class BitsVal(Value):
         return cls(val, typeObj, vld)
     
     # [TODO] bit reverse operator
-    
     def _concat(self, other):
         w = self._dtype.bit_length()
         resWidth = w + other._dtype.bit_length()
@@ -172,7 +172,6 @@ class BitsVal(Value):
         if l == 1:
             assert st.forceVector  # assert not indexing on single bit
             
-        # [TODO] what about Slice hdl class?
         # [TODO] boundary check
         isSlice = isinstance(key, slice)
         isSLICE = isinstance(key, Slice.getValueCls())
@@ -224,9 +223,6 @@ class BitsVal(Value):
             
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
-
-    # comparisons         
-    
     def __invert__(self):
         if isinstance(self, Value):
             v = self.clone()
@@ -235,6 +231,7 @@ class BitsVal(Value):
         else:
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
     
+    # comparisons         
     def _eq(self, other):
         return bitsCmp(self, other, AllOps.EQ, lambda a, b : a == b)
     

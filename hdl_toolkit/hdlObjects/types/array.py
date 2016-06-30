@@ -13,6 +13,9 @@ class Array(HdlType):
         self.elmType = elmType
         self.size = size
     
+    def __hash__(self):
+        return hash((self.elmType, self.size))
+    
     @classmethod
     def getValueCls(cls):
         try:

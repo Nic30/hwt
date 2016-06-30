@@ -45,6 +45,7 @@ class AllOps():
     DIV = OpDefinition(lambda a, b : a // b)
     ADD = OpDefinition(lambda a, b : a + b)
     SUB = OpDefinition(lambda a, b : a - b)
+    POW = OpDefinition(lambda a, b : a ** b)
     UN_MINUS = OpDefinition(lambda a :-a)
     MOD = OpDefinition(lambda a, b : a % b)
     MUL = OpDefinition(lambda a, b : a * b)

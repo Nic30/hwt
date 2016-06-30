@@ -51,16 +51,15 @@ class AxiStreamStoredBurst(Unit):
         # [TODO] refactor
         Switch(wordIndex,
             *[(vec(i, wordIndex_w), 
-               self.writeData(d, vldAll, i == DATA_LEN -1) +
-               If(self.dataRd(),
-                   c(vec(i+1, wordIndex_w), wordIndex)
-                   ,
-                   c(wordIndex, wordIndex)
-               )
+               self.writeData(d, vldAll, i == DATA_LEN -1)
               ) for i, d in enumerate(self.DATA)],
             (None, self.writeStop())
         )
-            
+        If(self.dataRd() & (wordIndex < len(self.DATA)),
+            c(wordIndex +1, wordIndex)
+            ,
+            c(wordIndex, wordIndex)
+        )
         
         
 if __name__ == "__main__":

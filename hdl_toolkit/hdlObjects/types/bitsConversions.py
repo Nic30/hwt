@@ -2,6 +2,9 @@ from hdl_toolkit.hdlObjects.types.hdlType import HdlType
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.types.boolean import Boolean
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import INT
+from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 def convertBits(self, sigOrVal, toType):
     isVal = isinstance(sigOrVal, Value)
@@ -15,6 +18,11 @@ def convertBits(self, sigOrVal, toType):
     elif isinstance(toType, Bits):
         if self.bit_length() == toType.bit_length():
             return sigOrVal._convSign(toType.signed)
+    elif toType == INT:
+        if isVal:
+            raise NotImplementedError()
+        else:
+            return Operator.withRes(AllOps.BitsToInt, [sigOrVal], toType)
         
     # if isinstance(toType, Integer):
     #    if isinstance(sigOrVal, Value):

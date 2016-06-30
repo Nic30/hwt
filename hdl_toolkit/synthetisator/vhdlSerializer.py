@@ -17,6 +17,9 @@ from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BOOL, BIT
+from hdl_toolkit.hdlObjects.specialValues import Unconstrained
+from hdl_toolkit.hdlObjects.types.array import Array
+from sympy.integrals.risch import NonElementaryIntegral
 
 class VhdlVersion():
     v2002 = 2002
@@ -106,7 +109,7 @@ class VhdlSerializer():
         extraTypes = set()
         for v in sorted(arch.variables, key=lambda x: x.name):
             variables.append(cls.SignalItem(v, declaration=True))
-            if isinstance(v._dtype, Enum):
+            if isinstance(v._dtype, (Enum, Array)):
                 extraTypes.add(v._dtype)
             
         for p in sorted(arch.processes, key=lambda x: x.name):
@@ -236,6 +239,11 @@ class VhdlSerializer():
             return  "%s := %s" % (s, cls.Value(getParam(g.defaultVal)))
     
     @classmethod
+    def isUnnamedIndex(cls, sig):
+        return ( hasattr(sig, "origin") and 
+                sig.origin.operator == AllOps.INDEX and
+                sig.hasGenericName)
+    @classmethod
     def isStaticExpression(cls, sig):
         if isinstance(sig, Value):
             return True
@@ -245,24 +253,9 @@ class VhdlSerializer():
             if isinstance(d, Operator):
                 return True
             elif isinstance(d, Assignment):
-                if d.dst is sig and len(sig.endpoints) == 1:
-                    ep = list(sig.endpoints)[0]
-                    if isinstance(ep, Operator) and ep.operator == AllOps.INDEX:
-                        return True
-                # for o in d.ops:
-                #    if not cls.isStaticExpression(o):
-                #        return False
-                # return True
-        elif len(sig.endpoints) == 1:
-            e = sig.endpoints[0]
-            if isinstance(e, Operator) and e.operator == AllOps.INDEX:
-                return True
-            
-            
-                    
-        if sig.name.startswith("sig_1"):
-            print("")
-        return False
+                return cls.isUnnamedIndex(sig)
+        else:
+            return cls.isUnnamedIndex(sig)
             
             
     @classmethod
@@ -388,24 +381,63 @@ class VhdlSerializer():
             return "%s : %s" % (g.name, t)
 
     @classmethod
-    def HdlType(cls, typ, declaration=False):
-        assert isinstance(typ, HdlType)
+    def HdlType_bits(cls, typ, declaration=False):
+        disableRange = False
+        if typ.signed is None:
+            if typ.forceVector or typ.bit_length() > 1:
+                name = 'STD_LOGIC_VECTOR'
+            else:
+                name = 'STD_LOGIC'
+                disableRange = True
+        elif typ.signed:
+            name = "SIGNED"
+        else:
+            name = 'UNSIGNED'     
+            
+        c = typ.constrain
+        if disableRange or c is None or isinstance(c, Unconstrained):
+            constr = ""
+        elif isinstance(c, (int, float)):
+            constr = "%d DOWNOT 0" % c
+        else:        
+            constr = "(%s)" % cls.Value(c)     
+        return name + constr
+
+    @classmethod
+    def HdlType_enum(cls, typ, declaration=False):
         buff = []
         if declaration:
-            if isinstance(typ, Enum):
-                buff.extend(["TYPE ", typ.name.upper(), ' IS ('])
-                buff.append(", ".join(typ._allValues))
-                buff.append(")")
-            else:
-                raise NotImplementedError("type declaration is not impleneted for type %s" % 
-                                          (typ.name))
+            buff.extend(["TYPE ", typ.name.upper(), ' IS ('])
+            buff.append(", ".join(typ._allValues))
+            buff.append(")")
         else:
-            if isinstance(typ, Bits):
-                return typ.asVhdl(cls)
-            else:
-                buff.append(typ.name.upper())
-   
+            return typ.name
         return "".join(buff)
+
+    @classmethod
+    def HdlType_array(cls, typ, declaration=False):
+        name = "arrT_%d" % (id(typ))
+        if declaration:
+            return "TYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
+                (name, cls.asHdl(typ.size), cls.HdlType(typ.elmType))
+        else:
+            return name
+
+    @classmethod
+    def HdlType(cls, typ, declaration=False):
+        assert isinstance(typ, HdlType)
+        if isinstance(typ, Bits):
+            return cls.HdlType_bits(typ, declaration=declaration)
+        elif isinstance(typ, Enum):
+            return cls.HdlType_enum(typ, declaration=declaration)
+        elif isinstance(typ, Array):
+            return cls.HdlType_array(typ, declaration=declaration)
+        else:
+            if declaration:
+                raise NotImplementedError("type declaration is not impleneted for type %s" % 
+                                      (typ.name))
+            else:
+                return typ.name.upper()
                 
     @classmethod
     def VHDLVariable(cls, v):
@@ -493,7 +525,7 @@ class VhdlSerializer():
             return _bin('>')
         elif o == AllOps.INDEX:
             assert len(ops) == 2
-            return "%s(%s)" % ((p(ops[0])).strip(), p(ops[1]))
+            return "%s(%s)" % ((cls.asHdl(ops[0])).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('<')
         elif o == AllOps.SUB:
@@ -518,6 +550,15 @@ class VhdlSerializer():
         elif o == AllOps.BitsAsVec:
             assert len(ops) == 1
             return  "STD_LOGIC_VECTOR(" + p(ops[0]) + ")"
+        elif o == AllOps.BitsToInt:
+            assert len(ops) == 1
+            op = cls.asHdl(ops[0])
+            if ops[0]._dtype.signed is None:
+                op = "UNSIGNED(%s)" %  op
+            return "TO_INTEGER(%s)" % op
+        elif o == AllOps.POW:
+            assert len(ops) == 2
+            return _bin('**')
         else:
             raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))
         #     
