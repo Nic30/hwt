@@ -15,6 +15,7 @@ setup(name='HWToolkit',
         'simpy',  # discrete simulator 
         'jinja2', # hdl templates renderer, visualizer renderer
         'flask',  # visualizer
+        'hdlConvertor', # vhdl/verilog parser https://github.com/Nic30/hdlConvertor
       ],
       license='MIT',
       packages = find_packages(),

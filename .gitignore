@@ -21,6 +21,11 @@ visualizer/workspace/__pycache__/
 *.dill
 *.class
 
+hdl_toolkit/parser/hdlConvertor/build
+hdl_toolkit/parser/hdlConvertor/Debug
+hdl_toolkit/parser/hdlConvertor/dist
+
+
 # python egg folders
 build/
 dist/

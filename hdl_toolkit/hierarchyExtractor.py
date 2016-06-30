@@ -6,8 +6,39 @@ from hdl_toolkit.nonRedefDict import RedefinitionErr
 from hdl_toolkit.hdlContext import HDLCtx, RequireImportErr
 from hdl_toolkit.parser.loader import ParserLoader, getFileInfoFromObj 
 
+class CircularReferenceError(Exception):
+    pass
 
-        
+
+def resolveComplileOrder(fileDependencyDict, topFile):
+    """
+    Converts dependency dictionary to list of files in which they should be parsed.
+    
+    example:
+    dfs = DesignFile.loadFiles(fileInfos) # get design file contexts
+    dep = DesignFile.fileDependencyDict(dfs) # discovery dependeny between files 
+    mainFile = hdlFiles[0] # choose our top file
+    
+    # sort files for parser (top file is at the end)
+    dependencies = resolveComplileOrder(dep, mainFile, dependencies) 
+    # now in dependencies are sorted fileInfos
+    """
+    dependencies = []
+    _resolveComplileOrder(fileDependencyDict, topFile, dependencies, set())
+    return dependencies
+
+def _resolveComplileOrder(dep, k, resolved, unresolved):
+    unresolved.add(k)
+    for child in dep[k]:
+        if child not in resolved:
+            if child in unresolved:
+                if k == child:
+                    continue
+                else:
+                    raise CircularReferenceError('Circular reference detected: %s -&gt; %s' % (k, child))
+            _resolveComplileOrder(dep, child, resolved, unresolved)
+    resolved.append(k)
+    unresolved.remove(k)        
 
 class DesignFile():
     """
@@ -75,7 +106,7 @@ class DesignFile():
                 except RequireImportErr:
                     pass
             if imp is None:
-                raise Exception("%s: require to import %s and it is not defined in any file" % 
+                raise RequireImportErr("%s: require to import %s and it is not defined in any file" % 
                                 (self.fileName, str(d)))
             if d.all:
                 try:
@@ -172,14 +203,17 @@ class DesignFile():
                     pass
 
             if df is None:
-                raise Exception(
+                raise RequireImportErr(
                  "%s: require to import %s and it is not defined in any file" % 
                  (self.fileName, str(d)))
             fi = getFileInfoFromObj(df)
             self.dependentOnFiles.add(fi.fileName)
 
     @staticmethod
-    def loadFiles(filesInfos, parallel=True):
+    def loadFiles(filesInfos):
+        """
+        load ParserFileInfo and build DesignFile for it 
+        """
         for fi in filesInfos:
             fi.hierarchyOnly = True
         
@@ -194,6 +228,9 @@ class DesignFile():
     @staticmethod
     def fileDependencyDict(designFiles, ignoredRefs=[HdlRef(["ieee"], False),
                                                      HdlRef(["std"], False)]):
+        """
+        build dictionary file : [files on which this file depends on] 
+        """
         depDict = {}
         for df in designFiles:
             df.discoverDependentOnFiles(designFiles, ignoredRefs)

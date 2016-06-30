@@ -1,16 +1,10 @@
-import os
-import sys
-import json
-from subprocess import Popen, PIPE
+import hdlConvertor
 
 from hdl_toolkit.parser.baseParser import BaseParser, ParserException
 from hdl_toolkit.parser.vhdlParser import VhdlParser
 from hdl_toolkit.parser.verilogParser import VerilogParser
 from hdl_toolkit.hdlContext import BaseVhdlContext, HDLCtx, BaseVerilogContext
 
-baseDir = os.path.dirname(__file__)
-JAVA = 'java'
-CONVERTOR = os.path.join(baseDir, "vhdlConvertor", "hdlConvertor.jar")
 
 class ParserFileInfo():
     def __init__(self, fileName, lib):
@@ -65,46 +59,8 @@ def isCaseSecsitiveLang(lang):
         return True
     else:
         raise ParserException("Invalid lang specification \"%s\" is not supported" % (str(lang)))
-        
-def getJson(byteData, fileInfo):
-    if byteData == b'':
-        j = None
-    else:
-        j = json.loads(byteData.decode("utf-8"))
-    k = fileInfo.getCacheKey()
-    BaseParser._cache[k] = j
-    return j
-
-def collectJsonFromProc(p, timeoutInterval, ignoreErrors):
-    stdoutdata, stdErrData = p.communicate(timeout=timeoutInterval)
-    fileName = p.fileInfo.fileName
-    
-    # get json
-    if p.returncode != 0:
-        raise ParserException("Failed to parse file %s" % (fileName))
-    if not ignoreErrors and (stdErrData != b'' and stdErrData is not None):
-        sys.stderr.write(stdErrData.decode()) 
-    try:
-        return getJson(stdoutdata, p.fileInfo)
-    except ValueError:
-        raise ParserException(("Failed to parse file %s, ValueError while parsing" + 
-                        " json from convertor\n%s") % (fileName, stdErrData.decode()))
-                        
-
 
 class ParserLoader():
-    @staticmethod
-    def spotLoadingProc(fInfo, debug=False):
-        cmd = [JAVA, "-jar", str(CONVERTOR), fInfo.fileName]
-        if fInfo.hierarchyOnly:
-            cmd.append('-h')
-        if debug:
-            cmd.append("-d")
-        cmd.extend(('-langue', fInfo.lang))
-    
-        p = Popen(cmd, stdout=PIPE)
-        p.fileInfo = fInfo
-        return p
     
     @staticmethod
     def getTopCtx(lang):
@@ -138,52 +94,35 @@ class ParserLoader():
         
         topCtx = ParserLoader.getTopCtx(lang)
         
-        # start parsing all files    
-        p_list = []
-        for fInfo in fileList:
-            k = fInfo.getCacheKey()
-            if k in BaseParser._cache:
-                p = fInfo
-            else:
-                p = ParserLoader.spotLoadingProc(fInfo, debug=debug)
-            p_list.append(p)
-
         fileCtxs = []
+        # start parsing all files    
         # collect parsed json from java parser and construct python objects
-        for p in p_list:
-            if isinstance(p, ParserFileInfo):  # result is in cache
-                j = BaseParser._cache[p.getCacheKey()]
-                fileInfo = p
-            else:  # parser process was spooted
-                fileInfo = p.fileInfo
-                j = collectJsonFromProc(p, timeoutInterval, ignoreErrors)
-            if j:
-                lib = fileInfo.lib
-                fName = fileInfo.fileName
-                parser = fileInfo.getParser()
-                if lib is None:
-                    ctx = topCtx
-                else:
-                    try:
-                        ctx = topCtx[lib]
-                    except KeyError:
-                        ctx = HDLCtx(lib, topCtx)
-                        topCtx[lib] = ctx
+        for fileInfo in fileList:
+            fName = fileInfo.fileName
+            j = hdlConvertor.parse(fName, lang,
+                                   hierarchyOnly=fileInfo.hierarchyOnly,
+                                   debug=debug)
+            lib = fileInfo.lib
+            parser = fileInfo.getParser()
+            if lib is None:
+                ctx = topCtx
+            else:
+                try:
+                    ctx = topCtx[lib]
+                except KeyError:
+                    ctx = HDLCtx(lib, topCtx)
+                    topCtx[lib] = ctx
 
-                fileCtx = HDLCtx(fName, ctx)
-                fileCtx.fileInfo = fileInfo
-                fileCtxs.append(fileCtx)
-                parser.parse(j, fName, fileCtx)
-                
-                # copy references to primary units
-                for _, e in fileCtx.entities.items():
-                    ctx.insertObj(e, fileInfo.caseSensitive, fileInfo.hierarchyOnly)
-                for _, p in fileCtx.packages.items():
-                    ctx.insertObj(p, fileInfo.caseSensitive, fileInfo.hierarchyOnly)
-                    
-                    
-                    
-                     
+            fileCtx = HDLCtx(fName, ctx)
+            fileCtx.fileInfo = fileInfo
+            fileCtxs.append(fileCtx)
+            parser.parse(j, fName, fileCtx)
+            
+            # copy references to primary units
+            for _, e in fileCtx.entities.items():
+                ctx.insertObj(e, fileInfo.caseSensitive, fileInfo.hierarchyOnly)
+            for _, p in fileCtx.packages.items():
+                ctx.insertObj(p, fileInfo.caseSensitive, fileInfo.hierarchyOnly)
                 # [TODO] update parent context
     
         return topCtx, fileCtxs
