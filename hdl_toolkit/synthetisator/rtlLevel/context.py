@@ -130,31 +130,34 @@ class Context():
             discoverDatapaths(s)
     
     def buildProcessesOutOfAssignments(self):
-        # for s in where(arch.statements, lambda x: isinstance(x, PortConnection)):  # find subUnits
-        #    self.subUnits.add(self.unit)
-        assigments = list(where(self.startsOfDataPaths, lambda x: isinstance(x, Assignment)))
+        assigments = list(where(self.startsOfDataPaths, 
+                                lambda x: isinstance(x, Assignment)
+                                )
+                          )
         for sig in set(map(lambda x:x.dst, assigments)):
-            dps = list(where(assigments, lambda x: x.dst == sig))
-            
+            dps = list(where(assigments, 
+                             lambda x: x.dst == sig)
+                       )
             p = HWProcess("assig_process_" + sig.name)
             for dp in dps:
                 for s in discoverSensitivity(dp):
+                    # resolve process boundaries and mark them 
+                    # and resolve visibility for signals  
                     s.hidden = False
-                    s.processCrossing = True
+                    if s.name not in self.signals:
+                        self.signals[s.name] = s
+                    
+                    # register sensitivity    
                     p.sensitivityList.add(s)
+                    s.simSensitiveProcesses.add(p)
             
             # render sequential statements in process
             # (conversion from netlist to statements)
             for stm in renderIfTree(dps):
-                p.bodyBuff.append(stm) 
+                p.statements.append(stm) 
             
-            # resolve process boundaries and mark them, and resolve visibility for signals  
-            #SignalVisibilityResolver  
-            # [TODO] support for dynamically created signals
-            # if sig.name not in self.signals:
-            #    self.signals[sig.name] = sig
-                
             yield p
+
     def synthetize(self, interfaces):
         ent = Entity()
         ent.name = self.name
@@ -180,8 +183,6 @@ class Context():
             if s not in interfaces:
                 # [TODO] if has driver
                 arch.variables.append(s)
-                if isinstance(s, RtlSyncSignal):
-                    arch.variables.append(s.next)
         
         # instanciate subUnits in architecture
         for u in self.subUnits:  

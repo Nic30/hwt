@@ -28,7 +28,26 @@ class IfContainer():
         self.elIfs = elIfs
         self.ifFalse = ifFalse
     
+    def simEval(self):
+        """
+        Same like seqEval but does not assign to signal instead of
+        yield tuple (signal, value)
+        """
+        if evalCond(self.cond):
+            for s in self.ifTrue:
+                yield from s.simEval()
+        else:
+            for c in self.elIfs:
+                if evalCond(c[0]):
+                    for s in c[1]:
+                        yield from s.simEval()
+                    raise StopIteration()
+            
+            for s in self.ifFalse:
+                yield from s.simEval()
+        
     def seqEval(self):
+        # [TODO] use simEval and then 
         if evalCond(self.cond):
             for s in self.ifTrue:
                 s.seqEval()
@@ -53,6 +72,8 @@ class SwitchContainer():
     def __init__(self, switchOn, cases):
         self.switchOn = switchOn
         self.cases = cases
+    def simEval(self):
+        raise NotImplementedError()
     def seqEval(self):
         raise NotImplementedError()
     def __repr__(self):
@@ -67,8 +88,10 @@ class WhileContainer():
         self.cond = cond
         self.body = body
     
+    def simEval(self):
+        raise NotImplementedError()
+    
     def seqEval(self):
-        
         while True:
             cond = True
             for c in self.cond:

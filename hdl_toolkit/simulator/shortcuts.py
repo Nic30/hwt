@@ -1,6 +1,6 @@
 import sys
+
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
@@ -10,6 +10,7 @@ from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import walkSignalOnUnit
 from hdl_toolkit.hdlObjects.types.integer import Integer
 from hdl_toolkit.hdlObjects.types.boolean import Boolean
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.bitmask import Bitmask
 
 def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.us):
     """
@@ -62,18 +63,9 @@ def write(val, sig):
     if isinstance(sig, InterfaceBase):
         sig = sig._sigInside
     assert isinstance(v, Value)
-    assert v.eventMask == 0
+    v.eventMask = Bitmask.mask(v._dtype.bit_length())
     v = v._convert(sig._dtype)
     
-    sim = sig._simulator
-    process = sim.env.process
+    sig.simUpdateVal(v)
     
-    allMask = Bitmask.mask(sig._dtype.bit_length())
-    v.eventMask = allMask
-    _v = v.clone()
-    process(sig.simUpdateVal(v))
-    yield sim.env.timeout(sim.config.risFalDur)
-        
-    _v.eventMask = 0
-    process(sig.simUpdateVal(_v))
-    
+    sig._simulator.signalsToDisableEvent.append((sig, v))

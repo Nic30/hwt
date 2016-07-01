@@ -409,7 +409,7 @@ class VhdlSerializer():
                 
     @classmethod
     def HWProcess(cls, proc):
-        body = proc.bodyBuff
+        body = proc.statements
         hasToBeVhdlProcess = arr_any(body, lambda x: isinstance(x, (IfContainer, SwitchContainer, WhileContainer)))
         sensitifityList = list(where(proc.sensitivityList, lambda x : not isinstance(x, Param)))
         return VHDLTemplates.process.render({

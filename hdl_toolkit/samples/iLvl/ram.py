@@ -44,4 +44,4 @@ class Ram_dp(Ram_sp):
 
 if __name__ == "__main__":
     from hdl_toolkit.synthetisator.shortcuts import toRtl
-    print(toRtl(Ram_dp))
+    print(toRtl(Ram_sp))

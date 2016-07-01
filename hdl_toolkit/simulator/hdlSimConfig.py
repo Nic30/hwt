@@ -4,7 +4,7 @@ from hdl_toolkit.hdlObjects.assignment import Assignment
 class HdlSimConfig():
     def __init__(self):
         # rising faling duration
-        self.risFalDur = 100
+        self.risFalDur = 2
         self.log = False
     
     

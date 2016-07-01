@@ -20,8 +20,11 @@ if __name__ == "__main__":
         yield from write(0, u.a.din)
         yield from write(1, u.a.we)
         yield from write(1, u.a.en)
+        
         yield env.timeout(10*s.ns)
+        
         yield from write(1, u.a.din)
+        
         yield env.timeout(10*s.ns)  
         
         

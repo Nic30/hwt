@@ -13,6 +13,15 @@ from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.simulator.utils import valHasChanged
 
 
+def hasDiferentVal(reference, sigOrVal):
+    assert isinstance(reference, Value)
+    if isinstance(sigOrVal, Value):
+        v = sigOrVal
+    else:
+        v = sigOrVal._val
+    
+    return reference != v
+
 class UniqList(list):
     def append(self, obj):
         if obj in self:
@@ -43,17 +52,30 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
         self._usedOps = {}
         self.negated = False
         self.hidden = True
-        self.processCrossing = False
+        
+        self.simSensitiveProcesses = set()
     
     def simPropagateChanges(self):
         if valHasChanged(self):
             conf = self._simulator.config
             env = self._simulator.env
             self._oldVal = self._val
+            
             for e in self.endpoints:
+                try:
+                    isIndexOnMe = e.op == AllOps.INDEX and e.result != self
+                except AttributeError:
+                    isIndexOnMe = False
+                
+                if isIndexOnMe:
+                    # if i has index which I am driver for
+                    raise NotImplementedError()
+                
+            for p in self.simSensitiveProcesses:        
                 if conf.logPropagation:
-                    conf.logPropagation("%d: Signal.simPropagateChanges %s -> %s" % (env.now, self.name, str(e)))
-                yield env.process(e.simPropagateChanges())
+                    conf.logPropagation("%d: Signal.simPropagateChanges %s -> %s" % 
+                                        (env.now, self.name, str(p.name)))
+                self._simulator.addHwProcToRun(p)
         
     def staticEval(self):
         # operator writes in self._val new value
@@ -64,12 +86,26 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
             if isinstance(self.defaultVal, RtlSignal):
                 self._val = self.defaultVal._val
             else:
-                if not self._val.vldMask:  # [TODO] find better way how to find out if was initialized
+                # [TODO] find better way how to find out if was initialized
+                if not self._val.vldMask:  
                     self._val = self.defaultVal
         
         if not isinstance(self._val, Value):
             raise SimException("Evaluation of signal returned not supported object (%s)" % (repr(self._val)))
         return self._val
+    
+    def simEval(self):
+        """
+        Evaluate, signals which have hidden flag set
+        @attention: single process has to drive single variable in order to work
+        """
+        for d in self.drivers:
+            if not isinstance(d, Assignment):
+                d.simEval()
+        if not isinstance(self._val, Value):
+            raise SimException("Evaluation of signal returned not supported object (%s)" % (repr(self._val)))
+        return self._val
+        
     
     def simUpdateVal(self, newVal):
         """
@@ -83,11 +119,12 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
             env = self._simulator.env
         except AttributeError:
             raise SimNotInitialized("Singal %s does not contains reference to its simulator" % (str(self)))
+        
         c = self._simulator.config
         if  c.log:
             c.logChange(env.now, self, newVal)
         
-        yield env.process(self.simPropagateChanges())
+        self.simPropagateChanges()
      
     def singleDriver(self):
         """

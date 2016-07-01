@@ -9,14 +9,11 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 
 class VcdHdlSimConfig(HdlSimConfig):
     def __init__(self, dumpFile=sys.stdout):
+        super().__init__()
         # rising faling duration
-        self.risFalDur = 100
-        # operator propagation
-        self.opPropagDur = 1000
-        self.log = True
         self.vcdWritter = VcdWritter(dumpFile) 
-        
-        #self.logPropagation = False
+        self.log = True
+        # self.logPropagation = False
     
     
     def vcdRegisterUnit(self, unit_name, sublements):

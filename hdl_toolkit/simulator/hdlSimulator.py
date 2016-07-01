@@ -4,6 +4,7 @@ from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
+from hdl_toolkit.bitmask import Bitmask
 
 class HdlSimulator():
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
@@ -22,6 +23,11 @@ class HdlSimulator():
         # unit :  signal | unit
         # signal : None
         self.registered = {}
+        
+        # (signal, value) tupes which should be applied before new round of processes
+        #  will be executed
+        self.valuesToApply = []
+        self.signalsToDisableEvent = []
     
     def _registerSignal(self, sig):
         self.registered[sig] = None
@@ -55,29 +61,57 @@ class HdlSimulator():
                 
         for s in signals:
             injectSignal(s)
+
+    def addHwProcToRun(self, proc):
+        if not self.valuesToApply:
+            # (in future)
+            self.env.process(self.applyValues())
+            
+        for v in proc.simEval():
+            self.valuesToApply.append(v)
+            print("apply", v)
+            print()
+    
+    def applyValues(self):
+        # [TODO] not ideal, processes should be evaluated before runing apply values
+        # this should be done by priority, not by timeout
+        yield self.env.timeout(1)
+        print("%d:applyValues" % (self.env.now))
+        
+        for s in self.signalsToDisableEvent:
+            s[0]._val.eventMask = 0
+            
+        updatedSigs = {}
+        for s, v in self.valuesToApply:
+            v.eventMask = Bitmask.mask(v._dtype.bit_length())
+            try:
+                lastV = updatedSigs[s]
+            except KeyError:
+                lastV = None
+                
+            if lastV is not None:
+                # short circuit if lastV is different
+                raise NotImplementedError()
+            else:
+                s.simUpdateVal(v)
+        
+        self.signalsToDisableEvent = self.valuesToApply
+        self.valuesToApply = []
     
     def _initSignals(self, signals):
         """
         Inject default values to simulation
         @attention:  [DEPRECATED] simulation has to be process-based
         """
-        e = self.env
-
         for s in signals:
             v = s.defaultVal.clone()
-            v.eventMask = v.vldMask
-            e.process(s.simUpdateVal(v))
-        yield e.timeout(self.config.risFalDur)
-            
-        for s in signals:   
-            v = s.defaultVal.clone()
-            v.eventMask = 0
-            e.process(s.simUpdateVal(v))
+            s._val = v
+
         
     def simSignals(self, signals, time, extraProcesses=[]):
         self._injectSimToCtx(signals)
         self.config.beforeSim(self)
-        self.env.process(self._initSignals(signals))  
+        self._initSignals(signals)  
        
         for p in extraProcesses:
             self.env.process(p(self.env))

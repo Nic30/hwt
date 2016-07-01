@@ -21,6 +21,9 @@ class Value():
     def staticEval(self):
         return self
     
+    def simEval(self):
+        return self
+    
     def clone(self):
         return self.__class__(self.val, self._dtype, self.vldMask, eventMask=self.eventMask)
     
