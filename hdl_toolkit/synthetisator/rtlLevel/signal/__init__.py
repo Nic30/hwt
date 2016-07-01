@@ -19,7 +19,7 @@ class UniqList(list):
             pass
         return list.append(self, obj)
 
-class RtlSignal(SignalItem, SignalOps, RtlSignalBase):
+class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
     """
     more like net
     @ivar _usedOps: dictionary of used operators which can be reused
@@ -27,6 +27,8 @@ class RtlSignal(SignalItem, SignalOps, RtlSignalBase):
     @ivar drivers: UniqList of operators and statements which can drive this signal.
     @ivar negated: this value represents that the value of signal has opposite meaning
            [TODO] mv negated to Bits hdl type.
+    @ivar hiden: means that this signal is part of expression and should not be rendered 
+    @ivar processCrossing: means that this signal is crossing process boundary
     """
     def __init__(self, name, dtype, defaultVal=None):
         if name is None:
@@ -34,12 +36,14 @@ class RtlSignal(SignalItem, SignalOps, RtlSignalBase):
             self.hasGenericName = True 
        
         assert isinstance(dtype, HdlType)
-        super(RtlSignal, self).__init__(name, dtype, defaultVal)
+        super().__init__(name, dtype, defaultVal)
         # set can not be used because hash of items are changign
         self.endpoints = UniqList()
         self.drivers = UniqList()
         self._usedOps = {}
         self.negated = False
+        self.hidden = True
+        self.processCrossing = False
     
     def simPropagateChanges(self):
         if valHasChanged(self):

@@ -8,6 +8,7 @@ class HWProcess():
         self.interfaces = {}
         self.bodyBuff = []
         self.sensitivityList = set()
+        
     def logToProcWrap(self, func):
         def fnWithLogToProc(*args, **kwargs):
             cmdstr = func(*args, **kwargs)

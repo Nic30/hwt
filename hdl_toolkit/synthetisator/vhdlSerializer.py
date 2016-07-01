@@ -7,7 +7,6 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment 
 from hdl_toolkit.hdlObjects.statements import IfContainer, \
     SwitchContainer, WhileContainer
-from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
 from hdl_toolkit.synthetisator.param import getParam, Param
 from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthetisator.exceptions import SerializerException
@@ -19,7 +18,6 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BOOL, BIT
 from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from hdl_toolkit.hdlObjects.types.array import Array
-from sympy.integrals.risch import NonElementaryIntegral
 
 class VhdlVersion():
     v2002 = 2002
@@ -239,48 +237,6 @@ class VhdlSerializer():
             return  "%s := %s" % (s, cls.Value(getParam(g.defaultVal)))
     
     @classmethod
-    def isUnnamedIndex(cls, sig):
-        return ( hasattr(sig, "origin") and 
-                sig.origin.operator == AllOps.INDEX and
-                sig.hasGenericName)
-    @classmethod
-    def isStaticExpression(cls, sig):
-        if isinstance(sig, Value):
-            return True
-        ds = len(sig.drivers)
-        if ds == 1:
-            d = sig.singleDriver()
-            if isinstance(d, Operator):
-                return True
-            elif isinstance(d, Assignment):
-                return cls.isUnnamedIndex(sig)
-        else:
-            return cls.isUnnamedIndex(sig)
-            
-            
-    @classmethod
-    def isSignalHiddenInExpr(cls, sig):
-        """Some signals are just only conections in expression they done need to be rendered because
-        they are hidden inside expression for example sig. from a+b in a+b+c"""
-        return cls.isStaticExpression(sig)
-        # if len(sig.drivers) == 1:
-        #    if len(sig.endpoints) <= 1:
-        #        d = list(iter(sig.drivers))[0]
-        #        return not isinstance(d, Assignment) \
-        #               and not isinstance(d, PortConnection) \
-        #               and d.result == sig
-        #    else:
-        #        for e in sig.endpoints:
-        #            if not isinstance(e, Assignment):
-        #                return False
-        #            if sig is e.src:
-        #                return False
-        #        return True
-        #            
-        # else:
-        #    return False
-    
-    @classmethod
     def PortConnection(cls, pc):
         if pc.portItem._dtype != pc.sig._dtype:
             raise SerializerException("Port map %s is nod valid (types does not match)  (%s, %s)" % (
@@ -362,7 +318,7 @@ class VhdlSerializer():
             else:
                 return s 
         else:
-            if cls.isSignalHiddenInExpr(si) and hasattr(si, "origin"):
+            if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin)
             else:
                 return si.name
@@ -449,11 +405,11 @@ class VhdlSerializer():
         if v.defaultVal is not None:
             return s + " := %s" % cls.Value(v, v.defaultVal)
         else:
-            return s 
+            return s
                 
     @classmethod
     def HWProcess(cls, proc):
-        body = [s for s in renderIfTree(proc.bodyBuff)]
+        body = proc.bodyBuff
         hasToBeVhdlProcess = arr_any(body, lambda x: isinstance(x, (IfContainer, SwitchContainer, WhileContainer)))
         sensitifityList = list(where(proc.sensitivityList, lambda x : not isinstance(x, Param)))
         return VHDLTemplates.process.render({
@@ -554,15 +510,11 @@ class VhdlSerializer():
             assert len(ops) == 1
             op = cls.asHdl(ops[0])
             if ops[0]._dtype.signed is None:
-                op = "UNSIGNED(%s)" %  op
+                op = "UNSIGNED(%s)" % op
             return "TO_INTEGER(%s)" % op
         elif o == AllOps.POW:
             assert len(ops) == 2
             return _bin('**')
         else:
             raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))
-        #     
-        # if isinstance(self.strOperator, str):
-        #    return  self.strOperator.join(map(p, operator.ops))
-        # else:
-        #    return self.strOperator(operator, list(map(p, operator.ops)))
+

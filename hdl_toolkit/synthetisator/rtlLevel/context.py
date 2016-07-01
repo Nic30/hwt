@@ -10,13 +10,37 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment
 
 from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal
-from hdl_toolkit.synthetisator.rtlLevel.memory import RtlMemory
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkUnitInputs, walkSignalsInExpr, \
     discoverSensitivity, walkSigSouces, signalHasDriver
 from hdl_toolkit.synthetisator.templates import VHDLTemplates  
 from hdl_toolkit.synthetisator.exceptions import SigLvlConfErr
+from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDriversExc
+from hdl_toolkit.synthetisator.rtlLevel.memory import RtlSyncSignal
+
+def isUnnamedIndex(sig):
+    return (hasattr(sig, "origin") and 
+            sig.origin.operator == AllOps.INDEX and
+            sig.hasGenericName)
+        
+def isSignalHiddenInExpr( sig):
+    """Some signals are just only connections in expression they done need to be rendered because
+    they are hidden inside expression for example sig. from a+b in a+b+c"""
+    if isinstance(sig, Value):
+        return True
+    try:
+        d = sig.singleDriver()
+        if isinstance(d, Operator):
+            return True
+    except MultipleDriversExc:
+        pass
+        
+    return isUnnamedIndex(sig)
+
 
 # [TODO] rename to RtlNetlist
 class Context():
@@ -52,7 +76,7 @@ class Context():
             defVal = typ.fromPy(defVal)
 
         if clk is not None:
-            s = RtlMemory(name, typ, defVal)
+            s = RtlSyncSignal(name, typ, defVal)
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
@@ -105,6 +129,32 @@ class Context():
         for s in where(interfaces, lambda s: signalHasDriver(s)):  # walk my outputs
             discoverDatapaths(s)
     
+    def buildProcessesOutOfAssignments(self):
+        # for s in where(arch.statements, lambda x: isinstance(x, PortConnection)):  # find subUnits
+        #    self.subUnits.add(self.unit)
+        assigments = list(where(self.startsOfDataPaths, lambda x: isinstance(x, Assignment)))
+        for sig in set(map(lambda x:x.dst, assigments)):
+            dps = list(where(assigments, lambda x: x.dst == sig))
+            
+            p = HWProcess("assig_process_" + sig.name)
+            for dp in dps:
+                for s in discoverSensitivity(dp):
+                    s.hidden = False
+                    s.processCrossing = True
+                    p.sensitivityList.add(s)
+            
+            # render sequential statements in process
+            # (conversion from netlist to statements)
+            for stm in renderIfTree(dps):
+                p.bodyBuff.append(stm) 
+            
+            # resolve process boundaries and mark them, and resolve visibility for signals  
+            #SignalVisibilityResolver  
+            # [TODO] support for dynamically created signals
+            # if sig.name not in self.signals:
+            #    self.signals[sig.name] = sig
+                
+            yield p
     def synthetize(self, interfaces):
         ent = Entity()
         ent.name = self.name
@@ -121,27 +171,16 @@ class Context():
         self.discover(interfaces)
         
         arch = Architecture(ent)
-        # for s in where(arch.statements, lambda x: isinstance(x, PortConnection)):  # find subUnits
-        #    self.subUnits.add(self.unit)
-        assigments = list(where(self.startsOfDataPaths, lambda x: isinstance(x, Assignment)))
-        for sig in set(map(lambda x:x.dst, assigments)):
-            dps = list(where(assigments, lambda x: x.dst == sig))
-            p = HWProcess("assig_process_" + sig.name)
-            for dp in dps:
-                p.sensitivityList.update(discoverSensitivity(dp))
-            p.bodyBuff.extend(dps) 
+        for p in self.buildProcessesOutOfAssignments():
             arch.processes.append(p)
             
-            # [TODO] support for dynamically created signals
-            # if sig.name not in self.signals:
-            #    self.signals[sig.name] = sig
 
         # add signals, variables etc. in architecture
         for _, s in self.signals.items():
             if s not in interfaces:
                 # [TODO] if has driver
                 arch.variables.append(s)
-                if isinstance(s, RtlMemory):
+                if isinstance(s, RtlSyncSignal):
                     arch.variables.append(s.next)
         
         # instanciate subUnits in architecture

@@ -1,9 +1,17 @@
 import unittest
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
-from hdl_toolkit.simulator.hdlSimulator import HdlSimulator, staticLikeEval
+from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkAllOriginSignals
 from hdl_toolkit.hdlObjects.types.defs import INT, STR, BOOL
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, hBool, hBit
+
+def staticLikeEval(sig, log=False):
+    # is not real static evaluation based on expression tree
+    sim = HdlSimulator()
+    sim.config.log = log
+    sigs = list(walkAllOriginSignals(sig))
+    sim.simSignals(sigs, time=100 * sim.ms)
+    return sig._val
 
 
 class OperatorTC(unittest.TestCase):

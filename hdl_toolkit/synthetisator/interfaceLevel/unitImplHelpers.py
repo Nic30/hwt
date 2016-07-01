@@ -4,7 +4,7 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT, mkRange
+from hdl_toolkit.hdlObjects.typeShortcuts import mkRange
 from copy import copy
 
 

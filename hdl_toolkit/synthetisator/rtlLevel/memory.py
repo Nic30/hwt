@@ -4,9 +4,7 @@ from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlMemoryBase
 
-
-
-class RtlMemory(RtlSignal, RtlMemoryBase):
+class RtlSyncSignal(RtlMemoryBase, RtlSignal):
     """
     Syntax sugar,
     every write is made to next signal, "next" is assigned
@@ -26,4 +24,3 @@ class RtlMemory(RtlSignal, RtlMemoryBase):
             source.endpoints.append(a)
              
         return a
-    

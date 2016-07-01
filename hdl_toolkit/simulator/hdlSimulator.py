@@ -1,12 +1,9 @@
 import simpy
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkAllOriginSignals
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
-
-
 
 class HdlSimulator():
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
@@ -15,6 +12,7 @@ class HdlSimulator():
     us = ns * 1000
     ms = us * 1000
     s = ms * 1000
+    
     def __init__(self, config=None):
         if config == None:
             config = HdlSimConfig() 
@@ -29,9 +27,11 @@ class HdlSimulator():
         self.registered[sig] = None
     
     def _injectSimToCtx(self, signals):
-        
+        """
+        Decorate all signals in netlist with _simulator
+        """
         def injectSignal(o):
-            
+            """Recursively inject _simulator"""
             if isinstance(o, RtlSignalBase):
                 if not hasattr(o, "_simulator") or o._simulator != self:
                     self._registerSignal(o)
@@ -57,6 +57,10 @@ class HdlSimulator():
             injectSignal(s)
     
     def _initSignals(self, signals):
+        """
+        Inject default values to simulation
+        @attention:  [DEPRECATED] simulation has to be process-based
+        """
         e = self.env
 
         for s in signals:
@@ -79,11 +83,3 @@ class HdlSimulator():
             self.env.process(p(self.env))
        
         self.env.run(until=time)
-
-def staticLikeEval(sig, log=False):
-    # is not real static evaluation based on expression tree
-    sim = HdlSimulator()
-    sim.config.log = log
-    sigs = list(walkAllOriginSignals(sig))
-    sim.simSignals(sigs, time=100 * sim.ms)
-    return sig._val
