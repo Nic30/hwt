@@ -1,18 +1,17 @@
 from hdl_toolkit.samples.iLvl.simple import SimpleUnit
-from hdl_toolkit.simulator.shortcuts import simUnitVcd, write
+from hdl_toolkit.simulator.shortcuts import simUnitVcd
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 
 if __name__ == "__main__":
     u = SimpleUnit()
-    s = HdlSimulator
 
-    def stimulus(env):
+    def stimulus(s):
         aIn = True
         while True:
             # alias wait in VHDL
-            yield env.timeout(10*s.ns)    
-            yield from write(aIn, u.clk)
+            yield s.timeout(10 * s.ns)    
+            s.write(aIn, u.a)
             aIn = not aIn
     
-    simUnitVcd(u, [stimulus], "simpleUnit.vcd", time= s.us)
+    simUnitVcd(u, [stimulus], "tmp/simpleUnit.vcd", time=HdlSimulator.us)
     print("done")

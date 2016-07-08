@@ -8,22 +8,22 @@ if __name__ == "__main__":
     s = HdlSimulator
 
     def stimulus(env):
-        yield from write(False, u.a.clk)
+        write(False, u.a.clk)
         
         while True:
             # alias wait in VHDL
             yield env.timeout(10*s.ns)    
-            yield from write(~read(u.a.clk), u.a.clk)
+            write(~read(u.a.clk), u.a.clk)
     
     def dataStimul(env):
-        yield from write(0, u.a.addr)
-        yield from write(0, u.a.din)
-        yield from write(1, u.a.we)
-        yield from write(1, u.a.en)
+        write(0, u.a.addr)
+        write(0, u.a.din)
+        write(1, u.a.we)
+        write(1, u.a.en)
         
         yield env.timeout(10*s.ns)
         
-        yield from write(1, u.a.din)
+        write(1, u.a.din)
         
         yield env.timeout(10*s.ns)  
         
