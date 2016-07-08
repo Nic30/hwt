@@ -8,24 +8,34 @@ from hdl_toolkit.hdlObjects.types.boolean import Boolean
 from hdl_toolkit.hdlObjects.types.bits import Bits
 
 class VcdHdlSimConfig(HdlSimConfig):
+    supported_type_classes = (Boolean,  Bits)
+    
     def __init__(self, dumpFile=sys.stdout):
         super().__init__()
         # rising faling duration
         self.vcdWritter = VcdWritter(dumpFile) 
         self.log = True
         # self.logPropagation = False
+        
+        # unit :  signal | unit
+        # signal : None
+        self.registered = {}
     
     
     def vcdRegisterUnit(self, unit_name, sublements):
         with self.vcdWritter.module(unit_name) as m:
             for se , ssitems in sublements.items():
                 if isinstance(se, RtlSignalBase): 
-                    if isinstance(se._dtype, (Boolean, Bits)):
+                    if isinstance(se._dtype, self.supported_type_classes):
                         m.var(se)
                 else:
                     raise NotImplementedError(se)
    
-    def beforeSim(self, simulator):
+    
+    def _registerSignal(self, sig):
+        self.registered[sig] = None
+   
+    def beforeSim(self, simulator, signals):
         """
         This method is called before first step of simulation.
         """
@@ -33,11 +43,8 @@ class VcdHdlSimConfig(HdlSimConfig):
         topSigs = {}
         self.vcdWritter.date(datetime.now())
         self.vcdWritter.timescale(1)
-        for k, v in simulator.registered.items():
-            if isinstance(k, Unit):
-                self.vcdRegisterUnit(k._name, v)
-            else:
-                topSigs[k] = None
+        for s in signals:
+            topSigs[s] = None
         
         if topSigs:
             self.vcdRegisterUnit("top", topSigs)
