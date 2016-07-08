@@ -55,12 +55,10 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
         
         self.simSensitiveProcesses = set()
     
-    def simPropagateChanges(self):
+    def simPropagateChanges(self, simulator):
         if valHasChanged(self):
-            conf = self._simulator.config
-            env = self._simulator.env
             self._oldVal = self._val
-            
+
             for e in self.endpoints:
                 try:
                     isIndexOnMe = e.op == AllOps.INDEX and e.result != self
@@ -71,11 +69,12 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
                     # if i has index which I am driver for
                     raise NotImplementedError()
                 
+            conf = simulator.config
             for p in self.simSensitiveProcesses:        
                 if conf.logPropagation:
                     conf.logPropagation("%d: Signal.simPropagateChanges %s -> %s" % 
-                                        (env.now, self.name, str(p.name)))
-                self._simulator.addHwProcToRun(p)
+                                        (simulator.env.now, self.name, str(p.name)))
+                simulator.addHwProcToRun(p)
         
     def staticEval(self):
         # operator writes in self._val new value
@@ -94,20 +93,20 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
             raise SimException("Evaluation of signal returned not supported object (%s)" % (repr(self._val)))
         return self._val
     
-    def simEval(self):
+    def simEval(self, simulator):
         """
         Evaluate, signals which have hidden flag set
         @attention: single process has to drive single variable in order to work
         """
         for d in self.drivers:
             if not isinstance(d, Assignment):
-                d.simEval()
+                d.simEval(simulator)
         if not isinstance(self._val, Value):
             raise SimException("Evaluation of signal returned not supported object (%s)" % (repr(self._val)))
         return self._val
         
     
-    def simUpdateVal(self, newVal):
+    def simUpdateVal(self, simulator, newVal):
         """
         Method called by simulator to update new value for this object
         """
@@ -115,16 +114,12 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
         if not isinstance(newVal, Value):
             raise SimException("new value is instance of %s it should be instance of value" % (str(newVal.__class__)))
         self._val = newVal
-        try:
-            env = self._simulator.env
-        except AttributeError:
-            raise SimNotInitialized("Singal %s does not contains reference to its simulator" % (str(self)))
         
-        c = self._simulator.config
+        c = simulator.config
         if  c.log:
-            c.logChange(env.now, self, newVal)
+            c.logChange(simulator.env.now, self, newVal)
         
-        self.simPropagateChanges()
+        self.simPropagateChanges(simulator)
      
     def singleDriver(self):
         """

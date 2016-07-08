@@ -5,6 +5,8 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.bitmask import Bitmask
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 
 class HdlSimulator():
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
@@ -20,54 +22,17 @@ class HdlSimulator():
         self.config = config
         self.env = simpy.Environment()
         
-        # unit :  signal | unit
-        # signal : None
-        self.registered = {}
-        
         # (signal, value) tupes which should be applied before new round of processes
         #  will be executed
         self.valuesToApply = []
         self.signalsToDisableEvent = []
     
-    def _registerSignal(self, sig):
-        self.registered[sig] = None
-    
-    def _injectSimToCtx(self, signals):
-        """
-        Decorate all signals in netlist with _simulator
-        """
-        def injectSignal(o):
-            """Recursively inject _simulator"""
-            if isinstance(o, RtlSignalBase):
-                if not hasattr(o, "_simulator") or o._simulator != self:
-                    self._registerSignal(o)
-                    o._simulator = self
-                    o._setDefValue()
-                    for e in o.endpoints:
-                        injectSignal(e)
-            elif isinstance(o, Operator):
-                o._simulator = self
-                injectSignal(o.result)
-                for op in o.ops:
-                    injectSignal(op)
-            elif isinstance(o, Value):
-                pass
-            elif isinstance(o, Assignment):
-                o._simulator = self
-                injectSignal(o.src)
-                injectSignal(o.dst) 
-            else:
-                raise NotImplementedError("%s instance of %s" % (repr(o), repr(o.__class__)))
-                
-        for s in signals:
-            injectSignal(s)
-
     def addHwProcToRun(self, proc):
         if not self.valuesToApply:
             # (in future)
             self.env.process(self.applyValues())
             
-        for v in proc.simEval():
+        for v in proc.simEval(self):
             self.valuesToApply.append(v)
             print("apply", v)
             print()
@@ -75,7 +40,7 @@ class HdlSimulator():
     def applyValues(self):
         # [TODO] not ideal, processes should be evaluated before runing apply values
         # this should be done by priority, not by timeout
-        yield self.env.timeout(1)
+        yield self.env.timeout(0)
         print("%d:applyValues" % (self.env.now))
         
         for s in self.signalsToDisableEvent:
@@ -83,7 +48,7 @@ class HdlSimulator():
             
         updatedSigs = {}
         for s, v in self.valuesToApply:
-            v.eventMask = Bitmask.mask(v._dtype.bit_length())
+            v.eventMask = v._dtype.all_mask()
             try:
                 lastV = updatedSigs[s]
             except KeyError:
@@ -93,7 +58,7 @@ class HdlSimulator():
                 # short circuit if lastV is different
                 raise NotImplementedError()
             else:
-                s.simUpdateVal(v)
+                s.simUpdateVal(self, v)
         
         self.signalsToDisableEvent = self.valuesToApply
         self.valuesToApply = []
@@ -101,19 +66,45 @@ class HdlSimulator():
     def _initSignals(self, signals):
         """
         Inject default values to simulation
-        @attention:  [DEPRECATED] simulation has to be process-based
         """
         for s in signals:
             v = s.defaultVal.clone()
-            s._val = v
+            s.simUpdateVal(self, v)
 
+    def read(self, sig):
+        """
+        Read value from signal or interface
+        """
+        if isinstance(sig, InterfaceBase):
+            sig = sig._sigInside
+        return sig._val.clone()
         
+    def write(self, val, sig):
+        """
+        Write value to signal or interface.
+        """
+        v = toHVal(val)
+        if isinstance(sig, InterfaceBase):
+            sig = sig._sigInside
+        assert isinstance(v, Value)
+        v = v._convert(sig._dtype)
+        
+        sig.simUpdateVal(self, v)
+        
+        self.signalsToDisableEvent.append((sig, v))
+        
+    def timeout(self, time):
+        return self.env.timeout(time)
+    
+            
     def simSignals(self, signals, time, extraProcesses=[]):
-        self._injectSimToCtx(signals)
-        self.config.beforeSim(self)
+        """
+        Run simulation
+        """
+        self.config.beforeSim(self, signals)
         self._initSignals(signals)  
        
         for p in extraProcesses:
-            self.env.process(p(self.env))
+            self.env.process(p(self))
        
         self.env.run(until=time)

@@ -6,11 +6,11 @@ class HWProcess():
         self.statements = []
         self.sensitivityList = set()
 
-    def simEval(self):
+    def simEval(self, simulator):
         """
         Called by simulator when signal has changed value and this process
         should be recounted
         """
         for s in self.statements:
-            yield from s.simEval()
+            yield from s.simEval(simulator)
         #raise NotImplementedError()

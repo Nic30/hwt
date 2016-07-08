@@ -18,27 +18,7 @@ class Operator():
         self.ops = list(operands)
         self.operator = operator
         self.result = None
-        
-    #def simPropagateChanges(self):
-    #    """
-    #    Called by simulator on input change
-    #    """
-    #    v = self.evalFn()
-    #    try:
-    #        sim = self._simulator
-    #    except AttributeError:
-    #        raise SimNotInitialized("Operator '%s' is not bounded to any simulator" %
-    #                                 (str(self)))
-    #    env = sim.env
-    #    c = sim.config
-    #    
-    #    yield env.timeout(c.propagDelay(self))
-    #    
-    #    if c.logPropagation:
-    #        # [BUG] str method on Op displays new values, but they are not propageted yet
-    #        c.logPropagation('%d: "%s" -> %s' % (env.now, str(self), str(v))) 
-    #    yield env.process(self.result.simUpdateVal(v))
-    
+            
     def registerSignals(self, outputs=[]):
         """
         Register potential signals to drivers/endpoints
@@ -54,14 +34,14 @@ class Operator():
                 raise NotImplementedError("Operator operands can be only signal or values got:%s" % repr(o))
                 
     
-    def simEval(self):
+    def simEval(self, simulator):
         """
         Recursively statistically evaluate result of this operator
         if signal has not set hidden flag do not reevaluate it
         """
         for o in self.ops:
             if o.hidden:
-                o.simEval()
+                o.simEval(simulator)
         self.result._val = self.evalFn()
             
     def staticEval(self):

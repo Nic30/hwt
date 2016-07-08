@@ -15,8 +15,8 @@ class Assignment():
     def seqEval(self):
         self.dst._val = self.src.staticEval() 
     
-    def simEval(self):
-        yield (self.dst, self.src.simEval())
+    def simEval(self, simulator):
+        yield (self.dst, self.src.simEval(simulator))
         
     def __repr__(self):
         from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
