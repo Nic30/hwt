@@ -1,6 +1,7 @@
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType 
 from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from copy import copy
+from hdl_toolkit.bitmask import Bitmask
 
 class Bits(HdlType):
     
@@ -29,6 +30,9 @@ class Bits(HdlType):
         s = copy(self)
         s.constrain = const
         return s
+    
+    def all_mask(self):
+        return Bitmask.mask(self.bit_length())
     
     def bit_length(self):
         if isinstance(self.constrain, Unconstrained):

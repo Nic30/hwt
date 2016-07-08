@@ -18,6 +18,9 @@ class Integer(HdlType):
     def __hash__(self):
         return hash((self.max, self.min))
     
+    def all_mask(self):
+        return 1
+    
     @property
     def name(self):
         ma = self.max

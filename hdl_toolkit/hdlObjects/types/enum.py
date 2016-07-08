@@ -11,6 +11,9 @@ class Enum(HdlType):
     def valAsVhdl(self, val, serializer):
         return  '%s' % str(val.val)
     
+    def all_mask(self):
+        return 1
+    
     @classmethod
     def getValueCls(cls):
         try:

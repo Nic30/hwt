@@ -15,7 +15,10 @@ class Boolean(HdlType):
 
     def bit_length(self):
         return 1
-    
+
+    def all_mask(self):
+        return 1
+
     @classmethod
     def getValueCls(cls):
         try:

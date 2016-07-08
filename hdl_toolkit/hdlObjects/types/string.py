@@ -15,6 +15,9 @@ class String(HdlType):
         return convertString
     
 
+    def all_mask(self):
+        return 1
+
     @classmethod
     def getValueCls(cls):
         try:
