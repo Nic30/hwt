@@ -6,14 +6,14 @@ class Value():
     
     operators are overloaded in every type separately
     """
-    def __init__(self, val, _type, vldMask, eventMask=0):
+    def __init__(self, val, _type, vldMask, updateTime):
         if isinstance(val, Value):
             val = val.val
 
         self.val = val
         self._dtype = _type
         self.vldMask = vldMask
-        self.eventMask = eventMask
+        self.updateTime = updateTime
 
     def _convert(self, toT):
         return self._dtype.convert(self, toT)
@@ -25,14 +25,14 @@ class Value():
         return self
     
     def clone(self):
-        return self.__class__(self.val, self._dtype, self.vldMask, eventMask=self.eventMask)
+        return self.__class__(self.val, self._dtype, self.vldMask, self.updateTime)
     
     def __hash__(self):
-        return hash((self._dtype, self.val, self.vldMask, self.eventMask))
+        return hash((self._dtype, self.val, self.vldMask, self.updateTime))
     
     def __repr__(self):
-        return "<Value {0:s}, vldMask {1:b}, eventMask {2:b}>".format(
-                    str(self.val), self.vldMask, self.eventMask)    
+        return "<Value {0:s}, vldMask {1:b}, updateTime {2:f}>".format(
+                    str(self.val), self.vldMask, self.updateTime)    
 
     @classmethod
     def fromPy(cls, val, typeObj):
@@ -104,7 +104,12 @@ class Value():
         raise NotImplementedError()
     def __ge__(self, other):
         raise NotImplementedError()
+        
+    def _hasEvent(self, now):
+        raise NotImplementedError()
     
+    def _onRisingEdge(self, now):
+        raise NotImplementedError()
     
 def areValues(*items):
     res = True

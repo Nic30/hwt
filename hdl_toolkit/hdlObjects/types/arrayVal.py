@@ -62,10 +62,10 @@ class ArrayVal(Value):
         eq = True
         first = self.val[0]
         vld = first.vldMask
-        ev = first.eventMask
+        updateTime = first.updateTime
         
         for a, b in zip(self.val, other.val):
             eq = eq and a == b
             vld = vld & a.vldMask & b.vldMask
-            ev = ev & a.eventMask & b.eventMask
-        return BOOL.getValueCls()(eq, BOOL, vld, eventMask=ev)
+            updateTime = max(updateTime, a.updateTime, b.updateTime)
+        return BOOL.getValueCls()(eq, BOOL, vld, updateTime)

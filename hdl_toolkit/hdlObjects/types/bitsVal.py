@@ -33,9 +33,9 @@ def bitsCmp(self, other, op, evalFn=None):
         
         vld = self.vldMask & other.vldMask
         res = evalFn(self.val, other.val) and vld == Bitmask.mask(w)
-        ev = self.eventMask | other.eventMask
+        updateTime = max(self.updateTime, other.updateTime)
     
-        return BoolVal(res, BOOL, vld, eventMask=ev)
+        return BoolVal(res, BOOL, vld, updateTime)
     else:
         if other._dtype == BOOL:
             self = self._convert(BOOL)
@@ -63,9 +63,9 @@ def bitsBitOp(self, other, op):
         
         vld = self.vldMask & other.vldMask
         res = op._evalFn(self.val, other.val) & vld
-        ev = self.eventMask | other.eventMask
+        updateTime = max(self.updateTime, other.updateTime)
     
-        return BoolVal(res, BOOL, vld, eventMask=ev)
+        return BoolVal(res, BOOL, vld, updateTime)
     else:
         if other._dtype == BOOL:
             self = self._convert(BOOL)
@@ -85,7 +85,7 @@ def bitsArithOp(self, other, op):
         v.val = op._evalFn(self.val, other.val)
         # [TODO] value check
         v.vldMask = self.vldMask & other.vldMask
-        v.eventMask = self.vldMask | other.vldMask
+        v.updateTime = max(self.updateTime, other.updateTime)
     else:
         resT = self._dtype
         if self._dtype.signed is None:
@@ -156,7 +156,7 @@ class BitsVal(Value):
             v = self.clone()
             v.val = (v.val << w) | other.val
             v.vldMask = (v.vldMask << w) | other.vldMask
-            v.eventMask = (v.eventMask << w) | other.eventMask
+            v.updateTime = max(self.updateTime, other.updateTime)
             v._dtype = resT
             return v    
         else:
@@ -259,21 +259,20 @@ class BitsVal(Value):
     def __or__(self, other):
         return bitsBitOp(self, other, AllOps.OR_LOG)
        
-    def _hasEvent(self):
+    def _hasEvent(self, now):
         if isinstance(self, Value):
-            return BoolVal(bool(self.eventMask),
+            return BoolVal(self.updateTime == now,
                             BOOL,
                             self.vldMask,
-                            eventMask=self.eventMask)
+                            now)
         else:
             return Operator.withRes(AllOps.EVENT, [self], BOOL)
     
-    def _onRisingEdge(self):
+    def _onRisingEdge(self, now):
         if isinstance(self, Value):
-            return BoolVal(bool(self.eventMask) and self.val,
-                            BOOL,
-                            self.vldMask,
-                            eventMask=self.eventMask)
+            v = self._hasEvent(now)
+            v.val = v.val and self.val
+            return v
         else:
             return Operator.withRes(AllOps.RISING_EDGE, [self], BOOL)
 

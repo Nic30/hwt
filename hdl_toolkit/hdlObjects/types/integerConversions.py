@@ -28,7 +28,7 @@ def convertInteger(self, sigOrVal, toType):
         if isVal:
             v = sigOrVal.val
             assert v == 0 or v == 1
-            return BooleanVal(v, BOOL, sigOrVal.vldMask, sigOrVal.eventMask)
+            return BooleanVal(v, BOOL, sigOrVal.vldMask, sigOrVal.updateTime)
             
     elif isinstance(toType, Bits):
         if isVal:
@@ -40,7 +40,7 @@ def convertInteger(self, sigOrVal, toType):
             m= Bitmask.mask(w)
             
             v.vldMask = m if sigOrVal.vldMask else 0
-            v.eventMask = m if sigOrVal.eventMask else 0
+            v.updateTime = sigOrVal.updateTime
              
             v._dtype = toType
             return v

@@ -28,7 +28,7 @@ class OperatorTC(unittest.TestCase):
             sim.simSignals([a], time=100 * HdlSimulator.ms)
             self.assertEqual(a._val.val, v)
             self.assertEqual(a._val.vldMask, 1)
-            self.assertEqual(a._val.eventMask, 0)
+            self.assertEqual(a._val.updateTime, 0)
             
     def testNotBOOL(self):
         a = self.c.sig('a', typ=BOOL)
@@ -41,7 +41,7 @@ class OperatorTC(unittest.TestCase):
             sim.simSignals([a], time=100 * HdlSimulator.ms)
             self.assertTrue(res._val._eq(hBool(not v)).val)
             self.assertEqual(res._val.vldMask, 1)
-            self.assertEqual(res._val.eventMask, 0, "v=%d" % (v))
+            self.assertEqual(res._val.updateTime, 0, "v=%d" % (v))
                     
     def testDownto(self):
         a = self.c.sig('a', typ=INT)

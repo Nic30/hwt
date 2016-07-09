@@ -15,7 +15,7 @@ class ValueTC(unittest.TestCase):
         v0 = vec(2, 2)
         v1 = v0.clone()
         self.assertTrue(v0._eq(v1))
-        v1.eventMask = 2
+        v1.updateTime = 2
         self.assertTrue(v0._eq(v1))
     
     def testBOOLNeg(self):

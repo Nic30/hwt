@@ -11,7 +11,7 @@ def boolLogOp(self, other, op):
         v = bool(op._evalFn(bool(self.val), (other.val)))
         return BooleanVal(v, BOOL,
                 self.vldMask & other.vldMask,
-                self.eventMask | other.eventMask)
+                max(self.updateTime,  other.updateTime))
     else:
         return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
 
@@ -24,7 +24,7 @@ def boolCmpOp(self, other, op, evalFn=None):
         v = evalFn(bool(self.val), bool(other.val)) and (self.vldMask == other.vldMask == 1)
         return BooleanVal(v, BOOL,
                 self.vldMask & other.vldMask,
-                self.eventMask | other.eventMask)
+                max(self.updateTime,  other.updateTime))
     else:
         return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
 
@@ -44,15 +44,9 @@ class BooleanVal(Value):
         return cls(val, typeObj, vld)
             
     def _eq(self, other):
-        """
-        @attention: for value ignores eventMask
-        """
         return boolCmpOp(self, other, AllOps.EQ, evalFn=lambda a, b: a == b)
 
     def __ne__(self, other):
-        """
-        @attention: for value ignores eventMask
-        """
         return boolCmpOp(self, other, AllOps.NEQ)
 
     def __invert__(self):
@@ -75,9 +69,9 @@ class BooleanVal(Value):
         else:
             return Operator.withRes(AllOps.TERNARY, [self, ifTrue, ifFalse], ifTrue._dtype)
 
-    def _hasEvent(self):
+    def _hasEvent(self, now):
         if isinstance(self, Value):
-            return BooleanVal(bool(self.eventMask), BOOL, self.vldMask, eventMask=self.eventMask)
+            return BooleanVal(self.updateTime == now, BOOL, self.vldMask, now)
         else:
             return Operator.withRes(AllOps.EVENT, [self], BOOL)
     

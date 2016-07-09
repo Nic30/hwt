@@ -25,7 +25,7 @@ def convertBits(self, sigOrVal, toType):
                 raise NotImplementedError()
             else:
                 fullMask = Bitmask.mask(self.bit_length())
-                return INT.getValueCls()(sigOrVal.val, INT, sigOrVal.vldMask == fullMask, eventMask=int(bool(sigOrVal.eventMask)))
+                return INT.getValueCls()(sigOrVal.val, INT, sigOrVal.vldMask == fullMask, sigOrVal.updateTime)
         else:
             return Operator.withRes(AllOps.BitsToInt, [sigOrVal], toType)
         

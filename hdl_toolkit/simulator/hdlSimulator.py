@@ -44,11 +44,11 @@ class HdlSimulator():
         print("%d:applyValues" % (self.env.now))
         
         for s in self.signalsToDisableEvent:
-            s[0]._val.eventMask = 0
+            s[0]._val.updateTime = self.env.now
             
         updatedSigs = {}
         for s, v in self.valuesToApply:
-            v.eventMask = v._dtype.all_mask()
+            v.updateTime = self.env.now
             try:
                 lastV = updatedSigs[s]
             except KeyError:

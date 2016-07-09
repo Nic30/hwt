@@ -15,8 +15,8 @@ def intOp(self, other, op, resT, evalFn=None):
     if areValues(self, other):
         v = evalFn(self.val, other.val)
         vldMask = int(self.vldMask and other.vldMask)
-        eventMask = int(self.eventMask or other.eventMask)
-        return resT.getValueCls()(v, resT, vldMask, eventMask)
+        updateTime = max(self.updateTime, other.updateTime)
+        return resT.getValueCls()(v, resT, vldMask, updateTime)
     else:
         return Operator.withRes(op, [self, other], resT)
 
@@ -29,7 +29,7 @@ def intCmpOp(self, other, op, evalFn=None):
 class IntegerVal(Value):
     """
     @ivar vldMask: can be only 0 or 1
-    @ivar eventMask: can be only 0 or 1
+    @ivar updateTime: time when this value was set, used in simulator
     """
     @classmethod
     def fromPy(cls, val, typeObj):
@@ -83,8 +83,8 @@ class IntegerVal(Value):
         other = toHVal(other)._convert(INT)
         if areValues(self, other):
             vldMask = int(self.vldMask and other.vldMask)
-            eventMask = int(self.eventMask or other.eventMask)
-            return SLICE.getValueCls()((self, other), SLICE, vldMask, eventMask)
+            updateTime = max(self.updateTime, other.updateTime)
+            return SLICE.getValueCls()((self, other), SLICE, vldMask, updateTime)
         else:
             return Operator.withRes(AllOps.DOWNTO, [self, other], SLICE)
     

@@ -22,10 +22,6 @@ class EnumVal(Value):
         return cls(val, typeObj, valid)
     
     def _eq(self, other):
-        """return abs(w.val[0].val - w.val[1].val) + 1
-    
-        @attention: ignores eventMask
-        """
         assert self._dtype is other._dtype
         
         if areValues(self, other):
@@ -33,8 +29,8 @@ class EnumVal(Value):
                 and self.vldMask == other.vldMask == 1
             
             vldMask = int(self.vldMask == other.vldMask == 1)
-            evMask = self.eventMask | other.eventMask
-            return BoolVal(eq, BOOL, vldMask, eventMask=evMask)
+            updateTime = max(self.updateTime,  other.updateTime)
+            return BoolVal(eq, BOOL, vldMask, updateTime)
         else:
             return Operator.withRes(AllOps.EQ, [self, other], BOOL)
         
@@ -46,8 +42,8 @@ class EnumVal(Value):
                 and self.vldMask == other.vldMask == 1
             
             vldMask = int(self.vldMask == other.vldMask == 1)
-            evMask = self.eventMask | other.eventMask
-            return BoolVal(neq, BOOL, vldMask, eventMask=evMask)
+            updateTime = max(self.updateTime,  other.updateTime)
+            return BoolVal(neq, BOOL, vldMask, updateTime)
         else:
             return Operator.withRes(AllOps.NEQ, [self, other], BOOL)
         

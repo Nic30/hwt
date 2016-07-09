@@ -18,8 +18,8 @@ class StringVal(Value):
         if isinstance(other, Value):
             eq = self.val == other.val
             vld = int(self.vldMask and other.vldMask)
-            ev = self.eventMask | other.eventMask
+            updateTime = max(self.updateTime, other.updateTime)
             
-            return BOOL.getValueCls()(eq, BOOL, vld, eventMask=ev)
+            return BOOL.getValueCls()(eq, BOOL, vld, updateTime)
         else:
             raise NotImplementedError()

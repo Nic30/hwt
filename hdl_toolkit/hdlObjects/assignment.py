@@ -22,65 +22,6 @@ class Assignment():
         from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.Assignment(self)    
 
-    #def evaluateCond(self):
-    #    cond = None
-    #    for c in self.cond:
-    #        if cond is None:
-    #            cond = c._val
-    #        else:
-    #            cond = cond & c._val
-    #    
-    #    return cond
-    
-    #def simPropagateChanges(self):
-    #    activeAsignments = []
-    #    for d in self.dst.drivers:
-    #        d.condRes = d.evaluateCond()
-    #        if d.condRes is None or d.condRes.vldMask == 0 or bool(d.condRes.val):
-    #            activeAsignments.append(d)
-    #    
-    #    l = len(activeAsignments)
-    #    if l == 0:
-    #        # print(">> %s disconnected"  % (repr(self)))
-    #        # disconnected
-    #        if isinstance(self.dst, RtlMemoryBase):
-    #            return # value is latched when there is no driver
-    #        nextVal = self.dst._val.clone()
-    #        nextVal.vldMask = 0
-    #    elif l == 1:
-    #        connectedTo = activeAsignments[0]
-    #        # print(">> %s connected to: %s" % (repr(self), repr(connectedTo) ) )
-    #        # connected
-    #        nextVal = connectedTo.src
-    #        if not isinstance(nextVal, Value):
-    #            nextVal = nextVal._val.clone()
-    #        if connectedTo.condRes and connectedTo.condRes.eventMask:
-    #            nextVal.eventMask = Bitmask.mask(nextVal._dtype.bit_length())
-    #    else:
-    #        # connected to many
-    #        # all has to be same or short circuit
-    #        nextVal = None
-    #        # print(">> %s multiple drivers: %s" % (repr(self), repr(activeAsignments) ) )
-    #        for d in activeAsignments:
-    #            if nextVal is None:
-    #                if isinstance(d.src, Value):
-    #                    nextVal = d.src.clone()
-    #                else:
-    #                    nextVal = d.src._val.clone()
-    #            else:
-    #                if hasDiferentVal(nextVal, d.src):
-    #                    nextVal.vldMask = 0
-    #
-    #    try:
-    #        sim = self._simulator
-    #    except AttributeError:
-    #        raise SimNotInitialized("Operator '%s' is not bounded to any simulator" % (str(self)))
-    #    
-    #    env = sim.env
-    #    c = sim.config
-    #    yield env.timeout(c.propagDelay(self))
-    #    yield env.process(self.dst.simUpdateVal(nextVal))
-
 class MapExpr():
     """
     Map expression, is used in component instance mapping
