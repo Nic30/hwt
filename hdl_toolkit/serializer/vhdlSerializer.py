@@ -1,6 +1,6 @@
 from python_toolkit.arrayQuery import arr_any, where
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType, InvalidVHDLTypeExc
-from hdl_toolkit.synthetisator.templates import VHDLTemplates
+from hdl_toolkit.serializer.templates import VHDLTemplates
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthetisator.rtlLevel.signal import MultipleDriversExc
 from hdl_toolkit.hdlObjects.value import Value
@@ -9,7 +9,7 @@ from hdl_toolkit.hdlObjects.statements import IfContainer, \
     SwitchContainer, WhileContainer
 from hdl_toolkit.synthetisator.param import getParam, Param
 from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
-from hdl_toolkit.synthetisator.exceptions import SerializerException
+from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.types.enum import Enum
@@ -18,6 +18,9 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BOOL, BIT
 from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from hdl_toolkit.hdlObjects.types.array import Array
+
+from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
+from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
 
 class VhdlVersion():
     v2002 = 2002
@@ -120,8 +123,8 @@ class VhdlSerializer():
         "variables"          :variables,
         "extraTypes"         :map(lambda typ: cls.HdlType(typ, declaration=True), extraTypes),
         "processes"          :procs,
-        "components"         :arch.components,
-        "componentInstances" :arch.componentInstances
+        "components"         :map(cls.Component, arch.components),
+        "componentInstances" :map(cls.ComponentInstance, arch.componentInstances)
         })
    
     @classmethod
@@ -136,22 +139,33 @@ class VhdlSerializer():
         return "--" + comentStr.replace("\n", "\n--")
     
     @classmethod
-    def Component(cls, c):
+    def Component(cls, entity):
         return VHDLTemplates.component.render({
-                "ports": [cls.PortItem(pi) for pi in c.entity.ports],
-                "generics": [cls.GenericItem(g) for g in c.entity.generics],
-                "entity": c.entity
+                "ports": [cls.PortItem(pi) for pi in entity.ports],
+                "generics": [cls.GenericItem(g) for g in entity.generics],
+                "entity": entity
                 })      
 
     @classmethod
-    def ComponentInstance(cls, ci):
-        if len(ci.portMaps) == 0 and len(ci.genericMaps) == 0:
+    def ComponentInstance(cls, entity):
+        portMaps = []
+        for pi in entity.ports:
+            pm = PortMap.fromPortItem(pi)
+            portMaps.append(pm)
+        
+        genericMaps = []
+        for g in entity.generics:
+            gm =  MapExpr(g, g._val)
+            genericMaps.append(gm) 
+        
+        if len(portMaps) == 0:
             raise Exception("Incomplete component instance")
+        
         return VHDLTemplates.componentInstance.render({
-                "name" : ci.name,
-                "component": ci.component,
-                "portMaps": [cls.PortConnection(x) for x in   ci.portMaps],
-                "genericMaps" : [cls.MapExpr(x) for x in   ci.genericMaps]
+                "instanceName" : entity._name,
+                "entity": entity,
+                "portMaps": [cls.PortConnection(x) for x in portMaps],
+                "genericMaps" : [cls.MapExpr(x) for x in genericMaps]
                 })     
 
     @classmethod
@@ -159,16 +173,15 @@ class VhdlSerializer():
         ent.ports.sort(key=lambda x: x.name)
         ent.generics.sort(key=lambda x: x.name)
 
-        doc = ent.__doc__
-        if doc:
-            doc = cls.comment(doc) + "\n"
-
         entVhdl = VHDLTemplates.entity.render({
                 "name": ent.name,
                 "ports" : [cls.PortItem(pi) for pi in ent.ports ],
                 "generics" : [cls.GenericItem(g) for g in ent.generics]
                 })
+
+        doc = ent.__doc__
         if doc:
+            doc = cls.comment(doc) + "\n"
             return doc + entVhdl   
         else:
             return entVhdl

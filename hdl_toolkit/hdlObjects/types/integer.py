@@ -1,5 +1,5 @@
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType 
-from hdl_toolkit.synthetisator.exceptions import SerializerException
+from hdl_toolkit.serializer.exceptions import SerializerException
 
 class Integer(HdlType):
     

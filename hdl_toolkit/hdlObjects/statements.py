@@ -71,7 +71,7 @@ class IfContainer():
                 s.seqEval()
         
     def __repr__(self):
-        from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.IfContainer(self)
 
 class SwitchContainer():
@@ -86,7 +86,7 @@ class SwitchContainer():
     def seqEval(self):
         raise NotImplementedError()
     def __repr__(self):
-        from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.SwitchContainer(self)
  
 class WhileContainer():

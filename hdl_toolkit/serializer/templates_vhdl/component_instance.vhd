@@ -1,4 +1,4 @@
-{{ name }} : COMPONENT {{ component.entity.name }}
+{{ instanceName }} : COMPONENT {{ entity.name }}
 {% if genericMaps|length >0 %}GENERIC MAP ( 
 	{{genericMaps|join(',\n')}} 
    )

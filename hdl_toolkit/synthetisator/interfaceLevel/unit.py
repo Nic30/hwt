@@ -1,6 +1,4 @@
-from hdl_toolkit.hdlObjects.component import Component
 from hdl_toolkit.synthetisator.rtlLevel.context import Context
-from hdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase 
 from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
@@ -84,9 +82,6 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
 
         self._architecture = s[2]
             
-        self._sigLvlUnit = VHDLUnit(self._entity)
-        self._sigLvlUnit._name = self._name
-      
         for intf in self._interfaces: 
             # reverse because other components looks at this one from outside
             if intf._isExtern:
@@ -100,7 +95,6 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
         yield from s
             
         # after synthesis clean up interface so unit can be used elsewhere
-        self._component = Component(self._entity)
         self._cleanAsSubunit() 
         
     def _loadDeclarations(self):

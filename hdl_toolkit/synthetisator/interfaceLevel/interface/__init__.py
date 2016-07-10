@@ -2,7 +2,6 @@ from copy import copy
 
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
-from hdl_toolkit.hdlObjects.portConnection import PortConnection
 
 from hdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from hdl_toolkit.synthetisator.interfaceLevel.interface.hdlExtraction import ExtractableInterface
@@ -184,9 +183,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
                 self._sig = s
                 
                 if hasattr(self, '_originEntityPort'):
-                    PortConnection.connectSigToPortItem(self._sig,
-                                                        self._originSigLvlUnit,
-                                                        self._originEntityPort)
+                    self._originEntityPort.connectSig(self._sig)
                 sigs = [s]
                 
         if self._multipliedBy is not None:

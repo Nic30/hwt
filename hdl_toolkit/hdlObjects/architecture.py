@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# from hdl_toolkit.hdlObjects.component import Component, ComponentInstance 
 
 class Architecture(object):
     """basic vhdl architecture"""
@@ -18,6 +17,6 @@ class Architecture(object):
         
         
     def __repr__(self):
-        from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         from hdl_toolkit.formater import formatVhdl
         return formatVhdl(VhdlSerializer.Architecture(self))

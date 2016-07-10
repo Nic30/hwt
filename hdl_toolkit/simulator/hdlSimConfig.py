@@ -1,5 +1,3 @@
-from hdl_toolkit.hdlObjects.assignment import Assignment
-
 
 class HdlSimConfig():
         
@@ -10,4 +8,5 @@ class HdlSimConfig():
         "%d: %s <= %s" % (nowTime, sig.name, str(nextVal))
         
     def logPropagation(self, x):
-        print(x)
+        pass
+        #print(x)

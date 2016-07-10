@@ -28,6 +28,8 @@ class UnitImplHelpers():
             
     def _cleanAsSubunit(self):
         """Disconnect internal signals so unit can be reused by parent unit"""
+        for pi in self._entity.ports:
+            pi.connectInternSig(pi._interface._sig)   
         for i in self._interfaces:
             i._clean()
                     
@@ -55,7 +57,6 @@ class UnitImplHelpers():
                 self._connectMyInterfaceToMyEntity(subIntf)  
         else:
             portItem = single(self._entity.ports, lambda x : x._interface == interface)
-            interface._originSigLvlUnit = self._sigLvlUnit
             interface._originEntityPort = portItem
             d = INTF_DIRECTION.asDirection(interface._direction)
             if portItem.direction != d:

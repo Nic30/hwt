@@ -19,17 +19,6 @@ class Assignment():
         yield (self.dst, self.src.simEval(simulator))
         
     def __repr__(self):
-        from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.Assignment(self)    
 
-class MapExpr():
-    """
-    Map expression, is used in component instance mapping
-    """
-    def __init__(self, compSig, value):
-        self.compSig = compSig 
-        self.value = value
-
-    def __repr__(self):
-        from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
-        return VhdlSerializer.MapExpr(self)

@@ -11,6 +11,7 @@ from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDrivers
 from hdl_toolkit.synthetisator.rtlLevel.signal.ops import SignalOps
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.simulator.utils import valHasChanged
+from hdl_toolkit.hdlObjects.portItem import PortItem
 
 
 def hasDiferentVal(reference, sigOrVal):
@@ -60,14 +61,23 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
             self._oldVal = self._val
 
             for e in self.endpoints:
-                try:
-                    isIndexOnMe = e.op == AllOps.INDEX and e.result != self
-                except AttributeError:
-                    isIndexOnMe = False
-                
-                if isIndexOnMe:
-                    # if i has index which I am driver for
-                    raise NotImplementedError()
+                if isinstance(e, PortItem):
+                    si = e.portItem._interface._sigInside
+                    if self is si:
+                        # OUT port
+                        raise NotImplementedError()
+                    else:
+                        # IN port
+                        si.simUpdateVal(simulator, self._val)
+                else:
+                    try:
+                        isIndexOnMe = e.op == AllOps.INDEX and e.result != self
+                    except AttributeError:
+                        isIndexOnMe = False
+                    
+                    if isIndexOnMe:
+                        # if i has index which I am driver for
+                        raise NotImplementedError()
                 
             conf = simulator.config
             for p in self.simSensitiveProcesses:        

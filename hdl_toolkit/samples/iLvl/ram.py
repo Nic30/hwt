@@ -10,6 +10,9 @@ from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 c = connect
 
 class Ram_sp(Unit):
+    """
+    Write first variant
+    """
     def _config(self):
         self.DATA_WIDTH = Param(64)
         self.ADDR_WIDTH = Param(4)
@@ -44,4 +47,4 @@ class Ram_dp(Ram_sp):
 
 if __name__ == "__main__":
     from hdl_toolkit.synthetisator.shortcuts import toRtl
-    print(toRtl(Ram_sp))
+    print(toRtl(Ram_dp))

@@ -1,10 +1,8 @@
 from python_toolkit.arrayQuery import where, distinctBy
 
 from hdl_toolkit.hdlObjects.architecture import Architecture
-from hdl_toolkit.hdlObjects.component import  Component
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.process import HWProcess
-from hdl_toolkit.hdlObjects.portConnection import PortConnection
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment
@@ -14,13 +12,14 @@ from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkUnitInputs, walkSignalsInExpr, \
     discoverSensitivity, walkSigSouces, signalHasDriver
-from hdl_toolkit.synthetisator.templates import VHDLTemplates  
+from hdl_toolkit.serializer.templates import VHDLTemplates  
 from hdl_toolkit.synthetisator.exceptions import SigLvlConfErr
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDriversExc
 from hdl_toolkit.synthetisator.rtlLevel.memory import RtlSyncSignal
+from hdl_toolkit.hdlObjects.portItem import PortItem
 
 def isUnnamedIndex(sig):
     return (hasattr(sig, "origin") and 
@@ -71,7 +70,10 @@ class Context():
 
         if name in self.signals:
             raise Exception('%s:signal name "%s" is not unique' % (self.name, name))
-        _defVal = typ.fromPy(defVal)
+        if not isinstance(defVal, Value):
+            _defVal = typ.fromPy(defVal)
+        else:
+            _defVal = defVal
 
 
         if clk is not None:
@@ -107,10 +109,11 @@ class Context():
                 if node in self.startsOfDataPaths:
                     return 
                 self.startsOfDataPaths.add(node)
-                if isinstance(node, PortConnection) and not node.unit.discovered:
+                if isinstance(node, PortItem) and not node.unit.discovered:
                     node.unit.discovered = True
                     for s in walkUnitInputs(node.unit):
-                        discoverDatapaths(s)
+                        if s is not None: # top unit does not have to be connected
+                            discoverDatapaths(s)
                     self.subUnits.add(node.unit)
                 elif isinstance(node, Assignment):
                     for s in walkSignalsInExpr(node.src):
@@ -158,8 +161,9 @@ class Context():
             yield p
 
     def synthetize(self, interfaces):
-        ent = Entity()
-        ent.name = self.name
+        ent = Entity(self.name)
+        ent._name = self.name + "_inst" # instance name
+        
 
         # create generics
         ent.ctx = self.globals
@@ -168,8 +172,9 @@ class Context():
         
         # create ports
         for s in interfaces:
-            ent.ports.append(portItemfromSignal(s))
-   
+            pi = portItemfromSignal(s, ent)
+            ent.ports.append(pi)
+
         self.discover(interfaces)
         
         arch = Architecture(ent)
@@ -185,12 +190,11 @@ class Context():
         
         # instanciate subUnits in architecture
         for u in self.subUnits:  
-            arch.componentInstances.append(u.asVHDLComponentInstance(u._name + "_inst")) 
+            arch.componentInstances.append(u) 
         
         # add components in architecture    
         for su in distinctBy(self.subUnits, lambda x: x.name):
-            c = Component(su)
-            arch.components.append(c)
+            arch.components.append(su)
         
         # [TODO] real references based on real ent/arch objects 
         return [ VHDLTemplates.basic_include, ent, arch]

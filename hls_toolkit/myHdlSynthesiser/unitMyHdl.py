@@ -5,13 +5,11 @@ from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInt
 from python_toolkit.arrayQuery import single, NoValueExc
 from myhdl.conversion._toVHDL import _ToVHDLConvertor, _shortversion
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
-from hdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 import types
 import copy
 from hls_toolkit.myHdlSynthesiser import toMyHdlIntf
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.parser import Parser
-from hdl_toolkit.hdlObjects.value import Value
 
 
 class DirectionInfoCont():
@@ -120,9 +118,6 @@ class UnitMyHdl(UnitFromHdl):
             self._name = defaultUnitName(self)
         self._loadMyImplementations()
 
-        self._sigLvlUnit = VHDLUnit(self._entity)
-        self._sigLvlUnit._name = self._name
-        
         for i in self._interfaces:
             if i._isExtern:
                 self._connectMyInterfaceToMyEntity(i)

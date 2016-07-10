@@ -2,7 +2,7 @@
 from functools import wraps
 from datetime import datetime
 import sys
-from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
 
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.boolean import Boolean

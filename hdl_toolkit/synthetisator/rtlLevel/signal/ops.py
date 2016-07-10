@@ -141,11 +141,9 @@ class SignalOps():
                 indexedOn = d.ops[0]
                 if isinstance(indexedOn, SignalItem):
                     # change direction of index for me and for indexed on
-                    # print(d, 'to driver of', indexedOn)
                     indexedOn.endpoints.remove(d)
                     indexedOn.drivers.append(d)
                      
-                    # print(d, "to endpoint of")    
                     self.drivers.remove(d)
                     self.endpoints.append(d)
         except MultipleDriversExc:

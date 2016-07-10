@@ -8,7 +8,6 @@ from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.package import PackageHeader, PackageBody
 from hdl_toolkit.hdlObjects.architecture import Architecture
-from hdl_toolkit.hdlObjects.component import ComponentInstance
 from hdl_toolkit.hdlObjects.types.defs import STR 
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
 from hdl_toolkit.hdlObjects.function import Function
@@ -119,10 +118,10 @@ class BaseParser(object):
         
         raise HDLParseErr("Unparsable expression %s" % (str(jExpr)))
 
-    def portFromJson(self, jPort, ctx):
+    def portFromJson(self, jPort, ctx, entity):
         v = jPort['variable']
         var_type = self.typeFromJson(v['type'], ctx)
-        p = PortItem(v['name'], jPort['direction'], var_type)
+        p = PortItem(v['name'], jPort['direction'], var_type, entity)
         val = v['value']
         if val is not None:
             p.defaultVal = self.exprFromJson(val, ctx)
@@ -173,8 +172,7 @@ class BaseParser(object):
             return _id.lower()
          
     def entityFromJson(self, jEnt, ctx):
-        e = Entity()
-        e.name = jEnt['name']
+        e = Entity(jEnt['name'])
         if not self.hierarchyOnly:
             entCtx = HDLCtx(e.name, ctx)
             for jGener in jEnt['generics']:
@@ -184,7 +182,7 @@ class BaseParser(object):
                 
             # entCtx.update(ctx)
             for jPort in jEnt['ports']:
-                p = self.portFromJson(jPort, entCtx)
+                p = self.portFromJson(jPort, entCtx, e)
                 e.ports.append(p)
             
             e.generics.sort(key=lambda x: x.name)
@@ -192,7 +190,7 @@ class BaseParser(object):
         return e
 
     def componentInstanceFromJson(self, jComp, ctx):
-        ci = ComponentInstance(jComp['name'], None)
+        ci = Entity(jComp['name'])
         ci.entityRef = HdlRef.fromJson(jComp['entityName'], self.caseSensitive)
         if not self.hierarchyOnly:
             pass

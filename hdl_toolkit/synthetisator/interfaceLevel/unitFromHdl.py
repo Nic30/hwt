@@ -5,7 +5,6 @@ from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.function import Function
 from hdl_toolkit.parser.utils import entityFromFile, loadCntxWithDependencies
 from hdl_toolkit.hdlContext import RequireImportErr
-from hdl_toolkit.synthetisator.rtlLevel.unit import VHDLUnit
 from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
@@ -192,28 +191,22 @@ class UnitFromHdl(Unit):
         if not hasattr(self, '_name'):
             self._name = defaultUnitName(self)
         self._loadMyImplementations()
-        self._entity = Entity()
-        self._entity.name = self.__class__._entity.name
+        self._entity = Entity(self.__class__._entity.name)
+        self._entity._name =  self._name
+        
         generics = self._entity.generics
         ports = self._entity.ports
-        self._sigLvlUnit = VHDLUnit(self._entity)
-        self._sigLvlUnit._name = self._name
         
         for p in self._params:
             generics.append(p)
         
         for unitIntf in self._interfaces:
             for i in walkPhysInterfaces(unitIntf):
-                pi = PortItem(i._getPhysicalName(), INTF_DIRECTION.asDirection(i._direction), i._dtype)
+                pi = PortItem(i._getPhysicalName(), INTF_DIRECTION.asDirection(i._direction), i._dtype, self._entity)
                 pi._interface = i
                 ports.append(pi)
-                i._originSigLvlUnit = self._sigLvlUnit
                 i._originEntityPort = pi
             
-        # self._sigLvlUnit = VHDLUnit(self._entity)
-        # for s in walkSignalOnUnit(self):
-        #    s._originSigLvlUnit = self._sigLvlUnit
-        #    
         return [self]
 
     def __str__(self):

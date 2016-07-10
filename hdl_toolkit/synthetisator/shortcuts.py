@@ -10,7 +10,7 @@ from hdl_toolkit.parser.loader import ParserLoader, langFromExtension, ParserFil
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
-from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
 from hdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
 
 

@@ -1,11 +1,11 @@
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.portConnection import PortConnection
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from python_toolkit.arrayQuery import where
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.portItem import PortItem
 
 
 def signalHasDriver(sig):
@@ -14,7 +14,6 @@ def signalHasDriver(sig):
     return False
 
 def walkSignalDrivers(sig):
-    # print(repr(sig))
     def assign2Me(ep):
         if isinstance(ep, Assignment) and ep.dst == sig:
             return True
@@ -23,7 +22,7 @@ def walkSignalDrivers(sig):
                 return signalHasDriver(ep.result)
             else:
                 return signalHasDriver(ep.ops[0])
-        elif isinstance(ep, PortConnection) and ep.portItem.direction == DIRECTION.OUT: 
+        elif isinstance(ep, PortItem) and ep.direction == DIRECTION.OUT: 
             return True
         else:
             return None
@@ -38,9 +37,9 @@ def walkSigExpr(sig):
     yield from sig.endpoints
 
 def walkUnitInputs(unit):
-    for pc in unit.portConnections:
-        if pc.portItem.direction == DIRECTION.IN:
-            yield pc.sig
+    for portItem in unit.ports:
+        if portItem.direction == DIRECTION.IN:
+            yield portItem.dst
 
 
 def walkAllOriginSignals(sig, discovered=None):
@@ -144,7 +143,7 @@ def walkSigSouces(sig, parent=None):
                     yield from walkSigSouces(op)
     elif isinstance(sig, RtlSignalBase):
         for e in sig.drivers:
-            if isinstance(e, PortConnection):
+            if isinstance(e, PortItem):
                 if not e.unit.discovered:
                     yield e
             elif isinstance(e, Assignment) and not e.src is sig:

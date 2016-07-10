@@ -15,14 +15,14 @@ class VHDLVariable():
         self._oldVal.vldMask = 0
     
     def __repr__(self):
-        from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.VHDLVariable(self)        
             
             
 class SignalItem(VHDLVariable):
     """basic vhdl signal"""
     def __repr__(self):
-        from hdl_toolkit.synthetisator.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.SignalItem(self)        
     
         

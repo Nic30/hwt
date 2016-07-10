@@ -13,6 +13,10 @@ from hdl_toolkit.synthetisator.shortcuts import toRtl
 c = connect
 
 class AxiStreamStoredBurst(Unit):
+    """
+    This units send data stored in property DATA over axi-stream interface
+    """
+    
     def _config(self):
         self.DATA_WIDTH = Param(64)
         self.DATA = [ ord(c) for c in "Hello world" ]
