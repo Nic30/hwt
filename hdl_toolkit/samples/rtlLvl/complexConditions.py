@@ -1,6 +1,6 @@
 
 from hdl_toolkit.formater import formatVhdl
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If, Switch
 from hdl_toolkit.hdlObjects.types.enum import Enum
@@ -9,17 +9,17 @@ w = connect
 
 
 def complexConds():
-    c = Context("ComplexConds")
+    n = RtlNetlist("ComplexConds")
     stT = Enum('t_state', ["idle", "tsWait", "ts0Wait", "ts1Wait", "lenExtr"])
-    clk = c.sig('clk')
-    rst = c.sig("rst")
+    clk = n.sig('clk')
+    rst = n.sig("rst")
     
-    st = c.sig('st', stT, clk=clk, syncRst=rst, defVal=stT.idle)
-    s_idle = c.sig('s_idle')
-    sd0 = c.sig('sd0')
-    sd1 = c.sig('sd1')
-    cntrlFifoVld = c.sig('ctrlFifoVld')
-    cntrlFifoLast = c.sig('ctrlFifoLast')
+    st = n.sig('st', stT, clk=clk, syncRst=rst, defVal=stT.idle)
+    s_idle = n.sig('s_idle')
+    sd0 = n.sig('sd0')
+    sd1 = n.sig('sd1')
+    cntrlFifoVld = n.sig('ctrlFifoVld')
+    cntrlFifoLast = n.sig('ctrlFifoLast')
 
     def tsWaitLogic(ifNoTsRd):
         return If(sd0 & sd1,
@@ -72,10 +72,10 @@ def complexConds():
     )
     w(st._eq(stT.idle), s_idle)
     
-    return c, [sd0, sd1, cntrlFifoVld, cntrlFifoLast, s_idle]
+    return n, [sd0, sd1, cntrlFifoVld, cntrlFifoLast, s_idle]
     
 if __name__ == "__main__":
-    c, interf = complexConds()
+    n, interf = complexConds()
     
-    for o in c.synthetize(interf):
+    for o in n.synthetize(interf):
         print(formatVhdl(str(o)))

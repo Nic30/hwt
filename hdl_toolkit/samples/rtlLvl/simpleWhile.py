@@ -1,4 +1,4 @@
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
@@ -8,19 +8,19 @@ w = connect
 
 if __name__ == "__main__":
     t = vecT(8)
-    c = Context("simpleWhile")
+    n = RtlNetlist("simpleWhile")
     
-    boundry = c.sig("boundry", t, defVal=8)
-    s_out = c.sig("s_out", t)
+    boundry = n.sig("boundry", t, defVal=8)
+    s_out = n.sig("s_out", t)
     
-    start = c.sig("start")
-    en = c.sig("en")    
+    start = n.sig("start")
+    en = n.sig("en")    
     
-    clk = c.sig("clk")
-    syncRst = c.sig("rst")
+    clk = n.sig("clk")
+    syncRst = n.sig("rst")
     
     
-    counter = c.sig("counter", t, clk, syncRst, 0)
+    counter = n.sig("counter", t, clk, syncRst, 0)
     If(start,
        w(boundry, counter)
        ,
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     
     interf = [clk, syncRst, start, en, s_out]
     
-    for o in c.synthetize(interf):
+    for o in n.synthetize(interf):
         print(formatVhdl(str(o)))
 
     

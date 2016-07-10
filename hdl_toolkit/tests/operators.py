@@ -1,5 +1,5 @@
 import unittest
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkAllOriginSignals
 from hdl_toolkit.hdlObjects.types.defs import INT, STR, BOOL
@@ -17,10 +17,10 @@ def staticLikeEval(sig, log=False):
 class OperatorTC(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.c = Context("test")
+        self.n = RtlNetlist("test")
     
     def testNoOp(self):
-        a = self.c.sig('a', typ=INT)
+        a = self.n.sig('a', typ=INT)
 
         for v in [True, False]:
             a.defaultVal = hBool(v)
@@ -31,7 +31,7 @@ class OperatorTC(unittest.TestCase):
             self.assertEqual(a._val.updateTime, 0)
             
     def testNotBOOL(self):
-        a = self.c.sig('a', typ=BOOL)
+        a = self.n.sig('a', typ=BOOL)
         res = ~a
         for v in [False, True]:
             a.defaultVal = hBool(v)
@@ -44,7 +44,7 @@ class OperatorTC(unittest.TestCase):
             self.assertEqual(res._val.updateTime, 0, "v=%d" % (v))
                     
     def testDownto(self):
-        a = self.c.sig('a', typ=INT)
+        a = self.n.sig('a', typ=INT)
         a.defaultVal = hInt(10)
         b = hInt(0)
         r = a._downto(b)
@@ -53,7 +53,7 @@ class OperatorTC(unittest.TestCase):
         self.assertEqual(res.val[1].val, 0)
     
     def testwalkAllOriginSignalsDownto(self):
-        a = self.c.sig('a', typ=INT)
+        a = self.n.sig('a', typ=INT)
         a.defaultVal = hInt(10)
         b = hInt(0)
         r = a._downto(b)
@@ -61,7 +61,7 @@ class OperatorTC(unittest.TestCase):
         self.assertSetEqual(origins, set([a]))
     
     def testwalkAllOriginSignalsDowntoAndPlus(self):
-        a = self.c.sig('a', typ=INT)
+        a = self.n.sig('a', typ=INT)
         a.defaultVal = hInt(10)
         b = hInt(0)
         am = a + hInt(5)
@@ -70,13 +70,13 @@ class OperatorTC(unittest.TestCase):
         self.assertSetEqual(origins, set([a]))
     
     def testADD_InvalidOperands(self):
-        a = self.c.sig('a', typ=STR)
-        b = self.c.sig('b')
+        a = self.n.sig('a', typ=STR)
+        b = self.n.sig('b')
         self.assertRaises(NotImplementedError, lambda : a + b) 
         
     def testAND_LOG_eval(self):
-        s0 = self.c.sig('s0')
-        s1 = self.c.sig('s1')
+        s0 = self.n.sig('s0')
+        s1 = self.n.sig('s1')
         andOp = s0 & s1
         for a_in, b_in, out in [(0, 0, 0),
                                 (0, 1, 0),
@@ -89,8 +89,8 @@ class OperatorTC(unittest.TestCase):
             self.assertEqual(andOp._val.val, out, "a_in %d, b_in %d, out %d" % (a_in, b_in, out))
     
     def testADD_eval(self):
-        a = self.c.sig('a', typ=INT)
-        b = self.c.sig('b', typ=INT)
+        a = self.n.sig('a', typ=INT)
+        b = self.n.sig('b', typ=INT)
         andOp = a + b
         for a_in, b_in, out in [(0, 0, 0),
                                 (0, 1, 1),

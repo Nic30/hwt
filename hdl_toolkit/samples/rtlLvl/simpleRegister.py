@@ -1,26 +1,26 @@
 from hdl_toolkit.formater import formatVhdl
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 
 
 if __name__ == "__main__":
     t = vecT(8)
   
-    c = Context("simpleRegister")
+    n = RtlNetlist("simpleRegister")
     
-    s_out = c.sig("s_out", t)
-    s_in = c.sig("s_in", t)    
-    clk = c.sig("clk")
-    syncRst = c.sig("rst")
+    s_out = n.sig("s_out", t)
+    s_in = n.sig("s_in", t)    
+    clk = n.sig("clk")
+    syncRst = n.sig("rst")
     
     
-    val = c.sig("val", t, clk, syncRst, 0)
+    val = n.sig("val", t, clk, syncRst, 0)
     val._assignFrom(s_in)
     s_out._assignFrom(val)
     
     interf = [clk, syncRst, s_in, s_out]
     
-    for o in c.synthetize(interf):
+    for o in n.synthetize(interf):
             print(formatVhdl(str(o)))
 
     

@@ -1,6 +1,6 @@
 
 from hdl_toolkit.formater import formatVhdl
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
@@ -10,13 +10,13 @@ w = connect
 
 def Counter():
     t = vecT(8)
-    c = Context("LeadingZero")
+    n = RtlNetlist("LeadingZero")
     
-    en = c.sig("en")
-    rst = c.sig("rst")
-    clk = c.sig("clk")
-    s_out = c.sig("s_out", t)
-    cnt = c.sig("cnt", t, clk=clk, syncRst=rst, defVal=0)
+    en = n.sig("en")
+    rst = n.sig("rst")
+    clk = n.sig("clk")
+    s_out = n.sig("s_out", t)
+    cnt = n.sig("cnt", t, clk=clk, syncRst=rst, defVal=0)
     
     If(en, 
        w(cnt+1, cnt)
@@ -28,11 +28,11 @@ def Counter():
     
     interf = [rst, clk, s_out, en]
     
-    return c, interf
+    return n, interf
 
 if __name__ == "__main__":
-    c, interf = Counter()
+    n, interf = Counter()
     
-    for o in c.synthetize(interf):
+    for o in n.synthetize(interf):
             print(formatVhdl(str(o)))
 

@@ -1,5 +1,5 @@
 import unittest
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If, Switch
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
@@ -17,7 +17,7 @@ rmWhitespaces = re.compile(r'\s+', re.MULTILINE)
 class StatementTreesTC(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.c = Context("test")
+        self.n = RtlNetlist("test")
     
     def compareStructure(self, template, cont):
         self.assertIsInstance(cont, template.__class__)
@@ -39,8 +39,8 @@ class StatementTreesTC(unittest.TestCase):
         self.assertEquals(_tmpl, _cont, "%s\n\nshould be\n\n%s"% (cont, tmpl ))
     
     def test_baicIf(self):
-        a = self.c.sig('a')
-        b = self.c.sig('b')
+        a = self.n.sig('a')
+        b = self.n.sig('b')
         
         assigs = If(a,
            w(1, b)
@@ -56,8 +56,8 @@ class StatementTreesTC(unittest.TestCase):
         self.compareStructure(tmpl, container)
         
     def test_basicSwitch(self):
-        a = self.c.sig('a', typ=INT)
-        b = self.c.sig('b', typ=INT)
+        a = self.n.sig('a', typ=INT)
+        b = self.n.sig('b', typ=INT)
         
         assigs = Switch(a,
                *[(i, w(i, b)) for i in range(4)]
@@ -70,16 +70,16 @@ class StatementTreesTC(unittest.TestCase):
         self.compareStructure(tmpl, cont)
     
     def test_ifsInSwitch(self):
-        c = self.c
+        n = self.n
         stT = Enum('t_state', ["idle", "tsWait", "ts0Wait", "ts1Wait", "lenExtr"])
-        clk = c.sig('clk')
-        rst = c.sig("rst")
+        clk = n.sig('clk')
+        rst = n.sig("rst")
         
-        st = c.sig('st', stT, clk=clk, syncRst=rst, defVal=stT.idle)
-        sd0 = c.sig('sd0')
-        sd1 = c.sig('sd1')
-        cntrlFifoVld = c.sig('ctrlFifoVld')
-        cntrlFifoLast = c.sig('ctrlFifoLast')
+        st = n.sig('st', stT, clk=clk, syncRst=rst, defVal=stT.idle)
+        sd0 = n.sig('sd0')
+        sd1 = n.sig('sd1')
+        cntrlFifoVld = n.sig('ctrlFifoVld')
+        cntrlFifoLast = n.sig('ctrlFifoLast')
     
         def tsWaitLogic():
             return If(sd0 & sd1,
@@ -158,16 +158,16 @@ class StatementTreesTC(unittest.TestCase):
         self.strStructureCmp(tmpl, cont)
     
     def test_ifs2LvlInSwitch(self):
-        c = self.c
+        n = self.n
         stT = Enum('t_state', ["idle", "tsWait", "ts0Wait", "ts1Wait", "lenExtr"])
-        clk = c.sig('clk')
-        rst = c.sig("rst")
+        clk = n.sig('clk')
+        rst = n.sig("rst")
         
-        st = c.sig('st', stT, clk=clk, syncRst=rst, defVal=stT.idle)
-        sd0 = c.sig('sd0')
-        sd1 = c.sig('sd1')
-        cntrlFifoVld = c.sig('ctrlFifoVld')
-        cntrlFifoLast = c.sig('ctrlFifoLast')
+        st = n.sig('st', stT, clk=clk, syncRst=rst, defVal=stT.idle)
+        sd0 = n.sig('sd0')
+        sd1 = n.sig('sd1')
+        cntrlFifoVld = n.sig('ctrlFifoVld')
+        cntrlFifoLast = n.sig('ctrlFifoLast')
     
         def tsWaitLogic(ifNoTsRd):
             return If(sd0 & sd1,
@@ -254,16 +254,16 @@ class StatementTreesTC(unittest.TestCase):
         self.strStructureCmp(tmpl, cont)
     
     def test_ifs3LvlInSwitch(self):
-        c = self.c
+        n = self.n
         stT = Enum('t_state', ["idle", "tsWait", "ts0Wait", "ts1Wait", "lenExtr"])
-        clk = c.sig('clk')
-        rst = c.sig("rst")
+        clk = n.sig('clk')
+        rst = n.sig("rst")
         
-        st = c.sig('st', stT, clk=clk, syncRst=rst, defVal=stT.idle)
-        sd0 = c.sig('sd0')
-        sd1 = c.sig('sd1')
-        cntrlFifoVld = c.sig('ctrlFifoVld')
-        cntrlFifoLast = c.sig('ctrlFifoLast')
+        st = n.sig('st', stT, clk=clk, syncRst=rst, defVal=stT.idle)
+        sd0 = n.sig('sd0')
+        sd1 = n.sig('sd1')
+        cntrlFifoVld = n.sig('ctrlFifoVld')
+        cntrlFifoLast = n.sig('ctrlFifoLast')
     
         def tsWaitLogic(ifNoTsRd):
             return If(sd0 & sd1,

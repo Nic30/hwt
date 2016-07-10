@@ -40,8 +40,7 @@ def isSignalHiddenInExpr( sig):
         
     return isUnnamedIndex(sig)
 
-# [TODO] rename to RtlNetlist
-class Context():
+class RtlNetlist():
     """
     Container for signals and units
     @ivar signals: dict of all signals in context

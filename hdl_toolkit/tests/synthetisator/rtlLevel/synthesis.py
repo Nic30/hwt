@@ -1,7 +1,7 @@
 import unittest
 
 from hdl_toolkit.hdlObjects.assignment import Assignment
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.samples.rtlLvl.indexOps import IndexOps
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
@@ -10,17 +10,17 @@ class TestCaseSynthesis(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.c = Context("test")
+        self.n = RtlNetlist("test")
 
     def testOpRisingEdgeMultipletimesSameObj(self):
-        clk = self.c.sig("ap_clk")
+        clk = self.n.sig("ap_clk")
         self.assertEqual(clk._onRisingEdge(), clk._onRisingEdge())
     
     
     def testSyncSig(self):
-        c = self.c
-        clk = c.sig("ap_clk")
-        a = c.sig("a", clk=clk)
+        n = self.n
+        clk = n.sig("ap_clk")
+        a = n.sig("a", clk=clk)
         self.assertEqual(len(a.drivers), 1)
         assig = next(iter(a.drivers))
         self.assertIsInstance(assig, Assignment)
@@ -32,7 +32,7 @@ class TestCaseSynthesis(unittest.TestCase):
         self.assertEqual(onRisE.origin.ops[0], clk)
     
     def testSyncSigWithReset(self):
-        c = self.c
+        c = self.n
         clk = c.sig("ap_clk")
         rst = c.sig("ap_rst")
         a = c.sig("a", clk=clk, syncRst=rst, defVal=0)

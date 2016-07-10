@@ -1,4 +1,4 @@
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase 
 from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
@@ -161,7 +161,7 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
                 n = nameForNestedParam(p)
                 addP(n, p)
                 
-        return Context(self._name, globalNames=globalNames)
+        return RtlNetlist(self._name, globalNames=globalNames)
     
     def _initName(self):
         if not hasattr(self, "_name"):

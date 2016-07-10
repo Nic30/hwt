@@ -1,7 +1,7 @@
 
 class HdlSimConfig():
         
-    def beforeSim(self, simulator):
+    def beforeSim(self, simulator, signals):
         pass
     
     def logChange(self, nowTime, sig, nextVal):

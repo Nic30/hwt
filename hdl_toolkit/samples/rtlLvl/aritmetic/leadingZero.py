@@ -1,6 +1,6 @@
 
 from hdl_toolkit.formater import formatVhdl
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
@@ -11,10 +11,10 @@ w = connect
 def LeadingZero():
     t = vecT(64)
     resT = vecT(8)
-    c = Context("LeadingZero")
+    n = RtlNetlist("LeadingZero")
     
-    s_in = c.sig("s_in", t)
-    index = c.sig("s_indexOfFirstZero", resT)
+    s_in = n.sig("s_in", t)
+    index = n.sig("s_indexOfFirstZero", resT)
     
     leadingZeroTop = None  # index is index of first empty record or last one
     for i in reversed(range(8)):
@@ -30,11 +30,11 @@ def LeadingZero():
     
     interf = [s_in, index]
     
-    return c, interf
+    return n, interf
 
 if __name__ == "__main__":
-    c, interf = LeadingZero()
+    n, interf = LeadingZero()
     
-    for o in c.synthetize(interf):
+    for o in n.synthetize(interf):
             print(formatVhdl(str(o)))
 

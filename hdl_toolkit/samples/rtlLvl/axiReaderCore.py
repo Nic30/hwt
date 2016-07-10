@@ -1,6 +1,6 @@
 
 from hdl_toolkit.formater import formatVhdl
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.hdlObjects.types.enum import Enum
@@ -9,14 +9,14 @@ w = connect
 
 
 def axiReaderCore():
-    c = Context("AxiReaderCore")
+    n = RtlNetlist("AxiReaderCore")
     rSt_t = Enum('rSt_t', ['rdIdle', 'rdData'])
     
-    rSt = c.sig('rSt', rSt_t)
-    arRd = c.sig('arRd')
-    arVld = c.sig('arVld')
-    rVld = c.sig('rVld')
-    rRd = c.sig('rRd')
+    rSt = n.sig('rSt', rSt_t)
+    arRd = n.sig('arRd')
+    arVld = n.sig('arVld')
+    rVld = n.sig('rVld')
+    rRd = n.sig('rRd')
 
     # ar fsm next
     If(arRd,
@@ -35,10 +35,10 @@ def axiReaderCore():
         )
     )
     
-    return c, [rSt, arRd, arVld, rVld, rRd]
+    return n, [rSt, arRd, arVld, rVld, rRd]
     
 if __name__ == "__main__":
-    c, interf = axiReaderCore()
+    n, interf = axiReaderCore()
     
-    for o in c.synthetize(interf):
+    for o in n.synthetize(interf):
             print(formatVhdl(str(o)))

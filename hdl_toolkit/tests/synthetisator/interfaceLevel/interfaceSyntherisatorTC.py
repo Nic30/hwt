@@ -9,7 +9,7 @@ from hdl_toolkit.interfaces.ambaOthers import FullDuplexAxiStream
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import synthesised
 from hdl_toolkit.synthetisator.interfaceLevel.emptyUnit import setOut
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
-from hdl_toolkit.synthetisator.rtlLevel.context import Context
+from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
 
 D = DIRECTION
 
@@ -22,9 +22,9 @@ def createTwoAxiDuplexStreams():
         i2._name = 'i2'
         i2._loadDeclarations()
         
-        c = Context("test")
+        n = RtlNetlist("test")
         for _i in [i, i2]:
-            _i._signalsForInterface(c)
+            _i._signalsForInterface(n)
         return i, i2
 
 class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
@@ -211,10 +211,10 @@ class InterfaceSyntherisatorTC(BaseSynthetisatorTC):
         s = lambda i: self.assertEqual(i._direction, INTF_DIRECTION.SLAVE)
         
         i, i2 = createTwoAxiDuplexStreams()
-        c = Context("test")
+        n = RtlNetlist("test")
         
-        i._signalsForInterface(c)
-        i2._signalsForInterface(c)
+        i._signalsForInterface(n)
+        i2._signalsForInterface(n)
         
         
         
