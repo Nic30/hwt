@@ -29,7 +29,7 @@ class UnitImplHelpers():
     def _cleanAsSubunit(self):
         """Disconnect internal signals so unit can be reused by parent unit"""
         for pi in self._entity.ports:
-            pi.connectInternSig(pi._interface._sig)   
+            pi.connectInternSig()
         for i in self._interfaces:
             i._clean()
                     
@@ -60,8 +60,8 @@ class UnitImplHelpers():
             interface._originEntityPort = portItem
             d = INTF_DIRECTION.asDirection(interface._direction)
             if portItem.direction != d:
-                print(self._entity)
-                print(self._architecture)
+                #print(self._entity)
+                #print(self._architecture)
                 raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
                                      (self._name, portItem.name, repr(interface), portItem.direction, d))
     

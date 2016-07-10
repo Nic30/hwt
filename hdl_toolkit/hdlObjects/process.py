@@ -13,4 +13,8 @@ class HWProcess():
         """
         for s in self.statements:
             yield from s.simEval(simulator)
-        #raise NotImplementedError()
+
+    def __repr__(self):
+        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.formater import formatVhdl
+        return formatVhdl(VhdlSerializer.HWProcess(self))

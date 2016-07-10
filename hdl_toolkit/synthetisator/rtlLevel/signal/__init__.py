@@ -3,15 +3,17 @@ from hdl_toolkit.hdlObjects.types.hdlType import HdlType
 from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.simulator.exceptions import SimNotInitialized, SimException
-from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, STR
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, STR
+from hdl_toolkit.hdlObjects.portItem import PortItem
+
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDriversExc
 from hdl_toolkit.synthetisator.rtlLevel.signal.ops import SignalOps
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
+
 from hdl_toolkit.simulator.utils import valHasChanged
-from hdl_toolkit.hdlObjects.portItem import PortItem
+from hdl_toolkit.simulator.exceptions import SimException
 
 
 def hasDiferentVal(reference, sigOrVal):
@@ -61,14 +63,8 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
             self._oldVal = self._val
 
             for e in self.endpoints:
-                if isinstance(e, PortItem):
-                    si = e.portItem._interface._sigInside
-                    if self is si:
-                        # OUT port
-                        raise NotImplementedError()
-                    else:
-                        # IN port
-                        si.simUpdateVal(simulator, self._val)
+                if isinstance(e, PortItem) and e.dst is not None:
+                    e.dst.simUpdateVal(simulator, self._val)
                 else:
                     try:
                         isIndexOnMe = e.op == AllOps.INDEX and e.result != self

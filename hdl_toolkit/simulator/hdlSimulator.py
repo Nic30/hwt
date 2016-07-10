@@ -5,7 +5,7 @@ from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from math import inf
 
-class HdlSimulator():
+class HdlSimulator(object):
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
     ps = 1
     ns = 1000
@@ -14,7 +14,7 @@ class HdlSimulator():
     s = ms * 1000
     
     def __init__(self, config=None):
-        if config == None:
+        if config is None:
             config = HdlSimConfig() 
         self.config = config
         self.env = simpy.Environment()
@@ -26,7 +26,7 @@ class HdlSimulator():
     
     def addHwProcToRun(self, proc):
         if not self.valuesToApply:
-            # (in future)
+            # (apply in future)
             self.env.process(self.applyValues())
             
         for v in proc.simEval(self):
@@ -39,6 +39,9 @@ class HdlSimulator():
         
         updatedSigs = {}
         va = self.valuesToApply
+        if self.config.logApplyingValues:
+            self.config.logApplyingValues(self, va)
+            
         self.valuesToApply = []
 
         for s, v in va:
@@ -53,6 +56,8 @@ class HdlSimulator():
                 raise NotImplementedError()
             else:
                 s.simUpdateVal(self, v)
+                
+                
         now = self.env.now
         nextEventT = self.env.peek()
         # is last event or is last in this time

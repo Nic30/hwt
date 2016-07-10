@@ -16,6 +16,8 @@ class PortMap():
         else:
             raise NotImplementedError()
         
+        assert sig is not None
+        
         return cls(sig, portItem)
     
     def __repr__(self):

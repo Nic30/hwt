@@ -4,7 +4,5 @@ from hdl_toolkit.simulator.shortcuts import simUnitVcd, oscilate
 
 if __name__ == "__main__":
     u = SimpleSubunit()
-    s = HdlSimulator
-
-    simUnitVcd(u, [oscilate(lambda: u.a)], "tmp/simpleSubunit.vcd", time= 40*s.ns)
+    simUnitVcd(u, [oscilate(lambda: u.a)], "tmp/simpleSubunit.vcd", time= 40*HdlSimulator.ns)
     print("done")

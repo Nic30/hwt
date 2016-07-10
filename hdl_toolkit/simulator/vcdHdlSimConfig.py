@@ -13,12 +13,16 @@ class VcdHdlSimConfig(HdlSimConfig):
         super().__init__()
         self.vcdWritter = VcdWritter(dumpFile) 
         self.logPropagation = False
-        
+        self.logApplyingValues = False        
+
         # unit :  signal | unit
         # signal : None
         self.registered = {}
     
     
+    #def logApplyingValues(self, simulator, values):
+    #    print(simulator.env.now, values)
+        
     def vcdRegisterUnit(self, unit_name, sublements):
         with self.vcdWritter.module(unit_name) as m:
             for se , ssitems in sublements.items():

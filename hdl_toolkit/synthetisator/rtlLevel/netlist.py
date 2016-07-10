@@ -10,7 +10,7 @@ from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
-from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import  walkUnitInputs, walkSignalsInExpr, \
+from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import walkUnitInputPorts, walkSignalsInExpr, \
     discoverSensitivity, walkSigSouces, signalHasDriver
 from hdl_toolkit.serializer.templates import VHDLTemplates  
 from hdl_toolkit.synthetisator.exceptions import SigLvlConfErr
@@ -26,7 +26,7 @@ def isUnnamedIndex(sig):
             sig.origin.operator == AllOps.INDEX and
             sig.hasGenericName)
         
-def isSignalHiddenInExpr( sig):
+def isSignalHiddenInExpr(sig):
     """Some signals are just only connections in expression they done need to be rendered because
     they are hidden inside expression for example sig. from a+b in a+b+c"""
     if isinstance(sig, Value):
@@ -101,6 +101,9 @@ class RtlNetlist():
         return buff
     
     def discover(self, interfaces):
+        """
+        Discovery process begins on the outputs and tracks back the inputs
+        """
         self.startsOfDataPaths = set()
         self.subUnits = set()
         def discoverDatapaths(signal):
@@ -108,11 +111,13 @@ class RtlNetlist():
                 if node in self.startsOfDataPaths:
                     return 
                 self.startsOfDataPaths.add(node)
-                if isinstance(node, PortItem) and not node.unit.discovered:
+                if isinstance(node, PortItem):
+                    if node.unit.discovered:
+                        pass
                     node.unit.discovered = True
-                    for s in walkUnitInputs(node.unit):
-                        if s is not None: # top unit does not have to be connected
-                            discoverDatapaths(s)
+                    for p in walkUnitInputPorts(node.unit):
+                        if p.src is not None:  # top unit does not have to be connected
+                            discoverDatapaths(p.src)
                     self.subUnits.add(node.unit)
                 elif isinstance(node, Assignment):
                     for s in walkSignalsInExpr(node.src):
@@ -131,15 +136,20 @@ class RtlNetlist():
             discoverDatapaths(s)
     
     def buildProcessesOutOfAssignments(self):
-        assigments = list(where(self.startsOfDataPaths, 
+        assigments = list(where(self.startsOfDataPaths,
                                 lambda x: isinstance(x, Assignment)
                                 )
                           )
         for sig in set(map(lambda x:x.dst, assigments)):
-            dps = list(where(assigments, 
+            dps = list(where(assigments,
                              lambda x: x.dst == sig)
                        )
             p = HWProcess("assig_process_" + sig.name)
+            # render sequential statements in process
+            # (conversion from netlist to statements)
+            for stm in renderIfTree(dps):
+                p.statements.append(stm) 
+
             for dp in dps:
                 for s in discoverSensitivity(dp):
                     # resolve process boundaries and mark them 
@@ -152,16 +162,12 @@ class RtlNetlist():
                     p.sensitivityList.add(s)
                     s.simSensitiveProcesses.add(p)
             
-            # render sequential statements in process
-            # (conversion from netlist to statements)
-            for stm in renderIfTree(dps):
-                p.statements.append(stm) 
             
             yield p
 
     def synthetize(self, interfaces):
         ent = Entity(self.name)
-        ent._name = self.name + "_inst" # instance name
+        ent._name = self.name + "_inst"  # instance name
         
 
         # create generics
@@ -172,6 +178,7 @@ class RtlNetlist():
         # create ports
         for s in interfaces:
             pi = portItemfromSignal(s, ent)
+            pi.reigsterInternSig(s)
             ent.ports.append(pi)
 
         self.discover(interfaces)

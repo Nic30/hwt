@@ -83,9 +83,9 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
         self._architecture = s[2]
             
         for intf in self._interfaces: 
-            # reverse because other components looks at this one from outside
             if intf._isExtern:
                 intf._resolveDirections()
+                # reverse because other components looks at this one from outside
                 intf._reverseDirection()
         
         # connect results of synthetized context to interfaces of this unit
@@ -139,6 +139,7 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
                 raise IntfLvlConfErr("Redefinition of generic '%s' while synthesis old:%s, new:%s" % 
                                      (n, repr(globalNames[n]), repr(p))) 
             globalNames[n] = p
+            
         def nameForNestedParam(p):
             n = ""
             node = p

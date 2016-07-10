@@ -15,14 +15,14 @@ def signalHasDriver(sig):
 
 def walkSignalDrivers(sig):
     def assign2Me(ep):
-        if isinstance(ep, Assignment) and ep.dst == sig:
+        if isinstance(ep, Assignment) and ep.dst is sig:
             return True
         elif isinstance(ep, Operator) and ep.operator == AllOps.INDEX:
             if sig is ep.ops[0]:
                 return signalHasDriver(ep.result)
             else:
                 return signalHasDriver(ep.ops[0])
-        elif isinstance(ep, PortItem) and ep.direction == DIRECTION.OUT: 
+        elif isinstance(ep, PortItem) and ep.dst is sig: 
             return True
         else:
             return None
@@ -36,10 +36,10 @@ def walkSigExpr(sig):
     yield from sig.drivers
     yield from sig.endpoints
 
-def walkUnitInputs(unit):
+def walkUnitInputPorts(unit):
     for portItem in unit.ports:
         if portItem.direction == DIRECTION.IN:
-            yield portItem.dst
+            yield portItem
 
 
 def walkAllOriginSignals(sig, discovered=None):
