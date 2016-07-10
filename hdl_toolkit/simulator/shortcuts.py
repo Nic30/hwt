@@ -46,3 +46,68 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.
     sim.simSignals(sigs, time=time, extraProcesses=stimulFunctions) 
 
 
+def afterRisingEdge(getSigFn):
+    """
+    Decorator wrapper
+    
+    usage:
+    @afterRisingEdge(lambda : yourUnit.clk)
+    def yourFn(simulator):
+        code which should be executed after rising edge (in the time of rising edge)
+        when all values are set
+    
+    """
+    def _afterRisingEdge(fn):
+        """
+        Decorator
+        """
+        def __afterRisingEdge(s):
+            """
+            Decorator function
+            """
+            while True:
+                yield s.updateComplete
+                v = s.read(getSigFn())._onRisingEdge(s.env.now)
+                if bool(v):
+                    fn(s)
+        return __afterRisingEdge
+    return _afterRisingEdge
+
+
+def oscilate(getSigFn, period=10*HdlSimulator.ns, initWait=0):
+    """
+    Oscilative drive for your signal
+    """
+    halfPeriod = period/2
+    def oscilateStimul(s):
+        sig = getSigFn()
+        s.write(False, sig)
+        yield s.wait(initWait)
+
+        while True:
+            yield s.wait(halfPeriod)   
+            c = s.read(sig)
+            s.write(~c, sig)
+    return oscilateStimul
+    
+
+
+def pullDownAfter(getSigFn, time=6*HdlSimulator.ns):
+    def _pullDownAfter(s):
+        sig = getSigFn()
+        
+        s.write(True, sig) 
+        yield s.wait(time)
+        s.write(False, sig)
+         
+    return _pullDownAfter
+    
+def pullUpAfter(getSigFn, time=6*HdlSimulator.ns):
+    def _pullDownAfter(s):
+        sig = getSigFn()
+        
+        s.write(False, sig) 
+        yield s.wait(time)
+        s.write(True, sig)
+         
+    return _pullDownAfter    

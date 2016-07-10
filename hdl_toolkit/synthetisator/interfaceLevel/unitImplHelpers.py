@@ -13,8 +13,10 @@ class UnitImplHelpers():
         clk = single(self._interfaces, lambda i: isinstance(i, Ap_clk))
         rst = single(self._interfaces, lambda i: isinstance(i, (Ap_rst, Ap_rst_n)))
         s = self._cntx.sig
-        if defVal is None:
+        
+        if defVal is None: # if no value is specified reset is not required
             return s(name, typ=dtype, clk=clk._sig)
+        
         return s(name, typ=dtype, clk=clk._sig,
                           syncRst=rst._sig, defVal=defVal)
     def _sig(self, name, dtype=BIT, defVal=None):

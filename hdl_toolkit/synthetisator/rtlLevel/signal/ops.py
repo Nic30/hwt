@@ -30,11 +30,11 @@ class SignalOps():
     def __invert__(self):
         return self.naryOp(AllOps.NOT, tv(self).__invert__)
         
-    def _onRisingEdge(self):
-        return self.naryOp(AllOps.RISING_EDGE, tv(self)._onRisingEdge)
+    def _onRisingEdge(self, now=None):
+        return self.naryOp(AllOps.RISING_EDGE, tv(self)._onRisingEdge, now)
     
-    def _hasEvent(self):
-        raise self.naryOp(AllOps.EVENT, tv(self)._hasEvent)
+    def _hasEvent(self, now=None):
+        raise self.naryOp(AllOps.EVENT, tv(self)._hasEvent, now)
     
     def _isOn(self):
         return self._dtype.convert(self, BOOL)

@@ -30,7 +30,7 @@ class ArrayVal(Value):
                 elements.append(e)
         
         
-        return cls(elements, typeObj, val is not None)
+        return cls(elements, typeObj, int(val is not None))
     
     def __getitem__(self, key):
         iamVal = isinstance(self, Value)

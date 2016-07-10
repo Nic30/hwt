@@ -41,7 +41,6 @@ def isSignalHiddenInExpr( sig):
         
     return isUnnamedIndex(sig)
 
-
 # [TODO] rename to RtlNetlist
 class Context():
     """
@@ -72,16 +71,16 @@ class Context():
 
         if name in self.signals:
             raise Exception('%s:signal name "%s" is not unique' % (self.name, name))
-        if defVal is not None and not isinstance(defVal, Value):
-            defVal = typ.fromPy(defVal)
+        _defVal = typ.fromPy(defVal)
+
 
         if clk is not None:
-            s = RtlSyncSignal(name, typ, defVal)
+            s = RtlSyncSignal(name, typ, _defVal)
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                            [RtlSignal._assignFrom(s, defVal)] ,
+                            [RtlSignal._assignFrom(s, _defVal)] ,
                             [RtlSignal._assignFrom(s, s.next)])
             else:
                 r = [RtlSignal._assignFrom(s, s.next)]
@@ -90,7 +89,7 @@ class Context():
         else:
             if syncRst:
                 raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
-            s = RtlSignal(name, typ, defaultVal=defVal)
+            s = RtlSignal(name, typ, defaultVal=_defVal)
         self.signals[name] = s
         return s
     

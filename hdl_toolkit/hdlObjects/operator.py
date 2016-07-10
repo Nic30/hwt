@@ -40,9 +40,9 @@ class Operator():
         if signal has not set hidden flag do not reevaluate it
         """
         for o in self.ops:
-            if o.hidden:
+            if isinstance(o, RtlSignalBase) and o.hidden:
                 o.simEval(simulator)
-        self.result._val = self.evalFn()
+        self.result._val = self.evalFn(simulator=simulator)
             
     def staticEval(self):
         """
@@ -52,11 +52,11 @@ class Operator():
             o.staticEval()
         self.result._val = self.evalFn()
             
-    def evalFn(self):
+    def evalFn(self, simulator=None):
         """
         Syntax sugar
         """
-        return self.operator.eval(self)
+        return self.operator.eval(self, simulator=simulator)
     
     def __eq__(self, other):
         return self is other or (

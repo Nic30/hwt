@@ -2,7 +2,6 @@ import sys
 from hdl_toolkit.simulator.vcdWritter import VcdWritter
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from datetime import datetime
-from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.hdlObjects.types.boolean import Boolean
 from hdl_toolkit.hdlObjects.types.bits import Bits
@@ -12,10 +11,8 @@ class VcdHdlSimConfig(HdlSimConfig):
     
     def __init__(self, dumpFile=sys.stdout):
         super().__init__()
-        # rising faling duration
         self.vcdWritter = VcdWritter(dumpFile) 
-        self.log = True
-        # self.logPropagation = False
+        self.logPropagation = False
         
         # unit :  signal | unit
         # signal : None
@@ -57,4 +54,5 @@ class VcdHdlSimConfig(HdlSimConfig):
         try:
             self.vcdWritter.change(nowTime, sig, nextVal)
         except KeyError:
+            # signal is not registered
             pass

@@ -7,5 +7,5 @@ class SliceVal(ArrayVal):
         _0 = self.val[0].staticEval()
         _1 = self.val[1].staticEval()
         updateTime = max(_0.updateTime, _1.updateTime)
-        return SliceVal([_0, _1], SLICE, vldMask=None, updateTime)
+        return SliceVal([_0, _1], SLICE, None, updateTime)
     

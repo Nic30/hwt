@@ -1,12 +1,9 @@
 import simpy
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
-from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from math import inf
 
 class HdlSimulator():
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
@@ -21,11 +18,11 @@ class HdlSimulator():
             config = HdlSimConfig() 
         self.config = config
         self.env = simpy.Environment()
+        self.updateComplete = self.env.event()
         
         # (signal, value) tupes which should be applied before new round of processes
         #  will be executed
         self.valuesToApply = []
-        self.signalsToDisableEvent = []
     
     def addHwProcToRun(self, proc):
         if not self.valuesToApply:
@@ -34,20 +31,17 @@ class HdlSimulator():
             
         for v in proc.simEval(self):
             self.valuesToApply.append(v)
-            print("apply", v)
-            print()
     
     def applyValues(self):
         # [TODO] not ideal, processes should be evaluated before runing apply values
         # this should be done by priority, not by timeout
-        yield self.env.timeout(0)
-        print("%d:applyValues" % (self.env.now))
+        yield self.wait(0)
         
-        for s in self.signalsToDisableEvent:
-            s[0]._val.updateTime = self.env.now
-            
         updatedSigs = {}
-        for s, v in self.valuesToApply:
+        va = self.valuesToApply
+        self.valuesToApply = []
+
+        for s, v in va:
             v.updateTime = self.env.now
             try:
                 lastV = updatedSigs[s]
@@ -59,10 +53,13 @@ class HdlSimulator():
                 raise NotImplementedError()
             else:
                 s.simUpdateVal(self, v)
-        
-        self.signalsToDisableEvent = self.valuesToApply
-        self.valuesToApply = []
-    
+        now = self.env.now
+        nextEventT = self.env.peek()
+        # is last event or is last in this time
+        if nextEventT == inf or (nextEventT > now and not self.valuesToApply):
+            self.updateComplete.succeed() # trigger
+            self.updateComplete = self.env.event() # regenerate event
+            
     def _initSignals(self, signals):
         """
         Inject default values to simulation
@@ -71,6 +68,10 @@ class HdlSimulator():
             v = s.defaultVal.clone()
             s.simUpdateVal(self, v)
 
+    def r(self, sig):
+        "read shortcut"
+        return self.read(sig)
+        
     def read(self, sig):
         """
         Read value from signal or interface
@@ -78,12 +79,18 @@ class HdlSimulator():
         if isinstance(sig, InterfaceBase):
             sig = sig._sigInside
         return sig._val.clone()
-        
+    
+    
+    def w(self, val, sig):
+        "write shortcut"
+        self.write(val, sig) 
+           
     def write(self, val, sig):
         """
         Write value to signal or interface.
         """
         v = toHVal(val)
+        v.updateTime = self.env.now
         if isinstance(sig, InterfaceBase):
             sig = sig._sigInside
         assert isinstance(v, Value)
@@ -91,12 +98,9 @@ class HdlSimulator():
         
         sig.simUpdateVal(self, v)
         
-        self.signalsToDisableEvent.append((sig, v))
-        
-    def timeout(self, time):
+    def wait(self, time):
         return self.env.timeout(time)
-    
-            
+        
     def simSignals(self, signals, time, extraProcesses=[]):
         """
         Run simulation

@@ -9,7 +9,7 @@ if __name__ == "__main__":
         aIn = True
         while True:
             # alias wait in VHDL
-            yield s.timeout(10 * s.ns)    
+            yield s.wait(10 * s.ns)    
             s.write(aIn, u.a)
             aIn = not aIn
     

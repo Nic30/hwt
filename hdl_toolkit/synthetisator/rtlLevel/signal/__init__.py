@@ -116,7 +116,7 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
         self._val = newVal
         
         c = simulator.config
-        if  c.log:
+        if  c.logChange:
             c.logChange(simulator.env.now, self, newVal)
         
         self.simPropagateChanges(simulator)

@@ -144,7 +144,7 @@ class BitsVal(Value):
         vld = 0 if val is None else Bitmask.mask(typeObj.bit_length())
         if not vld:
             val = 0
-        return cls(val, typeObj, vld)
+        return cls(int(val), typeObj, vld)
     
     # [TODO] bit reverse operator
     def _concat(self, other):

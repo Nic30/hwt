@@ -18,6 +18,15 @@ def evalCond(cond):
         
     return _cond
 
+def simEvalCond(cond, simulator):
+    _cond = True
+    for c in cond:
+        _cond = _cond and bool(c.simEval(simulator))
+        
+    return _cond
+
+
+
 class IfContainer():
     """
     Structural container for hdl rendering
@@ -33,7 +42,7 @@ class IfContainer():
         Same like seqEval but does not assign to signal instead of
         yield tuple (signal, value)
         """
-        if evalCond(self.cond):
+        if simEvalCond(self.cond, simulator):
             for s in self.ifTrue:
                 yield from s.simEval(simulator)
         else:

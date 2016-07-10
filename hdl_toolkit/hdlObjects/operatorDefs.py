@@ -18,7 +18,7 @@ class OpDefinition():
     def  __hash__(self):
         return hash(self.id)
     
-    def eval(self, operator):
+    def eval(self, operator, simulator=None):
         """Load all operands and process them by self._evalFn"""
         def getVal(v):
             while not isinstance(v, (Value, Function)):
@@ -27,6 +27,10 @@ class OpDefinition():
             return v
 
         ops = list(map(getVal, operator.ops))
+        
+        if operator.operator in (AllOps.RISING_EDGE, AllOps.EVENT):
+            ops.append(simulator.env.now)
+        
         return self._evalFn(*ops)
 
     def __repr__(self):
@@ -41,8 +45,8 @@ class AllOps():
     """
     
     NOT = OpDefinition(lambda a :~a)
-    EVENT = OpDefinition(lambda a : a._hasEvent())
-    RISING_EDGE = OpDefinition(lambda a : a._onRisingEdge())  # unnecessary
+    EVENT = OpDefinition(lambda a, now: a._hasEvent(now))
+    RISING_EDGE = OpDefinition(lambda a , now: a._onRisingEdge(now))  # unnecessary
     DIV = OpDefinition(lambda a, b : a // b)
     ADD = OpDefinition(lambda a, b : a + b)
     SUB = OpDefinition(lambda a, b : a - b)

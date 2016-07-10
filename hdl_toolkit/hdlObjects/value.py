@@ -6,7 +6,7 @@ class Value():
     
     operators are overloaded in every type separately
     """
-    def __init__(self, val, _type, vldMask, updateTime):
+    def __init__(self, val, _type, vldMask, updateTime=-1):
         if isinstance(val, Value):
             val = val.val
 
@@ -21,7 +21,7 @@ class Value():
     def staticEval(self):
         return self
     
-    def simEval(self):
+    def simEval(self, simulator):
         return self
     
     def clone(self):
