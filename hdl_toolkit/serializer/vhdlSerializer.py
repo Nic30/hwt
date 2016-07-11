@@ -326,10 +326,17 @@ class VhdlSerializer():
                 prefix = "SIGNAL"
 
             s = prefix + " %s : %s" % (si.name, cls.HdlType(si._dtype))
-            if si.defaultVal is not None and si.defaultVal.vldMask:
-                return s + " := %s" % cls.Value(si.defaultVal)
-            else:
-                return s 
+            if si.defaultVal is not None:
+                v = si.defaultVal
+                if isinstance(v, RtlSignalBase):
+                    return s + " := %s" % cls.asHdl(v)
+                elif isinstance(v, Value):
+                    if si.defaultVal.vldMask:
+                        return s + " := %s" % cls.Value(si.defaultVal)
+                else:
+                    raise NotImplementedError(v)
+                
+            return s 
         else:
             if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin)
@@ -474,6 +481,8 @@ class VhdlSerializer():
             return _bin('AND')
         elif o == AllOps.OR_LOG:
             return _bin('OR')
+        elif o == AllOps.XOR:
+            return _bin('XOR')
         elif o == AllOps.NOT:
             assert len(ops) == 1
             return "NOT " + p(ops[0])

@@ -6,6 +6,7 @@ from hdl_toolkit.hdlObjects.assignment import Assignment
 from python_toolkit.arrayQuery import where
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.portItem import PortItem
+from hdl_toolkit.synthetisator.param import Param
 
 
 def signalHasDriver(sig):
@@ -131,8 +132,13 @@ def discoverSensitivity(datapath):
     if not isinstance(datapath, Assignment):
         raise Exception("Not implemented")
     for c in datapath.cond:
-        yield from walkSignalsInExpr(c)
-    yield from walkSignalsInExpr(datapath.src)
+        for s in walkSignalsInExpr(c):
+            if not isinstance(s, Param):
+                yield s
+                
+    for s in walkSignalsInExpr(datapath.src):
+            if not isinstance(s, Param):
+                yield s
         
 # walks code but do not cross assignment of precursors 
 def walkSigSouces(sig, parent=None):    
