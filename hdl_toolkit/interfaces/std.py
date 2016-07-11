@@ -80,6 +80,15 @@ class Ap_vld(Interface):
         self.data = s(dtype=vecT(self.DATA_WIDTH))
         self.vld = s(alternativeNames=['valid'])
 
+class Ap_rd(Interface):
+    def _config(self):
+        self.DATA_WIDTH = Param(64)
+    
+    def _declr(self):
+        self.data = s(dtype=vecT(self.DATA_WIDTH))
+        self.rd = s(masterDir=D.IN, alternativeNames=['valid'])
+    
+
 class Ap_hs(Ap_vld):
     def _declr(self):
         super()._declr()
