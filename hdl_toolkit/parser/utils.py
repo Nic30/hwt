@@ -16,7 +16,7 @@ def entityFromFile(fileName, debug=False):
     ent = list(c.entities.items())[0][1]
     return ent
 
-def loadCntxWithDependencies(hdlFiles, debug=False, multithread=True):
+def loadCntxWithDependencies(hdlFiles, debug=False):
     """Load full context for first file"""
     fileInfos = []
     for f in hdlFiles:
@@ -28,7 +28,7 @@ def loadCntxWithDependencies(hdlFiles, debug=False, multithread=True):
             raise NotImplementedError()
         fileInfos.append(fi)
     
-    dfs = DesignFile.loadFiles(fileInfos, parallel=multithread)
+    dfs = DesignFile.loadFiles(fileInfos)
     
     dep = DesignFile.fileDependencyDict(dfs)
     mainFile = hdlFiles[0]

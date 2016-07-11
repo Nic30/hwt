@@ -20,8 +20,8 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
     @ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
     """
     
-    def __init__(self, multithread=True):
-        self.__class__._builded(multithread=multithread)
+    def __init__(self):
+        self.__class__._builded()
         self._checkIntferfaces = True
          
         self._loadConfig()

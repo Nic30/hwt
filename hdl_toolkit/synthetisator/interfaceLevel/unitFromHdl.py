@@ -141,21 +141,20 @@ class UnitFromHdl(Unit):
         cls._hdlSources = toAbsolutePaths(baseDir, cls._hdlSources)
     
     @staticmethod
-    def _loadEntity(cls, multithread=True, ignoreCache=False):
+    def _loadEntity(cls, ignoreCache=False):
         if not hasattr(cls, "_debugParser"):
             cls._debugParser = False
         # extract params from entity generics
         try:
             return entityFromFile(cls._hdlSources[0], debug=cls._debugParser)
         except RequireImportErr:
-            ctx = loadCntxWithDependencies(cls._hdlSources, debug=cls._debugParser,
-                                           multithread=multithread)
+            ctx = loadCntxWithDependencies(cls._hdlSources, debug=cls._debugParser)
             for _, e in ctx.entities.items():
                 if e.parent == ctx:
                     return e
         
     @classmethod
-    def _build(cls, multithread=True):
+    def _build(cls):
         cls._buildFileNames()
         if not hasattr(cls, "_intfClasses"):
             cls._intfClasses = allInterfaces
@@ -165,7 +164,7 @@ class UnitFromHdl(Unit):
         cls._interfaces = []
         cls._units = []
 
-        cls._entity = cls._loadEntity(cls, multithread=multithread)
+        cls._entity = cls._loadEntity(cls)
             
         for g in cls._entity.generics:
             cls._params.append(g)

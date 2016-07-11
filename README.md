@@ -9,7 +9,9 @@ Currently library is used for gluing things together. Examples showing this feat
 Automatic interface/parameter extraction is implemented take look at /hdl_toolkit/interfaces
 
 Libary has vhdl, verilog, vivado hls/hlx support, object from this langues (entity, architecture, package, function, module ...) 
-can be imported and used (take look at  /hdl_toolkit/samples/) like any others. 
+can be imported and used like any others. 
+
+There is library full of examples at https://github.com/Nic30/hwtLib.
 
 ## Library components
 
@@ -48,7 +50,7 @@ you can access things from _config(self).
 
 
 This is developement repo not everything needs to be working everytime, check it by running test in package you need. 
-Take a look at samples in packages.
+Take a look at samples in packages and https://github.com/Nic30/hwtLib.
 
 The library functionaly is in general driven by my projects usualy at Faculty of Information Technology 
 Brno University of Technology.
