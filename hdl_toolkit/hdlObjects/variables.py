@@ -1,3 +1,5 @@
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
+
 class VHDLVariable():
     def __init__(self, name, dtype, defaultVal=None):
         self.name = name
@@ -10,7 +12,11 @@ class VHDLVariable():
         self._setDefValue()
         
     def _setDefValue(self):
-        self._val = self.defaultVal.clone()
+        v = self.defaultVal
+        if isinstance(v, RtlSignalBase):
+            v = v.staticEval()
+            
+        self._val = v.clone()
         self._oldVal = self._val.clone()
         self._oldVal.vldMask = 0
     

@@ -20,6 +20,7 @@ from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDriversExc
 from hdl_toolkit.synthetisator.rtlLevel.memory import RtlSyncSignal
 from hdl_toolkit.hdlObjects.portItem import PortItem
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 
 def isUnnamedIndex(sig):
     return (hasattr(sig, "origin") and 
@@ -69,8 +70,11 @@ class RtlNetlist():
 
         if name in self.signals:
             raise Exception('%s:signal name "%s" is not unique' % (self.name, name))
-        if not isinstance(defVal, Value):
-            _defVal = typ.fromPy(defVal)
+        if not isinstance(defVal, (Value, RtlSignal)):
+            if isinstance(defVal, (InterfaceBase)):
+                _defVal = defVal._sig
+            else:    
+                _defVal = typ.fromPy(defVal)
         else:
             _defVal = defVal
 

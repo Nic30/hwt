@@ -20,7 +20,7 @@ class UnitImplHelpers():
         return s(name, typ=dtype, clk=clk._sig,
                           syncRst=rst._sig, defVal=defVal)
     def _sig(self, name, dtype=BIT, defVal=None):
-        return self._cntx.sig(name, typ=dtype, defVal=None)
+        return self._cntx.sig(name, typ=dtype, defVal=defVal)
     
     def _mkIntfExtern(self):
         for i in self._interfaces:

@@ -162,7 +162,7 @@ class BitsVal(Value):
         else:
             # is instance of signal
             if isinstance(other, InterfaceBase):
-                other = other._src
+                other = other._sig
             return Operator.withRes(AllOps.CONCAT, [self, other], resT)
     
     def __getitem__(self, key):
@@ -214,7 +214,8 @@ class BitsVal(Value):
             elif isinstance(t, Slice):
                 resT = Bits(widthConstr=key, forceVector=st.forceVector, signed=st.signed)
             elif isinstance(t, Bits):
-                raise NotImplementedError("[TODO] bits to integer conversion while indexing")
+                resT = BIT
+                key = key._convert(INT)
             else:
                 raise NotImplementedError("Index operation not implemented for index of type %s" % (repr(t)))
        

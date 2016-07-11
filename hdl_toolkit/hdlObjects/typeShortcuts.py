@@ -1,11 +1,14 @@
 from hdl_toolkit.hdlObjects.types.defs import INT, BOOL, STR, BIT
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.hdlObjects.value import Value
 
 def fromPyValToValueFn(pyT, hdlT):
     def fn(val):
         """create hdl value from hdl Value or Param or python value"""
-        return toHVal(val)._convert(hdlT)
+        return hdlT.fromPy(val)
+        #if isinstance(pyT, Value):
+        #    return toHVal(val)._convert(hdlT)
     return fn
 
 hInt = fromPyValToValueFn(int, INT)
