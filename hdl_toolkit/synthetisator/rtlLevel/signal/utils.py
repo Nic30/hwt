@@ -171,3 +171,4 @@ And = mkOp(lambda top, s: top & s)
 Or = mkOp(lambda top, s: top | s)
 Concat = mkOp(lambda top, s: top._concat(s))
 
+c = connect
