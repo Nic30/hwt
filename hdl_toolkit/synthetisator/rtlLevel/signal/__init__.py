@@ -89,14 +89,15 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
                 d.staticEval()
         else:
             if isinstance(self.defaultVal, RtlSignal):
-                self._val = self.defaultVal._val
+                self._val = self.defaultVal._val.staticEval()
             else:
                 # [TODO] find better way how to find out if was initialized
                 if not self._val.vldMask:  
-                    self._val = self.defaultVal
+                    self._val = self.defaultVal.clone()
         
         if not isinstance(self._val, Value):
-            raise SimException("Evaluation of signal returned not supported object (%s)" % (repr(self._val)))
+            raise SimException("Evaluation of signal returned not supported object (%s)" % 
+                               (repr(self._val)))
         return self._val
     
     def simEval(self, simulator):
@@ -108,7 +109,8 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
             if not isinstance(d, Assignment):
                 d.simEval(simulator)
         if not isinstance(self._val, Value):
-            raise SimException("Evaluation of signal returned not supported object (%s)" % (repr(self._val)))
+            raise SimException("Evaluation of signal returned not supported object (%s)" % 
+                               (repr(self._val)))
         return self._val
         
     
@@ -118,7 +120,8 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
         """
         
         if not isinstance(newVal, Value):
-            raise SimException("new value is instance of %s it should be instance of value" % (str(newVal.__class__)))
+            raise SimException("new value is instance of %s it should be instance of value" % 
+                               (str(newVal.__class__)))
         self._val = newVal
         
         c = simulator.config

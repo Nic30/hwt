@@ -247,7 +247,7 @@ class VhdlSerializer():
         if g.defaultVal is None:
             return s
         else:  
-            return  "%s := %s" % (s, cls.Value(getParam(g.defaultVal)))
+            return  "%s := %s" % (s, cls.Value(getParam(g.defaultVal).staticEval()))
     
     @classmethod
     def PortConnection(cls, pc):

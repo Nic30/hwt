@@ -55,7 +55,7 @@ class Param(RtlSignal):
         assert self.replacedWith is None
         val = toHVal(val)
         self.defaultVal = val
-        self._val = val
+        self._val = val.staticEval()
     
     def __repr__(self):
         val = "InvalidVal"
