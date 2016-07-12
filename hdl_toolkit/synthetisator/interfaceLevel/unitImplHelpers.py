@@ -6,7 +6,29 @@ from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.hdlObjects.typeShortcuts import mkRange
 from copy import copy
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
+from types import MethodType
 
+class MakeInterfaceExtern(object):
+    """
+    All newly added interfaces will be external. Automaticaly.
+    """
+    def __init__(self, unit):
+        self.unit = unit
+        
+    def __enter__(self):
+        orig = self.unit._setAttrListener
+        self.orig = orig
+        
+        def MakeInterfaceExternWrap(self, iName, i):
+            if isinstance(i, InterfaceBase):
+                i._isExtern = True
+            return orig(iName, i)
+        self.unit._setAttrListener = MethodType(MakeInterfaceExternWrap,
+                                           self.unit)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.unit._setAttrListener = self.orig
 
 class UnitImplHelpers():
     def _reg(self, name, dtype=BIT, defVal=None):
@@ -14,7 +36,7 @@ class UnitImplHelpers():
         rst = single(self._interfaces, lambda i: isinstance(i, (Ap_rst, Ap_rst_n)))
         s = self._cntx.sig
         
-        if defVal is None: # if no value is specified reset is not required
+        if defVal is None:  # if no value is specified reset is not required
             return s(name, typ=dtype, clk=clk._sig)
         
         return s(name, typ=dtype, clk=clk._sig,
@@ -22,10 +44,9 @@ class UnitImplHelpers():
     def _sig(self, name, dtype=BIT, defVal=None):
         return self._cntx.sig(name, typ=dtype, defVal=defVal)
     
-    def _mkIntfExtern(self):
-        for i in self._interfaces:
-            i._isExtern = True
-            
+    def _asExtern(self):
+        return MakeInterfaceExtern(self)
+    
     def _cleanAsSubunit(self):
         """Disconnect internal signals so unit can be reused by parent unit"""
         for pi in self._entity.ports:
@@ -60,8 +81,8 @@ class UnitImplHelpers():
             interface._originEntityPort = portItem
             d = INTF_DIRECTION.asDirection(interface._direction)
             if portItem.direction != d:
-                #print(self._entity)
-                #print(self._architecture)
+                # print(self._entity)
+                # print(self._architecture)
                 raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
                                      (self._name, portItem.name, repr(interface), portItem.direction, d))
     
