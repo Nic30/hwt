@@ -13,6 +13,7 @@ class ReturnContainer():
 
 def evalCond(cond):
     _cond = True
+    assert isinstance(cond, set)
     for c in cond:
         _cond = _cond and bool(c.staticEval())
         
@@ -47,7 +48,7 @@ class IfContainer():
                 yield from s.simEval(simulator)
         else:
             for c in self.elIfs:
-                if evalCond(c[0]):
+                if simEvalCond(c[0], simulator):
                     for s in c[1]:
                         yield from s.simEval(simulator)
                     raise StopIteration()

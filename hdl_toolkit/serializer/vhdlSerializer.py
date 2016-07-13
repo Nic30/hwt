@@ -299,7 +299,7 @@ class VhdlSerializer():
     
     @classmethod
     def SignedBitString(cls, v, width, vldMask):
-        if vldMask != Bitmask.mask(vldMask):
+        if vldMask != Bitmask.mask(width):
             raise SerializerException(
             "Value %s can not be serialized as signed bit string literal due not all bits are valid" % 
              repr(v))
@@ -309,7 +309,7 @@ class VhdlSerializer():
 
     @classmethod
     def UnsignedBitString(cls, v, width, vldMask):
-        if vldMask != Bitmask.mask(vldMask):
+        if vldMask != Bitmask.mask(width):
             raise SerializerException(
             "Value %s can not be serialized as signed bit string literal due not all bits are valid" % 
              repr(v))

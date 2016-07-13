@@ -1,5 +1,4 @@
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.types.integer import Integer
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType
@@ -37,9 +36,6 @@ def convertInteger(self, sigOrVal, toType):
             assert _v.bit_length() <= w
             v = toType.fromPy(_v)
             
-            m= Bitmask.mask(w)
-            
-            v.vldMask = m if sigOrVal.vldMask else 0
             v.updateTime = sigOrVal.updateTime
              
             v._dtype = toType

@@ -126,19 +126,45 @@ def walkSignalsInExpr(expr):
         else:
             yield expr
     else:
-        raise Exception("Unknown node '%s' type %s" % (repr(expr), str(expr.__class__)))
+        raise Exception("Unknown node '%s' type %s" % 
+                        (repr(expr), str(expr.__class__)))
 
-def discoverSensitivity(datapath):
+def discoverEventDependency(cond):
+    # [TODO] deep event dependency discovery
+    drivers = None
+    try:
+        drivers = cond.drivers
+    except AttributeError:
+        pass
+    
+    if drivers is not None and len(drivers) == 1:
+        d = drivers[0]
+        if isinstance(d, Operator) and d.operator == AllOps.RISING_EDGE:
+            yield d.ops[0]
+
+
+def discoverDriverSignals(datapath):
+    """
+    @return: generators of (isSensitive, signal)
+    """
+    # [TODO] resolve signals and event dependency in once
+    
     if not isinstance(datapath, Assignment):
-        raise Exception("Not implemented")
+        raise NotImplementedError()
+    
+    eventDependency = set()
+    for c in datapath.cond:
+        for ed in discoverEventDependency(c):
+            eventDependency.add(ed)
+
     for c in datapath.cond:
         for s in walkSignalsInExpr(c):
             if not isinstance(s, Param):
-                yield s
+                yield (s in eventDependency, s)
                 
     for s in walkSignalsInExpr(datapath.src):
             if not isinstance(s, Param):
-                yield s
+                yield (s in eventDependency, s)
         
 # walks code but do not cross assignment of precursors 
 def walkSigSouces(sig, parent=None):    

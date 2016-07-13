@@ -20,8 +20,8 @@ class VcdHdlSimConfig(HdlSimConfig):
         self.registered = {}
     
     
-    #def logApplyingValues(self, simulator, values):
-    #    print(simulator.env.now, values)
+    def logApplyingValues(self, simulator, values):
+        print(simulator.env.now, values)
         
     def vcdRegisterUnit(self, unit_name, sublements):
         with self.vcdWritter.module(unit_name) as m:

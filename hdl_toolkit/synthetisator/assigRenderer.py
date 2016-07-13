@@ -6,6 +6,7 @@ from hdl_toolkit.synthetisator.rtlLevel.signal import MultipleDriversExc
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.synthetisator.assigRendererContainers import DepContainer, IfTreeNode
 from python_toolkit.arrayQuery import where
+from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import discoverEventDependency
 
 SWITCH_THRESHOLD = 2  # (max count of elsifs with eq on same variable)
 
@@ -40,7 +41,7 @@ def _renderIfTree(node):
             elIfN = elIfN.neg[0]
             _ifTrue = []
             __renderStatements(elIfN.pos, _ifTrue)
-            elIfs.append((elIfN.cond, _ifTrue))
+            elIfs.append((set([elIfN.cond]), _ifTrue))
         else:
             # render standard else
             __renderStatements(elIfN.neg, ifFalse)
@@ -109,16 +110,7 @@ def getBaseCond(c):
     return (c, isNegated)
 
 def isEventDependent(cond):
-    # [TODO] deep event dependency discovery
-    drivers = None
-    try:
-        drivers = cond.drivers
-    except AttributeError:
-        pass
-    
-    return drivers is not None and len(drivers) == 1 \
-       and isinstance(drivers[0], Operator) \
-       and list(drivers)[0].operator == AllOps.RISING_EDGE
+    return bool(list(discoverEventDependency(cond)))
     
 def countCondOccurrences(termMap):
     for cond, container in termMap.items():

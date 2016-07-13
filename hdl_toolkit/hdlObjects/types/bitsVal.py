@@ -83,9 +83,21 @@ def bitsArithOp(self, other, op):
     if areValues(self, other):
         v = self.clone()
         v.val = op._evalFn(self.val, other.val)
-        # [TODO] value check
-        v.vldMask = self.vldMask & other.vldMask
+
+        # [TODO] correct overflow detection for signed values
+        w = v._dtype.bit_length()
+        v.val |= Bitmask.mask(w)
+        
+        # [TODO] value check range
+        if isinstance(other._dtype, Integer):
+            if other.vldMask:
+                v.vldMask = self.vldMask
+            else:
+                v.vldMask = 0  
+        else:
+            v.vldMask = self.vldMask & other.vldMask
         v.updateTime = max(self.updateTime, other.updateTime)
+        return v
     else:
         resT = self._dtype
         if self._dtype.signed is None:

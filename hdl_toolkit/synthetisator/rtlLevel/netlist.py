@@ -1,4 +1,4 @@
-from python_toolkit.arrayQuery import where, distinctBy
+from python_toolkit.arrayQuery import where, distinctBy, arr_any
 
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.entity import Entity
@@ -11,7 +11,7 @@ from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal
 from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
 from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
 from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import walkUnitInputPorts, walkSignalsInExpr, \
-    discoverSensitivity, walkSigSouces, signalHasDriver
+    discoverDriverSignals, walkSigSouces, signalHasDriver
 from hdl_toolkit.serializer.templates import VHDLTemplates  
 from hdl_toolkit.synthetisator.exceptions import SigLvlConfErr
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
@@ -155,16 +155,20 @@ class RtlNetlist():
                 p.statements.append(stm) 
 
             for dp in dps:
-                for s in discoverSensitivity(dp):
+                sensitivity = list(discoverDriverSignals(dp))
+                isEventDependentProc = arr_any(sensitivity, lambda x: x[0])
+                for evDependent, s in sensitivity:
                     # resolve process boundaries and mark them 
                     # and resolve visibility for signals  
                     s.hidden = False
                     if s.name not in self.signals:
                         self.signals[s.name] = s
                     
-                    # register sensitivity    
-                    p.sensitivityList.add(s)
-                    s.simSensitiveProcesses.add(p)
+                    if (evDependent and isEventDependentProc) \
+                        or not isEventDependentProc:
+                        # register sensitivity    
+                        p.sensitivityList.add(s)
+                        s.simSensitiveProcesses.add(p)
             
             
             yield p
