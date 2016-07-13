@@ -63,11 +63,15 @@ def afterRisingEdge(getSigFn):
             """
             Decorator function
             """
+            lastTime = -1
             while True:
                 yield s.updateComplete
-                v = s.read(getSigFn())._onRisingEdge(s.env.now)
-                if bool(v):
-                    fn(s)
+                now = s.env.now
+                if lastTime != s.env.now:
+                    lastTime = now
+                    v = s.read(getSigFn())._onRisingEdge(s.env.now)
+                    if bool(v):
+                        fn(s)
         return __afterRisingEdge
     return _afterRisingEdge
 
