@@ -91,8 +91,7 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
             if isinstance(self.defaultVal, RtlSignal):
                 self._val = self.defaultVal._val.staticEval()
             else:
-                # [TODO] find better way how to find out if was initialized
-                if not self._val.vldMask:  
+                if self._val.updateTime < 0:  
                     self._val = self.defaultVal.clone()
         
         if not isinstance(self._val, Value):

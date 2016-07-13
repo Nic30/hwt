@@ -38,6 +38,10 @@ class Value():
     def fromPy(cls, val, typeObj):
         raise NotImplementedError("fromPy fn is not implemented for %s" % (str(cls)))
    
+    def __nonzero__(self):
+        raise NotImplementedError()
+    def __bool__(self):
+        raise NotImplementedError()
     def __pos__(self):
         raise NotImplementedError()
     def __neg__(self):

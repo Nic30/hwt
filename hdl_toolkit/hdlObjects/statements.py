@@ -24,8 +24,9 @@ def simEvalCond(cond, simulator):
     _vld = 1
     for c in cond:
         v = c.simEval(simulator)
-        _cond = _cond and bool(v)
-        _vld = _vld & v.vldMask
+        _cond = _cond and bool(v.val)
+        assert isinstance(v.vldMask, int)
+        _vld &= v.vldMask
         
     return _cond, _vld
 
@@ -40,6 +41,13 @@ class IfContainer():
         self.ifTrue = ifTrue
         self.elIfs = elIfs
         self.ifFalse = ifFalse
+        
+    @staticmethod
+    def evalCase(simulator, stm, condVld):
+        for r in stm.simEval(simulator):
+            if not condVld:
+                r[1].vldMask = 0
+            yield r
     
     def simEval(self, simulator):
         """
@@ -47,28 +55,19 @@ class IfContainer():
         yield tuple (signal, value)
         """
         condRes, condVld = simEvalCond(self.cond, simulator)
-        if condRes:
-            for s in self.ifTrue:
-                for r in s.simEval(simulator):
-                    if not condVld:
-                        r[1].vldMask = 0
-                    yield r
+        if condRes or not condVld:
+            for stm in self.ifTrue:
+                yield from IfContainer.evalCase(simulator, stm, condVld)
         else:
             for c in self.elIfs:
                 subCondRes, subCondVld = simEvalCond(c[0], simulator)
                 if subCondRes:
-                    for s in c[1]:
-                        for r in s.simEval(simulator):
-                            if not subCondVld:
-                                r[1].vldMask = 0
-                            yield r
+                    for stm in c[1]:
+                        yield from IfContainer.evalCase(simulator, stm, subCondVld)
                     raise StopIteration()
             
-            for s in self.ifFalse:
-                for r in s.simEval(simulator):
-                    if not condVld:
-                        r[1].vldMask = 0
-                    yield r
+            for stm in self.ifFalse:
+                yield from IfContainer.evalCase(simulator, stm, condVld)
         
     #def seqEval(self):
     #    # [TODO] use simEval and then 
