@@ -41,7 +41,7 @@ def _renderIfTree(node):
             elIfN = elIfN.neg[0]
             _ifTrue = []
             __renderStatements(elIfN.pos, _ifTrue)
-            elIfs.append((set([elIfN.cond]), _ifTrue))
+            elIfs.append(([elIfN.cond,], _ifTrue))
         else:
             # render standard else
             __renderStatements(elIfN.neg, ifFalse)
@@ -67,7 +67,7 @@ def _renderIfTree(node):
             canBeConvertedToSwitch = True
             for elIf in elIfs:
                 try:
-                    op = elIf[0].singleDriver()
+                    op = elIf[0][0].singleDriver()
                     if op.operator == AllOps.EQ:
                         op1 = op.ops[1]
                         if op.ops[0] is switchOn and isinstance(op1, Value):
