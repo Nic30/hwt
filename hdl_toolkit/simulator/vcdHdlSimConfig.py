@@ -13,8 +13,8 @@ class VcdHdlSimConfig(HdlSimConfig):
     def __init__(self, dumpFile=sys.stdout):
         super().__init__()
         self.vcdWritter = VcdWritter(dumpFile) 
-        #self.logPropagation = False
-        #self.logApplyingValues = False        
+        self.logPropagation = False
+        self.logApplyingValues = False        
 
         # unit :  signal | unit
         # signal : None
@@ -63,5 +63,5 @@ class VcdHdlSimConfig(HdlSimConfig):
         try:
             self.vcdWritter.change(nowTime, sig, nextVal)
         except KeyError:
-            # signal is not registered
+            # not every signal has to be registered
             pass
