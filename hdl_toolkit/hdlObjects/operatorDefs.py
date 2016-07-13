@@ -28,8 +28,10 @@ class OpDefinition():
 
         ops = list(map(getVal, operator.ops))
         
-        if operator.operator in (AllOps.RISING_EDGE, AllOps.EVENT):
+        if isEventDependentOp(operator.operator):
             ops.append(simulator.env.now)
+        elif operator.operator == AllOps.IntToBits:
+            ops.append(operator.result._dtype)
         
         return self._evalFn(*ops)
 
@@ -37,7 +39,7 @@ class OpDefinition():
         return "<OpDefinition %s>" % (self.id)
 
 def isEventDependentOp(operator):
-    return operator == AllOps.RISING_EDGE or operator == AllOps.EVENT or operator ==  AllOps.FALLIGN_EDGE
+    return operator in (AllOps.RISING_EDGE, AllOps.EVENT, AllOps.FALLIGN_EDGE)
 
             
 class AllOps():
@@ -83,7 +85,7 @@ class AllOps():
     CALL = OpDefinition(lambda a, *ops: a.call(*ops))
     
     BitsToInt = OpDefinition(lambda a : a._convert(INT))
-    IntToBits = OpDefinition(lambda a : a._convert())
+    IntToBits = OpDefinition(lambda a, t: a._convert(t))
     
     BitsAsSigned = OpDefinition(lambda a : a._signed())
     BitsAsUnsigned = OpDefinition(lambda a : a._unsigned())

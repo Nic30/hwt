@@ -110,6 +110,7 @@ class RtlNetlist():
         """
         self.startsOfDataPaths = set()
         self.subUnits = set()
+        
         def discoverDatapaths(signal):
             for node in walkSigSouces(signal):
                 if node in self.startsOfDataPaths:

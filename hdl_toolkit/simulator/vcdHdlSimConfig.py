@@ -5,6 +5,7 @@ from datetime import datetime
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.hdlObjects.types.boolean import Boolean
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from pprint import pprint
 
 class VcdHdlSimConfig(HdlSimConfig):
     supported_type_classes = (Boolean,  Bits)
@@ -12,8 +13,8 @@ class VcdHdlSimConfig(HdlSimConfig):
     def __init__(self, dumpFile=sys.stdout):
         super().__init__()
         self.vcdWritter = VcdWritter(dumpFile) 
-        self.logPropagation = False
-        self.logApplyingValues = False        
+        #self.logPropagation = False
+        #self.logApplyingValues = False        
 
         # unit :  signal | unit
         # signal : None
@@ -21,8 +22,12 @@ class VcdHdlSimConfig(HdlSimConfig):
     
     
     def logApplyingValues(self, simulator, values):
-        print(simulator.env.now, values)
+        pprint((simulator.env.now, values))
         
+    def logPropagation(self, simulator, signal, process): 
+        print("%d: Signal.simPropagateChanges %s -> %s" % 
+                                        (simulator.env.now, signal.name, str(process.name))
+        )
     def vcdRegisterUnit(self, unit_name, sublements):
         with self.vcdWritter.module(unit_name) as m:
             for se , ssitems in sublements.items():

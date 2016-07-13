@@ -86,7 +86,7 @@ def bitsArithOp(self, other, op):
 
         # [TODO] correct overflow detection for signed values
         w = v._dtype.bit_length()
-        v.val |= Bitmask.mask(w)
+        v.val &= Bitmask.mask(w)
         
         # [TODO] value check range
         if isinstance(other._dtype, Integer):
@@ -240,6 +240,8 @@ class BitsVal(Value):
         if isinstance(self, Value):
             v = self.clone()
             v.val = ~v.val
+            w = v._dtype.bit_length()
+            v.val &= Bitmask.mask(w)
             return v
         else:
             return Operator.withRes(AllOps.NOT, [self], self._dtype)

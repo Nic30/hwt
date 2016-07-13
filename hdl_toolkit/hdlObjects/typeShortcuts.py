@@ -1,26 +1,18 @@
 from hdl_toolkit.hdlObjects.types.defs import INT, BOOL, STR, BIT
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.hdlObjects.value import Value
 
-def fromPyValToValueFn(pyT, hdlT):
-    def fn(val):
-        """create hdl value from hdl Value or Param or python value"""
-        return hdlT.fromPy(val)
-        #if isinstance(pyT, Value):
-        #    return toHVal(val)._convert(hdlT)
-    return fn
-
-hInt = fromPyValToValueFn(int, INT)
+# create hdl integer value (for example integer value in vhdl)
+hInt = lambda val: INT.fromPy(val)
 
 # create hdl boolean value (for example boolean value in vhdl)
-hBool = fromPyValToValueFn(bool, BOOL)
+hBool = lambda val: BOOL.fromPy(val)
 
 # create hdl string value (for example string value in vhdl)
-hStr = fromPyValToValueFn(str, STR)
+hStr = lambda val: STR.fromPy(val)
 
 # create hdl bit value (for example STD_LOGIC value in vhdl)
-hBit = fromPyValToValueFn(int, BIT)
+hBit = lambda val: BIT.fromPy(val)
 
 def mkRange(width):
     """Make hdl range (for example 1 downto 0 in vhdl)

@@ -11,20 +11,23 @@ class ReturnContainer():
     def seqEval(self):
         raise ReturnCalled(self.val.staticEval())       
 
-def evalCond(cond):
-    _cond = True
-    assert isinstance(cond, set)
-    for c in cond:
-        _cond = _cond and bool(c.staticEval())
-        
-    return _cond
+#def evalCond(cond):
+#    _cond = True
+#    assert isinstance(cond, set)
+#    for c in cond:
+#        _cond = _cond and bool(c.staticEval())
+#        
+#    return _cond
 
 def simEvalCond(cond, simulator):
     _cond = True
+    _vld = 1
     for c in cond:
-        _cond = _cond and bool(c.simEval(simulator))
+        v = c.simEval(simulator)
+        _cond = _cond and bool(v)
+        _vld = _vld & v.vldMask
         
-    return _cond
+    return _cond, _vld
 
 
 
@@ -43,33 +46,44 @@ class IfContainer():
         Same like seqEval but does not assign to signal instead of
         yield tuple (signal, value)
         """
-        if simEvalCond(self.cond, simulator):
+        condRes, condVld = simEvalCond(self.cond, simulator)
+        if condRes:
             for s in self.ifTrue:
-                yield from s.simEval(simulator)
+                for r in s.simEval(simulator):
+                    if not condVld:
+                        r[1].vldMask = 0
+                    yield r
         else:
             for c in self.elIfs:
-                if simEvalCond(c[0], simulator):
+                subCondRes, subCondVld = simEvalCond(c[0], simulator)
+                if subCondRes:
                     for s in c[1]:
-                        yield from s.simEval(simulator)
+                        for r in s.simEval(simulator):
+                            if not subCondVld:
+                                r[1].vldMask = 0
+                            yield r
                     raise StopIteration()
             
             for s in self.ifFalse:
-                yield from s.simEval(simulator)
+                for r in s.simEval(simulator):
+                    if not condVld:
+                        r[1].vldMask = 0
+                    yield r
         
-    def seqEval(self):
-        # [TODO] use simEval and then 
-        if evalCond(self.cond):
-            for s in self.ifTrue:
-                s.seqEval()
-        else:
-            for c in self.elIfs:
-                if evalCond(c[0]):
-                    for s in c[1]:
-                        s.seqEval()
-                    return
-            
-            for s in self.ifFalse:
-                s.seqEval()
+    #def seqEval(self):
+    #    # [TODO] use simEval and then 
+    #    if evalCond(self.cond):
+    #        for s in self.ifTrue:
+    #            s.seqEval()
+    #    else:
+    #        for c in self.elIfs:
+    #            if evalCond(c[0]):
+    #                for s in c[1]:
+    #                    s.seqEval()
+    #                return
+    #        
+    #        for s in self.ifFalse:
+    #            s.seqEval()
         
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer

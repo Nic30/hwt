@@ -78,8 +78,8 @@ class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
             conf = simulator.config
             for p in self.simSensitiveProcesses:        
                 if conf.logPropagation:
-                    conf.logPropagation("%d: Signal.simPropagateChanges %s -> %s" % 
-                                        (simulator.env.now, self.name, str(p.name)))
+                    conf.logPropagation(simulator, self, p)
+                    
                 simulator.addHwProcToRun(p)
         
     def staticEval(self):

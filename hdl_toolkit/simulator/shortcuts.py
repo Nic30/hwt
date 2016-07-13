@@ -36,8 +36,9 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.
     sim.config = VcdHdlSimConfig(outputFile)
     
     # collect signals for simulation
-    sigs = list(filter(lambda s: isinstance(s._dtype, VcdHdlSimConfig.supported_type_classes),  
-                   map(lambda x: x._sigInside, walkSignalOnUnit(unit))))
+    sigs = list(unit._cntx.signals.values())
+    # list(filter(lambda s: isinstance(s._dtype, VcdHdlSimConfig.supported_type_classes),  
+    #        map(lambda x: x._sigInside, walkSignalOnUnit(unit))))
 
     # run simulation, stimul processes are register after initial inicialization
     sim.simSignals(sigs, time=time, extraProcesses=stimulFunctions) 

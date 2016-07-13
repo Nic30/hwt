@@ -537,6 +537,19 @@ class VhdlSerializer():
             if ops[0]._dtype.signed is None:
                 op = "UNSIGNED(%s)" % op
             return "TO_INTEGER(%s)" % op
+        elif o == AllOps.IntToBits:
+            assert len(ops) == 1
+            resT = op.result._dtype
+            op_str = cls.asHdl(ops[0])
+            w = resT.bit_length()
+            
+            if resT.signed is None:
+                return "STD_LOGIC_VECTOR(TO_UNSIGNED(" + op_str + ", %d))" % (w)
+            elif resT.signed:
+                return "TO_UNSIGNED(" + op_str + ", %d)" % (w)
+            else:
+                return "TO_UNSIGNED(" + op_str + ", %d)" % (w)
+            
         elif o == AllOps.POW:
             assert len(ops) == 2
             return _bin('**')
