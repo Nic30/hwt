@@ -4,7 +4,7 @@ from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from python_toolkit.arrayQuery import where
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps, isEventDependentOp
 from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.synthetisator.param import Param
 
@@ -129,17 +129,20 @@ def walkSignalsInExpr(expr):
         raise Exception("Unknown node '%s' type %s" % 
                         (repr(expr), str(expr.__class__)))
 
-def discoverEventDependency(cond):
+def discoverEventDependency(sig):
+    """
+    walk signals drivers and yields whose signals which are in some event operator
+    """
     # [TODO] deep event dependency discovery
     drivers = None
     try:
-        drivers = cond.drivers
+        drivers = sig.drivers
     except AttributeError:
         pass
     
     if drivers is not None and len(drivers) == 1:
         d = drivers[0]
-        if isinstance(d, Operator) and d.operator == AllOps.RISING_EDGE:
+        if isinstance(d, Operator) and isEventDependentOp(d.operator):
             yield d.ops[0]
 
 

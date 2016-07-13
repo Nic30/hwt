@@ -116,9 +116,9 @@ class RtlNetlist():
                     return 
                 self.startsOfDataPaths.add(node)
                 if isinstance(node, PortItem):
-                    if node.unit.discovered:
+                    if node.unit.discovered is self:
                         pass
-                    node.unit.discovered = True
+                    node.unit.discovered = self
                     for p in walkUnitInputPorts(node.unit):
                         if p.src is not None:  # top unit does not have to be connected
                             discoverDatapaths(p.src)

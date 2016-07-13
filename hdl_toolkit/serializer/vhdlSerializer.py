@@ -519,6 +519,9 @@ class VhdlSerializer():
         elif o == AllOps.RISING_EDGE:
             assert len(ops) == 1
             return "RISING_EDGE(" + p(ops[0]) + ")"
+        elif o == AllOps.FALLIGN_EDGE:
+            assert len(ops) == 1
+            return "FALLING_EDGE(" + p(ops[0]) + ")"
         elif o == AllOps.BitsAsSigned:
             assert len(ops) == 1
             return  "SIGNED(" + p(ops[0]) + ")"
