@@ -208,5 +208,8 @@ class UnitFromHdl(Unit):
             
         return [self]
 
+    def _wasSynthetised(self):
+        return True
+    
     def __str__(self):
         return "\n".join(['--%s' % (repr(s)) for s in self._hdlSources])

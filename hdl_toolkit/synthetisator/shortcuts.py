@@ -20,6 +20,8 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
     else:
         u = unitOrCls
     
+    assert not u._wasSynthetised()
+    
     u._loadDeclarations()
     if name is not None:
         u._name = name

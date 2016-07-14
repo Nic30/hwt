@@ -73,6 +73,9 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
 
         yield from self._synthetiseContext(externInterf, self._cntx)
         self._checkArchCompInstances()
+        
+    def _wasSynthetised(self):
+        return hasattr(self, "_cntx")
     
     def _synthetiseContext(self, externInterf, cntx):
         # synthetize signal level context
