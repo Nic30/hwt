@@ -32,10 +32,11 @@ def bitsCmp(self, other, op, evalFn=None):
         assert w == other._dtype.bit_length(), "%d, %d" % (w, other._dtype.bit_length())
         
         vld = self.vldMask & other.vldMask
-        res = evalFn(self.val, other.val) and vld == Bitmask.mask(w)
+        _vld = vld == Bitmask.mask(w)
+        res = evalFn(self.val, other.val) and _vld
         updateTime = max(self.updateTime, other.updateTime)
     
-        return BoolVal(res, BOOL, vld, updateTime)
+        return BoolVal(res, BOOL, int(_vld), updateTime)
     else:
         if other._dtype == BOOL:
             self = self._convert(BOOL)
@@ -50,7 +51,7 @@ def bitsCmp(self, other, op, evalFn=None):
 
 def bitsBitOp(self, other, op):
     """
-    @attention: If other is Bool signal convert this to boolean (not ideal, due VHDL event operator)
+    @attention: If other is Bool signal, convert this to boolean (not ideal, due VHDL event operator)
     """
     other = toHVal(other)
     
@@ -65,7 +66,7 @@ def bitsBitOp(self, other, op):
         res = op._evalFn(self.val, other.val) & vld
         updateTime = max(self.updateTime, other.updateTime)
     
-        return BoolVal(res, BOOL, vld, updateTime)
+        return self.__class__(res, self._dtype, vld, updateTime)
     else:
         if other._dtype == BOOL:
             self = self._convert(BOOL)
