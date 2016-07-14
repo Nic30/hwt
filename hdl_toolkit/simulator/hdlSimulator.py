@@ -19,6 +19,7 @@ class HdlSimulator(object):
         self.config = config
         self.env = simpy.Environment()
         self.updateComplete = self.env.event()
+        self.lastUpdateComplete = -1
         
         # (signal, value) tupes which should be applied before new round of processes
         #  will be executed
@@ -39,7 +40,7 @@ class HdlSimulator(object):
         
         updatedSigs = {}
         va = self.valuesToApply
-        if self.config.logApplyingValues:
+        if va and self.config.logApplyingValues:
             self.config.logApplyingValues(self, va)
             
         self.valuesToApply = []
@@ -61,9 +62,10 @@ class HdlSimulator(object):
         now = self.env.now
         nextEventT = self.env.peek()
         # is last event or is last in this time
-        if nextEventT == inf or (nextEventT > now and not self.valuesToApply):
+        if nextEventT == inf or (nextEventT > now and not self.valuesToApply) and self.lastUpdateComplete < now:
             self.updateComplete.succeed() # trigger
             self.updateComplete = self.env.event() # regenerate event
+            self.lastUpdateComplete = now
             
     def _initSignals(self, signals):
         """

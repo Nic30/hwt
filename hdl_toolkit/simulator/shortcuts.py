@@ -64,12 +64,9 @@ def afterRisingEdge(getSigFn):
             lastTime = -1
             while True:
                 yield s.updateComplete
-                now = s.env.now
-                if lastTime != s.env.now:
-                    lastTime = now
-                    v = s.read(getSigFn())._onRisingEdge(s.env.now)
-                    if bool(v):
-                        fn(s)
+                v = s.read(getSigFn())._onRisingEdge(s.env.now)
+                if bool(v):
+                    fn(s)
         return __afterRisingEdge
     return _afterRisingEdge
 
