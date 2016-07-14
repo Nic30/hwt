@@ -94,7 +94,11 @@ class HdlSimulator(object):
         """
         Write value to signal or interface.
         """
-        v = toHVal(val)
+        if isinstance(val, Value):
+            v = val.clone()
+        else:
+            v = sig._dtype.fromPy(val)
+        
         v.updateTime = self.env.now
         if isinstance(sig, InterfaceBase):
             sig = sig._sigInside

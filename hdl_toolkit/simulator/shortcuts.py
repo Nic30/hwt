@@ -3,7 +3,6 @@ import sys
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.synthetisator.shortcuts import toRtl
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import walkSignalOnUnit
 
 def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.us):
     """
@@ -28,7 +27,8 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.
     """
     
     # load implementation of unit
-    toRtl(unit)
+    if not unit._wasSynthetised():
+        toRtl(unit)
 
     sim = HdlSimulator()
 
@@ -37,8 +37,6 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.
     
     # collect signals for simulation
     sigs = list(unit._cntx.signals.values())
-    # list(filter(lambda s: isinstance(s._dtype, VcdHdlSimConfig.supported_type_classes),  
-    #        map(lambda x: x._sigInside, walkSignalOnUnit(unit))))
 
     # run simulation, stimul processes are register after initial inicialization
     sim.simSignals(sigs, time=time, extraProcesses=stimulFunctions) 
@@ -76,13 +74,12 @@ def afterRisingEdge(getSigFn):
     return _afterRisingEdge
 
 
-def oscilate(getSigFn, period=10*HdlSimulator.ns, initWait=0):
+def oscilate(sig, period=10*HdlSimulator.ns, initWait=0):
     """
     Oscilative drive for your signal
     """
     halfPeriod = period/2
     def oscilateStimul(s):
-        sig = getSigFn()
         s.write(False, sig)
         yield s.wait(initWait)
 
@@ -94,22 +91,21 @@ def oscilate(getSigFn, period=10*HdlSimulator.ns, initWait=0):
     
 
 
-def pullDownAfter(getSigFn, time=6*HdlSimulator.ns):
+def pullDownAfter(getSigFn, intDelay=6*HdlSimulator.ns):
     def _pullDownAfter(s):
         sig = getSigFn()
         
         s.write(True, sig) 
-        yield s.wait(time)
+        yield s.wait(intDelay)
         s.write(False, sig)
          
     return _pullDownAfter
     
-def pullUpAfter(getSigFn, time=6*HdlSimulator.ns):
+def pullUpAfter(sig, intDelay=6*HdlSimulator.ns):
+
     def _pullDownAfter(s):
-        sig = getSigFn()
-        
         s.write(False, sig) 
-        yield s.wait(time)
+        yield s.wait(intDelay)
         s.write(True, sig)
          
     return _pullDownAfter    
