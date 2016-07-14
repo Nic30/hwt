@@ -19,10 +19,10 @@ class Value():
         return self._dtype.convert(self, toT)
 
     def staticEval(self):
-        return self
+        return self.clone()
     
     def simEval(self, simulator):
-        return self
+        return self.clone()
     
     def clone(self):
         return self.__class__(self.val, self._dtype, self.vldMask, self.updateTime)
