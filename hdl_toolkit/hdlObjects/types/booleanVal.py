@@ -63,8 +63,12 @@ class BooleanVal(Value):
         
         if isinstance(self, Value):
             if self.val:
+                if not self.vldMask:
+                    ifTrue.vldMask = 0
                 return ifTrue
             else:
+                if not self.vldMask:
+                    ifFalse.vldMask = 0
                 return ifFalse
         else:
             return Operator.withRes(AllOps.TERNARY, [self, ifTrue, ifFalse], ifTrue._dtype)
