@@ -22,7 +22,7 @@ def convertInteger(self, sigOrVal, toType):
             v._dtype = toType
             return v
         else:
-            return sigOrVal # [TODO] use convertor op
+            return sigOrVal  # [TODO] use convertor op
     elif toType == BOOL:
         if isVal:
             v = sigOrVal.val
@@ -39,6 +39,8 @@ def convertInteger(self, sigOrVal, toType):
             v.updateTime = sigOrVal.updateTime
              
             v._dtype = toType
+            if not sigOrVal.vldMask:
+                v.vldMask = 0
             return v
         else:
             return Operator.withRes(AllOps.IntToBits, [sigOrVal], toType)
