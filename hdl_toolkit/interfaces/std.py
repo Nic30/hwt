@@ -112,7 +112,7 @@ class BramPort(BramPort_withoutClk):
         self.clk = s(masterDir=D.OUT)
     
     @classmethod
-    def fromBramPort_withoutClk(cls, intfContainter, bramPort, clk):
+    def fromBramPort_withoutClk(cls, bramPort, clk):
         assert isinstance(bramPort, BramPort_withoutClk)
         assert isinstance(clk, Ap_clk)
         self = cls()
@@ -130,8 +130,6 @@ class BramPort(BramPort_withoutClk):
             setIntf(iName, intf)
         setIntf("clk", clk)
         
-        self._direction = bramPort._direction
-        intfContainter._interfaces.append(self)
         return self   
         
 
