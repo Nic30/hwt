@@ -501,6 +501,10 @@ class VhdlSerializer():
             return p(ops[0]) + "'EVENT"
         elif o == AllOps.GREATERTHAN:
             return _bin('>')
+        elif o == AllOps.GE:
+            return _bin('>=')
+        elif o == AllOps.LE:
+            return _bin('<=')
         elif o == AllOps.INDEX:
             assert len(ops) == 2
             return "%s(%s)" % ((cls.asHdl(ops[0])).strip(), p(ops[1]))
