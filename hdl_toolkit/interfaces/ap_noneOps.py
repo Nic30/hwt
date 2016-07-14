@@ -46,6 +46,13 @@ class Ap_noneOps(object):
         """
         return self._sig.__or__(other)
     
+    def __add__(self, other):
+        return self._sig.__add__(other)
+    
+    def __sub__(self, other):
+        return self._sig.__sub__(other)
+    
+    
     
     def _concat(self, *operands):
         """
