@@ -61,7 +61,7 @@ class IfContainer():
         else:
             for c in self.elIfs:
                 subCondRes, subCondVld = simEvalCond(c[0], simulator)
-                if subCondRes:
+                if subCondRes or not subCondVld:
                     for stm in c[1]:
                         yield from IfContainer.evalCase(simulator, stm, subCondVld)
                     raise StopIteration()
