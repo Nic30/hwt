@@ -53,7 +53,7 @@ class Signal(SignalOps, Interface):
             self._multipliedBy = factor
             if updateTypes and factor is not None:
                 self._injectMultiplerToDtype()
-s = Ap_none
+s = Signal
 Ap_none = Signal     
 
 class Ap_clk(Ap_none):
