@@ -1,3 +1,5 @@
+from copy import copy
+from types import MethodType
 from python_toolkit.arrayQuery import single
 from hdl_toolkit.interfaces.std import Ap_clk, Ap_rst, Ap_rst_n
 from hdl_toolkit.hdlObjects.types.bits import Bits
@@ -5,9 +7,7 @@ from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.hdlObjects.typeShortcuts import mkRange
-from copy import copy
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
-from types import MethodType
 
 class MakeInterfaceExtern(object):
     """
@@ -33,7 +33,10 @@ class MakeInterfaceExtern(object):
 class UnitImplHelpers():
     def _reg(self, name, dtype=BIT, defVal=None):
         clk = single(self._interfaces, lambda i: isinstance(i, Ap_clk))
-        rst = single(self._interfaces, lambda i: isinstance(i, (Ap_rst, Ap_rst_n)))
+        if defVal is None:
+            rst = None
+        else:
+            rst = single(self._interfaces, lambda i: isinstance(i, (Ap_rst, Ap_rst_n)))
         s = self._cntx.sig
         
         if defVal is None:  # if no value is specified reset is not required
