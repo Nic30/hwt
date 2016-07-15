@@ -128,11 +128,22 @@ class BitsVal(Value):
         if self._dtype.signed == signed:
             return self
         else:
+            t = copy(self._dtype)
+            t.signed = signed
             if isinstance(self, Value):
-                raise NotImplementedError()
+                selfSign = self._dtype.signed 
+                v = self.clone()
+                w = self._dtype.bit_length()
+                msbVal = 1 << (w-1)
+                if selfSign and not signed:
+                    if v.val < 0:
+                        v.val += msbVal
+                elif not selfSign and signed:
+                    if v.val >= msbVal:
+                        v.val -= (msbVal -1)
+                    
+                return v
             else:
-                t = copy(self._dtype)
-                t.signed = signed
                 if signed is None:
                     cnv = AllOps.BitsAsVec
                 elif signed:
