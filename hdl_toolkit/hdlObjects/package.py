@@ -8,6 +8,10 @@ class PackageHeader(HDLCtx):
         super(PackageHeader, self).__init__(name, libraryCtx)
         self.body = None
         self._isDummy = isDummy  
+    
+    def update(self, other):
+        HDLCtx.update(self, other)
+        self.body = other.body
         
     def insertBody(self, body):
         self.body = body

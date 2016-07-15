@@ -121,8 +121,16 @@ class ParserLoader():
             # copy references to primary units
             for _, e in fileCtx.entities.items():
                 ctx.insertObj(e, fileInfo.caseSensitive, fileInfo.hierarchyOnly)
-            for _, p in fileCtx.packages.items():
-                ctx.insertObj(p, fileInfo.caseSensitive, fileInfo.hierarchyOnly)
+            for pName, p in fileCtx.packages.items():
+                try:
+                    _p = ctx.packages[pName]
+                except KeyError:
+                    _p = None
+                    
+                if _p is None:                    
+                    ctx.insertObj(p, fileInfo.caseSensitive, fileInfo.hierarchyOnly)
+                else:
+                    _p.update(p)
                 # [TODO] update parent context
     
         return topCtx, fileCtxs
