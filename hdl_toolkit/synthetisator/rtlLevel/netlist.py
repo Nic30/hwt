@@ -76,7 +76,7 @@ class RtlNetlist():
             else:    
                 _defVal = typ.fromPy(defVal)
         else:
-            _defVal = defVal
+            _defVal = defVal._convert(typ)
 
 
         if clk is not None:
