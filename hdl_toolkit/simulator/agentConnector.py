@@ -1,21 +1,23 @@
-from hdl_toolkit.interfaces.std import Ap_none, FifoReader, FifoWriter, Ap_clk,\
-    Ap_rst_n
+from hdl_toolkit.interfaces.std import Signal, FifoReader, FifoWriter, Ap_clk,\
+    Ap_rst_n, Ap_vld
 from hdl_toolkit.simulator.agents.signal import SignalAgent
 from hdl_toolkit.simulator.agents.fifo import FifoReaderAgent, FifoWriterAgent
 from hdl_toolkit.simulator.agents.clk import OscilatorAgent
 from hdl_toolkit.simulator.agents.rst import PullUpAgent
+from hdl_toolkit.simulator.agents.ap_vld import Ap_vldAgent
 
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
 autoAgents = {
-              Ap_none : SignalAgent,
+              Signal     : SignalAgent,
               FifoReader : FifoReaderAgent,
               FifoWriter : FifoWriterAgent,
               Ap_clk     : OscilatorAgent,
-              Ap_rst_n   : PullUpAgent, 
+              Ap_rst_n   : PullUpAgent,
+              Ap_vld     : Ap_vldAgent, 
               }
 
-def autoAddAgents(unit, propName="_ag"):
+def autoAddAgents(unit, propName="_ag", autoAgentMap=autoAgents):
     """
     Walk all interfaces on unit and instantiate actor for every interface.
     
@@ -25,7 +27,7 @@ def autoAddAgents(unit, propName="_ag"):
     proc = []
     for intf in unit._interfaces:
         try:
-            agentCls = autoAgents[intf.__class__]
+            agentCls = autoAgentMap[intf.__class__]
         except KeyError:
             raise Exception("Can not find default agent for interface %s" % (str(intf)))
         
