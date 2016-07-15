@@ -50,7 +50,7 @@ def langFromExtension(fileName):
     elif n.endswith(".vhd"):
         return BaseParser.VHDL
     else:
-        raise NotImplementedError("Can not resolve type of file")
+        raise NotImplementedError("Can not resolve type of file \"%s\"" % (fileName))
     
 def isCaseSecsitiveLang(lang):
     if  lang == BaseParser.VHDL:
