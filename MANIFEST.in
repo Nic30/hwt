@@ -1,5 +1,3 @@
-recursive-include hdl_toolkit/samples *.vhd
-recursive-include hdl_toolkit/synthetisator/templates_vhdl *.vhd
-recursive-include templates_vhdl *.vhd 
-recursive-include hdl_toolkit/vhdlConvertor *.jar
-recursive-include visualizer *.js *.html *.css 
+recursive-include hdl_toolkit/serializer/templates_vhdl *.vhd
+recursive-include hdl_toolkit/serializer/templates_verilog *.v
+recursive-include visualizer *.js *.html *.css *.ico *.png *.oft *.eot *.svg *.ttf *.woff
