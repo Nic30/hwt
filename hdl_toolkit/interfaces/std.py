@@ -5,13 +5,13 @@ from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.interfaces.ap_noneOps import Ap_noneOps
+from hdl_toolkit.interfaces.signalOps import SignalOps
 from hdl_toolkit.hdlObjects.types.bits import Bits
 
 
 D = DIRECTION
 
-class Ap_none(Ap_noneOps, Interface):
+class Signal(SignalOps, Interface):
     def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None,
                    dtype=BIT, isExtern=False, alternativeNames=None,
                    loadConfig=True):
@@ -53,9 +53,8 @@ class Ap_none(Ap_noneOps, Interface):
             self._multipliedBy = factor
             if updateTypes and factor is not None:
                 self._injectMultiplerToDtype()
-
 s = Ap_none
-     
+Ap_none = Signal     
 
 class Ap_clk(Ap_none):
     _alternativeNames = ['ap_clk', 'aclk', 'clk', 'clock']

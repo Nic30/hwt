@@ -1,6 +1,6 @@
 
 
-class Ap_noneOps(object):
+class SignalOps(object):
     
     def __invert__(self):
         """~ operator - logical negation for one bit signals and hBool
