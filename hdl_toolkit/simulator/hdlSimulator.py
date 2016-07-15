@@ -72,7 +72,11 @@ class HdlSimulator(object):
         Inject default values to simulation
         """
         for s in signals:
-            v = s.defaultVal.clone()
+            if isinstance(s.defaultVal, Value):
+                v = s.defaultVal.clone()
+            else:
+                v = s.defaultVal.staticEval()
+                
             s.simUpdateVal(self, v)
 
     def r(self, sig):
