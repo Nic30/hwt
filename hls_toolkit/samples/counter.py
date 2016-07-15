@@ -1,5 +1,5 @@
 from myhdl import always_seq, Signal, modbv
-from hdl_toolkit.interfaces.std import Ap_clk, Ap_rst, Ap_none
+from hdl_toolkit.interfaces.std import Clk, Rst, Signal
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from hls_toolkit.myhdlSynthesiser.unitMyHdl import UnitMyHdl
@@ -10,11 +10,11 @@ class Counter(UnitMyHdl):
         self.DATA_WIDTH = 8
         
     def _declr(self):
-        self.clk = Ap_clk()
-        self.rst = Ap_rst()
+        self.clk = Clk()
+        self.rst = Rst()
         
-        self.enable = Ap_none()
-        self.count = Ap_none(dtype=vecT(self.DATA_WIDTH))
+        self.enable = Signal()
+        self.count = Signal(dtype=vecT(self.DATA_WIDTH))
     
     def _impl(self):
         def Inc(count, enable, clk, rst):

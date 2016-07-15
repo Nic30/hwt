@@ -1,10 +1,10 @@
-from hdl_toolkit.interfaces.std import Signal, FifoReader, FifoWriter, Ap_clk,\
-    Ap_rst_n, Ap_vld
+from hdl_toolkit.interfaces.std import Signal, FifoReader, FifoWriter, Clk,\
+    Rst_n, VldSynced
 from hdl_toolkit.simulator.agents.signal import SignalAgent
 from hdl_toolkit.simulator.agents.fifo import FifoReaderAgent, FifoWriterAgent
 from hdl_toolkit.simulator.agents.clk import OscilatorAgent
 from hdl_toolkit.simulator.agents.rst import PullUpAgent
-from hdl_toolkit.simulator.agents.ap_vld import Ap_vldAgent
+from hdl_toolkit.simulator.agents.vldSynced import VldSyncedAgent
 
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
@@ -12,9 +12,9 @@ autoAgents = {
               Signal     : SignalAgent,
               FifoReader : FifoReaderAgent,
               FifoWriter : FifoWriterAgent,
-              Ap_clk     : OscilatorAgent,
-              Ap_rst_n   : PullUpAgent,
-              Ap_vld     : Ap_vldAgent, 
+              Clk        : OscilatorAgent,
+              Rst_n   : PullUpAgent,
+              VldSynced     : VldSyncedAgent, 
               }
 
 def autoAddAgents(unit, propName="_ag", autoAgentMap=autoAgents):

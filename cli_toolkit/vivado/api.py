@@ -1,6 +1,6 @@
 import os
 import shutil
-from hdl_toolkit.interfaces.std import Ap_clk, Ap_rst, Ap_rst_n
+from hdl_toolkit.interfaces.std import Clk, Rst, Rst_n
 from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import walkSignalOnUnit
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from cli_toolkit.vivado.controller import VivadoTCL
@@ -52,9 +52,9 @@ class Port():
             width = interface._dtype.bit_length()
         else:
             width = None
-        if isinstance(interface, Ap_clk):
+        if isinstance(interface, Clk):
             typ = PortType.clk
-        elif isinstance(interface, (Ap_rst, Ap_rst_n)):
+        elif isinstance(interface, (Rst, Rst_n)):
             typ = PortType.rst
         else:
             typ = None

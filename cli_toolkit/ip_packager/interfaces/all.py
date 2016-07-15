@@ -90,7 +90,7 @@ class IP_Handshake(IfConfig):
                      'rd': "ap_ack",
                      "data":"data"   }
         
-class IP_Ap_clk(IfConfig):
+class IP_Clk(IfConfig):
     def __init__(self):
         super().__init__()
         self.name = "clock"
@@ -100,8 +100,8 @@ class IP_Ap_clk(IfConfig):
         self.map = 'CLK'
             
     def postProcess(self, component, entity, allInterfaces, thisIf):
-            rst = list(where(allInterfaces, lambda intf: isinstance(intf, interfaces.std.Ap_rst_n) 
-                                                        or isinstance(intf, interfaces.std.Ap_rst)))
+            rst = list(where(allInterfaces, lambda intf: isinstance(intf, interfaces.std.Rst_n) 
+                                                        or isinstance(intf, interfaces.std.Rst)))
             if len(rst) > 0:
                 rst = rst[0]
                 self.addSimpleParam(thisIf, "ASSOCIATED_RESET", rst._name)  # getResetPortName
@@ -113,7 +113,7 @@ class IP_Ap_clk(IfConfig):
             self.addSimpleParam(thisIf, "ASSOCIATED_BUSIF", ":".join(map(lambda intf: intf._name, intfs)))
             self.addSimpleParam(thisIf, "FREQ_HZ", str(DEFAULT_CLOCK))
 
-class IP_Ap_rst(IfConfig):
+class IP_Rst(IfConfig):
     def __init__(self):
         super().__init__()
         self.name = "reset"
@@ -125,7 +125,7 @@ class IP_Ap_rst(IfConfig):
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_HIGH")
 
-class IP_Ap_rst_n(IfConfig):
+class IP_Rst_n(IfConfig):
     def __init__(self):
         super().__init__()
         self.name = "reset"
@@ -207,7 +207,7 @@ allBusInterfaces = { interfaces.std.BramPort : IP_BlockRamPort,
                      interfaces.amba.AxiStream_withUserAndStrb : IP_AXIStream,
                      
                      interfaces.amba.Axi4 : IP_Axi4,
-                     interfaces.std.Ap_clk : IP_Ap_clk,
-                     interfaces.std.Ap_rst : IP_Ap_rst,
-                     interfaces.std.Ap_rst_n : IP_Ap_rst_n
+                     interfaces.std.Clk : IP_Clk,
+                     interfaces.std.Rst : IP_Rst,
+                     interfaces.std.Rst_n : IP_Rst_n
                     }

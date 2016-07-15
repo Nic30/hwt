@@ -166,7 +166,7 @@ class ExtractableInterface(InterfaceArray):
                 raise InterfaceIncompatibilityExc("Direction mismatch")
         
         else:
-            # extract signal(Ap_none , etc.)
+            # extract signal(Signal , etc.)
             # collect all possible names
             intfNames = []
             if hasattr(self, "_name"):

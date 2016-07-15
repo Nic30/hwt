@@ -1,5 +1,5 @@
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from hdl_toolkit.interfaces.std import Ap_vld
+from hdl_toolkit.interfaces.std import VldSynced
 from hls_toolkit.codeObjs import HlsOperation
 from hls_toolkit.baseSynthetisator import hls
 
@@ -21,8 +21,8 @@ def w(intf, val):
 
 
 class SimpleAp_vld(Unit):
-    a = Ap_vld(isExtern=True)
-    b = Ap_vld(isExtern=True)
+    a = VldSynced(isExtern=True)
+    b = VldSynced(isExtern=True)
     
     @hls
     def readAndWrite(self):

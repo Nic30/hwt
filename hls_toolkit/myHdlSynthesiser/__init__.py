@@ -5,7 +5,7 @@ from myhdl import always_seq, always_comb, Signal, modbv, ResetSignal
 from myhdl.conversion._toVHDL import _ToVHDLConvertor
 
 from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.interfaces.std import Ap_rst_n, Ap_rst
+from hdl_toolkit.interfaces.std import Rst_n, Rst
 
 def toMyHdlIntf(interface):
     if isinstance(interface, type):
@@ -14,8 +14,8 @@ def toMyHdlIntf(interface):
     return _toMyHdlInterface(interface)
 
 def _toMyHdlInterface(interface, signalMap=None):
-    if isinstance(interface, (Ap_rst, Ap_rst_n)):
-        activeIn = isinstance(interface, Ap_rst)
+    if isinstance(interface, (Rst, Rst_n)):
+        activeIn = isinstance(interface, Rst)
         return ResetSignal(0, active=int(activeIn), async=False)
     
     if interface._interfaces:

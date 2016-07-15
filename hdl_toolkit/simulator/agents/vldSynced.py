@@ -2,7 +2,7 @@ from hdl_toolkit.simulator.agents.agentBase import AgentBase
 from hdl_toolkit.simulator.shortcuts import afterRisingEdge
 
 
-class Ap_vldAgent(AgentBase):
+class VldSyncedAgent(AgentBase):
     def __init__(self, intf, getClkFn=lambda u:u.clk, getRstnFn=lambda u: u.rst_n):
         self.intf = intf
         self.clk = getClkFn(intf._parent)

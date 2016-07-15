@@ -1,7 +1,7 @@
-from hdl_toolkit.interfaces.std import Ap_hs
+from hdl_toolkit.interfaces.std import Handshaked
 
 
-class TrimmedAp_hs(Ap_hs):
+class TrimmedHs(Handshaked):
     _NAME_SEPARATOR = ""
     def _declr(self):
         super()._declr()

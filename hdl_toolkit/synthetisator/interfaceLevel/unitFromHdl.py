@@ -179,7 +179,8 @@ class UnitFromHdl(Unit):
         for p in cls._entity.ports:
             # == loading testbenches is not supported by this class 
             if not (hasattr(p, '_interface') and p._interface is not None):
-                raise AssertionError("Port %s does not have any interface assigned" % (p.name))  # every port should have interface (Ap_none at least) 
+                # every port should have interface (Signal at least) 
+                raise AssertionError("Port %s does not have any interface assigned" % (p.name))  
   
         
         cls._clsBuildFor = cls

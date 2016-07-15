@@ -1,15 +1,15 @@
 import math
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.synthetisator.param import evalParam
-from hdl_toolkit.interfaces.std import Ap_clk, Ap_rst_n
+from hdl_toolkit.interfaces.std import Clk, Rst_n
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
 
 
 log2ceil = lambda x:hInt(math.ceil(math.log2(evalParam(x).val)))
 
 def addClkRstn(self):
-    self.clk = Ap_clk(isExtern=True)
-    self.rst_n = Ap_rst_n(isExtern=True)
+    self.clk = Clk(isExtern=True)
+    self.rst_n = Rst_n(isExtern=True)
 
 
 def _tryConnect(src, unit, intfName):

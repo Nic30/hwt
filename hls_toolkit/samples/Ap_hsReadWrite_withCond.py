@@ -1,10 +1,10 @@
-from hdl_toolkit.interfaces.std import Ap_hs
+from hdl_toolkit.interfaces.std import Handshaked
 from hdl_toolkit.formater import formatVhdl
 from hdl_toolkit.intfLvl import Unit
 from hls_toolkit.codeObjs import FsmNode
 from hls_toolkit.baseSynthetisator import hls
 
-class HlsHs(Ap_hs):
+class HlsHs(Handshaked):
     def __init__(self, *args, **kwargs):
         super(HlsHs, self).__init__(*args, **kwargs)
         self._hlsNodes = []
