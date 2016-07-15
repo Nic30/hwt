@@ -7,6 +7,10 @@ def defaultUnitName(unit, sugestedName=None):
         return sugestedName
 
 def synthesised(u):
+    assert not u._wasSynthetised()
+    if not hasattr(u, "_interfaces"):
+        u._loadDeclarations()
+
     for _ in u._toRtl():
         pass
     return u
