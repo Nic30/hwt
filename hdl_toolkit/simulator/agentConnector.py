@@ -37,6 +37,21 @@ def autoAddAgents(unit, propName="_ag"):
         elif intf._direction == INTF_DIRECTION.SLAVE:
             proc.append(agent.driver)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError("intf._direction %s" %  str(intf._direction) )
         
     return proc
+
+def agInts(interface):
+    """
+    Convert all values which has agent collected in time >=0 to integer array.
+    Invalid value will be None.
+    """
+    res = []
+    
+    for d in interface._ag.data:
+        if d.updateTime >=0:
+            if d.vldMask == d._dtype.all_mask():
+                res.append(d.val)
+            else:
+                res.append(None)
+    return res
