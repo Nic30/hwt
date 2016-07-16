@@ -2,6 +2,11 @@ from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase, InterfaceBase 
 
+def nameAvailabilityCheck(obj, propName, prop):
+    if getattr(obj, propName, None) is not None:
+        raise IntfLvlConfErr("Already has parameter %s old:%s new:%s" % 
+                             (propName, repr(getattr(obj, propName)), prop))
+
 class PropDeclrCollector():
     def _config(self):
         """
@@ -46,73 +51,61 @@ class PropDeclrCollector():
         self._setAttrListener = self._paramCollector
         self._config()
         self._setAttrListener = None 
-
+    
+    def _registerParameter(self, pName, parameter):
+        nameAvailabilityCheck(self, pName, parameter)
+        # resolve name in this scope
+        try:
+            hasName = parameter._name is not None
+        except AttributeError:
+            hasName = False
+        if not hasName:
+            parameter._name = pName
+        # add name in this scope
+        parameter._names[self] = pName
         
+        if parameter.hasGenericName:
+            parameter.name = pName
+
+        if parameter._parent is None:
+            parameter._parent = self
+        
+        self._params.append(parameter)
+    
+    def _registerUnit(self, uName, unit):
+        nameAvailabilityCheck(self, uName, unit)
+        unit._parent = self
+        unit._name = uName
+        self._units.append(unit)
+    
+    def _registerInterface(self, iName, intf):
+        nameAvailabilityCheck(self, iName, intf)
+        intf._parent = self
+        intf._name = iName
+        self._interfaces.append(intf)
+            
     def _loadMyImplementations(self):
         # [TODO] initialize or properties should be initialized externally?
         # self._setAttrListener = self._declrCollector
         self._impl()
         # self._setAttrListener = None
-        
             
-    def _paramCollector(self, pName, p):
-        if isinstance(p, Param):
-            try:
-                hasName = p._name is not None
-            except AttributeError:
-                hasName = False
-            if not hasName:
-                p._name = pName
-            p._names[self] = pName
-            
-            if p.hasGenericName:
-                p.name = pName
-            if p._parent is None:
-                p._parent = self
-            if getattr(self, pName, None) is not None:
-                raise IntfLvlConfErr("Already has parameter %s old:%s new:%s" % 
-                                     (pName, repr(getattr(self, pName)), p))
-            self._params.append(p)
+    def _paramCollector(self, pName, prop):
+        if isinstance(prop, Param):
+            self._registerParameter(pName, prop)
     
-    def _declrCollector(self, iName, i):
-        isIntf = isinstance(i, InterfaceBase)
-        isUnit = isinstance(i, UnitBase)
-        if isIntf or isUnit:
-            i._parent = self
-            i._name = iName
-            if hasattr(self, iName):
-                raise IntfLvlConfErr("Already has atribute '%s' old:%s new:%s" % 
-                                     (iName, repr(getattr(self, iName)), i))
-        if isIntf:
-            self._interfaces.append(i)
-            
-        if isUnit:
-            self._units.append(i)
+    def _declrCollector(self, name, prop):
+        if isinstance(prop, InterfaceBase):
+            self._registerInterface(name, prop)
+        elif isinstance(prop, UnitBase):
+            self._registerUnit(name, prop)
     
-    def _updateParamsFrom(self, otherObj):
-        """
-        update all parameters which are defined on self from otherObj
-        """
-        for p in otherObj._params:
-            try:
-                onParentName = p._names[otherObj]
-            except KeyError as e:
-                raise e
-            try:
-                myP = getattr(self, onParentName)
-                if not isinstance(myP, Param):
-                    raise AttributeError()
-            except AttributeError:
-                continue
-            self._replaceParam(onParentName, p)
-          
     def _shareAllParams(self):
         """Update parameters which has same name in sub interfaces"""
         for i in self._interfaces:
             i._updateParamsFrom(self)
-        if hasattr(self, "_units"):
+            
+        if isinstance(self, UnitBase):
             for u in self._units:
-                for p in self._params:
-                    if hasattr(u, p._name):
-                        getattr(u, p._name).set(p)
+                u._updateParamsFrom(self)
         

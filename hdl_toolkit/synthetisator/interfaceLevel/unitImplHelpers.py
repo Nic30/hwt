@@ -94,8 +94,11 @@ class UnitImplHelpers():
         super(self)._shareAllParams()
         for i in self._units:
             i._updateParamsFrom(self)
-    
+
     def _updateParamsFrom(self, parent):
+        """
+        update all parameters which are defined on self from otherObj
+        """
         for parentP in  parent._params:
             try:
                 p = getattr(self, parentP._name)
