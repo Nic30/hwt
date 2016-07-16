@@ -8,15 +8,10 @@ BURST_FIXED = 0b00
 BURST_INCR = 0b01
 BURST_WRAP = 0b10
 
-BYTES_IN_TRANS = {1 : 0b000,
-                  2 : 0b001,
-                  4 : 0b010,
-                  8 : 0b011,
-                  16: 0b100,
-                  32: 0b101,
-                  64: 0b110,
-                  128 : 0b111
-                  }
+def BYTES_IN_TRANS(n):
+    assert isinstance(n, int)
+    return n.bit_length() - 1
+
 
 CACHE_DEFAULT = 3
 PROT_DEFAULT = 0
