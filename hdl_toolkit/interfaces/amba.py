@@ -8,14 +8,15 @@ BURST_FIXED = 0b00
 BURST_INCR = 0b01
 BURST_WRAP = 0b10
 
-BYTES_IN_TRANS_1 = 0b000
-BYTES_IN_TRANS_2 = 0b001
-BYTES_IN_TRANS_4 = 0b010
-BYTES_IN_TRANS_8 = 0b011
-BYTES_IN_TRANS_16 = 0b100
-BYTES_IN_TRANS_32 = 0b101
-BYTES_IN_TRANS_64 = 0b110
-BYTES_IN_TRANS_128 = 0b111
+BYTES_IN_TRANS = {1 : 0b000,
+                  2 : 0b001,
+                  4 : 0b010,
+                  8 : 0b011,
+                  16: 0b100,
+                  32: 0b101,
+                  64: 0b110,
+                  128 : 0b111
+                  }
 
 CACHE_DEFAULT = 3
 PROT_DEFAULT = 0
