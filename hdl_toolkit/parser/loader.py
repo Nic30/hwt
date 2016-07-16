@@ -17,7 +17,6 @@ class ParserFileInfo():
         self.lib = lib
         self.hierarchyOnly = False
         self.primaryUnitsOnly = False
-        self.functionsOnly = False
     
     def getParser(self):
         if self.lang == BaseParser.VERILOG:
@@ -27,7 +26,7 @@ class ParserFileInfo():
         else:
             raise NotImplementedError()
          
-        return pcls(self.caseSensitive, self.hierarchyOnly, self.primaryUnitsOnly, self.functionsOnly)
+        return pcls(self.caseSensitive, self.hierarchyOnly, self.primaryUnitsOnly)
     
     def __repr__(self):
         return "<%s: %s>" % (self.__class__.__name__, self.fileName)

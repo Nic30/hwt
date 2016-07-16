@@ -26,6 +26,7 @@ def loadCntxWithDependencies(hdlFiles, debug=False):
             fi = ParserFileInfo(f[1], f[0])
         else:
             raise NotImplementedError()
+        fi.hierarchyOnly = True
         fileInfos.append(fi)
     
     dfs = DesignFile.loadFiles(fileInfos)
@@ -38,8 +39,6 @@ def loadCntxWithDependencies(hdlFiles, debug=False):
     depFileInfos = []
     for d in dependencies:
         fi = ParserFileInfo(d, getLib(d, fileInfos))
-        fi.hierarchyOnly = False
-        fi.functionsOnly = (mainFile != d)
         depFileInfos.append(fi)
     
     _, fCtxs = ParserLoader.parseFiles(depFileInfos, debug=debug)

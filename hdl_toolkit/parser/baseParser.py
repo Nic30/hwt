@@ -38,18 +38,16 @@ class BaseParser(object):
     VERILOG = 'verilog'
     VHDL = 'vhdl'
 
-    def __init__(self, caseSensitive, hierarchyOnly=False, primaryUnitsOnly=True, functionsOnly=False):
+    def __init__(self, caseSensitive, hierarchyOnly=False, primaryUnitsOnly=True):
         self.caseSensitive = caseSensitive
         self.hierarchyOnly = hierarchyOnly
         self.primaryUnitsOnly = primaryUnitsOnly
-        self.functionsOnly = functionsOnly
     
     def packageHeaderFromJson(self, jPh, ctx):
         ph = PackageHeader(jPh['name'], ctx)
-        if not self.functionsOnly:
-            for jComp in jPh['components']:
-                c = self.entityFromJson(jComp, ctx)
-                ph.insertObj(c, self.caseSensitive)
+        for jComp in jPh['components']:
+            c = self.entityFromJson(jComp, ctx)
+            ph.insertObj(c, self.caseSensitive)
         for jFn in jPh['functions']:
             fn = self.functionFromJson(jFn, ctx)
             ph.insertObj(fn, self.caseSensitive, hierarchyOnly=self.hierarchyOnly)
@@ -289,12 +287,11 @@ class BaseParser(object):
             else:
                 ctx.packages[n].update(ph)
                 
-        if not self.functionsOnly:
-            for jE in jsonctx["entities"]:
-                ent = self.entityFromJson(jE, ctx)
-                ent.parent = ctx
-                ent.dependencies = dependencies
-                ctx.insertObj(ent, self.caseSensitive)
+        for jE in jsonctx["entities"]:
+            ent = self.entityFromJson(jE, ctx)
+            ent.parent = ctx
+            ent.dependencies = dependencies
+            ctx.insertObj(ent, self.caseSensitive)
 
         if not self.primaryUnitsOnly:
             for jpBody in jsonctx["packages"]:
@@ -306,10 +303,9 @@ class BaseParser(object):
                     ctx.insertObj(ph, self.caseSensitive)
                 else:
                     ctx.packages[n].insertBody(pb)
-            if not self.functionsOnly:
-                for jArch in jsonctx['architectures']:
-                    arch = self.archFromJson(jArch, ctx)
-                    arch.parent = ctx
-                    arch.dependencies = dependencies
-                    ctx.insertObj(arch, self.caseSensitive)
+            for jArch in jsonctx['architectures']:
+                arch = self.archFromJson(jArch, ctx)
+                arch.parent = ctx
+                arch.dependencies = dependencies
+                ctx.insertObj(arch, self.caseSensitive)
 
