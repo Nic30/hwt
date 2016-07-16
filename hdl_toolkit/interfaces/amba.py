@@ -117,12 +117,12 @@ class AxiLite(Interface):
         self.DATA_WIDTH = Param(64)
         
     def _declr(self):
-        self.aw = AxiLite_addr()
-        self.ar = AxiLite_addr()
-        self.w = AxiLite_w()
-        self.r = AxiLite_r()
-        self.b = AxiLite_b()
-        self._shareAllParams()
+        with self._paramsShared():
+            self.aw = AxiLite_addr()
+            self.ar = AxiLite_addr()
+            self.w = AxiLite_w()
+            self.r = AxiLite_r()
+            self.b = AxiLite_b()
         
 class AxiLite_addr_xil(AxiLite_addr):
     _NAME_SEPARATOR = ''
@@ -135,12 +135,12 @@ class AxiLite_b_xil(AxiLite_b):
     
 class AxiLite_xil(AxiLite):
     def _declr(self):
-        self.aw = AxiLite_addr_xil()
-        self.ar = AxiLite_addr_xil()
-        self.w = AxiLite_w_xil()
-        self.r = AxiLite_r_xil()
-        self.b = AxiLite_b_xil()   
-        self._shareAllParams()
+        with self._paramsShared():
+            self.aw = AxiLite_addr_xil()
+            self.ar = AxiLite_addr_xil()
+            self.w = AxiLite_w_xil()
+            self.r = AxiLite_r_xil()
+            self.b = AxiLite_b_xil()   
         
 class Axi4_addr(AxiLite_addr):
     def _config(self):
@@ -194,12 +194,12 @@ class Axi4(AxiLite):
         self.ID_WIDTH = Param(3)
         
     def _declr(self):
-        self.aw = Axi4_addr()
-        self.ar = Axi4_addr()
-        self.w = Axi4_w()
-        self.r = Axi4_r()
-        self.b = Axi4_b()
-        self._shareAllParams()
+        with self._paramsShared():
+            self.aw = Axi4_addr()
+            self.ar = Axi4_addr()
+            self.w = Axi4_w()
+            self.r = Axi4_r()
+            self.b = Axi4_b()
 
 class Axi4_addr_xil(Axi4_addr):
     _NAME_SEPARATOR = ''
@@ -213,9 +213,9 @@ class Axi4_b_xil(Axi4_b):
 
 class Axi4_xil(Axi4):
     def _declr(self):
-        self.ar = Axi4_addr_xil()
-        self.aw = Axi4_addr_xil()
-        self.r = Axi4_r_xil()
-        self.w = Axi4_w_xil()
-        self.b = Axi4_b_xil()  
-        self._shareAllParams()
+        with self._paramsShared():
+            self.ar = Axi4_addr_xil()
+            self.aw = Axi4_addr_xil()
+            self.r = Axi4_r_xil()
+            self.w = Axi4_w_xil()
+            self.b = Axi4_b_xil()  

@@ -9,6 +9,6 @@ class FullDuplexAxiStream(Interface):
         self.DATA_WIDTH = Param(64)
     
     def _declr(self):
-        self.tx = AxiStream()
-        self.rx = AxiStream(masterDir=DIRECTION.IN)
-        self._shareAllParams()
+        with self._paramsShared():
+            self.tx = AxiStream()
+            self.rx = AxiStream(masterDir=DIRECTION.IN)

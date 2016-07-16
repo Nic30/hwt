@@ -1,11 +1,34 @@
 from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase, InterfaceBase 
+from types import MethodType
 
 def nameAvailabilityCheck(obj, propName, prop):
     if getattr(obj, propName, None) is not None:
         raise IntfLvlConfErr("Already has parameter %s old:%s new:%s" % 
                              (propName, repr(getattr(obj, propName)), prop))
+
+class MakeParamsShared(object):
+    """
+    All newly added interfaces and units will share all parametes with unit
+    specified in constructor of this object. 
+    """
+    def __init__(self, unit):
+        self.unit = unit
+        
+    def __enter__(self):
+        orig = self.unit._setAttrListener
+        self.orig = orig
+        
+        def MakeParamsSharedWrap(self, iName, i):
+            if isinstance(i, (InterfaceBase, UnitBase)):
+                i._updateParamsFrom(self)
+            return orig(iName, i)
+        self.unit._setAttrListener = MethodType(MakeParamsSharedWrap,
+                                           self.unit)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.unit._setAttrListener = self.orig
 
 class PropDeclrCollector():
     def _config(self):
@@ -99,13 +122,12 @@ class PropDeclrCollector():
             self._registerInterface(name, prop)
         elif isinstance(prop, UnitBase):
             self._registerUnit(name, prop)
-    
-    def _shareAllParams(self):
-        """Update parameters which has same name in sub interfaces"""
-        for i in self._interfaces:
-            i._updateParamsFrom(self)
             
-        if isinstance(self, UnitBase):
-            for u in self._units:
-                u._updateParamsFrom(self)
+    def _paramsShared(self):
+        """
+        Usage:
         
+        with self._paramsShared():
+            # your interfaces and unit which should share all params with "self" there
+        """
+        return MakeParamsShared(self)
