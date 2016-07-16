@@ -26,6 +26,8 @@ RESP_EXOKAY = 1
 RESP_SLVERR = 2
 RESP_DECERR = 3
 
+# http://www.xilinx.com/support/documentation/ip_documentation/ug761_axi_reference_guide.pdf
+    
 class AxiStream_withoutSTRB(Interface):
     def _config(self):
         self.DATA_WIDTH = Param(64)
