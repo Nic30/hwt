@@ -69,11 +69,6 @@ class SignalOps(object):
     def _ternary(self, ifTrue, ifFalse):
         return self._sig._ternary(ifTrue, ifFalse)
     
-    def _slice(self, index):
-        """
-        functional form of __getitem__
-        """
-        return self._sig._slice(index)
     
     def _assignFrom(self, source):
         """
