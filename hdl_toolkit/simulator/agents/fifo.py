@@ -6,7 +6,8 @@ class FifoReaderAgent(AgentBase):
         self.intf = intf
         self.clk = getClkFn(intf._parent)
         self.rst_n = getRstnFn(intf._parent) 
-        self.wait = False
+
+        self.enable = True
         self.data = []
         
         self.monitor = afterRisingEdge(lambda : self.clk)(self.monitor)
@@ -15,7 +16,7 @@ class FifoReaderAgent(AgentBase):
     def monitor(self, s):
         intf = self.intf
         
-        if s.r(self.rst_n).val and not self.wait:
+        if s.r(self.rst_n).val and self.enable:
             rd = not s.r(intf.wait).val
             if rd:
                 d = s.read(intf.data)
@@ -32,7 +33,8 @@ class FifoWriterAgent(AgentBase):
         self.intf = intf
         self.clk = getClkFn(intf._parent)
         self.rst_n = getRstnFn(intf._parent) 
-        self.wait = False
+
+        self.enable = True
         self.data = []
         
         self.monitor = afterRisingEdge(lambda : self.clk)(self.monitor)
@@ -44,7 +46,8 @@ class FifoWriterAgent(AgentBase):
     def driver(self, s):
         intf = self.intf
         
-        if s.r(self.rst_n).val and not s.r(intf.wait).val and self.data:
+        if s.r(self.rst_n).val and not s.r(intf.wait).val \
+           and self.data and self.enable:
             print("next %f" % s.env.now)
             s.w(self.data.pop(0), intf.data)
             s.w(1, intf.en)
