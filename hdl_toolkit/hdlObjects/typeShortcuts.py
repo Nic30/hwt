@@ -1,6 +1,7 @@
 from hdl_toolkit.hdlObjects.types.defs import INT, BOOL, STR, BIT
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.synthetisator.param import evalParam
 
 # create hdl integer value (for example integer value in vhdl)
 hInt = lambda val: INT.fromPy(val)
@@ -28,7 +29,7 @@ def vecT(width, signed=None):
 
 def vec(val, width):
     """create hdl vector value"""
-    assert val < 2 ** width
+    assert val < evalParam(hInt(2) ** width).val
     return vecT(width).fromPy(val)
 
 def hRange(upper, lower):
