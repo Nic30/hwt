@@ -9,7 +9,7 @@ from hdl_toolkit.hdlObjects.portItem import PortItem
 
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDriversExc
-from hdl_toolkit.synthetisator.rtlLevel.signal.ops import SignalOps
+from hdl_toolkit.synthetisator.rtlLevel.signal.ops import RtlSignalOps
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 
 from hdl_toolkit.simulator.utils import valHasChanged
@@ -31,7 +31,7 @@ class UniqList(list):
             pass
         return list.append(self, obj)
 
-class RtlSignal(RtlSignalBase, SignalItem, SignalOps):
+class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
     more like net
     @ivar _usedOps: dictionary of used operators which can be reused

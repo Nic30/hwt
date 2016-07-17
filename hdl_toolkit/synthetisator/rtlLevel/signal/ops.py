@@ -6,13 +6,14 @@ from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDrivers
 from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.hdlObjects.value import Value
 
+        
 def tv(signal):
     """
     Value class for type of signal
     """
     return signal._dtype.getValueCls()
 
-class SignalOps():
+class RtlSignalOps():
     def _convert(self, toT):
         return tv(self)._convert(self, toT)
     
@@ -126,8 +127,7 @@ class SignalOps():
         return self.naryOp(AllOps.TERNARY, tv(self)._ternary, ifTrue, ifFalse)
     
     def _assignFrom(self, source):
-        from hdl_toolkit.hdlObjects.operator import Operator
-        
+        from hdl_toolkit.hdlObjects.operator import Operator # [TODO] import like this is not ideal
         source = toHVal(source)
         a = Assignment(source, self)
         a.cond = set()
@@ -155,3 +155,5 @@ class SignalOps():
         
         return a
     
+    def _same(self):
+        return [self._assignFrom(self)]
