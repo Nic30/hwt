@@ -7,7 +7,7 @@ class VerilogParser(BaseParser):
             t_name_str = jType['literal']['value']
         except KeyError:
             op = jType['binOperator']
-            t_name = HdlRef.fromJson(op['op0'], self.caseSensitive)
+            t_name = self.hdlRefFromJson(op['op0'])
             t = ctx.lookupLocal(t_name)
             specificator = self.exprFromJson(op['operands'][0], ctx)
             t = t.applySpecificator(specificator)

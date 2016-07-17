@@ -3,7 +3,7 @@ import shutil
 from itertools import chain
 from python_toolkit.fileHelpers import find_files
 
-from hdl_toolkit.formater import formatVhdl
+from hdl_toolkit.serializer.formater import formatVhdl
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.parser.loader import ParserLoader, langFromExtension, ParserFileInfo

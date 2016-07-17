@@ -1,5 +1,5 @@
 from hdl_toolkit.parser.loader import ParserFileInfo, ParserLoader
-from hdl_toolkit.hierarchyExtractor import DesignFile, resolveComplileOrder
+from hdl_toolkit.parser.hierarchyExtractor import DesignFile, resolveComplileOrder
 from python_toolkit.arrayQuery import single
 
 def getLib(fileName, fileInfos):

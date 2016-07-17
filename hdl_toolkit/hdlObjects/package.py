@@ -1,4 +1,4 @@
-from hdl_toolkit.hdlContext import HDLCtx
+from hdl_toolkit.parser.hdlContext import HDLCtx
 
 class PackageHeader(HDLCtx):
     """

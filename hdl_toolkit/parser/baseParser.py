@@ -17,7 +17,7 @@ from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from hdl_toolkit.hdlObjects.types.bits import Bits
 
-from hdl_toolkit.hdlContext import HDLCtx, HDLParseErr, RequireImportErr
+from hdl_toolkit.parser.hdlContext import HDLCtx, HDLParseErr, RequireImportErr
 
 from hdl_toolkit.synthetisator.param import Param
 
@@ -74,7 +74,7 @@ class BaseParser(object):
                 if isinstance(v[0], str):  # [TODO] not clear
                     ref = HdlRef([v], self.caseSensitive)
                 else:
-                    ref = HdlRef.fromJson(v, self.caseSensitive)
+                    ref = self.hdlRefFromJson(v)
                 v = ctx.lookupLocal(ref)
             elif t == 'INT':
                 bits = jLit.get("bits", None)
@@ -130,7 +130,7 @@ class BaseParser(object):
             t_name_str = jType['literal']['value']
         except KeyError:
             op = jType['binOperator']
-            t_name = HdlRef.fromJson(op['op0'], self.caseSensitive)
+            t_name = self.hdlRefFromJson(op['op0'])
             t = ctx.lookupLocal(t_name)
             specificator = self.exprFromJson(op['op1'], ctx)
                 
@@ -189,7 +189,7 @@ class BaseParser(object):
 
     def componentInstanceFromJson(self, jComp, ctx):
         ci = Entity(jComp['name'])
-        ci.entityRef = HdlRef.fromJson(jComp['entityName'], self.caseSensitive)
+        ci.entityRef = self.hdlRefFromJson(jComp['entityName'])
         if not self.hierarchyOnly:
             pass
             # raise NotImplementedError()
@@ -259,6 +259,32 @@ class BaseParser(object):
                 
         return Function(name, returnT, fnCtx, params, _locals, exprList, isOperator)
 
+    def hdlRefFromJson(self, jsn):
+        def flattern(jsn, op):
+            try:
+                binOp = jsn['binOperator']
+            except KeyError:
+                yield jsn['literal']
+                raise StopIteration()
+            if binOp['operator'] == op:
+                yield from flattern(binOp['op0'], op)
+                yield from flattern(binOp['op1'], op)
+            else:
+                yield binOp
+        allChilds = False
+        names = []
+        # [TODO]
+        for j in flattern(jsn, 'DOT'):
+            t = j["type"]
+            if t == 'ID' or t == "STRING":
+                names.append(j['value'])
+            elif t == "ALL":
+                allChilds = True
+            else:
+                raise NotImplementedError("Not implemented for id part of type %s" % (t))
+        return HdlRef(names, self.caseSensitive, allChilds=allChilds)
+    
+
     def parse(self, jsonctx, fileName, ctx):
         """
         @param fileName: vhdl filename
@@ -270,7 +296,7 @@ class BaseParser(object):
         dependencies = set()
         try:
             for jsnU in jsonctx['imports']:
-                u = HdlRef.fromJson(jsnU, self.caseSensitive)
+                u = self.hdlRefFromJson(jsnU)
                 dependencies.add(u)
                 # if ctx.lookupGlobal(u) is None:
                 if not self.hierarchyOnly:

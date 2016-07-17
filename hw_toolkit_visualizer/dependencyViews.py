@@ -1,6 +1,6 @@
 import os
 from flask.blueprints import Blueprint
-from hdl_toolkit.hierarchyExtractor import DesignFile
+from hdl_toolkit.parser.hierarchyExtractor import DesignFile
 from python_toolkit.fileHelpers import find_files
 from flask import render_template
 from hdl_toolkit.parser.loader import ParserFileInfo
