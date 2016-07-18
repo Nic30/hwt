@@ -18,13 +18,9 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
     Base class for all interfaces in interface synthetisator
     
     @cvar _NAME_SEPARATOR: separator for nested interface names   
-    
-    @cvar _interfaces: dict of sub interfaces (name : interf) 
-    @ivar _interfaces: deep copy of class _interfaces
-    
-    @cvar _alternativeNames: [] of alternative names
-    @ivar _alternativeNames: deep copy of class _alternativeNames
-    
+    @ivar _params: [] of parameter
+    @ivar _interfaces: [] sub interfaces 
+    @ivar _alternativeNames: [] of alternative names
     @ivar _name: name assigned during synthesis
     @ivar _parent: parent object (Unit or Interface instance)
     @ivar _isExtern: If true synthetisator sets it as external port of unit
