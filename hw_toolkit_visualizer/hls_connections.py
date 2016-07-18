@@ -1,6 +1,6 @@
-from hdl_toolkit.hdlObjects.portConnection import PortConnection
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from connectionsJsonObj import Net, Connection, ExternalPort, Unit
+from hdl_toolkit.hdlObjects.portItem import PortItem
 
 class PortIndexLookup():
     """ class for searching port indexes of portItems in units"""
@@ -81,12 +81,12 @@ def serializeRtlUnit(interface, unit):
         driver = s.getDriver()
         
                 
-        if driver and isinstance(driver, PortConnection):  # has driver inside schema
+        if driver and isinstance(driver, PortItem):  # has driver inside schema
             n = Net()
             n.name = s.name
             n.source = Connection(driver.unit, driver.portItem, portIndexLookup=indxLookup)
             for expr in s.expr:
-                if isinstance(expr, PortConnection) and expr.portItem.direction == DIRECTION.IN:
+                if isinstance(expr, PortItem) and expr.portItem.direction == DIRECTION.IN:
                     t = Connection(expr.unit, expr.portItem, portIndexLookup=indxLookup)
                     n.targets.append(t)
             
