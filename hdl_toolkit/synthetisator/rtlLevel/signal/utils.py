@@ -1,12 +1,12 @@
 from copy import deepcopy
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
 from hdl_toolkit.hdlObjects.types.defs import BIT
+from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from hdl_toolkit.hdlObjects.types.bits import Bits
-from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 
 
 def _connect(src, dst, srcExclude, dstExclude):
