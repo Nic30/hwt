@@ -1,150 +1,44 @@
+from copy import copy
+import hdlConvertor
 from python_toolkit.arrayQuery import arr_any
-from hdl_toolkit.hdlObjects.entity import Entity
-from hdl_toolkit.hdlObjects.package import PackageHeader
-from hdl_toolkit.hdlObjects.reference import HdlRef
-from hdl_toolkit.nonRedefDict import RedefinitionErr
-from hdl_toolkit.parser.hdlContext import HDLCtx, RequireImportErr
-from hdl_toolkit.parser.loader import ParserLoader, getFileInfoFromObj 
+from hdl_toolkit.parser.referenceCollector import collectReferences
+from hdl_toolkit.parser.defaults import defaultIgnoredRefs
 
-class CircularReferenceError(Exception):
+class UnresolvedReferenceError(Exception):
     pass
 
+class FileBoundedDict(dict):
+    pass
 
-def resolveComplileOrder(fileDependencyDict, topFile):
-    """
-    Converts dependency dictionary to list of files in which they should be parsed.
-    
-    example:
-    dfs = DesignFile.loadFiles(fileInfos) # get design file contexts
-    dep = DesignFile.fileDependencyDict(dfs) # discovery dependeny between files 
-    mainFile = hdlFiles[0] # choose our top file
-    
-    # sort files for parser (top file is at the end)
-    dependencies = resolveComplileOrder(dep, mainFile, dependencies) 
-    # now in dependencies are sorted fileInfos
-    """
-    dependencies = []
-    _resolveComplileOrder(fileDependencyDict, topFile, dependencies, set())
-    return dependencies
+def includeRefToDict(d, ref, obj):
+    nLastIndx = len(ref.names) - 1
+    for i, n in enumerate(ref.names):
+        try:
+            _d = d[n]
+        except KeyError:
+            _d = FileBoundedDict()
+            d[n] = _d
 
-def _resolveComplileOrder(dep, k, resolved, unresolved):
-    unresolved.add(k)
-    for child in dep[k]:
-        if child not in resolved:
-            if child in unresolved:
-                if k == child:
-                    continue
-                else:
-                    raise CircularReferenceError('Circular reference detected: %s -&gt; %s' % (k, child))
-            _resolveComplileOrder(dep, child, resolved, unresolved)
-    resolved.append(k)
-    unresolved.remove(k)        
+        d = _d
+        if i == nLastIndx:
+            _d.designFile = obj
+             
 
 class DesignFile():
     """
-    Wrapper around context of file
+    Wrapper around references of file
     """
-    def __init__(self, fileName, hdlCtx):
+    def __init__(self, fileInfo, jCtx):
         """
-        @param fileName: filename of file that hdlCtx comes from
-        @param hdlCtx: hdl context of file
+        @param fileInfo: ParserFileInfo objects contains filename, langue etc
+        @param jCtx: JSON serialized HDL AST (output from hdlConvertor.parse) 
         """
-        self.fileName = fileName
-        self.hdlCtx = hdlCtx
-        self.importedNames = HDLCtx("imports", None)
-        self.dependentOnFiles = set()
-
-    def allDefinedRefs(self):
-        """
-        iterate over all tuples (reference, referenced object)
-        """
-        def allDefinedRefsInCtx(ctx, nameList):
-            for n, obj in ctx.items():
-                if isinstance(obj, Entity):
-                    yield (HdlRef(nameList + [n], False), obj)
-                elif isinstance(obj, PackageHeader):
-                    if not obj._isDummy:
-                        yield (HdlRef(nameList + [n], False), obj)
-                        for k in obj:
-                            yield (HdlRef(nameList + [n, k], False), obj[k])
-                elif isinstance(obj, HDLCtx):
-                    yield from allDefinedRefsInCtx(obj, nameList + [n])
-        yield from allDefinedRefsInCtx(self.hdlCtx, [])
+        self.fileInfo = fileInfo
+        self.required, self.declared, self.defined = collectReferences(jCtx, scope=[fileInfo.lib])
+        self.unresolvedDep = copy(self.required) 
         
-    @staticmethod
-    def getAllTopCtxs(designFiles):
-        def getTopCtx(df):
-            top = df.hdlCtx
-            while top.parent is not None:
-                top = top.parent
-            return top
-        
-        def uniq(seq): 
-            seen = {}
-            for item in seq:
-                marker = id(item)
-                seen[marker] = item
-                
-            return list(seen.values())        
-        return uniq(map(getTopCtx, designFiles))
-
-    def discoverImports(self, allDesignFiles, ignoredRefs=[]):
-        """
-        discover all imported names in design file
-        """
-        topCtxs = DesignFile.getAllTopCtxs(allDesignFiles)
-        
-        for d in self.allDependencies(importsOnly=True):
-            if arr_any(ignoredRefs, lambda x: DesignFile.refMatch(d, x)):
-                continue
-            
-            imp = None
-            for c in topCtxs:
-                try:
-                    imp = c.lookupGlobal(d)
-                    break
-                except RequireImportErr:
-                    pass
-            if imp is None:
-                raise RequireImportErr("%s: require to import %s and it is not defined in any file" % 
-                                (self.fileName, str(d)))
-            if d.all:
-                try:
-                    for k, v in imp.items():
-                        self.importedNames[k] = v
-                except RedefinitionErr:
-                    pass
-            else:
-                k = imp.name
-                self.importedNames[k] = imp
-
-    def allDependencies(self, importsOnly=False):
-        """
-        iterate all dependencies of file
-        """
-        def allDependenciesForCtx(ctx, nameList):
-            # packageHeader < ent|arch|package
-            # ent <- arch
-            for _, obj in ctx.items():
-                if isinstance(obj, Entity):
-                    # components in packages does not have dependencies
-                    if hasattr(obj, "dependencies"):
-                        yield from obj.dependencies
-                elif isinstance(obj, PackageHeader) and obj._isDummy:
-                    yield HdlRef(nameList + [obj.name], False)
-                elif isinstance(obj, HDLCtx):
-                    for a in obj.architectures:
-                        yield from a.dependencies
-                        if not importsOnly:
-                            yield HdlRef(nameList + [a.entityName], False)
-                            for ci in a.componentInstances:
-                                yield ci.entityRef
-                    yield from allDependenciesForCtx(obj, nameList + [obj.name])
-                # else:
-                #    raise NotImplementedError(
-                #          "Not implemented for object of type %s" %
-                #           (obj.__class__.__name__))
-        yield from allDependenciesForCtx(self.hdlCtx, [])
+        self.depOnDefinitions = set()  # this file depends on definitions in DesignFiles 
+        self.depOnDeclarations = set()  # declaration in this file has definition in DesignFiles
 
     @staticmethod
     def refMatch(iHad, iWontToHave):
@@ -167,81 +61,108 @@ class DesignFile():
             except StopIteration:
                 return True
 
-    # @staticmethod
-    # def findReference(ref, allDesignFiles):
-    #    """
-    #    find reference in allDesignFiles
-    #    @return: iterator over tuples (filename, reference, defined object)
-    #    """
-    #    for df in allDesignFiles:
-    #            for defDep, obj in df.allDefinedRefs():
-    #                if DesignFile.refMatch(defDep, ref):
-    #                    return (df.fileName, defDep, obj)
-    #
-    def discoverDependentOnFiles(self, allDesignFiles, ignoredRefs=[]):
+    @staticmethod
+    def buildDefDecDict(allDesignFiles):
+        topDef = {}
+        topDec = {}
+        
+        for df in allDesignFiles:
+            for d in df.declared:
+                if hasattr(d, "defined") and d.defined:
+                    includeRefToDict(topDef, d, df)
+                includeRefToDict(topDec, d, df)
+        
+        for df in allDesignFiles:
+            for d in df.defined:
+                includeRefToDict(topDef, d, df)
+                
+        return topDec, topDef
+    
+    @staticmethod
+    def findInGlobals(globalDict, ref, scope=[]):
+        """
+        @return: Parser of file info where ref is defined or FileBoundedDict with designFile property
+        """
+        names = ref.names
+        try:
+            names = scope + list(ref.names)
+            top = globalDict
+            for n in names:
+                top = top[n]
+        except KeyError:
+            top = globalDict
+            names = ref.names
+            for n in names:
+                top = top[n]
+                
+        return top
+            
+    
+    def discoverDependentOnFiles(self, globalDecDict, globalDefDict, ignoredRefs=[]):
         """
         Discover on which files is this file dependent
         """
-        topCtxs = DesignFile.getAllTopCtxs(allDesignFiles)
-        
-        def isAlreadyImported(ref):
-            if len(ref.names) != 1:
-                return False
-            return ref.names[0] in self.importedNames
-
-        self.discoverImports(allDesignFiles, ignoredRefs=ignoredRefs)
-        for d in self.allDependencies():
+        imported = {}
+        for d in self.required:
             if arr_any(ignoredRefs, lambda x: DesignFile.refMatch(d, x)):
                 continue
-            if isAlreadyImported(d):
-                continue
-            df = None
-            for c in topCtxs:
+            
+            try:
+                fi = DesignFile.findInGlobals(imported, d, scope=[self.fileInfo.lib])
+            except KeyError:
+                fi = None
+            
+            if d.all:
+                _imported = DesignFile.findInGlobals(globalDecDict, d)
+                imported.update(_imported) 
+
+            if fi is None:
                 try:
-                    df = c.lookupGlobal(d)
-                except RequireImportErr:
-                    pass
-
-            if df is None:
-                raise RequireImportErr(
-                 "%s: require to import %s and it is not defined in any file" % 
-                 (self.fileName, str(d)))
-            fi = getFileInfoFromObj(df)
-            self.dependentOnFiles.add(fi.fileName)
-
+                    fi = DesignFile.findInGlobals(globalDecDict, d, scope=[self.fileInfo.lib])
+                except KeyError:
+                    raise UnresolvedReferenceError("%s: require to import %s" % 
+                                            (self.fileInfo.fileName, str(d)))
+                if fi is not self:
+                    if isinstance(fi, FileBoundedDict):
+                        fi = fi.designFile
+                    
+                    self.depOnDeclarations.add(fi)
+        
+        for d in self.declared:
+            try:
+                fi = DesignFile.findInGlobals(globalDefDict, d, scope=[self.fileInfo.lib])
+            except KeyError:
+                raise UnresolvedReferenceError("%s: can not find definition of %s" % 
+                                       (self.fileInfo.fileName, str(d)))
+                
+            if fi is not self:
+                if isinstance(fi, FileBoundedDict):
+                    fi = fi.designFile
+                self.depOnDefinitions.add(fi)
+            
+        
     @staticmethod
-    def loadFiles(filesInfos):
+    def loadFiles(fileInfos, debug=False):
         """
         load ParserFileInfo and build DesignFile for it 
         """
-        for fi in filesInfos:
-            fi.hierarchyOnly = True
-        
-        _, fileContexts = ParserLoader.parseFiles(filesInfos)
         designFiles = []
-        for fCtx in fileContexts:
-            d = DesignFile(fCtx.name, fCtx)
+        for fi in fileInfos:
+            jCtx = hdlConvertor.parse(fi.fileName, fi.lang,
+                                       hierarchyOnly=True,
+                                       debug=debug)
+            d = DesignFile(fi, jCtx)
             designFiles.append(d)
         
         return designFiles
 
     @staticmethod
-    def fileDependencyDict(designFiles, ignoredRefs=[HdlRef(["ieee"], False),
-                                                     HdlRef(["std"], False)]):
+    def resolveDependencies(designFiles, ignoredRefs=defaultIgnoredRefs):
         """
-        build dictionary file : [files on which this file depends on] 
+        collect depOnDefinitions and depOnDeclarations
         """
-        depDict = {}
+        globalDecDict, globalDefDict = DesignFile.buildDefDecDict(designFiles)
         for df in designFiles:
-            df.discoverDependentOnFiles(designFiles, ignoredRefs)
-            depDict[df.fileName] = df.dependentOnFiles
-        return depDict
+            df.discoverDependentOnFiles(globalDecDict, globalDefDict, ignoredRefs)
 
 
-def findFileWhereNameIsDefined(designFiles, name):
-    targetRef = HdlRef([name])
-    for df in designFiles:
-        refs = df.allDefinedRefs()
-        for ref in refs:
-            if DesignFile.refMatch(ref, targetRef):
-                return df
