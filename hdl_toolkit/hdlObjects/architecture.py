@@ -18,5 +18,5 @@ class Architecture(object):
         
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
-        from hdl_toolkit.formater import formatVhdl
+        from hdl_toolkit.serializer.formater import formatVhdl
         return formatVhdl(VhdlSerializer.Architecture(self))

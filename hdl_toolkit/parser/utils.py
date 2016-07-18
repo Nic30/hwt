@@ -1,5 +1,5 @@
 from hdl_toolkit.parser.loader import ParserFileInfo, ParserLoader
-from hdl_toolkit.hierarchyExtractor import DesignFile, resolveComplileOrder
+from hdl_toolkit.parser.hierarchyExtractor import DesignFile, resolveComplileOrder
 from python_toolkit.arrayQuery import single
 
 def getLib(fileName, fileInfos):
@@ -26,6 +26,7 @@ def loadCntxWithDependencies(hdlFiles, debug=False):
             fi = ParserFileInfo(f[1], f[0])
         else:
             raise NotImplementedError()
+        fi.hierarchyOnly = True
         fileInfos.append(fi)
     
     dfs = DesignFile.loadFiles(fileInfos)
@@ -38,8 +39,6 @@ def loadCntxWithDependencies(hdlFiles, debug=False):
     depFileInfos = []
     for d in dependencies:
         fi = ParserFileInfo(d, getLib(d, fileInfos))
-        fi.hierarchyOnly = False
-        fi.functionsOnly = (mainFile != d)
         depFileInfos.append(fi)
     
     _, fCtxs = ParserLoader.parseFiles(depFileInfos, debug=debug)

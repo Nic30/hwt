@@ -11,6 +11,7 @@ from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
 from hdl_toolkit.synthetisator.rtlLevel.signal.utils import aplyIndexOnSignal
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.synthetisator.param import Param
 
 class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """
@@ -231,6 +232,23 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         del p._names[self]  # remove reference from old param
         newP._names[self] = pName
         setattr(self, pName, newP) 
+    
+    def _updateParamsFrom(self, otherObj):
+        """
+        update all parameters which are defined on self from otherObj
+        """
+        for p in otherObj._params:
+            try:
+                onParentName = p._names[otherObj]
+            except KeyError as e:
+                raise e
+            try:
+                myP = getattr(self, onParentName)
+                if not isinstance(myP, Param):
+                    raise AttributeError()
+            except AttributeError:
+                continue
+            self._replaceParam(onParentName, p)
     
     def __repr__(self):
         s = [self.__class__.__name__]

@@ -4,7 +4,7 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.function import Function
 from hdl_toolkit.parser.utils import entityFromFile, loadCntxWithDependencies
-from hdl_toolkit.hdlContext import RequireImportErr
+from hdl_toolkit.parser.hdlContext import RequireImportErr
 from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit

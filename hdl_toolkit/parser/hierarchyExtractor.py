@@ -3,7 +3,7 @@ from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.package import PackageHeader
 from hdl_toolkit.hdlObjects.reference import HdlRef
 from hdl_toolkit.nonRedefDict import RedefinitionErr
-from hdl_toolkit.hdlContext import HDLCtx, RequireImportErr
+from hdl_toolkit.parser.hdlContext import HDLCtx, RequireImportErr
 from hdl_toolkit.parser.loader import ParserLoader, getFileInfoFromObj 
 
 class CircularReferenceError(Exception):
@@ -217,7 +217,7 @@ class DesignFile():
         for fi in filesInfos:
             fi.hierarchyOnly = True
         
-        _, fileContexts = ParserLoader.parseFiles(filesInfos, timeoutInterval=180)
+        _, fileContexts = ParserLoader.parseFiles(filesInfos)
         designFiles = []
         for fCtx in fileContexts:
             d = DesignFile(fCtx.name, fCtx)

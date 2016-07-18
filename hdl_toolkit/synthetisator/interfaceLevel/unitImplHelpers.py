@@ -30,7 +30,7 @@ class MakeInterfaceExtern(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.unit._setAttrListener = self.orig
 
-class UnitImplHelpers():
+class UnitImplHelpers(object):
     def _reg(self, name, dtype=BIT, defVal=None):
         clk = single(self._interfaces, lambda i: isinstance(i, Clk))
         if defVal is None:
@@ -48,7 +48,16 @@ class UnitImplHelpers():
         return self._cntx.sig(name, typ=dtype, defVal=defVal)
     
     def _asExtern(self):
+        """
+        Usage: 
+        
+        with self._asExtern():
+            # your interfaces which should be extern there
+        
+        """
         return MakeInterfaceExtern(self)
+    
+
     
     def _cleanAsSubunit(self):
         """Disconnect internal signals so unit can be reused by parent unit"""
@@ -89,13 +98,10 @@ class UnitImplHelpers():
                 raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
                                      (self._name, portItem.name, repr(interface), portItem.direction, d))
     
-    def _shareAllParams(self):
-        """Update parameters which has same name in sub interfaces"""
-        super(self)._shareAllParams()
-        for i in self._units:
-            i._updateParamsFrom(self)
-    
     def _updateParamsFrom(self, parent):
+        """
+        update all parameters which are defined on self from otherObj
+        """
         for parentP in  parent._params:
             try:
                 p = getattr(self, parentP._name)

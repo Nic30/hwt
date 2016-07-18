@@ -3,7 +3,7 @@ import hdlConvertor
 from hdl_toolkit.parser.baseParser import BaseParser, ParserException
 from hdl_toolkit.parser.vhdlParser import VhdlParser
 from hdl_toolkit.parser.verilogParser import VerilogParser
-from hdl_toolkit.hdlContext import BaseVhdlContext, HDLCtx, BaseVerilogContext
+from hdl_toolkit.parser.hdlContext import BaseVhdlContext, HDLCtx, BaseVerilogContext
 
 
 class ParserFileInfo():
@@ -17,7 +17,6 @@ class ParserFileInfo():
         self.lib = lib
         self.hierarchyOnly = False
         self.primaryUnitsOnly = False
-        self.functionsOnly = False
     
     def getParser(self):
         if self.lang == BaseParser.VERILOG:
@@ -27,7 +26,7 @@ class ParserFileInfo():
         else:
             raise NotImplementedError()
          
-        return pcls(self.caseSensitive, self.hierarchyOnly, self.primaryUnitsOnly, self.functionsOnly)
+        return pcls(self.caseSensitive, self.hierarchyOnly, self.primaryUnitsOnly)
     
     def __repr__(self):
         return "<%s: %s>" % (self.__class__.__name__, self.fileName)
@@ -76,16 +75,9 @@ class ParserLoader():
         return topCtx
     
     @staticmethod
-    def parseFiles(fileList, timeoutInterval=20, ignoreErrors=False, debug=False):
+    def parseFiles(fileList, debug=False):
         """
-        @param fileList: list of files to parse in same context
-        @param lang: hdl language name (currently supported are vhdl and verilog)
-        @param hdlCtx: parent HDL context
-        @param libName: name of actual library
-        @param timeoutInterval: timeout for process of external vhdl parser
-        @param hierarchyOnly: discover only presence of entities, architectures
-               and component instances inside, packages and components inside, packages
-        @param primaryUnitsOnly: parse only entities and package headers
+        @param fileList: list of ParserFileInfo object to parse in same context
         """
         
         lang = fileList[0].lang
@@ -100,7 +92,7 @@ class ParserLoader():
         for fileInfo in fileList:
             fName = fileInfo.fileName
             j = hdlConvertor.parse(fName, lang,
-                                   hierarchyOnly=fileInfo.hierarchyOnly,
+                                   hierarchyOnly=False,
                                    debug=debug)
             lib = fileInfo.lib
             parser = fileInfo.getParser()

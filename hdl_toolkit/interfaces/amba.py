@@ -8,14 +8,10 @@ BURST_FIXED = 0b00
 BURST_INCR = 0b01
 BURST_WRAP = 0b10
 
-BYTES_IN_TRANS_1 = 0b000
-BYTES_IN_TRANS_2 = 0b001
-BYTES_IN_TRANS_4 = 0b010
-BYTES_IN_TRANS_8 = 0b011
-BYTES_IN_TRANS_16 = 0b100
-BYTES_IN_TRANS_32 = 0b101
-BYTES_IN_TRANS_64 = 0b110
-BYTES_IN_TRANS_128 = 0b111
+def BYTES_IN_TRANS(n):
+    assert isinstance(n, int)
+    return n.bit_length() - 1
+
 
 CACHE_DEFAULT = 3
 PROT_DEFAULT = 0
@@ -26,6 +22,8 @@ RESP_EXOKAY = 1
 RESP_SLVERR = 2
 RESP_DECERR = 3
 
+# http://www.xilinx.com/support/documentation/ip_documentation/ug761_axi_reference_guide.pdf
+    
 class AxiStream_withoutSTRB(Interface):
     def _config(self):
         self.DATA_WIDTH = Param(64)
@@ -115,12 +113,12 @@ class AxiLite(Interface):
         self.DATA_WIDTH = Param(64)
         
     def _declr(self):
-        self.aw = AxiLite_addr()
-        self.ar = AxiLite_addr()
-        self.w = AxiLite_w()
-        self.r = AxiLite_r()
-        self.b = AxiLite_b()
-        self._shareAllParams()
+        with self._paramsShared():
+            self.aw = AxiLite_addr()
+            self.ar = AxiLite_addr()
+            self.w = AxiLite_w()
+            self.r = AxiLite_r()
+            self.b = AxiLite_b()
         
 class AxiLite_addr_xil(AxiLite_addr):
     _NAME_SEPARATOR = ''
@@ -133,12 +131,12 @@ class AxiLite_b_xil(AxiLite_b):
     
 class AxiLite_xil(AxiLite):
     def _declr(self):
-        self.aw = AxiLite_addr_xil()
-        self.ar = AxiLite_addr_xil()
-        self.w = AxiLite_w_xil()
-        self.r = AxiLite_r_xil()
-        self.b = AxiLite_b_xil()   
-        self._shareAllParams()
+        with self._paramsShared():
+            self.aw = AxiLite_addr_xil()
+            self.ar = AxiLite_addr_xil()
+            self.w = AxiLite_w_xil()
+            self.r = AxiLite_r_xil()
+            self.b = AxiLite_b_xil()   
         
 class Axi4_addr(AxiLite_addr):
     def _config(self):
@@ -192,12 +190,12 @@ class Axi4(AxiLite):
         self.ID_WIDTH = Param(3)
         
     def _declr(self):
-        self.aw = Axi4_addr()
-        self.ar = Axi4_addr()
-        self.w = Axi4_w()
-        self.r = Axi4_r()
-        self.b = Axi4_b()
-        self._shareAllParams()
+        with self._paramsShared():
+            self.aw = Axi4_addr()
+            self.ar = Axi4_addr()
+            self.w = Axi4_w()
+            self.r = Axi4_r()
+            self.b = Axi4_b()
 
 class Axi4_addr_xil(Axi4_addr):
     _NAME_SEPARATOR = ''
@@ -211,9 +209,9 @@ class Axi4_b_xil(Axi4_b):
 
 class Axi4_xil(Axi4):
     def _declr(self):
-        self.ar = Axi4_addr_xil()
-        self.aw = Axi4_addr_xil()
-        self.r = Axi4_r_xil()
-        self.w = Axi4_w_xil()
-        self.b = Axi4_b_xil()  
-        self._shareAllParams()
+        with self._paramsShared():
+            self.ar = Axi4_addr_xil()
+            self.aw = Axi4_addr_xil()
+            self.r = Axi4_r_xil()
+            self.w = Axi4_w_xil()
+            self.b = Axi4_b_xil()  
