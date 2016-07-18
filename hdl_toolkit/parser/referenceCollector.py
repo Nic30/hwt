@@ -48,7 +48,10 @@ def collectReferences(jCtx, scope=[]):
             declared.append(_c)
             
         for v in ph["variables"]:
-            raise NotImplementedError()
+            vname = bp._hdlId(v['name'])
+            _v = ref([pName, vname])
+            _v.defined = True
+            declared.append(_v)
         
         for f in ph["functions"]:
             fname = bp._hdlId(f['name'])
