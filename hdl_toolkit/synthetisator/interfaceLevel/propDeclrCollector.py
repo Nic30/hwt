@@ -4,6 +4,9 @@ from hdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase, Interfa
 from types import MethodType
 
 def nameAvailabilityCheck(obj, propName, prop):
+    """
+    Check if not redefining property on obj
+    """
     if getattr(obj, propName, None) is not None:
         raise IntfLvlConfErr("Already has parameter %s old:%s new:%s" % 
                              (propName, repr(getattr(obj, propName)), prop))
@@ -55,6 +58,7 @@ class PropDeclrCollector():
         make all connections etc.
         this method is called after _declr
         """
+        pass
 
     def __setattr__(self, attr, value):
         """setattr with listener injector"""
@@ -76,6 +80,9 @@ class PropDeclrCollector():
         self._setAttrListener = None 
     
     def _registerParameter(self, pName, parameter):
+        """
+        Register Param object on interface level object
+        """
         nameAvailabilityCheck(self, pName, parameter)
         # resolve name in this scope
         try:
@@ -96,12 +103,18 @@ class PropDeclrCollector():
         self._params.append(parameter)
     
     def _registerUnit(self, uName, unit):
+        """
+        Register unit object on interface level object
+        """
         nameAvailabilityCheck(self, uName, unit)
         unit._parent = self
         unit._name = uName
         self._units.append(unit)
     
     def _registerInterface(self, iName, intf):
+        """
+        Register interface object on interface level object
+        """
         nameAvailabilityCheck(self, iName, intf)
         intf._parent = self
         intf._name = iName
@@ -122,6 +135,13 @@ class PropDeclrCollector():
             self._registerInterface(name, prop)
         elif isinstance(prop, UnitBase):
             self._registerUnit(name, prop)
+    
+    def _registerArray(self, name, items):
+        """
+        Register aray of items on interface level object
+        """
+        for i, itm in enumerate(items):
+            setattr(self, name + str(i), itm)
             
     def _paramsShared(self):
         """
