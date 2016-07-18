@@ -42,7 +42,7 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.
     sim.simSignals(sigs, time=time, extraProcesses=stimulFunctions) 
 
 
-def afterRisingEdge(getSigFn):
+def afterRisingEdge(sig):
     """
     Decorator wrapper
     
@@ -61,10 +61,9 @@ def afterRisingEdge(getSigFn):
             """
             Decorator function
             """
-            lastTime = -1
             while True:
                 yield s.updateComplete
-                v = s.read(getSigFn())._onRisingEdge(s.env.now)
+                v = s.read(sig)._onRisingEdge(s.env.now)
                 if bool(v):
                     fn(s)
         return __afterRisingEdge
@@ -88,10 +87,8 @@ def oscilate(sig, period=10*HdlSimulator.ns, initWait=0):
     
 
 
-def pullDownAfter(getSigFn, intDelay=6*HdlSimulator.ns):
+def pullDownAfter(sig, intDelay=6*HdlSimulator.ns):
     def _pullDownAfter(s):
-        sig = getSigFn()
-        
         s.write(True, sig) 
         yield s.wait(intDelay)
         s.write(False, sig)
