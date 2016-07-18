@@ -84,12 +84,17 @@ class RdSynced(Interface):
     
     def _declr(self):
         self.data = s(dtype=vecT(self.DATA_WIDTH))
-        self.rd = s(masterDir=D.IN, alternativeNames=['valid'])
+        self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
     
 
 class Handshaked(VldSynced):
     def _declr(self):
         super()._declr()
+        self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
+
+class HandshakeSync():
+    def _declr(self):
+        self.vld = s(masterDir=D.IN, alternativeNames=['valid'])
         self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
 
 
