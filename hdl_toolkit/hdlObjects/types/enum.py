@@ -7,7 +7,16 @@ class Enum(HdlType):
         self._allValues = valueNames
         for n in valueNames:
             setattr(self, n, self.fromPy(n))
-            
+    
+    def _add(self, name):
+        """
+        Add member of the enum
+        """
+        self._allValues.append(name)
+        v = self.fromPy(name)
+        setattr(self, name, v)
+        return v
+                
     def valAsVhdl(self, val, serializer):
         return  '%s' % str(val.val)
     
