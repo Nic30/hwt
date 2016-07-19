@@ -2,10 +2,16 @@ import math
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.synthetisator.param import evalParam
 from hdl_toolkit.interfaces.std import Clk, Rst_n, Rst
-from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
+from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect, Concat
 
 
 log2ceil = lambda x:hInt(math.ceil(math.log2(evalParam(x).val)))
+
+
+def binToGray(sigOrVal):
+    l = sigOrVal._dtype.bit_length()
+    return Concat(sigOrVal[l-1], sigOrVal[l-1:0] ^ sigOrVal[l:1])
+
 
 def addClkRstn(self):
     self.clk = Clk(isExtern=True)
