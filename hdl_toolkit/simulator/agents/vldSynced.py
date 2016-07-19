@@ -3,15 +3,24 @@ from hdl_toolkit.simulator.shortcuts import afterRisingEdge
 
 
 class VldSyncedAgent(AgentBase):
-    def __init__(self, intf, getClkFn=lambda u:u.clk, getRstnFn=lambda u: u.rst_n):
+    def __init__(self, intf, clk=None, rstn=None):
         self.intf = intf
-        self.clk = getClkFn(intf._parent)
-        self.rst_n = getRstnFn(intf._parent) 
+        
+        p = intf._parent
+        if clk is None:
+            self.clk = p.clk
+        else:
+            self.clk = clk
+        if rstn is None:
+            self.rst_n = p.rst_n 
+        else:
+            self.rst_n = rstn
+            
         self.wait = False
         self.data = []
         
-        self.monitor = afterRisingEdge(lambda : self.clk)(self.monitor)
-        self.driver = afterRisingEdge(lambda : self.clk)(self.driver)
+        self.monitor = afterRisingEdge(self.clk)(self.monitor)
+        self.driver = afterRisingEdge(self.clk)(self.driver)
         
     def monitor(self, s):
         raise NotImplementedError()
