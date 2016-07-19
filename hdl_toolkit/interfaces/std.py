@@ -92,9 +92,9 @@ class Handshaked(VldSynced):
         super()._declr()
         self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
 
-class HandshakeSync():
+class HandshakeSync(Interface):
     def _declr(self):
-        self.vld = s(masterDir=D.IN, alternativeNames=['valid'])
+        self.vld = s(alternativeNames=['valid'])
         self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
 
 
