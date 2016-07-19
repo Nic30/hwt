@@ -71,6 +71,7 @@ class PropDeclrCollector():
             saListerner(attr, value)
         super().__setattr__(attr, value)
 
+    # configuration phase
     def _loadConfig(self):
         if not hasattr(self, '_params'):
             self._params = []
@@ -101,7 +102,17 @@ class PropDeclrCollector():
             parameter._parent = self
         
         self._params.append(parameter)
+
+    def _paramsShared(self):
+        """
+        Usage:
+        
+        with self._paramsShared():
+            # your interfaces and unit which should share all params with "self" there
+        """
+        return MakeParamsShared(self)
     
+    # declaration phase
     def _registerUnit(self, uName, unit):
         """
         Register unit object on interface level object
@@ -120,15 +131,6 @@ class PropDeclrCollector():
         intf._name = iName
         self._interfaces.append(intf)
             
-    def _loadMyImplementations(self):
-        # [TODO] initialize or properties should be initialized externally?
-        # self._setAttrListener = self._declrCollector
-        self._impl()
-        # self._setAttrListener = None
-            
-    def _paramCollector(self, pName, prop):
-        if isinstance(prop, Param):
-            self._registerParameter(pName, prop)
     
     def _declrCollector(self, name, prop):
         if isinstance(prop, InterfaceBase):
@@ -143,11 +145,31 @@ class PropDeclrCollector():
         for i, itm in enumerate(items):
             setattr(self, name + str(i), itm)
             
-    def _paramsShared(self):
+    # implementation phase
+    def _loadMyImplementations(self):
+        self._setAttrListener = self._implCollector
+        self._impl()
+        self._setAttrListener = None
+    
+    def _registerUnitInImpl(self, uName, u):
         """
-        Usage:
-        
-        with self._paramsShared():
-            # your interfaces and unit which should share all params with "self" there
+        @attention: unit has to be parametrized before it is registered 
+                  (some components can change interface by parametrization)
         """
-        return MakeParamsShared(self)
+        self._registerUnit(uName, u)
+        u._loadDeclarations()
+        self._lazyLoaded.extend(u._toRtl())
+        u._signalsForMyEntity(self._cntx, "sig_" + uName)
+    
+    def _registerIntfInImpl(self, iName, i):
+        raise NotImplementedError()
+            
+    def _paramCollector(self, pName, prop):
+        if isinstance(prop, Param):
+            self._registerParameter(pName, prop)
+    
+    def _implCollector(self, name, prop):
+        if isinstance(prop, InterfaceBase):
+            self._registerIntfInImpl(name, prop)
+        elif isinstance(prop, UnitBase):
+            self._registerUnitInImpl(name, prop)

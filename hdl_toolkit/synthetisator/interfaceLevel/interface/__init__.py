@@ -150,16 +150,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         works like self <= master in VHDL
         """
         return list(self._connectToIter(master, masterIndex, slaveIndex))
-   
-    def _propagateConnection(self):
-        """
-        Propagate connections from interface instance to all subinterfaces
-        """
-        for suIntf in self._interfaces:
-            suIntf._propagateConnection()
-        
-        for e in self._arrayElemCache:
-            e._propagateConnection()
     
     def _signalsForInterface(self, context, prefix='', typeTransform=lambda x: x):
         """

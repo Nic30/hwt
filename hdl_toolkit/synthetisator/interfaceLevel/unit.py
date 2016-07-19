@@ -18,11 +18,14 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
     @ivar _params: all params defined on this obj in configuration/declaration
     
     @ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
+    @ivar _lazyLoaded : container of rtl object which were lazy loaded in implementation phase
+                      (this object has to be returned from _toRtl of parent before it it's own objects)
     """
     
     def __init__(self):
         self.__class__._builded()
         self._checkIntferfaces = True
+        self._lazyLoaded = []
          
         self._loadConfig()
          
@@ -51,6 +54,7 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
                 externInterf.extend(signals)
         
         self._loadMyImplementations()
+        yield from self._lazyLoaded
 
         def forAllInterfaces(fn):
             for i in self._interfaces:
@@ -61,19 +65,16 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
                     if i._isExtern:
                         fn(i)
                         
-        #forAllInterfaces(lambda i : i._propagateSrc())
-        # propagate connections on interfaces in this unit
-        forAllInterfaces(lambda i : i._propagateConnection())
         forAllInterfaces(lambda i : i._connectMyElems())
         
         
         if self._checkIntferfaces and not externInterf:
             raise  Exception("Can not find any external interface for unit " + self._name \
                               + "- there is no such a thing as unit without interfaces")
-
+        
         yield from self._synthetiseContext(externInterf, self._cntx)
         self._checkArchCompInstances()
-        
+    
     def _wasSynthetised(self):
         return hasattr(self, "_cntx")
     
