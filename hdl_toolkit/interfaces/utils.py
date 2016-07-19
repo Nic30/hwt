@@ -2,7 +2,7 @@ import math
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.synthetisator.param import evalParam
 from hdl_toolkit.interfaces.std import Clk, Rst_n, Rst
-from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect, Concat
+from hdl_toolkit.synthetisator.codeOps import Concat, connect
 
 
 log2ceil = lambda x:hInt(math.ceil(math.log2(evalParam(x).val)))

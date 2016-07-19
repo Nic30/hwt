@@ -2,9 +2,9 @@ from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.types.defs import BOOL
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.assignment import Assignment
-from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDriversExc
 from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
         
 def tv(signal):

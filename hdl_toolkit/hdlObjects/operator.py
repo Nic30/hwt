@@ -1,5 +1,5 @@
 from copy import deepcopy
-from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal, RtlSignalBase 
+from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase 
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.function import Function
 

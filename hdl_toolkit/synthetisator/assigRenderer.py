@@ -2,11 +2,11 @@ from hdl_toolkit.hdlObjects.statements import IfContainer, SwitchContainer
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase 
-from hdl_toolkit.synthetisator.rtlLevel.signal import MultipleDriversExc
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.synthetisator.assigRendererContainers import DepContainer, IfTreeNode
 from python_toolkit.arrayQuery import where
-from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import discoverEventDependency
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.walkers import discoverEventDependency
 
 SWITCH_THRESHOLD = 2  # (max count of elsifs with eq on same variable)
 

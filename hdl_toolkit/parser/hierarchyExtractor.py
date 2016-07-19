@@ -137,7 +137,11 @@ class DesignFile():
                 
             if fi is not self:
                 if isinstance(fi, FileBoundedDict):
-                    fi = fi.designFile
+                    try:
+                        fi = fi.designFile
+                    except AttributeError:
+                        raise  UnresolvedReferenceError("%s: can not find definition of %s" % 
+                                       (self.fileInfo.fileName, str(d)))
                 self.depOnDefinitions.add(fi)
             
         

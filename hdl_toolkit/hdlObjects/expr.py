@@ -1,7 +1,7 @@
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import walkAllOriginSignals
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.walkers import walkAllOriginSignals
 
 def areInstanceOf(a, b, cls):
     return isinstance(a, cls) and isinstance(b, cls)

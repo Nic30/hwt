@@ -2,7 +2,6 @@ from python_toolkit.arrayQuery import arr_any, where
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType, InvalidVHDLTypeExc
 from hdl_toolkit.serializer.templates import VHDLTemplates
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthetisator.rtlLevel.signal import MultipleDriversExc
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment 
 from hdl_toolkit.hdlObjects.statements import IfContainer, \
@@ -21,6 +20,7 @@ from hdl_toolkit.hdlObjects.types.array import Array
 
 from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
 from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 class VhdlVersion():
     v2002 = 2002
