@@ -98,6 +98,11 @@ class HandshakeSync(Interface):
         self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
 
 
+class ReqDoneSync(Interface):
+    def _declr(self):
+        self.req = s()
+        self.done = s(masterDir=D.IN)
+
 class BramPort_withoutClk(Interface):
     def _config(self):
         self.ADDR_WIDTH = Param(32)
