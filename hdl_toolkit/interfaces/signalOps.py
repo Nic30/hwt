@@ -29,19 +29,19 @@ class SignalOps(object):
 
     def __gt__(self, other):
         """>"""
-        return self._sig.__gt__(self, other)
+        return self._sig.__gt__(other)
     
     def __lt__(self, other):
         """<"""
-        return self._sig.__lt__(self, other)
+        return self._sig.__lt__(other)
     
     def __ge__(self, other):
         """>="""
-        return self._sig.__ge__(self, other)
+        return self._sig.__ge__(other)
     
     def __le__(self, other):
         """<="""
-        return self._sig.__le__(self, other)
+        return self._sig.__le__(other)
     
 
     # bitewise
