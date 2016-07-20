@@ -53,7 +53,23 @@ def Switch(val, *cases):
                     )
     return top
 
-
+def genTransitions(st, *transitions):
+    """
+    @param st: variable which is driven by actual transition
+    @param transitions: tupes (condition, newvalue)
+    
+    @attention: transitions has priority, first has the biggest 
+    """
+    top = st._same()
+    
+    for condition, newvalue in reversed(transitions):
+        top = If(condition,
+                    c(newvalue, st)
+                    ,
+                    top
+                )
+        
+    return top
 
 def _connect(src, dst, srcExclude, dstExclude):
     if srcExclude or dstExclude:
@@ -80,7 +96,7 @@ def connect(src, *destinations, srcExclude=[], dstExclude=[]):
 
 def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
     """
-    Concatenate all signals to one big signal
+    Concatenate all signals to one big signal, recursively
     """
     if not intf._interfaces:
         if intf._masterDir == masterDirEqTo:
