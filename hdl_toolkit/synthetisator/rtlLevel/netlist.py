@@ -7,17 +7,17 @@ from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment
 
-from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal
-from hdl_toolkit.synthetisator.rtlLevel.codeOp import If
+from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal
+from hdl_toolkit.synthetisator.codeOps import If
 from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
-from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import walkUnitInputPorts, walkSignalsInExpr, \
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.walkers import walkUnitInputPorts, walkSignalsInExpr, \
     discoverDriverSignals, walkSigSouces, signalHasDriver
 from hdl_toolkit.serializer.templates import VHDLTemplates  
 from hdl_toolkit.synthetisator.exceptions import SigLvlConfErr
 from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.synthetisator.rtlLevel.signal.exceptions import MultipleDriversExc
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hdl_toolkit.synthetisator.rtlLevel.memory import RtlSyncSignal
 from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
@@ -70,7 +70,7 @@ class RtlNetlist():
 
         if name in self.signals:
             raise Exception('%s:signal name "%s" is not unique' % (self.name, name))
-        if not isinstance(defVal, (Value, RtlSignal)):
+        if not isinstance(defVal, (Value, RtlSignal, InterfaceBase)):
             if isinstance(defVal, (InterfaceBase)):
                 _defVal = defVal._sig
             else:    

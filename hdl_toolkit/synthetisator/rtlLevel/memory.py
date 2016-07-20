@@ -1,8 +1,8 @@
-from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlMemoryBase
+from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal
 
 class RtlSyncSignal(RtlMemoryBase, RtlSignal):
     """

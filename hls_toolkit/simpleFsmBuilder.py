@@ -1,8 +1,6 @@
 from itertools import groupby
-from hdl_toolkit.synthetisator.rtlLevel.signal.utils import connect
+from hdl_toolkit.synthetisator.codeOps import c
 
-
-c = connect
 
 class FsmBuilder(object):
     def __init__(self, fsmReg, transitions):

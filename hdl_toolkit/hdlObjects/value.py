@@ -88,7 +88,7 @@ class Value():
         raise NotImplementedError()
     def __eq__(self, other):
         if areValues(self, other):
-            return bool(self._eq(other))
+            return self._dtype == other._dtype and  bool(self._eq(other))
         else:
             super().__eq__(other)
     

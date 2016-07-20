@@ -9,9 +9,22 @@ from hdl_toolkit.synthetisator.interfaceLevel.interface.directionFns import Inte
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
 from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
-from hdl_toolkit.synthetisator.rtlLevel.signal.utils import aplyIndexOnSignal
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.synthetisator.param import Param
+from hdl_toolkit.hdlObjects.types.defs import BIT
+from hdl_toolkit.hdlObjects.typeShortcuts import hInt
+from hdl_toolkit.hdlObjects.types.bits import Bits
+
+
+def aplyIndexOnSignal(sig, dstType, index):
+    index = toHVal(index)
+    if sig._dtype == BIT or dstType == BIT:
+        return sig[hInt(index)]
+    elif isinstance(dstType, Bits):
+        w = toHVal(getWidthExpr(dstType))
+        return sig[(w * index):(w * (index + 1))]
+    else:
+        raise NotImplementedError()
 
 class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """

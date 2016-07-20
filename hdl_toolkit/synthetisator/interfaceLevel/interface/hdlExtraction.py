@@ -7,8 +7,8 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.interfaceLevel.interface.array import InterfaceArray
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.synthetisator.rtlLevel.signal.walkers import walkSignalsInExpr
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.walkers import walkSignalsInExpr
 
 class InterfaceIncompatibilityExc(Exception):
     pass

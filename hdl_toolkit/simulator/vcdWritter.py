@@ -143,7 +143,7 @@ class VcdWritter():
         return frmt % (val, varInfo.id)
     
 if __name__ == "__main__":
-    from hdl_toolkit.synthetisator.rtlLevel.signal import RtlSignal
+    from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal
     from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hBit, vec
 
     log = VcdWritter()

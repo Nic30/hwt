@@ -1,12 +1,58 @@
 from copy import deepcopy
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
 from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+
+
+def _intfToSig(obj):
+    if isinstance(obj, InterfaceBase):
+        return obj._sig
+    else:
+        return obj
+
+def If(cond, ifTrue=[], ifFalse=[]):
+    """
+    Create if statement
+    """
+    cond = _intfToSig(cond)
+    
+    for stm in ifTrue:
+        cond.endpoints.append(stm)
+        stm.cond.add(cond)
+    
+    if ifFalse:
+        # to prevent creating ~cond without reason
+        ncond = ~cond
+        for stm in ifFalse:
+            ncond.endpoints.append(stm)
+            stm.cond.add(ncond)
+    
+    ret = []
+    ret.extend(ifTrue)
+    ret.extend(ifFalse)
+    return ret
+
+def Switch(val, *cases):
+    """
+    Create switch statement
+    """
+    top = None
+    for c in reversed(cases):
+        if top is None:
+            top = c[1]
+        else:
+            assert c[0] is not None
+            top = If(val._eq(c[0]),
+                     c[1]
+                     ,
+                     top
+                    )
+    return top
+
 
 
 def _connect(src, dst, srcExclude, dstExclude):
@@ -25,7 +71,7 @@ def _connect(src, dst, srcExclude, dstExclude):
 
 def connect(src, *destinations, srcExclude=[], dstExclude=[]):
     """
-    Connect all signals works with interfaces as well
+    Connect all signals/interfaces/calues
     """
     assignemnts = []
     for dst in destinations:
@@ -66,12 +112,6 @@ def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
         
     return res
 
-def trim(src, targetWidth):
-    return vecWithOffset(src, targetWidth, 0)
-
-def vecWithOffset(src, width, offset):
-    return src[(width + offset):offset]
-
 def connectUnpacked(src, dst, exclude=[]):
     """src is packed and it is unpacked and connected to dst"""
     # [TODO] parametrized offsets
@@ -87,7 +127,7 @@ def connectUnpacked(src, dst, exclude=[]):
             offset += 1
         else:
             w = getWidthExpr(t)
-            s = vecWithOffset(src, w, offset)
+            s = src[(w+offset): offset]
             offset += t.bit_length()
         connections.append(sig._assignFrom(s))
     
@@ -131,13 +171,13 @@ def fitTo(what, to):
         return what
     elif toWidth < whatWidth:
         # slice
-        return vecWithOffset(what, hInt(toWidth), 0)
+        return what[:hInt(toWidth)]
     else:
         # extend
         return Concat(what, vec(0, toWidth - whatWidth))
        
 
-def mkOp(fn): 
+def _mkOp(fn): 
     def op(*ops):
         top = None 
         for s in ops:
@@ -148,27 +188,8 @@ def mkOp(fn):
         return top
     return op
 
-# [TODO] rm duplications
-def indexRange(width, index):
-    width = toHVal(width)
-    index = toHVal(index)
-    upper = width * index
-    lower = width * (index + 1) - 1
-    return lower._downto(upper)
-
-def aplyIndexOnSignal(sig, dstType, index):
-    if sig._dtype == BIT or dstType == BIT:
-        return sig[hInt(index)]
-    elif isinstance(dstType, Bits):
-        w = getWidthExpr(dstType)
-        r = indexRange(w, index)
-        return sig[r]
-    else:
-        raise NotImplementedError()
-
-
-And = mkOp(lambda top, s: top & s)
-Or = mkOp(lambda top, s: top | s)
-Concat = mkOp(lambda top, s: top._concat(s))
+And = _mkOp(lambda top, s: top & s)
+Or = _mkOp(lambda top, s: top | s)
+Concat = _mkOp(lambda top, s: top._concat(s))
 
 c = connect
