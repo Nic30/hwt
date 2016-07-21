@@ -159,15 +159,6 @@ class FifoReader(FifoWriter):
         self.en._masterDir = DIRECTION.IN
         self.wait._masterDir = DIRECTION.OUT
 
-
-class SPI(Interface):
-    def _declr(self):
-        self.clk = Clk()
-        self.mosi = s()
-        self.miso = s(masterDir=D.IN)
-        self.ss = s()
-
-
 s = Signal
   
 # class RGMII_channel(Interface):
