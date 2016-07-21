@@ -104,6 +104,17 @@ class Switch(StmCntx):
         return If.Else(self, *statements)
 
 
+def In(sigOrVal, iterable):
+    res = None
+    for i in iterable:
+        i = toHVal(i)
+        if res is None:
+            res = sigOrVal._eq(i)
+        else:
+            res = res | sigOrVal._eq(i)
+
+    return res
+
 class FsmBuilder(StmCntx):
     """
     @ivar stateReg: register with state
