@@ -7,6 +7,10 @@ from hdl_toolkit.synthetisator.codeOps import Concat, connect
 
 log2ceil = lambda x:hInt(math.ceil(math.log2(evalParam(x).val)))
 
+def isPow2(num):
+    assert isinstance(num, int)
+    return num != 0 and ((num & (num - 1)) == 0)
+
 
 def binToGray(sigOrVal):
     l = sigOrVal._dtype.bit_length()
