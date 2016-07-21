@@ -190,9 +190,9 @@ def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
     topPos = []
     topNeg = []
     for a in assignments:
-        c = list(where(a._unresolvedConds, lambda cond: cond[0] == topCond))
-        assert len(c) == 0 or len(c) == 1
-        for _c in c:
+        dependentOnTopCond = list(where(a._unresolvedConds, lambda cond: cond[0] is topCond))
+        assert len(dependentOnTopCond) == 0 or len(dependentOnTopCond) == 1
+        for _c in dependentOnTopCond:
             a._unresolvedConds.remove(_c)
             
             if _c[1]:
@@ -200,9 +200,11 @@ def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
             else:
                 topPos.append(a)
     if not (len(assignments) == (len(topNeg) + len(topPos))):
+        # it seems that there is some statement which is nod depended on topCond, but it should be 
+        # filtered earlier
         raise AssertionError(("got assignments %s and topCond %s \n for neg resolved %s,\n" + 
                              " for pos resolved %s\n" + 
-                             "something lost or duplicited") 
+                             "something lost or duplicited in statement renderer") 
                              % (str(assignments), str(topCond), str(topNeg), str(topPos)))
     top = IfTreeNode(topCond)
     top.pos = renderIfTree_afterCondSatisfied(topPos, globalCondOrder)
