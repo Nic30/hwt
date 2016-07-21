@@ -146,9 +146,9 @@ class FsmBuilder(StmCntx):
                 condition, newvalue = cAndS
             
             # building decision tree    
-            top = If(condition,
+            top =   If(condition,
                         c(newvalue, self.stateReg)
-                        ,
+                    ).Else(
                         top
                     )
             
