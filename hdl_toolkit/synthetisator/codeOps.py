@@ -104,30 +104,75 @@ class Switch(StmCntx):
         return If.Else(self, *statements)
 
 
+class FsmBuilder(StmCntx):
+    """
+    @ivar stateReg: register with state
+    """
+    
+    def __init__(self, parent, stateT, stateRegName="st"):
+        """
+        @param parent: parent unit where fsm should be builded
+        @param stateT: enum type of state
+        @param stateRegName: name of register where sate is stored
+        """
+        self.stateReg = parent._reg(stateRegName, stateT, stateT.fromPy(None))
+        Switch.__init__(self, self.stateReg)
+    
+    _appendStatements = Switch._appendStatements
+    def Trans(self, stateFrom, *condAndNextState):
+        """
+        @param stateFrom: apply when FSM is in this state
+        @param condAndNextState: tupes (condition, newState),
+                        last does not to have condition
+        
+        @attention: transitions has priority, first has the biggest 
+        @attention: if stateFrom is None it is evaluated as default
+        """
+        top = None
+        last = True
+        
+        for cAndS in reversed(condAndNextState):
+            if last is True:
+                last = False
+                # if this is last trans. it does not have to condition
+                try:
+                    condition, newvalue = cAndS
+                except TypeError:
+                    top = c(cAndS, self.stateReg)
+                    continue
+                top = self.stateReg._same()
+
+            else:
+                condition, newvalue = cAndS
+            
+            # building decision tree    
+            top = If(condition,
+                        c(newvalue, self.stateReg)
+                        ,
+                        top
+                    )
+            
+        # if there is no trans. this state fsm should hang in this state
+        if not condAndNextState:
+            top = self.stateReg._same()
+
+        if stateFrom is None:
+            s = Switch.Default(self, *top)
+        else:
+            s = Switch.Case(self, stateFrom, *top)
+        
+        return s
+    
+    def Default(self, *condAndNextState):
+        return self._trans(None, *condAndNextState)
+
 #class While(StmCntx):
 #    def __init__(self, cond):
 #        self.cnd = _intfToSig(cond)
 #    
 #    def Do(self, *statements):
 
-def genTransitions(st, *transitions):
-    """
-    @param st: variable which is driven by actual transition
-    @param transitions: tupes (condition, newvalue)
     
-    @attention: transitions has priority, first has the biggest 
-    """
-    top = st._same()
-    
-    for condition, newvalue in reversed(transitions):
-        top = If(condition,
-                    c(newvalue, st)
-                    ,
-                    top
-                )
-        
-    return top
-
 def _connect(src, dst, srcExclude, dstExclude):
     if srcExclude or dstExclude:
         raise NotImplementedError("[TODO]")
