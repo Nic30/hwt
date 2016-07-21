@@ -12,6 +12,7 @@ from hdl_toolkit.hdlObjects.types.slice import Slice
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from copy import copy
 from hdl_toolkit.hdlObjects.types.integerVal import IntegerVal
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 BoolVal = BOOL.getValueCls()
 
@@ -256,6 +257,13 @@ class BitsVal(Value):
             v.val &= Bitmask.mask(w)
             return v
         else:
+            try:
+                # double negation
+                d = self.singleDriver()
+                if isinstance(d, Operator) and d.operator == AllOps.NOT:
+                    return d.ops[0]
+            except MultipleDriversExc:
+                pass
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
     
     # comparisons         

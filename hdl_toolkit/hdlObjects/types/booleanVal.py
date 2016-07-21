@@ -3,6 +3,7 @@ from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 def boolLogOp(self, other, op):
     other = toHVal(other)
@@ -55,6 +56,13 @@ class BooleanVal(Value):
             v.val = not v.val
             return v
         else:
+            try:
+                # double negation
+                d = self.singleDriver()
+                if isinstance(d, Operator) and d.operator == AllOps.NOT:
+                    return d.ops[0]
+            except MultipleDriversExc:
+                pass
             return Operator.withRes(AllOps.NOT, [self], BOOL)
 
     def _ternary(self, ifTrue, ifFalse):
