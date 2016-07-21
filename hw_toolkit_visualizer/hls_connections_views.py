@@ -61,7 +61,7 @@ def connectionData(path):
         #    module = importlib.reload(sys.modules[path])
         # except KeyError:
         #    module = importlib.import_module(path.replace("/", "."))
-    from hdl_toolkit.samples.iLvl.axiLiteSlaveContainer import AxiLiteSlaveContainer
+    from hwtLib.samples.iLvl.hierarchy.axiLiteSlaveContainer import AxiLiteSlaveContainer
     u = AxiLiteSlaveContainer()
     #for _ in u._toRtl():
     #    pass

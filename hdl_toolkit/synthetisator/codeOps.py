@@ -1,3 +1,4 @@
+import types
 from copy import deepcopy
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
 from hdl_toolkit.hdlObjects.types.defs import BIT
@@ -14,44 +15,100 @@ def _intfToSig(obj):
     else:
         return obj
 
-def If(cond, ifTrue=[], ifFalse=[]):
+class StmCntx(list):
     """
-    Create if statement
+    Base class of statement contexts
     """
-    cond = _intfToSig(cond)
-    
-    for stm in ifTrue:
-        cond.endpoints.append(stm)
-        stm.cond.add(cond)
-    
-    if ifFalse:
-        # to prevent creating ~cond without reason
-        ncond = ~cond
-        for stm in ifFalse:
-            ncond.endpoints.append(stm)
-            stm.cond.add(ncond)
-    
-    ret = []
-    ret.extend(ifTrue)
-    ret.extend(ifFalse)
-    return ret
+    pass
 
-def Switch(val, *cases):
+def flaten(iterables):
+    if isinstance(iterables, (list, tuple, types.GeneratorType)):
+        for i in iterables:
+            yield from flaten(i)
+    else:
+        yield iterables
+        
+class If(StmCntx):
     """
-    Create switch statement
+    Context of if statement
+    
+    @param cond: condition in if
+    @param statements: list of statements which should be active if condition is met   
     """
-    top = None
-    for c in reversed(cases):
-        if top is None:
-            top = c[1]
+    def __init__(self, cond, *statements):
+        self.cond = _intfToSig(cond)
+        self.elifConds = []
+        self._appendStatements(set([self.cond,]), statements)
+        
+    def Else(self, *statements):
+        ncond = set()
+        ncond.add(~self.cond)
+        
+        for ec in self.elifConds:
+            ncond.add(~ec)
+
+        self._appendStatements(ncond, statements)
+            
+        # convert self to StmCntx to prevent any other else/elif
+        stml = StmCntx()
+        stml.extend(self)
+        return stml
+    
+    def _appendStatements(self, condSet, statements):
+        for stm in flaten(statements):
+            for c in condSet:
+                c.endpoints.append(stm)
+            stm.cond.update(condSet)
+            self.append(stm)
+    
+    def Elif(self, cond, *statements):
+        cond = _intfToSig(cond)
+        
+        thisCond = set()
+        thisCond.add(~self.cond)
+        for c in self.elifConds:
+            thisCond.add(~c)
+        thisCond.add(cond)
+        
+        self._appendStatements(thisCond, statements)
+        
+        self.elifConds.append(cond)
+        
+        return self
+
+class Switch(StmCntx):
+    def __init__(self, switchOn):
+        self.switchOn = switchOn
+        self.cond = None
+    
+    _appendStatements = If._appendStatements
+    
+    def Case(self, caseVal, *statements):
+        cond = self.switchOn._eq(caseVal)
+        if self.cond is None:
+            If.__init__(self, cond, *statements) 
         else:
-            assert c[0] is not None
-            top = If(val._eq(c[0]),
-                     c[1]
-                     ,
-                     top
-                    )
-    return top
+            If.Elif(self, cond, *statements)
+        return self
+    
+    def addCases(self, tupesValStmnts):
+        s = self
+        for val, statements in tupesValStmnts:
+            if val is None:
+                s = s.Default(*statements)
+            else:
+                s = s.Case(val, *statements)
+        return s
+    
+    def Default(self, *statements):
+        return If.Else(self, *statements)
+
+
+#class While(StmCntx):
+#    def __init__(self, cond):
+#        self.cnd = _intfToSig(cond)
+#    
+#    def Do(self, *statements):
 
 def genTransitions(st, *transitions):
     """

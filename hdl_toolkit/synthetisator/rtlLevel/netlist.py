@@ -85,8 +85,10 @@ class RtlNetlist():
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                            [RtlSignal._assignFrom(s, _defVal)] ,
-                            [RtlSignal._assignFrom(s, s.next)])
+                        [RtlSignal._assignFrom(s, _defVal)]
+                    ).Else(
+                        [RtlSignal._assignFrom(s, s.next)]
+                    )
             else:
                 r = [RtlSignal._assignFrom(s, s.next)]
             
