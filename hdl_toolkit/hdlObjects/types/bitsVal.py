@@ -165,7 +165,7 @@ class BitsVal(Value):
                 
     @classmethod
     def fromPy(cls, val, typeObj):
-        assert isinstance(val, (int, bool)) or val is None
+        assert isinstance(val, (int, bool)) or val is None, val
         vld = 0 if val is None else Bitmask.mask(typeObj.bit_length())
         if not vld:
             val = 0
