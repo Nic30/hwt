@@ -156,7 +156,7 @@ class VhdlSerializer():
         
         genericMaps = []
         for g in entity.generics:
-            gm =  MapExpr(g, g._val)
+            gm = MapExpr(g, g._val)
             genericMaps.append(gm) 
         
         if len(portMaps) == 0:
@@ -396,7 +396,7 @@ class VhdlSerializer():
         name = "arrT_%d" % (id(typ))
         if declaration:
             return "TYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
-                (name, cls.asHdl(toHVal(typ.size)), cls.HdlType(typ.elmType))
+                (name, cls.asHdl(toHVal(typ.size) - 1), cls.HdlType(typ.elmType))
         else:
             return name
 
