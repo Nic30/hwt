@@ -22,7 +22,7 @@ def aplyIndexOnSignal(sig, dstType, index):
         return sig[hInt(index)]
     elif isinstance(dstType, Bits):
         w = toHVal(getWidthExpr(dstType))
-        return sig[(w * index):(w * (index + 1))]
+        return sig[(w * (index + 1)):(w * index)]
     else:
         raise NotImplementedError()
 
