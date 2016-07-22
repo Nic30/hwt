@@ -21,6 +21,7 @@ from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
 from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 
 class VhdlVersion():
     v2002 = 2002
@@ -395,7 +396,7 @@ class VhdlSerializer():
         name = "arrT_%d" % (id(typ))
         if declaration:
             return "TYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
-                (name, cls.asHdl(typ.size), cls.HdlType(typ.elmType))
+                (name, cls.asHdl(toHVal(typ.size)), cls.HdlType(typ.elmType))
         else:
             return name
 
