@@ -16,6 +16,9 @@ class Array(HdlType):
     def __hash__(self):
         return hash((self.elmType, self.size))
     
+    def valAsVhdl(self, val, serializer):
+        return  "(" + (",\n".join([serializer.Value(v) for v in val.val])) + ")"
+    
     @classmethod
     def getValueCls(cls):
         try:
