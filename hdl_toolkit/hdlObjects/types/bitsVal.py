@@ -1,18 +1,21 @@
-from hdl_toolkit.hdlObjects.value import Value, areValues
-from hdl_toolkit.bitmask import Bitmask
-from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, BIT
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.hdlObjects.types.integer import Integer
-from hdl_toolkit.hdlObjects.types.bits import Bits
-from hdl_toolkit.hdlObjects.types.slice import Slice
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from copy import copy
+
+from hdl_toolkit.bitmask import Bitmask
+from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.typeShortcuts import vecT
+from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, BIT
+from hdl_toolkit.hdlObjects.types.eventCapableVal import EventCapableVal
+from hdl_toolkit.hdlObjects.types.integer import Integer
 from hdl_toolkit.hdlObjects.types.integerVal import IntegerVal
+from hdl_toolkit.hdlObjects.types.slice import Slice
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.hdlObjects.value import Value, areValues
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+
 
 BoolVal = BOOL.getValueCls()
 
@@ -121,7 +124,7 @@ def boundryFromType(sigOrVal, boundaryIndex):
     else:  # downto / to
         return c.singleDriver().ops[boundaryIndex]
 
-class BitsVal(Value):
+class BitsVal(EventCapableVal):
     """
     @attention: operator on signals are using value operator functions as well 
     """
@@ -294,23 +297,6 @@ class BitsVal(Value):
     def __or__(self, other):
         return bitsBitOp(self, other, AllOps.OR_LOG)
        
-    def _hasEvent(self, now):
-        if isinstance(self, Value):
-            return BoolVal(self.updateTime == now,
-                            BOOL,
-                            self.vldMask,
-                            now)
-        else:
-            return Operator.withRes(AllOps.EVENT, [self], BOOL)
-    
-    def _onRisingEdge(self, now):
-        if isinstance(self, Value):
-            v = self._hasEvent(now)
-            v.val = v.val and self.val
-            return v
-        else:
-            return Operator.withRes(AllOps.RISING_EDGE, [self], BOOL)
-
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)
 
