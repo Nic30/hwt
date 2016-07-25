@@ -70,7 +70,6 @@ class IfContainer():
                 yield from IfContainer.evalCase(simulator, stm, condVld)
         
     #def seqEval(self):
-    #    # [TODO] use simEval and then 
     #    if evalCond(self.cond):
     #        for s in self.ifTrue:
     #            s.seqEval()
