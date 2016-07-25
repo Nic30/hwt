@@ -2,6 +2,9 @@ from hls_toolkit.streamLvl.intfValueCont import IntfValueCont
 
 
 def valObj(intf, exclude=set()):
+    """
+    Generate default value object for interface
+    """
     if intf._interfaces:
         v = IntfValueCont(intf)
         for i in intf._interfaces:
