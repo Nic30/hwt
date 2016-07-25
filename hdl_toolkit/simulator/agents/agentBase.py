@@ -34,5 +34,5 @@ class SyncAgentBase(AgentBase):
             self.rst_n = rstn
 
         
-        self.monitor = afterRisingEdge(self.clk)(self.monitor)
-        self.driver = afterRisingEdge(self.clk)(self.driver)
+        self.monitor = afterRisingEdge(self.clk, self.monitor)
+        self.driver = afterRisingEdge(self.clk, self.driver)
