@@ -1,11 +1,11 @@
-from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.hdlObjects.types.defs import BOOL, INT
-from hdl_toolkit.synthetisator.param import evalParam
-from hdl_toolkit.hdlObjects.types.slice import Slice
-from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.types.defs import BOOL, INT
+from hdl_toolkit.hdlObjects.types.slice import Slice
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.synthetisator.param import evalParam
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 
 
 class ArrayVal(Value):
@@ -22,7 +22,7 @@ class ArrayVal(Value):
         else:
             elements = []
             for v in val:
-                if isinstance(v, RtlSignalBase): # is signal
+                if isinstance(v, RtlSignalBase):  # is signal
                     assert v._dtype == typeObj.elmType
                     e = v
                 else:
@@ -44,7 +44,7 @@ class ArrayVal(Value):
         elif isinstance(key, Value):
             pass
         else:
-            raise NotImplementedError("Index operation not implemented for index %s" %
+            raise NotImplementedError("Index operation not implemented for index %s" % 
                                        (repr(key)))
             
         # [TODO] eventmask should be shared for all items
