@@ -1,26 +1,15 @@
 from hdl_toolkit.hdlObjects.assignment import Assignment
-from hdl_toolkit.hdlObjects.types.hdlType import HdlType
-from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.portItem import PortItem
-
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-
-from hdl_toolkit.simulator.utils import valHasChanged
+from hdl_toolkit.hdlObjects.types.hdlType import HdlType
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.simulator.exceptions import SimException
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.ops import RtlSignalOps
+from hdl_toolkit.simulator.utils import valHasChanged
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.ops import RtlSignalOps
 
-
-def hasDiferentVal(reference, sigOrVal):
-    assert isinstance(reference, Value)
-    if isinstance(sigOrVal, Value):
-        v = sigOrVal
-    else:
-        v = sigOrVal._val
-    
-    return reference != v
 
 class UniqList(list):
     def append(self, obj):
@@ -102,8 +91,16 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         @attention: single process has to drive single variable in order to work
         """
         for d in self.drivers:
-            if not isinstance(d, Assignment):
-                d.simEval(simulator)
+            if isinstance(d, Assignment):
+                continue
+            try:
+                o = d.operator
+                if o == AllOps.INDEX:
+                    continue
+            except AttributeError:
+                pass
+            
+            d.simEval(simulator)
         if not isinstance(self._val, Value):
             raise SimException("Evaluation of signal returned not supported object (%s)" % 
                                (repr(self._val)))
@@ -133,14 +130,4 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         if len(self.drivers) != 1:
             raise MultipleDriversExc()
         return list(self.drivers)[0]
-            
-def areSameSignals(a, b):
-    if a is b:
-        return True
-    if type(a) != type(b):
-        return False 
-    if len(a.drivers) != 1 or len(b.drivers) != 1:
-        return False
-    da = list(a.drivers)[0]
-    db = list(b.drivers)[0]
-    return da == db
+
