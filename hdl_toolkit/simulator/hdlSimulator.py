@@ -72,13 +72,13 @@ class HdlSimulator(object):
         nextEventT = self.env.peek()
         now = self.env.now
         # is last event or is last in this time
-        if (math.isinf(nextEventT) or nextEventT > now\
-            and self.lastUpdateComplete < now:
-            
+        if (math.isinf(nextEventT) or nextEventT > now) and self.lastUpdateComplete < now:
             self.updateComplete.succeed()  # trigger
             self.updateComplete = self.env.event()  # regenerate event
             self.lastUpdateComplete = now
             
+        self.applyValuesPlaned = False 
+           
     def _initSignals(self, signals):
         """
         Inject default values to simulation
