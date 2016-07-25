@@ -27,7 +27,9 @@ class INTF_DIRECTION():
         else:
             raise Exception("%s is not interface direction" % (repr(d)))
     
-
+READ = "READ"
+WRITE = "WRITE"
+    
 class DIRECTION():
     IN = "IN"
     OUT = "OUT"
