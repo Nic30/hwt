@@ -1,17 +1,18 @@
+from itertools import chain
 import os
 import shutil
-from itertools import chain
-from python_toolkit.fileHelpers import find_files
 
-from hdl_toolkit.serializer.formater import formatVhdl
-from hdl_toolkit.hdlObjects.entity import Entity
+import hdlConvertor
 from hdl_toolkit.hdlObjects.architecture import Architecture
-from hdl_toolkit.parser.loader import ParserLoader, langFromExtension, ParserFileInfo
-from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
-from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
+from hdl_toolkit.hdlObjects.entity import Entity
+from hdl_toolkit.parser.loader import langFromExtension, ParserFileInfo
+from hdl_toolkit.serializer.formater import formatVhdl
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
+from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
+from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
+from python_toolkit.fileHelpers import find_files
 
 
 def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
@@ -29,6 +30,16 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
     return formatVhdl(
                      "\n".join([ serializer.asHdl(x) for x in u._toRtl()])
                      )
+
+def synthesised(u):
+    assert not u._wasSynthetised()
+    if not hasattr(u, "_interfaces"):
+        u._loadDeclarations()
+
+    for _ in u._toRtl():
+        pass
+    return u
+
 
 def synthetizeAndSave(unit, folderName='.', name=None):
     unit._loadDeclarations()
@@ -68,8 +79,7 @@ def fileSyntaxCheck(fileInfo, timeoutInterval=20):
     """
     Perform syntax check on whole file (only in java parser)
     """
-    p = ParserLoader.spotLoadingProc(fileInfo) 
-    p.communicate(timeout=timeoutInterval)
+    return hdlConvertor.parse(fileInfo.fileName, fileInfo.lang) 
 
 
 def _syntaxCheckUnitFromHdl(u):
