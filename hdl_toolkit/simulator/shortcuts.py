@@ -42,32 +42,50 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.
     sim.simSignals(sigs, time=time, extraProcesses=stimulFunctions) 
 
 
-def afterRisingEdge(sig):
+def afterRisingEdge(sig, fn):
     """
     Decorator wrapper
     
     usage:
-    @afterRisingEdge(lambda : yourUnit.clk)
+    @afterRisingEdge(yourUnit.clk)
     def yourFn(simulator):
         code which should be executed after rising edge (in the time of rising edge)
         when all values are set
     
     """
-    def _afterRisingEdge(fn):
+    def __afterRisingEdge(s):
         """
-        Decorator
+        Process function which always waits on RisingEdge and then runs fn
         """
-        def __afterRisingEdge(s):
-            """
-            Decorator function
-            """
-            while True:
-                yield s.updateComplete
-                v = s.read(sig)._onRisingEdge(s.env.now)
-                if bool(v):
-                    fn(s)
-        return __afterRisingEdge
-    return _afterRisingEdge
+        while True:
+            yield s.updateComplete
+            v = s.read(sig)._onRisingEdge(s.env.now)
+            if bool(v):
+                fn(s)
+    return __afterRisingEdge
+
+
+def afterRisingEdgeNoReset(sig, reset, fn):
+    """
+    Decorator wrapper
+    
+    same like afterRisingEdge, but acitvate when reset is not active
+    
+    """
+    def __afterRisingEdge(s):
+        """
+        Process function which always waits on RisingEdge and then runs fn
+        """
+        while True:
+            yield s.updateComplete
+            r = s.read(reset)
+            if reset.negated:
+                r.val = not r.val
+             
+            v = s.read(sig)._onRisingEdge(s.env.now) 
+            if bool(v) and not bool(r):
+                fn(s)
+    return __afterRisingEdge
 
 
 def oscilate(sig, period=10*HdlSimulator.ns, initWait=0):

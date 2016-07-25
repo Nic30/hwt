@@ -4,6 +4,7 @@ from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from math import inf
+import math
 
 class HdlSimulator(object):
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
@@ -62,7 +63,7 @@ class HdlSimulator(object):
         now = self.env.now
         nextEventT = self.env.peek()
         # is last event or is last in this time
-        if nextEventT == inf or (nextEventT > now and not self.valuesToApply) and self.lastUpdateComplete < now:
+        if math.isinf(nextEventT) or (nextEventT > now and not self.valuesToApply) and self.lastUpdateComplete < now:
             self.updateComplete.succeed() # trigger
             self.updateComplete = self.env.event() # regenerate event
             self.lastUpdateComplete = now

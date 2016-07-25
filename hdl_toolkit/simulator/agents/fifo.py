@@ -18,8 +18,8 @@ class FifoReaderAgent(AgentBase):
         self.enable = True
         self.data = []
         
-        self.monitor = afterRisingEdge(self.clk)(self.monitor)
-        self.driver = afterRisingEdge(self.clk)(self.driver)
+        self.monitor = afterRisingEdge(self.clk, self.monitor)
+        self.driver = afterRisingEdge(self.clk, self.driver)
         
     def monitor(self, s):
         intf = self.intf
@@ -54,8 +54,8 @@ class FifoWriterAgent(AgentBase):
         self.enable = True
         self.data = []
         
-        self.monitor = afterRisingEdge(self.clk)(self.monitor)
-        self.driver = afterRisingEdge(self.clk)(self.driver)
+        self.monitor = afterRisingEdge(self.clk, self.monitor)
+        self.driver = afterRisingEdge(self.clk, self.driver)
         
     def monitor(self, s):
         raise NotImplementedError()
@@ -65,10 +65,10 @@ class FifoWriterAgent(AgentBase):
         
         if s.r(self.rst_n).val and not s.r(intf.wait).val \
            and self.data and self.enable:
-            print("next %f" % s.env.now)
+            #print("next %f" % s.env.now)
             s.w(self.data.pop(0), intf.data)
             s.w(1, intf.en)
         else:
-            print("wait %f" % s.env.now)
+            #print("wait %f" % s.env.now)
             s.w(0, intf.data)
             s.w(0, intf.en)
