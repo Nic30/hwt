@@ -3,6 +3,7 @@ from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 ns = HdlSimulator.ns
 
 class SignalAgent(AgentBase):
+    READER_DELAY = 0.001 # random small value
     def __init__(self, intf, delay=10*ns):
         self.delay = delay
         self.intf = intf
@@ -17,6 +18,7 @@ class SignalAgent(AgentBase):
             yield s.wait(self.delay)
     
     def monitor(self, s):
+        yield s.wait(self.READER_DELAY)
         while True:
             sig = self.intf
             self.data.append(s.read(sig))
