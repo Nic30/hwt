@@ -9,6 +9,9 @@ from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 
 
 class ArrayVal(Value):
+    """
+    Class of value of array
+    """
     
     @classmethod
     def fromPy(cls, val, typeObj):
@@ -47,11 +50,13 @@ class ArrayVal(Value):
             raise NotImplementedError("Index operation not implemented for index %s" % 
                                        (repr(key)))
             
-        # [TODO] eventmask should be shared for all items
         # [TODO] dirty flag is required
         if iamVal and isinstance(key, Value):
-            return self.val[key.val]
-        
+            v = self.val[key.val].clone()
+            if not key._isFullVld():
+                v.vldMask = 0
+            
+            return v
         
         return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.elmType)
     
