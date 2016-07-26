@@ -95,7 +95,23 @@ class SwitchContainer():
         self.switchOn = switchOn
         self.cases = cases
     def simEval(self, simulator):
-        raise NotImplementedError()
+        v = self.switchOn.simEval(simulator)
+        vld = v.vldMask == v._dtype.all_mask()
+        if not vld:
+            c = self.cases[0]
+            stmnts = c[1]
+        else:
+            for c in self.cases:
+                val = c[0]
+                stmnts = c[1]
+                if val is None:
+                    break
+                elif v.val == val.val:
+                    break
+        
+        for stm in stmnts:
+            yield from IfContainer.evalCase(simulator, stm, vld)  
+                      
     def seqEval(self):
         raise NotImplementedError()
     def __repr__(self):
