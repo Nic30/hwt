@@ -53,13 +53,14 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                     e.dst.simUpdateVal(simulator, self._val)
                 else:
                     try:
-                        isIndexOnMe = e.op == AllOps.INDEX and e.result != self
+                        iamDrivingOp = e.operator == AllOps.INDEX and e.result is not self 
                     except AttributeError:
-                        isIndexOnMe = False
+                        iamDrivingOp = False
                     
-                    if isIndexOnMe:
+                    if iamDrivingOp:
                         # if i has index which I am driver for
-                        raise NotImplementedError()
+                        resSig = e.result
+                        resSig.simEval(simulator)
                 
             conf = simulator.config
             for p in self.simSensitiveProcesses:        
@@ -95,7 +96,8 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                 continue
             try:
                 o = d.operator
-                if o == AllOps.INDEX:
+                # if iam not driven by this index
+                if o == AllOps.INDEX and o.result is not self:
                     continue
             except AttributeError:
                 pass
