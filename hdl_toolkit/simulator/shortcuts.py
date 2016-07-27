@@ -3,6 +3,7 @@ import sys
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.synthetisator.shortcuts import toRtl
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
+import inspect
 
 def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.us):
     """
@@ -19,10 +20,10 @@ def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.u
 def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.us):
     """
     @param unit: interface level unit to simulate
-    @param stimulFunctions: iterable of function with single param env (simpy enviroment)
+    @param stimulFunctions: iterable of function with single param env (simpy environment)
                             which are driving the simulation
     @param outputFile: file where vcd will be dumped
-    @param time: endtime of simulation prescalers are defined in HdlSimulator
+    @param time: endtime of simulation, time units are defined in HdlSimulator
     
     """
     
@@ -35,11 +36,8 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.
     # configure simulator to log in vcd
     sim.config = VcdHdlSimConfig(outputFile)
     
-    # collect signals for simulation
-    sigs = list(unit._cntx.signals.values())
-
-    # run simulation, stimul processes are register after initial inicialization
-    sim.simSignals(sigs, time=time, extraProcesses=stimulFunctions) 
+    # run simulation, stimul processes are register after initial initialization
+    sim.simUnit(unit, time=time, extraProcesses=stimulFunctions) 
 
 
 def afterRisingEdge(sig, fn):
@@ -53,6 +51,7 @@ def afterRisingEdge(sig, fn):
         when all values are set
     
     """
+    isGenerator = inspect.isgeneratorfunction(fn)
     def __afterRisingEdge(s):
         """
         Process function which always waits on RisingEdge and then runs fn
@@ -61,7 +60,10 @@ def afterRisingEdge(sig, fn):
             yield s.updateComplete
             v = s.read(sig)._onRisingEdge(s.env.now)
             if bool(v):
-                fn(s)
+                if isGenerator:
+                    yield from fn(s)
+                else:
+                    fn(s)
     return __afterRisingEdge
 
 
@@ -69,7 +71,7 @@ def afterRisingEdgeNoReset(sig, reset, fn):
     """
     Decorator wrapper
     
-    same like afterRisingEdge, but acitvate when reset is not active
+    same like afterRisingEdge, but activate when reset is not active
     
     """
     def __afterRisingEdge(s):
@@ -90,7 +92,7 @@ def afterRisingEdgeNoReset(sig, reset, fn):
 
 def oscilate(sig, period=10*HdlSimulator.ns, initWait=0):
     """
-    Oscilative drive for your signal
+    Oscilative driver for your signal
     """
     halfPeriod = period/2
     def oscilateStimul(s):

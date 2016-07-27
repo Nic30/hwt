@@ -79,17 +79,20 @@ class HdlSimulator(object):
             
         self.applyValuesPlaned = False 
            
-    def _initSignals(self, signals):
+    def _initUnitSignals(self, unit):
         """
         Inject default values to simulation
         """
-        for s in signals:
+        for s in unit._cntx.signals.values():
             if isinstance(s.defaultVal, Value):
                 v = s.defaultVal.clone()
             else:
                 v = s.defaultVal.staticEval()
                 
             s.simUpdateVal(self, v)
+            
+        for u in unit._units:
+            self._initUnitSignals(u)
 
     def r(self, sig):
         "read shortcut"
@@ -127,13 +130,13 @@ class HdlSimulator(object):
         
     def wait(self, time):
         return self.env.timeout(time)
-        
-    def simSignals(self, signals, time, extraProcesses=[]):
+    
+    def simUnit(self, synthesisedUnit, time, extraProcesses=[]):
         """
         Run simulation
         """
-        self.config.beforeSim(self, signals)
-        self._initSignals(signals)  
+        self.config.beforeSim(self, synthesisedUnit)
+        self._initUnitSignals(synthesisedUnit)  
        
         for p in extraProcesses:
             self.env.process(p(self))
