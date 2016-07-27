@@ -67,7 +67,7 @@ class BramPortAgent(AgentBase):
     def driver(self, s):
         intf = self.intf
         
-        if self.requests is not None and self.enable:
+        if self.requests and self.enable:
             req = self.requests.pop(0)
             self.doReq(s, req)
             
