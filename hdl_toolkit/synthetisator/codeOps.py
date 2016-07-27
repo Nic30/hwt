@@ -175,7 +175,9 @@ class FsmBuilder(StmCntx):
         return s
     
     def Default(self, *condAndNextState):
-        return self.Trans(None, *condAndNextState)
+        d = self.Trans(None, *condAndNextState)
+        d.sateReg = self.stateReg
+        return d
 
 #class While(StmCntx):
 #    def __init__(self, cond):
