@@ -110,9 +110,10 @@ class VhdlSerializer():
         procs = []
         extraTypes = set()
         for v in sorted(arch.variables, key=lambda x: x.name):
-            variables.append(cls.SignalItem(v, declaration=True))
-            if isinstance(v._dtype, (Enum, Array)):
-                extraTypes.add(v._dtype)
+            if v.endpoints or v.drivers or v.simSensitiveProcesses:  # if is used
+                variables.append(cls.SignalItem(v, declaration=True))
+                if isinstance(v._dtype, (Enum, Array)):
+                    extraTypes.add(v._dtype)
             
         for p in sorted(arch.processes, key=lambda x: x.name):
             procs.append(cls.HWProcess(p))
@@ -321,10 +322,13 @@ class VhdlSerializer():
     @classmethod
     def SignalItem(cls, si, declaration=False):
         if declaration:
-            if si.isConstant:
+            if si.drivers:
+                prefix = "SIGNAL"
+            elif si.endpoints or si.simSensitiveProcesses:
                 prefix = "CONSTANT"
             else:
-                prefix = "SIGNAL"
+                raise SerializerException("Signal %s should be declared by it is not used" % si.name)
+                
 
             s = prefix + " %s : %s" % (si.name, cls.HdlType(si._dtype))
             if si.defaultVal is not None:
