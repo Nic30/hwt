@@ -56,11 +56,10 @@ def valuesToInts(values):
     """
     res = []
     for d in values:
-        if d.updateTime >=0:
-            if d.vldMask == d._dtype.all_mask():
-                res.append(d.val)
-            else:
-                res.append(None)
+        if d.vldMask == d._dtype.all_mask():
+            res.append(d.val)
+        else:
+            res.append(None)
     return res
 
 def agInts(interface):
