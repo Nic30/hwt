@@ -2,6 +2,7 @@ from copy import deepcopy
 from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase 
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.function import Function
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 class InvalidOperandExc(Exception):
     pass
@@ -39,18 +40,24 @@ class Operator():
         Recursively statistically evaluate result of this operator
         if signal has not set hidden flag do not reevaluate it
         """
-        for o in self.ops:
-            if isinstance(o, RtlSignalBase) and o.hidden:
-                o.simEval(simulator)
-        self.result._val = self.evalFn(simulator=simulator)
+        if self.operator == AllOps.INDEX and self in self.result.endpoints:
+            raise NotImplementedError("propagate index on other side")
+        else:
+            for o in self.ops:
+                if isinstance(o, RtlSignalBase) and o.hidden:
+                    o.simEval(simulator)
+            self.result._val = self.evalFn(simulator=simulator)
             
     def staticEval(self):
         """
         Recursively statistically evaluate result of this operator
         """
-        for o in self.ops:
-            o.staticEval()
-        self.result._val = self.evalFn()
+        if self.operator == AllOps.INDEX and self in self.result.endpoints:
+            raise NotImplementedError("propagate index on other side")
+        else:
+            for o in self.ops:
+                o.staticEval()
+            self.result._val = self.evalFn()
             
     def evalFn(self, simulator=None):
         """

@@ -203,8 +203,20 @@ class BitsVal(EventCapableVal):
         # [TODO] boundary check
         isSlice = isinstance(key, slice)
         isSLICE = isinstance(key, Slice.getValueCls())
-        
-        if isSlice or isSLICE:
+        if areValues(self, key):
+            if key._dtype == INT:
+                updateTime = max(self.updateTime, key.updateTime)
+                if key._isFullVld():
+                    val = Bitmask.select(self.val, key.val)
+                    vld = Bitmask.select(self.vldMask, key.val)
+                else:
+                    val = 0
+                    vld = 0
+                return BitsVal( val, BIT, vld, updateTime=updateTime)
+            else:
+                raise NotImplementedError(key)
+            
+        elif isSlice or isSLICE:
             if isSlice:
                 if key.step is not None:
                     raise NotImplementedError()
@@ -251,6 +263,17 @@ class BitsVal(EventCapableVal):
             raise NotImplementedError("Index operation not implemented for index %s" % (repr(key)))
             
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
+
+    def __setitem__(self, index, value):
+        assert isinstance(self, Value)
+        assert index._dtype == INT, index._dtype 
+        
+        if index._isFullVld():
+            self.val = Bitmask.bitSetTo(self.val, index.val, value.val)
+            self.vldMask = Bitmask.bitSetTo(self.vldMask, index.val, value.vldMask)
+            self.updateTime = max(index.updateTime, value.updateTime)
+        else:
+            self.vldMask = 0
 
     def __invert__(self):
         if isinstance(self, Value):

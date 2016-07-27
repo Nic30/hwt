@@ -7,7 +7,6 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.param import evalParam
 from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 
-
 class ArrayVal(Value):
     """
     Class of value of array
@@ -50,7 +49,6 @@ class ArrayVal(Value):
             raise NotImplementedError("Index operation not implemented for index %s" % 
                                        (repr(key)))
             
-        # [TODO] dirty flag is required
         if iamVal and isinstance(key, Value):
             v = self.val[key.val].clone()
             if not key._isFullVld():
@@ -59,6 +57,19 @@ class ArrayVal(Value):
             return v
         
         return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.elmType)
+    
+    def __setitem__(self, index, value):
+        assert isinstance(self, Value)
+        assert index._dtype == INT, index._dtype 
+        
+        self.updateTime = max(index.updateTime, value.updateTime)
+        if index._isFullVld():
+            self.val[index.val] = value.clone()
+        else:
+            for v in self.val:
+                v.vldMask = 0 
+                v.updateTime = self.updateTime
+            self.vldMask = 0
     
     def _eq(self, other):
         assert self._dtype.elmType == other._dtype.elmType

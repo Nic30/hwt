@@ -11,11 +11,20 @@ from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDr
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils.ops import RtlSignalOps
 
 
+
+def simEvalIndexedAssign(simulator, indexedOn, index, newVal):
+    indxVal = index.simEval(simulator)
+    # [TODO] multiple nested indexing in assignment
+    val = indexedOn._val
+    val[indxVal] = newVal
+    
+    indexedOn.simUpdateVal(simulator, val, forceUpdate=True)
+    
+
 class UniqList(list):
     def append(self, obj):
-        if obj in self:
-            pass
-        return list.append(self, obj)
+        if obj not in self:
+            list.append(self, obj)
 
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
@@ -44,8 +53,8 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         
         self.simSensitiveProcesses = set()
     
-    def simPropagateChanges(self, simulator):
-        if valHasChanged(self):
+    def simPropagateChanges(self, simulator, forceUpdate=False):
+        if forceUpdate or valHasChanged(self):
             self._oldVal = self._val
 
             for e in self.endpoints:
@@ -53,14 +62,19 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                     e.dst.simUpdateVal(simulator, self._val)
                 else:
                     try:
-                        iamDrivingOp = e.operator == AllOps.INDEX and e.result is not self 
+                        isIndexing = e.operator == AllOps.INDEX 
                     except AttributeError:
-                        iamDrivingOp = False
+                        isIndexing = False
                     
-                    if iamDrivingOp:
-                        # if i has index which I am driver for
-                        resSig = e.result
-                        resSig.simEval(simulator)
+                    if isIndexing:
+                        if e.result is self:
+                            # mem[indx] = self
+                            simEvalIndexedAssign(simulator, e.ops[0], e.ops[1], self._val)
+                        else:
+                            #    result = self[index]
+                            # or result = index[self]
+                            resSig = e.result
+                            resSig.simEval(simulator)
                 
             conf = simulator.config
             for p in self.simSensitiveProcesses:        
@@ -109,7 +123,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         return self._val
         
     
-    def simUpdateVal(self, simulator, newVal):
+    def simUpdateVal(self, simulator, newVal, forceUpdate=False):
         """
         Method called by simulator to update new value for this object
         """
@@ -123,7 +137,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         if  c.logChange:
             c.logChange(simulator.env.now, self, newVal)
         
-        self.simPropagateChanges(simulator)
+        self.simPropagateChanges(simulator, forceUpdate=forceUpdate)
      
     def singleDriver(self):
         """
