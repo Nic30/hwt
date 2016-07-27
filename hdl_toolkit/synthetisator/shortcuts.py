@@ -77,7 +77,7 @@ def synthetizeAndSave(unit, folderName='.', name=None):
 
 def fileSyntaxCheck(fileInfo, timeoutInterval=20):
     """
-    Perform syntax check on whole file (only in java parser)
+    Perform syntax check on whole file
     """
     return hdlConvertor.parse(fileInfo.fileName, fileInfo.lang) 
 
