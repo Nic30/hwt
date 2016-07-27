@@ -422,10 +422,7 @@ class VhdlSerializer():
                 
     @classmethod
     def VHDLVariable(cls, v):
-        if v.isShared :
-            prefix = "SHARED VARIABLE"
-        else:
-            prefix = "VARIABLE"
+        prefix = "VARIABLE"
         s = prefix + " %s : %s" % (v.name, cls.HdlType(v._dtype))
         if v.defaultVal is not None:
             return s + " := %s" % cls.Value(v, v.defaultVal)
