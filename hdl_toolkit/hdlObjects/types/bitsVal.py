@@ -5,7 +5,7 @@ from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.types.bits import Bits
-from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, BIT
+from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, BIT, SLICE
 from hdl_toolkit.hdlObjects.types.eventCapableVal import EventCapableVal
 from hdl_toolkit.hdlObjects.types.integer import Integer
 from hdl_toolkit.hdlObjects.types.integerVal import IntegerVal
@@ -266,11 +266,18 @@ class BitsVal(EventCapableVal):
 
     def __setitem__(self, index, value):
         assert isinstance(self, Value)
-        assert index._dtype == INT, index._dtype 
         
         if index._isFullVld():
-            self.val = Bitmask.bitSetTo(self.val, index.val, value.val)
-            self.vldMask = Bitmask.bitSetTo(self.vldMask, index.val, value.vldMask)
+            if index._dtype == INT: 
+                self.val = Bitmask.bitSetTo(self.val, index.val, value.val)
+                self.vldMask = Bitmask.bitSetTo(self.vldMask, index.val, value.vldMask)
+            elif index._dtype == SLICE:
+                size = index._size()
+                noOfFirstBit = index.val[1].val
+                self.val = Bitmask.setBitRange(self.val, noOfFirstBit, size, value.val)
+                self.vldMask = Bitmask.setBitRange(self.vldMask, noOfFirstBit, size, value.vldMask)
+            else:
+                raise NotImplementedError("Not implemented for index %s" % repr(index))
             self.updateTime = max(index.updateTime, value.updateTime)
         else:
             self.vldMask = 0

@@ -37,6 +37,16 @@ class Bitmask():
         return val ^ (1 << bitNo)
     
     @staticmethod
+    def setBitRange(val, bitStart, bitsLen, newBits):
+        mask = Bitmask.mask(bitsLen)
+        newBits &= mask
+        
+        mask <<= bitStart
+        newBits <<= bitStart
+        
+        return (val & ~mask) | newBits
+    
+    @staticmethod
     def bitSetTo(val, bitNo, bitVal):
         if bitVal == 0:
             return Bitmask.clean(val, bitNo)
