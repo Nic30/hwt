@@ -1,9 +1,11 @@
+import inspect
+import os
 import sys
 
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
-from hdl_toolkit.synthetisator.shortcuts import toRtl
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-import inspect
+from hdl_toolkit.synthetisator.shortcuts import toRtl
+
 
 def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.us):
     """
@@ -11,6 +13,7 @@ def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.u
     If outputFile is string try to open it as file
     """
     if isinstance(outputFile, str):
+        os.makedirs(os.path.dirname(outputFile), exist_ok=True)
         with open(outputFile, 'w') as f:
             return _simUnitVcd(unit, stimulFunctions, outputFile=f, time=time) 
     else:
