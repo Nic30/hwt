@@ -9,7 +9,8 @@ class FifoReaderAgent(SyncAgentBase):
             rd = not s.r(intf.wait).val
             s.w(rd, intf.en)
             if rd:
-                yield s.wait(0) # let rest of the system act
+                while s.applyValuesPlaned:
+                    yield s.wait(0) # let rest of the system act
                 d = s.read(intf.data)
                 self.data.append(d)
         else:
