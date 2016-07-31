@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 
-setup(name='HWToolkit',
+setup(name='hwtoolkit',
       version='0.2',
       description='hdl synthesis toolkit',
       url='https://github.com/Nic30/HWToolkit',
