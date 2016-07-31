@@ -1,32 +1,30 @@
 from hdl_toolkit.hdlObjects.assignment import Assignment
-from hdl_toolkit.hdlObjects.types.hdlType import HdlType
-from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.portItem import PortItem
-
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-
-from hdl_toolkit.simulator.utils import valHasChanged
+from hdl_toolkit.hdlObjects.types.hdlType import HdlType
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.simulator.exceptions import SimException
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.ops import RtlSignalOps
+from hdl_toolkit.simulator.utils import valHasChanged
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.synthetisator.rtlLevel.signalUtils.ops import RtlSignalOps
 
 
-def hasDiferentVal(reference, sigOrVal):
-    assert isinstance(reference, Value)
-    if isinstance(sigOrVal, Value):
-        v = sigOrVal
-    else:
-        v = sigOrVal._val
+
+def simEvalIndexedAssign(simulator, indexedOn, index, newVal):
+    indxVal = index.simEval(simulator)
+    # [TODO] multiple nested indexing in assignment
+    val = indexedOn._val
+    val[indxVal] = newVal
     
-    return reference != v
+    indexedOn.simUpdateVal(simulator, val, forceUpdate=True)
+    
 
 class UniqList(list):
     def append(self, obj):
-        if obj in self:
-            pass
-        return list.append(self, obj)
+        if obj not in self:
+            list.append(self, obj)
 
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
@@ -55,8 +53,8 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         
         self.simSensitiveProcesses = set()
     
-    def simPropagateChanges(self, simulator):
-        if valHasChanged(self):
+    def simPropagateChanges(self, simulator, forceUpdate=False):
+        if forceUpdate or valHasChanged(self):
             self._oldVal = self._val
 
             for e in self.endpoints:
@@ -64,13 +62,19 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                     e.dst.simUpdateVal(simulator, self._val)
                 else:
                     try:
-                        isIndexOnMe = e.op == AllOps.INDEX and e.result != self
+                        isIndexing = e.operator == AllOps.INDEX 
                     except AttributeError:
-                        isIndexOnMe = False
+                        isIndexing = False
                     
-                    if isIndexOnMe:
-                        # if i has index which I am driver for
-                        raise NotImplementedError()
+                    if isIndexing:
+                        if e.result is self:
+                            # mem[indx] = self
+                            simEvalIndexedAssign(simulator, e.ops[0], e.ops[1], self._val)
+                        else:
+                            #    result = self[index]
+                            # or result = index[self]
+                            resSig = e.result
+                            resSig.simEval(simulator)
                 
             conf = simulator.config
             for p in self.simSensitiveProcesses:        
@@ -102,15 +106,24 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         @attention: single process has to drive single variable in order to work
         """
         for d in self.drivers:
-            if not isinstance(d, Assignment):
-                d.simEval(simulator)
+            if isinstance(d, Assignment):
+                continue
+            try:
+                o = d.operator
+                # if iam not driven by this index
+                if o == AllOps.INDEX and o.result is not self:
+                    continue
+            except AttributeError:
+                pass
+            
+            d.simEval(simulator)
         if not isinstance(self._val, Value):
             raise SimException("Evaluation of signal returned not supported object (%s)" % 
                                (repr(self._val)))
         return self._val
         
     
-    def simUpdateVal(self, simulator, newVal):
+    def simUpdateVal(self, simulator, newVal, forceUpdate=False):
         """
         Method called by simulator to update new value for this object
         """
@@ -124,7 +137,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         if  c.logChange:
             c.logChange(simulator.env.now, self, newVal)
         
-        self.simPropagateChanges(simulator)
+        self.simPropagateChanges(simulator, forceUpdate=forceUpdate)
      
     def singleDriver(self):
         """
@@ -133,14 +146,4 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         if len(self.drivers) != 1:
             raise MultipleDriversExc()
         return list(self.drivers)[0]
-            
-def areSameSignals(a, b):
-    if a is b:
-        return True
-    if type(a) != type(b):
-        return False 
-    if len(a.drivers) != 1 or len(b.drivers) != 1:
-        return False
-    da = list(a.drivers)[0]
-    db = list(b.drivers)[0]
-    return da == db
+

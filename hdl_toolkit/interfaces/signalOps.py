@@ -1,7 +1,10 @@
 
 
 class SignalOps(object):
-    
+    """
+    Operands for Signal interface,
+    these operands are delegated on RtlSignal object for this interface
+    """
 
     # events
     def _onRisingEdge(self):
@@ -9,6 +12,9 @@ class SignalOps(object):
     
     def _onFallingEdge(self):
         return self._sig._onFallingEdge()
+
+    def _hasEvent(self):
+        return self._sig._hasEvent()
     
     # comparisions
     def _isOn(self):
@@ -45,6 +51,7 @@ class SignalOps(object):
     
 
     # bitewise
+
     def __invert__(self):
         """~ operator - logical negation for one bit signals and hBool
            bitwise inversion for wider signals """
@@ -73,6 +80,7 @@ class SignalOps(object):
     
     
     # arithmetic
+    
     def __add__(self, other):
         return self._sig.__add__(other)
     
@@ -87,6 +95,7 @@ class SignalOps(object):
         concatenate signals to one big one. works like & in vhdl
         """
         return self._sig._concat(*operands)
+    
     
     def __getitem__(self, key):
         """
@@ -106,7 +115,7 @@ class SignalOps(object):
     
     def _same(self):
         """
-        Assign self to self - used for gegisters where walue should remain same
+        Assign self to self - used for registers where value should remain same
         """
-        
+        return self._sig._same()
         

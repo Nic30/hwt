@@ -1,9 +1,11 @@
-from hdl_toolkit.hdlObjects.types.defs import BOOL
-from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.types.defs import BOOL
+from hdl_toolkit.hdlObjects.types.eventCapableVal import EventCapableVal
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+
 
 def boolLogOp(self, other, op):
     other = toHVal(other)
@@ -29,7 +31,7 @@ def boolCmpOp(self, other, op, evalFn=None):
     else:
         return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
 
-class BooleanVal(Value):
+class BooleanVal(EventCapableVal):
     
     @classmethod
     def fromPy(cls, val, typeObj):
@@ -80,14 +82,6 @@ class BooleanVal(Value):
                 return ifFalse
         else:
             return Operator.withRes(AllOps.TERNARY, [self, ifTrue, ifFalse], ifTrue._dtype)
-
-    def _hasEvent(self, now):
-        if isinstance(self, Value):
-            return BooleanVal(self.updateTime == now, BOOL, self.vldMask, now)
-        else:
-            return Operator.withRes(AllOps.EVENT, [self], BOOL)
-    
-
 
     # logic
     def __and__(self, other):

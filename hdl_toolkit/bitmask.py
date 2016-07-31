@@ -15,3 +15,42 @@ class Bitmask():
     @staticmethod
     def extendWithSet(mask, actualWidth, toWidth):    
         return Bitmask.bitField(actualWidth - 1, toWidth) | mask
+
+    @staticmethod   
+    def select(val, bitNo):
+        """
+        select bit from integer
+        """
+        
+        return (val >> bitNo) & 1
+    
+    @staticmethod
+    def clean(val, bitNo):
+        return val & ~(1 << bitNo)
+    
+    @staticmethod
+    def set(val, bitNo):
+        return val | (1 << bitNo)
+    
+    @staticmethod
+    def toogle(val, bitNo):
+        return val ^ (1 << bitNo)
+    
+    @staticmethod
+    def setBitRange(val, bitStart, bitsLen, newBits):
+        mask = Bitmask.mask(bitsLen)
+        newBits &= mask
+        
+        mask <<= bitStart
+        newBits <<= bitStart
+        
+        return (val & ~mask) | newBits
+    
+    @staticmethod
+    def bitSetTo(val, bitNo, bitVal):
+        if bitVal == 0:
+            return Bitmask.clean(val, bitNo)
+        elif bitVal == 1:
+            return Bitmask.set(val, bitNo)
+        else:
+            raise NotImplementedError()

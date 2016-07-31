@@ -4,8 +4,6 @@ class VHDLVariable():
     def __init__(self, name, dtype, defaultVal=None):
         self.name = name
         self._dtype = dtype
-        self.isConstant = False
-        self.isShared = False
         if defaultVal is None:
             defaultVal = dtype.fromPy(None) 
         self.defaultVal = defaultVal

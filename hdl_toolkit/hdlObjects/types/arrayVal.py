@@ -1,14 +1,16 @@
-from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.hdlObjects.types.defs import BOOL, INT
-from hdl_toolkit.synthetisator.param import evalParam
-from hdl_toolkit.hdlObjects.types.slice import Slice
-from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-
+from hdl_toolkit.hdlObjects.types.defs import BOOL, INT
+from hdl_toolkit.hdlObjects.types.slice import Slice
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.synthetisator.param import evalParam
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 
 class ArrayVal(Value):
+    """
+    Class of value of array
+    """
     
     @classmethod
     def fromPy(cls, val, typeObj):
@@ -22,7 +24,7 @@ class ArrayVal(Value):
         else:
             elements = []
             for v in val:
-                if isinstance(v, RtlSignalBase): # is signal
+                if isinstance(v, RtlSignalBase):  # is signal
                     assert v._dtype == typeObj.elmType
                     e = v
                 else:
@@ -44,16 +46,30 @@ class ArrayVal(Value):
         elif isinstance(key, Value):
             pass
         else:
-            raise NotImplementedError("Index operation not implemented for index %s" %
+            raise NotImplementedError("Index operation not implemented for index %s" % 
                                        (repr(key)))
             
-        # [TODO] eventmask should be shared for all items
-        # [TODO] dirty flag is required
         if iamVal and isinstance(key, Value):
-            return self.val[key.val]
-        
+            v = self.val[key.val].clone()
+            if not key._isFullVld():
+                v.vldMask = 0
+            
+            return v
         
         return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.elmType)
+    
+    def __setitem__(self, index, value):
+        assert isinstance(self, Value)
+        assert index._dtype == INT, index._dtype 
+        
+        self.updateTime = max(index.updateTime, value.updateTime)
+        if index._isFullVld():
+            self.val[index.val] = value.clone()
+        else:
+            for v in self.val:
+                v.vldMask = 0 
+                v.updateTime = self.updateTime
+            self.vldMask = 0
     
     def _eq(self, other):
         assert self._dtype.elmType == other._dtype.elmType

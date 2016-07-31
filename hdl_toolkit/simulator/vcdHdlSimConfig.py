@@ -1,11 +1,12 @@
-import sys
-from hdl_toolkit.simulator.vcdWritter import VcdWritter
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from datetime import datetime
-from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
-from hdl_toolkit.hdlObjects.types.boolean import Boolean
-from hdl_toolkit.hdlObjects.types.bits import Bits
 from pprint import pprint
+import sys
+
+from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.boolean import Boolean
+from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
+from hdl_toolkit.simulator.vcdWritter import VcdWritter
+
 
 class VcdHdlSimConfig(HdlSimConfig):
     supported_type_classes = (Boolean,  Bits)
@@ -28,32 +29,27 @@ class VcdHdlSimConfig(HdlSimConfig):
         print("%d: Signal.simPropagateChanges %s -> %s" % 
                                         (simulator.env.now, signal.name, str(process.name))
         )
-    def vcdRegisterUnit(self, unit_name, sublements):
-        with self.vcdWritter.module(unit_name) as m:
-            for se , ssitems in sublements.items():
-                if isinstance(se, RtlSignalBase): 
-                    if isinstance(se._dtype, self.supported_type_classes):
-                        m.var(se)
-                else:
-                    raise NotImplementedError(se)
+    def vcdRegisterUnit(self, unit):
+        with self.vcdWritter.module(unit._name) as m:
+            for se in unit._cntx.signals.values():
+                if isinstance(se._dtype, self.supported_type_classes):
+                    m.var(se)
+                    
+            for u in unit._units:
+                self.vcdRegisterUnit(u)
    
     
     def _registerSignal(self, sig):
         self.registered[sig] = None
    
-    def beforeSim(self, simulator, signals):
+    def beforeSim(self, simulator, synthesisedUnit):
         """
         This method is called before first step of simulation.
         """
-        
-        topSigs = {}
         self.vcdWritter.date(datetime.now())
         self.vcdWritter.timescale(1)
-        for s in signals:
-            topSigs[s] = None
-        
-        if topSigs:
-            self.vcdRegisterUnit("top", topSigs)
+
+        self.vcdRegisterUnit(synthesisedUnit)
         self.vcdWritter.enddefinitions()
         
     def logChange(self, nowTime, sig, nextVal):

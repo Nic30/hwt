@@ -1,7 +1,8 @@
-from hdl_toolkit.interfaces.std import Signal
-from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.hdlObjects.portItem import PortItem
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.interfaces.std import Signal
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils.walkers import signalHasDriver
+
 
 def portItemfromSignal(s, entity):
     if signalHasDriver(s):
@@ -16,3 +17,4 @@ def portItemfromSignal(s, entity):
     
     
     return pi
+

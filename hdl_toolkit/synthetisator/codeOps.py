@@ -175,7 +175,9 @@ class FsmBuilder(StmCntx):
         return s
     
     def Default(self, *condAndNextState):
-        return self._trans(None, *condAndNextState)
+        d = self.Trans(None, *condAndNextState)
+        d.sateReg = self.stateReg
+        return d
 
 #class While(StmCntx):
 #    def __init__(self, cond):
@@ -300,7 +302,7 @@ def fitTo(what, to):
         return what
     elif toWidth < whatWidth:
         # slice
-        return what[:hInt(toWidth)]
+        return what[hInt(toWidth):]
     else:
         # extend
         return Concat(what, vec(0, toWidth - whatWidth))

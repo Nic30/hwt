@@ -1,18 +1,21 @@
-from hdl_toolkit.hdlObjects.value import Value, areValues
-from hdl_toolkit.bitmask import Bitmask
-from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, BIT
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.hdlObjects.types.integer import Integer
-from hdl_toolkit.hdlObjects.types.bits import Bits
-from hdl_toolkit.hdlObjects.types.slice import Slice
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from copy import copy
+
+from hdl_toolkit.bitmask import Bitmask
+from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.typeShortcuts import vecT
+from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, BIT, SLICE
+from hdl_toolkit.hdlObjects.types.eventCapableVal import EventCapableVal
+from hdl_toolkit.hdlObjects.types.integer import Integer
 from hdl_toolkit.hdlObjects.types.integerVal import IntegerVal
+from hdl_toolkit.hdlObjects.types.slice import Slice
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.hdlObjects.value import Value, areValues
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+
 
 BoolVal = BOOL.getValueCls()
 
@@ -121,7 +124,7 @@ def boundryFromType(sigOrVal, boundaryIndex):
     else:  # downto / to
         return c.singleDriver().ops[boundaryIndex]
 
-class BitsVal(Value):
+class BitsVal(EventCapableVal):
     """
     @attention: operator on signals are using value operator functions as well 
     """
@@ -165,7 +168,7 @@ class BitsVal(Value):
                 
     @classmethod
     def fromPy(cls, val, typeObj):
-        assert isinstance(val, (int, bool)) or val is None
+        assert isinstance(val, (int, bool)) or val is None, val
         vld = 0 if val is None else Bitmask.mask(typeObj.bit_length())
         if not vld:
             val = 0
@@ -200,8 +203,20 @@ class BitsVal(Value):
         # [TODO] boundary check
         isSlice = isinstance(key, slice)
         isSLICE = isinstance(key, Slice.getValueCls())
-        
-        if isSlice or isSLICE:
+        if areValues(self, key):
+            if key._dtype == INT:
+                updateTime = max(self.updateTime, key.updateTime)
+                if key._isFullVld():
+                    val = Bitmask.select(self.val, key.val)
+                    vld = Bitmask.select(self.vldMask, key.val)
+                else:
+                    val = 0
+                    vld = 0
+                return BitsVal( val, BIT, vld, updateTime=updateTime)
+            else:
+                raise NotImplementedError(key)
+            
+        elif isSlice or isSLICE:
             if isSlice:
                 if key.step is not None:
                     raise NotImplementedError()
@@ -249,6 +264,24 @@ class BitsVal(Value):
             
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
+    def __setitem__(self, index, value):
+        assert isinstance(self, Value)
+        
+        if index._isFullVld():
+            if index._dtype == INT: 
+                self.val = Bitmask.bitSetTo(self.val, index.val, value.val)
+                self.vldMask = Bitmask.bitSetTo(self.vldMask, index.val, value.vldMask)
+            elif index._dtype == SLICE:
+                size = index._size()
+                noOfFirstBit = index.val[1].val
+                self.val = Bitmask.setBitRange(self.val, noOfFirstBit, size, value.val)
+                self.vldMask = Bitmask.setBitRange(self.vldMask, noOfFirstBit, size, value.vldMask)
+            else:
+                raise NotImplementedError("Not implemented for index %s" % repr(index))
+            self.updateTime = max(index.updateTime, value.updateTime)
+        else:
+            self.vldMask = 0
+
     def __invert__(self):
         if isinstance(self, Value):
             v = self.clone()
@@ -294,23 +327,6 @@ class BitsVal(Value):
     def __or__(self, other):
         return bitsBitOp(self, other, AllOps.OR_LOG)
        
-    def _hasEvent(self, now):
-        if isinstance(self, Value):
-            return BoolVal(self.updateTime == now,
-                            BOOL,
-                            self.vldMask,
-                            now)
-        else:
-            return Operator.withRes(AllOps.EVENT, [self], BOOL)
-    
-    def _onRisingEdge(self, now):
-        if isinstance(self, Value):
-            v = self._hasEvent(now)
-            v.val = v.val and self.val
-            return v
-        else:
-            return Operator.withRes(AllOps.RISING_EDGE, [self], BOOL)
-
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)
 

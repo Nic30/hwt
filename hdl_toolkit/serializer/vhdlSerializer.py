@@ -21,6 +21,7 @@ from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
 from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 
 class VhdlVersion():
     v2002 = 2002
@@ -109,9 +110,10 @@ class VhdlSerializer():
         procs = []
         extraTypes = set()
         for v in sorted(arch.variables, key=lambda x: x.name):
-            variables.append(cls.SignalItem(v, declaration=True))
-            if isinstance(v._dtype, (Enum, Array)):
-                extraTypes.add(v._dtype)
+            if v.endpoints or v.drivers or v.simSensitiveProcesses:  # if is used
+                variables.append(cls.SignalItem(v, declaration=True))
+                if isinstance(v._dtype, (Enum, Array)):
+                    extraTypes.add(v._dtype)
             
         for p in sorted(arch.processes, key=lambda x: x.name):
             procs.append(cls.HWProcess(p))
@@ -155,7 +157,7 @@ class VhdlSerializer():
         
         genericMaps = []
         for g in entity.generics:
-            gm =  MapExpr(g, g._val)
+            gm = MapExpr(g, g._val)
             genericMaps.append(gm) 
         
         if len(portMaps) == 0:
@@ -320,10 +322,13 @@ class VhdlSerializer():
     @classmethod
     def SignalItem(cls, si, declaration=False):
         if declaration:
-            if si.isConstant:
+            if si.drivers:
+                prefix = "SIGNAL"
+            elif si.endpoints or si.simSensitiveProcesses:
                 prefix = "CONSTANT"
             else:
-                prefix = "SIGNAL"
+                raise SerializerException("Signal %s should be declared by it is not used" % si.name)
+                
 
             s = prefix + " %s : %s" % (si.name, cls.HdlType(si._dtype))
             if si.defaultVal is not None:
@@ -395,7 +400,7 @@ class VhdlSerializer():
         name = "arrT_%d" % (id(typ))
         if declaration:
             return "TYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
-                (name, cls.asHdl(typ.size), cls.HdlType(typ.elmType))
+                (name, cls.asHdl(toHVal(typ.size) - 1), cls.HdlType(typ.elmType))
         else:
             return name
 
@@ -417,10 +422,7 @@ class VhdlSerializer():
                 
     @classmethod
     def VHDLVariable(cls, v):
-        if v.isShared :
-            prefix = "SHARED VARIABLE"
-        else:
-            prefix = "VARIABLE"
+        prefix = "VARIABLE"
         s = prefix + " %s : %s" % (v.name, cls.HdlType(v._dtype))
         if v.defaultVal is not None:
             return s + " := %s" % cls.Value(v, v.defaultVal)

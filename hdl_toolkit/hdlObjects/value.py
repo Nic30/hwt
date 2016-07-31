@@ -14,6 +14,9 @@ class Value():
         self._dtype = _type
         self.vldMask = vldMask
         self.updateTime = updateTime
+    
+    def _isFullVld(self):
+        return self.vldMask == self._dtype.all_mask()
 
     def _convert(self, toT):
         return self._dtype.convert(self, toT)

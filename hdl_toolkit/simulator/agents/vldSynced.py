@@ -1,36 +1,25 @@
-from hdl_toolkit.simulator.agents.agentBase import AgentBase
-from hdl_toolkit.simulator.shortcuts import afterRisingEdge
+from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
 
 
-class VldSyncedAgent(AgentBase):
-    def __init__(self, intf, clk=None, rstn=None):
-        self.intf = intf
+class VldSyncedAgent(SyncAgentBase):
+    def doRead(self, s):
+        return s.read(self.intf)
         
-        p = intf._parent
-        if clk is None:
-            self.clk = p.clk
-        else:
-            self.clk = clk
-        if rstn is None:
-            self.rst_n = p.rst_n 
-        else:
-            self.rst_n = rstn
-            
-        self.wait = False
-        self.data = []
-        
-        self.monitor = afterRisingEdge(self.clk)(self.monitor)
-        self.driver = afterRisingEdge(self.clk)(self.driver)
+    def doWrite(self, s, data):
+        s.w(data, self.intf.data)
         
     def monitor(self, s):
-        raise NotImplementedError()
+        intf = self.intf
+        if self.enable and s.r(self.rst_n).val and s.r(intf.vld).val:
+            self.data.push(self.doRead(s))
             
     def driver(self, s):
         intf = self.intf
         
-        if s.r(self.rst_n).val and self.data:
-            s.w(self.data.pop(0), intf.data)
+        if self.enable and self.data and s.r(self.rst_n).val :
+            d = self.data.pop(0)
+            self.doWrite(s, d)
             s.w(1, intf.vld)
         else:
-            s.w(0, intf.data)
+            self.doWrite(s, None)
             s.w(0, intf.vld)

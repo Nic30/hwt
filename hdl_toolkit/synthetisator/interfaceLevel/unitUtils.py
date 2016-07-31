@@ -6,15 +6,6 @@ def defaultUnitName(unit, sugestedName=None):
     else:
         return sugestedName
 
-def synthesised(u):
-    assert not u._wasSynthetised()
-    if not hasattr(u, "_interfaces"):
-        u._loadDeclarations()
-
-    for _ in u._toRtl():
-        pass
-    return u
-
 def walkSignalOnUnit(unit):
     for i in unit._interfaces:
         yield from walkPhysInterfaces(i)
