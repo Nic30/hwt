@@ -8,21 +8,25 @@ class SignalAgent(AgentBase):
         self.delay = delay
         self.intf = intf
         self.data = []
+    
+    def doRead(self, s):
+        return s.read(self.intf)
         
+    def doWrite(self, s, data):
+        s.w(data, self.intf)    
         
     def driver(self, s):
         while True:
-            sig = self.intf
             if self.data:
-                s.write(self.data.pop(0), sig)
+                self.doWrite(s, self.data.pop(0))
             yield s.wait(self.delay)
     
     def monitor(self, s):
         yield s.wait(self.READER_DELAY)
         while True:
-            sig = self.intf
             while s.applyValuesPlaned:
                 yield s.wait(0)
-            self.data.append(s.read(sig))
+            d = self.doRead(s)
+            self.data.append(d)
             yield s.wait(self.delay)
     
