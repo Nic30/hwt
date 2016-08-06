@@ -1,21 +1,15 @@
 from hdl_toolkit.hdlObjects.specialValues import READ, WRITE
-from hdl_toolkit.simulator.agents.agentBase import AgentBase
+from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
 from hdl_toolkit.simulator.shortcuts import oscilate, afterRisingEdge
 
 
-class BramPortAgent(AgentBase):
+class BramPort_withoutClkAgent(SyncAgentBase):
     """
     @ivar requests: list of tuples (request type, address) - used for driver
     @ivar data:     list of data in memory, used for monitor
     """
-    def __init__(self, intf, clk=None):
-        super().__init__(intf)
-        
-        # resolve clk and rstn
-        if clk is None:
-            self.clk = intf.clk
-        else:
-            self.clk = clk
+    def __init__(self, intf, clk=None, rstn=None):
+        super().__init__(intf, clk=clk, rstn=rstn, allowNoReset=True)
         
         self.requests = []
         self.readPending = False
@@ -80,5 +74,8 @@ class BramPortAgent(AgentBase):
             self.readed.append(d)
             self.readPending = False
     
+
+
+class BramPortAgent(BramPort_withoutClkAgent):
     def getSubDrivers(self):
         yield oscilate(self.intf.clk)
