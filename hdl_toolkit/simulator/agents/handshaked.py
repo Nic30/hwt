@@ -1,6 +1,5 @@
 from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
 
-
 class HandshakedAgent(SyncAgentBase):
     def __init__(self, intf, clk=None, rstn=None):
         super().__init__(intf, clk=None, rstn=None)
@@ -41,6 +40,19 @@ class HandshakedAgent(SyncAgentBase):
             s.w(1, intf.vld)
         else:
             s.w(0, intf.vld)
+        
+        yield s.updateComplete
+        
+        rd = s.r(intf.rd).val
+        if rd:
+            if self.data:
+                self.actualData = self.data.pop(0)
+            else:
+                self.actualData = None
 
-
+class HandshakeSyncAgent(HandshakedAgent):
+    def doWrite(self, s, data):
+        pass
     
+    def doRead(self, s):
+        raise NotImplementedError()    
