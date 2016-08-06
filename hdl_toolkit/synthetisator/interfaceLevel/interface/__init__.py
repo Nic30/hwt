@@ -132,18 +132,31 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
             e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
         
         
-    def _connectToIter(self, master, masterIndex=None, slaveIndex=None):
+    def _connectToIter(self, master, masterIndex=None, slaveIndex=None, exclude=set()):
+        if self in exclude or master in exclude:
+            return
+        
         if self._interfaces:
             for ifc in self._interfaces:
+                if ifc in exclude:
+                    continue
                 mIfc = getattr(master, ifc._name)
+                
+                if mIfc in exclude:
+                    continue
+                
                 if mIfc._masterDir == DIRECTION.OUT:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(ifc), repr(mIfc)))
-                    yield from ifc._connectTo(mIfc, masterIndex=masterIndex, slaveIndex=slaveIndex)
+                    
+                    yield from ifc._connectTo(mIfc, masterIndex=masterIndex, slaveIndex=slaveIndex,
+                                                    exclude=exclude)
                 else:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(mIfc), repr(ifc)))
-                    yield from mIfc._connectTo(ifc, masterIndex=slaveIndex, slaveIndex=masterIndex)
+                     
+                    yield from mIfc._connectTo(ifc, masterIndex=slaveIndex, slaveIndex=masterIndex,
+                                                    exclude=exclude)
         else:
             dstSig = toHVal(self)
             srcSig = toHVal(master)
@@ -157,12 +170,12 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
             yield dstSig._assignFrom(srcSig)
         
             
-    def _connectTo(self, master, masterIndex=None, slaveIndex=None):
+    def _connectTo(self, master, masterIndex=None, slaveIndex=None, exclude=set()):
         """
         connect to another interface interface (on rtl level)
         works like self <= master in VHDL
         """
-        return list(self._connectToIter(master, masterIndex, slaveIndex))
+        return list(self._connectToIter(master, masterIndex, slaveIndex, exclude))
     
     def _signalsForInterface(self, context, prefix='', typeTransform=lambda x: x):
         """

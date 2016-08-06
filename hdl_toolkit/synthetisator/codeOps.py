@@ -176,7 +176,7 @@ class FsmBuilder(StmCntx):
     
     def Default(self, *condAndNextState):
         d = self.Trans(None, *condAndNextState)
-        d.sateReg = self.stateReg
+        d.stateReg = self.stateReg
         return d
 
 #class While(StmCntx):
@@ -186,27 +186,27 @@ class FsmBuilder(StmCntx):
 #    def Do(self, *statements):
 
     
-def _connect(src, dst, srcExclude, dstExclude):
-    if srcExclude or dstExclude:
-        raise NotImplementedError("[TODO]")
+def _connect(src, dst, exclude):
         
     if isinstance(src, InterfaceBase):
         if isinstance(dst, InterfaceBase):
-            return dst._connectTo(src)
+            return dst._connectTo(src, exclude=exclude)
         src = src._sig
         
+    assert not exclude, "this intf. is just a signal"   
+    
     src = toHVal(src)
     src = src._dtype.convert(src, dst._dtype)
     
     return [dst._assignFrom(src)]
 
-def connect(src, *destinations, srcExclude=[], dstExclude=[]):
+def connect(src, *destinations, exclude=set()):
     """
     Connect all signals/interfaces/calues
     """
     assignemnts = []
     for dst in destinations:
-        assignemnts.extend(_connect(src, dst, srcExclude, dstExclude))
+        assignemnts.extend(_connect(src, dst, exclude))
     return assignemnts
 
 def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
