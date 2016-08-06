@@ -1,16 +1,18 @@
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.interfaces.std import Signal, FifoReader, FifoWriter, Clk, \
-    Rst_n, VldSynced, Rst, Handshaked, BramPort
-from hdl_toolkit.simulator.agents.bramPort import BramPortAgent
+    Rst_n, VldSynced, Rst, Handshaked, BramPort, RdSynced, BramPort_withoutClk, \
+    HandshakeSync
+from hdl_toolkit.simulator.agents.bramPort import BramPortAgent, BramPort_withoutClkAgent
 from hdl_toolkit.simulator.agents.clk import OscilatorAgent
 from hdl_toolkit.simulator.agents.fifo import FifoReaderAgent, FifoWriterAgent
-from hdl_toolkit.simulator.agents.handshaked import HandshakedAgent
+from hdl_toolkit.simulator.agents.handshaked import HandshakedAgent, HandshakeSyncAgent
+from hdl_toolkit.simulator.agents.rdSynced import RdSyncedAgent
 from hdl_toolkit.simulator.agents.rst import PullUpAgent, PullDownAgent
 from hdl_toolkit.simulator.agents.signal import SignalAgent
 from hdl_toolkit.simulator.agents.vldSynced import VldSyncedAgent
 
 
-autoAgents ={
+autoAgents = {
               Signal     : SignalAgent,
               FifoReader : FifoReaderAgent,
               FifoWriter : FifoWriterAgent,
@@ -18,8 +20,11 @@ autoAgents ={
               Rst_n      : PullUpAgent,
               Rst        : PullDownAgent,
               VldSynced  : VldSyncedAgent,
+              RdSynced   : RdSyncedAgent,
               Handshaked : HandshakedAgent,
+              HandshakeSync : HandshakeSyncAgent,
               BramPort   : BramPortAgent,
+              BramPort_withoutClk: BramPort_withoutClkAgent,
             }
 
 def autoAddAgents(unit, propName="_ag", autoAgentMap=autoAgents):
@@ -46,7 +51,7 @@ def autoAddAgents(unit, propName="_ag", autoAgentMap=autoAgents):
             proc.append(agent.driver)
             proc.extend(agent.getSubDrivers())
         else:
-            raise NotImplementedError("intf._direction %s" %  str(intf._direction) )
+            raise NotImplementedError("intf._direction %s" % str(intf._direction))
         
     return proc
 
