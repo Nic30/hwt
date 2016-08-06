@@ -4,6 +4,7 @@ import simpy
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
+from sympy.polys.groebnertools import sig
 
 
 
@@ -27,7 +28,7 @@ class HdlSimulator(object):
         self.config = config
         self.env = simpy.Environment()
         self.updateComplete = self.env.event()
-        self.lastUpdateComplete = -1
+        self.lastUpdateComplete = -10 # something lower than -1 (-1 has static values)
         self.applyValuesPlaned = False
         
         # (signal, value) tupes which should be applied before new round of processes
@@ -76,6 +77,11 @@ class HdlSimulator(object):
             self.updateComplete.succeed()  # trigger
             self.updateComplete = self.env.event()  # regenerate event
             self.lastUpdateComplete = now
+        #else:
+        #    if nextEventT == now:
+        #        # if there is some process in this time and we have to let it finish
+        #        yield self.env.process(self.applyValues())
+        #        return
             
         self.applyValuesPlaned = False 
            
@@ -94,6 +100,11 @@ class HdlSimulator(object):
         for u in unit._units:
             self._initUnitSignals(u)
 
+        # in initialization we have to run all processes to resolve static drivers
+        # order does not matter, but it has to be after default values are applied
+        for p in unit._architecture.processes:
+            self.addHwProcToRun(p)
+            
     def r(self, sig):
         "read shortcut"
         return self.read(sig)
@@ -127,6 +138,14 @@ class HdlSimulator(object):
         v = v._convert(sig._dtype)
         
         sig.simUpdateVal(self, v)
+        
+        if not sig.simSensitiveProcesses and not self.applyValuesPlaned:
+            # in some cases simulation process can wait on all values applied
+            # signal value was changed but there are no sensitive processes to it
+            # because of this applyValues is never planed and but should be
+            self.env.process(self.applyValues())
+            self.applyValuesPlaned = True
+            
         
     def wait(self, time):
         return self.env.timeout(time)
