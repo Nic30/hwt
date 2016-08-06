@@ -138,13 +138,13 @@ class BitsVal(EventCapableVal):
                 selfSign = self._dtype.signed 
                 v = self.clone()
                 w = self._dtype.bit_length()
-                msbVal = 1 << (w-1)
+                msbVal = 1 << (w - 1)
                 if selfSign and not signed:
                     if v.val < 0:
                         v.val += msbVal
                 elif not selfSign and signed:
                     if v.val >= msbVal:
-                        v.val -= (msbVal -1)
+                        v.val -= (msbVal - 1)
                     
                 return v
             else:
@@ -177,13 +177,14 @@ class BitsVal(EventCapableVal):
     # [TODO] bit reverse operator
     def _concat(self, other):
         w = self._dtype.bit_length()
-        resWidth = w + other._dtype.bit_length()
+        other_w = other._dtype.bit_length()
+        resWidth = w + other_w
         resT = vecT(resWidth)
         
         if isinstance(self, Value) and isinstance(other, Value):
             v = self.clone()
-            v.val = (v.val << w) | other.val
-            v.vldMask = (v.vldMask << w) | other.vldMask
+            v.val = (v.val << other_w) | other.val
+            v.vldMask = (v.vldMask << other_w) | other.vldMask
             v.updateTime = max(self.updateTime, other.updateTime)
             v._dtype = resT
             return v    
@@ -204,15 +205,24 @@ class BitsVal(EventCapableVal):
         isSlice = isinstance(key, slice)
         isSLICE = isinstance(key, Slice.getValueCls())
         if areValues(self, key):
+            updateTime = max(self.updateTime, key.updateTime)
+            keyVld = key._isFullVld() 
+            val = 0
+            vld = 0
+            
             if key._dtype == INT:
-                updateTime = max(self.updateTime, key.updateTime)
-                if key._isFullVld():
+                if keyVld:
                     val = Bitmask.select(self.val, key.val)
                     vld = Bitmask.select(self.vldMask, key.val)
-                else:
-                    val = 0
-                    vld = 0
-                return BitsVal( val, BIT, vld, updateTime=updateTime)
+                return BitsVal(val, BIT, vld, updateTime=updateTime)
+            elif key._dtype == SLICE:
+                if keyVld:
+                    firstBitNo = key.val[1].val
+                    size = key._size()
+                    val = Bitmask.selectRange(self.val, firstBitNo, size)
+                    vld = Bitmask.selectRange(self.val, firstBitNo, size)
+                retT = vecT(size, signed=self._dtype.signed)
+                return BitsVal(val, retT, vld, updateTime=updateTime)
             else:
                 raise NotImplementedError(key)
             
