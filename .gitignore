@@ -29,7 +29,7 @@ hdl_toolkit/parser/hdlConvertor/dist
 # python egg folders
 build/
 dist/
-HWToolkit.egg-info/
+hwtoolkit.egg-info/
 
 # eclipse project files
 .project
