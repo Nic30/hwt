@@ -25,6 +25,11 @@ class Bitmask():
         return (val >> bitNo) & 1
     
     @staticmethod
+    def selectRange(val, bitsStart, bitsLen):
+        val >>= bitsStart
+        return val & Bitmask.mask(bitsLen)
+    
+    @staticmethod
     def clean(val, bitNo):
         return val & ~(1 << bitNo)
     
