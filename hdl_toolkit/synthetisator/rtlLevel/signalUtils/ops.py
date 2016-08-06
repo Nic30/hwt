@@ -2,9 +2,9 @@ from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.types.defs import BOOL
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.assignment import Assignment
-from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 
         
 def tv(signal):
@@ -24,7 +24,7 @@ class RtlSignalOps():
         except KeyError:
             o = opCreateDelegate(self, *otherOps)
             self._usedOps[k] = o
-            return o  
+            return o
         
         return o
     
@@ -33,6 +33,9 @@ class RtlSignalOps():
         
     def _onRisingEdge(self, now=None):
         return self.naryOp(AllOps.RISING_EDGE, tv(self)._onRisingEdge, now)
+    
+    def _onFallingEdge(self, now=None):
+        return self.naryOp(AllOps.FALLIGN_EDGE, tv(self)._onFallingEdge, now)
     
     def _hasEvent(self, now=None):
         raise self.naryOp(AllOps.EVENT, tv(self)._hasEvent, now)
@@ -126,28 +129,33 @@ class RtlSignalOps():
     def _ternary(self, ifTrue, ifFalse):
         return self.naryOp(AllOps.TERNARY, tv(self)._ternary, ifTrue, ifFalse)
     
-    def _assignFrom(self, source):
+    def _tryMyIndexToEndpoint(self):
+        """
+        Try if I now drive index operator which was my driver.
+        """
         from hdl_toolkit.hdlObjects.operator import Operator # [TODO] import like this is not ideal
-        source = toHVal(source)
-        a = Assignment(source, self)
-        a.cond = set()
-        
         try:
-            # now I am result of the index  self[xx] <= source
+            # now I am result of the index  xxx[xx] <= source
             # get index op
             d = self.singleDriver()
             if isinstance(d, Operator) and d.operator == AllOps.INDEX:
-                # get singla on which is signal applied
+                # get signal on which is index applied
                 indexedOn = d.ops[0]
-                if isinstance(indexedOn, SignalItem):
-                    # change direction of index for me and for indexed on
-                    indexedOn.endpoints.remove(d)
-                    indexedOn.drivers.append(d)
-                     
-                    self.drivers.remove(d)
-                    self.endpoints.append(d)
+                if isinstance(indexedOn, RtlSignalBase):
+                    d = d.asDrived()
+                    self = d.result
+                else:
+                    raise Exception("can not drive static value")
         except MultipleDriversExc:
             pass
+        
+        return self
+    
+    def _assignFrom(self, source):
+        source = toHVal(source)
+        self = self._tryMyIndexToEndpoint()
+        a = Assignment(source, self)
+        a.cond = set()
         
         self.drivers.append(a)
         if not isinstance(source, Value):
