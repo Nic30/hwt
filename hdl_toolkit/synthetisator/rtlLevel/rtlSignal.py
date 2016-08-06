@@ -74,7 +74,11 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                             #    result = self[index]
                             # or result = index[self]
                             resSig = e.result
-                            resSig.simEval(simulator)
+                            if resSig.endpoints: 
+                                # because there can be unused operators which can change direction of dataflow
+                                # for example when index is constructed we do not know if assignment will come or not,
+                                # if it comes original operator is left and reversed is constructed
+                                resSig.simEval(simulator)
                 
             conf = simulator.config
             for p in self.simSensitiveProcesses:        
@@ -110,8 +114,8 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                 continue
             try:
                 o = d.operator
-                # if iam not driven by this index
-                if o == AllOps.INDEX and o.result is not self:
+                # if I am not driven by this index
+                if o == AllOps.INDEX and d.result is not self:
                     continue
             except AttributeError:
                 pass
