@@ -12,7 +12,7 @@ def convertBits(self, sigOrVal, toType):
     
     if isinstance(toType, Boolean):
         if isVal:
-            return sigOrVal == self.getValueCls().fromPy(1, self)
+            return sigOrVal._eq(self.getValueCls().fromPy(1, self))
         elif self.bit_length() == 1:
             v = 0 if sigOrVal.negated else 1
             return sigOrVal._eq(self.getValueCls().fromPy(v, self))
