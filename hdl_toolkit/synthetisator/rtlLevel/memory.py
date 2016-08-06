@@ -14,13 +14,13 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
     def __init__(self, name, var_type, defaultVal=None):
         super().__init__(name, var_type, defaultVal)
         self.next = RtlSignal(name + "_next", var_type)
-        
+           
     def _assignFrom(self, source):
         source = toHVal(source)
         a = Assignment(source, self.next)
         a.cond = set()
+        # [TODO] check no operator reverse should happen
         self.next.drivers.append(a)
         if not isinstance(source, Value):
             source.endpoints.append(a)
-             
         return a
