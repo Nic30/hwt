@@ -34,6 +34,11 @@ def _tryConnect(src, unit, intfName):
     if dst is not None:
         connect(src, dst)
 
+def propagateClk(self):
+    clk = self.clk
+    for u in self._units:
+        _tryConnect(clk, u, 'clk')
+    
 def propagateClkRstn(self):
     clk = self.clk
     rst_n = self.rst_n
