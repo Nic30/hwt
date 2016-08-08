@@ -1,5 +1,5 @@
 import os
-from hdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
+from hdl_toolkit.synthetisator.shortcuts import synthesizeAndSave
 from hdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
 
 from cli_toolkit.vivado.partBuilder import XilinxPartBuilder
@@ -11,11 +11,11 @@ from cli_toolkit.vivado.config import VivadoConfig
 pb = XilinxPartBuilder
 defaultPart = XilinxPartBuilder(pb.Family.kintex7, pb.Size._160t, pb.Package.ffg676, pb.Speedgrade._2).name()
 
-def buildUnit(unit, synthetize=True, implement=True, writeBitstream=True, getConstrains=None, 
+def buildUnit(unit, synthesize=True, implement=True, writeBitstream=True, getConstrains=None, 
               log=True, openGui=False, part=defaultPart):
     r = VivadoReport()
     uName = defaultUnitName(unit)
-    def synthetizeCmds():
+    def synthesizeCmds():
         p = Project("__pycache__", uName)
         if p._exists():
             p._remove()
@@ -23,14 +23,14 @@ def buildUnit(unit, synthetize=True, implement=True, writeBitstream=True, getCon
         yield from p.create()
         yield from p.setPart(part)
         
-        files = synthetizeAndSave(unit, folderName=os.path.join(p.path, 'src'))
+        files = synthesizeAndSave(unit, folderName=os.path.join(p.path, 'src'))
         
         yield from p.addDesignFiles(files)
         yield from p.setTop(unit._name)
         if getConstrains is not None:
             yield from p.addXDCs("constrains0", getConstrains(unit))
         
-        if synthetize:
+        if synthesize:
             yield from p.synth()
             r.utilizationSynth = os.path.join(p.path, p.name + ".runs", "synth_1", uName + "_utilization_synth.rpt")
             
@@ -54,7 +54,7 @@ def buildUnit(unit, synthetize=True, implement=True, writeBitstream=True, getCon
             r.bitstreamFile = os.path.join(impl, unit._name + ".bit")
              
     with VivadoCntrl(VivadoConfig.getExec(), logComunication=log) as v:
-        v.process(synthetizeCmds())
+        v.process(synthesizeCmds())
         if openGui:
             v.openGui()
     return r

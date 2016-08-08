@@ -116,7 +116,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
                     i._initArrayItems()    
         
     def _clean(self, rmConnetions=True, lockNonExternal=True):
-        """Remove all signals from this interface (used after unit is synthetized
+        """Remove all signals from this interface (used after unit is synthesized
          and its parent is connecting its interface to this unit)"""
         if self._interfaces:
             for i in self._interfaces:

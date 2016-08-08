@@ -1,7 +1,6 @@
-from myhdl import always_seq, Signal, modbv
+from myhdl import always_seq, Signal as Sig, modbv
 from hdl_toolkit.interfaces.std import Clk, Rst, Signal
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 from hls_toolkit.myhdlSynthesiser.unitMyHdl import UnitMyHdl
 
 
@@ -27,7 +26,7 @@ class Counter(UnitMyHdl):
             reset -- asynchronous reset input
         
             """
-            countReg = Signal(modbv(0)[8:])
+            countReg = Sig(modbv(0)[8:])
             @always_seq(clk.posedge, reset=rst)
             def incLogic():
                 count.next = countReg
@@ -39,5 +38,6 @@ class Counter(UnitMyHdl):
         return Inc, [self.count, self.enable, self.clk, self.rst]
 
 if __name__ == "__main__":
-    print(synthetizeCls(Counter))
+    from hdl_toolkit.synthetisator.shortcuts import toRtl
+    print(toRtl(Counter))
     

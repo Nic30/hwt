@@ -50,8 +50,8 @@ class RtlNetlist():
     """
     def __init__(self, name, globalNames:dict=None):
         """
-        @param name: name of context is synthetized as entity name
-        @param globalNames: dictionary of parameters is synthetized as entity generics  
+        @param name: name of context is synthesized as entity name
+        @param globalNames: dictionary of parameters is synthesized as entity generics  
         """
         if not globalNames:
             self.globals = {}
@@ -64,7 +64,7 @@ class RtlNetlist():
     def sig(self, name, typ=BIT, clk=None, syncRst=None, defVal=None):
         """
         generate new signal in context
-        @param clk: clk signal, if specified signal is synthetized as SyncSignal
+        @param clk: clk signal, if specified signal is synthesized as SyncSignal
         @param syncRst: reset 
         """
 
@@ -176,7 +176,7 @@ class RtlNetlist():
             
             yield p
 
-    def synthetize(self, interfaces):
+    def synthesize(self, interfaces):
         ent = Entity(self.name)
         ent._name = self.name + "_inst"  # instance name
         

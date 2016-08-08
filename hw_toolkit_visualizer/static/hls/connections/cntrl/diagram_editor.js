@@ -51,7 +51,7 @@ function diagramEditorCntrl($scope, hotkeys){
 				callback: function(e) {
 					e.stopPropagation(this);
 					e.preventDefault(this);
-					api.synthetize();
+					api.synthesize();
 				}
 			},{	combo: 'ctrl+e',
 				description: 'Edit component',
@@ -100,7 +100,7 @@ function diagramEditorCntrl($scope, hotkeys){
 		// [TODO] x,y
 	}
 	
-	api.synthetize = function(){
+	api.synthesize = function(){
 		function onHidden(){
 			console.log('goodbye'); 
 		}

@@ -79,8 +79,8 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
         return hasattr(self, "_cntx")
     
     def _synthetiseContext(self, externInterf, cntx):
-        # synthetize signal level context
-        s = cntx.synthetize(externInterf)
+        # synthesize signal level context
+        s = cntx.synthesize(externInterf)
         self._entity = s[1]
         self._entity.__doc__ = self.__doc__
 
@@ -92,7 +92,7 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
                 # reverse because other components looks at this one from outside
                 intf._reverseDirection()
         
-        # connect results of synthetized context to interfaces of this unit
+        # connect results of synthesized context to interfaces of this unit
         for intf in self._interfaces:
             if intf._isExtern:
                 self._connectMyInterfaceToMyEntity(intf)

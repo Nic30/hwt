@@ -126,7 +126,7 @@ class FsmBuilder(StmCntx):
         @param stateT: enum type of state
         @param stateRegName: name of register where sate is stored
         """
-        self.stateReg = parent._reg(stateRegName, stateT, stateT.fromPy(None))
+        self.stateReg = parent._reg(stateRegName, stateT, stateT.fromPy(stateT._allValues[0]))
         Switch.__init__(self, self.stateReg)
     
     _appendStatements = Switch._appendStatements

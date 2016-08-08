@@ -3,7 +3,7 @@ from os.path import relpath
 
 from python_toolkit.fileHelpers import find_files
 from hdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
-from hdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
+from hdl_toolkit.synthetisator.shortcuts import synthesizeAndSave
 from cli_toolkit.ip_packager.component import Component
 from cli_toolkit.ip_packager.helpers import prettify
 from cli_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
@@ -39,7 +39,7 @@ class Packager(object):
         
         files = self.hdlFiles
         self.hdlFiles = set()
-        self.hdlFiles = set(synthetizeAndSave(self.topUnit, folderName=path))
+        self.hdlFiles = set(synthesizeAndSave(self.topUnit, folderName=path))
 
         for srcF in files:
             dst = os.path.join(path, os.path.relpath(srcF, srcDir).replace('../', ''))

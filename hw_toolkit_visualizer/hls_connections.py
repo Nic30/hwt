@@ -72,7 +72,7 @@ def serializeRtlUnit(interface, unit):
     """
     now if driver is assigment input rendering does not work
     """
-    unit.synthetize(interface)
+    unit.synthesize(interface)
     nets = []
     nodes = sorted(list(unit.subUnits), key=lambda x : x.name)
     

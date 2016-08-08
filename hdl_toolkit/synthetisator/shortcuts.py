@@ -42,7 +42,7 @@ def synthesised(u):
     return u
 
 
-def synthetizeAndSave(unit, folderName='.', name=None):
+def synthesizeAndSave(unit, folderName='.', name=None):
     unit._loadDeclarations()
     header = None
     os.makedirs(folderName, exist_ok=True)
@@ -107,7 +107,7 @@ def syntaxCheck(unitOrFileName):
             unitName = defaultUnitName(unitOrFileName)
         
         d = "__pycache__/" + unitName
-        synthetizeAndSave(unitOrFileName, d)
+        synthesizeAndSave(unitOrFileName, d)
         for f in chain(find_files(d, '*.vhd', recursive=True), find_files(d, '*.v', recursive=True)):
             fileSyntaxCheck(ParserFileInfo(d, 'work'))
         
@@ -116,7 +116,7 @@ def syntaxCheck(unitOrFileName):
     else:
         raise  NotImplementedError("Not implemented for '%'" % (repr(unitOrFileName)))
     
-def synthetizeAsIpcore(unit, folderName=".", name=None):
+def synthesizeAsIpcore(unit, folderName=".", name=None):
     from cli_toolkit.ip_packager.packager import Packager
     p = Packager(unit)
     p.createPackage(folderName)
