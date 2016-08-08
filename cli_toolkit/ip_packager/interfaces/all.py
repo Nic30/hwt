@@ -109,7 +109,7 @@ class IP_Clk(IfConfig):
             elif len(rst) > 1:
                 raise Exception("Don't know how to work with multiple resets")
             
-            intfs = where(allInterfaces, lambda intf: intf != rst and intf != self)
+            intfs = where(allInterfaces, lambda intf: intf is not rst and intf is not self)
             self.addSimpleParam(thisIf, "ASSOCIATED_BUSIF", ":".join(map(lambda intf: intf._name, intfs)))
             self.addSimpleParam(thisIf, "FREQ_HZ", str(DEFAULT_CLOCK))
 
