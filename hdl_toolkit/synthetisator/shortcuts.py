@@ -15,6 +15,7 @@ from hdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
 from python_toolkit.fileHelpers import find_files
 
 
+
 def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
     if not isinstance(unitOrCls, Unit):
         u = unitOrCls()
@@ -116,7 +117,7 @@ def syntaxCheck(unitOrFileName):
         raise  NotImplementedError("Not implemented for '%'" % (repr(unitOrFileName)))
     
 def synthetizeAsIpcore(unit, folderName=".", name=None):
-    # too simple to implement -> useless
-    raise NotImplementedError()
-    
+    from cli_toolkit.ip_packager.packager import Packager
+    p = Packager(unit)
+    p.createPackage(folderName)
     
