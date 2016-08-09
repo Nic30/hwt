@@ -139,3 +139,9 @@ class WhileContainer():
             
             for s in self.body:
                 s.seqEval()
+
+class WaitStm():
+    def __init__(self, waitForWhat):
+        self.isTimeWait = isinstance(waitForWhat, int)
+        self.waitForWhat = waitForWhat
+        
