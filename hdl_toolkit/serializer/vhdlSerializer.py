@@ -5,7 +5,7 @@ from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import Assignment 
 from hdl_toolkit.hdlObjects.statements import IfContainer, \
-    SwitchContainer, WhileContainer
+    SwitchContainer, WhileContainer, WaitStm
 from hdl_toolkit.synthetisator.param import getParam, Param
 from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.serializer.exceptions import SerializerException
@@ -110,11 +110,10 @@ class VhdlSerializer():
         procs = []
         extraTypes = set()
         for v in sorted(arch.variables, key=lambda x: x.name):
-            if v.endpoints or v.drivers or v.simSensitiveProcesses:  # if is used
-                variables.append(cls.SignalItem(v, declaration=True))
-                if isinstance(v._dtype, (Enum, Array)):
-                    extraTypes.add(v._dtype)
-            
+            variables.append(cls.SignalItem(v, declaration=True))
+            if isinstance(v._dtype, (Enum, Array)):
+                extraTypes.add(v._dtype)
+        
         for p in sorted(arch.processes, key=lambda x: x.name):
             procs.append(cls.HWProcess(p))
             
@@ -242,7 +241,16 @@ class VhdlSerializer():
             cases.append((key, statements))  
         return VHDLTemplates.Switch.render(switchOn=switchOn,
                                            cases=cases)  
-  
+    @classmethod
+    def WaitStm(cls, w):
+        if w.isTimeWait:
+            return "wait for %d ns" % w.waitForWhat
+        elif w.waitForWhat is None:
+            return "wait"
+        else:
+            raise NotImplementedError()
+        
+        
     @classmethod
     def GenericItem(cls, g):
         s = "%s : %s" % (g.name, cls.HdlType(g._dtype))
@@ -327,7 +335,7 @@ class VhdlSerializer():
             elif si.endpoints or si.simSensitiveProcesses:
                 prefix = "CONSTANT"
             else:
-                raise SerializerException("Signal %s should be declared by it is not used" % si.name)
+                raise SerializerException("Signal %s should be declared but it is not used" % si.name)
                 
 
             s = prefix + " %s : %s" % (si.name, cls.HdlType(si._dtype))
@@ -379,7 +387,7 @@ class VhdlSerializer():
         if disableRange or c is None or isinstance(c, Unconstrained):
             constr = ""
         elif isinstance(c, (int, float)):
-            constr = "%d DOWNOT 0" % c
+            constr = "(%d DOWNTO 0)" % (c-1)
         else:        
             constr = "(%s)" % cls.Value(c)     
         return name + constr
@@ -432,7 +440,8 @@ class VhdlSerializer():
     @classmethod
     def HWProcess(cls, proc):
         body = proc.statements
-        hasToBeVhdlProcess = arr_any(body, lambda x: isinstance(x, (IfContainer, SwitchContainer, WhileContainer)))
+        hasToBeVhdlProcess = arr_any(body, lambda x: isinstance(x, 
+                                        (IfContainer, SwitchContainer, WhileContainer, WaitStm)))
         sensitifityList = list(where(proc.sensitivityList, lambda x : not isinstance(x, Param)))
         return VHDLTemplates.process.render({
               "name": proc.name,
