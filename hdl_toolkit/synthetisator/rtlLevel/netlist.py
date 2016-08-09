@@ -201,9 +201,9 @@ class RtlNetlist():
 
         # add signals, variables etc. in architecture
         for _, s in self.signals.items():
-            if s not in interfaces:
-                # [TODO] if has driver
-                arch.variables.append(s)
+            if s.endpoints or s.drivers or s.simSensitiveProcesses: # if is used
+                if s not in interfaces:
+                    arch.variables.append(s)
         
         # instanciate subUnits in architecture
         for u in self.subUnits:  
