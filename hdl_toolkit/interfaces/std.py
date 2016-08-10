@@ -159,6 +159,15 @@ class FifoReader(FifoWriter):
         self.en._masterDir = DIRECTION.IN
         self.wait._masterDir = DIRECTION.OUT
 
+class RegCntrl(Interface):
+    def _config(self):
+        self.DATA_WIDTH = Param(8)
+    
+    def _declr(self):
+        self.din = Signal(dtype=vecT(self.DATA_WIDTH), masterDir=D.IN)
+        with self._paramsShared():
+            self.dout = VldSynced()
+
 s = Signal
   
 # class RGMII_channel(Interface):
