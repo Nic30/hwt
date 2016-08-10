@@ -4,15 +4,12 @@ import simpy
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
-from sympy.polys.groebnertools import sig
-
-
 
 class HdlSimulator(object):
     """
     while True:
         apply values on signals
-        run all processes which were tiggered
+        run all processes which were triggered
     """
     
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
@@ -28,7 +25,7 @@ class HdlSimulator(object):
         self.config = config
         self.env = simpy.Environment()
         self.updateComplete = self.env.event()
-        self.lastUpdateComplete = -10 # something lower than -1 (-1 has static values)
+        self.lastUpdateComplete = -2
         self.applyValuesPlaned = False
         
         # (signal, value) tupes which should be applied before new round of processes
@@ -44,11 +41,12 @@ class HdlSimulator(object):
 
         for v in proc.simEval(self):
             self.valuesToApply.append(v)
+            print(v)
     
     def applyValues(self):
-        # [TODO] not ideal, processes should be evaluated before runing apply values
+        # [TODO] not ideal, processes should be evaluated before running apply values
         # this should be done by priority, not by timeout
-        # (currently cant gen scipy working with priorities)
+        # (currently can't get scipy working with priorities)
         yield self.wait(0)
         va = self.valuesToApply
         
@@ -105,10 +103,7 @@ class HdlSimulator(object):
         for p in unit._architecture.processes:
             self.addHwProcToRun(p)
             
-    def r(self, sig):
-        "read shortcut"
-        return self.read(sig)
-        
+       
     def read(self, sig):
         """
         Read value from signal or interface
@@ -117,11 +112,6 @@ class HdlSimulator(object):
             sig = sig._sigInside
         return sig._val.clone()
     
-    
-    def w(self, val, sig):
-        "write shortcut"
-        self.write(val, sig) 
-           
     def write(self, val, sig):
         """
         Write value to signal or interface.
@@ -146,6 +136,8 @@ class HdlSimulator(object):
             self.env.process(self.applyValues())
             self.applyValuesPlaned = True
             
+    r = read    
+    w = write
         
     def wait(self, time):
         return self.env.timeout(time)

@@ -5,8 +5,6 @@ from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
-from hdl_toolkit.synthetisator.codeOps import fitTo
 from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
 from hdl_toolkit.synthetisator.interfaceLevel.interface.directionFns import InterfaceDirectionFns 
@@ -14,17 +12,8 @@ from hdl_toolkit.synthetisator.interfaceLevel.interface.hdlExtraction import Ext
 from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
 from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
 from hdl_toolkit.synthetisator.param import Param
+from hdl_toolkit.synthetisator.vectorUtils import getWidthExpr, fitTo, aplyIndexOnSignal
 
-
-def aplyIndexOnSignal(sig, dstType, index):
-    index = toHVal(index)
-    if sig._dtype == BIT or dstType == BIT:
-        return sig[index]
-    elif isinstance(dstType, Bits):
-        w = toHVal(getWidthExpr(dstType))
-        return sig[(w * (index + 1)):(w * index)]
-    else:
-        raise NotImplementedError()
 
 class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """

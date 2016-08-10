@@ -1,12 +1,13 @@
-import types
 from copy import deepcopy
-from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
+import types
+
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
-from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
-from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.synthetisator.vectorUtils import getWidthExpr, fitTo
 
 
 def _intfToSig(obj):
@@ -198,11 +199,12 @@ def _connect(src, dst, exclude, fit):
         src = dst._dtype.fromPy(None)
     else:
         src = toHVal(src)
-        src = src._dtype.convert(src, dst._dtype)
-    
+        
     if fit:
         src = fitTo(src, dst)
         
+    src = src._dtype.convert(src, dst._dtype)
+    
     return [dst._assignFrom(src)]
 
 def connect(src, *destinations, exclude=set(), fit=False):
@@ -295,27 +297,6 @@ def packedWidth(intf):
         if t == BIT:
             return 1
         return t.bit_length()
-
-def fitTo(what, to):
-    """
-    Slice signal "what" to fit in "to" 
-    or
-    extend "what" with zeros to same width as "to"
-    
-    little endian impl.
-    """
-
-    whatWidth = what._dtype.bit_length()
-    toWidth = to._dtype.bit_length()
-    if toWidth == whatWidth:
-        return what
-    elif toWidth < whatWidth:
-        # slice
-        return what[hInt(toWidth):]
-    else:
-        # extend
-        return Concat(vec(0, toWidth - whatWidth), what)
-       
 
 def _mkOp(fn): 
     def op(*ops):

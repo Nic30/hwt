@@ -1,12 +1,13 @@
-from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
-from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.interfaces.signalOps import SignalOps
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import BIT
+from hdl_toolkit.interfaces.signalOps import SignalOps
+from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
+from hdl_toolkit.synthetisator.param import Param
+from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthetisator.vectorUtils import getWidthExpr
+
 
 D = DIRECTION
 

@@ -30,7 +30,7 @@ def dependencyGraph():
     #
     files = list(map(lambda f : ParserFileInfo(f, "work"), files ))
     #unisimDesFiles = DesignFile.loadFiles(unisimFiles, libName='unisim')
-    desFiles = DesignFile.loadFiles(files)
+    desFiles = DesignFile.loadFiles(files, debug=True)
     DesignFile.resolveDependencies(desFiles) # + unisimDesFiles)
     
     nodes = []
