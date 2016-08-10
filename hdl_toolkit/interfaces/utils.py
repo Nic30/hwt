@@ -5,7 +5,10 @@ from hdl_toolkit.interfaces.std import Clk, Rst_n, Rst
 from hdl_toolkit.synthetisator.codeOps import Concat, connect
 
 
-log2ceil = lambda x:hInt(math.ceil(math.log2(evalParam(x).val)))
+def log2ceil(x):
+    if not isinstance(x, (int, float)):
+        x = evalParam(x).val
+    return hInt(math.ceil(math.log2(x)))
 
 def isPow2(num):
     assert isinstance(num, int)
