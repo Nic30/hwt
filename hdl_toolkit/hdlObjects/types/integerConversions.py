@@ -33,7 +33,7 @@ def convertInteger(self, sigOrVal, toType):
         if isVal:
             _v = sigOrVal.val 
             w = toType.bit_length()
-            assert _v.bit_length() <= w
+            assert _v.bit_length() <= w, (_v, w)
             v = toType.fromPy(_v)
             
             v.updateTime = sigOrVal.updateTime
