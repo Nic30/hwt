@@ -194,9 +194,11 @@ def _connect(src, dst, exclude):
         src = src._sig
         
     assert not exclude, "this intf. is just a signal"   
-    
-    src = toHVal(src)
-    src = src._dtype.convert(src, dst._dtype)
+    if src is None:
+        src = dst._dtype.fromPy(None)
+    else:
+        src = toHVal(src)
+        src = src._dtype.convert(src, dst._dtype)
     
     return [dst._assignFrom(src)]
 
@@ -305,7 +307,7 @@ def fitTo(what, to):
         return what[hInt(toWidth):]
     else:
         # extend
-        return Concat(what, vec(0, toWidth - whatWidth))
+        return Concat(vec(0, toWidth - whatWidth), what)
        
 
 def _mkOp(fn): 
