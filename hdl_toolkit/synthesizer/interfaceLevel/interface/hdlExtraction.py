@@ -1,14 +1,15 @@
+from hdl_toolkit.hdlObjects.expr import ExprComparator
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
+from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.synthesizer.interfaceLevel.interface.array import InterfaceArray
+from hdl_toolkit.synthesizer.param import Param
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import walkSignalsInExpr
 from python_toolkit.arrayQuery import single, NoValueExc, arr_any
 from python_toolkit.stringUtils import matchIgnorecase
-from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
-from hdl_toolkit.hdlObjects.expr import ExprComparator
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.synthetisator.interfaceLevel.interface.array import InterfaceArray
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.walkers import walkSignalsInExpr
+
 
 class InterfaceIncompatibilityExc(Exception):
     pass

@@ -1,4 +1,5 @@
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+
 
 class VHDLVariable():
     def __init__(self, name, dtype, defaultVal=None):

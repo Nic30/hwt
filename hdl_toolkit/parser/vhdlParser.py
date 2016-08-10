@@ -1,6 +1,7 @@
-from hdl_toolkit.parser.baseParser import BaseParser 
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.parser.baseParser import BaseParser 
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+
 
 class VhdlParser(BaseParser):
 

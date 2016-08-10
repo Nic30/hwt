@@ -1,13 +1,14 @@
-from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.architecture import Architecture
+from hdl_toolkit.hdlObjects.entity import Entity
+from hdl_toolkit.hdlObjects.process import HWProcess
+from hdl_toolkit.hdlObjects.statements import WaitStm
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal
-from hdl_toolkit.hdlObjects.process import HWProcess
-from hdl_toolkit.synthetisator.codeOps import connect
-from hdl_toolkit.hdlObjects.statements import WaitStm
 from hdl_toolkit.interfaces.std import Rst_n
 from hdl_toolkit.serializer.templates import VHDLTemplates
+from hdl_toolkit.synthesizer.codeOps import connect
+from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
+
 
 def _clkDriverProc(clk, clkPeriod):
     d = HWProcess("clk_driver")

@@ -12,9 +12,9 @@ from hdl_toolkit.hdlObjects.types.integerVal import IntegerVal
 from hdl_toolkit.hdlObjects.types.slice import Slice
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.value import Value, areValues
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 
 BoolVal = BOOL.getValueCls()

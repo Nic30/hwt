@@ -5,19 +5,19 @@ from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
-from hdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
-from hdl_toolkit.synthetisator.interfaceLevel.interface.directionFns import InterfaceDirectionFns 
-from hdl_toolkit.synthetisator.interfaceLevel.interface.hdlExtraction import ExtractableInterface
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
-from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.synthetisator.vectorUtils import getWidthExpr, fitTo, aplyIndexOnSignal
+from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
+from hdl_toolkit.synthesizer.interfaceLevel.buildable import Buildable
+from hdl_toolkit.synthesizer.interfaceLevel.interface.directionFns import InterfaceDirectionFns 
+from hdl_toolkit.synthesizer.interfaceLevel.interface.hdlExtraction import ExtractableInterface
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase 
+from hdl_toolkit.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector 
+from hdl_toolkit.synthesizer.param import Param
+from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo, aplyIndexOnSignal
 
 
 class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """
-    Base class for all interfaces in interface synthetisator
+    Base class for all interfaces in interface synthesizer
     
     @cvar _NAME_SEPARATOR: separator for nested interface names   
     @ivar _params: [] of parameter
@@ -25,7 +25,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
     @ivar _alternativeNames: [] of alternative names
     @ivar _name: name assigned during synthesis
     @ivar _parent: parent object (Unit or Interface instance)
-    @ivar _isExtern: If true synthetisator sets it as external port of unit
+    @ivar _isExtern: If true synthesizer sets it as external port of unit
     
     #only interfaces without _interfaces have:
     @ivar _sig: rtl level signal instance     
@@ -121,7 +121,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
             e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
         
         
-    def _connectToIter(self, master, masterIndex=None, slaveIndex=None, 
+    def _connectToIter(self, master, masterIndex=None, slaveIndex=None,
                              exclude=set(), fit=False):
         if self in exclude or master in exclude:
             return
@@ -196,7 +196,7 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
                 
         if self._multipliedBy is not None:
             for elemIntf in self._arrayElemCache:
-                #elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name 
+                # elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name 
                 elemIntf._signalsForInterface(context, prefix,
                                                typeTransform=typeTransform)
                 # they are not in sigs because they are not main signals

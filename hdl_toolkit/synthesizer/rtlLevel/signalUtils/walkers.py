@@ -1,12 +1,12 @@
-from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.assignment import Assignment
-from python_toolkit.arrayQuery import where
+from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps, isEventDependentOp
 from hdl_toolkit.hdlObjects.portItem import PortItem
-from hdl_toolkit.synthetisator.param import Param
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.synthesizer.param import Param
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from python_toolkit.arrayQuery import where
 
 
 def signalHasDriver(sig):

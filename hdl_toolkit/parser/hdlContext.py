@@ -2,17 +2,16 @@
 # -*- coding: utf-8 -*-
 from myhdl.conversion._toVHDL import _shortversion
 
-from hdl_toolkit.hdlObjects.reference import HdlRef 
-from hdl_toolkit.nonRedefDict import NonRedefDict
-from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.architecture import Architecture
+from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.function import Function
 from hdl_toolkit.hdlObjects.functionContainer import FunctionContainer
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, STR, BIT
+from hdl_toolkit.hdlObjects.reference import HdlRef 
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, STR, BIT
 from hdl_toolkit.hdlObjects.types.integer import Integer
-
+from hdl_toolkit.nonRedefDict import NonRedefDict
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class RequireImportErr(Exception):

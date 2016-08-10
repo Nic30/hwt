@@ -4,7 +4,7 @@ from hdl_toolkit.hdlObjects.types.defs import BOOL
 from hdl_toolkit.hdlObjects.types.eventCapableVal import EventCapableVal
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.value import Value, areValues
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 
 def boolLogOp(self, other, op):

@@ -1,11 +1,11 @@
-from hdl_toolkit.synthetisator.rtlLevel.netlist import RtlNetlist
-from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase 
-from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
-from hdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
-from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
-from hdl_toolkit.synthetisator.interfaceLevel.unitImplHelpers import UnitImplHelpers
-from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import forAllParams
+from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
+from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import UnitBase 
+from hdl_toolkit.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector 
+from hdl_toolkit.synthesizer.interfaceLevel.buildable import Buildable
+from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
+from hdl_toolkit.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers
+from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import forAllParams
 
 
 

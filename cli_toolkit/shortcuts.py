@@ -1,13 +1,13 @@
 import os
-from hdl_toolkit.synthetisator.shortcuts import synthesizeAndSave
-from hdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
 
-from cli_toolkit.vivado.partBuilder import XilinxPartBuilder
 from cli_toolkit.vivado.api import Project, VivadoReport
-from cli_toolkit.vivado.controller import VivadoCntrl
 from cli_toolkit.vivado.config import VivadoConfig
+from cli_toolkit.vivado.controller import VivadoCntrl
+from cli_toolkit.vivado.partBuilder import XilinxPartBuilder
+from hdl_toolkit.synthesizer.interfaceLevel.unit import defaultUnitName
+from hdl_toolkit.synthesizer.shortcuts import synthesizeAndSave
 
-        
+
 pb = XilinxPartBuilder
 defaultPart = XilinxPartBuilder(pb.Family.kintex7, pb.Size._160t, pb.Package.ffg676, pb.Speedgrade._2).name()
 

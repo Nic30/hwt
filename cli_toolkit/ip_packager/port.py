@@ -1,11 +1,12 @@
-from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.hdlObjects.typeShortcuts import hInt
+from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
 from cli_toolkit.ip_packager.helpers import appendSpiElem, \
          findS, mkSpiElm, ns
-from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+
 
 class WireTypeDef():
     _requiredVal = ["typeName"]

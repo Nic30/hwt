@@ -1,6 +1,6 @@
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import UnitBase, InterfaceBase 
+from hdl_toolkit.synthesizer.param import Param
+from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase 
 from types import MethodType
 
 def nameAvailabilityCheck(obj, propName, prop):

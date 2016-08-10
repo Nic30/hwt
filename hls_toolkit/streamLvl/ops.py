@@ -1,7 +1,9 @@
-from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from collections import deque
-from hls_toolkit.streamLvl.valObj import valObj
+
 from hdl_toolkit.bitmask import Bitmask
+from hdl_toolkit.synthesizer.interfaceLevel.interface import Interface
+from hls_toolkit.streamLvl.valObj import valObj
+
 
 def write(val, intf):
     assert isinstance(intf, Interface)

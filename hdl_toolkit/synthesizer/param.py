@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.cmp import areSameSignals
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.cmp import areSameSignals
 
 
 class Param(RtlSignal):

@@ -11,7 +11,7 @@ cli_toolkit/ip_packager/__pycache__/
 cli_toolkit/samples/__pycache__/
 hls_toolkit/samples/__pycache__/
 hls_toolkit/samples/exactMatcherVivadoHls/solution1/.autopilot/
-hdl_toolkit/synthetisator/__pycache__/
+hdl_toolkit/synthesizer/__pycache__/
 hdl_toolkit/samples/iLvl/vhdl/__pycahe__/
 hdl_toolkit/samples/sLvl/vhdl/__pycache__/
 visualizer/__pycache__/

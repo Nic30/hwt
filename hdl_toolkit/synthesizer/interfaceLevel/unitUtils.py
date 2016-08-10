@@ -1,4 +1,5 @@
-from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
+from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
+
 
 def defaultUnitName(unit, sugestedName=None):
     if not sugestedName:

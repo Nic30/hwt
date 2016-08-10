@@ -361,13 +361,13 @@ class Code(object):
 
 if __name__ == "__main__":
     def fn(a, a_en, b):
-        print('With synthetisator')
+        print('With synthesizer')
         if a_en:
             return a
     
         
     c = Code.from_code(fn.__code__)
-    argName = "__synthetisator__"
+    argName = "__synthesizer__"
     c.addPositionalArg(argName)
     
     
@@ -377,8 +377,8 @@ if __name__ == "__main__":
     
     #instr = [
     #    (Opcode(LOAD_GLOBAL), 'print'),
-    #    (Opcode(LOAD_CONST), 'With synthetisator'),
-    #    #(Opcode(LOAD_FAST), '__synthetisator__')  ,
+    #    (Opcode(LOAD_CONST), 'With synthesizer'),
+    #    #(Opcode(LOAD_FAST), '__synthesizer__')  ,
     #    (Opcode(CALL_FUNCTION), 1),
     #    (Opcode(POP_TOP), None),
     #]

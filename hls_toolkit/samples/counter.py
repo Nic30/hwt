@@ -1,7 +1,8 @@
 from myhdl import always_seq, Signal as Sig, modbv
-from hdl_toolkit.interfaces.std import Clk, Rst, Signal
+
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
-from hls_toolkit.myhdlSynthesiser.unitMyHdl import UnitMyHdl
+from hdl_toolkit.interfaces.std import Clk, Rst, Signal
+from hls_toolkit.myhdlSynthesizer.unitMyHdl import UnitMyHdl
 
 
 class Counter(UnitMyHdl):
@@ -38,6 +39,6 @@ class Counter(UnitMyHdl):
         return Inc, [self.count, self.enable, self.clk, self.rst]
 
 if __name__ == "__main__":
-    from hdl_toolkit.synthetisator.shortcuts import toRtl
+    from hdl_toolkit.synthesizer.shortcuts import toRtl
     print(toRtl(Counter))
     

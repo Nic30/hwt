@@ -1,5 +1,5 @@
+from hdl_toolkit.synthesizer.shortcuts import toRtl
 from hls_toolkit.vivadoHLS.unit import VivadoHLSUnit
-from hdl_toolkit.synthetisator.shortcuts import toRtl
 
 
 class ExactMatcher(VivadoHLSUnit):

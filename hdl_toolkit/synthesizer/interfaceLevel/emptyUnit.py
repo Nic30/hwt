@@ -1,7 +1,7 @@
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
-from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
+from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
+from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
 
 def setOut(*interfaces, defVal=None):
     for i in interfaces:

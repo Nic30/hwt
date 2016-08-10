@@ -1,8 +1,8 @@
-from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
-from hdl_toolkit.interfaces.std import s
-from hdl_toolkit.synthetisator.param import Param
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
+from hdl_toolkit.interfaces.std import s
+from hdl_toolkit.synthesizer.interfaceLevel.interface import Interface
+from hdl_toolkit.synthesizer.param import Param
 
 
 class Mi32(Interface):

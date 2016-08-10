@@ -1,13 +1,15 @@
 from copy import copy
 from types import MethodType
-from python_toolkit.arrayQuery import single
-from hdl_toolkit.interfaces.std import Clk, Rst, Rst_n
+
+from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
+from hdl_toolkit.hdlObjects.typeShortcuts import mkRange
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
-from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
-from hdl_toolkit.hdlObjects.typeShortcuts import mkRange
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.interfaces.std import Clk, Rst, Rst_n
+from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from python_toolkit.arrayQuery import single
+
 
 class MakeInterfaceExtern(object):
     """

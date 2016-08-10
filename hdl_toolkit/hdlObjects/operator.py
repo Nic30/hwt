@@ -1,9 +1,11 @@
 from copy import deepcopy
-from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase 
-from hdl_toolkit.hdlObjects.value import Value
+
 from hdl_toolkit.hdlObjects.function import Function
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlMemoryBase
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlMemoryBase
+from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase 
+
 
 class InvalidOperandExc(Exception):
     pass

@@ -8,10 +8,10 @@ from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.parser.loader import langFromExtension, ParserFileInfo
 from hdl_toolkit.serializer.formater import formatVhdl
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
-from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
-from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
-from hdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
+from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
+from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
+from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
+from hdl_toolkit.synthesizer.vhdlCodeWrap import VhdlCodeWrap
 from python_toolkit.fileHelpers import find_files
 
 

@@ -1,4 +1,4 @@
-from hdl_toolkit.synthetisator.param import Param, getParam
+from hdl_toolkit.synthesizer.param import Param, getParam
 
 def sameIntfAs(intf):
     _intf = intf.__class__()

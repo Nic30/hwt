@@ -1,7 +1,7 @@
-from hdl_toolkit.synthetisator.interfaceLevel.interface import  Interface
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.interfaces.std import s, D
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
+from hdl_toolkit.interfaces.std import s, D
+from hdl_toolkit.synthesizer.interfaceLevel.interface import  Interface
+from hdl_toolkit.synthesizer.param import Param
 
 
 BURST_FIXED = 0b00

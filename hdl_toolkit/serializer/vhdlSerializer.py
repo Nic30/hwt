@@ -1,27 +1,27 @@
-from python_toolkit.arrayQuery import arr_any, where
-from hdl_toolkit.hdlObjects.types.hdlType import HdlType, InvalidVHDLTypeExc
-from hdl_toolkit.serializer.templates import VHDLTemplates
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.assignment import Assignment 
-from hdl_toolkit.hdlObjects.statements import IfContainer, \
-    SwitchContainer, WhileContainer, WaitStm
-from hdl_toolkit.synthetisator.param import getParam, Param
-from hdl_toolkit.synthetisator.interfaceLevel.unitFromHdl import UnitFromHdl
-from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.hdlObjects.types.enum import Enum
-from hdl_toolkit.bitmask import Bitmask
+from hdl_toolkit.hdlObjects.specialValues import Unconstrained
+from hdl_toolkit.hdlObjects.statements import IfContainer, \
+    SwitchContainer, WhileContainer, WaitStm
+from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BOOL, BIT
-from hdl_toolkit.hdlObjects.specialValues import Unconstrained
-from hdl_toolkit.hdlObjects.types.array import Array
-
-from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
-from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.hdlObjects.types.enum import Enum
+from hdl_toolkit.hdlObjects.types.hdlType import HdlType, InvalidVHDLTypeExc
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.serializer.exceptions import SerializerException
+from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
+from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
+from hdl_toolkit.serializer.templates import VHDLTemplates
+from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
+from hdl_toolkit.synthesizer.param import getParam, Param
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from python_toolkit.arrayQuery import arr_any, where
+
 
 class VhdlVersion():
     v2002 = 2002

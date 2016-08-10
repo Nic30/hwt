@@ -5,9 +5,9 @@ from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
-from hdl_toolkit.synthetisator.vectorUtils import getWidthExpr, fitTo
+from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo
 
 
 def _intfToSig(obj):

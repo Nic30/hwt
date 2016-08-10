@@ -7,12 +7,12 @@ class ConfErr(Exception):
 
 class IntfLvlConfErr(ConfErr):
     """
-    Interface level synthetisator user configuration error
+    Interface level synthesizer user configuration error
     """
     pass
 
 class SigLvlConfErr(ConfErr):
     """
-    Signal level synthetisator user configuration error
+    Signal level synthesizer user configuration error
     """
     pass

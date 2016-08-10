@@ -1,8 +1,9 @@
 import math
+
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
-from hdl_toolkit.synthetisator.param import evalParam
 from hdl_toolkit.interfaces.std import Clk, Rst_n, Rst
-from hdl_toolkit.synthetisator.codeOps import Concat, connect
+from hdl_toolkit.synthesizer.codeOps import Concat, connect
+from hdl_toolkit.synthesizer.param import evalParam
 
 
 def log2ceil(x):

@@ -1,11 +1,12 @@
-from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from hdl_toolkit.interfaces.std import VldSynced
-from hls_toolkit.codeObjs import HlsOperation
-from hls_toolkit.baseSynthetisator import hls
-
 """
 Hls operations are always made of datapath and FSM
 """
+
+from hdl_toolkit.interfaces.std import VldSynced
+from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
+from hls_toolkit.baseSynthesizer import hls
+from hls_toolkit.codeObjs import HlsOperation
+
 
 def r(intf):
     """read for Ap_vld

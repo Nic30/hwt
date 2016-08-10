@@ -6,9 +6,9 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.simulator.exceptions import SimException
 from hdl_toolkit.simulator.utils import valHasChanged
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.ops import RtlSignalOps
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
 
 
 

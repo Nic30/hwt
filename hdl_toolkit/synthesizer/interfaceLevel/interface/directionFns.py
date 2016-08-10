@@ -1,5 +1,5 @@
-from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, DIRECTION
+from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
 
 
 class InterfaceDirectionFns():

@@ -1,15 +1,14 @@
-from python_toolkit.arrayQuery import single, where
-from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit import interfaces
-import hdl_toolkit.interfaces.std
-import hdl_toolkit.interfaces.amba
-
-from cli_toolkit.ip_packager.otherXmlObjs import Parameter
-from cli_toolkit.ip_packager.helpers import mkSpiElm, spi_ns_prefix
 from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+from cli_toolkit.ip_packager.helpers import mkSpiElm, spi_ns_prefix
+from cli_toolkit.ip_packager.otherXmlObjs import Parameter
+from hdl_toolkit import interfaces
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+import hdl_toolkit.interfaces.amba
+import hdl_toolkit.interfaces.std
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from python_toolkit.arrayQuery import single, where
 
-         
+
 DEFAULT_CLOCK = 100000000
 D = DIRECTION
 

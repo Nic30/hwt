@@ -1,26 +1,25 @@
-from python_toolkit.arrayQuery import where, distinctBy, arr_any
-
 from hdl_toolkit.hdlObjects.architecture import Architecture
+from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.entity import Entity
+from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.process import HWProcess
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.hdlObjects.assignment import Assignment
-
-from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal
-from hdl_toolkit.synthetisator.codeOps import If
-from hdl_toolkit.synthetisator.rtlLevel.utils import portItemfromSignal
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.walkers import walkUnitInputPorts, walkSignalsInExpr, \
-    discoverDriverSignals, walkSigSouces, signalHasDriver
 from hdl_toolkit.serializer.templates import VHDLTemplates  
-from hdl_toolkit.synthetisator.exceptions import SigLvlConfErr
-from hdl_toolkit.synthetisator.assigRenderer import renderIfTree
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hdl_toolkit.synthetisator.rtlLevel.memory import RtlSyncSignal
-from hdl_toolkit.hdlObjects.portItem import PortItem
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.synthesizer.assigRenderer import renderIfTree
+from hdl_toolkit.synthesizer.codeOps import If
+from hdl_toolkit.synthesizer.exceptions import SigLvlConfErr
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.synthesizer.rtlLevel.memory import RtlSyncSignal
+from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import walkUnitInputPorts, walkSignalsInExpr, \
+    discoverDriverSignals, walkSigSouces, signalHasDriver
+from hdl_toolkit.synthesizer.rtlLevel.utils import portItemfromSignal
+from python_toolkit.arrayQuery import where, distinctBy, arr_any
+
 
 def isUnnamedIndex(sig):
     return (hasattr(sig, "origin") and 

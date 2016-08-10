@@ -3,10 +3,10 @@ from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.interfaces.signalOps import SignalOps
-from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthetisator.vectorUtils import getWidthExpr
+from hdl_toolkit.synthesizer.interfaceLevel.interface import Interface
+from hdl_toolkit.synthesizer.param import Param
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr
 
 
 D = DIRECTION
@@ -63,7 +63,7 @@ class Rst(Signal):
 class Rst_n(Signal):
     _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn', 'rst_n' ]
     def _signalsForInterface(self, context, prefix='', typeTransform=lambda x:x):
-        sigs = Signal._signalsForInterface(self, context, prefix, 
+        sigs = Signal._signalsForInterface(self, context, prefix,
                                             typeTransform=typeTransform)
         for s in sigs:
             s.negated = True

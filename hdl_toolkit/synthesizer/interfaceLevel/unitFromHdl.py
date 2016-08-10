@@ -5,11 +5,11 @@ from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.function import Function
 from hdl_toolkit.parser.utils import entityFromFile, loadCntxWithDependencies
 from hdl_toolkit.parser.hdlContext import RequireImportErr
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit
-from hdl_toolkit.synthetisator.interfaceLevel.unitUtils import defaultUnitName
-from hdl_toolkit.synthetisator.interfaceLevel.interface.utils import walkPhysInterfaces
+from hdl_toolkit.synthesizer.param import Param
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
+from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
+from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.interfaces.all import allInterfaces
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.portItem import PortItem

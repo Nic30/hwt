@@ -1,5 +1,5 @@
 from hdl_toolkit.interfaces.std import Clk, s, D
-from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
+from hdl_toolkit.synthesizer.interfaceLevel.interface import Interface
 
 
 class SPI(Interface):

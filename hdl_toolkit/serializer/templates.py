@@ -1,5 +1,7 @@
 from jinja2 import Environment, PackageLoader
-from hdl_toolkit.synthetisator.vhdlCodeWrap import VhdlCodeWrap
+
+from hdl_toolkit.synthesizer.vhdlCodeWrap import VhdlCodeWrap
+
 
 class VHDLTemplates(object):
     '''

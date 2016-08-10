@@ -1,5 +1,5 @@
 
-class BaseHlsSynthetisator():
+class BaseHlsSynthesizer():
     def __init__(self, iLvUnit, ctx, hlsFn):
         """
         @param iLvUnit: interface level unit where is this hlsFn placed
@@ -62,5 +62,5 @@ def hls(fn):
     """
     hls function marker
     """
-    fn._synthetisator = BaseHlsSynthetisator
+    fn._synthesizer = BaseHlsSynthesizer
     return fn
