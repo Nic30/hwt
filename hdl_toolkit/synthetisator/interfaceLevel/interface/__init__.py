@@ -1,25 +1,25 @@
 from copy import copy
 
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
-from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
-
-from hdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
-from hdl_toolkit.synthetisator.interfaceLevel.interface.hdlExtraction import ExtractableInterface
-from hdl_toolkit.synthetisator.interfaceLevel.interface.directionFns import InterfaceDirectionFns 
-from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
-from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
-from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import BIT
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
+from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
+from hdl_toolkit.synthetisator.codeOps import fitTo
+from hdl_toolkit.synthetisator.exceptions import IntfLvlConfErr
+from hdl_toolkit.synthetisator.interfaceLevel.buildable import Buildable
+from hdl_toolkit.synthetisator.interfaceLevel.interface.directionFns import InterfaceDirectionFns 
+from hdl_toolkit.synthetisator.interfaceLevel.interface.hdlExtraction import ExtractableInterface
+from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase 
+from hdl_toolkit.synthetisator.interfaceLevel.propDeclrCollector import PropDeclrCollector 
+from hdl_toolkit.synthetisator.param import Param
 
 
 def aplyIndexOnSignal(sig, dstType, index):
     index = toHVal(index)
     if sig._dtype == BIT or dstType == BIT:
-        return sig[hInt(index)]
+        return sig[index]
     elif isinstance(dstType, Bits):
         w = toHVal(getWidthExpr(dstType))
         return sig[(w * (index + 1)):(w * index)]
@@ -132,7 +132,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
             e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
         
         
-    def _connectToIter(self, master, masterIndex=None, slaveIndex=None, exclude=set()):
+    def _connectToIter(self, master, masterIndex=None, slaveIndex=None, 
+                             exclude=set(), fit=False):
         if self in exclude or master in exclude:
             return
         
@@ -150,13 +151,13 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(ifc), repr(mIfc)))
                     
                     yield from ifc._connectTo(mIfc, masterIndex=masterIndex, slaveIndex=slaveIndex,
-                                                    exclude=exclude)
+                                                    exclude=exclude, fit=fit)
                 else:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(mIfc), repr(ifc)))
                      
                     yield from mIfc._connectTo(ifc, masterIndex=slaveIndex, slaveIndex=masterIndex,
-                                                    exclude=exclude)
+                                                    exclude=exclude, fit=fit)
         else:
             dstSig = toHVal(self)
             srcSig = toHVal(master)
@@ -166,16 +167,21 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
             
             if slaveIndex is not None:
                 dstSig = aplyIndexOnSignal(dstSig, srcSig._dtype, slaveIndex)
-
+                
+            if fit:
+                srcSig = fitTo(srcSig, dstSig)
+            
             yield dstSig._assignFrom(srcSig)
         
             
-    def _connectTo(self, master, masterIndex=None, slaveIndex=None, exclude=set()):
+    def _connectTo(self, master, masterIndex=None, slaveIndex=None,
+                         exclude=set(), fit=False):
         """
         connect to another interface interface (on rtl level)
         works like self <= master in VHDL
         """
-        return list(self._connectToIter(master, masterIndex, slaveIndex, exclude))
+        return list(self._connectToIter(master, masterIndex, slaveIndex,
+                                        exclude, fit))
     
     def _signalsForInterface(self, context, prefix='', typeTransform=lambda x: x):
         """

@@ -186,11 +186,11 @@ class FsmBuilder(StmCntx):
 #    def Do(self, *statements):
 
     
-def _connect(src, dst, exclude):
+def _connect(src, dst, exclude, fit):
         
     if isinstance(src, InterfaceBase):
         if isinstance(dst, InterfaceBase):
-            return dst._connectTo(src, exclude=exclude)
+            return dst._connectTo(src, exclude=exclude, fit=fit)
         src = src._sig
         
     assert not exclude, "this intf. is just a signal"   
@@ -200,15 +200,22 @@ def _connect(src, dst, exclude):
         src = toHVal(src)
         src = src._dtype.convert(src, dst._dtype)
     
+    if fit:
+        src = fitTo(src, dst)
+        
     return [dst._assignFrom(src)]
 
-def connect(src, *destinations, exclude=set()):
+def connect(src, *destinations, exclude=set(), fit=False):
     """
-    Connect all signals/interfaces/calues
+    Connect src (signals/interfaces/values) to all destinations
+    @param exclude: interfaces on any level on src or destinations 
+                which should be excluded from connection process
+    @param fit: auto fit source width to destination width 
     """
     assignemnts = []
     for dst in destinations:
-        assignemnts.extend(_connect(src, dst, exclude))
+        assignemnts.extend(_connect(src, dst, exclude, fit))
+        
     return assignemnts
 
 def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
