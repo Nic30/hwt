@@ -9,7 +9,12 @@ from hdl_toolkit.synthesizer.param import evalParam
 def log2ceil(x):
     if not isinstance(x, (int, float)):
         x = evalParam(x).val
-    return hInt(math.ceil(math.log2(x)))
+    
+    if x == 0 or x == 1:
+        res = 1
+    else:
+        res = math.ceil(math.log2(x))
+    return hInt(res)
 
 def isPow2(num):
     assert isinstance(num, int)
