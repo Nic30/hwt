@@ -1,4 +1,3 @@
-from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
