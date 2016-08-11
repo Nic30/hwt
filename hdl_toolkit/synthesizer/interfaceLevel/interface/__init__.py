@@ -50,10 +50,12 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         This constructor is called when constructing new interface, it is usually done 
         manually while creating Unit or
         automatically while extracting interfaces from UnitWithSoure
-         
-        @param hasExter: if true this interface is specified as interface outside of this unit  
+        @param masterDir: direction which this interface should have for master 
+        @param isExtern: if true this interface is specified as interface outside of this unit  
         @param multiplyedBy: this can be instance of integer or Param, this mean the interface
                          is array of the interfaces where multiplyedBy is the size
+        @param alternativeNames: alternative names which are used for interface extraction from hdl
+        @param loadConfig: do load config in __init__ 
         """
         self._setAttrListener = None
         super().__init__()
