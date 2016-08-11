@@ -4,10 +4,14 @@ from hdl_toolkit.synthesizer.param import Param
 from hdl_toolkit.interfaces.std import s, D
 
 class IPIF(Interface):
+    def _config(self):
+        self.ADDR_WIDTH = Param(32)
+        self.DATA_WIDTH = Param(32)
+        
     def _declr(self):
         # read /write addr
-        self.bus2ip_addr = s(dtype=vecT(32), alternativeNames=["b2i_addr"]) 
-        self.bus2ip_data = s(dtype=vecT(32), alternativeNames=["b2i_data"])
+        self.bus2ip_addr = s(dtype=vecT(self.ADDR_WIDTH), alternativeNames=["b2i_addr"]) 
+        self.bus2ip_data = s(dtype=vecT(self.DATA_WIDTH), alternativeNames=["b2i_data"])
         # byte enable for bus2ip_data
         self.bus2ip_be = s(dtype=vecT(4), alternativeNames=["b2i_be"])
         
@@ -18,7 +22,7 @@ class IPIF(Interface):
         # chip select
         self.bus2ip_cs = s(alternativeNames=["b2i_cs"])
 
-        self.ip2bus_data = s(dtype=vecT(32), masterDir=D.IN, alternativeNames=["i2b_data"]) 
+        self.ip2bus_data = s(dtype=vecT(self.DATA_WIDTH), masterDir=D.IN, alternativeNames=["i2b_data"]) 
         # write ack
         self.ip2bus_wrack = s(masterDir=D.IN, alternativeNames=["i2b_wrack"])
         # read ack
