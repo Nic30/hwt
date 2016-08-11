@@ -49,7 +49,7 @@ class InterfaceDirectionFns():
         elif allS:
             self._direction = INTF_DIRECTION.SLAVE
         else:
-            raise IntfLvlConfErr("Subinterfaces on %s have not consistent directions\n%s" % 
+            raise IntfLvlConfErr("Subinterfaces on %s \nhave not consistent directions\n%s" % 
                     (repr(self), '\n'.join([str((i._direction, repr(i))) for i in self._interfaces])))
         
         
