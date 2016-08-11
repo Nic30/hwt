@@ -118,6 +118,6 @@ def syntaxCheck(unitOrFileName):
     
 def synthesizeAsIpcore(unit, folderName=".", name=None):
     from cli_toolkit.ip_packager.packager import Packager
-    p = Packager(unit)
+    p = Packager(unit, name=name)
     p.createPackage(folderName)
     

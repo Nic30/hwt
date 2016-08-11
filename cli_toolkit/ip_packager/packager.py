@@ -10,10 +10,10 @@ from python_toolkit.fileHelpers import find_files
 
 
 class Packager(object):
-    def __init__(self, topUnit, extraVhdlDirs=[], extraVhdlFiles=[],
+    def __init__(self, topUnit, name=None, extraVhdlDirs=[], extraVhdlFiles=[],
                  extraVerilogFiles=[], extraVerilogDirs=[]):
         self.topUnit = topUnit
-        self.name = defaultUnitName(self.topUnit)
+        self.name = defaultUnitName(self.topUnit, sugestedName=name)
         self.hdlFiles = set()
         
         for d in extraVhdlDirs:
@@ -40,7 +40,7 @@ class Packager(object):
         
         files = self.hdlFiles
         self.hdlFiles = set()
-        self.hdlFiles = set(synthesizeAndSave(self.topUnit, folderName=path))
+        self.hdlFiles = set(synthesizeAndSave(self.topUnit, folderName=path, name=self.name))
 
         for srcF in files:
             dst = os.path.join(path, os.path.relpath(srcF, srcDir).replace('../', ''))
@@ -93,19 +93,19 @@ class Packager(object):
         with open(ip_dir + "component.xml", "w") as f:
             f.write(xml_str)
 
-#def packageMultipleProjects(workspace, names, ipRepo):
+# def packageMultipleProjects(workspace, names, ipRepo):
 #    for folder, name in names.items():
 #        packageVivadoHLSProj(os.path.join(workspace, folder), "solution1", name + ".vhd", ipRepo)
 #        print(folder + " packaged")
 #
-#def packageVivadoHLSProj(projPath, solutionName, mainVhdlFileName, ipRepo):
+# def packageVivadoHLSProj(projPath, solutionName, mainVhdlFileName, ipRepo):
 #    # rm others ip in project
 #    vhdlPath = os.path.join(projPath, solutionName, "syn/vhdl")   
 #    e = entityFromFile(os.path.join(vhdlPath, mainVhdlFileName))
 #    p = Packager(e, [vhdlPath])
 #    p.createPackage(ipRepo)
 #
-#def packageBD(ipRepo, bdPath, repoPath):
+# def packageBD(ipRepo, bdPath, repoPath):
 #    bdName = os.path.basename(bdPath)
 #    bdSourcesDir = os.path.join(bdPath, "hdl")
 #    vhldFolders = []
