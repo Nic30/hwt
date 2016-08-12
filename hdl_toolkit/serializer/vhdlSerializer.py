@@ -139,6 +139,8 @@ class VhdlSerializer():
         extraTypes_serialized = []
         arch.variables.sort(key=lambda x: x.name)
         arch.processes.sort(key=lambda x: x.name)
+        arch.components.sort(key=lambda x: x.name)
+        arch.componentInstances.sort(key=lambda x: x._name)
         
         for v in arch.variables:
             t = v._dtype
@@ -504,7 +506,7 @@ class VhdlSerializer():
             proc.name = scope.checkedName(proc.name, proc)
         
         
-        sensitivityList = list(where(proc.sensitivityList, lambda x : not isinstance(x, Param)))
+        sensitivityList = sorted(where(proc.sensitivityList, lambda x : not isinstance(x, Param)), key=lambda x: x.name)
         
         return VHDLTemplates.process.render({
               "name": proc.name,
