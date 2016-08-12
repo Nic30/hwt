@@ -40,7 +40,9 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     def __init__(self, name, dtype, defaultVal=None):
         if name is None:
             name = "sig_" + str(id(self))
-            self.hasGenericName = True 
+            self.hasGenericName = True
+        else:
+            self.hasGenericName = False  
        
         assert isinstance(dtype, HdlType)
         super().__init__(name, dtype, defaultVal)

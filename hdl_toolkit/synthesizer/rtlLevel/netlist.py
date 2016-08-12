@@ -150,7 +150,10 @@ class RtlNetlist():
             dps = list(where(assigments,
                              lambda x: x.dst == sig)
                        )
-            p = HWProcess("assig_process_" + sig.name)
+            name = ""
+            if not sig.hasGenericName:
+                name = sig.name
+            p = HWProcess("assig_process_" + name)
             # render sequential statements in process
             # (conversion from netlist to statements)
             for stm in renderIfTree(dps):
