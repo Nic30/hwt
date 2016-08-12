@@ -78,7 +78,7 @@ class NameScopeItem(dict):
         
         actual = self
         try:
-            cntrVal = actual.cntrsForPrefixNames[suggestedName, parent]
+            cntrVal = actual.cntrsForPrefixNames[suggestedName]
         except KeyError:
             cntrVal = -1
         
