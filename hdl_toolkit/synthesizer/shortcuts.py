@@ -6,13 +6,13 @@ import hdlConvertor
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.parser.loader import langFromExtension, ParserFileInfo
-from hdl_toolkit.serializer.formater import formatVhdl
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthesizer.vhdlCodeWrap import VhdlCodeWrap
 from python_toolkit.fileHelpers import find_files
+from hdl_toolkit.serializer.exceptions import SerializerException
 
 
 
@@ -27,9 +27,35 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
     u._loadDeclarations()
     if name is not None:
         u._name = name
+    
+    globScope = serializer.getBaseNameScope()
+    codeBuff = []
+    mouduleScopes = {}
+    
+    for x in u._toRtl():
+        if isinstance(x, Entity):
+            s = globScope.fork(1)
+            s.setLevel(2)
+            mouduleScopes[x] = s
+            sc = serializer.Entity(x, s)
+        elif isinstance(x, Architecture):
+            try:
+                s = mouduleScopes[x.entity]
+            except KeyError:
+                raise SerializerException("Entity should be serialized before architecture of %s" % 
+                                          (x.getEntityName()))
+            sc = serializer.Architecture(x, s)
+        elif isinstance(x, VhdlCodeWrap):
+            sc = serializer.asHdl(x)
+        else:
+            raise NotImplementedError("Unexpected object %s" % (repr(x)))
         
-    return formatVhdl(
-                     "\n".join([ serializer.asHdl(x) for x in u._toRtl()])
+        
+        codeBuff.append(sc)
+            
+    
+    return serializer.formater(
+                     "\n".join(codeBuff)
                      )
 
 def synthesised(u):
@@ -42,21 +68,36 @@ def synthesised(u):
     return u
 
 
-def synthesizeAndSave(unit, folderName='.', name=None):
+def synthesizeAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
     unit._loadDeclarations()
     header = None
     os.makedirs(folderName, exist_ok=True)
     files = set()
     if name is not None:
         unit._name = name
-    for o in [ x for x in unit._toRtl()]:
+        
+    globScope = serializer.getBaseNameScope()
+    mouduleScopes = {}
+    
+    for o in unit._toRtl():
         if isinstance(o, VhdlCodeWrap):
             header = o
             fName = None
         elif isinstance(o, Entity):
+            # we need to serialize before we take name, before name can change
+            s = globScope.fork(1)
+            s.setLevel(2)
+            mouduleScopes[o] = s
+            sc = serializer.Entity(o, s)
             fName = o.name + "_ent.vhd"
         elif isinstance(o, Architecture):
-            fName = o.entityName + "_" + o.name + "_arch.vhd"
+            try:
+                s = mouduleScopes[o.entity]
+            except KeyError:
+                raise SerializerException("Entity should be serialized before architecture of %s" % 
+                                          (o.getEntityName()))
+            sc = serializer.Architecture(o, s)
+            fName = o.getEntityName() + "_" + o.name + "_arch.vhd"
         elif isinstance(o, UnitFromHdl):
             fName = None
             for fn in o._hdlSources:
@@ -71,9 +112,10 @@ def synthesizeAndSave(unit, folderName='.', name=None):
             files.add(fp)
             
             with open(fp, 'w') as f:
-                f.write(formatVhdl(
-                     "\n".join([ VhdlSerializer.asHdl(x) for x in [header, o]])
-                        ))
+                f.write(
+                    serializer.formater(
+                        "\n".join([ serializer.asHdl(header), sc])
+                    ))
     return files
 
 def fileSyntaxCheck(fileInfo, timeoutInterval=20):
@@ -93,7 +135,6 @@ def _syntaxCheckUnitFromHdl(u):
 
 
 def syntaxCheck(unitOrFileName):
-    
     if issubclass(unitOrFileName, UnitFromHdl):
         unitOrFileName._buildFileNames()
         _syntaxCheckUnitFromHdl(unitOrFileName)
@@ -116,7 +157,7 @@ def syntaxCheck(unitOrFileName):
     else:
         raise  NotImplementedError("Not implemented for '%'" % (repr(unitOrFileName)))
     
-def synthesizeAsIpcore(unit, folderName=".", name=None):
+def synthesizeAsIpcore(unit, folderName=".", name=None, serializer=VhdlSerializer):
     from cli_toolkit.ip_packager.packager import Packager
     p = Packager(unit, name=name)
     p.createPackage(folderName)

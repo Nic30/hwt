@@ -1,7 +1,7 @@
 
 class HWProcess():
     def __init__(self, name):
-        self.name = name.replace("__", "_")
+        self.name = name
         self.interfaces = {}
         self.statements = []
         self.sensitivityList = set()
@@ -17,4 +17,4 @@ class HWProcess():
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         from hdl_toolkit.serializer.formater import formatVhdl
-        return formatVhdl(VhdlSerializer.HWProcess(self))
+        return formatVhdl(VhdlSerializer.HWProcess(self, {}, {}))

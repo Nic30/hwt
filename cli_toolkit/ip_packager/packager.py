@@ -11,8 +11,10 @@ from python_toolkit.fileHelpers import find_files
 
 class Packager(object):
     def __init__(self, topUnit, name=None, extraVhdlDirs=[], extraVhdlFiles=[],
-                 extraVerilogFiles=[], extraVerilogDirs=[]):
+                 extraVerilogFiles=[], extraVerilogDirs=[],
+                 serializer):
         self.topUnit = topUnit
+        self.serializer = serializer
         self.name = defaultUnitName(self.topUnit, sugestedName=name)
         self.hdlFiles = set()
         
@@ -40,7 +42,7 @@ class Packager(object):
         
         files = self.hdlFiles
         self.hdlFiles = set()
-        self.hdlFiles = set(synthesizeAndSave(self.topUnit, folderName=path, name=self.name))
+        self.hdlFiles = set(synthesizeAndSave(self.topUnit, folderName=path, name=self.name, serializer=self.serializer))
 
         for srcF in files:
             dst = os.path.join(path, os.path.relpath(srcF, srcDir).replace('../', ''))
