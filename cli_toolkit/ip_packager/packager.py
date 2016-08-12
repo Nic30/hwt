@@ -7,12 +7,13 @@ from cli_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFn
 from hdl_toolkit.synthesizer.interfaceLevel.unit import defaultUnitName
 from hdl_toolkit.synthesizer.shortcuts import synthesizeAndSave
 from python_toolkit.fileHelpers import find_files
+from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
 
 
 class Packager(object):
     def __init__(self, topUnit, name=None, extraVhdlDirs=[], extraVhdlFiles=[],
                  extraVerilogFiles=[], extraVerilogDirs=[],
-                 serializer):
+                 serializer=VhdlSerializer):
         self.topUnit = topUnit
         self.serializer = serializer
         self.name = defaultUnitName(self.topUnit, sugestedName=name)
