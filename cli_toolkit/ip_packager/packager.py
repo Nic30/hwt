@@ -85,7 +85,7 @@ class Packager(object):
         self.mkAutoGui()
         
         c = Component()
-        c._files = [relpath(p, ip_dir) for p in self.hdlFiles] \
+        c._files = [relpath(p, ip_dir) for p in sorted(self.hdlFiles)] \
                     + [relpath(guiFile, ip_dir) ]
         c.vendor = "nic"
         c.library = "mylib"
