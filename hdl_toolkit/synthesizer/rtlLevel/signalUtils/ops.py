@@ -121,6 +121,15 @@ class RtlSignalOps():
         
         return o
 
+    def _reversed(self):
+        length = self._dtype.bit_length()
+        concated = None
+        for i in range(length):
+            if i == 0:
+                concated = self[i]
+            else:
+                concated = concated._concat(self[i])
+        return concated
 
     def _concat(self, *operands):
         return self.naryOp(AllOps.CONCAT, tv(self)._concat, *operands)
