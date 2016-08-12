@@ -77,5 +77,10 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
 
 class BramPortAgent(BramPort_withoutClkAgent):
+    def __init__(self, intf, clk=None, rstn=None):
+        if clk is None:
+            clk = intf.clk
+        super().__init__(intf, clk=clk, rstn=rstn)
+        
     def getSubDrivers(self):
         yield oscilate(self.intf.clk)

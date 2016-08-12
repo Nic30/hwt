@@ -5,9 +5,9 @@ import sys
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hdl_toolkit.synthesizer.shortcuts import toRtl
+from hdl_toolkit.hdlObjects.specialValues import Time
 
-
-def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.us):
+def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
     """
     Syntax sugar
     If outputFile is string try to open it as file
@@ -20,7 +20,7 @@ def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.u
         return _simUnitVcd(unit, stimulFunctions, outputFile=outputFile, time=time) 
 
 
-def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.us):
+def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
     """
     @param unit: interface level unit to simulate
     @param stimulFunctions: iterable of function with single param env (simpy environment)
@@ -93,7 +93,7 @@ def afterRisingEdgeNoReset(sig, reset, fn):
     return __afterRisingEdge
 
 
-def oscilate(sig, period=10*HdlSimulator.ns, initWait=0):
+def oscilate(sig, period=10*Time.ns, initWait=0):
     """
     Oscilative driver for your signal
     """
@@ -110,7 +110,7 @@ def oscilate(sig, period=10*HdlSimulator.ns, initWait=0):
     
 
 
-def pullDownAfter(sig, intDelay=6*HdlSimulator.ns):
+def pullDownAfter(sig, intDelay=6*Time.ns):
     def _pullDownAfter(s):
         s.write(True, sig) 
         yield s.wait(intDelay)
@@ -118,7 +118,7 @@ def pullDownAfter(sig, intDelay=6*HdlSimulator.ns):
          
     return _pullDownAfter
     
-def pullUpAfter(sig, intDelay=6*HdlSimulator.ns):
+def pullUpAfter(sig, intDelay=6*Time.ns):
 
     def _pullDownAfter(s):
         s.write(False, sig) 

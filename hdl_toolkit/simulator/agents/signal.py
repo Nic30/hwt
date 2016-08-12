@@ -1,10 +1,9 @@
 from hdl_toolkit.simulator.agents.agentBase import AgentBase
-from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
-ns = HdlSimulator.ns
+from hdl_toolkit.hdlObjects.specialValues import Time
 
 class SignalAgent(AgentBase):
     READER_DELAY = 0.001 # random small value
-    def __init__(self, intf, delay=10*ns):
+    def __init__(self, intf, delay=10*Time.ns):
         self.delay = delay
         self.intf = intf
         self.data = []

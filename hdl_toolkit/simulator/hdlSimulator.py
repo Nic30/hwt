@@ -5,7 +5,6 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
-
 class HdlSimulator(object):
     """
     while True:
@@ -14,12 +13,7 @@ class HdlSimulator(object):
     """
     
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
-    ps = 1
-    ns = 1000
-    us = ns * 1000
-    ms = us * 1000
-    s = ms * 1000
-
+    
     def __init__(self, config=None):
         if config is None:
             config = HdlSimConfig() 
@@ -42,7 +36,6 @@ class HdlSimulator(object):
 
         for v in proc.simEval(self):
             self.valuesToApply.append(v)
-            print(v)
     
     def applyValues(self):
         # [TODO] not ideal, processes should be evaluated before running apply values
@@ -87,6 +80,7 @@ class HdlSimulator(object):
     def _initUnitSignals(self, unit):
         """
         Inject default values to simulation
+        @return: generator of all HWprocess 
         """
         for s in unit._cntx.signals.values():
             if isinstance(s.defaultVal, Value):
@@ -97,12 +91,12 @@ class HdlSimulator(object):
             s.simUpdateVal(self, v)
             
         for u in unit._units:
-            self._initUnitSignals(u)
+            yield from self._initUnitSignals(u)
 
         # in initialization we have to run all processes to resolve static drivers
         # order does not matter, but it has to be after default values are applied
         for p in unit._architecture.processes:
-            self.addHwProcToRun(p)
+            yield p
             
        
     def read(self, sig):
@@ -137,9 +131,7 @@ class HdlSimulator(object):
             self.env.process(self.applyValues())
             self.applyValuesPlaned = True
             
-    r = read    
-    w = write
-        
+
     def wait(self, time):
         return self.env.timeout(time)
     
@@ -148,9 +140,15 @@ class HdlSimulator(object):
         Run simulation
         """
         self.config.beforeSim(self, synthesisedUnit)
-        self._initUnitSignals(synthesisedUnit)  
-       
         for p in extraProcesses:
             self.env.process(p(self))
+        for p in self._initUnitSignals(synthesisedUnit):
+            self.addHwProcToRun(p)  
+       
        
         self.env.run(until=time)
+    
+    # shortcuts
+    r = read    
+    w = write
+        
