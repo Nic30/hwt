@@ -136,31 +136,35 @@ class VhdlSerializer():
         variables = []
         procs = []
         extraTypes = set()
+        extraTypes_serialized = []
         arch.variables.sort(key=lambda x: x.name)
         arch.processes.sort(key=lambda x: x.name)
         
         for v in arch.variables:
+            t = v._dtype
+            # if type requires extra definition
+            if isinstance(t, (Enum, Array)) and t not in extraTypes:
+                extraTypes.add(v._dtype)
+                extraTypes_serialized.append( cls.HdlType(t, scope, declaration=True))
+
             v.name = scope.checkedName(v.name, v)
             serializedVar = cls.SignalItem(v, declaration=True)
             variables.append(serializedVar)
             
-            # if type requires extra definition
-            if isinstance(v._dtype, (Enum, Array)):
-                extraTypes.add(v._dtype)
         
         for p in arch.processes:
             procs.append(cls.HWProcess(p, scope))
         
-        arch.name = scope.checkedName(arch.name, arch, isGlobal=True)    
+        # architecture names can be same for different entities
+        # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)    
              
         return VHDLTemplates.architecture.render({
         "entityName"         :arch.getEntityName(),
         "name"               :arch.name,
         "variables"          :variables,
-        "extraTypes"         :map(lambda typ: cls.HdlType(typ, scope, declaration=True),
-                                   extraTypes),
+        "extraTypes"         :extraTypes_serialized,
         "processes"          :procs,
-        "components"         :map(lambda c: cls.Component(c, scope),
+        "components"         :map(lambda c: cls.Component(c),
                                    arch.components),
         "componentInstances" :map(lambda c: cls.ComponentInstance(c, scope),
                                    arch.componentInstances)
@@ -187,7 +191,8 @@ class VhdlSerializer():
                 })      
 
     @classmethod
-    def ComponentInstance(cls, entity):
+    def ComponentInstance(cls, entity, scope):
+        # [TODO] check if instance name is available in scope
         portMaps = []
         for pi in entity.ports:
             pm = PortMap.fromPortItem(pi)
@@ -249,7 +254,10 @@ class VhdlSerializer():
             if not forceBool or c._dtype == BOOL:
                 return cls.asHdl(c)
             elif c._dtype == BIT:
-                return "(" + cls.asHdl(c) + ")='1'" 
+                return "(" + cls.asHdl(c) + ")=" + cls.BitLiteral(1, 1) 
+            elif isinstance(c._dtype, Bits):
+                width = c._dtype.bit_length()
+                return "(" + cls.asHdl(c) + ")!=" + cls.BitString(0, width)
             else:
                 raise NotImplementedError()
             
@@ -345,7 +353,7 @@ class VhdlSerializer():
     @classmethod
     def BitString(cls, v, width, vldMask=None):
         if vldMask is None:
-            vldMask = width
+            vldMask = Bitmask.mask(width)
         # if can be in hex
         if width % 4 == 0 and vldMask == (1 << width) - 1:
             return ('X"%0' + str(width // 4) + 'x"') % (v)
@@ -442,6 +450,7 @@ class VhdlSerializer():
             typ.name = scope.checkedName(name, typ)
             
             buff.extend(["TYPE ", typ.name.upper(), ' IS ('])
+            # [TODO] check enum values names 
             buff.append(", ".join(typ._allValues))
             buff.append(")")
             return "".join(buff)
@@ -460,7 +469,7 @@ class VhdlSerializer():
             typ.name = scope.checkedName(name, typ)
             
             return "TYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
-                (name, cls.asHdl(toHVal(typ.size) - 1), cls.HdlType(typ.elmType))
+                (typ.name, cls.asHdl(toHVal(typ.size) - 1), cls.HdlType(typ.elmType))
         else:
             try:
                 return typ.name
