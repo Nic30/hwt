@@ -2,7 +2,7 @@ from copy import deepcopy
 import types
 
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from hdl_toolkit.hdlObjects.typeShortcuts import hInt
+from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
@@ -312,5 +312,9 @@ def _mkOp(fn):
 And = _mkOp(lambda top, s: top & s)
 Or = _mkOp(lambda top, s: top | s)
 Concat = _mkOp(lambda top, s: top._concat(s))
+
+# [TODO] sign correct shift
+slr = lambda sig, howMany: vec(0, howMany)._concat(sig[:howMany])
+
 
 c = connect
