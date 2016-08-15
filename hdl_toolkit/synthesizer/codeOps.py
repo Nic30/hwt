@@ -106,6 +106,7 @@ class Switch(StmCntx):
 
 
 def In(sigOrVal, iterable):
+    """Hdl conversible in operator, check if any of items in "iterable" equals "sigOrVal" """
     res = None
     for i in iterable:
         i = toHVal(i)
