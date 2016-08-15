@@ -7,6 +7,7 @@ from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from python_toolkit.arrayQuery import where
+from hdl_toolkit.hdlObjects.types.enum import Enum
 
 
 SWITCH_THRESHOLD = 2  # (max count of elsifs with eq on same variable)
@@ -27,6 +28,7 @@ def _renderIfTree(node):
     render this as switch statement
     """
     assert isinstance(node, IfTreeNode)   
+    
     ifTrue = []
     __renderStatements(node.pos, ifTrue)
     
@@ -86,6 +88,13 @@ def _renderIfTree(node):
                 canBeConvertedToSwitch = True
                     
             if canBeConvertedToSwitch:
+                t = switchOn._dtype
+                # if nothing else and we have enum ad we used all the values
+                if not ifFalse and isinstance(t, Enum) and len(t._allValues) == len(cases):
+                    # convert last to default, because hdl languages usually need this
+                    ifFalse = cases[-1][1]
+                    cases = cases[:-1]
+                    
                 cases.append((None, ifFalse))
             
                 yield SwitchContainer(switchOn, cases)
@@ -119,7 +128,8 @@ def countCondOccurrences(termMap):
         yield (cond, cnt)
 
 def sortCondsByMostImpact(countedConds):
-    for c in sorted(countedConds, key=lambda x: (x[1], isEventDependent(x[0])),
+    # id is used to make sorting more deterministic, but it is not optimal solution
+    for c in sorted(countedConds, key=lambda x: (x[1], isEventDependent(x[0]), id(x[0])),
                      reverse=True):
         yield c[0]
 
@@ -169,9 +179,10 @@ def renderIfTree_afterCondSatisfied(assignments, globalCondOrder):
                     termUsage[c[0]] += 1
                 except KeyError:
                     termUsage[c[0]] = 1
-    
+                    
+    # id is used to make sorting more deterministic, but it is not optimal solution
     topConds = sorted(termUsage.keys(),
-                      key=lambda x: (termUsage[x], globalCondOrder.index(x)),
+                      key=lambda x: (termUsage[x], globalCondOrder.index(x), id(x)),
                       reverse=True)
     if len(topConds) == 0:
         return top 
@@ -183,16 +194,18 @@ def renderIfTree_afterCondSatisfied(assignments, globalCondOrder):
             assignments.remove(a)
             
         # create IfTreeNode for topCond
-        topIf = splitIfTreeOnCond(assignments, topCond, globalCondOrder)
+        topIf = splitIfTreeOnCond(assignments, topCond, topConds[1:])
         return [topIf]
     
 def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
     # in this step we are consuming unresolvedConds and building IfTreeNodes
+
     topPos = []
     topNeg = []
     for a in assignments:
         dependentOnTopCond = list(where(a._unresolvedConds, lambda cond: cond[0] is topCond))
         assert len(dependentOnTopCond) == 0 or len(dependentOnTopCond) == 1
+        
         for _c in dependentOnTopCond:
             a._unresolvedConds.remove(_c)
             
@@ -200,6 +213,7 @@ def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
                 topNeg.append(a)
             else:
                 topPos.append(a)
+                
     if not (len(assignments) == (len(topNeg) + len(topPos))):
         # it seems that there is some statement which is nod depended on topCond, but it should be 
         # filtered earlier
@@ -218,7 +232,6 @@ def renderIfTree(assignments):
     Walk assignments and resolve if tree from conditions
     """
     # condSig:DepContainer
-
 
     
     # register assignments in tree of IfTreeNodes
