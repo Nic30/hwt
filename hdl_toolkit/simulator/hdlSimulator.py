@@ -143,10 +143,11 @@ class HdlSimulator(object):
         
         for p in extraProcesses:
             self.env.process(p(self))
-            
+        
+        # these are usually static assignments
         for p in self._initUnitSignals(synthesisedUnit):
-            pass
-            #self.addHwProcToRun(p)  
+            if not p.sensitivityList: 
+                self.addHwProcToRun(p)  
        
        
         self.env.run(until=time)
