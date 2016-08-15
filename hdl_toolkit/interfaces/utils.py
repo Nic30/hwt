@@ -27,12 +27,12 @@ def binToGray(sigOrVal):
 
 
 def addClkRstn(self):
-    self.clk = Clk(isExtern=True)
-    self.rst_n = Rst_n(isExtern=True)
+    self.clk = Clk()
+    self.rst_n = Rst_n()
 
 def addClkRst(self):
-    self.clk = Clk(isExtern=True)
-    self.rst = Rst(isExtern=True)
+    self.clk = Clk()
+    self.rst = Rst()
 
 
 def _tryConnect(src, unit, intfName):
