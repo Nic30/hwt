@@ -315,6 +315,7 @@ Concat = _mkOp(lambda top, s: top._concat(s))
 
 # [TODO] sign correct shift
 slr = lambda sig, howMany: vec(0, howMany)._concat(sig[:howMany])
+srr = lambda sig, howMany: sig[howMany:]._concat(vec(0, howMany))
 
 
 c = connect
