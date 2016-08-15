@@ -140,10 +140,13 @@ class HdlSimulator(object):
         Run simulation
         """
         self.config.beforeSim(self, synthesisedUnit)
+        
         for p in extraProcesses:
             self.env.process(p(self))
+            
         for p in self._initUnitSignals(synthesisedUnit):
-            self.addHwProcToRun(p)  
+            pass
+            #self.addHwProcToRun(p)  
        
        
         self.env.run(until=time)
