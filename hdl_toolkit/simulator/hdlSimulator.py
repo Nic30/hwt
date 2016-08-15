@@ -5,15 +5,54 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
+
 class HdlSimulator(object):
     """
-    while True:
-        apply values on signals
-        run all processes which were triggered
+    [HOW IT WORKS]
+    
+    Every signal should have single or none driver
+    -> (no conflict resolving is needed (is already done by synthesizer))
+    
+    Every signal is initialized at start with its default value
+    -> (no drove, constant drove solved)
+    
+    Every assignment has it's delay, clock dependent assignments has delay != 0
+    (they should be marked before sim started)
+    -> (memories and register solved)
+    
+    Every signal value changing object (assignment, index...) should on simEval() yield
+       tuple (updateDelayTime, applicator) where applicator is function(oldValue)
+       and returns tuple (newValue, valueHasChangedFlag) 
+    -> (updating value in arrays, structs etc. solved)
+    
+    Every interprocess signal is marked by synthesizer and it can not be directly updated
+       by any process, process should only return tuple (updateDelayTime, applicator)
+       and let simulator to update it for others, any other signals are evaluated as expression
+       by every process
+    every process drives only one signal
+    every process uses sensitivity-list like in other languages (but it is generated automatically)
+    -> (communication between process solved)
+    
+    Hdl processes can not contain any wait statements etc. only simulation processes can.
+    Simulation processes are written in python.
+    -> (using hdl as main simulator driver is not efficient and thats why it is not supported
+        and it is easy to just read hdl process with unsupported statements and translate them to 
+        simulator commands)
+    
+    
+    This simulation is made to check if hsl code behaves the same way as hdl. 
+    It has some limitations from HDL point of view but every single one can be rewritten to supported format.
+    Hdl synthesizer of HWToolkit does it automatically.
+    
+    
+    @ivar updateComplete: this event is triggered when there are not any values to apply in this time
+    @ivar valuesToApply: is container to for quantum of values which should be applied in single time 
+    @ivar env: simpy enviromnment
+    @ivar lastUpdateComplete: time when last apply values ended
+    @ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
     """
     
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
-    
     def __init__(self, config=None):
         if config is None:
             config = HdlSimConfig() 
