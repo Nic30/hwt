@@ -43,19 +43,12 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
     sim.simUnit(unit, time=time, extraProcesses=stimulFunctions) 
 
 
-def afterRisingEdge(sig, fn):
+def onRisingEdge(sig, fn):
     """
     Decorator wrapper
-    
-    usage:
-    @afterRisingEdge(yourUnit.clk)
-    def yourFn(simulator):
-        code which should be executed after rising edge (in the time of rising edge)
-        when all values are set
-    
     """
     isGenerator = inspect.isgeneratorfunction(fn)
-    def __afterRisingEdge(s):
+    def __onRisingEdge(s):
         """
         Process function which always waits on RisingEdge and then runs fn
         """
@@ -67,17 +60,17 @@ def afterRisingEdge(sig, fn):
                     yield from fn(s)
                 else:
                     fn(s)
-    return __afterRisingEdge
+    return __onRisingEdge
 
 
-def afterRisingEdgeNoReset(sig, reset, fn):
+def onRisingEdgeNoReset(sig, reset, fn):
     """
     Decorator wrapper
     
-    same like afterRisingEdge, but activate when reset is not active
+    same like onRisingEdge, but activate when reset is not active
     
     """
-    def __afterRisingEdge(s):
+    def __onRisingEdge(s):
         """
         Process function which always waits on RisingEdge and then runs fn
         """
@@ -90,7 +83,7 @@ def afterRisingEdgeNoReset(sig, reset, fn):
             v = s.read(sig)._onRisingEdge(s.env.now) 
             if bool(v) and not bool(r):
                 fn(s)
-    return __afterRisingEdge
+    return __onRisingEdge
 
 
 def oscilate(sig, period=10*Time.ns, initWait=0):
