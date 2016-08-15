@@ -11,13 +11,12 @@ class ReturnContainer():
     def seqEval(self):
         raise ReturnCalled(self.val.staticEval())       
 
-#def evalCond(cond):
-#    _cond = True
-#    assert isinstance(cond, set)
-#    for c in cond:
-#        _cond = _cond and bool(c.staticEval())
-#        
-#    return _cond
+def seqEvalCond(cond):
+    _cond = True
+    for c in cond:
+        _cond = _cond and bool(c.staticEval())
+        
+    return _cond
 
 def simEvalCond(cond, simulator):
     _cond = True
@@ -69,19 +68,19 @@ class IfContainer():
             for stm in self.ifFalse:
                 yield from IfContainer.evalCase(simulator, stm, condVld)
         
-    #def seqEval(self):
-    #    if evalCond(self.cond):
-    #        for s in self.ifTrue:
-    #            s.seqEval()
-    #    else:
-    #        for c in self.elIfs:
-    #            if evalCond(c[0]):
-    #                for s in c[1]:
-    #                    s.seqEval()
-    #                return
-    #        
-    #        for s in self.ifFalse:
-    #            s.seqEval()
+    def seqEval(self):
+        if seqEvalCond(self.cond):
+            for s in self.ifTrue:
+                s.seqEval()
+        else:
+            for c in self.elIfs:
+                if seqEvalCond(c[0]):
+                    for s in c[1]:
+                        s.seqEval()
+                    return
+            
+            for s in self.ifFalse:
+                s.seqEval()
         
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
@@ -94,6 +93,7 @@ class SwitchContainer():
     def __init__(self, switchOn, cases):
         self.switchOn = switchOn
         self.cases = cases
+    
     def simEval(self, simulator):
         v = self.switchOn.simEval(simulator)
         vld = v.vldMask == v._dtype.all_mask()
@@ -114,6 +114,7 @@ class SwitchContainer():
                       
     def seqEval(self):
         raise NotImplementedError()
+    
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.SwitchContainer(self)
@@ -130,13 +131,7 @@ class WhileContainer():
         raise NotImplementedError()
     
     def seqEval(self):
-        while True:
-            cond = True
-            for c in self.cond:
-                cond = cond and bool(c.staticEval())
-            if not cond:
-                break
-            
+        while seqEvalCond(self.cond):
             for s in self.body:
                 s.seqEval()
 
