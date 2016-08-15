@@ -87,6 +87,8 @@ class SignalOps(object):
     def __sub__(self, other):
         return self._sig.__sub__(other)
     
+    def __mul__(self, other):
+        return self._sig.__mul__(other)
     
     
     # hdl centric
