@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import deepcopy, copy
 import types
 
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
@@ -290,7 +290,10 @@ def packedWidth(intf):
         intf._loadDeclarations()
     elif isinstance(intf, InterfaceBase) and not hasattr(intf, "_interfaces"):
         # not loaded interface
-        intf = deepcopy(intf)
+        _intf = intf
+
+        intf = _intf.__class__()
+        intf._updateParamsFrom(_intf)
         intf._loadDeclarations()
         
     
