@@ -1,4 +1,4 @@
-from hdl_toolkit.hdlObjects.assignment import Assignment
+from hdl_toolkit.hdlObjects.assignment import Assignment, mkArrayUpdater
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType
@@ -14,10 +14,8 @@ from hdl_toolkit.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
 def simEvalIndexedAssign(simulator, indexedOn, index, newVal):
     indxVal = index.simEval(simulator)
     # [TODO] multiple nested indexing in assignment
-    val = indexedOn._val
-    val[indxVal] = newVal
-    
-    indexedOn.simUpdateVal(simulator, lambda v: (True, val))
+    print(simulator.env.now)
+    indexedOn.simUpdateVal(simulator, mkArrayUpdater(newVal, indxVal))
     
 
 class UniqList(list):

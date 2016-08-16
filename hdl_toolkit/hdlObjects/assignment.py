@@ -3,6 +3,16 @@ from hdl_toolkit.simulator.utils import valueHasChanged
 def mkUpdater(nextVal):
     return lambda currentVal: (valueHasChanged(currentVal, nextVal), nextVal)
 
+def mkArrayUpdater(nextItemVal, index):
+    
+    def updater(currentVal):
+        change = valueHasChanged(currentVal[index], nextItemVal)
+        currentVal[index] = nextItemVal
+        return (change, currentVal)
+    
+    return updater
+    
+
 class Assignment():
     """
     Assignment container
