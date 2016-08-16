@@ -4,7 +4,7 @@ import sys
 
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-from hdl_toolkit.synthesizer.shortcuts import toRtl
+from hdl_toolkit.synthesizer.shortcuts import toRtl, synthesised
 from hdl_toolkit.hdlObjects.specialValues import Time
 
 def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
@@ -32,7 +32,7 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
     
     # load implementation of unit
     if not unit._wasSynthetised():
-        toRtl(unit)
+        synthesised(unit)
 
     sim = HdlSimulator()
 

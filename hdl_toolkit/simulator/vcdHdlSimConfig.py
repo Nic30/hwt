@@ -29,6 +29,7 @@ class VcdHdlSimConfig(HdlSimConfig):
         print("%d: Signal.simPropagateChanges %s -> %s" % 
                                         (simulator.env.now, signal.name, str(process.name))
         )
+        
     def vcdRegisterUnit(self, unit):
         with self.vcdWritter.module(unit._name) as m:
             for se in unit._cntx.signals.values():
