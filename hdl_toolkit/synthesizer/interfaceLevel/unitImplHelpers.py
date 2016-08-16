@@ -106,7 +106,7 @@ class UnitImplHelpers(object):
         """
         for parentP in  parent._params:
             try:
-                p = getattr(self, parentP._name)
+                p = getattr(self, parentP._names[parent])
             except AttributeError:
                 continue
             p.set(parentP) 
