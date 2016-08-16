@@ -85,11 +85,23 @@ class BooleanVal(EventCapableVal):
 
     # logic
     def __and__(self, other):
-        # [VHDL-BUG-LIKE] X and 0 should be 0 now is X (in vhdl is now this function correct)
+        # [BUG] X and 0 should be 0 now is X
+        #
+        #  t, n, i  
+        #[[t, n, i], # t
+        # [n, n, n], # n
+        # [i, n, i]  # i
+        #] 
+
         return boolLogOp(self, other, AllOps.AND_LOG)
         
     def __or__(self, other):
-        # [VHDL-BUG-LIKE] X or 1 should be 1 now is X (in vhdl is now this function correct) 
+        # [BUG] X or 1 should be 1 now is X
+        # t,  n, i  
+        #[[t, t, t], # t
+        # [t, n, i], # n
+        # [t, i, i]  # i
+        #] 
         return boolLogOp(self, other, AllOps.OR_LOG)
 
     # for evaluating only, not convertible to hdl
