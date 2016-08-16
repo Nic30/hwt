@@ -17,4 +17,4 @@ class HWProcess():
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         from hdl_toolkit.serializer.formater import formatVhdl
-        return formatVhdl(VhdlSerializer.HWProcess(self, {}, {}))
+        return formatVhdl(VhdlSerializer.HWProcess(self, VhdlSerializer.getBaseNameScope()))
