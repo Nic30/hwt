@@ -259,7 +259,7 @@ class VhdlSerializer():
                 return "(" + cls.asHdl(c) + ")=" + cls.BitLiteral(1, 1) 
             elif isinstance(c._dtype, Bits):
                 width = c._dtype.bit_length()
-                return "(" + cls.asHdl(c) + ")!=" + cls.BitString(0, width)
+                return "(" + cls.asHdl(c) + ")/=" + cls.BitString(0, width)
             else:
                 raise NotImplementedError()
             
