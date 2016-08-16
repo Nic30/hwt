@@ -8,6 +8,7 @@ from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 
 
 def _intfToSig(obj):
@@ -33,13 +34,17 @@ class If(StmCntx):
     """
     Context of if statement
     
-    @param cond: condition in if
-    @param statements: list of statements which should be active if condition is met   
+    @ivar nowIsEventDependent: flag if current scope of if is event dependent
     """
     def __init__(self, cond, *statements):
+        """
+        @param cond: condition in if
+        @param statements: list of statements which should be active if condition is met   
+        """
         self.cond = _intfToSig(cond)
+        self.nowIsEventDependent = bool(list(discoverEventDependency(cond)))
         self.elifConds = []
-        self._appendStatements(set([self.cond,]), statements)
+        self._appendStatements(set([self.cond, ]), statements)
         
     def Else(self, *statements):
         ncond = set()
@@ -57,6 +62,7 @@ class If(StmCntx):
     
     def _appendStatements(self, condSet, statements):
         for stm in flaten(statements):
+            stm.isEventDependent = stm.isEventDependent or self.nowIsEventDependent
             for c in condSet:
                 c.endpoints.append(stm)
             stm.cond.update(condSet)
@@ -64,7 +70,7 @@ class If(StmCntx):
     
     def Elif(self, cond, *statements):
         cond = _intfToSig(cond)
-        
+        self.nowIsEventDependent = self.nowIsEventDependent or bool(list(discoverEventDependency(cond)))
         thisCond = set()
         thisCond.add(~self.cond)
         for c in self.elifConds:
@@ -159,7 +165,7 @@ class FsmBuilder(StmCntx):
                 condition, newvalue = cAndS
             
             # building decision tree    
-            top =   If(condition,
+            top = If(condition,
                         c(newvalue, self.stateReg)
                     ).Else(
                         top
@@ -181,7 +187,7 @@ class FsmBuilder(StmCntx):
         d.stateReg = self.stateReg
         return d
 
-#class While(StmCntx):
+# class While(StmCntx):
 #    def __init__(self, cond):
 #        self.cnd = _intfToSig(cond)
 #    
@@ -270,7 +276,7 @@ def connectUnpacked(src, dst, exclude=[]):
             offset += 1
         else:
             w = getWidthExpr(t)
-            s = src[(w+offset): offset]
+            s = src[(w + offset): offset]
             offset += t.bit_length()
         connections.append(sig._assignFrom(s))
     

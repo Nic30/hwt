@@ -1,5 +1,4 @@
 
-
 class ReturnCalled(Exception):
     def __init__(self, val):
         self.val = val
@@ -20,16 +19,27 @@ def seqEvalCond(cond):
 
 def simEvalCond(cond, simulator):
     _cond = True
-    _vld = 1
+    _vld = True
     for c in cond:
         v = c.simEval(simulator)
-        _cond = _cond and bool(v.val)
-        assert isinstance(v.vldMask, int)
-        _vld &= v.vldMask
+        val = bool(v.val)
+        fullVld = v._isFullVld()
+        if not val and fullVld:
+            return False, True
+        
+        _cond = _cond and val
+        _vld = _vld and fullVld
+        
         
     return _cond, _vld
 
 
+def _invalidated(origUpadater):
+    def __invalidated(val):
+        _, v = origUpadater(val)
+        v.vldMask = 0
+        return True, v
+    return __invalidated
 
 class IfContainer():
     """
@@ -45,7 +55,7 @@ class IfContainer():
     def evalCase(simulator, stm, condVld):
         for r in stm.simEval(simulator):
             if not condVld:
-                r[1].vldMask = 0
+                r = (r[0], _invalidated(r[1]), r[2])
             yield r
     
     def simEval(self, simulator):

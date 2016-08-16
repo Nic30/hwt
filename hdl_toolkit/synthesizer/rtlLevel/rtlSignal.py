@@ -5,7 +5,6 @@ from hdl_toolkit.hdlObjects.types.hdlType import HdlType
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.simulator.exceptions import SimException
-from hdl_toolkit.simulator.utils import valHasChanged
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
@@ -18,7 +17,7 @@ def simEvalIndexedAssign(simulator, indexedOn, index, newVal):
     val = indexedOn._val
     val[indxVal] = newVal
     
-    indexedOn.simUpdateVal(simulator, val, forceUpdate=True)
+    indexedOn.simUpdateVal(simulator, lambda v: (True, val))
     
 
 class UniqList(list):
@@ -55,39 +54,38 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         
         self.simSensitiveProcesses = set()
     
-    def simPropagateChanges(self, simulator, forceUpdate=False):
-        if forceUpdate or valHasChanged(self):
-            self._oldVal = self._val
+    def simPropagateChanges(self, simulator):
+        self._oldVal = self._val
 
-            for e in self.endpoints:
-                if isinstance(e, PortItem) and e.dst is not None:
-                    e.dst.simUpdateVal(simulator, self._val)
-                else:
-                    try:
-                        isIndexing = e.operator == AllOps.INDEX 
-                    except AttributeError:
-                        isIndexing = False
-                    
-                    if isIndexing:
-                        if e.result is self:
-                            # mem[indx] = self
-                            simEvalIndexedAssign(simulator, e.ops[0], e.ops[1], self._val)
-                        else:
-                            #    result = self[index]
-                            # or result = index[self]
-                            resSig = e.result
-                            if resSig.endpoints: 
-                                # because there can be unused operators which can change direction of dataflow
-                                # for example when index is constructed we do not know if assignment will come or not,
-                                # if it comes original operator is left and reversed is constructed
-                                resSig.simEval(simulator)
+        for e in self.endpoints:
+            if isinstance(e, PortItem) and e.dst is not None:
+                e.dst.simUpdateVal(simulator, lambda v: (True, self._val))
+            else:
+                try:
+                    isIndexing = e.operator == AllOps.INDEX 
+                except AttributeError:
+                    isIndexing = False
                 
-            conf = simulator.config
-            for p in self.simSensitiveProcesses:        
-                if conf.logPropagation:
-                    conf.logPropagation(simulator, self, p)
-                    
-                simulator.addHwProcToRun(p)
+                if isIndexing:
+                    if e.result is self:
+                        # mem[indx] = self
+                        simEvalIndexedAssign(simulator, e.ops[0], e.ops[1], self._val)
+                    else:
+                        #    result = self[index]
+                        # or result = index[self]
+                        resSig = e.result
+                        if resSig.endpoints: 
+                            # because there can be unused operators which can change direction of dataflow
+                            # for example when index is constructed we do not know if assignment will come or not,
+                            # if it comes original operator is left and reversed is constructed
+                            resSig.simEval(simulator)
+            
+        log = simulator.config.logPropagation
+        for p in self.simSensitiveProcesses:        
+            if log:
+                log(simulator, self, p)
+                
+            simulator.addHwProcToRun(p, False)
         
     def staticEval(self):
         # operator writes in self._val new value
@@ -123,27 +121,28 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                 pass
             
             d.simEval(simulator)
+            
         if not isinstance(self._val, Value):
             raise SimException("Evaluation of signal returned not supported object (%s)" % 
                                (repr(self._val)))
         return self._val
         
     
-    def simUpdateVal(self, simulator, newVal, forceUpdate=False):
+    def simUpdateVal(self, simulator, valUpdater):
         """
         Method called by simulator to update new value for this object
         """
         
-        if not isinstance(newVal, Value):
-            raise SimException("new value is instance of %s it should be instance of value" % 
-                               (str(newVal.__class__)))
+        dirtyFlag, newVal = valUpdater(self._oldVal)
         self._val = newVal
+        newVal.updateTime = simulator.env.now
         
-        c = simulator.config
-        if  c.logChange:
-            c.logChange(simulator.env.now, self, newVal)
-        
-        self.simPropagateChanges(simulator, forceUpdate=forceUpdate)
+        if dirtyFlag:
+            log = simulator.config.logChange
+            if  log:
+                log(simulator.env.now, self, newVal)
+            
+            self.simPropagateChanges(simulator)
      
     def singleDriver(self):
         """
