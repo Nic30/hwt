@@ -85,6 +85,13 @@ class HdlSimulator(object):
             # print(self.env.now, dst, updater, isEvDependent, proc)
             self.valuesToApply.append((dst, updater, isEvDependent, proc))
     
+    def applyDelayed(self, sig, vUpdater):
+        def dellayedUpadate(sig, vUpdater):
+            yield self.wait(self.EV_DEPENDENCY_SLOWDOWN)
+            sig.simUpdateVal(self, vUpdater)
+            # print(self.env.now, sig, comesFrom, sig._val)
+        self.env.process(dellayedUpadate(sig, vUpdater))
+    
     def applyValues(self):
         # [TODO] not ideal, processes should be evaluated before running apply values
         # this should be done by priority, not by timeout
@@ -107,11 +114,7 @@ class HdlSimulator(object):
         # it should resolve value collision
         for s, vUpdater, isEventDependent, comesFrom in va:
             if isEventDependent:
-                def dellayedUpadate(s, vUpdater):
-                    yield self.wait(self.EV_DEPENDENCY_SLOWDOWN)
-                    s.simUpdateVal(self, vUpdater)
-                    # print(self.env.now, s, comesFrom, s._val)
-                self.env.process(dellayedUpadate(s, vUpdater))
+                self.applyDelayed(s, vUpdater)
             else:
                 s.simUpdateVal(self, vUpdater)
             
