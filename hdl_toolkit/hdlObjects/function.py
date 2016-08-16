@@ -23,6 +23,7 @@ class Function():
 
     def call(self, *args):
         for p, a in zip(self.params, args):
+            a.updateTime = 0
             p._val = a
         
         try:
