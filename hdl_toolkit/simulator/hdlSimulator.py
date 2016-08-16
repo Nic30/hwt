@@ -2,6 +2,7 @@ import math
 import simpy
 
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.assignment import mkUpdater
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthesizer.assigRenderer import isEventDependent
@@ -81,6 +82,7 @@ class HdlSimulator(object):
 
         for v in proc.simEval(self):
             dst, updater, isEvDependent = v
+            # print(self.env.now, dst, updater, isEvDependent, proc)
             self.valuesToApply.append((dst, updater, isEvDependent, proc))
     
     def applyValues(self):
@@ -108,7 +110,7 @@ class HdlSimulator(object):
                 def dellayedUpadate(s, vUpdater):
                     yield self.wait(self.EV_DEPENDENCY_SLOWDOWN)
                     s.simUpdateVal(self, vUpdater)
-                    print(self.env.now, s, comesFrom, s._val)
+                    # print(self.env.now, s, comesFrom, s._val)
                 self.env.process(dellayedUpadate(s, vUpdater))
             else:
                 s.simUpdateVal(self, vUpdater)
@@ -141,7 +143,7 @@ class HdlSimulator(object):
                 v = s.defaultVal.staticEval()
             
             # force update all signals to deafut values and propagate it    
-            s.simUpdateVal(self, lambda x: (True, v))
+            s.simUpdateVal(self, mkUpdater(v))
             
         for u in unit._units:
             yield from self._initUnitSignals(u)
@@ -199,7 +201,7 @@ class HdlSimulator(object):
         for p in self._initUnitSignals(synthesisedUnit):
             if not p.sensitivityList: 
                 self.addHwProcToRun(p, False)  
-       
+        
        
         self.env.run(until=time)
     

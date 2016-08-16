@@ -1,5 +1,7 @@
 from hdl_toolkit.simulator.utils import valueHasChanged
 
+def mkUpdater(nextVal):
+    return lambda currentVal: (valueHasChanged(currentVal, nextVal), nextVal)
 
 class Assignment():
     """
@@ -24,8 +26,8 @@ class Assignment():
         @return: generator of tuple (dst, valueUpdater, isEventDependent)
         """
         nextVal = self.src.simEval(simulator)
-        updater = lambda currentVal: (valueHasChanged(currentVal, nextVal), nextVal)
-        yield (self.dst, updater, self.isEventDependent)
+        
+        yield (self.dst, mkUpdater(nextVal), self.isEventDependent)
         
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
