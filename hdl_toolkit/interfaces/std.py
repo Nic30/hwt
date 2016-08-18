@@ -161,6 +161,9 @@ class FifoReader(FifoWriter):
         self.wait._masterDir = DIRECTION.OUT
 
 class RegCntrl(Interface):
+    """
+    Register control interface
+    """
     def _config(self):
         self.DATA_WIDTH = Param(8)
     
@@ -169,14 +172,5 @@ class RegCntrl(Interface):
         with self._paramsShared():
             self.dout = VldSynced()
 
+
 s = Signal
-  
-# class RGMII_channel(Interface):
-#    def _config(self):
-#        self.DATA_WIDTH = 4
-#        
-#    def _declr(self):
-#        self.c = s()
-#        self.d = s(dtype=vecT(self.DATA_WIDTH))
-#        self.x_ctl = s()
-    
