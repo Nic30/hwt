@@ -161,4 +161,6 @@ def synthesizeAsIpcore(unit, folderName=".", name=None, serializer=VhdlSerialize
     from cli_toolkit.ip_packager.packager import Packager
     p = Packager(unit, name=name)
     p.createPackage(folderName)
+    return p
+    
     
