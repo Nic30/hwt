@@ -1,5 +1,5 @@
-import subprocess
 from subprocess import PIPE, Popen
+import os
 
 DEFAULT_VCOM_PARAMS = ["2008", "explicit", "just p"]
 DEFAULT_VLOG_PARAMS = ["sv"]
@@ -22,10 +22,15 @@ def runVerificationCmd(vhdlFiles, svFiles,
                                           lib,
                                           formatFileNames(vhdlFiles)
                                           )
-    buildSv = "vlog %s -work {%s} %s" % (
+    
+    sv_incdir = set(map(lambda f: "+incdir+" + os.path.basename(f), svFiles))
+    
+    
+    buildSv = "vlog %s -work {%s} %s %s" % (
                                          formatParams(vlogParams),
                                          lib,
-                                         formatFileNames(svFiles)
+                                         formatFileNames(svFiles),
+                                         " ".join(sv_incdir)
                                          )
     
     cmd = """
@@ -64,7 +69,7 @@ def runSVVer(vhdlFiles, systemVerilogSources,
               vcomParams=DEFAULT_VCOM_PARAMS,
               vlogParams=DEFAULT_VLOG_PARAMS):
     
-    verCmd = runVerificationCmd(vhdlFiles, systemVerilogSources, 
+    verCmd = runVerificationCmd(vhdlFiles, systemVerilogSources,
                                 vcomParams, vlogParams)
     p = Popen(VSIM, shell=True, stdin=PIPE)
     print(p.communicate(verCmd.encode(encoding='utf_8')))
