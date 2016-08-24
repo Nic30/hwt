@@ -7,8 +7,8 @@ from cli_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFn
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
 from hdl_toolkit.synthesizer.interfaceLevel.unit import defaultUnitName
 from hdl_toolkit.synthesizer.shortcuts import synthesizeAndSave
+from hdl_toolkit.synthesizer.fileList import FileList
 from python_toolkit.fileHelpers import find_files
-
 
 class Packager(object):
     def __init__(self, topUnit, name=None, extraVhdlDirs=[], extraVhdlFiles=[],
@@ -17,21 +17,22 @@ class Packager(object):
         self.topUnit = topUnit
         self.serializer = serializer
         self.name = defaultUnitName(self.topUnit, sugestedName=name)
-        self.hdlFiles = set()
+        self.hdlFiles = FileList()
         
         for d in extraVhdlDirs:
             for f in find_files(d, "*.vhd"):
-                self.hdlFiles.add(f)
+                self.hdlFiles.append(f)
+                
         for f in extraVhdlFiles:
-            self.hdlFiles.add(f)
+            self.hdlFiles.append(f)
         
         for d in extraVerilogDirs:
             for f in find_files(d, "*.v"):
-                self.hdlFiles.add(f)
+                self.hdlFiles.append(f)
+                
         for f in extraVerilogFiles:
-            self.hdlFiles.add(f)
-        
-        
+            self.hdlFiles.append(f)
+
     def saveHdlFiles(self, srcDir):
         path = os.path.join(srcDir, self.name)
         try: 
@@ -42,14 +43,17 @@ class Packager(object):
             os.makedirs(path)
         
         files = self.hdlFiles
-        self.hdlFiles = set()
-        self.hdlFiles = set(synthesizeAndSave(self.topUnit, folderName=path, name=self.name, serializer=self.serializer))
+        self.hdlFiles = FileList(
+                          synthesizeAndSave(self.topUnit, folderName=path,
+                          name=self.name, serializer=self.serializer)
+                        )
 
         for srcF in files:
-            dst = os.path.join(path, os.path.relpath(srcF, srcDir).replace('../', ''))
+            dst = os.path.join(path, os.path.relpath(srcF, srcDir)\
+                               .replace('../', ''))
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy(srcF, dst)
-            self.hdlFiles.add(dst)
+            self.hdlFiles.append(dst)
             
     def mkAutoGui(self):
         gui = GuiBuilder()

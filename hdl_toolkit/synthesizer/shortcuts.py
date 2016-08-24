@@ -13,6 +13,7 @@ from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthesizer.vhdlCodeWrap import VhdlCodeWrap
 from python_toolkit.fileHelpers import find_files
 from hdl_toolkit.serializer.exceptions import SerializerException
+from hdl_toolkit.synthesizer.fileList import FileList
 
 
 
@@ -72,7 +73,7 @@ def synthesizeAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer
     unit._loadDeclarations()
     header = None
     os.makedirs(folderName, exist_ok=True)
-    files = set()
+    files = FileList()
     if name is not None:
         unit._name = name
         
@@ -103,13 +104,13 @@ def synthesizeAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer
             for fn in o._hdlSources:
                 if isinstance(fn, str):
                     shutil.copy2(fn, folderName)
-                    files.add(fn)
+                    files.append(fn)
         else:
             raise Exception("Do not know how to serialize %s" % (repr(o)))
     
         if fName is not None:
             fp = os.path.join(folderName, fName)
-            files.add(fp)
+            files.append(fp)
             
             with open(fp, 'w') as f:
                 f.write(
