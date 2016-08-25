@@ -113,6 +113,7 @@ class HdlSimulator(object):
         # but each signal should be driven by only one process and
         # it should resolve value collision
         for s, vUpdater, isEventDependent, comesFrom in va:
+            print(s)
             if isEventDependent:
                 self.applyDelayed(s, vUpdater)
             else:

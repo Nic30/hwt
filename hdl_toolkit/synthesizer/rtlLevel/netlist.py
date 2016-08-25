@@ -2,7 +2,6 @@ from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.process import HWProcess
 from hdl_toolkit.hdlObjects.types.defs import BIT
@@ -21,11 +20,6 @@ from hdl_toolkit.synthesizer.rtlLevel.utils import portItemfromSignal
 from python_toolkit.arrayQuery import where, distinctBy, arr_any
 
 
-def isUnnamedIndex(sig):
-    return (hasattr(sig, "origin") and 
-            sig.origin.operator == AllOps.INDEX and
-            sig.hasGenericName)
-        
 def isSignalHiddenInExpr(sig):
     """Some signals are just only connections in expression they done need to be rendered because
     they are hidden inside expression for example sig. from a+b in a+b+c"""
@@ -38,7 +32,7 @@ def isSignalHiddenInExpr(sig):
     except MultipleDriversExc:
         pass
         
-    return isUnnamedIndex(sig)
+    return False
 
 class RtlNetlist():
     """
@@ -128,12 +122,16 @@ class RtlNetlist():
                 elif isinstance(node, Assignment):
                     for s in walkSignalsInExpr(node.src):
                         discoverDatapaths(s)
-                    assert isinstance(node.cond, set)
+
                     for c in node.cond:
                         for s in  walkSignalsInExpr(c):
                             discoverDatapaths(s)
+                    if node.indexes:
+                        for i in node.indexes:
+                            walkSigSouces(i)
+                    
                 else:
-                    raise NotImplementedError()
+                    raise NotImplementedError(node)
                         
             if signal in interfaces:
                 self.startsOfDataPaths.add(signal)
@@ -153,30 +151,30 @@ class RtlNetlist():
             name = ""
             if not sig.hasGenericName:
                 name = sig.name
-            p = HWProcess("assig_process_" + name)
             # render sequential statements in process
             # (conversion from netlist to statements)
             for stm in renderIfTree(dps):
-                p.statements.append(stm) 
-
-            for dp in dps:
-                sensitivity = list(discoverDriverSignals(dp))
-                isEventDependentProc = arr_any(sensitivity, lambda x: x[0])
-                for evDependent, s in sensitivity:
-                    # resolve process boundaries and mark them 
-                    # and resolve visibility for signals  
-                    s.hidden = False
-                    if s.name not in self.signals:
-                        self.signals[s.name] = s
-                    
-                    if (evDependent and isEventDependentProc) \
-                        or not isEventDependentProc:
-                        # register sensitivity    
-                        p.sensitivityList.add(s)
-                        s.simSensitiveProcesses.add(p)
+                p = HWProcess("assig_process_" + name)
+                p.statements.append(stm)
+                # [TODO] sensitity list from dps which are covered by stm
+                for dp in dps:
+                    sensitivity = list(discoverDriverSignals(dp))
+                    isEventDependentProc = arr_any(sensitivity, lambda x: x[0])
+                    for evDependent, s in sensitivity:
+                        # resolve process boundaries and mark them 
+                        # and resolve visibility for signals  
+                        s.hidden = False
+                        if s.name not in self.signals:
+                            self.signals[s.name] = s
+                        
+                        if (evDependent and isEventDependentProc) \
+                            or not isEventDependentProc:
+                            # register sensitivity    
+                            p.sensitivityList.add(s)
+                            s.simSensitiveProcesses.add(p)
+                
             
-            
-            yield p
+                yield p
 
     def synthesize(self, interfaces):
         ent = Entity(self.name)

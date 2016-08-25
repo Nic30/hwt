@@ -16,13 +16,8 @@ def signalHasDriver(sig):
 
 def walkSignalDrivers(sig):
     def assign2Me(ep):
-        if isinstance(ep, Assignment) and ep.dst is sig:
+        if isinstance(ep, Assignment):
             return True
-        elif isinstance(ep, Operator) and ep.operator == AllOps.INDEX:
-            if sig is ep.ops[0]:
-                return signalHasDriver(ep.result)
-            else:
-                return signalHasDriver(ep.ops[0])
         elif isinstance(ep, PortItem) and ep.dst is sig: 
             return True
         else:
@@ -183,9 +178,6 @@ def walkSigSouces(sig, parent=None):
                     yield e
             elif isinstance(e, Assignment) and not e.src is sig:
                 yield e
-            elif isinstance(e, Operator) and e.operator == AllOps.INDEX:
-                if e in sig.drivers:
-                    yield from walkSigSouces(e.result, sig)   
             else:
                 yield from walkSigSouces(e, sig)
     else:

@@ -62,21 +62,13 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                 try:
                     isIndexing = e.operator == AllOps.INDEX 
                 except AttributeError:
-                    isIndexing = False
+                    continue
                 
                 if isIndexing:
-                    if e.result is self:
-                        # mem[indx] = self
-                        simEvalIndexedAssign(simulator, e.ops[0], e.ops[1], self._val)
-                    else:
-                        #    result = self[index]
-                        # or result = index[self]
-                        resSig = e.result
-                        if resSig.endpoints: 
-                            # because there can be unused operators which can change direction of dataflow
-                            # for example when index is constructed we do not know if assignment will come or not,
-                            # if it comes original operator is left and reversed is constructed
-                            resSig.simEval(simulator)
+                    assert e.result is self
+                    # mem[indx] = self
+                    simEvalIndexedAssign(simulator, e.ops[0], e.ops[1], self._val)
+
             
         log = simulator.config.logPropagation
         for p in self.simSensitiveProcesses:        
@@ -110,13 +102,6 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         for d in self.drivers:
             if isinstance(d, Assignment):
                 continue
-            try:
-                o = d.operator
-                # if I am not driven by this index
-                if o == AllOps.INDEX and d.result is not self:
-                    continue
-            except AttributeError:
-                pass
             
             d.simEval(simulator)
             

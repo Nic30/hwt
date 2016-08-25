@@ -174,12 +174,18 @@ class VhdlSerializer():
    
     @classmethod
     def Assignment(cls, a):
-        if a.dst._dtype == a.src._dtype:
-            return "%s <= %s" % (cls.asHdl(a.dst), cls.Value(a.src))
+        dst = a.dst
+        if a.indexes is not None:
+            for i in a.indexes:
+                dst = dst[i]   
+            
+            
+        if dst._dtype == a.src._dtype:
+            return "%s <= %s" % (cls.asHdl(dst), cls.Value(a.src))
         else:
-            raise SerializerException("%s <= %s  is not valid assignment because types are different(%s; %s) " % 
-                             (cls.asHdl(a.dst), cls.Value(a.src), repr(a.dst._dtype), repr(a.src._dtype)))
-    
+            raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
+                         (cls.asHdl(dst), cls.Value(a.src), repr(a.dst._dtype), repr(a.src._dtype)))
+        
     @classmethod
     def comment(cls, comentStr):
         return "--" + comentStr.replace("\n", "\n--")

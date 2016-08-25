@@ -4,7 +4,6 @@ def mkUpdater(nextVal):
     return lambda currentVal: (valueHasChanged(currentVal, nextVal), nextVal)
 
 def mkArrayUpdater(nextItemVal, index):
-    
     def updater(currentVal):
         change = valueHasChanged(currentVal[index], nextItemVal)
         currentVal[index] = nextItemVal
@@ -21,11 +20,15 @@ class Assignment():
     @ivar cond: set of terms if all them are evaluated to True,
                 assignment is active
     @ivar condRes: tmp variable for simPropagateChanges
+    @ivar indexes: description of index selector on dst (list of Index/Slice objects)
+                    (f.e. [[0], [1]] means  dst[0][1]  )
+    
     """
-    def __init__(self, src, dst):
+    def __init__(self, src, dst, indexes=None):
         self.src = src
         self.dst = dst
         self.isEventDependent = False
+        self.indexes = indexes
         self.cond = set()
         
     def seqEval(self):

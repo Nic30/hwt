@@ -138,33 +138,43 @@ class RtlSignalOps():
     def _ternary(self, ifTrue, ifFalse):
         return self.naryOp(AllOps.TERNARY, tv(self)._ternary, ifTrue, ifFalse)
     
-    def _tryMyIndexToEndpoint(self):
+    def _getIndexCascade(self):
         """
-        Try if I now drive index operator which was my driver.
+        Find out if this signal is something indexed
         """
-        from hdl_toolkit.hdlObjects.operator import Operator # [TODO] import like this is not ideal
         try:
             # now I am result of the index  xxx[xx] <= source
             # get index op
             d = self.singleDriver()
-            if isinstance(d, Operator) and d.operator == AllOps.INDEX:
+            try:
+                op = d.operator
+            except AttributeError:
+                op = None
+            if op == AllOps.INDEX:
                 # get signal on which is index applied
                 indexedOn = d.ops[0]
                 if isinstance(indexedOn, RtlSignalBase):
-                    d = d.asDrived()
-                    self = d.result
+                    # [TODO] multidimensional indexing
+                    return indexedOn, [d.ops[1]]
                 else:
-                    raise Exception("can not drive static value")
+                    raise Exception("can not drive static value %s" % repr(indexedOn))
+                
         except MultipleDriversExc:
             pass
         
-        return self
     
     def _assignFrom(self, source):
         source = toHVal(source)
-        self = self._tryMyIndexToEndpoint()
-        a = Assignment(source, self)
-        a.cond = set()
+ 
+        tmp = self._getIndexCascade()
+        if tmp:
+            mainSig, indexCascade = tmp
+            self = mainSig
+        else:
+            indexCascade = None
+            
+        # self = self._tryMyIndexToEndpoint()
+        a = Assignment(source, self, indexCascade)
         
         self.drivers.append(a)
         if not isinstance(source, Value):

@@ -27,7 +27,7 @@ def _renderIfTree(node):
     if number of elsifs is higher than SWITCH_THRESHOLD and all conditions are if format signal == value
     render this as switch statement
     """
-    assert isinstance(node, IfTreeNode)   
+    assert isinstance(node, IfTreeNode), node  
     
     ifTrue = []
     __renderStatements(node.pos, ifTrue)
@@ -194,37 +194,51 @@ def renderIfTree_afterCondSatisfied(assignments, globalCondOrder):
             assignments.remove(a)
             
         # create IfTreeNode for topCond
-        topIf = splitIfTreeOnCond(assignments, topCond, topConds[1:])
-        return [topIf]
+        ifs = []
+        topIf, notDependent = splitIfTreeOnCond(assignments, topCond, topConds[1:])
+        ifs.append(topIf)
+        if notDependent:
+            _ifs = renderIfTree_afterCondSatisfied(notDependent, globalCondOrder)
+            ifs.extend(_ifs)
+            
+        return ifs
     
 def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
     # in this step we are consuming unresolvedConds and building IfTreeNodes
 
     topPos = []
     topNeg = []
+    notDependent = []
     for a in assignments:
         dependentOnTopCond = list(where(a._unresolvedConds, lambda cond: cond[0] is topCond))
-        assert len(dependentOnTopCond) == 0 or len(dependentOnTopCond) == 1
+        l = len(dependentOnTopCond)
         
-        for _c in dependentOnTopCond:
+        if l == 0:
+            notDependent.append(a)
+        elif l == 1:
+            _c = dependentOnTopCond[0]
             a._unresolvedConds.remove(_c)
             
             if _c[1]:
                 topNeg.append(a)
             else:
                 topPos.append(a)
-                
-    if not (len(assignments) == (len(topNeg) + len(topPos))):
-        # it seems that there is some statement which is nod depended on topCond, but it should be 
-        # filtered earlier
-        raise AssertionError(("got assignments %s and topCond %s \n for neg resolved %s,\n" + 
-                             " for pos resolved %s\n" + 
-                             "something lost or duplicited in statement renderer") 
-                             % (str(assignments), str(topCond), str(topNeg), str(topPos)))
+        else:
+            raise NotImplementedError()     
+    #if not (len(assignments) == (len(topNeg) + len(topPos))):
+    #    # it seems that there is some statement which is nod depended on topCond, but it should be 
+    #    # filtered earlier
+    #    raise AssertionError(("got assignments %s and topCond %s \n for neg resolved %s,\n" + 
+    #                         " for pos resolved %s\n" + 
+    #                         "something lost or duplicited in statement renderer") 
+    #                         % (str(assignments), str(topCond), str(topNeg), str(topPos)))
+    if len(topPos) + len(topNeg) == 0:
+        raise AssertionError("Something should be dependent")
+    
     top = IfTreeNode(topCond)
     top.pos = renderIfTree_afterCondSatisfied(topPos, globalCondOrder)
     top.neg = renderIfTree_afterCondSatisfied(topNeg, globalCondOrder)
-    return top
+    return top, notDependent
 
 
 def renderIfTree(assignments):
@@ -246,9 +260,11 @@ def renderIfTree(assignments):
     if condOrder:
         # split assignments on most important condition
         topCond = condOrder[0]
-        top = splitIfTreeOnCond(assignments, topCond, condOrder)
+        top, notDependent = splitIfTreeOnCond(assignments, topCond, condOrder)
         
         yield from _renderIfTree(top)
+        if notDependent:
+            yield from renderIfTree(notDependent)
     else:
         # none of assignments has condition no If or switch is needed
         yield from assignments
