@@ -23,21 +23,23 @@ from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from python_toolkit.arrayQuery import arr_any, where
 from hdl_toolkit.serializer.formater import formatVhdl
+from hdl_toolkit.hdlObjects.types.slice import Slice
+from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
 
 
 VHLD_KEYWORDS = [
 "abs", "access", "across", "after", "alias", "all", "and", "architecture", "array",
-"assert", "attribute", "begin", "block", "body", "break", "bugger", "bus", "case", 
+"assert", "attribute", "begin", "block", "body", "break", "bugger", "bus", "case",
 "component", "configuration", "constant", "disconnect", "downto", "end", "entity",
 "else", "elsif", "exit", "file", "for", "function", "generate", "generic", "group",
 "guarded", "if", "impure", "in", "inertial", "inout", "is", "label", "library", "limit",
 "linkage", "literal", "loop", "map", "mod", "nand", "nature", "new", "next", "noise",
 "nor", "not", "null", "of", "on", "open", "or", "others", "out", "package", "port",
-"postponed", "process", "procedure", "procedural", "pure", "quantity", "range", 
-"reverse_range", "reject", "rem", "record","reference",  "register", "report", "return",
-"rol", "ror", "select", "severity", "shared", "signal", "sla", "sll", "spectrum", "sra", 
+"postponed", "process", "procedure", "procedural", "pure", "quantity", "range",
+"reverse_range", "reject", "rem", "record", "reference", "register", "report", "return",
+"rol", "ror", "select", "severity", "shared", "signal", "sla", "sll", "spectrum", "sra",
 "srl", "subnature", "subtype", "terminal", "then", "through", "to", "tolerance", "transport",
-"type", "unaffected", "units", "until", "use", "variable", "wait", "with", "when", "while", 
+"type", "unaffected", "units", "until", "use", "variable", "wait", "with", "when", "while",
 "xnor", "xor"]        
 
 
@@ -147,7 +149,7 @@ class VhdlSerializer():
             # if type requires extra definition
             if isinstance(t, (Enum, Array)) and t not in extraTypes:
                 extraTypes.add(v._dtype)
-                extraTypes_serialized.append( cls.HdlType(t, scope, declaration=True))
+                extraTypes_serialized.append(cls.HdlType(t, scope, declaration=True))
 
             v.name = scope.checkedName(v.name, v)
             serializedVar = cls.SignalItem(v, declaration=True)
@@ -177,6 +179,9 @@ class VhdlSerializer():
         dst = a.dst
         if a.indexes is not None:
             for i in a.indexes:
+                if isinstance(i, SliceVal):
+                    i = i.clone()
+                    i.val = (i.val[0] + 1, i.val[1])
                 dst = dst[i]   
             
             
@@ -184,7 +189,7 @@ class VhdlSerializer():
             return "%s <= %s" % (cls.asHdl(dst), cls.Value(a.src))
         else:
             raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
-                         (cls.asHdl(dst), cls.Value(a.src), repr(a.dst._dtype), repr(a.src._dtype)))
+                         (cls.asHdl(dst), cls.Value(a.src), repr(dst._dtype), repr(a.src._dtype)))
         
     @classmethod
     def comment(cls, comentStr):
