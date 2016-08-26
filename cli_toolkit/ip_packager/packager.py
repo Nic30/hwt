@@ -1,33 +1,38 @@
 import os, shutil
 from os.path import relpath
 
-from python_toolkit.fileHelpers import find_files
-from hdl_toolkit.synthetisator.interfaceLevel.unit import defaultUnitName
-from hdl_toolkit.synthetisator.shortcuts import synthetizeAndSave
 from cli_toolkit.ip_packager.component import Component
 from cli_toolkit.ip_packager.helpers import prettify
 from cli_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
+from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.synthesizer.interfaceLevel.unit import defaultUnitName
+from hdl_toolkit.synthesizer.shortcuts import synthesizeAndSave
+from hdl_toolkit.synthesizer.fileList import FileList
+from python_toolkit.fileHelpers import find_files
 
 class Packager(object):
-    def __init__(self, topUnit, extraVhdlDirs=[], extraVhdlFiles=[],
-                 extraVerilogFiles=[], extraVerilogDirs=[]):
+    def __init__(self, topUnit, name=None, extraVhdlDirs=[], extraVhdlFiles=[],
+                 extraVerilogFiles=[], extraVerilogDirs=[],
+                 serializer=VhdlSerializer):
         self.topUnit = topUnit
-        self.name = defaultUnitName(self.topUnit)
-        self.hdlFiles = set()
+        self.serializer = serializer
+        self.name = defaultUnitName(self.topUnit, sugestedName=name)
+        self.hdlFiles = FileList()
         
         for d in extraVhdlDirs:
             for f in find_files(d, "*.vhd"):
-                self.hdlFiles.add(f)
+                self.hdlFiles.append(f)
+                
         for f in extraVhdlFiles:
-            self.hdlFiles.add(f)
+            self.hdlFiles.append(f)
         
         for d in extraVerilogDirs:
             for f in find_files(d, "*.v"):
-                self.hdlFiles.add(f)
+                self.hdlFiles.append(f)
+                
         for f in extraVerilogFiles:
-            self.hdlFiles.add(f)
-        
-        
+            self.hdlFiles.append(f)
+
     def saveHdlFiles(self, srcDir):
         path = os.path.join(srcDir, self.name)
         try: 
@@ -38,14 +43,17 @@ class Packager(object):
             os.makedirs(path)
         
         files = self.hdlFiles
-        self.hdlFiles = set()
-        self.hdlFiles = set(synthetizeAndSave(self.topUnit, folderName=path))
+        self.hdlFiles = FileList(
+                          synthesizeAndSave(self.topUnit, folderName=path,
+                          name=self.name, serializer=self.serializer)
+                        )
 
         for srcF in files:
-            dst = os.path.join(path, os.path.relpath(srcF, srcDir).replace('../', ''))
+            dst = os.path.join(path, os.path.relpath(srcF, srcDir)\
+                               .replace('../', ''))
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy(srcF, dst)
-            self.hdlFiles.add(dst)
+            self.hdlFiles.append(dst)
             
     def mkAutoGui(self):
         gui = GuiBuilder()
@@ -81,7 +89,7 @@ class Packager(object):
         self.mkAutoGui()
         
         c = Component()
-        c._files = [relpath(p, ip_dir) for p in self.hdlFiles] \
+        c._files = [relpath(p, ip_dir) for p in sorted(self.hdlFiles)] \
                     + [relpath(guiFile, ip_dir) ]
         c.vendor = "nic"
         c.library = "mylib"
@@ -92,19 +100,19 @@ class Packager(object):
         with open(ip_dir + "component.xml", "w") as f:
             f.write(xml_str)
 
-#def packageMultipleProjects(workspace, names, ipRepo):
+# def packageMultipleProjects(workspace, names, ipRepo):
 #    for folder, name in names.items():
 #        packageVivadoHLSProj(os.path.join(workspace, folder), "solution1", name + ".vhd", ipRepo)
 #        print(folder + " packaged")
 #
-#def packageVivadoHLSProj(projPath, solutionName, mainVhdlFileName, ipRepo):
+# def packageVivadoHLSProj(projPath, solutionName, mainVhdlFileName, ipRepo):
 #    # rm others ip in project
 #    vhdlPath = os.path.join(projPath, solutionName, "syn/vhdl")   
 #    e = entityFromFile(os.path.join(vhdlPath, mainVhdlFileName))
 #    p = Packager(e, [vhdlPath])
 #    p.createPackage(ipRepo)
 #
-#def packageBD(ipRepo, bdPath, repoPath):
+# def packageBD(ipRepo, bdPath, repoPath):
 #    bdName = os.path.basename(bdPath)
 #    bdSourcesDir = os.path.join(bdPath, "hdl")
 #    vhldFolders = []

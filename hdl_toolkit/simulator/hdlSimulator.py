@@ -2,53 +2,106 @@ import math
 import simpy
 
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.hdlObjects.assignment import mkUpdater
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
-
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.synthesizer.assigRenderer import isEventDependent
+from hdl_toolkit.simulator.utils import valueHasChanged
 
 
 class HdlSimulator(object):
     """
-    while True:
-        apply values on signals
-        run all processes which were tiggered
+    [HOW IT WORKS]
+    
+    Every signal should have single or none driver
+    -> (no conflict resolving is needed (is already done by synthesizer))
+    
+    Every signal is initialized at start with its default value
+    -> (no drove, constant drove solved)
+    
+    Every assignment has it's delay, clock dependent assignments has delay != 0
+    (they should be marked before sim started)
+    -> (memories and register solved)
+    
+    Every signal value changing object (assignment, index...) should on simEval() yield
+       tuple (updateDelayTime, applicator) where applicator is function(oldValue)
+       and returns tuple (newValue, valueHasChangedFlag) 
+    -> (updating value in arrays, structs etc. solved)
+    
+    Every interprocess signal is marked by synthesizer and it can not be directly updated
+       by any process, process should only return tuple (updateDelayTime, applicator)
+       and let simulator to update it for others, any other signals are evaluated as expression
+       by every process
+    every process drives only one signal
+    every process uses sensitivity-list like in other languages (but it is generated automatically)
+    -> (communication between process solved)
+    
+    Hdl processes can not contain any wait statements etc. only simulation processes can.
+    Simulation processes are written in python.
+    -> (using hdl as main simulator driver is not efficient and thats why it is not supported
+        and it is easy to just read hdl process with unsupported statements and translate them to 
+        simulator commands)
+    
+    
+    This simulation is made to check if hsl code behaves the same way as hdl. 
+    It has some limitations from HDL point of view but every single one can be rewritten to supported format.
+    Hdl synthesizer of HWToolkit does it automatically.
+    
+    
+    @ivar updateComplete: this event is triggered when there are not any values to apply in this time
+    @ivar valuesToApply: is container to for quantum of values which should be applied in single time 
+    @ivar env: simpy enviromnment
+    @ivar lastUpdateComplete: time when last apply values ended
+    @ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
     """
+    # time after values which are event dependent will be applied
+    # this is random number smaller than any clock
+    EV_DEPENDENCY_SLOWDOWN = 1
     
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
-    ps = 1
-    ns = 1000
-    us = ns * 1000
-    ms = us * 1000
-    s = ms * 1000
-
     def __init__(self, config=None):
         if config is None:
             config = HdlSimConfig() 
+            
         self.config = config
         self.env = simpy.Environment()
         self.updateComplete = self.env.event()
-        self.lastUpdateComplete = -10 # something lower than -1 (-1 has static values)
+        self.lastUpdateComplete = -2
         self.applyValuesPlaned = False
         
         # (signal, value) tupes which should be applied before new round of processes
         #  will be executed
         self.valuesToApply = []
+        self.delayedValuesToApply = []
     
-    def addHwProcToRun(self, proc):
+    def addHwProcToRun(self, proc, applyImmediately):
         # first process in time has to plan executing of apply values on the end of this time
-        if not self.applyValuesPlaned:
+        if not applyImmediately and not self.applyValuesPlaned:
             # (apply in future)
             self.env.process(self.applyValues())
             self.applyValuesPlaned = True
 
         for v in proc.simEval(self):
-            self.valuesToApply.append(v)
+            dst, updater, isEvDependent = v
+            # print(self.env.now, dst, updater, isEvDependent, proc)
+            self.valuesToApply.append((dst, updater, isEvDependent, proc))
+    
+    def applyDelayed(self, sig, vUpdater):
+        def dellayedUpadate(sig, vUpdater):
+            yield self.wait(self.EV_DEPENDENCY_SLOWDOWN)
+            sig.simUpdateVal(self, vUpdater)
+            # print(self.env.now, sig, comesFrom, sig._val)
+        self.env.process(dellayedUpadate(sig, vUpdater))
     
     def applyValues(self):
-        # [TODO] not ideal, processes should be evaluated before runing apply values
+        # [TODO] not ideal, processes should be evaluated before running apply values
         # this should be done by priority, not by timeout
-        # (currently cant gen scipy working with priorities)
+        # (currently can't get scipy working with priorities)
+        print("applyValues enter", self.env.now)
         yield self.wait(0)
+        if self.env.now == 1:
+            raise 1
+        
         va = self.valuesToApply
         
         # log if there are items to log
@@ -60,10 +113,14 @@ class HdlSimulator(object):
         # apply values to signals, values can overwrite each other
         # but each signal should be driven by only one process and
         # it should resolve value collision
-        for s, v in va:
-            v.updateTime = self.env.now
-            s.simUpdateVal(self, v)
-                
+        for s, vUpdater, isEventDependent, comesFrom in va:
+            print(s)
+            if isEventDependent:
+                self.applyDelayed(s, vUpdater)
+            else:
+                s.simUpdateVal(self, vUpdater)
+            
+            
         # processes triggered from simUpdateVal can add nev values
         if self.valuesToApply:
             yield from self.applyValues()
@@ -76,38 +133,31 @@ class HdlSimulator(object):
             self.updateComplete.succeed()  # trigger
             self.updateComplete = self.env.event()  # regenerate event
             self.lastUpdateComplete = now
-        #else:
-        #    if nextEventT == now:
-        #        # if there is some process in this time and we have to let it finish
-        #        yield self.env.process(self.applyValues())
-        #        return
-            
+ 
         self.applyValuesPlaned = False 
            
     def _initUnitSignals(self, unit):
         """
         Inject default values to simulation
+        @return: generator of all HWprocess 
         """
         for s in unit._cntx.signals.values():
             if isinstance(s.defaultVal, Value):
                 v = s.defaultVal.clone()
             else:
                 v = s.defaultVal.staticEval()
-                
-            s.simUpdateVal(self, v)
+            
+            # force update all signals to deafut values and propagate it    
+            s.simUpdateVal(self, mkUpdater(v))
             
         for u in unit._units:
-            self._initUnitSignals(u)
+            yield from self._initUnitSignals(u)
 
         # in initialization we have to run all processes to resolve static drivers
         # order does not matter, but it has to be after default values are applied
         for p in unit._architecture.processes:
-            self.addHwProcToRun(p)
-            
-    def r(self, sig):
-        "read shortcut"
-        return self.read(sig)
-        
+            yield p
+              
     def read(self, sig):
         """
         Read value from signal or interface
@@ -116,11 +166,6 @@ class HdlSimulator(object):
             sig = sig._sigInside
         return sig._val.clone()
     
-    
-    def w(self, val, sig):
-        "write shortcut"
-        self.write(val, sig) 
-           
     def write(self, val, sig):
         """
         Write value to signal or interface.
@@ -136,7 +181,7 @@ class HdlSimulator(object):
 
         v = v._convert(sig._dtype)
         
-        sig.simUpdateVal(self, v)
+        sig.simUpdateVal(self, lambda curentV: (valueHasChanged(curentV, v), v))
         
         if not sig.simSensitiveProcesses and not self.applyValuesPlaned:
             # in some cases simulation process can wait on all values applied
@@ -145,7 +190,6 @@ class HdlSimulator(object):
             self.env.process(self.applyValues())
             self.applyValuesPlaned = True
             
-        
     def wait(self, time):
         return self.env.timeout(time)
     
@@ -154,9 +198,19 @@ class HdlSimulator(object):
         Run simulation
         """
         self.config.beforeSim(self, synthesisedUnit)
-        self._initUnitSignals(synthesisedUnit)  
-       
+        
         for p in extraProcesses:
             self.env.process(p(self))
+        
+        # these are usually static assignments
+        for p in self._initUnitSignals(synthesisedUnit):
+            if not p.sensitivityList: 
+                self.addHwProcToRun(p, False)  
+        
        
         self.env.run(until=time)
+    
+    # shortcuts
+    r = read    
+    w = write
+        

@@ -1,5 +1,4 @@
 
-
 class ReturnCalled(Exception):
     def __init__(self, val):
         self.val = val
@@ -11,26 +10,36 @@ class ReturnContainer():
     def seqEval(self):
         raise ReturnCalled(self.val.staticEval())       
 
-#def evalCond(cond):
-#    _cond = True
-#    assert isinstance(cond, set)
-#    for c in cond:
-#        _cond = _cond and bool(c.staticEval())
-#        
-#    return _cond
+def seqEvalCond(cond):
+    _cond = True
+    for c in cond:
+        _cond = _cond and bool(c.staticEval())
+        
+    return _cond
 
 def simEvalCond(cond, simulator):
     _cond = True
-    _vld = 1
+    _vld = True
     for c in cond:
         v = c.simEval(simulator)
-        _cond = _cond and bool(v.val)
-        assert isinstance(v.vldMask, int)
-        _vld &= v.vldMask
+        val = bool(v.val)
+        fullVld = v._isFullVld()
+        if not val and fullVld:
+            return False, True
+        
+        _cond = _cond and val
+        _vld = _vld and fullVld
+        
         
     return _cond, _vld
 
 
+def _invalidated(origUpadater):
+    def __invalidated(val):
+        _, v = origUpadater(val)
+        v.vldMask = 0
+        return True, v
+    return __invalidated
 
 class IfContainer():
     """
@@ -46,7 +55,7 @@ class IfContainer():
     def evalCase(simulator, stm, condVld):
         for r in stm.simEval(simulator):
             if not condVld:
-                r[1].vldMask = 0
+                r = (r[0], _invalidated(r[1]), r[2])
             yield r
     
     def simEval(self, simulator):
@@ -69,19 +78,19 @@ class IfContainer():
             for stm in self.ifFalse:
                 yield from IfContainer.evalCase(simulator, stm, condVld)
         
-    #def seqEval(self):
-    #    if evalCond(self.cond):
-    #        for s in self.ifTrue:
-    #            s.seqEval()
-    #    else:
-    #        for c in self.elIfs:
-    #            if evalCond(c[0]):
-    #                for s in c[1]:
-    #                    s.seqEval()
-    #                return
-    #        
-    #        for s in self.ifFalse:
-    #            s.seqEval()
+    def seqEval(self):
+        if seqEvalCond(self.cond):
+            for s in self.ifTrue:
+                s.seqEval()
+        else:
+            for c in self.elIfs:
+                if seqEvalCond(c[0]):
+                    for s in c[1]:
+                        s.seqEval()
+                    return
+            
+            for s in self.ifFalse:
+                s.seqEval()
         
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
@@ -94,6 +103,7 @@ class SwitchContainer():
     def __init__(self, switchOn, cases):
         self.switchOn = switchOn
         self.cases = cases
+    
     def simEval(self, simulator):
         v = self.switchOn.simEval(simulator)
         vld = v.vldMask == v._dtype.all_mask()
@@ -114,6 +124,7 @@ class SwitchContainer():
                       
     def seqEval(self):
         raise NotImplementedError()
+    
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.SwitchContainer(self)
@@ -130,12 +141,12 @@ class WhileContainer():
         raise NotImplementedError()
     
     def seqEval(self):
-        while True:
-            cond = True
-            for c in self.cond:
-                cond = cond and bool(c.staticEval())
-            if not cond:
-                break
-            
+        while seqEvalCond(self.cond):
             for s in self.body:
                 s.seqEval()
+
+class WaitStm():
+    def __init__(self, waitForWhat):
+        self.isTimeWait = isinstance(waitForWhat, int)
+        self.waitForWhat = waitForWhat
+        

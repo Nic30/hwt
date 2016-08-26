@@ -1,7 +1,8 @@
-from hdl_toolkit.hdlObjects.types.defs import INT, BOOL, STR, BIT
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import INT, BOOL, STR, BIT
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.synthetisator.param import evalParam
+from hdl_toolkit.synthesizer.param import evalParam
+
 
 # create hdl integer value (for example integer value in vhdl)
 hInt = lambda val: INT.fromPy(val)

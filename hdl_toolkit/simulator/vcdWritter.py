@@ -1,12 +1,12 @@
 
 from functools import wraps
-from datetime import datetime
 import sys
+
+from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.boolean import Boolean
+from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
 
-from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.hdlObjects.types.boolean import Boolean
-from hdl_toolkit.hdlObjects.types.bits import Bits
 
 class UnsupportedTypeExec(Exception):
     pass
@@ -141,24 +141,6 @@ class VcdWritter():
             frmt = "b%s %s" 
             
         return frmt % (val, varInfo.id)
-    
-if __name__ == "__main__":
-    from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal
-    from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hBit, vec
-
-    log = VcdWritter()
-    log.date(datetime.now())
-    with log.module("module0") as m:
-        s1 = RtlSignal('s1', BIT)
-        s2 = RtlSignal('s2', vecT(3))
-        m.var(s1)
-        m.var(s2)
-    log.enddefinitions()
-    
-    log.change(0, s1, hBit(0))
-    log.change(10000, s2, vec(0, 3))
-    log.change(10000, s1, hBit(1))
-    log.change(20000, s1, hBit(0))
     
     
     

@@ -1,9 +1,10 @@
 from flask import render_template, request, jsonify
 from flask.blueprints import Blueprint
 import json, importlib, sys, os, glob
-from hdl_toolkit.synthetisator.interfaceLevel.unit import Unit 
-from hls_connections import serializeUnit 
+
 from connectionsJsonObj import FSEntry, jsonResp 
+from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit 
+from hls_connections import serializeUnit 
 
 
 WORKSPACE_DIR = "../hdl_toolkit/samples/" 

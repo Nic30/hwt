@@ -87,9 +87,17 @@ class SignalOps(object):
     def __sub__(self, other):
         return self._sig.__sub__(other)
     
+    def __mul__(self, other):
+        return self._sig.__mul__(other)
     
     
     # hdl centric
+    def _reversed(self):
+        """
+        reverse bitorder 
+        """
+        return self._sig._reversed()
+    
     def _concat(self, *operands):
         """
         concatenate signals to one big one. works like & in vhdl

@@ -1,8 +1,10 @@
 
 from hdl_toolkit.hdlObjects.types.defs import INT, STR, BOOL
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.hdlObjects.variables import SignalItem
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
+
+
 defaultConversions = {int: INT,
                       str: STR,
                       bool: BOOL}

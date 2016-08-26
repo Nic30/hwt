@@ -1,8 +1,9 @@
 from hdl_toolkit.interfaces.std import Handshaked
-from hdl_toolkit.serializer.formater import formatVhdl
 from hdl_toolkit.intfLvl import Unit
+from hdl_toolkit.serializer.formater import formatVhdl
+from hls_toolkit.baseSynthesizer import hls
 from hls_toolkit.codeObjs import FsmNode
-from hls_toolkit.baseSynthetisator import hls
+
 
 class HlsHs(Handshaked):
     def __init__(self, *args, **kwargs):

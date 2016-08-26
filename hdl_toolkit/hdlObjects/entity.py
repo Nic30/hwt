@@ -11,5 +11,5 @@ class Entity(object):
 
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
-        return VhdlSerializer.Entity(self)
+        return VhdlSerializer.Entity(self, VhdlSerializer.getBaseNameScope())
     

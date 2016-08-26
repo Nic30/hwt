@@ -4,10 +4,10 @@ import sys
 
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-from hdl_toolkit.synthetisator.shortcuts import toRtl
+from hdl_toolkit.synthesizer.shortcuts import toRtl, synthesised
+from hdl_toolkit.hdlObjects.specialValues import Time
 
-
-def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.us):
+def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
     """
     Syntax sugar
     If outputFile is string try to open it as file
@@ -20,7 +20,7 @@ def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.u
         return _simUnitVcd(unit, stimulFunctions, outputFile=outputFile, time=time) 
 
 
-def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.us):
+def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
     """
     @param unit: interface level unit to simulate
     @param stimulFunctions: iterable of function with single param env (simpy environment)
@@ -32,7 +32,7 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.
     
     # load implementation of unit
     if not unit._wasSynthetised():
-        toRtl(unit)
+        synthesised(unit)
 
     sim = HdlSimulator()
 
@@ -43,19 +43,12 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=HdlSimulator.
     sim.simUnit(unit, time=time, extraProcesses=stimulFunctions) 
 
 
-def afterRisingEdge(sig, fn):
+def onRisingEdge(sig, fn):
     """
     Decorator wrapper
-    
-    usage:
-    @afterRisingEdge(yourUnit.clk)
-    def yourFn(simulator):
-        code which should be executed after rising edge (in the time of rising edge)
-        when all values are set
-    
     """
     isGenerator = inspect.isgeneratorfunction(fn)
-    def __afterRisingEdge(s):
+    def __onRisingEdge(s):
         """
         Process function which always waits on RisingEdge and then runs fn
         """
@@ -67,17 +60,17 @@ def afterRisingEdge(sig, fn):
                     yield from fn(s)
                 else:
                     fn(s)
-    return __afterRisingEdge
+    return __onRisingEdge
 
 
-def afterRisingEdgeNoReset(sig, reset, fn):
+def onRisingEdgeNoReset(sig, reset, fn):
     """
     Decorator wrapper
     
-    same like afterRisingEdge, but activate when reset is not active
+    same like onRisingEdge, but activate when reset is not active
     
     """
-    def __afterRisingEdge(s):
+    def __onRisingEdge(s):
         """
         Process function which always waits on RisingEdge and then runs fn
         """
@@ -90,10 +83,10 @@ def afterRisingEdgeNoReset(sig, reset, fn):
             v = s.read(sig)._onRisingEdge(s.env.now) 
             if bool(v) and not bool(r):
                 fn(s)
-    return __afterRisingEdge
+    return __onRisingEdge
 
 
-def oscilate(sig, period=10*HdlSimulator.ns, initWait=0):
+def oscilate(sig, period=10*Time.ns, initWait=0):
     """
     Oscilative driver for your signal
     """
@@ -110,7 +103,7 @@ def oscilate(sig, period=10*HdlSimulator.ns, initWait=0):
     
 
 
-def pullDownAfter(sig, intDelay=6*HdlSimulator.ns):
+def pullDownAfter(sig, intDelay=6*Time.ns):
     def _pullDownAfter(s):
         s.write(True, sig) 
         yield s.wait(intDelay)
@@ -118,7 +111,7 @@ def pullDownAfter(sig, intDelay=6*HdlSimulator.ns):
          
     return _pullDownAfter
     
-def pullUpAfter(sig, intDelay=6*HdlSimulator.ns):
+def pullUpAfter(sig, intDelay=6*Time.ns):
 
     def _pullDownAfter(s):
         s.write(False, sig) 

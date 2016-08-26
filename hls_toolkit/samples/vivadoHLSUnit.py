@@ -1,5 +1,5 @@
+from hdl_toolkit.synthesizer.shortcuts import toRtl
 from hls_toolkit.vivadoHLS.unit import VivadoHLSUnit
-from hdl_toolkit.synthetisator.shortcuts import synthetizeCls
 
 
 class ExactMatcher(VivadoHLSUnit):
@@ -8,5 +8,5 @@ class ExactMatcher(VivadoHLSUnit):
     
     
 if __name__ == "__main__":
-    print(synthetizeCls(ExactMatcher))
+    print(toRtl(ExactMatcher))
     print(ExactMatcher._entity)

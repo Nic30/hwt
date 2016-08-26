@@ -4,8 +4,8 @@ from hdl_toolkit.hdlObjects.types.defs import BOOL, INT
 from hdl_toolkit.hdlObjects.types.slice import Slice
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.synthetisator.param import evalParam
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.param import evalParam
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 class ArrayVal(Value):
     """

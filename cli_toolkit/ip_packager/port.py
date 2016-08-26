@@ -1,12 +1,12 @@
-from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.hdlObjects.typeShortcuts import hInt
-from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
 from cli_toolkit.ip_packager.helpers import appendSpiElem, \
          findS, mkSpiElm, ns
-from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import BIT
+from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+
 
 class WireTypeDef():
     _requiredVal = ["typeName"]
@@ -55,14 +55,17 @@ class Port():
         t = port.type
         dt = p._dtype
         
-        t.typeName = dt.name.upper()
+        
+        t.typeName = VhdlSerializer.HdlType(dt)
+        try:
+            t.typeName = t.typeName[:t.typeName.index('(')]
+        except ValueError:
+            pass
+        
         if dt == BIT:
             port.vector = False
         elif isinstance(dt, Bits):
-            c = dt.constrain.origin
-            assert(isinstance(c, Operator) and c.operator == AllOps.DOWNTO)
-            
-            port.vector = (c.ops[0], c.ops[1])
+            port.vector = dt.constrain.staticEval().val
         t.viewNameRefs = ["xilinx_vhdlsynthesis", "xilinx_vhdlbehavioralsimulation"]
         return port
     

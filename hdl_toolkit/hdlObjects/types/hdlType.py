@@ -1,5 +1,6 @@
-from hdl_toolkit.synthetisator.exceptions import TypeConversionErr
 from hdl_toolkit.serializer.exceptions import SerializerException
+from hdl_toolkit.synthesizer.exceptions import TypeConversionErr
+
 
 class InvalidVHDLTypeExc(Exception):
     def __init__(self, vhdlType):

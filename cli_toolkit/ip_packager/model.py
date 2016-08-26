@@ -56,8 +56,10 @@ class ModelParameter():
     def fromGeneric(cls, g):
         val = Value.fromGeneric("MODELPARAM_VALUE.", g, Value.RESOLVE_GENERATED)
         return cls(g.name, g.name.replace("_", " "), VivadoTclExpressionSerializer.HdlType(g._dtype).lower(), val)
+    
     def asElem(self):
         e = mkSpiElm("modelParameter")
+        e.attrib["spirit:dataType"] = self.datatype
         appendStrElements(e, self,
                           reqPropNames=['name', "displayName"])
         e.append(self.value.asElem())

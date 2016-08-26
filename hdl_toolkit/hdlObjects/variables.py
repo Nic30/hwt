@@ -1,6 +1,8 @@
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
-class VHDLVariable():
+
+class SignalItem(object):
+    """basic hdl signal"""
     def __init__(self, name, dtype, defaultVal=None):
         self.name = name
         self._dtype = dtype
@@ -18,13 +20,6 @@ class VHDLVariable():
         self._oldVal = self._val.clone()
         self._oldVal.vldMask = 0
     
-    def __repr__(self):
-        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
-        return VhdlSerializer.VHDLVariable(self)        
-            
-            
-class SignalItem(VHDLVariable):
-    """basic vhdl signal"""
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.SignalItem(self)        

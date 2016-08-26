@@ -1,11 +1,13 @@
+# [TODO] mv to hwtLib
 from hdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
 from cli_toolkit.vivado.api import portmapXdcForUnit, walkEachBitOnUnit
 from cli_toolkit.vivado.xdcGen import IoStandard
 from cli_toolkit.shortcuts import buildUnit
 
 
+
 if __name__ == "__main__":
-    unit = SimpleUnit2()
+    u = SimpleUnit2()
     def getConstrains(unit):
         def r(row, start, last):
             a = []
@@ -33,7 +35,7 @@ if __name__ == "__main__":
     # print(portMap)
     # for xdc in xdcForUnit(unit, portMap):
     #    print(xdc.asTcl())
-    r = buildUnit(unit, getConstrains=getConstrains)
+    r = buildUnit(u, getConstrains=getConstrains)
     
     print("Bitstream is in file %s" % (r.bitstreamFile))
     

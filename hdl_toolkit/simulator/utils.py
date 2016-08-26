@@ -1,5 +1,3 @@
 
-def valHasChanged(sig):
-    o = sig._oldVal
-    n = sig._val
-    return n.val != o.val or n.vldMask != o.vldMask
+def valueHasChanged(valA, valB):
+    return valA.val != valB.val or valA.vldMask != valB.vldMask

@@ -37,7 +37,7 @@ class Value():
         self.resolve = resolve
         t = g._dtype
         def getVal():
-            if g.defaultVal:
+            if g.defaultVal is not None and g.defaultVal.vldMask:
                 return g.defaultVal.staticEval().val
             else:
                 return 0  

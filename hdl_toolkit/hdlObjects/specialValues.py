@@ -55,3 +55,10 @@ class DIRECTION():
         else:
             raise Exception("Parameter is not direction")
             
+
+class Time():
+    ps = 1
+    ns = 1000
+    us = ns * 1000
+    ms = us * 1000
+    s = ms * 1000

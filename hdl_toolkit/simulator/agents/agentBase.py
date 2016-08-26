@@ -1,4 +1,4 @@
-from hdl_toolkit.simulator.shortcuts import afterRisingEdge
+from hdl_toolkit.simulator.shortcuts import onRisingEdge
 
 class AgentBase():
     def __init__(self, intf):
@@ -59,5 +59,5 @@ class SyncAgentBase(AgentBase):
             self.rst_n = rstn
 
         
-        self.monitor = afterRisingEdge(self.clk, self.monitor)
-        self.driver = afterRisingEdge(self.clk, self.driver)
+        self.monitor = onRisingEdge(self.clk, self.monitor)
+        self.driver = onRisingEdge(self.clk, self.driver)

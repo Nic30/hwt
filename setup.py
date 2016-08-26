@@ -10,7 +10,7 @@ setup(name='hwtoolkit',
       author='Michal Orsak',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
-        'myhdl',  # optional hls synthetisator (but used in some samples)
+        'myhdl',  # optional hls synthesizer (but used in some samples)
         'Pillow', # altium scheme reader
         'simpy',  # discrete simulator 
         'jinja2', # hdl templates renderer, visualizer renderer

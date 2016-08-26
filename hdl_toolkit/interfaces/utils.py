@@ -1,11 +1,20 @@
 import math
+
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
-from hdl_toolkit.synthetisator.param import evalParam
 from hdl_toolkit.interfaces.std import Clk, Rst_n, Rst
-from hdl_toolkit.synthetisator.codeOps import Concat, connect
+from hdl_toolkit.synthesizer.codeOps import Concat, connect
+from hdl_toolkit.synthesizer.param import evalParam
 
 
-log2ceil = lambda x:hInt(math.ceil(math.log2(evalParam(x).val)))
+def log2ceil(x):
+    if not isinstance(x, (int, float)):
+        x = evalParam(x).val
+    
+    if x == 0 or x == 1:
+        res = 1
+    else:
+        res = math.ceil(math.log2(x))
+    return hInt(res)
 
 def isPow2(num):
     assert isinstance(num, int)
@@ -18,12 +27,12 @@ def binToGray(sigOrVal):
 
 
 def addClkRstn(self):
-    self.clk = Clk(isExtern=True)
-    self.rst_n = Rst_n(isExtern=True)
+    self.clk = Clk()
+    self.rst_n = Rst_n()
 
 def addClkRst(self):
-    self.clk = Clk(isExtern=True)
-    self.rst = Rst(isExtern=True)
+    self.clk = Clk()
+    self.rst = Rst()
 
 
 def _tryConnect(src, unit, intfName):

@@ -1,4 +1,5 @@
 from copy import copy
+
 import hdlConvertor
 from python_toolkit.arrayQuery import arr_any
 from hdl_toolkit.parser.referenceCollector import collectReferences

@@ -12,9 +12,9 @@ from hdl_toolkit.hdlObjects.types.integerVal import IntegerVal
 from hdl_toolkit.hdlObjects.types.slice import Slice
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.value import Value, areValues
-from hdl_toolkit.synthetisator.interfaceLevel.mainBases import InterfaceBase
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthetisator.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 
 BoolVal = BOOL.getValueCls()
@@ -49,7 +49,7 @@ def bitsCmp(self, other, op, evalFn=None):
         elif isinstance(other._dtype, Integer):
             other = other._convert(self._dtype) 
         else:
-            raise NotImplementedError("Types are not comparable (%s, %s)" % (repr(self._dtype), repr(other._dtype)))
+            raise TypeError("Types are not comparable (%s, %s)" % (repr(self._dtype), repr(other._dtype)))
         
         return Operator.withRes(op, [self, other], BOOL) 
 
@@ -77,7 +77,7 @@ def bitsBitOp(self, other, op):
         elif self._dtype == other._dtype:
             pass
         else:
-            raise NotImplementedError("Types are not comparable (%s, %s)" %
+            raise TypeError("Types are not comparable (%s, %s)" % 
                                        (repr(self._dtype), repr(other._dtype)))
         
         return Operator.withRes(op, [self, other], self._dtype) 
@@ -112,7 +112,7 @@ def bitsArithOp(self, other, op):
         elif isinstance(other._dtype, Integer):
             pass
         else:
-            raise NotImplementedError("%s %s %s" % (repr(self), repr(op) , repr(other)))
+            raise TypeError("%s %s %s" % (repr(self), repr(op) , repr(other)))
         
         o = Operator.withRes(op, [self, other], self._dtype)
         return o._convert(resT)
@@ -123,6 +123,14 @@ def boundryFromType(sigOrVal, boundaryIndex):
         return c.val[boundaryIndex]
     else:  # downto / to
         return c.singleDriver().ops[boundaryIndex]
+
+def getMulResT(firstT, secondT):
+    if isinstance(secondT, Integer):
+        raise NotImplementedError()
+    
+    width = firstT.bit_length() + secondT.bit_length()
+    return vecT(width, firstT.signed)
+    
 
 class BitsVal(EventCapableVal):
     """
@@ -192,6 +200,12 @@ class BitsVal(EventCapableVal):
             # is instance of signal
             if isinstance(other, InterfaceBase):
                 other = other._sig
+            if isinstance(other._dtype, Bits):
+                pass
+            elif other._dtype == BOOL:
+                other = other._convert(BIT)
+            else:
+                raise TypeError(other._dtype)
             return Operator.withRes(AllOps.CONCAT, [self, other], resT)
     
     def __getitem__(self, key):
@@ -224,7 +238,7 @@ class BitsVal(EventCapableVal):
                 retT = vecT(size, signed=self._dtype.signed)
                 return BitsVal(val, retT, vld, updateTime=updateTime)
             else:
-                raise NotImplementedError(key)
+                raise TypeError(key)
             
         elif isSlice or isSLICE:
             if isSlice:
@@ -267,10 +281,10 @@ class BitsVal(EventCapableVal):
                 resT = BIT
                 key = key._convert(INT)
             else:
-                raise NotImplementedError("Index operation not implemented for index of type %s" % (repr(t)))
+                raise TypeError("Index operation not implemented for index of type %s" % (repr(t)))
        
         else:
-            raise NotImplementedError("Index operation not implemented for index %s" % (repr(key)))
+            raise TypeError("Index operation not implemented for index %s" % (repr(key)))
             
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
@@ -287,7 +301,7 @@ class BitsVal(EventCapableVal):
                 self.val = Bitmask.setBitRange(self.val, noOfFirstBit, size, value.val)
                 self.vldMask = Bitmask.setBitRange(self.vldMask, noOfFirstBit, size, value.vldMask)
             else:
-                raise NotImplementedError("Not implemented for index %s" % repr(index))
+                raise TypeError("Not implemented for index %s" % repr(index))
             self.updateTime = max(index.updateTime, value.updateTime)
         else:
             self.vldMask = 0
@@ -342,6 +356,45 @@ class BitsVal(EventCapableVal):
 
     def __add__(self, other):
         return bitsArithOp(self, other, AllOps.ADD)
-            
     
+    def __mul__(self, other):        
+        other = toHVal(other)
+        assert isinstance(other._dtype, (Integer, Bits))
+        
+        resT = getMulResT(self._dtype, other._dtype)
+        if areValues(self, other):
+            val = self.val * other.val
+            result = resT.fromPy(val)
+            
+            raise NotImplementedError() 
+            ## [TODO] value check range
+            #if isinstance(other._dtype, Integer):
+            #    if other.vldMask:
+            #        v.vldMask = self.vldMask
+            #    else:
+            #        v.vldMask = 0
+            #
+            #elif isinstance(other._dtype, Bits):
+            #    v.vldMask = self.vldMask & other.vldMask
+            #else:
+            #    raise TypeError("Incompatible type for multiplication: %s" % (repr(other._dtype)))
+            ## [TODO] correct overflow detection for signed values
+            #w = v._dtype.bit_length()
+            #v.val &= Bitmask.mask(2*w)
+            #v.updateTime = max(self.updateTime, other.updateTime)
+            #return v
+        
+        else:
+            if self._dtype.signed is None:
+                self = self._unsigned()
+            if isinstance(other._dtype, Bits) and other._dtype.signed is None:
+                other = other._unsigned() 
+            elif isinstance(other._dtype, Integer):
+                pass
+            else:
+                raise TypeError("%s %s %s" % (repr(self), repr(op) , repr(other)))
+            
+            subResT = vecT(resT.bit_length(), self._dtype.signed)
+            o = Operator.withRes(AllOps.MUL, [self, other], subResT)
+            return o._convert(resT)
         

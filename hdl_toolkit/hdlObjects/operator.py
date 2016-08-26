@@ -1,9 +1,9 @@
 from copy import deepcopy
-from hdl_toolkit.synthetisator.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase 
-from hdl_toolkit.hdlObjects.value import Value
+
 from hdl_toolkit.hdlObjects.function import Function
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlMemoryBase
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase 
+
 
 class InvalidOperandExc(Exception):
     pass
@@ -15,79 +15,12 @@ class Operator():
     @ivar evalFn: function to evaluate this operator
     @ivar operator: OpDefinition instance 
     @ivar result: result signal of this operator
-    @ivar __reversed: used in operators which can change direction of data-flow, for example indexing,
-                this is reference on same operator with reversed direction
     """
     def __init__(self, operator, operands):
         self.ops = list(operands)
         self.operator = operator
         self.result = None
         self._isDriver = True
-        self._reversed = None
-        
-        
-    def asDrived(self):
-        """
-        Used in index (operators which can change data-flow direction in process of building netlist)
-        xx[x] = result vs result = xx[x]
-
-        @return: operator variant which is driven by result
-        
-        - drivers/endpoints for netlist walking
-        
-        - index created as driven by result by default  (result = xx[x])
-        - index should be reversed on assignment to it  (-> xx[x] = result )
-        - operators are cached for each signal          
-        - reversing operation has to keep other uses of this op as they are
-        - sync signal should on reverse replace itself with next signal 
-        
-        
-        """
-        if not self._isDriver:
-            return self
-        
-        
-        
-        if self._reversed is None:
-            # create op with changed direction (result -> ops)
-            # result = indexedOn[xxx]  to indexedOn[xxx] = result
-            indexedOn = self.ops[0]
-            if isinstance(indexedOn, RtlMemoryBase): # [TODO] this logic should be in RtlMemory
-                indexedOn = indexedOn.next
-                
-            index = self.ops[1]
-            
-            rev = self._reversed = Operator(self.operator, [indexedOn, index])
-            rev._isDriver = False
-            rev._reversed = self
-            
-            # wrap it with result signal
-            out = RtlSignal(None, self.result._dtype)
-            out.endpoints.append(rev)
-            out.origin = rev
-            rev.result = out
-            rev.registerSignals([indexedOn])
-            
-            
-        return self._reversed
-        
-    
-    def asDriver(self):
-        """
-        Used in index (operators which can change data-flow direction in process of building netlist)
-        xx[x] = result vs result = xx[x]
-        
-        @return: operator variant which is driving result
-        """
-        if self._isDriver:
-            return self
-        
-        if self._reversed is None:
-            raise Exception("Reversed op should have been already instantiated")
-            # because all operators should be drivers by default
-        else:
-            raise self._reversed
-        
             
     def registerSignals(self, outputs=[]):
         """
@@ -110,27 +43,19 @@ class Operator():
         Recursively statistically evaluate result of this operator
         if signal has not set hidden flag do not reevaluate it
         """
-        if self.operator == AllOps.INDEX and self in self.result.endpoints:
-            # this should not be evaluated because it is part of assignments like xx[xx] =
-            # this will be evaluated when assignment is active
-            raise NotImplementedError("propagate index on other side %s" % repr(self))
-        else:
-            for o in self.ops:
-                if isinstance(o, RtlSignalBase) and o.hidden:
-                    o.simEval(simulator)
-            self.result._val = self.evalFn(simulator=simulator)
+        for o in self.ops:
+            if isinstance(o, RtlSignalBase) and o.hidden:
+                o.simEval(simulator)
+        self.result._val = self.evalFn(simulator=simulator)
             
     def staticEval(self):
         """
         Recursively statistically evaluate result of this operator
         """
-        if self.operator == AllOps.INDEX and self in self.result.endpoints:
-            raise NotImplementedError("propagate index on other side")
-        else:
-            for o in self.ops:
-                o.staticEval()
-            self.result._val = self.evalFn()
-            
+        for o in self.ops:
+            o.staticEval()
+        self.result._val = self.evalFn()
+        
     def evalFn(self, simulator=None):
         """
         Syntax sugar

@@ -1,12 +1,13 @@
-from hdl_toolkit.synthetisator.interfaceLevel.interface import Interface
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from hdl_toolkit.synthetisator.param import Param
-from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
-from hdl_toolkit.hdlObjects.vectorUtils import getWidthExpr
-from hdl_toolkit.synthetisator.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.interfaces.signalOps import SignalOps
 from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.hdlObjects.types.defs import BIT
+from hdl_toolkit.interfaces.signalOps import SignalOps
+from hdl_toolkit.synthesizer.interfaceLevel.interface import Interface
+from hdl_toolkit.synthesizer.param import Param
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr
+
 
 D = DIRECTION
 
@@ -62,7 +63,7 @@ class Rst(Signal):
 class Rst_n(Signal):
     _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn', 'rst_n' ]
     def _signalsForInterface(self, context, prefix='', typeTransform=lambda x:x):
-        sigs = Signal._signalsForInterface(self, context, prefix, 
+        sigs = Signal._signalsForInterface(self, context, prefix,
                                             typeTransform=typeTransform)
         for s in sigs:
             s.negated = True
@@ -159,14 +160,17 @@ class FifoReader(FifoWriter):
         self.en._masterDir = DIRECTION.IN
         self.wait._masterDir = DIRECTION.OUT
 
-s = Signal
-  
-# class RGMII_channel(Interface):
-#    def _config(self):
-#        self.DATA_WIDTH = 4
-#        
-#    def _declr(self):
-#        self.c = s()
-#        self.d = s(dtype=vecT(self.DATA_WIDTH))
-#        self.x_ctl = s()
+class RegCntrl(Interface):
+    """
+    Register control interface
+    """
+    def _config(self):
+        self.DATA_WIDTH = Param(8)
     
+    def _declr(self):
+        self.din = Signal(dtype=vecT(self.DATA_WIDTH), masterDir=D.IN)
+        with self._paramsShared():
+            self.dout = VldSynced()
+
+
+s = Signal
