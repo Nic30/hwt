@@ -3,9 +3,10 @@ import os
 from python_toolkit.arrayQuery import where
 import subprocess
 import re
+from copy import copy
 
-DEFAULT_VCOM_PARAMS = ['2008', "explicit"]
-DEFAULT_VLOG_PARAMS = ["work {work}", "sv"]
+DEFAULT_VCOM_PARAMS = ['-2008', "-explicit"]
+DEFAULT_VLOG_PARAMS = ["-work {work}", "-sv"]
 VSIM = ["vsim"]
 
 MTI_HOME = "/opt/modelsim_se_105/modeltech/"
@@ -17,7 +18,7 @@ def formatFileNames(fileNames):
     return "\\\n".join(map(lambda x: "{%s}" % x, fileNames))
 
 def formatParams(params):
-    return " ".join(map(lambda x: "-" + x , params))
+    return " ".join(params)
 
 def findSVPackageFiles(svFiles):
     for f in svFiles:
@@ -28,15 +29,19 @@ def findSVPackageFiles(svFiles):
 def buildSv(sv_incdir, svFiles, vlogParams):
     return ("vlog %s +incdir+" + UVM_HOME + "src " + UVM_HOME + "src/uvm.sv %s %s") % (
             formatParams(vlogParams),
-            " ".join(sv_incdir),
+            " ".join(map(lambda x:"+incdir+"+ x, sv_incdir)),
             formatFileNames(where(svFiles, lambda x: x.endswith(".sv"))),
            )
 
-def runVerificationCmd(vhdlFiles, svFiles, top,
+def runVerificationCmds(vhdlFiles, svFiles, top, uvmTestNames,
                        vcomParams=DEFAULT_VCOM_PARAMS,
                        vlogParams=DEFAULT_VLOG_PARAMS):
     lib = "work"
-
+    vsimParams = ["-wlf sim.wlf",
+                  "-sv_lib " + MTI_HOME + "uvm-1.2/linux_x86_64/uvm_dpi",
+                  '-do "run -all;"',
+                  "-errorfile errors"]
+    
     if vhdlFiles:
         buildVhdls = "vcom %s -work {%s} %s" % (
                                           formatParams(vcomParams),
@@ -46,7 +51,7 @@ def runVerificationCmd(vhdlFiles, svFiles, top,
     else:
         buildVhdls = ""
         
-    sv_incdir = set(map(lambda f: "+incdir+" + os.path.dirname(f), svFiles))
+    sv_incdir = set(map(lambda f: os.path.dirname(f), svFiles))
     svFiles = list(where(svFiles, lambda x: x.endswith(".sv")))
     buildSvCmd = []
     packageFiles = list(findSVPackageFiles(svFiles))
@@ -57,9 +62,8 @@ def runVerificationCmd(vhdlFiles, svFiles, top,
     for f in packageFiles:
         # we need includes only from this package
         dirName = os.path.dirname(f)
-        _sv_incdir = list(where(sv_incdir, lambda x: x.startswith(dirName)))
         # we are building only this package
-        buildSvCmd.append(buildSv(_sv_incdir, [f], vlogParams))
+        buildSvCmd.append(buildSv([dirName], [f], vlogParams))
     
     packageFiles = set(packageFiles)
     # build rest of files
@@ -70,8 +74,9 @@ def runVerificationCmd(vhdlFiles, svFiles, top,
                 vlogParams)
         )
     
-    
-    cmd = ("""
+    for uvmTestName in uvmTestNames:
+        _vsimParams = vsimParams + ["+UVM_TESTNAME=%s" % uvmTestName]
+        cmd = ("""
 onbreak {status; puts "Quit on break"; quit -code 1}
 onerror {status; puts "Quit on error"; quit -code 2}
 onElabError {status; puts "Quit on elabError"; quit -code 3}
@@ -83,32 +88,28 @@ vlib work
 add wave -divider DUT
 add wave -noupdate -hex /top/dut1/*
 
-vsim -wlf sim.wlf -sv_lib """ + MTI_HOME + """uvm-1.2/linux_x86_64/uvm_dpi -lib %s %s -do "run -all; quit -f" -errorfile errors
-
-view wave
-delete wave *
-restart -f
-run 5us
+vsim  %s -lib %s %s 
 quit -code 0
-""") % (buildVhdls, "\n".join(buildSvCmd), lib, top)
-    
-    return cmd
+""") % (buildVhdls, "\n".join(buildSvCmd),
+        formatParams(_vsimParams), lib, top)
+        yield cmd
 
 
-def runSVVer(vhdlFiles, systemVerilogSources, top,
+def runSVVer(vhdlFiles, systemVerilogSources, top, uvmTestNames=[""],
               vcomParams=DEFAULT_VCOM_PARAMS,
               vlogParams=DEFAULT_VLOG_PARAMS, gui=False):
-    
-    verCmd = runVerificationCmd(vhdlFiles, systemVerilogSources, top,
-                                vcomParams, vlogParams)
+    verCmds = list(runVerificationCmds(vhdlFiles, systemVerilogSources, 
+                                  top, uvmTestNames,
+                                  vcomParams, vlogParams))
     cmdFileName = "modelsimCmd.tcl"
     with open(cmdFileName, 'w') as f:
-        f.write(verCmd)
+        f.write("\n---------------\n".join(verCmds))
 
     
-    _VSIM = VSIM + ["-c"]
-    p = Popen(_VSIM, shell=True, stdin=PIPE)
-    p.communicate(verCmd.encode(encoding='utf_8'))
+    for cmd in verCmds:
+        _VSIM = VSIM + ["-c"]
+        p = Popen(_VSIM, shell=True, stdin=PIPE)
+        p.communicate(cmd.encode(encoding='utf_8'))
 
     if gui:
         p = subprocess.call(VSIM + ["-gui"])
