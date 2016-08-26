@@ -216,9 +216,6 @@ def renderIfTree(assignments):
     """
     Walk assignments and resolve if tree from conditions
     """
-    # condSig:DepContainer
-
-
     
     # register assignments in tree of IfTreeNodes
     for a in assignments:
