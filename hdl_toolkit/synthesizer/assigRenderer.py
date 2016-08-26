@@ -224,7 +224,7 @@ def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
             else:
                 topPos.append(a)
         else:
-            raise NotImplementedError()     
+            raise NotImplementedError(dependentOnTopCond)     
     #if not (len(assignments) == (len(topNeg) + len(topPos))):
     #    # it seems that there is some statement which is nod depended on topCond, but it should be 
     #    # filtered earlier
