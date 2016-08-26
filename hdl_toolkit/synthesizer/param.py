@@ -81,7 +81,7 @@ def evalParam(p):
     if isinstance(p, RtlSignalBase):
         return p.staticEval()
         # use rather param inheritance instead of param as param value
-    return p
+    return toHVal(p)
 
 def getParam(p):
     """
