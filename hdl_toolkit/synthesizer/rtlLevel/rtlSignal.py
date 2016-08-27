@@ -1,5 +1,4 @@
-from hdl_toolkit.hdlObjects.assignment import Assignment, mkArrayUpdater
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType
 from hdl_toolkit.hdlObjects.value import Value
@@ -9,15 +8,7 @@ from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
 
-
-
-def simEvalIndexedAssign(simulator, indexedOn, index, newVal):
-    indxVal = index.simEval(simulator)
-    # [TODO] multiple nested indexing in assignment
-    print(simulator.env.now)
-    indexedOn.simUpdateVal(simulator, mkArrayUpdater(newVal, indxVal))
-    
-
+# [TODO] there is duplication with FileList
 class UniqList(list):
     def append(self, obj):
         if obj not in self:
@@ -58,17 +49,6 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         for e in self.endpoints:
             if isinstance(e, PortItem) and e.dst is not None:
                 e.dst.simUpdateVal(simulator, lambda v: (True, self._val))
-            else:
-                try:
-                    isIndexing = e.operator == AllOps.INDEX 
-                except AttributeError:
-                    continue
-                
-                if isIndexing:
-                    assert e.result is self
-                    # mem[indx] = self
-                    simEvalIndexedAssign(simulator, e.ops[0], e.ops[1], self._val)
-
             
         log = simulator.config.logPropagation
         for p in self.simSensitiveProcesses:        
