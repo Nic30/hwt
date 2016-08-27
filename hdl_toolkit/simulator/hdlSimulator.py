@@ -77,27 +77,18 @@ class HdlSimulator(object):
     def addHwProcToRun(self, proc, applyImmediately):
         # first process in time has to plan executing of apply values on the end of this time
         if not applyImmediately and not self.applyValuesPlaned:
-            # (apply in future)
+            # (apply on end of this time to minialize process reevaluation)
             self.env.process(self.applyValues())
             self.applyValuesPlaned = True
 
         for v in proc.simEval(self):
             dst, updater, isEvDependent = v
-            # print(self.env.now, dst, updater, isEvDependent, proc)
             self.valuesToApply.append((dst, updater, isEvDependent, proc))
-    
-    def applyDelayed(self, sig, vUpdater):
-        def dellayedUpadate(sig, vUpdater):
-            yield self.wait(self.EV_DEPENDENCY_SLOWDOWN)
-            sig.simUpdateVal(self, vUpdater)
-            # print(self.env.now, sig, comesFrom, sig._val)
-        self.env.process(dellayedUpadate(sig, vUpdater))
     
     def applyValues(self):
         # [TODO] not ideal, processes should be evaluated before running apply values
         # this should be done by priority, not by timeout
         # (currently can't get scipy working with priorities)
-        print("applyValues enter", self.env.now)
         yield self.wait(0)
         if self.env.now == 1:
             raise 1
@@ -114,9 +105,10 @@ class HdlSimulator(object):
         # but each signal should be driven by only one process and
         # it should resolve value collision
         for s, vUpdater, isEventDependent, comesFrom in va:
-            print(s)
+            #print(s, isEventDependent)
             if isEventDependent:
-                self.applyDelayed(s, vUpdater)
+                t = self.env.timeout(self.EV_DEPENDENCY_SLOWDOWN)
+                t.callbacks.append(lambda ev: s.simUpdateVal(self, vUpdater)) 
             else:
                 s.simUpdateVal(self, vUpdater)
             
