@@ -129,16 +129,18 @@ def discoverEventDependency(sig):
     walk signals drivers and yields whose signals which are in some event operator
     """
     # [TODO] deep event dependency discovery
-    drivers = None
     try:
         drivers = sig.drivers
     except AttributeError:
-        pass
+        return
     
-    if drivers is not None and len(drivers) == 1:
+    if len(drivers) == 1:
         d = drivers[0]
         if isinstance(d, Operator) and isEventDependentOp(d.operator):
             yield d.ops[0]
+        else:
+            for op in d.ops:
+                yield from discoverEventDependency(op)
 
 
 def discoverDriverSignals(datapath):
