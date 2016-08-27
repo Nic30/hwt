@@ -5,7 +5,6 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import mkUpdater
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hdl_toolkit.synthesizer.assigRenderer import isEventDependent
 from hdl_toolkit.simulator.utils import valueHasChanged
 
 
