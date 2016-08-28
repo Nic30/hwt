@@ -84,6 +84,12 @@ class HdlSimulator(object):
             dst, updater, isEvDependent = v
             self.valuesToApply.append((dst, updater, isEvDependent, proc))
     
+    def _delayedUpdate(self, sig, vUpdater):
+        def updateCallback(ev):
+            sig.simUpdateVal(self, vUpdater)
+            
+        t = self.env.timeout(self.EV_DEPENDENCY_SLOWDOWN)
+        t.callbacks.append(updateCallback) 
     def applyValues(self):
         # [TODO] not ideal, processes should be evaluated before running apply values
         # this should be done by priority, not by timeout
@@ -104,10 +110,9 @@ class HdlSimulator(object):
         # but each signal should be driven by only one process and
         # it should resolve value collision
         for s, vUpdater, isEventDependent, comesFrom in va:
-            #print(s, isEventDependent)
+            # print(s, isEventDependent)
             if isEventDependent:
-                t = self.env.timeout(self.EV_DEPENDENCY_SLOWDOWN)
-                t.callbacks.append(lambda ev: s.simUpdateVal(self, vUpdater)) 
+                self._delayedUpdate(s, vUpdater)
             else:
                 s.simUpdateVal(self, vUpdater)
             
