@@ -1,11 +1,12 @@
 import math
-import simpy
 
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.assignment import mkUpdater
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.simulator.utils import valueHasChanged
+from hdl_toolkit.simulator.simulatorCore import HdlEnvironmentCore
+from simpy.events import NORMAL
 
 
 class HdlSimulator(object):
@@ -42,6 +43,18 @@ class HdlSimulator(object):
         simulator commands)
     
     
+    HWprocesses have smaller priority than simulation processes
+    this allows simplyfi logic of all agents
+    when simulation process is executed HW part did not anything in this time
+    so simulation process can prepare anythink for HW part (= can write)
+    if simulation process need to read it has to yield simulator.updateComplete
+    first, process then be waken after reaction of HW in this time
+    -> agents are greatly simplified, they just need to yield simulator.updateComplete
+       before read 
+       Do not read before write in single time (potential combinational loop), because
+       of event dependent HW processes will not be reevalueated 
+       
+    
     This simulation is made to check if hsl code behaves the same way as hdl. 
     It has some limitations from HDL point of view but every single one can be rewritten to supported format.
     Hdl synthesizer of HWToolkit does it automatically.
@@ -55,49 +68,58 @@ class HdlSimulator(object):
     """
     # time after values which are event dependent will be applied
     # this is random number smaller than any clock
-    EV_DEPENDENCY_SLOWDOWN = 1
+    # note that this time is not there to assert functionality but show
+    # to make sim results more clear to user
+    EV_DEPENDENCY_SLOWDOWN = 500
     
+    PRIORITY_APPLY_COMB = NORMAL + 1
+    PRIORITY_APPLY_EV_DEP =  NORMAL + 2
+     
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
     def __init__(self, config=None):
         if config is None:
             config = HdlSimConfig() 
             
         self.config = config
-        self.env = simpy.Environment()
+        self.env = HdlEnvironmentCore()
         self.updateComplete = self.env.event()
         self.lastUpdateComplete = -2
-        self.applyValuesPlaned = False
+        self.applyValEv = None
         
         # (signal, value) tupes which should be applied before new round of processes
         #  will be executed
         self.valuesToApply = []
-        self.delayedValuesToApply = []
     
     def addHwProcToRun(self, proc, applyImmediately):
         # first process in time has to plan executing of apply values on the end of this time
-        if not applyImmediately and not self.applyValuesPlaned:
+        if not applyImmediately and self.applyValEv is None:
             # (apply on end of this time to minialize process reevaluation)
-            self.env.process(self.applyValues())
-            self.applyValuesPlaned = True
+            self.scheduleAplyValues()
 
         for v in proc.simEval(self):
+            #print("RUNNING", self.env.now, proc.name)
             dst, updater, isEvDependent = v
             self.valuesToApply.append((dst, updater, isEvDependent, proc))
     
     def _delayedUpdate(self, sig, vUpdater):
         def updateCallback(ev):
+            # print("DELAYED", self.env.now, sig.name)
             sig.simUpdateVal(self, vUpdater)
             
         t = self.env.timeout(self.EV_DEPENDENCY_SLOWDOWN)
         t.callbacks.append(updateCallback) 
+   
+    def scheduleAplyValues(self):
+        self.applyValEv = self.env.event()
+        self.applyValEv._ok = True
+        self.applyValEv._value = None
+        self.applyValEv.callbacks.append(lambda ev: self.applyValues())
+        self.env.schedule(self.applyValEv, priority=self.PRIORITY_APPLY_COMB)
+        
     def applyValues(self):
         # [TODO] not ideal, processes should be evaluated before running apply values
         # this should be done by priority, not by timeout
         # (currently can't get scipy working with priorities)
-        yield self.wait(0)
-        if self.env.now == 1:
-            raise 1
-        
         va = self.valuesToApply
         
         # log if there are items to log
@@ -114,23 +136,26 @@ class HdlSimulator(object):
             if isEventDependent:
                 self._delayedUpdate(s, vUpdater)
             else:
+                # print("NORMAL", self.env.now, comesFrom.name)
                 s.simUpdateVal(self, vUpdater)
             
             
         # processes triggered from simUpdateVal can add nev values
         if self.valuesToApply:
-            yield from self.applyValues()
+            self.scheduleAplyValues()
+            return
         
         # activate updateComplete if this was last applyValues() in this time        
         nextEventT = self.env.peek()
         now = self.env.now
         # is last event or is last in this time
-        if (math.isinf(nextEventT) or nextEventT > now) and self.lastUpdateComplete < now:
+        if (math.isinf(nextEventT) or nextEventT > now) \
+            and self.lastUpdateComplete < now:
             self.updateComplete.succeed()  # trigger
             self.updateComplete = self.env.event()  # regenerate event
             self.lastUpdateComplete = now
  
-        self.applyValuesPlaned = False 
+        self.applyValEv = None 
            
     def _initUnitSignals(self, unit):
         """
@@ -179,12 +204,11 @@ class HdlSimulator(object):
         
         sig.simUpdateVal(self, lambda curentV: (valueHasChanged(curentV, v), v))
         
-        if not sig.simSensitiveProcesses and not self.applyValuesPlaned:
+        if not sig.simSensitiveProcesses and self.applyValEv is not None:
             # in some cases simulation process can wait on all values applied
             # signal value was changed but there are no sensitive processes to it
             # because of this applyValues is never planed and but should be
-            self.env.process(self.applyValues())
-            self.applyValuesPlaned = True
+            self.scheduleAplyValues()
             
     def wait(self, time):
         return self.env.timeout(time)
