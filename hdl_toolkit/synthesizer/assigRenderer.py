@@ -1,14 +1,14 @@
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.statements import IfContainer, SwitchContainer
+from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.synthesizer.assigRendererContainers import DepContainer, IfTreeNode
+from hdl_toolkit.synthesizer.assigRendererContainers import IfTreeNode
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase 
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
+from hdl_toolkit.synthesizer.termUsageResolver import TermUsageRecord, \
+    extractCondTermOrderNonResolved, extractCondTermOrder
 from python_toolkit.arrayQuery import where
-from hdl_toolkit.hdlObjects.types.enum import Enum
-
 
 SWITCH_THRESHOLD = 2  # (max count of elsifs with eq on same variable)
 
@@ -44,7 +44,7 @@ def _renderIfTree(node):
             elIfN = elIfN.neg[0]
             _ifTrue = []
             __renderStatements(elIfN.pos, _ifTrue)
-            elIfs.append(([elIfN.cond,], _ifTrue))
+            elIfs.append(([elIfN.cond, ], _ifTrue))
         else:
             # render standard else
             __renderStatements(elIfN.neg, ifFalse)
@@ -102,88 +102,13 @@ def _renderIfTree(node):
     
     yield IfContainer([node.cond], ifTrue, ifFalse, elIfs=elIfs)
 
-def getBaseCond(c):
-    """
-    if is negated return original cond and negated flag
-    """
-    isNegated = False
-    drivers = []
-    try:
-        drivers = c.drivers
-    except AttributeError:
-        pass
-    if len(drivers) == 1:
-        d = list(c.drivers)[0]
-        if isinstance(d, Operator) and d.operator == AllOps.NOT:
-            c = d.ops[0]
-            isNegated = True
-    return (c, isNegated)
-
-def isEventDependent(cond):
-    return bool(list(discoverEventDependency(cond)))
-    
-def countCondOccurrences(termMap):
-    for cond, container in termMap.items():
-        cnt = len(container.pos) + len(container.neg)
-        yield (cond, cnt)
-
-def sortCondsByMostImpact(countedConds):
-    # id is used to make sorting more deterministic, but it is not optimal solution
-    for c in sorted(countedConds, key=lambda x: (x[1], isEventDependent(x[0]), id(x[0])),
-                     reverse=True):
-        yield c[0]
-
-def buildTermMapFromConditions(assignments):
-    termMap = {}
-
-    def insertToMap(condSig, assigment, isNegated):
-        try:
-            cont = termMap[condSig]
-        except KeyError:
-            cont = DepContainer()
-            termMap[condSig] = cont
-        
-        if isNegated:
-            c = cont.neg
-        else:
-            c = cont.pos
-        c.add(assigment)
-
-    def registerToMap(assigment):
-        # walk all assignments and register them in term map
-        # cond is set of term in conjunctive form
-        for realC, isNegated in assigment._unresolvedConds:
-            insertToMap(realC, assigment, isNegated)
-            
-    # resolve main hierarchy of conditions
-    for a in assignments:
-        registerToMap(a)
-    
-    return termMap
-
 def renderIfTree_afterCondSatisfied(assignments, globalCondOrder):
-    top = []
     # there can be only one main condition ant this means 
     # only the most impact cond is taken
     # else no condition is taken and assignment is just statement at this level
     # in this step we are consuming assignment as statement
-    termUsage = {}
-    for a in assignments:
-        # add assignments without cond as statements
-        if len(a._unresolvedConds) == 0:
-            top.append(a)
-        else:
-            # else register this to termap to resolve most impact condition
-            for c in a._unresolvedConds:
-                try:
-                    termUsage[c[0]] += 1
-                except KeyError:
-                    termUsage[c[0]] = 1
-                    
-    # id is used to make sorting more deterministic, but it is not optimal solution
-    topConds = sorted(termUsage.keys(),
-                      key=lambda x: (termUsage[x], globalCondOrder.index(x), id(x)),
-                      reverse=True)
+    top, topConds = extractCondTermOrderNonResolved(assignments, globalCondOrder)
+
     if len(topConds) == 0:
         return top 
     else:
@@ -225,7 +150,7 @@ def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
                 topPos.append(a)
         else:
             raise NotImplementedError(dependentOnTopCond)     
-    #if not (len(assignments) == (len(topNeg) + len(topPos))):
+    # if not (len(assignments) == (len(topNeg) + len(topPos))):
     #    # it seems that there is some statement which is nod depended on topCond, but it should be 
     #    # filtered earlier
     #    raise AssertionError(("got assignments %s and topCond %s \n for neg resolved %s,\n" + 
@@ -245,17 +170,7 @@ def renderIfTree(assignments):
     """
     Walk assignments and resolve if tree from conditions
     """
-    # condSig:DepContainer
-
-    
-    # register assignments in tree of IfTreeNodes
-    for a in assignments:
-        # prepare base conds
-        a._unresolvedConds = [ getBaseCond(c) for c in a.cond ]
-    
-    termMap = buildTermMapFromConditions(assignments)
-    condOrder = list(sortCondsByMostImpact(countCondOccurrences(termMap)))
-    
+    condOrder = list(extractCondTermOrder(assignments))
     
     if condOrder:
         # split assignments on most important condition

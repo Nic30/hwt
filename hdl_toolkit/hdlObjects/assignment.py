@@ -3,8 +3,14 @@ from hdl_toolkit.simulator.utils import valueHasChanged
 def mkUpdater(nextVal):
     return lambda currentVal: (valueHasChanged(currentVal, nextVal), nextVal)
 
-def mkArrayUpdater(nextItemVal, index):
+def mkArrayUpdater(simulator, nextItemVal, indexes):
+    _indexes = list(map(lambda i: i.simEval(simulator), indexes))
+     
     def updater(currentVal):
+        if len(_indexes) > 1:
+            raise NotImplementedError()
+        
+        index = _indexes[0]
         change = valueHasChanged(currentVal[index], nextItemVal)
         currentVal[index] = nextItemVal
         return (change, currentVal)
@@ -23,13 +29,27 @@ class Assignment():
     @ivar indexes: description of index selector on dst (list of Index/Slice objects)
                     (f.e. [[0], [1]] means  dst[0][1]  )
     
+    @cvar __instCntr: counter used for generating instance ids
+    @ivar _instId: internaly used only for intuitive sorting of statements
     """
+    __instCntr = 0
+    
     def __init__(self, src, dst, indexes=None):
         self.src = src
         self.dst = dst
         self.isEventDependent = False
         self.indexes = indexes
         self.cond = set()
+        self._instId = Assignment._nextInstId()
+    
+    @classmethod
+    def _nextInstId(cls):
+        """
+        Get next instance id
+        """
+        i = cls.__instCntr
+        cls.__instCntr +=1
+        return i
         
     def seqEval(self):
         self.dst._val = self.src.staticEval() 
@@ -40,7 +60,11 @@ class Assignment():
         """
         nextVal = self.src.simEval(simulator)
         
-        yield (self.dst, mkUpdater(nextVal), self.isEventDependent)
+        if self.indexes:
+            updater = mkArrayUpdater(simulator, nextVal, self.indexes)
+        else:
+            updater = mkUpdater(nextVal)
+        yield (self.dst, updater, self.isEventDependent)
         
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
