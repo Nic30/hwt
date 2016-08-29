@@ -25,6 +25,7 @@ from python_toolkit.arrayQuery import arr_any, where
 from hdl_toolkit.serializer.formater import formatVhdl
 from hdl_toolkit.hdlObjects.types.slice import Slice
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
+from itertools import chain
 
 
 VHLD_KEYWORDS = [
@@ -42,6 +43,31 @@ VHLD_KEYWORDS = [
 "type", "unaffected", "units", "until", "use", "variable", "wait", "with", "when", "while",
 "xnor", "xor"]        
 
+def getMaxStmIdForStm(stm):
+    maxId = 0
+    if isinstance(stm, Assignment):
+        return stm._instId
+    elif isinstance(stm, IfContainer):
+        for _stm in chain(stm.ifTrue, *map(lambda _elif: _elif[1], stm.elIfs), stm.ifFalse):
+            maxId = max(maxId, getMaxStmIdForStm(_stm))
+        return maxId
+    elif isinstance(stm, SwitchContainer):
+        for _stm in chain(*map(lambda _case: _case[1], stm.cases)):
+            maxId = max(maxId, getMaxStmIdForStm(_stm))
+        return maxId
+    else:
+        raise NotImplementedError(stm)
+
+def maxStmId(proc):
+    """
+    get max statement id,
+    used for sorting of processes in architecture
+    """
+    maxId = 0
+    for stm in proc.statements: 
+        maxId = max(maxId, getMaxStmIdForStm(stm)) 
+    return maxId
+    
 
 class VhdlVersion():
     v2002 = 2002
@@ -140,7 +166,7 @@ class VhdlSerializer():
         extraTypes = set()
         extraTypes_serialized = []
         arch.variables.sort(key=lambda x: x.name)
-        arch.processes.sort(key=lambda x: x.name)
+        arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.components.sort(key=lambda x: x.name)
         arch.componentInstances.sort(key=lambda x: x._name)
         
