@@ -5,7 +5,7 @@ from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 class FunctionContainer(list):
     """
-    Used as container for functions with same name to support function overloading
+    Hdl container for functions with same name to support function overloading
     """
     def __init__(self, name, parent):
         super(FunctionContainer, self).__init__()
@@ -16,6 +16,9 @@ class FunctionContainer(list):
         return hash((id(self), self.name))
         
     def append(self, fn, suppressRedefinition=False):
+        """
+        Append function definition
+        """
         if self:
             assert self[0].name == fn.name  # assert every appended function has same name
         if not suppressRedefinition:

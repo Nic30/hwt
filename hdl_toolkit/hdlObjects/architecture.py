@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 class Architecture(object):
-    """basic vhdl architecture"""
+    """
+    Hdl container of internal structure of unit
+    """
     def __init__(self, entity):
         self.entity = entity
         if entity: 

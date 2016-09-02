@@ -2,7 +2,7 @@ from hdl_toolkit.hdlObjects.variables import SignalItem
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 
 class PortItem(SignalItem):
-    """basic vhdl entity port item"""
+    """basic hdl entity port item"""
     def __init__(self, name, direction, dtype, unit):
         self.name = name
         self.unit = unit
@@ -56,6 +56,9 @@ class PortItem(SignalItem):
             raise NotImplementedError()
 
     def connectInternSig(self):
+        """
+        connet signal from internal side of of this component to this port
+        """
         if self.direction == DIRECTION.OUT:
             self.src.endpoints.append(self)
         elif self.direction == DIRECTION.IN:

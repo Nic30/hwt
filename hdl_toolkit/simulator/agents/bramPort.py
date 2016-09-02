@@ -23,11 +23,13 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         addr = req[1]
         
         if rw == READ:
+            print("AG-R", s.env.now)
             rw = 0
             wdata = None
             self.readPending = True
             
         elif rw == WRITE:
+            print("AG-W", s.env.now)
             wdata = req[2] 
             rw = 1
         else:

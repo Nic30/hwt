@@ -1,6 +1,9 @@
 from hdl_toolkit.hdlObjects.statements import ReturnCalled
 
 class Function():
+    """
+    Container for hdl cunction
+    """
     def __init__(self, name, returnT, ctx, params, _locals, exprList, isOperator=False):
         """
         class to store hdl function

@@ -3,6 +3,10 @@ from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
 
 def setOut(*interfaces, defVal=None):
+    """
+    set interfaces as output interfaces
+    @attention: only for instances of EmptyUnit
+    """
     for i in interfaces:
         i._setDirectionsLikeIn(INTF_DIRECTION.SLAVE)
         

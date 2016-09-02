@@ -5,6 +5,9 @@ from hdl_toolkit.hdlObjects.portItem import PortItem
 
 
 class SimSignal():
+    """
+    Class of signal simulation functions
+    """
     def simPropagateChanges(self, simulator):
         self._oldVal = self._val
 

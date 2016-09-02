@@ -2,6 +2,7 @@ from hdl_toolkit.parser.hdlContext import HDLCtx
 
 class PackageHeader(HDLCtx):
     """
+    Hdl package container
     Entities means components from vhdl
     """
     def __init__(self, name, libraryCtx, isDummy=False):

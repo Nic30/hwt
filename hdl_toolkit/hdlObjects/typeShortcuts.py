@@ -25,14 +25,12 @@ def mkRange(width):
     return to._downto(0)
 
 def vecT(width, signed=None):
-    """Make contrained vector type for example std_logic_vector(width-1 downto 0) in vhdl"""
+    """Make vector type with specified width for example
+       std_logic_vector(width-1 downto 0) in vhdl
+    """
     return Bits(widthConstr=mkRange(width), signed=signed, forceVector=True)
 
 def vec(val, width):
     """create hdl vector value"""
     assert val < evalParam(hInt(2) ** width).val
     return vecT(width).fromPy(val)
-
-def hRange(upper, lower):
-    upper = toHVal(upper)
-    return upper._downto(lower)

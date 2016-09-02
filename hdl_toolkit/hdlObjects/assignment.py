@@ -1,9 +1,15 @@
 from hdl_toolkit.simulator.utils import valueHasChanged
 
 def mkUpdater(nextVal):
+    """
+    Create value updater for simulation
+    """
     return lambda currentVal: (valueHasChanged(currentVal, nextVal), nextVal)
 
 def mkArrayUpdater(simulator, nextItemVal, indexes):
+    """
+    Create value updater for simulation for value of array type 
+    """
     _indexes = list(map(lambda i: i.simEval(simulator), indexes))
      
     def updater(currentVal):
@@ -25,7 +31,6 @@ class Assignment():
     @ivar dest: destination signal
     @ivar cond: set of terms if all them are evaluated to True,
                 assignment is active
-    @ivar condRes: tmp variable for simPropagateChanges
     @ivar indexes: description of index selector on dst (list of Index/Slice objects)
                     (f.e. [[0], [1]] means  dst[0][1]  )
     

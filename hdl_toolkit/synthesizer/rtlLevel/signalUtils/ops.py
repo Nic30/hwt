@@ -164,6 +164,9 @@ class RtlSignalOps():
         
     
     def _assignFrom(self, source):
+        """
+        Create assignment to this signal
+        """
         source = toHVal(source)
  
         tmp = self._getIndexCascade()
@@ -183,4 +186,8 @@ class RtlSignalOps():
         return a
     
     def _same(self):
+        """
+        assign self to self 
+        used for registers where it means that value should remain same
+        """
         return [self._assignFrom(self)]
