@@ -34,6 +34,14 @@ class MakeInterfaceExtern(object):
 
 class UnitImplHelpers(object):
     def _reg(self, name, dtype=BIT, defVal=None):
+        """
+        Create register in this unit
+        @param defVal: default value of this register, if this value is specified
+                       reset of this component is used
+                       (unit has to have single interface of class Rst or Rst_n)
+        
+        """
+        
         clk = single(self._interfaces, lambda i: isinstance(i, Clk))
         if defVal is None:
             rst = None
@@ -46,7 +54,11 @@ class UnitImplHelpers(object):
         
         return s(name, typ=dtype, clk=clk._sig,
                           syncRst=rst._sig, defVal=defVal)
+        
     def _sig(self, name, dtype=BIT, defVal=None):
+        """
+        Create signal in this unit
+        """
         return self._cntx.sig(name, typ=dtype, defVal=defVal)
     
     def _asExtern(self):
@@ -72,6 +84,8 @@ class UnitImplHelpers(object):
         # generate for all ports of subunit signals in this context
         def lockTypeWidth(t):
             # [TODO] only read parameter instead of full evaluation
+            # problem is that parametes should be theyr's values 
+            # (because this signals are for parent unit)
             if isinstance(t, Bits):
                 t = copy(t)
                 t.constrain = mkRange(t.bit_length())
