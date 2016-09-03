@@ -163,7 +163,7 @@ def syntaxCheck(unitOrFileName):
     else:
         raise  NotImplementedError("Not implemented for '%'" % (repr(unitOrFileName)))
     
-def synthesizeAsIpcore(unit, folderName=".", name=None, serializer=VhdlSerializer):
+def serializeAsIpcore(unit, folderName=".", name=None, serializer=VhdlSerializer):
     from cli_toolkit.ip_packager.packager import Packager
     p = Packager(unit, name=name)
     p.createPackage(folderName)
