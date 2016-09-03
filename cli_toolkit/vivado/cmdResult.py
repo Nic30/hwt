@@ -1,5 +1,6 @@
 import re
 
+
 class VivadoErr(Exception):
     def __init__(self, cmdResult):
         super(VivadoErr, self).__init__()
@@ -8,6 +9,9 @@ class VivadoErr(Exception):
         return 'Cmd "%s" caused errors:\n%s' % (self.cmdResult.cmd, str(self.cmdResult.errors))
 
 class VivadoCmdResult():
+    """
+    Parsed result of comand over cli
+    """
     regex_invalidCmd = re.compile("(invalid command name \".*\")")
     regex_err = re.compile("ERROR: (.*)")
     regex_critWarn = re.compile('CRITICAL WARNING: (.*)')
@@ -43,6 +47,7 @@ class VivadoCmdResult():
         resultText = VivadoCmdResult.extractMsgs(resultText, VivadoCmdResult.regex_info, infos)
         
         return cls(cmd, resultText.strip(), errors, criticalWarnings, warnings, infos)
+    
     def raiseOnErrors(self):
         if self.errors:
             raise VivadoErr(self)    

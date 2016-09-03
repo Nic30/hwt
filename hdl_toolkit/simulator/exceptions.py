@@ -1,5 +1,4 @@
-class SimException(Exception):
-    pass
 
-class SimNotInitialized(SimException):
+class SimException(Exception):
+    """Error in simulation"""
     pass

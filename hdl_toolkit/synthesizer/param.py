@@ -75,6 +75,9 @@ class Param(RtlSignal):
         
 
 def evalParam(p):
+    """
+    Get value of parameter
+    """
     while isinstance(p, Param):
         p = p.get()
     
@@ -86,6 +89,8 @@ def evalParam(p):
 def getParam(p):
     """
     get param value or value
+    getParam gets only item which is specified as param value,
+    but evalParam also evaluates it if it is not value 
     """
     if isinstance(p, Param):
         p = p.get()

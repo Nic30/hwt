@@ -4,7 +4,7 @@ import sys
 
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-from hdl_toolkit.synthesizer.shortcuts import toRtl, synthesised
+from hdl_toolkit.synthesizer.shortcuts import synthesised
 from hdl_toolkit.hdlObjects.specialValues import Time
 
 def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
@@ -62,7 +62,7 @@ def onRisingEdge(sig, fn):
                     fn(s)
     return __onRisingEdge
 
-
+# [TODO] this is not generaly working for all agenets wee need custom 
 def onRisingEdgeNoReset(sig, reset, fn):
     """
     Decorator wrapper
@@ -88,7 +88,7 @@ def onRisingEdgeNoReset(sig, reset, fn):
 
 def oscilate(sig, period=10*Time.ns, initWait=0):
     """
-    Oscilative driver for your signal
+    Oscilative simulation driver for your signal
     """
     halfPeriod = period/2
     def oscilateStimul(s):
@@ -104,6 +104,10 @@ def oscilate(sig, period=10*Time.ns, initWait=0):
 
 
 def pullDownAfter(sig, intDelay=6*Time.ns):
+    """
+    @return: simulation driver which keeps value high for intDelay then it sets
+             value to 0
+    """
     def _pullDownAfter(s):
         s.write(True, sig) 
         yield s.wait(intDelay)
@@ -112,7 +116,10 @@ def pullDownAfter(sig, intDelay=6*Time.ns):
     return _pullDownAfter
     
 def pullUpAfter(sig, intDelay=6*Time.ns):
-
+    """
+    @return: Simulation driver which keeps value low for intDelay then it sets
+             value to 1
+    """
     def _pullDownAfter(s):
         s.write(False, sig) 
         yield s.wait(intDelay)

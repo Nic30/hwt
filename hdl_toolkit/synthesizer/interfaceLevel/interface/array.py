@@ -7,6 +7,9 @@ from python_toolkit.arrayQuery import arr_any
 
 
 def splitToTermSet(width):
+    """
+    try split width expression to multiplicands
+    """
     try:
         width = width.singleDriver()
     except (AttributeError, MultipleDriversExc):
@@ -18,6 +21,9 @@ def splitToTermSet(width):
 
 
 class InterfaceArray():
+    """
+    Interface with multiplied widths of signals to create array of interfaces
+    """
     def __init__(self):
         self._arrayElemCache = []
         

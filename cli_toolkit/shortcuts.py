@@ -13,6 +13,9 @@ defaultPart = XilinxPartBuilder(pb.Family.kintex7, pb.Size._160t, pb.Package.ffg
 
 def buildUnit(unit, synthesize=True, implement=True, writeBitstream=True, getConstrains=None, 
               log=True, openGui=False, part=defaultPart):
+    """
+    Synthetize unit in bitstream synthesis tool
+    """
     r = VivadoReport()
     uName = defaultUnitName(unit)
     def synthesizeCmds():

@@ -6,11 +6,11 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthesizer.assigRendererContainers import IfTreeNode
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase 
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hdl_toolkit.synthesizer.termUsageResolver import TermUsageRecord, \
-    extractCondTermOrderNonResolved, extractCondTermOrder
+from hdl_toolkit.synthesizer.termUsageResolver import extractCondTermOrderNonResolved, extractCondTermOrder
 from python_toolkit.arrayQuery import where
 
-SWITCH_THRESHOLD = 2  # (max count of elsifs with eq on same variable)
+# (max count of elsifs with eq on same variable)
+SWITCH_THRESHOLD = 2  
 
 def __renderStatements(statements, resultContainer):
     for st in statements:

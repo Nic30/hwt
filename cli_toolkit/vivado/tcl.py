@@ -1,8 +1,9 @@
 import multiprocessing
+
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 
-# http://www.xilinx.com/support/documentation/sw_manuals/xilinx2013_1/ug975-vivado-quick-reference.pdf
 
+# http://www.xilinx.com/support/documentation/sw_manuals/xilinx2013_1/ug975-vivado-quick-reference.pdf
 class VivadoFSOpsTCL():
     @staticmethod
     def ls():

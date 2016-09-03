@@ -1,4 +1,3 @@
-from copy import deepcopy, copy
 import types
 
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
@@ -7,8 +6,10 @@ from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
+from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo
+from operator import and_, or_
+from hdl_toolkit.hdlObjects.operatorDefs import concatFn
 
 
 def _intfToSig(obj):
@@ -32,7 +33,7 @@ def flaten(iterables):
         
 class If(StmCntx):
     """
-    Context of if statement
+    If statement generator
     
     @ivar nowIsEventDependent: flag if current scope of if is event dependent
     """
@@ -84,6 +85,9 @@ class If(StmCntx):
         return self
 
 class Switch(StmCntx):
+    """
+    Switch statement generator
+    """
     def __init__(self, switchOn):
         self.switchOn = switchOn
         self.cond = None
@@ -112,7 +116,9 @@ class Switch(StmCntx):
 
 
 def In(sigOrVal, iterable):
-    """Hdl conversible in operator, check if any of items in "iterable" equals "sigOrVal" """
+    """
+    Hdl conversible in operator, check if any of items in "iterable" equals "sigOrVal"
+    """
     res = None
     for i in iterable:
         i = toHVal(i)
@@ -319,13 +325,17 @@ def _mkOp(fn):
         return top
     return op
 
-And = _mkOp(lambda top, s: top & s)
-Or = _mkOp(lambda top, s: top | s)
-Concat = _mkOp(lambda top, s: top._concat(s))
+# variadic operator functions
+And = _mkOp(and_)
+Or = _mkOp(or_)
+Concat = _mkOp(concatFn)
 
 # [TODO] sign correct shift
-slr = lambda sig, howMany: vec(0, howMany)._concat(sig[:howMany])
-srr = lambda sig, howMany: sig[howMany:]._concat(vec(0, howMany))
+def slr(sig, howMany):
+    return vec(0, howMany)._concat(sig[:howMany])
+
+def srr(sig, howMany):
+    return sig[howMany:]._concat(vec(0, howMany))
 
 
 c = connect

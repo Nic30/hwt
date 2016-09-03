@@ -1,23 +1,28 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import hdlConvertor
 from itertools import chain
 import os
 import shutil
 
-import hdlConvertor
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.parser.loader import langFromExtension, ParserFileInfo
+from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.synthesizer.fileList import FileList
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthesizer.vhdlCodeWrap import VhdlCodeWrap
 from python_toolkit.fileHelpers import find_files
-from hdl_toolkit.serializer.exceptions import SerializerException
-from hdl_toolkit.synthesizer.fileList import FileList
-
 
 
 def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
+    """
+    convert unit to rtl string using specified serializer
+    """
     if not isinstance(unitOrCls, Unit):
         u = unitOrCls()
     else:

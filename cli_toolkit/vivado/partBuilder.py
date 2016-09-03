@@ -1,4 +1,4 @@
-class XilinxPartBuilder:
+class XilinxPartBuilder():
     class Package():
         #zynq
         clg484 = "clg484"
@@ -20,6 +20,7 @@ class XilinxPartBuilder:
         ffg1156 = "ffg1156"
         rf676 = "rf676"
         rf900 = "rf900"
+        
     class Size():
         #zynq sizes
         _010 = "010"

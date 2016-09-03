@@ -121,7 +121,6 @@ class ExtractableInterface(InterfaceArray):
                         _unitParam = unitParam 
 
                 if len(paramDiff) == 0:
-                    
                     # [TODO] and port is not parametrized
                     origT = self._originEntityPort._dtype
                     t = self._dtype

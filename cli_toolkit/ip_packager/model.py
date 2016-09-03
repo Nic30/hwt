@@ -1,8 +1,9 @@
+from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
 from cli_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
          findS, mkSpiElm, spi_ns_prefix, appendSpiArray
-import xml.etree.ElementTree as etree
 from cli_toolkit.ip_packager.otherXmlObjs import Value
-from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+import xml.etree.ElementTree as etree
+
 
 class FileSetRef():
     @classmethod

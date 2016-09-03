@@ -8,9 +8,6 @@ from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
 
 
-class UnsupportedTypeExec(Exception):
-    pass
-
 def dumpMethod(func):
     """decorator which takes functions return and write it as line to dumpFile"""
     @wraps(func)
@@ -52,7 +49,7 @@ class VcdVarContext(dict):
     
     def register(self, var):
         if not isinstance(var._dtype, (Boolean, Bits)):
-            raise UnsupportedTypeExec(var)
+            raise TypeError(var)
         
         var_id = self.idToStr(self.nextId)
         if var in self:
