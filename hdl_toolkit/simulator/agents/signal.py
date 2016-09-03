@@ -2,8 +2,8 @@ from hdl_toolkit.simulator.agents.agentBase import AgentBase
 from hdl_toolkit.hdlObjects.specialValues import Time
 
 class SignalAgent(AgentBase):
-    READER_DELAY = 0.001 # random small value
-    def __init__(self, intf, delay=10*Time.ns):
+    READER_DELAY = 0.001  # random small value
+    def __init__(self, intf, delay=10 * Time.ns):
         self.delay = delay
         self.intf = intf
         self.data = []
@@ -23,8 +23,7 @@ class SignalAgent(AgentBase):
     def monitor(self, s):
         yield s.wait(self.READER_DELAY)
         while True:
-            while s.applyValuesPlaned:
-                yield s.wait(0)
+            yield s.updateComplete
             d = self.doRead(s)
             self.data.append(d)
             yield s.wait(self.delay)
