@@ -74,7 +74,7 @@ def synthesised(u):
     return u
 
 
-def synthesizeAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
+def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
     unit._loadDeclarations()
     header = None
     os.makedirs(folderName, exist_ok=True)
@@ -154,7 +154,7 @@ def syntaxCheck(unitOrFileName):
             unitName = defaultUnitName(unitOrFileName)
         
         d = "__pycache__/" + unitName
-        synthesizeAndSave(unitOrFileName, d)
+        toRtlAndSave(unitOrFileName, d)
         for f in chain(find_files(d, '*.vhd', recursive=True), find_files(d, '*.v', recursive=True)):
             fileSyntaxCheck(ParserFileInfo(d, 'work'))
         
