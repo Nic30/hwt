@@ -98,12 +98,11 @@ class SignalOps(object):
         """
         return self._sig._reversed()
     
-    def _concat(self, *operands):
+    def _concat(self, *others):
         """
-        concatenate signals to one big one. works like & in vhdl
+        concatenate signals to one big one
         """
-        return self._sig._concat(*operands)
-    
+        return self._sig._concat(*others)
     
     def __getitem__(self, key):
         """
@@ -115,11 +114,13 @@ class SignalOps(object):
         return self._sig._ternary(ifTrue, ifFalse)
     
     
-    def _assignFrom(self, source):
+    def __pow__(self, source):
         """
         connect this signal to driver
+        @attention: it is not power operator it is assignment
+        @return: list of assignments
         """
-        return self._sig._assignFrom(source)
+        return self._sig.__pow__(source)
     
     def _same(self):
         """

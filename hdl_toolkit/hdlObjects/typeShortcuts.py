@@ -32,5 +32,5 @@ def vecT(width, signed=None):
 
 def vec(val, width):
     """create hdl vector value"""
-    assert val < evalParam(hInt(2) ** width).val
+    assert val < evalParam(hInt(2)._pow(width)).val
     return vecT(width).fromPy(val)

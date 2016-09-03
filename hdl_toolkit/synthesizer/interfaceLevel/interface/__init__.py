@@ -122,7 +122,6 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         for e in self._arrayElemCache:
             e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
         
-        
     def _connectToIter(self, master, masterIndex=None, slaveIndex=None,
                              exclude=set(), fit=False):
         if self in exclude or master in exclude:
@@ -162,9 +161,8 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
             if fit:
                 srcSig = fitTo(srcSig, dstSig)
             
-            yield dstSig._assignFrom(srcSig)
-        
-            
+            yield dstSig.__pow__(srcSig)
+    
     def _connectTo(self, master, masterIndex=None, slaveIndex=None,
                          exclude=set(), fit=False):
         """
@@ -173,6 +171,9 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
         """
         return list(self._connectToIter(master, masterIndex, slaveIndex,
                                         exclude, fit))
+    
+    def __pow__(self, other):
+        return self._connectTo(other)
     
     def _signalsForInterface(self, context, prefix='', typeTransform=lambda x: x):
         """

@@ -218,7 +218,7 @@ def _connect(src, dst, exclude, fit):
         
     src = src._dtype.convert(src, dst._dtype)
     
-    return [dst._assignFrom(src)]
+    return dst ** src
 
 def connect(src, *destinations, exclude=set(), fit=False):
     """
@@ -284,7 +284,7 @@ def connectUnpacked(src, dst, exclude=[]):
             w = getWidthExpr(t)
             s = src[(w + offset): offset]
             offset += t.bit_length()
-        connections.append(sig._assignFrom(s))
+        connections.append(sig ** s)
     
     return connections
     
@@ -316,6 +316,7 @@ def packedWidth(intf):
 
 def _mkOp(fn): 
     def op(*ops):
+        assert ops, ops
         top = None 
         for s in ops:
             if top is None:
@@ -329,6 +330,14 @@ def _mkOp(fn):
 And = _mkOp(and_)
 Or = _mkOp(or_)
 Concat = _mkOp(concatFn)
+
+def iterBits(sig):
+    l = sig._dtype.bit_length() 
+    for bit in range(l):
+        yield sig[bit] 
+
+def power(base, exp):
+    return toHVal(base)._pow(exp) 
 
 # [TODO] sign correct shift
 def slr(sig, howMany):

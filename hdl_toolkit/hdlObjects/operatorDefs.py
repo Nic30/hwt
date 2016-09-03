@@ -1,7 +1,7 @@
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.function import Function
 from hdl_toolkit.hdlObjects.types.defs import INT
-from operator import floordiv, add, sub, pow, inv, mod, mul, ne, and_, or_, eq, \
+from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
     xor, gt, ge, lt, le, getitem
 
 class OpDefinition():
@@ -66,6 +66,9 @@ def toFn(a, b):
 def concatFn(a, b):
     return a._concat(b)
 
+def power(base, exp):
+    return base._pow(exp) 
+
 def eqFn(a, b):
     return a._eq(b)
 
@@ -106,7 +109,7 @@ class AllOps():
     DIV = OpDefinition(floordiv)
     ADD = OpDefinition(add)
     SUB = OpDefinition(sub)
-    POW = OpDefinition(pow)
+    POW = OpDefinition(power)
     UN_MINUS = OpDefinition(inv)
     MOD = OpDefinition(mod)
     MUL = OpDefinition(mul)

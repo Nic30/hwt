@@ -53,6 +53,8 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
             sc = serializer.Architecture(x, s)
         elif isinstance(x, VhdlCodeWrap):
             sc = serializer.asHdl(x)
+        elif isinstance(x, UnitFromHdl):
+            sc = str(x)
         else:
             raise NotImplementedError("Unexpected object %s" % (repr(x)))
         
