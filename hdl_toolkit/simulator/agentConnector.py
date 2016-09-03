@@ -39,7 +39,8 @@ def autoAddAgents(unit, propName="_ag", autoAgentMap=autoAgents):
         try:
             agentCls = autoAgentMap[intf.__class__]
         except KeyError:
-            raise Exception("Can not find default agent for interface %s" % (str(intf)))
+            raise Exception(("Can not find default agent for interface %s\n" +
+                            "(you have to register it to autoAgentMap)") % (str(intf)))
         
         agent = agentCls(intf)
         setattr(intf, propName, agent)
