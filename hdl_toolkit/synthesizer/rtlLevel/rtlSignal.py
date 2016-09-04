@@ -25,7 +25,12 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
            [TODO] mv negated to Bits hdl type.
     @ivar hiden: means that this signal is part of expression and should not be rendered 
     @ivar processCrossing: means that this signal is crossing process boundary
+    
+    @cvar __instCntr: counter used for generating instance ids
+    @ivar _instId: internaly used only for intuitive sorting of statements
     """
+    __instCntr = 0
+
     def __init__(self, name, dtype, defaultVal=None):
         if name is None:
             name = "sig_" + str(id(self))
@@ -41,8 +46,17 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
         self._usedOps = {}
         self.negated = False
         self.hidden = True
-        
+        self._instId = RtlSignal._nextInstId()
         self.simSensitiveProcesses = set()
+    
+    @classmethod
+    def _nextInstId(cls):
+        """
+        Get next instance id
+        """
+        i = cls.__instCntr
+        cls.__instCntr +=1
+        return i
     
     def staticEval(self):
         # operator writes in self._val new value

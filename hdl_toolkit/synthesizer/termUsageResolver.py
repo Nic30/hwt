@@ -70,7 +70,7 @@ def countCondOccurrences(termMap):
 
 def sortCondsByMostImpact(countedConds):
     for c in sorted(countedConds,
-                    key=lambda x: (x.usedCnt, x.isEventDependent, x.maxStmId),
+                    key=lambda x: (x.usedCnt, x.isEventDependent, x.maxStmId, x.term._instId),
                      reverse=True):
         yield c.term
 
