@@ -1,7 +1,7 @@
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.interfaces.std import Signal, FifoReader, FifoWriter, Clk, \
     Rst_n, VldSynced, Rst, Handshaked, BramPort, RdSynced, BramPort_withoutClk, \
-    HandshakeSync
+    HandshakeSync, RegCntrl
 from hdl_toolkit.simulator.agents.bramPort import BramPortAgent, BramPort_withoutClkAgent
 from hdl_toolkit.simulator.agents.clk import OscilatorAgent
 from hdl_toolkit.simulator.agents.fifo import FifoReaderAgent, FifoWriterAgent
@@ -10,6 +10,7 @@ from hdl_toolkit.simulator.agents.rdSynced import RdSyncedAgent
 from hdl_toolkit.simulator.agents.rst import PullUpAgent, PullDownAgent
 from hdl_toolkit.simulator.agents.signal import SignalAgent
 from hdl_toolkit.simulator.agents.vldSynced import VldSyncedAgent
+from hdl_toolkit.simulator.agents.regCntrl import RegCntrlAgent
 
 
 autoAgents = {
@@ -25,6 +26,7 @@ autoAgents = {
               HandshakeSync : HandshakeSyncAgent,
               BramPort   : BramPortAgent,
               BramPort_withoutClk: BramPort_withoutClkAgent,
+              RegCntrl : RegCntrlAgent,
             }
 
 def autoAddAgents(unit, propName="_ag", autoAgentMap=autoAgents):
@@ -39,7 +41,7 @@ def autoAddAgents(unit, propName="_ag", autoAgentMap=autoAgents):
         try:
             agentCls = autoAgentMap[intf.__class__]
         except KeyError:
-            raise Exception(("Can not find default agent for interface %s\n" +
+            raise Exception(("Can not find default agent for interface %s\n" + 
                             "(you have to register it to autoAgentMap)") % (str(intf)))
         
         agent = agentCls(intf)

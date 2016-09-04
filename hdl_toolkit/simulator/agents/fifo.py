@@ -9,8 +9,7 @@ class FifoReaderAgent(SyncAgentBase):
             rd = not s.r(intf.wait).val
             s.w(rd, intf.en)
             if rd:
-                while s.applyValuesPlaned:
-                    yield s.wait(0) # let rest of the system act
+                yield s.updateComplete
                 d = s.read(intf.data)
                 self.data.append(d)
         else:
@@ -29,10 +28,10 @@ class FifoWriterAgent(SyncAgentBase):
         
         if s.r(self.rst_n).val and not s.r(intf.wait).val \
            and self.data and self.enable:
-            #print("next %f" % s.env.now)
+            # print("next %f" % s.env.now)
             s.w(self.data.pop(0), intf.data)
             s.w(1, intf.en)
         else:
-            #print("wait %f" % s.env.now)
+            # print("wait %f" % s.env.now)
             s.w(0, intf.data)
             s.w(0, intf.en)

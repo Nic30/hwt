@@ -1,5 +1,3 @@
-from hdl_toolkit.hdlObjects.assignment import Assignment
-from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.variables import SignalItem
@@ -40,6 +38,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
        
         assert isinstance(dtype, HdlType)
         super().__init__(name, dtype, defaultVal)
+        SimSignal.__init__(self)
         # set can not be used because hash of items are changign
         self.endpoints = UniqList()
         self.drivers = UniqList()
@@ -47,7 +46,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
         self.negated = False
         self.hidden = True
         self._instId = RtlSignal._nextInstId()
-        self.simSensitiveProcesses = set()
+
     
     @classmethod
     def _nextInstId(cls):

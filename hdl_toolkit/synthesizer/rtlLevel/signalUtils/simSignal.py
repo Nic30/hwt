@@ -1,13 +1,21 @@
 from hdl_toolkit.hdlObjects.assignment import Assignment
+from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.exceptions import SimException
-from hdl_toolkit.hdlObjects.portItem import PortItem
 
 
 class SimSignal():
     """
     Class of signal simulation functions
+    
+    @ivar _writeCallbacks: list of callback functions(signal, simulator) which is called
+                           when new (changed) value is written to this signal
     """
+
+    def __init__(self):
+        self._writeCallbacks = []
+        self.simSensitiveProcesses = set()
+    
     def simPropagateChanges(self, simulator):
         self._oldVal = self._val
 
@@ -37,7 +45,6 @@ class SimSignal():
             raise SimException("Evaluation of signal returned not supported object (%s)" % 
                                (repr(self._val)))
         return self._val
-        
     
     def simUpdateVal(self, simulator, valUpdater):
         """
@@ -52,5 +59,12 @@ class SimSignal():
             log = simulator.config.logChange
             if  log:
                 log(simulator.env.now, self, newVal)
+            
+            # run write callbacks we have to create new list to allow 
+            # registerring of new call backs in callbacks
+            callBacks = self._writeCallbacks
+            self._writeCallbacks = []
+            for c in callBacks:
+                simulator.env.process(c(simulator))
             
             self.simPropagateChanges(simulator)
