@@ -5,7 +5,7 @@ from cli_toolkit.ip_packager.component import Component
 from cli_toolkit.ip_packager.helpers import prettify
 from cli_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
-from hdl_toolkit.synthesizer.fileList import FileList
+from hdl_toolkit.synthesizer.uniqList import UniqList
 from hdl_toolkit.synthesizer.interfaceLevel.unit import defaultUnitName
 from hdl_toolkit.synthesizer.shortcuts import toRtlAndSave
 from python_toolkit.fileHelpers import find_files
@@ -21,7 +21,7 @@ class Packager(object):
         self.topUnit = topUnit
         self.serializer = serializer
         self.name = defaultUnitName(self.topUnit, sugestedName=name)
-        self.hdlFiles = FileList()
+        self.hdlFiles = UniqList()
         
         for d in extraVhdlDirs:
             for f in find_files(d, "*.vhd"):
@@ -47,7 +47,7 @@ class Packager(object):
             os.makedirs(path)
         
         files = self.hdlFiles
-        self.hdlFiles = FileList(
+        self.hdlFiles = UniqList(
                           toRtlAndSave(self.topUnit, folderName=path,
                           name=self.name, serializer=self.serializer)
                         )
