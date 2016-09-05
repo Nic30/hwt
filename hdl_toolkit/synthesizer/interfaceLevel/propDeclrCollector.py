@@ -33,7 +33,7 @@ class MakeParamsShared(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.unit._setAttrListener = self.orig
 
-class PropDeclrCollector():
+class PropDeclrCollector(object):
     def _config(self):
         """
         initialize all parameters
