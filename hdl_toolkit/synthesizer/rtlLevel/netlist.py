@@ -144,9 +144,9 @@ class RtlNetlist():
                                 lambda x: isinstance(x, Assignment)
                                 )
                           )
-        for sig in set(map(lambda x:x.dst, assigments)):
+        for sig in set(map(lambda x: x.dst, assigments)):
             dps = list(where(assigments,
-                             lambda x: x.dst == sig)
+                             lambda x: x.dst is sig)
                        )
             name = ""
             if not sig.hasGenericName:
