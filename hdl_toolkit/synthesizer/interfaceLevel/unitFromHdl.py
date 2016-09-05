@@ -70,6 +70,10 @@ class UnitFromHdl(Unit):
     @cvar _intfClasses: interface classes which are searched on hdl entity 
     @cvar _debugParser: flag to run hdl parser in debug mode
     """
+    def __init__(self):
+        self._builded()
+        super(UnitFromHdl, self).__init__()
+    
     def _config(self):
         cls = self.__class__
         self._params = []
@@ -151,6 +155,18 @@ class UnitFromHdl(Unit):
             for _, e in ctx.entities.items():
                 if e.parent == ctx:
                     return e
+    
+    @classmethod
+    def _isBuild(cls):
+        try:
+            return cls._clsBuildFor == cls
+        except AttributeError:
+            return False
+        
+    @classmethod
+    def _builded(cls):
+        if not cls._isBuild():
+            cls._build()   
         
     @classmethod
     def _build(cls):
