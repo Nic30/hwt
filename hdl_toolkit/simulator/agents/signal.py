@@ -4,6 +4,7 @@ from hdl_toolkit.hdlObjects.specialValues import Time
 class SignalAgent(AgentBase):
     def __init__(self, intf, delay=10 * Time.ns):
         self.delay = delay
+        self.initDelay = 0
         self.intf = intf
         self.data = []
     
@@ -14,12 +15,18 @@ class SignalAgent(AgentBase):
         s.w(data, self.intf)    
         
     def driver(self, s):
+        if self.initDelay:
+            yield s.wait(self.initDelay)
+        
         while True:
             if self.data:
                 self.doWrite(s, self.data.pop(0))
             yield s.wait(self.delay)
     
     def monitor(self, s):
+        if self.initDelay:
+            yield s.wait(self.initDelay)
+        
         while True:
             yield s.updateComplete
             d = self.doRead(s)
