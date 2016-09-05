@@ -1,6 +1,6 @@
 from hdl_toolkit.hdlObjects.specialValues import READ, WRITE
 from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
-from hdl_toolkit.simulator.shortcuts import oscilate, onRisingEdge
+from hdl_toolkit.simulator.shortcuts import oscilate
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):
@@ -57,19 +57,22 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
     def driver(self, s):
         intf = self.intf
-        
+        readPending = self.readPending
         if self.requests and self.enable:
             req = self.requests.pop(0)
-            self.doReq(s, req)
-            
-            s.w(1, intf.en)
+            if req is None:
+                s.w(0, intf.en)
+                self.readPending = False
+            else:    
+                self.doReq(s, req)
+                s.w(1, intf.en)
         else:
             s.w(0, intf.en)
+            self.readPending = False
         
-        if self.readPending:
+        if readPending:
             d = s.r(intf.dout)
             self.readed.append(d)
-            self.readPending = False
     
 
 
