@@ -1,6 +1,9 @@
 
 
 class FileList(list):
+    """
+    List of unique items
+    """
     def __init__(self, *args, **kwargs):
         super(FileList, self).__init__(*args, **kwargs)
         self.__s = set()

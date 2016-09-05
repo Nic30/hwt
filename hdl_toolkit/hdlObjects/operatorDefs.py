@@ -1,6 +1,8 @@
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.function import Function
 from hdl_toolkit.hdlObjects.types.defs import INT
+from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
+    xor, gt, ge, lt, le, getitem
 
 class OpDefinition():
     """
@@ -41,7 +43,56 @@ class OpDefinition():
 def isEventDependentOp(operator):
     return operator in (AllOps.RISING_EDGE, AllOps.EVENT, AllOps.FALLIGN_EDGE)
 
-            
+
+def eventFn(a, now):
+    return a._hasEvent(now)
+
+def onRisingEdgeFn(a, now):
+    return a._onRisingEdge(now)
+
+def onFallingEdge(a, now):
+    return a._onFallingEdge(now)
+
+def dotOpFn(a, name):
+    return getattr(a, name)
+
+# [TODO] downto / to are relict of vhdl and should be replaced with slice
+def downtoFn(a, b):
+    return a._downto(b)
+
+def toFn(a, b):
+    return a._to(b)
+
+def concatFn(a, b):
+    return a._concat(b)
+
+def power(base, exp):
+    return base._pow(exp) 
+
+def eqFn(a, b):
+    return a._eq(b)
+
+def ternaryFn(a, b, c):
+    return a._ternary(b, c)
+
+def callFn(fn, *ops):
+    return a.call(*ops)
+
+def bitsToIntFn(a):
+    return a._convert(INT)
+
+def intToBitsFn(a, t):
+    return  a._convert(t)
+
+def bitsAsSignedFn(a):
+    return a._signed()
+
+def bitsAsUnsignedFn(a):
+    return a._unsigned()
+
+def bitsAsVec(a):
+    return a._vec()
+
 class AllOps():
     _idsInited = False
     """
@@ -51,45 +102,46 @@ class AllOps():
     """
     
     
-    EVENT = OpDefinition(lambda a, now: a._hasEvent(now))
-    RISING_EDGE = OpDefinition(lambda a , now: a._onRisingEdge(now))   # unnecessary
-    FALLIGN_EDGE = OpDefinition(lambda a , now: a._onFallingEdge(now)) # unnecessary
+    EVENT = OpDefinition(eventFn)
+    RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
+    FALLIGN_EDGE = OpDefinition(onFallingEdge)  # unnecessary
     
-    DIV = OpDefinition(lambda a, b : a // b)
-    ADD = OpDefinition(lambda a, b : a + b)
-    SUB = OpDefinition(lambda a, b : a - b)
-    POW = OpDefinition(lambda a, b : a ** b)
-    UN_MINUS = OpDefinition(lambda a :-a)
-    MOD = OpDefinition(lambda a, b : a % b)
-    MUL = OpDefinition(lambda a, b : a * b)
+    DIV = OpDefinition(floordiv)
+    ADD = OpDefinition(add)
+    SUB = OpDefinition(sub)
+    POW = OpDefinition(power)
+    UN_MINUS = OpDefinition(inv)
+    MOD = OpDefinition(mod)
+    MUL = OpDefinition(mul)
     
-    NOT = OpDefinition(lambda a :~a)
-    XOR = OpDefinition(lambda a, b : a != b)
-    AND_LOG = OpDefinition(lambda a, b : a & b)
-    OR_LOG = OpDefinition(lambda a, b : a | b)
+    NOT = OpDefinition(inv)
+    XOR = OpDefinition(xor)
+    AND_LOG = OpDefinition(and_)
+    OR_LOG = OpDefinition(or_)
 
-    DOT = OpDefinition(lambda a, name : getattr(a, name))
-    DOWNTO = OpDefinition(lambda a, b : a._downto(b))
-    CONCAT = OpDefinition(lambda a, b : a._concat(b))
+    DOT = OpDefinition(dotOpFn)
+    DOWNTO = OpDefinition(downtoFn)
+    TO = OpDefinition(toFn)
+    CONCAT = OpDefinition(concatFn)
     
-    EQ = OpDefinition(lambda a, b : a._eq(b))
-    NEQ = OpDefinition(lambda a, b : a != b)
-    GREATERTHAN = OpDefinition(lambda a, b : a > b)
-    GE = OpDefinition(lambda a, b : a >= b)
-    LOWERTHAN = OpDefinition(lambda a, b : a < b)
-    LE = OpDefinition(lambda a, b : a <= b)
+    EQ = OpDefinition(eqFn)
+    NEQ = OpDefinition(ne)
+    GREATERTHAN = OpDefinition(gt)
+    GE = OpDefinition(ge)
+    LOWERTHAN = OpDefinition(lt)
+    LE = OpDefinition(le)
     
 
-    INDEX = OpDefinition(lambda a, b : a[b])
-    TERNARY = OpDefinition(lambda a, b, c : a._ternary(b, c))
-    CALL = OpDefinition(lambda a, *ops: a.call(*ops))
+    INDEX = OpDefinition(getitem)
+    TERNARY = OpDefinition(ternaryFn)
+    CALL = OpDefinition(callFn)
     
-    BitsToInt = OpDefinition(lambda a : a._convert(INT))
-    IntToBits = OpDefinition(lambda a, t: a._convert(t))
+    BitsToInt = OpDefinition(bitsToIntFn)
+    IntToBits = OpDefinition(intToBitsFn)
     
-    BitsAsSigned = OpDefinition(lambda a : a._signed())
-    BitsAsUnsigned = OpDefinition(lambda a : a._unsigned())
-    BitsAsVec = OpDefinition(lambda a : a._vec())
+    BitsAsSigned = OpDefinition(bitsAsSignedFn)
+    BitsAsUnsigned = OpDefinition(bitsAsUnsignedFn)
+    BitsAsVec = OpDefinition(bitsAsVec)
     
     allOps = {}
         

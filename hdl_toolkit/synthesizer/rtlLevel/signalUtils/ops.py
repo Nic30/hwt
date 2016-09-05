@@ -5,6 +5,7 @@ from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 
 def tv(signal):
@@ -134,7 +135,6 @@ class RtlSignalOps():
     def _concat(self, *operands):
         return self.naryOp(AllOps.CONCAT, tv(self)._concat, *operands)
     
-    
     def _ternary(self, ifTrue, ifFalse):
         return self.naryOp(AllOps.TERNARY, tv(self)._ternary, ifTrue, ifFalse)
     
@@ -163,8 +163,21 @@ class RtlSignalOps():
             pass
         
     
-    def _assignFrom(self, source):
-        source = toHVal(source)
+    def __pow__(self, source):
+        """
+        Create assignment to this signal
+        @attention: it is not power operator it is assignment
+        @return: list of assignments
+        """
+        if isinstance(source, InterfaceBase):
+            source = source._sig
+        
+        if source is None:
+            source = self._dtype.fromPy(None)
+        else:
+            source = toHVal(source)
+            source = source._dtype.convert(source, self._dtype)
+        
  
         tmp = self._getIndexCascade()
         if tmp:
@@ -180,7 +193,11 @@ class RtlSignalOps():
         if not isinstance(source, Value):
             source.endpoints.append(a)
         
-        return a
+        return [a]
     
     def _same(self):
-        return [self._assignFrom(self)]
+        """
+        assign self to self 
+        used for registers where it means that value should remain same
+        """
+        return [self.__pow__(self)]

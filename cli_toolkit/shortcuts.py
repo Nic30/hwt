@@ -5,7 +5,7 @@ from cli_toolkit.vivado.config import VivadoConfig
 from cli_toolkit.vivado.controller import VivadoCntrl
 from cli_toolkit.vivado.partBuilder import XilinxPartBuilder
 from hdl_toolkit.synthesizer.interfaceLevel.unit import defaultUnitName
-from hdl_toolkit.synthesizer.shortcuts import synthesizeAndSave
+from hdl_toolkit.synthesizer.shortcuts import toRtlAndSave
 
 
 pb = XilinxPartBuilder
@@ -13,6 +13,9 @@ defaultPart = XilinxPartBuilder(pb.Family.kintex7, pb.Size._160t, pb.Package.ffg
 
 def buildUnit(unit, synthesize=True, implement=True, writeBitstream=True, getConstrains=None, 
               log=True, openGui=False, part=defaultPart):
+    """
+    Synthetize unit in bitstream synthesis tool
+    """
     r = VivadoReport()
     uName = defaultUnitName(unit)
     def synthesizeCmds():
@@ -23,7 +26,7 @@ def buildUnit(unit, synthesize=True, implement=True, writeBitstream=True, getCon
         yield from p.create()
         yield from p.setPart(part)
         
-        files = synthesizeAndSave(unit, folderName=os.path.join(p.path, 'src'))
+        files = toRtlAndSave(unit, folderName=os.path.join(p.path, 'src'))
         
         yield from p.addDesignFiles(files)
         yield from p.setTop(unit._name)

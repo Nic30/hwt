@@ -15,8 +15,8 @@ class RdSyncedAgent(SyncAgentBase):
         if self.notReset(s) and self.enable:
             s.w(1, intf.rd)
             
-            while s.applyValuesPlaned:
-                yield s.wait(0)
+            yield s.updateComplete
+            
             d = self.doRead(s)
             self.data.append(d)
         else:
@@ -40,8 +40,7 @@ class RdSyncedAgent(SyncAgentBase):
         self.doWrite(s, self.actualData)
         if self.notReset(s) and self.actualData is not None and self.enable:
             s.w(1, intf.vld)
-            while s.applyValuesPlaned:
-                yield s.wait(0)
+            yield s.updateComplete
                     
             d = self.doRead(s)
             self.data.append(d)

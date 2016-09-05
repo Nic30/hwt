@@ -1,8 +1,8 @@
-from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from cli_toolkit.ip_packager.helpers import appendSpiElem, \
          mkSpiElm
+from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
-   
+
 class BusInterface():
     def __init__(self):
         self.name = None
@@ -13,6 +13,7 @@ class BusInterface():
         self._portMaps = {}
         self.parameters = [] 
         self.endianness = None
+        
     # @classmethod
     # def fromElem(cls, elm):
     #    self = cls()
@@ -36,6 +37,7 @@ class BusInterface():
     #        self.parameters.append(p_obj)
     #        
     #    return self
+    
     @staticmethod
     def generatePortMap(biType, intf):
         def processIntf(mapDict, intf):

@@ -3,12 +3,10 @@ from time import gmtime, strftime
 
 from cli_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
     appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
+from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BOOL, STR
 from hdl_toolkit.hdlObjects.types.integer import Integer
-from hdl_toolkit.hdlObjects.types.bits import Bits
 
-
-XILINX_VERSION = "2014.4.1"
 
 class Value():
     __slots__ = ['id', 'format', 'bitStringLength', 'resolve', 'dependency', 'text']
@@ -159,11 +157,13 @@ class CoreExtensions():
         appendXiElem(r, "coreRevision").text = revision
         appendXiElem(r, "coreCreationDateTime").text = strftime("%Y-%m-%dT%H:%M:%SZ", self.coreCreationDateTime)
         return r
-    
+
+#  [TODO] XILINX_VERSION has to be extracted into some configuration
 class VendorExtensions():
+    XILINX_VERSION = "2014.4.1"
     def __init__(self):
         self.coreExtensions = CoreExtensions()
-        self.packagingInfo = {"xilinxVersion": XILINX_VERSION}
+        self.packagingInfo = {"xilinxVersion": self.XILINX_VERSION}
     def asElem(self, displayName, revision):
         r = mkSpiElm("vendorExtensions")
         r.append(self.coreExtensions.asElem(displayName, revision))

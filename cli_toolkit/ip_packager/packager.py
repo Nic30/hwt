@@ -5,12 +5,16 @@ from cli_toolkit.ip_packager.component import Component
 from cli_toolkit.ip_packager.helpers import prettify
 from cli_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
-from hdl_toolkit.synthesizer.interfaceLevel.unit import defaultUnitName
-from hdl_toolkit.synthesizer.shortcuts import synthesizeAndSave
 from hdl_toolkit.synthesizer.fileList import FileList
+from hdl_toolkit.synthesizer.interfaceLevel.unit import defaultUnitName
+from hdl_toolkit.synthesizer.shortcuts import toRtlAndSave
 from python_toolkit.fileHelpers import find_files
 
+
 class Packager(object):
+    """
+    Ipcore packager
+    """
     def __init__(self, topUnit, name=None, extraVhdlDirs=[], extraVhdlFiles=[],
                  extraVerilogFiles=[], extraVerilogDirs=[],
                  serializer=VhdlSerializer):
@@ -44,7 +48,7 @@ class Packager(object):
         
         files = self.hdlFiles
         self.hdlFiles = FileList(
-                          synthesizeAndSave(self.topUnit, folderName=path,
+                          toRtlAndSave(self.topUnit, folderName=path,
                           name=self.name, serializer=self.serializer)
                         )
 

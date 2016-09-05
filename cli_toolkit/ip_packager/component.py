@@ -1,16 +1,15 @@
 from time import  time
-from python_toolkit.arrayQuery import arr_any
 
+from cli_toolkit.ip_packager.busInterface import BusInterface
 from cli_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
          mkSpiElm, ns, whereEndsWithExt, whereEndsWithExts
+from cli_toolkit.ip_packager.interfaces.all import allBusInterfaces
 from cli_toolkit.ip_packager.model import Model
-from cli_toolkit.ip_packager.port import Port
-
 from cli_toolkit.ip_packager.otherXmlObjs import VendorExtensions, FileSet, File, \
     Parameter, Value
+from cli_toolkit.ip_packager.port import Port
+from python_toolkit.arrayQuery import arr_any
 import xml.etree.ElementTree as etree
-from cli_toolkit.ip_packager.interfaces.all import allBusInterfaces
-from cli_toolkit.ip_packager.busInterface import BusInterface
 
 
 vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
@@ -102,10 +101,11 @@ class Component():
         c.append(self.vendorExtensions.asElem(self.name + "_v" + self.version, revision=str(int(time()))))
         
         return c
-   
-
     
     def asignTopUnit(self, unit):
+        """
+        Set hwt unit as template for component
+        """
         self._topUnit = unit
         self.name = unit._name
         self.model.addDefaultViews(self._topUnit)

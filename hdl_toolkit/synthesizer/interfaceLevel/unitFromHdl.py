@@ -1,20 +1,23 @@
+from copy import copy
 import inspect, os
 import types
-from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.function import Function
-from hdl_toolkit.parser.utils import entityFromFile, loadCntxWithDependencies
-from hdl_toolkit.parser.hdlContext import RequireImportErr
-from hdl_toolkit.synthesizer.param import Param
-from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
-from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
-from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
-from hdl_toolkit.interfaces.all import allInterfaces
+
 from hdl_toolkit.hdlObjects.entity import Entity
+from hdl_toolkit.hdlObjects.function import Function
+from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, Unconstrained
-from copy import copy
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.interfaces.all import allInterfaces
+from hdl_toolkit.parser.hdlContext import RequireImportErr
+from hdl_toolkit.parser.utils import entityFromFile, loadCntxWithDependencies
+from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
+from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
+from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
+from hdl_toolkit.synthesizer.param import Param
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.fileList import FileList
+
 
 def cloneExprWithUpdatedParams(expr, paramUpdateDict):
     if isinstance(expr, Param):
@@ -33,12 +36,8 @@ def cloneExprWithUpdatedParams(expr, paramUpdateDict):
     else:
         raise NotImplementedError("Not implemented for %s" % (repr(expr)))
 
-def addPath(paths, p):
-    if p not in paths:
-        paths.append(p)
-
 def toAbsolutePaths(relativeTo, sources):
-    paths = []
+    paths = FileList()
     
     if isinstance(sources, str):
         sources = [sources]
@@ -47,15 +46,15 @@ def toAbsolutePaths(relativeTo, sources):
     def collectPaths(p):
         if isinstance(p, str):
             _p = os.path.join(relativeTo, p)
-            addPath(paths, _p)
+            paths.append(_p)
         elif isinstance(p, type) and issubclass(p, UnitFromHdl):
             p._buildFileNames()
             for _p in p._hdlSources:
-                addPath(paths, _p)
+                paths.append(_p)
         else:
             # tuple (lib, filename)
             _p = (p[0], os.path.join(relativeTo, p[1]))
-            addPath(paths, _p)
+            paths.append(_p)
     
     for s in sources:
         collectPaths(s)
@@ -192,7 +191,7 @@ class UnitFromHdl(Unit):
             self._name = defaultUnitName(self)
         self._loadMyImplementations()
         self._entity = Entity(self.__class__._entity.name)
-        self._entity._name =  self._name
+        self._entity._name = self._name
         
         generics = self._entity.generics
         ports = self._entity.ports

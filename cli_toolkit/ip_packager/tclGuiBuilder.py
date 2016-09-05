@@ -1,8 +1,5 @@
 
 
-def setParamOnModel(propName):
-    return "set_property value [get_property value ${PARAM_VALUE.%s}] ${MODELPARAM_VALUE.%s}" % (propName, propName)
-
 class TclObj():
     pass
 
@@ -67,6 +64,9 @@ class TclFn(TclObj):
                                             ' '.join(map(lambda x: str(x), self.params)),
                                             '\n'.join(map(lambda x: str(x), self.body)))
 
+
+def setParamOnModel(propName):
+    return "set_property value [get_property value ${PARAM_VALUE.%s}] ${MODELPARAM_VALUE.%s}" % (propName, propName)
 
 def paramManipulatorFns(paramName):
     pv = 'PARAM_VALUE.' + paramName

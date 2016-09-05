@@ -14,9 +14,6 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         self.requests = []
         self.readPending = False
         self.readed = []
-        
-        self.monitor = onRisingEdge(self.clk, self.monitor)
-        self.driver = onRisingEdge(self.clk, self.driver)
 
     def doReq(self, s, req):
         rw = req[0]

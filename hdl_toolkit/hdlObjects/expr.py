@@ -51,13 +51,3 @@ class ExprComparator():
                 yield (params[0], m[1])
         else:
             raise NotImplementedError("Searching for multiple differences in expression")
-
-class Map():
-    def __init__(self, src, dst):
-        self.src = src
-        self.dst = dst
-   
-    def __str__(self):
-        return "%s => %s" % (self.dst.name, self.src.name)  
-
- 

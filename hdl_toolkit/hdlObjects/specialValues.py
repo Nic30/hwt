@@ -1,8 +1,8 @@
 
+# [TODO] rename to constants
+
 class Unconstrained():
     __slots__ = ["derivedWidth"]
-    
-    
     
 class INTF_DIRECTION():
     MASTER = "MASTER"

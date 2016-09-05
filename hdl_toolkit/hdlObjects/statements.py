@@ -1,9 +1,16 @@
 
 class ReturnCalled(Exception):
+    """
+    Exception which is used as return statement while executing of hdl functions
+    """
     def __init__(self, val):
         self.val = val
 
 class ReturnContainer():
+    """
+    Stuctural container of return statement in hdl
+    """
+    
     def __init__(self, val=None):
         self.val = val
 
@@ -35,6 +42,9 @@ def simEvalCond(cond, simulator):
 
 
 def _invalidated(origUpadater):
+    """
+    disable validity on updater result
+    """
     def __invalidated(val):
         _, v = origUpadater(val)
         v.vldMask = 0
@@ -43,7 +53,7 @@ def _invalidated(origUpadater):
 
 class IfContainer():
     """
-    Structural container for hdl rendering
+    Structural container of if statement for hdl rendering
     """
     def __init__(self, cond, ifTrue=[], ifFalse=[], elIfs=[]):
         self.cond = cond
@@ -61,7 +71,7 @@ class IfContainer():
     def simEval(self, simulator):
         """
         Same like seqEval but does not assign to signal instead of
-        yield tuple (signal, value)
+        if schedueles updater in simulator
         """
         condRes, condVld = simEvalCond(self.cond, simulator)
         if condRes or not condVld:
@@ -98,13 +108,16 @@ class IfContainer():
 
 class SwitchContainer():
     """
-    Structural container for hdl rendering
+    Structural container for switch statement for hdl rendering
     """
     def __init__(self, switchOn, cases):
         self.switchOn = switchOn
         self.cases = cases
     
     def simEval(self, simulator):
+        """
+        scheduele updater in simulator with effect of this statement
+        """
         v = self.switchOn.simEval(simulator)
         vld = v.vldMask == v._dtype.all_mask()
         if not vld:
@@ -131,7 +144,7 @@ class SwitchContainer():
  
 class WhileContainer():
     """
-    Structural container for hdl rendering
+    Structural container of while statement for hdl rendering
     """
     def __init__(self, cond, body):
         self.cond = cond
@@ -146,6 +159,9 @@ class WhileContainer():
                 s.seqEval()
 
 class WaitStm():
+    """
+    Structural container of wait statemnet for hdl rendering
+    """
     def __init__(self, waitForWhat):
         self.isTimeWait = isinstance(waitForWhat, int)
         self.waitForWhat = waitForWhat

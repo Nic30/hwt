@@ -6,6 +6,9 @@ class PortType():
     rst = "rst"
 
 class SimpleXDCProp():
+    """
+    xdc property setter container
+    """
     def __init__(self, port, mode):
         self.port = port
         self.mode = mode
@@ -62,6 +65,7 @@ class XdcTextWrapper():
     
     
 class Comment(XdcTextWrapper):
+    """tcl xdc comment"""
     def __init__(self, text):
         super(Comment, self).__init__("#" + text)
     

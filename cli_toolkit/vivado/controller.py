@@ -1,7 +1,9 @@
 import pexpect, os
+
 from cli_toolkit.vivado.cmdResult import VivadoCmdResult
-from cli_toolkit.vivado.tcl import VivadoTCL
 from cli_toolkit.vivado.config import VivadoConfig
+from cli_toolkit.vivado.tcl import VivadoTCL
+
 
 def mkPackageIp(verdor, user, name, version):
     return ':'.join([verdor, user, name, version])
@@ -89,9 +91,8 @@ class VivadoCntrl():
             os.remove(self.jurnalFile)   
             
 if __name__ == "__main__":
-    from cli_toolkit.tests.config import defaultVivadoExc
     import os
-    with VivadoCntrl(defaultVivadoExc) as v: 
+    with VivadoCntrl() as v: 
         _op, _pwd, _dir = v.process(['open_project /home/nic30/Documents/vivado/Sprobe10_board_test/Sprobe10_board_test.xpr', 'pwd', 'dir'])
         print(_op.resultText)
         ls = os.listdir(_pwd.resultText)

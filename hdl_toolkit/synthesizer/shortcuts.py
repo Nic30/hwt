@@ -1,23 +1,28 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import hdlConvertor
 from itertools import chain
 import os
 import shutil
 
-import hdlConvertor
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.parser.loader import langFromExtension, ParserFileInfo
+from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.synthesizer.fileList import FileList
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthesizer.vhdlCodeWrap import VhdlCodeWrap
 from python_toolkit.fileHelpers import find_files
-from hdl_toolkit.serializer.exceptions import SerializerException
-from hdl_toolkit.synthesizer.fileList import FileList
-
 
 
 def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
+    """
+    convert unit to rtl string using specified serializer
+    """
     if not isinstance(unitOrCls, Unit):
         u = unitOrCls()
     else:
@@ -48,6 +53,8 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
             sc = serializer.Architecture(x, s)
         elif isinstance(x, VhdlCodeWrap):
             sc = serializer.asHdl(x)
+        elif isinstance(x, UnitFromHdl):
+            sc = str(x)
         else:
             raise NotImplementedError("Unexpected object %s" % (repr(x)))
         
@@ -69,7 +76,7 @@ def synthesised(u):
     return u
 
 
-def synthesizeAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
+def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
     unit._loadDeclarations()
     header = None
     os.makedirs(folderName, exist_ok=True)
@@ -149,7 +156,7 @@ def syntaxCheck(unitOrFileName):
             unitName = defaultUnitName(unitOrFileName)
         
         d = "__pycache__/" + unitName
-        synthesizeAndSave(unitOrFileName, d)
+        toRtlAndSave(unitOrFileName, d)
         for f in chain(find_files(d, '*.vhd', recursive=True), find_files(d, '*.v', recursive=True)):
             fileSyntaxCheck(ParserFileInfo(d, 'work'))
         
@@ -158,7 +165,7 @@ def syntaxCheck(unitOrFileName):
     else:
         raise  NotImplementedError("Not implemented for '%'" % (repr(unitOrFileName)))
     
-def synthesizeAsIpcore(unit, folderName=".", name=None, serializer=VhdlSerializer):
+def serializeAsIpcore(unit, folderName=".", name=None, serializer=VhdlSerializer):
     from cli_toolkit.ip_packager.packager import Packager
     p = Packager(unit, name=name)
     p.createPackage(folderName)

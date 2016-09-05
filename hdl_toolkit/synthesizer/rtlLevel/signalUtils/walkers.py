@@ -72,42 +72,6 @@ def walkAllOriginSignals(sig, discovered=None):
     else:
         yield sig
 
-def _walkAllRelatedSignals(obj, discovered=None):
-    """
-    Walk every code element and discover every signal which has any relation to this object 
-    (even not direct)
-    """
-    if isinstance(obj, Value):
-        raise StopIteration()
-    elif isinstance(obj, Operator):
-        for op in obj.ops:
-            yield from _walkAllRelatedSignals(op, discovered=discovered)
-    elif isinstance(obj, RtlSignalBase):
-        yield from walkAllRelatedSignals(obj, discovered=discovered)
-    elif isinstance(obj, Assignment):
-        for s in [obj.src, obj.dst]:
-            yield from _walkAllRelatedSignals(s, discovered=discovered)
-    else:
-        raise NotImplementedError("walkAllRelatedSignals not implemented for node %s" % (str(obj)))
-
-        
-def walkAllRelatedSignals(sig, discovered=None):
-    """
-    Walk every code element and discover every signal which has any relation to this signal 
-    (even not direct)
-    """
-    
-    if discovered is None:
-        discovered = set()
-    assert isinstance(sig, RtlSignalBase)
-    if sig in discovered:
-        return
-
-    discovered.add(sig)
-    yield sig
-    for e in walkSigExpr(sig):
-        yield from _walkAllRelatedSignals(e, discovered)
-        
 def walkSignalsInExpr(expr):
     if isinstance(expr, Value):
         return

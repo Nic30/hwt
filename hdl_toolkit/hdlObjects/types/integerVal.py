@@ -4,6 +4,7 @@ from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.types.integer import Integer
+from operator import pow
 
 BoolVal = BOOL.getValueCls()
 
@@ -70,8 +71,8 @@ class IntegerVal(Value):
     def __mul__(self, other):
         return intAritmeticOp(self, other, AllOps.MUL)
 
-    def __pow__(self, other):
-        return intAritmeticOp(self, other, AllOps.POW)
+    def _pow(self, other):
+        return intOp(self, other, AllOps.POW, INT, pow)
 
     def __floordiv__(self, other):
         return intAritmeticOp(self, other, AllOps.DIV)

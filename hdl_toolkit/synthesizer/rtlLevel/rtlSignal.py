@@ -1,5 +1,3 @@
-from hdl_toolkit.hdlObjects.assignment import Assignment
-from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.hdlObjects.variables import SignalItem
@@ -7,6 +5,7 @@ from hdl_toolkit.simulator.exceptions import SimException
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.simSignal import SimSignal
 
 # [TODO] there is duplication with FileList
 class UniqList(list):
@@ -14,7 +13,7 @@ class UniqList(list):
         if obj not in self:
             list.append(self, obj)
 
-class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
+class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
     """
     more like net
     @ivar _usedOps: dictionary of used operators which can be reused
@@ -24,7 +23,12 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
            [TODO] mv negated to Bits hdl type.
     @ivar hiden: means that this signal is part of expression and should not be rendered 
     @ivar processCrossing: means that this signal is crossing process boundary
+    
+    @cvar __instCntr: counter used for generating instance ids
+    @ivar _instId: internaly used only for intuitive sorting of statements
     """
+    __instCntr = 0
+
     def __init__(self, name, dtype, defaultVal=None):
         if name is None:
             name = "sig_" + str(id(self))
@@ -34,29 +38,25 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
        
         assert isinstance(dtype, HdlType)
         super().__init__(name, dtype, defaultVal)
+        SimSignal.__init__(self)
         # set can not be used because hash of items are changign
         self.endpoints = UniqList()
         self.drivers = UniqList()
         self._usedOps = {}
         self.negated = False
         self.hidden = True
-        
-        self.simSensitiveProcesses = set()
-    
-    def simPropagateChanges(self, simulator):
-        self._oldVal = self._val
+        self._instId = RtlSignal._nextInstId()
 
-        for e in self.endpoints:
-            if isinstance(e, PortItem) and e.dst is not None:
-                e.dst.simUpdateVal(simulator, lambda v: (True, self._val))
-            
-        log = simulator.config.logPropagation
-        for p in self.simSensitiveProcesses:        
-            if log:
-                log(simulator, self, p)
-                
-            simulator.addHwProcToRun(p, False)
-        
+    
+    @classmethod
+    def _nextInstId(cls):
+        """
+        Get next instance id
+        """
+        i = cls.__instCntr
+        cls.__instCntr +=1
+        return i
+    
     def staticEval(self):
         # operator writes in self._val new value
         if self.drivers:
@@ -74,39 +74,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                                (repr(self._val)))
         return self._val
     
-    def simEval(self, simulator):
-        """
-        Evaluate, signals which have hidden flag set
-        @attention: single process has to drive single variable in order to work
-        """
-        for d in self.drivers:
-            if isinstance(d, Assignment):
-                continue
-            
-            d.simEval(simulator)
-            
-        if not isinstance(self._val, Value):
-            raise SimException("Evaluation of signal returned not supported object (%s)" % 
-                               (repr(self._val)))
-        return self._val
-        
-    
-    def simUpdateVal(self, simulator, valUpdater):
-        """
-        Method called by simulator to update new value for this object
-        """
-        
-        dirtyFlag, newVal = valUpdater(self._oldVal)
-        self._val = newVal
-        newVal.updateTime = simulator.env.now
-        
-        if dirtyFlag:
-            log = simulator.config.logChange
-            if  log:
-                log(simulator.env.now, self, newVal)
-            
-            self.simPropagateChanges(simulator)
-     
+      
     def singleDriver(self):
         """
         Returns a first driver if signal has only one driver.
