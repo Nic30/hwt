@@ -126,6 +126,9 @@ class BramPort_withoutClk(Interface):
         self.en = s()
         self.we = s()   
 
+    def _getIpCoreIntfClass(self):
+        from cli_toolkit.ip_packager.interfaces.std import IP_BlockRamPort
+        return IP_BlockRamPort
 
 class BramPort(BramPort_withoutClk):
     
@@ -153,11 +156,6 @@ class BramPort(BramPort_withoutClk):
         setIntf("clk", clk)
         
         return self   
-    
-    def _getIpCoreIntfClass(self):
-        from cli_toolkit.ip_packager.interfaces.std import IP_BlockRamPort
-        return IP_BlockRamPort
-        
 
 class FifoWriter(Interface):
     def _config(self):
