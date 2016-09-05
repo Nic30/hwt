@@ -1,12 +1,12 @@
 import math
-
-from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.hdlObjects.assignment import mkUpdater
-from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
-from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hdl_toolkit.simulator.utils import valueHasChanged
-from hdl_toolkit.simulator.simulatorCore import HdlEnvironmentCore
 from simpy.events import NORMAL
+
+from hdl_toolkit.hdlObjects.assignment import mkUpdater
+from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
+from hdl_toolkit.simulator.simulatorCore import HdlEnvironmentCore
+from hdl_toolkit.simulator.utils import valueHasChanged
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 
 class HdlSimulator(object):
@@ -65,6 +65,8 @@ class HdlSimulator(object):
     @ivar env: simpy enviromnment
     @ivar lastUpdateComplete: time when last apply values ended
     @ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
+    @ivar evDependentProcsToRun: list of event dependent processes which should be evaluated after 
+                                applyValEv
     """
     # time after values which are event dependent will be applied
     # this is random number smaller than any clock
@@ -73,7 +75,7 @@ class HdlSimulator(object):
     EV_DEPENDENCY_SLOWDOWN = 500
     
     PRIORITY_APPLY_COMB = NORMAL + 1
-    PRIORITY_APPLY_EV_DEP =  NORMAL + 2
+    PRIORITY_APPLY_SEQ = PRIORITY_APPLY_COMB + 1 
      
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
     def __init__(self, config=None):
@@ -89,15 +91,17 @@ class HdlSimulator(object):
         # (signal, value) tupes which should be applied before new round of processes
         #  will be executed
         self.valuesToApply = []
+        self.evDependentProcsToRun = []
+        
     
     def addHwProcToRun(self, proc, applyImmediately):
         # first process in time has to plan executing of apply values on the end of this time
         if not applyImmediately and self.applyValEv is None:
-            # (apply on end of this time to minialize process reevaluation)
+            # (apply on end of this time to minimalize process reevaluation)
             self.scheduleAplyValues()
 
         for v in proc.simEval(self):
-            #print("RUNNING", self.env.now, proc.name)
+            # print("RUNNING", self.env.now, proc.name)
             dst, updater, isEvDependent = v
             self.valuesToApply.append((dst, updater, isEvDependent, proc))
     
@@ -113,10 +117,24 @@ class HdlSimulator(object):
         self.applyValEv = self.env.event()
         self.applyValEv._ok = True
         self.applyValEv._value = None
-        self.applyValEv.callbacks.append(lambda ev: self.applyValues())
+        self.applyValEv.callbacks.append(self.applyValues)
+        
         self.env.schedule(self.applyValEv, priority=self.PRIORITY_APPLY_COMB)
         
-    def applyValues(self):
+        self.runSeqProcessesEv = self.env.event()
+        self.runSeqProcessesEv._ok = True
+        self.runSeqProcessesEv._value = None
+        self.runSeqProcessesEv.callbacks.append(self.runSeqProcesses)
+        
+        self.env.schedule(self.runSeqProcessesEv, priority=self.PRIORITY_APPLY_SEQ)
+
+    def runSeqProcesses(self, ev):
+            for proc in self.evDependentProcsToRun:
+                for v in proc.simEval(self):
+                    dst, updater, _ = v
+                    self._delayedUpdate(dst, updater)
+        
+    def applyValues(self, ev):
         # [TODO] not ideal, processes should be evaluated before running apply values
         # this should be done by priority, not by timeout
         # (currently can't get scipy working with priorities)
@@ -134,7 +152,8 @@ class HdlSimulator(object):
         for s, vUpdater, isEventDependent, comesFrom in va:
             # print(s, isEventDependent)
             if isEventDependent:
-                self._delayedUpdate(s, vUpdater)
+                self.evDependentProcsToRun.append(comesFrom)
+                
             else:
                 # print("NORMAL", self.env.now, comesFrom.name)
                 s.simUpdateVal(self, vUpdater)
@@ -146,15 +165,9 @@ class HdlSimulator(object):
             return
         
         # activate updateComplete if this was last applyValues() in this time        
-        nextEventT = self.env.peek()
-        now = self.env.now
-        # is last event or is last in this time
-        if (math.isinf(nextEventT) or nextEventT > now) \
-            and self.lastUpdateComplete < now:
-            self.updateComplete.succeed()  # trigger
-            self.updateComplete = self.env.event()  # regenerate event
-            self.lastUpdateComplete = now
- 
+        self.updateComplete.succeed()  # trigger
+        self.updateComplete = self.env.event()  # regenerate event
+        self.lastUpdateComplete = self.env.now
         self.applyValEv = None 
            
     def _initUnitSignals(self, unit):
