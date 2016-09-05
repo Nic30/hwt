@@ -54,12 +54,19 @@ class Signal(SignalOps, Interface):
 
 class Clk(Signal):
     _alternativeNames = ['ap_clk', 'aclk', 'clk', 'clock']
+    
+    def _getIpCoreIntfClass(self):
+        from cli_toolkit.ip_packager.interfaces.std import IP_Clk
+        return IP_Clk
 
 
 class Rst(Signal):
     _alternativeNames = ['ap_rst', 'areset', 'reset', 'rst']
 
-
+    def _getIpCoreIntfClass(self):
+        from cli_toolkit.ip_packager.interfaces.std import IP_Rst
+        return IP_Rst
+    
 class Rst_n(Signal):
     _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn', 'rst_n' ]
     def _signalsForInterface(self, context, prefix='', typeTransform=lambda x:x):
@@ -69,6 +76,9 @@ class Rst_n(Signal):
             s.negated = True
         return sigs
 
+    def _getIpCoreIntfClass(self):
+        from cli_toolkit.ip_packager.interfaces.std import IP_Rst_n
+        return IP_Rst_n
 
 class VldSynced(Interface):
     def _config(self):
@@ -118,6 +128,7 @@ class BramPort_withoutClk(Interface):
 
 
 class BramPort(BramPort_withoutClk):
+    
     def _declr(self):
         super()._declr()
         self.clk = s(masterDir=D.OUT)
@@ -142,6 +153,10 @@ class BramPort(BramPort_withoutClk):
         setIntf("clk", clk)
         
         return self   
+    
+    def _getIpCoreIntfClass(self):
+        from cli_toolkit.ip_packager.interfaces.std import IP_BlockRamPort
+        return IP_BlockRamPort
         
 
 class FifoWriter(Interface):
@@ -153,6 +168,7 @@ class FifoWriter(Interface):
         self.wait = s(masterDir=DIRECTION.IN)
         self.data = s(dtype=vecT(self.DATA_WIDTH), alternativeNames=[''])
 
+    
 
 class FifoReader(FifoWriter):
     def _declr(self):

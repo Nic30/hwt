@@ -15,6 +15,9 @@ from hdl_toolkit.synthesizer.param import Param
 from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo, aplyIndexOnSignal
 
 
+class NoKnownIpCoreInterface(Exception):
+    pass
+
 class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """
     Base class for all interfaces in interface synthesizer
@@ -259,6 +262,9 @@ class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollect
             except AttributeError:
                 continue
             self._replaceParam(onParentName, p)
+    def _getIpCoreIntfClass(self):
+        raise NoKnownIpCoreInterface()
+    
     
     def __repr__(self):
         s = [self.__class__.__name__]

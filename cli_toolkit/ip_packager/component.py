@@ -3,13 +3,13 @@ from time import  time
 from cli_toolkit.ip_packager.busInterface import BusInterface
 from cli_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
          mkSpiElm, ns, whereEndsWithExt, whereEndsWithExts
-from cli_toolkit.ip_packager.interfaces.all import allBusInterfaces
 from cli_toolkit.ip_packager.model import Model
 from cli_toolkit.ip_packager.otherXmlObjs import VendorExtensions, FileSet, File, \
     Parameter, Value
 from cli_toolkit.ip_packager.port import Port
 from python_toolkit.arrayQuery import arr_any
 import xml.etree.ElementTree as etree
+from hdl_toolkit.synthesizer.interfaceLevel.interface import NoKnownIpCoreInterface
 
 
 vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
@@ -120,8 +120,8 @@ class Component():
         for intf in self.busInterfaces:
             biClass = None
             try:
-                biClass = allBusInterfaces[intf.__class__]
-            except KeyError:
+                biClass = intf._getIpCoreIntfClass()
+            except NoKnownIpCoreInterface:
                 pass
             if biClass is not None:
                 bi = BusInterface.fromBiClass(intf, biClass)
