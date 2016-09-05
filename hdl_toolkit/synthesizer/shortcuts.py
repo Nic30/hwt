@@ -11,7 +11,7 @@ from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.parser.loader import langFromExtension, ParserFileInfo
 from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
-from hdl_toolkit.synthesizer.fileList import FileList
+from hdl_toolkit.synthesizer.uniqList import UniqList
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
@@ -80,7 +80,7 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
     unit._loadDeclarations()
     header = None
     os.makedirs(folderName, exist_ok=True)
-    files = FileList()
+    files = UniqList()
     if name is not None:
         unit._name = name
         

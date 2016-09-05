@@ -6,12 +6,7 @@ from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.simSignal import SimSignal
-
-# [TODO] there is duplication with FileList
-class UniqList(list):
-    def append(self, obj):
-        if obj not in self:
-            list.append(self, obj)
+from hdl_toolkit.synthesizer.uniqList import UniqList
 
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
     """

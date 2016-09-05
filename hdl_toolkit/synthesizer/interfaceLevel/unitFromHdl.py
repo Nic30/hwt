@@ -16,7 +16,7 @@ from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthesizer.param import Param
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthesizer.fileList import FileList
+from hdl_toolkit.synthesizer.uniqList import UniqList
 
 
 def cloneExprWithUpdatedParams(expr, paramUpdateDict):
@@ -37,7 +37,7 @@ def cloneExprWithUpdatedParams(expr, paramUpdateDict):
         raise NotImplementedError("Not implemented for %s" % (repr(expr)))
 
 def toAbsolutePaths(relativeTo, sources):
-    paths = FileList()
+    paths = UniqList()
     
     if isinstance(sources, str):
         sources = [sources]
