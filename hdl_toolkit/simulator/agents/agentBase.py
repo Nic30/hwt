@@ -4,7 +4,6 @@ class AgentBase():
     def __init__(self, intf):
         self.intf = intf
         self.enable = True
-        self.data = []
     
     def getSubDrivers(self):
         return []
