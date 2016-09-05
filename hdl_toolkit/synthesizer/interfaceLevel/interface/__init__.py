@@ -6,7 +6,6 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
-from hdl_toolkit.synthesizer.interfaceLevel.buildable import Buildable
 from hdl_toolkit.synthesizer.interfaceLevel.interface.directionFns import InterfaceDirectionFns 
 from hdl_toolkit.synthesizer.interfaceLevel.interface.hdlExtraction import ExtractableInterface
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase 
@@ -18,7 +17,7 @@ from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo, aplyIndexOn
 class NoKnownIpCoreInterface(Exception):
     pass
 
-class Interface(InterfaceBase, Buildable, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
+class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """
     Base class for all interfaces in interface synthesizer
     

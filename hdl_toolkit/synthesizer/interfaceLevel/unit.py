@@ -1,5 +1,4 @@
 from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
-from hdl_toolkit.synthesizer.interfaceLevel.buildable import Buildable
 from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import forAllParams
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import UnitBase 
 from hdl_toolkit.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector 
@@ -8,10 +7,10 @@ from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
 
 
-class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
+class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     """
     Class members:
-    #resolved automaticaly durning configuration/declaration:
+    #resolved automatically during configuration/declaration:
     @ivar _interfaces: all interfaces 
     @ivar _units: all units defined on this obj in configuration/declaration
     @ivar _params: all params defined on this obj in configuration/declaration
@@ -22,7 +21,6 @@ class Unit(UnitBase, Buildable, PropDeclrCollector, UnitImplHelpers):
     """
     
     def __init__(self):
-        self.__class__._builded()
         self._checkIntferfaces = True
         self._lazyLoaded = []
          
