@@ -1,11 +1,11 @@
 
 
-class FileList(list):
+class UniqList(list):
     """
     List of unique items
     """
     def __init__(self, *args, **kwargs):
-        super(FileList, self).__init__(*args, **kwargs)
+        super(UniqList, self).__init__(*args, **kwargs)
         self.__s = set()
     
     def append(self, item):
