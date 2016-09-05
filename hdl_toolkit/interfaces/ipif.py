@@ -32,6 +32,7 @@ class IPIF(Interface):
         
 class IPIFWithCE(IPIF):
     def _config(self):
+        super(IPIFWithCE, self)._config()
         self.REG_COUNT = Param(1)
         
     def _declr(self):
