@@ -1,8 +1,8 @@
 import unittest
-from hdl_toolkit.interfaces.amba import AxiStream, Axi4
-from hls_toolkit.streamLvl.valObj import valObj
-from hls_toolkit.streamLvl.ops import  packVal, unpackVal
 
+from hls_toolkit.streamLvl.ops import  packVal, unpackVal
+from hls_toolkit.streamLvl.valObj import valObj
+from hwtLib.interfaces.amba import AxiStream, Axi4
 
 
 class StreamLvlTC(unittest.TestCase):
