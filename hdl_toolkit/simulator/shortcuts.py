@@ -7,7 +7,7 @@ from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hdl_toolkit.synthesizer.shortcuts import synthesised
 from hdl_toolkit.hdlObjects.specialValues import Time
 
-def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
+def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
     """
     Syntax sugar
     If outputFile is string try to open it as file
@@ -20,7 +20,7 @@ def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
         return _simUnitVcd(unit, stimulFunctions, outputFile=outputFile, time=time) 
 
 
-def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=Time.us):
+def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
     """
     @param unit: interface level unit to simulate
     @param stimulFunctions: iterable of function with single param env (simpy environment)
