@@ -10,6 +10,7 @@ from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDe
 from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo
 from operator import and_, or_
 from hdl_toolkit.hdlObjects.operatorDefs import concatFn
+from hdl_toolkit.hdlObjects.types.enum import Enum
 
 
 def _intfToSig(obj):
@@ -140,7 +141,12 @@ class FsmBuilder(StmCntx):
         @param stateT: enum type of state
         @param stateRegName: name of register where sate is stored
         """
-        self.stateReg = parent._reg(stateRegName, stateT, stateT.fromPy(stateT._allValues[0]))
+        if isinstance(stateT, Enum):
+            beginVal = stateT.fromPy(stateT._allValues[0])
+        else:
+            beginVal = 0
+        
+        self.stateReg = parent._reg(stateRegName, stateT, beginVal)
         Switch.__init__(self, self.stateReg)
     
     _appendStatements = Switch._appendStatements
