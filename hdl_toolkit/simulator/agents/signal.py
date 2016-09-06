@@ -1,12 +1,28 @@
 from hdl_toolkit.simulator.agents.agentBase import AgentBase
 from hdl_toolkit.hdlObjects.specialValues import Time
+from hdl_toolkit.simulator.shortcuts import onRisingEdge
 
 class SignalAgent(AgentBase):
-    def __init__(self, intf, delay=10 * Time.ns):
+    """
+    Agent for signal interface, it can use clock and reset interface for synchronization
+    or can be synchronized by delay
+    
+    @attention: clock synchronization has higher priority 
+    """
+    def __init__(self, intf, clk=None, rstn=None, delay=10 * Time.ns):
         self.delay = delay
         self.initDelay = 0
+        self.clk = clk
+        self.rstn = rstn
         self.intf = intf
         self.data = []
+        
+        self.initPending = True 
+        
+        if clk is not None:
+            self.monitor = onRisingEdge(self.clk, self.monitor)
+            self.driver = onRisingEdge(self.clk, self.driver)
+            
     
     def doRead(self, s):
         return s.read(self.intf)
@@ -15,21 +31,24 @@ class SignalAgent(AgentBase):
         s.w(data, self.intf)    
         
     def driver(self, s):
-        if self.initDelay:
+        if self.initPending and self.initDelay:
             yield s.wait(self.initDelay)
+            self.initPending = False
         
-        while True:
-            if self.data:
-                self.doWrite(s, self.data.pop(0))
+        if self.data:
+            self.doWrite(s, self.data.pop(0))
+        
+        if self.clk is None:    
             yield s.wait(self.delay)
     
     def monitor(self, s):
-        if self.initDelay:
+        if self.initPending and self.initDelay:
             yield s.wait(self.initDelay)
+            self.initPending = False
         
-        while True:
-            yield s.updateComplete
-            d = self.doRead(s)
-            self.data.append(d)
+        yield s.updateComplete
+        d = self.doRead(s)
+        self.data.append(d)
+        if self.clk is None:
             yield s.wait(self.delay)
-    
+

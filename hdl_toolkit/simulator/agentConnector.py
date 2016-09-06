@@ -48,11 +48,9 @@ def autoAddAgents(unit, propName="_ag", autoAgentMap=autoAgents):
         setattr(intf, propName, agent)
         
         if intf._direction == INTF_DIRECTION.MASTER:
-            proc.append(agent.monitor)
-            proc.extend(agent.getSubMonitors())
+            proc.extend(agent.getMonitors())
         elif intf._direction == INTF_DIRECTION.SLAVE:
-            proc.append(agent.driver)
-            proc.extend(agent.getSubDrivers())
+            proc.extend(agent.getDrivers())
         else:
             raise NotImplementedError("intf._direction %s" % str(intf._direction))
         

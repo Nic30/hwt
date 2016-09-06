@@ -1,40 +1,19 @@
-
-
+from hdl_toolkit.simulator.agents.vldSynced import VldSyncedAgent
+from hdl_toolkit.simulator.agents.signal import SignalAgent
 from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
 
 
 class RegCntrlAgent(SyncAgentBase):
     def __init__(self, intf, clk=None, rstn=None):
-        super().__init__(intf, clk=None, rstn=None, allowNoReset=True)
-        self.requests = []
-        self.rx = []
-        self.tx = []
-        self.readPending = False
+        self.intf = intf
+        if clk is None:
+            clk = self._getClk()
         
-    def monitor(self, s):
-        """
-        Collect data
-        """
-        raise NotImplementedError()
+        self._rx = SignalAgent(intf.din, clk=clk, rstn=None)
+        self._tx = VldSyncedAgent(intf.dout, clk=clk, rstn=rstn, allowNoReset=True)
+
+    def getDrivers(self):
+        return self._rx.getMonitors() + self._tx.getDrivers()
     
-    def doRead(self, s):
-        return s.read(self.intf.din)
-        
-    def doWrite(self, s, data):
-        if data is None:
-            s.w(0, self.intf.dout.data)
-        else:
-            s.w(data, self.intf.dout.data)
-        
-    def driver(self, s):
-        intf = self.intf
-        
-        if self.enable and self.tx:
-            data = self.tx.pop(0)
-            self.doWrite(s, data)
-            s.w(1, intf.dout.vld)
-        else:
-            self.doWrite(s, None)
-            s.w(0, intf.dout.vld)
-        
-        self.rx.append(self.doRead(s))
+    def getMonitors(self):
+        return self._rx.getDrivers() + self._tx.getMonitors()

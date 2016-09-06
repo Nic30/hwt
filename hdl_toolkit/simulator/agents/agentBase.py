@@ -1,15 +1,16 @@
 from hdl_toolkit.simulator.shortcuts import onRisingEdge
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import UnitBase
 
 class AgentBase():
     def __init__(self, intf):
         self.intf = intf
         self.enable = True
     
-    def getSubDrivers(self):
-        return []
+    def getDrivers(self):
+        return [self.driver]
     
-    def getSubMonitors(self):
-        return []
+    def getMonitors(self):
+        return [self.monitor]
 
     def driver(self, s):
         raise NotImplementedError()
@@ -41,19 +42,29 @@ class SyncAgentBase(AgentBase):
             return True
         else:
             s.r(self.rst_n).val
-        
+    
+    def _getClk(self):
+        p = self.intf._parent
+        while True:
+            try:
+                return p.clk
+            except AttributeError:
+                if isinstance(p, UnitBase):
+                    raise Exception("Can not find clk")
+                p = p._parent
+        return None
+    
     def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
         super().__init__(intf)
         
         # resolve clk and rstn
-        p = intf._parent
         if clk is None:
-            self.clk = p.clk
+            self.clk = self._getClk()
         else:
             self.clk = clk
             
         if rstn is None:
-            self.rst_n = self.getRst_n(p, allowNoReset=allowNoReset)
+            self.rst_n = self.getRst_n(intf._parent, allowNoReset=allowNoReset)
         else:
             self.rst_n = rstn
 

@@ -2,6 +2,10 @@ from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
 
 
 class VldSyncedAgent(SyncAgentBase):
+    def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
+        super(VldSyncedAgent, self).__init__(intf, clk=clk, rstn=rstn, allowNoReset=allowNoReset)
+        self.data = []
+    
     def doRead(self, s):
         return s.read(self.intf)
         

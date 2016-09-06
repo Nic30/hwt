@@ -1,7 +1,11 @@
 from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
 
 class FifoReaderAgent(SyncAgentBase):
-       
+    
+    def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
+        super(FifoReaderAgent, self).__init__(intf, clk, rstn, allowNoReset)
+        self.data = []
+        
     def monitor(self, s):
         intf = self.intf
         

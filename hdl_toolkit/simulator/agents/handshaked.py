@@ -4,6 +4,7 @@ class HandshakedAgent(SyncAgentBase):
     def __init__(self, intf, clk=None, rstn=None):
         super().__init__(intf, clk=None, rstn=None)
         self.actualData = None
+        self.data = []
         
     def monitor(self, s):
         """
