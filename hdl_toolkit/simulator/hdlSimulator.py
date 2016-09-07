@@ -63,7 +63,6 @@ class HdlSimulator(object):
     @ivar updateComplete: this event is triggered when there are not any values to apply in this time
     @ivar valuesToApply: is container to for quantum of values which should be applied in single time 
     @ivar env: simpy enviromnment
-    @ivar lastUpdateComplete: time when last apply values ended
     @ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
     @ivar evDependentProcsToRun: list of event dependent processes which should be evaluated after 
                                 applyValEv
@@ -85,7 +84,6 @@ class HdlSimulator(object):
         self.config = config
         self.env = HdlEnvironmentCore()
         self.updateComplete = self.env.event()
-        self.lastUpdateComplete = -2
         self.applyValEv = None
         
         # (signal, value) tupes which should be applied before new round of processes
@@ -129,15 +127,12 @@ class HdlSimulator(object):
         self.env.schedule(self.runSeqProcessesEv, priority=self.PRIORITY_APPLY_SEQ)
 
     def runSeqProcesses(self, ev):
-            for proc in self.evDependentProcsToRun:
-                for v in proc.simEval(self):
-                    dst, updater, _ = v
-                    self._delayedUpdate(dst, updater)
+        for proc in self.evDependentProcsToRun:
+            for v in proc.simEval(self):
+                dst, updater, _ = v
+                self._delayedUpdate(dst, updater)
         
     def applyValues(self, ev):
-        # [TODO] not ideal, processes should be evaluated before running apply values
-        # this should be done by priority, not by timeout
-        # (currently can't get scipy working with priorities)
         va = self.valuesToApply
         
         # log if there are items to log
@@ -150,12 +145,9 @@ class HdlSimulator(object):
         # but each signal should be driven by only one process and
         # it should resolve value collision
         for s, vUpdater, isEventDependent, comesFrom in va:
-            # print(s, isEventDependent)
             if isEventDependent:
                 self.evDependentProcsToRun.append(comesFrom)
-                
             else:
-                # print("NORMAL", self.env.now, comesFrom.name)
                 s.simUpdateVal(self, vUpdater)
             
             
@@ -167,7 +159,6 @@ class HdlSimulator(object):
         # activate updateComplete if this was last applyValues() in this time        
         self.updateComplete.succeed()  # trigger
         self.updateComplete = self.env.event()  # regenerate event
-        self.lastUpdateComplete = self.env.now
         self.applyValEv = None 
            
     def _initUnitSignals(self, unit):
