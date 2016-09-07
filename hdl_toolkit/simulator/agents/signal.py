@@ -35,20 +35,37 @@ class SignalAgent(AgentBase):
             yield s.wait(self.initDelay)
             self.initPending = False
         
-        if self.data:
-            self.doWrite(s, self.data.pop(0))
         
-        if self.clk is None:    
-            yield s.wait(self.delay)
+        if self.clk is None:
+            # if clock is specified this function is periodicaly called every
+            # clk tick
+            while True:
+                if self.data:
+                    self.doWrite(s, self.data.pop(0))
+                yield s.wait(self.delay)
+        else:
+            # if clock is specified this function is periodicaly called every
+            # clk tick
+            if self.data:
+                self.doWrite(s, self.data.pop(0))
+    
     
     def monitor(self, s):
         if self.initPending and self.initDelay:
             yield s.wait(self.initDelay)
             self.initPending = False
-        
-        yield s.updateComplete
-        d = self.doRead(s)
-        self.data.append(d)
+
         if self.clk is None:
-            yield s.wait(self.delay)
+            # if there is no clk, we have to manage periodic call by our selfs
+            while True:
+                yield s.updateComplete
+                d = self.doRead(s)
+                self.data.append(d)
+                yield s.wait(self.delay)
+        else:
+            # if clock is specified this function is periodicaly called every
+            # clk tick
+            yield s.updateComplete
+            d = self.doRead(s)
+            self.data.append(d)
 
