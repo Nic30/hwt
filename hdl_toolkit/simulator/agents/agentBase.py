@@ -20,28 +20,34 @@ class AgentBase():
 
    
 class SyncAgentBase(AgentBase):
-    def getRst_n(self, unit, allowNoReset):
-        try:
-            return unit.rst_n 
-        except AttributeError:
-            pass
-        
-        try:
-            return ~unit.rst 
-        except AttributeError:
-            pass
+    def getRst_n(self, parent, allowNoReset):
+        while True:
+            try:
+                return parent.rst_n 
+            except AttributeError:
+                pass
+            
+            try:
+                return ~parent.rst 
+            except AttributeError:
+                pass
+            
+            if isinstance(parent, UnitBase):
+                break
+            else:
+                parent = parent._parent
         
         if allowNoReset:
             return None
         else:
-            raise Exception("Can not find reset on unit %s" % (repr(unit)))
+            raise Exception("Can not find reset on unit %s" % (repr(parent)))
         
     
     def notReset(self, s):
         if self.rst_n is None:
             return True
         else:
-            s.r(self.rst_n).val
+            return s.r(self.rst_n).val
     
     def _getClk(self):
         p = self.intf._parent

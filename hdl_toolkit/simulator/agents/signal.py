@@ -51,11 +51,10 @@ class SignalAgent(AgentBase):
     
     
     def monitor(self, s):
-        if self.initPending and self.initDelay:
-            yield s.wait(self.initDelay)
-            self.initPending = False
-
         if self.clk is None:
+            if self.initPending and self.initDelay:
+                yield s.wait(self.initDelay)
+                self.initPending = False
             # if there is no clk, we have to manage periodic call by our selfs
             while True:
                 yield s.updateComplete

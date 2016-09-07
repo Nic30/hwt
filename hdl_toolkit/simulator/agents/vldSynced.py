@@ -7,20 +7,20 @@ class VldSyncedAgent(SyncAgentBase):
         self.data = []
     
     def doRead(self, s):
-        return s.read(self.intf)
+        return s.read(self.intf.data)
         
     def doWrite(self, s, data):
         s.w(data, self.intf.data)
         
     def monitor(self, s):
         intf = self.intf
-        if self.enable and s.r(self.rst_n).val and s.r(intf.vld).val:
+        if self.enable and self.notReset(s) and s.r(intf.vld).val:
             self.data.push(self.doRead(s))
             
     def driver(self, s):
         intf = self.intf
         
-        if self.enable and self.data and s.r(self.rst_n).val :
+        if self.enable and self.data and self.notReset(s):
             d = self.data.pop(0)
             self.doWrite(s, d)
             s.w(1, intf.vld)
