@@ -41,6 +41,7 @@ class HandshakedAgent(SyncAgentBase):
             s.w(1, intf.vld)
         else:
             s.w(0, intf.vld)
+            return
         
         yield s.updateComplete
         
