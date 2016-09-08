@@ -29,6 +29,7 @@ class INTF_DIRECTION():
     
 READ = "READ"
 WRITE = "WRITE"
+NOP = "NOP"
     
 class DIRECTION():
     IN = "IN"
