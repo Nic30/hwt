@@ -46,6 +46,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     
     def monitor(self, s):
         intf = self.intf
+        
+        yield s.updateComplete
         if self.enable and s.read(intf.en).val:
             we = self.read(intf.we)
             addr = self.read(intf.addr)
@@ -55,6 +57,16 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             else:
                 self.onReadReq(s, addr)
 
+    def getDrivers(self):
+        drivers = [self.driver]
+        try:
+            clk = self.intf.clk
+        except AttributeError:
+            return drivers
+        drivers.append(oscilate(clk))
+        return drivers
+         
+        
     def driver(self, s):
         intf = self.intf
         readPending = self.readPending
@@ -71,6 +83,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             self.readPending = False
         
         if readPending:
+            yield s.updateComplete
             d = s.r(intf.dout)
             self.readed.append(d)
     
