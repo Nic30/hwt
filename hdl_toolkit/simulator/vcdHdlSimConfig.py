@@ -9,7 +9,7 @@ from hdl_toolkit.simulator.vcdWritter import VcdWritter
 
 
 class VcdHdlSimConfig(HdlSimConfig):
-    supported_type_classes = (Boolean,  Bits)
+    supported_type_classes = (Boolean, Bits)
     
     def __init__(self, dumpFile=sys.stdout):
         super().__init__()
@@ -32,7 +32,7 @@ class VcdHdlSimConfig(HdlSimConfig):
         
     def vcdRegisterUnit(self, unit):
         with self.vcdWritter.module(unit._name) as m:
-            for se in unit._cntx.signals.values():
+            for se in unit._cntx.signals:
                 if isinstance(se._dtype, self.supported_type_classes):
                     m.var(se)
                     

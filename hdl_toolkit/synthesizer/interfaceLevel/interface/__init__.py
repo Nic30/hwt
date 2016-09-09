@@ -261,9 +261,12 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
             except AttributeError:
                 continue
             self._replaceParam(onParentName, p)
+            
     def _getIpCoreIntfClass(self):
         raise NoKnownIpCoreInterface()
     
+    def _getSimAgent(self):
+        return NotImplementedError()
     
     def __repr__(self):
         s = [self.__class__.__name__]

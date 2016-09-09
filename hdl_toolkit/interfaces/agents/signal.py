@@ -1,6 +1,7 @@
-from hdl_toolkit.simulator.agents.agentBase import AgentBase
 from hdl_toolkit.hdlObjects.specialValues import Time
+from hdl_toolkit.simulator.agentBase import AgentBase
 from hdl_toolkit.simulator.shortcuts import onRisingEdge
+
 
 class SignalAgent(AgentBase):
     """

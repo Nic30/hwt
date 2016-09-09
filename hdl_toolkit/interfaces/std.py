@@ -12,7 +12,7 @@ from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr
 D = DIRECTION
 
 class Signal(SignalOps, Interface):
-    def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None,
+    def __init__(self, masterDir=D.OUT, multipliedBy=None,
                    dtype=BIT, isExtern=False, alternativeNames=None,
                    loadConfig=True):
         super().__init__(masterDir=masterDir, multipliedBy=multipliedBy,
@@ -50,7 +50,11 @@ class Signal(SignalOps, Interface):
             self._multipliedBy = factor
             if updateTypes and factor is not None:
                 self._injectMultiplerToDtype()
-
+    
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.signal import SignalAgent
+        return SignalAgent
+        
 
 class Clk(Signal):
     _alternativeNames = ['ap_clk', 'aclk', 'clk', 'clock']
@@ -59,6 +63,10 @@ class Clk(Signal):
         from cli_toolkit.ip_packager.interfaces.std import IP_Clk
         return IP_Clk
 
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.clk import OscilatorAgent
+        return OscilatorAgent
+         
 
 class Rst(Signal):
     _alternativeNames = ['ap_rst', 'areset', 'reset', 'rst']
@@ -66,6 +74,11 @@ class Rst(Signal):
     def _getIpCoreIntfClass(self):
         from cli_toolkit.ip_packager.interfaces.std import IP_Rst
         return IP_Rst
+    
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.rst import PullDownAgent
+        return PullDownAgent
+    
     
 class Rst_n(Signal):
     _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn', 'rst_n' ]
@@ -80,6 +93,10 @@ class Rst_n(Signal):
         from cli_toolkit.ip_packager.interfaces.std import IP_Rst_n
         return IP_Rst_n
 
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.rst import PullUpAgent
+        return PullUpAgent
+
 class VldSynced(Interface):
     def _config(self):
         self.DATA_WIDTH = Param(64)
@@ -88,7 +105,11 @@ class VldSynced(Interface):
         self.data = s(dtype=vecT(self.DATA_WIDTH))
         self.vld = s(alternativeNames=['valid'])
 
-
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.vldSynced import VldSyncedAgent
+        return VldSyncedAgent
+    
+    
 class RdSynced(Interface):
     def _config(self):
         self.DATA_WIDTH = Param(64)
@@ -97,18 +118,28 @@ class RdSynced(Interface):
         self.data = s(dtype=vecT(self.DATA_WIDTH))
         self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
     
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.rdSynced import RdSyncedAgent
+        return RdSyncedAgent
 
 class Handshaked(VldSynced):
     def _declr(self):
         super()._declr()
         self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
+        
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.handshaked import HandshakedAgent
+        return HandshakedAgent
 
 class HandshakeSync(Interface):
     def _declr(self):
         self.vld = s(alternativeNames=['valid'])
         self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
 
-
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.handshaked import HandshakeSyncAgent
+        return HandshakeSyncAgent
+    
 class ReqDoneSync(Interface):
     def _declr(self):
         self.req = s()
@@ -130,11 +161,19 @@ class BramPort_withoutClk(Interface):
         from cli_toolkit.ip_packager.interfaces.std import IP_BlockRamPort
         return IP_BlockRamPort
 
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.bramPort import BramPort_withoutClkAgent
+        return BramPort_withoutClkAgent
+
 class BramPort(BramPort_withoutClk):
     
     def _declr(self):
         super()._declr()
         self.clk = s(masterDir=D.OUT)
+    
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.bramPort import BramPortAgent
+        return BramPortAgent
     
     @classmethod
     def fromBramPort_withoutClk(cls, bramPort, clk):
@@ -163,16 +202,22 @@ class FifoWriter(Interface):
         
     def _declr(self):
         self.en = s()
-        self.wait = s(masterDir=DIRECTION.IN)
+        self.wait = s(masterDir=D.IN)
         self.data = s(dtype=vecT(self.DATA_WIDTH), alternativeNames=[''])
 
-    
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.fifo import FifoWriterAgent
+        return FifoWriterAgent
 
 class FifoReader(FifoWriter):
     def _declr(self):
         super()._declr()
-        self.en._masterDir = DIRECTION.IN
-        self.wait._masterDir = DIRECTION.OUT
+        self.en._masterDir = D.IN
+        self.wait._masterDir = D.OUT
+        
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.fifo import FifoReaderAgent
+        return FifoReaderAgent
 
 class RegCntrl(Interface):
     """
@@ -186,5 +231,8 @@ class RegCntrl(Interface):
         with self._paramsShared():
             self.dout = VldSynced()
 
+    def _getSimAgent(self):
+        from hdl_toolkit.interfaces.agents.regCntrl import RegCntrlAgent
+        return RegCntrlAgent
 
 s = Signal

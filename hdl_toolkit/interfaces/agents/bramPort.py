@@ -1,5 +1,5 @@
 from hdl_toolkit.hdlObjects.specialValues import READ, WRITE
-from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
+from hdl_toolkit.simulator.agentBase import SyncAgentBase
 from hdl_toolkit.simulator.shortcuts import oscilate
 
 

@@ -1,4 +1,5 @@
-from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
+from hdl_toolkit.simulator.agentBase import SyncAgentBase
+
 
 class HandshakedAgent(SyncAgentBase):
     def __init__(self, intf, clk=None, rstn=None):
@@ -58,3 +59,4 @@ class HandshakeSyncAgent(HandshakedAgent):
     
     def doRead(self, s):
         raise NotImplementedError()    
+    

@@ -166,7 +166,7 @@ class HdlSimulator(object):
         Inject default values to simulation
         @return: generator of all HWprocess 
         """
-        for s in unit._cntx.signals.values():
+        for s in unit._cntx.signals:
             if isinstance(s.defaultVal, Value):
                 v = s.defaultVal.clone()
             else:

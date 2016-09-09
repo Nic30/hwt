@@ -1,4 +1,4 @@
-from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
+from hdl_toolkit.simulator.agentBase import SyncAgentBase
 
 
 class VldSyncedAgent(SyncAgentBase):

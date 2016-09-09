@@ -23,7 +23,6 @@ from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from python_toolkit.arrayQuery import arr_any, where
 from hdl_toolkit.serializer.formater import formatVhdl
-from hdl_toolkit.hdlObjects.types.slice import Slice
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
 from itertools import chain
 

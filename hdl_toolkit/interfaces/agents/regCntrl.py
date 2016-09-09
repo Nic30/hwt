@@ -1,6 +1,6 @@
-from hdl_toolkit.simulator.agents.vldSynced import VldSyncedAgent
-from hdl_toolkit.simulator.agents.signal import SignalAgent
-from hdl_toolkit.simulator.agents.agentBase import SyncAgentBase
+from hdl_toolkit.interfaces.agents.signal import SignalAgent
+from hdl_toolkit.interfaces.agents.vldSynced import VldSyncedAgent
+from hdl_toolkit.simulator.agentBase import SyncAgentBase
 
 
 class RegCntrlAgent(SyncAgentBase):

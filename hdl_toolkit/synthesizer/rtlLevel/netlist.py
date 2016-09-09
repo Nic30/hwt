@@ -18,6 +18,7 @@ from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import walkUnitInputPo
     discoverDriverSignals, walkSigSouces, signalHasDriver
 from hdl_toolkit.synthesizer.rtlLevel.utils import portItemfromSignal
 from python_toolkit.arrayQuery import where, distinctBy, arr_any
+from hdl_toolkit.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals
 
 
 def isSignalHiddenInExpr(sig):
@@ -50,7 +51,7 @@ class RtlNetlist():
             self.globals = {}
         else:
             self.globals = globalNames
-        self.signals = {}
+        self.signals = set()
         self.name = name
 
     
@@ -60,9 +61,6 @@ class RtlNetlist():
         @param clk: clk signal, if specified signal is synthesized as SyncSignal
         @param syncRst: reset 
         """
-
-        if name in self.signals:
-            raise Exception('%s:signal name "%s" is not unique' % (self.name, name))
         if not isinstance(defVal, (Value, RtlSignal, InterfaceBase)):
             if isinstance(defVal, (InterfaceBase)):
                 _defVal = defVal._sig
@@ -90,7 +88,9 @@ class RtlNetlist():
             if syncRst:
                 raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
             s = RtlSignal(name, typ, defaultVal=_defVal)
-        self.signals[name] = s
+        
+        self.signals.add(s)
+        
         return s
     
     def cloneSignals(self, signals:list, oldToNewNameFn, cloneAsSync=False):
@@ -164,8 +164,6 @@ class RtlNetlist():
                         # resolve process boundaries and mark them 
                         # and resolve visibility for signals  
                         s.hidden = False
-                        if s.name not in self.signals:
-                            self.signals[s.name] = s
                         
                         if (evDependent and isEventDependentProc) \
                             or not isEventDependentProc:
@@ -192,6 +190,7 @@ class RtlNetlist():
             pi.reigsterInternSig(s)
             ent.ports.append(pi)
 
+        removeUnconnectedSignals(self)
         self.discover(interfaces)
         
         arch = Architecture(ent)
@@ -200,8 +199,8 @@ class RtlNetlist():
             
 
         # add signals, variables etc. in architecture
-        for _, s in self.signals.items():
-            if s.endpoints or s.drivers or s.simSensitiveProcesses: # if is used
+        for s in self.signals:
+            if s.endpoints or s.drivers or s.simSensitiveProcesses:  # if is used
                 if s not in interfaces:
                     arch.variables.append(s)
         

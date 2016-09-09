@@ -1,35 +1,6 @@
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
-from hdl_toolkit.interfaces.std import Signal, FifoReader, FifoWriter, Clk, \
-    Rst_n, VldSynced, Rst, Handshaked, BramPort, RdSynced, BramPort_withoutClk, \
-    HandshakeSync, RegCntrl
-from hdl_toolkit.simulator.agents.bramPort import BramPortAgent, BramPort_withoutClkAgent
-from hdl_toolkit.simulator.agents.clk import OscilatorAgent
-from hdl_toolkit.simulator.agents.fifo import FifoReaderAgent, FifoWriterAgent
-from hdl_toolkit.simulator.agents.handshaked import HandshakedAgent, HandshakeSyncAgent
-from hdl_toolkit.simulator.agents.rdSynced import RdSyncedAgent
-from hdl_toolkit.simulator.agents.rst import PullUpAgent, PullDownAgent
-from hdl_toolkit.simulator.agents.signal import SignalAgent
-from hdl_toolkit.simulator.agents.vldSynced import VldSyncedAgent
-from hdl_toolkit.simulator.agents.regCntrl import RegCntrlAgent
 
-
-autoAgents = {
-              Signal     : SignalAgent,
-              FifoReader : FifoReaderAgent,
-              FifoWriter : FifoWriterAgent,
-              Clk        : OscilatorAgent,
-              Rst_n      : PullUpAgent,
-              Rst        : PullDownAgent,
-              VldSynced  : VldSyncedAgent,
-              RdSynced   : RdSyncedAgent,
-              Handshaked : HandshakedAgent,
-              HandshakeSync : HandshakeSyncAgent,
-              BramPort   : BramPortAgent,
-              BramPort_withoutClk: BramPort_withoutClkAgent,
-              RegCntrl : RegCntrlAgent,
-            }
-
-def autoAddAgents(unit, propName="_ag", autoAgentMap=autoAgents):
+def autoAddAgents(unit, propName="_ag"):
     """
     Walk all interfaces on unit and instantiate actor for every interface.
     
@@ -39,10 +10,10 @@ def autoAddAgents(unit, propName="_ag", autoAgentMap=autoAgents):
     proc = []
     for intf in unit._interfaces:
         try:
-            agentCls = autoAgentMap[intf.__class__]
-        except KeyError:
-            raise Exception(("Can not find default agent for interface %s\n" + 
-                            "(you have to register it to autoAgentMap)") % (str(intf)))
+            agentCls = intf._getSimAgent()
+        except NotImplementedError:
+            raise NotImplementedError(("Interface %s\n" + 
+                            "has not any simulation agent class assigned") % (str(intf)))
         
         agent = agentCls(intf)
         setattr(intf, propName, agent)

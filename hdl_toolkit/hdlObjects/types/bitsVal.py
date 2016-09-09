@@ -15,6 +15,7 @@ from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from operator import eq
 
 
 BoolVal = BOOL.getValueCls()
@@ -53,7 +54,28 @@ def bitsCmp(self, other, op, evalFn=None):
         
         return Operator.withRes(op, [self, other], BOOL) 
 
-def bitsBitOp(self, other, op):
+def vldMaskForAnd(a, b):
+    # (val, vld)
+    # (0, 0) & (0, 0) -> (0, 0) 
+    # (0, 1) & (0, 0) -> (0, 1)
+    # (0, 0) & (0, 1) -> (0, 1)
+    # (1, 1) & (0, 0) -> (0, 0)
+    
+    a_vld = (a.vldMask & ~a.val)
+    b_vld = (b.vldMask & ~b.val)
+    vld = (a.vldMask & b.vldMask) | a_vld | b_vld
+    return vld  
+
+def vldMaskForOr(a, b):
+    a_vld = (a.vldMask & a.val)
+    b_vld = (b.vldMask & b.val)
+    vld = (a.vldMask & b.vldMask) | a_vld | b_vld
+    return vld  
+
+def vldMaskForXor(a, b):
+    return a.vldMask & b.vldMask
+
+def bitsBitOp(self, other, op, getVldFn):
     """
     @attention: If other is Bool signal, convert this to boolean (not ideal, due VHDL event operator)
     """
@@ -66,7 +88,7 @@ def bitsBitOp(self, other, op):
         w = self._dtype.bit_length()
         assert w == other._dtype.bit_length()
         
-        vld = self.vldMask & other.vldMask
+        vld = getVldFn(self, other)
         res = op._evalFn(self.val, other.val) & vld
         updateTime = max(self.updateTime, other.updateTime)
     
@@ -325,7 +347,7 @@ class BitsVal(EventCapableVal):
     
     # comparisons         
     def _eq(self, other):
-        return bitsCmp(self, other, AllOps.EQ, lambda a, b : a == b)
+        return bitsCmp(self, other, AllOps.EQ, eq)
     
     def __ne__(self, other):
         return bitsCmp(self, other, AllOps.NEQ)
@@ -343,13 +365,13 @@ class BitsVal(EventCapableVal):
         return bitsCmp(self, other, AllOps.LE)
     
     def __xor__(self, other):
-        return bitsBitOp(self, other, AllOps.XOR)
+        return bitsBitOp(self, other, AllOps.XOR, vldMaskForXor)
     
     def __and__(self, other):
-        return bitsBitOp(self, other, AllOps.AND_LOG)
+        return bitsBitOp(self, other, AllOps.AND_LOG, vldMaskForAnd)
     
     def __or__(self, other):
-        return bitsBitOp(self, other, AllOps.OR_LOG)
+        return bitsBitOp(self, other, AllOps.OR_LOG, vldMaskForOr)
        
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)
@@ -367,22 +389,22 @@ class BitsVal(EventCapableVal):
             result = resT.fromPy(val)
             
             raise NotImplementedError() 
-            ## [TODO] value check range
-            #if isinstance(other._dtype, Integer):
+            # # [TODO] value check range
+            # if isinstance(other._dtype, Integer):
             #    if other.vldMask:
             #        v.vldMask = self.vldMask
             #    else:
             #        v.vldMask = 0
             #
-            #elif isinstance(other._dtype, Bits):
+            # elif isinstance(other._dtype, Bits):
             #    v.vldMask = self.vldMask & other.vldMask
-            #else:
+            # else:
             #    raise TypeError("Incompatible type for multiplication: %s" % (repr(other._dtype)))
-            ## [TODO] correct overflow detection for signed values
-            #w = v._dtype.bit_length()
-            #v.val &= Bitmask.mask(2*w)
-            #v.updateTime = max(self.updateTime, other.updateTime)
-            #return v
+            # # [TODO] correct overflow detection for signed values
+            # w = v._dtype.bit_length()
+            # v.val &= Bitmask.mask(2*w)
+            # v.updateTime = max(self.updateTime, other.updateTime)
+            # return v
         
         else:
             if self._dtype.signed is None:
@@ -392,7 +414,7 @@ class BitsVal(EventCapableVal):
             elif isinstance(other._dtype, Integer):
                 pass
             else:
-                raise TypeError("%s %s %s" % (repr(self), repr(op) , repr(other)))
+                raise TypeError("%s %s %s" % (repr(self), repr(AllOps.MUL) , repr(other)))
             
             subResT = vecT(resT.bit_length(), self._dtype.signed)
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)

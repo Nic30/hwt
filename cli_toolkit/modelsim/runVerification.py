@@ -34,13 +34,15 @@ def buildSv(sv_incdir, svFiles, vlogParams):
            )
 
 def runVerificationCmds(vhdlFiles, svFiles, top, uvmTestNames,
-                       vcomParams=DEFAULT_VCOM_PARAMS,
-                       vlogParams=DEFAULT_VLOG_PARAMS):
+                       vcomParams,
+                       vlogParams,
+                       vsimParams):
     lib = "work"
-    vsimParams = ["-wlf sim.wlf",
+    vsimParams = vsimParams + ["-wlf sim.wlf",
                   "-sv_lib " + MTI_HOME + "uvm-1.2/linux_x86_64/uvm_dpi",
                   '-do "run -all;"',
-                  "-errorfile errors"]
+                  "-errorfile errors"
+                  ]
     
     if vhdlFiles:
         buildVhdls = "vcom %s -work {%s} %s" % (
@@ -97,10 +99,12 @@ quit -code 0
 
 def runSVVer(vhdlFiles, systemVerilogSources, top, uvmTestNames=[""],
               vcomParams=DEFAULT_VCOM_PARAMS,
-              vlogParams=DEFAULT_VLOG_PARAMS, gui=False):
+              vlogParams=DEFAULT_VLOG_PARAMS,
+              vsimParams = ["+UVM_NO_RELNOTES"],
+              gui=False):
     verCmds = list(runVerificationCmds(vhdlFiles, systemVerilogSources, 
                                   top, uvmTestNames,
-                                  vcomParams, vlogParams))
+                                  vcomParams, vlogParams, vsimParams))
     cmdFileName = "modelsimCmd.tcl"
     with open(cmdFileName, 'w') as f:
         f.write("\n---------------\n".join(verCmds))
