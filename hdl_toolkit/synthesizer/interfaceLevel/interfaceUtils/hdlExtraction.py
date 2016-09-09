@@ -3,7 +3,7 @@ from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.synthesizer.interfaceLevel.interface.array import InterfaceArray
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.array import InterfaceArray
 from hdl_toolkit.synthesizer.param import Param
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import walkSignalsInExpr

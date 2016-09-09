@@ -11,7 +11,7 @@ from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.interfaces.all import allInterfaces
 from hdl_toolkit.parser.hdlContext import RequireImportErr
 from hdl_toolkit.parser.utils import entityFromFile, loadCntxWithDependencies
-from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthesizer.param import Param

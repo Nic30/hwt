@@ -46,6 +46,8 @@ class Assignment():
         self.indexes = indexes
         self.cond = set()
         self._instId = Assignment._nextInstId()
+        
+        dst.ctx.startsOfDataPaths.add(self)
     
     @classmethod
     def _nextInstId(cls):
@@ -53,7 +55,7 @@ class Assignment():
         Get next instance id
         """
         i = cls.__instCntr
-        cls.__instCntr +=1
+        cls.__instCntr += 1
         return i
         
     def seqEval(self):

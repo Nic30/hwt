@@ -119,8 +119,9 @@ class UnitImplHelpers(object):
         update all parameters which are defined on self from otherObj
         """
         for parentP in  parent._params:
+            name = parentP._scopes[parent][1]
             try:
-                p = getattr(self, parentP._names[parent])
+                p = getattr(self, name)
             except AttributeError:
                 continue
             p.set(parentP) 

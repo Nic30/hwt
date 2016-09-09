@@ -4,8 +4,7 @@ import os
 import types
 
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from hdl_toolkit.parser import Parser
-from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl, \
     toAbsolutePaths
 from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
@@ -48,7 +47,6 @@ class UnitMyHdl(UnitFromHdl):
         
         self._hdlSources = toAbsolutePaths(os.getcwd(), files)
         mFile = self._hdlSources[0]
-        Parser.invalidateCacheFor(mFile)
         self._entity = UnitFromHdl._loadEntity(self)
         ports = self._entity.ports
         for unitIntf in self._interfaces:

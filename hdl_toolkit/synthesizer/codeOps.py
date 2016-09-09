@@ -1,16 +1,16 @@
+from operator import and_, or_
 import types
 
+from hdl_toolkit.hdlObjects.operatorDefs import concatFn
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt, vec
 from hdl_toolkit.hdlObjects.types.defs import BIT
+from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo
-from operator import and_, or_
-from hdl_toolkit.hdlObjects.operatorDefs import concatFn
-from hdl_toolkit.hdlObjects.types.enum import Enum
 
 
 def _intfToSig(obj):

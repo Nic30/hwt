@@ -24,9 +24,9 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
     """
     __instCntr = 0
 
-    def __init__(self, name, dtype, defaultVal=None):
+    def __init__(self, ctx, name, dtype, defaultVal=None):
         if name is None:
-            name = "sig_" + str(id(self))
+            name = "sig_"
             self.hasGenericName = True
         else:
             self.hasGenericName = False  
@@ -34,6 +34,12 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
         assert isinstance(dtype, HdlType)
         super().__init__(name, dtype, defaultVal)
         SimSignal.__init__(self)
+        self.ctx = ctx
+        
+        if ctx: 
+            # params does not have any signal on created and it is assigned after param is bounded to unit
+            ctx.signals.add(self)
+            
         # set can not be used because hash of items are changign
         self.endpoints = UniqList()
         self.drivers = UniqList()
@@ -49,7 +55,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
         Get next instance id
         """
         i = cls.__instCntr
-        cls.__instCntr +=1
+        cls.__instCntr += 1
         return i
     
     def staticEval(self):

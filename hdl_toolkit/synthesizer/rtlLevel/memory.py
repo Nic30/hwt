@@ -12,9 +12,15 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
     to main signal on every clock rising edge
     """
     
-    def __init__(self, name, var_type, defaultVal=None):
-        super().__init__(name, var_type, defaultVal)
-        self.next = RtlSignal(name + "_next", var_type)
+    def __init__(self, ctx, name, var_type, defaultVal=None):
+        """
+        @param ctx: context in which is sig. created (instance of RtlNetlist)
+        @param name: suggested name
+        @param var_type: type of signal
+        @param defaultVal: default value for signal (used as def. val in hdl and for reset)  
+        """
+        super().__init__(ctx, name, var_type, defaultVal)
+        self.next = RtlSignal(ctx, name + "_next", var_type)
            
     def __pow__(self, source):
         """

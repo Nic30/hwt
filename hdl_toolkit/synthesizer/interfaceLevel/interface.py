@@ -1,17 +1,15 @@
 from copy import copy
 
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
-from hdl_toolkit.hdlObjects.typeShortcuts import hInt
-from hdl_toolkit.hdlObjects.types.bits import Bits
-from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
-from hdl_toolkit.synthesizer.interfaceLevel.interface.directionFns import InterfaceDirectionFns 
-from hdl_toolkit.synthesizer.interfaceLevel.interface.hdlExtraction import ExtractableInterface
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.directionFns import InterfaceDirectionFns 
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.hdlExtraction import ExtractableInterface
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase 
 from hdl_toolkit.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector 
 from hdl_toolkit.synthesizer.param import Param
-from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo, aplyIndexOnSignal
+from hdl_toolkit.synthesizer.vectorUtils import fitTo, aplyIndexOnSignal
+from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
 
 
 class NoKnownIpCoreInterface(Exception):
@@ -43,7 +41,8 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
     Agenda of direction:
     @ivar _masterDir: specifies which direction has this interface at master
     @ivar _direction: means actual direction of this interface resolved by its drivers
-    
+    @ivar _cntx: rtl netlist context of all signals and params on this interface
+                 after interface is registered on parent _cntx is merged 
     """
     _NAME_SEPARATOR = "_"
     def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None, \
@@ -68,7 +67,6 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         # resolve alternative names         
         if not alternativeNames:
             if hasattr(self.__class__, "_alternativeNames"):
-                # [TODO] only shallow cp required
                 self._alternativeNames = copy(self.__class__._alternativeNames)
             else:
                 self._alternativeNames = []
@@ -82,6 +80,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
             else:
                 self._name = ''     
         
+        self._cntx = RtlNetlist()
         
         if loadConfig:
             self._loadConfig()                
@@ -175,6 +174,9 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
                                         exclude, fit))
     
     def __pow__(self, other):
+        """
+        @attention: ** operator is used as "assignment" it creates connection between interface and other
+        """
         return self._connectTo(other)
     
     def _signalsForInterface(self, context, prefix='', typeTransform=lambda x: x):
@@ -241,8 +243,8 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         i = self._params.index(p)
         assert i > -1
         self._params[i] = newP
-        del p._names[self]  # remove reference from old param
-        newP._names[self] = pName
+        del p._scopes[self]  # remove reference from old param
+        newP._registerScope(pName, self)
         setattr(self, pName, newP) 
     
     def _updateParamsFrom(self, otherObj):
@@ -251,7 +253,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         """
         for p in otherObj._params:
             try:
-                onParentName = p._names[otherObj]
+                _, onParentName = p._scopes[otherObj]
             except KeyError as e:
                 raise e
             try:

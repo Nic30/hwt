@@ -1,5 +1,5 @@
 from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
-from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import forAllParams
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import forAllParams
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import UnitBase 
 from hdl_toolkit.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector 
 from hdl_toolkit.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers
@@ -23,6 +23,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     def __init__(self):
         self._checkIntferfaces = True
         self._lazyLoaded = []
+        self._cntx = RtlNetlist()
          
         self._loadConfig()
          
@@ -32,7 +33,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         synthesize all subunits, make connections between them, build entity and component for this unit
         """
         self._initName()
-        self._cntx = self._contextFromParams()
+        self._cntx.globals = self._globalsFromParams()
         externInterf = [] 
         
         # prepare subunits
@@ -69,15 +70,15 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             raise  Exception("Can not find any external interface for unit " + self._name \
                               + "- there is no such a thing as unit without interfaces")
         
-        yield from self._synthetiseContext(externInterf, self._cntx)
+        yield from self._synthetiseContext(externInterf)
         self._checkArchCompInstances()
     
     def _wasSynthetised(self):
-        return hasattr(self, "_cntx")
+        return self._cntx.synthesised
     
-    def _synthetiseContext(self, externInterf, cntx):
+    def _synthetiseContext(self, externInterf):
         # synthesize signal level context
-        s = cntx.synthesize(externInterf)
+        s = self._cntx.synthesize(self._name, externInterf)
         self._entity = s[1]
         self._entity.__doc__ = self.__doc__
 
@@ -129,7 +130,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         pass        
 
-    def _contextFromParams(self):
+    def _globalsFromParams(self):
         # construct globals (generics for entity)
         globalNames = {}
         def addP(n, p):
@@ -163,7 +164,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
                 n = nameForNestedParam(p)
                 addP(n, p)
                 
-        return RtlNetlist(self._name, globalNames=globalNames)
+        return globalNames
     
     def _initName(self):
         if not hasattr(self, "_name"):

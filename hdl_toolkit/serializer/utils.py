@@ -8,6 +8,7 @@ from hdl_toolkit.interfaces.std import Rst_n
 from hdl_toolkit.serializer.templates import VHDLTemplates
 from hdl_toolkit.synthesizer.codeOps import connect
 from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
 
 
 def _clkDriverProc(clk, clkPeriod):
@@ -44,12 +45,13 @@ def makeTestbenchTemplate(unit, name=None, clkPeriod=10, resetDelay=15, procGen=
     arch.components.append(unit._entity)
     arch.componentInstances.append(unit._entity)
     
+    nl = RtlNetlist()
     ctx = {}
     for p in unit._entity.ports:
         t = p._dtype
         if isinstance(t, Bits) and not t == BIT:
             t = Bits(t.bit_length(), t.forceVector, t.signed)  
-        s = RtlSignal(p.name, t, t.fromPy(0))
+        s = RtlSignal(nl, p.name, t, t.fromPy(0))
         ctx[p._interface] = s
         p.connectSig(s)
 

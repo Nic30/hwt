@@ -8,6 +8,13 @@ from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
 class InvalidOperandExc(Exception):
     pass
 
+def getCtxFromOps(ops):
+    for o in ops:
+        if isinstance(o, RtlSignalBase):
+            return o.ctx
+    raise TypeError("Can not find context because there is no signal in ops")
+    
+
 class Operator():
     """
     Class of operator in expression tree
@@ -74,7 +81,7 @@ class Operator():
         Create operator with result signal
         """
         op = Operator(opDef, operands)
-        out = RtlSignal(None, resT)
+        out = RtlSignal(getCtxFromOps(operands), None, resT)
         out.drivers.append(op)
         out.origin = op
         op.result = out

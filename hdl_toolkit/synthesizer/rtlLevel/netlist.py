@@ -2,7 +2,6 @@ from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.process import HWProcess
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.value import Value
@@ -12,13 +11,12 @@ from hdl_toolkit.synthesizer.codeOps import If
 from hdl_toolkit.synthesizer.exceptions import SigLvlConfErr
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthesizer.rtlLevel.memory import RtlSyncSignal
+from hdl_toolkit.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals
 from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import walkUnitInputPorts, walkSignalsInExpr, \
-    discoverDriverSignals, walkSigSouces, signalHasDriver
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverDriverSignals
 from hdl_toolkit.synthesizer.rtlLevel.utils import portItemfromSignal
 from python_toolkit.arrayQuery import where, distinctBy, arr_any
-from hdl_toolkit.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals
 
 
 def isSignalHiddenInExpr(sig):
@@ -39,20 +37,15 @@ class RtlNetlist():
     """
     Container for signals and units
     @ivar signals: dict of all signals in context
-    @ivar startsOfDataPaths: is created by discover(interfaces), is set of nodes where datapaths starts
-    @ivar subUnits:           --------------||---------------------------- all units in this context 
+    @ivar startsOfDataPaths:  is set of nodes where datapaths starts
+    @ivar subUnits:           is set of all units in this context 
     """
-    def __init__(self, name, globalNames:dict=None):
-        """
-        @param name: name of context is synthesized as entity name
-        @param globalNames: dictionary of parameters is synthesized as entity generics  
-        """
-        if not globalNames:
-            self.globals = {}
-        else:
-            self.globals = globalNames
+    def __init__(self):
+        self.globals = {}
         self.signals = set()
-        self.name = name
+        self.startsOfDataPaths = set()
+        self.subUnits = set()
+        self.synthesised = False
 
     
     def sig(self, name, typ=BIT, clk=None, syncRst=None, defVal=None):
@@ -71,7 +64,7 @@ class RtlNetlist():
 
 
         if clk is not None:
-            s = RtlSyncSignal(name, typ, _defVal)
+            s = RtlSyncSignal(self, name, typ, _defVal)
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
@@ -87,7 +80,7 @@ class RtlNetlist():
         else:
             if syncRst:
                 raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
-            s = RtlSignal(name, typ, defaultVal=_defVal)
+            s = RtlSignal(self, name, typ, defaultVal=_defVal)
         
         self.signals.add(s)
         
@@ -99,46 +92,43 @@ class RtlNetlist():
             buff.append(self.sig(oldToNewNameFn(s.name), s.vat_type.width))
         return buff
     
-    def discover(self, interfaces):
-        """
-        Discovery process begins on the outputs and tracks back the inputs
-        """
-        self.startsOfDataPaths = set()
-        self.subUnits = set()
-        
-        def discoverDatapaths(signal):
-            for node in walkSigSouces(signal):
-                if node in self.startsOfDataPaths:
-                    return 
-                self.startsOfDataPaths.add(node)
-                if isinstance(node, PortItem):
-                    if node.unit.discovered is self:
-                        pass
-                    node.unit.discovered = self
-                    for p in walkUnitInputPorts(node.unit):
-                        if p.src is not None:  # top unit does not have to be connected
-                            discoverDatapaths(p.src)
-                    self.subUnits.add(node.unit)
-                elif isinstance(node, Assignment):
-                    for s in walkSignalsInExpr(node.src):
-                        discoverDatapaths(s)
-
-                    for c in node.cond:
-                        for s in  walkSignalsInExpr(c):
-                            discoverDatapaths(s)
-                    if node.indexes:
-                        for i in node.indexes:
-                            walkSigSouces(i)
-                    
-                else:
-                    raise NotImplementedError(node)
-                        
-            if signal in interfaces:
-                self.startsOfDataPaths.add(signal)
-                
-        for s in where(interfaces, lambda s: signalHasDriver(s)):  # walk my outputs
-            discoverDatapaths(s)
-    
+    # def discover(self, interfaces):
+    #    """
+    #    Discovery process begins on the outputs and tracks back the inputs
+    #    """
+    #    def discoverDatapaths(signal):
+    #        for node in walkSigSouces(signal):
+    #            if node in self.startsOfDataPaths:
+    #                return 
+    #            self.startsOfDataPaths.add(node)
+    #            if isinstance(node, PortItem):
+    #                if node.unit.discovered is self:
+    #                    pass
+    #                node.unit.discovered = self
+    #                for p in walkUnitInputPorts(node.unit):
+    #                    if p.src is not None:  # top unit does not have to be connected
+    #                        discoverDatapaths(p.src)
+    #                self.subUnits.add(node.unit)
+    #            elif isinstance(node, Assignment):
+    #                for s in walkSignalsInExpr(node.src):
+    #                    discoverDatapaths(s)
+    #
+    #                for c in node.cond:
+    #                    for s in  walkSignalsInExpr(c):
+    #                        discoverDatapaths(s)
+    #                if node.indexes:
+    #                    for i in node.indexes:
+    #                        walkSigSouces(i)
+    #                
+    #            else:
+    #                raise NotImplementedError(node)
+    #                    
+    #        if signal in interfaces:
+    #            self.startsOfDataPaths.add(signal)
+    #            
+    #    for s in where(interfaces, lambda s: signalHasDriver(s)):  # walk my outputs
+    #        discoverDatapaths(s)
+    #
     def buildProcessesOutOfAssignments(self):
         assigments = list(where(self.startsOfDataPaths,
                                 lambda x: isinstance(x, Assignment)
@@ -174,13 +164,27 @@ class RtlNetlist():
             
                 yield p
 
-    def synthesize(self, interfaces):
-        ent = Entity(self.name)
-        ent._name = self.name + "_inst"  # instance name
+    def mergeWith(self, other):
+        """
+        Merge two instances into this
+        @attention: "others" becomes invalid because all signals etc. will be transferred into this 
+        """
+        assert not other.synthesised
+        self.globals.update(other.globals)
+        self.signals.update(other.signals)
+        self.startsOfDataPaths.update(other.startsOfDataPaths)
+        self.subUnits.update(other.subUnits)
+        
+        for s in other.signals:
+            s.ctx = self
         
 
+    def synthesize(self, name, interfaces):
+        ent = Entity(name)
+        ent._name = name + "_inst"  # instance name
+
         # create generics
-        ent.ctx = self.globals
+        # ent.ctx = self.globals
         for _, v in self.globals.items():
             ent.generics.append(v)
         
@@ -191,7 +195,7 @@ class RtlNetlist():
             ent.ports.append(pi)
 
         removeUnconnectedSignals(self)
-        self.discover(interfaces)
+        # self.discover(interfaces)
         
         arch = Architecture(ent)
         for p in self.buildProcessesOutOfAssignments():
@@ -201,7 +205,7 @@ class RtlNetlist():
         # add signals, variables etc. in architecture
         for s in self.signals:
             if s.endpoints or s.drivers or s.simSensitiveProcesses:  # if is used
-                if s not in interfaces:
+                if s not in interfaces and not s.hidden:
                     arch.variables.append(s)
         
         # instanciate subUnits in architecture
@@ -211,6 +215,8 @@ class RtlNetlist():
         # add components in architecture    
         for su in distinctBy(self.subUnits, lambda x: x.name):
             arch.components.append(su)
+        
+        self.synthesised = True
         
         # [TODO] real references based on real ent/arch objects 
         return [ VHDLTemplates.basic_include, ent, arch]

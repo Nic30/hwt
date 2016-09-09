@@ -26,16 +26,16 @@ class EmptyUnit(Unit):
         
         self._loadMyImplementations()
         # construct globals (generics for entity)
-        cntx = self._contextFromParams()
+        self._cntx.globals = self._globalsFromParams()
         externInterf = [] 
         # prepare connections     
         for i in self._interfaces:
-            signals = i._signalsForInterface(cntx)
+            signals = i._signalsForInterface(self._cntx)
             if not i._isExtern:
                 raise IntfLvlConfErr("All interfaces in EmptyUnit has to be extern, %s: %s is not" % 
                                      (self.__class__.__name__, i._getFullName()))
             externInterf.extend(signals)
-            #i._resolveDirections()
+            # i._resolveDirections()
             # connect outputs to dummy value
             for s in signals:
                 if s._interface._direction == INTF_DIRECTION.SLAVE:
@@ -43,5 +43,5 @@ class EmptyUnit(Unit):
         if not externInterf:
             raise  Exception("Can not find any external interface for unit " + self._name \
                               + "- there is no such a thing as unit without interfaces")
-        yield  from self._synthetiseContext(externInterf, cntx)
+        yield from self._synthetiseContext(externInterf)
         # self._checkEntityPortDirections()

@@ -130,7 +130,7 @@ def discoverDriverSignals(datapath):
             if not isinstance(s, Param):
                 yield (s in eventDependency, s)
         
-# walks code but do not cross assignment of precursors 
+# walks code, and returns assignments and port items which are driving this signal
 def walkSigSouces(sig, parent=None):    
     if isinstance(sig, Operator):
         if sig.operator != AllOps.INDEX:  # [TODO] more test to assert this cond. will work

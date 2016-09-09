@@ -93,7 +93,7 @@ class PropDeclrCollector(object):
         if not hasName:
             parameter._name = pName
         # add name in this scope
-        parameter._names[self] = pName
+        parameter._registerScope(pName, self)
         
         if parameter.hasGenericName:
             parameter.name = pName
@@ -129,6 +129,8 @@ class PropDeclrCollector(object):
         nameAvailabilityCheck(self, iName, intf)
         intf._parent = self
         intf._name = iName
+        self._cntx.mergeWith(intf._cntx)
+        intf._cntx = self._cntx 
         self._interfaces.append(intf)
             
     

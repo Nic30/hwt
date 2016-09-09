@@ -14,12 +14,16 @@ class Param(RtlSignal):
     
     def __init__(self, initval):
         initval = toHVal(initval)
-        super(Param, self).__init__(None, initval._dtype, defaultVal=initval)
+        super(Param, self).__init__(None, None, initval._dtype, defaultVal=initval)
         self._val = initval
         self.replacedWith = None
         self._parent = None
-        self._names = {}
-         
+        # unit: (ctx, name)
+        self._scopes = {}
+    
+    def _registerScope(self, name, unit):     
+        self._scopes[unit] = (unit._cntx, name)
+        
     def setHdlName(self, name):
         self.hasGenericName = False
         self.name = name
@@ -49,6 +53,7 @@ class Param(RtlSignal):
             
         
         self.replacedWith = replaceWith
+    
 
     def set(self, val):
         """

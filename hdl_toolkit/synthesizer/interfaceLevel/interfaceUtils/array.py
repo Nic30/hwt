@@ -1,6 +1,6 @@
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
-from hdl_toolkit.synthesizer.interfaceLevel.interface.utils import walkPhysInterfaces
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr
 from python_toolkit.arrayQuery import arr_any
