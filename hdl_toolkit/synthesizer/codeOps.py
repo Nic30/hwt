@@ -171,7 +171,7 @@ class FsmBuilder(StmCntx):
                 except TypeError:
                     top = c(cAndS, self.stateReg)
                     continue
-                top = self.stateReg._same()
+                top = [] #self.stateReg._same()
 
             else:
                 condition, newvalue = cAndS
@@ -184,8 +184,8 @@ class FsmBuilder(StmCntx):
                     )
             
         # if there is no trans. this state fsm should hang in this state
-        if not condAndNextState:
-            top = self.stateReg._same()
+        #if not condAndNextState:
+        #    top = self.stateReg._same()
 
         if stateFrom is None:
             s = Switch.Default(self, *top)

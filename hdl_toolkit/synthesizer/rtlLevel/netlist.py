@@ -17,6 +17,8 @@ from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriv
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverDriverSignals
 from hdl_toolkit.synthesizer.rtlLevel.utils import portItemfromSignal
 from python_toolkit.arrayQuery import where, distinctBy, arr_any
+from hdl_toolkit.hdlObjects.statements import IfContainer, WaitStm, \
+    SwitchContainer
 
 
 def isSignalHiddenInExpr(sig):
@@ -32,6 +34,38 @@ def isSignalHiddenInExpr(sig):
         pass
         
     return False
+
+def _isEnclosed(objList):
+    if not objList:
+        return False
+    for o in objList:
+        if not isEnclosed(o):
+            return False
+    return True
+    
+def isEnclosed(obj):
+    if isinstance(obj, (Assignment, WaitStm)):
+        return True
+    elif isinstance(obj, IfContainer):
+        for ol in [obj.ifTrue, obj.ifFalse]:
+            if not _isEnclosed(ol):
+                return False
+        for _, ol in obj.elIfs:
+            if not _isEnclosed(ol):
+                return False
+                
+        return True 
+    elif isinstance(obj, SwitchContainer):
+        allCasesCovered = True
+        for cond, ol in obj.cases:
+            if cond is None:
+                allCasesCovered = True
+            if not _isEnclosed(ol):
+                return False
+            
+        return allCasesCovered
+    else:
+        raise NotImplementedError(obj)
 
 class RtlNetlist():
     """
@@ -145,6 +179,9 @@ class RtlNetlist():
             # (conversion from netlist to statements)
             for stm in renderIfTree(dps):
                 p = HWProcess("assig_process_" + name)
+                if sig._useNopVal and not isEnclosed(stm):
+                    p.statements.append(Assignment(sig._nopVal, sig))
+                    
                 p.statements.append(stm)
                 # [TODO] sensitity list from dps which are covered by stm
                 for dp in dps:
