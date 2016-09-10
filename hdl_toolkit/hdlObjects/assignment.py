@@ -24,7 +24,7 @@ def mkArrayUpdater(simulator, nextItemVal, indexes):
     return updater
     
 
-class Assignment():
+class Assignment(object):
     """
     Assignment container
     @ivar src: source  
@@ -72,7 +72,7 @@ class Assignment():
         else:
             updater = mkUpdater(nextVal)
         yield (self.dst, updater, self.isEventDependent)
-        
+    
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
         return VhdlSerializer.Assignment(self)    
