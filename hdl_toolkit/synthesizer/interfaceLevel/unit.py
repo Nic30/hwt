@@ -79,10 +79,10 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     def _synthetiseContext(self, externInterf):
         # synthesize signal level context
         s = self._cntx.synthesize(self._name, externInterf)
-        self._entity = s[1]
+        self._entity = s[0]
         self._entity.__doc__ = self.__doc__
 
-        self._architecture = s[2]
+        self._architecture = s[1]
             
         for intf in self._interfaces: 
             if intf._isExtern:
