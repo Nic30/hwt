@@ -1,7 +1,8 @@
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.process import HWProcess
-from hdl_toolkit.hdlObjects.statements import WaitStm
+from hdl_toolkit.hdlObjects.statements import WaitStm, IfContainer,\
+    SwitchContainer
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.interfaces.std import Rst_n
@@ -9,7 +10,33 @@ from hdl_toolkit.serializer.templates import VHDLTemplates
 from hdl_toolkit.synthesizer.codeOps import connect
 from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
+from hdl_toolkit.hdlObjects.assignment import Assignment
+from itertools import chain
 
+def getMaxStmIdForStm(stm):
+    maxId = 0
+    if isinstance(stm, Assignment):
+        return stm._instId
+    elif isinstance(stm, IfContainer):
+        for _stm in chain(stm.ifTrue, *map(lambda _elif: _elif[1], stm.elIfs), stm.ifFalse):
+            maxId = max(maxId, getMaxStmIdForStm(_stm))
+        return maxId
+    elif isinstance(stm, SwitchContainer):
+        for _stm in chain(*map(lambda _case: _case[1], stm.cases)):
+            maxId = max(maxId, getMaxStmIdForStm(_stm))
+        return maxId
+    else:
+        raise NotImplementedError(stm)
+
+def maxStmId(proc):
+    """
+    get max statement id,
+    used for sorting of processes in architecture
+    """
+    maxId = 0
+    for stm in proc.statements: 
+        maxId = max(maxId, getMaxStmIdForStm(stm)) 
+    return maxId
 
 def _clkDriverProc(clk, clkPeriod):
     d = HWProcess("clk_driver")
@@ -82,8 +109,6 @@ def makeTestbenchTemplate(unit, name=None, clkPeriod=10, resetDelay=15, procGen=
 def makeTestbenchTemplateFile(unit, fileName, clkPeriod=10, resetDelay=15): 
     with open(fileName, "w") as f:
         e, a = makeTestbenchTemplate(unit, clkPeriod=clkPeriod, resetDelay=resetDelay)
-        
-        f.write(str(VHDLTemplates.basic_include))
         f.write(str(e))
         f.write(str(a))
 
