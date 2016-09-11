@@ -77,14 +77,14 @@ class UnitExampleModel(SimModel):
     a = RtlSignal(_cntx, "a", BIT)
     b = RtlSignal(_cntx, "b", BIT)
     
-    _interfaces = [clk, a, b]
-    _units = []
-    
     @sensitivity(a)
     def assig_process_b(self, sim):
         yield (self.b, mkUpdater(self.a._oldVal & self.clk._oldVal), False)
         
-    _processes = [assig_process_b]
+    def __init__(self):
+        self._interfaces = [self.clk, self.a, self.b]
+        self._units = []
+        self._processes = [self.assig_process_b]
 
 if __name__ == "__main__":
     simUnitVcd(UnitExampleModel, [oscilate(UnitExampleModel.a), oscilate(UnitExampleModel.clk, period=100 * Time.ns)], "test.vcd")
