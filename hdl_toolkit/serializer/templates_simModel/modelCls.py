@@ -6,7 +6,8 @@ from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal{% for c in componentInstances %}
-from {{c.__class__.__name__}} import import {{c.__class__.__name__}}{% endfor %}
+if "{{c.name}}" not in locals(): # support for all models in single file
+    from {{c.name}} import {{c.name}}{% endfor %}
 {% for imp in imports %}
 {{imp}}
 {% endfor %}
@@ -18,10 +19,10 @@ class {{ name }}(SimModel):
     {{name}} = RtlSignal(_cntx, "{{name}}", {{dtype}}){% endfor %}
     
     # internal signals{% for name, dtype, defVal in signals %}
-    {{name}} = RtlSignal(_cntx, "{{name}}", {{dtype}}, defVal={{defVal}}){% endfor %}
+    {{name}} = RtlSignal(_cntx, "{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}
     
     {% for c in componentInstances %}
-    {{c._name}} = {{c.__class__.__name__}}()
+    {{c._name}} = {{c.name}}()
     {% endfor %}
 {% for proc in processes %}
 {{proc}}
@@ -37,6 +38,8 @@ class {{ name }}(SimModel):
         self._units = [{% for c in componentInstances %}self.{{c._name}},
                        {% endfor %}
                        ]
-    
+        {% for proc in processObjects %}
+        sensitivity(self.{{proc.name}}, {% for s in proc.sensitivityList %}self.{{s.name}}, {% endfor %})
+        {% endfor %}
         
         

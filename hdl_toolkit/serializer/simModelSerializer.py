@@ -1,6 +1,5 @@
 from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from hdl_toolkit.hdlObjects.statements import IfContainer, \
     SwitchContainer, WhileContainer, WaitStm
 from hdl_toolkit.hdlObjects.types.array import Array
@@ -12,17 +11,18 @@ from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.nameScope import LangueKeyword, NameScope
-from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
-from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
 from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
-from hdl_toolkit.synthesizer.param import getParam, Param, evalParam
+from hdl_toolkit.synthesizer.param import Param, evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from python_toolkit.arrayQuery import arr_any, where
+from python_toolkit.arrayQuery import where
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
 from  keyword import kwlist
 from jinja2.loaders import PackageLoader
 from jinja2.environment import Environment
 from hdl_toolkit.serializer.utils import maxStmId
+from hdl_toolkit.hdlObjects.types.boolean import Boolean
+from hdl_toolkit.hdlObjects.types.integer import Integer
+from hdl_toolkit.hdlObjects.types.string import String
 
        
 opPrecedence = {AllOps.NOT : 4,
@@ -123,9 +123,9 @@ class SimModelSerializer():
         "signals"            : list(map(lambda v: (v.name, cls.HdlType(v._dtype), cls.Value(evalParam(v.defaultVal))), variables)),
         "extraTypes"         : extraTypes_serialized,
         "processes"          : procs,
+        "processObjects"     : arch.processes,
         "processesNames"     : map(lambda p: p.name, arch.processes),
-        "componentInstances" : map(lambda c: cls.ComponentInstance(c, scope),
-                                   arch.componentInstances)
+        "componentInstances" : arch.componentInstances
         })
    
     @classmethod
@@ -144,30 +144,6 @@ class SimModelSerializer():
     def comment(cls, comentStr):
         return "#" + comentStr.replace("\n", "\n#")     
 
-    @classmethod
-    def ComponentInstance(cls, entity, scope):
-        # [TODO] check if instance name is available in scope
-        portMaps = []
-        for pi in entity.ports:
-            pm = PortMap.fromPortItem(pi)
-            portMaps.append(pm)
-        
-        genericMaps = []
-        for g in entity.generics:
-            gm = MapExpr(g, g._val)
-            genericMaps.append(gm) 
-        
-        if len(portMaps) == 0:
-            raise Exception("Incomplete component instance")
-        
-        # [TODO] check component instance name
-        return VHDLTemplates.componentInstance.render({
-                "instanceName" : entity._name,
-                "entity": entity,
-                "portMaps": [cls.PortConnection(x) for x in portMaps],
-                "genericMaps" : [cls.MapExpr(x) for x in genericMaps]
-                })
-    
     @classmethod
     def condAsHdl(cls, cond, forceBool):
         if isinstance(cond, RtlSignalBase):
@@ -393,21 +369,9 @@ class SimModelSerializer():
         
         return processTmpl.render({
               "name": proc.name,
-              "sensitivityList": ", ".join([cls.asHdl(s) for s in sensitivityList]),
+              "sensitivityList": ", ".join([s.name for s in sensitivityList]),
               "stmLines": [ cls.asHdl(s) for s in body] })
-    
-    @classmethod
-    def Value(cls, val):
-        """ 
-        @param dst: is signal connected with value 
-        @param val: value object, can be instance of Signal or Value    """
-        if isinstance(val, Value):
-            return val._dtype.valAsVhdl(val, cls)
-        elif isinstance(val, RtlSignalBase):
-            return cls.SignalItem(val)
-        else:
-            raise Exception("value can not resolve value serialization for %s" % (repr(val))) 
-        
+           
     @classmethod
     def BitToBool(cls, cast):
         v = 0 if cast.sig.negated else 1
@@ -474,12 +438,12 @@ class SimModelSerializer():
             return _bin('+')
         elif o == AllOps.TERNARY:
             return p(ops[1]) + " if " + cls.condAsHdl([ops[0]], True) + " else " + p(ops[2])
-        elif o == AllOps.RISING_EDGE:
-            assert len(ops) == 1
-            return "RISING_EDGE(" + p(ops[0]) + ")"
-        elif o == AllOps.FALLIGN_EDGE:
-            assert len(ops) == 1
-            return "FALLING_EDGE(" + p(ops[0]) + ")"
+        #elif o == AllOps.RISING_EDGE:
+        #    assert len(ops) == 1
+        #    return "RISING_EDGE(" + p(ops[0]) + ")"
+        #elif o == AllOps.FALLIGN_EDGE:
+        #    assert len(ops) == 1
+        #    return "FALLING_EDGE(" + p(ops[0]) + ")"
         elif o == AllOps.BitsAsSigned:
             assert len(ops) == 1
             return  "%s._signed()" % p(ops[0])
