@@ -8,6 +8,7 @@ from hdl_toolkit.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.simSignal import SimSignal
 from hdl_toolkit.synthesizer.uniqList import UniqList
 
+
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
     """
     more like net
@@ -24,7 +25,15 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
     """
     __instCntr = 0
 
-    def __init__(self, ctx, name, dtype, defaultVal=None):
+    def __init__(self, ctx, name, dtype, defaultVal=None, nopVal=None, useNopVal=False):
+        """
+        @param ctx: context - RtlNetlist which is this signal part of
+        @param name: name hint for this signal, if is None name is choosen automaticaly
+        @param defaultVal: value which is used for reset and as default value in hdl
+        @param useNopVal: use nopVal or ignore it
+        @param nopVal: value which is used to fill up statements when no other value is assigned
+        """
+        
         if name is None:
             name = "sig_"
             self.hasGenericName = True
@@ -32,7 +41,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
             self.hasGenericName = False  
        
         assert isinstance(dtype, HdlType)
-        super().__init__(name, dtype, defaultVal)
+        super(RtlSignal, self).__init__(name, dtype, defaultVal)
         SimSignal.__init__(self)
         self.ctx = ctx
         
@@ -47,6 +56,9 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
         self.negated = False
         self.hidden = True
         self._instId = RtlSignal._nextInstId()
+        
+        self._nopVal = nopVal
+        self._useNopVal = useNopVal 
 
     
     @classmethod

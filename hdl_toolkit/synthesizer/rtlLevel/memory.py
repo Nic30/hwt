@@ -1,9 +1,10 @@
-from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.assignment import Assignment
+from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlMemoryBase
 from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
+
 
 class RtlSyncSignal(RtlMemoryBase, RtlSignal):
     """
@@ -20,7 +21,7 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         @param defaultVal: default value for signal (used as def. val in hdl and for reset)  
         """
         super().__init__(ctx, name, var_type, defaultVal)
-        self.next = RtlSignal(ctx, name + "_next", var_type)
+        self.next = RtlSignal(ctx, name + "_next", var_type, nopVal=self, useNopVal=True)
            
     def __pow__(self, source):
         """
@@ -38,7 +39,7 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         
         a = Assignment(source, self.next)
         a.cond = set()
-        # [TODO] check no operator reverse should happen
+
         self.next.drivers.append(a)
         if not isinstance(source, Value):
             source.endpoints.append(a)

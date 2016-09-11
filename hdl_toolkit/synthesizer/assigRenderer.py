@@ -71,7 +71,7 @@ def _renderIfTree(node):
             for elIf in elIfs:
                 try:
                     op = elIf[0][0].singleDriver()
-                    if op.operator == AllOps.EQ:
+                    if isinstance(op, Operator) and op.operator == AllOps.EQ:
                         op1 = op.ops[1]
                         if op.ops[0] is switchOn and isinstance(op1, Value):
                             cases.append((op1, elIf[1]))

@@ -1,4 +1,3 @@
-import math
 from simpy.events import NORMAL
 
 from hdl_toolkit.hdlObjects.assignment import mkUpdater

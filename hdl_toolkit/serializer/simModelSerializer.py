@@ -1,6 +1,4 @@
 from hdl_toolkit.bitmask import Bitmask
-from hdl_toolkit.hdlObjects.assignment import Assignment 
-from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from hdl_toolkit.hdlObjects.statements import IfContainer, \
@@ -16,92 +14,49 @@ from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.nameScope import LangueKeyword, NameScope
 from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
 from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
-from hdl_toolkit.serializer.templates import VHDLTemplates
 from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
-from hdl_toolkit.synthesizer.param import getParam, Param
+from hdl_toolkit.synthesizer.param import getParam, Param, evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from python_toolkit.arrayQuery import arr_any, where
-from hdl_toolkit.serializer.formater import formatVhdl
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
+from  keyword import kwlist
+from jinja2.loaders import PackageLoader
+from jinja2.environment import Environment
 from hdl_toolkit.serializer.utils import maxStmId
 
-
-VHLD_KEYWORDS = [
-"abs", "access", "across", "after", "alias", "all", "and", "architecture", "array",
-"assert", "attribute", "begin", "block", "body", "break", "bugger", "bus", "case",
-"component", "configuration", "constant", "disconnect", "downto", "end", "entity",
-"else", "elsif", "exit", "file", "for", "function", "generate", "generic", "group",
-"guarded", "if", "impure", "in", "inertial", "inout", "is", "label", "library", "limit",
-"linkage", "literal", "loop", "map", "mod", "nand", "nature", "new", "next", "noise",
-"nor", "not", "null", "of", "on", "open", "or", "others", "out", "package", "port",
-"postponed", "process", "procedure", "procedural", "pure", "quantity", "range",
-"reverse_range", "reject", "rem", "record", "reference", "register", "report", "return",
-"rol", "ror", "select", "severity", "shared", "signal", "sla", "sll", "spectrum", "sra",
-"srl", "subnature", "subtype", "terminal", "then", "through", "to", "tolerance", "transport",
-"type", "unaffected", "units", "until", "use", "variable", "wait", "with", "when", "while",
-"xnor", "xor"]        
-
-
-class VhdlVersion():
-    v2002 = 2002
-    v2008 = 2008
-
-# keep in mind that there is no such a thing in vhdl itself
-opPrecedence = {AllOps.NOT : 2,
+       
+opPrecedence = {AllOps.NOT : 4,
                 AllOps.EVENT: 1,
                 AllOps.RISING_EDGE: 1,
-                AllOps.DIV: 3,
-                AllOps.ADD : 3,
-                AllOps.SUB: 3,
-                AllOps.MUL: 3,
-                AllOps.MUL: 3,
-                AllOps.XOR: 2,
-                AllOps.EQ: 2,
-                AllOps.NEQ: 2,
-                AllOps.AND_LOG: 2,
-                AllOps.OR_LOG: 2,
-                AllOps.DOWNTO: 2,
-                AllOps.GREATERTHAN: 2,
-                AllOps.LOWERTHAN: 2,
-                AllOps.CONCAT: 2,
+                AllOps.DIV: 4,
+                AllOps.ADD : 5,
+                AllOps.SUB: 5,
+                AllOps.MUL: 4,
+                AllOps.XOR: 9,
+                AllOps.EQ: 11,
+                AllOps.NEQ: 11,
+                AllOps.AND_LOG: 8,
+                AllOps.OR_LOG: 10,
+                AllOps.DOWNTO: 1,
+                AllOps.GREATERTHAN: 11,
+                AllOps.LOWERTHAN: 11,
+                AllOps.CONCAT: 1,
                 AllOps.INDEX: 1,
                 AllOps.TERNARY: 1,
                 AllOps.CALL: 1,
                 }
 
-class DoesNotContainsTernary(Exception):
-    pass
+env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_simModel'))
+unitTmpl = env.get_template('modelCls.py')
+processTmpl = env.get_template('process.py')
 
-def ternaryOpsToIf(statements):
-    """Convert all ternary operators to IfContainers"""
-    stms = []
-    
-    for st in statements:
-        if isinstance(st, Assignment):
-            try:
-                if not isinstance(st.src, RtlSignalBase):
-                    raise DoesNotContainsTernary()
-                d = st.src.singleDriver()
-                if not isinstance(d, Operator) or d.operator != AllOps.TERNARY:
-                    raise DoesNotContainsTernary()
-                else:
-                    ifc = IfContainer(d.ops[0],
-                                      [Assignment(d.ops[1], st.dst)]
-                                      ,
-                                      [Assignment(d.ops[2], st.dst)]
-                           )
-                    stms.append(ifc)
-                
-            except (MultipleDriversExc, DoesNotContainsTernary):
-                stms.append(st)
-        else:
-            stms.append(st)
-    return stms
+indent = "    "        
+        
 
-class VhdlSerializer():
-    VHDL_VER = VhdlVersion.v2002
-    __keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
+class SimModelSerializer():
+    __keywords_dict = {kw: LangueKeyword() for kw in kwlist}
+    __keywords_dict.update({'sim': LangueKeyword(),
+                            'self': LangueKeyword()})
     
     @classmethod
     def getBaseNameScope(cls):
@@ -110,14 +65,12 @@ class VhdlSerializer():
         s[0].update(cls.__keywords_dict)
         return s
     
-    formater = formatVhdl
+    formater = lambda s: s
     
     @classmethod
     def asHdl(cls, obj):
-        if hasattr(obj, "asVhdl"):
-            return obj.asVhdl(cls)
-        elif isinstance(obj, UnitFromHdl):
-            return str(obj)
+        if isinstance(obj, UnitFromHdl):
+            raise NotImplementedError()
         elif isinstance(obj, RtlSignalBase):
             return cls.SignalItem(obj)
         elif isinstance(obj, Value):
@@ -131,8 +84,12 @@ class VhdlSerializer():
     
     @classmethod
     def FunctionContainer(cls, fn):
-        return fn.name
-    
+        raise NotImplementedError()
+        # return fn.name
+    @classmethod
+    def Entity(cls, ent, scope):
+        return ""
+        
     @classmethod
     def Architecture(cls, arch, scope):
         variables = []
@@ -141,7 +98,6 @@ class VhdlSerializer():
         extraTypes_serialized = []
         arch.variables.sort(key=lambda x: x.name)
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
-        arch.components.sort(key=lambda x: x.name)
         arch.componentInstances.sort(key=lambda x: x._name)
         
         for v in arch.variables:
@@ -152,56 +108,41 @@ class VhdlSerializer():
                 extraTypes_serialized.append(cls.HdlType(t, scope, declaration=True))
 
             v.name = scope.checkedName(v.name, v)
-            serializedVar = cls.SignalItem(v, declaration=True)
-            variables.append(serializedVar)
+            variables.append(v)
             
         
         for p in arch.processes:
-            procs.append(cls.HWProcess(p, scope))
+            procs.append(cls.HWProcess(p, scope, 0))
         
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)    
              
-        return VHDLTemplates.architecture.render({
-        "entityName"         :arch.getEntityName(),
-        "name"               :arch.name,
-        "variables"          :variables,
-        "extraTypes"         :extraTypes_serialized,
-        "processes"          :procs,
-        "components"         :map(lambda c: cls.Component(c),
-                                   arch.components),
-        "componentInstances" :map(lambda c: cls.ComponentInstance(c, scope),
+        return unitTmpl.render({
+        "name"               : arch.getEntityName(),
+        "ports"              : list(map(lambda p: (p.name, cls.HdlType(p._dtype)), arch.entity.ports)),
+        "signals"            : list(map(lambda v: (v.name, cls.HdlType(v._dtype), cls.Value(evalParam(v.defaultVal))), variables)),
+        "extraTypes"         : extraTypes_serialized,
+        "processes"          : procs,
+        "processesNames"     : map(lambda p: p.name, arch.processes),
+        "componentInstances" : map(lambda c: cls.ComponentInstance(c, scope),
                                    arch.componentInstances)
         })
    
     @classmethod
     def Assignment(cls, a):
         dst = a.dst
-        if a.indexes is not None:
-            for i in a.indexes:
-                if isinstance(i, SliceVal):
-                    i = i.clone()
-                    i.val = (i.val[0] + 1, i.val[1])
-                dst = dst[i]   
-            
-            
         if dst._dtype == a.src._dtype:
-            return "%s <= %s" % (cls.asHdl(dst), cls.Value(a.src))
+            if a.indexes is not None:
+                raise NotImplementedError()
+            else:
+                return "yield (self.%s, mkUpdater(%s), %r)" % (dst.name, cls.Value(a.src), a.isEventDependent)
         else:
             raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
                          (cls.asHdl(dst), cls.Value(a.src), repr(dst._dtype), repr(a.src._dtype)))
         
     @classmethod
     def comment(cls, comentStr):
-        return "--" + comentStr.replace("\n", "\n--")
-    
-    @classmethod
-    def Component(cls, entity):
-        return VHDLTemplates.component.render({
-                "ports": [cls.PortItem(pi) for pi in entity.ports],
-                "generics": [cls.GenericItem(g) for g in entity.generics],
-                "entity": entity
-                })      
+        return "#" + comentStr.replace("\n", "\n#")     
 
     @classmethod
     def ComponentInstance(cls, entity, scope):
@@ -225,36 +166,7 @@ class VhdlSerializer():
                 "entity": entity,
                 "portMaps": [cls.PortConnection(x) for x in portMaps],
                 "genericMaps" : [cls.MapExpr(x) for x in genericMaps]
-                })     
-
-    @classmethod
-    def Entity(cls, ent, scope):
-        ports = []
-        generics = []
-        ent.ports.sort(key=lambda x: x.name)
-        ent.generics.sort(key=lambda x: x.name)
-
-        ent.name = scope.checkedName(ent.name, ent, isGlobal=True)
-        for p in ent.ports:
-            p.name = scope.checkedName(p.name, p)
-            ports.append(cls.PortItem(p))
-            
-        for g in ent.generics:
-            g.name = scope.checkedName(g.name, g)
-            generics.append(cls.GenericItem(g))    
-
-        entVhdl = VHDLTemplates.entity.render({
-                "name": ent.name,
-                "ports" : ports,
-                "generics" : generics
                 })
-
-        doc = ent.__doc__
-        if doc:
-            doc = cls.comment(doc) + "\n"
-            return doc + entVhdl   
-        else:
-            return entVhdl
     
     @classmethod
     def condAsHdl(cls, cond, forceBool):
@@ -281,16 +193,10 @@ class VhdlSerializer():
     def IfContainer(cls, ifc):
         cond = cls.condAsHdl(ifc.cond, True)
         elIfs = []
-        if cls.VHDL_VER < VhdlVersion.v2008:
-            ifTrue = ternaryOpsToIf(ifc.ifTrue)
-            ifFalse = ternaryOpsToIf(ifc.ifFalse)
-        else:
-            ifTrue = ifc.ifTrue
-            ifFalse = ifc.ifFalse
+        ifTrue = ifc.ifTrue
+        ifFalse = ifc.ifFalse
         
         for c, statements in ifc.elIfs:
-            if cls.VHDL_VER < VhdlVersion.v2008:
-                statements = ternaryOpsToIf(statements)
                 
             elIfs.append((cls.condAsHdl(c, True), statements))
         
@@ -308,9 +214,6 @@ class VhdlSerializer():
             if key is not None:  # None is default
                 key = cls.asHdl(key)
                 
-            if cls.VHDL_VER < VhdlVersion.v2008:
-                statements = ternaryOpsToIf(statements)
-                
             cases.append((key, statements))  
         return VHDLTemplates.Switch.render(switchOn=switchOn,
                                            cases=cases)  
@@ -324,31 +227,6 @@ class VhdlSerializer():
         else:
             raise NotImplementedError()
         
-    @classmethod
-    def GenericItem(cls, g):
-        s = "%s : %s" % (g.name, cls.HdlType(g._dtype))
-        if g.defaultVal is None:
-            return s
-        else:  
-            return  "%s := %s" % (s, cls.Value(getParam(g.defaultVal).staticEval()))
-    
-    @classmethod
-    def PortConnection(cls, pc):
-        if pc.portItem._dtype != pc.sig._dtype:
-            raise SerializerException("Port map %s is nod valid (types does not match)  (%s, %s)" % (
-                      "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig)),
-                      repr(pc.portItem._dtype), repr(pc.sig._dtype)))
-        return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig))      
-    
-    @classmethod
-    def PortItem(cls, pi):
-        try:
-            return "%s : %s %s" % (pi.name, pi.direction,
-                                   cls.HdlType(pi._dtype))
-        except InvalidVHDLTypeExc as e:
-            e.variable = pi
-            raise e
-
     @staticmethod
     def BitString_binary(v, width, vldMask=None):
         buff = []
@@ -427,30 +305,26 @@ class VhdlSerializer():
             if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin)
             else:
-                return si.name
+                return "self.%s._oldVal" % si.name
 
     @classmethod
     def HdlType_bits(cls, typ, declaration=False):
         disableRange = False
         if typ.signed is None:
-            if typ.forceVector or typ.bit_length() > 1:
-                name = 'STD_LOGIC_VECTOR'
-            else:
-                name = 'STD_LOGIC'
-                disableRange = True
-        elif typ.signed:
-            name = "SIGNED"
-        else:
-            name = 'UNSIGNED'     
+            if not (typ.forceVector or typ.bit_length() > 1):
+                return 'BIT'
             
         c = typ.constrain
-        if disableRange or c is None or isinstance(c, Unconstrained):
-            constr = ""
-        elif isinstance(c, (int, float)):
-            constr = "(%d DOWNTO 0)" % (c - 1)
+        if isinstance(c, (int, float)):
+            pass
         else:        
-            constr = "(%s)" % cls.Value(c)     
-        return name + constr
+            c = evalParam(c)
+            if isinstance(c, SliceVal):
+                c = c._size()
+            else:
+                c = c.val  
+             
+        return "vecT(%d, %r)" % (c, typ.signed)
 
     @classmethod
     def HdlType_enum(cls, typ, scope, declaration=False):
@@ -509,25 +383,18 @@ class VhdlSerializer():
                 return typ.name.upper()
                 
     @classmethod
-    def HWProcess(cls, proc, scope):
+    def HWProcess(cls, proc, scope, indentLvl):
         body = proc.statements
-        hasToBeVhdlProcess = arr_any(body, lambda x: isinstance(x,
-                                        (IfContainer, SwitchContainer, WhileContainer, WaitStm)))
-        if hasToBeVhdlProcess:
-            proc.name = scope.checkedName(proc.name, proc)
+        proc.name = scope.checkedName(proc.name, proc)
         
         
-        sensitivityList = sorted(where(proc.sensitivityList, lambda x : not isinstance(x, Param)), key=lambda x: x.name)
+        sensitivityList = sorted(where(proc.sensitivityList,
+                                       lambda x : not isinstance(x, Param)), key=lambda x: x.name)
         
-        return VHDLTemplates.process.render({
+        return processTmpl.render({
               "name": proc.name,
-              "hasToBeVhdlProcess": hasToBeVhdlProcess,
               "sensitivityList": ", ".join([cls.asHdl(s) for s in sensitivityList]),
-              "statements": [ cls.asHdl(s) for s in body] })
-    
-    @classmethod
-    def MapExpr(cls, m):
-        return   "%s => %s" % (m.compSig.name, cls.asHdl(m.value))
+              "stmLines": [ cls.asHdl(s) for s in body] })
     
     @classmethod
     def Value(cls, val):
@@ -539,12 +406,12 @@ class VhdlSerializer():
         elif isinstance(val, RtlSignalBase):
             return cls.SignalItem(val)
         else:
-            raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 
+            raise Exception("value can not resolve value serialization for %s" % (repr(val))) 
         
     @classmethod
     def BitToBool(cls, cast):
         v = 0 if cast.sig.negated else 1
-        return cls.asHdl(cast.sig) + "=='%d'" % v
+        return cls.asHdl(cast.sig) + "._eq(hBit(%d))" % v
 
     @classmethod
     def Operator(cls, op):
@@ -565,27 +432,27 @@ class VhdlSerializer():
             return (" " + name + " ").join(map(lambda x: x.strip(), map(p, ops)))
         
         if o == AllOps.AND_LOG:
-            return _bin('AND')
+            return _bin('&')
         elif o == AllOps.OR_LOG:
-            return _bin('OR')
+            return _bin('|')
         elif o == AllOps.XOR:
-            return _bin('XOR')
+            return _bin('^')
         elif o == AllOps.NOT:
             assert len(ops) == 1
-            return "NOT " + p(ops[0])
+            return "~" + p(ops[0])
         elif o == AllOps.CALL:
             return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
-            return _bin('&')
+            return "Concat(%s, %s)" % (p(ops[0]), p(ops[1]))
         elif o == AllOps.DIV:
-            return _bin('/')
+            return _bin('//')
         elif o == AllOps.DOWNTO:
-            return _bin('DOWNTO')
+            return _bin(':')
         elif o == AllOps.EQ:
-            return _bin('=')
+            return '(%s)._eq(%s)' % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EVENT:
             assert len(ops) == 1
-            return p(ops[0]) + "'EVENT"
+            return p(ops[0]) + "._hasEvent(sim)"
         elif o == AllOps.GREATERTHAN:
             return _bin('>')
         elif o == AllOps.GE:
@@ -594,7 +461,7 @@ class VhdlSerializer():
             return _bin('<=')
         elif o == AllOps.INDEX:
             assert len(ops) == 2
-            return "%s(%s)" % ((cls.asHdl(ops[0])).strip(), p(ops[1]))
+            return "%s[%s]" % ((cls.asHdl(ops[0])).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('<')
         elif o == AllOps.SUB:
@@ -602,11 +469,11 @@ class VhdlSerializer():
         elif o == AllOps.MUL:
             return _bin('*')
         elif o == AllOps.NEQ:
-            return _bin('/=')
+            return _bin('!=')
         elif o == AllOps.ADD:
             return _bin('+')
         elif o == AllOps.TERNARY:
-            return p(ops[1]) + " WHEN " + cls.condAsHdl([ops[0]], True) + " ELSE " + p(ops[2])
+            return p(ops[1]) + " if " + cls.condAsHdl([ops[0]], True) + " else " + p(ops[2])
         elif o == AllOps.RISING_EDGE:
             assert len(ops) == 1
             return "RISING_EDGE(" + p(ops[0]) + ")"
@@ -615,35 +482,35 @@ class VhdlSerializer():
             return "FALLING_EDGE(" + p(ops[0]) + ")"
         elif o == AllOps.BitsAsSigned:
             assert len(ops) == 1
-            return  "SIGNED(" + p(ops[0]) + ")"
+            return  "%s._signed()" % p(ops[0])
         elif o == AllOps.BitsAsUnsigned:
             assert len(ops) == 1
-            return  "UNSIGNED(" + p(ops[0]) + ")"
+            return  "%s._unsigned()" % p(ops[0])
         elif o == AllOps.BitsAsVec:
             assert len(ops) == 1
-            return  "STD_LOGIC_VECTOR(" + p(ops[0]) + ")"
-        elif o == AllOps.BitsToInt:
-            assert len(ops) == 1
-            op = cls.asHdl(ops[0])
-            if ops[0]._dtype.signed is None:
-                op = "UNSIGNED(%s)" % op
-            return "TO_INTEGER(%s)" % op
-        elif o == AllOps.IntToBits:
-            assert len(ops) == 1
-            resT = op.result._dtype
-            op_str = cls.asHdl(ops[0])
-            w = resT.bit_length()
-            
-            if resT.signed is None:
-                return "STD_LOGIC_VECTOR(TO_UNSIGNED(" + op_str + ", %d))" % (w)
-            elif resT.signed:
-                return "TO_UNSIGNED(" + op_str + ", %d)" % (w)
-            else:
-                return "TO_UNSIGNED(" + op_str + ", %d)" % (w)
-            
+            return  "%s._vec()" % p(ops[0])
+        # elif o == AllOps.BitsToInt:
+        #    assert len(ops) == 1
+        #    op = cls.asHdl(ops[0])
+        #    if ops[0]._dtype.signed is None:
+        #        op = "UNSIGNED(%s)" % op
+        #    return "TO_INTEGER(%s)" % op
+        # elif o == AllOps.IntToBits:
+        #    assert len(ops) == 1
+        #    resT = op.result._dtype
+        #    op_str = cls.asHdl(ops[0])
+        #    w = resT.bit_length()
+        #    
+        #    if resT.signed is None:
+        #        return "STD_LOGIC_VECTOR(TO_UNSIGNED(" + op_str + ", %d))" % (w)
+        #    elif resT.signed:
+        #        return "TO_UNSIGNED(" + op_str + ", %d)" % (w)
+        #    else:
+        #        return "TO_UNSIGNED(" + op_str + ", %d)" % (w)
+        #    
         elif o == AllOps.POW:
             assert len(ops) == 2
-            return _bin('**')
+            return  "pow(%s, %s)" % (p(ops[0]), p(ops[1]))
         else:
             raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))
 

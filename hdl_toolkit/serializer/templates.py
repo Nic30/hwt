@@ -1,8 +1,5 @@
 from jinja2 import Environment, PackageLoader
 
-from hdl_toolkit.synthesizer.vhdlCodeWrap import VhdlCodeWrap
-
-
 class VHDLTemplates(object):
     '''
     Class for loading vhdl templates
@@ -16,12 +13,5 @@ class VHDLTemplates(object):
     
     If = env.get_template('if.vhd')
     Switch = env.get_template('switch.vhd')
-
-    # [TODO] remove in future
-    basic_include = VhdlCodeWrap("""
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-""")
         
         

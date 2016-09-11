@@ -65,6 +65,7 @@ class SimSignal():
             callBacks = self._writeCallbacks
             self._writeCallbacks = []
             for c in callBacks:
+                # simulation processes
                 simulator.env.process(c(simulator))
-            
+
             self.simPropagateChanges(simulator)
