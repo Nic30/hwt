@@ -255,6 +255,5 @@ class RtlNetlist():
         
         self.synthesised = True
         
-        # [TODO] real references based on real ent/arch objects 
-        return [ VHDLTemplates.basic_include, ent, arch]
+        return [ent, arch]
        
