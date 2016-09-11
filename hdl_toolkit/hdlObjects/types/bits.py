@@ -46,17 +46,7 @@ class Bits(HdlType):
             w = self.constrain.staticEval()
             return abs(w.val[0].val - w.val[1].val) + 1 
 
-    def valAsVhdl(self, val, serializer):
-        w = self.bit_length()
-        if self.signed is None:
-            if self.forceVector or w > 1:
-                return serializer.BitString(val.val, w, val.vldMask)
-            else:
-                return serializer.BitLiteral(val.val, val.vldMask)
-        elif self.signed:
-            return serializer.SignedBitString(val.val, w, val.vldMask)
-        else:
-            return serializer.UnsignedBitString(val.val, w, val.vldMask)
+    
     
     @classmethod
     def getConvertor(cls):

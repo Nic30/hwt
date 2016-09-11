@@ -49,8 +49,5 @@ class HdlType():
         raise TypeConversionErr("Conversion of type %s to type %s is not implemented" 
                                    % (repr(self), repr(toType)))
     
-    def valAsVhdl(self, val, serializer):
-        raise SerializerException("Serialization of type %s is not implemented" % (repr(self)))
-
     def __repr__(self):
         return "<HdlType %s>" % (self.__class__.__name__)

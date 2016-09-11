@@ -5,10 +5,6 @@ class String(HdlType):
         super().__init__()
         self.name = "STRING"
 
-    def valAsVhdl(self, val, serializer):
-        return  '"%s"' % str(val.val)
-
-
     @classmethod
     def getConvertor(cls):
         from hdl_toolkit.hdlObjects.types.stringConversions import convertString
