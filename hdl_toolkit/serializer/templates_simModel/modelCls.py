@@ -1,4 +1,5 @@
-from hdl_toolkit.simulator.simModel import SimModel, sensitivity
+from hdl_toolkit.simulator.simModel import SimModel, sensitivity, simBitsT
+from hdl_toolkit.hdlObjects.types.bitsVal import BitsVal
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.hdlObjects.assignment import mkUpdater, mkArrayUpdater
 from hdl_toolkit.hdlObjects.types.defs import BIT, INT
@@ -24,7 +25,7 @@ class {{ name }}(SimModel):
     {% for c in componentInstances %}
     # connect ports
     {% for p in c.ports %}
-    {% if c.direction == "IN" %}{{c.name}}.{{p.dst.name}} = {{p.src.name}}{% else %}{{c.name}}.{{p.src.name}} = {{p.dst.name}} {% endif %}{% endfor %}
+    {{c.name}}.{% if p.direction == "IN" %}{{p.dst.name}} = {{p.src.name}}{% else %}{{p.src.name}} = {{p.dst.name}} {% endif %}{% endfor %}
 
     {{c._name}} = {{c.name}}()
     {% endfor %}
@@ -43,8 +44,9 @@ class {{ name }}(SimModel):
                        {% endfor %}
                        ]
         {% for proc in processObjects %}
-        sensitivity(self.{{proc.name}}, {% for s in proc.sensitivityList %}self.{{s.name}}, {% endfor %})
-        {% endfor %}
+        sensitivity(self.{{proc.name}}, {% for s in proc.sensitivityList %}self.{{s.name}}{% if not loop.last %}, {% endif %}{% endfor %}){% endfor %}
         
-
+    def _getStaticProcesses(self):
+        {% for proc in processObjects %}{% if not proc.sensitivityList %}
+        yield self.{{proc.name}}{% endif %}{% endfor %}
         
