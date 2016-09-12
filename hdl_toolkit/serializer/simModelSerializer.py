@@ -1,6 +1,6 @@
 from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
-from  keyword import kwlist
+from keyword import kwlist
 
 from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.hdlObjects.types.bits import Bits
@@ -185,7 +185,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         
         return processTmpl.render({
               "name": proc.name,
-              "sensitivityList": ", ".join([s.name for s in sensitivityList]),
+              "sensitivityList": [s.name for s in sensitivityList],
               "stmLines": [ cls.asHdl(s) for s in body] })
            
 
