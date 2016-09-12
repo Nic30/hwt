@@ -38,6 +38,7 @@ class PortItem(SignalItem):
         else:
             raise NotImplementedError()
     
+        signal.hidden = False
         signal.ctx.subUnits.add(self.unit)
     
     def reigsterInternSig(self, signal):
