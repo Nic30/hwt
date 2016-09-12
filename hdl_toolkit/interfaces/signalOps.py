@@ -121,10 +121,3 @@ class SignalOps(object):
         @return: list of assignments
         """
         return self._sig.__pow__(source)
-    
-    def _same(self):
-        """
-        Assign self to self - used for registers where value should remain same
-        """
-        return self._sig._same()
-        

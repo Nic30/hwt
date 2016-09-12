@@ -194,10 +194,3 @@ class RtlSignalOps():
             source.endpoints.append(a)
         
         return [a]
-    
-    def _same(self):
-        """
-        assign self to self 
-        used for registers where it means that value should remain same
-        """
-        return [self.__pow__(self)]
