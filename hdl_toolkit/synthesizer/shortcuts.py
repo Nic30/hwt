@@ -78,7 +78,6 @@ def synthesised(u):
 
 def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
     unit._loadDeclarations()
-    header = None
     os.makedirs(folderName, exist_ok=True)
     files = UniqList()
     if name is not None:
@@ -88,16 +87,16 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
     mouduleScopes = {}
     
     for o in unit._toRtl():
-        if isinstance(o, VhdlCodeWrap):
-            header = o
-            fName = None
-        elif isinstance(o, Entity):
+        if isinstance(o, Entity):
             # we need to serialize before we take name, before name can change
             s = globScope.fork(1)
             s.setLevel(2)
             mouduleScopes[o] = s
+            
             sc = serializer.Entity(o, s)
-            fName = o.name + "_ent.vhd"
+            fName = o.name + ".vhd"
+            fileMode = 'w'
+            
         elif isinstance(o, Architecture):
             try:
                 s = mouduleScopes[o.entity]
@@ -105,7 +104,8 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 raise SerializerException("Entity should be serialized before architecture of %s" % 
                                           (o.getEntityName()))
             sc = serializer.Architecture(o, s)
-            fName = o.getEntityName() + "_" + o.name + "_arch.vhd"
+            fName = o.getEntityName() + ".vhd"
+            fileMode = 'a'
         elif isinstance(o, UnitFromHdl):
             fName = None
             for fn in o._hdlSources:
@@ -119,11 +119,12 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
             fp = os.path.join(folderName, fName)
             files.append(fp)
             
-            with open(fp, 'w') as f:
+            with open(fp, fileMode) as f:
+                if fileMode == 'a':
+                    f.write("\n")
                 f.write(
-                    serializer.formater(
-                        "\n".join([ serializer.asHdl(header), sc])
-                    ))
+                    serializer.formater(sc)
+                    )
     return files
 
 def fileSyntaxCheck(fileInfo, timeoutInterval=20):
