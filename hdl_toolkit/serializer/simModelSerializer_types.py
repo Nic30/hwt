@@ -22,11 +22,10 @@ class SimModelSerializer_types():
             else:
                 c = c.val  
              
-        return "vecT(%d, %r)" % (c, typ.signed)
+        return "simBitsT(%d, %r)" % (c, typ.signed)
 
     @classmethod
     def HdlType_enum(cls, typ, scope, declaration=False):
-        buff = []
         if declaration:
             try:
                 name = typ.name
@@ -34,11 +33,7 @@ class SimModelSerializer_types():
                 name = "enumT_"
             typ.name = scope.checkedName(name, typ)
             
-            buff.extend(["TYPE ", typ.name.upper(), ' IS ('])
-            # [TODO] check enum values names 
-            buff.append(", ".join(typ._allValues))
-            buff.append(")")
-            return "".join(buff)
+            return "Enum( \"%d\", [%s])" % (typ.name, ", ".join(typ._allValues))
         else:
             return typ.name
         
@@ -52,9 +47,9 @@ class SimModelSerializer_types():
                 name = "arrT_"
             
             typ.name = scope.checkedName(name, typ)
-            
-            return "TYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
-                (typ.name, cls.asHdl(toHVal(typ.size) - 1), cls.HdlType(typ.elmType))
+            #Array(vecT(self.DATA_WIDTH), self.DEPTH)
+            return "Array(%s, %d)" % \
+                (cls.HdlType(typ.elmType), evalParam(typ.size).val)
         else:
             try:
                 return typ.name
