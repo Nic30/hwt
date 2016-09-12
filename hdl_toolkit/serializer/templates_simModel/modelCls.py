@@ -22,6 +22,10 @@ class {{ name }}(SimModel):
     {{name}} = RtlSignal(_cntx, "{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}
     
     {% for c in componentInstances %}
+    # connect ports
+    {% for p in c.ports %}
+    {% if c.direction == "IN" %}{{c.name}}.{{p.dst.name}} = {{p.src.name}}{% else %}{{c.name}}.{{p.src.name}} = {{p.dst.name}} {% endif %}{% endfor %}
+
     {{c._name}} = {{c.name}}()
     {% endfor %}
 {% for proc in processes %}
@@ -42,4 +46,5 @@ class {{ name }}(SimModel):
         sensitivity(self.{{proc.name}}, {% for s in proc.sensitivityList %}self.{{s.name}}, {% endfor %})
         {% endfor %}
         
+
         
