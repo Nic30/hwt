@@ -4,23 +4,24 @@ import sys
 
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-from hdl_toolkit.synthesizer.shortcuts import synthesised
 from hdl_toolkit.hdlObjects.specialValues import Time
 
-def simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
+def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
     """
     Syntax sugar
     If outputFile is string try to open it as file
     """
     if isinstance(outputFile, str):
-        os.makedirs(os.path.dirname(outputFile), exist_ok=True)
+        d = os.path.dirname(outputFile)
+        if d:
+            os.makedirs(d, exist_ok=True)
         with open(outputFile, 'w') as f:
-            return _simUnitVcd(unit, stimulFunctions, outputFile=f, time=time) 
+            return _simUnitVcd(simModel, stimulFunctions, outputFile=f, time=time) 
     else:
-        return _simUnitVcd(unit, stimulFunctions, outputFile=outputFile, time=time) 
+        return _simUnitVcd(simModel, stimulFunctions, outputFile=outputFile, time=time) 
 
 
-def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
+def _simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
     """
     @param unit: interface level unit to simulate
     @param stimulFunctions: iterable of function with single param env (simpy environment)
@@ -30,14 +31,12 @@ def _simUnitVcd(unit, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns
     
     """
     
-    # load implementation of unit
-    if not unit._wasSynthetised():
-        synthesised(unit)
-
     sim = HdlSimulator()
 
     # configure simulator to log in vcd
     sim.config = VcdHdlSimConfig(outputFile)
+    
+    unit = simModel()
     
     # run simulation, stimul processes are register after initial initialization
     sim.simUnit(unit, time=time, extraProcesses=stimulFunctions) 
