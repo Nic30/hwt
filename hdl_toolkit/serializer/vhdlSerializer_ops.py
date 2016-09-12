@@ -1,7 +1,6 @@
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
-from hdl_toolkit.serializer.exceptions import SerializerException
-from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
+
 
 # keep in mind that there is no such a thing in vhdl itself
 opPrecedence = {AllOps.NOT : 2,
@@ -27,35 +26,7 @@ opPrecedence = {AllOps.NOT : 2,
                 }
 
 class VhdlSerializer_ops():
-    
-    @classmethod
-    def WaitStm(cls, w):
-        if w.isTimeWait:
-            return "wait for %d ns" % w.waitForWhat
-        elif w.waitForWhat is None:
-            return "wait"
-        else:
-            raise NotImplementedError()
 
-    
-    @classmethod
-    def Assignment(cls, a):
-        dst = a.dst
-        if a.indexes is not None:
-            for i in a.indexes:
-                if isinstance(i, SliceVal):
-                    i = i.clone()
-                    i.val = (i.val[0] + 1, i.val[1])
-                dst = dst[i]   
-            
-            
-        if dst._dtype == a.src._dtype:
-            return "%s <= %s" % (cls.asHdl(dst), cls.Value(a.src))
-        else:
-            raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
-                         (cls.asHdl(dst), cls.Value(a.src), repr(dst._dtype), repr(a.src._dtype)))
-
-            
     @classmethod
     def BitToBool(cls, cast):
         v = 0 if cast.sig.negated else 1

@@ -24,6 +24,7 @@ from hdl_toolkit.serializer.utils import maxStmId
 from hdl_toolkit.serializer.vhdlSerializer_Value import VhdlSerializer_Value
 from hdl_toolkit.serializer.vhdlSerializer_ops import VhdlSerializer_ops
 from hdl_toolkit.serializer.vhdlSerializer_types import VhdlSerializer_types
+from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
 
 
 VHLD_KEYWORDS = [
@@ -88,6 +89,32 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         return s
     
     @classmethod
+    def WaitStm(cls, w):
+        if w.isTimeWait:
+            return "wait for %d ns" % w.waitForWhat
+        elif w.waitForWhat is None:
+            return "wait"
+        else:
+            raise NotImplementedError()
+
+    @classmethod
+    def Assignment(cls, a):
+        dst = a.dst
+        if a.indexes is not None:
+            for i in a.indexes:
+                if isinstance(i, SliceVal):
+                    i = i.clone()
+                    i.val = (i.val[0] + 1, i.val[1])
+                dst = dst[i]   
+            
+            
+        if dst._dtype == a.src._dtype:
+            return "%s <= %s" % (cls.asHdl(dst), cls.Value(a.src))
+        else:
+            raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
+                         (cls.asHdl(dst), cls.Value(a.src), repr(dst._dtype), repr(a.src._dtype)))
+
+    @classmethod
     def asHdl(cls, obj):
         if hasattr(obj, "asVhdl"):
             return obj.asVhdl(cls)
@@ -148,7 +175,6 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         "componentInstances" :map(lambda c: cls.ComponentInstance(c, scope),
                                    arch.componentInstances)
         })
-   
         
     @classmethod
     def comment(cls, comentStr):
@@ -308,7 +334,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             proc.name = scope.checkedName(proc.name, proc)
         
         
-        sensitivityList = sorted(where(proc.sensitivityList, lambda x : not isinstance(x, Param)), 
+        sensitivityList = sorted(where(proc.sensitivityList, lambda x : not isinstance(x, Param)),
                                     key=lambda x: x.name)
         
         return VHDLTemplates.process.render({
