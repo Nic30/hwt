@@ -21,7 +21,9 @@ class SimModelSerializer_value():
         @param val: value object, can be instance of Signal or Value    """
         t = val._dtype
         
-        if isinstance(t, Slice):
+        if isinstance(val, RtlSignalBase):
+            return cls.SignalItem(val)
+        elif isinstance(t, Slice):
             return cls.Slice_valAsVhdl(t, val)
         elif isinstance(t, Array):
             return cls.Array_valAsVhdl(t, val)
@@ -35,8 +37,6 @@ class SimModelSerializer_value():
             return cls.Integer_valAsVhdl(t, val)
         elif isinstance(t, String):
             return cls.String_valAsVhdl(t, val)
-        elif isinstance(val, RtlSignalBase):
-            return cls.SignalItem(val)
         else:
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 
     
