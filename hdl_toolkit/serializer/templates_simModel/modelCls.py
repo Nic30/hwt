@@ -22,13 +22,8 @@ class {{ name }}(SimModel):
     # internal signals{% for name, dtype, defVal in signals %}
     {{name}} = RtlSignal(_cntx, "{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}
     
-    {% for c in componentInstances %}
-    # connect ports
-    {% for p in c.ports %}
-    {{c.name}}.{% if p.direction == "IN" %}{{p.dst.name}} = {{p.src.name}}{% else %}{{p.src.name}} = {{p.dst.name}} {% endif %}{% endfor %}
+    
 
-    {{c._name}} = {{c.name}}()
-    {% endfor %}
 {% for proc in processes %}
 {{proc}}
 {% endfor %}
@@ -40,6 +35,12 @@ class {{ name }}(SimModel):
                             {% endfor %}]
         self._processes = [{% for procName in processesNames %}self.{{procName}},
                            {% endfor %}]
+        {% for c in componentInstances %}
+        # connect ports{% for p in c.ports %}
+        {{c.name}}.{% if p.direction == "IN" %}{{p.dst.name}} = self.{{p.src.name}}{% else %}{{p.src.name}} = self.{{p.dst.name}} {% endif %}{% endfor %}
+        self.{{c._name}} = {{c.name}}()
+        {% endfor %}
+        
         self._units = [{% for c in componentInstances %}self.{{c._name}},
                        {% endfor %}
                        ]
@@ -47,6 +48,6 @@ class {{ name }}(SimModel):
         sensitivity(self.{{proc.name}}, {% for s in proc.sensitivityList %}self.{{s.name}}{% if not loop.last %}, {% endif %}{% endfor %}){% endfor %}
         
     def _getStaticProcesses(self):
-        {% for proc in processObjects %}{% if not proc.sensitivityList %}
-        yield self.{{proc.name}}{% endif %}{% endfor %}
+        {% if unsensitiveProcesses %}{% for proc in unsensitiveProcesses %}
+        yield self.{{proc.name}}{% endfor %}{% else %}return []{% endif %}
         

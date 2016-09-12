@@ -98,7 +98,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         "processes"          : procs,
         "processObjects"     : arch.processes,
         "processesNames"     : map(lambda p: p.name, arch.processes),
-        "componentInstances" : arch.componentInstances
+        "componentInstances" : arch.componentInstances,
+        "unsensitiveProcesses" : list(where(arch.processes, lambda proc: not proc.sensitivityList)),
         })
    
     @classmethod
