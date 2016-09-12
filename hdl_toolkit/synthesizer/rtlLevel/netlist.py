@@ -126,43 +126,6 @@ class RtlNetlist():
             buff.append(self.sig(oldToNewNameFn(s.name), s.vat_type.width))
         return buff
     
-    # def discover(self, interfaces):
-    #    """
-    #    Discovery process begins on the outputs and tracks back the inputs
-    #    """
-    #    def discoverDatapaths(signal):
-    #        for node in walkSigSouces(signal):
-    #            if node in self.startsOfDataPaths:
-    #                return 
-    #            self.startsOfDataPaths.add(node)
-    #            if isinstance(node, PortItem):
-    #                if node.unit.discovered is self:
-    #                    pass
-    #                node.unit.discovered = self
-    #                for p in walkUnitInputPorts(node.unit):
-    #                    if p.src is not None:  # top unit does not have to be connected
-    #                        discoverDatapaths(p.src)
-    #                self.subUnits.add(node.unit)
-    #            elif isinstance(node, Assignment):
-    #                for s in walkSignalsInExpr(node.src):
-    #                    discoverDatapaths(s)
-    #
-    #                for c in node.cond:
-    #                    for s in  walkSignalsInExpr(c):
-    #                        discoverDatapaths(s)
-    #                if node.indexes:
-    #                    for i in node.indexes:
-    #                        walkSigSouces(i)
-    #                
-    #            else:
-    #                raise NotImplementedError(node)
-    #                    
-    #        if signal in interfaces:
-    #            self.startsOfDataPaths.add(signal)
-    #            
-    #    for s in where(interfaces, lambda s: signalHasDriver(s)):  # walk my outputs
-    #        discoverDatapaths(s)
-    #
     def buildProcessesOutOfAssignments(self):
         assigments = list(where(self.startsOfDataPaths,
                                 lambda x: isinstance(x, Assignment)
@@ -221,7 +184,6 @@ class RtlNetlist():
         ent._name = name + "_inst"  # instance name
 
         # create generics
-        # ent.ctx = self.globals
         for _, v in self.globals.items():
             ent.generics.append(v)
         
@@ -232,7 +194,6 @@ class RtlNetlist():
             ent.ports.append(pi)
 
         removeUnconnectedSignals(self)
-        # self.discover(interfaces)
         
         arch = Architecture(ent)
         for p in self.buildProcessesOutOfAssignments():
