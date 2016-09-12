@@ -5,9 +5,6 @@ class Boolean(HdlType):
         super().__init__()
         self.name = 'boolean'
     
-    def valAsVhdl(self, val, serializer):
-        return str(bool(val.val))
-
     @classmethod
     def getConvertor(cls):
         from hdl_toolkit.hdlObjects.types.booleanConversions import convertBoolean

@@ -1,15 +1,11 @@
 
 
-def sensitivity(*sensitiveTo):
+def sensitivity(proc, *sensitiveTo):
     """
     register sensitivity for process
     and bound process int
     """
-    def _sensitivity(proc):
-        proc.sensitivityList = sensitiveTo 
-        return proc
-    
-    return _sensitivity
+    proc.sensitivityList = sensitiveTo 
 
 class SimModel(object):
     pass

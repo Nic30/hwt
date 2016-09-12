@@ -25,6 +25,10 @@ from python_toolkit.arrayQuery import arr_any, where
 from hdl_toolkit.serializer.formater import formatVhdl
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
 from hdl_toolkit.serializer.utils import maxStmId
+from hdl_toolkit.hdlObjects.types.boolean import Boolean
+from hdl_toolkit.hdlObjects.types.integer import Integer
+from hdl_toolkit.hdlObjects.types.string import String
+from hdl_toolkit.hdlObjects.types.slice import Slice
 
 
 VHLD_KEYWORDS = [
@@ -453,6 +457,19 @@ class VhdlSerializer():
         return name + constr
 
     @classmethod
+    def Bits_valAsVhdl(cls, dtype, val):
+        w = dtype.bit_length()
+        if dtype.signed is None:
+            if dtype.forceVector or w > 1:
+                return cls.BitString(val.val, w, val.vldMask)
+            else:
+                return cls.BitLiteral(val.val, val.vldMask)
+        elif dtype.signed:
+            return cls.SignedBitString(val.val, w, val.vldMask)
+        else:
+            return cls.UnsignedBitString(val.val, w, val.vldMask)
+
+    @classmethod
     def HdlType_enum(cls, typ, scope, declaration=False):
         buff = []
         if declaration:
@@ -470,6 +487,9 @@ class VhdlSerializer():
         else:
             return typ.name
         
+    @classmethod
+    def Enum_valAsVhdl(cls, dtype, val):
+        return  '%s' % str(val.val)
 
     @classmethod
     def HdlType_array(cls, typ, scope, declaration=False):
@@ -491,6 +511,11 @@ class VhdlSerializer():
                 # sometimes we need to debug expression and we need temporary type name
                 # this may be risk and this should be done by extra debug serializer
                 return "arrT_%d" % id(typ) 
+    
+    @classmethod
+    def Array_valAsVhdl(cls, dtype, val):
+        return  "(" + (",\n".join([cls.Value(v) for v in val.val])) + ")"
+    
 
     @classmethod
     def HdlType(cls, typ, scope=None, declaration=False):
@@ -507,7 +532,23 @@ class VhdlSerializer():
                                       (typ.name))
             else:
                 return typ.name.upper()
-                
+    @classmethod
+    def Bool_valAsVhdl(cls, dtype, val):
+        return str(bool(val.val))
+    
+    @classmethod
+    def Integer_valAsVhdl(cls, dtype, val):
+        return str(int(val.val))
+
+    @classmethod
+    def Slice_valAsVhdl(cls, dtype, val):
+        return "%s DOWNTO %s" % (cls.Value(val.val[0]), cls.Value(val.val[1]))
+
+    @classmethod
+    def String_valAsVhdl(cls, dtype, val):
+        return  '"%s"' % str(val.val)
+
+
     @classmethod
     def HWProcess(cls, proc, scope):
         body = proc.statements
@@ -534,13 +575,27 @@ class VhdlSerializer():
         """ 
         @param dst: is signal connected with value 
         @param val: value object, can be instance of Signal or Value    """
-        if isinstance(val, Value):
-            return val._dtype.valAsVhdl(val, cls)
+        t = val._dtype
+        
+        if isinstance(t, Slice):
+            return cls.Slice_valAsVhdl(t, val)
+        elif isinstance(t, Array):
+            return cls.Array_valAsVhdl(t, val)
+        elif isinstance(t, Bits):
+            return cls.Bits_valAsVhdl(t, val)
+        elif isinstance(t, Boolean):
+            return cls.Bool_valAsVhdl(t, val)
+        elif isinstance(t, Enum):
+            return cls.Enum_valAsVhdl(t, val)
+        elif isinstance(t, Integer):
+            return cls.Integer_valAsVhdl(t, val)
+        elif isinstance(t, String):
+            return cls.String_valAsVhdl(t, val)
         elif isinstance(val, RtlSignalBase):
             return cls.SignalItem(val)
         else:
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 
-        
+            
     @classmethod
     def BitToBool(cls, cast):
         v = 0 if cast.sig.negated else 1

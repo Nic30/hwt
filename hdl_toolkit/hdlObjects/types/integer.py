@@ -7,9 +7,6 @@ class Integer(HdlType):
         super(Integer, self).__init__()
         self.min = _min
         self.max = _max
-
-    def valAsVhdl(self, val, serializer):
-        return str(int(val.val))
     
     def __eq__(self, other):
         return self is other or (

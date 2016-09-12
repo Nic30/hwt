@@ -16,9 +16,6 @@ class Enum(HdlType):
         v = self.fromPy(name)
         setattr(self, name, v)
         return v
-                
-    def valAsVhdl(self, val, serializer):
-        return  '%s' % str(val.val)
     
     def all_mask(self):
         return 1
