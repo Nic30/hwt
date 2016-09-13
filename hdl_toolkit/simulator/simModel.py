@@ -1,6 +1,7 @@
 from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.simulator.utils import valueHasChanged
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 
 
 __simBitsTCache = {}
@@ -66,6 +67,19 @@ def simEvalCond(cond, simulator):
 
 class SimModel(object):
     pass
+
+def connectSimPort(simUnit, subSimUnit, srcName, dstName, direction):
+        if direction == DIRECTION.OUT:
+            origPort = getattr(subSimUnit, srcName)
+            newPort = getattr(simUnit, dstName)
+            setattr(subSimUnit, srcName, newPort)
+        else:
+            origPort = getattr(subSimUnit, dstName)
+            newPort = getattr(simUnit, srcName)
+            setattr(subSimUnit, dstName, newPort)
+        
+        subSimUnit._cntx.signals.remove(origPort)
+    
     
 def mkUpdater(nextVal, resVld):
     """
