@@ -1,13 +1,12 @@
-{{indent}}__cond, __condVldTmp = simEvalCond({{ cond }}, sim)
-{{indent}}__condVld = __condVld and __condVldTmp
-{{indent}}if __cond or not __condVld:{% if ifTrue %}{% for stm in ifTrue %}
-{{stm}}{% endfor %}{% else %}pass{% endif %}
-{{indent}}else:
-{{indent}}    {% for c, stms in elIfs %}
-{{indent}}    __cond, __condVldTmp = simEvalCond({{ c }}, sim)
-{{indent}}    __condVld = __condVld and __condVldTmp
-{{indent}}    if __cond or not __condVld:{% for stm in stms %}
+{{indent}}_cond, _condVldTmp = simEvalCond({{ cond }}, sim)
+{{indent}}_condVld = _condVld and _condVldTmp
+{{indent}}if _cond or not _condVld:{% if ifTrue|length > 0 %}{% for stm in ifTrue %}
+{{stm}}{% endfor %}{% else %}pass{% endif %}{% if  ifFalse|length > 0 or elIfs|length >0 %}
+{{indent}}else:{% for c, stms in elIfs %}
+{{indent}}    _cond, _condVldTmp = simEvalCond({{ c }}, sim)
+{{indent}}    _condVld = _condVld and _condVldTmp
+{{indent}}    if _cond or not _condVld:{% for stm in stms %}
 {{stm}}{% endfor %}
-{{indent}}        raise StopIteration(){% endfor %}
-{{indent}}    {% if ifFalse %}{% for stm in ifFalse %}
-{{stm}}{%endfor%}{%endif%}
+{{indent}}        raise StopIteration(){% endfor %}{% if ifFalse|length > 0 %}{% for stm in ifFalse %}
+{{stm}}{%endfor%}
+{{indent}}    raise StopIteration(){%endif%}{%endif%}

@@ -1,12 +1,18 @@
-from hdl_toolkit.simulator.simModel import SimModel, sensitivity, simBitsT, _invalidated, simEvalCond
-from hdl_toolkit.hdlObjects.types.bitsVal import BitsVal
-from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
-from hdl_toolkit.hdlObjects.assignment import mkUpdater, mkArrayUpdater
-from hdl_toolkit.hdlObjects.types.defs import BIT, INT
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT
-from hdl_toolkit.hdlObjects.types.enum import Enum
+from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 from hdl_toolkit.hdlObjects.types.array import Array
-from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal{% for c in componentInstances %}
+from hdl_toolkit.hdlObjects.types.arrayVal import ArrayVal
+from hdl_toolkit.hdlObjects.types.bitsConversions import convertBits
+from hdl_toolkit.hdlObjects.types.bitsVal import BitsVal
+from hdl_toolkit.hdlObjects.types.defs import BIT, INT, SLICE
+from hdl_toolkit.hdlObjects.types.enum import Enum
+from hdl_toolkit.simulator.simModel import (SimModel, sensitivity, simBitsT,
+                                            simEvalCond, mkUpdater, mkArrayUpdater)
+from hdl_toolkit.hdlObjects.types.integerConversions import convertInteger
+from hdl_toolkit.synthesizer.codeOps import Concat
+from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
+from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
+from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
+{% for c in componentInstances %}
 if "{{c.name}}" not in locals(): # support for all models in single file
     from {{c.name}} import {{c.name}}{% endfor %}
 {% for imp in imports %}
@@ -43,7 +49,8 @@ class {{ name }}(SimModel):
                        ]
         {% for proc in processObjects %}
         sensitivity(self.{{proc.name}}, {% for s in proc.sensitivityList %}self.{{s.name}}{% if not loop.last %}, {% endif %}{% endfor %}){% endfor %}
-        
+    
+    # [TODO] rm    
     def _getStaticProcesses(self):
         {% if unsensitiveProcesses %}{% for proc in unsensitiveProcesses %}
         yield self.{{proc.name}}{% endfor %}{% else %}return []{% endif %}
