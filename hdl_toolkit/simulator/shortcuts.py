@@ -1,22 +1,29 @@
+import imp
 import inspect
 import os
 import sys
-import imp
 
+from hdl_toolkit.hdlObjects.specialValues import Time
+from hdl_toolkit.serializer.simModelSerializer import SimModelSerializer
+from hdl_toolkit.simulator.agentConnector import autoAddAgents
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-from hdl_toolkit.hdlObjects.specialValues import Time
-from hdl_toolkit.synthesizer.shortcuts import toRtl
-from hdl_toolkit.serializer.simModelSerializer import SimModelSerializer
 from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hdl_toolkit.synthesizer.shortcuts import toRtl
+
 
 def simPrepare(unit):
     """
     Create simulation model and connect it with interfaces of original unit
+    @return: tuple (fully loaded unit with connected sim model,
+                    connected simulation model,
+                    simulation processes of agents
+                    ) 
     """
     model = toSimModel(unit)
     reconectUnitSignalsToModel(unit, model)
-    return unit, model
+    procs = autoAddAgents(unit)
+    return unit, model, procs
 
 def toSimModel(unit):
     """

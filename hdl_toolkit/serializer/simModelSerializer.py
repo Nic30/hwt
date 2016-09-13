@@ -22,6 +22,7 @@ unitTmpl = env.get_template('modelCls.py')
 processTmpl = env.get_template('process.py')
 iftmpl = env.get_template("if.py")
 assignTmpl = env.get_template("assign.py")
+switchTmpl = env.get_template("switch.py")
 
 _indent = "    "
 _indentCache = {}        
@@ -124,7 +125,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             if a.indexes is not None:
                 raise NotImplementedError()
             else:
-                return assignTmpl.render(indent = getIndent(indent),
+                return assignTmpl.render(indent=getIndent(indent),
                                          dst=dst.name,
                                          src=cls.Value(a.src),
                                          isEventDependent=a.isEventDependent)
@@ -160,17 +161,21 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
                              ifFalse=map(lambda obj: cls.stmAsHdl(obj, indent + 1), ifFalse))  
     
     @classmethod
-    def SwitchContainer(cls, sw):
-        switchOn = cls.condAsHdl(sw.switchOn, False)
+    def SwitchContainer(cls, sw, indent):
+        switchOn = cls.asHdl(sw.switchOn)
         
         cases = []
         for key, statements in sw.cases:
             if key is not None:  # None is default
                 key = cls.asHdl(key)
-                
-            cases.append((key, statements))  
-        return VHDLTemplates.Switch.render(switchOn=switchOn,
-                                           cases=cases)  
+                ind = indent + 1
+            else:
+                ind = indent  
+            cases.append((key, list(map(lambda s: cls.stmAsHdl(s, ind), statements))))  
+        
+        return switchTmpl.render(indent=getIndent(indent),
+                                 switchOn=switchOn,
+                                 cases=cases)  
    
     @classmethod
     def WaitStm(cls, w):
