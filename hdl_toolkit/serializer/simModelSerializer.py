@@ -21,7 +21,6 @@ env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_simM
 unitTmpl = env.get_template('modelCls.py')
 processTmpl = env.get_template('process.py')
 iftmpl = env.get_template("if.py")
-assignTmpl = env.get_template("assign.py")
 switchTmpl = env.get_template("switch.py")
 
 _indent = "    "
@@ -121,18 +120,19 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
     @classmethod
     def Assignment(cls, a, indent=0):
         dst = a.dst
-        if dst._dtype == a.src._dtype:
-            if a.indexes is not None:
-                raise NotImplementedError()
-            else:
-                return assignTmpl.render(indent=getIndent(indent),
-                                         dst=dst.name,
-                                         src=cls.Value(a.src),
-                                         isEventDependent=a.isEventDependent)
-                
+        if a.indexes is not None:
+            return "%syield (self.%s, mkArrayUpdater(%s, _condVld, [%s]), %s)" % (
+                        getIndent(indent), dst.name, cls.Value(a.src),
+                        ", ".join(map(cls.asHdl, a.indexes)),
+                        a.isEventDependent)
         else:
-            raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
-                         (cls.asHdl(dst), cls.Value(a.src), repr(dst._dtype), repr(a.src._dtype)))
+            if not (dst._dtype == a.src._dtype):
+                raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
+                     (cls.asHdl(dst), cls.Value(a.src), repr(dst._dtype), repr(a.src._dtype)))
+            return "%syield (self.%s, mkUpdater(%s, _condVld), %s)" % (
+                        getIndent(indent), dst.name, cls.Value(a.src), a.isEventDependent)
+            
+
         
     @classmethod
     def comment(cls, comentStr):
@@ -152,13 +152,13 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         
         for c, statements in ifc.elIfs:
             elIfs.append((cls.condAsHdl(c),
-                          map(lambda obj: cls.stmAsHdl(obj, indent + 2), statements)))
+                          tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 2), statements))))
         
         return iftmpl.render(indent=getIndent(indent),
                              cond=cond,
-                             ifTrue=map(lambda obj: cls.stmAsHdl(obj, indent + 1), ifTrue),
+                             ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1), ifTrue)),
                              elIfs=elIfs,
-                             ifFalse=map(lambda obj: cls.stmAsHdl(obj, indent + 1), ifFalse))  
+                             ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1), ifFalse)))  
     
     @classmethod
     def SwitchContainer(cls, sw, indent):
@@ -171,7 +171,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
                 ind = indent + 1
             else:
                 ind = indent  
-            cases.append((key, list(map(lambda s: cls.stmAsHdl(s, ind), statements))))  
+            cases.append((key, tuple(map(lambda s: cls.stmAsHdl(s, ind), statements))))  
         
         return switchTmpl.render(indent=getIndent(indent),
                                  switchOn=switchOn,
