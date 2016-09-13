@@ -1,4 +1,4 @@
-from hdl_toolkit.simulator.simModel import SimModel, sensitivity, simBitsT
+from hdl_toolkit.simulator.simModel import SimModel, sensitivity, simBitsT, _invalidated, simEvalCond
 from hdl_toolkit.hdlObjects.types.bitsVal import BitsVal
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.hdlObjects.assignment import mkUpdater, mkArrayUpdater
@@ -22,12 +22,9 @@ class {{ name }}(SimModel):
     # internal signals{% for name, dtype, defVal in signals %}
     {{name}} = RtlSignal(_cntx, "{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}
     
-    
-
 {% for proc in processes %}
 {{proc}}
 {% endfor %}
-    
     
     def __init__(self):
         self._interfaces = [{% for name, _ in ports   %}self.{{name}},

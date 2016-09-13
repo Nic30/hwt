@@ -24,33 +24,6 @@ def seqEvalCond(cond):
         
     return _cond
 
-def simEvalCond(cond, simulator):
-    _cond = True
-    _vld = True
-    for c in cond:
-        v = c.simEval(simulator)
-        val = bool(v.val)
-        fullVld = v._isFullVld()
-        if not val and fullVld:
-            return False, True
-        
-        _cond = _cond and val
-        _vld = _vld and fullVld
-        
-        
-    return _cond, _vld
-
-
-def _invalidated(origUpadater):
-    """
-    disable validity on updater result
-    """
-    def __invalidated(val):
-        _, v = origUpadater(val)
-        v.vldMask = 0
-        return True, v
-    return __invalidated
-
 class IfContainer():
     """
     Structural container of if statement for hdl rendering
@@ -60,33 +33,6 @@ class IfContainer():
         self.ifTrue = ifTrue
         self.elIfs = elIfs
         self.ifFalse = ifFalse
-        
-    @staticmethod
-    def evalCase(simulator, stm, condVld):
-        for r in stm.simEval(simulator):
-            if not condVld:
-                r = (r[0], _invalidated(r[1]), r[2])
-            yield r
-    
-    def simEval(self, simulator):
-        """
-        Same like seqEval but does not assign to signal instead of
-        if schedueles updater in simulator
-        """
-        condRes, condVld = simEvalCond(self.cond, simulator)
-        if condRes or not condVld:
-            for stm in self.ifTrue:
-                yield from IfContainer.evalCase(simulator, stm, condVld)
-        else:
-            for c in self.elIfs:
-                subCondRes, subCondVld = simEvalCond(c[0], simulator)
-                if subCondRes or not subCondVld:
-                    for stm in c[1]:
-                        yield from IfContainer.evalCase(simulator, stm, subCondVld)
-                    raise StopIteration()
-            
-            for stm in self.ifFalse:
-                yield from IfContainer.evalCase(simulator, stm, condVld)
         
     def seqEval(self):
         if seqEvalCond(self.cond):
@@ -114,27 +60,6 @@ class SwitchContainer():
         self.switchOn = switchOn
         self.cases = cases
     
-    def simEval(self, simulator):
-        """
-        scheduele updater in simulator with effect of this statement
-        """
-        v = self.switchOn.simEval(simulator)
-        vld = v.vldMask == v._dtype.all_mask()
-        if not vld:
-            c = self.cases[0]
-            stmnts = c[1]
-        else:
-            for c in self.cases:
-                val = c[0]
-                stmnts = c[1]
-                if val is None:
-                    break
-                elif v.val == val.val:
-                    break
-        
-        for stm in stmnts:
-            yield from IfContainer.evalCase(simulator, stm, vld)  
-                      
     def seqEval(self):
         raise NotImplementedError()
     
@@ -149,9 +74,6 @@ class WhileContainer():
     def __init__(self, cond, body):
         self.cond = cond
         self.body = body
-    
-    def simEval(self, simulator):
-        raise NotImplementedError()
     
     def seqEval(self):
         while seqEvalCond(self.cond):

@@ -3,8 +3,6 @@ from jinja2.loaders import PackageLoader
 from keyword import kwlist
 
 from hdl_toolkit.hdlObjects.types.array import Array
-from hdl_toolkit.hdlObjects.types.bits import Bits
-from hdl_toolkit.hdlObjects.types.defs import BOOL, BIT
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.serializer.exceptions import SerializerException
@@ -22,9 +20,18 @@ from python_toolkit.arrayQuery import where
 env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_simModel'))
 unitTmpl = env.get_template('modelCls.py')
 processTmpl = env.get_template('process.py')
+iftmpl = env.get_template("if.py")
+assignTmpl = env.get_template("assign.py")
 
-indent = "    "        
-        
+_indent = "    "
+_indentCache = {}        
+def getIndent(indentNum):
+    try:
+        return  _indentCache[indentNum]
+    except KeyError:
+        i = "".join([_indent for _ in range(indentNum)])   
+        _indentCache[indentNum] = i
+        return i
 
 class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimModelSerializer_types):
     __keywords_dict = {kw: LangueKeyword() for kw in kwlist}
@@ -54,6 +61,14 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             except AttributeError:
                 raise NotImplementedError("Not implemented for %s" % (repr(obj)))
             return serFn(obj)
+    
+    @classmethod
+    def stmAsHdl(cls, obj, indent=0):
+        try:
+            serFn = getattr(cls, obj.__class__.__name__)
+        except AttributeError:
+            raise NotImplementedError("Not implemented for %s" % (repr(obj)))
+        return serFn(obj, indent)
     
     @classmethod
     def FunctionContainer(cls, fn):
@@ -103,13 +118,17 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         })
    
     @classmethod
-    def Assignment(cls, a):
+    def Assignment(cls, a, indent=0):
         dst = a.dst
         if dst._dtype == a.src._dtype:
             if a.indexes is not None:
                 raise NotImplementedError()
             else:
-                return "yield (self.%s, mkUpdater(%s), %r)" % (dst.name, cls.Value(a.src), a.isEventDependent)
+                return assignTmpl.render(indent = getIndent(indent),
+                                         dst=dst.name,
+                                         src=cls.Value(a.src),
+                                         isEventDependent=a.isEventDependent)
+                
         else:
             raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
                          (cls.asHdl(dst), cls.Value(a.src), repr(dst._dtype), repr(a.src._dtype)))
@@ -119,41 +138,26 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         return "#" + comentStr.replace("\n", "\n#")     
 
     @classmethod
-    def condAsHdl(cls, cond, forceBool):
-        if isinstance(cond, RtlSignalBase):
-            cond = [cond]
-        else:
-            cond = list(cond)
-        if len(cond) == 1:
-            c = cond[0]
-            if not forceBool or c._dtype == BOOL:
-                return cls.asHdl(c)
-            elif c._dtype == BIT:
-                return "(" + cls.asHdl(c) + ")=" + cls.BitLiteral(1, 1) 
-            elif isinstance(c._dtype, Bits):
-                width = c._dtype.bit_length()
-                return "(" + cls.asHdl(c) + ")/=" + cls.BitString(0, width)
-            else:
-                raise NotImplementedError()
-            
-        else:
-            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool), cond))
+    def condAsHdl(cls, cond):
+        cond = list(cond)
+        return "[%s]" % (",".join(map(lambda x: cls.asHdl(x), cond)))
     
     @classmethod
-    def IfContainer(cls, ifc):
-        cond = cls.condAsHdl(ifc.cond, True)
-        elIfs = []
+    def IfContainer(cls, ifc, indent):
+        cond = cls.condAsHdl(ifc.cond)
         ifTrue = ifc.ifTrue
+        elIfs = []
         ifFalse = ifc.ifFalse
         
         for c, statements in ifc.elIfs:
-                
-            elIfs.append((cls.condAsHdl(c, True), statements))
+            elIfs.append((cls.condAsHdl(c),
+                          map(lambda obj: cls.stmAsHdl(obj, indent + 2), statements)))
         
-        return VHDLTemplates.If.render(cond=cond,
-                                       ifTrue=ifTrue,
-                                       elIfs=elIfs,
-                                       ifFalse=ifFalse)  
+        return iftmpl.render(indent=getIndent(indent),
+                             cond=cond,
+                             ifTrue=map(lambda obj: cls.stmAsHdl(obj, indent + 1), ifTrue),
+                             elIfs=elIfs,
+                             ifFalse=map(lambda obj: cls.stmAsHdl(obj, indent + 1), ifFalse))  
     
     @classmethod
     def SwitchContainer(cls, sw):
@@ -187,7 +191,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         return processTmpl.render({
               "name": proc.name,
               "sensitivityList": [s.name for s in sensitivityList],
-              "stmLines": [ cls.asHdl(s) for s in body] })
+              "stmLines": [ cls.stmAsHdl(s, 2) for s in body] })
            
 
 

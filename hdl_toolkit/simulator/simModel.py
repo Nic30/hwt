@@ -46,6 +46,32 @@ def sensitivity(proc, *sensitiveTo):
         s.simSensitiveProcesses.add(proc)
          
 
+def _invalidated(origUpadater):
+    """
+    disable validity on updater result
+    """
+    def __invalidated(val):
+        _, v = origUpadater(val)
+        v.vldMask = 0
+        return val.vldMask != 0 , v
+    return __invalidated
+
+def simEvalCond(cond, simulator):
+    _cond = True
+    _vld = True
+    for c in cond:
+        v = c.simEval(simulator)
+        val = bool(v.val)
+        fullVld = v._isFullVld()
+        if not val and fullVld:
+            return False, True
+        
+        _cond = _cond and val
+        _vld = _vld and fullVld
+        
+        
+    return _cond, _vld
+
 class SimModel(object):
     pass
     

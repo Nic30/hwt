@@ -1,10 +1,40 @@
 import inspect
 import os
 import sys
+import imp
 
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hdl_toolkit.hdlObjects.specialValues import Time
+from hdl_toolkit.synthesizer.shortcuts import toRtl
+from hdl_toolkit.serializer.simModelSerializer import SimModelSerializer
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+
+def simPrepare(unit):
+    """
+    Create simulation model and connect it with interfaces of original unit
+    """
+    model = toSimModel(unit)
+    reconectUnitSignalsToModel(unit, model)
+    return unit, model
+
+def toSimModel(unit):
+    """
+    Create a simulation model for unit
+    """
+    sim_code = toRtl(unit, serializer=SimModelSerializer)
+    simModule = imp.new_module('simModule')
+    exec(sim_code, simModule.__dict__)
+    return simModule.__dict__[unit._name]
+
+def reconectUnitSignalsToModel(synthesisedUnit, modeCls):
+    """
+    Reconnect model signals to unit to run simulation with simulation model
+    but use original unit interfaces for comunication
+    """
+    for s in walkPhysInterfaces(synthesisedUnit):
+        s._sigInside = getattr(modeCls, s._sigInside.name) 
+    
 
 def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
     """
