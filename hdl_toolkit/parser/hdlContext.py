@@ -225,9 +225,11 @@ class BaseVhdlContext():
     @classmethod
     def getBaseCtx(cls):
         d = HDLCtx(None, None)
-        for t in [cls.integer, cls.positive, cls.natural,
-                   cls.boolean, cls.string]:
-            d[t.name.lower()] = t
+        d['integer'] = cls.integer
+        d['positive'] = cls.positive
+        d['natural'] = cls.natural
+        d['boolean'] = cls.boolean
+        d['string'] = cls.string
         d['true'] = BOOL.fromPy(True)
         d['false'] = BOOL.fromPy(False)
         return d
