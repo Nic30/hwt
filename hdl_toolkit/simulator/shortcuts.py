@@ -23,6 +23,7 @@ def simPrepare(unit):
     """
     model = toSimModel(unit)
     reconectUnitSignalsToModel(unit, model)
+    model = model()
     procs = autoAddAgents(unit)
     return unit, model, procs
 
@@ -35,32 +36,32 @@ def toSimModel(unit):
     exec(sim_code, simModule.__dict__)
     return simModule.__dict__[unit._name]
 
-def reconectUnitSignalsToModel(synthesisedUnit, modeCls):
+def reconectUnitSignalsToModel(synthesisedUnit, modelCls):
     """
     Reconnect model signals to unit to run simulation with simulation model
     but use original unit interfaces for comunication
     """
     for s in walkPhysInterfaces(synthesisedUnit):
-        s._sigInside = getattr(modeCls, s._sigInside.name) 
+        s._sigInside = getattr(modelCls, s._sigInside.name) 
     
 
-def simUnitVcd(simModelCls, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
+def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
     """
     Syntax sugar
     If outputFile is string try to open it as file
     """
-    assert issubclass(simModelCls, SimModel), "Class of SimModel is required (got %r)" % (simModelCls)
+    assert isinstance(simModel, SimModel), "Class of SimModel is required (got %r)" % (simModel)
     if isinstance(outputFile, str):
         d = os.path.dirname(outputFile)
         if d:
             os.makedirs(d, exist_ok=True)
         with open(outputFile, 'w') as f:
-            return _simUnitVcd(simModelCls, stimulFunctions, outputFile=f, time=time) 
+            return _simUnitVcd(simModel, stimulFunctions, outputFile=f, time=time) 
     else:
-        return _simUnitVcd(simModelCls, stimulFunctions, outputFile=outputFile, time=time) 
+        return _simUnitVcd(simModel, stimulFunctions, outputFile=outputFile, time=time) 
 
 
-def _simUnitVcd(simModelCls, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
+def _simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
     """
     @param unit: interface level unit to simulate
     @param stimulFunctions: iterable of function with single param env (simpy environment)
@@ -75,10 +76,8 @@ def _simUnitVcd(simModelCls, stimulFunctions, outputFile=sys.stdout, time=100 * 
     # configure simulator to log in vcd
     sim.config = VcdHdlSimConfig(outputFile)
     
-    model = simModelCls()
-    
     # run simulation, stimul processes are register after initial initialization
-    sim.simUnit(model, time=time, extraProcesses=stimulFunctions) 
+    sim.simUnit(simModel, time=time, extraProcesses=stimulFunctions) 
 
 
 class CallbackLoop(object):
