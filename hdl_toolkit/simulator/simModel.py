@@ -1,5 +1,7 @@
-from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.bitmask import Bitmask
+from hdl_toolkit.hdlObjects.types.bits import Bits
+from hdl_toolkit.simulator.utils import valueHasChanged
+
 
 __simBitsTCache = {}
 def simBitsT(width, signed):
@@ -46,16 +48,6 @@ def sensitivity(proc, *sensitiveTo):
         s.simSensitiveProcesses.add(proc)
          
 
-def _invalidated(origUpadater):
-    """
-    disable validity on updater result
-    """
-    def __invalidated(val):
-        _, v = origUpadater(val)
-        v.vldMask = 0
-        return val.vldMask != 0 , v
-    return __invalidated
-
 def simEvalCond(cond, simulator):
     _cond = True
     _vld = True
@@ -75,3 +67,43 @@ def simEvalCond(cond, simulator):
 class SimModel(object):
     pass
     
+def mkUpdater(nextVal, resVld):
+    """
+    Create value updater for simulation
+    """
+    if resVld:
+        return lambda currentVal: (valueHasChanged(currentVal, nextVal), nextVal)
+    else:
+        def updater(currentVal):
+            nextVal.vldMask = 0
+            return (valueHasChanged(currentVal, nextVal), nextVal)
+        return updater
+            
+
+def mkArrayUpdater(nextItemVal, resVld, indexes):
+    """
+    Create value updater for simulation for value of array type
+    [TODO] vldMask of indexes affects vldMask of array
+    """
+    if resVld:
+        def updater(currentVal):
+            if len(indexes) > 1:
+                raise NotImplementedError()
+            
+            index = indexes[0]
+            change = valueHasChanged(currentVal[index], nextItemVal)
+            currentVal[index] = nextItemVal
+            return (change, currentVal)
+    else:
+        def updater(currentVal):
+            if len(indexes) > 1:
+                raise NotImplementedError()
+            
+            index = indexes[0]
+            change = valueHasChanged(currentVal[index], nextItemVal)
+            nextItemVal.vldMask = 0
+            currentVal.vldMask = 0
+            currentVal[index] = nextItemVal
+            return (change, currentVal)
+
+    return updater
