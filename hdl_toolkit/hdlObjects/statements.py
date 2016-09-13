@@ -20,7 +20,7 @@ class ReturnContainer():
 def seqEvalCond(cond):
     _cond = True
     for c in cond:
-        _cond = _cond and bool(c.staticEval())
+        _cond = _cond and bool(c.staticEval().val)
         
     return _cond
 

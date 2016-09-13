@@ -1,28 +1,3 @@
-from hdl_toolkit.simulator.utils import valueHasChanged
-
-def mkUpdater(nextVal):
-    """
-    Create value updater for simulation
-    """
-    return lambda currentVal: (valueHasChanged(currentVal, nextVal), nextVal)
-
-def mkArrayUpdater(simulator, nextItemVal, indexes):
-    """
-    Create value updater for simulation for value of array type 
-    """
-    _indexes = list(map(lambda i: i.simEval(simulator), indexes))
-     
-    def updater(currentVal):
-        if len(_indexes) > 1:
-            raise NotImplementedError()
-        
-        index = _indexes[0]
-        change = valueHasChanged(currentVal[index], nextItemVal)
-        currentVal[index] = nextItemVal
-        return (change, currentVal)
-    
-    return updater
-    
 
 class Assignment(object):
     """
@@ -60,18 +35,6 @@ class Assignment(object):
         
     def seqEval(self):
         self.dst._val = self.src.staticEval() 
-    
-    def simEval(self, simulator):
-        """
-        @return: generator of tuple (dst, valueUpdater, isEventDependent)
-        """
-        nextVal = self.src.simEval(simulator)
-        
-        if self.indexes:
-            updater = mkArrayUpdater(simulator, nextVal, self.indexes)
-        else:
-            updater = mkUpdater(nextVal)
-        yield (self.dst, updater, self.isEventDependent)
     
     def __repr__(self):
         from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
