@@ -9,13 +9,13 @@ opPrecedence = {AllOps.NOT : 4,
                 AllOps.SUB: 5,
                 AllOps.MUL: 4,
                 AllOps.XOR: 9,
-                AllOps.EQ: 11,
-                AllOps.NEQ: 11,
-                AllOps.AND_LOG: 8,
+                AllOps.EQ: 10,
+                AllOps.NEQ: 10,
+                AllOps.AND_LOG: 10,
                 AllOps.OR_LOG: 10,
                 AllOps.DOWNTO: 1,
-                AllOps.GREATERTHAN: 11,
-                AllOps.LOWERTHAN: 11,
+                AllOps.GREATERTHAN: 10,
+                AllOps.LOWERTHAN: 10,
                 AllOps.CONCAT: 1,
                 AllOps.INDEX: 1,
                 AllOps.TERNARY: 1,
@@ -62,7 +62,7 @@ class SimModelSerializer_ops():
         elif o == AllOps.DIV:
             return _bin('//')
         elif o == AllOps.DOWNTO:
-            return _bin(':')
+            return "SliceVal([%s, %s], SLICE, True)" % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EQ:
             return '(%s)._eq(%s)' % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EVENT:
@@ -88,43 +88,35 @@ class SimModelSerializer_ops():
         elif o == AllOps.ADD:
             return _bin('+')
         elif o == AllOps.TERNARY:
-            return p(ops[1]) + " if " + cls.condAsHdl([ops[0]], True) + " else " + p(ops[2])
-        #elif o == AllOps.RISING_EDGE:
-        #    assert len(ops) == 1
-        #    return "RISING_EDGE(" + p(ops[0]) + ")"
-        #elif o == AllOps.FALLIGN_EDGE:
-        #    assert len(ops) == 1
-        #    return "FALLING_EDGE(" + p(ops[0]) + ")"
+            return "(%s)._ternary(%s, %s)" % tuple(map(cls.asHdl, ops)) 
+        elif o == AllOps.RISING_EDGE:
+            assert len(ops) == 1
+            return "(%s)._onRisingEdge(sim.env.now)" % (p(ops[0]))
+        elif o == AllOps.FALLIGN_EDGE:
+            assert len(ops) == 1
+            return "(%s)._onFallingEdge(sim.env.now)" % (p(ops[0]))
         elif o == AllOps.BitsAsSigned:
             assert len(ops) == 1
-            return  "%s._signed()" % p(ops[0])
+            return  "(%s)._signed()" % p(ops[0])
         elif o == AllOps.BitsAsUnsigned:
             assert len(ops) == 1
-            return  "%s._unsigned()" % p(ops[0])
+            return  "(%s)._unsigned()" % p(ops[0])
         elif o == AllOps.BitsAsVec:
             assert len(ops) == 1
-            return  "%s._vec()" % p(ops[0])
-        # elif o == AllOps.BitsToInt:
-        #    assert len(ops) == 1
-        #    op = cls.asHdl(ops[0])
-        #    if ops[0]._dtype.signed is None:
-        #        op = "UNSIGNED(%s)" % op
-        #    return "TO_INTEGER(%s)" % op
-        # elif o == AllOps.IntToBits:
-        #    assert len(ops) == 1
-        #    resT = op.result._dtype
-        #    op_str = cls.asHdl(ops[0])
-        #    w = resT.bit_length()
-        #    
-        #    if resT.signed is None:
-        #        return "STD_LOGIC_VECTOR(TO_UNSIGNED(" + op_str + ", %d))" % (w)
-        #    elif resT.signed:
-        #        return "TO_UNSIGNED(" + op_str + ", %d)" % (w)
-        #    else:
-        #        return "TO_UNSIGNED(" + op_str + ", %d)" % (w)
-        #    
+            return  "(%s)._vec()" % p(ops[0])
+        elif o == AllOps.BitsToInt:
+            assert len(ops) == 1
+            op = ops[0]
+            return "convertBits(%s, %s, INT)" % (cls.HdlType_bits(op._dtype), cls.asHdl(op))
+        elif o == AllOps.IntToBits:
+            assert len(ops) == 1
+            resT = op.result._dtype
+            return "convertInteger(%s, %s, %s)" % (cls.HdlType(ops[0]._dtype),
+                                                   cls.asHdl(ops[0]),
+                                                   cls.HdlType_bits(resT))
+            
         elif o == AllOps.POW:
             assert len(ops) == 2
             return  "pow(%s, %s)" % (p(ops[0]), p(ops[1]))
         else:
-            raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))
+            raise NotImplementedError("Do not know how to convert %s to simModel" % (o))
