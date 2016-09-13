@@ -6,6 +6,7 @@ from hdl_toolkit.hdlObjects.types.integer import Integer
 from hdl_toolkit.hdlObjects.types.string import String
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.types.slice import Slice
+from hdl_toolkit.synthesizer.param import Param, evalParam
 
 
 class SimModelSerializer_value():
@@ -20,11 +21,28 @@ class SimModelSerializer_value():
         if declaration:
             raise NotImplementedError()
         else:
+            if isinstance(si, Param):
+                return cls.Value(evalParam(si))
             if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin)
             else:
                 return "self.%s._oldVal" % si.name
-
+    @classmethod
+    def Integer_valAsVhdl(cls, t, i):
+        if i.vldMask:
+            return "hInt(%d)" % i.val
+        else:
+            return "hInt(None)"
+    
+    @classmethod
+    def Array_valAsVhdl(cls, t, val):
+        return "ArrayVal([%s], %s, %d)" % (",\n".join(map(cls.Value, val.val)), cls.HdlType(t), val.vldMask)
+    
+    @classmethod
+    def Slice_valAsVhdl(cls, t, val):
+        return "SliceVal([hInt(%d), hInt(%d)], SLICE, %d)" % (evalParam(val.val[0]).val, evalParam(val.val[1]).val,
+                                                  val.vldMask)
+    
     @classmethod
     def Value(cls, val):
         """ 
