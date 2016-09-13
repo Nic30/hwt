@@ -1,9 +1,12 @@
+from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from hdl_toolkit.hdlObjects.types import hdlType
+from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.enum import Enum
-from hdl_toolkit.hdlObjects.types.array import Array
+from hdl_toolkit.hdlObjects.types.integer import Integer
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
-from hdl_toolkit.hdlObjects.specialValues import Unconstrained
+from hdl_toolkit.serializer.exceptions import SerializerException
+
 
 class VhdlSerializer_types():
     @classmethod
@@ -70,6 +73,28 @@ class VhdlSerializer_types():
                 return "arrT_%d" % id(typ) 
     
     @classmethod
+    def HdlType_int(cls, typ, scope, declaration=False):
+        ma = typ.max
+        mi = typ.min
+        noMax = ma is None
+        noMin = mi is None
+        if noMin: 
+            if noMax:
+                return "INTEGER"
+            else:
+                raise SerializerException("If max is specified min has to be specified as well")
+        else:
+            if noMax:
+                if mi == 0:
+                    return "NATURAL"
+                elif mi == 1:
+                    return "POSITIVE"
+                else:
+                    raise SerializerException("If max is specified min has to be specified as well")
+            else:
+                return "INTEGER RANGE %d to %d" % (mi, ma)
+    
+    @classmethod
     def HdlType(cls, typ, scope=None, declaration=False):
         if isinstance(typ, Bits):
             return cls.HdlType_bits(typ, declaration=declaration)
@@ -77,6 +102,8 @@ class VhdlSerializer_types():
             return cls.HdlType_enum(typ, scope, declaration=declaration)
         elif isinstance(typ, Array):
             return cls.HdlType_array(typ, scope, declaration=declaration)
+        elif isinstance(typ, Integer):
+            return cls.HdlType_int(typ, scope, declaration=declaration)
         else:
             if declaration:
                 raise NotImplementedError("type declaration is not implemented for type %s" % 

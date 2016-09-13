@@ -1,5 +1,4 @@
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType 
-from hdl_toolkit.serializer.exceptions import SerializerException
 
 class Integer(HdlType):
     
@@ -17,28 +16,6 @@ class Integer(HdlType):
     
     def all_mask(self):
         return 1
-    
-    @property
-    def name(self):
-        ma = self.max
-        mi = self.min
-        noMax = ma is None
-        noMin = mi is None
-        if noMin: 
-            if noMax:
-                return "INTEGER"
-            else:
-                raise SerializerException("If max is specified min has to be specified as well")
-        else:
-            if noMax:
-                if mi == 0:
-                    return "NATURAL"
-                elif mi == 1:
-                    return "POSITIVE"
-                else:
-                    raise SerializerException("If max is specified min has to be specified as well")
-            else:
-                return "INTEGER RANGE %d to %d" % (mi, ma)
 
     @classmethod
     def getConvertor(cls):
