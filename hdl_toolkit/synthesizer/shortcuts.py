@@ -94,7 +94,7 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
             mouduleScopes[o] = s
             
             sc = serializer.Entity(o, s)
-            fName = o.name + ".vhd"
+            fName = o.name + serializer.fileExtension
             fileMode = 'w'
             
         elif isinstance(o, Architecture):
@@ -104,7 +104,7 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 raise SerializerException("Entity should be serialized before architecture of %s" % 
                                           (o.getEntityName()))
             sc = serializer.Architecture(o, s)
-            fName = o.getEntityName() + ".vhd"
+            fName = o.getEntityName() + serializer.fileExtension
             fileMode = 'a'
         elif isinstance(o, UnitFromHdl):
             fName = None

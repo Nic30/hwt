@@ -80,6 +80,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
     VHDL_VER = VhdlVersion.v2002
     __keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
     formater = formatVhdl
+    fileExtension = '.vhd'
     
     @classmethod
     def getBaseNameScope(cls):
