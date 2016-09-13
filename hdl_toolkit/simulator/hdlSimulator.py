@@ -97,10 +97,27 @@ class HdlSimulator(object):
             # (apply on end of this time to minimalize process reevaluation)
             self.scheduleAplyValues()
 
-        for v in proc.simEval(self):
+        for v in proc(self):
             # print("RUNNING", self.env.now, proc.name)
             dst, updater, isEvDependent = v
             self.valuesToApply.append((dst, updater, isEvDependent, proc))
+
+    def _initUnitSignals(self, unit):
+        """
+        Inject default values to simulation
+        @return: generator of all HWprocess 
+        """
+        for s in unit._cntx.signals:
+            v = s.defaultVal.clone()
+            
+            # force update all signals to deafut values and propagate it    
+            s.simUpdateVal(self, mkUpdater(v))
+            
+        for u in unit._units:
+            self._initUnitSignals(u)
+        
+        for p in unit._getStaticProcesses():
+            self.addHwProcToRun(p, False) 
     
     def _delayedUpdate(self, sig, vUpdater):
         def updateCallback(ev):
@@ -160,28 +177,6 @@ class HdlSimulator(object):
         self.updateComplete = self.env.event()  # regenerate event
         self.applyValEv = None 
            
-    def _initUnitSignals(self, unit):
-        """
-        Inject default values to simulation
-        @return: generator of all HWprocess 
-        """
-        for s in unit._cntx.signals:
-            if isinstance(s.defaultVal, Value):
-                v = s.defaultVal.clone()
-            else:
-                v = s.defaultVal.staticEval()
-            
-            # force update all signals to deafut values and propagate it    
-            s.simUpdateVal(self, mkUpdater(v))
-            
-        for u in unit._units:
-            yield from self._initUnitSignals(u)
-
-        # in initialization we have to run all processes to resolve static drivers
-        # order does not matter, but it has to be after default values are applied
-        for p in unit._architecture.processes:
-            yield p
-              
     def read(self, sig):
         """
         Read value from signal or interface
@@ -225,11 +220,7 @@ class HdlSimulator(object):
         for p in extraProcesses:
             self.env.process(p(self))
         
-        # these are usually static assignments
-        for p in self._initUnitSignals(synthesisedUnit):
-            if not p.sensitivityList: 
-                self.addHwProcToRun(p, False)  
-        
+        self._initUnitSignals(synthesisedUnit)
        
         self.env.run(until=time)
     

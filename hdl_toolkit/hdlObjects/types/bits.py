@@ -35,13 +35,13 @@ class Bits(HdlType):
         return Bitmask.mask(self.bit_length())
     
     def bit_length(self):
-        if isinstance(self.constrain, Unconstrained):
+        if isinstance(self.constrain, (int, float)):
+            return int(self.constrain)
+        elif isinstance(self.constrain, Unconstrained):
             try:
                 return self.constrain.derivedWidth
             except AttributeError:
                 return None
-        elif isinstance(self.constrain, (int, float)):
-            return int(self.constrain)
         else:
             w = self.constrain.staticEval()
             return abs(w.val[0].val - w.val[1].val) + 1 
