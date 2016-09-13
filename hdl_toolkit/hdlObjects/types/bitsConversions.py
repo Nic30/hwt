@@ -28,10 +28,5 @@ def convertBits(self, sigOrVal, toType):
                 return INT.getValueCls()(sigOrVal.val, INT, sigOrVal.vldMask == fullMask, sigOrVal.updateTime)
         else:
             return Operator.withRes(AllOps.BitsToInt, [sigOrVal], toType)
-        
-    # if isinstance(toType, Integer):
-    #    if isinstance(sigOrVal, Value):
-    #        v = sigOrVal.clone()
-    #        v._dtype = toType
-    #        return v
+
     return HdlType.defaultConvert(self, sigOrVal, toType)
