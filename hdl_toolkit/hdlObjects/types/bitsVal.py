@@ -1,9 +1,12 @@
 from copy import copy
+from operator import eq
 
 from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
+from hdl_toolkit.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForXor, \
+    vldMaskForAnd, vldMaskForOr
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BOOL, INT, BIT, SLICE
 from hdl_toolkit.hdlObjects.types.eventCapableVal import EventCapableVal
@@ -15,7 +18,6 @@ from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from operator import eq
 
 
 BoolVal = BOOL.getValueCls()
@@ -53,27 +55,6 @@ def bitsCmp(self, other, op, evalFn=None):
             raise TypeError("Types are not comparable (%s, %s)" % (repr(self._dtype), repr(other._dtype)))
         
         return Operator.withRes(op, [self, other], BOOL) 
-
-def vldMaskForAnd(a, b):
-    # (val, vld)
-    # (0, 0) & (0, 0) -> (0, 0) 
-    # (0, 1) & (0, 0) -> (0, 1)
-    # (0, 0) & (0, 1) -> (0, 1)
-    # (1, 1) & (0, 0) -> (0, 0)
-    
-    a_vld = (a.vldMask & ~a.val)
-    b_vld = (b.vldMask & ~b.val)
-    vld = (a.vldMask & b.vldMask) | a_vld | b_vld
-    return vld  
-
-def vldMaskForOr(a, b):
-    a_vld = (a.vldMask & a.val)
-    b_vld = (b.vldMask & b.val)
-    vld = (a.vldMask & b.vldMask) | a_vld | b_vld
-    return vld  
-
-def vldMaskForXor(a, b):
-    return a.vldMask & b.vldMask
 
 def bitsBitOp(self, other, op, getVldFn):
     """
