@@ -4,6 +4,8 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.hdlObjects.types.hdlType import HdlType
+from hdl_toolkit.serializer.exceptions import SerializerException
+from hdl_toolkit.hdlObjects.types.integer import Integer
 
 class SimModelSerializer_types():
     @classmethod
@@ -37,27 +39,31 @@ class SimModelSerializer_types():
         else:
             return typ.name
         
+    @classmethod
+    def HdlType_int(cls, typ, scope, declaration=False):
+        ma = typ.max
+        mi = typ.min
+        noMax = ma is None
+        noMin = mi is None
+        if noMin: 
+            if noMax:
+                return "INT"
+            else:
+                raise SerializerException("If max is specified min has to be specified as well")
+        else:
+            if noMax:
+                if mi == 0:
+                    return "UINT"
+                elif mi == 1:
+                    return "PINT"
+                else:
+                    raise SerializerException("If max is specified min has to be specified as well")
+            else:
+                raise NotImplementedError()
 
     @classmethod
     def HdlType_array(cls, typ, scope, declaration=False):
-        if declaration:
-            try:
-                name = typ.name
-            except AttributeError:
-                name = "arrT_"
-            
-            typ.name = scope.checkedName(name, typ)
-            #Array(vecT(self.DATA_WIDTH), self.DEPTH)
-            return "Array(%s, %d)" % \
-                (cls.HdlType(typ.elmType), evalParam(typ.size).val)
-        else:
-            try:
-                return typ.name
-            except AttributeError:
-                # [TODO]
-                # sometimes we need to debug expression and we need temporary type name
-                # this may be risk and this should be done by extra debug serializer
-                return "arrT_%d" % id(typ) 
+        return "Array(%s, %d)" % (cls.HdlType(typ.elmType), evalParam(typ.size).val)
 
     @classmethod
     def HdlType(cls, typ, scope=None, declaration=False):
@@ -67,6 +73,8 @@ class SimModelSerializer_types():
             return cls.HdlType_enum(typ, scope, declaration=declaration)
         elif isinstance(typ, Array):
             return cls.HdlType_array(typ, scope, declaration=declaration)
+        elif isinstance(typ, Integer):
+            return cls.HdlType_int(typ, scope, declaration=declaration)
         else:
             if declaration:
                 raise NotImplementedError("type declaration is not implemented for type %s" % 
