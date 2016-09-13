@@ -1,8 +1,8 @@
 from simpy.events import NORMAL
 
-from hdl_toolkit.hdlObjects.assignment import mkUpdater
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
+from hdl_toolkit.simulator.simModel import mkUpdater
 from hdl_toolkit.simulator.simulatorCore import HdlEnvironmentCore
 from hdl_toolkit.simulator.utils import valueHasChanged
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -98,7 +98,6 @@ class HdlSimulator(object):
             self.scheduleAplyValues()
 
         for v in proc(self):
-            # print("RUNNING", self.env.now, proc.name)
             dst, updater, isEvDependent = v
             self.valuesToApply.append((dst, updater, isEvDependent, proc))
 
@@ -111,7 +110,7 @@ class HdlSimulator(object):
             v = s.defaultVal.clone()
             
             # force update all signals to deafut values and propagate it    
-            s.simUpdateVal(self, mkUpdater(v))
+            s.simUpdateVal(self, mkUpdater(v, True))
             
         for u in unit._units:
             self._initUnitSignals(u)
@@ -144,7 +143,7 @@ class HdlSimulator(object):
 
     def runSeqProcesses(self, ev):
         for proc in self.evDependentProcsToRun:
-            for v in proc.simEval(self):
+            for v in proc(self):
                 dst, updater, _ = v
                 self._delayedUpdate(dst, updater)
         
