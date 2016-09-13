@@ -35,7 +35,7 @@ class SimModelSerializer_types():
                 name = "enumT_"
             typ.name = scope.checkedName(name, typ)
             
-            return "Enum( \"%d\", [%s])" % (typ.name, ", ".join(typ._allValues))
+            return '%s = Enum( "%s", [%s])' % (typ.name, typ.name, ", ".join(map(lambda x: '"%s"' %x, typ._allValues)))
         else:
             return typ.name
         
@@ -63,6 +63,7 @@ class SimModelSerializer_types():
 
     @classmethod
     def HdlType_array(cls, typ, scope, declaration=False):
+        assert not declaration
         return "Array(%s, %d)" % (cls.HdlType(typ.elmType), evalParam(typ.size).val)
 
     @classmethod

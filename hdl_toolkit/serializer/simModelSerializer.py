@@ -15,6 +15,7 @@ from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthesizer.param import Param, evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from python_toolkit.arrayQuery import where
+from hdl_toolkit.hdlObjects.types.enumVal import EnumVal
 
 
 env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_simModel'))
@@ -37,6 +38,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
     __keywords_dict = {kw: LangueKeyword() for kw in kwlist}
     __keywords_dict.update({'sim': LangueKeyword(),
                             'self': LangueKeyword()})
+    fileExtension = '.py'
+    formater = lambda s: s
     
     @classmethod
     def getBaseNameScope(cls):
@@ -45,7 +48,6 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         s[0].update(cls.__keywords_dict)
         return s
     
-    formater = lambda s: s
     
     @classmethod
     def asHdl(cls, obj):
@@ -76,6 +78,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         # return fn.name
     @classmethod
     def Entity(cls, ent, scope):
+        ent.name = scope.checkedName(ent.name, ent, isGlobal=True)
         return ""
         
     @classmethod
@@ -91,13 +94,22 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         for v in arch.variables:
             t = v._dtype
             # if type requires extra definition
-            if isinstance(t, (Enum, Array)) and t not in extraTypes:
+            if isinstance(t, Enum) and t not in extraTypes:
                 extraTypes.add(v._dtype)
                 extraTypes_serialized.append(cls.HdlType(t, scope, declaration=True))
 
             v.name = scope.checkedName(v.name, v)
             variables.append(v)
             
+        
+        def serializeVar(v):
+            dv = evalParam(v.defaultVal)
+            if isinstance(dv, EnumVal):
+                dv = "%s.%s" % (dv._dtype.name, dv.val)
+            else:
+                dv = cls.Value(dv)
+            
+            return v.name, cls.HdlType(v._dtype), dv
         
         for p in arch.processes:
             procs.append(cls.HWProcess(p, scope, 0))
@@ -108,7 +120,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         return unitTmpl.render({
         "name"               : arch.getEntityName(),
         "ports"              : list(map(lambda p: (p.name, cls.HdlType(p._dtype)), arch.entity.ports)),
-        "signals"            : list(map(lambda v: (v.name, cls.HdlType(v._dtype), cls.Value(evalParam(v.defaultVal))), variables)),
+        "signals"            : list(map(serializeVar, variables)),
         "extraTypes"         : extraTypes_serialized,
         "processes"          : procs,
         "processObjects"     : arch.processes,

@@ -5,7 +5,7 @@ from hdl_toolkit.hdlObjects.types.bitsConversions import convertBits
 from hdl_toolkit.hdlObjects.types.bitsVal import BitsVal
 from hdl_toolkit.hdlObjects.types.defs import BIT, INT, SLICE
 from hdl_toolkit.hdlObjects.types.enum import Enum
-from hdl_toolkit.simulator.simModel import (SimModel, sensitivity, simBitsT,
+from hdl_toolkit.simulator.simModel import (SimModel, sensitivity, simBitsT, connectSimPort,
                                             simEvalCond, mkUpdater, mkArrayUpdater)
 from hdl_toolkit.hdlObjects.types.integerConversions import convertInteger
 from hdl_toolkit.synthesizer.codeOps import Concat
@@ -21,7 +21,9 @@ if "{{c.name}}" not in locals(): # support for all models in single file
 
 class {{ name }}(SimModel):
     _name = "{{ name }}" 
-    _cntx = RtlNetlist()
+    _cntx = RtlNetlist(){% for t in extraTypes %} 
+    {{t}}{% endfor %}
+    
     # ports{% for name, dtype in ports %}
     {{name}} = RtlSignal(_cntx, "{{name}}", {{dtype}}){% endfor %}
     
@@ -40,7 +42,7 @@ class {{ name }}(SimModel):
                            {% endfor %}]
         {% for c in componentInstances %}
         # connect ports{% for p in c.ports %}
-        {{c.name}}.{% if p.direction == "IN" %}{{p.dst.name}} = self.{{p.src.name}}{% else %}{{p.src.name}} = self.{{p.dst.name}} {% endif %}{% endfor %}
+        connectSimPort(self, {{c.name}},"{{p.src.name}}", "{{p.dst.name}}", "{{ p.direction }}"){% endfor %}
         self.{{c._name}} = {{c.name}}()
         {% endfor %}
         
