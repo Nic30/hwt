@@ -28,7 +28,7 @@ class SimSignal():
             if log:
                 log(simulator, self, p)
                 
-            simulator.addHwProcToRun(p, False)
+            simulator.addHwProcToRun(p)
 
     def simEval(self, simulator):
         """

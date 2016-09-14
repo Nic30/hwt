@@ -91,15 +91,16 @@ class HdlSimulator(object):
         self.evDependentProcsToRun = []
         
     
-    def addHwProcToRun(self, proc, applyImmediately):
+    def addHwProcToRun(self, proc):
         # first process in time has to plan executing of apply values on the end of this time
-        if not applyImmediately and self.applyValEv is None:
+        if self.applyValEv is None:
             # (apply on end of this time to minimalize process reevaluation)
             self.scheduleAplyValues()
 
         for v in proc(self):
             dst, updater, isEvDependent = v
-            self.valuesToApply.append((dst, updater, isEvDependent, proc))
+            if not(self.env.now == 0 and isEvDependent):  # pass event dependent on startup
+                self.valuesToApply.append((dst, updater, isEvDependent, proc))
 
     def _initUnitSignals(self, unit):
         """
@@ -115,8 +116,8 @@ class HdlSimulator(object):
         for u in unit._units:
             self._initUnitSignals(u)
         
-        for p in unit._getStaticProcesses():
-            self.addHwProcToRun(p, False) 
+        for p in unit._processes:
+            self.addHwProcToRun(p) 
     
     def _delayedUpdate(self, sig, vUpdater):
         def updateCallback(ev):
