@@ -15,7 +15,7 @@ class VldSyncedAgent(SyncAgentBase):
     def monitor(self, s):
         intf = self.intf
         if self.enable and self.notReset(s) and s.r(intf.vld).val:
-            self.data.push(self.doRead(s))
+            self.data.append(self.doRead(s))
             
     def driver(self, s):
         intf = self.intf
