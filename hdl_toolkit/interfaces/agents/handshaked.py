@@ -1,10 +1,11 @@
 from hdl_toolkit.simulator.agentBase import SyncAgentBase
+from hdl_toolkit.hdlObjects.specialValues import NOP
 
 
 class HandshakedAgent(SyncAgentBase):
     def __init__(self, intf, clk=None, rstn=None):
         super().__init__(intf, clk=None, rstn=None)
-        self.actualData = None
+        self.actualData = NOP
         self.data = []
         
     def monitor(self, s):
@@ -26,19 +27,22 @@ class HandshakedAgent(SyncAgentBase):
         return s.read(self.intf.data)
         
     def doWrite(self, s, data):
-        if data is None:
-            s.w(0, self.intf.data)
-        else:
-            s.w(data, self.intf.data)
+        s.w(data, self.intf.data)
         
     def driver(self, s):
         intf = self.intf
         
-        if self.actualData is None and self.data:
+        if self.actualData is NOP and self.data:
             self.actualData = self.data.pop(0)
         
-        self.doWrite(s, self.actualData)
-        if s.r(self.rst_n).val and self.actualData is not None and self.enable:
+        do = self.actualData is not NOP
+        
+        if do:
+            self.doWrite(s, self.actualData)
+        else:
+            self.doWrite(s, None)
+            
+        if s.r(self.rst_n).val and do and self.enable:
             s.w(1, intf.vld)
         else:
             s.w(0, intf.vld)
@@ -51,7 +55,7 @@ class HandshakedAgent(SyncAgentBase):
             if self.data:
                 self.actualData = self.data.pop(0)
             else:
-                self.actualData = None
+                self.actualData = NOP
 
 class HandshakeSyncAgent(HandshakedAgent):
     def doWrite(self, s, data):
