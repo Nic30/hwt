@@ -67,9 +67,7 @@ class HdlSimulator(object):
                                 applyValEv
     """
     # time after values which are event dependent will be applied
-    # this is random number smaller than any clock
-    # note that this time is not there to assert functionality but show
-    # to make sim results more clear to user
+    # this is random number smaller than any clock half-period
     EV_DEPENDENCY_SLOWDOWN = 500
     
     PRIORITY_APPLY_COMB = NORMAL + 1
@@ -121,7 +119,6 @@ class HdlSimulator(object):
     
     def _delayedUpdate(self, sig, vUpdater):
         def updateCallback(ev):
-            # print("DELAYED", self.env.now, sig.name)
             sig.simUpdateVal(self, vUpdater)
             
         t = self.env.timeout(self.EV_DEPENDENCY_SLOWDOWN)
