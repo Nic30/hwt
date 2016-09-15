@@ -131,6 +131,7 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 sc = serializer.Architecture(obj, s)
                 fName = obj.getEntityName() + serializer.fileExtension
                 fileMode = 'a'
+                
             elif isinstance(obj, UnitFromHdl):
                 fName = None
                 for fn in obj._hdlSources:
