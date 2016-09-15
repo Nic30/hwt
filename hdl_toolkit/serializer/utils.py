@@ -6,7 +6,6 @@ from hdl_toolkit.hdlObjects.statements import WaitStm, IfContainer,\
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.interfaces.std import Rst_n
-from hdl_toolkit.serializer.templates import VHDLTemplates
 from hdl_toolkit.synthesizer.codeOps import connect
 from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
