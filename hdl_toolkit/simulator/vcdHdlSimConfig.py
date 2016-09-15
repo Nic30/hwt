@@ -6,10 +6,11 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.boolean import Boolean
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.simulator.vcdWritter import VcdWritter
+from hdl_toolkit.hdlObjects.types.enum import Enum
 
 
 class VcdHdlSimConfig(HdlSimConfig):
-    supported_type_classes = (Boolean, Bits)
+    supported_type_classes = (Boolean, Bits, Enum)
     
     def __init__(self, dumpFile=sys.stdout):
         super().__init__()
