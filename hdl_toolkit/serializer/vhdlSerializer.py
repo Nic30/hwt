@@ -270,6 +270,8 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
     
     @classmethod
     def Component(cls, entity):
+        entity.ports.sort(key=lambda x: x.name)
+        entity.generics.sort(key=lambda x: x.name)
         return component.render({
                 "ports": [cls.PortItem(pi) for pi in entity.ports],
                 "generics": [cls.GenericItem(g) for g in entity.generics],
