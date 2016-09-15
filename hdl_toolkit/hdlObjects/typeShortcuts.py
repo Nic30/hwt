@@ -30,7 +30,7 @@ def vecT(width, signed=None):
     """
     return Bits(widthConstr=mkRange(width), signed=signed, forceVector=True)
 
-def vec(val, width):
+def vec(val, width, signed=None):
     """create hdl vector value"""
     assert val < evalParam(hInt(2)._pow(width)).val
-    return vecT(width).fromPy(val)
+    return vecT(width, signed).fromPy(val)
