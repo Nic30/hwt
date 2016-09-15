@@ -2,8 +2,8 @@ from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
 from keyword import kwlist
 
-from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.hdlObjects.types.enum import Enum
+from hdl_toolkit.hdlObjects.types.enumVal import EnumVal
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.nameScope import LangueKeyword, NameScope
@@ -15,7 +15,6 @@ from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthesizer.param import Param, evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from python_toolkit.arrayQuery import where
-from hdl_toolkit.hdlObjects.types.enumVal import EnumVal
 
 
 env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_simModel'))
@@ -48,6 +47,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         s[0].update(cls.__keywords_dict)
         return s
     
+    @classmethod
+    def serializationDecision(cls, obj, serializedClasses, serializedConfiguredUnits):
+        # we need all instances for simulation
+        return True
     
     @classmethod
     def asHdl(cls, obj):
