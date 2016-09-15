@@ -7,6 +7,7 @@ class Entity(object):
     """
     def __init__(self, name):
         self.name = name
+        self.origin = None  # creator of this object
         self.generics = []
         self.ports = []
         self.ctx = {}
