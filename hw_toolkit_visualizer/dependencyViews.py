@@ -1,10 +1,11 @@
 import os
 from flask.blueprints import Blueprint
-from hdl_toolkit.parser.hierarchyExtractor import DesignFile
 from python_toolkit.fileHelpers import find_files
 from flask import render_template
-from hdl_toolkit.parser.loader import ParserFileInfo
 
+# [TODO] move gui out of hwt
+from hwtHdlParsers.hierarchyExtractor import DesignFile
+from hwtHdlParsers.loader import ParserFileInfo
 
 dependenciesBp = Blueprint('dependencies', __name__, template_folder='templates/dependencies/')
 
@@ -18,20 +19,20 @@ def rel(root, f):
 # http://www.coppelia.io/2014/07/an-a-to-z-of-extra-features-for-the-d3-force-layout/
 @dependenciesBp.route('/dependencies/')
 def dependencyGraph():
-    #unisimFiles = ['/opt/Xilinx/Vivado/2015.2/data/vhdl/src/unisims/retarget_VCOMP.vhd']
+    # unisimFiles = ['/opt/Xilinx/Vivado/2015.2/data/vhdl/src/unisims/retarget_VCOMP.vhd']
     workspace = "/home/nic30/Documents/workspace/sprobe10/fpgalibs/src/hfer/"
-    #workspace = "/home/nic30/Documents/workspace/sprobe10/fpgalibs/src/"
-    #workspace = "../../hwtLib/hwtLib/samples/vhdlCodesign/vhdl/dependencies0"
+    # workspace = "/home/nic30/Documents/workspace/sprobe10/fpgalibs/src/"
+    # workspace = "../../hwtLib/hwtLib/samples/vhdlCodesign/vhdl/dependencies0"
     r = lambda df: rel(workspace, df.fileInfo.fileName) 
     files = []
     files.extend(find_files(workspace, '*.vhd'))
-    #files.extend(list(find_files(workspace + 'util/', '*.vhd')) 
+    # files.extend(list(find_files(workspace + 'util/', '*.vhd')) 
     #           + list(find_files(workspace + 'axi/', '*.vhd')))
     #
-    files = list(map(lambda f : ParserFileInfo(f, "work"), files ))
-    #unisimDesFiles = DesignFile.loadFiles(unisimFiles, libName='unisim')
+    files = list(map(lambda f : ParserFileInfo(f, "work"), files))
+    # unisimDesFiles = DesignFile.loadFiles(unisimFiles, libName='unisim')
     desFiles = DesignFile.loadFiles(files, debug=True)
-    DesignFile.resolveDependencies(desFiles) # + unisimDesFiles)
+    DesignFile.resolveDependencies(desFiles)  # + unisimDesFiles)
     
     nodes = []
     links = []

@@ -11,7 +11,6 @@ from hdl_toolkit.serializer.simModelSerializer_Value import SimModelSerializer_v
 from hdl_toolkit.serializer.simModelSerializer_ops import SimModelSerializer_ops
 from hdl_toolkit.serializer.simModelSerializer_types import SimModelSerializer_types
 from hdl_toolkit.serializer.utils import maxStmId
-from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthesizer.param import Param, evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from python_toolkit.arrayQuery import where
@@ -54,9 +53,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
     
     @classmethod
     def asHdl(cls, obj):
-        if isinstance(obj, UnitFromHdl):
-            raise NotImplementedError()
-        elif isinstance(obj, RtlSignalBase):
+        if isinstance(obj, RtlSignalBase):
             return cls.SignalItem(obj)
         elif isinstance(obj, Value):
             return cls.Value(obj)

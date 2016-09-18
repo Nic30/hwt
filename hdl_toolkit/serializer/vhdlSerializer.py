@@ -13,7 +13,6 @@ from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.nameScope import LangueKeyword, NameScope
 from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
 from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
-from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthesizer.param import getParam, Param, evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
@@ -206,8 +205,6 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
     def asHdl(cls, obj):
         if hasattr(obj, "asVhdl"):
             return obj.asVhdl(cls)
-        elif isinstance(obj, UnitFromHdl):
-            return str(obj)
         elif isinstance(obj, RtlSignalBase):
             return cls.SignalItem(obj)
         elif isinstance(obj, Value):
