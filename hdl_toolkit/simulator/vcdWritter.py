@@ -2,10 +2,9 @@
 from functools import wraps
 import sys
 
-from hdl_toolkit.hdlObjects.types.bits import Bits
-from hdl_toolkit.hdlObjects.types.boolean import Boolean
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.hdlObjects.types.enum import Enum
 
 
 def dumpMethod(func):
@@ -15,13 +14,18 @@ def dumpMethod(func):
         s = func(*args, **kwrds)
         if s is not None:
             self = args[0]
-            self.dumpFile.write(s + '\n')
+            self.dumpFile.write(s)
+            self.dumpFile.write('\n')
+    
     return wrapped
 
 class VcdVarInfo():
     """Info about signal registered in vcd"""
     def __init__(self, _id, dtype):
-        self.width = dtype.bit_length()
+        if isinstance(dtype, Enum):
+            self.width = 1
+        else:
+            self.width = dtype.bit_length()
         self.id = _id
         self._dtype = dtype
 
@@ -48,9 +52,6 @@ class VcdVarContext(dict):
         return ''.join(digits)
     
     def register(self, var):
-        if not isinstance(var._dtype, (Boolean, Bits)):
-            raise TypeError(var)
-        
         var_id = self.idToStr(self.nextId)
         if var in self:
             raise KeyError("%s is already registered" % (repr(var)))
@@ -81,8 +82,13 @@ class VcdModule():
     @dumpMethod    
     def var(self, sig):
         vInf = self.vars.register(sig)
-        return "$var wire %d %s %s $end" % (vInf.width, vInf.id, sig.name) 
-
+        if isinstance(vInf._dtype, Enum):
+            sigType = 'real'
+        else:    
+            sigType = 'wire'
+            
+        return "$var %s %d %s %s $end" % (sigType, vInf.width, vInf.id, sig.name)
+     
     @dumpMethod
     def footer(self):
         return "$upscope $end"
@@ -129,13 +135,20 @@ class VcdWritter():
     def change(self, time, sig, newVal):
         self.setTime(time)
         varInfo = self.vars[sig]
-        val = VhdlSerializer.BitString_binary(newVal.val, varInfo.width, newVal.vldMask)
-        val = val.replace('"', "")
-         
-        if varInfo._dtype == BIT:
-            frmt = "%s%s"
+        if isinstance(sig._dtype, Enum):
+            if newVal.vldMask:
+                val = newVal.val
+            else:
+                val = "XXXX"
+            frmt = "s%s %s"
         else:
-            frmt = "b%s %s" 
+            val = VhdlSerializer.BitString_binary(newVal.val, varInfo.width, newVal.vldMask)
+            val = val.replace('"', "")
+             
+            if varInfo._dtype == BIT:
+                frmt = "%s%s"
+            else:
+                frmt = "b%s %s" 
             
         return frmt % (val, varInfo.id)
     

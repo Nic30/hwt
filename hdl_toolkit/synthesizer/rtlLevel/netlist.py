@@ -5,7 +5,6 @@ from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.process import HWProcess
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.value import Value
-from hdl_toolkit.serializer.templates import VHDLTemplates  
 from hdl_toolkit.synthesizer.assigRenderer import renderIfTree
 from hdl_toolkit.synthesizer.codeOps import If
 from hdl_toolkit.synthesizer.exceptions import SigLvlConfErr

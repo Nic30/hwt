@@ -23,6 +23,9 @@ class Param(RtlSignal):
     
     def _registerScope(self, name, unit):     
         self._scopes[unit] = (unit._cntx, name)
+    
+    def getName(self, where):
+        return self._scopes[where][1]
         
     def setHdlName(self, name):
         self.hasGenericName = False

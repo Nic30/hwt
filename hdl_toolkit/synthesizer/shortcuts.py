@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import hdlConvertor
 from itertools import chain
 import os
 import shutil
 
+import hdlConvertor
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.parser.loader import langFromExtension, ParserFileInfo
 from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
-from hdl_toolkit.synthesizer.uniqList import UniqList
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
 from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
+from hdl_toolkit.synthesizer.uniqList import UniqList
 from hdl_toolkit.synthesizer.vhdlCodeWrap import VhdlCodeWrap
 from python_toolkit.fileHelpers import find_files
 
@@ -37,30 +37,45 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
     globScope = serializer.getBaseNameScope()
     codeBuff = []
     mouduleScopes = {}
+
+    # unitCls : unitobj
+    serializedClasses = {}
     
-    for x in u._toRtl():
-        if isinstance(x, Entity):
-            s = globScope.fork(1)
-            s.setLevel(2)
-            mouduleScopes[x] = s
-            sc = serializer.Entity(x, s)
-        elif isinstance(x, Architecture):
-            try:
-                s = mouduleScopes[x.entity]
-            except KeyError:
-                raise SerializerException("Entity should be serialized before architecture of %s" % 
-                                          (x.getEntityName()))
-            sc = serializer.Architecture(x, s)
-        elif isinstance(x, VhdlCodeWrap):
-            sc = serializer.asHdl(x)
-        elif isinstance(x, UnitFromHdl):
-            sc = str(x)
+    # (unitCls, paramsValues) : unitObj
+    # where paramsValues are dict name:value
+    serializedConfiguredUnits = {}
+    
+    doSerialize = True
+    for obj in u._toRtl():
+        doSerialize = serializer.serializationDecision(obj, serializedClasses, serializedConfiguredUnits)
+        if doSerialize:
+            if isinstance(obj, Entity):
+                s = globScope.fork(1)
+                s.setLevel(2)
+                mouduleScopes[obj] = s
+                sc = serializer.Entity(obj, s)
+            elif isinstance(obj, Architecture):
+                try:
+                    s = mouduleScopes[obj.entity]
+                except KeyError:
+                    raise SerializerException("Entity should be serialized before architecture of %s" % 
+                                              (obj.getEntityName()))
+                sc = serializer.Architecture(obj, s)
+            elif isinstance(obj, VhdlCodeWrap):
+                sc = serializer.asHdl(obj)
+            elif isinstance(obj, UnitFromHdl):
+                sc = str(obj)
+            else:
+                raise NotImplementedError("Unexpected object %r" % (obj))
+        
+            codeBuff.append(sc)
         else:
-            raise NotImplementedError("Unexpected object %s" % (repr(x)))
-        
-        
-        codeBuff.append(sc)
-            
+            try:
+                name = "(" + obj.name + ")"
+            except AttributeError:
+                name = ""
+                
+            codeBuff.append(serializer.comment("Object of class %s%s was not serialized due its serializer mode" % (obj.__class__.__name__, name)))
     
     return serializer.formater(
                      "\n".join(codeBuff)
@@ -86,45 +101,56 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
     globScope = serializer.getBaseNameScope()
     mouduleScopes = {}
     
-    for o in unit._toRtl():
-        if isinstance(o, Entity):
-            # we need to serialize before we take name, before name can change
-            s = globScope.fork(1)
-            s.setLevel(2)
-            mouduleScopes[o] = s
-            
-            sc = serializer.Entity(o, s)
-            fName = o.name + serializer.fileExtension
-            fileMode = 'w'
-            
-        elif isinstance(o, Architecture):
-            try:
-                s = mouduleScopes[o.entity]
-            except KeyError:
-                raise SerializerException("Entity should be serialized before architecture of %s" % 
-                                          (o.getEntityName()))
-            sc = serializer.Architecture(o, s)
-            fName = o.getEntityName() + serializer.fileExtension
-            fileMode = 'a'
-        elif isinstance(o, UnitFromHdl):
-            fName = None
-            for fn in o._hdlSources:
-                if isinstance(fn, str):
-                    shutil.copy2(fn, folderName)
-                    files.append(fn)
-        else:
-            raise Exception("Do not know how to serialize %s" % (repr(o)))
+    # unitCls : unitobj
+    serializedClasses = {}
     
-        if fName is not None:
-            fp = os.path.join(folderName, fName)
-            files.append(fp)
-            
-            with open(fp, fileMode) as f:
-                if fileMode == 'a':
-                    f.write("\n")
-                f.write(
-                    serializer.formater(sc)
-                    )
+    # (unitCls, paramsValues) : unitObj
+    # where paramsValues are dict name:value
+    serializedConfiguredUnits = {}
+    
+    doSerialize = True
+    for obj in unit._toRtl():
+        doSerialize = serializer.serializationDecision(obj, serializedClasses, serializedConfiguredUnits)
+        if doSerialize:
+            if isinstance(obj, Entity):
+                # we need to serialize before we take name, before name can change
+                s = globScope.fork(1)
+                s.setLevel(2)
+                mouduleScopes[obj] = s
+                
+                sc = serializer.Entity(obj, s)
+                fName = obj.name + serializer.fileExtension
+                fileMode = 'w'
+                
+            elif isinstance(obj, Architecture):
+                try:
+                    s = mouduleScopes[obj.entity]
+                except KeyError:
+                    raise SerializerException("Entity should be serialized before architecture of %s" % 
+                                              (obj.getEntityName()))
+                sc = serializer.Architecture(obj, s)
+                fName = obj.getEntityName() + serializer.fileExtension
+                fileMode = 'a'
+                
+            elif isinstance(obj, UnitFromHdl):
+                fName = None
+                for fn in obj._hdlSources:
+                    if isinstance(fn, str):
+                        shutil.copy2(fn, folderName)
+                        files.append(fn)
+            else:
+                raise Exception("Do not know how to serialize %r" % (obj))
+        
+            if fName is not None:
+                fp = os.path.join(folderName, fName)
+                files.append(fp)
+                
+                with open(fp, fileMode) as f:
+                    if fileMode == 'a':
+                        f.write("\n")
+                    f.write(
+                        serializer.formater(sc)
+                        )
     return files
 
 def fileSyntaxCheck(fileInfo, timeoutInterval=20):

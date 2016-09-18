@@ -1,6 +1,6 @@
 from hdl_toolkit.interfaces.std import Handshaked
 from hdl_toolkit.intfLvl import Unit
-from hdl_toolkit.serializer.formater import formatVhdl
+from hdl_toolkit.serializer.vhdlFormater import formatVhdl
 from hls_toolkit.baseSynthesizer import hls
 from hls_toolkit.codeObjs import FsmNode
 

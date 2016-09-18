@@ -5,12 +5,16 @@ from hdl_toolkit.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrC
 from hdl_toolkit.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers
 from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
+from hdl_toolkit.serializer.constants import SERI_MODE
 
 
 class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     """
     Class members:
     #resolved automatically during configuration/declaration:
+    
+    @cvar _serializerMode: mode for serializer (drives when unit should be serialized)
+    
     @ivar _interfaces: all interfaces 
     @ivar _units: all units defined on this obj in configuration/declaration
     @ivar _params: all params defined on this obj in configuration/declaration
@@ -19,6 +23,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     @ivar _lazyLoaded : container of rtl object which were lazy loaded in implementation phase
                       (this object has to be returned from _toRtl of parent before it it's own objects)
     """
+    
+    _serializerMode = SERI_MODE.ALWAYS
     
     def __init__(self):
         self._checkIntferfaces = True
@@ -81,9 +87,10 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         s = self._cntx.synthesize(self._name, externInterf)
         self._entity = s[0]
         self._entity.__doc__ = self.__doc__
+        self._entity.origin = self
 
         self._architecture = s[1]
-            
+    
         for intf in self._interfaces: 
             if intf._isExtern:
                 intf._resolveDirections()

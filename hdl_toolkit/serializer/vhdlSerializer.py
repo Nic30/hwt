@@ -13,18 +13,24 @@ from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.nameScope import LangueKeyword, NameScope
 from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
 from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
-from hdl_toolkit.serializer.templates import VHDLTemplates
 from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl
-from hdl_toolkit.synthesizer.param import getParam, Param
+from hdl_toolkit.synthesizer.param import getParam, Param, evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from python_toolkit.arrayQuery import arr_any, where
-from hdl_toolkit.serializer.formater import formatVhdl
+from hdl_toolkit.serializer.vhdlFormater import formatVhdl
 from hdl_toolkit.serializer.utils import maxStmId
 from hdl_toolkit.serializer.vhdlSerializer_Value import VhdlSerializer_Value
 from hdl_toolkit.serializer.vhdlSerializer_ops import VhdlSerializer_ops
 from hdl_toolkit.serializer.vhdlSerializer_types import VhdlSerializer_types
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
+from jinja2.environment import Environment
+from jinja2.loaders import PackageLoader
+from hdl_toolkit.serializer.constants import SERI_MODE
+from hdl_toolkit.hdlObjects.entity import Entity
+from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
+from hdl_toolkit.hdlObjects.architecture import Architecture
+from collections import namedtuple
 
 
 VHLD_KEYWORDS = [
@@ -42,6 +48,16 @@ VHLD_KEYWORDS = [
 "type", "unaffected", "units", "until", "use", "variable", "wait", "with", "when", "while",
 "xnor", "xor"]        
 
+
+env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_vhdl'))
+architecture = env.get_template('architecture.vhd')
+entity = env.get_template('entity.vhd')
+process = env.get_template('process.vhd')
+component = env.get_template('component.vhd')
+componentInstance = env.get_template('component_instance.vhd')
+
+If = env.get_template('if.vhd')
+Switch = env.get_template('switch.vhd')
 
 class VhdlVersion():
     v2002 = 2002
@@ -76,6 +92,19 @@ def ternaryOpsToIf(statements):
             stms.append(st)
     return stms
 
+def freeze_dict(data):
+    keys = sorted(data.keys())
+    frozen_type = namedtuple(''.join(keys), keys)
+    return frozen_type(**data)
+
+def paramsToValTuple(unit):
+    d = {}
+    for p in unit._params:
+        name = p.getName(unit)
+        v = evalParam(p)
+        d[name] = v
+    return freeze_dict(d)
+
 class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_types):
     VHDL_VER = VhdlVersion.v2002
     __keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
@@ -88,6 +117,64 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         s.setLevel(1)
         s[0].update(cls.__keywords_dict)
         return s
+    
+    @classmethod
+    def serializationDecision(cls, obj, serializedClasses, serializedConfiguredUnits):
+        """
+        Decide if this unit should be serialized or not eventually fix name to fit same already serialized unit
+        
+        @param serializedClasses: unitCls : unitobj
+    
+        @param serializedConfiguredUnits: (unitCls, paramsValues) : unitObj
+                                          where paramsValues are named tuple name:value
+        """
+        isEnt = isinstance(obj, Entity) 
+        isArch = isinstance(obj, Architecture)
+        if isEnt:
+            unit = obj.origin
+        elif isArch:
+            unit = obj.entity.origin
+        else:
+            return True
+        
+        assert isinstance(unit, Unit)
+        m = unit._serializerMode
+        
+        if m == SERI_MODE.ALWAYS:
+            return True
+        elif m == SERI_MODE.ONCE:
+            if isEnt:
+                try:
+                    prevUnit = serializedClasses[unit.__class__]
+                except KeyError:
+                    serializedClasses[unit.__class__] = unit
+                    obj.name = unit.__class__.__name__
+                    return True
+
+                obj.name = prevUnit._entity.name
+                return False
+            
+            return serializedClasses[unit.__class__] is unit
+        elif m == SERI_MODE.PARAMS_UNIQ:
+            params = paramsToValTuple(unit)
+            k = (unit.__class__, params)
+            if isEnt:
+                try:
+                    prevUnit = serializedConfiguredUnits[k]
+                except KeyError:
+                    serializedConfiguredUnits[k] = unit
+                    return True
+
+                obj.name = prevUnit._entity.name
+                return False
+            
+            return serializedConfiguredUnits[k] is unit    
+        elif m == SERI_MODE.EXCLUDE:
+            if isEnt:
+                obj.name = unit.__class__.__name__
+            return False
+        else:
+            raise NotImplementedError("Not implemented serializer mode %r on unit %r" % (m, unit))
     
     @classmethod
     def WaitStm(cls, w):
@@ -165,7 +252,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)    
              
-        return VHDLTemplates.architecture.render({
+        return architecture.render({
         "entityName"         :arch.getEntityName(),
         "name"               :arch.name,
         "variables"          :variables,
@@ -183,7 +270,9 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
     
     @classmethod
     def Component(cls, entity):
-        return VHDLTemplates.component.render({
+        entity.ports.sort(key=lambda x: x.name)
+        entity.generics.sort(key=lambda x: x.name)
+        return component.render({
                 "ports": [cls.PortItem(pi) for pi in entity.ports],
                 "generics": [cls.GenericItem(g) for g in entity.generics],
                 "entity": entity
@@ -206,7 +295,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             raise Exception("Incomplete component instance")
         
         # [TODO] check component instance name
-        return VHDLTemplates.componentInstance.render({
+        return componentInstance.render({
                 "instanceName" : entity._name,
                 "entity": entity,
                 "portMaps": [cls.PortConnection(x) for x in portMaps],
@@ -229,7 +318,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             g.name = scope.checkedName(g.name, g)
             generics.append(cls.GenericItem(g))    
 
-        entVhdl = VHDLTemplates.entity.render({
+        entVhdl = entity.render({
                 "name": ent.name,
                 "ports" : ports,
                 "generics" : generics
@@ -280,7 +369,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
                 
             elIfs.append((cls.condAsHdl(c, True), statements))
         
-        return VHDLTemplates.If.render(cond=cond,
+        return If.render(cond=cond,
                                        ifTrue=ifTrue,
                                        elIfs=elIfs,
                                        ifFalse=ifFalse)  
@@ -298,7 +387,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
                 statements = ternaryOpsToIf(statements)
                 
             cases.append((key, statements))  
-        return VHDLTemplates.Switch.render(switchOn=switchOn,
+        return Switch.render(switchOn=switchOn,
                                            cases=cases)  
    
     @classmethod
@@ -338,7 +427,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         sensitivityList = sorted(where(proc.sensitivityList, lambda x : not isinstance(x, Param)),
                                     key=lambda x: x.name)
         
-        return VHDLTemplates.process.render({
+        return process.render({
               "name": proc.name,
               "hasToBeVhdlProcess": hasToBeVhdlProcess,
               "sensitivityList": ", ".join([cls.asHdl(s) for s in sensitivityList]),
