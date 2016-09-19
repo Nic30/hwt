@@ -33,10 +33,8 @@ class FifoWriterAgent(SyncAgentBase):
         
         if s.r(self.rst_n).val and not s.r(intf.wait).val \
            and self.data and self.enable:
-            # print("next %f" % s.env.now)
             s.w(self.data.pop(0), intf.data)
             s.w(1, intf.en)
         else:
-            # print("wait %f" % s.env.now)
             s.w(0, intf.data)
             s.w(0, intf.en)

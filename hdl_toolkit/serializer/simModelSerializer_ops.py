@@ -91,10 +91,10 @@ class SimModelSerializer_ops():
             return "(%s)._ternary(%s, %s)" % tuple(map(cls.asHdl, ops)) 
         elif o == AllOps.RISING_EDGE:
             assert len(ops) == 1
-            return "(%s)._onRisingEdge(sim.env.now)" % (p(ops[0]))
+            return "(%s)._onRisingEdge(sim.now)" % (p(ops[0]))
         elif o == AllOps.FALLIGN_EDGE:
             assert len(ops) == 1
-            return "(%s)._onFallingEdge(sim.env.now)" % (p(ops[0]))
+            return "(%s)._onFallingEdge(sim.now)" % (p(ops[0]))
         elif o == AllOps.BitsAsSigned:
             assert len(ops) == 1
             return  "(%s)._signed()" % p(ops[0])

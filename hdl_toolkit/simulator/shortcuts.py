@@ -119,7 +119,7 @@ class CallbackLoop(object):
     
 
 def isRising(sig, sim):
-    return bool(sim.read(sig)._onRisingEdge(sim.env.now))
+    return bool(sim.read(sig)._onRisingEdge(sim.now))
 
 def onRisingEdge(sig, fn):
     """

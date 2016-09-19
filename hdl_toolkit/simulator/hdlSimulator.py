@@ -8,7 +8,7 @@ from hdl_toolkit.simulator.utils import valueHasChanged
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 
-class HdlSimulator(object):
+class HdlSimulator(HdlEnvironmentCore):
     """
     [HOW IT WORKS]
     
@@ -75,12 +75,12 @@ class HdlSimulator(object):
      
     # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
     def __init__(self, config=None):
+        super(HdlSimulator, self).__init__()
         if config is None:
             config = HdlSimConfig() 
             
         self.config = config
-        self.env = HdlEnvironmentCore()
-        self.updateComplete = self.env.event()
+        self.updateComplete = self.event()
         self.applyValEv = None
         
         # (signal, value) tupes which should be applied before new round of processes
@@ -97,7 +97,7 @@ class HdlSimulator(object):
 
         for v in proc(self):
             dst, updater, isEvDependent = v
-            if not(self.env.now == 0 and isEvDependent):  # pass event dependent on startup
+            if not(self.now == 0 and isEvDependent):  # pass event dependent on startup
                 self.valuesToApply.append((dst, updater, isEvDependent, proc))
 
     def _initUnitSignals(self, unit):
@@ -121,23 +121,23 @@ class HdlSimulator(object):
         def updateCallback(ev):
             sig.simUpdateVal(self, vUpdater)
             
-        t = self.env.timeout(self.EV_DEPENDENCY_SLOWDOWN)
+        t = self.timeout(self.EV_DEPENDENCY_SLOWDOWN)
         t.callbacks.append(updateCallback) 
    
     def scheduleAplyValues(self):
-        self.applyValEv = self.env.event()
+        self.applyValEv = self.event()
         self.applyValEv._ok = True
         self.applyValEv._value = None
         self.applyValEv.callbacks.append(self.applyValues)
         
-        self.env.schedule(self.applyValEv, priority=self.PRIORITY_APPLY_COMB)
+        self.schedule(self.applyValEv, priority=self.PRIORITY_APPLY_COMB)
         
-        self.runSeqProcessesEv = self.env.event()
+        self.runSeqProcessesEv = self.event()
         self.runSeqProcessesEv._ok = True
         self.runSeqProcessesEv._value = None
         self.runSeqProcessesEv.callbacks.append(self.runSeqProcesses)
         
-        self.env.schedule(self.runSeqProcessesEv, priority=self.PRIORITY_APPLY_SEQ)
+        self.schedule(self.runSeqProcessesEv, priority=self.PRIORITY_APPLY_SEQ)
 
     def runSeqProcesses(self, ev):
         for proc in self.evDependentProcsToRun:
@@ -171,7 +171,7 @@ class HdlSimulator(object):
         
         # activate updateComplete if this was last applyValues() in this time        
         self.updateComplete.succeed()  # trigger
-        self.updateComplete = self.env.event()  # regenerate event
+        self.updateComplete = self.event()  # regenerate event
         self.applyValEv = None 
            
     def read(self, sig):
@@ -191,7 +191,7 @@ class HdlSimulator(object):
         else:
             v = sig._dtype.fromPy(val)
         
-        v.updateTime = self.env.now
+        v.updateTime = self.now
         if isinstance(sig, InterfaceBase):
             sig = sig._sigInside
 
@@ -206,7 +206,7 @@ class HdlSimulator(object):
             self.scheduleAplyValues()
             
     def wait(self, time):
-        return self.env.timeout(time)
+        return self.timeout(time)
     
     def simUnit(self, synthesisedUnit, time, extraProcesses=[]):
         """
@@ -215,11 +215,11 @@ class HdlSimulator(object):
         self.config.beforeSim(self, synthesisedUnit)
         
         for p in extraProcesses:
-            self.env.process(p(self))
+            self.process(p(self))
         
         self._initUnitSignals(synthesisedUnit)
        
-        self.env.run(until=time)
+        self.run(until=time)
     
     # shortcuts
     r = read    
