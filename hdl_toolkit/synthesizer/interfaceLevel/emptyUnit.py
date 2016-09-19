@@ -19,6 +19,8 @@ class EmptyUnit(Unit):
     """
     _defaultValue = None
     def _toRtl(self):
+        assert not self._wasSynthetised()
+        
         self._initName()
         for i in self._interfaces:
             i._setDirectionsLikeIn(INTF_DIRECTION.MASTER)

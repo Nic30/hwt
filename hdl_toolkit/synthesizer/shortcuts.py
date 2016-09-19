@@ -12,9 +12,6 @@ from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.uniqList import UniqList
-from hdl_toolkit.synthesizer.vhdlCodeWrap import VhdlCodeWrap
-
-
 
 def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
     """
@@ -24,8 +21,6 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
         u = unitOrCls()
     else:
         u = unitOrCls
-    
-    assert not u._wasSynthetised()
     
     u._loadDeclarations()
     if name is not None:
@@ -124,16 +119,16 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 sc = serializer.Architecture(obj, s)
                 fName = obj.getEntityName() + serializer.fileExtension
                 fileMode = 'a'
-                
-            elif isinstance(obj, UnitFromHdl):
-                fName = None
-                for fn in obj._hdlSources:
-                    if isinstance(fn, str):
-                        shutil.copy2(fn, folderName)
-                        files.append(fn)
             else:
-                raise Exception("Do not know how to serialize %r" % (obj))
-        
+                if hasattr(obj, "_hdlSources"):
+                    fName = None
+                    for fn in obj._hdlSources:
+                        if isinstance(fn, str):
+                            shutil.copy2(fn, folderName)
+                            files.append(fn)
+                else:
+                    sc = serializer.asHdl(obj)   
+    
             if fName is not None:
                 fp = os.path.join(folderName, fName)
                 files.append(fp)
