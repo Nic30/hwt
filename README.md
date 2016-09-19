@@ -39,5 +39,3 @@ IP core packager can automaticaly generate gui generator for setting params on u
 * Keep in mind that everything is configured from top to bottom but builded in oposite direction. This mean you can set configuration for childs in _declr(self) of parent but childs declarations and implementation will be completed in parent _impl(self). Result of this is that you can easily configure design but errors are showing up when you try to use them.
  
 Take a look at samples in packages and https://github.com/Nic30/hwtLib.
-
-I know I have to write wiki, but I do not even have time to exists.
