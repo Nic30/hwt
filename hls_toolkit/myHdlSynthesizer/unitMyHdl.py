@@ -112,6 +112,7 @@ class UnitMyHdl(UnitFromHdl):
 
     def _toRtl(self):
         """Convert unit to hdl objects"""
+        assert not self._wasSynthetised()
         
         if not hasattr(self, '_name'):
             self._name = defaultUnitName(self)

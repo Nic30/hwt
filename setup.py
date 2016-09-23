@@ -14,8 +14,7 @@ setup(name='hwtoolkit',
         'Pillow', # altium scheme reader
         'simpy',  # discrete simulator 
         'jinja2', # hdl templates renderer, visualizer renderer
-        'flask',  # visualizer
-        'hdlConvertor', # vhdl/verilog parser https://github.com/Nic30/hdlConvertor
+        'flask'  # visualizer
       ],
       license='MIT',
       packages = find_packages(),

@@ -1,6 +1,6 @@
-from hdl_toolkit.parser.hdlContext import HDLCtx
+from hdl_toolkit.hdlObjects.hdlContext import HdlContext
 
-class PackageHeader(HDLCtx):
+class PackageHeader(HdlContext):
     """
     Hdl package container
     Entities means components from vhdl
@@ -11,7 +11,7 @@ class PackageHeader(HDLCtx):
         self._isDummy = isDummy  
     
     def update(self, other):
-        HDLCtx.update(self, other)
+        HdlContext.update(self, other)
         self.body = other.body
         
     def insertBody(self, body):
@@ -20,10 +20,10 @@ class PackageHeader(HDLCtx):
     
     def copyFrom(self, other):
         assert self._isDummy
-        HDLCtx.copyFrom(self, other)
+        HdlContext.copyFrom(self, other)
         self._isDummy = False
         
-class PackageBody(HDLCtx):
+class PackageBody(HdlContext):
     def __init__(self, name, libraryCtx):
         super(PackageBody, self).__init__(name, libraryCtx)
         self.header = None

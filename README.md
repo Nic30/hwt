@@ -1,59 +1,41 @@
 # HWToolkit
-HLS syntetizator, HDL parser writen in python
+HLS syntetizator writen in python (with VHDL/(System) Verilog parser, simulator, UVM like environment, IP core packager ... )
 
-This library allows you rapidly speedup design creation by abstraction over HDL lanuages, 
-it allows you write clean design using hi-level interfaces, 
-so you do not have to mess with every signal separately (for the rest of functionality I did not made public examples yet).
-Currently library is used for gluing things together. Examples showing this features are placed in /hdl_toolkit/samples/iLvl.
+This library was originaly syntax shugar/macro language for vhdl.
+Main purpose was to optimize learning curve of VHDL/Verilog and allow rapid developing.
+Now library has it's own simulator and it has become hdl language.
+It more hi-level abstraction over hardware but also lets you access the lowest layers.
+Every thing which can be written in vhdl (and system verilog) can be also written in HWToolkit except for analog part (which can be emulated and we have no need for integrating it).
 
-Automatic interface/parameter extraction is implemented take look at /hdl_toolkit/interfaces
-
-Libary has vhdl, verilog, vivado hls/hlx support, object from this langues (entity, architecture, package, function, module ...) 
-can be imported and used like any others. 
+This is HDL with ultimate preprocesor, real propgraming language, simulator and HSL under single roof.
 
 There is library full of examples at https://github.com/Nic30/hwtLib.
+And (System) Verilog/VHDL compatibility layer at https://github.com/Nic30/hwtHdlParsers which allows you to import objects from HDL. Automatic interface/parameter extraction also is implemented.
 
-## Library components
+We also have buildsystem. It is easily extensible but currently support only Xilinx Vivado and can control Modelsim and Altium designer. We also use it for generating *.xdc (constraints) 
 
-Unit/UnitFromHdl/VivadoHLSUnit/... - these are main parts of the design. Properties of this objects which are derived from class Interface
-or class Param (generic/attribute representation in this library) are recognized by library and they can be synthetised.
+There is also layer for importing object from another languages like Vivado Hls or MyHdl.
 
-HdlSimulator is working but it needs better format than VCD in order to be something.
-Hls part is under construction.
-IP core packager with automatic gui generator is fully working.
-vivado_toolit contains realtime driver for vivado and constrains generator.
+IP core packager can automaticaly generate gui generator for setting params on unit it also recognizes standard vivado interfaces.
 
-### You need to know only this, rest you can see in examples:
-* Every unit is like hi-level netlist.
+
+### Light-speed tutorial:
+* There are units (Ram, Cpu) and interfaces connecting them (Signal, Clk, Axi4 etc...).
+
+* Every unit is like hi-level netlist, you should override this methods:
 
 * In _config(self) function you should specify things which can be configured from top.
 
-* In _declr(self)  function you should declare all things on which is configuration applied on,
-you can access things from _config(self).
+* In _declr(self)  function you should declare all things on which is configuration applied on, you can access things from _config(self).
 
 * In _impl(self) you implement internal structure of the unit.
 
 * Interfaces does not have _impl method, rest is same.
 
-* _config(self) is called by constructor by default
+* Direction of interfaces are resolved from drivers of interface and you do not have to wory about it.
 
-* Direction of interfaces are resolved from drivers of interface.
+* power operator ** is used as connection operator (assign in Verilog, <= in VHDL), there is also function connect with can fit widths. 
 
-* Easiest way how to extract Unit from VHDL/Verilog is to use UnitFromHdl class (as is shown in examples)
- In order to extract newly defined interface as well UnitFromHdl has 
-
-* Easiest way how to connect is two things is use connect function as shown in examples. 
-
-* Keep in mind that everything is configured from top to bottom but builded in oposite direction.
-  This mean you can set configuration for childs in _declr(self) of parent but childs declarations
-  and implementation will be completed in parent _impl(self)
-
-
-This is developement repo not everything needs to be working everytime, check it by running test in package you need. 
+* Keep in mind that everything is configured from top to bottom but builded in oposite direction. This mean you can set configuration for childs in _declr(self) of parent but childs declarations and implementation will be completed in parent _impl(self). Result of this is that you can easily configure design but errors are showing up when you try to use them.
+ 
 Take a look at samples in packages and https://github.com/Nic30/hwtLib.
-
-The library functionaly is in general driven by my projects usualy at Faculty of Information Technology 
-Brno University of Technology.
-I know I have to write wiki, but I do not even have time to exists.
-
-The project is licensed under MIT.

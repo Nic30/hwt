@@ -24,11 +24,11 @@ class VcdHdlSimConfig(HdlSimConfig):
     
     
     def logApplyingValues(self, simulator, values):
-        pprint((simulator.env.now, values))
+        pprint((simulator.now, values))
         
     def logPropagation(self, simulator, signal, process): 
         print("%d: Signal.simPropagateChanges %s -> %s" % 
-                                        (simulator.env.now, signal.name, str(process.name))
+                                        (simulator.now, signal.name, str(process.name))
         )
         
     def vcdRegisterUnit(self, unit):

@@ -31,7 +31,7 @@ class OpDefinition():
         ops = list(map(getVal, operator.ops))
         
         if isEventDependentOp(operator.operator):
-            ops.append(simulator.env.now)
+            ops.append(simulator.now)
         elif operator.operator == AllOps.IntToBits:
             ops.append(operator.result._dtype)
         

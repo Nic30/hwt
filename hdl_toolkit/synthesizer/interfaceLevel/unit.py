@@ -38,6 +38,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         synthesize all subunits, make connections between them, build entity and component for this unit
         """
+        assert not self._wasSynthetised()
+        
         self._initName()
         self._cntx.globals = self._globalsFromParams()
         externInterf = [] 

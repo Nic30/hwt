@@ -5,16 +5,19 @@ from hdl_toolkit.hdlObjects.types.eventCapableVal import EventCapableVal
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hdl_toolkit.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForOr, \
+    vldMaskForAnd
+from operator import eq
 
 
-def boolLogOp(self, other, op):
+def boolLogOp(self, other, op, getVldFn):
     other = toHVal(other)
 
     if areValues(self, other):
         v = bool(op._evalFn(bool(self.val), (other.val)))
         return BooleanVal(v, BOOL,
-                self.vldMask & other.vldMask,
-                max(self.updateTime,  other.updateTime))
+                getVldFn(self, other),
+                max(self.updateTime, other.updateTime))
     else:
         return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
 
@@ -27,7 +30,7 @@ def boolCmpOp(self, other, op, evalFn=None):
         v = evalFn(bool(self.val), bool(other.val)) and (self.vldMask == other.vldMask == 1)
         return BooleanVal(v, BOOL,
                 self.vldMask & other.vldMask,
-                max(self.updateTime,  other.updateTime))
+                max(self.updateTime, other.updateTime))
     else:
         return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
 
@@ -47,7 +50,7 @@ class BooleanVal(EventCapableVal):
         return cls(val, typeObj, vld)
             
     def _eq(self, other):
-        return boolCmpOp(self, other, AllOps.EQ, evalFn=lambda a, b: a == b)
+        return boolCmpOp(self, other, AllOps.EQ, evalFn=eq)
 
     def __ne__(self, other):
         return boolCmpOp(self, other, AllOps.NEQ)
@@ -85,24 +88,10 @@ class BooleanVal(EventCapableVal):
 
     # logic
     def __and__(self, other):
-        # [BUG] X and 0 should be 0 now is X
-        #
-        #  t, n, i  
-        #[[t, n, i], # t
-        # [n, n, n], # n
-        # [i, n, i]  # i
-        #] 
-
-        return boolLogOp(self, other, AllOps.AND_LOG)
+        return boolLogOp(self, other, AllOps.AND_LOG, vldMaskForAnd)
         
     def __or__(self, other):
-        # [BUG] X or 1 should be 1 now is X
-        # t,  n, i  
-        #[[t, t, t], # t
-        # [t, n, i], # n
-        # [t, i, i]  # i
-        #] 
-        return boolLogOp(self, other, AllOps.OR_LOG)
+        return boolLogOp(self, other, AllOps.OR_LOG, vldMaskForOr)
 
     # for evaluating only, not convertible to hdl
     

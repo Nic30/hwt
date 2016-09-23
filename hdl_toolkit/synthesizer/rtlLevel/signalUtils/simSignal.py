@@ -53,12 +53,12 @@ class SimSignal():
         
         dirtyFlag, newVal = valUpdater(self._oldVal)
         self._val = newVal
-        newVal.updateTime = simulator.env.now
+        newVal.updateTime = simulator.now
         
         if dirtyFlag:
             log = simulator.config.logChange
             if  log:
-                log(simulator.env.now, self, newVal)
+                log(simulator.now, self, newVal)
             
             # run write callbacks we have to create new list to allow 
             # registerring of new call backs in callbacks
@@ -66,6 +66,6 @@ class SimSignal():
             self._writeCallbacks = []
             for c in callBacks:
                 # simulation processes
-                simulator.env.process(c(simulator))
+                simulator.process(c(simulator))
 
             self.simPropagateChanges(simulator)
