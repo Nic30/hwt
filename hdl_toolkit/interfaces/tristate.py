@@ -13,11 +13,11 @@ class TristateSig(Interface):
         self.forceVector = False
         
     def _declr(self):
-        t = Bits(self.DATA_WIDTH._downto(0), self.forceVector)
+        t = Bits((self.DATA_WIDTH-1)._downto(0), self.forceVector)
         
         self.t = Signal(dtype=t) # connect
-        self.i = Signal(dtype=t) # input
-        self.o = Signal(dtype=t, masterDir=DIRECTION.IN) # output
+        self.i = Signal(dtype=t, masterDir=DIRECTION.IN) # input
+        self.o = Signal(dtype=t) # output
 
 class TristateClk(TristateSig):
     pass
