@@ -164,6 +164,9 @@ class PropDeclrCollector(object):
         u._signalsForMyEntity(self._cntx, "sig_" + uName)
     
     def _registerIntfInImpl(self, iName, i):
+        """
+        Register interface in implementation phase
+        """
         raise NotImplementedError()
             
     def _paramCollector(self, pName, prop):
