@@ -7,6 +7,11 @@ from hdl_toolkit.synthesizer.param import evalParam
 
 
 def log2ceil(x):
+    """
+    Returns no of bits required to store x-1
+    for example x=8 returns 3
+    """
+    
     if not isinstance(x, (int, float)):
         x = evalParam(x).val
     
@@ -23,7 +28,7 @@ def isPow2(num):
 
 def binToGray(sigOrVal):
     l = sigOrVal._dtype.bit_length()
-    return Concat(sigOrVal[l-1], sigOrVal[l-1:0] ^ sigOrVal[l:1])
+    return Concat(sigOrVal[l - 1], sigOrVal[l - 1:0] ^ sigOrVal[l:1])
 
 
 def addClkRstn(self):
