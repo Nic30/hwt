@@ -19,12 +19,13 @@ def autoAddAgents(unit, propName="_ag"):
         setattr(intf, propName, agent)
         
         if intf._direction == INTF_DIRECTION.MASTER:
-            proc.extend(agent.getMonitors())
+            agProcs = agent.getMonitors()
         elif intf._direction == INTF_DIRECTION.SLAVE:
-            proc.extend(agent.getDrivers())
+            agProcs = agent.getDrivers()
         else:
             raise NotImplementedError("intf._direction %s" % str(intf._direction))
         
+        proc.extend(agProcs)
     return proc
 
 def valuesToInts(values):
