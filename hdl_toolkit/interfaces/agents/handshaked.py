@@ -25,11 +25,13 @@ class HandshakedAgent(SyncAgentBase):
         Collect data
         """
         if s.r(self.rst_n).val and self.enable:
-            vld = s.r(self._vld).val
-            if vld:
+            s.w(1, self._rd)
+            
+            yield s.updateComplete
+            vld = s.r(self._vld)
+            if vld.val or not vld.vldMask:
                 d = self.doRead(s)
                 self.data.append(d)
-            s.w(1, self._rd)
         else:
             s.w(0, self._rd)
     
@@ -58,8 +60,8 @@ class HandshakedAgent(SyncAgentBase):
         
         yield s.updateComplete
         
-        rd = s.r(self._rd).val
-        if rd:
+        rd = s.r(self._rd) 
+        if rd.val or not rd.vldMask:
             if self.data:
                 self.actualData = self.data.pop(0)
             else:
