@@ -1,7 +1,9 @@
-from hdl_toolkit.hdlObjects.types.hdlType import HdlType 
-from hdl_toolkit.hdlObjects.specialValues import Unconstrained
 from copy import copy
+
 from hdl_toolkit.bitmask import Bitmask
+from hdl_toolkit.hdlObjects.specialValues import Unconstrained
+from hdl_toolkit.hdlObjects.types.hdlType import HdlType 
+
 
 class Bits(HdlType):
     
