@@ -55,8 +55,8 @@ process = env.get_template('process.vhd')
 component = env.get_template('component.vhd')
 componentInstance = env.get_template('component_instance.vhd')
 
-If = env.get_template('if.vhd')
-Switch = env.get_template('switch.vhd')
+IfTmpl = env.get_template('if.vhd')
+SwitchTmpl = env.get_template('switch.vhd')
 
 class VhdlVersion():
     v2002 = 2002
@@ -366,7 +366,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
                 
             elIfs.append((cls.condAsHdl(c, True), statements))
         
-        return If.render(cond=cond,
+        return IfTmpl.render(cond=cond,
                                        ifTrue=ifTrue,
                                        elIfs=elIfs,
                                        ifFalse=ifFalse)  
@@ -384,7 +384,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
                 statements = ternaryOpsToIf(statements)
                 
             cases.append((key, statements))  
-        return Switch.render(switchOn=switchOn,
+        return SwitchTmpl.render(switchOn=switchOn,
                                            cases=cases)  
    
     @classmethod

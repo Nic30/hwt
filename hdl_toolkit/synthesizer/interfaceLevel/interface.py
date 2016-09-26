@@ -268,7 +268,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         raise NoKnownIpCoreInterface()
     
     def _getSimAgent(self):
-        return NotImplementedError()
+        raise NotImplementedError()
     
     def __repr__(self):
         s = [self.__class__.__name__]

@@ -7,21 +7,31 @@ class HandshakedAgent(SyncAgentBase):
         super().__init__(intf, clk=None, rstn=None)
         self.actualData = NOP
         self.data = []
+        # these signals are extracted like this to make 
+        # agent more configurable
+        self._rd = self.getRd()
+        self._vld = self.getVld()
+    
+    def getRd(self):
+        """get "ready" signal"""
+        return self.intf.rd
+    
+    def getVld(self):
+        """get "valid" signal"""
+        return self.intf.vld
         
     def monitor(self, s):
         """
         Collect data
         """
-        intf = self.intf
-        
         if s.r(self.rst_n).val and self.enable:
-            vld = s.r(intf.vld).val
+            vld = s.r(self._vld).val
             if vld:
                 d = self.doRead(s)
                 self.data.append(d)
-            s.w(1, intf.rd)
+            s.w(1, self._rd)
         else:
-            s.w(0, intf.rd)
+            s.w(0, self._rd)
     
     def doRead(self, s):
         return s.read(self.intf.data)
@@ -30,8 +40,6 @@ class HandshakedAgent(SyncAgentBase):
         s.w(data, self.intf.data)
         
     def driver(self, s):
-        intf = self.intf
-        
         if self.actualData is NOP and self.data:
             self.actualData = self.data.pop(0)
         
@@ -43,14 +51,14 @@ class HandshakedAgent(SyncAgentBase):
             self.doWrite(s, None)
             
         if s.r(self.rst_n).val and do and self.enable:
-            s.w(1, intf.vld)
+            s.w(1, self._vld)
         else:
-            s.w(0, intf.vld)
+            s.w(0, self._vld)
             return
         
         yield s.updateComplete
         
-        rd = s.r(intf.rd).val
+        rd = s.r(self._rd).val
         if rd:
             if self.data:
                 self.actualData = self.data.pop(0)
