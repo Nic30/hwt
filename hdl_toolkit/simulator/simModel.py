@@ -85,6 +85,8 @@ def mkUpdater(nextVal, resVld):
     """
     Create value updater for simulation
     """
+    nextVal = nextVal.clone()
+    
     if resVld:
         return lambda currentVal: (valueHasChanged(currentVal, nextVal), nextVal)
     else:
@@ -99,6 +101,7 @@ def mkArrayUpdater(nextItemVal, resVld, indexes):
     Create value updater for simulation for value of array type
     [TODO] vldMask of indexes affects vldMask of array
     """
+    nextItemVal = nextItemVal.clone()
     if resVld:
         def updater(currentVal):
             if len(indexes) > 1:
