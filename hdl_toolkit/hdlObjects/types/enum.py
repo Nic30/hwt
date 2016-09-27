@@ -6,7 +6,8 @@ class Enum(HdlType):
         self.name = name
         self._allValues = valueNames
         for n in valueNames:
-            setattr(self, n, self.fromPy(n))
+            v = self.fromPy(n)
+            setattr(self, n, v)
     
     def _add(self, name):
         """

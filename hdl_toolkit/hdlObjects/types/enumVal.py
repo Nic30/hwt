@@ -16,8 +16,8 @@ class EnumVal(Value):
             valid = False
             val = typeObj._allValues[0]
         else:
+            assert isinstance(val, str)
             valid = True
-        assert isinstance(val, str)
         
         return cls(val, typeObj, valid)
     
