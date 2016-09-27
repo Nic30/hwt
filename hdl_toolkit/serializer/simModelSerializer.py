@@ -153,7 +153,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
     @classmethod
     def condAsHdl(cls, cond):
         cond = list(cond)
-        return "[%s]" % (",".join(map(lambda x: cls.asHdl(x), cond)))
+        return "%s" % (",".join(map(lambda x: cls.asHdl(x), cond)))
     
     @classmethod
     def IfContainer(cls, ifc, indent):
