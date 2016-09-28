@@ -51,9 +51,3 @@ class {{ name }}(SimModel):
                        ]
         {% for proc in processObjects %}
         sensitivity(self.{{proc.name}}, {% for s in proc.sensitivityList %}self.{{s.name}}{% if not loop.last %}, {% endif %}{% endfor %}){% endfor %}
-    
-    # [TODO] rm    
-    def _getStaticProcesses(self):
-        {% if unsensitiveProcesses %}{% for proc in unsensitiveProcesses %}
-        yield self.{{proc.name}}{% endfor %}{% else %}return []{% endif %}
-        
