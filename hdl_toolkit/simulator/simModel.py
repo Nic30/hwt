@@ -49,10 +49,10 @@ def sensitivity(proc, *sensitiveTo):
         s.simSensitiveProcesses.add(proc)
          
 
-def simEvalCond(cond, simulator):
+def simEvalCond(simulator, *conds):
     _cond = True
     _vld = True
-    for c in cond:
+    for c in conds:
         v = c.simEval(simulator)
         val = bool(v.val)
         fullVld = v._isFullVld()

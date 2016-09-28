@@ -1,4 +1,4 @@
-{% for c in cases %}{{indent}}{% if c[0] is not none %}_cond, _condVldTmp = simEvalCond([{{ switchOn }}._eq({{c[0]}})], sim)
+{% for c in cases %}{{indent}}{% if c[0] is not none %}_cond, _condVldTmp = simEvalCond(sim, {{ switchOn }}._eq({{c[0]}}))
 {{indent}}_condVld = _condVld and _condVldTmp
 {{indent}}if _cond or not _condVld:{% for stm in c[1] %}
 {{stm}}{% endfor %}
