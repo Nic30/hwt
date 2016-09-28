@@ -126,7 +126,6 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         "processObjects"     : arch.processes,
         "processesNames"     : map(lambda p: p.name, arch.processes),
         "componentInstances" : arch.componentInstances,
-        "unsensitiveProcesses" : list(where(arch.processes, lambda proc: not proc.sensitivityList)),
         })
    
     @classmethod
@@ -157,6 +156,27 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
     
     @classmethod
     def IfContainer(cls, ifc, indent):
+        """
+        condDefined = True
+        cond = cond.eval()
+        if cond or cond == UNKNOWN:
+            condDefined_0 = (condDefined and not cond != UNKNOWN) or not cond  
+            ...
+        
+        #elif
+        if not cond or cond == UNKNOWN:
+            # condDefined is condDefined_0 
+            cond2 = cond2.eval()    
+            if cond2 or cond2 == UNKNOWN:
+                condDefined_1 = (condDefined_0 and not cond2 != UNKNOWN) or not cond2  
+                ...
+        
+            
+            #else
+            if cond2 == UNKNOWN or not cond2 
+                ...
+         
+        """
         cond = cls.condAsHdl(ifc.cond)
         ifTrue = ifc.ifTrue
         elIfs = []
