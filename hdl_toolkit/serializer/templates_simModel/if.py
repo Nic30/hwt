@@ -6,12 +6,9 @@ if ifTrue|length > 0 %}{%
     for stm in ifTrue %}
 {{stm}}{% 
     endfor %}{% 
-else %}{% 
-    if default is none %}
-{{indent}}    pass{% 
-    else %}
-{{default}}{% 
-    endif %}{%
+else %}
+{{indent}}    #enclosure
+{{enclosure}}{%
 endif %}
 {{indent}}#else:
 {{indent}}if not c_{{indentNum}} or not cVld_{{ indentNum }}:{% 
@@ -20,12 +17,8 @@ if ifFalse|length > 0 %}{%
 {{stm}}{%
     endfor%}{% 
 else %}
-{{indent}}    #default
-{%  if default is none 
-%}{{indent}}    pass{% 
-    else 
-%}{{default}}{% 
-    endif %}
+{{indent}}    #enclosure
+{{enclosure}}
 {% endif %}
 {#
 """ This template constructs if-else trees like this """ 

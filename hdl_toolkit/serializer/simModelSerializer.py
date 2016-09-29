@@ -67,12 +67,12 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             return serFn(obj)
     
     @classmethod
-    def stmAsHdl(cls, obj, indent=0, default=None):
+    def stmAsHdl(cls, obj, indent=0, enclosure=None):
         try:
             serFn = getattr(cls, obj.__class__.__name__)
         except AttributeError:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
-        return serFn(obj, indent, default)
+        return serFn(obj, indent, enclosure)
     
     @classmethod
     def FunctionContainer(cls, fn):
@@ -146,8 +146,6 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
                         getIndent(indent), dst.name, cls.Value(a.src),
                         a.isEventDependent)
             
-
-        
     @classmethod
     def comment(cls, comentStr):
         return "#" + comentStr.replace("\n", "\n#")     
@@ -158,7 +156,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         return "%s" % (",".join(map(lambda x: cls.asHdl(x), cond)))
     
     @classmethod
-    def IfContainer(cls, ifc, indent, default=None):
+    def IfContainer(cls, ifc, indent, enclosure=None):
         cond = cls.condAsHdl(ifc.cond)
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
@@ -175,22 +173,25 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             
             lastIf.ifFalse = ifc.ifFalse
             
-            return cls.IfContainer(topIf, indent, default)
+            return cls.IfContainer(topIf, indent, enclosure)
         else:
-            if default is not None:
-                default=cls.stmAsHdl(default, indent + 1)
+            if enclosure is None:
+                _enclosure = getIndent(indent + 1) + "pass"
+            else:
+                _enclosure = cls.stmAsHdl(enclosure, indent + 1)
+                
             return iftmpl.render(
                 indent=getIndent(indent),
                 indentNum=indent,
                 cond=cond,
-                default=default,
-                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1),
+                enclosure=_enclosure,
+                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1, enclosure),
                                  ifTrue)),
-                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1),
+                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1, enclosure),
                                    ifFalse)))  
     
     @classmethod
-    def SwitchContainer(cls, sw, indent, default=None):
+    def SwitchContainer(cls, sw, indent, enclosure=None):
         switchOn = sw.switchOn
         mkCond = lambda c: {Operator(AllOps.EQ,
                                     [switchOn, c])}
@@ -209,7 +210,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
                     ifFalse,
                     elIfs)
         
-        return cls.IfContainer(topIf, indent, default=default)
+        return cls.IfContainer(topIf, indent, enclosure)
     
     @classmethod
     def WaitStm(cls, w):
@@ -231,6 +232,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         elif len(body) == 2:
             # first statement is taken as default
             _body = cls.stmAsHdl(body[1], 2, body[0])
+        else:
+            raise NotImplementedError()
         
         return processTmpl.render({
               "name": proc.name,
