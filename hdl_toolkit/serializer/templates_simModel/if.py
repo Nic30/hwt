@@ -1,4 +1,5 @@
 {{indent}}c_{{indentNum}}, cVld_{{ indentNum }} = simEvalCond(sim, {{ cond }})
+{{indent}}#if ():
 {{indent}}if c_{{indentNum}} or not cVld_{{ indentNum }}: 
 {{indent}}    cVld_{{ indentNum }} = cVld_{{ indentNum-1 }} and cVld_{{ indentNum }}{%
     if ifTrue|length > 0 %}{% 
@@ -12,15 +13,19 @@
         endif %}{% 
     endif %}{% 
     if  ifFalse|length > 0 or elIfs|length >0 %}
+{{indent}}#else ():
 {{indent}}if not c_{{indentNum}} or not cVld_{{ indentNum }}:{% 
         for c, stms in elIfs %}
+{{indent}}    #elif ():
 {{indent}}    c_{{indentNum}}, cVld_{{ indentNum }}_tmp = simEvalCond(sim, {{ c }})
-{{indent}}    if c_{{indentNum}} or not cVld_{{ indentNum }}: 
-{{indent}}        cVld_{{ indentNum }} = cVld_{{ indentNum }}_tmp and cVld_{{ indentNum }}{%
+{{indent}}    if c_{{indentNum}} or not cVld_{{ indentNum }}_tmp: 
+{{indent}}        cVld_{{ indentNum }} = cVld_{{ indentNum }}_tmp and cVld_{{ indentNum }}
+{{indent}}        cVld_{{ indentNum +1}} = cVld_{{ indentNum }}{%
               if stms|length > 0 %}{% 
                 for stm in stms %}
 {{stm}}{%        endfor %}{%
-    else %}{% 
+    else %}
+{{indent}}    #default{% 
         if default is none 
 %}{{indent}}    pass{% 
         else %}
@@ -29,12 +34,14 @@
     endif %}{% 
         endfor %}{% 
         if ifFalse|length > 0 %}
+{{indent}}    #else:
 {{indent}}    if not c_{{indentNum}} or not cVld_{{ indentNum }}:
 {{indent}}        cVld_{{ indentNum +1}}  = cVld_{{ indentNum }}
         {%
             for stm in ifFalse %}
 {{stm}}{%   endfor%}{%
-        else %}{% 
+        else %}
+{{indent}}    #default{% 
         if default is none 
 %}{{indent}}    pass{% 
         else %}
