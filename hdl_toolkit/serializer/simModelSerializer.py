@@ -161,23 +161,33 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
     def IfContainer(cls, ifc, indent, default=None):
         cond = cls.condAsHdl(ifc.cond)
         ifTrue = ifc.ifTrue
-        elIfs = []
         ifFalse = ifc.ifFalse
-        
-        for c, statements in ifc.elIfs:
-            stms = tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 2), statements))
-            elIfs.append((cls.condAsHdl(c), stms))
-        
-        
-        return iftmpl.render(
-            indent=getIndent(indent),
-            indentNum=indent,
-            cond=cond,
-            ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1),
-                             ifTrue)),
-            elIfs=elIfs,
-            ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 2),
-                               ifFalse)))  
+
+        if ifc.elIfs:
+            # if has elifs revind this to tree
+            ifFalse = []
+            topIf = IfContainer(ifc.cond, ifc.ifTrue, ifFalse)
+            for c, stms in ifc.elIfs:
+                _ifFalse = []
+                lastIf = IfContainer(c, stms, _ifFalse)
+                ifFalse.append(lastIf)
+                ifFalse = _ifFalse
+            
+            lastIf.ifFalse = ifc.ifFalse
+            
+            return cls.IfContainer(topIf, indent, default)
+        else:
+            if default is not None:
+                default=cls.stmAsHdl(default, indent + 1)
+            return iftmpl.render(
+                indent=getIndent(indent),
+                indentNum=indent,
+                cond=cond,
+                default=default,
+                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1),
+                                 ifTrue)),
+                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1),
+                                   ifFalse)))  
     
     @classmethod
     def SwitchContainer(cls, sw, indent, default=None):
