@@ -40,7 +40,7 @@ class SimModelSerializer_value():
     
     @classmethod
     def Slice_valAsVhdl(cls, t, val):
-        return "SliceVal([hInt(%d), hInt(%d)], SLICE, %d)" % (evalParam(val.val[0]).val, evalParam(val.val[1]).val,
+        return "SliceVal((hInt(%d), hInt(%d)), SLICE, %d)" % (evalParam(val.val[0]).val, evalParam(val.val[1]).val,
                                                   val.vldMask)
     @classmethod
     def Enum_valAsVhdl(cls, t, val):

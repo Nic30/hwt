@@ -62,7 +62,7 @@ class SimModelSerializer_ops():
         elif o == AllOps.DIV:
             return _bin('//')
         elif o == AllOps.DOWNTO:
-            return "SliceVal([%s, %s], SLICE, True)" % (p(ops[0]), p(ops[1]))
+            return "SliceVal((%s, %s), SLICE, True)" % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EQ:
             return '(%s)._eq(%s)' % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EVENT:
