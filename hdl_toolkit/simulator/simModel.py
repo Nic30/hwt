@@ -81,48 +81,29 @@ def connectSimPort(simUnit, subSimUnit, srcName, dstName, direction):
         subSimUnit._cntx.signals.remove(origPort)
     
     
-def mkUpdater(nextVal, resVld):
+def mkUpdater(nextVal):
     """
     Create value updater for simulation
     """
     
-    if resVld:
-        def updater(currentVal):
-            _nextVal = nextVal.clone()
-            return (valueHasChanged(currentVal, _nextVal), _nextVal)
-    else:
-        def updater(currentVal):
-            _nextVal = nextVal.clone()
-            _nextVal.vldMask = 0
-            return (valueHasChanged(currentVal, _nextVal), _nextVal)
+    def updater(currentVal):
+        _nextVal = nextVal.clone()
+        return (valueHasChanged(currentVal, _nextVal), _nextVal)
     return updater
             
 
-def mkArrayUpdater(nextItemVal, resVld, indexes):
+def mkArrayUpdater(nextItemVal, indexes):
     """
     Create value updater for simulation for value of array type
     """
-    if resVld:
-        def updater(currentVal):
-            _nextItemVal = nextItemVal.clone()
-            if len(indexes) > 1:
-                raise NotImplementedError()
-            
-            index = indexes[0]
-            change = valueHasChanged(currentVal[index], _nextItemVal)
-            currentVal[index] = _nextItemVal
-            return (change, currentVal)
-    else:
-        def updater(currentVal):
-            _nextItemVal = nextItemVal.clone()
-            if len(indexes) > 1:
-                raise NotImplementedError()
-            
-            index = indexes[0]
-            change = valueHasChanged(currentVal[index], _nextItemVal)
-            _nextItemVal.vldMask = 0
-            currentVal.vldMask = 0
-            currentVal[index] = _nextItemVal
-            return (change, currentVal)
+    def updater(currentVal):
+        _nextItemVal = nextItemVal.clone()
+        if len(indexes) > 1:
+            raise NotImplementedError()
+        
+        index = indexes[0]
+        change = valueHasChanged(currentVal[index], _nextItemVal)
+        currentVal[index] = _nextItemVal
+        return (change, currentVal)
 
     return updater
