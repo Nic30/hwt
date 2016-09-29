@@ -81,46 +81,29 @@ def connectSimPort(simUnit, subSimUnit, srcName, dstName, direction):
         subSimUnit._cntx.signals.remove(origPort)
     
     
-def mkUpdater(nextVal, resVld):
+def mkUpdater(nextVal):
     """
     Create value updater for simulation
     """
-    nextVal = nextVal.clone()
     
-    if resVld:
-        return lambda currentVal: (valueHasChanged(currentVal, nextVal), nextVal)
-    else:
-        def updater(currentVal):
-            nextVal.vldMask = 0
-            return (valueHasChanged(currentVal, nextVal), nextVal)
-        return updater
+    def updater(currentVal):
+        _nextVal = nextVal.clone()
+        return (valueHasChanged(currentVal, _nextVal), _nextVal)
+    return updater
             
 
-def mkArrayUpdater(nextItemVal, resVld, indexes):
+def mkArrayUpdater(nextItemVal, indexes):
     """
     Create value updater for simulation for value of array type
-    [TODO] vldMask of indexes affects vldMask of array
     """
-    nextItemVal = nextItemVal.clone()
-    if resVld:
-        def updater(currentVal):
-            if len(indexes) > 1:
-                raise NotImplementedError()
-            
-            index = indexes[0]
-            change = valueHasChanged(currentVal[index], nextItemVal)
-            currentVal[index] = nextItemVal
-            return (change, currentVal)
-    else:
-        def updater(currentVal):
-            if len(indexes) > 1:
-                raise NotImplementedError()
-            
-            index = indexes[0]
-            change = valueHasChanged(currentVal[index], nextItemVal)
-            nextItemVal.vldMask = 0
-            currentVal.vldMask = 0
-            currentVal[index] = nextItemVal
-            return (change, currentVal)
+    def updater(currentVal):
+        _nextItemVal = nextItemVal.clone()
+        if len(indexes) > 1:
+            raise NotImplementedError()
+        
+        index = indexes[0]
+        change = valueHasChanged(currentVal[index], _nextItemVal)
+        currentVal[index] = _nextItemVal
+        return (change, currentVal)
 
     return updater

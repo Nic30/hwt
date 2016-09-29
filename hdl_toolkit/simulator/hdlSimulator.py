@@ -2,7 +2,7 @@ from simpy.events import NORMAL
 
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
-from hdl_toolkit.simulator.simModel import mkUpdater
+from hdl_toolkit.simulator.simModel import mkUpdater, mkArrayUpdater
 from hdl_toolkit.simulator.simulatorCore import HdlEnvironmentCore
 from hdl_toolkit.simulator.utils import valueHasChanged
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -95,8 +95,10 @@ class HdlSimulator(HdlEnvironmentCore):
             # (apply on end of this time to minimalize process reevaluation)
             self.scheduleAplyValues()
 
-        for v in proc(self):
-            dst, updater, isEvDependent = v
+        actionSet = set(proc(self))
+        res = self.conflictResolvStrategy(actionSet)
+        if res:
+            dst, updater, isEvDependent = res
             if not(self.now == 0 and isEvDependent):  # pass event dependent on startup
                 self.valuesToApply.append((dst, updater, isEvDependent, proc))
 
@@ -109,7 +111,7 @@ class HdlSimulator(HdlEnvironmentCore):
             v = s.defaultVal.clone()
             
             # force update all signals to deafut values and propagate it    
-            s.simUpdateVal(self, mkUpdater(v, True))
+            s.simUpdateVal(self, mkUpdater(v))
             
         for u in unit._units:
             self._initUnitSignals(u)
@@ -138,12 +140,37 @@ class HdlSimulator(HdlEnvironmentCore):
         self.runSeqProcessesEv.callbacks.append(self.runSeqProcesses)
         
         self.schedule(self.runSeqProcessesEv, priority=self.PRIORITY_APPLY_SEQ)
+    
+    def conflictResolvStrategy(self, actionSet):
+        l = len(actionSet)
+        if l == 0:
+            return
+        elif l == 1:
+            res = list(actionSet)[0]
+        else:
+            # we are driving signal with two different values so we invalidate resutl
+            res = list(list(actionSet)[0])
+            v = res[1].clone()
+            v.vldMask = 0
+            res[1] = v
 
+        l = len(res)
+        if l == 4:
+            dst, val, indexes, isEvDependent = res
+            return (dst, mkArrayUpdater(val, indexes), isEvDependent)
+        else:
+            dst, val, isEvDependent = res
+            return (dst, mkUpdater(val), isEvDependent)
+    
+    
     def runSeqProcesses(self, ev):
         for proc in self.evDependentProcsToRun:
-            for v in proc(self):
+            actionSet = set(proc(self))
+            v = self.conflictResolvStrategy(actionSet)
+            if v is not None:
                 dst, updater, _ = v
                 self._delayedUpdate(dst, updater)
+        
         
     def applyValues(self, ev):
         va = self.valuesToApply

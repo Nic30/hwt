@@ -14,13 +14,15 @@ from hdl_toolkit.serializer.utils import maxStmId
 from hdl_toolkit.synthesizer.param import Param, evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from python_toolkit.arrayQuery import where
+from hdl_toolkit.hdlObjects.statements import IfContainer
+from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 
 
 env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_simModel'))
 unitTmpl = env.get_template('modelCls.py')
 processTmpl = env.get_template('process.py')
 iftmpl = env.get_template("if.py")
-switchTmpl = env.get_template("switch.py")
 
 _indent = "    "
 _indentCache = {}        
@@ -65,12 +67,12 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             return serFn(obj)
     
     @classmethod
-    def stmAsHdl(cls, obj, indent=0):
+    def stmAsHdl(cls, obj, indent=0, default=None):
         try:
             serFn = getattr(cls, obj.__class__.__name__)
         except AttributeError:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
-        return serFn(obj, indent)
+        return serFn(obj, indent, default)
     
     @classmethod
     def FunctionContainer(cls, fn):
@@ -126,14 +128,13 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         "processObjects"     : arch.processes,
         "processesNames"     : map(lambda p: p.name, arch.processes),
         "componentInstances" : arch.componentInstances,
-        "unsensitiveProcesses" : list(where(arch.processes, lambda proc: not proc.sensitivityList)),
         })
    
     @classmethod
-    def Assignment(cls, a, indent=0):
+    def Assignment(cls, a, indent=0, default=None):
         dst = a.dst
         if a.indexes is not None:
-            return "%syield (self.%s, mkArrayUpdater(%s, _condVld, [%s]), %s)" % (
+            return "%syield (self.%s, %s, (%s,), %s)" % (
                         getIndent(indent), dst.name, cls.Value(a.src),
                         ", ".join(map(cls.asHdl, a.indexes)),
                         a.isEventDependent)
@@ -141,8 +142,9 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             if not (dst._dtype == a.src._dtype):
                 raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
                      (cls.asHdl(dst), cls.Value(a.src), repr(dst._dtype), repr(a.src._dtype)))
-            return "%syield (self.%s, mkUpdater(%s, _condVld), %s)" % (
-                        getIndent(indent), dst.name, cls.Value(a.src), a.isEventDependent)
+            return "%syield (self.%s, %s, %s)" % (
+                        getIndent(indent), dst.name, cls.Value(a.src),
+                        a.isEventDependent)
             
 
         
@@ -156,39 +158,49 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         return "%s" % (",".join(map(lambda x: cls.asHdl(x), cond)))
     
     @classmethod
-    def IfContainer(cls, ifc, indent):
+    def IfContainer(cls, ifc, indent, default=None):
         cond = cls.condAsHdl(ifc.cond)
         ifTrue = ifc.ifTrue
         elIfs = []
         ifFalse = ifc.ifFalse
         
         for c, statements in ifc.elIfs:
-            elIfs.append((cls.condAsHdl(c),
-                          tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 2), statements))))
+            stms = tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 2), statements))
+            elIfs.append((cls.condAsHdl(c), stms))
         
-        return iftmpl.render(indent=getIndent(indent),
-                             cond=cond,
-                             ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1), ifTrue)),
-                             elIfs=elIfs,
-                             ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1), ifFalse)))  
+        
+        return iftmpl.render(
+            indent=getIndent(indent),
+            indentNum=indent,
+            cond=cond,
+            ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1),
+                             ifTrue)),
+            elIfs=elIfs,
+            ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 2),
+                               ifFalse)))  
     
     @classmethod
-    def SwitchContainer(cls, sw, indent):
-        switchOn = cls.asHdl(sw.switchOn)
+    def SwitchContainer(cls, sw, indent, default=None):
+        switchOn = sw.switchOn
+        mkCond = lambda c: {Operator(AllOps.EQ,
+                                    [switchOn, c])}
+        ifFalse = []
+        elIfs = []
         
-        cases = []
         for key, statements in sw.cases:
             if key is not None:  # None is default
-                key = cls.asHdl(key)
-                ind = indent + 1
+                elIfs.append((mkCond(key), statements))  
             else:
-                ind = indent  
-            cases.append((key, tuple(map(lambda s: cls.stmAsHdl(s, ind), statements))))  
+                ifFalse = statements
         
-        return switchTmpl.render(indent=getIndent(indent),
-                                 switchOn=switchOn,
-                                 cases=cases)  
-   
+        topCond = mkCond(sw.cases[0][0])
+        topIf = IfContainer(topCond,
+                    sw.cases[0][1],
+                    ifFalse,
+                    elIfs)
+        
+        return cls.IfContainer(topIf, indent, default=default)
+    
     @classmethod
     def WaitStm(cls, w):
         if w.isTimeWait:
@@ -204,11 +216,16 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         proc.name = scope.checkedName(proc.name, proc)
         sensitivityList = sorted(where(proc.sensitivityList,
                                        lambda x : not isinstance(x, Param)), key=lambda x: x.name)
+        if len(body) == 1:
+            _body = cls.stmAsHdl(body[0], 2)
+        elif len(body) == 2:
+            # first statement is taken as default
+            _body = cls.stmAsHdl(body[1], 2, body[0])
         
         return processTmpl.render({
               "name": proc.name,
               "sensitivityList": [s.name for s in sensitivityList],
-              "stmLines": [ cls.stmAsHdl(s, 2) for s in body] })
+              "stmLines": [_body] })
            
 
 
