@@ -142,7 +142,10 @@ class RtlNetlist():
             for stm in renderIfTree(dps):
                 p = HWProcess("assig_process_" + name)
                 if sig._useNopVal and not isEnclosed(stm):
-                    p.statements.append(Assignment(sig._nopVal, sig))
+                    n = sig._nopVal
+                    p.statements.append(Assignment(n, sig))
+                    if isinstance(n, RtlSignal):
+                        p.sensitivityList.add(n)
                     
                 p.statements.append(stm)
                 # [TODO] sensitity list from dps which are covered by stm
@@ -159,7 +162,7 @@ class RtlNetlist():
                             # register sensitivity    
                             p.sensitivityList.add(s)
                             s.simSensitiveProcesses.add(p)
-                
+                            
             
                 yield p
 
