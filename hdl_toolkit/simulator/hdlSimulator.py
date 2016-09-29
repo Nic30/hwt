@@ -142,24 +142,32 @@ class HdlSimulator(HdlEnvironmentCore):
         self.schedule(self.runSeqProcessesEv, priority=self.PRIORITY_APPLY_SEQ)
     
     def conflictResolvStrategy(self, actionSet):
+        cloned = False
         l = len(actionSet)
         if l == 0:
             return
         elif l == 1:
             res = list(actionSet)[0]
         else:
-            # we are driving signal with two different values so we invalidate resutl
+            # we are driving signal with two different values so we invalidate result
             res = list(list(actionSet)[0])
             v = res[1].clone()
             v.vldMask = 0
             res[1] = v
+            cloned = True
 
         l = len(res)
         if l == 4:
             dst, val, indexes, isEvDependent = res
+            if not cloned:
+                val = val.clone()
             return (dst, mkArrayUpdater(val, indexes), isEvDependent)
         else:
             dst, val, isEvDependent = res
+            if not cloned:
+                val = val.clone()
+                
+            #print(self.now, dst, val)
             return (dst, mkUpdater(val), isEvDependent)
     
     
