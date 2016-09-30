@@ -118,13 +118,7 @@ class RtlNetlist():
         self.signals.add(s)
         
         return s
-    
-    def cloneSignals(self, signals:list, oldToNewNameFn, cloneAsSync=False):
-        buff = []
-        for s in signals:
-            buff.append(self.sig(oldToNewNameFn(s.name), s.vat_type.width))
-        return buff
-    
+   
     def buildProcessesOutOfAssignments(self):
         assigments = list(where(self.startsOfDataPaths,
                                 lambda x: isinstance(x, Assignment)
