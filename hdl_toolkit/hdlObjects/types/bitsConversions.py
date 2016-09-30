@@ -7,6 +7,21 @@ from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.bitmask import Bitmask
 
+def convertBits__val(self, sigOrVal, toType):
+    if isinstance(toType, Boolean):
+        return sigOrVal._eq(self.getValueCls().fromPy(1, self))
+    elif isinstance(toType, Bits):
+        if self.bit_length() == toType.bit_length():
+            return sigOrVal._convSign(toType.signed)
+    elif toType == INT:
+        if self.signed:
+            raise NotImplementedError()
+        else:
+            fullMask = Bitmask.mask(self.bit_length())
+            return INT.getValueCls()(sigOrVal.val, INT, sigOrVal.vldMask == fullMask, sigOrVal.updateTime)
+    return HdlType.defaultConvert(self, sigOrVal, toType)
+
+
 def convertBits(self, sigOrVal, toType):
     isVal = isinstance(sigOrVal, Value)
     

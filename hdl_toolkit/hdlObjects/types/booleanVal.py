@@ -81,7 +81,7 @@ class BooleanVal(EventCapableVal):
                 pass
             return Operator.withRes(AllOps.NOT, [self], BOOL)
 
-    def _ternary_val(self, ifTrue, ifFalse):
+    def _ternary__val(self, ifTrue, ifFalse):
         if self.val:
             if not self.vldMask:
                 ifTrue.vldMask = 0
@@ -95,7 +95,7 @@ class BooleanVal(EventCapableVal):
         ifFalse = toHVal(ifFalse)
         
         if isinstance(self, Value):
-            return self._ternary_val(ifTrue, ifFalse)
+            return self._ternary__val(ifTrue, ifFalse)
         else:
             return Operator.withRes(AllOps.TERNARY, [self, ifTrue, ifFalse], ifTrue._dtype)
 

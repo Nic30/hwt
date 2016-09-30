@@ -26,7 +26,7 @@ class SimModelSerializer_ops():
     @classmethod
     def BitToBool(cls, cast):
         v = 0 if cast.sig.negated else 1
-        return cls.asHdl(cast.sig) + "._eq(hBit(%d))" % v
+        return cls.asHdl(cast.sig) + "._eq__val(hBit(%d))" % v
 
     @classmethod
     def Operator(cls, op):
@@ -44,74 +44,74 @@ class SimModelSerializer_ops():
         ops = op.ops
         o = op.operator
         def _bin(name):
-            return (" " + name + " ").join(map(lambda x: x.strip(), map(p, ops)))
+            return "(%s).%s(%s)" % (p(ops[0]).strip(), name, p(ops[1]).strip())
         
         if o == AllOps.AND_LOG:
-            return _bin('&')
+            return _bin('_and__val')
         elif o == AllOps.OR_LOG:
-            return _bin('|')
+            return _bin('_or__val')
         elif o == AllOps.XOR:
-            return _bin('^')
+            return _bin('_xor__val')
         elif o == AllOps.NOT:
             assert len(ops) == 1
-            return "~" + p(ops[0])
-        elif o == AllOps.CALL:
-            return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
+            return "(%s)._invert__val()" % p(ops[0])
+        # elif o == AllOps.CALL:
+        #    return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
-            return "Concat(%s, %s)" % (p(ops[0]), p(ops[1]))
+            return "(%s)._concat__val(%s)" % (p(ops[0]), p(ops[1]))
         elif o == AllOps.DIV:
-            return _bin('//')
+            return _bin('_truediv__val')
         elif o == AllOps.DOWNTO:
             return "SliceVal((%s, %s), SLICE, True)" % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EQ:
-            return '(%s)._eq(%s)' % (p(ops[0]), p(ops[1]))
+            return '(%s)._eq__val(%s)' % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EVENT:
             assert len(ops) == 1
-            return p(ops[0]) + "._hasEvent(sim)"
+            return p(ops[0]) + "._hasEvent__val(sim)"
         elif o == AllOps.GREATERTHAN:
-            return _bin('>')
+            return _bin('_gt__val')
         elif o == AllOps.GE:
-            return _bin('>=')
+            return _bin('_ge__val')
         elif o == AllOps.LE:
-            return _bin('<=')
+            return _bin('_le__val')
         elif o == AllOps.INDEX:
             assert len(ops) == 2
-            return "%s[%s]" % ((cls.asHdl(ops[0])).strip(), p(ops[1]))
+            return "(%s)._getitem__val(%s)" % ((cls.asHdl(ops[0])).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
-            return _bin('<')
+            return _bin('_lt__val')
         elif o == AllOps.SUB:
-            return _bin('-')
+            return _bin('_sub__val')
         elif o == AllOps.MUL:
-            return _bin('*')
+            return _bin('_mul__val')
         elif o == AllOps.NEQ:
-            return _bin('!=')
+            return _bin('_ne__val')
         elif o == AllOps.ADD:
-            return _bin('+')
+            return _bin('_add__val')
         elif o == AllOps.TERNARY:
-            return "(%s)._ternary(%s, %s)" % tuple(map(cls.asHdl, ops)) 
+            return "(%s)._ternary__val(%s, %s)" % tuple(map(cls.asHdl, ops)) 
         elif o == AllOps.RISING_EDGE:
             assert len(ops) == 1
-            return "(%s)._onRisingEdge(sim.now)" % (p(ops[0]))
+            return "(%s)._onRisingEdge__val(sim.now)" % (p(ops[0]))
         elif o == AllOps.FALLIGN_EDGE:
             assert len(ops) == 1
-            return "(%s)._onFallingEdge(sim.now)" % (p(ops[0]))
+            return "(%s)._onFallingEdge__val(sim.now)" % (p(ops[0]))
         elif o == AllOps.BitsAsSigned:
             assert len(ops) == 1
-            return  "(%s)._signed()" % p(ops[0])
+            return  "(%s)._convSign__val(True)" % p(ops[0])
         elif o == AllOps.BitsAsUnsigned:
             assert len(ops) == 1
-            return  "(%s)._unsigned()" % p(ops[0])
+            return  "(%s)._convSign__val(False)" % p(ops[0])
         elif o == AllOps.BitsAsVec:
             assert len(ops) == 1
-            return  "(%s)._vec()" % p(ops[0])
+            return  "(%s)._convSign__val(None)" % p(ops[0])
         elif o == AllOps.BitsToInt:
             assert len(ops) == 1
             op = ops[0]
-            return "convertBits(%s, %s, INT)" % (cls.HdlType_bits(op._dtype), cls.asHdl(op))
+            return "convertBits__val(%s, %s, INT)" % (cls.HdlType_bits(op._dtype), cls.asHdl(op))
         elif o == AllOps.IntToBits:
             assert len(ops) == 1
             resT = op.result._dtype
-            return "convertInteger(%s, %s, %s)" % (cls.HdlType(ops[0]._dtype),
+            return "convertInteger__val(%s, %s, %s)" % (cls.HdlType(ops[0]._dtype),
                                                    cls.asHdl(ops[0]),
                                                    cls.HdlType_bits(resT))
             

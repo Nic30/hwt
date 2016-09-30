@@ -1,13 +1,13 @@
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
 from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.hdlObjects.types.arrayVal import ArrayVal
-from hdl_toolkit.hdlObjects.types.bitsConversions import convertBits
+from hdl_toolkit.hdlObjects.types.bitsConversions import convertBits__val
 from hdl_toolkit.hdlObjects.types.bitsVal import BitsVal
 from hdl_toolkit.hdlObjects.types.defs import BIT, INT, SLICE
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.simulator.simModel import (SimModel, sensitivity, simBitsT, connectSimPort,
                                             simEvalCond, mkUpdater, mkArrayUpdater)
-from hdl_toolkit.hdlObjects.types.integerConversions import convertInteger
+from hdl_toolkit.hdlObjects.types.integerConversions import convertInteger__val
 from hdl_toolkit.synthesizer.codeOps import Concat
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal

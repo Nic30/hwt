@@ -34,7 +34,7 @@ class ArrayVal(Value):
         
         return cls(elements, typeObj, int(val is not None))
     
-    def __getitem__val(self, key):
+    def _getitem__val(self, key):
         v = self.val[key.val].clone()
         if not key._isFullVld():
             v.vldMask = 0
@@ -57,7 +57,7 @@ class ArrayVal(Value):
                                        (repr(key)))
             
         if iamVal and isinstance(key, Value):
-            return self.__getitem__val(key)
+            return self._getitem__val(key)
         
         return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.elmType)
     
