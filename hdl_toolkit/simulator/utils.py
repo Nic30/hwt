@@ -1,3 +1,3 @@
 
 def valueHasChanged(valA, valB):
-    return valA.val != valB.val or valA.vldMask != valB.vldMask
+    return valA.val is not valB.val or valA.vldMask != valB.vldMask
