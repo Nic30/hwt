@@ -1,5 +1,5 @@
 from hdl_toolkit.hdlObjects.specialValues import Unconstrained
-from hdl_toolkit.hdlObjects.types import hdlType
+from hdl_toolkit.hdlObjects.types.hdlType import HdlType
 from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.enum import Enum
@@ -109,5 +109,5 @@ class VhdlSerializer_types():
                 raise NotImplementedError("type declaration is not implemented for type %s" % 
                                       (typ.name))
             else:
-                assert isinstance(typ, hdlType)
+                assert isinstance(typ, HdlType)
                 return typ.name.upper()

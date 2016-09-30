@@ -2,11 +2,13 @@ from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps, isEventDependentOp
 from hdl_toolkit.hdlObjects.portItem import PortItem
-from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION, SENSITIVITY
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthesizer.param import Param
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from python_toolkit.arrayQuery import where
+from hdl_toolkit.hdlObjects.statements import IfContainer, SwitchContainer
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 
 def signalHasDriver(sig):
@@ -55,7 +57,6 @@ def walkAllOriginSignals(sig, discovered=None):
     discovered.add(sig)
     
     if sig.drivers:
-       
         for obj in sig.drivers:
             if isinstance(obj, Value):
                 raise StopIteration()
@@ -68,7 +69,7 @@ def walkAllOriginSignals(sig, discovered=None):
             elif isinstance(obj, Assignment):
                 yield from walkAllOriginSignals(obj.src, discovered)
             else:
-                raise NotImplementedError("walkAllOriginSignals not implemented for %s" % (str(obj)))
+                raise TypeError("walkAllOriginSignals not implemented for %s" % (str(obj)))
     else:
         yield sig
 
@@ -87,6 +88,58 @@ def walkSignalsInExpr(expr):
     else:
         raise Exception("Unknown node '%s' type %s" % 
                         (repr(expr), str(expr.__class__)))
+
+class EventDependencyReached(Exception):
+    """
+    Exception which signalize that walkDriversInExpr 
+    has reached event dependent operator
+    """
+    def __init__(self, evOp):
+        self.evOp = evOp
+
+def walkDriversInExpr(expr, seenSet):
+    """
+    @return: generators of RtlSignal
+            where signal is in expression and is not used in event dependent expression
+    @raise EventDependencyReached: when this generator steps on event dependent operator 
+    """
+    if isinstance(expr, (Value, Param)):
+        pass
+    elif isinstance(expr, RtlSignalBase):
+        if expr in seenSet:
+            pass
+        else:
+            seenSet.add(expr)
+            
+            if not expr.hidden:
+                yield expr
+                return
+            
+            try:
+                op = expr.singleDriver()
+            except MultipleDriversExc:
+                yield expr
+                return
+            
+            if not isinstance(op, Operator):
+                yield expr
+                return
+            
+            if isEventDependentOp(op.operator):
+                raise EventDependencyReached(op)
+            else:
+                evDepReached = None
+                for operand in op.ops:
+                    try:
+                        yield from walkDriversInExpr(operand, seenSet)
+                    except EventDependencyReached as e:
+                        assert evDepReached is None, "expression is not event dependent on multiple events"
+                        evDepReached = e
+                if evDepReached is not None:
+                    raise evDepReached
+                    
+    else:           
+        raise TypeError(expr)
 
 def discoverEventDependency(sig):
     """
@@ -107,28 +160,53 @@ def discoverEventDependency(sig):
                     yield from discoverEventDependency(op)
 
 
-def discoverDriverSignals(datapath):
-    """
-    @return: generators of (isSensitive, signal)
-    """
-    # [TODO] resolve signals and event dependency in once
-    
-    if not isinstance(datapath, Assignment):
-        raise NotImplementedError()
-    
-    eventDependency = set()
-    for c in datapath.cond:
-        for ed in discoverEventDependency(c):
-            eventDependency.add(ed)
+def isEdgeDependent(sens):
+    return sens == SENSITIVITY.RISING or sens == SENSITIVITY.FALLING
 
-    for c in datapath.cond:
-        for s in walkSignalsInExpr(c):
-            if not isinstance(s, Param):
-                yield (s in eventDependency, s)
-                
-    for s in walkSignalsInExpr(datapath.src):
-            if not isinstance(s, Param):
-                yield (s in eventDependency, s)
+def _discoverSensitivity(statement, seenSet, isTop):
+    try:
+        if isinstance(statement, Assignment):
+            if statement.indexes:
+                for i in statement.indexes:
+                    yield from walkDriversInExpr(i, seenSet)
+            yield from walkDriversInExpr(statement.src, seenSet)
+        elif isinstance(statement, IfContainer):
+            # if true
+            for c in statement.cond:
+                yield from walkDriversInExpr(c, seenSet)
+            for stm in statement.ifTrue:
+                yield from _discoverSensitivity(stm, seenSet, False)
+            # elifs
+            for cond, stms in statement.elIfs:
+                for c in cond:
+                    yield from walkDriversInExpr(c, seenSet)
+                for stm in stms:
+                    yield from _discoverSensitivity(stm, seenSet, False)
+            # else
+            for stm in statement.ifFalse:
+                yield from _discoverSensitivity(stm, seenSet, False)
+            
+        elif isinstance(statement, SwitchContainer):
+            yield from walkDriversInExpr(statement.switchOn, seenSet)
+            for cond, stms in statement.cases:
+                #yield from walkDriversInExpr(cond, seenSet)
+                for stm in stms:
+                    yield from _discoverSensitivity(stm, seenSet, False)
+        else:
+            raise TypeError(statement)
+        
+    except EventDependencyReached as e:
+        if isTop:
+            yield e.evOp
+        else:
+            raise e
+
+def discoverSensitivity(statement):
+    """
+    @return: generators of (sensitivity, signal)
+            where sensitivity is member of SENSITIVITY enum
+    """
+    yield from _discoverSensitivity(statement, set(), True) 
         
 # walks code, and returns assignments and port items which are driving this signal
 def walkSigSouces(sig, parent=None):    

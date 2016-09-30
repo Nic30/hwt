@@ -232,7 +232,7 @@ class HdlSimulator(HdlEnvironmentCore):
         
         sig.simUpdateVal(self, lambda curentV: (valueHasChanged(curentV, v), v))
         
-        if not sig.simSensitiveProcesses and self.applyValEv is not None:
+        if not sig.simSensProcs and self.applyValEv is not None:
             # in some cases simulation process can wait on all values applied
             # signal value was changed but there are no sensitive processes to it
             # because of this applyValues is never planed and but should be

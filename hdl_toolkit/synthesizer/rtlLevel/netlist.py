@@ -15,7 +15,7 @@ from hdl_toolkit.synthesizer.rtlLevel.memory import RtlSyncSignal
 from hdl_toolkit.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals
 from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverDriverSignals
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverSensitivity
 from hdl_toolkit.synthesizer.rtlLevel.utils import portItemfromSignal
 from python_toolkit.arrayQuery import where, distinctBy, arr_any
 
@@ -131,6 +131,8 @@ class RtlNetlist():
             name = ""
             if not sig.hasGenericName:
                 name = sig.name
+            sig.hidden =False
+            
             # render sequential statements in process
             # (conversion from netlist to statements)
             for stm in renderIfTree(dps):
@@ -142,22 +144,11 @@ class RtlNetlist():
                         p.sensitivityList.add(n)
                     
                 p.statements.append(stm)
-                # [TODO] sensitity list from dps which are covered by stm
-                for dp in dps:
-                    sensitivity = list(discoverDriverSignals(dp))
-                    isEventDependentProc = arr_any(sensitivity, lambda x: x[0])
-                    for evDependent, s in sensitivity:
-                        # resolve process boundaries and mark them 
-                        # and resolve visibility for signals  
-                        s.hidden = False
-                        
-                        if (evDependent and isEventDependentProc) \
-                            or not isEventDependentProc:
-                            # register sensitivity    
-                            p.sensitivityList.add(s)
-                            s.simSensitiveProcesses.add(p)
-                            
-            
+                sensitivity = discoverSensitivity(stm)
+                p.sensitivityList.update(sensitivity)
+                for s in p.sensitivityList:
+                    s.hidden = False
+
                 yield p
 
     def mergeWith(self, other):
@@ -198,9 +189,8 @@ class RtlNetlist():
 
         # add signals, variables etc. in architecture
         for s in self.signals:
-            if s.endpoints or s.drivers or s.simSensitiveProcesses:  # if is used
-                if s not in interfaces and not s.hidden:
-                    arch.variables.append(s)
+            if s not in interfaces and not s.hidden:
+                arch.variables.append(s)
         
         # instanciate subUnits in architecture
         for u in self.subUnits:  

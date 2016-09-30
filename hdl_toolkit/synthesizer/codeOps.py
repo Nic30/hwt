@@ -11,6 +11,7 @@ from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhys
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from hdl_toolkit.synthesizer.vectorUtils import getWidthExpr, fitTo
+from python_toolkit.arrayQuery import arr_any
 
 
 def _intfToSig(obj):
@@ -72,7 +73,8 @@ class If(StmCntx):
     
     def Elif(self, cond, *statements):
         cond = _intfToSig(cond)
-        self.nowIsEventDependent = self.nowIsEventDependent or bool(list(discoverEventDependency(cond)))
+        self.nowIsEventDependent = self.nowIsEventDependent or\
+                               arr_any(discoverEventDependency(cond), lambda x: True)
         thisCond = set()
         thisCond.add(~self.cond)
         for c in self.elifConds:

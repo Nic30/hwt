@@ -417,6 +417,14 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         except InvalidVHDLTypeExc as e:
             e.variable = pi
             raise e
+    
+    @classmethod
+    def sensitivityListItem(cls, item):
+        if isinstance(item, Operator):
+            item = item.ops[0]
+        
+        return cls.asHdl(item)
+            
 
     @classmethod
     def HWProcess(cls, proc, scope):
@@ -427,13 +435,12 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             proc.name = scope.checkedName(proc.name, proc)
         
         
-        sensitivityList = sorted(where(proc.sensitivityList, lambda x : not isinstance(x, Param)),
-                                    key=lambda x: x.name)
+        sensitivityList = sorted(map(cls.sensitivityListItem, proc.sensitivityList))
         
         return process.render({
               "name": proc.name,
               "hasToBeVhdlProcess": hasToBeVhdlProcess,
-              "sensitivityList": ", ".join([cls.asHdl(s) for s in sensitivityList]),
+              "sensitivityList": ", ".join(sensitivityList),
               "statements": [ cls.asHdl(s) for s in body] })
     
     @classmethod
