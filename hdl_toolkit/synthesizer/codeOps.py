@@ -274,7 +274,7 @@ def connectUnpacked(src, dst, exclude=[]):
     # [TODO] parametrized offsets
     offset = 0
     connections = []
-    for i in walkPhysInterfaces(dst):
+    for i in reversed(list(walkPhysInterfaces(dst))):
         if i in exclude:
             continue
         sig = i._sig
