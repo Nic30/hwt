@@ -9,11 +9,11 @@ from hdl_toolkit.simulator.agentConnector import autoAddAgents
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
-from hdl_toolkit.synthesizer.shortcuts import toRtl
+from hdl_toolkit.synthesizer.shortcuts import toRtl, synthesised
 from hdl_toolkit.simulator.simModel import SimModel
 
 
-def simPrepare(unit):
+def simPrepare(unit, modelCls =None):
     """
     Create simulation model and connect it with interfaces of original unit
     @return: tuple (fully loaded unit with connected sim model,
@@ -21,9 +21,13 @@ def simPrepare(unit):
                     simulation processes of agents
                     ) 
     """
-    model = toSimModel(unit)
-    reconectUnitSignalsToModel(unit, model)
-    model = model()
+    if modelCls is None:
+        modelCls = toSimModel(unit)
+    else:
+        synthesised(unit)
+        
+    reconectUnitSignalsToModel(unit, modelCls)
+    model = modelCls()
     procs = autoAddAgents(unit)
     return unit, model, procs
 
