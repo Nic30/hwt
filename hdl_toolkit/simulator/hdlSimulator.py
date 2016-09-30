@@ -111,7 +111,7 @@ class HdlSimulator(HdlEnvironmentCore):
             v = s.defaultVal.clone()
             
             # force update all signals to deafut values and propagate it    
-            s.simUpdateVal(self, mkUpdater(v))
+            s.simUpdateVal(self, mkUpdater(v, False))
             
         for u in unit._units:
             self._initUnitSignals(u)
@@ -142,40 +142,38 @@ class HdlSimulator(HdlEnvironmentCore):
         self.schedule(self.runSeqProcessesEv, priority=self.PRIORITY_APPLY_SEQ)
     
     def conflictResolvStrategy(self, actionSet):
-        cloned = False
+        """
+        This functions resolves 
+        @param actionSet: set of actions made by process
+        
+        """
+        invalidate = False
         l = len(actionSet)
         if l == 0:
             return
         elif l == 1:
-            res = list(actionSet)[0]
+            res = actionSet.pop()
         else:
             # we are driving signal with two different values so we invalidate result
-            res = list(list(actionSet)[0])
-            v = res[1].clone()
-            v.vldMask = 0
-            res[1] = v
-            cloned = True
+            res = list(actionSet.pop())
+            invalidate = True
 
         l = len(res)
         if l == 4:
             dst, val, indexes, isEvDependent = res
-            if not cloned:
-                val = val.clone()
-            return (dst, mkArrayUpdater(val, indexes), isEvDependent)
+            return (dst, mkArrayUpdater(val, indexes, invalidate), isEvDependent)
         else:
             dst, val, isEvDependent = res
-            if not cloned:
-                val = val.clone()
                 
             #print(self.now, dst, val)
-            return (dst, mkUpdater(val), isEvDependent)
+            return (dst, mkUpdater(val, invalidate), isEvDependent)
     
     
     def runSeqProcesses(self, ev):
         for proc in self.evDependentProcsToRun:
             actionSet = set(proc(self))
-            v = self.conflictResolvStrategy(actionSet)
-            if v is not None:
+            if actionSet:
+                v = self.conflictResolvStrategy(actionSet)
                 dst, updater, _ = v
                 self._delayedUpdate(dst, updater)
         
