@@ -1,8 +1,8 @@
 from collections import deque
 
-from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.synthesizer.interfaceLevel.interface import Interface
 from hls_toolkit.streamLvl.valObj import valObj
+from hdl_toolkit.bitmask import mask
 
 
 def write(val, intf):
@@ -77,4 +77,4 @@ def _unpackVal(packedVal, intf, exclude=set()):
         return width, unpackedVal
     else:
         w = intf._dtype.bit_length()
-        return w, Bitmask.mask(w) & packedVal    
+        return w, mask(w) & packedVal    

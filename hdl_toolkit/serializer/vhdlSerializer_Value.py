@@ -1,14 +1,14 @@
-from hdl_toolkit.bitmask import Bitmask
-from hdl_toolkit.serializer.exceptions import SerializerException
-from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.hdlObjects.types.slice import Slice
+from hdl_toolkit.bitmask import mask
 from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.boolean import Boolean
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.hdlObjects.types.integer import Integer
+from hdl_toolkit.hdlObjects.types.slice import Slice
 from hdl_toolkit.hdlObjects.types.string import String
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.serializer.exceptions import SerializerException
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class VhdlSerializer_Value():
@@ -106,7 +106,7 @@ class VhdlSerializer_Value():
     @classmethod
     def BitString(cls, v, width, vldMask=None):
         if vldMask is None:
-            vldMask = Bitmask.mask(width)
+            vldMask = mask(width)
         # if can be in hex
         if width % 4 == 0 and vldMask == (1 << width) - 1:
             return ('X"%0' + str(width // 4) + 'x"') % (v)
@@ -123,7 +123,7 @@ class VhdlSerializer_Value():
     
     @classmethod
     def SignedBitString(cls, v, width, vldMask):
-        if vldMask != Bitmask.mask(width):
+        if vldMask != mask(width):
             raise SerializerException(
             "Value %s can not be serialized as signed bit string literal due not all bits are valid" % 
              repr(v))
@@ -134,7 +134,7 @@ class VhdlSerializer_Value():
     
     @classmethod
     def UnsignedBitString(cls, v, width, vldMask):
-        if vldMask != Bitmask.mask(width):
+        if vldMask != mask(width):
             raise SerializerException(
             "Value %s can not be serialized as signed bit string literal due not all bits are valid" % 
              repr(v))

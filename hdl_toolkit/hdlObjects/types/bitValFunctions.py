@@ -1,4 +1,3 @@
-from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.types.typeCast import toHVal
 from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.hdlObjects.types.defs import BOOL
@@ -6,6 +5,7 @@ from hdl_toolkit.hdlObjects.types.integer import Integer
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
+from hdl_toolkit.bitmask import mask
 
 BoolVal = BOOL.getValueCls()
 
@@ -14,7 +14,7 @@ def bitsCmp__val(self, other, op, evalFn):
     assert w == other._dtype.bit_length(), "%d, %d" % (w, other._dtype.bit_length())
     
     vld = self.vldMask & other.vldMask
-    _vld = vld == Bitmask.mask(w)
+    _vld = vld == mask(w)
     res = evalFn(self.val, other.val) and _vld
     updateTime = max(self.updateTime, other.updateTime)
     
@@ -84,7 +84,7 @@ def bitsArithOp__val(self, other, op):
 
     # [TODO] correct overflow detection for signed values
     w = v._dtype.bit_length()
-    v.val &= Bitmask.mask(w)
+    v.val &= mask(w)
     
     # [TODO] value check range
     if isinstance(other._dtype, Integer):

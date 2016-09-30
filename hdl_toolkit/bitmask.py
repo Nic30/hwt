@@ -1,61 +1,49 @@
-class Bitmask():
-    
-    @staticmethod
-    def mask(bits):
-        return (1 << bits) - 1
-    
-    @staticmethod
-    def bitField(_from, to):
-        """
-        _from 0 to 1 -> '1'  
-        """
-        w = to - _from
-        return Bitmask.mask(w) << _from
-    
-    @staticmethod
-    def extendWithSet(mask, actualWidth, toWidth):    
-        return Bitmask.bitField(actualWidth - 1, toWidth) | mask
+def mask(bits):
+    return (1 << bits) - 1
 
-    @staticmethod   
-    def select(val, bitNo):
-        """
-        select bit from integer
-        """
-        
-        return (val >> bitNo) & 1
+def bitField(_from, to):
+    """
+    _from 0 to 1 -> '1'  
+    """
+    w = to - _from
+    return mask(w) << _from
+
+def extendWithSet(mask, actualWidth, toWidth):    
+    return bitField(actualWidth - 1, toWidth) | mask
+
+def selectBit(val, bitNo):
+    """
+    select bit from integer
+    """
     
-    @staticmethod
-    def selectRange(val, bitsStart, bitsLen):
-        val >>= bitsStart
-        return val & Bitmask.mask(bitsLen)
+    return (val >> bitNo) & 1
+
+def selectBitRange(val, bitsStart, bitsLen):
+    val >>= bitsStart
+    return val & mask(bitsLen)
+
+def clean(val, bitNo):
+    return val & ~(1 << bitNo)
+
+def setBit(val, bitNo):
+    return val | (1 << bitNo)
+
+def toogle(val, bitNo):
+    return val ^ (1 << bitNo)
+
+def setBitRange(val, bitStart, bitsLen, newBits):
+    _mask = mask(bitsLen)
+    newBits &= _mask
     
-    @staticmethod
-    def clean(val, bitNo):
-        return val & ~(1 << bitNo)
+    _mask <<= bitStart
+    newBits <<= bitStart
     
-    @staticmethod
-    def set(val, bitNo):
-        return val | (1 << bitNo)
-    
-    @staticmethod
-    def toogle(val, bitNo):
-        return val ^ (1 << bitNo)
-    
-    @staticmethod
-    def setBitRange(val, bitStart, bitsLen, newBits):
-        mask = Bitmask.mask(bitsLen)
-        newBits &= mask
-        
-        mask <<= bitStart
-        newBits <<= bitStart
-        
-        return (val & ~mask) | newBits
-    
-    @staticmethod
-    def bitSetTo(val, bitNo, bitVal):
-        if bitVal == 0:
-            return Bitmask.clean(val, bitNo)
-        elif bitVal == 1:
-            return Bitmask.set(val, bitNo)
-        else:
-            raise NotImplementedError()
+    return (val & ~_mask) | newBits
+
+def bitSetTo(val, bitNo, bitVal):
+    if bitVal == 0:
+        return clean(val, bitNo)
+    elif bitVal == 1:
+        return setBit(val, bitNo)
+    else:
+        raise NotImplementedError()

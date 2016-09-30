@@ -1,7 +1,6 @@
 from copy import copy
 from operator import eq, ne, lt, gt, ge, le
 
-from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.typeShortcuts import vecT
@@ -21,6 +20,8 @@ from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriv
 from hdl_toolkit.hdlObjects.types.bitValFunctions import boundryFromType,\
     bitsCmp__val, bitsCmp, bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp,\
     getMulResT
+from hdl_toolkit.bitmask import mask, selectBit, selectBitRange, bitSetTo,\
+    setBitRange
 
 class BitsVal(EventCapableVal):
     """
@@ -71,7 +72,7 @@ class BitsVal(EventCapableVal):
     @classmethod
     def fromPy(cls, val, typeObj):
         assert isinstance(val, (int, bool)) or val is None, val
-        vld = 0 if val is None else Bitmask.mask(typeObj.bit_length())
+        vld = 0 if val is None else mask(typeObj.bit_length())
         if not vld:
             val = 0
         return cls(int(val), typeObj, vld)
@@ -124,15 +125,15 @@ class BitsVal(EventCapableVal):
         
         if key._dtype == INT:
             if keyVld:
-                val = Bitmask.select(self.val, key.val)
-                vld = Bitmask.select(self.vldMask, key.val)
+                val = selectBit(self.val, key.val)
+                vld = selectBit(self.vldMask, key.val)
             return BitsVal(val, BIT, vld, updateTime=updateTime)
         elif key._dtype == SLICE:
             if keyVld:
                 firstBitNo = key.val[1].val
                 size = key._size()
-                val = Bitmask.selectRange(self.val, firstBitNo, size)
-                vld = Bitmask.selectRange(self.vldMask, firstBitNo, size)
+                val = selectBitRange(self.val, firstBitNo, size)
+                vld = selectBitRange(self.vldMask, firstBitNo, size)
             retT = vecT(size, signed=self._dtype.signed)
             return BitsVal(val, retT, vld, updateTime=updateTime)
         else:
@@ -201,13 +202,13 @@ class BitsVal(EventCapableVal):
     def _setitem__val(self, index, value):
         if index._isFullVld():
             if index._dtype == INT: 
-                self.val = Bitmask.bitSetTo(self.val, index.val, value.val)
-                self.vldMask = Bitmask.bitSetTo(self.vldMask, index.val, value.vldMask)
+                self.val = bitSetTo(self.val, index.val, value.val)
+                self.vldMask = bitSetTo(self.vldMask, index.val, value.vldMask)
             elif index._dtype == SLICE:
                 size = index._size()
                 noOfFirstBit = index.val[1].val
-                self.val = Bitmask.setBitRange(self.val, noOfFirstBit, size, value.val)
-                self.vldMask = Bitmask.setBitRange(self.vldMask, noOfFirstBit, size, value.vldMask)
+                self.val = setBitRange(self.val, noOfFirstBit, size, value.val)
+                self.vldMask = setBitRange(self.vldMask, noOfFirstBit, size, value.vldMask)
             else:
                 raise TypeError("Not implemented for index %s" % repr(index))
             self.updateTime = max(index.updateTime, value.updateTime)
@@ -222,7 +223,7 @@ class BitsVal(EventCapableVal):
         v = self.clone()
         v.val = ~v.val
         w = v._dtype.bit_length()
-        v.val &= Bitmask.mask(w)
+        v.val &= mask(w)
         return v
     
     def __invert__(self):

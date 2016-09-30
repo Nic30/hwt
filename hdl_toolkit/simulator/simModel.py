@@ -1,7 +1,7 @@
-from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.simulator.utils import valueHasChanged
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.bitmask import mask
 
 
 __simBitsTCache = {}
@@ -25,7 +25,7 @@ class SimBitsT(Bits):
     def __init__(self, widthConstr, signed):
         self.constrain = widthConstr
         self.signed = signed
-        self._allMask = Bitmask.mask(self.bit_length())
+        self._allMask = mask(self.bit_length())
     
     def __eq__(self, other):
         return isinstance(other, Bits) and other.bit_length() == self.bit_length()\
