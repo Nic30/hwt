@@ -50,12 +50,14 @@ def sensitivity(proc, *sensitiveTo):
          
 
 def simEvalCond(simulator, *conds):
+    """
+    Evaluate list of values as condition
+    """
     _cond = True
     _vld = True
-    for c in conds:
-        v = c.simEval(simulator)
+    for v in conds:
         val = bool(v.val)
-        fullVld = v._isFullVld()
+        fullVld = v.vldMask == 1
         if not val and fullVld:
             return False, True
         
@@ -69,39 +71,46 @@ class SimModel(object):
     pass
 
 def connectSimPort(simUnit, subSimUnit, srcName, dstName, direction):
-        if direction == DIRECTION.OUT:
-            origPort = getattr(subSimUnit, srcName)
-            newPort = getattr(simUnit, dstName)
-            setattr(subSimUnit, srcName, newPort)
-        else:
-            origPort = getattr(subSimUnit, dstName)
-            newPort = getattr(simUnit, srcName)
-            setattr(subSimUnit, dstName, newPort)
-        
-        subSimUnit._cntx.signals.remove(origPort)
+    if direction == DIRECTION.OUT:
+        origPort = getattr(subSimUnit, srcName)
+        newPort = getattr(simUnit, dstName)
+        setattr(subSimUnit, srcName, newPort)
+    else:
+        origPort = getattr(subSimUnit, dstName)
+        newPort = getattr(simUnit, srcName)
+        setattr(subSimUnit, dstName, newPort)
+    
+    subSimUnit._cntx.signals.remove(origPort)
     
     
-def mkUpdater(nextVal):
+def mkUpdater(nextVal, invalidate):
     """
     Create value updater for simulation
     """
     
     def updater(currentVal):
-        return (valueHasChanged(currentVal, nextVal), nextVal)
+        _nextVal = nextVal.clone()
+        if invalidate:
+            _nextVal.vldMask=0
+        return (valueHasChanged(currentVal, _nextVal), _nextVal)
     return updater
             
 
-def mkArrayUpdater(nextItemVal, indexes):
+def mkArrayUpdater(nextItemVal, indexes, invalidate):
     """
     Create value updater for simulation for value of array type
     """
     def updater(currentVal):
         if len(indexes) > 1:
             raise NotImplementedError()
-        
+
+        _nextItemVal = nextItemVal.clone()        
+        if invalidate:
+            _nextItemVal.vldMask=0
+            
         index = indexes[0]
-        change = valueHasChanged(currentVal[index], nextItemVal)
-        currentVal[index] = nextItemVal
+        change = valueHasChanged(currentVal[index], _nextItemVal)
+        currentVal[index] = _nextItemVal
         return (change, currentVal)
 
     return updater
