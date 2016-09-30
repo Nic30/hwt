@@ -30,6 +30,7 @@ from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from collections import namedtuple
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION
 
 
 VHLD_KEYWORDS = [
@@ -404,9 +405,14 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig))      
     
     @classmethod
+    def DIRECTION(cls, d):
+        return d.name
+
+    
+    @classmethod
     def PortItem(cls, pi):
         try:
-            return "%s : %s %s" % (pi.name, pi.direction,
+            return "%s : %s %s" % (pi.name, cls.DIRECTION(pi.direction),
                                    cls.HdlType(pi._dtype))
         except InvalidVHDLTypeExc as e:
             e.variable = pi

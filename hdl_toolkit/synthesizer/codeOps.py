@@ -251,7 +251,7 @@ def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
         
         if i._interfaces:
             if i._masterDir == DIRECTION.IN:
-                d = DIRECTION.oposite(masterDirEqTo)
+                d = DIRECTION.opposite(masterDirEqTo)
             else:
                 d = masterDirEqTo
             s = packed(i, d, exclude=exclude) 

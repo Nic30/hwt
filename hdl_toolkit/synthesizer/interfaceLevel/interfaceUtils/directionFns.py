@@ -12,7 +12,7 @@ class InterfaceDirectionFns():
             for i in self._interfaces:
                 i._setDirectionsLikeIn(d)
         else:
-            opDir = INTF_DIRECTION.oposite(d)
+            opDir = INTF_DIRECTION.opposite(d)
             self._direction = opDir
             for i in self._interfaces:
                 i._setDirectionsLikeIn(opDir)
@@ -31,7 +31,7 @@ class InterfaceDirectionFns():
             md = DIRECTION.asIntfDirection(i._masterDir)
             if d != INTF_DIRECTION.UNKNOWN:
                 isLikeInM = d == md
-                isLikeInS = d == INTF_DIRECTION.oposite(md)
+                isLikeInS = d == INTF_DIRECTION.opposite(md)
                 allInMasterConf = allInMasterConf and isLikeInM
                 allInSlaveConf = allInSlaveConf and isLikeInS
         return  (allInMasterConf, allInSlaveConf)  
@@ -74,6 +74,6 @@ class InterfaceDirectionFns():
         if self._dirLocked:
             raise IntfLvlConfErr("Can not reverse direction on interface %s because it was locked (%s)" % 
                                  (repr(self), self._direction))
-        self._direction = INTF_DIRECTION.oposite(self._direction)
+        self._direction = INTF_DIRECTION.opposite(self._direction)
         for intf in self._interfaces:
             intf._reverseDirection()

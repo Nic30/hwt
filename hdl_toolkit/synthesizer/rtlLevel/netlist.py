@@ -3,6 +3,8 @@ from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.process import HWProcess
+from hdl_toolkit.hdlObjects.statements import IfContainer, WaitStm, \
+    SwitchContainer
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.synthesizer.assigRenderer import renderIfTree
@@ -16,8 +18,6 @@ from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriv
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverDriverSignals
 from hdl_toolkit.synthesizer.rtlLevel.utils import portItemfromSignal
 from python_toolkit.arrayQuery import where, distinctBy, arr_any
-from hdl_toolkit.hdlObjects.statements import IfContainer, WaitStm, \
-    SwitchContainer
 
 
 def isSignalHiddenInExpr(sig):

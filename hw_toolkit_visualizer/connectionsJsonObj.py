@@ -105,7 +105,7 @@ class ExternalPort(Unit):
         
     def toJson(self):
         j = super(ExternalPort, self).toJson()
-        j["direction"] = DIRECTION.oposite(INTF_DIRECTION.asDirection(self.origin._direction))
+        j["direction"] = DIRECTION.opposite(INTF_DIRECTION.asDirection(self.origin._direction))
         return j
 
 class Net():

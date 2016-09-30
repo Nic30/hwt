@@ -1,13 +1,14 @@
+from enum import Enum
 
 # [TODO] rename to constants
 
 class Unconstrained():
     __slots__ = ["derivedWidth"]
     
-class INTF_DIRECTION():
-    MASTER = "MASTER"
-    SLAVE = "SLAVE"
-    UNKNOWN = "UNKNOWN"
+class INTF_DIRECTION(Enum):
+    MASTER = 0
+    SLAVE = 1
+    UNKNOWN = 2
     
     @classmethod
     def asDirection(cls, val):
@@ -19,7 +20,7 @@ class INTF_DIRECTION():
             raise Exception("Parameter (%s) is not interface direction" % (repr(val)))
     
     @classmethod
-    def oposite(cls, d):
+    def opposite(cls, d):
         if d == cls.SLAVE:
             return cls.MASTER
         elif d == cls.MASTER:
@@ -31,10 +32,10 @@ READ = "READ"
 WRITE = "WRITE"
 NOP = "NOP"
     
-class DIRECTION():
-    IN = "IN"
-    OUT = "OUT"
-    INOUT = "INOUT"
+class DIRECTION(Enum):
+    IN = 0
+    OUT = 1
+    INOUT = 2
     
     @classmethod
     def asIntfDirection(cls, d):
@@ -46,7 +47,7 @@ class DIRECTION():
             raise TypeError("Parameter %s is not direction" % (str(d)))
     
     @classmethod
-    def oposite(cls, d):
+    def opposite(cls, d):
         if d == cls.IN:
             return cls.OUT
         elif d == cls.OUT:
@@ -63,3 +64,8 @@ class Time():
     us = ns * 1000
     ms = us * 1000
     s = ms * 1000
+
+class SENSITIVITY(Enum):
+    ANY = 0b11
+    RISING = 0b01 
+    FALLING = 0b10 
