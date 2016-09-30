@@ -34,6 +34,13 @@ class ArrayVal(Value):
         
         return cls(elements, typeObj, int(val is not None))
     
+    def __getitem__val(self, key):
+        v = self.val[key.val].clone()
+        if not key._isFullVld():
+            v.vldMask = 0
+        
+        return v
+    
     def __getitem__(self, key):
         iamVal = isinstance(self, Value)
         key = toHVal(key)
@@ -50,11 +57,7 @@ class ArrayVal(Value):
                                        (repr(key)))
             
         if iamVal and isinstance(key, Value):
-            v = self.val[key.val].clone()
-            if not key._isFullVld():
-                v.vldMask = 0
-            
-            return v
+            return self.__getitem__val(key)
         
         return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.elmType)
     
@@ -71,7 +74,7 @@ class ArrayVal(Value):
                 v.updateTime = self.updateTime
             self.vldMask = 0
     
-    def _eq(self, other):
+    def _eq__val(self, other):
         assert self._dtype.elmType == other._dtype.elmType
         assert self._dtype.size == other._dtype.size
         
@@ -85,3 +88,7 @@ class ArrayVal(Value):
             vld = vld & a.vldMask & b.vldMask
             updateTime = max(updateTime, a.updateTime, b.updateTime)
         return BOOL.getValueCls()(eq, BOOL, vld, updateTime)
+        
+    def _eq(self, other):
+        assert isinstance(other, ArrayVal)
+        return self._eq__val(other)

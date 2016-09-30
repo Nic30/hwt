@@ -6,10 +6,9 @@ class Value():
     
     operators are overloaded in every type separately
     """
+    __slots__ = ["val", "_dtype", "vldMask", "updateTime"]
+    
     def __init__(self, val, _type, vldMask, updateTime=-1):
-        if isinstance(val, Value):
-            val = val.val
-
         self.val = val
         self._dtype = _type
         self.vldMask = vldMask

@@ -1,5 +1,5 @@
 from copy import copy
-from operator import eq
+from operator import eq, ne, lt, gt, ge, le
 
 from hdl_toolkit.bitmask import Bitmask
 from hdl_toolkit.hdlObjects.operator import Operator
@@ -18,122 +18,9 @@ from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-
-
-BoolVal = BOOL.getValueCls()
-
-def bitsCmp(self, other, op, evalFn=None):
-    """
-    @attention: If other is Bool signal convert this to boolean (not ideal, due VHDL event operator)
-    """
-    other = toHVal(other)
-    
-    iamVal = isinstance(self, Value)
-    otherIsVal = isinstance(other, Value) 
-
-    if evalFn is None:
-        evalFn = op._evalFn
-    
-    if iamVal and otherIsVal:
-        w = self._dtype.bit_length()
-        assert w == other._dtype.bit_length(), "%d, %d" % (w, other._dtype.bit_length())
-        
-        vld = self.vldMask & other.vldMask
-        _vld = vld == Bitmask.mask(w)
-        res = evalFn(self.val, other.val) and _vld
-        updateTime = max(self.updateTime, other.updateTime)
-    
-        return BoolVal(res, BOOL, int(_vld), updateTime)
-    else:
-        if other._dtype == BOOL:
-            self = self._convert(BOOL)
-        elif self._dtype == other._dtype:
-            pass
-        elif isinstance(other._dtype, Integer):
-            other = other._convert(self._dtype) 
-        else:
-            raise TypeError("Types are not comparable (%s, %s)" % (repr(self._dtype), repr(other._dtype)))
-        
-        return Operator.withRes(op, [self, other], BOOL) 
-
-def bitsBitOp(self, other, op, getVldFn):
-    """
-    @attention: If other is Bool signal, convert this to boolean (not ideal, due VHDL event operator)
-    """
-    other = toHVal(other)
-    
-    iamVal = isinstance(self, Value)
-    otherIsVal = isinstance(other, Value) 
-    
-    if iamVal and otherIsVal:
-        w = self._dtype.bit_length()
-        assert w == other._dtype.bit_length()
-        
-        vld = getVldFn(self, other)
-        res = op._evalFn(self.val, other.val) & vld
-        updateTime = max(self.updateTime, other.updateTime)
-    
-        return self.__class__(res, self._dtype, vld, updateTime)
-    else:
-        if other._dtype == BOOL:
-            self = self._convert(BOOL)
-        elif self._dtype == other._dtype:
-            pass
-        else:
-            raise TypeError("Types are not comparable (%s, %s)" % 
-                                       (repr(self._dtype), repr(other._dtype)))
-        
-        return Operator.withRes(op, [self, other], self._dtype) 
-
-def bitsArithOp(self, other, op):
-    other = toHVal(other)
-    assert isinstance(other._dtype, (Integer, Bits))
-    if areValues(self, other):
-        v = self.clone()
-        v.val = op._evalFn(self.val, other.val)
-
-        # [TODO] correct overflow detection for signed values
-        w = v._dtype.bit_length()
-        v.val &= Bitmask.mask(w)
-        
-        # [TODO] value check range
-        if isinstance(other._dtype, Integer):
-            if other.vldMask:
-                v.vldMask = self.vldMask
-            else:
-                v.vldMask = 0  
-        else:
-            v.vldMask = self.vldMask & other.vldMask
-        v.updateTime = max(self.updateTime, other.updateTime)
-        return v
-    else:
-        resT = self._dtype
-        if self._dtype.signed is None:
-            self = self._unsigned()
-        if isinstance(other._dtype, Bits) and other._dtype.signed is None:
-            other = other._unsigned() 
-        elif isinstance(other._dtype, Integer):
-            pass
-        else:
-            raise TypeError("%s %s %s" % (repr(self), repr(op) , repr(other)))
-        
-        o = Operator.withRes(op, [self, other], self._dtype)
-        return o._convert(resT)
-
-def boundryFromType(sigOrVal, boundaryIndex):
-    c = sigOrVal._dtype.constrain
-    if isinstance(c, Value):  # slice
-        return c.val[boundaryIndex]
-    else:  # downto / to
-        return c.singleDriver().ops[boundaryIndex]
-
-def getMulResT(firstT, secondT):
-    if isinstance(secondT, Integer):
-        raise NotImplementedError()
-    
-    width = firstT.bit_length() + secondT.bit_length()
-    return vecT(width, firstT.signed)
-    
+from hdl_toolkit.hdlObjects.types.bitValFunctions import boundryFromType,\
+    bitsCmp__val, bitsCmp, bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp,\
+    getMulResT
 
 class BitsVal(EventCapableVal):
     """
@@ -186,20 +73,34 @@ class BitsVal(EventCapableVal):
         return cls(int(val), typeObj, vld)
     
     # [TODO] bit reverse operator
+    
+    def _concat_val(self, other):
+        w = self._dtype.bit_length()
+        other_w = other._dtype.bit_length()
+        resWidth = w + other_w
+        resT = vecT(resWidth)
+        
+        v = self.clone()
+        v.val = (v.val << other_w) | other.val
+        v.vldMask = (v.vldMask << other_w) | other.vldMask
+        v.updateTime = max(self.updateTime, other.updateTime)
+        v._dtype = resT
+        
+        return v 
+    
     def _concat(self, other):
         w = self._dtype.bit_length()
         other_w = other._dtype.bit_length()
         resWidth = w + other_w
         resT = vecT(resWidth)
         
-        if isinstance(self, Value) and isinstance(other, Value):
-            v = self.clone()
-            v.val = (v.val << other_w) | other.val
-            v.vldMask = (v.vldMask << other_w) | other.vldMask
-            v.updateTime = max(self.updateTime, other.updateTime)
-            v._dtype = resT
-            return v    
+        if areValues(self, other):
+            return self._concat_val(other)
         else:
+            w = self._dtype.bit_length()
+            other_w = other._dtype.bit_length()
+            resWidth = w + other_w
+            resT = vecT(resWidth)
             # is instance of signal
             if isinstance(other, InterfaceBase):
                 other = other._sig
@@ -210,6 +111,28 @@ class BitsVal(EventCapableVal):
             else:
                 raise TypeError(other._dtype)
             return Operator.withRes(AllOps.CONCAT, [self, other], resT)
+    
+    def _getitem__val(self, key):
+        updateTime = max(self.updateTime, key.updateTime)
+        keyVld = key._isFullVld() 
+        val = 0
+        vld = 0
+        
+        if key._dtype == INT:
+            if keyVld:
+                val = Bitmask.select(self.val, key.val)
+                vld = Bitmask.select(self.vldMask, key.val)
+            return BitsVal(val, BIT, vld, updateTime=updateTime)
+        elif key._dtype == SLICE:
+            if keyVld:
+                firstBitNo = key.val[1].val
+                size = key._size()
+                val = Bitmask.selectRange(self.val, firstBitNo, size)
+                vld = Bitmask.selectRange(self.vldMask, firstBitNo, size)
+            retT = vecT(size, signed=self._dtype.signed)
+            return BitsVal(val, retT, vld, updateTime=updateTime)
+        else:
+            raise TypeError(key)
     
     def __getitem__(self, key):
         iamVal = isinstance(self, Value)
@@ -222,27 +145,7 @@ class BitsVal(EventCapableVal):
         isSlice = isinstance(key, slice)
         isSLICE = isinstance(key, Slice.getValueCls())
         if areValues(self, key):
-            updateTime = max(self.updateTime, key.updateTime)
-            keyVld = key._isFullVld() 
-            val = 0
-            vld = 0
-            
-            if key._dtype == INT:
-                if keyVld:
-                    val = Bitmask.select(self.val, key.val)
-                    vld = Bitmask.select(self.vldMask, key.val)
-                return BitsVal(val, BIT, vld, updateTime=updateTime)
-            elif key._dtype == SLICE:
-                if keyVld:
-                    firstBitNo = key.val[1].val
-                    size = key._size()
-                    val = Bitmask.selectRange(self.val, firstBitNo, size)
-                    vld = Bitmask.selectRange(self.vldMask, firstBitNo, size)
-                retT = vecT(size, signed=self._dtype.signed)
-                return BitsVal(val, retT, vld, updateTime=updateTime)
-            else:
-                raise TypeError(key)
-            
+            return self._getitem__val(key)
         elif isSlice or isSLICE:
             if isSlice:
                 if key.step is not None:
@@ -291,9 +194,7 @@ class BitsVal(EventCapableVal):
             
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
-    def __setitem__(self, index, value):
-        assert isinstance(self, Value)
-        
+    def _setitem__val(self, index, value):
         if index._isFullVld():
             if index._dtype == INT: 
                 self.val = Bitmask.bitSetTo(self.val, index.val, value.val)
@@ -309,13 +210,20 @@ class BitsVal(EventCapableVal):
         else:
             self.vldMask = 0
 
+    def __setitem__(self, index, value):
+        assert isinstance(self, Value)
+        return self._setitem__val(index, value)
+
+    def _invert__val(self):
+        v = self.clone()
+        v.val = ~v.val
+        w = v._dtype.bit_length()
+        v.val &= Bitmask.mask(w)
+        return v
+    
     def __invert__(self):
         if isinstance(self, Value):
-            v = self.clone()
-            v.val = ~v.val
-            w = v._dtype.bit_length()
-            v.val &= Bitmask.mask(w)
-            return v
+            return self._invert__val()
         else:
             try:
                 # double negation
@@ -327,67 +235,102 @@ class BitsVal(EventCapableVal):
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
     
     # comparisons         
+    def _eq__val(self, other):
+        return bitsCmp__val(self, other, AllOps.EQ, eq)
     def _eq(self, other):
         return bitsCmp(self, other, AllOps.EQ, eq)
     
+    
+    def _ne__val(self, other):
+        return bitsCmp__val(self, other, AllOps.NEQ, ne)
     def __ne__(self, other):
         return bitsCmp(self, other, AllOps.NEQ)
     
+
+    def _lt__val(self, other):
+        return bitsCmp__val(self, other, AllOps.LOWERTHAN, lt)
     def __lt__(self, other):
         return bitsCmp(self, other, AllOps.LOWERTHAN)
     
+    
+    def _gt__val(self, other):
+        return bitsCmp__val(self, other, AllOps.GREATERTHAN, gt)
     def __gt__(self, other):
         return bitsCmp(self, other, AllOps.GREATERTHAN)
+
     
+    def _ge__val(self, other):
+        return bitsCmp__val(self, other, AllOps.GE, ge)
     def __ge__(self, other):
         return bitsCmp(self, other, AllOps.GE)
    
+   
+    def _le__val(self, other):
+        return bitsCmp__val(self, other, AllOps.LE, le)
     def __le__(self, other):
         return bitsCmp(self, other, AllOps.LE)
     
+    
+    def _xor__val(self, other):
+        return bitsBitOp__val(self, other, AllOps.XOR, vldMaskForXor)
     def __xor__(self, other):
         return bitsBitOp(self, other, AllOps.XOR, vldMaskForXor)
     
+    
+    def _and__val(self, other):
+        return bitsBitOp__val(self, other, AllOps.AND_LOG, vldMaskForAnd)
     def __and__(self, other):
         return bitsBitOp(self, other, AllOps.AND_LOG, vldMaskForAnd)
     
+    
+    def _or__val(self, other):
+        return bitsBitOp__val(self, other, AllOps.OR_LOG, vldMaskForOr)
     def __or__(self, other):
         return bitsBitOp(self, other, AllOps.OR_LOG, vldMaskForOr)
        
+
+    def _sub__val(self, other):
+        return bitsArithOp__val(self, other, AllOps.SUB)
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)
-
+    
+   
+    def _add__val(self, other):
+        return bitsArithOp__val(self, other, AllOps.ADD)
     def __add__(self, other):
         return bitsArithOp(self, other, AllOps.ADD)
     
+    def _mul__val(self, other):
+        resT = getMulResT(self._dtype, other._dtype)
+        val = self.val * other.val
+        result = resT.fromPy(val)
+        
+        raise NotImplementedError() 
+        # # [TODO] value check range
+        # if isinstance(other._dtype, Integer):
+        #    if other.vldMask:
+        #        v.vldMask = self.vldMask
+        #    else:
+        #        v.vldMask = 0
+        #
+        # elif isinstance(other._dtype, Bits):
+        #    v.vldMask = self.vldMask & other.vldMask
+        # else:
+        #    raise TypeError("Incompatible type for multiplication: %s" % (repr(other._dtype)))
+        # # [TODO] correct overflow detection for signed values
+        # w = v._dtype.bit_length()
+        # v.val &= Bitmask.mask(2*w)
+        # v.updateTime = max(self.updateTime, other.updateTime)
+        # return v
     def __mul__(self, other):        
         other = toHVal(other)
         assert isinstance(other._dtype, (Integer, Bits))
         
-        resT = getMulResT(self._dtype, other._dtype)
-        if areValues(self, other):
-            val = self.val * other.val
-            result = resT.fromPy(val)
-            
-            raise NotImplementedError() 
-            # # [TODO] value check range
-            # if isinstance(other._dtype, Integer):
-            #    if other.vldMask:
-            #        v.vldMask = self.vldMask
-            #    else:
-            #        v.vldMask = 0
-            #
-            # elif isinstance(other._dtype, Bits):
-            #    v.vldMask = self.vldMask & other.vldMask
-            # else:
-            #    raise TypeError("Incompatible type for multiplication: %s" % (repr(other._dtype)))
-            # # [TODO] correct overflow detection for signed values
-            # w = v._dtype.bit_length()
-            # v.val &= Bitmask.mask(2*w)
-            # v.updateTime = max(self.updateTime, other.updateTime)
-            # return v
         
+        if areValues(self, other):
+            return self._mul__val(other)
         else:
+            resT = getMulResT(self._dtype, other._dtype)
             if self._dtype.signed is None:
                 self = self._unsigned()
             if isinstance(other._dtype, Bits) and other._dtype.signed is None:
