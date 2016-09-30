@@ -237,7 +237,7 @@ class BitsVal(EventCapableVal):
                     firstBitNo = key.val[1].val
                     size = key._size()
                     val = Bitmask.selectRange(self.val, firstBitNo, size)
-                    vld = Bitmask.selectRange(self.val, firstBitNo, size)
+                    vld = Bitmask.selectRange(self.vldMask, firstBitNo, size)
                 retT = vecT(size, signed=self._dtype.signed)
                 return BitsVal(val, retT, vld, updateTime=updateTime)
             else:
