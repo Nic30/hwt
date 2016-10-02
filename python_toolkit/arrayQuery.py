@@ -1,4 +1,3 @@
-
 # select = map, groupBy = itertools.groupby
 
 class DuplicitValueExc(Exception):
@@ -35,7 +34,7 @@ def single(iterable, fn):
     return ret
 
 def arr_any(iterable, fn):
-    for i in where(iterable, fn):
+    for _ in where(iterable, fn):
         return True
     return False
 
