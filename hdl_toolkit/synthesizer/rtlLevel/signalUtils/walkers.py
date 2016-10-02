@@ -97,12 +97,7 @@ class EventDependencyReached(Exception):
     def __init__(self, evOp):
         self.evOp = evOp
 
-def walkDriversInExpr(expr, seenSet):
-    """
-    @return: generators of RtlSignal
-            where signal is in expression and is not used in event dependent expression
-    @raise EventDependencyReached: when this generator steps on event dependent operator 
-    """
+def _walkDriversInExpr(expr, seenSet):
     if isinstance(expr, (Value, Param)):
         pass
     elif isinstance(expr, RtlSignalBase):
@@ -128,18 +123,24 @@ def walkDriversInExpr(expr, seenSet):
             if isEventDependentOp(op.operator):
                 raise EventDependencyReached(op)
             else:
-                evDepReached = None
                 for operand in op.ops:
-                    try:
-                        yield from walkDriversInExpr(operand, seenSet)
-                    except EventDependencyReached as e:
-                        assert evDepReached is None, "expression is not event dependent on multiple events"
-                        evDepReached = e
-                if evDepReached is not None:
-                    raise evDepReached
+                    yield from walkDriversInExpr(operand, seenSet)
                     
     else:           
         raise TypeError(expr)
+    
+
+def walkDriversInExpr(expr, seenSet):
+    """
+    @return: generators of RtlSignal
+            where signal is in expression and is not used in event dependent expression
+    @raise EventDependencyReached: when this generator steps on event dependent operator 
+    @attention: if event operator is found in expression, only sensitivity EventDependencyReached is raised
+                this may case some synthesis (Vivado, ISE, Quartus ...) to complain about sensitivity, 
+                but it will work 
+    """
+    res = list(_walkDriversInExpr(expr, seenSet))
+    yield from res
 
 def discoverEventDependency(sig):
     """
@@ -189,7 +190,7 @@ def _discoverSensitivity(statement, seenSet, isTop):
         elif isinstance(statement, SwitchContainer):
             yield from walkDriversInExpr(statement.switchOn, seenSet)
             for cond, stms in statement.cases:
-                #yield from walkDriversInExpr(cond, seenSet)
+                # yield from walkDriversInExpr(cond, seenSet)
                 for stm in stms:
                     yield from _discoverSensitivity(stm, seenSet, False)
         else:

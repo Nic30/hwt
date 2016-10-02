@@ -8,6 +8,12 @@ from hdl_toolkit.simulator.utils import valueHasChanged
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 
+def isEvDependentOn(sig, process):
+    if sig is None:
+        return False
+    return process in sig.simFallingSensProcs or process in sig.simRisingSensProcs
+    
+
 class HdlSimulator(HdlEnvironmentCore):
     """
     [HOW IT WORKS]
@@ -63,7 +69,7 @@ class HdlSimulator(HdlEnvironmentCore):
     @ivar valuesToApply: is container to for quantum of values which should be applied in single time 
     @ivar env: simpy enviromnment
     @ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
-    @ivar evDependentProcsToRun: list of event dependent processes which should be evaluated after 
+    @ivar seqProcsToRun: list of event dependent processes which should be evaluated after 
                                 applyValEv
     """
     # time after values which are event dependent will be applied
@@ -86,22 +92,29 @@ class HdlSimulator(HdlEnvironmentCore):
         # (signal, value) tupes which should be applied before new round of processes
         #  will be executed
         self.valuesToApply = []
-        self.evDependentProcsToRun = []
+        self.seqProcsToRun = []
         
     
-    def addHwProcToRun(self, proc):
+    def addHwProcToRun(self, trigger, proc):
         # first process in time has to plan executing of apply values on the end of this time
         if self.applyValEv is None:
             # (apply on end of this time to minimalize process reevaluation)
             self.scheduleAplyValues()
-
-        actionSet = set(proc(self))
-        res = self.conflictResolvStrategy(actionSet)
-        if res:
-            dst, updater, isEvDependent = res
-            if not(self.now == 0 and isEvDependent):  # pass event dependent on startup
+            
+        if isEvDependentOn(trigger, proc):
+            if self.now == 0:
+                pass  # pass event dependent on startup
+            
+        else:
+            actionSet = set(proc(self))
+            res = self.conflictResolvStrategy(actionSet)
+            if res:
+                dst, updater, isEvDependent = res
+                if trigger is not None:
+                    assert not isEvDependent, "trigger %r, proc %r" % (trigger, proc)
                 self.valuesToApply.append((dst, updater, isEvDependent, proc))
-
+            
+        
     def _initUnitSignals(self, unit):
         """
         Inject default values to simulation
@@ -117,7 +130,7 @@ class HdlSimulator(HdlEnvironmentCore):
             self._initUnitSignals(u)
         
         for p in unit._processes:
-            self.addHwProcToRun(p) 
+            self.addHwProcToRun(None, p) 
     
     def _delayedUpdate(self, sig, vUpdater):
         def updateCallback(ev):
@@ -165,12 +178,12 @@ class HdlSimulator(HdlEnvironmentCore):
         else:
             dst, val, isEvDependent = res
                 
-            #print(self.now, dst, val)
+            # print(self.now, dst, val)
             return (dst, mkUpdater(val, invalidate), isEvDependent)
     
     
     def runSeqProcesses(self, ev):
-        for proc in self.evDependentProcsToRun:
+        for proc in self.seqProcsToRun:
             actionSet = set(proc(self))
             if actionSet:
                 v = self.conflictResolvStrategy(actionSet)
@@ -192,7 +205,7 @@ class HdlSimulator(HdlEnvironmentCore):
         # it should resolve value collision
         for s, vUpdater, isEventDependent, comesFrom in va:
             if isEventDependent:
-                self.evDependentProcsToRun.append(comesFrom)
+                self.seqProcsToRun.append(comesFrom)
             else:
                 s.simUpdateVal(self, vUpdater)
             

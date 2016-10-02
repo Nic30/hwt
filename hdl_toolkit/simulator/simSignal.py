@@ -7,10 +7,11 @@ class SimSignal(SignalItem):
     @ivar _writeCallbacks: list of callback functions(signal, simulator) which is called
                            when new (changed) value is written to this signal
     """
-    __slots__ = ["name", "_val", "_oldVal", "_writeCallbacks", 
+    __slots__ = ["name", "_val", "_oldVal", "_writeCallbacks",
                  "simSensProcs", "simRisingSensProcs", "simFallingSensProcs"]
     def __init__(self, ctx, name, dtype, defaultVal=None):
         ctx.signals.add(self)
+        self.hidden = False
         self._writeCallbacks = []
         self.simSensProcs = set()
         self.simRisingSensProcs = set()
@@ -28,7 +29,7 @@ class SimSignal(SignalItem):
             if log:
                 log(simulator, self, p)
                 
-            simulator.addHwProcToRun(p)
+            simulator.addHwProcToRun(self, p)
 
         if self.simRisingSensProcs or self.simFallingSensProcs: 
             if v.val or not v.vldMask:
@@ -36,13 +37,13 @@ class SimSignal(SignalItem):
                     if log:
                         log(simulator, self, p)
                 
-                    simulator.addHwProcToRun(p)
+                    simulator.addHwProcToRun(self, p)
             if not v.val or not v.vldMask:
                 for p in self.simFallingSensProcs:        
                     if log:
                         log(simulator, self, p)
                 
-                    simulator.addHwProcToRun(p)
+                    simulator.addHwProcToRun(self, p)
     
     def simUpdateVal(self, simulator, valUpdater):
         """
