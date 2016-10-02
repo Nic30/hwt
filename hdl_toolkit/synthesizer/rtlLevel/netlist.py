@@ -17,7 +17,7 @@ from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverSensitivity
 from hdl_toolkit.synthesizer.rtlLevel.utils import portItemfromSignal
-from python_toolkit.arrayQuery import where, distinctBy, arr_any
+from python_toolkit.arrayQuery import where, distinctBy
 
 
 def isSignalHiddenInExpr(sig):
@@ -43,6 +43,9 @@ def _isEnclosed(objList):
     return True
     
 def isEnclosed(obj):
+    """
+    Check if statement has any not used branch
+    """
     if isinstance(obj, (Assignment, WaitStm)):
         return True
     elif isinstance(obj, IfContainer):
@@ -65,6 +68,22 @@ def isEnclosed(obj):
         return allCasesCovered
     else:
         raise NotImplementedError(obj)
+
+def groupedby(collection, fn):
+    """
+    @attention: Order of pairs is not deterministic.
+    """
+    d = {}
+    for item in collection:
+        k = fn(item)
+        try:
+            arr = d[k] 
+        except KeyError:
+            arr = []
+            d[k] = arr
+        arr.append(item)
+    
+    yield from d.items()
 
 class RtlNetlist():
     """
@@ -109,7 +128,8 @@ class RtlNetlist():
             else:
                 r = [RtlSignal.__pow__(s, s.next)]
             
-            If(clk._onRisingEdge(), r)
+            If(clk._onRisingEdge(), 
+               r)
         else:
             if syncRst:
                 raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
@@ -120,18 +140,18 @@ class RtlNetlist():
         return s
    
     def buildProcessesOutOfAssignments(self):
-        assigments = list(where(self.startsOfDataPaths,
-                                lambda x: isinstance(x, Assignment)
-                                )
+        """
+        Render conditional assignments to statements and wrap them with process statement
+        """
+        assigments = where(self.startsOfDataPaths,
+                            lambda x: isinstance(x, Assignment)
                           )
-        for sig in set(map(lambda x: x.dst, assigments)):
-            dps = list(where(assigments,
-                             lambda x: x.dst is sig)
-                       )
+        for sig, dps in groupedby(assigments, lambda x: x.dst):
+            dps = list(dps)
             name = ""
             if not sig.hasGenericName:
                 name = sig.name
-            sig.hidden =False
+            sig.hidden = False
             
             # render sequential statements in process
             # (conversion from netlist to statements)
