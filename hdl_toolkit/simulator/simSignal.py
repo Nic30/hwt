@@ -1,19 +1,21 @@
-from hdl_toolkit.hdlObjects.portItem import PortItem
+from hdl_toolkit.hdlObjects.variables import SignalItem
 
-
-class SimSignal():
+class SimSignal(SignalItem):
     """
     Class of signal simulation functions
     
     @ivar _writeCallbacks: list of callback functions(signal, simulator) which is called
                            when new (changed) value is written to this signal
     """
-
-    def __init__(self):
+    __slots__ = ["name", "_val", "_oldVal", "_writeCallbacks", 
+                 "simSensProcs", "simRisingSensProcs", "simFallingSensProcs"]
+    def __init__(self, ctx, name, dtype, defaultVal=None):
+        ctx.signals.add(self)
         self._writeCallbacks = []
         self.simSensProcs = set()
         self.simRisingSensProcs = set()
         self.simFallingSensProcs = set()
+        super(SimSignal, self).__init__(name, dtype, defaultVal)
         
     
     def simPropagateChanges(self, simulator):

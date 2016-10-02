@@ -5,11 +5,10 @@ from hdl_toolkit.simulator.exceptions import SimException
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
-from hdl_toolkit.synthesizer.rtlLevel.signalUtils.simSignal import SimSignal
 from hdl_toolkit.synthesizer.uniqList import UniqList
 
 
-class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
+class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
     more like net
     @ivar _usedOps: dictionary of used operators which can be reused
@@ -42,7 +41,6 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps, SimSignal):
        
         assert isinstance(dtype, HdlType)
         super(RtlSignal, self).__init__(name, dtype, defaultVal)
-        SimSignal.__init__(self)
         self.ctx = ctx
         
         if ctx: 

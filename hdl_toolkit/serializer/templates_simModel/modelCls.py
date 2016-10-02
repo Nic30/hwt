@@ -11,7 +11,7 @@ from hdl_toolkit.simulator.simModel import (SimModel, sensitivity, simBitsT, con
                                             simEvalCond, mkUpdater, mkArrayUpdater)
 from hdl_toolkit.synthesizer.codeOps import Concat
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
-from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hdl_toolkit.simulator.simSignal import SimSignal
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
 {% for c in componentInstances %}
 if "{{c.name}}" not in locals(): # support for all models in single file
@@ -26,10 +26,10 @@ class {{ name }}(SimModel):
     {{t}}{% endfor %}
     
     # ports{% for name, dtype in ports %}
-    {{name}} = RtlSignal(_cntx, "{{name}}", {{dtype}}){% endfor %}
+    {{name}} = SimSignal(_cntx, "{{name}}", {{dtype}}){% endfor %}
     
     # internal signals{% for name, dtype, defVal in signals %}
-    {{name}} = RtlSignal(_cntx, "{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}
+    {{name}} = SimSignal(_cntx, "{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}
     
 {% for proc in processes %}
 {{proc}}
