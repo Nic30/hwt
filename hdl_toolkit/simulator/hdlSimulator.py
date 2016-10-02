@@ -88,6 +88,7 @@ class HdlSimulator(HdlEnvironmentCore):
         self.config = config
         self.updateComplete = self.event()
         self.applyValEv = None
+        self.runSeqProcessesEv = None
         
         # (signal, value) tupes which should be applied before new round of processes
         #  will be executed
@@ -104,6 +105,7 @@ class HdlSimulator(HdlEnvironmentCore):
         if isEvDependentOn(trigger, proc):
             if self.now == 0:
                 pass  # pass event dependent on startup
+            self.seqProcsToRun.append(proc)
             
         else:
             actionSet = set(proc(self))
@@ -132,27 +134,25 @@ class HdlSimulator(HdlEnvironmentCore):
         for p in unit._processes:
             self.addHwProcToRun(None, p) 
     
-    def _delayedUpdate(self, sig, vUpdater):
-        def updateCallback(ev):
-            sig.simUpdateVal(self, vUpdater)
-            
-        t = self.timeout(self.EV_DEPENDENCY_SLOWDOWN)
-        t.callbacks.append(updateCallback) 
-   
     def scheduleAplyValues(self):
-        self.applyValEv = self.event()
-        self.applyValEv._ok = True
-        self.applyValEv._value = None
-        self.applyValEv.callbacks.append(self.applyValues)
+        applyVal = self.applyValEv = self.event()
+        applyVal._ok = True
+        applyVal._value = None
+        applyVal.callbacks.append(self.applyValues)
         
-        self.schedule(self.applyValEv, priority=self.PRIORITY_APPLY_COMB)
+        self.schedule(applyVal, priority=self.PRIORITY_APPLY_COMB)
         
-        self.runSeqProcessesEv = self.event()
-        self.runSeqProcessesEv._ok = True
-        self.runSeqProcessesEv._value = None
-        self.runSeqProcessesEv.callbacks.append(self.runSeqProcesses)
+        if self.runSeqProcessesEv is not None:
+            return
         
-        self.schedule(self.runSeqProcessesEv, priority=self.PRIORITY_APPLY_SEQ)
+        #print(self.now, "sched")
+        assert not self.seqProcsToRun       
+        runSeq = self.runSeqProcessesEv = self.event()
+        runSeq._ok = True
+        runSeq._value = None
+        runSeq.callbacks.append(self.runSeqProcesses)
+        
+        self.schedule(runSeq, priority=self.PRIORITY_APPLY_SEQ)
     
     def conflictResolvStrategy(self, actionSet):
         """
@@ -183,13 +183,17 @@ class HdlSimulator(HdlEnvironmentCore):
     
     
     def runSeqProcesses(self, ev):
+        #print(self.now, "run")
+        updates = []
         for proc in self.seqProcsToRun:
             actionSet = set(proc(self))
             if actionSet:
                 v = self.conflictResolvStrategy(actionSet)
-                dst, updater, _ = v
-                self._delayedUpdate(dst, updater)
-        
+                updates.append(v)
+        self.seqProcsToRun = []
+        self.runSeqProcessesEv = None
+        for s, updater, _ in updates:
+            s.simUpdateVal(self, updater)
         
     def applyValues(self, ev):
         va = self.valuesToApply
