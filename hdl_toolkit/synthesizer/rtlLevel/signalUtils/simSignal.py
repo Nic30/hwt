@@ -20,10 +20,6 @@ class SimSignal():
         v = self._val
         self._oldVal = v
 
-        for e in self.endpoints:
-            if isinstance(e, PortItem) and e.dst is not None:
-                e.dst.simUpdateVal(simulator, lambda v: (True, self._val))
-        
         # run all sensitive processes    
         log = simulator.config.logPropagation
         for p in self.simSensProcs:        
