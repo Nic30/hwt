@@ -43,7 +43,7 @@ class VhdlSerializer_Value():
         if declaration:
             if si.drivers:
                 prefix = "SIGNAL"
-            elif si.endpoints or si.simSensitiveProcesses:
+            elif si.endpoints or si.simSensProcs:
                 prefix = "CONSTANT"
             else:
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)

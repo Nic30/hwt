@@ -5,7 +5,7 @@ from hdl_toolkit.hdlObjects.types.bitsConversions import convertBits__val
 from hdl_toolkit.hdlObjects.types.bitsVal import BitsVal
 from hdl_toolkit.hdlObjects.types.defs import BIT, INT, SLICE
 from hdl_toolkit.hdlObjects.types.enum import Enum
-from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION, SENSITIVITY
 from hdl_toolkit.hdlObjects.types.integerConversions import convertInteger__val
 from hdl_toolkit.simulator.simModel import (SimModel, sensitivity, simBitsT, connectSimPort,
                                             simEvalCond, mkUpdater, mkArrayUpdater)
@@ -51,4 +51,12 @@ class {{ name }}(SimModel):
                        {% endfor %}
                        ]
         {% for proc in processObjects %}
-        sensitivity(self.{{proc.name}}, {% for s in proc.sensitivityList %}self.{{s.name}}{% if not loop.last %}, {% endif %}{% endfor %}){% endfor %}
+        sensitivity(self.{{proc.name}}, {% 
+            for s in proc.sensitivityList %}{% 
+                if isOp(s) %}({{ sensitivityByOp(s.operator) }}, self.{{s.ops[0].name}}){% 
+                else %}self.{{s.name}}{%
+                endif %}{% 
+                if not loop.last %}, {% 
+                endif %}{% 
+            endfor %}){% 
+        endfor %}

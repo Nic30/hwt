@@ -3,6 +3,7 @@ from hdl_toolkit.hdlObjects.function import Function
 from hdl_toolkit.hdlObjects.types.defs import INT
 from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
     xor, gt, ge, lt, le, getitem
+from hdl_toolkit.hdlObjects.specialValues import SENSITIVITY
 
 class OpDefinition():
     """
@@ -156,3 +157,12 @@ if not AllOps._idsInited:
             o.id = a
             
     AllOps._idsInited = True
+
+def sensitivityByOp(op):
+    if op == AllOps.RISING_EDGE:
+        return SENSITIVITY.RISING
+    elif op == AllOps.FALLIGN_EDGE:
+        return SENSITIVITY.FALLING
+    else:
+        assert op == AllOps.EVENT
+        return SENSITIVITY.ANY

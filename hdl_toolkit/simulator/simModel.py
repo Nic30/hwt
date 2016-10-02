@@ -1,8 +1,7 @@
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.simulator.utils import valueHasChanged
-from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.hdlObjects.specialValues import DIRECTION, SENSITIVITY
 from hdl_toolkit.bitmask import mask
-
 
 __simBitsTCache = {}
 def simBitsT(width, signed):
@@ -46,7 +45,18 @@ def sensitivity(proc, *sensitiveTo):
     register sensitivity for process
     """
     for s in sensitiveTo:
-        s.simSensitiveProcesses.add(proc)
+        if isinstance(s, tuple):
+            sen, s = s
+            if sen == SENSITIVITY.ANY:
+                s.simSensProcs.add(proc)
+            elif sen == SENSITIVITY.RISING:
+                s.simRisingSensProcs.add(proc)
+            elif sen == SENSITIVITY.FALLING:
+                s.simRisingSensProcs.add(proc)
+            else:
+                raise AssertionError(sen)
+        else:
+            s.simSensProcs.add(proc)
          
 
 def simEvalCond(simulator, *conds):
@@ -91,7 +101,7 @@ def mkUpdater(nextVal, invalidate):
     def updater(currentVal):
         _nextVal = nextVal.clone()
         if invalidate:
-            _nextVal.vldMask=0
+            _nextVal.vldMask = 0
         return (valueHasChanged(currentVal, _nextVal), _nextVal)
     return updater
             
@@ -106,7 +116,7 @@ def mkArrayUpdater(nextItemVal, indexes, invalidate):
 
         _nextItemVal = nextItemVal.clone()        
         if invalidate:
-            _nextItemVal.vldMask=0
+            _nextItemVal.vldMask = 0
             
         index = indexes[0]
         change = valueHasChanged(currentVal[index], _nextItemVal)

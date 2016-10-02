@@ -16,7 +16,8 @@ from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from python_toolkit.arrayQuery import where
 from hdl_toolkit.hdlObjects.statements import IfContainer
 from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps, sensitivityByOp
+from hdl_toolkit.hdlObjects.specialValues import SENSITIVITY
 
 
 env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_simModel'))
@@ -128,6 +129,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         "processObjects"     : arch.processes,
         "processesNames"     : map(lambda p: p.name, arch.processes),
         "componentInstances" : arch.componentInstances,
+        "isOp"               : lambda x: isinstance(x, Operator),
+        "sensitivityByOp"    : sensitivityByOp
         })
    
     @classmethod
@@ -222,11 +225,26 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             raise NotImplementedError()
     
     @classmethod
+    def sensitivityListItem(cls, item):
+        if isinstance(item, Operator):
+            op = item.operator
+            if op == AllOps.RISING_EDGE:
+                sens = SENSITIVITY.RISING
+            elif op == AllOps.FALLIGN_EDGE:
+                sens = SENSITIVITY.FALLING
+            else:
+                assert op == AllOps.EVENT
+                sens = SENSITIVITY.ANY
+            
+            return "(%s, %s)" % (str(sens), item.ops[0].name)
+        else:
+            return item.name
+    
+    @classmethod
     def HWProcess(cls, proc, scope, indentLvl):
         body = proc.statements
         proc.name = scope.checkedName(proc.name, proc)
-        sensitivityList = sorted(where(proc.sensitivityList,
-                                       lambda x : not isinstance(x, Param)), key=lambda x: x.name)
+        sensitivityList = sorted(map(cls.sensitivityListItem, proc.sensitivityList))
         if len(body) == 1:
             _body = cls.stmAsHdl(body[0], 2)
         elif len(body) == 2:
@@ -237,7 +255,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         
         return processTmpl.render({
               "name": proc.name,
-              "sensitivityList": [s.name for s in sensitivityList],
+              "sensitivityList": sensitivityList,
               "stmLines": [_body] })
            
 
