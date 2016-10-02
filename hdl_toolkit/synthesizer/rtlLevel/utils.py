@@ -1,6 +1,5 @@
 from hdl_toolkit.hdlObjects.portItem import PortItem
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import signalHasDriver
 
 

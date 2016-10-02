@@ -172,6 +172,10 @@ class RtlNetlist():
         
 
     def synthesize(self, name, interfaces):
+        """
+        Build Entity and architecture out of netlist representation
+        """
+        
         ent = Entity(name)
         ent._name = name + "_inst"  # instance name
 
