@@ -38,6 +38,7 @@ class SimSignal(SignalItem):
                         log(simulator, self, p)
                 
                     simulator.addHwProcToRun(self, p)
+                    
             if not v.val or not v.vldMask:
                 for p in self.simFallingSensProcs:        
                     if log:

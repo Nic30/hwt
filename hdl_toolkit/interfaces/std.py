@@ -54,7 +54,12 @@ class Signal(SignalOps, Interface):
     def _getSimAgent(self):
         from hdl_toolkit.interfaces.agents.signal import SignalAgent
         return SignalAgent
-        
+
+def VectSignal(width, signed=None, masterDir=D.OUT, multipliedBy=None,
+                   isExtern=False, alternativeNames=None,
+                   loadConfig=True):
+    return Signal(masterDir, multipliedBy, vecT(width, signed), 
+                  isExtern, alternativeNames, loadConfig)        
 
 class Clk(Signal):
     _alternativeNames = ['ap_clk', 'aclk', 'clk', 'clock']

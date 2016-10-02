@@ -80,6 +80,9 @@ def bitsBitOp(self, other, op, getVldFn):
 
 def bitsArithOp__val(self, other, op):
     v = self.clone()
+    self_vld = self._isFullVld()
+    other_vld = other._isFullVld()
+     
     v.val = op._evalFn(self.val, other.val)
 
     # [TODO] correct overflow detection for signed values
@@ -87,13 +90,11 @@ def bitsArithOp__val(self, other, op):
     v.val &= mask(w)
     
     # [TODO] value check range
-    if isinstance(other._dtype, Integer):
-        if other.vldMask:
-            v.vldMask = self.vldMask
-        else:
-            v.vldMask = 0  
+    if self_vld and other_vld:
+        v.vldMask = mask(w)
     else:
-        v.vldMask = self.vldMask & other.vldMask
+        v.vldMask = 0
+        
     v.updateTime = max(self.updateTime, other.updateTime)
     return v
 
