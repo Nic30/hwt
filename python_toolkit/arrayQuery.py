@@ -67,3 +67,21 @@ def indexUsigIs(iterable, item):
         if v is item:
             return i
         i += 1
+
+
+def groupedby(collection, fn):
+    """
+    This function does not needs initial sorting like itertools.groupby
+    @attention: Order of pairs is not deterministic.
+    """
+    d = {}
+    for item in collection:
+        k = fn(item)
+        try:
+            arr = d[k] 
+        except KeyError:
+            arr = []
+            d[k] = arr
+        arr.append(item)
+    
+    yield from d.items()

@@ -17,7 +17,7 @@ from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.walkers import discoverSensitivity
 from hdl_toolkit.synthesizer.rtlLevel.utils import portItemfromSignal
-from python_toolkit.arrayQuery import where, distinctBy
+from python_toolkit.arrayQuery import where, distinctBy, groupedby
 
 
 def isSignalHiddenInExpr(sig):
@@ -69,21 +69,6 @@ def isEnclosed(obj):
     else:
         raise NotImplementedError(obj)
 
-def groupedby(collection, fn):
-    """
-    @attention: Order of pairs is not deterministic.
-    """
-    d = {}
-    for item in collection:
-        k = fn(item)
-        try:
-            arr = d[k] 
-        except KeyError:
-            arr = []
-            d[k] = arr
-        arr.append(item)
-    
-    yield from d.items()
 
 class RtlNetlist():
     """
