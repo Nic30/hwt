@@ -17,6 +17,7 @@ from hdl_toolkit.serializer.simModelSerializer_types import SimModelSerializer_t
 from hdl_toolkit.serializer.utils import maxStmId
 from hdl_toolkit.synthesizer.param import evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.hdlObjects.types.bits import Bits
 
 
 env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_simModel'))
@@ -135,18 +136,34 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
     @classmethod
     def Assignment(cls, a, indent=0, default=None):
         dst = a.dst
+        indentStr = getIndent(indent)
+        ev = a.isEventDependent
+        
         if a.indexes is not None:
             return "%syield (self.%s, %s, (%s,), %s)" % (
-                        getIndent(indent), dst.name, cls.Value(a.src),
-                        ", ".join(map(cls.asHdl, a.indexes)),
-                        a.isEventDependent)
+                        indentStr, dst.name, cls.Value(a.src),
+                        ", ".join(map(cls.asHdl, a.indexes)), ev)
         else:
             if not (dst._dtype == a.src._dtype):
-                raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
-                     (cls.asHdl(dst), cls.Value(a.src), repr(dst._dtype), repr(a.src._dtype)))
-            return "%syield (self.%s, %s, %s)" % (
-                        getIndent(indent), dst.name, cls.Value(a.src),
-                        a.isEventDependent)
+                srcT = a.src._dtype
+                dstT = dst._dtype
+                if (isinstance(srcT, Bits) and isinstance(dstT, Bits) and
+                    srcT.bit_length() == dstT.bit_length() == 1):
+                    if srcT.forceVector != dstT.forceVector:
+                        if srcT.forceVector:
+                            return "%syield (self.%s, (%s)._getitem__val(hInt(0)), %s)" % (
+                                    indentStr, dst.name, cls.Value(a.src), ev)
+                        else:
+                            return "%syield (self.%s, %s, (hInt(0),), %s)" % (
+                                    indentStr, dst.name, cls.Value(a.src), ev)
+                    
+                raise SerializerException(("%s <= %s  is not valid assignment\n" +
+                                          " because types are different (%r; %r) ") % 
+                                          (cls.asHdl(dst), cls.Value(a.src),
+                                          dst._dtype, a.src._dtype))
+            else:
+                return "%syield (self.%s, %s, %s)" % (
+                        indentStr, dst.name, cls.Value(a.src), ev)
             
     @classmethod
     def comment(cls, comentStr):
