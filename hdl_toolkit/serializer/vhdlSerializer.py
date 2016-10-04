@@ -1,4 +1,10 @@
+from collections import namedtuple
+from jinja2.environment import Environment
+from jinja2.loaders import PackageLoader
+
+from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.assignment import Assignment 
+from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.operator import Operator
 from hdl_toolkit.hdlObjects.operatorDefs import AllOps
 from hdl_toolkit.hdlObjects.statements import IfContainer, \
@@ -8,29 +14,23 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BOOL, BIT
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.hdlObjects.types.hdlType import InvalidVHDLTypeExc
+from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
 from hdl_toolkit.hdlObjects.value import Value
+from hdl_toolkit.serializer.constants import SERI_MODE
 from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.nameScope import LangueKeyword, NameScope
 from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
 from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
-from hdl_toolkit.synthesizer.param import getParam, Param, evalParam
-from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from python_toolkit.arrayQuery import arr_any, where
-from hdl_toolkit.serializer.vhdlFormater import formatVhdl
 from hdl_toolkit.serializer.utils import maxStmId
+from hdl_toolkit.serializer.vhdlFormater import formatVhdl
 from hdl_toolkit.serializer.vhdlSerializer_Value import VhdlSerializer_Value
 from hdl_toolkit.serializer.vhdlSerializer_ops import VhdlSerializer_ops
 from hdl_toolkit.serializer.vhdlSerializer_types import VhdlSerializer_types
-from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
-from jinja2.environment import Environment
-from jinja2.loaders import PackageLoader
-from hdl_toolkit.serializer.constants import SERI_MODE
-from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
-from hdl_toolkit.hdlObjects.architecture import Architecture
-from collections import namedtuple
-from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hdl_toolkit.synthesizer.param import getParam, evalParam
+from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from python_toolkit.arrayQuery import arr_any
 
 
 VHLD_KEYWORDS = [
@@ -50,11 +50,11 @@ VHLD_KEYWORDS = [
 
 
 env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_vhdl'))
-architecture = env.get_template('architecture.vhd')
-entity = env.get_template('entity.vhd')
-process = env.get_template('process.vhd')
-component = env.get_template('component.vhd')
-componentInstance = env.get_template('component_instance.vhd')
+architectureTmpl = env.get_template('architecture.vhd')
+entityTmpl = env.get_template('entity.vhd')
+processTmpl = env.get_template('process.vhd')
+componentTmpl = env.get_template('component.vhd')
+componentInstanceTmpl = env.get_template('component_instance.vhd')
 
 IfTmpl = env.get_template('if.vhd')
 SwitchTmpl = env.get_template('switch.vhd')
@@ -261,7 +261,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)    
              
-        return architecture.render({
+        return architectureTmpl.render({
         "entityName"         :arch.getEntityName(),
         "name"               :arch.name,
         "variables"          :variables,
@@ -281,7 +281,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
     def Component(cls, entity):
         entity.ports.sort(key=lambda x: x.name)
         entity.generics.sort(key=lambda x: x.name)
-        return component.render({
+        return componentTmpl.render({
                 "ports": [cls.PortItem(pi) for pi in entity.ports],
                 "generics": [cls.GenericItem(g) for g in entity.generics],
                 "entity": entity
@@ -304,7 +304,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             raise Exception("Incomplete component instance")
         
         # [TODO] check component instance name
-        return componentInstance.render({
+        return componentInstanceTmpl.render({
                 "instanceName" : entity._name,
                 "entity": entity,
                 "portMaps": [cls.PortConnection(x) for x in portMaps],
@@ -327,7 +327,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             g.name = scope.checkedName(g.name, g)
             generics.append(cls.GenericItem(g))    
 
-        entVhdl = entity.render({
+        entVhdl = entityTmpl.render({
                 "name": ent.name,
                 "ports" : ports,
                 "generics" : generics
@@ -448,7 +448,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         
         sensitivityList = sorted(map(cls.sensitivityListItem, proc.sensitivityList))
         
-        return process.render({
+        return processTmpl.render({
               "name": proc.name,
               "hasToBeVhdlProcess": hasToBeVhdlProcess,
               "sensitivityList": ", ".join(sensitivityList),

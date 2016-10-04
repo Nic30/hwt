@@ -2,6 +2,10 @@ from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
 from keyword import kwlist
 
+from hdl_toolkit.hdlObjects.operator import Operator
+from hdl_toolkit.hdlObjects.operatorDefs import AllOps, sensitivityByOp
+from hdl_toolkit.hdlObjects.specialValues import SENSITIVITY
+from hdl_toolkit.hdlObjects.statements import IfContainer
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.hdlObjects.types.enumVal import EnumVal
 from hdl_toolkit.hdlObjects.value import Value
@@ -11,19 +15,14 @@ from hdl_toolkit.serializer.simModelSerializer_Value import SimModelSerializer_v
 from hdl_toolkit.serializer.simModelSerializer_ops import SimModelSerializer_ops
 from hdl_toolkit.serializer.simModelSerializer_types import SimModelSerializer_types
 from hdl_toolkit.serializer.utils import maxStmId
-from hdl_toolkit.synthesizer.param import Param, evalParam
+from hdl_toolkit.synthesizer.param import evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from python_toolkit.arrayQuery import where
-from hdl_toolkit.hdlObjects.statements import IfContainer
-from hdl_toolkit.hdlObjects.operator import Operator
-from hdl_toolkit.hdlObjects.operatorDefs import AllOps, sensitivityByOp
-from hdl_toolkit.hdlObjects.specialValues import SENSITIVITY
 
 
 env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_simModel'))
 unitTmpl = env.get_template('modelCls.py')
 processTmpl = env.get_template('process.py')
-iftmpl = env.get_template("if.py")
+ifTmpl = env.get_template("if.py")
 
 _indent = "    "
 _indentCache = {}        
@@ -183,7 +182,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             else:
                 _enclosure = cls.stmAsHdl(enclosure, indent + 1)
                 
-            return iftmpl.render(
+            return ifTmpl.render(
                 indent=getIndent(indent),
                 indentNum=indent,
                 cond=cond,
