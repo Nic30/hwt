@@ -119,8 +119,8 @@ def mkArrayUpdater(nextItemVal, indexes, invalidate):
             _nextItemVal.vldMask = 0
             
         index = indexes[0]
-        change = valueHasChanged(currentVal[index], _nextItemVal)
-        currentVal[index] = _nextItemVal
+        change = valueHasChanged(currentVal._getitem__val(index), _nextItemVal)
+        currentVal._setitem__val(index, _nextItemVal) 
         return (change, currentVal)
 
     return updater
