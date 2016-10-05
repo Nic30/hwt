@@ -61,10 +61,7 @@ class ArrayVal(Value):
         
         return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.elmType)
     
-    def __setitem__(self, index, value):
-        assert isinstance(self, Value)
-        assert index._dtype == INT, index._dtype 
-        
+    def _setitem__val(self, index, value):
         self.updateTime = max(index.updateTime, value.updateTime)
         if index._isFullVld():
             self.val[index.val] = value.clone()
@@ -74,6 +71,12 @@ class ArrayVal(Value):
                 v.updateTime = self.updateTime
             self.vldMask = 0
     
+    
+    def __setitem__(self, index, value):
+        assert isinstance(self, Value)
+        assert index._dtype == INT, index._dtype 
+        return self._setitem__val(index, value)
+        
     def _eq__val(self, other):
         assert self._dtype.elmType == other._dtype.elmType
         assert self._dtype.size == other._dtype.size
