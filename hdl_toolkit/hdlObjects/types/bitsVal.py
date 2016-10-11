@@ -176,7 +176,9 @@ class BitsVal(EventCapableVal):
                 raise NotImplementedError("[TODO] bit select on value")
             else:
                 key = (start - INT.fromPy(1))._downto(stop)
-                resT = Bits(widthConstr=key, forceVector=True, signed=st.signed)
+                # [TODO] type can be wrong, but we need to get rid off widthConstr and use only width
+                _resWidth = (start - 1 - stop)._downto(0)
+                resT = Bits(widthConstr=_resWidth, forceVector=True, signed=st.signed)
                 
         elif isinstance(key, (int, IntegerVal)):
             key = toHVal(key)
