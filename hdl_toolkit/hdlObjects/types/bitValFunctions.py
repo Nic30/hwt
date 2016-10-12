@@ -107,8 +107,8 @@ def bitsArithOp(self, other, op):
         resT = self._dtype
         if self._dtype.signed is None:
             self = self._unsigned()
-        if isinstance(other._dtype, Bits) and other._dtype.signed is None:
-            other = other._unsigned() 
+        if isinstance(other._dtype, Bits):
+            other = other._convSign(self._dtype.signed)    
         elif isinstance(other._dtype, Integer):
             pass
         else:
