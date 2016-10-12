@@ -11,6 +11,7 @@ class FifoReaderAgent(SyncAgentBase):
         intf = self.intf
         
         if s.r(self.rst_n).val and self.enable:
+            
             rd = not s.r(intf.wait).val
             s.w(rd, intf.en)
             if rd:
@@ -36,5 +37,5 @@ class FifoWriterAgent(SyncAgentBase):
             s.w(self.data.pop(0), intf.data)
             s.w(1, intf.en)
         else:
-            s.w(0, intf.data)
+            s.w(None, intf.data)
             s.w(0, intf.en)
