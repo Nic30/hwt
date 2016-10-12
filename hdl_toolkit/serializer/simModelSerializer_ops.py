@@ -60,7 +60,7 @@ class SimModelSerializer_ops():
         elif o == AllOps.CONCAT:
             return "(%s)._concat__val(%s)" % (p(ops[0]), p(ops[1]))
         elif o == AllOps.DIV:
-            return _bin('_truediv__val')
+            return _bin('_floordiv__val')
         elif o == AllOps.DOWNTO:
             return "SliceVal((%s, %s), SLICE, True)" % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EQ:
