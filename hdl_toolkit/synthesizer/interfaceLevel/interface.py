@@ -247,7 +247,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         newP._registerScope(pName, self)
         setattr(self, pName, newP) 
     
-    def _updateParamsFrom(self, otherObj):
+    def _updateParamsFrom(self, otherObj, updater=lambda self, onParentName, p : self._replaceParam(onParentName, p)):
         """
         update all parameters which are defined on self from otherObj
         """
@@ -262,7 +262,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
                     raise AttributeError()
             except AttributeError:
                 continue
-            self._replaceParam(onParentName, p)
+            updater(self, onParentName, p)
             
     def _getIpCoreIntfClass(self):
         raise NoKnownIpCoreInterface()
