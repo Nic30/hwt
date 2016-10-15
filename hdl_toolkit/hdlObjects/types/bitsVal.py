@@ -77,8 +77,6 @@ class BitsVal(EventCapableVal):
             val = 0
         return cls(int(val), typeObj, vld)
     
-    # [TODO] bit reverse operator
-    
     def _concat__val(self, other):
         w = self._dtype.bit_length()
         other_w = other._dtype.bit_length()
@@ -146,7 +144,6 @@ class BitsVal(EventCapableVal):
         if l == 1:
             assert st.forceVector  # assert not indexing on single bit
             
-        # [TODO] boundary check
         isSlice = isinstance(key, slice)
         isSLICE = isinstance(key, Slice.getValueCls())
         if areValues(self, key):
@@ -199,6 +196,7 @@ class BitsVal(EventCapableVal):
         else:
             raise TypeError("Index operation not implemented for index %s" % (repr(key)))
             
+        # [TODO] boundary check
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
     def _setitem__val(self, index, value):
