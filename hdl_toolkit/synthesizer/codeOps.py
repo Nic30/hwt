@@ -336,6 +336,9 @@ Or = _mkOp(or_)
 Concat = _mkOp(concatFn)
 
 def iterBits(sig):
+    """
+    Iterate over bits in vector
+    """
     l = sig._dtype.bit_length() 
     for bit in range(l):
         yield sig[bit] 
@@ -343,12 +346,32 @@ def iterBits(sig):
 def power(base, exp):
     return toHVal(base)._pow(exp) 
 
-# [TODO] sign correct shift
-def slr(sig, howMany):
+
+def ror(sig, howMany):
+    """
+    Rotate right
+    """
+    return  sig[howMany:]._concat(sig[:howMany])
+
+def rol(sig, howMany):
+    """
+    Rotate left
+    """
+    return  sig[:howMany]._concat(sig[howMany:])
+
+
+def sll(sig, howMany):
+    """
+    Logical shift left
+    """
     return vec(0, howMany)._concat(sig[:howMany])
 
-def srr(sig, howMany):
+def srl(sig, howMany):
+    """
+    Logical shift right
+    """
     return sig[howMany:]._concat(vec(0, howMany))
 
 
+# shortcuts
 c = connect
