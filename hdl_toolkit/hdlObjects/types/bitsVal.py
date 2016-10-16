@@ -92,6 +92,7 @@ class BitsVal(EventCapableVal):
         return v 
     
     def _concat(self, other):
+        # [TODO] vhdl does not support concatenation of signed/ unsigned 
         w = self._dtype.bit_length()
         other_w = other._dtype.bit_length()
         resWidth = w + other_w
