@@ -71,7 +71,7 @@ class Packager(object):
             s = gui.asTcl() + '\n' + '\n'.join(map(lambda x : str(x), handlers))
             f.write(s)
 
-    def createPackage(self, repoDir):
+    def createPackage(self, repoDir, vendor="nic", library="mylib", description=None):
         '''
         synthetise hdl if needen
         copy hdl files
@@ -95,9 +95,14 @@ class Packager(object):
         c = Component()
         c._files = [relpath(p, ip_dir) for p in sorted(self.hdlFiles)] \
                     + [relpath(guiFile, ip_dir) ]
-        c.vendor = "nic"
-        c.library = "mylib"
-        c.description = self.name + "_v" + c.version
+        
+        c.vendor = vendor
+        c.library = library
+        if description is None:
+            c.description = self.name + "_v" + c.version
+        else:
+            c.description = description
+            
         c.asignTopUnit(self.topUnit)
         
         xml_str = prettify(c.xml()) 

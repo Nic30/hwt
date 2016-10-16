@@ -6,6 +6,7 @@ from cli_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BOOL, STR
 from hdl_toolkit.hdlObjects.types.integer import Integer
+from hdl_toolkit.synthesizer.param import evalParam
 
 
 class Value():
@@ -35,8 +36,9 @@ class Value():
         self.resolve = resolve
         t = g._dtype
         def getVal():
-            if g.defaultVal is not None and g.defaultVal.vldMask:
-                return g.defaultVal.staticEval().val
+            v = evalParam(g.defaultVal) 
+            if v.vldMask:
+                return v.val
             else:
                 return 0  
         def bitString(w):

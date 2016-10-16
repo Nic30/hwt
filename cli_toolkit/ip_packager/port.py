@@ -50,7 +50,7 @@ class Port():
     def _entPort2CompPort(e, p):
         port = Port()
         port.name = p.name
-        port.direction = p.direction.lower()
+        port.direction = p.direction.name.lower()
         port.type = WireTypeDef()
         t = port.type
         dt = p._dtype
