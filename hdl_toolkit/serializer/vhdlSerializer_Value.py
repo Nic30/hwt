@@ -41,26 +41,28 @@ class VhdlSerializer_Value():
     @classmethod
     def SignalItem(cls, si, declaration=False):
         if declaration:
+            v = si.defaultVal
             if si.drivers:
                 prefix = "SIGNAL"
             elif si.endpoints or si.simSensProcs:
                 prefix = "CONSTANT"
+                if not v.vldMask:
+                    raise SerializerException("Signal %s is constant and has undefined value" % si.name)
             else:
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)
                 
 
             s = prefix + " %s : %s" % (si.name, cls.HdlType(si._dtype))
-            if si.defaultVal is not None:
-                v = si.defaultVal
-                if isinstance(v, RtlSignalBase):
-                    return s + " := %s" % cls.asHdl(v)
-                elif isinstance(v, Value):
-                    if si.defaultVal.vldMask:
-                        return s + " := %s" % cls.Value(si.defaultVal)
+            if isinstance(v, RtlSignalBase):
+                return s + " := %s" % cls.asHdl(v)
+            elif isinstance(v, Value):
+                if si.defaultVal.vldMask:
+                    return s + " := %s" % cls.Value(si.defaultVal)
                 else:
-                    raise NotImplementedError(v)
-                
-            return s 
+                    return s 
+            else:
+                raise NotImplementedError(v)
+            
         else:
             if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin)
