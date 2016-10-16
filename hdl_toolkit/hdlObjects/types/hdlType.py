@@ -14,7 +14,7 @@ class InvalidVHDLTypeExc(Exception):
         return self.__str__()
 
 class HdlType():
-    #__slots__ = ['name', "constrain", "_valCls", "_convertor"]
+    #_slots__ = ['name', "constrain", "_valCls", "_convertor"]
 
     def __init__(self):
         self.constrain = None
@@ -45,8 +45,8 @@ class HdlType():
         return HdlType.defaultConvert
     
     def defaultConvert(self, sigOrVal, toType):
-        raise TypeConversionErr("Conversion of type %s to type %s is not implemented" 
-                                   % (repr(self), repr(toType)))
+        raise TypeConversionErr("Conversion of %r of type \n%r to type %r is not implemented" 
+                                   % (sigOrVal, self, toType))
     
     def __repr__(self):
         return "<HdlType %s>" % (self.__class__.__name__)
