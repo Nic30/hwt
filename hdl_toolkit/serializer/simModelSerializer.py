@@ -151,10 +151,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
                     srcT.bit_length() == dstT.bit_length() == 1):
                     if srcT.forceVector != dstT.forceVector:
                         if srcT.forceVector:
-                            return "%syield (self.%s, (%s)._getitem__val(hInt(0)), %s)" % (
+                            return "%syield (self.%s, (%s)._getitem__val(simHInt(0)), %s)" % (
                                     indentStr, dst.name, cls.Value(a.src), ev)
                         else:
-                            return "%syield (self.%s, %s, (hInt(0),), %s)" % (
+                            return "%syield (self.%s, %s, (simHInt(0),), %s)" % (
                                     indentStr, dst.name, cls.Value(a.src), ev)
                     
                 raise SerializerException(("%s <= %s  is not valid assignment\n" +

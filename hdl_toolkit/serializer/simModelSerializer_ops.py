@@ -107,11 +107,11 @@ class SimModelSerializer_ops():
         elif o == AllOps.BitsToInt:
             assert len(ops) == 1
             op = ops[0]
-            return "convertBits__val(%s, %s, INT)" % (cls.HdlType_bits(op._dtype), cls.asHdl(op))
+            return "convertSimBits__val(%s, %s, SIM_INT)" % (cls.HdlType_bits(op._dtype), cls.asHdl(op))
         elif o == AllOps.IntToBits:
             assert len(ops) == 1
             resT = op.result._dtype
-            return "convertInteger__val(%s, %s, %s)" % (cls.HdlType(ops[0]._dtype),
+            return "convertSimInteger__val(%s, %s, %s)" % (cls.HdlType(ops[0]._dtype),
                                                    cls.asHdl(ops[0]),
                                                    cls.HdlType_bits(resT))
             
