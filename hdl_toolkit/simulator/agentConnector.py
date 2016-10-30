@@ -1,4 +1,5 @@
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
+from hdl_toolkit.synthesizer.param import evalParam
 
 def autoAddAgents(unit, propName="_ag"):
     """
@@ -15,17 +16,30 @@ def autoAddAgents(unit, propName="_ag"):
             raise NotImplementedError(("Interface %s\n" + 
                             "has not any simulation agent class assigned") % (str(intf)))
         
-        agent = agentCls(intf)
-        setattr(intf, propName, agent)
+        if intf._multipliedBy:
+            agentCnt = evalParam(intf._multipliedBy).val
+            agent = []
+            for i in range(agentCnt):
+                a = agentCls(intf[i])
+                agent.append(a)
+                setattr(intf[i], propName, a)
+        else:
+            agent = agentCls(intf)
+            setattr(intf, propName, agent)
         
+        if intf._multipliedBy is None:
+            agent = [agent, ]
+            
         if intf._direction == INTF_DIRECTION.MASTER:
-            agProcs = agent.getMonitors()
+            agProcs = list(map(lambda a: a.getMonitors(), agent))
         elif intf._direction == INTF_DIRECTION.SLAVE:
-            agProcs = agent.getDrivers()
+            agProcs = list(map(lambda a: a.getDrivers(), agent))
         else:
             raise NotImplementedError("intf._direction %s" % str(intf._direction))
         
-        proc.extend(agProcs)
+        for p in agProcs:
+            proc.extend(p)
+    
     return proc
 
 def valuesToInts(values):

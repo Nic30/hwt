@@ -11,11 +11,14 @@ from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hdl_toolkit.synthesizer.shortcuts import toRtl, synthesised
 from hdl_toolkit.simulator.simModel import SimModel
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.simulator.simSignalProxy import IndexSimSignalProxy
 
 
-def simPrepare(unit, modelCls =None):
+def simPrepare(unit, modelCls=None):
     """
     Create simulation model and connect it with interfaces of original unit
+    and decorate it with agents
     @return: tuple (fully loaded unit with connected sim model,
                     connected simulation model,
                     simulation processes of agents
@@ -40,19 +43,39 @@ def toSimModel(unit):
     exec(sim_code, simModule.__dict__)
     return simModule.__dict__[unit._name]
 
-def reconectUnitSignalsToModel(synthesisedUnit, modelCls):
+def reconectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls):
     """
     Reconnect model signals to unit to run simulation with simulation model
-    but use original unit interfaces for comunication
+    but use original unit interfaces for communication
     """
-    for s in walkPhysInterfaces(synthesisedUnit):
+    subInterfaces = synthesisedUnitOrIntf._interfaces
+    reconnectArrayItems = isinstance(synthesisedUnitOrIntf, InterfaceBase)\
+                             and synthesisedUnitOrIntf._multipliedBy
+    if subInterfaces:
+        for intf in subInterfaces:
+            reconectUnitSignalsToModel(intf, modelCls)
+    else:
+        s = synthesisedUnitOrIntf
         s._sigInside = getattr(modelCls, s._sigInside.name) 
     
+    if reconnectArrayItems:
+        # if this interface is array we have to replace signals in array items as well
+        for item in synthesisedUnitOrIntf._arrayElemCache:
+            reconectArrayIntfSignalsToModel(synthesisedUnitOrIntf, item)
+    
+def reconectArrayIntfSignalsToModel(parent, item):
+    index = parent._arrayElemCache.index(item)
+    for p, i in zip(walkPhysInterfaces(parent), walkPhysInterfaces(item)):
+        s = i._sigInside
+        width = s._dtype.bit_length()
+        i._sigInside = IndexSimSignalProxy(i._name, p._sigInside, i._dtype,
+                                        (width * (index + 1)), (width * index))
 
 def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
     """
     Syntax sugar
     If outputFile is string try to open it as file
+    @return: hdl simulator object
     """
     assert isinstance(simModel, SimModel), "Class of SimModel is required (got %r)" % (simModel)
     if isinstance(outputFile, str):
@@ -72,7 +95,7 @@ def _simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Tim
                             which are driving the simulation
     @param outputFile: file where vcd will be dumped
     @param time: endtime of simulation, time units are defined in HdlSimulator
-    
+    @return: hdl simulator object
     """
     
     sim = HdlSimulator()
@@ -82,7 +105,7 @@ def _simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Tim
     
     # run simulation, stimul processes are register after initial initialization
     sim.simUnit(simModel, time=time, extraProcesses=stimulFunctions) 
-
+    return sim
 
 class CallbackLoop(object):
     def __init__(self, sig, condFn, fn):
