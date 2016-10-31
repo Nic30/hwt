@@ -9,13 +9,13 @@ from hdl_toolkit.simulator.agentConnector import autoAddAgents
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
-from hdl_toolkit.synthesizer.shortcuts import toRtl, synthesised
+from hdl_toolkit.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
 from hdl_toolkit.simulator.simModel import SimModel
-from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hdl_toolkit.simulator.simSignalProxy import IndexSimSignalProxy
+from pydoc import importfile
+import importlib
 
 
-def simPrepare(unit, modelCls=None):
+def simPrepare(unit, modelCls=None, dumpModelIn=None):
     """
     Create simulation model and connect it with interfaces of original unit
     and decorate it with agents
@@ -25,7 +25,7 @@ def simPrepare(unit, modelCls=None):
                     ) 
     """
     if modelCls is None:
-        modelCls = toSimModel(unit)
+        modelCls = toSimModel(unit, tmpDir=dumpModelIn)
     else:
         synthesised(unit)
         
@@ -34,13 +34,26 @@ def simPrepare(unit, modelCls=None):
     procs = autoAddAgents(unit)
     return unit, model, procs
 
-def toSimModel(unit):
+def toSimModel(unit, tmpDir=None):
     """
     Create a simulation model for unit
     """
-    sim_code = toRtl(unit, serializer=SimModelSerializer)
-    simModule = imp.new_module('simModule')
-    exec(sim_code, simModule.__dict__)
+    if tmpDir is not None:
+        files = toRtlAndSave(unit, tmpDir, serializer=SimModelSerializer)      
+        d = os.path.join(os.getcwd(), tmpDir)
+        dInPath = d in sys.path
+        if not dInPath:
+            sys.path.append(d)
+        
+        simModule = importlib.import_module(unit._name)
+        
+        if not dInPath:
+            sys.path.remove(d)
+    else:
+        sim_code = toRtl(unit, serializer=SimModelSerializer)
+        simModule = imp.new_module('simModule')
+        exec(sim_code, simModule.__dict__)
+    
     return simModule.__dict__[unit._name]
 
 def reconectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls):

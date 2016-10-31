@@ -122,7 +122,7 @@ class BitsVal(EventCapableVal):
         val = 0
         vld = 0
         
-        if key._dtype == INT:
+        if isinstance(key._dtype, Integer):
             if keyVld:
                 val = selectBit(self.val, key.val)
                 vld = selectBit(self.vldMask, key.val)
@@ -202,7 +202,7 @@ class BitsVal(EventCapableVal):
 
     def _setitem__val(self, index, value):
         if index._isFullVld():
-            if index._dtype == INT: 
+            if isinstance(index._dtype, Integer): 
                 self.val = bitSetTo(self.val, index.val, value.val)
                 self.vldMask = bitSetTo(self.vldMask, index.val, value.vldMask)
             elif index._dtype == SLICE:

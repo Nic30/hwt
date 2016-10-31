@@ -1,4 +1,5 @@
 from hdl_toolkit.simulator.agentBase import SyncAgentBase
+from hdl_toolkit.hdlObjects.specialValues import NOP
 
 
 class VldSyncedAgent(SyncAgentBase):
@@ -22,8 +23,12 @@ class VldSyncedAgent(SyncAgentBase):
         
         if self.enable and self.data and self.notReset(s):
             d = self.data.pop(0)
-            self.doWrite(s, d)
-            s.w(1, intf.vld)
+            if d is NOP:
+                self.doWrite(s, None)
+                s.w(0, intf.vld)
+            else:
+                self.doWrite(s, d)
+                s.w(1, intf.vld)
         else:
             self.doWrite(s, None)
             s.w(0, intf.vld)

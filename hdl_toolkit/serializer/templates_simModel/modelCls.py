@@ -1,18 +1,22 @@
-from hdl_toolkit.hdlObjects.typeShortcuts import vecT, hInt
+from hdl_toolkit.hdlObjects.typeShortcuts import vecT
 from hdl_toolkit.hdlObjects.types.array import Array
 from hdl_toolkit.hdlObjects.types.arrayVal import ArrayVal
 from hdl_toolkit.hdlObjects.types.bitsConversions import convertBits__val
 from hdl_toolkit.hdlObjects.types.bitsVal import BitsVal
-from hdl_toolkit.hdlObjects.types.defs import BIT, INT, SLICE
+from hdl_toolkit.hdlObjects.types.defs import BIT, SLICE
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.hdlObjects.specialValues import DIRECTION, SENSITIVITY
-from hdl_toolkit.hdlObjects.types.integerConversions import convertInteger__val
-from hdl_toolkit.simulator.simModel import (SimModel, sensitivity, simBitsT, connectSimPort,
+from hdl_toolkit.simulator.types.simIntConversions import convertSimInteger__val 
+from hdl_toolkit.simulator.types.simInt import SIM_INT, simHInt
+from hdl_toolkit.simulator.types.simBits import simBitsT
+from hdl_toolkit.simulator.types.simBitsConversions import convertSimBits__val
+from hdl_toolkit.simulator.simModel import (SimModel, sensitivity, connectSimPort,
                                             simEvalCond, mkUpdater, mkArrayUpdater)
 from hdl_toolkit.synthesizer.codeOps import Concat
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.simulator.simSignal import SimSignal
 from hdl_toolkit.hdlObjects.types.sliceVal import SliceVal
+
 {% for c in componentInstances %}
 if "{{c.name}}" not in locals(): # support for all models in single file
     from {{c.name}} import {{c.name}}{% endfor %}

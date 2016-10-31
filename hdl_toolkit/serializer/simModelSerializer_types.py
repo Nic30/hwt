@@ -47,11 +47,12 @@ class SimModelSerializer_types():
         noMin = mi is None
         if noMin: 
             if noMax:
-                return "INT"
+                return "SIM_INT"
             else:
                 raise SerializerException("If max is specified min has to be specified as well")
         else:
             if noMax:
+                # [TODO] convert these to sim as well
                 if mi == 0:
                     return "UINT"
                 elif mi == 1:
