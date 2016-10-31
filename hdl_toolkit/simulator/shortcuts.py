@@ -13,6 +13,8 @@ from hdl_toolkit.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
 from hdl_toolkit.simulator.simModel import SimModel
 from pydoc import importfile
 import importlib
+from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hdl_toolkit.simulator.simSignalProxy import IndexSimSignalProxy
 
 
 def simPrepare(unit, modelCls=None, dumpModelIn=None):
