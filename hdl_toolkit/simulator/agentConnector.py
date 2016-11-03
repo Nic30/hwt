@@ -48,11 +48,14 @@ def valuesToInts(values):
     """
     res = []
     for d in values:
-        if d.vldMask == d._dtype.all_mask():
-            res.append(d.val)
-        else:
-            res.append(None)
+        res.append(valToInt(d))
     return res
+
+def valToInt(v):
+    if v.vldMask == v._dtype.all_mask():
+        return v.val
+    else:
+        return None
 
 def agInts(interface):
     """
