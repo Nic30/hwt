@@ -18,6 +18,16 @@ def allValuesToInts(sequenceOrVal):
         return l
 
 class SimTestCase(unittest.TestCase):
+    """
+    This is TestCase class contains methods which are usually used during
+    hdl simulation.
+    
+    @attention: self.model, self.procs has to be specified before running doSim
+    u = Axi_rDatapump()
+    self.model, self.procs = simPrepare(u)
+    
+    """
+    
     def getTestName(self):
         className, testName = self.id().split(".")[-2:]
         return "%s_%s" % (className, testName)
