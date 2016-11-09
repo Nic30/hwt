@@ -78,7 +78,7 @@ def synthesised(u):
         pass
     return u
 
-
+# [TODO] merge toRtlAndSave and toRtl
 def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
     unit._loadDeclarations()
     os.makedirs(folderName, exist_ok=True)
