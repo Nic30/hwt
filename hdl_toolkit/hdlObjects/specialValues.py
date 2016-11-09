@@ -8,7 +8,8 @@ class Unconstrained():
 class INTF_DIRECTION(Enum):
     MASTER = 0
     SLAVE = 1
-    UNKNOWN = 2
+    TRISTATE = 2
+    UNKNOWN = 3
     
     @classmethod
     def asDirection(cls, val):
@@ -16,6 +17,8 @@ class INTF_DIRECTION(Enum):
             return DIRECTION.IN 
         elif val == INTF_DIRECTION.MASTER:
             return DIRECTION.OUT
+        elif val == INTF_DIRECTION.TRISTATE:
+            return DIRECTION.INOUT
         else:
             raise Exception("Parameter (%s) is not interface direction" % (repr(val)))
     
@@ -25,6 +28,8 @@ class INTF_DIRECTION(Enum):
             return cls.MASTER
         elif d == cls.MASTER:
             return cls.SLAVE
+        elif d == cls.TRISTATE:
+            return d
         else:
             raise Exception("%s is not interface direction" % (repr(d)))
     
@@ -43,6 +48,8 @@ class DIRECTION(Enum):
             return INTF_DIRECTION.SLAVE
         elif d == cls.OUT:
             return INTF_DIRECTION.MASTER
+        elif d == cls.INOUT:
+            return INTF_DIRECTION.TRISTATE
         else:
             raise TypeError("Parameter %s is not direction" % (str(d)))
     
@@ -53,7 +60,7 @@ class DIRECTION(Enum):
         elif d == cls.OUT:
             return cls.IN
         elif d == cls.INOUT:
-            return cls.INOUT
+            return d
         else:
             raise Exception("Parameter is not direction")
             
