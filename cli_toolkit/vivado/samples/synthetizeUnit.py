@@ -1,5 +1,5 @@
 # [TODO] mv to hwtLib
-from hdl_toolkit.samples.iLvl.simple2 import SimpleUnit2
+from hwtLib.samples.iLvl.simpleAxiStream import SimpleUnitAxiStream3
 from cli_toolkit.vivado.api import portmapXdcForUnit, walkEachBitOnUnit
 from cli_toolkit.vivado.xdcGen import IoStandard
 from cli_toolkit.shortcuts import buildUnit
@@ -7,7 +7,7 @@ from cli_toolkit.shortcuts import buildUnit
 
 
 if __name__ == "__main__":
-    u = SimpleUnit2()
+    u = SimpleUnitAxiStream()
     def getConstrains(unit):
         def r(row, start, last):
             a = []
