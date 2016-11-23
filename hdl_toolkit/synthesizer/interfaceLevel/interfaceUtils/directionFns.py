@@ -7,7 +7,7 @@ class InterfaceDirectionFns():
     def _setDirectionsLikeIn(self, intfDir):
         # [TODO] array elements
         d = DIRECTION.asIntfDirection(self._masterDir)
-        if intfDir == INTF_DIRECTION.MASTER:
+        if intfDir == INTF_DIRECTION.MASTER or d == INTF_DIRECTION.TRISTATE:
             self._direction = d
             for i in self._interfaces:
                 i._setDirectionsLikeIn(d)
