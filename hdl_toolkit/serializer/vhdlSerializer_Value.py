@@ -87,9 +87,9 @@ class VhdlSerializer_Value():
             else:
                 return cls.BitLiteral(val.val, val.vldMask)
         elif dtype.signed:
-            return cls.SignedBitString(val.val, w, val.vldMask)
+            return cls.SignedBitString(val.val, w, dtype.forceVector, val.vldMask)
         else:
-            return cls.UnsignedBitString(val.val, w, val.vldMask)
+            return cls.UnsignedBitString(val.val, w, dtype.forceVector, val.vldMask)
 
     @staticmethod
     def BitString_binary(v, width, vldMask=None):
@@ -124,25 +124,29 @@ class VhdlSerializer_Value():
 
     
     @classmethod
-    def SignedBitString(cls, v, width, vldMask):
+    def SignedBitString(cls, v, width, forceVector, vldMask):
         if vldMask != mask(width):
-            raise SerializerException(
-            "Value %s can not be serialized as signed bit string literal due not all bits are valid" % 
-             repr(v))
+            if forceVector or width > 1:
+                v = cls.BitString(v, width, vldMask)
+            else:
+                v = cls.BitLiteral(v, width, vldMask)
         else:
-            # [TODO] parametrized width
-            return "TO_SIGNED(%d, %d)" % (v, width)
+            v = str(v)
+        # [TODO] parametrized width
+        return "TO_SIGNED(%s, %d)" % (v, width)
 
     
     @classmethod
-    def UnsignedBitString(cls, v, width, vldMask):
+    def UnsignedBitString(cls, v, width, forceVector, vldMask):
         if vldMask != mask(width):
-            raise SerializerException(
-            "Value %s can not be serialized as signed bit string literal due not all bits are valid" % 
-             repr(v))
+            if forceVector or width > 1:
+                v = cls.BitString(v, width, vldMask)
+            else:
+                v = cls.BitLiteral(v, width, vldMask)
         else:
-            # [TODO] parametrized width
-            return "TO_UNSIGNED(%d, %d)" % (v, width)
+            v = str(v)
+        # [TODO] parametrized width
+        return "TO_UNSIGNED(%s, %d)" % (v, width)
     
     @classmethod
     def Bool_valAsVhdl(cls, dtype, val):

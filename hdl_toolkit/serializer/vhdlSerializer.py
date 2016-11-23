@@ -201,14 +201,17 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         else:
             srcT = a.src._dtype
             dstT = dst._dtype
-            if (isinstance(srcT, Bits) and isinstance(dstT, Bits) and
-                srcT.bit_length() == dstT.bit_length() == 1):
-                if srcT.forceVector != dstT.forceVector:
-                    if srcT.forceVector:
-                        return "%s <= %s(0)" % (cls.asHdl(dst), cls.Value(a.src)) 
-                    else:
-                        return "%s(0) <= %s" % (cls.asHdl(dst), cls.Value(a.src)) 
-                
+            if isinstance(srcT, Bits) and isinstance(dstT, Bits):
+                sLen = srcT.bit_length()
+                dLen = dstT.bit_length()
+                if sLen == dLen:
+                    if sLen == 1 and srcT.forceVector != dstT.forceVector:
+                        if srcT.forceVector:
+                            return "%s <= %s(0)" % (cls.asHdl(dst), cls.Value(a.src)) 
+                        else:
+                            return "%s(0) <= %s" % (cls.asHdl(dst), cls.Value(a.src)) 
+                    elif srcT.signed is not dstT.signed:
+                        "%s <= %s" % (cls.asHdl(dst), cls.Value(a.src._convSign(dstT.signed)))
             
             raise SerializerException("%s <= %s  is not valid assignment\n because types are different (%s; %s) " % 
                          (cls.asHdl(dst), cls.Value(a.src), repr(dst._dtype), repr(a.src._dtype)))
