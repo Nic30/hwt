@@ -17,10 +17,10 @@ from hdl_toolkit.hdlObjects.value import Value, areValues
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hdl_toolkit.hdlObjects.types.bitValFunctions import boundryFromType,\
-    bitsCmp__val, bitsCmp, bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp,\
+from hdl_toolkit.hdlObjects.types.bitValFunctions import boundryFromType, \
+    bitsCmp__val, bitsCmp, bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, \
     getMulResT
-from hdl_toolkit.bitmask import mask, selectBit, selectBitRange, bitSetTo,\
+from hdl_toolkit.bitmask import mask, selectBit, selectBitRange, bitSetTo, \
     setBitRange
 
 class BitsVal(EventCapableVal):
@@ -92,7 +92,6 @@ class BitsVal(EventCapableVal):
         return v 
     
     def _concat(self, other):
-        # [TODO] vhdl does not support concatenation of signed/ unsigned 
         w = self._dtype.bit_length()
         other_w = other._dtype.bit_length()
         resWidth = w + other_w
@@ -109,12 +108,18 @@ class BitsVal(EventCapableVal):
             if isinstance(other, InterfaceBase):
                 other = other._sig
             if isinstance(other._dtype, Bits):
-                pass
+                if other._dtype.signed != None:
+                    other = other._vec()
             elif other._dtype == BOOL:
                 other = other._convert(BIT)
             else:
                 raise TypeError(other._dtype)
-            return Operator.withRes(AllOps.CONCAT, [self, other], resT)
+            
+            if self._dtype.signed != None:
+                    self = self._vec()
+            
+            return Operator.withRes(AllOps.CONCAT, [self, other], resT)\
+                           ._convert(vecT(resWidth, signed=self._dtype.signed))
     
     def _getitem__val(self, key):
         updateTime = max(self.updateTime, key.updateTime)
