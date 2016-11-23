@@ -4,8 +4,6 @@ from python_toolkit.fileHelpers import find_files
 from flask import render_template
 
 # [TODO] move gui out of hwt
-from hwtHdlParsers.hierarchyExtractor import DesignFile
-from hwtHdlParsers.loader import ParserFileInfo
 
 dependenciesBp = Blueprint('dependencies', __name__, template_folder='templates/dependencies/')
 

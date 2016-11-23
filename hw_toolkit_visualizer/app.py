@@ -1,8 +1,9 @@
 import sys
 from flask import Flask, render_template
 from flask.helpers import send_from_directory
-from hls_connections_views import connectionsBp
-from dependencyViews import dependenciesBp
+from hw_toolkit_visualizer.hls_connections_views import connectionsBp
+from hw_toolkit_visualizer.dependencyViews import dependenciesBp
+from hw_toolkit_visualizer.wave_views import waveBp
 
 
 sys.path.append("..")  # [hotfix] to make visualizer run after downloading from git
@@ -29,6 +30,7 @@ def gantt():
 
 app.register_blueprint(connectionsBp)
 app.register_blueprint(dependenciesBp)
+app.register_blueprint(waveBp)
 
 if __name__ == '__main__':
     app.run(debug=True)
