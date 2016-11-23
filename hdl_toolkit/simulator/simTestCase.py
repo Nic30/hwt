@@ -1,9 +1,12 @@
+import os
 import unittest
 
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.simulator.agentConnector import valToInt
-from hdl_toolkit.simulator.shortcuts import simUnitVcd
+from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.simSignal import SimSignal
+from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
+from hdl_toolkit.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
 
 
 def allValuesToInts(sequenceOrVal):
@@ -33,10 +36,40 @@ class SimTestCase(unittest.TestCase):
         return "%s_%s" % (className, testName)
     
     def doSim(self, time):
-        simUnitVcd(self.model, self.procs,
-                    "tmp/" + self.getTestName() + ".vcd",
-                    time=time)
+        outputFileName = "tmp/" + self.getTestName() + ".vcd"
+        d = os.path.dirname(outputFileName)
+        if d:
+            os.makedirs(d, exist_ok=True)
+        with open(outputFileName, 'w') as outputFile:
+            # return _simUnitVcd(simModel, stimulFunctions, outputFile=f, time=time) 
+            sim = HdlSimulator()
+
+            # configure simulator to log in vcd
+            sim.config = VcdHdlSimConfig(outputFile)
+            
+            # run simulation, stimul processes are register after initial initialization
+            sim.simUnit(self.model, time=time, extraProcesses=self.procs) 
+            return sim
     
+    def dumpHdlTestbench(self, time):
+        outputFileName = "tmp/" + self.getTestName() + "_tb.vhd"
+        d = os.path.dirname(outputFileName)
+        if d:
+            os.makedirs(d, exist_ok=True)
+        with open(outputFileName, 'w') as outputFile:
+            # return _simUnitVcd(simModel, stimulFunctions, outputFile=f, time=time) 
+            sim = HdlSimulator()
+
+            # configure simulator to log in vcd
+            sim.config = HdlSimConfigVhdlTestbench(self.u)
+            
+            # run simulation, stimul processes are register after initial initialization
+            sim.simUnit(self.model, time=time, extraProcesses=self.procs)
+            
+            sim.config.dump(outputFile)
+            
+            return sim
+        
     def assertValEqual(self, first, second, msg=None):
         if isinstance(first, SimSignal):
             first = first._val

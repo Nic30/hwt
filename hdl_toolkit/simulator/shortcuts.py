@@ -1,4 +1,5 @@
 import imp
+import importlib
 import inspect
 import os
 import sys
@@ -7,14 +8,12 @@ from hdl_toolkit.hdlObjects.specialValues import Time
 from hdl_toolkit.serializer.simModelSerializer import SimModelSerializer
 from hdl_toolkit.simulator.agentConnector import autoAddAgents
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
+from hdl_toolkit.simulator.simModel import SimModel
+from hdl_toolkit.simulator.simSignalProxy import IndexSimSignalProxy
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
-from hdl_toolkit.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
-from hdl_toolkit.simulator.simModel import SimModel
-from pydoc import importfile
-import importlib
 from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hdl_toolkit.simulator.simSignalProxy import IndexSimSignalProxy
+from hdl_toolkit.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
 
 
 def simPrepare(unit, modelCls=None, dumpModelIn=None):
