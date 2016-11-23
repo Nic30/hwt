@@ -1,7 +1,6 @@
 import sys
 
 from hdl_toolkit.hdlObjects.architecture import Architecture
-from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.process import HWProcess
 from hdl_toolkit.hdlObjects.statements import WaitStm
@@ -11,10 +10,11 @@ from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.enum import Enum
 from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
+from hdl_toolkit.synthesizer.codeOps import connect
 from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hdl_toolkit.synthesizer.codeOps import connect
+from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
 
 def makeTestbenchTemplate(unit, name=None):
@@ -81,7 +81,7 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
             self.tbArch.processes.append(proc)
             
         for s in walkPhysInterfaces(top):
-            if isinstance(s._dtype, self.supported_type_classes):
+            if s._direction is INTF_DIRECTION.SLAVE and isinstance(s._dtype, self.supported_type_classes):
                 reg(s)
         
     def logChange(self, nowTime, sig, nextVal):
@@ -105,6 +105,12 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
                 )
                 hwProc.actualTime = nowTime
         
+        try:
+            # SimBits type does not have forceVector flag, but serializer requires it
+            nextVal._dtype.forceVector = hwProc.driverFor._dtype.forceVector
+        except AttributeError:
+            pass
+        
         hwProc.statements.extend(
             connect(nextVal, hwProc.driverFor)
         )
@@ -112,6 +118,9 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
         
         
     def dump(self, dumpFile=sys.stdout):
+        for proc in self.tbArch.processes:
+            proc.statements.append(WaitStm(None))
+        
         hasToBeOpened = isinstance(dumpFile, str)
         if hasToBeOpened:
             _dumpFile = open(dumpFile, 'w')
