@@ -75,6 +75,7 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
         self.tbEnt, self.tbArch, self.tbCtx = makeTestbenchTemplate(top) 
 
         def reg(sigIntf):
+            """register interface and create diver process for it"""
             proc = mkDriverProc(sigIntf, self.tbCtx)
             self.registered[sigIntf._sigInside] = proc
             self.tbArch.processes.append(proc)
@@ -94,9 +95,15 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
             return
         
         if hwProc.actualTime < nowTime:
-            hwProc.statements.append(
-                WaitStm(int(nowTime - hwProc.actualTime))
-            )
+            a = hwProc.actualTime
+            if a < 0:
+                a = 0
+            delay = int(nowTime - a)
+            if delay > 0:
+                hwProc.statements.append(
+                    WaitStm(int(delay) // 1000)
+                )
+                hwProc.actualTime = nowTime
         
         hwProc.statements.extend(
             connect(nextVal, hwProc.driverFor)
@@ -112,8 +119,8 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
             _dumpFile = dumpFile
         
         sc = VhdlSerializer.getBaseNameScope()
-        _dumpFile.write(VhdlSerializer.Entity(self.tbEnt, sc))
-        _dumpFile.write(VhdlSerializer.Architecture(self.tbArch, sc))
+        _dumpFile.write(VhdlSerializer.formater(VhdlSerializer.Entity(self.tbEnt, sc)))
+        _dumpFile.write(VhdlSerializer.formater(VhdlSerializer.Architecture(self.tbArch, sc)))
         
         
         
