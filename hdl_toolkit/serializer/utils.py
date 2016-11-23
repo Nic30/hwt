@@ -1,16 +1,18 @@
+from itertools import chain
+
 from hdl_toolkit.hdlObjects.architecture import Architecture
+from hdl_toolkit.hdlObjects.assignment import Assignment
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.process import HWProcess
-from hdl_toolkit.hdlObjects.statements import WaitStm, IfContainer,\
+from hdl_toolkit.hdlObjects.statements import WaitStm, IfContainer, \
     SwitchContainer
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.interfaces.std import Rst_n
 from hdl_toolkit.synthesizer.codeOps import connect
-from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
-from hdl_toolkit.hdlObjects.assignment import Assignment
-from itertools import chain
+from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
+
 
 def getMaxStmIdForStm(stm):
     maxId = 0
@@ -23,6 +25,8 @@ def getMaxStmIdForStm(stm):
     elif isinstance(stm, SwitchContainer):
         for _stm in chain(*map(lambda _case: _case[1], stm.cases)):
             maxId = max(maxId, getMaxStmIdForStm(_stm))
+        return maxId
+    elif isinstance(stm, WaitStm):
         return maxId
     else:
         raise NotImplementedError(stm)
