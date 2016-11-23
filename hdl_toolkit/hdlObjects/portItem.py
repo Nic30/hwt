@@ -65,6 +65,8 @@ class PortItem(SignalItem):
             self.src.endpoints.append(self)
         elif self.direction == DIRECTION.IN:
             self.dst.drivers.append(self)
+        elif self.direction == DIRECTION.INOUT:
+            self.dst.drivers.append(self)
         else:
             raise NotImplementedError()
         

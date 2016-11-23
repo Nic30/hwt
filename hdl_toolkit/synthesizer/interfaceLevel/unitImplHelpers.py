@@ -1,7 +1,7 @@
 from copy import copy
 from types import MethodType
 
-from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
+from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, DIRECTION
 from hdl_toolkit.hdlObjects.typeShortcuts import mkRange
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
@@ -108,6 +108,10 @@ class UnitImplHelpers(object):
             portItem = single(self._entity.ports, lambda x : x._interface == interface)
             interface._originEntityPort = portItem
             d = INTF_DIRECTION.asDirection(interface._direction)
+            
+            if d == DIRECTION.INOUT:
+                portItem.direction = DIRECTION.INOUT
+                 
             if portItem.direction != d:
                 # print(self._entity)
                 # print(self._architecture)
