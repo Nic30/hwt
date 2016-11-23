@@ -51,8 +51,11 @@ class SimTestCase(unittest.TestCase):
             sim.simUnit(self.model, time=time, extraProcesses=self.procs) 
             return sim
     
-    def dumpHdlTestbench(self, time):
-        outputFileName = "tmp/" + self.getTestName() + "_tb.vhd"
+    def dumpHdlTestbench(self, time, file=None):
+        if file:
+            outputFileName = file
+        else:
+            outputFileName = "tmp/" + self.getTestName() + "_tb.vhd"
         d = os.path.dirname(outputFileName)
         if d:
             os.makedirs(d, exist_ok=True)
