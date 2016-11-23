@@ -98,12 +98,14 @@ def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time
         if d:
             os.makedirs(d, exist_ok=True)
         with open(outputFile, 'w') as f:
-            return _simUnitVcd(simModel, stimulFunctions, outputFile=f, time=time) 
+            return _simUnitVcd(simModel, stimulFunctions, 
+                               outputFile=f, time=time) 
     else:
-        return _simUnitVcd(simModel, stimulFunctions, outputFile=outputFile, time=time) 
+        return _simUnitVcd(simModel, stimulFunctions, 
+                           outputFile=outputFile, time=time) 
 
 
-def _simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
+def _simUnitVcd(simModel, stimulFunctions, outputFile, time):
     """
     @param unit: interface level unit to simulate
     @param stimulFunctions: iterable of function with single param env (simpy environment)
