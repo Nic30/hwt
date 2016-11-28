@@ -7,7 +7,7 @@ from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.simSignal import SimSignal
 from hdl_toolkit.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hdl_toolkit.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
-
+from hdl_toolkit.simulator.utils import agent_randomize
 
 def allValuesToInts(sequenceOrVal):
     if isinstance(sequenceOrVal, Value):
@@ -87,5 +87,8 @@ class SimTestCase(unittest.TestCase):
         @param seq2: items are not converted
         """
         seq1 = allValuesToInts(seq1)
+        unittest.TestCase.assertSequenceEqual(self, seq1, seq2, msg, seq_type)
         
-        return unittest.TestCase.assertSequenceEqual(self, seq1, seq2, msg=msg, seq_type=seq_type)
+
+    def randomize(self, intf):
+        self.procs.append(agent_randomize(intf._ag))
