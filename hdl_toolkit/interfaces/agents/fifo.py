@@ -6,18 +6,26 @@ class FifoReaderAgent(SyncAgentBase):
     def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
         super(FifoReaderAgent, self).__init__(intf, clk, rstn, allowNoReset)
         self.data = []
+        self.readPending = False
         
     def monitor(self, s):
         intf = self.intf
-        
+        if self.readPending:
+            yield s.updateComplete
+            d = s.read(intf.data)
+            self.data.append(d)
+            self.readPending = False
         if s.r(self.rst_n).val and self.enable:
             
             rd = not s.r(intf.wait).val
             s.w(rd, intf.en)
+            
             if rd:
-                yield s.updateComplete
-                d = s.read(intf.data)
-                self.data.append(d)
+                self.readPending = True
+            #    self.readPending
+            #    yield s.updateComplete
+            #    d = s.read(intf.data)
+            #    self.data.append(d)
         else:
             s.w(0, intf.en)
             
