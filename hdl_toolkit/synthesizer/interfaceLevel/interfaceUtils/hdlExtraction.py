@@ -206,7 +206,7 @@ class ExtractableInterface(InterfaceArray):
         # [TODO] ports as dict
         for name in cls._extractPossiblePrefixes(ports):
             try:
-                intfInst = cls(isExtern=True)
+                intfInst = cls()
                 intfInst._loadDeclarations()
                 prefix = name 
                      
@@ -228,6 +228,7 @@ class ExtractableInterface(InterfaceArray):
                     if mf is not None:
                         intf._extractDtype(multipliedBy=mf)
                         intf._setMultipliedBy(mf, updateTypes=False)
+                intfInst._setAsExtern(True)
                 yield (name, intf) 
             except InterfaceIncompatibilityExc as e:
                 # pass if interface was not found in ports

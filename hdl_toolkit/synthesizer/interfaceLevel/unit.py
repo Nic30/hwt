@@ -121,6 +121,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._setAttrListener = None
         for i in self._interfaces:
             i._loadDeclarations()
+            i._setAsExtern(True)
             
             if i._multipliedBy is not None:
                 if i._interfaces:

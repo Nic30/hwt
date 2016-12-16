@@ -13,10 +13,10 @@ D = DIRECTION
 
 class Signal(SignalOps, Interface):
     def __init__(self, masterDir=D.OUT, multipliedBy=None,
-                   dtype=BIT, isExtern=False, alternativeNames=None,
+                   dtype=BIT, alternativeNames=None,
                    loadConfig=True):
         super().__init__(masterDir=masterDir, multipliedBy=multipliedBy,
-             isExtern=isExtern, alternativeNames=alternativeNames,
+                            alternativeNames=alternativeNames,
              loadConfig=loadConfig)
         self._dtype = dtype
         self._setMultipliedBy(multipliedBy, updateTypes=True)
@@ -56,10 +56,10 @@ class Signal(SignalOps, Interface):
         return SignalAgent
 
 def VectSignal(width, signed=None, masterDir=D.OUT, multipliedBy=None,
-                   isExtern=False, alternativeNames=None,
+                   alternativeNames=None,
                    loadConfig=True):
     return Signal(masterDir, multipliedBy, vecT(width, signed), 
-                  isExtern, alternativeNames, loadConfig)        
+                   alternativeNames, loadConfig)        
 
 class Clk(Signal):
     _alternativeNames = ['ap_clk', 'aclk', 'clk', 'clock']

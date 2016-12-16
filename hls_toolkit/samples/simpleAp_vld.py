@@ -22,8 +22,8 @@ def w(intf, val):
 
 
 class SimpleAp_vld(Unit):
-    a = VldSynced(isExtern=True)
-    b = VldSynced(isExtern=True)
+    a = VldSynced()
+    b = VldSynced()
     
     @hls
     def readAndWrite(self):

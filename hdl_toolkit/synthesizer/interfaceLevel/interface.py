@@ -46,13 +46,12 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
     """
     _NAME_SEPARATOR = "_"
     def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None, \
-                 isExtern=False, alternativeNames=None, loadConfig=True):
+                 alternativeNames=None, loadConfig=True):
         """
         This constructor is called when constructing new interface, it is usually done 
         manually while creating Unit or
         automatically while extracting interfaces from UnitWithSoure
         @param masterDir: direction which this interface should have for master 
-        @param isExtern: if true this interface is specified as interface outside of this unit  
         @param multiplyedBy: this can be instance of integer or Param, this mean the interface
                          is array of the interfaces where multiplyedBy is the size
         @param alternativeNames: alternative names which are used for interface extraction from hdl
@@ -83,8 +82,10 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         self._cntx = RtlNetlist()
         
         if loadConfig:
-            self._loadConfig()                
-        self._isExtern = isExtern
+            self._loadConfig()
+        
+        # flags for better design error detection                    
+        self._isExtern = False
         self._isAccessible = True
         self._dirLocked = False
         

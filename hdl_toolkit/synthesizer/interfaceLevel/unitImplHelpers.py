@@ -1,5 +1,4 @@
 from copy import copy
-from types import MethodType
 
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, DIRECTION
 from hdl_toolkit.hdlObjects.typeShortcuts import mkRange
@@ -7,30 +6,7 @@ from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.interfaces.std import Clk, Rst, Rst_n
 from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
-from hdl_toolkit.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from python_toolkit.arrayQuery import single
-
-
-class MakeInterfaceExtern(object):
-    """
-    All newly added interfaces will be external. Automaticaly.
-    """
-    def __init__(self, unit):
-        self.unit = unit
-        
-    def __enter__(self):
-        orig = self.unit._setAttrListener
-        self.orig = orig
-        
-        def MakeInterfaceExternWrap(self, iName, i):
-            if isinstance(i, InterfaceBase):
-                i._isExtern = True
-            return orig(iName, i)
-        self.unit._setAttrListener = MethodType(MakeInterfaceExternWrap,
-                                           self.unit)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.unit._setAttrListener = self.orig
 
 class UnitImplHelpers(object):
     def _reg(self, name, dtype=BIT, defVal=None):
@@ -60,18 +36,6 @@ class UnitImplHelpers(object):
         Create signal in this unit
         """
         return self._cntx.sig(name, typ=dtype, defVal=defVal)
-    
-    def _asExtern(self):
-        """
-        Usage: 
-        
-        with self._asExtern():
-            # your interfaces which should be extern there
-        
-        """
-        return MakeInterfaceExtern(self)
-    
-
     
     def _cleanAsSubunit(self):
         """Disconnect internal signals so unit can be reused by parent unit"""

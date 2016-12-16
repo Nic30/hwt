@@ -36,27 +36,29 @@ class MakeParamsShared(object):
 class PropDeclrCollector(object):
     def _config(self):
         """
-        initialize all parameters
-        setup all parameters on this interface,
-        use Param class instances to allow system to update values
-        configuration method is called in __init__ of class
+        Configure object parameters
+        * setup all parameters on this object,
+          use Param class instances to allow use of parametr inheritance
+        * called in __init__ of class
         """
         pass
         
     def _declr(self):
         """
         declarations
-        initialize all subinterface objects
-        parameter instances are now set as parent object wish and should not be changed
-        _declr method is called after _config
+        * do all declarations of externally accessible objects there (Interfaces) 
+        * is called after _config
+        * _declr method is called after _config
+        * if this object is Unit all interfaces are threaten as externally accessible interfaces
+          if this object is Interface all subinterfaces are loaded 
         """
         pass
     
     def _impl(self):
         """
         implementations
-        make all connections etc.
-        this method is called after _declr
+        * implement functionality of design there
+        * called after _declr
         """
         pass
 

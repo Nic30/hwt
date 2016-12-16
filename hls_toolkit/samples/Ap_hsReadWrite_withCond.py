@@ -29,8 +29,8 @@ class HlsHs(Handshaked):
 
 
 class TestHlsUnit(Unit):
-    a = HlsHs(isExtern=True)
-    b = HlsHs(isExtern=True)
+    a = HlsHs()
+    b = HlsHs()
     
     @hls
     def readAndWrite(self):
