@@ -70,7 +70,7 @@ class UnitImplHelpers(object):
                 self._connectMyInterfaceToMyEntity(subIntf)  
         else:
             portItem = single(self._entity.ports, lambda x : x._interface == interface)
-            interface._originEntityPort = portItem
+            interface._boundedEntityPort = portItem
             d = INTF_DIRECTION.asDirection(interface._direction)
             
             if d == DIRECTION.INOUT:

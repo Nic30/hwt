@@ -83,10 +83,10 @@ class ExtractableInterface(InterfaceArray):
             for intfConfMap in self._interfaces:
                 intfConfMap._unExtrac()
         else:
-            if hasattr(self, "_originEntityPort"):
-                if hasattr(self._originEntityPort, "_interface"):
-                    del self._originEntityPort._interface
-                del self._originEntityPort
+            if hasattr(self, "_boundedEntityPort"):
+                if hasattr(self._boundedEntityPort, "_interface"):
+                    del self._boundedEntityPort._interface
+                del self._boundedEntityPort
                 
     def _extractDtype(self, multipliedBy=None):
         """
@@ -101,7 +101,7 @@ class ExtractableInterface(InterfaceArray):
             intfTConstr = self._dtype.constrain
 
             if intfTConstr is not None and isinstance(intfTConstr, (RtlSignalBase, SliceVal)):
-                unitTConstr = self._originEntityPort._dtype.constrain
+                unitTConstr = self._boundedEntityPort._dtype.constrain
                 paramDiff = list(ExprComparator.findExprDiffInParam(intfTConstr, unitTConstr))
                     
                 for intfParam, unitParam in paramDiff:
@@ -122,14 +122,14 @@ class ExtractableInterface(InterfaceArray):
 
                 if len(paramDiff) == 0:
                     # [TODO] and port is not parametrized
-                    origT = self._originEntityPort._dtype
+                    origT = self._boundedEntityPort._dtype
                     t = self._dtype
                     self._dtypeMatch = origT == t and not typeIsParametrized(origT) and not typeIsParametrized(t) 
                 else:
                     self._dtypeMatch = isinstance(_unitParam, (Param, Value))
                     updateParam(intfParam, _unitParam)
             else:
-                self._dtypeMatch = self._originEntityPort._dtype == self._dtype
+                self._dtypeMatch = self._boundedEntityPort._dtype == self._dtype
         
     def _tryToExtractByName(self, prefix, ports):
         """
@@ -148,7 +148,7 @@ class ExtractableInterface(InterfaceArray):
                     if intf._interfaces:
                         dirMatches = intf._direction == INTF_DIRECTION.MASTER
                     else:
-                        dirMatches = intf._originEntityPort.direction == intf._masterDir
+                        dirMatches = intf._boundedEntityPort.direction == intf._masterDir
                     allDirMatch = allDirMatch and dirMatches
                     noneDirMatch = noneDirMatch  and not dirMatches     
             except InterfaceIncompatibilityExc as e:
@@ -176,21 +176,21 @@ class ExtractableInterface(InterfaceArray):
             for n in intfNames:
                 name = prefix + n
                 try:
-                    self._originEntityPort = single(ports,
+                    self._boundedEntityPort = single(ports,
                                             lambda p : matchIgnorecase(p.name, name))
                     break
                 except NoValueExc as e:
                     continue
-            if not hasattr(self, "_originEntityPort"):
+            if not hasattr(self, "_boundedEntityPort"):
                 self._unExtrac()
                 raise  InterfaceIncompatibilityExc("Missing " + prefix + n)
 
             self._extractDtype()
             
             # assign references to hdl objects
-            self._originEntityPort._interface = self
+            self._boundedEntityPort._interface = self
             # resolve direction
-            dirMatches = self._originEntityPort.direction == self._masterDir
+            dirMatches = self._boundedEntityPort.direction == self._masterDir
             if dirMatches:
                 self._direction = INTF_DIRECTION.MASTER
             else:
@@ -215,7 +215,7 @@ class ExtractableInterface(InterfaceArray):
                     if intf._interfaces:
                         name = cls.__name__.lower()
                     else:
-                        name = intf._originEntityPort.name
+                        name = intf._boundedEntityPort.name
                 else:
                     name += intf._name
                 

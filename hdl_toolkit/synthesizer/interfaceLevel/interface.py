@@ -10,10 +10,7 @@ from hdl_toolkit.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrC
 from hdl_toolkit.synthesizer.param import Param
 from hdl_toolkit.synthesizer.vectorUtils import fitTo, aplyIndexOnSignal
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
-
-
-class NoKnownIpCoreInterface(Exception):
-    pass
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 
 class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """
@@ -32,8 +29,8 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
     @ival _sigInside : _sig after toRtl conversion is made (after toRtl conversion
                     _sig is signal for parent unit and _sigInside is signal 
                     in original unit, this separates process of translating units) 
-    @ivar _originEntityPort: entityPort for which was this interface created
-    @ivar _originSigLvlUnit: VHDL unit for which was this interface created
+    @ivar _boundedEntityPort: entityPort for which was this interface created
+    @ivar _boundedSigLvlUnit: RTL unit for which was this interface created
 
     
     
@@ -198,8 +195,8 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
                 s._interface = self
                 self._sig = s
                 
-                if hasattr(self, '_originEntityPort'):
-                    self._originEntityPort.connectSig(self._sig)
+                if hasattr(self, '_boundedEntityPort'):
+                    self._boundedEntityPort.connectSig(self._sig)
                 sigs = [s]
                 
         if self._multipliedBy is not None:
@@ -214,8 +211,8 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
 
     def _getPhysicalName(self):
         """Get name in HDL """
-        if hasattr(self, "_originEntityPort"):
-            return self._originEntityPort.name
+        if hasattr(self, "_boundedEntityPort"):
+            return self._boundedEntityPort.name
         else:
             return self._getFullName().replace('.', self._NAME_SEPARATOR)
         
@@ -266,10 +263,10 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
             updater(self, onParentName, p)
             
     def _getIpCoreIntfClass(self):
-        raise NoKnownIpCoreInterface()
+        raise NotSpecified()
     
     def _getSimAgent(self):
-        raise NotImplementedError()
+        raise NotSpecified()
     
     def __repr__(self):
         s = [self.__class__.__name__]

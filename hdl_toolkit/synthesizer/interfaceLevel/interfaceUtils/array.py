@@ -36,10 +36,10 @@ class InterfaceArray():
         widths = []
         # collect all widths    
         for i in walkPhysInterfaces(self):
-            if i._dtypeMatch or i._originEntityPort._dtype.constrain is None:
+            if i._dtypeMatch or i._boundedEntityPort._dtype.constrain is None:
                 # if is not constrained vector or type was resolved this can not be a interfaceArray
                 return 
-            w = getWidthExpr(i._originEntityPort._dtype)
+            w = getWidthExpr(i._boundedEntityPort._dtype)
             widths.append(w)
             
         # find what have all widths in common

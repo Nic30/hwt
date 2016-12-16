@@ -108,6 +108,16 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         # after synthesis clean up interface so unit can be used elsewhere
         self._cleanAsSubunit() 
         
+    def __loadInterface(self, i, isExtern):
+        i._loadDeclarations()
+        i._setAsExtern(isExtern)
+        
+        if i._multipliedBy is not None:
+            if i._interfaces:
+                i._initArrayItems() 
+            else:
+                i._injectMultiplerToDtype()    
+                
     def _loadDeclarations(self):
         """
         Load all declarations from _decl() method, recursively for all interfaces/units.
@@ -120,19 +130,20 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._declr()
         self._setAttrListener = None
         for i in self._interfaces:
-            i._loadDeclarations()
-            i._setAsExtern(True)
-            
-            if i._multipliedBy is not None:
-                if i._interfaces:
-                    i._initArrayItems() 
-                else:
-                    i._injectMultiplerToDtype()
+            self.__loadInterface(i, True)
                 
         # if I am a unit load subunits    
         for u in self._units:
             u._loadDeclarations()
-
+            
+    def _registerIntfInImpl(self, iName, intf):
+        """
+        Register interface in implementation phase
+        """
+        self._registerInterface(iName, intf)
+        self.__loadInterface(intf, False)
+        intf._signalsForInterface(self._cntx)
+        
     @classmethod
     def _build(cls, multithread=True):
         """
