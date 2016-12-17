@@ -9,7 +9,7 @@ from cli_toolkit.ip_packager.otherXmlObjs import VendorExtensions, FileSet, File
 from cli_toolkit.ip_packager.port import Port
 from python_toolkit.arrayQuery import arr_any
 import xml.etree.ElementTree as etree
-from hdl_toolkit.synthesizer.interfaceLevel.interface import NoKnownIpCoreInterface
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 
 
 vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
@@ -121,7 +121,7 @@ class Component():
             biClass = None
             try:
                 biClass = intf._getIpCoreIntfClass()
-            except NoKnownIpCoreInterface:
+            except NotSpecified:
                 pass
             if biClass is not None:
                 bi = BusInterface.fromBiClass(intf, biClass)
