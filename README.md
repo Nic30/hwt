@@ -1,4 +1,6 @@
 # HWToolkit
+
+[![Join the chat at https://gitter.im/HWToolkit/Lobby](https://badges.gitter.im/HWToolkit/Lobby.svg)](https://gitter.im/HWToolkit/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 HLS syntetizator writen in python (with VHDL/(System) Verilog parser, simulator, UVM like environment, IP core packager ... )
 
 This library was originaly syntax shugar/macro language for vhdl.
