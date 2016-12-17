@@ -42,7 +42,7 @@ def bitsCmp(self, other, op, evalFn=None):
         elif isinstance(other._dtype, Integer):
             other = other._convert(self._dtype) 
         else:
-            raise TypeError("Types are not comparable (%s, %s)" % (repr(self._dtype), repr(other._dtype)))
+            raise TypeError("Values of types (%s, %s) are not comparable" % (repr(self._dtype), repr(other._dtype)))
         
         return Operator.withRes(op, [self, other], BOOL) 
 
