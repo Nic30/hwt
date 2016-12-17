@@ -100,9 +100,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
                 intf._reverseDirection()
         
         # connect results of synthesized context to interfaces of this unit
-        for intf in self._interfaces:
-            if intf._isExtern:
-                self._connectMyInterfaceToMyEntity(intf)
+        self._boundInterfacesToEntity(self._interfaces)
         yield from s
             
         # after synthesis clean up interface so unit can be used elsewhere

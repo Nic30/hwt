@@ -7,6 +7,7 @@ from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.interfaces.std import Clk, Rst, Rst_n
 from hdl_toolkit.synthesizer.exceptions import IntfLvlConfErr
 from python_toolkit.arrayQuery import single
+from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 
 class UnitImplHelpers(object):
     def _reg(self, name, dtype=BIT, defVal=None):
@@ -62,25 +63,37 @@ class UnitImplHelpers(object):
                 i._signalsForInterface(context, prefix + i._NAME_SEPARATOR,
                                        typeTransform=lockTypeWidth)
     
-    def _connectMyInterfaceToMyEntity(self, interface):
-        # [TODO] reverse walk entity port and register it on interfaces
-        # then check if all interfaces are configured
-        if interface._interfaces:
-            for subIntf in interface._interfaces:
-                self._connectMyInterfaceToMyEntity(subIntf)  
-        else:
-            portItem = single(self._entity.ports, lambda x : x._interface == interface)
-            interface._boundedEntityPort = portItem
-            d = INTF_DIRECTION.asDirection(interface._direction)
-            
-            if d == DIRECTION.INOUT:
-                portItem.direction = DIRECTION.INOUT
-                 
-            if portItem.direction != d:
-                # print(self._entity)
-                # print(self._architecture)
-                raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
-                                     (self._name, portItem.name, repr(interface), portItem.direction, d))
+    def _boundInterfacesToEntity(self, interfaces):
+        externSignals = []
+        inftToPortDict = {}
+        
+        for p in self._entity.ports:
+            inftToPortDict[p._interface] = p
+        
+        for intf in self._interfaces:
+            if intf._isExtern:
+                for s in walkPhysInterfaces(intf):
+                    externSignals.append(s)
+        
+        assert len(externSignals) == len(inftToPortDict.keys())
+        
+        for s in externSignals:
+            self._boundIntfSignalToEntity(s, inftToPortDict)
+        
+        
+    def _boundIntfSignalToEntity(self, interface, inftToPortDict):
+        portItem = single(self._entity.ports, lambda x : x._interface == interface)
+        interface._boundedEntityPort = portItem
+        d = INTF_DIRECTION.asDirection(interface._direction)
+        
+        if d == DIRECTION.INOUT:
+            portItem.direction = DIRECTION.INOUT
+             
+        if portItem.direction != d:
+            # print(self._entity)
+            # print(self._architecture)
+            raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
+                                 (self._name, portItem.name, repr(interface), portItem.direction, d))
     
     def _updateParamsFrom(self, parent):
         """
