@@ -1,5 +1,5 @@
 # HWToolkit
-[![Join the chat at https://gitter.im/HWToolkit/Lobby](https://badges.gitter.im/HWToolkit/Lobby.svg)](https://gitter.im/HWToolkit/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)[![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt) [![Travis-ci Build Status](https://travis-ci.org/Nic30/hwtLib.png?branch=master)](https://travis-ci.org/Nic30/hwtLib)
+[![Travis-ci Build Status](https://travis-ci.org/Nic30/hwtLib.png?branch=master)](https://travis-ci.org/Nic30/hwtLib) [![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt) [![Join the chat at https://gitter.im/HWToolkit/Lobby](https://badges.gitter.im/HWToolkit/Lobby.svg)](https://gitter.im/HWToolkit/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
 
 
 Main purpose of HWToolkit framework is to speedup FPAGA design development. HWToolkit does the thing by intuitive HW description, powerful macro language, integrated UVM like verification environment.
