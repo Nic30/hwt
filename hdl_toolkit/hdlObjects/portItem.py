@@ -71,6 +71,6 @@ class PortItem(SignalItem):
             raise NotImplementedError()
         
     def __repr__(self):
-        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
-        return VhdlSerializer.PortItem(self) 
+        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
+        return VhdlSerializer.PortItem(self, onlyPrintDefaultValues) 
 

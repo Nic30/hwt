@@ -43,7 +43,8 @@ class EnumVal(Value):
         
         vldMask = int(self.vldMask == other.vldMask == 1)
         updateTime = max(self.updateTime, other.updateTime)
-        return BoolVal(neq, BOOL, vldMask, updateTime)    
+        return BoolVal(neq, BOOL, vldMask, updateTime)   
+     
     def __ne__(self, other):
         assert self._dtype is other._dtype
         

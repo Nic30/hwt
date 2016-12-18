@@ -14,15 +14,15 @@ from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 class VhdlSerializer_Value():
     
     @classmethod
-    def Value(cls, val):
+    def Value(cls, val, createTmpVarFn):
         """ 
         @param dst: is signal connected with value 
         @param val: value object, can be instance of Signal or Value    """
         t = val._dtype
         if isinstance(val, RtlSignalBase):
-            return cls.SignalItem(val)
+            return cls.SignalItem(val, createTmpVarFn)
         elif isinstance(t, Slice):
-            return cls.Slice_valAsVhdl(t, val)
+            return cls.Slice_valAsVhdl(t, val, createTmpVarFn)
         elif isinstance(t, Array):
             return cls.Array_valAsVhdl(t, val)
         elif isinstance(t, Bits):
@@ -39,10 +39,12 @@ class VhdlSerializer_Value():
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 
     
     @classmethod
-    def SignalItem(cls, si, declaration=False):
+    def SignalItem(cls, si, createTmpVarFn, declaration=False):
         if declaration:
             v = si.defaultVal
-            if si.drivers:
+            if si.virtualOnly:
+                prefix = "VARIABLE"
+            elif si.drivers:
                 prefix = "SIGNAL"
             elif si.endpoints or si.simSensProcs:
                 prefix = "CONSTANT"
@@ -52,12 +54,12 @@ class VhdlSerializer_Value():
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)
                 
 
-            s = prefix + " %s : %s" % (si.name, cls.HdlType(si._dtype))
+            s = prefix + " %s : %s" % (si.name, cls.HdlType(si._dtype, createTmpVarFn))
             if isinstance(v, RtlSignalBase):
-                return s + " := %s" % cls.asHdl(v)
+                return s + " := %s" % cls.asHdl(v, createTmpVarFn)
             elif isinstance(v, Value):
                 if si.defaultVal.vldMask:
-                    return s + " := %s" % cls.Value(si.defaultVal)
+                    return s + " := %s" % cls.Value(si.defaultVal, createTmpVarFn)
                 else:
                     return s 
             else:
@@ -65,7 +67,7 @@ class VhdlSerializer_Value():
             
         else:
             if si.hidden and hasattr(si, "origin"):
-                return cls.asHdl(si.origin)
+                return cls.asHdl(si.origin, createTmpVarFn)
             else:
                 return si.name
 
@@ -157,8 +159,8 @@ class VhdlSerializer_Value():
         return str(int(val.val))
 
     @classmethod
-    def Slice_valAsVhdl(cls, dtype, val):
-        return "%s DOWNTO %s" % (cls.Value(val.val[0]), cls.Value(val.val[1]))
+    def Slice_valAsVhdl(cls, dtype, val, createTmpVarFn):
+        return "%s DOWNTO %s" % (cls.Value(val.val[0], createTmpVarFn), cls.Value(val.val[1], createTmpVarFn))
 
     @classmethod
     def String_valAsVhdl(cls, dtype, val):

@@ -14,7 +14,15 @@ class Assignment(object):
     """
     __instCntr = 0
     
-    def __init__(self, src, dst, indexes=None):
+    def __init__(self, src, dst, indexes=None, virtualOnly=False):
+        """
+        @param dst: destination to assign to
+        @param src: source which is assigned from
+        @param indexes: description of index selector on dst (list of Index/Slice objects)
+                (f.e. [[0], [1]] means  dst[0][1]  )
+        @param virtualOnly: flag indicates that this assignments is only virtual and should not be added into
+                netlist, because it is only for internal notation
+        """
         self.src = src
         self.dst = dst
         self.isEventDependent = False
@@ -22,7 +30,8 @@ class Assignment(object):
         self.cond = set()
         self._instId = Assignment._nextInstId()
         
-        dst.ctx.startsOfDataPaths.add(self)
+        if not virtualOnly:
+            dst.ctx.startsOfDataPaths.add(self)
     
     @classmethod
     def _nextInstId(cls):
@@ -34,9 +43,10 @@ class Assignment(object):
         return i
         
     def seqEval(self):
+        """Sequentially evaluate this assignment"""
         self.dst._val = self.src.staticEval() 
     
     def __repr__(self):
-        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
-        return VhdlSerializer.Assignment(self)    
+        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
+        return VhdlSerializer.Assignment(self, onlyPrintDefaultValues)    
 

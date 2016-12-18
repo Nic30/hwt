@@ -65,7 +65,7 @@ class Bits(HdlType):
             return cls._valCls
 
     def __repr__(self):
-        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
         c = self.constrain
         if isinstance(c, int):
             constr = "width:%d" % c
@@ -75,7 +75,7 @@ class Bits(HdlType):
             except AttributeError:
                 constr = ""
         else:
-            constr = VhdlSerializer.asHdl(self.constrain)
+            constr = VhdlSerializer.asHdl(self.constrain, onlyPrintDefaultValues)
         
         return "<HdlType %s, %s>" % (
             self.__class__.__name__, constr)

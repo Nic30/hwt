@@ -10,7 +10,7 @@ from hdl_toolkit.serializer.exceptions import SerializerException
 
 class VhdlSerializer_types():
     @classmethod
-    def HdlType_bits(cls, typ, declaration=False):
+    def HdlType_bits(cls, typ, createTmpVarFn, declaration=False):
         disableRange = False
         if typ.signed is None:
             if typ.forceVector or typ.bit_length() > 1:
@@ -29,7 +29,7 @@ class VhdlSerializer_types():
         elif isinstance(c, (int, float)):
             constr = "(%d DOWNTO 0)" % (c - 1)
         else:        
-            constr = "(%s)" % cls.Value(c)     
+            constr = "(%s)" % cls.Value(c, createTmpVarFn)     
         return name + constr
 
 
@@ -52,7 +52,7 @@ class VhdlSerializer_types():
             return typ.name
         
     @classmethod
-    def HdlType_array(cls, typ, scope, declaration=False):
+    def HdlType_array(cls, typ, createTmpVarFn, scope, declaration=False):
         if declaration:
             try:
                 name = typ.name
@@ -62,7 +62,7 @@ class VhdlSerializer_types():
             typ.name = scope.checkedName(name, typ)
             
             return "TYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
-                (typ.name, cls.asHdl(toHVal(typ.size) - 1), cls.HdlType(typ.elmType))
+                (typ.name, cls.asHdl(toHVal(typ.size) - 1, createTmpVarFn), cls.HdlType(typ.elmType, createTmpVarFn))
         else:
             try:
                 return typ.name
@@ -95,13 +95,13 @@ class VhdlSerializer_types():
                 return "INTEGER RANGE %d to %d" % (mi, ma)
     
     @classmethod
-    def HdlType(cls, typ, scope=None, declaration=False):
+    def HdlType(cls, typ, createTmpVarFn, scope=None, declaration=False):
         if isinstance(typ, Bits):
-            return cls.HdlType_bits(typ, declaration=declaration)
+            return cls.HdlType_bits(typ, createTmpVarFn, declaration=declaration)
         elif isinstance(typ, Enum):
             return cls.HdlType_enum(typ, scope, declaration=declaration)
         elif isinstance(typ, Array):
-            return cls.HdlType_array(typ, scope, declaration=declaration)
+            return cls.HdlType_array(typ, createTmpVarFn, scope, declaration=declaration)
         elif isinstance(typ, Integer):
             return cls.HdlType_int(typ, scope, declaration=declaration)
         else:
