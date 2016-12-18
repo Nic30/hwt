@@ -11,16 +11,16 @@ from hdl_toolkit.hdlObjects.types.enumVal import EnumVal
 from hdl_toolkit.hdlObjects.value import Value
 from hdl_toolkit.serializer.exceptions import SerializerException
 from hdl_toolkit.serializer.nameScope import LangueKeyword, NameScope
-from hdl_toolkit.serializer.simModelSerializer_Value import SimModelSerializer_value
-from hdl_toolkit.serializer.simModelSerializer_ops import SimModelSerializer_ops
-from hdl_toolkit.serializer.simModelSerializer_types import SimModelSerializer_types
+from hdl_toolkit.serializer.simModel.value import SimModelSerializer_value
+from hdl_toolkit.serializer.simModel.ops import SimModelSerializer_ops
+from hdl_toolkit.serializer.simModel.types import SimModelSerializer_types
 from hdl_toolkit.serializer.utils import maxStmId
 from hdl_toolkit.synthesizer.param import evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hdl_toolkit.hdlObjects.types.bits import Bits
 
 
-env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_simModel'))
+env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/simModel/templates'))
 unitTmpl = env.get_template('modelCls.py')
 processTmpl = env.get_template('process.py')
 ifTmpl = env.get_template("if.py")

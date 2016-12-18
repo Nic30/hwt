@@ -7,5 +7,5 @@ class MapExpr():
         self.value = value
 
     def __repr__(self):
-        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
         return VhdlSerializer.MapExpr(self)

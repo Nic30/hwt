@@ -18,5 +18,5 @@ class HWProcess():
             yield from s.simEval(simulator)
 
     def __repr__(self):
-        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
         return VhdlSerializer.formater(VhdlSerializer.HWProcess(self, VhdlSerializer.getBaseNameScope()))

@@ -24,5 +24,5 @@ class Architecture(object):
             return self.entityName    
         
     def __repr__(self):
-        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
         return VhdlSerializer.formater(VhdlSerializer.Architecture(self, VhdlSerializer.getBaseNameScope()))

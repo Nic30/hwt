@@ -3,7 +3,7 @@ from functools import wraps
 import sys
 
 from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
 from hdl_toolkit.hdlObjects.types.enum import Enum
 
 

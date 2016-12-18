@@ -5,7 +5,7 @@ import os
 import sys
 
 from hdl_toolkit.hdlObjects.specialValues import Time
-from hdl_toolkit.serializer.simModelSerializer import SimModelSerializer
+from hdl_toolkit.serializer.simModel.serializer import SimModelSerializer
 from hdl_toolkit.simulator.agentConnector import autoAddAgents
 from hdl_toolkit.simulator.hdlSimulator import HdlSimulator
 from hdl_toolkit.simulator.simModel import SimModel

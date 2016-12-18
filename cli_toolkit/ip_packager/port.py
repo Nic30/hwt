@@ -4,7 +4,7 @@ from cli_toolkit.ip_packager.helpers import appendSpiElem, \
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 

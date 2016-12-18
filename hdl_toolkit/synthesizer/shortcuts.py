@@ -9,7 +9,7 @@ from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.entity import Entity
 
 from hdl_toolkit.serializer.exceptions import SerializerException
-from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.uniqList import UniqList
 

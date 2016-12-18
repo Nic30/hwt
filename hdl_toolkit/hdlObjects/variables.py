@@ -21,7 +21,7 @@ class SignalItem(object):
         self._oldVal.vldMask = 0
     
     def __repr__(self):
-        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
         return VhdlSerializer.SignalItem(self)        
     
         

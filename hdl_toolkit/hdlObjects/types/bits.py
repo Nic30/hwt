@@ -65,7 +65,7 @@ class Bits(HdlType):
             return cls._valCls
 
     def __repr__(self):
-        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
         c = self.constrain
         if isinstance(c, int):
             constr = "width:%d" % c

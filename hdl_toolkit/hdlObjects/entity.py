@@ -14,6 +14,6 @@ class Entity(object):
         self.discovered = False
 
     def __repr__(self):
-        from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+        from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
         return VhdlSerializer.Entity(self, VhdlSerializer.getBaseNameScope())
     

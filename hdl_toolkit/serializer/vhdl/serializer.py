@@ -22,10 +22,10 @@ from hdl_toolkit.serializer.nameScope import LangueKeyword, NameScope
 from hdl_toolkit.serializer.serializerClases.mapExpr import MapExpr
 from hdl_toolkit.serializer.serializerClases.portMap import PortMap 
 from hdl_toolkit.serializer.utils import maxStmId
-from hdl_toolkit.serializer.vhdlFormater import formatVhdl
-from hdl_toolkit.serializer.vhdlSerializer_Value import VhdlSerializer_Value
-from hdl_toolkit.serializer.vhdlSerializer_ops import VhdlSerializer_ops
-from hdl_toolkit.serializer.vhdlSerializer_types import VhdlSerializer_types
+from hdl_toolkit.serializer.vhdl.formater import formatVhdl
+from hdl_toolkit.serializer.vhdl.value import VhdlSerializer_Value
+from hdl_toolkit.serializer.vhdl.ops import VhdlSerializer_ops
+from hdl_toolkit.serializer.vhdl.types import VhdlSerializer_types
 from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
 from hdl_toolkit.synthesizer.param import getParam, evalParam
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -49,7 +49,7 @@ VHLD_KEYWORDS = [
 "xnor", "xor"]        
 
 
-env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/templates_vhdl'))
+env = Environment(loader=PackageLoader('hdl_toolkit', 'serializer/vhdl/templates'))
 architectureTmpl = env.get_template('architecture.vhd')
 entityTmpl = env.get_template('entity.vhd')
 processTmpl = env.get_template('process.vhd')

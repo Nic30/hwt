@@ -3,18 +3,18 @@ import sys
 from hdl_toolkit.hdlObjects.architecture import Architecture
 from hdl_toolkit.hdlObjects.entity import Entity
 from hdl_toolkit.hdlObjects.process import HWProcess
+from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 from hdl_toolkit.hdlObjects.statements import WaitStm
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.boolean import Boolean
 from hdl_toolkit.hdlObjects.types.defs import BIT
 from hdl_toolkit.hdlObjects.types.enum import Enum
-from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
 from hdl_toolkit.simulator.hdlSimConfig import HdlSimConfig
 from hdl_toolkit.synthesizer.codeOps import connect
 from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hdl_toolkit.synthesizer.rtlLevel.netlist import RtlNetlist
 from hdl_toolkit.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
 
 def makeTestbenchTemplate(unit, name=None):

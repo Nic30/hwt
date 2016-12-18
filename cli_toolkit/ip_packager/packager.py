@@ -4,7 +4,7 @@ from os.path import relpath
 from cli_toolkit.ip_packager.component import Component
 from cli_toolkit.ip_packager.helpers import prettify
 from cli_toolkit.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
-from hdl_toolkit.serializer.vhdlSerializer import VhdlSerializer
+from hdl_toolkit.serializer.vhdl.serializer import VhdlSerializer
 from hdl_toolkit.synthesizer.uniqList import UniqList
 from hdl_toolkit.synthesizer.interfaceLevel.unit import defaultUnitName
 from hdl_toolkit.synthesizer.shortcuts import toRtlAndSave
