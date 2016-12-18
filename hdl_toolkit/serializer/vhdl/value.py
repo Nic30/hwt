@@ -24,7 +24,7 @@ class VhdlSerializer_Value():
         elif isinstance(t, Slice):
             return cls.Slice_valAsVhdl(t, val, createTmpVarFn)
         elif isinstance(t, Array):
-            return cls.Array_valAsVhdl(t, val)
+            return cls.Array_valAsVhdl(t, val, createTmpVarFn)
         elif isinstance(t, Bits):
             return cls.Bits_valAsVhdl(t, val)
         elif isinstance(t, Boolean):
@@ -76,8 +76,8 @@ class VhdlSerializer_Value():
         return  '%s' % str(val.val)
     
     @classmethod
-    def Array_valAsVhdl(cls, dtype, val):
-        return  "(" + (",\n".join([cls.Value(v) for v in val.val])) + ")"
+    def Array_valAsVhdl(cls, dtype, val, createTmpVarFn):
+        return  "(" + (",\n".join([cls.Value(v, createTmpVarFn) for v in val.val])) + ")"
     
         
     @classmethod
