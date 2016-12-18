@@ -43,18 +43,7 @@ class Operator():
                 pass
             else:
                 raise NotImplementedError("Operator operands can be only signal or values got:%s" % repr(o))
-                
-    
-    def simEval(self, simulator):
-        """
-        Recursively statistically evaluate result of this operator
-        if signal has not set hidden flag do not reevaluate it
-        """
-        for o in self.ops:
-            if isinstance(o, RtlSignalBase) and o.hidden:
-                o.simEval(simulator)
-        self.result._val = self.evalFn(simulator=simulator)
-            
+
     def staticEval(self):
         """
         Recursively statistically evaluate result of this operator
