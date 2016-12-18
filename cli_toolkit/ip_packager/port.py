@@ -56,7 +56,9 @@ class Port():
         dt = p._dtype
         
         
-        t.typeName = VhdlSerializer.HdlType(dt)
+        def createTmpVar(suggestedName , dtype):
+            pass
+        t.typeName = VhdlSerializer.HdlType(dt, createTmpVar)
         try:
             t.typeName = t.typeName[:t.typeName.index('(')]
         except ValueError:
@@ -89,7 +91,7 @@ class Port():
                     d.text = VivadoTclExpressionSerializer.asHdl(val.staticEval())
                 else:
                     resolve = "immediate"
-                    d.text = VivadoTclExpressionSerializer.asHdl(val)
+                    d.text = VivadoTclExpressionSerializer.asHdl(val, None)
                 d.attrib["spirit:resolve"] = resolve
             mkBoundry("left", self.vector[0])
             mkBoundry("right", self.vector[1])

@@ -56,7 +56,11 @@ class ModelParameter():
     @classmethod
     def fromGeneric(cls, g):
         val = Value.fromGeneric("MODELPARAM_VALUE.", g, Value.RESOLVE_GENERATED)
-        return cls(g.name, g.name.replace("_", " "), VivadoTclExpressionSerializer.HdlType(g._dtype).lower(), val)
+        def createTmpVar(suggestedName, dtype):
+            raise NotImplementedError("Value of generic %s can not be converted do ipcore format (%s)", g.name, repr(val))
+        return cls(g.name,
+                   g.name.replace("_", " "),
+                   VivadoTclExpressionSerializer.HdlType(g._dtype, createTmpVar).lower(), val)
     
     def asElem(self):
         e = mkSpiElm("modelParameter")

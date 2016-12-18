@@ -42,8 +42,11 @@ class IntfConfig(Type):
         return p
     
     def addWidthParam(self, thisIntf, name, value):
+        def createTmpVar(suggestedName, dtype):
+            raise NotImplementedError("Value of generic %s can not be converted do ipcore format (%s)", name, repr(value))
+       
         p = self.addSimpleParam(thisIntf, "ADDR_WIDTH",
-                            VivadoTclExpressionSerializer.asHdl(value.staticEval()))
+                            VivadoTclExpressionSerializer.asHdl(value.staticEval(), createTmpVar))
         if isinstance(value, RtlSignalBase):
             p.value.resolve = "user" 
         

@@ -120,12 +120,12 @@ class VhdlSerializer_statements():
     @classmethod
     def SwitchContainer(cls, sw, createTmpVarFn):
         asHdl = lambda obj : cls.asHdl(obj, createTmpVarFn)
-        switchOn = cls.condAsHdl(sw.switchOn, False)
+        switchOn = cls.condAsHdl(sw.switchOn, False, createTmpVarFn)
         
         cases = []
         for key, statements in sw.cases:
             if key is not None:  # None is default
-                key = cls.asHdl(key)
+                key = cls.asHdl(key, createTmpVarFn)
                 
             if cls.VHDL_VER < VhdlVersion.v2008:
                 statements = ternaryOpsToIf(statements)
@@ -135,5 +135,5 @@ class VhdlSerializer_statements():
                                  cases=cases)  
     
     @classmethod
-    def MapExpr(cls, m):
-        return   "%s => %s" % (m.compSig.name, cls.asHdl(m.value))
+    def MapExpr(cls, m, createTmpVar):
+        return   "%s => %s" % (m.compSig.name, cls.asHdl(m.value, createTmpVar))

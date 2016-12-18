@@ -70,7 +70,7 @@ def onlyPrintDefaultValues(suggestedName, dtype):
     # [TODO] it is better to use RtlSignal
     s = SignalItem(suggestedName, dtype, virtualOnly=True)
     s.hidden = False
-    serializedS = VhdlSerializer.SignalItem(s, createTmpVarFn, declaration=True)
+    serializedS = VhdlSerializer.SignalItem(s, onlyPrintDefaultValues, declaration=True)
     print(serializedS)
     return s
 
@@ -91,9 +91,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
     def serializationDecision(cls, obj, serializedClasses, serializedConfiguredUnits):
         """
         Decide if this unit should be serialized or not eventually fix name to fit same already serialized unit
-        
         @param serializedClasses: unitCls : unitobj
-    
         @param serializedConfiguredUnits: (unitCls, paramsValues) : unitObj
                                           where paramsValues are named tuple name:value
         """
@@ -180,16 +178,18 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.components.sort(key=lambda x: x.name)
         arch.componentInstances.sort(key=lambda x: x._name)
+        def createTmpVarFn(suggestedName, dtype):
+            raise NotImplementedError()
         
         for v in arch.variables:
             t = v._dtype
             # if type requires extra definition
             if isinstance(t, (Enum, Array)) and t not in extraTypes:
                 extraTypes.add(v._dtype)
-                extraTypes_serialized.append(cls.HdlType(t, scope, declaration=True))
+                extraTypes_serialized.append(cls.HdlType(t, createTmpVarFn, scope, declaration=True))
 
             v.name = scope.checkedName(v.name, v)
-            serializedVar = cls.SignalItem(v, declaration=True)
+            serializedVar = cls.SignalItem(v, createTmpVarFn, declaration=True)
             variables.append(serializedVar)
             
         
@@ -205,9 +205,9 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         "variables"          :variables,
         "extraTypes"         :extraTypes_serialized,
         "processes"          :procs,
-        "components"         :map(lambda c: cls.Component(c),
+        "components"         :map(lambda c: cls.Component(c, createTmpVarFn),
                                    arch.components),
-        "componentInstances" :map(lambda c: cls.ComponentInstance(c, scope),
+        "componentInstances" :map(lambda c: cls.ComponentInstance(c, createTmpVarFn, scope),
                                    arch.componentInstances)
         })
         
@@ -216,18 +216,17 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         return "--" + comentStr.replace("\n", "\n--")
     
     @classmethod
-    def Component(cls, entity):
+    def Component(cls, entity, createTmpVar):
         entity.ports.sort(key=lambda x: x.name)
         entity.generics.sort(key=lambda x: x.name)
         return componentTmpl.render({
-                "ports": [cls.PortItem(pi) for pi in entity.ports],
-                "generics": [cls.GenericItem(g) for g in entity.generics],
+                "ports": [cls.PortItem(pi, createTmpVar) for pi in entity.ports],
+                "generics": [cls.GenericItem(g, createTmpVar) for g in entity.generics],
                 "entity": entity
                 })      
 
     @classmethod
-    def ComponentInstance(cls, entity, scope):
-        # [TODO] check if instance name is available in scope
+    def ComponentInstance(cls, entity, createTmpVarFn, scope):
         portMaps = []
         for pi in entity.ports:
             pm = PortMap.fromPortItem(pi)
@@ -245,8 +244,8 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         return componentInstanceTmpl.render({
                 "instanceName" : entity._name,
                 "entity": entity,
-                "portMaps": [cls.PortConnection(x) for x in portMaps],
-                "genericMaps" : [cls.MapExpr(x) for x in genericMaps]
+                "portMaps": [cls.PortConnection(x, createTmpVarFn) for x in portMaps],
+                "genericMaps" : [cls.MapExpr(x, createTmpVarFn) for x in genericMaps]
                 })     
 
     @classmethod
@@ -282,7 +281,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             return entVhdl
     
     @classmethod
-    def condAsHdl(cls, cond, forceBool):
+    def condAsHdl(cls, cond, forceBool, createTmpVarFn):
         if isinstance(cond, RtlSignalBase):
             cond = [cond]
         else:
@@ -290,17 +289,17 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         if len(cond) == 1:
             c = cond[0]
             if not forceBool or c._dtype == BOOL:
-                return cls.asHdl(c)
+                return cls.asHdl(c, createTmpVarFn)
             elif c._dtype == BIT:
-                return "(" + cls.asHdl(c) + ")=" + cls.BitLiteral(1, 1) 
+                return "(" + cls.asHdl(c, createTmpVarFn) + ")=" + cls.BitLiteral(1, 1) 
             elif isinstance(c._dtype, Bits):
                 width = c._dtype.bit_length()
-                return "(" + cls.asHdl(c) + ")/=" + cls.BitString(0, width)
+                return "(" + cls.asHdl(c, createTmpVarFn) + ")/=" + cls.BitString(0, width)
             else:
                 raise NotImplementedError()
             
         else:
-            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool), cond))
+            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool, createTmpVarFn), cond))
     
       
     @classmethod

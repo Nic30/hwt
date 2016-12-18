@@ -26,8 +26,14 @@ opPrecedence = {AllOps.NOT : 2,
                 }
 
 def isResultOfTypeConversion(sig):
-    d = sig.drivers[0]
-    return True
+    try:
+        d = sig.drivers[0]
+    except IndexError:
+        return False
+    
+    if sig.hidden:
+        return True
+    return False
 
 class VhdlSerializer_ops():
 
@@ -102,7 +108,7 @@ class VhdlSerializer_ops():
         elif o == AllOps.ADD:
             return _bin('+')
         elif o == AllOps.TERNARY:
-            return p(ops[1]) + " WHEN " + cls.condAsHdl([ops[0]], True) + " ELSE " + p(ops[2])
+            return p(ops[1]) + " WHEN " + cls.condAsHdl([ops[0]], True, createTmpVarFn) + " ELSE " + p(ops[2])
         elif o == AllOps.RISING_EDGE:
             assert len(ops) == 1
             return "RISING_EDGE(" + p(ops[0]) + ")"
