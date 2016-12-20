@@ -47,7 +47,7 @@ def ternaryOpsToIf(statements):
 class VhdlSerializer_statements():
     
     @classmethod
-    def WaitStm(cls, w):
+    def WaitStm(cls, w, createTmpVarFn):
         if w.isTimeWait:
             return "wait for %d ns" % w.waitForWhat
         elif w.waitForWhat is None:
