@@ -373,7 +373,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         extraVarsInit = []
         for s in extraVars:
             a = Assignment(s.defaultVal, s, virtualOnly=True)
-            extraVarsInit = [cls.Assignment(a, createTmpVarFn) ]
+            extraVarsInit.append(cls.Assignment(a, createTmpVarFn))
 
         return processTmpl.render({
               "name": proc.name,
