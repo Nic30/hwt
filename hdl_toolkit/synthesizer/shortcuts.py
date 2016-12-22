@@ -143,7 +143,7 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
 
 
 def serializeAsIpcore(unit, folderName=".", name=None, serializer=VhdlSerializer):
-    from cli_toolkit.ip_packager.packager import Packager
+    from hdl_toolkit.serializer.ip_packager.packager import Packager
     p = Packager(unit, name=name)
     p.createPackage(folderName)
     return p

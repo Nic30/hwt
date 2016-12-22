@@ -1,4 +1,4 @@
-from cli_toolkit.ip_packager.interfaces.intfConfig import IntfConfig, DEFAULT_CLOCK 
+from hdl_toolkit.serializer.ip_packager.interfaces.intfConfig import IntfConfig, DEFAULT_CLOCK 
 from hdl_toolkit.interfaces.std import Rst, Rst_n
 from python_toolkit.arrayQuery import where
 

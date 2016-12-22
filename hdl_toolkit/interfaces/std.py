@@ -65,7 +65,7 @@ class Clk(Signal):
     _alternativeNames = ['ap_clk', 'aclk', 'clk', 'clock']
     
     def _getIpCoreIntfClass(self):
-        from cli_toolkit.ip_packager.interfaces.std import IP_Clk
+        from hdl_toolkit.serializer.ip_packager.interfaces.std import IP_Clk
         return IP_Clk
 
     def _getSimAgent(self):
@@ -77,7 +77,7 @@ class Rst(Signal):
     _alternativeNames = ['ap_rst', 'areset', 'reset', 'rst']
 
     def _getIpCoreIntfClass(self):
-        from cli_toolkit.ip_packager.interfaces.std import IP_Rst
+        from hdl_toolkit.serializer.ip_packager.interfaces.std import IP_Rst
         return IP_Rst
     
     def _getSimAgent(self):
@@ -95,7 +95,7 @@ class Rst_n(Signal):
         return sigs
 
     def _getIpCoreIntfClass(self):
-        from cli_toolkit.ip_packager.interfaces.std import IP_Rst_n
+        from hdl_toolkit.serializer.ip_packager.interfaces.std import IP_Rst_n
         return IP_Rst_n
 
     def _getSimAgent(self):
@@ -163,7 +163,7 @@ class BramPort_withoutClk(Interface):
         self.we = s()   
 
     def _getIpCoreIntfClass(self):
-        from cli_toolkit.ip_packager.interfaces.std import IP_BlockRamPort
+        from hdl_toolkit.serializer.ip_packager.interfaces.std import IP_BlockRamPort
         return IP_BlockRamPort
 
     def _getSimAgent(self):

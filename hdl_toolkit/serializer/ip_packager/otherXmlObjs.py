@@ -1,7 +1,7 @@
 import os, math
 from time import gmtime, strftime
 
-from cli_toolkit.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
+from hdl_toolkit.serializer.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
     appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
 from hdl_toolkit.hdlObjects.types.bits import Bits
 from hdl_toolkit.hdlObjects.types.defs import BOOL, STR

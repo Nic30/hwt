@@ -1,12 +1,12 @@
 from time import  time
 
-from cli_toolkit.ip_packager.busInterface import BusInterface
-from cli_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
+from hdl_toolkit.serializer.ip_packager.busInterface import BusInterface
+from hdl_toolkit.serializer.ip_packager.helpers import appendSpiElem, appendStrElements, \
          mkSpiElm, ns, whereEndsWithExt, whereEndsWithExts
-from cli_toolkit.ip_packager.model import Model
-from cli_toolkit.ip_packager.otherXmlObjs import VendorExtensions, FileSet, File, \
+from hdl_toolkit.serializer.ip_packager.model import Model
+from hdl_toolkit.serializer.ip_packager.otherXmlObjs import VendorExtensions, FileSet, File, \
     Parameter, Value
-from cli_toolkit.ip_packager.port import Port
+from hdl_toolkit.serializer.ip_packager.port import Port
 from python_toolkit.arrayQuery import arr_any
 import xml.etree.ElementTree as etree
 from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified

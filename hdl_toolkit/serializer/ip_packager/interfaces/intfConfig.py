@@ -1,6 +1,6 @@
-from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
-from cli_toolkit.ip_packager.helpers import mkSpiElm, spi_ns_prefix
-from cli_toolkit.ip_packager.otherXmlObjs import Parameter
+from hdl_toolkit.serializer.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+from hdl_toolkit.serializer.ip_packager.helpers import mkSpiElm, spi_ns_prefix
+from hdl_toolkit.serializer.ip_packager.otherXmlObjs import Parameter
 from hdl_toolkit.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from python_toolkit.arrayQuery import single
 

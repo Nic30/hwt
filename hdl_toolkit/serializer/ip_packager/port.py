@@ -1,5 +1,5 @@
-from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
-from cli_toolkit.ip_packager.helpers import appendSpiElem, \
+from hdl_toolkit.serializer.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+from hdl_toolkit.serializer.ip_packager.helpers import appendSpiElem, \
          findS, mkSpiElm, ns
 from hdl_toolkit.hdlObjects.typeShortcuts import hInt
 from hdl_toolkit.hdlObjects.types.bits import Bits

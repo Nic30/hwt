@@ -1,7 +1,7 @@
-from cli_toolkit.ip_packager.exprSerializer import VivadoTclExpressionSerializer
-from cli_toolkit.ip_packager.helpers import appendSpiElem, appendStrElements, \
+from hdl_toolkit.serializer.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+from hdl_toolkit.serializer.ip_packager.helpers import appendSpiElem, appendStrElements, \
          findS, mkSpiElm, spi_ns_prefix, appendSpiArray
-from cli_toolkit.ip_packager.otherXmlObjs import Value
+from hdl_toolkit.serializer.ip_packager.otherXmlObjs import Value
 import xml.etree.ElementTree as etree
 
 

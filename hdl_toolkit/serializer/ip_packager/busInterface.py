@@ -1,4 +1,4 @@
-from cli_toolkit.ip_packager.helpers import appendSpiElem, \
+from hdl_toolkit.serializer.ip_packager.helpers import appendSpiElem, \
          mkSpiElm
 from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
 
