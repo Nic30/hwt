@@ -3,15 +3,15 @@
 
 from setuptools import setup, find_packages
 
-setup(name='hwtoolkit',
-      version='0.2',
+setup(name='hwt',
+      version='0.3',
       description='hdl synthesis toolkit',
       url='https://github.com/Nic30/HWToolkit',
       author='Michal Orsak',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
         'simpy',  # discrete simulator 
-        'jinja2',  # hdl templates renderer, visualizer renderer
+        'jinja2',  # hdl templates renderer
       ],
       license='MIT',
       packages=find_packages(),
