@@ -1,4 +1,4 @@
-recursive-include hdl_toolkit/serializer/vhdl/templates *.vhd
-recursive-include hdl_toolkit/serializer/verilog/templates *.v
-recursive-include hdl_toolkit/serializer/simModel/templates *.py
-recursive-include visualizer *.js *.html *.css *.ico *.png *.oft *.eot *.svg *.ttf *.woff
+recursive-include hwt/serializer/vhdl/templates *.vhd
+recursive-include hwt/serializer/verilog/templates *.v
+recursive-include hwt/serializer/simModel/templates *.py
+
