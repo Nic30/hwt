@@ -7,6 +7,8 @@ cache:
   apt: true
 python:
 - '3.5'
+script:
+- echo "tests are part of hwtLib"
 deploy:
   provider: pypi
   user: nic30
