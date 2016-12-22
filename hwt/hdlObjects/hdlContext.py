@@ -1,4 +1,4 @@
-from hwt.nonRedefDict import NonRedefDict
+from hwt.pyUtils.nonRedefDict import NonRedefDict
 from hwt.hdlObjects.reference import HdlRef
 from hwt.hdlObjects.entity import Entity
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
