@@ -1,6 +1,6 @@
 from subprocess import PIPE, Popen
 import os
-from python_toolkit.arrayQuery import where
+from hwt.pyUtils.arrayQuery import where
 import subprocess
 import re
 from copy import copy

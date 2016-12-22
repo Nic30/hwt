@@ -1,6 +1,6 @@
 import os
 from flask.blueprints import Blueprint
-from python_toolkit.fileHelpers import find_files
+from hwt.pyUtils.fileHelpers import find_files
 from flask import render_template
 
 # [TODO] move gui out of hwt

@@ -1,5 +1,5 @@
 from itertools import groupby
-from hdl_toolkit.synthesizer.codeOps import c
+from hwt.synthesizer.codeOps import c
 
 
 class FsmBuilder(object):

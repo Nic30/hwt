@@ -1,8 +1,8 @@
 from collections import deque
 
-from hdl_toolkit.synthesizer.interfaceLevel.interface import Interface
+from hwt.synthesizer.interfaceLevel.interface import Interface
 from hls_toolkit.streamLvl.valObj import valObj
-from hdl_toolkit.bitmask import mask
+from hwt.bitmask import mask
 
 
 def write(val, intf):

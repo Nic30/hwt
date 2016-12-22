@@ -4,8 +4,8 @@ import types
 from myhdl import always_seq, always_comb, Signal, modbv, ResetSignal
 from myhdl.conversion._toVHDL import _ToVHDLConvertor
 
-from hdl_toolkit.hdlObjects.types.defs import BIT
-from hdl_toolkit.interfaces.std import Rst_n, Rst
+from hwt.hdlObjects.types.defs import BIT
+from hwt.interfaces.std import Rst_n, Rst
 
 def toMyHdlIntf(interface):
     if isinstance(interface, type):

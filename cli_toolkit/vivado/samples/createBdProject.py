@@ -1,4 +1,4 @@
-from hdl_toolkit.hdlObjects.specialValues import DIRECTION
+from hwt.hdlObjects.specialValues import DIRECTION
 from cli_toolkit.vivado.partBuilder import XilinxPartBuilder
 from cli_toolkit.vivado.api import Project, Port, Net
 from cli_toolkit.vivado.controller import VivadoCntrl

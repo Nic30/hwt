@@ -4,8 +4,8 @@ import inspect
 import subprocess
 import hashlib
 
-from python_toolkit.fileHelpers import find_files
-from hdl_toolkit.intfLvl import UnitFromHdl
+from hwt.pyUtils.fileHelpers import find_files
+from hwt.intfLvl import UnitFromHdl
 
 class VivadoHlsConfig():
     EXECUTABLE = ["bash", "/opt/Xilinx/Vivado_HLS/2015.2/vivado_hls.sh"]

@@ -1,4 +1,4 @@
-from hdl_toolkit.synthesizer.shortcuts import toRtl
+from hwt.synthesizer.shortcuts import toRtl
 from hls_toolkit.vivadoHLS.unit import VivadoHLSUnit
 
 

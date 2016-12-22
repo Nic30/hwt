@@ -2,8 +2,8 @@
 Hls operations are always made of datapath and FSM
 """
 
-from hdl_toolkit.interfaces.std import VldSynced
-from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit
+from hwt.interfaces.std import VldSynced
+from hwt.synthesizer.interfaceLevel.unit import Unit
 from hls_toolkit.baseSynthesizer import hls
 from hls_toolkit.codeObjs import HlsOperation
 

@@ -3,13 +3,13 @@ from myhdl.conversion._toVHDL import _ToVHDLConvertor, _shortversion
 import os
 import types
 
-from hdl_toolkit.hdlObjects.specialValues import DIRECTION
-from hdl_toolkit.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
-from hdl_toolkit.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl, \
+from hwt.hdlObjects.specialValues import DIRECTION
+from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hwt.synthesizer.interfaceLevel.unitFromHdl import UnitFromHdl, \
     toAbsolutePaths
-from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import defaultUnitName
+from hwt.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hls_toolkit.myHdlSynthesizer import toMyHdlIntf
-from python_toolkit.arrayQuery import single, NoValueExc
+from hwt.pyUtils.arrayQuery import single, NoValueExc
 
 
 class DirectionInfoCont():

@@ -3,7 +3,7 @@ import json
 import os
 from stat import S_ISDIR
 import time
-from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION, DIRECTION
+from hwt.hdlObjects.specialValues import INTF_DIRECTION, DIRECTION
 
 def getExterntPort(intf):
     return getattr(intf, "_guiExternPort", None)

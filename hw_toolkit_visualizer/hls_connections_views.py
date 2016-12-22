@@ -3,11 +3,11 @@ from flask.blueprints import Blueprint
 import json, importlib, sys, os, glob
 
 from connectionsJsonObj import FSEntry, jsonResp 
-from hdl_toolkit.synthesizer.interfaceLevel.unit import Unit 
+from hwt.synthesizer.interfaceLevel.unit import Unit 
 from hls_connections import serializeUnit 
 
 
-WORKSPACE_DIR = "../hdl_toolkit/samples/" 
+WORKSPACE_DIR = "../hwt/samples/" 
 sys.path.append(WORKSPACE_DIR)
 
 connectionsBp = Blueprint('connections', __name__, template_folder='templates/hls/')

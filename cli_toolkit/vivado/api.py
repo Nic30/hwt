@@ -3,10 +3,10 @@ import shutil
 
 from cli_toolkit.vivado.controller import VivadoTCL
 from cli_toolkit.vivado.xdcGen import PackagePin, Comment, PortType
-from hdl_toolkit.hdlObjects.specialValues import INTF_DIRECTION
-from hdl_toolkit.hdlObjects.types.bits import Bits
-from hdl_toolkit.interfaces.std import Clk, Rst, Rst_n
-from hdl_toolkit.synthesizer.interfaceLevel.unitUtils import walkSignalOnUnit
+from hwt.hdlObjects.specialValues import INTF_DIRECTION
+from hwt.hdlObjects.types.bits import Bits
+from hwt.interfaces.std import Clk, Rst, Rst_n
+from hwt.synthesizer.interfaceLevel.unitUtils import walkSignalOnUnit
 
 
 class ConfigErr(Exception):

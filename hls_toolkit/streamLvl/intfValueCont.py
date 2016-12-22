@@ -1,4 +1,4 @@
-from hdl_toolkit.hdlObjects.value import Value
+from hwt.hdlObjects.value import Value
 from copy import deepcopy
 
 
