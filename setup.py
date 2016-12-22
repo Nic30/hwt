@@ -10,17 +10,11 @@ setup(name='hwtoolkit',
       author='Michal Orsak',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
-        'myhdl',  # optional hls synthesizer (but used in some samples)
-        'Pillow', # altium scheme reader
         'simpy',  # discrete simulator 
-        'jinja2', # hdl templates renderer, visualizer renderer
-        'flask'  # visualizer
+        'jinja2',  # hdl templates renderer, visualizer renderer
       ],
       license='MIT',
-      packages = find_packages(),
-      package_data={'hwt': ['*.vhd', '*.v'],
-                    'visualizer' : ['*.html', '*.js', '*.css', '*.ico', 
-                                    '*.png', '*.oft', '*.eot', '*.svg', 
-                                    '*.ttf', '*.woff']},
+      packages=find_packages(),
+      package_data={'hwt': ['*.vhd', '*.v']},
       include_package_data=True,
       zip_safe=False)
