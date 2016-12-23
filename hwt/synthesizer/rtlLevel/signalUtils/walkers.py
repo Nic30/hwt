@@ -3,11 +3,11 @@ from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps, isEventDependentOp
 from hwt.hdlObjects.portItem import PortItem
 from hwt.hdlObjects.specialValues import DIRECTION, SENSITIVITY
+from hwt.hdlObjects.statements import IfContainer, SwitchContainer
 from hwt.hdlObjects.value import Value
+from hwt.pyUtils.arrayQuery import where
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.pyUtils.arrayQuery import where
-from hwt.hdlObjects.statements import IfContainer, SwitchContainer
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 
@@ -97,7 +97,15 @@ class EventDependencyReached(Exception):
     def __init__(self, evOp):
         self.evOp = evOp
 
-def _walkDriversInExpr(expr, seenSet):
+def walkDriversInExpr(expr, seenSet):
+    """
+    @return: generators of RtlSignal
+            where signal is in expression and is not used in event dependent expression
+    @raise EventDependencyReached: when this generator steps on event dependent operator 
+    @attention: if event operator is found in expression, only sensitivity EventDependencyReached is raised
+                this may case some synthesis (Vivado, ISE, Quartus ...) to complain about sensitivity, 
+                but it will work 
+    """
     if isinstance(expr, (Value, Param)):
         pass
     elif isinstance(expr, RtlSignalBase):
@@ -128,19 +136,6 @@ def _walkDriversInExpr(expr, seenSet):
                     
     else:           
         raise TypeError(expr)
-    
-
-def walkDriversInExpr(expr, seenSet):
-    """
-    @return: generators of RtlSignal
-            where signal is in expression and is not used in event dependent expression
-    @raise EventDependencyReached: when this generator steps on event dependent operator 
-    @attention: if event operator is found in expression, only sensitivity EventDependencyReached is raised
-                this may case some synthesis (Vivado, ISE, Quartus ...) to complain about sensitivity, 
-                but it will work 
-    """
-    res = list(_walkDriversInExpr(expr, seenSet))
-    yield from res
 
 def discoverEventDependency(sig):
     """

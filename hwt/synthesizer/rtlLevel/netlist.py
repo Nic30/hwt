@@ -113,7 +113,7 @@ class RtlNetlist():
             else:
                 r = [RtlSignal.__pow__(s, s.next)]
             
-            If(clk._onRisingEdge(), 
+            If(clk._onRisingEdge(),
                r)
         else:
             if syncRst:
@@ -138,9 +138,15 @@ class RtlNetlist():
                 name = sig.name
             sig.hidden = False
             
+            haveNotIndexes = True
+            for dp in dps:
+                haveNotIndexes = haveNotIndexes and not dp.indexes
+            
             # render sequential statements in process
             # (conversion from netlist to statements)
+            hasCombDriver = False
             for stm in renderIfTree(dps):
+                
                 p = HWProcess("assig_process_" + name)
                 if sig._useNopVal and not isEnclosed(stm):
                     n = sig._nopVal
@@ -149,11 +155,23 @@ class RtlNetlist():
                         p.sensitivityList.add(n)
                     
                 p.statements.append(stm)
+
                 sensitivity = discoverSensitivity(stm)
                 p.sensitivityList.update(sensitivity)
-                for s in p.sensitivityList:
-                    s.hidden = False
 
+                isEventDependent = False
+                for s in p.sensitivityList:
+                    if isinstance(s, Operator):
+                        # event operator
+                        s.ops[0].hidden = False
+                        isEventDependent = True
+                    else:
+                        s.hidden = False
+
+                if hasCombDriver and not isEventDependent and haveNotIndexes:
+                    raise MultipleDriversExc("Signal %s has multiple combinational drivers" % name)
+                hasCombDriver = hasCombDriver or not isEventDependent
+                
                 yield p
 
     def mergeWith(self, other):
