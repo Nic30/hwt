@@ -9,7 +9,7 @@ from hwt.hdlObjects.statements import WaitStm, IfContainer, \
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BIT
 from hwt.interfaces.std import Rst_n
-from hwt.synthesizer.codeOps import connect
+from hwt.code import connect
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
