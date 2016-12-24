@@ -7,6 +7,7 @@ from hwt.hdlObjects.specialValues import DIRECTION
 class TristateSig(Interface):
     """
     Tristate interface
+    in order to make this a vector[0] instead of single bit use forceVector=True
     """
     def _config(self):
         self.DATA_WIDTH = Param(1)
