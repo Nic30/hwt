@@ -1,12 +1,8 @@
 from hwt.hdlObjects.specialValues import INTF_DIRECTION
+from hwt.interfaces.utils import cloneIntf
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.param import evalParam, Param
 
-
-def cloneIntf(intf):
-    i = intf.__class__()
-    i._updateParamsFrom(intf)
-    return i
 
 class IpCoreWrapper(Unit):
     """
