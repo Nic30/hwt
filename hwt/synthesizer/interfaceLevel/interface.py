@@ -56,6 +56,8 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         """
         self._setAttrListener = None
         super().__init__()
+        if multipliedBy is not None:
+            multipliedBy = toHVal(multipliedBy)
         self._multipliedBy = multipliedBy
         self._masterDir = masterDir
         self._direction = INTF_DIRECTION.UNKNOWN
