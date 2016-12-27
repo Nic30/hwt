@@ -4,7 +4,7 @@ from keyword import kwlist
 
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps, sensitivityByOp
-from hwt.hdlObjects.specialValues import SENSITIVITY
+from hwt.hdlObjects.constants import SENSITIVITY
 from hwt.hdlObjects.statements import IfContainer
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.enumVal import EnumVal

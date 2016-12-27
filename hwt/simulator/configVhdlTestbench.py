@@ -3,7 +3,7 @@ import sys
 from hwt.hdlObjects.architecture import Architecture
 from hwt.hdlObjects.entity import Entity
 from hwt.hdlObjects.process import HWProcess
-from hwt.hdlObjects.specialValues import INTF_DIRECTION
+from hwt.hdlObjects.constants import INTF_DIRECTION
 from hwt.hdlObjects.statements import WaitStm
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.boolean import Boolean

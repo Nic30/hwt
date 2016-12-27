@@ -3,7 +3,7 @@ from hwt.hdlObjects.function import Function
 from hwt.hdlObjects.types.defs import INT
 from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
     xor, gt, ge, lt, le, getitem
-from hwt.hdlObjects.specialValues import SENSITIVITY
+from hwt.hdlObjects.constants import SENSITIVITY
 
 class OpDefinition():
     """

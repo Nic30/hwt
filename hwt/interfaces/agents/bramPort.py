@@ -1,4 +1,4 @@
-from hwt.hdlObjects.specialValues import READ, WRITE
+from hwt.hdlObjects.constants import READ, WRITE
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.simulator.shortcuts import oscilate
 

@@ -2,7 +2,7 @@ from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.param import Param
 from hwt.interfaces.std import Signal
 from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.specialValues import DIRECTION
+from hwt.hdlObjects.constants import DIRECTION
 
 class TristateSig(Interface):
     """

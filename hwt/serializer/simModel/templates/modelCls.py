@@ -5,7 +5,7 @@ from hwt.hdlObjects.types.bitsConversions import convertBits__val
 from hwt.hdlObjects.types.bitsVal import BitsVal
 from hwt.hdlObjects.types.defs import BIT, SLICE
 from hwt.hdlObjects.types.enum import Enum
-from hwt.hdlObjects.specialValues import DIRECTION, SENSITIVITY
+from hwt.hdlObjects.constants import DIRECTION, SENSITIVITY
 from hwt.simulator.types.simIntConversions import convertSimInteger__val 
 from hwt.simulator.types.simInt import SIM_INT, simHInt
 from hwt.simulator.types.simBits import simBitsT

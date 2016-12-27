@@ -3,7 +3,7 @@ from operator import and_, or_
 import types
 
 from hwt.hdlObjects.operatorDefs import concatFn
-from hwt.hdlObjects.specialValues import DIRECTION
+from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.typeShortcuts import hInt, vec
 from hwt.hdlObjects.types.defs import BIT
 from hwt.hdlObjects.types.enum import Enum

@@ -1,4 +1,4 @@
-from hwt.hdlObjects.specialValues import Time
+from hwt.hdlObjects.constants import Time
 from random import Random
 
 def valueHasChanged(valA, valB):

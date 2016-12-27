@@ -2,7 +2,7 @@ from hwt.hdlObjects.assignment import Assignment
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps, isEventDependentOp
 from hwt.hdlObjects.portItem import PortItem
-from hwt.hdlObjects.specialValues import DIRECTION, SENSITIVITY
+from hwt.hdlObjects.constants import DIRECTION, SENSITIVITY
 from hwt.hdlObjects.statements import IfContainer, SwitchContainer
 from hwt.hdlObjects.value import Value
 from hwt.pyUtils.arrayQuery import where
