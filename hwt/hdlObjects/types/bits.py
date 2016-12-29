@@ -1,6 +1,6 @@
 from copy import copy
 
-from hwt.hdlObjects.specialValues import Unconstrained
+from hwt.hdlObjects.constants import Unconstrained
 from hwt.hdlObjects.types.hdlType import HdlType 
 from hwt.bitmask import mask
 

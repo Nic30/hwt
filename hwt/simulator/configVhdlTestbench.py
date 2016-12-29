@@ -3,7 +3,7 @@ import sys
 from hwt.hdlObjects.architecture import Architecture
 from hwt.hdlObjects.entity import Entity
 from hwt.hdlObjects.process import HWProcess
-from hwt.hdlObjects.specialValues import INTF_DIRECTION
+from hwt.hdlObjects.constants import INTF_DIRECTION
 from hwt.hdlObjects.statements import WaitStm
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.boolean import Boolean
@@ -11,7 +11,7 @@ from hwt.hdlObjects.types.defs import BIT
 from hwt.hdlObjects.types.enum import Enum
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.simulator.hdlSimConfig import HdlSimConfig
-from hwt.synthesizer.codeOps import connect
+from hwt.code import connect
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal

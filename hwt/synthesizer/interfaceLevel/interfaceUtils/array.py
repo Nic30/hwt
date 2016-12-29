@@ -1,5 +1,5 @@
 from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.specialValues import INTF_DIRECTION
+from hwt.hdlObjects.constants import INTF_DIRECTION
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.synthesizer.vectorUtils import getWidthExpr

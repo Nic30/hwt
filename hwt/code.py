@@ -1,17 +1,19 @@
+import math
 from operator import and_, or_
 import types
 
 from hwt.hdlObjects.operatorDefs import concatFn
-from hwt.hdlObjects.specialValues import DIRECTION
+from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.typeShortcuts import hInt, vec
 from hwt.hdlObjects.types.defs import BIT
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.pyUtils.arrayQuery import arr_any
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from hwt.synthesizer.vectorUtils import getWidthExpr, fitTo
-from hwt.pyUtils.arrayQuery import arr_any
 
 
 def _intfToSig(obj):
@@ -371,6 +373,30 @@ def srl(sig, howMany):
     Logical shift right
     """
     return sig[howMany:]._concat(vec(0, howMany))
+
+def log2ceil(x):
+    """
+    Returns no of bits required to store x-1
+    for example x=8 returns 3
+    """
+    
+    if not isinstance(x, (int, float)):
+        x = evalParam(x).val
+    
+    if x == 0 or x == 1:
+        res = 1
+    else:
+        res = math.ceil(math.log2(x))
+    return hInt(res)
+
+def isPow2(num):
+    assert isinstance(num, int)
+    return num != 0 and ((num & (num - 1)) == 0)
+
+
+def binToGray(sigOrVal):
+    l = sigOrVal._dtype.bit_length()
+    return Concat(sigOrVal[l - 1], sigOrVal[l - 1:0] ^ sigOrVal[l:1])
 
 
 # shortcuts

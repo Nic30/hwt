@@ -8,7 +8,7 @@ from hwt.hdlObjects.statements import IfContainer, WaitStm, \
 from hwt.hdlObjects.types.defs import BIT
 from hwt.hdlObjects.value import Value
 from hwt.synthesizer.assigRenderer import renderIfTree
-from hwt.synthesizer.codeOps import If
+from hwt.code import If
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal

@@ -1,5 +1,5 @@
 from hwt.simulator.utils import valueHasChanged
-from hwt.hdlObjects.specialValues import DIRECTION, SENSITIVITY
+from hwt.hdlObjects.constants import DIRECTION, SENSITIVITY
 
 
 def sensitivity(proc, *sensitiveTo):

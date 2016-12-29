@@ -1,6 +1,6 @@
 from copy import copy
 
-from hwt.hdlObjects.specialValues import DIRECTION, INTF_DIRECTION
+from hwt.hdlObjects.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import InterfaceDirectionFns 
@@ -56,6 +56,8 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         """
         self._setAttrListener = None
         super().__init__()
+        if multipliedBy is not None:
+            multipliedBy = toHVal(multipliedBy)
         self._multipliedBy = multipliedBy
         self._masterDir = masterDir
         self._direction = INTF_DIRECTION.UNKNOWN

@@ -1,4 +1,4 @@
-from hwt.hdlObjects.specialValues import INTF_DIRECTION
+from hwt.hdlObjects.constants import INTF_DIRECTION
 from hwt.synthesizer.param import evalParam
 
 def autoAddAgents(unit, propName="_ag"):

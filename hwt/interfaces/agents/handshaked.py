@@ -1,5 +1,5 @@
 from hwt.simulator.agentBase import SyncAgentBase
-from hwt.hdlObjects.specialValues import NOP
+from hwt.hdlObjects.constants import NOP
 
 
 class HandshakedAgent(SyncAgentBase):

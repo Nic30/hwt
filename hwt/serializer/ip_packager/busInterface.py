@@ -1,6 +1,6 @@
 from hwt.serializer.ip_packager.helpers import appendSpiElem, \
          mkSpiElm
-from hwt.hdlObjects.specialValues import INTF_DIRECTION
+from hwt.hdlObjects.constants import INTF_DIRECTION
 
 
 class BusInterface():

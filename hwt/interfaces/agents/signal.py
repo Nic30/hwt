@@ -1,4 +1,4 @@
-from hwt.hdlObjects.specialValues import Time
+from hwt.hdlObjects.constants import Time
 from hwt.simulator.agentBase import AgentBase
 from hwt.simulator.shortcuts import onRisingEdge
 

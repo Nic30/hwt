@@ -1,4 +1,4 @@
-from hwt.hdlObjects.specialValues import DIRECTION
+from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.typeShortcuts import vecT
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BIT

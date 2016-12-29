@@ -42,7 +42,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         
         self._initName()
         self._cntx.globals = self._globalsFromParams()
-        externInterf = [] 
+        self._externInterf = [] 
         
         # prepare subunits
         for u in self._units:
@@ -57,7 +57,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         for i in self._interfaces:
             signals = i._signalsForInterface(self._cntx)
             if i._isExtern:
-                externInterf.extend(signals)
+                self._externInterf.extend(signals)
         
         self._loadMyImplementations()
         yield from self._lazyLoaded
@@ -74,11 +74,11 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         forAllInterfaces(lambda i : i._connectMyElems())
         
         
-        if self._checkIntferfaces and not externInterf:
+        if self._checkIntferfaces and not self._externInterf:
             raise  Exception("Can not find any external interface for unit " + self._name \
                               + "- there is no such a thing as unit without interfaces")
         
-        yield from self._synthetiseContext(externInterf)
+        yield from self._synthetiseContext(self._externInterf)
         self._checkArchCompInstances()
     
     def _wasSynthetised(self):
@@ -106,7 +106,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         # after synthesis clean up interface so unit can be used elsewhere
         self._cleanAsSubunit() 
         
-    def __loadInterface(self, i, isExtern):
+    def _loadInterface(self, i, isExtern):
         i._loadDeclarations()
         i._setAsExtern(isExtern)
         
@@ -128,7 +128,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._declr()
         self._setAttrListener = None
         for i in self._interfaces:
-            self.__loadInterface(i, True)
+            self._loadInterface(i, True)
                 
         # if I am a unit load subunits    
         for u in self._units:
@@ -139,7 +139,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         Register interface in implementation phase
         """
         self._registerInterface(iName, intf)
-        self.__loadInterface(intf, False)
+        self._loadInterface(intf, False)
         intf._signalsForInterface(self._cntx)
         
     @classmethod

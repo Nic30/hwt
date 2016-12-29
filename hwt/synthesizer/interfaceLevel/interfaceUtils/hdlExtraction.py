@@ -1,6 +1,6 @@
 from hwt.hdlObjects.expr import ExprComparator
 from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.specialValues import INTF_DIRECTION
+from hwt.hdlObjects.constants import INTF_DIRECTION
 from hwt.hdlObjects.types.sliceVal import SliceVal
 from hwt.hdlObjects.value import Value
 from hwt.synthesizer.interfaceLevel.interfaceUtils.array import InterfaceArray

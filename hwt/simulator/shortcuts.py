@@ -4,7 +4,7 @@ import inspect
 import os
 import sys
 
-from hwt.hdlObjects.specialValues import Time
+from hwt.hdlObjects.constants import Time
 from hwt.serializer.simModel.serializer import SimModelSerializer
 from hwt.simulator.agentConnector import autoAddAgents
 from hwt.simulator.hdlSimulator import HdlSimulator

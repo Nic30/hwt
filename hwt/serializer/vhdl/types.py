@@ -1,4 +1,4 @@
-from hwt.hdlObjects.specialValues import Unconstrained
+from hwt.hdlObjects.constants import Unconstrained
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.bits import Bits

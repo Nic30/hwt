@@ -1,5 +1,5 @@
 from hwt.hdlObjects.variables import SignalItem
-from hwt.hdlObjects.specialValues import DIRECTION
+from hwt.hdlObjects.constants import DIRECTION
 
 class PortItem(SignalItem):
     """basic hdl entity port item"""
