@@ -77,7 +77,8 @@ class RtlNetlist():
     @ivar startsOfDataPaths:  is set of nodes where datapaths starts
     @ivar subUnits:           is set of all units in this context 
     """
-    def __init__(self):
+    def __init__(self, parentForDebug=None):
+        self.parentForDebug = parentForDebug
         self.globals = {}
         self.signals = set()
         self.startsOfDataPaths = set()

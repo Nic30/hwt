@@ -29,7 +29,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     def __init__(self):
         self._checkIntferfaces = True
         self._lazyLoaded = []
-        self._cntx = RtlNetlist()
+        self._cntx = RtlNetlist(self)
          
         self._loadConfig()
          

@@ -78,7 +78,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
             else:
                 self._name = ''     
         
-        self._cntx = RtlNetlist()
+        self._cntx = RtlNetlist(self)
         
         if loadConfig:
             self._loadConfig()
