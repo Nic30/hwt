@@ -126,7 +126,7 @@ def boundryFromType(sigOrVal, boundaryIndex):
 
 def getMulResT(firstT, secondT):
     if isinstance(secondT, Integer):
-        raise NotImplementedError()
+        return firstT # [maybe wrong]
     
     width = firstT.bit_length() + secondT.bit_length()
     return vecT(width, firstT.signed)
