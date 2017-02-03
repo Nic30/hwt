@@ -4,7 +4,7 @@ import types
 
 from hwt.hdlObjects.operatorDefs import concatFn
 from hwt.hdlObjects.constants import DIRECTION
-from hwt.hdlObjects.typeShortcuts import hInt, vec
+from hwt.hdlObjects.typeShortcuts import hInt, vec, vecT
 from hwt.hdlObjects.types.defs import BIT
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.typeCast import toHVal
@@ -133,6 +133,46 @@ def In(sigOrVal, iterable):
             res = res | sigOrVal._eq(i)
 
     return res
+
+
+def _ForEach_callBody(fn, item, index):
+    if fn.__code__.co_argcount == 1:
+        return fn(item)
+    else:
+        return fn(item, index)
+    
+def ForEach(parentUnit, items, bodyFn, ack=None):
+    """
+    @param parentUnit: unit where this code should be instantiated
+    @param items: items which this "for" itering on
+    @param bodyFn: function which fn(item, index) or fn(item). 
+                   It's content is performed in every iteration.
+    @param ack: Ack signal to signalize that next iteration should be performed.
+                if ack=None "for" will run for ever in loop 
+    """
+    
+    items = list(items)
+    l = len(items)
+    if l == 0:
+        # if there are no items there is nothing to generate
+        return []
+    elif l == 1:
+        # if there is only one item do not generate counter logic generate
+        return _ForEach_callBody(bodyFn, items[0], 0)
+    else:
+        # if there is multiple items we have to generate counter logic
+        index = parentUnit._reg("for_index", vecT(log2ceil(l + 1), signed=False), defVal=0)
+        incrIndex = index ** (index + 1)
+        if ack is not None:
+            If(ack,
+               incrIndex
+            )
+        return Switch(index).addCases(
+            [  (i, _ForEach_callBody(bodyFn, item, i)) 
+                for i, item in enumerate(items)]
+            ).Default(
+                _ForEach_callBody(bodyFn, items[0], 0)
+            )
 
 class FsmBuilder(StmCntx):
     """
