@@ -6,8 +6,29 @@ from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BIT
 from hwt.interfaces.std import Clk, Rst, Rst_n
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.pyUtils.arrayQuery import single
+from hwt.pyUtils.arrayQuery import single, NoValueExc
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+
+def getClk(unit):
+    try:
+        return getattr(unit, "clk")
+    except AttributeError:
+        pass
+    try:
+        return single(unit._interfaces, lambda i: isinstance(i, Clk))
+    except NoValueExc:
+        raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
+
+def getRst(unit):
+    for n in ["rst", "rst_n", "reset"]:
+        try:
+            return getattr(unit, n)
+        except AttributeError:
+            pass
+    try:
+        return single(unit._interfaces, lambda i: isinstance(i, (Rst, Rst_n)))
+    except NoValueExc:
+        raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
 
 class UnitImplHelpers(object):
     def _reg(self, name, dtype=BIT, defVal=None):
@@ -19,13 +40,14 @@ class UnitImplHelpers(object):
         
         """
         
-        clk = single(self._interfaces, lambda i: isinstance(i, Clk))
+        clk = getClk(self)
+            
         if defVal is None:
             rst = None
         else:
-            rst = single(self._interfaces, lambda i: isinstance(i, (Rst, Rst_n)))
-        s = self._cntx.sig
+            rst = getRst(self)
         
+        s = self._cntx.sig
         if defVal is None:  # if no value is specified reset is not required
             return s(name, typ=dtype, clk=clk._sig)
         
