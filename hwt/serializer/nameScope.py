@@ -54,9 +54,15 @@ class NameScopeItem(dict):
         # search if name is already defined on me and parents
         actual = self
         o = None
+        
+        if parent.ignorecase:
+            _name = name.lower()
+        else:
+            _name = name
+            
         while actual is not None:
             try:
-                o = actual[name]
+                o = actual[_name]
             except KeyError:
                 actual = actual.getParent(parent)
                 continue
@@ -64,7 +70,7 @@ class NameScopeItem(dict):
         
         if o is None or o is obj: 
             # we can use use the name, because it is not used
-            self[name] = obj
+            self[_name] = obj
         else:
             raise NameOccupiedErr(o)
             
