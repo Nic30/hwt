@@ -1,5 +1,6 @@
 from hwt.hdlObjects.types.hdlType import HdlType 
 
+
 class Integer(HdlType):
     
     def __init__(self, _min=None, _max=None):

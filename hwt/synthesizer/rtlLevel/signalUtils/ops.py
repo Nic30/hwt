@@ -3,9 +3,9 @@ from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.types.defs import BOOL
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.hdlObjects.value import Value
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 
 def tv(signal):

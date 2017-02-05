@@ -5,12 +5,13 @@ from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import InterfaceDirectionFns 
 from hwt.synthesizer.interfaceLevel.interfaceUtils.hdlExtraction import ExtractableInterface
+from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase 
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector 
 from hwt.synthesizer.param import Param
-from hwt.synthesizer.vectorUtils import fitTo, aplyIndexOnSignal
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
+from hwt.synthesizer.vectorUtils import fitTo, aplyIndexOnSignal
+
 
 class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
     """

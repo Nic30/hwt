@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 from hwt.hdlObjects.architecture import Architecture
+from hwt.hdlObjects.assignment import Assignment
 from hwt.hdlObjects.entity import Entity
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.statements import IfContainer, \
@@ -11,6 +12,8 @@ from hwt.hdlObjects.types.defs import BOOL, BIT
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.hdlType import InvalidVHDLTypeExc
 from hwt.hdlObjects.value import Value
+from hwt.hdlObjects.variables import SignalItem
+from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.constants import SERI_MODE
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.nameScope import LangueKeyword, NameScope
@@ -26,9 +29,6 @@ from hwt.serializer.vhdl.value import VhdlSerializer_Value
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.param import getParam, evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.pyUtils.arrayQuery import arr_any
-from hwt.hdlObjects.variables import SignalItem
-from hwt.hdlObjects.assignment import Assignment
 
 
 architectureTmpl = vhdlTmplEnv.get_template('architecture.vhd')
