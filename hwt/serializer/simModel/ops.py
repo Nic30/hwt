@@ -117,6 +117,6 @@ class SimModelSerializer_ops():
             
         elif o == AllOps.POW:
             assert len(ops) == 2
-            return  "pow(%s, %s)" % (p(ops[0]), p(ops[1]))
+            return  "power(%s, %s)" % (p(ops[0]), p(ops[1]))
         else:
             raise NotImplementedError("Do not know how to convert %s to simModel" % (o))

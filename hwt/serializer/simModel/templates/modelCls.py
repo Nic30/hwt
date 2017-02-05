@@ -12,7 +12,7 @@ from hwt.simulator.types.simBits import simBitsT
 from hwt.simulator.types.simBitsConversions import convertSimBits__val
 from hwt.simulator.simModel import (SimModel, sensitivity, connectSimPort,
                                             simEvalCond, mkUpdater, mkArrayUpdater)
-from hwt.code import Concat
+from hwt.code import Concat, power
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.simulator.simSignal import SimSignal
 from hwt.hdlObjects.types.sliceVal import SliceVal
