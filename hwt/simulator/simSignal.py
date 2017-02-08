@@ -61,7 +61,7 @@ class SimSignal(SignalItem):
                 log(simulator.now, self, newVal)
             
             # run write callbacks we have to create new list to allow 
-            # registerring of new call backs in callbacks
+            # registering of new call backs in callbacks
             callBacks = self._writeCallbacks
             self._writeCallbacks = []
             for c in callBacks:
