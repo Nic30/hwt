@@ -47,3 +47,8 @@ def bitSetTo(val, bitNo, bitVal):
         return setBit(val, bitNo)
     else:
         raise NotImplementedError()
+
+
+def align(val, lowerBitCntToAlign):
+    val = val >> lowerBitCntToAlign
+    return val << lowerBitCntToAlign

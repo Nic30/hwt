@@ -76,8 +76,8 @@ class SimTestCase(unittest.TestCase):
     def assertValEqual(self, first, second, msg=None):
         if isinstance(first, SimSignal):
             first = first._val
-            
-        first = valToInt(first)
+        if not isinstance(first, int):    
+            first = valToInt(first)
         
         return unittest.TestCase.assertEqual(self, first, second, msg=msg)
     
