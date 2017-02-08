@@ -190,6 +190,7 @@ class HdlSimulator(HdlEnvironmentCore):
             if actionSet:
                 v = self.conflictResolvStrategy(actionSet)
                 updates.append(v)
+                
         self.seqProcsToRun = []
         self.runSeqProcessesEv = None
         for s, updater, _ in updates:
