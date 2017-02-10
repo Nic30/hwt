@@ -2,24 +2,47 @@ from hwt.simulator.shortcuts import onRisingEdge
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 
 class AgentBase():
+    """
+    Base class of agent of interface like in UVM
+    driver is used for slave interfaces
+    monitor is used for master interfaces
+    
+    @ivar intf: interface assigned to this agent
+    @ivar enable: flag to enable/disable this agent
+    """
     def __init__(self, intf):
         self.intf = intf
         self.enable = True
     
     def getDrivers(self):
+        """
+        Called before simulation to collect all drivers of interfaces from this agent
+        """
         return [self.driver]
     
     def getMonitors(self):
+        """
+        Called before simulation to collect all monitors of interfaces from this agent
+        """
         return [self.monitor]
 
     def driver(self, s):
+        """
+        Implement this method to drive your interface in simulation/verification
+        """
         raise NotImplementedError()
     
     def monitor(self, s):
+        """
+        Implement this method to monitor your interface in simulation/verification
+        """
         raise NotImplementedError()
 
    
 class SyncAgentBase(AgentBase):
+    """
+    Agent which discovers clk, rst signal and runs only at specified edge of clk
+    """
     def getRst_n(self, parent, allowNoReset):
         while True:
             try:
@@ -60,6 +83,7 @@ class SyncAgentBase(AgentBase):
                 p = p._parent
         return None
     
+    _edgeFn = onRisingEdge
     def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
         super().__init__(intf)
         
@@ -75,5 +99,5 @@ class SyncAgentBase(AgentBase):
             self.rst_n = rstn
 
         
-        self.monitor = onRisingEdge(self.clk, self.monitor)
-        self.driver = onRisingEdge(self.clk, self.driver)
+        self.monitor = self._edgeFn(self.clk, self.monitor)
+        self.driver = self._edgeFn(self.clk, self.driver)
