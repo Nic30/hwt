@@ -2,14 +2,15 @@ from hwt.simulator.agentBase import SyncAgentBase
 
 
 class RdSyncedAgent(SyncAgentBase):
+    """
+    Simulation/verification agent for RdSynced interface
+    """
     def __init__(self, intf, clk=None, rstn=None):
-        super().__init__(intf, clk=None, rstn=None, allowNoReset=True)
+        super().__init__(intf, clk=clk, rstn=rstn, allowNoReset=True)
         self.actualData = None
         
     def monitor(self, s):
-        """
-        Collect data
-        """
+        """Collect data from interface"""
         intf = self.intf
         
         if self.notReset(s) and self.enable:
@@ -23,15 +24,15 @@ class RdSyncedAgent(SyncAgentBase):
             s.w(0, intf.rd)
     
     def doRead(self, s):
+        """extract data from interface"""
         return s.read(self.intf.data)
         
     def doWrite(self, s, data):
-        if data is None:
-            s.w(0, self.intf.data)
-        else:
-            s.w(data, self.intf.data)
+        """write data to interface"""
+        s.w(data, self.intf.data)
         
     def driver(self, s):
+        """Push data to interface"""
         intf = self.intf
         
         if self.actualData is None and self.data:

@@ -3,8 +3,13 @@ from hwt.hdlObjects.constants import NOP
 
 
 class HandshakedAgent(SyncAgentBase):
+    """
+    Simulation/verification agent for handshaked interface
+    @attention: requires clk and rst/rstn signal 
+      (if you do not have any create simulation wrapper with it)
+    """
     def __init__(self, intf, clk=None, rstn=None):
-        super().__init__(intf, clk=None, rstn=None)
+        super().__init__(intf, clk=clk, rstn=rstn)
         self.actualData = NOP
         self.data = []
         # these signals are extracted like this to make 
@@ -22,7 +27,7 @@ class HandshakedAgent(SyncAgentBase):
         
     def monitor(self, s):
         """
-        Collect data
+        Collect data from interface
         """
         if s.r(self.rst_n).val and self.enable:
             s.w(1, self._rd)
@@ -36,12 +41,15 @@ class HandshakedAgent(SyncAgentBase):
             s.w(0, self._rd)
     
     def doRead(self, s):
+        """extract data from interface"""
         return s.read(self.intf.data)
         
     def doWrite(self, s, data):
+        """write data to interface"""
         s.w(data, self.intf.data)
         
     def driver(self, s):
+        """Push data to interface"""
         if self.actualData is NOP and self.data:
             self.actualData = self.data.pop(0)
         
@@ -68,6 +76,11 @@ class HandshakedAgent(SyncAgentBase):
                 self.actualData = NOP
 
 class HandshakeSyncAgent(HandshakedAgent):
+    """
+    Simulation/verification agent for HandshakedSycn interface
+    @attention: there is no data channel on this interface it is synchronization only
+    """  
+    
     def doWrite(self, s, data):
         pass
     

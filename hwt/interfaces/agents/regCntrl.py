@@ -4,12 +4,15 @@ from hwt.simulator.agentBase import SyncAgentBase
 
 
 class RegCntrlAgent(SyncAgentBase):
+    """
+    Simulation/verification agent for RegCntrl interface
+    """
     def __init__(self, intf, clk=None, rstn=None):
         self.intf = intf
         if clk is None:
             clk = self._getClk()
         
-        self._din = SignalAgent(intf.din, clk=clk, rstn=None)
+        self._din = SignalAgent(intf.din, clk=clk, rstn=rstn)
         self._dout = VldSyncedAgent(intf.dout, clk=clk, rstn=rstn, allowNoReset=True)
 
     def din_getter(self):

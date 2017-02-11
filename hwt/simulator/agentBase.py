@@ -42,7 +42,28 @@ class AgentBase():
 class SyncAgentBase(AgentBase):
     """
     Agent which discovers clk, rst signal and runs only at specified edge of clk
+    @attention: requires clk and rst/rstn signal 
+      (if you do not have any create simulation wrapper with it)
     """
+    def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
+        super().__init__(intf)
+        
+        # resolve clk and rstn
+        if clk is None:
+            self.clk = self._getClk()
+        else:
+            self.clk = clk
+            
+        if rstn is None:
+            self.rst_n = self.getRst_n(intf._parent, allowNoReset=allowNoReset)
+        else:
+            self.rst_n = rstn
+
+        
+        self.monitor = onRisingEdge(self.clk, self.monitor)
+        self.driver = onRisingEdge(self.clk, self.driver)
+    
+    
     def getRst_n(self, parent, allowNoReset):
         while True:
             try:
@@ -65,7 +86,6 @@ class SyncAgentBase(AgentBase):
         else:
             raise Exception("Can not find reset on unit %s" % (repr(parent)))
         
-    
     def notReset(self, s):
         if self.rst_n is None:
             return True
@@ -83,21 +103,3 @@ class SyncAgentBase(AgentBase):
                 p = p._parent
         return None
     
-    _edgeFn = onRisingEdge
-    def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
-        super().__init__(intf)
-        
-        # resolve clk and rstn
-        if clk is None:
-            self.clk = self._getClk()
-        else:
-            self.clk = clk
-            
-        if rstn is None:
-            self.rst_n = self.getRst_n(intf._parent, allowNoReset=allowNoReset)
-        else:
-            self.rst_n = rstn
-
-        
-        self.monitor = self._edgeFn(self.clk, self.monitor)
-        self.driver = self._edgeFn(self.clk, self.driver)
