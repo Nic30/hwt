@@ -49,16 +49,12 @@ class IndexSimSignalProxy(SimSignal):
     def simUpdateVal(self, simulator, valUpdater):
         """
         Method called by simulator to update new value for this object
+        we are only delegating update on parent signal
         """
-        
         dirtyFlag, newVal = valUpdater(self._oldVal)
         newVal.updateTime = simulator.now
         
         if dirtyFlag:
-            # log = simulator.config.logChange
-            # if  log:
-            #    log(simulator.now, self, newVal)
-            
             # run write callbacks we have to create new list to allow 
             # registering of new call backs in callbacks
             callBacks = self._writeCallbacks
