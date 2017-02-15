@@ -33,7 +33,7 @@ class Value():
         return hash((self._dtype, self.val, self.vldMask, self.updateTime))
     
     def __repr__(self):
-        return "<Value {0:s}, vldMask {1:b}, updateTime {2:.2f}>".format(
+        return "<Value {0:s}, mask {1:b}, time {2:.2f}>".format(
                     str(self.val), self.vldMask, self.updateTime)    
 
     @classmethod

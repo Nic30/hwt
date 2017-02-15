@@ -14,6 +14,7 @@ from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
+from hwt.hdlObjects.types.defs import BIT
 
 
 def simPrepare(unit, modelCls=None, dumpModelIn=None):
@@ -82,8 +83,15 @@ def reconectArrayIntfSignalsToModel(parent, item):
     for p, i in zip(walkPhysInterfaces(parent), walkPhysInterfaces(item)):
         s = i._sigInside
         width = s._dtype.bit_length()
+        if s._dtype == BIT:
+            lowerIndex = None
+            upperIndex = (width * index)
+        else:
+            lowerIndex = (width * index)
+            upperIndex = (width * (index + 1))
+            
         i._sigInside = IndexSimSignalProxy(i._name, p._sigInside, i._dtype,
-                                        (width * (index + 1)), (width * index))
+                                        upperIndex, lowerIndex)
 
 def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
     """
@@ -97,10 +105,10 @@ def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time
         if d:
             os.makedirs(d, exist_ok=True)
         with open(outputFile, 'w') as f:
-            return _simUnitVcd(simModel, stimulFunctions, 
+            return _simUnitVcd(simModel, stimulFunctions,
                                outputFile=f, time=time) 
     else:
-        return _simUnitVcd(simModel, stimulFunctions, 
+        return _simUnitVcd(simModel, stimulFunctions,
                            outputFile=outputFile, time=time) 
 
 
