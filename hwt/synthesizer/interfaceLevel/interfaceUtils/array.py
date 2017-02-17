@@ -4,6 +4,7 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfac
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.synthesizer.vectorUtils import getWidthExpr
 from hwt.pyUtils.arrayQuery import arr_any
+from hwt.synthesizer.exceptions import IntfLvlConfErr
 
 
 def splitToTermSet(width):
@@ -82,10 +83,9 @@ class InterfaceArray():
         
     
     def __getitem__(self, key):
-        if key < self._multipliedBy.staticEval().val:
-            return self._arrayElemCache[key]
-        else:
-            raise IndexError()
+        if self._multipliedBy is None:
+            raise IntfLvlConfErr("interface %s is not array and can not be indexe on" % self._name)
+        return self._arrayElemCache[key]
     
     def _mkElemItem(self):
         e = self.__class__()
