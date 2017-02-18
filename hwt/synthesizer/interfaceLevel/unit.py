@@ -186,7 +186,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         return globalNames
     
     def _getDefaultName(self):
-        return defaultUnitName(self)
+        return self.__class__.__name__
     
     def _checkArchCompInstances(self):
         cInstances = len(self._architecture.componentInstances)
