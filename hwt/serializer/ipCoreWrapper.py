@@ -56,9 +56,8 @@ class IpCoreWrapper(Unit):
         return origToWrapInfMap   
     
     
-    def _initName(self):
-        if not hasattr(self, "_name"):
-            self._name = self._baseUnit.__class__.__name__
+    def _getDefaultName(self):
+        return self._baseUnit.__class__.__name__
           
     def _lazyLoadParamsAndInterfaces(self):
         self._cntx.globals = self._globalsFromParams()

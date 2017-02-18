@@ -39,8 +39,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         synthesize all subunits, make connections between them, build entity and component for this unit
         """
         assert not self._wasSynthetised()
-        
-        self._initName()
+        if not hasattr(self, "_name"):
+            self._name = self._getDefaultName()
         self._cntx.globals = self._globalsFromParams()
         self._externInterf = [] 
         
@@ -185,9 +185,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
                 
         return globalNames
     
-    def _initName(self):
-        if not hasattr(self, "_name"):
-            self._name = defaultUnitName(self)
+    def _getDefaultName(self):
+        return defaultUnitName(self)
     
     def _checkArchCompInstances(self):
         cInstances = len(self._architecture.componentInstances)
