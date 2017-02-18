@@ -9,6 +9,7 @@ from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.shortcuts import toRtlAndSave
 from hwt.synthesizer.uniqList import UniqList
 
+# [TODO] memory maps https://forums.xilinx.com/t5/Embedded-Processor-System-Design/exporting-AXI-BASEADDR-to-xparameters-h-from-Vivado-IP/td-p/428650
 
 class Packager(object):
     """
@@ -76,7 +77,7 @@ class Packager(object):
 
     def createPackage(self, repoDir, vendor="nic", library="mylib", description=None):
         '''
-        synthetise hdl if needen
+        synthetise hdl if needed
         copy hdl files
         create gui file
         
