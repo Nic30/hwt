@@ -65,7 +65,7 @@ def reconectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls):
     """
     subInterfaces = synthesisedUnitOrIntf._interfaces
     reconnectArrayItems = isinstance(synthesisedUnitOrIntf, InterfaceBase)\
-                             and synthesisedUnitOrIntf._multipliedBy
+                             and synthesisedUnitOrIntf._multipliedBy is not None
     if subInterfaces:
         for intf in subInterfaces:
             reconectUnitSignalsToModel(intf, modelCls)
