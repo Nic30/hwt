@@ -13,7 +13,7 @@ from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.hdlType import InvalidVHDLTypeExc
 from hwt.hdlObjects.value import Value
 from hwt.hdlObjects.variables import SignalItem
-from hwt.pyUtils.arrayQuery import arr_any
+from hwt.pyUtils.arrayQuery import arr_any, groupedby
 from hwt.serializer.constants import SERI_MODE
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.nameScope import LangueKeyword, NameScope
@@ -199,6 +199,9 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)    
              
+             
+        uniqComponents = map(lambda x: x[1][0], groupedby(arch.components, lambda c: c.name))
+        
         return architectureTmpl.render({
         "entityName"         :arch.getEntityName(),
         "name"               :arch.name,
@@ -206,7 +209,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         "extraTypes"         :extraTypes_serialized,
         "processes"          :procs,
         "components"         :map(lambda c: cls.Component(c, createTmpVarFn),
-                                   arch.components),
+                                   uniqComponents),
         "componentInstances" :map(lambda c: cls.ComponentInstance(c, createTmpVarFn, scope),
                                    arch.componentInstances)
         })
