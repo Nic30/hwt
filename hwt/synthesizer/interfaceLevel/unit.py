@@ -1,11 +1,10 @@
+from hwt.serializer.constants import SERI_MODE
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import forAllParams
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase 
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector 
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers
-from hwt.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
-from hwt.serializer.constants import SERI_MODE
 
 
 class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
