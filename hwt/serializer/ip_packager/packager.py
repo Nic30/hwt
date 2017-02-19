@@ -1,16 +1,16 @@
 import os, shutil
 from os.path import relpath
 
+from hwt.pyUtils.fileHelpers import find_files
 from hwt.serializer.ip_packager.component import Component
 from hwt.serializer.ip_packager.helpers import prettify
 from hwt.serializer.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
 from hwt.serializer.vhdl.serializer import VhdlSerializer
-from hwt.synthesizer.uniqList import UniqList
-from hwt.synthesizer.interfaceLevel.unit import defaultUnitName
 from hwt.synthesizer.shortcuts import toRtlAndSave
-from hwt.pyUtils.fileHelpers import find_files
+from hwt.synthesizer.uniqList import UniqList
 
 
+# [TODO] memory maps https://forums.xilinx.com/t5/Embedded-Processor-System-Design/exporting-AXI-BASEADDR-to-xparameters-h-from-Vivado-IP/td-p/428650
 class Packager(object):
     """
     Ipcore packager
@@ -20,7 +20,11 @@ class Packager(object):
                  serializer=VhdlSerializer):
         self.topUnit = topUnit
         self.serializer = serializer
-        self.name = defaultUnitName(self.topUnit, sugestedName=name)
+        if name:
+            self.name = name
+        else:
+            self.name = self.topUnit._getDefaultName()
+        
         self.hdlFiles = UniqList()
         
         for d in extraVhdlDirs:
@@ -73,7 +77,7 @@ class Packager(object):
 
     def createPackage(self, repoDir, vendor="nic", library="mylib", description=None):
         '''
-        synthetise hdl if needen
+        synthetise hdl if needed
         copy hdl files
         create gui file
         

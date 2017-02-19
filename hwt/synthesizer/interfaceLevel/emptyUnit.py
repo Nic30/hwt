@@ -20,8 +20,8 @@ class EmptyUnit(Unit):
     _defaultValue = None
     def _toRtl(self):
         assert not self._wasSynthetised()
-        
-        self._initName()
+        if not hasattr(self, "_name"):
+            self._name = self._getDefaultName()
         for i in self._interfaces:
             i._setDirectionsLikeIn(INTF_DIRECTION.MASTER)
         

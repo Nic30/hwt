@@ -1,11 +1,10 @@
+from hwt.serializer.constants import SERI_MODE
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import forAllParams
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase 
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector 
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers
-from hwt.synthesizer.interfaceLevel.unitUtils import defaultUnitName
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
-from hwt.serializer.constants import SERI_MODE
 
 
 class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
@@ -39,8 +38,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         synthesize all subunits, make connections between them, build entity and component for this unit
         """
         assert not self._wasSynthetised()
-        
-        self._initName()
+        if not hasattr(self, "_name"):
+            self._name = self._getDefaultName()
         self._cntx.globals = self._globalsFromParams()
         self._externInterf = [] 
         
@@ -185,9 +184,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
                 
         return globalNames
     
-    def _initName(self):
-        if not hasattr(self, "_name"):
-            self._name = defaultUnitName(self)
+    def _getDefaultName(self):
+        return self.__class__.__name__
     
     def _checkArchCompInstances(self):
         cInstances = len(self._architecture.componentInstances)
