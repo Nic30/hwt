@@ -133,9 +133,9 @@ class BooleanVal(EventCapableVal):
         return boolLogOp(self, other, AllOps.AND_LOG, vldMaskForAnd, whenOneIsVal_and)
 
     def _or__val(self, other):
-        return boolLogOp__val(self, other, AllOps.OR_LOG, vldMaskForOr, whenOneIsVal_or)
+        return boolLogOp__val(self, other, AllOps.OR_LOG, vldMaskForOr)
     def __or__(self, other):
-        return boolLogOp(self, other, AllOps.OR_LOG, vldMaskForOr)
+        return boolLogOp(self, other, AllOps.OR_LOG, vldMaskForOr, whenOneIsVal_or)
 
 
     # for evaluating only, not convertible to hdl
