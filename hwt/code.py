@@ -399,7 +399,9 @@ def rol(sig, howMany):
     """
     Rotate left
     """
-    return  sig[:howMany]._concat(sig[howMany:])
+    l = sig._dtype.bit_length()
+    b = l - howMany - 1
+    return  sig[(l-howMany):]._concat(sig[:(l-howMany)])
 
 
 def sll(sig, howMany):
