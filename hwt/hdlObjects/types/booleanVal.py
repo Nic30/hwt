@@ -15,13 +15,19 @@ def boolLogOp__val(self, other, op, getVldFn):
             getVldFn(self, other),
             max(self.updateTime, other.updateTime))
 
-def boolLogOp(self, other, op, getVldFn):
+def boolLogOp(self, other, op, getVldFn, whenOneIsVal):
     other = toHVal(other)
 
-    if areValues(self, other):
-        return boolLogOp__val(self, other, op, getVldFn)
+    if isinstance(self, Value):
+        if isinstance(other, Value):
+            return boolLogOp__val(self, other, op, getVldFn)
+
+        return whenOneIsVal(self, other)
     else:
-        return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
+        if isinstance(other, Value):
+            return whenOneIsVal(other, self)
+        
+    return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
 
 def boolCmpOp__val(self, other, op, evalFn):
     v = evalFn(bool(self.val), bool(other.val)) and (self.vldMask == other.vldMask == 1)
@@ -39,6 +45,27 @@ def boolCmpOp(self, other, op, evalFn=None):
     else:
         return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
 
+def whenOneIsVal_and(val, other):
+    if val.vldMask:
+        if val.val:
+            return other
+        else:
+            v = val.clone()
+            v.val = 0
+            return v
+    else:
+        return val
+    
+
+def whenOneIsVal_or(val, other):
+    if val.vldMask:
+        if val.val:
+            return val
+        else:
+            return other
+    else:
+        return val
+    
 class BooleanVal(EventCapableVal):
     
     @classmethod
@@ -103,10 +130,10 @@ class BooleanVal(EventCapableVal):
     def _and__val(self, other):
         return boolLogOp__val(self, other, AllOps.AND_LOG, vldMaskForAnd)
     def __and__(self, other):
-        return boolLogOp(self, other, AllOps.AND_LOG, vldMaskForAnd)
+        return boolLogOp(self, other, AllOps.AND_LOG, vldMaskForAnd, whenOneIsVal_and)
 
     def _or__val(self, other):
-        return boolLogOp__val(self, other, AllOps.OR_LOG, vldMaskForOr)
+        return boolLogOp__val(self, other, AllOps.OR_LOG, vldMaskForOr, whenOneIsVal_or)
     def __or__(self, other):
         return boolLogOp(self, other, AllOps.OR_LOG, vldMaskForOr)
 

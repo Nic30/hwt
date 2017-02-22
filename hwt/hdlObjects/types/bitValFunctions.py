@@ -70,6 +70,7 @@ def bitsBitOp(self, other, op, getVldFn):
     else:
         if other._dtype == BOOL:
             self = self._convert(BOOL)
+            return self & other
         elif self._dtype == other._dtype:
             pass
         else:
