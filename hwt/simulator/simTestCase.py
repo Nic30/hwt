@@ -8,6 +8,7 @@ from hwt.simulator.simSignal import SimSignal
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
 from hwt.simulator.utils import agent_randomize
+from hwt.simulator.shortcuts import simPrepare
 
 def allValuesToInts(sequenceOrVal):
     if isinstance(sequenceOrVal, Value):
@@ -92,3 +93,7 @@ class SimTestCase(unittest.TestCase):
 
     def randomize(self, intf):
         self.procs.append(agent_randomize(intf._ag))
+
+    def prepareUnit(self, u):
+        _, self.model, self.procs = simPrepare(u)
+        self.u = u
