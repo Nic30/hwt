@@ -94,6 +94,8 @@ class SimTestCase(unittest.TestCase):
     def randomize(self, intf):
         self.procs.append(agent_randomize(intf._ag))
 
-    def prepareUnit(self, u):
-        _, self.model, self.procs = simPrepare(u)
-        self.u = u
+    def prepareUnit(self, u, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
+        self.u, self.model, self.procs = simPrepare(u, 
+                                               modelCls=modelCls,
+                                               dumpModelIn=dumpModelIn,
+                                               onAfterToRtl=onAfterToRtl)
