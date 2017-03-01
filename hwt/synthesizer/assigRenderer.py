@@ -149,7 +149,9 @@ def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
             else:
                 topPos.append(a)
         else:
-            raise NotImplementedError(dependentOnTopCond)     
+            raise NotImplementedError(
+                ("There are multiple different assignments to same object(%r) with same condition (%r)" % (a.dst, topCond),
+                dependentOnTopCond))     
     # if not (len(assignments) == (len(topNeg) + len(topPos))):
     #    # it seems that there is some statement which is nod depended on topCond, but it should be 
     #    # filtered earlier
