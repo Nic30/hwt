@@ -14,6 +14,7 @@ from hwt.simulator.simSignal import SimSignal
 from hwt.simulator.utils import agent_randomize
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from _random import Random
+from hwt.hdlObjects.constants import Time
 
 
 def allValuesToInts(sequenceOrVal):
@@ -43,7 +44,7 @@ class SimTestCase(unittest.TestCase):
     u = Axi_rDatapump()
     self.model, self.procs = simPrepare(u)
     """
-    __rand = Random(317)
+    _rand = Random(317)
 
     def getTestName(self):
         className, testName = self.id().split(".")[-2:]
@@ -199,7 +200,9 @@ class SimTestCase(unittest.TestCase):
         self.fail(msg)
 
     def randomize(self, intf):
-        self.procs.append(agent_randomize(intf._ag, seed=self.__rand.getrandbits(64)))
+        self.procs.append(agent_randomize(intf._ag, 
+                                          50 * Time.ns, 
+                                          seed=self._rand.getrandbits(64)))
 
     def prepareUnit(self, u, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
         self.u, self.model, self.procs = simPrepare(u,
