@@ -13,6 +13,7 @@ from hwt.simulator.shortcuts import simPrepare
 from hwt.simulator.simSignal import SimSignal
 from hwt.simulator.utils import agent_randomize
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
+from _random import Random
 
 
 def allValuesToInts(sequenceOrVal):
@@ -24,14 +25,15 @@ def allValuesToInts(sequenceOrVal):
         l = []
         for i in sequenceOrVal:
             l.append(allValuesToInts(i))
-            
+
         if isinstance(sequenceOrVal, tuple):
             return tuple(l)
-        
+
         return l
     else:
         return sequenceOrVal
-    
+
+
 class SimTestCase(unittest.TestCase):
     """
     This is TestCase class contains methods which are usually used during
@@ -41,6 +43,7 @@ class SimTestCase(unittest.TestCase):
     u = Axi_rDatapump()
     self.model, self.procs = simPrepare(u)
     """
+    __rand = Random(317)
 
     def getTestName(self):
         className, testName = self.id().split(".")[-2:]
@@ -91,7 +94,7 @@ class SimTestCase(unittest.TestCase):
             first = valToInt(first)
 
         return unittest.TestCase.assertEqual(self, first, second, msg=msg)
-    
+
     def assertEmpty(self, val, msg=None):
         return unittest.TestCase.assertEqual(self, len(val), 0, msg=msg)
 
@@ -196,10 +199,10 @@ class SimTestCase(unittest.TestCase):
         self.fail(msg)
 
     def randomize(self, intf):
-        self.procs.append(agent_randomize(intf._ag))
+        self.procs.append(agent_randomize(intf._ag, seed=self.__rand.getrandbits(64)))
 
     def prepareUnit(self, u, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
-        self.u, self.model, self.procs = simPrepare(u, 
-                                               modelCls=modelCls,
-                                               dumpModelIn=dumpModelIn,
-                                               onAfterToRtl=onAfterToRtl)
+        self.u, self.model, self.procs = simPrepare(u,
+                                                    modelCls=modelCls,
+                                                    dumpModelIn=dumpModelIn,
+                                                    onAfterToRtl=onAfterToRtl)
