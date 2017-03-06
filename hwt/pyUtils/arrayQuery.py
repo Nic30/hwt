@@ -85,3 +85,11 @@ def groupedby(collection, fn):
         arr.append(item)
     
     yield from d.items()
+
+def split(arr, size):
+    arr = list(arr)
+    while len(arr) > size:
+        pice = arr[:size]
+        yield pice
+        arr = arr[size:]
+    yield arr
