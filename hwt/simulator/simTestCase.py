@@ -15,6 +15,7 @@ from hwt.simulator.utils import agent_randomize
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from _random import Random
 from hwt.hdlObjects.constants import Time
+from unittest.case import _Outcome
 
 
 def allValuesToInts(sequenceOrVal):
@@ -44,7 +45,8 @@ class SimTestCase(unittest.TestCase):
     u = Axi_rDatapump()
     self.model, self.procs = simPrepare(u)
     """
-    _rand = Random(317)
+    _defaultSeed = 317
+    _rand = Random(_defaultSeed)
 
     def getTestName(self):
         className, testName = self.id().split(".")[-2:]
@@ -144,26 +146,26 @@ class SimTestCase(unittest.TestCase):
                 return
 
             differing = '%ss differ: %s != %s\n' % (
-                    (seq_type_name.capitalize(),) +
+                    (seq_type_name.capitalize(),) + 
                     _common_shorten_repr(seq1, seq2))
 
             for i in range(min(len1, len2)):
                 try:
                     item1 = seq1[i]
                 except (TypeError, IndexError, NotImplementedError):
-                    differing += ('\nUnable to index element %d of first %s\n' %
+                    differing += ('\nUnable to index element %d of first %s\n' % 
                                  (i, seq_type_name))
                     break
 
                 try:
                     item2 = seq2[i]
                 except (TypeError, IndexError, NotImplementedError):
-                    differing += ('\nUnable to index element %d of second %s\n' %
+                    differing += ('\nUnable to index element %d of second %s\n' % 
                                  (i, seq_type_name))
                     break
 
                 if item1 != item2:
-                    differing += ('\nFirst differing element %d:\n%s\n%s\n' %
+                    differing += ('\nFirst differing element %d:\n%s\n%s\n' % 
                                  ((i,) + _common_shorten_repr(item1, item2)))
                     break
             else:
@@ -176,7 +178,7 @@ class SimTestCase(unittest.TestCase):
                 differing += ('\nFirst %s contains %d additional '
                              'elements.\n' % (seq_type_name, len1 - len2))
                 try:
-                    differing += ('First extra element %d:\n%s\n' %
+                    differing += ('First extra element %d:\n%s\n' % 
                                   (len2, safe_repr(seq1[len2])))
                 except (TypeError, IndexError, NotImplementedError):
                     differing += ('Unable to index element %d '
@@ -185,7 +187,7 @@ class SimTestCase(unittest.TestCase):
                 differing += ('\nSecond %s contains %d additional '
                              'elements.\n' % (seq_type_name, len2 - len1))
                 try:
-                    differing += ('First extra element %d:\n%s\n' %
+                    differing += ('First extra element %d:\n%s\n' % 
                                   (len1, safe_repr(seq2[len1])))
                 except (TypeError, IndexError, NotImplementedError):
                     differing += ('Unable to index element %d '
@@ -200,8 +202,8 @@ class SimTestCase(unittest.TestCase):
         self.fail(msg)
 
     def randomize(self, intf):
-        self.procs.append(agent_randomize(intf._ag, 
-                                          50 * Time.ns, 
+        self.procs.append(agent_randomize(intf._ag,
+                                          50 * Time.ns,
                                           seed=self._rand.getrandbits(64)))
 
     def prepareUnit(self, u, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
@@ -209,3 +211,5 @@ class SimTestCase(unittest.TestCase):
                                                     modelCls=modelCls,
                                                     dumpModelIn=dumpModelIn,
                                                     onAfterToRtl=onAfterToRtl)
+    def setUp(self):
+        self._rand.seed(self._defaultSeed)
