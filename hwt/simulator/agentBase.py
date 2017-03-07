@@ -14,6 +14,10 @@ class AgentBase():
     def __init__(self, intf):
         self.intf = intf
         self.enable = True
+        self._debugOutput = None
+
+    def _debug(self, out):
+        self._debugOutput = out
 
     def getDrivers(self):
         """
