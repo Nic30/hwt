@@ -75,7 +75,7 @@ class Packager(object):
             s = gui.asTcl() + '\n' + '\n'.join(map(lambda x : str(x), handlers))
             f.write(s)
 
-    def createPackage(self, repoDir, vendor="nic", library="mylib", description=None):
+    def createPackage(self, repoDir, vendor="hwt", library="mylib", description=None):
         '''
         synthetise hdl if needed
         copy hdl files
