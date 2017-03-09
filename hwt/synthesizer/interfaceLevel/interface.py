@@ -257,13 +257,21 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         newP._registerScope(pName, self)
         setattr(self, pName, newP)
 
-    def _updateParamsFrom(self, otherObj, updater=_defaultUpdater):
+    def _updateParamsFrom(self, otherObj, updater=_defaultUpdater, exclude=None):
         """
         update all parameters which are defined on self from otherObj
+        @param exclude: iterable of parameter on other object which should be excluded
         """
-        for p in otherObj._params:
+        excluded = set()
+        if exclude is not None:
+            exclude = set(exclude)
+        
+        for parentP in otherObj._params:
+            if exclude and parentP in exclude:
+                excluded.add(parentP)
+                continue
             try:
-                _, onParentName = p._scopes[otherObj]
+                _, onParentName = parentP._scopes[otherObj]
             except KeyError as e:
                 raise e
             try:
@@ -272,7 +280,11 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
                     raise AttributeError()
             except AttributeError:
                 continue
-            updater(self, onParentName, p)
+
+            updater(self, onParentName, parentP)
+        
+        if exclude is not None:
+            assert excluded == exclude
 
     def _getIpCoreIntfClass(self):
         raise NotSpecified()

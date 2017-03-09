@@ -126,14 +126,26 @@ class UnitImplHelpers(object):
             p = getattr(self, prefix + name)
             lp.set(p)
 
-    def _updateParamsFrom(self, parent):
+    def _updateParamsFrom(self, parent, exclude=None):
         """
         update all parameters which are defined on self from otherObj
+        @param exclude: iterable of parameter on parent object which should be excluded
         """
+        excluded = set()
+        if exclude is not None:
+            exclude = set(exclude)
+        
         for parentP in parent._params:
+            if exclude and parentP in exclude:
+                excluded.add(parentP)
+                continue
+
             name = parentP._scopes[parent][1]
             try:
                 p = getattr(self, name)
             except AttributeError:
                 continue
             p.set(parentP)
+        
+        if exclude is not None:
+            assert excluded == exclude
