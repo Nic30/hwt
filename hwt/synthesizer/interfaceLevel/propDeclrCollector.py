@@ -16,16 +16,18 @@ class MakeParamsShared(object):
     All newly added interfaces and units will share all parametes with unit
     specified in constructor of this object. 
     """
-    def __init__(self, unit):
+    def __init__(self, unit, exclude=None):
         self.unit = unit
+        self.exclude = exclude
         
     def __enter__(self):
         orig = self.unit._setAttrListener
         self.orig = orig
+        exclude = self.exclude
         
         def MakeParamsSharedWrap(self, iName, i):
             if isinstance(i, (InterfaceBase, UnitBase)):
-                i._updateParamsFrom(self)
+                i._updateParamsFrom(self, exclude=exclude)
             return orig(iName, i)
         self.unit._setAttrListener = MethodType(MakeParamsSharedWrap,
                                            self.unit)
@@ -105,14 +107,16 @@ class PropDeclrCollector(object):
         
         self._params.append(parameter)
 
-    def _paramsShared(self):
+    def _paramsShared(self, exclude=None):
         """
         Usage:
         
         with self._paramsShared():
             # your interfaces and unit which should share all params with "self" there
+            
+        @param exclude: params which should not be shared
         """
-        return MakeParamsShared(self)
+        return MakeParamsShared(self, exclude=exclude)
     
     # declaration phase
     def _registerUnit(self, uName, unit):
