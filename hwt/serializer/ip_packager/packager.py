@@ -18,6 +18,7 @@ class Packager(object):
     def __init__(self, topUnit, name=None, extraVhdlDirs=[], extraVhdlFiles=[],
                  extraVerilogFiles=[], extraVerilogDirs=[],
                  serializer=VhdlSerializer):
+        assert not topUnit._wasSynthetised()
         self.topUnit = topUnit
         self.serializer = serializer
         if name:
