@@ -12,9 +12,15 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfac
 
 def getClk(unit):
     try:
-        return getattr(unit, "clk")
+        return unit.clk
     except AttributeError:
         pass
+    
+    try:
+        return unit.clock
+    except AttributeError:
+        pass
+    
     try:
         return single(unit._interfaces, lambda i: isinstance(i, Clk))
     except NoValueExc:
