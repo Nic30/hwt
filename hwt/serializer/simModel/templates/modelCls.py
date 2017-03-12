@@ -3,12 +3,12 @@ from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.arrayVal import ArrayVal
 from hwt.hdlObjects.types.bitsConversions import convertBits__val
 from hwt.hdlObjects.types.bitsVal import BitsVal
-from hwt.hdlObjects.types.defs import BIT, SLICE
+from hwt.hdlObjects.types.defs import SLICE
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.constants import DIRECTION, SENSITIVITY
 from hwt.simulator.types.simIntConversions import convertSimInteger__val 
-from hwt.simulator.types.simInt import SIM_INT, simHInt
-from hwt.simulator.types.simBits import simBitsT
+from hwt.simulator.types.simInt import simHInt, SIM_INT
+from hwt.simulator.types.simBits import simBitsT, SIM_BIT
 from hwt.simulator.types.simBitsConversions import convertSimBits__val
 from hwt.simulator.simModel import (SimModel, sensitivity, connectSimPort,
                                             simEvalCond, mkUpdater, mkArrayUpdater)

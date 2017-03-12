@@ -12,7 +12,7 @@ class SimModelSerializer_types():
     def HdlType_bits(cls, typ, declaration=False):
         if typ.signed is None:
             if not (typ.forceVector or typ.bit_length() > 1):
-                return 'BIT'
+                return 'SIM_BIT'
             
         c = typ.constrain
         if isinstance(c, (int, float)):

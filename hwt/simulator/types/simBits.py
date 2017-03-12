@@ -42,3 +42,5 @@ class SimBitsT(Bits):
 
     def convert(self, sigOrVal, toType):
         return convertSimBits__val(self, sigOrVal, toType)
+    
+SIM_BIT = SimBitsT(1, None)
