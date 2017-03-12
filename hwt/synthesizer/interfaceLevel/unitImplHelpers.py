@@ -39,6 +39,14 @@ def getRst(unit):
         raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
 
 
+def getSignalName(sig):
+    try:
+        return sig._name
+    except AttributeError:
+        pass
+    return sig.name
+
+
 class UnitImplHelpers(object):
     def _reg(self, name, dtype=BIT, defVal=None):
         """
