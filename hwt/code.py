@@ -2,8 +2,8 @@ import math
 from operator import and_, or_
 import types
 
-from hwt.hdlObjects.operatorDefs import concatFn
 from hwt.hdlObjects.constants import DIRECTION
+from hwt.hdlObjects.operatorDefs import concatFn
 from hwt.hdlObjects.typeShortcuts import hInt, vec, vecT
 from hwt.hdlObjects.types.defs import BIT
 from hwt.hdlObjects.types.enum import Enum
@@ -28,13 +28,15 @@ class StmCntx(list):
     """
     pass
 
+
 def flaten(iterables):
     if isinstance(iterables, (list, tuple, types.GeneratorType)):
         for i in iterables:
             yield from flaten(i)
     else:
         yield iterables
-        
+
+
 class If(StmCntx):
     """
     If statement generator
@@ -89,6 +91,7 @@ class If(StmCntx):
         
         return self
 
+
 class Switch(StmCntx):
     """
     Switch statement generator
@@ -140,7 +143,8 @@ def _ForEach_callBody(fn, item, index):
         return fn(item)
     else:
         return fn(item, index)
-    
+
+
 def ForEach(parentUnit, items, bodyFn, ack=None):
     """
     @param parentUnit: unit where this code should be instantiated
@@ -173,6 +177,7 @@ def ForEach(parentUnit, items, bodyFn, ack=None):
             ).Default(
                 _ForEach_callBody(bodyFn, items[0], 0)
             )
+
 
 class FsmBuilder(StmCntx):
     """
@@ -239,13 +244,14 @@ class FsmBuilder(StmCntx):
         d.stateReg = self.stateReg
         return d
 
+
 # class While(StmCntx):
 #    def __init__(self, cond):
 #        self.cnd = _intfToSig(cond)
 #    
 #    def Do(self, *statements):
 
-    
+
 def _connect(src, dst, exclude, fit):
         
     if isinstance(src, InterfaceBase):
@@ -266,6 +272,7 @@ def _connect(src, dst, exclude, fit):
     
     return dst ** src
 
+
 def connect(src, *destinations, exclude=set(), fit=False):
     """
     Connect src (signals/interfaces/values) to all destinations
@@ -278,6 +285,7 @@ def connect(src, *destinations, exclude=set(), fit=False):
         assignemnts.extend(_connect(src, dst, exclude, fit))
         
     return assignemnts
+
 
 def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
     """
@@ -313,6 +321,7 @@ def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
         
     return res
 
+
 def connectUnpacked(src, dst, exclude=[]):
     """src is packed and it is unpacked and connected to dst"""
     # [TODO] parametrized offsets
@@ -333,7 +342,8 @@ def connectUnpacked(src, dst, exclude=[]):
         connections.append(sig ** s)
     
     return connections
-    
+
+
 def packedWidth(intf):
     """Sum of all width of interfaces in this interface"""
     if isinstance(intf, type):
@@ -360,6 +370,7 @@ def packedWidth(intf):
             return 1
         return t.bit_length()
 
+
 def _mkOp(fn): 
     def op(*ops):
         assert ops, ops
@@ -372,10 +383,12 @@ def _mkOp(fn):
         return top
     return op
 
+
 # variadic operator functions
 And = _mkOp(and_)
 Or = _mkOp(or_)
 Concat = _mkOp(concatFn)
+
 
 def iterBits(sig):
     """
@@ -384,6 +397,7 @@ def iterBits(sig):
     l = sig._dtype.bit_length() 
     for bit in range(l):
         yield sig[bit] 
+
 
 def power(base, exp):
     return toHVal(base)._pow(exp) 
@@ -395,13 +409,14 @@ def ror(sig, howMany):
     """
     return  sig[howMany:]._concat(sig[:howMany])
 
+
 def rol(sig, howMany):
     """
     Rotate left
     """
     l = sig._dtype.bit_length()
     b = l - howMany - 1
-    return  sig[(l-howMany):]._concat(sig[:(l-howMany)])
+    return  sig[(l - howMany):]._concat(sig[:(l - howMany)])
 
 
 def sll(sig, howMany):
@@ -410,11 +425,13 @@ def sll(sig, howMany):
     """
     return vec(0, howMany)._concat(sig[:howMany])
 
+
 def srl(sig, howMany):
     """
     Logical shift right
     """
     return sig[howMany:]._concat(vec(0, howMany))
+
 
 def log2ceil(x):
     """
@@ -430,6 +447,7 @@ def log2ceil(x):
     else:
         res = math.ceil(math.log2(x))
     return hInt(res)
+
 
 def isPow2(num):
     assert isinstance(num, int)
