@@ -11,9 +11,9 @@ class BusInterface():
         self.isMaster = None
         # logical : physical
         self._portMaps = {}
-        self.parameters = [] 
+        self.parameters = []
         self.endianness = None
-        
+
     # @classmethod
     # def fromElem(cls, elm):
     #    self = cls()
@@ -30,29 +30,35 @@ class BusInterface():
     #    for m in elm.find('spirit:_portMaps', ns):
     #        pm = PortMap.fromElem(m)
     #        self._portMaps.append(pm)
-    #    
+    #
     #    self.parameters = []
     #    for p in elm.find('spirit:parameters', ns):
     #        p_obj = Parameter.fromElem(p)
     #        self.parameters.append(p_obj)
-    #        
+    #
     #    return self
-    
+
     @staticmethod
     def generatePortMap(biType, intf):
         def processIntf(mapDict, intf):
             if not intf._interfaces:
                 assert(isinstance(mapDict, str))
-                return {mapDict : intf._getPhysicalName()}
+                return {mapDict: intf._getPhysicalName()}
             else:
                 d = {}
                 for i in intf._interfaces:
                     if i._isExtern:
-                        m = mapDict[i._name]
+                        try:
+                            m = mapDict[i._name]
+                        except KeyError:
+                            raise Exception("Interface %s has interface %s which is not defined in ipcore interface class"
+                                            % (intf._getFullName(), i._name)
+                                            )
+
                         d.update(processIntf(m, i))
                 return d
         return processIntf(biType.map, intf)
-    
+
     @classmethod
     def fromBiClass(cls, intf, biClass):
         self = BusInterface()
@@ -65,17 +71,16 @@ class BusInterface():
         self._portMaps = BusInterface.generatePortMap(biType, intf)
         self.parameters = biType.parameters
         return self
-    
+
     def asElem(self):
         def mkPortMap(logicalName, physicalName):
             pm = mkSpiElm("portMap")
             appendSpiElem(appendSpiElem(pm, "logicalPort"), "name").text = logicalName
             appendSpiElem(appendSpiElem(pm, "physicalPort"), "name").text = physicalName
             return pm
-        
+
         e = mkSpiElm("busInterface")
-        
-        
+
         appendSpiElem(e, 'name').text = self.name
         e.append(self.busType.asElem('busType'))
         e.append(self.abstractionType.asElem('abstractionType'))
@@ -83,7 +88,7 @@ class BusInterface():
             appendSpiElem(e, "master")
         else:
             appendSpiElem(e, "slave")
-       
+
         pm = appendSpiElem(e, "portMaps")
 
         for lName, pName in sorted(self._portMaps.items(), key=lambda pm: pm[0]):
@@ -93,6 +98,6 @@ class BusInterface():
         if len(self.parameters) > 0:
             pm = appendSpiElem(e, "parameters")
             for p in self.parameters:
-                pElm = p.asElem() 
+                pElm = p.asElem()
                 pm.append(pElm)
         return e
