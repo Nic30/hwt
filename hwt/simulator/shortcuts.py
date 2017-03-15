@@ -49,8 +49,9 @@ def toSimModel(unit, tmpDir=None):
         d = os.path.join(os.getcwd(), tmpDir)
         dInPath = d in sys.path
         if not dInPath:
-            sys.path.append(d)
-
+            sys.path.insert(0, d)
+        if unit._name in sys.modules:
+            del sys.modules[unit._name]
         simModule = importlib.import_module(unit._name)
 
         if not dInPath:
