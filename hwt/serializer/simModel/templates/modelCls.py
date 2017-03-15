@@ -1,3 +1,5 @@
+from importlib import reload
+
 from hwt.hdlObjects.typeShortcuts import vecT
 from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.arrayVal import ArrayVal
@@ -19,6 +21,8 @@ from hwt.hdlObjects.types.sliceVal import SliceVal
 
 {% for c in componentInstances %}
 if "{{c.name}}" not in locals(): # support for all models in single file
+    import {{c.name}}
+    reload({{c.name}})
     from {{c.name}} import {{c.name}}{% endfor %}
 {% for imp in imports %}
 {{imp}}

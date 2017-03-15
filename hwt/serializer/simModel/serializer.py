@@ -25,6 +25,36 @@ unitTmpl = env.get_template('modelCls.py')
 processTmpl = env.get_template('process.py')
 ifTmpl = env.get_template("if.py")
 
+simCls_reservedWords = ['sim',
+                        'self'
+                        'reload',
+                        'vecT',
+                        'Array',
+                        'ArrayVal',
+                        'convertBits__val',
+                        'BitsVal',
+                        'SLICE',
+                        'Enum'
+                        'DIRECTION',
+                        'SENSITIVITY',
+                        'convertSimInteger__val',
+                        'simHInt',
+                        'SIM_INT',
+                        'simBitsT',
+                        'SIM_BIT',
+                        'convertSimBits__val',
+                        'SimModel',
+                        'sensitivity',
+                        'connectSimPort',
+                        'simEvalCond',
+                        'mkUpdater',
+                        'mkArrayUpdater'
+                        'Concat',
+                        'power'
+                        'RtlNetlist'
+                        'SimSignal'
+                        'SliceVal']
+
 _indent = "    "
 _indentCache = {}        
 def getIndent(indentNum):
@@ -36,9 +66,8 @@ def getIndent(indentNum):
         return i
 
 class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimModelSerializer_types):
-    __keywords_dict = {kw: LangueKeyword() for kw in kwlist}
-    __keywords_dict.update({'sim': LangueKeyword(),
-                            'self': LangueKeyword()})
+    __keywords_dict = {kw: LangueKeyword() for kw in kwlist + simCls_reservedWords}
+    
     fileExtension = '.py'
     formater = lambda s: s
     
