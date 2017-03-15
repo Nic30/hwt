@@ -134,7 +134,7 @@ class UnitImplHelpers(object):
             raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" %
                                  (self._name, portItem.name, repr(interface), portItem.direction, d))
 
-    def shareParamsWithPrefix(self, obj, prefix, paramNames):
+    def _shareParamsWithPrefix(self, obj, prefix, paramNames):
         for name in paramNames:
             lp = getattr(obj, name)
             p = getattr(self, prefix + name)
