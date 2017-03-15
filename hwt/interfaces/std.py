@@ -61,11 +61,18 @@ class Signal(SignalOps, Interface):
         return SignalAgent
 
 
-def VectSignal(width, signed=None, masterDir=D.OUT, multipliedBy=None,
-                   alternativeNames=None,
-                   loadConfig=True):
-    return Signal(masterDir, multipliedBy, vecT(width, signed), 
-                   alternativeNames, loadConfig)        
+def VectSignal(width,
+               signed=None,
+               masterDir=D.OUT,
+               multipliedBy=None,
+               alternativeNames=None,
+               loadConfig=True):
+
+    return Signal(masterDir,
+                  multipliedBy,
+                  vecT(width, signed),
+                  alternativeNames,
+                  loadConfig)
 
 
 class Clk(Signal):
