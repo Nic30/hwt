@@ -22,6 +22,7 @@ def _intfToSig(obj):
     else:
         return obj
 
+
 class StmCntx(list):
     """
     Base class of statement contexts
@@ -40,33 +41,33 @@ def flaten(iterables):
 class If(StmCntx):
     """
     If statement generator
-    
+
     @ivar nowIsEventDependent: flag if current scope of if is event dependent
     """
     def __init__(self, cond, *statements):
         """
         @param cond: condition in if
-        @param statements: list of statements which should be active if condition is met   
+        @param statements: list of statements which should be active if condition is met
         """
         self.cond = _intfToSig(cond)
         self.nowIsEventDependent = bool(list(discoverEventDependency(cond)))
         self.elifConds = []
         self._appendStatements(set([self.cond, ]), statements)
-        
+
     def Else(self, *statements):
         ncond = set()
         ncond.add(~self.cond)
-        
+
         for ec in self.elifConds:
             ncond.add(~ec)
 
         self._appendStatements(ncond, statements)
-            
+
         # convert self to StmCntx to prevent any other else/elif
         stml = StmCntx()
         stml.extend(self)
         return stml
-    
+
     def _appendStatements(self, condSet, statements):
         for stm in flaten(statements):
             stm.isEventDependent = stm.isEventDependent or self.nowIsEventDependent
@@ -74,21 +75,21 @@ class If(StmCntx):
                 c.endpoints.append(stm)
             stm.cond.update(condSet)
             self.append(stm)
-    
+
     def Elif(self, cond, *statements):
         cond = _intfToSig(cond)
         self.nowIsEventDependent = self.nowIsEventDependent or\
-                               arr_any(discoverEventDependency(cond), lambda x: True)
+                                   arr_any(discoverEventDependency(cond), lambda x: True)
         thisCond = set()
         thisCond.add(~self.cond)
         for c in self.elifConds:
             thisCond.add(~c)
         thisCond.add(cond)
-        
+
         self._appendStatements(thisCond, statements)
-        
+
         self.elifConds.append(cond)
-        
+
         return self
 
 
@@ -99,17 +100,17 @@ class Switch(StmCntx):
     def __init__(self, switchOn):
         self.switchOn = switchOn
         self.cond = None
-    
+
     _appendStatements = If._appendStatements
-    
+
     def Case(self, caseVal, *statements):
         cond = self.switchOn._eq(caseVal)
         if self.cond is None:
-            If.__init__(self, cond, *statements) 
+            If.__init__(self, cond, *statements)
         else:
             If.Elif(self, cond, *statements)
         return self
-    
+
     def addCases(self, tupesValStmnts):
         s = self
         for val, statements in tupesValStmnts:
@@ -118,8 +119,11 @@ class Switch(StmCntx):
             else:
                 s = s.Case(val, *statements)
         return s
-    
+
     def Default(self, *statements):
+        if self.cond is None:
+            # no cases were used
+            return statements
         return If.Else(self, *statements)
 
 
@@ -149,12 +153,12 @@ def ForEach(parentUnit, items, bodyFn, ack=None):
     """
     @param parentUnit: unit where this code should be instantiated
     @param items: items which this "for" itering on
-    @param bodyFn: function which fn(item, index) or fn(item). 
+    @param bodyFn: function which fn(item, index) or fn(item).
                    It's content is performed in every iteration.
     @param ack: Ack signal to signalize that next iteration should be performed.
-                if ack=None "for" will run for ever in loop 
+                if ack=None "for" will run for ever in loop
     """
-    
+
     items = list(items)
     l = len(items)
     if l == 0:
@@ -171,19 +175,20 @@ def ForEach(parentUnit, items, bodyFn, ack=None):
             If(ack,
                incrIndex
             )
+
         return Switch(index).addCases(
-            [  (i, _ForEach_callBody(bodyFn, item, i)) 
-                for i, item in enumerate(items)]
-            ).Default(
-                _ForEach_callBody(bodyFn, items[0], 0)
-            )
+                                      [(i, _ForEach_callBody(bodyFn, item, i))
+                                          for i, item in enumerate(items)]
+                                      ).Default(
+                                          _ForEach_callBody(bodyFn, items[0], 0)
+                                      )
 
 
 class FsmBuilder(StmCntx):
     """
     @ivar stateReg: register with state
     """
-    
+
     def __init__(self, parent, stateT, stateRegName="st"):
         """
         @param parent: parent unit where fsm should be builded
@@ -194,23 +199,24 @@ class FsmBuilder(StmCntx):
             beginVal = stateT.fromPy(stateT._allValues[0])
         else:
             beginVal = 0
-        
+
         self.stateReg = parent._reg(stateRegName, stateT, beginVal)
         Switch.__init__(self, self.stateReg)
-    
+
     _appendStatements = Switch._appendStatements
+
     def Trans(self, stateFrom, *condAndNextState):
         """
         @param stateFrom: apply when FSM is in this state
         @param condAndNextState: tupes (condition, newState),
                         last does not to have condition
-        
+
         @attention: transitions has priority, first has the biggest 
         @attention: if stateFrom is None it is evaluated as default
         """
         top = None
         last = True
-        
+
         for cAndS in reversed(condAndNextState):
             if last is True:
                 last = False
@@ -220,25 +226,25 @@ class FsmBuilder(StmCntx):
                 except TypeError:
                     top = c(cAndS, self.stateReg)
                     continue
-                top = [] 
+                top = []
 
             else:
                 condition, newvalue = cAndS
-            
-            # building decision tree    
+
+            # building decision tree
             top = If(condition,
                         c(newvalue, self.stateReg)
                     ).Else(
                         top
                     )
-            
+
         if stateFrom is None:
             s = Switch.Default(self, *top)
         else:
             s = Switch.Case(self, stateFrom, *top)
-        
+
         return s
-    
+
     def Default(self, *condAndNextState):
         d = self.Trans(None, *condAndNextState)
         d.stateReg = self.stateReg
@@ -248,42 +254,42 @@ class FsmBuilder(StmCntx):
 # class While(StmCntx):
 #    def __init__(self, cond):
 #        self.cnd = _intfToSig(cond)
-#    
+#
 #    def Do(self, *statements):
 
 
 def _connect(src, dst, exclude, fit):
-        
+
     if isinstance(src, InterfaceBase):
         if isinstance(dst, InterfaceBase):
             return dst._connectTo(src, exclude=exclude, fit=fit)
         src = src._sig
-        
-    assert not exclude, "this intf. is just a signal"   
+
+    assert not exclude, "this intf. is just a signal"
     if src is None:
         src = dst._dtype.fromPy(None)
     else:
         src = toHVal(src)
-        
+
     if fit:
         src = fitTo(src, dst)
-        
+
     src = src._dtype.convert(src, dst._dtype)
-    
+
     return dst ** src
 
 
 def connect(src, *destinations, exclude=set(), fit=False):
     """
     Connect src (signals/interfaces/values) to all destinations
-    @param exclude: interfaces on any level on src or destinations 
+    @param exclude: interfaces on any level on src or destinations
                 which should be excluded from connection process
-    @param fit: auto fit source width to destination width 
+    @param fit: auto fit source width to destination width
     """
     assignemnts = []
     for dst in destinations:
         assignemnts.extend(_connect(src, dst, exclude, fit))
-        
+
     return assignemnts
 
 
@@ -295,30 +301,30 @@ def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
         if intf._masterDir == masterDirEqTo:
             return intf._sig
         return None
-    
+
     res = None
     for i in intf._interfaces:
         if i in exclude:
             continue
-        
+
         if i._interfaces:
             if i._masterDir == DIRECTION.IN:
                 d = DIRECTION.opposite(masterDirEqTo)
             else:
                 d = masterDirEqTo
-            s = packed(i, d, exclude=exclude) 
+            s = packed(i, d, exclude=exclude)
         else:
             if i._masterDir == masterDirEqTo:
                 s = i._sig
             else:
                 s = None
-        
+
         if s is not None:
             if res is None:
                 res = s
             else:
                 res = Concat(res, s)
-        
+
     return res
 
 
@@ -340,7 +346,7 @@ def connectUnpacked(src, dst, exclude=[]):
             s = src[(w + offset): offset]
             offset += t.bit_length()
         connections.append(sig ** s)
-    
+
     return connections
 
 
@@ -357,8 +363,7 @@ def packedWidth(intf):
         intf = _intf.__class__()
         intf._updateParamsFrom(_intf)
         intf._loadDeclarations()
-        
-    
+
     if intf._interfaces:
         w = 0
         for i in intf._interfaces:
@@ -371,10 +376,10 @@ def packedWidth(intf):
         return t.bit_length()
 
 
-def _mkOp(fn): 
+def _mkOp(fn):
     def op(*ops):
         assert ops, ops
-        top = None 
+        top = None
         for s in ops:
             if top is None:
                 top = s
@@ -394,20 +399,20 @@ def iterBits(sig):
     """
     Iterate over bits in vector
     """
-    l = sig._dtype.bit_length() 
+    l = sig._dtype.bit_length()
     for bit in range(l):
-        yield sig[bit] 
+        yield sig[bit]
 
 
 def power(base, exp):
-    return toHVal(base)._pow(exp) 
+    return toHVal(base)._pow(exp)
 
 
 def ror(sig, howMany):
     """
     Rotate right
     """
-    return  sig[howMany:]._concat(sig[:howMany])
+    return sig[howMany:]._concat(sig[:howMany])
 
 
 def rol(sig, howMany):
@@ -415,8 +420,7 @@ def rol(sig, howMany):
     Rotate left
     """
     l = sig._dtype.bit_length()
-    b = l - howMany - 1
-    return  sig[(l - howMany):]._concat(sig[:(l - howMany)])
+    return sig[(l - howMany):]._concat(sig[:(l - howMany)])
 
 
 def sll(sig, howMany):
@@ -438,10 +442,10 @@ def log2ceil(x):
     Returns no of bits required to store x-1
     for example x=8 returns 3
     """
-    
+
     if not isinstance(x, (int, float)):
         x = evalParam(x).val
-    
+
     if x == 0 or x == 1:
         res = 1
     else:
