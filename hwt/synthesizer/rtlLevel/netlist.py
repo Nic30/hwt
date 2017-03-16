@@ -170,7 +170,7 @@ class RtlNetlist():
                         s.hidden = False
 
                 if hasCombDriver and not isEventDependent and haveNotIndexes:
-                    raise MultipleDriversExc("Signal %s has multiple combinational drivers" % name)
+                    raise MultipleDriversExc("%s: Signal %s has multiple combinational drivers" % (self.getDebugScopeName(), name))
                 hasCombDriver = hasCombDriver or not isEventDependent
                 
                 yield p
@@ -231,4 +231,15 @@ class RtlNetlist():
         self.synthesised = True
         
         return [ent, arch]
-       
+
+    def getDebugScopeName(self):
+        scope = []
+        p = self.parentForDebug
+        while p is not None:
+            scope.append(p._name)
+            try:
+                p = p._parent
+            except AttributeError:
+                p = None
+
+        return ".".join(reversed(scope))
