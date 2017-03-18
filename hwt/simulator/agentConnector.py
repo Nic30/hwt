@@ -1,12 +1,13 @@
 from hwt.hdlObjects.constants import INTF_DIRECTION
 from hwt.synthesizer.param import evalParam
 
+
 def autoAddAgents(unit, propName="_ag"):
     """
     Walk all interfaces on unit and instantiate actor for every interface.
-    
+
     @return: all monitor/driver functions which should be added to simulation as processes
-     
+
     """
     proc = []
     for intf in unit._interfaces:
@@ -15,7 +16,7 @@ def autoAddAgents(unit, propName="_ag"):
         except NotImplementedError:
             raise NotImplementedError(("Interface %s\n" + 
                             "has not any simulation agent class assigned") % (str(intf)))
-        
+
         if intf._multipliedBy is not None:
             agentCnt = evalParam(intf._multipliedBy).val
             agent = []
@@ -26,21 +27,22 @@ def autoAddAgents(unit, propName="_ag"):
         else:
             agent = agentCls(intf)
             setattr(intf, propName, agent)
-        
+
         if intf._multipliedBy is None:
             agent = [agent, ]
-            
+
         if intf._direction == INTF_DIRECTION.MASTER:
             agProcs = list(map(lambda a: a.getMonitors(), agent))
         elif intf._direction == INTF_DIRECTION.SLAVE:
             agProcs = list(map(lambda a: a.getDrivers(), agent))
         else:
             raise NotImplementedError("intf._direction %s" % str(intf._direction))
-        
+
         for p in agProcs:
             proc.extend(p)
-    
+
     return proc
+
 
 def valuesToInts(values):
     """
@@ -51,11 +53,13 @@ def valuesToInts(values):
         res.append(valToInt(d))
     return res
 
+
 def valToInt(v):
     if v.vldMask == v._dtype.all_mask():
         return v.val
     else:
         return None
+
 
 def agInts(interface):
     """
