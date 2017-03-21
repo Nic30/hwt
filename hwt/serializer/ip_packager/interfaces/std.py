@@ -26,6 +26,7 @@ class IP_Clk(IntfConfig):
             self.addSimpleParam(thisIf, "ASSOCIATED_BUSIF", ":".join(map(lambda intf: intf._name, intfs)))
             self.addSimpleParam(thisIf, "FREQ_HZ", str(DEFAULT_CLOCK))
 
+
 class IP_Rst(IntfConfig):
     def __init__(self):
         super().__init__()
@@ -37,6 +38,7 @@ class IP_Rst(IntfConfig):
         
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_HIGH")
+
 
 class IP_Rst_n(IntfConfig):
     def __init__(self):
@@ -50,6 +52,7 @@ class IP_Rst_n(IntfConfig):
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_LOW")
 
+
 class IP_Handshake(IntfConfig):
     def __init__(self):
         super().__init__()
@@ -60,6 +63,7 @@ class IP_Handshake(IntfConfig):
         self.map = {'rd': "ap_vld",
                      'rd': "ap_ack",
                      "data":"data"   }
+
 
 class IP_BlockRamPort(IntfConfig):
     def __init__(self):
