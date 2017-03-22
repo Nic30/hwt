@@ -1,3 +1,4 @@
+from _random import Random
 import difflib
 from inspect import isgenerator
 import os
@@ -5,6 +6,7 @@ import pprint
 import unittest
 from unittest.util import safe_repr, _common_shorten_repr
 
+from hwt.hdlObjects.constants import Time
 from hwt.hdlObjects.value import Value
 from hwt.simulator.agentConnector import valToInt
 from hwt.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
@@ -13,9 +15,6 @@ from hwt.simulator.shortcuts import simPrepare
 from hwt.simulator.simSignal import SimSignal
 from hwt.simulator.utils import agent_randomize
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-from _random import Random
-from hwt.hdlObjects.constants import Time
-from unittest.case import _Outcome
 
 
 def allValuesToInts(sequenceOrVal):
@@ -93,7 +92,7 @@ class SimTestCase(unittest.TestCase):
     def assertValEqual(self, first, second, msg=None):
         if isinstance(first, SimSignal):
             first = first._val
-        if not isinstance(first, int):
+        if not isinstance(first, int) and first is not None:
             first = valToInt(first)
 
         return unittest.TestCase.assertEqual(self, first, second, msg=msg)
