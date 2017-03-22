@@ -17,13 +17,14 @@ class HStruct(HdlType):
         @param name: optional name used for debugging purposes
         """
         self.fields = []
+        self.name = name
         fieldNames = []
         for f in template:
             try:
                 typ, name = f
                 field = HStructField(name, typ)
-            except IndexError:
-                if not isinstance(field, HStructField):
+            except TypeError:
+                if not isinstance(f, HStructField):
                     raise AssertionError("Template for struct field %r is not in valid format" % f)
                 field = f
             self.fields.append(field)
