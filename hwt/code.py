@@ -31,10 +31,10 @@ class StmCntx(list):
     pass
 
 
-def flaten(iterables):
+def flatten(iterables):
     if isinstance(iterables, (list, tuple, types.GeneratorType)):
         for i in iterables:
-            yield from flaten(i)
+            yield from flatten(i)
     else:
         yield iterables
 
@@ -71,7 +71,7 @@ class If(StmCntx):
         return stml
 
     def _appendStatements(self, condSet, statements):
-        for stm in flaten(statements):
+        for stm in flatten(statements):
             stm.isEventDependent = stm.isEventDependent or self.nowIsEventDependent
             for c in condSet:
                 c.endpoints.append(stm)
@@ -151,11 +151,11 @@ def _ForEach_callBody(fn, item, index):
         return fn(item, index)
 
 
-def ForEach(parentUnit, items, bodyFn, ack=None):
+def ForEach(parentUnit, items, bodyFn, name=""):
     """
     @param parentUnit: unit where this code should be instantiated
     @param items: items which this "for" itering on
-    @param bodyFn: function which fn(item, index) or fn(item).
+    @param bodyFn: function which fn(item, index) or fn(item) returns (statementList, ack).
                    It's content is performed in every iteration.
     @param ack: Ack signal to signalize that next iteration should be performed.
                 if ack=None "for" will run for ever in loop
@@ -171,19 +171,28 @@ def ForEach(parentUnit, items, bodyFn, ack=None):
         return _ForEach_callBody(bodyFn, items[0], 0)
     else:
         # if there is multiple items we have to generate counter logic
-        index = parentUnit._reg("for_index", vecT(log2ceil(l + 1), signed=False), defVal=0)
-        incrIndex = index ** (index + 1)
-        if ack is not None:
-            If(ack,
-               incrIndex
-            )
-
-        return Switch(index).addCases(
-                                      [(i, _ForEach_callBody(bodyFn, item, i))
-                                          for i, item in enumerate(items)]
-                                      ).Default(
-                                          _ForEach_callBody(bodyFn, items[0], 0)
-                                      )
+        index = parentUnit._reg(name + "for_index",
+                                vecT(log2ceil(l + 1), signed=False),
+                                defVal=0)
+        ackSig = parentUnit._sig(name + "for_ack")
+         
+        statementLists = []
+        for i, (statementList, ack)  in  [(i, _ForEach_callBody(bodyFn, item, i)) for i, item in enumerate(items)]:
+            statementLists.append(statementList + [(ackSig ** ack), ])
+            
+        If(ackSig,
+           If(index._eq(l - 1),
+              index ** 0
+           ).Else(
+               index ** (index + 1)
+           )
+        )        
+        return Switch(index)\
+                    .addCases(
+                      enumerate(statementLists)
+                    ).Default(
+                      _ForEach_callBody(bodyFn, items[0], 0)[0]
+                    )
 
 
 class FsmBuilder(StmCntx):
