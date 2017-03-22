@@ -10,7 +10,7 @@ class HStructField(object):
 
 
 class HStruct(HdlType):
-    def __init__(self, template, name=None):
+    def __init__(self, *template, name=None):
         """
         @param template: list of tuples (type, name) or HStructField objects
                         name can be None it means that there is space in structure
@@ -49,7 +49,10 @@ class HStruct(HdlType):
                 return "\n".join(buff)
 
         self.valueCls = StructVal
-
+    
+    def bit_length(self):
+        return sum(map(lambda f: f.type.bit_length(), self.fields), start=0)
+    
     def getValueCls(self):
         return self.valueCls
 
@@ -65,6 +68,13 @@ class HStruct(HdlType):
             return s // 8
         else:
             return s // 8 + 1
+    
+    def __add__(self, other):
+        """
+        override of addition, merge struct into one 
+        """
+        assert isinstance(other, HStruct)
+        return HStruct(*self.fields, *other.fields)
 
     def __str__(self):
         if self.name:
