@@ -14,6 +14,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from hwt.synthesizer.vectorUtils import getWidthExpr, fitTo
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 def _intfToSig(obj):
@@ -50,6 +51,7 @@ class If(StmCntx):
         @param statements: list of statements which should be active if condition is met
         """
         self.cond = _intfToSig(cond)
+        assert isinstance(self.cond, RtlSignalBase)
         self.nowIsEventDependent = bool(list(discoverEventDependency(cond)))
         self.elifConds = []
         self._appendStatements(set([self.cond, ]), statements)
