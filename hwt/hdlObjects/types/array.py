@@ -1,4 +1,5 @@
-from hwt.hdlObjects.types.hdlType import HdlType 
+from hwt.hdlObjects.types.hdlType import HdlType
+
 
 class Array(HdlType):
     """
@@ -9,15 +10,15 @@ class Array(HdlType):
         super(Array, self).__init__()
         self.elmType = elmType
         self.size = size
-    
+
     def __hash__(self):
         return hash((self.elmType, self.size))
-    
+
     @classmethod
     def getValueCls(cls):
         try:
             return cls._valCls
         except AttributeError:
-            from hwt.hdlObjects.types.arrayVal import ArrayVal 
+            from hwt.hdlObjects.types.arrayVal import ArrayVal
             cls._valCls = ArrayVal
             return cls._valCls
