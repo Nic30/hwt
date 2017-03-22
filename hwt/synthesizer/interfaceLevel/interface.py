@@ -265,7 +265,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         excluded = set()
         if exclude is not None:
             exclude = set(exclude)
-        
+
         for parentP in otherObj._params:
             if exclude and parentP in exclude:
                 excluded.add(parentP)
@@ -282,7 +282,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
                 continue
 
             updater(self, onParentName, parentP)
-        
+
         if exclude is not None:
             assert excluded == exclude
 
@@ -290,7 +290,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         raise NotSpecified()
 
     def _getSimAgent(self):
-        raise NotSpecified()
+        raise NotSpecified("Override this function in your interface implementation")
 
     def __repr__(self):
         s = [self.__class__.__name__]

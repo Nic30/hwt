@@ -10,7 +10,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     """
     def __init__(self, intf, clk=None, rstn=None):
         super().__init__(intf, clk=clk, rstn=rstn, allowNoReset=True)
-        
+
         self.requests = []
         self.readPending = False
         self.readed = []
@@ -18,23 +18,23 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     def doReq(self, s, req):
         rw = req[0]
         addr = req[1]
-        
+
         if rw == READ:
             rw = 0
             wdata = None
             self.readPending = True
-            
+
         elif rw == WRITE:
-            wdata = req[2] 
+            wdata = req[2]
             rw = 1
         else:
             raise NotImplementedError(rw)
-        
+
         intf = self.intf
         s.w(rw, intf.we)
         s.w(addr, intf.addr)
         s.w(wdata, intf.din)
-    
+
     def onReadReq(self, s, addr):
         """
         on readReqRecieved
@@ -43,10 +43,10 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
     def onWriteReq(self, s, addr, data):
         raise NotImplementedError()
-    
+
     def monitor(self, s):
         intf = self.intf
-        
+
         yield s.updateComplete
         if self.enable and s.read(intf.en).val:
             we = self.read(intf.we)
@@ -58,15 +58,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
                 self.onReadReq(s, addr)
 
     def getDrivers(self):
-        drivers = [self.driver]
-        try:
-            clk = self.intf.clk
-        except AttributeError:
-            return drivers
-        drivers.append(oscilate(clk))
-        return drivers
-         
-        
+        return [self.driver]
+
     def driver(self, s):
         intf = self.intf
         readPending = self.readPending
@@ -75,18 +68,17 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             if req is None:
                 s.w(0, intf.en)
                 self.readPending = False
-            else:    
+            else:
                 self.doReq(s, req)
                 s.w(1, intf.en)
         else:
             s.w(0, intf.en)
             self.readPending = False
-        
+
         if readPending:
             yield s.updateComplete
             d = s.r(intf.dout)
             self.readed.append(d)
-    
 
 
 class BramPortAgent(BramPort_withoutClkAgent):
@@ -94,6 +86,8 @@ class BramPortAgent(BramPort_withoutClkAgent):
         if clk is None:
             clk = intf.clk
         super().__init__(intf, clk=clk, rstn=rstn)
-        
-    def getSubDrivers(self):
-        yield oscilate(self.intf.clk)
+
+    def getDrivers(self):
+        drivers = super(BramPortAgent, self).getDrivers()
+        drivers.append(oscilate(self.intf.clk))
+        return drivers

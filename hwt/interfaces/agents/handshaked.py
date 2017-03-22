@@ -92,4 +92,4 @@ class HandshakeSyncAgent(HandshakedAgent):
         pass
 
     def doRead(self, s):
-        raise NotImplementedError()
+        return s.now
