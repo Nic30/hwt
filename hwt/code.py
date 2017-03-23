@@ -12,9 +12,9 @@ from hwt.pyUtils.arrayQuery import arr_any
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import evalParam
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from hwt.synthesizer.vectorUtils import getWidthExpr, fitTo
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 def _intfToSig(obj):
@@ -153,12 +153,11 @@ def _ForEach_callBody(fn, item, index):
 
 def ForEach(parentUnit, items, bodyFn, name=""):
     """
+    Generate for loop for static items
     @param parentUnit: unit where this code should be instantiated
     @param items: items which this "for" itering on
     @param bodyFn: function which fn(item, index) or fn(item) returns (statementList, ack).
-                   It's content is performed in every iteration.
-    @param ack: Ack signal to signalize that next iteration should be performed.
-                if ack=None "for" will run for ever in loop
+                   It's content is performed in every iteration. When ack is high loop will fall to next iteration
     """
 
     items = list(items)
@@ -175,18 +174,19 @@ def ForEach(parentUnit, items, bodyFn, name=""):
                                 vecT(log2ceil(l + 1), signed=False),
                                 defVal=0)
         ackSig = parentUnit._sig(name + "for_ack")
-         
+
         statementLists = []
-        for i, (statementList, ack)  in  [(i, _ForEach_callBody(bodyFn, item, i)) for i, item in enumerate(items)]:
+        for i, (statementList, ack) in [(i, _ForEach_callBody(bodyFn, item, i))
+                                        for i, item in enumerate(items)]:
             statementLists.append(statementList + [(ackSig ** ack), ])
-            
+
         If(ackSig,
            If(index._eq(l - 1),
               index ** 0
            ).Else(
                index ** (index + 1)
            )
-        )        
+        )
         return Switch(index)\
                     .addCases(
                       enumerate(statementLists)
@@ -222,7 +222,7 @@ class FsmBuilder(StmCntx):
         @param condAndNextState: tupes (condition, newState),
                         last does not to have condition
 
-        @attention: transitions has priority, first has the biggest 
+        @attention: transitions has priority, first has the biggest
         @attention: if stateFrom is None it is evaluated as default
         """
         top = None
