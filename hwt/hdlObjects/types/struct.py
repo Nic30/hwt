@@ -1,4 +1,5 @@
 from hwt.hdlObjects.types.hdlType import HdlType
+from hwt.hdlObjects.value import Value
 
 
 class HStructField(object):
@@ -8,8 +9,14 @@ class HStructField(object):
         assert isinstance(typ, HdlType)
         self.type = typ
 
+    def __hash__(self):
+        return hash((self.type, self.name))
+
 
 class HStruct(HdlType):
+    """
+    C-like structure type
+    """
     def __init__(self, *template, name=None):
         """
         @param template: list of tuples (type, name) or HStructField objects
@@ -19,6 +26,8 @@ class HStruct(HdlType):
         self.fields = []
         self.name = name
         fieldNames = []
+        self.isFixedSize = True
+
         for f in template:
             try:
                 typ, name = f
@@ -31,7 +40,15 @@ class HStruct(HdlType):
             if field.name is not None:
                 fieldNames.append(field.name)
 
-        class StructVal(object):
+            t = field.type
+            if self.isFixedSize:
+                if (isinstance(t, HStruct) and t.isFixedSize)\
+                              or not hasattr(t, "bit_length"):
+                    self.isFixedSize = False
+
+        self.fields = tuple(self.fields)
+
+        class StructVal(Value):
             __structType = self
             __slots__ = fieldNames
 
@@ -50,10 +67,13 @@ class HStruct(HdlType):
                 return "\n".join(buff)
 
         self.valueCls = StructVal
-    
+
     def bit_length(self):
-        return sum(map(lambda f: f.type.bit_length(), self.fields), start=0)
-    
+        if self.fixedSize:
+            return sum(map(lambda f: f.type.bit_length(), self.fields), start=0)
+        else:
+            return TypeError("Can not request bit_lenght on size which has not fixed size")
+
     def getValueCls(self):
         return self.valueCls
 
@@ -69,10 +89,13 @@ class HStruct(HdlType):
             return s // 8
         else:
             return s // 8 + 1
-    
+
+    def __hash__(self):
+        return hash((self.name, self.fields))
+
     def __add__(self, other):
         """
-        override of addition, merge struct into one 
+        override of addition, merge struct into one
         """
         assert isinstance(other, HStruct)
         return HStruct(*self.fields, *other.fields)
