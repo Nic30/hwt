@@ -42,7 +42,7 @@ class HStruct(HdlType):
 
             t = field.type
             if self.isFixedSize:
-                if (isinstance(t, HStruct) and t.isFixedSize)\
+                if (isinstance(t, HStruct) and not t.isFixedSize)\
                               or not hasattr(t, "bit_length"):
                     self.isFixedSize = False
 
@@ -69,10 +69,10 @@ class HStruct(HdlType):
         self.valueCls = StructVal
 
     def bit_length(self):
-        if self.fixedSize:
-            return sum(map(lambda f: f.type.bit_length(), self.fields), start=0)
+        if self.isFixedSize:
+            return sum(map(lambda f: f.type.bit_length(), self.fields))
         else:
-            return TypeError("Can not request bit_lenght on size which has not fixed size")
+            raise TypeError("Can not request bit_lenght on size which has not fixed size")
 
     def getValueCls(self):
         return self.valueCls
