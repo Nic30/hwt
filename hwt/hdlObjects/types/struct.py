@@ -3,11 +3,12 @@ from hwt.hdlObjects.value import Value
 
 
 class HStructField(object):
-    def __init__(self, name, typ):
-        assert isinstance(name, str) or name is None
+    def __init__(self, typ, name, info=None):
+        assert isinstance(name, str) or name is None, name
+        assert isinstance(typ, HdlType),typ
         self.name = name
-        assert isinstance(typ, HdlType)
         self.type = typ
+        self.info = info
 
     def __hash__(self):
         return hash((self.type, self.name))
@@ -30,12 +31,13 @@ class HStruct(HdlType):
 
         for f in template:
             try:
-                typ, name = f
-                field = HStructField(name, typ)
+                field = HStructField(*f)
             except TypeError:
-                if not isinstance(f, HStructField):
-                    raise AssertionError("Template for struct field %r is not in valid format" % f)
                 field = f
+            if not isinstance(field, HStructField):
+                raise TypeError("Template for struct field %s is not in valid format" % repr(f))
+            
+            
             self.fields.append(field)
             if field.name is not None:
                 fieldNames.append(field.name)
@@ -73,7 +75,7 @@ class HStruct(HdlType):
             return sum(map(lambda f: f.type.bit_length(), self.fields))
         else:
             raise TypeError("Can not request bit_lenght on size which has not fixed size")
-
+    
     def getValueCls(self):
         return self.valueCls
 
@@ -89,7 +91,7 @@ class HStruct(HdlType):
             return s // 8
         else:
             return s // 8 + 1
-
+    
     def __hash__(self):
         return hash((self.name, self.fields))
 
