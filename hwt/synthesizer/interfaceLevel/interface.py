@@ -2,7 +2,7 @@ from copy import copy
 
 from hwt.hdlObjects.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.synthesizer.exceptions import IntfLvlConfErr, TypeConversionErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import InterfaceDirectionFns
 from hwt.synthesizer.interfaceLevel.interfaceUtils.hdlExtraction import ExtractableInterface
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
@@ -290,7 +290,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         raise NotSpecified()
 
     def _getSimAgent(self):
-        raise NotSpecified("Override this function in your interface implementation")
+        raise NotSpecified("Override this function in your interface implementation (from %r)" % self)
 
     def __repr__(self):
         s = [self.__class__.__name__]
