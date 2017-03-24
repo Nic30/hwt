@@ -1,4 +1,5 @@
 from hwt.hdlObjects.types.hdlType import HdlType
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class Array(HdlType):
@@ -13,6 +14,19 @@ class Array(HdlType):
 
     def __hash__(self):
         return hash((self.elmType, self.size))
+
+    def bit_length(self):
+        try:
+            itemSize = self.elmType.bit_length
+        except AttributeError:
+            itemSize = None
+        if itemSize is None:
+            raise TypeError("Can not determine size of array because item has not determinable size")
+        
+        s = self.size
+        if isinstance(s, RtlSignalBase):
+            s = s.staticEval()
+        return s * itemSize()
 
     @classmethod
     def getValueCls(cls):
