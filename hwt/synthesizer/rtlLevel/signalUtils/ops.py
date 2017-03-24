@@ -6,6 +6,7 @@ from hwt.hdlObjects.value import Value
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hwt.synthesizer.exceptions import TypeConversionErr
 
 
 def tv(signal):
@@ -169,25 +170,34 @@ class RtlSignalOps():
         """
         if isinstance(source, InterfaceBase):
             source = source._sig
-
+    
         if source is None:
             source = self._dtype.fromPy(None)
         else:
             source = toHVal(source)
-            source = source._dtype.convert(source, self._dtype)
-
+            err = False
+            try:
+                source = source._dtype.convert(source, self._dtype)
+            except TypeConversionErr:
+                err = True
+            if err:
+                raise TypeConversionErr("Can not connect %r (of type %r) to %r (of type %r) due type incompatibility"
+                            % (source, source._dtype, self, self._dtype))
+    
         tmp = self._getIndexCascade()
         if tmp:
             mainSig, indexCascade = tmp
             self = mainSig
         else:
             indexCascade = None
-
+    
         # self = self._tryMyIndexToEndpoint()
         a = Assignment(source, self, indexCascade)
-
+    
         self.drivers.append(a)
         if not isinstance(source, Value):
             source.endpoints.append(a)
-
+    
         return [a]
+
+        
