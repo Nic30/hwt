@@ -1,6 +1,5 @@
 import math
 from operator import and_, or_
-import types
 
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.operatorDefs import concatFn
@@ -8,7 +7,7 @@ from hwt.hdlObjects.typeShortcuts import hInt, vec, vecT
 from hwt.hdlObjects.types.defs import BIT
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.pyUtils.arrayQuery import arr_any
+from hwt.pyUtils.arrayQuery import arr_any, flatten
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import evalParam
@@ -29,14 +28,6 @@ class StmCntx(list):
     Base class of statement contexts
     """
     pass
-
-
-def flatten(iterables):
-    if isinstance(iterables, (list, tuple, types.GeneratorType)):
-        for i in iterables:
-            yield from flatten(i)
-    else:
-        yield iterables
 
 
 class If(StmCntx):
