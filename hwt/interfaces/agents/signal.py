@@ -43,7 +43,11 @@ class SignalAgent(AgentBase):
             # clk tick
             while True:
                 if self.data:
-                    self.doWrite(s, self.data.pop(0))
+                    try:
+                        d = self.data.pop(0)
+                    except AttributeError:
+                        d = next(self.data)
+                    self.doWrite(s, d)
                 yield s.wait(self.delay)
         else:
             # if clock is specified this function is periodicaly called every
