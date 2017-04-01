@@ -2,7 +2,7 @@ from hwt.hdlObjects.constants import INTF_DIRECTION
 from hwt.synthesizer.param import evalParam
 
 
-def autoAddAgents(unit, propName="_ag"):
+def autoAddAgents(unit):
     """
     Walk all interfaces on unit and instantiate actor for every interface.
 
@@ -14,7 +14,7 @@ def autoAddAgents(unit, propName="_ag"):
         try:
             agentCls = intf._getSimAgent()
         except NotImplementedError:
-            raise NotImplementedError(("Interface %s\n" + 
+            raise NotImplementedError(("Interface %s\n" +
                             "has not any simulation agent class assigned") % (str(intf)))
 
         if intf._multipliedBy is not None:
@@ -23,10 +23,10 @@ def autoAddAgents(unit, propName="_ag"):
             for i in range(agentCnt):
                 a = agentCls(intf[i])
                 agent.append(a)
-                setattr(intf[i], propName, a)
+                intf[i]._ag = a
         else:
             agent = agentCls(intf)
-            setattr(intf, propName, agent)
+            intf._ag = agent
 
         if intf._multipliedBy is None:
             agent = [agent, ]
