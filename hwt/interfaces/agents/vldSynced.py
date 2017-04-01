@@ -16,13 +16,16 @@ class VldSyncedAgent(SyncAgentBase):
     def monitor(self, s):
         intf = self.intf
         yield s.updateComplete
-        if self.enable and self.notReset(s) and s.r(intf.vld).val:
-            d = self.doRead(s)
+        if self.enable and self.notReset(s):
+            vld = s.r(intf.vld)
+            assert vld.vldMask, "valid signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
+            if vld.val:
+                d = self.doRead(s)
 
-            if self._debugOutput is not None:
-                self._debugOutput.write("%s, read, %d: %r\n" % (
-                                          self.intf._getFullName(), s.now, d))
-            self.data.append(d)
+                if self._debugOutput is not None:
+                    self._debugOutput.write("%s, read, %d: %r\n" % (
+                                              self.intf._getFullName(), s.now, d))
+                self.data.append(d)
 
     def driver(self, s):
         intf = self.intf

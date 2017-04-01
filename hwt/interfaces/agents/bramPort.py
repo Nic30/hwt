@@ -48,14 +48,19 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         intf = self.intf
 
         yield s.updateComplete
-        if self.enable and s.read(intf.en).val:
-            we = self.read(intf.we)
-            addr = self.read(intf.addr)
-            if we.val:
-                data = self.read(intf.din)
-                self.onWriteReq(s, addr, data)
-            else:
-                self.onReadReq(s, addr)
+        if self.enable:
+            en = s.read(intf.en)
+            assert en.vldMask
+            if en.val:
+                we = self.read(intf.we)
+                assert we.vldMask
+
+                addr = self.read(intf.addr)
+                if we.val:
+                    data = self.read(intf.din)
+                    self.onWriteReq(s, addr, data)
+                else:
+                    self.onReadReq(s, addr)
 
     def getDrivers(self):
         return [self.driver]

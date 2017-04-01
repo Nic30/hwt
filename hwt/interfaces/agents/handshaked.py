@@ -34,7 +34,9 @@ class HandshakedAgent(SyncAgentBase):
 
             yield s.updateComplete
             vld = s.r(self._vld)
-            if vld.val or not vld.vldMask:
+            assert vld.vldMask, "valid signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
+
+            if vld.val:
                 d = self.doRead(s)
                 if self._debugOutput is not None:
                     self._debugOutput.write("%s, read, %d: %r\n" % (
@@ -52,7 +54,10 @@ class HandshakedAgent(SyncAgentBase):
         s.w(data, self.intf.data)
 
     def driver(self, s):
-        """Push data to interface"""
+        """Push data to interface
+
+        set vld high and wait on rd in high then pass new data
+        """
         if self.actualData is NOP and self.data:
             self.actualData = self.data.pop(0)
 
@@ -63,7 +68,8 @@ class HandshakedAgent(SyncAgentBase):
         else:
             self.doWrite(s, None)
 
-        if s.r(self.rst_n).val and do and self.enable:
+        en = s.r(self.rst_n).val and self.enable
+        if en and do:
             s.w(1, self._vld)
         else:
             s.w(0, self._vld)
@@ -72,7 +78,9 @@ class HandshakedAgent(SyncAgentBase):
         yield s.updateComplete
 
         rd = s.r(self._rd)
-        if rd.val or not rd.vldMask:
+        if en:
+            assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
+        if rd.val:
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, wrote, %d: %r\n" % (
                                            self.intf._getFullName(), s.now, self.actualData))
@@ -86,6 +94,8 @@ class HandshakeSyncAgent(HandshakedAgent):
     """
     Simulation/verification agent for HandshakedSycn interface
     @attention: there is no data channel on this interface it is synchronization only
+                and it actually does not have any meaningful data collected data in monitor
+                mode are just values of simulation time when item was collected
     """
 
     def doWrite(self, s, data):
