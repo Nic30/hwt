@@ -15,9 +15,13 @@ from hwt.simulator.shortcuts import simPrepare
 from hwt.simulator.simSignal import SimSignal
 from hwt.simulator.utils import agent_randomize
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
+from hwt.hdlObjects.types.arrayVal import ArrayVal
 
 
 def allValuesToInts(sequenceOrVal):
+    if isinstance(sequenceOrVal, ArrayVal):
+        sequenceOrVal = sequenceOrVal.val
+
     if isinstance(sequenceOrVal, Value):
         return valToInt(sequenceOrVal)
     elif not sequenceOrVal:
