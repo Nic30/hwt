@@ -7,6 +7,7 @@ import unittest
 from unittest.util import safe_repr, _common_shorten_repr
 
 from hwt.hdlObjects.constants import Time
+from hwt.hdlObjects.types.arrayVal import ArrayVal
 from hwt.hdlObjects.value import Value
 from hwt.simulator.agentConnector import valToInt
 from hwt.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
@@ -15,7 +16,6 @@ from hwt.simulator.shortcuts import simPrepare
 from hwt.simulator.simSignal import SimSignal
 from hwt.simulator.utils import agent_randomize
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-from hwt.hdlObjects.types.arrayVal import ArrayVal
 
 
 def allValuesToInts(sequenceOrVal):
@@ -123,10 +123,10 @@ class SimTestCase(unittest.TestCase):
             seq_type_name = seq_type.__name__
             if not isinstance(seq1, seq_type):
                 raise self.failureException('First sequence is not a %s: %s'
-                                        % (seq_type_name, safe_repr(seq1)))
+                                            % (seq_type_name, safe_repr(seq1)))
             if not isinstance(seq2, seq_type):
                 raise self.failureException('Second sequence is not a %s: %s'
-                                        % (seq_type_name, safe_repr(seq2)))
+                                            % (seq_type_name, safe_repr(seq2)))
         else:
             seq_type_name = "sequence"
 
@@ -156,20 +156,20 @@ class SimTestCase(unittest.TestCase):
                 try:
                     item1 = seq1[i]
                 except (TypeError, IndexError, NotImplementedError):
-                    differing += ('\nUnable to index element %d of first %s\n' % 
-                                 (i, seq_type_name))
+                    differing += ('\nUnable to index element %d of first %s\n' 
+                                  % (i, seq_type_name))
                     break
 
                 try:
                     item2 = seq2[i]
                 except (TypeError, IndexError, NotImplementedError):
-                    differing += ('\nUnable to index element %d of second %s\n' % 
-                                 (i, seq_type_name))
+                    differing += ('\nUnable to index element %d of second %s\n'
+                                  % (i, seq_type_name))
                     break
 
                 if item1 != item2:
-                    differing += ('\nFirst differing element %d:\n%s\n%s\n' % 
-                                 ((i,) + _common_shorten_repr(item1, item2)))
+                    differing += ('\nFirst differing element %d:\n%s\n%s\n'
+                                  % ((i,) + _common_shorten_repr(item1, item2)))
                     break
             else:
                 if (len1 == len2 and seq_type is None and
@@ -214,5 +214,6 @@ class SimTestCase(unittest.TestCase):
                                                     modelCls=modelCls,
                                                     dumpModelIn=dumpModelIn,
                                                     onAfterToRtl=onAfterToRtl)
+
     def setUp(self):
         self._rand.seed(self._defaultSeed)
