@@ -21,8 +21,10 @@ from hwt.pyUtils.arrayQuery import where, distinctBy, groupedby
 
 
 def isSignalHiddenInExpr(sig):
-    """Some signals are just only connections in expression they done need to be rendered because
-    they are hidden inside expression for example sig. from a+b in a+b+c"""
+    """
+    Some signals are just only connections in expression they done need to be rendered because
+    they are hidden inside expression for example sig. from a+b in a+b+c
+    """
     if isinstance(sig, Value):
         return True
     try:
@@ -73,9 +75,10 @@ def isEnclosed(obj):
 class RtlNetlist():
     """
     Container for signals and units
-    @ivar signals: dict of all signals in context
-    @ivar startsOfDataPaths:  is set of nodes where datapaths starts
-    @ivar subUnits:           is set of all units in this context 
+
+    :ivar signals: dict of all signals in context
+    :ivar startsOfDataPaths:  is set of nodes where datapaths starts
+    :ivar subUnits:           is set of all units in this context 
     """
     def __init__(self, parentForDebug=None):
         self.parentForDebug = parentForDebug
@@ -89,8 +92,9 @@ class RtlNetlist():
     def sig(self, name, typ=BIT, clk=None, syncRst=None, defVal=None):
         """
         generate new signal in context
-        @param clk: clk signal, if specified signal is synthesized as SyncSignal
-        @param syncRst: reset 
+
+        :param clk: clk signal, if specified signal is synthesized as SyncSignal
+        :param syncRst: reset 
         """
         if not isinstance(defVal, (Value, RtlSignal, InterfaceBase)):
             if isinstance(defVal, (InterfaceBase)):
@@ -178,7 +182,7 @@ class RtlNetlist():
     def mergeWith(self, other):
         """
         Merge two instances into this
-        @attention: "others" becomes invalid because all signals etc. will be transferred into this 
+        :attention: "others" becomes invalid because all signals etc. will be transferred into this 
         """
         assert not other.synthesised
         self.globals.update(other.globals)

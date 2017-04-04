@@ -11,26 +11,27 @@ from hwt.synthesizer.uniqList import UniqList
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
     more like net
-    @ivar _usedOps: dictionary of used operators which can be reused
-    @ivar endpoints: UniqList of operators and statements for which this signal is driver.
-    @ivar drivers: UniqList of operators and statements which can drive this signal.
-    @ivar negated: this value represents that the value of signal has opposite meaning
-           [TODO] mv negated to Bits hdl type.
-    @ivar hiden: means that this signal is part of expression and should not be rendered 
-    @ivar processCrossing: means that this signal is crossing process boundary
+
+    :ivar _usedOps: dictionary of used operators which can be reused
+    :ivar endpoints: UniqList of operators and statements for which this signal is driver.
+    :ivar drivers: UniqList of operators and statements which can drive this signal.
+    :ivar negated: this value represents that the value of signal has opposite meaning
+        [TODO] mv negated to Bits hdl type.
+    :ivar hiden: means that this signal is part of expression and should not be rendered 
+    :ivar processCrossing: means that this signal is crossing process boundary
     
-    @cvar __instCntr: counter used for generating instance ids
-    @ivar _instId: internaly used only for intuitive sorting of statements
+    :cvar __instCntr: counter used for generating instance ids
+    :ivar _instId: internaly used only for intuitive sorting of statements
     """
     __instCntr = 0
 
     def __init__(self, ctx, name, dtype, defaultVal=None, nopVal=None, useNopVal=False):
         """
-        @param ctx: context - RtlNetlist which is this signal part of
-        @param name: name hint for this signal, if is None name is choosen automaticaly
-        @param defaultVal: value which is used for reset and as default value in hdl
-        @param useNopVal: use nopVal or ignore it
-        @param nopVal: value which is used to fill up statements when no other value is assigned
+        :param ctx: context - RtlNetlist which is this signal part of
+        :param name: name hint for this signal, if is None name is choosen automaticaly
+        :param defaultVal: value which is used for reset and as default value in hdl
+        :param useNopVal: use nopVal or ignore it
+        :param nopVal: value which is used to fill up statements when no other value is assigned
         """
         
         if name is None:

@@ -8,8 +8,9 @@ from hwt.hdlObjects.constants import SENSITIVITY
 class OpDefinition():
     """
     OperatorDefinition
-    @ivar id: name of operator
-    @ivar _evalFn: function which evaluates operands
+
+    :ivar id: name of operator
+    :ivar _evalFn: function which evaluates operands
     """
     def __init__(self, evalFn):
         self.id = None  # assigned automatically in AllOps  
@@ -97,9 +98,9 @@ def bitsAsVec(a):
 class AllOps():
     _idsInited = False
     """
-    @attention: Remember that and operator "and" is & and "or" is |, "and" and "or" can not be used because
-    they can not be overloaded
-    @attention: These are operators of internal AST, the are not equal to verilog or vhdl operators
+    :attention: Remember that and operator "and" is & and "or" is |, "and" and "or" can not be used because
+        they can not be overloaded
+    :attention: These are operators of internal AST, the are not equal to verilog or vhdl operators
     """
     
     

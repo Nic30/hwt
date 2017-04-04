@@ -8,8 +8,8 @@ class AgentBase():
     driver is used for slave interfaces
     monitor is used for master interfaces
 
-    @ivar intf: interface assigned to this agent
-    @ivar enable: flag to enable/disable this agent
+    :ivar intf: interface assigned to this agent
+    :ivar enable: flag to enable/disable this agent
     """
     def __init__(self, intf):
         self.intf = intf
@@ -47,7 +47,8 @@ class AgentBase():
 class SyncAgentBase(AgentBase):
     """
     Agent which discovers clk, rst signal and runs only at specified edge of clk
-    @attention: requires clk and rst/rstn signal
+    
+    :attention: requires clk and rst/rstn signal
       (if you do not have any create simulation wrapper with it)
     """
     def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):

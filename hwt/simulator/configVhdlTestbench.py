@@ -19,8 +19,8 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 def makeTestbenchTemplate(unit, name=None):
     """
-    @param unit: synthesized unit
-    @return: (entity, arch, context) of testbench
+    :param unit: synthesized unit
+    :return: (entity, arch, context) of testbench
     """
     if name is None:
         name = unit._name + "_tb"

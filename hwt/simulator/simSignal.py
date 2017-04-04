@@ -4,8 +4,8 @@ class SimSignal(SignalItem):
     """
     Class of signal simulation functions
     
-    @ivar _writeCallbacks: list of callback functions(signal, simulator) which is called
-                           when new (changed) value is written to this signal
+    :ivar _writeCallbacks: list of callback functions(signal, simulator) which is called
+        when new (changed) value is written to this signal
     """
     __slots__ = ["name", "_val", "_oldVal", "_writeCallbacks",
                  "simSensProcs", "simRisingSensProcs", "simFallingSensProcs"]

@@ -12,15 +12,15 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     Class members:
     #resolved automatically during configuration/declaration:
 
-    @cvar _serializerMode: mode for serializer (drives when unit should be serialized)
+    :cvar _serializerMode: mode for serializer (drives when unit should be serialized)
 
-    @ivar _interfaces: all interfaces 
-    @ivar _units: all units defined on this obj in configuration/declaration
-    @ivar _params: all params defined on this obj in configuration/declaration
+    :ivar _interfaces: all interfaces 
+    :ivar _units: all units defined on this obj in configuration/declaration
+    :ivar _params: all params defined on this obj in configuration/declaration
 
-    @ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
-    @ivar _lazyLoaded : container of rtl object which were lazy loaded in implementation phase
-                      (this object has to be returned from _toRtl of parent before it it's own objects)
+    :ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
+    :ivar _lazyLoaded : container of rtl object which were lazy loaded in implementation phase
+        (this object has to be returned from _toRtl of parent before it it's own objects)
     """
 
     _serializerMode = SERI_MODE.ALWAYS

@@ -9,8 +9,8 @@ class EnumVal(Value):
     @classmethod
     def fromPy(cls, val, typeObj):
         """
-        @param val: value of python type bool or None
-        @param typeObj: instance of HdlType
+        :param val: value of python type bool or None
+        :param typeObj: instance of HdlType
         """
         if val is None:
             valid = False

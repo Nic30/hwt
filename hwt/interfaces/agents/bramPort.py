@@ -5,8 +5,8 @@ from hwt.simulator.shortcuts import oscilate
 
 class BramPort_withoutClkAgent(SyncAgentBase):
     """
-    @ivar requests: list of tuples (request type, address) - used for driver
-    @ivar data:     list of data in memory, used for monitor
+    :ivar requests: list of tuples (request type, address) - used for driver
+    :ivar data: list of data in memory, used for monitor
     """
     def __init__(self, intf, clk=None, rstn=None):
         super().__init__(intf, clk=clk, rstn=rstn, allowNoReset=True)

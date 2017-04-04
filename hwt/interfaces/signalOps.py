@@ -119,7 +119,8 @@ class SignalOps(object):
     def __pow__(self, source):
         """
         connect this signal to driver
-        @attention: it is not power operator it is assignment
-        @return: list of assignments
+
+        :attention: it is not power operator it is assignment
+        :return: list of assignments
         """
         return self._sig.__pow__(source)

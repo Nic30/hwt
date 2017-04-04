@@ -10,8 +10,8 @@ class IndexSimSignalProxy(SimSignal):
     """
     def __init__(self, name, baseSignal, dtype, upperIndex, lowerIndex=None):
         """
-        @param lowerIndex: if this is none only upper index will be used like sig[upperIndex]
-                            else range select like sig[upperIndex:lowerIndex]
+        :param lowerIndex: if this is none only upper index will be used like sig[upperIndex]
+            else range select like sig[upperIndex:lowerIndex]
         """
         defaultVal = dtype.fromPy(None) 
 

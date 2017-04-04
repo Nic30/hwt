@@ -33,14 +33,14 @@ def intCmpOp(self, other, op, evalFn=None):
 
 class IntegerVal(Value):
     """
-    @ivar vldMask: can be only 0 or 1
-    @ivar updateTime: time when this value was set, used in simulator
+    :ivar vldMask: can be only 0 or 1
+    :ivar updateTime: time when this value was set, used in simulator
     """
     @classmethod
     def fromPy(cls, val, typeObj):
         """
-        @param val: value of python type int or None
-        @param typeObj: instance of HdlType
+        :param val: value of python type int or None
+        :param typeObj: instance of HdlType
         """
         assert isinstance(typeObj, Integer)
         vld = int(val is not None)

@@ -5,8 +5,9 @@ from hwt.hdlObjects.constants import NOP
 class HandshakedAgent(SyncAgentBase):
     """
     Simulation/verification agent for handshaked interface
-    @attention: requires clk and rst/rstn signal
-      (if you do not have any create simulation wrapper with it)
+
+    :attention: requires clk and rst/rstn signal
+        (if you do not have any create simulation wrapper with it)
     """
     def __init__(self, intf, clk=None, rstn=None):
         super().__init__(intf, clk=clk, rstn=rstn)
@@ -93,7 +94,8 @@ class HandshakedAgent(SyncAgentBase):
 class HandshakeSyncAgent(HandshakedAgent):
     """
     Simulation/verification agent for HandshakedSycn interface
-    @attention: there is no data channel on this interface it is synchronization only
+
+    :attention: there is no data channel on this interface it is synchronization only
                 and it actually does not have any meaningful data collected data in monitor
                 mode are just values of simulation time when item was collected
     """

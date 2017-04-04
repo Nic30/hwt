@@ -44,9 +44,7 @@ class SimTestCase(unittest.TestCase):
     This is TestCase class contains methods which are usually used during
     hdl simulation.
 
-    @attention: self.model, self.procs has to be specified before running doSim
-    u = Axi_rDatapump()
-    self.model, self.procs = simPrepare(u)
+    :attention: self.model, self.procs has to be specified before running doSim (you can use prepareUnit method)
     """
     _defaultSeed = 317
     _rand = Random(_defaultSeed)
@@ -111,12 +109,13 @@ class SimTestCase(unittest.TestCase):
         which can be indexed, has a length, and has an equality operator.
 
         Args:
-        @param seq1: can contain instance of values or nested list of them
-        @param seq2: items are not converted
-        @param seq_type: The expected datatype of the sequences, or None if no
-                    datatype should be enforced.
-        @param msg: Optional message to use on failure instead of a list of
-                    differences.
+
+        :param seq1: can contain instance of values or nested list of them
+        :param seq2: items are not converted
+        :param seq_type: The expected datatype of the sequences, or None if no
+            datatype should be enforced.
+        :param msg: Optional message to use on failure instead of a list of
+            differences.
         """
         seq1 = allValuesToInts(seq1)
         if seq_type is not None:

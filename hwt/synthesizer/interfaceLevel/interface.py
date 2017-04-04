@@ -21,31 +21,34 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
     """
     Base class for all interfaces in interface synthesizer
 
-    @cvar _NAME_SEPARATOR: separator for nested interface names
-    @ivar _params: [] of parameter
-    @ivar _interfaces: [] sub interfaces
-    @ivar _alternativeNames: [] of alternative names
-    @ivar _name: name assigned during synthesis
-    @ivar _parent: parent object (Unit or Interface instance)
-    @ivar _isExtern: If true synthesizer sets it as external port of unit
+    :cvar _NAME_SEPARATOR: separator for nested interface names
+    :ivar _params: [] of parameter
+    :ivar _interfaces: [] sub interfaces
+    :ivar _alternativeNames: [] of alternative names
+    :ivar _name: name assigned during synthesis
+    :ivar _parent: parent object (Unit or Interface instance)
+    :ivar _isExtern: If true synthesizer sets it as external port of unit
 
     #only interfaces without _interfaces have:
-    @ivar _sig: rtl level signal instance
+
+    :ivar _sig: rtl level signal instance
     @ival _sigInside : _sig after toRtl conversion is made (after toRtl conversion
-                    _sig is signal for parent unit and _sigInside is signal
-                    in original unit, this separates process of translating units)
-    @ivar _boundedEntityPort: entityPort for which was this interface created
-    @ivar _boundedSigLvlUnit: RTL unit for which was this interface created
+        _sig is signal for parent unit and _sigInside is signal
+        in original unit, this separates process of translating units)
+    :ivar _boundedEntityPort: entityPort for which was this interface created
+    :ivar _boundedSigLvlUnit: RTL unit for which was this interface created
 
 
     Agenda of direction:
-    @ivar _masterDir: specifies which direction has this interface at master
-    @ivar _direction: means actual direction of this interface resolved by its drivers
-    @ivar _cntx: rtl netlist context of all signals and params on this interface
-                 after interface is registered on parent _cntx is merged
+
+    :ivar _masterDir: specifies which direction has this interface at master
+    :ivar _direction: means actual direction of this interface resolved by its drivers
+    :ivar _cntx: rtl netlist context of all signals and params on this interface
+        after interface is registered on parent _cntx is merged
 
     Agenda of simulations:
-    @ivar _ag: agent object connected to this interface (initialized by simulator)
+
+    :ivar _ag: agent object connected to this interface (initialized by simulator)
     """
 
     _NAME_SEPARATOR = "_"
@@ -55,12 +58,13 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         This constructor is called when constructing new interface, it is usually done
         manually while creating Unit or
         automatically while extracting interfaces from UnitWithSoure
-        @param masterDir: direction which this interface should have for master
-        @param multiplyedBy: this can be instance of integer or Param, this mean the interface
+
+        :param masterDir: direction which this interface should have for master
+        :param multiplyedBy: this can be instance of integer or Param, this mean the interface
                          is array of the interfaces where multiplyedBy is the size
-        @param alternativeNames: alternative names which are used for interface extraction from hdl
+        :param alternativeNames: alternative names which are used for interface extraction from hdl
                                 [TODO] remove
-        @param loadConfig: do load config in __init__
+        :param loadConfig: do load config in __init__
         """
         self._setAttrListener = None
         super().__init__()
@@ -182,7 +186,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
 
     def __pow__(self, other):
         """
-        @attention: ** operator is used as "assignment" it creates connection between interface and other
+        :attention: ** operator is used as "assignment" it creates connection between interface and other
         """
         return self._connectTo(other)
 
@@ -190,7 +194,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         """
         generate _sig for each interface which has no subinterface
         if already has _sig return it instead
-        @param typeTransform: optional function (type) returns modified type for signal
+        :param typeTransform: optional function (type) returns modified type for signal
         """
         sigs = []
         if self._interfaces:
@@ -260,7 +264,8 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
     def _updateParamsFrom(self, otherObj, updater=_defaultUpdater, exclude=None):
         """
         update all parameters which are defined on self from otherObj
-        @param exclude: iterable of parameter on other object which should be excluded
+
+        :param exclude: iterable of parameter on other object which should be excluded
         """
         excluded = set()
         if exclude is not None:

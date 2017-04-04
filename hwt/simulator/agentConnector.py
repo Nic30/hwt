@@ -6,8 +6,7 @@ def autoAddAgents(unit):
     """
     Walk all interfaces on unit and instantiate actor for every interface.
 
-    @return: all monitor/driver functions which should be added to simulation as processes
-
+    :return: all monitor/driver functions which should be added to simulation as processes
     """
     proc = []
     for intf in unit._interfaces:

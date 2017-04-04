@@ -26,7 +26,7 @@ from hwt.bitmask import mask, selectBit, selectBitRange, bitSetTo, \
 
 class BitsVal(EventCapableVal):
     """
-    @attention: operator on signals are using value operator functions as well
+    :attention: operator on signals are using value operator functions as well
     """
     def _convSign__val(self, signed):
         if self._dtype.signed == signed:

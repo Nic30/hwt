@@ -82,7 +82,8 @@ def indexUsigIs(iterable, item):
 def groupedby(collection, fn):
     """
     This function does not needs initial sorting like itertools.groupby
-    @attention: Order of pairs is not deterministic.
+    
+    :attention: Order of pairs is not deterministic.
     """
     d = {}
     for item in collection:

@@ -34,12 +34,12 @@ class If(StmCntx):
     """
     If statement generator
 
-    @ivar nowIsEventDependent: flag if current scope of if is event dependent
+    :ivar nowIsEventDependent: flag if current scope of if is event dependent
     """
     def __init__(self, cond, *statements):
         """
-        @param cond: condition in if
-        @param statements: list of statements which should be active if condition is met
+        :param cond: condition in if
+        :param statements: list of statements which should be active if condition is met
         """
         self.cond = _intfToSig(cond)
         assert isinstance(self.cond, RtlSignalBase)
@@ -145,10 +145,11 @@ def _ForEach_callBody(fn, item, index):
 def ForEach(parentUnit, items, bodyFn, name=""):
     """
     Generate for loop for static items
-    @param parentUnit: unit where this code should be instantiated
-    @param items: items which this "for" itering on
-    @param bodyFn: function which fn(item, index) or fn(item) returns (statementList, ack).
-                   It's content is performed in every iteration. When ack is high loop will fall to next iteration
+
+    :param parentUnit: unit where this code should be instantiated
+    :param items: items which this "for" itering on
+    :param bodyFn: function which fn(item, index) or fn(item) returns (statementList, ack).
+        It's content is performed in every iteration. When ack is high loop will fall to next iteration
     """
 
     items = list(items)
@@ -188,14 +189,14 @@ def ForEach(parentUnit, items, bodyFn, name=""):
 
 class FsmBuilder(StmCntx):
     """
-    @ivar stateReg: register with state
+    :ivar stateReg: register with state
     """
 
     def __init__(self, parent, stateT, stateRegName="st"):
         """
-        @param parent: parent unit where fsm should be builded
-        @param stateT: enum type of state
-        @param stateRegName: name of register where sate is stored
+        :param parent: parent unit where fsm should be builded
+        :param stateT: enum type of state
+        :param stateRegName: name of register where sate is stored
         """
         if isinstance(stateT, Enum):
             beginVal = stateT.fromPy(stateT._allValues[0])
@@ -209,12 +210,12 @@ class FsmBuilder(StmCntx):
 
     def Trans(self, stateFrom, *condAndNextState):
         """
-        @param stateFrom: apply when FSM is in this state
-        @param condAndNextState: tupes (condition, newState),
-                        last does not to have condition
+        :param stateFrom: apply when FSM is in this state
+        :param condAndNextState: tupes (condition, newState),
+            last does not to have condition
 
-        @attention: transitions has priority, first has the biggest
-        @attention: if stateFrom is None it is evaluated as default
+        :attention: transitions has priority, first has the biggest
+        :attention: if stateFrom is None it is evaluated as default
         """
         top = None
         last = True
@@ -284,9 +285,10 @@ def _connect(src, dst, exclude, fit):
 def connect(src, *destinations, exclude=set(), fit=False):
     """
     Connect src (signals/interfaces/values) to all destinations
-    @param exclude: interfaces on any level on src or destinations
-                which should be excluded from connection process
-    @param fit: auto fit source width to destination width
+    
+    :param exclude: interfaces on any level on src or destinations
+        which should be excluded from connection process
+    :param fit: auto fit source width to destination width
     """
     assignemnts = []
     for dst in destinations:

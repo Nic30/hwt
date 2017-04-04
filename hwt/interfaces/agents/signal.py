@@ -11,7 +11,7 @@ class SignalAgent(AgentBase):
     Agent for signal interface, it can use clock and reset interface for synchronization
     or can be synchronized by delay
 
-    @attention: clock synchronization has higher priority
+    :attention: clock synchronization has higher priority
     """
     def __init__(self, intf, clk=None, rstn=None, delay=DEFAULT_CLOCK):
         self.delay = delay

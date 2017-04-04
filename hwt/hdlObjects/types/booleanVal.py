@@ -71,8 +71,8 @@ class BooleanVal(EventCapableVal):
     @classmethod
     def fromPy(cls, val, typeObj):
         """
-        @param val: value of python type bool or None
-        @param typeObj: instance of HdlType
+        :param val: value of python type bool or None
+        :param typeObj: instance of HdlType
         """
         vld = int(val is not None)
         if not vld:

@@ -20,9 +20,9 @@ class HStruct(HdlType):
     """
     def __init__(self, *template, name=None):
         """
-        @param template: list of tuples (type, name) or HStructField objects
-                        name can be None it means that there is space in structure
-        @param name: optional name used for debugging purposes
+        :param template: list of tuples (type, name) or HStructField objects
+            name can be None it means that there is space in structure
+        :param name: optional name used for debugging purposes
         """
         self.fields = []
         self.name = name
