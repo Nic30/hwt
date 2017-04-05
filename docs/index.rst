@@ -25,7 +25,7 @@ There are may HLS like features like:
 
  
 You can also download this doc in `PDF
-<https://media.readthedocs.org/pdf/HWToolkit/latest/HWToolkit.pdf>`_.
+<https://media.readthedocs.org/pdf/hwtoolkit/latest/hwtoolkit.pdf>`_.
 
 
 .. toctree::
