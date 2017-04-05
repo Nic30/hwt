@@ -157,7 +157,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'hwt', 'HWToolikt Documentation',
-     author, 'hwt', 'Collection of tools for hardware generatio.',
+     author, 'hwt', 'Collection of tools for hardware generation.',
      'Miscellaneous'),
 ]
 
