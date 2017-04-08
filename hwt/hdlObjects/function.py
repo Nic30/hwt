@@ -8,13 +8,13 @@ class Function():
         """
         class to store hdl function
 
-        @param name: name of the function
-        @param returnT: return type
-        @param ctx: hdl context of this funtion
-        @param params: list of argument signals
-        @param _locals : local variables in this function
-        @param exprList: list of expressions in body
-        @param isOperator: is operator flag
+        :param name: name of the function
+        :param returnT: return type
+        :param ctx: hdl context of this funtion
+        :param params: list of argument signals
+        :param _locals : local variables in this function
+        :param exprList: list of expressions in body
+        :param isOperator: is operator flag
         """
         self.name = name
         self.returnT = returnT

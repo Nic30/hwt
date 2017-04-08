@@ -21,10 +21,11 @@ def simPrepare(unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
     """
     Create simulation model and connect it with interfaces of original unit
     and decorate it with agents
-    @return: tuple (fully loaded unit with connected sim model,
-                    connected simulation model,
-                    simulation processes of agents
-                    )
+
+    :return: tuple (fully loaded unit with connected sim model,
+        connected simulation model,
+        simulation processes of agents
+        )
     """
     if modelCls is None:
         modelCls = toSimModel(unit, tmpDir=dumpModelIn)
@@ -108,7 +109,8 @@ def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time
     """
     Syntax sugar
     If outputFile is string try to open it as file
-    @return: hdl simulator object
+
+    :return: hdl simulator object
     """
     assert isinstance(simModel, SimModel), "Class of SimModel is required (got %r)" % (simModel)
     if isinstance(outputFile, str):
@@ -125,12 +127,12 @@ def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time
 
 def _simUnitVcd(simModel, stimulFunctions, outputFile, time):
     """
-    @param unit: interface level unit to simulate
-    @param stimulFunctions: iterable of function with single param env (simpy environment)
-                            which are driving the simulation
-    @param outputFile: file where vcd will be dumped
-    @param time: endtime of simulation, time units are defined in HdlSimulator
-    @return: hdl simulator object
+    :param unit: interface level unit to simulate
+    :param stimulFunctions: iterable of function with single param env (simpy environment)
+        which are driving the simulation
+    :param outputFile: file where vcd will be dumped
+    :param time: endtime of simulation, time units are defined in HdlSimulator
+    :return: hdl simulator object
     """
     sim = HdlSimulator()
 
@@ -145,11 +147,11 @@ def _simUnitVcd(simModel, stimulFunctions, outputFile, time):
 class CallbackLoop(object):
     def __init__(self, sig, condFn, fn):
         """
-        @param sig: signal on which write callback should be used
-        @param condFn: condition (function) which has to be satisfied in order to run callback
-        @attention: if condFn is None callback function is always executed
+        :param sig: signal on which write callback should be used
+        :param condFn: condition (function) which has to be satisfied in order to run callback
+        :attention: if condFn is None callback function is always executed
 
-        @ivar isGenerator: flag if callback function is generator or normal function
+        :ivar isGenerator: flag if callback function is generator or normal function
         """
         self.isGenerator = inspect.isgeneratorfunction(fn)
         self.condFn = condFn
@@ -227,7 +229,7 @@ def oscilate(sig, period=10 * Time.ns, initWait=0):
 
 def pullDownAfter(sig, intDelay=6 * Time.ns):
     """
-    @return: simulation driver which keeps value high for intDelay then it sets
+    :return: simulation driver which keeps value high for intDelay then it sets
              value to 0
     """
     def _pullDownAfter(s):
@@ -240,8 +242,8 @@ def pullDownAfter(sig, intDelay=6 * Time.ns):
 
 def pullUpAfter(sig, intDelay=6 * Time.ns):
     """
-    @return: Simulation driver which keeps value low for intDelay then it sets
-             value to 1
+    :return: Simulation driver which keeps value low for intDelay then it sets
+        value to 1
     """
     def _pullDownAfter(s):
         s.write(False, sig)

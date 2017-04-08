@@ -51,9 +51,10 @@ class UnitImplHelpers(object):
     def _reg(self, name, dtype=BIT, defVal=None):
         """
         Create register in this unit
-        @param defVal: default value of this register, if this value is specified
-                       reset of this component is used
-                       (unit has to have single interface of class Rst or Rst_n)
+
+        :param defVal: default value of this register, if this value is specified
+            reset of this component is used
+            (unit has to have single interface of class Rst or Rst_n)
         """
         clk = getClk(self)
 
@@ -143,7 +144,8 @@ class UnitImplHelpers(object):
     def _updateParamsFrom(self, parent, exclude=None):
         """
         update all parameters which are defined on self from otherObj
-        @param exclude: iterable of parameter on parent object which should be excluded
+
+        :param exclude: iterable of parameter on parent object which should be excluded
         """
         excluded = set()
         if exclude is not None:

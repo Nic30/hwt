@@ -11,9 +11,9 @@ class ExprComparator():
     @staticmethod
     def isSimilar(exprA, exprB, diffInA):
         """
-        @return:  tuple (match, exprDiffB)
-        @attention: works only on simple expressions like constrain definition,
-                    does not support multiple drivers for signals
+        :return: tuple (match, exprDiffB)
+        :attention: works only on simple expressions like constrain definition,
+            does not support multiple drivers for signals
         """
         if exprA  is diffInA:
             return (True, exprB)

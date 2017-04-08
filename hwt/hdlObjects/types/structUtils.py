@@ -20,7 +20,8 @@ class FrameTemplate(list):
     def walkWords(self):
         """
         Walks frame over words
-        @return: generator of tuples (wordIndex, list of FrameTemplateItems)
+
+        :return: generator of tuples (wordIndex, list of FrameTemplateItems)
         """
         wordRecord = []
         actualWord = 0
@@ -53,7 +54,8 @@ class FrameTemplate(list):
     def resolveFieldPossitionsInFrame(self, dataWidth, disolveArrays=True):
         """
         Format fields in datawords
-        @return: number of words
+
+        :return: number of words
         """
         assert isinstance(dataWidth, int), dataWidth
         bitAddr = 0
@@ -126,7 +128,7 @@ class StructFieldInfo():
         """Some fields has to be internally split due data-width of bus,
         there we discover how to split field to words on bus
 
-        @param startWordIndex: bit index where field starts, (f.e. 16 for f2 in struct {uint16_t f1, uint16_t f2})
+        :param startWordIndex: bit index where field starts, (f.e. 16 for f2 in struct {uint16_t f1, uint16_t f2})
 
         """
         fieldWidth = self.type.bit_length()
@@ -162,8 +164,8 @@ class StructBusBurstInfo():
     """
     def __init__(self, addrOffset, fieldInfos):
         """
-        @param addrOffset: offset of this burst in number of words
-        @param fieldInfos: iterable of field StructFieldInfo
+        :param addrOffset: offset of this burst in number of words
+        :param fieldInfos: iterable of field StructFieldInfo
         """
         self.addrOffset = addrOffset
         self.fieldInfos = fieldInfos
@@ -177,10 +179,10 @@ class StructBusBurstInfo():
     @staticmethod
     def packFieldInfosToBusBurst(structInfos, maxDummyWords, wordIndexToAddrRatio):
         """
-        @param structInfos: iterable of StructFieldInfo which are describing target structure
-        @param maxDummyWords: maximum allowable not used words in bus burst
-        @param wordIndexToAddrRatio: addrOffset = wordIndex of field * wordIndexToAddrRatio
-        @return: list of StructBusBurstInfo
+        :param structInfos: iterable of StructFieldInfo which are describing target structure
+        :param maxDummyWords: maximum allowable not used words in bus burst
+        :param wordIndexToAddrRatio: addrOffset = wordIndex of field * wordIndexToAddrRatio
+        :return: list of StructBusBurstInfo
         """
         busBursts = []
 
@@ -226,9 +228,9 @@ class StructBusBurstInfo():
 class BusFieldInfo(object):
     def __init__(self, access="rw", fieldInterface=None, disolveArray=False):
         """
-        @param access: "r", "w" or "rw" describes access mode from bus side
-        @param fieldInterface: interface for which this field was generated
-        @param disolveArray: interpret this array interface as bunch of items
+        :param access: "r", "w" or "rw" describes access mode from bus side
+        :param fieldInterface: interface for which this field was generated
+        :param disolveArray: interpret this array interface as bunch of items
                              instead of single memory space
         """
         assert access in ['r', 'w', 'rw']

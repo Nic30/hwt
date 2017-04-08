@@ -17,8 +17,10 @@ hStr = lambda val: STR.fromPy(val)
 hBit = lambda val: BIT.fromPy(val)
 
 def mkRange(width):
-    """Make hdl range (for example 1 downto 0 in vhdl)
-       @return: (width -1, 0) 
+    """
+    Make hdl range (for example 1 downto 0 in vhdl)
+    
+    :return: (width -1, 0) 
     """
     to = toHVal(width)
     to = to - 1

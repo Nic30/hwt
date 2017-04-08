@@ -35,7 +35,7 @@ class ExtractableInterface(InterfaceArray):
     @classmethod
     def _extractPossiblePrefixes(cls, ports, prefix=""):
         """
-        @return: iterator over unit ports witch probably matches with this interface
+        :return: iterator over unit ports witch probably matches with this interface
         """
         intfObj = cls()
         intfObj._loadDeclarations()
@@ -133,8 +133,8 @@ class ExtractableInterface(InterfaceArray):
         
     def _tryToExtractByName(self, prefix, ports):
         """
-        @return: self if extraction was successful
-        @raise InterfaceIncompatibilityExc: if this interface with this prefix does not fit for this entity 
+        :return: self if extraction was successful
+        :raise InterfaceIncompatibilityExc: if this interface with this prefix does not fit for this entity 
         """
         if self._interfaces:
             # extract subinterfaces and propagate params
@@ -201,7 +201,7 @@ class ExtractableInterface(InterfaceArray):
     @classmethod        
     def _tryToExtract(cls, ports):
         """
-        @return: iterator over tuples (interface name. extracted interface)
+        :return: iterator over tuples (interface name. extracted interface)
         """
         # [TODO] ports as dict
         for name in cls._extractPossiblePrefixes(ports):

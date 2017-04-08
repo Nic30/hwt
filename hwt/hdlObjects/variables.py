@@ -5,11 +5,11 @@ class SignalItem(object):
     """basic hdl signal"""
     def __init__(self, name, dtype, defaultVal=None,  virtualOnly=False):
         """
-        @param name: name for better orientation in netlists (used only in serialization)
-        @param dtype: data type of this signal
-        @param defaultVal: value for initialization 
-        @param virtualOnly: flag indicates that this assignments is only virtual and should not be added into
-                netlist, because it is only for internal notation
+        :param name: name for better orientation in netlists (used only in serialization)
+        :param dtype: data type of this signal
+        :param defaultVal: value for initialization 
+        :param virtualOnly: flag indicates that this assignments is only virtual and should not be added into
+            netlist, because it is only for internal notation
         """
         self.name = name
         self._dtype = dtype

@@ -9,7 +9,7 @@ class Bits(HdlType):
 
     def __init__(self, widthConstr=None, forceVector=False, signed=None):
         """
-        @param forceVector: use always hdl vector type
+        :param forceVector: use always hdl vector type
             (for example std_logic_vector(0 downto 0) instead of std_logic)
         """
         super().__init__()

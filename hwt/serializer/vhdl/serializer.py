@@ -91,9 +91,10 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
     def serializationDecision(cls, obj, serializedClasses, serializedConfiguredUnits):
         """
         Decide if this unit should be serialized or not eventually fix name to fit same already serialized unit
-        @param serializedClasses: unitCls : unitobj
-        @param serializedConfiguredUnits: (unitCls, paramsValues) : unitObj
-                                          where paramsValues are named tuple name:value
+
+        :param serializedClasses: unitCls : unitobj
+        :param serializedConfiguredUnits: (unitCls, paramsValues) : unitObj
+            where paramsValues are named tuple name:value
         """
         isEnt = isinstance(obj, Entity) 
         isArch = isinstance(obj, Architecture)
@@ -147,9 +148,10 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
     def asHdl(cls, obj, createTmpVarFn):
         """
         Convert object to VHDL string
-        @param obj: object to serialize
-        @param createTmpVarFn: function (sugestedName, dtype) returns variable
-                            this function will be called to create tmp variables
+
+        :param obj: object to serialize
+        :param createTmpVarFn: function (sugestedName, dtype) returns variable
+            this function will be called to create tmp variables
         """
         if hasattr(obj, "asVhdl"):
             return obj.asVhdl(cls, createTmpVarFn)
@@ -347,7 +349,8 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
     def HWProcess(cls, proc, scope):
         """
         Serialize HWProcess objects as VHDL
-        @param scope: name scope to prevent name collisions
+
+        :param scope: name scope to prevent name collisions
         """
         body = proc.statements
         extraVars = []

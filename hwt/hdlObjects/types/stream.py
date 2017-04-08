@@ -8,9 +8,9 @@ class HStream(HdlType):
     """
     def __init__(self, elmType):
         """
-        @param elmType: type of item used for alignment purposes
-        @attention: width of itemType and width of interface over which
-                    is this stream send are two different things
+        :param elmType: type of item used for alignment purposes
+        :attention: width of itemType and width of interface over which
+            is this stream send are two different things
         """
         self.elmType = elmType
 

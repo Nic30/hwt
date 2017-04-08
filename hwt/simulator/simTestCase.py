@@ -7,6 +7,7 @@ import unittest
 from unittest.util import safe_repr, _common_shorten_repr
 
 from hwt.hdlObjects.constants import Time
+from hwt.hdlObjects.types.arrayVal import ArrayVal
 from hwt.hdlObjects.value import Value
 from hwt.simulator.agentConnector import valToInt
 from hwt.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
@@ -18,6 +19,9 @@ from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 
 
 def allValuesToInts(sequenceOrVal):
+    if isinstance(sequenceOrVal, ArrayVal):
+        sequenceOrVal = sequenceOrVal.val
+
     if isinstance(sequenceOrVal, Value):
         return valToInt(sequenceOrVal)
     elif not sequenceOrVal:
@@ -40,9 +44,7 @@ class SimTestCase(unittest.TestCase):
     This is TestCase class contains methods which are usually used during
     hdl simulation.
 
-    @attention: self.model, self.procs has to be specified before running doSim
-    u = Axi_rDatapump()
-    self.model, self.procs = simPrepare(u)
+    :attention: self.model, self.procs has to be specified before running doSim (you can use prepareUnit method)
     """
     _defaultSeed = 317
     _rand = Random(_defaultSeed)
@@ -107,22 +109,23 @@ class SimTestCase(unittest.TestCase):
         which can be indexed, has a length, and has an equality operator.
 
         Args:
-        @param seq1: can contain instance of values or nested list of them
-        @param seq2: items are not converted
-        @param seq_type: The expected datatype of the sequences, or None if no
-                    datatype should be enforced.
-        @param msg: Optional message to use on failure instead of a list of
-                    differences.
+
+        :param seq1: can contain instance of values or nested list of them
+        :param seq2: items are not converted
+        :param seq_type: The expected datatype of the sequences, or None if no
+            datatype should be enforced.
+        :param msg: Optional message to use on failure instead of a list of
+            differences.
         """
         seq1 = allValuesToInts(seq1)
         if seq_type is not None:
             seq_type_name = seq_type.__name__
             if not isinstance(seq1, seq_type):
                 raise self.failureException('First sequence is not a %s: %s'
-                                        % (seq_type_name, safe_repr(seq1)))
+                                            % (seq_type_name, safe_repr(seq1)))
             if not isinstance(seq2, seq_type):
                 raise self.failureException('Second sequence is not a %s: %s'
-                                        % (seq_type_name, safe_repr(seq2)))
+                                            % (seq_type_name, safe_repr(seq2)))
         else:
             seq_type_name = "sequence"
 
@@ -152,20 +155,20 @@ class SimTestCase(unittest.TestCase):
                 try:
                     item1 = seq1[i]
                 except (TypeError, IndexError, NotImplementedError):
-                    differing += ('\nUnable to index element %d of first %s\n' % 
-                                 (i, seq_type_name))
+                    differing += ('\nUnable to index element %d of first %s\n' 
+                                  % (i, seq_type_name))
                     break
 
                 try:
                     item2 = seq2[i]
                 except (TypeError, IndexError, NotImplementedError):
-                    differing += ('\nUnable to index element %d of second %s\n' % 
-                                 (i, seq_type_name))
+                    differing += ('\nUnable to index element %d of second %s\n'
+                                  % (i, seq_type_name))
                     break
 
                 if item1 != item2:
-                    differing += ('\nFirst differing element %d:\n%s\n%s\n' % 
-                                 ((i,) + _common_shorten_repr(item1, item2)))
+                    differing += ('\nFirst differing element %d:\n%s\n%s\n'
+                                  % ((i,) + _common_shorten_repr(item1, item2)))
                     break
             else:
                 if (len1 == len2 and seq_type is None and
@@ -210,5 +213,6 @@ class SimTestCase(unittest.TestCase):
                                                     modelCls=modelCls,
                                                     dumpModelIn=dumpModelIn,
                                                     onAfterToRtl=onAfterToRtl)
+
     def setUp(self):
         self._rand.seed(self._defaultSeed)

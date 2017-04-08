@@ -113,12 +113,15 @@ class PropDeclrCollector(object):
 
     def _paramsShared(self, exclude=None):
         """
+        Auto-propagate params by name to child components and interfaces
         Usage:
+        
+        .. code-block:: python
 
-        with self._paramsShared():
-            # your interfaces and unit which should share all params with "self" there
+            with self._paramsShared():
+                # your interfaces and unit which should share all params with "self" there
 
-        @param exclude: params which should not be shared
+        :param exclude: params which should not be shared
         """
         return MakeParamsShared(self, exclude=exclude)
 
@@ -164,8 +167,8 @@ class PropDeclrCollector(object):
 
     def _registerUnitInImpl(self, uName, u):
         """
-        @attention: unit has to be parametrized before it is registered
-                  (some components can change interface by parametrization)
+        :attention: unit has to be parametrized before it is registered
+            (some components can change interface by parametrization)
         """
         self._registerUnit(uName, u)
         u._loadDeclarations()

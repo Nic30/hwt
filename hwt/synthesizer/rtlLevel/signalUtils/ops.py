@@ -165,8 +165,9 @@ class RtlSignalOps():
     def __pow__(self, source):
         """
         Create assignment to this signal
-        @attention: it is not power operator it is assignment
-        @return: list of assignments
+
+        :attention: it is not power operator it is assignment
+        :return: list of assignments
         """
         if isinstance(source, InterfaceBase):
             source = source._sig

@@ -62,12 +62,12 @@ class HdlSimulator(HdlEnvironmentCore):
     It has some limitations from HDL point of view but every single one can be rewritten to supported format.
     Hdl synthesizer of HWToolkit does it automatically.
 
-    @ivar updateComplete: this event is triggered when there are not any values to apply in this time
-    @ivar valuesToApply: is container to for quantum of values which should be applied in single time
-    @ivar env: simpy enviromnment
-    @ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
-    @ivar seqProcsToRun: list of event dependent processes which should be evaluated after
-                                applyValEv
+    :ivar updateComplete: this event is triggered when there are not any values to apply in this time
+    :ivar valuesToApply: is container to for quantum of values which should be applied in single time
+    :ivar env: simpy enviromnment
+    :ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
+    :ivar seqProcsToRun: list of event dependent processes which should be evaluated after
+        applyValEv
     """
     # time after values which are event dependent will be applied
     # this is random number smaller than any clock half-period
@@ -115,7 +115,8 @@ class HdlSimulator(HdlEnvironmentCore):
     def _initUnitSignals(self, unit):
         """
         Inject default values to simulation
-        @return: generator of all HWprocess
+
+        :return: generator of all HWprocess
         """
         for s in unit._cntx.signals:
             v = s.defaultVal.clone()
@@ -152,7 +153,7 @@ class HdlSimulator(HdlEnvironmentCore):
     def conflictResolvStrategy(self, actionSet):
         """
         This functions resolves
-        @param actionSet: set of actions made by process
+        :param actionSet: set of actions made by process
 
         """
         invalidate = False

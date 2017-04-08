@@ -18,10 +18,11 @@ def getCtxFromOps(ops):
 class Operator():
     """
     Class of operator in expression tree
-    @ivar ops: list of operands
-    @ivar evalFn: function to evaluate this operator
-    @ivar operator: OpDefinition instance 
-    @ivar result: result signal of this operator
+
+    :ivar ops: list of operands
+    :ivar evalFn: function to evaluate this operator
+    :ivar operator: OpDefinition instance 
+    :ivar result: result signal of this operator
     """
     def __init__(self, operator, operands):
         self.ops = list(operands)

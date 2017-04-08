@@ -50,8 +50,8 @@ class SimModelSerializer_value():
     @classmethod
     def Value(cls, val):
         """ 
-        @param dst: is signal connected with value 
-        @param val: value object, can be instance of Signal or Value    """
+        :param dst: is signal connected with value 
+        :param val: value object, can be instance of Signal or Value    """
         t = val._dtype
         
         if isinstance(val, RtlSignalBase):

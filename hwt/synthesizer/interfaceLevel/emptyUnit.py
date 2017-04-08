@@ -5,7 +5,8 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 def setOut(*interfaces, defVal=None):
     """
     set interfaces as output interfaces
-    @attention: only for instances of EmptyUnit
+
+    :attention: only for instances of EmptyUnit
     """
     for i in interfaces:
         i._setDirectionsLikeIn(INTF_DIRECTION.SLAVE)
@@ -15,7 +16,7 @@ class EmptyUnit(Unit):
     Unit used for prototyping all output interfaces are connected to _defaultValue
     and this is only think which architecture contains
     
-    @cvar _defaultValue: this value is used to initialize all signals 
+    :cvar _defaultValue: this value is used to initialize all signals 
     """
     _defaultValue = None
     def _toRtl(self):
