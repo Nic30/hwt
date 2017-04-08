@@ -18,7 +18,7 @@ class VldSyncedAgent(SyncAgentBase):
         yield s.updateComplete
         if self.enable and self.notReset(s):
             vld = s.r(intf.vld)
-            assert vld.vldMask, "valid signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
+            assert vld.vldMask, "valid signal for interface %r is in invalid state, this would cause desynchronization in %d" % (self.intf, s.now)
             if vld.val:
                 d = self.doRead(s)
 
