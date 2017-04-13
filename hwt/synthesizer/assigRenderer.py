@@ -10,7 +10,8 @@ from hwt.synthesizer.termUsageResolver import extractCondTermOrderNonResolved, e
 from hwt.pyUtils.arrayQuery import where
 
 # (max count of elsifs with eq on same variable)
-SWITCH_THRESHOLD = 2  
+SWITCH_THRESHOLD = 2
+
 
 def __renderStatements(statements, resultContainer):
     for st in statements:
@@ -20,21 +21,22 @@ def __renderStatements(statements, resultContainer):
         else:
             resultContainer.append(st)
 
+
 def _renderIfTree(node):
     """
     Render tree of IfTreeNode objects to IfContainers, SwitchContainers etc.
-    
+
     if number of elsifs is higher than SWITCH_THRESHOLD and all conditions are if format signal == value
     render this as switch statement
     """
     assert isinstance(node, IfTreeNode), node  
-    
+
     ifTrue = []
     __renderStatements(node.pos, ifTrue)
-    
+
     elIfs = []
     ifFalse = []
-    
+
     # extract elsifs
     elIfN = node
     while True:
@@ -49,7 +51,7 @@ def _renderIfTree(node):
             # render standard else
             __renderStatements(elIfN.neg, ifFalse)
             break
-    
+
     # if threshold
     if len(elIfs) >= SWITCH_THRESHOLD:
         cases = []
@@ -65,7 +67,7 @@ def _renderIfTree(node):
                     cases.append((op1, ifTrue))
         except MultipleDriversExc:
             pass
-        
+
         if switchOn is not None:
             canBeConvertedToSwitch = True
             for elIf in elIfs:
@@ -125,9 +127,10 @@ def renderIfTree_afterCondSatisfied(assignments, globalCondOrder):
         if notDependent:
             _ifs = renderIfTree_afterCondSatisfied(notDependent, globalCondOrder)
             ifs.extend(_ifs)
-            
+
         return ifs
-    
+
+
 def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
     # in this step we are consuming unresolvedConds and building IfTreeNodes
 
@@ -137,13 +140,13 @@ def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
     for a in assignments:
         dependentOnTopCond = list(where(a._unresolvedConds, lambda cond: cond[0] is topCond))
         l = len(dependentOnTopCond)
-        
+
         if l == 0:
             notDependent.append(a)
         elif l == 1:
             _c = dependentOnTopCond[0]
             a._unresolvedConds.remove(_c)
-            
+
             if _c[1]:
                 topNeg.append(a)
             else:
@@ -151,7 +154,7 @@ def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
         else:
             raise NotImplementedError(
                 ("There are multiple different assignments to same object(%r) with same condition (%r)" % (a.dst, topCond),
-                dependentOnTopCond))     
+                 dependentOnTopCond))
     # if not (len(assignments) == (len(topNeg) + len(topPos))):
     #    # it seems that there is some statement which is nod depended on topCond, but it should be 
     #    # filtered earlier
@@ -161,7 +164,7 @@ def splitIfTreeOnCond(assignments, topCond, globalCondOrder):
     #                         % (str(assignments), str(topCond), str(topNeg), str(topPos)))
     if len(topPos) + len(topNeg) == 0:
         raise AssertionError("Something should be dependent")
-    
+
     top = IfTreeNode(topCond)
     top.pos = renderIfTree_afterCondSatisfied(topPos, globalCondOrder)
     top.neg = renderIfTree_afterCondSatisfied(topNeg, globalCondOrder)
@@ -173,12 +176,12 @@ def renderIfTree(assignments):
     Walk assignments and resolve if tree from conditions
     """
     condOrder = list(extractCondTermOrder(assignments))
-    
+    print(condOrder)
     if condOrder:
         # split assignments on most important condition
         topCond = condOrder[0]
         top, notDependent = splitIfTreeOnCond(assignments, topCond, condOrder)
-        
+
         yield from _renderIfTree(top)
         if notDependent:
             yield from renderIfTree(notDependent)
