@@ -99,14 +99,14 @@ class VhdlSerializer_Value():
         for i in range(width - 1, -1, -1):
             mask = (1 << i)
             b = v & mask
-            
+
             if vldMask & mask:
                 s = "1" if b else "0"
             else:
                 s = "X"
             buff.append(s)
         return '"%s"' % (''.join(buff))
-    
+
     @classmethod
     def BitString(cls, v, width, vldMask=None):
         if vldMask is None:
@@ -116,15 +116,14 @@ class VhdlSerializer_Value():
             return ('X"%0' + str(width // 4) + 'x"') % (v)
         else:  # else in binary
             return cls.BitString_binary(v, width, vldMask)
-    
+
     @classmethod
     def BitLiteral(cls, v, vldMask):
         if vldMask:
-            return  "'%d'" % int(bool(v))
+            return "'%d'" % int(bool(v))
         else:
             return "'X'"
 
-    
     @classmethod
     def SignedBitString(cls, v, width, forceVector, vldMask):
         if vldMask != mask(width):
@@ -137,7 +136,6 @@ class VhdlSerializer_Value():
         # [TODO] parametrized width
         return "TO_SIGNED(%s, %d)" % (v, width)
 
-    
     @classmethod
     def UnsignedBitString(cls, v, width, forceVector, vldMask):
         if vldMask != mask(width):
@@ -149,7 +147,7 @@ class VhdlSerializer_Value():
             v = str(v)
         # [TODO] parametrized width
         return "TO_UNSIGNED(%s, %d)" % (v, width)
-    
+
     @classmethod
     def Bool_valAsVhdl(cls, dtype, val):
         return str(bool(val.val))

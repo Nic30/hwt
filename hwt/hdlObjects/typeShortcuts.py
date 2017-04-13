@@ -16,21 +16,24 @@ hStr = lambda val: STR.fromPy(val)
 # create hdl bit value (for example STD_LOGIC value in vhdl)
 hBit = lambda val: BIT.fromPy(val)
 
+
 def mkRange(width):
     """
     Make hdl range (for example 1 downto 0 in vhdl)
-    
-    :return: (width -1, 0) 
+
+    :return: (width -1, 0)
     """
     to = toHVal(width)
     to = to - 1
     return to._downto(0)
+
 
 def vecT(width, signed=None):
     """Make vector type with specified width for example
        std_logic_vector(width-1 downto 0) in vhdl
     """
     return Bits(widthConstr=mkRange(width), signed=signed, forceVector=True)
+
 
 def vec(val, width, signed=None):
     """create hdl vector value"""
