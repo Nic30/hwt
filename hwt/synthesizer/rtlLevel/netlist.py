@@ -1,3 +1,4 @@
+from hwt.code import If
 from hwt.hdlObjects.architecture import Architecture
 from hwt.hdlObjects.assignment import Assignment
 from hwt.hdlObjects.entity import Entity
@@ -7,8 +8,8 @@ from hwt.hdlObjects.statements import IfContainer, WaitStm, \
     SwitchContainer
 from hwt.hdlObjects.types.defs import BIT
 from hwt.hdlObjects.value import Value
+from hwt.pyUtils.arrayQuery import where, distinctBy, groupedby
 from hwt.synthesizer.assigRenderer import renderIfTree
-from hwt.code import If
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
@@ -17,7 +18,6 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverSensitivity
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
-from hwt.pyUtils.arrayQuery import where, distinctBy, groupedby
 
 
 def isSignalHiddenInExpr(sig):

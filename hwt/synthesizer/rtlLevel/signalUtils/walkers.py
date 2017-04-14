@@ -90,7 +90,7 @@ def walkSignalsInExpr(expr):
         else:
             yield expr
     else:
-        raise Exception("Unknown node '%s' type %s" %
+        raise Exception("Unknown node '%s' type %s" % 
                         (repr(expr), str(expr.__class__)))
 
 
@@ -167,43 +167,50 @@ def isEdgeDependent(sens):
     return sens == SENSITIVITY.RISING or sens == SENSITIVITY.FALLING
 
 
+def _discoverSensitivityForList(cond, seenSet):
+    """
+    Discover sensitivity for list of signals
+    """
+    # do not yield directly to let EventDependencyReached exception propagate first
+    tmp = []
+    # if true
+    for c in cond:
+        tmp.extend(walkDriversInExpr(c, seenSet))
+    yield from tmp
+
+
 def _discoverSensitivity(statement, seenSet, isTop):
     try:
         if isinstance(statement, Assignment):
             if statement.indexes:
-                for i in statement.indexes:
-                    yield from walkDriversInExpr(i, seenSet)
+                yield from _discoverSensitivityForList(statement.indexes, seenSet)
             yield from walkDriversInExpr(statement.src, seenSet)
         elif isinstance(statement, IfContainer):
-            tmp = []
             # if true
-            for c in statement.cond:
-                tmp.extend(walkDriversInExpr(c, seenSet))
-            yield from tmp
-            
+            yield from _discoverSensitivityForList(statement.cond, seenSet)
             for stm in statement.ifTrue:
-                yield from _discoverSensitivity(stm, seenSet, False)
+                yield from _discoverSensitivity(stm, seenSet, True)
 
             # elifs
             for cond, stms in statement.elIfs:
-                tmp = []
-                for c in cond:
-                    tmp.extend( walkDriversInExpr(c, seenSet))
-                yield from tmp
-
+                yield from _discoverSensitivityForList(cond, seenSet)
                 for stm in stms:
-                    yield from _discoverSensitivity(stm, seenSet, False)
+                    yield from _discoverSensitivity(stm, seenSet, True)
             # else
             for stm in statement.ifFalse:
-                yield from _discoverSensitivity(stm, seenSet, False)
+                yield from _discoverSensitivity(stm, seenSet, True)
 
         elif isinstance(statement, SwitchContainer):
+            # do not yield directly to let EventDependencyReached exception propagate first
             tmp = list(walkDriversInExpr(statement.switchOn, seenSet))
             yield from tmp
             for cond, stms in statement.cases:
                 # yield from walkDriversInExpr(cond, seenSet)
                 for stm in stms:
-                    yield from _discoverSensitivity(stm, seenSet, False)
+                    yield from _discoverSensitivity(stm, seenSet, True)
+
+            for stm in statement.default:
+                yield from _discoverSensitivity(stm, seenSet, True)
         else:
             raise TypeError(statement)
 
