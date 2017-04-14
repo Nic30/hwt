@@ -13,6 +13,7 @@ from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.uniqList import UniqList
 
+
 def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
     """
     convert unit to rtl string using specified serializer
@@ -21,22 +22,22 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
         u = unitOrCls()
     else:
         u = unitOrCls
-    
+
     u._loadDeclarations()
     if name is not None:
         u._name = name
-    
+
     globScope = serializer.getBaseNameScope()
     codeBuff = []
     mouduleScopes = {}
 
     # unitCls : unitobj
     serializedClasses = {}
-    
+
     # (unitCls, paramsValues) : unitObj
     # where paramsValues are dict name:value
     serializedConfiguredUnits = {}
-    
+
     doSerialize = True
     for obj in u._toRtl():
         doSerialize = serializer.serializationDecision(obj, serializedClasses, serializedConfiguredUnits)
@@ -50,24 +51,25 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
                 try:
                     s = mouduleScopes[obj.entity]
                 except KeyError:
-                    raise SerializerException("Entity should be serialized before architecture of %s" % 
+                    raise SerializerException("Entity should be serialized before architecture of %s" %
                                               (obj.getEntityName()))
                 sc = serializer.Architecture(obj, s)
             else:
                 sc = serializer.asHdl(obj)
-        
+
             codeBuff.append(sc)
         else:
             try:
                 name = "(" + obj.name + ")"
             except AttributeError:
                 name = ""
-                
+
             codeBuff.append(serializer.comment("Object of class %s%s was not serialized due its serializer mode" % (obj.__class__.__name__, name)))
     
     return serializer.formater(
                      "\n".join(codeBuff)
                      )
+
 
 def synthesised(u):
     assert not u._wasSynthetised()
@@ -78,6 +80,7 @@ def synthesised(u):
         pass
     return u
 
+
 # [TODO] merge toRtlAndSave and toRtl
 def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
     unit._loadDeclarations()
@@ -85,17 +88,17 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
     files = UniqList()
     if name is not None:
         unit._name = name
-        
+
     globScope = serializer.getBaseNameScope()
     mouduleScopes = {}
-    
+
     # unitCls : unitobj
     serializedClasses = {}
-    
+
     # (unitCls, paramsValues) : unitObj
     # where paramsValues are dict name:value
     serializedConfiguredUnits = {}
-    
+
     doSerialize = True
     for obj in unit._toRtl():
         doSerialize = serializer.serializationDecision(obj, serializedClasses, serializedConfiguredUnits)
@@ -105,11 +108,11 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 s = globScope.fork(1)
                 s.setLevel(2)
                 mouduleScopes[obj] = s
-                
+
                 sc = serializer.Entity(obj, s)
                 fName = obj.name + serializer.fileExtension
                 fileMode = 'w'
-                
+
             elif isinstance(obj, Architecture):
                 try:
                     s = mouduleScopes[obj.entity]
@@ -127,12 +130,12 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                             shutil.copy2(fn, folderName)
                             files.append(fn)
                 else:
-                    sc = serializer.asHdl(obj)   
-    
+                    sc = serializer.asHdl(obj)
+
             if fName is not None:
                 fp = os.path.join(folderName, fName)
                 files.append(fp)
-                
+
                 with open(fp, fileMode) as f:
                     if fileMode == 'a':
                         f.write("\n")
@@ -147,5 +150,3 @@ def serializeAsIpcore(unit, folderName=".", name=None, serializer=VhdlSerializer
     p = Packager(unit, name=name)
     p.createPackage(folderName)
     return p
-    
-    

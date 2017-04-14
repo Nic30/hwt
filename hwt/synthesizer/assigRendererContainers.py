@@ -8,6 +8,3 @@ class IfTreeNode():
         self.cond = cond
         self.pos = []
         self.neg = []
-
-
-

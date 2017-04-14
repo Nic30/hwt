@@ -12,12 +12,13 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class VhdlSerializer_Value():
-    
+
     @classmethod
     def Value(cls, val, createTmpVarFn):
-        """ 
-        :param dst: is signal connected with value 
-        :param val: value object, can be instance of Signal or Value    """
+        """
+        :param dst: is signal connected with value
+        :param val: value object, can be instance of Signal or Value
+        """
         t = val._dtype
         if isinstance(val, RtlSignalBase):
             return cls.SignalItem(val, createTmpVarFn)
@@ -36,8 +37,8 @@ class VhdlSerializer_Value():
         elif isinstance(t, String):
             return cls.String_valAsVhdl(t, val)
         else:
-            raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 
-    
+            raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val)))
+
     @classmethod
     def SignalItem(cls, si, createTmpVarFn, declaration=False):
         if declaration:
@@ -52,7 +53,6 @@ class VhdlSerializer_Value():
                     raise SerializerException("Signal %s is constant and has undefined value" % si.name)
             else:
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)
-                
 
             s = prefix + " %s : %s" % (si.name, cls.HdlType(si._dtype, createTmpVarFn))
             if isinstance(v, RtlSignalBase):
@@ -61,10 +61,10 @@ class VhdlSerializer_Value():
                 if si.defaultVal.vldMask:
                     return s + " := %s" % cls.Value(si.defaultVal, createTmpVarFn)
                 else:
-                    return s 
+                    return s
             else:
                 raise NotImplementedError(v)
-            
+
         else:
             if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin, createTmpVarFn)
@@ -73,13 +73,12 @@ class VhdlSerializer_Value():
 
     @classmethod
     def Enum_valAsVhdl(cls, dtype, val):
-        return  '%s' % str(val.val)
-    
+        return '%s' % str(val.val)
+
     @classmethod
     def Array_valAsVhdl(cls, dtype, val, createTmpVarFn):
-        return  "(" + (",\n".join([cls.Value(v, createTmpVarFn) for v in val.val])) + ")"
-    
-        
+        return "(" + (",\n".join([cls.Value(v, createTmpVarFn) for v in val.val])) + ")"
+
     @classmethod
     def Bits_valAsVhdl(cls, dtype, val):
         w = dtype.bit_length()
@@ -99,14 +98,14 @@ class VhdlSerializer_Value():
         for i in range(width - 1, -1, -1):
             mask = (1 << i)
             b = v & mask
-            
+
             if vldMask & mask:
                 s = "1" if b else "0"
             else:
                 s = "X"
             buff.append(s)
         return '"%s"' % (''.join(buff))
-    
+
     @classmethod
     def BitString(cls, v, width, vldMask=None):
         if vldMask is None:
@@ -116,15 +115,14 @@ class VhdlSerializer_Value():
             return ('X"%0' + str(width // 4) + 'x"') % (v)
         else:  # else in binary
             return cls.BitString_binary(v, width, vldMask)
-    
+
     @classmethod
     def BitLiteral(cls, v, vldMask):
         if vldMask:
-            return  "'%d'" % int(bool(v))
+            return "'%d'" % int(bool(v))
         else:
             return "'X'"
 
-    
     @classmethod
     def SignedBitString(cls, v, width, forceVector, vldMask):
         if vldMask != mask(width):
@@ -137,7 +135,6 @@ class VhdlSerializer_Value():
         # [TODO] parametrized width
         return "TO_SIGNED(%s, %d)" % (v, width)
 
-    
     @classmethod
     def UnsignedBitString(cls, v, width, forceVector, vldMask):
         if vldMask != mask(width):
@@ -149,11 +146,11 @@ class VhdlSerializer_Value():
             v = str(v)
         # [TODO] parametrized width
         return "TO_UNSIGNED(%s, %d)" % (v, width)
-    
+
     @classmethod
     def Bool_valAsVhdl(cls, dtype, val):
         return str(bool(val.val))
-    
+
     @classmethod
     def Integer_valAsVhdl(cls, dtype, val):
         return str(int(val.val))
@@ -164,6 +161,4 @@ class VhdlSerializer_Value():
 
     @classmethod
     def String_valAsVhdl(cls, dtype, val):
-        return  '"%s"' % str(val.val)
-    
-
+        return '"%s"' % str(val.val)

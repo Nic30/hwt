@@ -7,7 +7,7 @@ class UniqList(list):
     def __init__(self, *args, **kwargs):
         super(UniqList, self).__init__(*args, **kwargs)
         self.__s = set()
-    
+
     def append(self, item):
         if item in self.__s:
             return False
@@ -15,3 +15,6 @@ class UniqList(list):
             self.__s.add(item)
             list.append(self, item)
             return True
+
+    def __contains__(self, key):
+        return key in self.__s
