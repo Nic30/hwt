@@ -1,8 +1,6 @@
 from itertools import chain
 
-from hwt.code import connect
 from hwt.hdlObjects.assignment import Assignment
-from hwt.hdlObjects.process import HWProcess
 from hwt.hdlObjects.statements import WaitStm, IfContainer, \
     SwitchContainer
 
@@ -24,12 +22,13 @@ def getMaxStmIdForStm(stm):
     else:
         raise NotImplementedError(stm)
 
+
 def maxStmId(proc):
     """
     get max statement id,
     used for sorting of processes in architecture
     """
     maxId = 0
-    for stm in proc.statements: 
-        maxId = max(maxId, getMaxStmIdForStm(stm)) 
+    for stm in proc.statements:
+        maxId = max(maxId, getMaxStmIdForStm(stm))
     return maxId

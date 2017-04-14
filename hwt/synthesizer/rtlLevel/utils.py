@@ -14,7 +14,5 @@ def portItemfromSignal(s, entity):
         t = s._dtype
         s._interface = Signal(dtype=t)
     pi._interface = s._interface
-    
-    
-    return pi
 
+    return pi
