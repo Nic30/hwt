@@ -109,7 +109,7 @@ def walkDriversInExpr(expr, seenSet):
         where signal is in expression and is not used in event dependent expression
     :raise EventDependencyReached: when this generator steps on event dependent operator
     :attention: if event operator is found in expression, only sensitivity EventDependencyReached is raised
-        this may case some synthesis (Vivado, ISE, Quartus ...) to complain about sensitivity, 
+        this may case some synthesis (Vivado, ISE, Quartus ...) to complain about sensitivity,
         but it will work
     """
     if isinstance(expr, (Value, Param)):
@@ -175,15 +175,22 @@ def _discoverSensitivity(statement, seenSet, isTop):
                     yield from walkDriversInExpr(i, seenSet)
             yield from walkDriversInExpr(statement.src, seenSet)
         elif isinstance(statement, IfContainer):
+            tmp = []
             # if true
             for c in statement.cond:
-                yield from walkDriversInExpr(c, seenSet)
+                tmp.extend(walkDriversInExpr(c, seenSet))
+            yield from tmp
+            
             for stm in statement.ifTrue:
                 yield from _discoverSensitivity(stm, seenSet, False)
+
             # elifs
             for cond, stms in statement.elIfs:
+                tmp = []
                 for c in cond:
-                    yield from walkDriversInExpr(c, seenSet)
+                    tmp.extend( walkDriversInExpr(c, seenSet))
+                yield from tmp
+
                 for stm in stms:
                     yield from _discoverSensitivity(stm, seenSet, False)
             # else
@@ -191,7 +198,8 @@ def _discoverSensitivity(statement, seenSet, isTop):
                 yield from _discoverSensitivity(stm, seenSet, False)
 
         elif isinstance(statement, SwitchContainer):
-            yield from walkDriversInExpr(statement.switchOn, seenSet)
+            tmp = list(walkDriversInExpr(statement.switchOn, seenSet))
+            yield from tmp
             for cond, stms in statement.cases:
                 # yield from walkDriversInExpr(cond, seenSet)
                 for stm in stms:
