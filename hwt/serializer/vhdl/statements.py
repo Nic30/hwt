@@ -14,13 +14,15 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 IfTmpl = vhdlTmplEnv.get_template('if.vhd')
 SwitchTmpl = vhdlTmplEnv.get_template('switch.vhd')
 
+
 class DoesNotContainsTernary(Exception):
     pass
+
 
 def ternaryOpsToIf(statements):
     """Convert all ternary operators to IfContainers"""
     stms = []
-    
+
     for st in statements:
         if isinstance(st, Assignment):
             try:
@@ -36,7 +38,7 @@ def ternaryOpsToIf(statements):
                                       [Assignment(d.ops[2], st.dst)]
                            )
                     stms.append(ifc)
-                
+
             except (MultipleDriversExc, DoesNotContainsTernary):
                 stms.append(st)
         else:
@@ -45,7 +47,7 @@ def ternaryOpsToIf(statements):
 
 
 class VhdlSerializer_statements():
-    
+
     @classmethod
     def WaitStm(cls, w, createTmpVarFn):
         if w.isTimeWait:
@@ -65,15 +67,14 @@ class VhdlSerializer_statements():
             symbol = ":="
         else:
             symbol = "<="
-        
+
         if a.indexes is not None:
             for i in a.indexes:
                 if isinstance(i, SliceVal):
                     i = i.clone()
                     i.val = (i.val[0] + 1, i.val[1])
-                dst = dst[i]   
-        
-                    
+                dst = dst[i]
+
         if dst._dtype == a.src._dtype:
             return "%s %s %s" % (asHdl(dst), symbol, valAsHdl(a.src))
         else:
@@ -90,7 +91,7 @@ class VhdlSerializer_statements():
                             return "%s(0) %s %s" % (asHdl(dst), symbol, valAsHdl(a.src)) 
                     elif srcT.signed is not dstT.signed:
                         return "%s %s %s" % (asHdl(dst), symbol, valAsHdl(a.src._convSign(dstT.signed)))
-            
+
             raise SerializerException("%s %s %s  is not valid assignment\n because types are different (%s; %s) " % 
                          (asHdl(dst), symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
 
@@ -105,35 +106,38 @@ class VhdlSerializer_statements():
         else:
             ifTrue = ifc.ifTrue
             ifFalse = ifc.ifFalse
-        
+
         for c, statements in ifc.elIfs:
             if cls.VHDL_VER < VhdlVersion.v2008:
                 statements = ternaryOpsToIf(statements)
-                
+
             elIfs.append((cls.condAsHdl(c, True, createTmpVarFn), [asHdl(s) for s in statements]))
-        
+
         return IfTmpl.render(cond=cond,
                              ifTrue=[asHdl(s) for s in ifTrue],
                              elIfs=elIfs,
                              ifFalse=[asHdl(s) for s in ifFalse])  
-    
+
     @classmethod
     def SwitchContainer(cls, sw, createTmpVarFn):
         asHdl = lambda obj : cls.asHdl(obj, createTmpVarFn)
         switchOn = cls.condAsHdl(sw.switchOn, False, createTmpVarFn)
-        
+
         cases = []
         for key, statements in sw.cases:
-            if key is not None:  # None is default
-                key = cls.asHdl(key, createTmpVarFn)
-                
+            key = cls.asHdl(key, createTmpVarFn)
+
             if cls.VHDL_VER < VhdlVersion.v2008:
                 statements = ternaryOpsToIf(statements)
-                
-            cases.append((key, [asHdl(s) for s in statements]))  
+
+            cases.append((key, [asHdl(s) for s in statements]))
+
+        if sw.default:
+            cases.append((None, [asHdl(s) for s in sw.default]))
+
         return SwitchTmpl.render(switchOn=switchOn,
-                                 cases=cases)  
-    
+                                 cases=cases)
+
     @classmethod
     def MapExpr(cls, m, createTmpVar):
-        return   "%s => %s" % (m.compSig.name, cls.asHdl(m.value, createTmpVar))
+        return "%s => %s" % (m.compSig.name, cls.asHdl(m.value, createTmpVar))

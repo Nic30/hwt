@@ -6,34 +6,44 @@ class ReturnCalled(Exception):
     def __init__(self, val):
         self.val = val
 
+
 class ReturnContainer():
     """
     Stuctural container of return statement in hdl
     """
-    
+
     def __init__(self, val=None):
         self.val = val
 
     def seqEval(self):
-        raise ReturnCalled(self.val.staticEval())       
+        raise ReturnCalled(self.val.staticEval())
+
 
 def seqEvalCond(cond):
     _cond = True
     for c in cond:
         _cond = _cond and bool(c.staticEval().val)
-        
+
     return _cond
+
 
 class IfContainer():
     """
     Structural container of if statement for hdl rendering
     """
     def __init__(self, cond, ifTrue=[], ifFalse=[], elIfs=[]):
+        """
+        :param cond: list of conditions for this if
+        :param ifTrue: list of statements which should be active if cond. is met
+        :param elIfs: list of tuples (list of conditions, list of statements)
+        :param ifFalse: list of statements which should be active if cond.
+            and any other cond. in elIfs is met
+        """
         self.cond = cond
         self.ifTrue = ifTrue
         self.elIfs = elIfs
         self.ifFalse = ifFalse
-        
+
     def seqEval(self):
         if seqEvalCond(self.cond):
             for s in self.ifTrue:
@@ -44,29 +54,32 @@ class IfContainer():
                     for s in c[1]:
                         s.seqEval()
                     return
-            
+
             for s in self.ifFalse:
                 s.seqEval()
-        
+
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
         return VhdlSerializer.IfContainer(self, onlyPrintDefaultValues)
+
 
 class SwitchContainer():
     """
     Structural container for switch statement for hdl rendering
     """
-    def __init__(self, switchOn, cases):
+    def __init__(self, switchOn, cases, default=[]):
         self.switchOn = switchOn
         self.cases = cases
-    
+        self.default = default
+
     def seqEval(self):
         raise NotImplementedError()
-    
+
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
         return VhdlSerializer.SwitchContainer(self, onlyPrintDefaultValues)
- 
+
+
 class WhileContainer():
     """
     Structural container of while statement for hdl rendering
@@ -74,11 +87,12 @@ class WhileContainer():
     def __init__(self, cond, body):
         self.cond = cond
         self.body = body
-    
+
     def seqEval(self):
         while seqEvalCond(self.cond):
             for s in self.body:
                 s.seqEval()
+
 
 class WaitStm():
     """
@@ -87,4 +101,3 @@ class WaitStm():
     def __init__(self, waitForWhat):
         self.isTimeWait = isinstance(waitForWhat, int)
         self.waitForWhat = waitForWhat
-        
