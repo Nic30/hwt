@@ -18,7 +18,7 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         :param ctx: context in which is sig. created (instance of RtlNetlist)
         :param name: suggested name
         :param var_type: type of signal
-        :param defaultVal: default value for signal (used as def. val in hdl and for reset)  
+        :param defaultVal: default value for signal (used as def. val in hdl and for reset)
         """
         super().__init__(ctx, name, var_type, defaultVal)
         self.next = RtlSignal(ctx, name + "_next", var_type, nopVal=self, useNopVal=True)
