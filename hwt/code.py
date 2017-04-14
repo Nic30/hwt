@@ -14,6 +14,7 @@ from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from hwt.synthesizer.vectorUtils import getWidthExpr, fitTo
+from hwt.synthesizer.andReducedContainer import AndReducedContainer
 
 
 def _intfToSig(obj):
@@ -43,12 +44,16 @@ class If(StmCntx):
         """
         self.cond = _intfToSig(cond)
         assert isinstance(self.cond, RtlSignalBase)
+
         self.nowIsEventDependent = bool(list(discoverEventDependency(cond)))
         self.elifConds = []
-        self._appendStatements(set([self.cond, ]), statements)
+
+        c = AndReducedContainer()
+        c.add(self.cond)
+        self._appendStatements(c, statements)
 
     def Else(self, *statements):
-        ncond = set()
+        ncond = AndReducedContainer()
         ncond.add(~self.cond)
 
         for ec in self.elifConds:
@@ -62,6 +67,9 @@ class If(StmCntx):
         return stml
 
     def _appendStatements(self, condSet, statements):
+        """
+        Append statements to this container under conditions specified by condSet
+        """
         for stm in flatten(statements):
             stm.isEventDependent = stm.isEventDependent or self.nowIsEventDependent
             for c in condSet:
@@ -73,7 +81,7 @@ class If(StmCntx):
         cond = _intfToSig(cond)
         self.nowIsEventDependent = self.nowIsEventDependent or\
                                    arr_any(discoverEventDependency(cond), lambda x: True)
-        thisCond = set()
+        thisCond = AndReducedContainer()
         thisCond.add(~self.cond)
         for c in self.elifConds:
             thisCond.add(~c)
@@ -122,7 +130,7 @@ class Switch(StmCntx):
 
 def In(sigOrVal, iterable):
     """
-    Hdl conversible in operator, check if any of items in "iterable" equals "sigOrVal"
+    Hdl convertible in operator, check if any of items in "iterable" equals "sigOrVal"
     """
     res = None
     for i in iterable:
@@ -131,7 +139,7 @@ def In(sigOrVal, iterable):
             res = sigOrVal._eq(i)
         else:
             res = res | sigOrVal._eq(i)
-
+    assert res is not None
     return res
 
 
@@ -285,7 +293,7 @@ def _connect(src, dst, exclude, fit):
 def connect(src, *destinations, exclude=set(), fit=False):
     """
     Connect src (signals/interfaces/values) to all destinations
-    
+
     :param exclude: interfaces on any level on src or destinations
         which should be excluded from connection process
     :param fit: auto fit source width to destination width

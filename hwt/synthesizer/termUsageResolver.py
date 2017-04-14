@@ -86,9 +86,12 @@ class TermUsageRecord(object):
         self.isEventDependent = any(discoverEventDependency(term))
         self.maxStmId = maxStmId
 
+    def __repr__(self):
+        return "<TermUsageRecord %r, usedCnt:%d, isEventDependent:%r, maxStmId:%d>" % (self.term, self.usedCnt, self.isEventDependent, self.maxStmId)
+
 
 def extractCondTermOrder(assignments):
-            # register assignments in tree of IfTreeNodes
+    # register assignments in tree of IfTreeNodes
     for a in assignments:
         # prepare base conds
         a._unresolvedConds = [getBaseCond(c) for c in a.cond]
