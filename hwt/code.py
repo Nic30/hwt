@@ -54,10 +54,10 @@ class If(StmCntx):
 
     def Else(self, *statements):
         ncond = AndReducedContainer()
-        ncond.add(~self.cond)
 
-        for ec in self.elifConds:
+        for ec in reversed(self.elifConds):
             ncond.add(~ec)
+        ncond.add(~self.cond)
 
         self._appendStatements(ncond, statements)
 
@@ -82,10 +82,10 @@ class If(StmCntx):
         self.nowIsEventDependent = self.nowIsEventDependent or\
                                    arr_any(discoverEventDependency(cond), lambda x: True)
         thisCond = AndReducedContainer()
-        thisCond.add(~self.cond)
-        for c in self.elifConds:
-            thisCond.add(~c)
         thisCond.add(cond)
+        for c in reversed(self.elifConds):
+            thisCond.add(~c)
+        thisCond.add(~self.cond)
 
         self._appendStatements(thisCond, statements)
 

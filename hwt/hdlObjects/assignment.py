@@ -33,7 +33,6 @@ class Assignment(object):
         self.indexes = indexes
         self.cond = AndReducedContainer()
         self._instId = Assignment._nextInstId()
-        
 
         if not virtualOnly:
             dst.ctx.startsOfDataPaths.add(self)
