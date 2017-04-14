@@ -100,7 +100,7 @@ class HdlSimulator(HdlEnvironmentCore):
 
         if isEvDependentOn(trigger, proc):
             if self.now == 0:
-                pass  # pass event dependent on startup
+                return  # pass event dependent on startup
             self.seqProcsToRun.append(proc)
 
         else:
