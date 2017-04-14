@@ -10,12 +10,12 @@ from hwt.synthesizer.param import Param, evalParam
 
 
 class SimModelSerializer_value():
-        
+
     @classmethod
     def Bits_valAsVhdl(cls, dtype, val):
         return "BitsVal(%d, simBitsT(%d, %r), %d)" % (
             val.val, dtype.bit_length(), dtype.signed, val.vldMask)
-   
+
     @classmethod
     def SignalItem(cls, si, declaration=False):
         if declaration:
@@ -27,33 +27,37 @@ class SimModelSerializer_value():
                 return cls.asHdl(si.origin)
             else:
                 return "self.%s._oldVal" % si.name
+
     @classmethod
     def Integer_valAsVhdl(cls, t, i):
         if i.vldMask:
             return "simHInt(%d)" % i.val
         else:
             return "simHInt(None)"
-    
+
     @classmethod
     def Array_valAsVhdl(cls, t, val):
         return "ArrayVal([%s], %s, %d)" % (",\n".join(map(cls.Value, val.val)), cls.HdlType(t), val.vldMask)
-    
+
     @classmethod
     def Slice_valAsVhdl(cls, t, val):
-        return "SliceVal((simHInt(%d), simHInt(%d)), SLICE, %d)" % (evalParam(val.val[0]).val, evalParam(val.val[1]).val,
-                                                  val.vldMask)
+        return "SliceVal((simHInt(%d), simHInt(%d)), SLICE, %d)" % (
+                    evalParam(val.val[0]).val,
+                    evalParam(val.val[1]).val,
+                    val.vldMask)
+
     @classmethod
     def Enum_valAsVhdl(cls, t, val):
         return "self.%s.%s" % (t.name, val.val)
-    
-    
+
     @classmethod
     def Value(cls, val):
-        """ 
-        :param dst: is signal connected with value 
-        :param val: value object, can be instance of Signal or Value    """
+        """
+        :param dst: is signal connected with value
+        :param val: value object, can be instance of Signal or Value
+        """
         t = val._dtype
-        
+
         if isinstance(val, RtlSignalBase):
             return cls.SignalItem(val)
         elif isinstance(t, Slice):
@@ -71,5 +75,6 @@ class SimModelSerializer_value():
         elif isinstance(t, String):
             return cls.String_valAsVhdl(t, val)
         else:
-            raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val))) 
-    
+            raise Exception("value2vhdlformat can not resolve value serialization for %s" % (
+                                repr(val)))
+

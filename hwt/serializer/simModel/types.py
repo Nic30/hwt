@@ -7,23 +7,24 @@ from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.serializer.exceptions import SerializerException
 from hwt.hdlObjects.types.integer import Integer
 
+
 class SimModelSerializer_types():
     @classmethod
     def HdlType_bits(cls, typ, declaration=False):
         if typ.signed is None:
             if not (typ.forceVector or typ.bit_length() > 1):
                 return 'SIM_BIT'
-            
+
         c = typ.constrain
         if isinstance(c, (int, float)):
             pass
-        else:        
+        else:
             c = evalParam(c)
             if isinstance(c, SliceVal):
                 c = c._size()
             else:
-                c = c.val  
-             
+                c = c.val
+
         return "simBitsT(%d, %r)" % (c, typ.signed)
 
     @classmethod
@@ -34,18 +35,21 @@ class SimModelSerializer_types():
             except AttributeError:
                 name = "enumT_"
             typ.name = scope.checkedName(name, typ)
-            
-            return '%s = Enum( "%s", [%s])' % (typ.name, typ.name, ", ".join(map(lambda x: '"%s"' %x, typ._allValues)))
+
+            return '%s = Enum( "%s", [%s])' % (typ.name,
+                                               typ.name,
+                                               ", ".join(map(lambda x: '"%s"' % x,
+                                                             typ._allValues)))
         else:
             return typ.name
-        
+
     @classmethod
     def HdlType_int(cls, typ, scope, declaration=False):
         ma = typ.max
         mi = typ.min
         noMax = ma is None
         noMin = mi is None
-        if noMin: 
+        if noMin:
             if noMax:
                 return "SIM_INT"
             else:
@@ -79,8 +83,8 @@ class SimModelSerializer_types():
             return cls.HdlType_int(typ, scope, declaration=declaration)
         else:
             if declaration:
-                raise NotImplementedError("type declaration is not implemented for type %s" % 
-                                      (typ.name))
+                raise NotImplementedError("type declaration is not implemented for type %s"
+                                          % (typ.name))
             else:
                 assert isinstance(typ, HdlType)
                 return typ.name.upper()
