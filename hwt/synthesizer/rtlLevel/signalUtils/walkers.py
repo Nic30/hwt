@@ -51,7 +51,7 @@ def walkAllOriginSignals(sig, discovered=None):
     if discovered is None:
         discovered = set()
     if isinstance(sig, Value):
-        raise StopIteration()
+        return
     if not isinstance(sig, RtlSignalBase):
         raise AssertionError("Expected only instances of signal, got: %s"
                              % (repr(sig)))
@@ -62,7 +62,7 @@ def walkAllOriginSignals(sig, discovered=None):
     if sig.drivers:
         for obj in sig.drivers:
             if isinstance(obj, Value):
-                raise StopIteration()
+                return
             elif isinstance(obj, Operator):
                 for op in obj.ops:
                     if isinstance(op, RtlSignalBase):

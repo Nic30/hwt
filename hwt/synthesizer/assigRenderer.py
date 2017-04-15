@@ -152,7 +152,7 @@ def renderIfTree(statements, resolvedCnt=0):
                             c = stm.cases.pop()
                             stm.default = c[1]
                         yield stm
-                        raise StopIteration()
+                        return
             break
 
         if len(elIfs) >= SWITCH_THRESHOLD:
@@ -187,7 +187,7 @@ def renderIfTree(statements, resolvedCnt=0):
                     default = ifFalse
 
                     yield SwitchContainer(switchOn, cases, default)
-                    raise StopIteration()
+                    return
 
         yield IfContainer(topCond,
                           ifTrue,
