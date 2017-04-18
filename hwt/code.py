@@ -1,5 +1,5 @@
 import math
-from operator import and_, or_
+from operator import and_, or_, xor
 
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.operatorDefs import concatFn
@@ -404,6 +404,7 @@ def _mkOp(fn):
 # variadic operator functions
 And = _mkOp(and_)
 Or = _mkOp(or_)
+Xor = _mkOp(xor)
 Concat = _mkOp(concatFn)
 
 
