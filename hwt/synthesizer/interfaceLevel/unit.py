@@ -129,6 +129,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         # if I am a unit load subunits
         for u in self._units:
             u._loadDeclarations()
+        for p in self._params:
+            p.setReadOnly()
 
     def _registerIntfInImpl(self, iName, intf):
         """

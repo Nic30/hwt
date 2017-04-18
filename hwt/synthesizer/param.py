@@ -5,8 +5,7 @@ from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.cmp import areSameSignals
-
-
+ 
 class Param(RtlSignal):
     """
     Class used in same way as generics in VHDL, it is wrapper around the value
@@ -18,6 +17,7 @@ class Param(RtlSignal):
         self._val = initval
         self.replacedWith = None
         self._parent = None
+        self.__isReadOnly = False 
         # unit: (ctx, name)
         self._scopes = {}
     
@@ -26,7 +26,10 @@ class Param(RtlSignal):
     
     def getName(self, where):
         return self._scopes[where][1]
-        
+    
+    def setReadOnly(self):
+        self.__isReadOnly = True
+
     def setHdlName(self, name):
         self.hasGenericName = False
         self.name = name
@@ -62,7 +65,9 @@ class Param(RtlSignal):
         """
         set value of this param
         """
-        assert self.replacedWith is None
+        assert not self.__isReadOnly, "This parameter was locked and now it can not be changed"
+        assert self.replacedWith is None, "This param was replaced with new one and this should not exists"
+
         val = toHVal(val)
         self.defaultVal = val
         self._val = val.staticEval()

@@ -2,7 +2,7 @@ from copy import copy
 
 from hwt.hdlObjects.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.synthesizer.exceptions import IntfLvlConfErr, TypeConversionErr
+from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import InterfaceDirectionFns
 from hwt.synthesizer.interfaceLevel.interfaceUtils.hdlExtraction import ExtractableInterface
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
@@ -119,6 +119,8 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
                 if not i._interfaces:
                     i._injectMultiplerToDtype()
                     i._initArrayItems()
+        for p in self._params:
+            p.setReadOnly()
 
     def _clean(self, rmConnetions=True, lockNonExternal=True):
         """Remove all signals from this interface (used after unit is synthesized
