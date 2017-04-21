@@ -72,12 +72,14 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             req = self.requests.pop(0)
             if req is NOP:
                 s.w(0, intf.en)
+                s.w(0, intf.we)
                 self.readPending = False
             else:
                 self.doReq(s, req)
                 s.w(1, intf.en)
         else:
             s.w(0, intf.en)
+            s.w(0, intf.we)
             self.readPending = False
 
         if readPending:
