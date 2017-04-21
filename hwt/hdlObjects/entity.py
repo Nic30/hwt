@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+
 class Entity(object):
     """
     Hdl container of hdl configuration and interfaces
@@ -16,4 +17,3 @@ class Entity(object):
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer
         return VhdlSerializer.Entity(self, VhdlSerializer.getBaseNameScope())
-    
