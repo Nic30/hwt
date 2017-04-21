@@ -1,11 +1,11 @@
-from hwt.hdlObjects.constants import READ, WRITE
+from hwt.hdlObjects.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.simulator.shortcuts import oscilate
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):
     """
-    :ivar requests: list of tuples (request type, address) - used for driver
+    :ivar requests: list of tuples (request type, address, [write data]) - used for driver
     :ivar data: list of data in memory, used for monitor
     """
     def __init__(self, intf, clk=None, rstn=None):
@@ -70,7 +70,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         readPending = self.readPending
         if self.requests and self.enable:
             req = self.requests.pop(0)
-            if req is None:
+            if req is NOP:
                 s.w(0, intf.en)
                 self.readPending = False
             else:
