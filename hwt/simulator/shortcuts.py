@@ -13,7 +13,6 @@ from hwt.simulator.simModel import SimModel
 from hwt.simulator.simSignalProxy import IndexSimSignalProxy
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
 
 
@@ -22,13 +21,20 @@ def simPrepare(unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
     Create simulation model and connect it with interfaces of original unit
     and decorate it with agents
 
+    :param unit: interface level unit which you wont prepare for simulation
+    :param modelCls: class of rtl simulation model to run simulation on, if is None
+        rtl sim model will be generated from unit
+    :param dumpModelIn: folder to where put sim model files (if is None sim model will be constructed only in memory)
+    :param onAfterToRtl: callback fn(unit) which will be called unit after it will
+        be synthesised to rtl
+
     :return: tuple (fully loaded unit with connected sim model,
         connected simulation model,
         simulation processes of agents
         )
     """
     if modelCls is None:
-        modelCls = toSimModel(unit, tmpDir=dumpModelIn)
+        modelCls = toSimModel(unit, dumpModelIn=dumpModelIn)
     else:
         synthesised(unit)
 
@@ -41,13 +47,16 @@ def simPrepare(unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
     return unit, model, procs
 
 
-def toSimModel(unit, tmpDir=None):
+def toSimModel(unit, dumpModelIn=None):
     """
     Create a simulation model for unit
+
+    :param unit: interface level unit which you wont prepare for simulation
+    :param dumpModelIn: folder to where put sim model files (otherwise sim model will be constructed only in memory)
     """
-    if tmpDir is not None:
-        toRtlAndSave(unit, tmpDir, serializer=SimModelSerializer)
-        d = os.path.join(os.getcwd(), tmpDir)
+    if dumpModelIn is not None:
+        toRtlAndSave(unit, dumpModelIn, serializer=SimModelSerializer)
+        d = os.path.join(os.getcwd(), dumpModelIn)
         dInPath = d in sys.path
         if not dInPath:
             sys.path.insert(0, d)

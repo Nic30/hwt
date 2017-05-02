@@ -211,8 +211,19 @@ class SimTestCase(unittest.TestCase):
                                           50 * Time.ns,
                                           seed=self._rand.getrandbits(64)))
 
-    def prepareUnit(self, u, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
-        self.u, self.model, self.procs = simPrepare(u,
+    def prepareUnit(self, unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
+        """
+        Create simulation model and connect it with interfaces of original unit
+        and decorate it with agents and collect all simulation processes
+
+        :param unit: interface level unit which you wont prepare for simulation
+        :param modelCls: class of rtl simulation model to run simulation on, if is None
+            rtl sim model will be generated from unit
+        :param dumpModelIn: folder to where put sim model files (if is None sim model will be constructed only in memory)
+        :param onAfterToRtl: callback fn(unit) which will be called unit after it will
+            be synthesised to rtl
+        """
+        self.u, self.model, self.procs = simPrepare(unit,
                                                     modelCls=modelCls,
                                                     dumpModelIn=dumpModelIn,
                                                     onAfterToRtl=onAfterToRtl)
