@@ -3,6 +3,7 @@
 
 from setuptools import setup, find_packages
 
+
 setup(name='hwt',
       version='1.4',
       description='hdl synthesis toolkit',
