@@ -204,7 +204,13 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
 
-        uniqComponents = map(lambda x: x[1][0], groupedby(arch.components, lambda c: c.name))
+        uniqComponents = list(map(lambda x: x[1][0], groupedby(arch.components, lambda c: c.name)))
+        uniqComponents.sort(key=lambda c: c.name)
+        components = list(map(lambda c: cls.Component(c, createTmpVarFn),
+                              uniqComponents))
+        
+        componentInstances = list(map(lambda c: cls.ComponentInstance(c, createTmpVarFn, scope),
+                                      arch.componentInstances))
 
         return architectureTmpl.render({
             "entityName": arch.getEntityName(),
@@ -212,10 +218,8 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             "variables": variables,
             "extraTypes": extraTypes_serialized,
             "processes": procs,
-            "components": map(lambda c: cls.Component(c, createTmpVarFn),
-                              uniqComponents),
-            "componentInstances": map(lambda c: cls.ComponentInstance(c, createTmpVarFn, scope),
-                                      arch.componentInstances)
+            "components": components,
+            "componentInstances": componentInstances
             })
 
     @classmethod
