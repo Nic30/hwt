@@ -1,5 +1,6 @@
 # select = map, groupBy = itertools.groupby
 from types import GeneratorType
+from itertools import zip_longest
 
 
 class DuplicitValueExc(Exception):
@@ -82,7 +83,7 @@ def indexUsigIs(iterable, item):
 def groupedby(collection, fn):
     """
     This function does not needs initial sorting like itertools.groupby
-    
+
     :attention: Order of pairs is not deterministic.
     """
     d = {}
@@ -113,3 +114,8 @@ def flatten(iterables):
             yield from flatten(i)
     else:
         yield iterables
+
+
+def grouper(n, iterable, padvalue=None):
+    "grouper(3, 'abcdefg', 'x') --> ('a','b','c'), ('d','e','f'), ('g','x','x')"
+    return zip_longest(*[iter(iterable)]*n, fillvalue=padvalue)

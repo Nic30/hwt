@@ -148,14 +148,14 @@ class SimTestCase(unittest.TestCase):
                 return
 
             differing = '%ss differ: %s != %s\n' % (
-                    (seq_type_name.capitalize(),) + 
+                    (seq_type_name.capitalize(),) +
                     _common_shorten_repr(seq1, seq2))
 
             for i in range(min(len1, len2)):
                 try:
                     item1 = seq1[i]
                 except (TypeError, IndexError, NotImplementedError):
-                    differing += ('\nUnable to index element %d of first %s\n' 
+                    differing += ('\nUnable to index element %d of first %s\n'
                                   % (i, seq_type_name))
                     break
 
@@ -172,24 +172,24 @@ class SimTestCase(unittest.TestCase):
                     break
             else:
                 if (len1 == len2 and seq_type is None and
-                    type(seq1) != type(seq2)):
+                   type(seq1) != type(seq2)):
                     # The sequences are the same, but have differing types.
                     return
 
             if len1 > len2:
                 differing += ('\nFirst %s contains %d additional '
-                             'elements.\n' % (seq_type_name, len1 - len2))
+                              'elements.\n' % (seq_type_name, len1 - len2))
                 try:
-                    differing += ('First extra element %d:\n%s\n' % 
+                    differing += ('First extra element %d:\n%s\n' %
                                   (len2, safe_repr(seq1[len2])))
                 except (TypeError, IndexError, NotImplementedError):
                     differing += ('Unable to index element %d '
                                   'of first %s\n' % (len2, seq_type_name))
             elif len1 < len2:
                 differing += ('\nSecond %s contains %d additional '
-                             'elements.\n' % (seq_type_name, len2 - len1))
+                              'elements.\n' % (seq_type_name, len2 - len1))
                 try:
-                    differing += ('First extra element %d:\n%s\n' % 
+                    differing += ('First extra element %d:\n%s\n' %
                                   (len1, safe_repr(seq2[len1])))
                 except (TypeError, IndexError, NotImplementedError):
                     differing += ('Unable to index element %d '
@@ -204,12 +204,26 @@ class SimTestCase(unittest.TestCase):
         self.fail(msg)
 
     def randomize(self, intf):
+        """
+        Randomly disable and enable interface for testing purposes
+        """
         self.procs.append(agent_randomize(intf._ag,
                                           50 * Time.ns,
                                           seed=self._rand.getrandbits(64)))
 
-    def prepareUnit(self, u, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
-        self.u, self.model, self.procs = simPrepare(u,
+    def prepareUnit(self, unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
+        """
+        Create simulation model and connect it with interfaces of original unit
+        and decorate it with agents and collect all simulation processes
+
+        :param unit: interface level unit which you wont prepare for simulation
+        :param modelCls: class of rtl simulation model to run simulation on, if is None
+            rtl sim model will be generated from unit
+        :param dumpModelIn: folder to where put sim model files (if is None sim model will be constructed only in memory)
+        :param onAfterToRtl: callback fn(unit) which will be called unit after it will
+            be synthesised to rtl
+        """
+        self.u, self.model, self.procs = simPrepare(unit,
                                                     modelCls=modelCls,
                                                     dumpModelIn=dumpModelIn,
                                                     onAfterToRtl=onAfterToRtl)

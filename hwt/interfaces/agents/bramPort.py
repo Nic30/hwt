@@ -1,12 +1,14 @@
-from hwt.hdlObjects.constants import READ, WRITE
+from hwt.hdlObjects.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.simulator.shortcuts import oscilate
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):
     """
-    :ivar requests: list of tuples (request type, address) - used for driver
+    :ivar requests: list of tuples (request type, address, [write data]) - used for driver
     :ivar data: list of data in memory, used for monitor
+    :ivar mem: if agent is in monitor mode (= is slave) all reads and writes are performed on
+        mem object
     """
     def __init__(self, intf, clk=None, rstn=None):
         super().__init__(intf, clk=clk, rstn=rstn, allowNoReset=True)
@@ -14,6 +16,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         self.requests = []
         self.readPending = False
         self.readed = []
+
+        self.mem = {}
 
     def doReq(self, s, req):
         rw = req[0]
@@ -37,27 +41,43 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
     def onReadReq(self, s, addr):
         """
-        on readReqRecieved
+        on readReqRecieved in monitor mode
         """
-        raise NotImplementedError()
+        self.requests.append((READ, addr))
 
     def onWriteReq(self, s, addr, data):
-        raise NotImplementedError()
+        """
+        on writeReqRecieved in monitor mode
+        """
+        self.requests.append((WRITE, addr, data))
 
     def monitor(self, s):
         intf = self.intf
 
         yield s.updateComplete
+
+        if self.requests:
+            req = self.requests.pop(0)
+            t = req[0]
+            addr = req[1]
+            assert addr._isFullVld(), s.now
+            if t == READ:
+                s.write(self.mem[addr.val], intf.dout)
+            else:
+                assert t == WRITE
+                s.write(None, intf.dout)
+                self.mem[addr.val] = req[2]
+
         if self.enable:
             en = s.read(intf.en)
             assert en.vldMask
             if en.val:
-                we = self.read(intf.we)
+                we = s.read(intf.we)
                 assert we.vldMask
 
-                addr = self.read(intf.addr)
+                addr = s.read(intf.addr)
                 if we.val:
-                    data = self.read(intf.din)
+                    data = s.read(intf.din)
                     self.onWriteReq(s, addr, data)
                 else:
                     self.onReadReq(s, addr)
@@ -70,14 +90,16 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         readPending = self.readPending
         if self.requests and self.enable:
             req = self.requests.pop(0)
-            if req is None:
+            if req is NOP:
                 s.w(0, intf.en)
+                s.w(0, intf.we)
                 self.readPending = False
             else:
                 self.doReq(s, req)
                 s.w(1, intf.en)
         else:
             s.w(0, intf.en)
+            s.w(0, intf.we)
             self.readPending = False
 
         if readPending:

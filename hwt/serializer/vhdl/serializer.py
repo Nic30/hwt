@@ -281,7 +281,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
                 })
 
         doc = ent.__doc__
-        if doc:
+        if doc and id(doc) != id(Entity.__doc__):
             doc = cls.comment(doc) + "\n"
             return doc + entVhdl
         else:

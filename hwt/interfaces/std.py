@@ -4,7 +4,7 @@ from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BIT
 from hwt.interfaces.signalOps import SignalOps
 from hwt.synthesizer.interfaceLevel.interface import Interface
-from hwt.synthesizer.param import Param
+from hwt.synthesizer.param import Param, evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.vectorUtils import getWidthExpr
 
@@ -194,6 +194,19 @@ class BramPort_withoutClk(Interface):
     def _getSimAgent(self):
         from hwt.interfaces.agents.bramPort import BramPort_withoutClkAgent
         return BramPort_withoutClkAgent
+
+    def _getWordAddrStep(self):
+        """
+        :return: size of one word in unit of address
+        """
+        return 1
+
+    def _getAddrStep(self):
+        """
+        :return: how many bits is one unit of address (f.e. 8 bits for  char * pointer,
+             36 for 36 bit bram)
+        """
+        return evalParam(self.DATA_WIDTH).val
 
 
 class BramPort(BramPort_withoutClk):

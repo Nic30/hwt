@@ -51,7 +51,13 @@ def splitStatementsOnCond(statements, resolvedCondCnt):
         # else:
         #    stm
         condIndx = -resolvedCondCnt - 1
-        topCond, _ = getBaseCond(simplestStm.cond[condIndx])
+        try:
+            _topCond = simplestStm.cond[condIndx]
+        except IndexError:
+            raise Exception("Error while resolving position in if-tree of statement %r with conditions %s"
+                            % (simplestStm, simplestStm.cond))
+
+        topCond, _ = getBaseCond(_topCond)
         topCondNeg = ~topCond
 
         ifTrue = []
@@ -119,7 +125,7 @@ def renderIfTree(statements, resolvedCnt=0):
             yield a
 
     if _statements:
-        topCond, ifTrue, ifFalse, independent = splitStatementsOnCond(statements, resolvedCnt)
+        topCond, ifTrue, ifFalse, independent = splitStatementsOnCond(_statements, resolvedCnt)
         if independent:
             yield from renderIfTree(independent, resolvedCnt)
 
