@@ -25,15 +25,17 @@ opPrecedence = {AllOps.NOT : 2,
                 AllOps.CALL: 1,
                 }
 
+
 def isResultOfTypeConversion(sig):
     try:
         d = sig.drivers[0]
     except IndexError:
         return False
-    
+
     if sig.hidden:
         return True
     return False
+
 
 class VhdlSerializer_ops():
 
@@ -42,7 +44,6 @@ class VhdlSerializer_ops():
         v = 0 if cast.sig.negated else 1
         return cls.asHdl(cast.sig) + "=='%d'" % v
 
-    
     @classmethod
     def Operator(cls, op, createTmpVarFn):
         def p(operand):
@@ -50,17 +51,18 @@ class VhdlSerializer_ops():
             if isinstance(operand, RtlSignalBase):
                 try:
                     o = operand.singleDriver()
-                    if opPrecedence[o.operator] <= opPrecedence[op.operator]:
+                    if o.operator != op.operator and opPrecedence[o.operator] <= opPrecedence[op.operator]:
                         return " (%s) " % s
                 except Exception:
                     pass
             return " %s " % s
-        
+
         ops = op.ops
         o = op.operator
+
         def _bin(name):
             return (" " + name + " ").join(map(lambda x: x.strip(), map(p, ops)))
-        
+
         if o == AllOps.AND_LOG:
             return _bin('AND')
         elif o == AllOps.OR_LOG:
@@ -95,7 +97,7 @@ class VhdlSerializer_ops():
             if isResultOfTypeConversion(o1):
                 o1 = createTmpVarFn("tmpTypeConv", o1._dtype)
                 o1.defaultVal = ops[0]
-            
+
             return "%s(%s)" % (cls.asHdl(o1, createTmpVarFn).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('<')
@@ -117,13 +119,13 @@ class VhdlSerializer_ops():
             return "FALLING_EDGE(" + p(ops[0]) + ")"
         elif o == AllOps.BitsAsSigned:
             assert len(ops) == 1
-            return  "SIGNED(" + p(ops[0]) + ")"
+            return "SIGNED(" + p(ops[0]) + ")"
         elif o == AllOps.BitsAsUnsigned:
             assert len(ops) == 1
-            return  "UNSIGNED(" + p(ops[0]) + ")"
+            return "UNSIGNED(" + p(ops[0]) + ")"
         elif o == AllOps.BitsAsVec:
             assert len(ops) == 1
-            return  "STD_LOGIC_VECTOR(" + p(ops[0]) + ")"
+            return "STD_LOGIC_VECTOR(" + p(ops[0]) + ")"
         elif o == AllOps.BitsToInt:
             assert len(ops) == 1
             op = cls.asHdl(ops[0], createTmpVarFn)
@@ -135,17 +137,16 @@ class VhdlSerializer_ops():
             resT = op.result._dtype
             op_str = cls.asHdl(ops[0], createTmpVarFn)
             w = resT.bit_length()
-            
+
             if resT.signed is None:
                 return "STD_LOGIC_VECTOR(TO_UNSIGNED(" + op_str + ", %d))" % (w)
             elif resT.signed:
                 return "TO_UNSIGNED(" + op_str + ", %d)" % (w)
             else:
                 return "TO_UNSIGNED(" + op_str + ", %d)" % (w)
-            
+
         elif o == AllOps.POW:
             assert len(ops) == 2
             return _bin('**')
         else:
             raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))
-
