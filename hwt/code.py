@@ -105,6 +105,8 @@ class Switch(StmCntx):
     _appendStatements = If._appendStatements
 
     def Case(self, caseVal, *statements):
+        """c-like case of switch statement
+        """
         cond = self.switchOn._eq(caseVal)
         if self.cond is None:
             If.__init__(self, cond, *statements)
@@ -113,6 +115,9 @@ class Switch(StmCntx):
         return self
 
     def addCases(self, tupesValStmnts):
+        """
+        Add multiple case statements from iterable of tuleles (caseVal, statements) 
+        """
         s = self
         for val, statements in tupesValStmnts:
             if val is None:
@@ -122,10 +127,42 @@ class Switch(StmCntx):
         return s
 
     def Default(self, *statements):
+        """c-like default of switch statement
+        """
         if self.cond is None:
             # no cases were used
             return statements
         return If.Else(self, *statements)
+
+
+def SwitchLogic(cases, default=None):
+    """
+    generate if tree for cases like
+    
+    if cond0:
+        statements0
+    elif cond1:
+        statements1
+    ...
+    else:
+        default
+        
+    :param case: iterable of tuples (condition, statements)
+    :param default: default statements
+    """
+    if default is not None:
+        assigTop = default
+    else:
+        assigTop = []
+
+    for cond, statements in reversed(cases):
+        assigTop = If(cond,
+                       statements
+                   ).Else(
+                       assigTop
+                   )
+
+    return assigTop
 
 
 def In(sigOrVal, iterable):
