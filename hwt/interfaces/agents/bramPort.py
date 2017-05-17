@@ -82,9 +82,6 @@ class BramPort_withoutClkAgent(SyncAgentBase):
                 else:
                     self.onReadReq(s, addr)
 
-    def getDrivers(self):
-        return [self.driver]
-
     def driver(self, s):
         intf = self.intf
         readPending = self.readPending
