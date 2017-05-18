@@ -170,6 +170,7 @@ class RtlSignalOps():
         :return: list of assignments
         """
         if isinstance(source, InterfaceBase):
+            assert source._isAccessible
             source = source._sig
     
         if source is None:
