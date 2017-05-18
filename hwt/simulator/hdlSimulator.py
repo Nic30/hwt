@@ -18,15 +18,8 @@ class HdlSimulator(HdlEnvironmentCore):
     """
     [HOW IT WORKS]
 
-    Every signal should have single or none driver
-    -> (no conflict resolving is needed (is already done by synthesizer))
-
     Every signal is initialized at start with its default value
     -> (no drove, constant drove solved)
-
-    Every assignment has it's delay, clock dependent assignments has delay != 0
-    (they should be marked before sim started)
-    -> (memories and register solved)
 
     Every signal value changing object (assignment, index...) should on simEval() yield
        tuple (updateDelayTime, applicator) where applicator is function(oldValue)
@@ -41,16 +34,16 @@ class HdlSimulator(HdlEnvironmentCore):
     every process uses sensitivity-list like in other languages (but it is generated automatically)
     -> (communication between process solved)
 
-    Hdl processes can not contain any wait statements etc. only simulation processes can.
+    Hdlprocesses can not contain any wait statements etc. only simulation processes can.
     Simulation processes are written in python.
     -> (using hdl as main simulator driver is not efficient and thats why it is not supported
         and it is easy to just read hdl process with unsupported statements and translate them to
         simulator commands)
 
-    HWprocesses have smaller priority than simulation processes
-    this allows simplyfi logic of all agents
+    HWprocesses have lower priority than simulation processes
+    this allows simplify logic of all agents
     when simulation process is executed HW part did not anything in this time
-    so simulation process can prepare anythink for HW part (= can write)
+    so simulation process can prepare anything for HW part (= can write)
     if simulation process need to read it has to yield simulator.updateComplete
     first, process then be waken after reaction of HW in this time
     -> agents are greatly simplified, they just need to yield simulator.updateComplete
@@ -64,7 +57,7 @@ class HdlSimulator(HdlEnvironmentCore):
 
     :ivar updateComplete: this event is triggered when there are not any values to apply in this time
     :ivar valuesToApply: is container to for quantum of values which should be applied in single time
-    :ivar env: simpy enviromnment
+    :ivar env: simply environment
     :ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
     :ivar seqProcsToRun: list of event dependent processes which should be evaluated after
         applyValEv
