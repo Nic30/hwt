@@ -76,8 +76,6 @@ def VectSignal(width,
 
 
 class Clk(Signal):
-    _alternativeNames = ['ap_clk', 'aclk', 'clk', 'clock']
-
     def _getIpCoreIntfClass(self):
         from hwt.serializer.ip_packager.interfaces.std import IP_Clk
         return IP_Clk
@@ -88,8 +86,6 @@ class Clk(Signal):
 
 
 class Rst(Signal):
-    _alternativeNames = ['ap_rst', 'areset', 'reset', 'rst']
-
     def _getIpCoreIntfClass(self):
         from hwt.serializer.ip_packager.interfaces.std import IP_Rst
         return IP_Rst
@@ -100,8 +96,6 @@ class Rst(Signal):
 
 
 class Rst_n(Signal):
-    _alternativeNames = ['ap_rst_n', 'aresetn', 'resetn', 'rstn', 'rst_n']
-
     def _signalsForInterface(self,
                              context,
                              prefix='',
@@ -129,7 +123,7 @@ class VldSynced(Interface):
 
     def _declr(self):
         self.data = s(dtype=vecT(self.DATA_WIDTH))
-        self.vld = s(alternativeNames=['valid'])
+        self.vld = s()
 
     def _getSimAgent(self):
         from hwt.interfaces.agents.vldSynced import VldSyncedAgent
@@ -142,7 +136,7 @@ class RdSynced(Interface):
 
     def _declr(self):
         self.data = s(dtype=vecT(self.DATA_WIDTH))
-        self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
+        self.rd = s(masterDir=D.IN)
 
     def _getSimAgent(self):
         from hwt.interfaces.agents.rdSynced import RdSyncedAgent
@@ -152,7 +146,7 @@ class RdSynced(Interface):
 class Handshaked(VldSynced):
     def _declr(self):
         super()._declr()
-        self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
+        self.rd = s(masterDir=D.IN)
 
     def _getSimAgent(self):
         from hwt.interfaces.agents.handshaked import HandshakedAgent
@@ -161,8 +155,8 @@ class Handshaked(VldSynced):
 
 class HandshakeSync(Interface):
     def _declr(self):
-        self.vld = s(alternativeNames=['valid'])
-        self.rd = s(masterDir=D.IN, alternativeNames=['ready'])
+        self.vld = s()
+        self.rd = s(masterDir=D.IN)
 
     def _getSimAgent(self):
         from hwt.interfaces.agents.handshaked import HandshakeSyncAgent
@@ -181,9 +175,9 @@ class BramPort_withoutClk(Interface):
         self.DATA_WIDTH = Param(64)
 
     def _declr(self):
-        self.addr = s(dtype=vecT(self.ADDR_WIDTH), alternativeNames=['addr_v'])
-        self.din = s(dtype=vecT(self.DATA_WIDTH), alternativeNames=['din_v'])
-        self.dout = s(masterDir=D.IN, dtype=vecT(self.DATA_WIDTH), alternativeNames=['dout_v'])
+        self.addr = s(dtype=vecT(self.ADDR_WIDTH))
+        self.din = s(dtype=vecT(self.DATA_WIDTH))
+        self.dout = s(masterDir=D.IN, dtype=vecT(self.DATA_WIDTH))
         self.en = s()
         self.we = s()
 
