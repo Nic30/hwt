@@ -183,7 +183,7 @@ class CallbackLoop(object):
             else:
                 self.fn(sim)
         s._writeCallbacks.append(self.onWriteCallback)
-        # no function just asset this functionn will be generator
+        # no function just asset this function will be generator
         yield sim.wait(0)
 
     def initProcess(self, sim):
