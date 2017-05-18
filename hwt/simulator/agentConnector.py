@@ -10,10 +10,13 @@ def autoAddAgents(unit):
     """
     proc = []
     for intf in unit._interfaces:
+        if not intf._isExtern:
+            continue
+
         try:
             agentCls = intf._getSimAgent()
         except NotImplementedError:
-            raise NotImplementedError(("Interface %s\n" +
+            raise NotImplementedError(("Interface %s\n" + 
                             "has not any simulation agent class assigned") % (str(intf)))
 
         if intf._multipliedBy is not None:
@@ -35,7 +38,7 @@ def autoAddAgents(unit):
         elif intf._direction == INTF_DIRECTION.SLAVE:
             agProcs = list(map(lambda a: a.getDrivers(), agent))
         else:
-            raise NotImplementedError("intf._direction %s" % str(intf._direction))
+            raise NotImplementedError("intf._direction %s for %r" % (str(intf._direction), intf))
 
         for p in agProcs:
             proc.extend(p)
