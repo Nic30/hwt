@@ -49,7 +49,7 @@ class SyncAgentBase(AgentBase):
     Agent which discovers clk, rst signal and runs only at specified edge of clk
     
     :attention: requires clk and rst/rstn signal
-      (if you do not have any create simulation wrapper with it)
+        (if you do not have any create simulation wrapper with it)
     """
     def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
         super().__init__(intf)
