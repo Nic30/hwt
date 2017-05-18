@@ -89,7 +89,7 @@ class HdlSimulator(HdlEnvironmentCore):
         # first process in time has to plan executing of apply values on the end of this time
         if self.applyValEv is None:
             # (apply on end of this time to minimalize process reevaluation)
-            self.scheduleAplyValues()
+            self.scheduleApplyValues()
 
         if isEvDependentOn(trigger, proc):
             if self.now == 0:
@@ -123,7 +123,7 @@ class HdlSimulator(HdlEnvironmentCore):
         for p in unit._processes:
             self.addHwProcToRun(None, p)
 
-    def scheduleAplyValues(self):
+    def scheduleApplyValues(self):
         applyVal = self.applyValEv = self.event()
         applyVal._ok = True
         applyVal._value = None
@@ -146,8 +146,8 @@ class HdlSimulator(HdlEnvironmentCore):
     def conflictResolvStrategy(self, actionSet):
         """
         This functions resolves
-        :param actionSet: set of actions made by process
 
+        :param actionSet: set of actions made by process
         """
         invalidate = False
         l = len(actionSet)
@@ -171,9 +171,9 @@ class HdlSimulator(HdlEnvironmentCore):
             return (dst, mkUpdater(val, invalidate), isEvDependent)
 
     def runSeqProcesses(self, ev):
-        # print(self.now, "run")
         updates = []
         for proc in self.seqProcsToRun:
+            # print(self.now, "runSeq", proc)
             actionSet = set(proc(self))
             if actionSet:
                 v = self.conflictResolvStrategy(actionSet)
@@ -204,7 +204,7 @@ class HdlSimulator(HdlEnvironmentCore):
 
         # processes triggered from simUpdateVal can add nev values
         if self.valuesToApply:
-            self.scheduleAplyValues()
+            self.scheduleApplyValues()
             return
 
         # activate updateComplete if this was last applyValues() in this time
@@ -241,7 +241,7 @@ class HdlSimulator(HdlEnvironmentCore):
             # in some cases simulation process can wait on all values applied
             # signal value was changed but there are no sensitive processes to it
             # because of this applyValues is never planed and but should be
-            self.scheduleAplyValues()
+            self.scheduleApplyValues()
 
     def wait(self, time):
         return self.timeout(time)
