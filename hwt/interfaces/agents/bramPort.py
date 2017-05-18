@@ -18,7 +18,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         self.readed = []
 
         self.mem = {}
-
+        self.requireInit = True
+    
     def doReq(self, s, req):
         rw = req[0]
         addr = req[1]
@@ -27,10 +28,16 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             rw = 0
             wdata = None
             self.readPending = True
-
+            if self._debugOutput is not None:
+                self._debugOutput.write("%s, after %r read_req: %d\n" % (
+                                        self.intf._getFullName(), s.now, addr))
         elif rw == WRITE:
             wdata = req[2]
             rw = 1
+            if self._debugOutput is not None:
+                self._debugOutput.write("%s, after %r write: %d:%d\n" % (
+                                        self.intf._getFullName(), s.now, addr, wdata))
+
         else:
             raise NotImplementedError(rw)
 
@@ -55,19 +62,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         intf = self.intf
 
         yield s.updateComplete
-
-        if self.requests:
-            req = self.requests.pop(0)
-            t = req[0]
-            addr = req[1]
-            assert addr._isFullVld(), s.now
-            if t == READ:
-                s.write(self.mem[addr.val], intf.dout)
-            else:
-                assert t == WRITE
-                s.write(None, intf.dout)
-                self.mem[addr.val] = req[2]
-
+        # now we are after clk edge
         if self.enable:
             en = s.read(intf.en)
             assert en.vldMask
@@ -82,9 +77,30 @@ class BramPort_withoutClkAgent(SyncAgentBase):
                 else:
                     self.onReadReq(s, addr)
 
+        if self.requests:
+            req = self.requests.pop(0)
+            t = req[0]
+            addr = req[1]
+            assert addr._isFullVld(), s.now
+            if t == READ:
+                s.write(self.mem[addr.val], intf.dout)
+            else:
+                assert t == WRITE
+                s.write(None, intf.dout)
+                self.mem[addr.val] = req[2]
+
+
     def driver(self, s):
         intf = self.intf
+        if self.requireInit:
+            s.w(0, intf.en)
+            s.w(0, intf.we)
+            self.requireInit = False
+
         readPending = self.readPending
+        yield s.updateComplete         
+        # now we are after clk edge
+
         if self.requests and self.enable:
             req = self.requests.pop(0)
             if req is NOP:
@@ -103,6 +119,9 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             yield s.updateComplete
             d = s.r(intf.dout)
             self.readed.append(d)
+            if self._debugOutput is not None:
+                self._debugOutput.write("%s, on %r read_data: %d\n" % (
+                                        self.intf._getFullName(), s.now, d.val))
 
 
 class BramPortAgent(BramPort_withoutClkAgent):
