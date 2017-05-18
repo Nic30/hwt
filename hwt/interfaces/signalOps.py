@@ -123,4 +123,5 @@ class SignalOps(object):
         :attention: it is not power operator it is assignment
         :return: list of assignments
         """
+        assert self._isAccessible
         return self._sig.__pow__(source)
