@@ -8,7 +8,9 @@ class RdSyncedAgent(SyncAgentBase):
     """
     def __init__(self, intf, clk=None, rstn=None):
         super().__init__(intf, clk=clk, rstn=rstn, allowNoReset=True)
-        self.actualData = None
+        self.actualData = NOP
+        self.data = []
+        self._rd = intf.rd
 
     def monitor(self, s):
         """Collect data from interface"""
@@ -52,7 +54,7 @@ class RdSyncedAgent(SyncAgentBase):
 
         rd = s.r(self._rd)
         if en:
-            assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
+            assert rd.vldMask, "%r: ready signal for interface %r is in invalid state, this would cause desynchronization" % (s.now, self.intf)
         if rd.val:
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, wrote, %d: %r\n" % (
