@@ -17,6 +17,7 @@ class HandshakedAgent(SyncAgentBase):
         # agent more configurable
         self._rd = self.getRd()
         self._vld = self.getVld()
+        self._lastWritten = None
 
     def getRd(self):
         """get "ready" signal"""
@@ -62,15 +63,17 @@ class HandshakedAgent(SyncAgentBase):
         if self.actualData is NOP and self.data:
             self.actualData = self.data.pop(0)
 
-        do = self.actualData is not NOP
+        doSend = self.actualData is not NOP
 
-        if do:
-            self.doWrite(s, self.actualData)
-        else:
-            self.doWrite(s, None)
+        if self.actualData is not self._lastWritten:
+            if doSend:
+                self.doWrite(s, self.actualData)
+            else:
+                self.doWrite(s, None)
+            self._lastWritten = self.actualData
 
         en = s.r(self.rst_n).val and self.enable
-        if en and do:
+        if en and doSend:
             s.w(1, self._vld)
         else:
             s.w(0, self._vld)
