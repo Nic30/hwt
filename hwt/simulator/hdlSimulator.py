@@ -101,8 +101,8 @@ class HdlSimulator(HdlEnvironmentCore):
             res = self.conflictResolvStrategy(actionSet)
             if res:
                 dst, updater, isEvDependent = res
-                if trigger is not None:
-                    assert not isEvDependent, "trigger %r, proc %r" % (trigger, proc)
+                #if trigger is not None:
+                #    assert not isEvDependent, "trigger %r, proc %r" % (trigger, proc)
                 self.valuesToApply.append((dst, updater, isEvDependent, proc))
 
     def _initUnitSignals(self, unit):
