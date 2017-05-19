@@ -161,6 +161,8 @@ class PropDeclrCollector(object):
     def _associated(self, clk=None, rst=None):
         """
         associate newly added interfaces to "self" with selected clk, rst
+        (if interface is not associated agents try to find clk/rst by _getAssociatedClk/_getAssociatedRst
+         which will search for any clk/rst on parent recursively)
         Usage:
         
         .. code-block:: python
