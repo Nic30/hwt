@@ -13,7 +13,6 @@ class VcdHdlSimConfig(HdlSimConfig):
     supported_type_classes = (Boolean, Bits, Enum)
 
     def __init__(self, dumpFile=sys.stdout):
-        super().__init__()
         self.vcdWritter = VcdWritter(dumpFile)
         self.logPropagation = False
         self.logApplyingValues = False
