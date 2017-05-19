@@ -4,9 +4,8 @@ from hwt.hdlObjects.constants import INTF_DIRECTION, DIRECTION
 from hwt.hdlObjects.typeShortcuts import mkRange
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BIT
-from hwt.interfaces.std import Clk, Rst, Rst_n
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.pyUtils.arrayQuery import single, NoValueExc
+from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 
 
@@ -16,27 +15,21 @@ def getClk(unit):
     except AttributeError:
         pass
     
+    raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
+
+
+def getRst(unit):
     try:
-        return unit.clock
+        return unit.rst
     except AttributeError:
         pass
     
     try:
-        return single(unit._interfaces, lambda i: isinstance(i, Clk))
-    except NoValueExc:
-        raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
-
-
-def getRst(unit):
-    for n in ["rst", "rst_n", "reset"]:
-        try:
-            return getattr(unit, n)
-        except AttributeError:
-            pass
-    try:
-        return single(unit._interfaces, lambda i: isinstance(i, (Rst, Rst_n)))
-    except NoValueExc:
-        raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
+        return unit.rst_n
+    except AttributeError:
+        pass
+    
+    raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
 
 
 def getSignalName(sig):
@@ -59,18 +52,17 @@ class UnitImplHelpers(object):
         clk = getClk(self)
 
         if defVal is None:
+            # if no value is specified reset is not required
             rst = None
         else:
-            rst = getRst(self)
+            rst = getRst(self)._sig
 
         s = self._cntx.sig
-        if defVal is None:  # if no value is specified reset is not required
-            return s(name, typ=dtype, clk=clk._sig)
 
         return s(name,
                  typ=dtype,
                  clk=clk._sig,
-                 syncRst=rst._sig,
+                 syncRst=rst,
                  defVal=defVal)
 
     def _sig(self, name, dtype=BIT, defVal=None):
@@ -132,7 +124,7 @@ class UnitImplHelpers(object):
         if portItem.direction != d:
             # print(self._entity)
             # print(self._architecture)
-            raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" %
+            raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
                                  (self._name, portItem.name, repr(interface), portItem.direction, d))
 
     def _shareParamsWithPrefix(self, obj, prefix, paramNames):

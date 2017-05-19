@@ -1,5 +1,7 @@
 from hwt.simulator.shortcuts import onRisingEdge
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
+from hwt.interfaces.std import Rst_n
+from hwt.synthesizer.exceptions import IntfLvlConfErr
 
 
 class AgentBase():
@@ -51,58 +53,41 @@ class SyncAgentBase(AgentBase):
     :attention: requires clk and rst/rstn signal
         (if you do not have any create simulation wrapper with it)
     """
-    def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
+    def __init__(self, intf, allowNoReset=False):
         super().__init__(intf)
 
         # resolve clk and rstn
-        if clk is None:
-            self.clk = self._getClk()
-        else:
-            self.clk = clk
-
-        if rstn is None:
-            self.rst_n = self.getRst_n(intf._parent, allowNoReset=allowNoReset)
-        else:
-            self.rst_n = rstn
-
+        self.clk = self.intf._getAssociatedClk()
+        try:
+            self.rst_n = self.getRst_n(allowNoReset=allowNoReset)
+        except IntfLvlConfErr as e:
+            if allowNoReset:
+                pass
+            else:
+                raise e
+            
+        # run monitor, driver only on rising edge of clk
         self.monitor = onRisingEdge(self.clk, self.monitor)
         self.driver = onRisingEdge(self.clk, self.driver)
 
-    def getRst_n(self, parent, allowNoReset):
-        while True:
-            try:
-                return parent.rst_n
-            except AttributeError:
-                pass
-
-            try:
-                return ~parent.rst
-            except AttributeError:
-                pass
-
-            if isinstance(parent, UnitBase):
-                break
+    def getRst_n(self, allowNoReset):
+        """
+        If interface has associated rst(_n) return it otherwise try to find rst(_n) on parent recursively
+        """
+        a = self.intf._getAssociatedRst()
+        if a is not None:
+            if isinstance(a, Rst_n):
+                return a
             else:
-                parent = parent._parent
+                return ~a
 
         if allowNoReset:
             return None
         else:
-            raise Exception("Can not find reset on unit %s" % (repr(parent)))
+            raise Exception("Can not find reset for %s" % (self.intf._getFullName()))
 
     def notReset(self, s):
         if self.rst_n is None:
             return True
         else:
             return s.r(self.rst_n).val
-
-    def _getClk(self):
-        p = self.intf._parent
-        while True:
-            try:
-                return p.clk
-            except AttributeError:
-                if isinstance(p, UnitBase):
-                    raise Exception("Can not find clk")
-                p = p._parent
-        return None

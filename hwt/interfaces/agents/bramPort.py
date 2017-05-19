@@ -10,8 +10,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     :ivar mem: if agent is in monitor mode (= is slave) all reads and writes are performed on
         mem object
     """
-    def __init__(self, intf, clk=None, rstn=None):
-        super().__init__(intf, clk=clk, rstn=rstn, allowNoReset=True)
+    def __init__(self, intf):
+        super().__init__(intf, allowNoReset=True)
 
         self.requests = []
         self.readPending = False
@@ -125,10 +125,6 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
 
 class BramPortAgent(BramPort_withoutClkAgent):
-    def __init__(self, intf, clk=None, rstn=None):
-        if clk is None:
-            clk = intf.clk
-        super().__init__(intf, clk=clk, rstn=rstn)
 
     def getDrivers(self):
         drivers = super(BramPortAgent, self).getDrivers()

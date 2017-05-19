@@ -206,8 +206,11 @@ class BramPort_withoutClk(Interface):
 class BramPort(BramPort_withoutClk):
 
     def _declr(self):
-        super()._declr()
         self.clk = s(masterDir=D.OUT)
+        with self._associated(clk=self.clk):
+            super()._declr()
+        
+        self._associatedClk = self.clk
 
     def _getSimAgent(self):
         from hwt.interfaces.agents.bramPort import BramPortAgent

@@ -6,11 +6,12 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import InterfaceDirectionFns
 from hwt.synthesizer.interfaceLevel.interfaceUtils.hdlExtraction import ExtractableInterface
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.vectorUtils import fitTo, aplyIndexOnSignal
+from hwt.synthesizer.interfaceLevel.unitImplHelpers import getRst, getClk
 
 
 def _defaultUpdater(self, onParentName, p):
@@ -28,11 +29,15 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
     :ivar _name: name assigned during synthesis
     :ivar _parent: parent object (Unit or Interface instance)
     :ivar _isExtern: If true synthesizer sets it as external port of unit
+    :ivar _associatedClk: clock Signal (interface) associated with this interface if is none
+        simulation agent try to search it on parent
+    :ivar _associatedRst: rst(_n) Signal (interface) associated with this interface if is none
+        simulation agent try to search it on parent
 
     #only interfaces without _interfaces have:
 
     :ivar _sig: rtl level signal instance
-    @ival _sigInside : _sig after toRtl conversion is made (after toRtl conversion
+    :ivar _sigInside : _sig after toRtl conversion is made (after toRtl conversion
         _sig is signal for parent unit and _sigInside is signal
         in original unit, this separates process of translating units)
     :ivar _boundedEntityPort: entityPort for which was this interface created
@@ -67,6 +72,10 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         :param loadConfig: do load config in __init__
         """
         self._setAttrListener = None
+        self._associatedClk = None
+        self._associatedRst = None
+        self._parent = None
+
         super().__init__()
         if multipliedBy is not None:
             multipliedBy = toHVal(multipliedBy)
@@ -298,6 +307,40 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
 
     def _getSimAgent(self):
         raise NotSpecified("Override this function in your interface implementation (from %r)" % self)
+
+    def _getAssociatedRst(self):
+        """
+        If interface has associated rst(_n) return it otherwise try to find rst(_n) on parent recursively
+        """
+        a = self._associatedRst
+        
+        if a is not None:
+            return a
+
+        p = self._parent
+        assert p is not None
+
+        if isinstance(p, UnitBase):
+            return getRst(p)
+        else:
+            return p._getAssociatedRst()
+
+    def _getAssociatedClk(self):
+        """
+        If interface has associated clk return it otherwise try to find clk on parent recursively
+        """
+        a = self._associatedClk
+        
+        if a is not None:
+            return a
+
+        p = self._parent
+        assert p is not None
+
+        if isinstance(p, UnitBase):
+            return getClk(p)
+        else:
+            return p._getAssociatedClk()
 
     def __repr__(self):
         s = [self.__class__.__name__]

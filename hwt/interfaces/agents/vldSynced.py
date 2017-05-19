@@ -1,10 +1,10 @@
-from hwt.simulator.agentBase import SyncAgentBase
 from hwt.hdlObjects.constants import NOP
+from hwt.simulator.agentBase import SyncAgentBase
 
 
 class VldSyncedAgent(SyncAgentBase):
-    def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
-        super(VldSyncedAgent, self).__init__(intf, clk=clk, rstn=rstn, allowNoReset=allowNoReset)
+    def __init__(self, intf, allowNoReset=False):
+        super(VldSyncedAgent, self).__init__(intf, allowNoReset=allowNoReset)
         self.data = []
 
     def doRead(self, s):

@@ -3,8 +3,8 @@ from hwt.simulator.agentBase import SyncAgentBase
 
 class FifoReaderAgent(SyncAgentBase):
 
-    def __init__(self, intf, clk=None, rstn=None, allowNoReset=False):
-        super(FifoReaderAgent, self).__init__(intf, clk, rstn, allowNoReset)
+    def __init__(self, intf, allowNoReset=False):
+        super(FifoReaderAgent, self).__init__(intf, allowNoReset)
         self.data = []
         self.readPending = False
 

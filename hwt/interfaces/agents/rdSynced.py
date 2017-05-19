@@ -6,8 +6,8 @@ class RdSyncedAgent(SyncAgentBase):
     """
     Simulation/verification agent for RdSynced interface
     """
-    def __init__(self, intf, clk=None, rstn=None):
-        super().__init__(intf, clk=clk, rstn=rstn, allowNoReset=True)
+    def __init__(self, intf, allowNoReset=True):
+        super().__init__(intf, allowNoReset=allowNoReset)
         self.actualData = NOP
         self.data = []
         self._rd = intf.rd

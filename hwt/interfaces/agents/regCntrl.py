@@ -1,19 +1,18 @@
 from hwt.interfaces.agents.signal import SignalAgent
 from hwt.interfaces.agents.vldSynced import VldSyncedAgent
-from hwt.simulator.agentBase import SyncAgentBase
+from hwt.simulator.agentBase import SyncAgentBase, AgentBase
 
 
 class RegCntrlAgent(SyncAgentBase):
     """
     Simulation/verification agent for RegCntrl interface
     """
-    def __init__(self, intf, clk=None, rstn=None):
-        self.intf = intf
-        if clk is None:
-            clk = self._getClk()
-
-        self._din = SignalAgent(intf.din, clk=clk, rstn=rstn)
-        self._dout = VldSyncedAgent(intf.dout, clk=clk, rstn=rstn, allowNoReset=True)
+    def __init__(self, intf):
+        AgentBase.__init__(self, intf)
+        super().__init__(intf)
+        
+        self._din = SignalAgent(intf.din)
+        self._dout = VldSyncedAgent(intf.dout, allowNoReset=True)
 
     def din_getter(self):
         return self._din.data

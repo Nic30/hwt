@@ -17,7 +17,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     :ivar _interfaces: all interfaces 
     :ivar _units: all units defined on this obj in configuration/declaration
     :ivar _params: all params defined on this obj in configuration/declaration
-
+    :ivar _parent: parent object (Unit instance)
+    
     :ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
     :ivar _lazyLoaded : container of rtl object which were lazy loaded in implementation phase
         (this object has to be returned from _toRtl of parent before it it's own objects)
@@ -26,6 +27,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     _serializerMode = SERI_MODE.ALWAYS
 
     def __init__(self):
+        self._parent = None
         self._checkIntferfaces = True
         self._lazyLoaded = []
         self._cntx = RtlNetlist(self)

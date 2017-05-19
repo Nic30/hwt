@@ -10,7 +10,7 @@ def nameAvailabilityCheck(obj, propName, prop):
     Check if not redefining property on obj
     """
     if getattr(obj, propName, None) is not None:
-        raise IntfLvlConfErr("Already has parameter %s old:%s new:%s" %
+        raise IntfLvlConfErr("Already has parameter %s old:%s new:%s" % 
                              (propName, repr(getattr(obj, propName)), prop))
 
 
@@ -32,7 +32,40 @@ class MakeParamsShared(object):
             if isinstance(i, (InterfaceBase, UnitBase)):
                 i._updateParamsFrom(self, exclude=exclude)
             return orig(iName, i)
+
         self.unit._setAttrListener = MethodType(MakeParamsSharedWrap,
+                                                self.unit)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.unit._setAttrListener = self.orig
+
+class MakeClkRstAssociations(object):
+    """
+    All newly added interfaces will be associated with clk, rst
+    specified in constructor of this object.
+    """
+    def __init__(self, unit, clk=None, rst=None):
+        self.unit = unit
+        self.clk = clk
+        self.rst = rst
+
+    def __enter__(self):
+        orig = self.unit._setAttrListener
+        self.orig = orig
+        clk = self.clk
+        rst = self.rst
+
+        def MakeClkRstAssociationsWrap(self, iName, i):
+            if isinstance(i, InterfaceBase):
+                if clk is not None:
+                    assert i._associatedClk is None
+                    i._associatedClk = clk
+                if rst is not None:
+                    assert i._associatedRst is None
+                    i._associatedRst = rst
+            return orig(iName, i)
+
+        self.unit._setAttrListener = MethodType(MakeClkRstAssociationsWrap,
                                                 self.unit)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -124,6 +157,24 @@ class PropDeclrCollector(object):
         :param exclude: params which should not be shared
         """
         return MakeParamsShared(self, exclude=exclude)
+    
+    def _associated(self, clk=None, rst=None):
+        """
+        associate newly added interfaces to "self" with selected clk, rst
+        Usage:
+        
+        .. code-block:: python
+
+            with self._associated(clk=self.myClk, rst=self.myRst):
+                self.myAxi = AxiStrem() 
+                # this interface is associated with myClk and myRst
+                # simulation agents and component builders will use them
+
+
+        :param exclude: params which should not be shared
+        """
+        return MakeClkRstAssociations(self, clk, rst)
+
 
     # declaration phase
     def _registerUnit(self, uName, unit):
@@ -131,6 +182,7 @@ class PropDeclrCollector(object):
         Register unit object on interface level object
         """
         nameAvailabilityCheck(self, uName, unit)
+        assert unit._parent is None
         unit._parent = self
         unit._name = uName
         self._units.append(unit)
@@ -140,6 +192,7 @@ class PropDeclrCollector(object):
         Register interface object on interface level object
         """
         nameAvailabilityCheck(self, iName, intf)
+        assert intf._parent is None
         intf._parent = self
         intf._name = iName
         self._cntx.mergeWith(intf._cntx)
@@ -147,6 +200,10 @@ class PropDeclrCollector(object):
         self._interfaces.append(intf)
 
     def _declrCollector(self, name, prop):
+        if name in ["_associatedClk", "_associatedRst"]:
+            object.__setattr__(self, name, prop)
+            return
+
         if isinstance(prop, InterfaceBase):
             self._registerInterface(name, prop)
         elif isinstance(prop, UnitBase):

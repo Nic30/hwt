@@ -9,8 +9,8 @@ class HandshakedAgent(SyncAgentBase):
     :attention: requires clk and rst/rstn signal
         (if you do not have any create simulation wrapper with it)
     """
-    def __init__(self, intf, clk=None, rstn=None):
-        super().__init__(intf, clk=clk, rstn=rstn)
+    def __init__(self, intf):
+        super().__init__(intf)
         self.actualData = NOP
         self.data = []
         # these signals are extracted like this to make
