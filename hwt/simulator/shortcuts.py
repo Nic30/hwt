@@ -224,11 +224,12 @@ def onRisingEdgeNoReset(sig, reset, fn):
 def oscilate(sig, period=10 * Time.ns, initWait=0):
     """
     Oscilative simulation driver for your signal
+    (usually used as clk generator)
     """
-    halfPeriod = period / 2
 
     def oscilateStimul(s):
         s.write(False, sig)
+        halfPeriod = period / 2
         yield s.wait(initWait)
 
         while True:
@@ -236,6 +237,7 @@ def oscilate(sig, period=10 * Time.ns, initWait=0):
             s.write(True, sig)
             yield s.wait(halfPeriod)
             s.write(False, sig)
+
     return oscilateStimul
 
 
