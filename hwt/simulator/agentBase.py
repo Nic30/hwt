@@ -1,6 +1,5 @@
-from hwt.simulator.shortcuts import onRisingEdge
-from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.interfaces.std import Rst_n
+from hwt.simulator.shortcuts import onRisingEdge
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 
 
