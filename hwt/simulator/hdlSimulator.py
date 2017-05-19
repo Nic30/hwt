@@ -6,6 +6,7 @@ from hwt.simulator.simModel import mkUpdater, mkArrayUpdater
 from hwt.simulator.simulatorCore import HdlEnvironmentCore
 from hwt.simulator.utils import valueHasChanged
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.hdlObjects.types.bits import Bits
 
 
 def isEvDependentOn(sig, process):
@@ -224,14 +225,16 @@ class HdlSimulator(HdlEnvironmentCore):
         """
         Write value to signal or interface.
         """
+        if isinstance(sig, InterfaceBase):
+            sig = sig._sigInside
+
         if isinstance(val, Value):
             v = val.clone()
         else:
+            # assert type(sig._dtype) is not Bits, "Bits type is slow and should be automatically replaced by SimBitsT (on: %s)" % (sig._getFullName())
             v = sig._dtype.fromPy(val)
 
         v.updateTime = self.now
-        if isinstance(sig, InterfaceBase):
-            sig = sig._sigInside
 
         v = v._convert(sig._dtype)
 

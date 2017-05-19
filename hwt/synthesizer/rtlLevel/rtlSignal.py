@@ -79,7 +79,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             else:
                 if self._val.updateTime < 0:
                     self._val = self.defaultVal.clone()
-
+        
         if not isinstance(self._val, Value):
             raise SimException("Evaluation of signal returned not supported object (%s)" %
                                (repr(self._val)))

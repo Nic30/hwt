@@ -14,6 +14,7 @@ from hwt.simulator.simSignalProxy import IndexSimSignalProxy
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
+from hwt.simulator.types.simBits import simBitsT
 
 
 def simPrepare(unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
@@ -112,7 +113,7 @@ def reconectArrayIntfSignalsToModel(parent, item):
 
         i._sigInside = IndexSimSignalProxy(i._name,
                                            p._sigInside,
-                                           i._dtype,
+                                           simBitsT(width, s._dtype.signed),
                                            upperIndex,
                                            lowerIndex)
 
