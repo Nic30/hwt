@@ -3,8 +3,14 @@ class HdlSimConfig():
     """
     Container of configuration of hdl simulator
     """
+    def __init__(self):
+        # set to None to prevent redundant calls
+        self.beforeSim = None
+        self.logChange = None
+        self.logPropagation = None
+        self.logApplyingValues = None
 
-    def beforeSim(self, simulator, signals):
+    def beforeSim(self, simulator, synthesisedUnit):
         """
         called beforee preparing of simulation
         """
@@ -16,7 +22,7 @@ class HdlSimConfig():
         """
         pass
 
-    def logPropagation(self, x):
+    def logPropagation(self, simulator, signal, process):
         """
         Log value propagation over netlist
         """

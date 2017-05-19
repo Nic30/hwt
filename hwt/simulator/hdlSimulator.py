@@ -253,7 +253,9 @@ class HdlSimulator(HdlEnvironmentCore):
         """
         Run simulation
         """
-        self.config.beforeSim(self, synthesisedUnit)
+        beforeSim = self.config.beforeSim
+        if beforeSim is not None:
+            beforeSim(self, synthesisedUnit)
 
         for p in extraProcesses:
             self.process(p(self))
