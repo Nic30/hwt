@@ -477,14 +477,14 @@ def sll(sig, howMany):
     """
     Logical shift left
     """
-    return vec(0, howMany)._concat(sig[:howMany])
+    return sig[howMany:]._concat(vec(0, howMany))
 
 
 def srl(sig, howMany):
     """
     Logical shift right
     """
-    return sig[howMany:]._concat(vec(0, howMany))
+    return vec(0, howMany)._concat(sig[:howMany])
 
 
 def log2ceil(x):
