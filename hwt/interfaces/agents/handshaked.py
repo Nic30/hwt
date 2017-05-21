@@ -4,7 +4,7 @@ from hwt.hdlObjects.constants import NOP
 
 class HandshakedAgent(SyncAgentBase):
     """
-    Simulation/verification agent for handshaked interface
+    Simulation/verification agent for :class:`hwt.interfaces.std.Handshaked` interface
 
     :attention: requires clk and rst/rstn signal
         (if you do not have any create simulation wrapper with it)
@@ -84,6 +84,7 @@ class HandshakedAgent(SyncAgentBase):
         rd = s.r(self._rd)
         if en:
             assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
+
         if rd.val:
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, wrote, %d: %r\n" % (
