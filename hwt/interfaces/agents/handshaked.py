@@ -78,6 +78,12 @@ class HandshakedAgent(SyncAgentBase):
         """write data to interface"""
         s.w(data, self.intf.data)
 
+    def checkIfRdWillBeValid(self, s):
+        yield s.updateComplete
+        rd = s.r(self._rd)
+        assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
+
+
     def driver(self, s):
         """
         Push data to interface
@@ -106,13 +112,17 @@ class HandshakedAgent(SyncAgentBase):
             self._lastVld = vld
     
 
+        if not self.enable:
+            # we can not check rd it in this function because we can not wait
+            # because we can be reactivated in this same time
+            s.process(self.checkIfRdWillBeValid(s))
+            return
+
         # wait of response of slave
         yield s.updateComplete
 
         rd = s.r(self._rd)
-        if en:
-            assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
-
+        assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
         if not vld:
             return
 
