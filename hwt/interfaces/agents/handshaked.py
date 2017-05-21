@@ -38,10 +38,11 @@ class HandshakedAgent(SyncAgentBase):
         """
         Collect data from interface
         """
-        if s.r(self.rst_n).val and self.enable:
+        r = s.read
+        if r(self.rst_n).val and self.enable:
             # update rd signal only if required
             if self._lastRd is not 1:
-                s.w(1, self._rd)
+                s.write(1, self._rd)
                 self._lastRd = 1
                 
                 # try to run onMonitorReady if there is any
@@ -55,7 +56,7 @@ class HandshakedAgent(SyncAgentBase):
             
             # wait for response of master
             yield s.updateComplete
-            vld = s.r(self._vld)
+            vld = r(self._vld)
             assert vld.vldMask, "valid signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
 
             if vld.val:
@@ -68,7 +69,7 @@ class HandshakedAgent(SyncAgentBase):
         else:
             if self._lastRd is not 0:
                 # can not receive, say it to masters
-                s.w(0, self._rd)
+                s.write(0, self._rd)
                 self._lastRd = 0
 
     def doRead(self, s):
@@ -77,11 +78,11 @@ class HandshakedAgent(SyncAgentBase):
 
     def doWrite(self, s, data):
         """write data to interface"""
-        s.w(data, self.intf.data)
+        s.write(data, self.intf.data)
 
     def checkIfRdWillBeValid(self, s):
         yield s.updateComplete
-        rd = s.r(self._rd)
+        rd = s.read(self._rd)
         assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
 
 
@@ -91,7 +92,8 @@ class HandshakedAgent(SyncAgentBase):
 
         set vld high and wait on rd in high then pass new data
         """
-        
+        r = s.read
+    
         # pop new data if there are not any pending
         if self.actualData is NOP and self.data:
             self.actualData = self.data.pop(0)
@@ -106,10 +108,10 @@ class HandshakedAgent(SyncAgentBase):
                 self.doWrite(s, None)
             self._lastWritten = self.actualData
 
-        en = s.r(self.rst_n).val and self.enable
+        en = r(self.rst_n).val and self.enable
         vld = int(en and doSend)
         if self._lastVld is not vld:
-            s.w(vld, self._vld)
+            s.write(vld, self._vld)
             self._lastVld = vld
     
 
@@ -122,7 +124,7 @@ class HandshakedAgent(SyncAgentBase):
         # wait of response of slave
         yield s.updateComplete
 
-        rd = s.r(self._rd)
+        rd = r(self._rd)
         assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
         if not vld:
             return

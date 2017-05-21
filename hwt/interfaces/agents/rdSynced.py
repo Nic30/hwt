@@ -17,14 +17,14 @@ class RdSyncedAgent(SyncAgentBase):
         intf = self.intf
 
         if self.notReset(s) and self.enable:
-            s.w(1, intf.rd)
+            s.write(1, intf.rd)
 
             yield s.updateComplete
 
             d = self.doRead(s)
             self.data.append(d)
         else:
-            s.w(0, intf.rd)
+            s.write(0, intf.rd)
 
     def doRead(self, s):
         """extract data from interface"""
@@ -32,10 +32,11 @@ class RdSyncedAgent(SyncAgentBase):
 
     def doWrite(self, s, data):
         """write data to interface"""
-        s.w(data, self.intf.data)
+        s.write(data, self.intf.data)
 
     def driver(self, s):
         """Push data to interface"""
+        r = s.read
         if self.actualData is NOP and self.data:
             self.actualData = self.data.pop(0)
 
@@ -46,13 +47,13 @@ class RdSyncedAgent(SyncAgentBase):
         else:
             self.doWrite(s, None)
 
-        en = s.r(self.rst_n).val and self.enable
+        en = r(self.rst_n).val and self.enable
         if not (en and do):
             return
 
         yield s.updateComplete
 
-        rd = s.r(self._rd)
+        rd = r(self._rd)
         if en:
             assert rd.vldMask, "%r: ready signal for interface %r is in invalid state, this would cause desynchronization" % (s.now, self.intf)
         if rd.val:

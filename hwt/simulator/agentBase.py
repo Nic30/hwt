@@ -89,4 +89,4 @@ class SyncAgentBase(AgentBase):
         if self.rst_n is None:
             return True
         else:
-            return s.r(self.rst_n).val
+            return s.read(self.rst_n).val

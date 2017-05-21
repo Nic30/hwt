@@ -31,7 +31,7 @@ class SignalAgent(AgentBase):
         return s.read(self.intf)
 
     def doWrite(self, s, data):
-        s.w(data, self.intf)
+        s.write(data, self.intf)
 
     def driver(self, s):
         if self.initPending and self.initDelay:

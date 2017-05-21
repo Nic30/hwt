@@ -264,6 +264,3 @@ class HdlSimulator(HdlEnvironmentCore):
 
         self.run(until=time)
 
-    # shortcuts
-    r = read
-    w = write

@@ -42,9 +42,10 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             raise NotImplementedError(rw)
 
         intf = self.intf
-        s.w(rw, intf.we)
-        s.w(addr, intf.addr)
-        s.w(wdata, intf.din)
+        w = s.write 
+        w(rw, intf.we)
+        w(addr, intf.addr)
+        w(wdata, intf.din)
 
     def onReadReq(self, s, addr):
         """
@@ -92,9 +93,10 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
     def driver(self, s):
         intf = self.intf
+        w = s.write
         if self.requireInit:
-            s.w(0, intf.en)
-            s.w(0, intf.we)
+            w(0, intf.en)
+            w(0, intf.we)
             self.requireInit = False
 
         readPending = self.readPending
@@ -104,20 +106,20 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         if self.requests and self.enable:
             req = self.requests.pop(0)
             if req is NOP:
-                s.w(0, intf.en)
-                s.w(0, intf.we)
+                w(0, intf.en)
+                w(0, intf.we)
                 self.readPending = False
             else:
                 self.doReq(s, req)
-                s.w(1, intf.en)
+                w(1, intf.en)
         else:
-            s.w(0, intf.en)
-            s.w(0, intf.we)
+            w(0, intf.en)
+            w(0, intf.we)
             self.readPending = False
 
         if readPending:
             yield s.updateComplete
-            d = s.r(intf.dout)
+            d = s.read(intf.dout)
             self.readed.append(d)
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, on %r read_data: %d\n" % (
