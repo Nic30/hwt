@@ -52,7 +52,7 @@ def eventFn(a, now):
 def onRisingEdgeFn(a, now):
     return a._onRisingEdge(now)
 
-def onFallingEdge(a, now):
+def onFallingEdgeFn(a, now):
     return a._onFallingEdge(now)
 
 def dotOpFn(a, name):
@@ -106,7 +106,7 @@ class AllOps():
     
     EVENT = OpDefinition(eventFn)
     RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
-    FALLIGN_EDGE = OpDefinition(onFallingEdge)  # unnecessary
+    FALLIGN_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary
     
     DIV = OpDefinition(floordiv)
     ADD = OpDefinition(add)
