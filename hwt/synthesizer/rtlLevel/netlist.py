@@ -220,6 +220,10 @@ class RtlNetlist():
 
         # add signals, variables etc. in architecture
         for s in self.signals:
+            if s.hidden and s.defaultVal.vldMask and not s.drivers:
+                # constant
+                s.hidden = False
+            
             if s not in interfaces and not s.hidden:
                 arch.variables.append(s)
 
