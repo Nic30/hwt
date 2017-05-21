@@ -206,6 +206,15 @@ def onRisingEdge(sig, fn):
     c = CallbackLoop(sig, isRising, fn)
     return c.initProcess
 
+def isFalling(sig, sim):
+    return bool(sim.read(sig)._onFallingEdge(sim.now))
+
+def onFallingEdge(sig, fn):
+    """
+    Call function (or generator) everytime when signal is on rising edge
+    """
+    c = CallbackLoop(sig, isFalling, fn)
+    return c.initProcess
 
 def onRisingEdgeNoReset(sig, reset, fn):
     """
