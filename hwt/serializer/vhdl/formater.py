@@ -9,7 +9,7 @@ Simple and stupid implementation of vhdl formater, no parser based on regular ex
 indentIncr = ["^entity", "^port\s*\(", "^port\s*map\s*\(", "^generic\s*map\s*\(", "^generic\s*\(",
               "^architecture", "^if", "^case", "^port\s+map\s*\(", "^process", "^while", "^component",
               "\S+\s*:\s*process"]
-indentDecr = ["^end", "^\)"]
+indentDecr = ["^end[^\w\d_]", "^\)"]
 indentPeak = ["^begin", "^elsif", "^else", "^when",]
 
 indentIncr = list(map(lambda x: re.compile(x, re.IGNORECASE), indentIncr))
