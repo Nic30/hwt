@@ -477,7 +477,8 @@ def sll(sig, howMany):
     """
     Logical shift left
     """
-    return sig[howMany:]._concat(vec(0, howMany))
+    l = sig._dtype.bit_length()
+    return sig[(l - howMany):]._concat(vec(0, howMany))
 
 
 def srl(sig, howMany):
