@@ -5,7 +5,8 @@ from hwt.hdlObjects.constants import NOP
 class HandshakedAgent(SyncAgentBase):
     """
     Simulation/verification agent for :class:`hwt.interfaces.std.Handshaked` interface
-    there is onMonitorReady and onDriverWirteAck
+    there is onMonitorReady(simulator) and onDriverWirteAck(simulator) unimplemented method
+    which can be used for interfaces with bi-directional data streams
 
     :attention: requires clk and rst/rstn signal
         (if you do not have any create simulation wrapper with it)
