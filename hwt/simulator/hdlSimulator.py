@@ -6,7 +6,6 @@ from hwt.simulator.simModel import mkUpdater, mkArrayUpdater
 from hwt.simulator.simulatorCore import HdlEnvironmentCore
 from hwt.simulator.utils import valueHasChanged
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hwt.hdlObjects.types.bits import Bits
 
 
 def isEvDependentOn(sig, process):
@@ -102,7 +101,7 @@ class HdlSimulator(HdlEnvironmentCore):
             res = self.conflictResolvStrategy(actionSet)
             if res:
                 dst, updater, isEvDependent = res
-                #if trigger is not None:
+                # if trigger is not None:
                 #    assert not isEvDependent, "trigger %r, proc %r" % (trigger, proc)
                 self.valuesToApply.append((dst, updater, isEvDependent, proc))
 
