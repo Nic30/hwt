@@ -454,6 +454,16 @@ def iterBits(sig):
         yield sig[bit]
 
 
+def splitOnParts(sig, numberOfParts):
+    """Split signal on parts of same width"""
+    l = sig._dtype.bit_length()
+    assert l % numberOfParts == 0, (l, numberOfParts)
+
+    partWidth = l // numberOfParts
+    for i in range(numberOfParts):
+        yield sig[((i + 1) * partWidth):(i * partWidth)]
+
+
 def power(base, exp):
     return toHVal(base)._pow(exp)
 
