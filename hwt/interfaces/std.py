@@ -181,6 +181,12 @@ class Handshaked(VldSynced):
 class HandshakeSync(Interface):
     """
     Only synchronization interface, like vld+rd signal with meaning like in :class:`.Handshaked` interface
+    
+    :ivar rd: when high slave is ready to receive data
+    :ivar vld: when high master is sending data to slave
+
+    transaction happens when both ready and valid are high
+
     """
     def _declr(self):
         self.vld = s()
