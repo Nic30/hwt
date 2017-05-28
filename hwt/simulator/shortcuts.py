@@ -177,14 +177,16 @@ class CallbackLoop(object):
 
     def onWriteCallback(self, sim):
         s = self.sig
+
         cond = self.condFn(s, sim)
+        # exec callback when cond is True or when it is uncertain
         if cond is None or cond:
             if self.isGenerator:
                 yield from self.fn(sim)
             else:
                 self.fn(sim)
         s._writeCallbacks.append(self.onWriteCallback)
-        # no function just asset this function will be generator
+        # no function just assert this function will be generator
         yield sim.wait(0)
 
     def initProcess(self, sim):
@@ -201,7 +203,7 @@ def isRising(sig, sim):
 
 def onRisingEdge(sig, fn):
     """
-    Call function (or generator) everytime when signal is on rising edge
+    Call function (or generator) every time when signal is on rising edge
     """
     c = CallbackLoop(sig, isRising, fn)
     return c.initProcess
@@ -211,33 +213,18 @@ def isFalling(sig, sim):
 
 def onFallingEdge(sig, fn):
     """
-    Call function (or generator) everytime when signal is on rising edge
+    Call function (or generator) every time when signal is on rising edge
     """
     c = CallbackLoop(sig, isFalling, fn)
     return c.initProcess
 
-def onRisingEdgeNoReset(sig, reset, fn):
-    """
-    Call function (or generator) everytime when signal is on rising edge and reset
-    is not active
-    """
-    def cond(clk, sim):
-        r = sim.read(reset)
-        if reset.negated:
-            r.val = not r.val
-        return isRising(clk, sim) and not bool(r)
-
-    c = CallbackLoop(sig, isRising, fn)
-    return c.initProcess
-
-
 def oscilate(sig, period=10 * Time.ns, initWait=0):
     """
-    Oscilative simulation driver for your signal
+    Oscillative simulation driver for your signal
     (usually used as clk generator)
     """
 
-    def oscilateStimul(s):
+    def oscillateStimul(s):
         s.write(False, sig)
         halfPeriod = period / 2
         yield s.wait(initWait)
@@ -248,30 +235,7 @@ def oscilate(sig, period=10 * Time.ns, initWait=0):
             yield s.wait(halfPeriod)
             s.write(False, sig)
 
-    return oscilateStimul
+    return oscillateStimul
 
 
-def pullDownAfter(sig, intDelay=6 * Time.ns):
-    """
-    :return: simulation driver which keeps value high for intDelay then it sets
-             value to 0
-    """
-    def _pullDownAfter(s):
-        s.write(True, sig)
-        yield s.wait(intDelay)
-        s.write(False, sig)
 
-    return _pullDownAfter
-
-
-def pullUpAfter(sig, intDelay=6 * Time.ns):
-    """
-    :return: Simulation driver which keeps value low for intDelay then it sets
-        value to 1
-    """
-    def _pullDownAfter(s):
-        s.write(False, sig)
-        yield s.wait(intDelay)
-        s.write(True, sig)
-
-    return _pullDownAfter
