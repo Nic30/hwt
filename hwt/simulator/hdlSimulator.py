@@ -202,7 +202,7 @@ class HdlSimulator(HdlEnvironmentCore):
             else:
                 s.simUpdateVal(self, vUpdater)
 
-        # processes triggered from simUpdateVal can add nev values
+        # processes triggered from simUpdateVal can add new values
         if self.valuesToApply:
             self.scheduleApplyValues()
             return

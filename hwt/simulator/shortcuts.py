@@ -11,10 +11,10 @@ from hwt.simulator.agentConnector import autoAddAgents
 from hwt.simulator.hdlSimulator import HdlSimulator
 from hwt.simulator.simModel import SimModel
 from hwt.simulator.simSignalProxy import IndexSimSignalProxy
+from hwt.simulator.types.simBits import simBitsT
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
-from hwt.simulator.types.simBits import simBitsT
 
 
 def simPrepare(unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):

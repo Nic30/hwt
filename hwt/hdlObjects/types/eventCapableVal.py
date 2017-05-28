@@ -22,6 +22,7 @@ class EventCapableVal(Value):
         v = self._hasEvent__val(now)
         v.val = v.val and not self.val
         return v
+
     def _onFallingEdge(self, now):
         if isinstance(self, Value):
             return self._onFallingEdge__val(now)
@@ -32,6 +33,7 @@ class EventCapableVal(Value):
         v = self._hasEvent__val(now)
         v.val = v.val and self.val
         return v   
+
     def _onRisingEdge(self, now):
         if isinstance(self, Value):
             return self._onRisingEdge__val(now)
