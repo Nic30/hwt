@@ -14,7 +14,7 @@ def sensitivity(proc, *sensitiveTo):
             elif sen == SENSITIVITY.RISING:
                 s.simRisingSensProcs.add(proc)
             elif sen == SENSITIVITY.FALLING:
-                s.simRisingSensProcs.add(proc)
+                s.simFallingSensProcs.add(proc)
             else:
                 raise AssertionError(sen)
         else:
