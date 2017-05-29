@@ -7,11 +7,11 @@ class HStructField(object):
         assert isinstance(name, str) or name is None, name
         assert isinstance(typ, HdlType),typ
         self.name = name
-        self.type = typ
+        self.dtype = typ
         self.info = info
 
     def __hash__(self):
-        return hash((self.type, self.name))
+        return hash((self.dtype, self.name))
 
 
 class HStruct(HdlType):
@@ -42,7 +42,7 @@ class HStruct(HdlType):
             if field.name is not None:
                 fieldNames.append(field.name)
 
-            t = field.type
+            t = field.dtype
             if self.isFixedSize:
                 if (isinstance(t, HStruct) and not t.isFixedSize)\
                               or not hasattr(t, "bit_length"):
@@ -72,7 +72,7 @@ class HStruct(HdlType):
 
     def bit_length(self):
         if self.isFixedSize:
-            return sum(map(lambda f: f.type.bit_length(), self.fields))
+            return sum(map(lambda f: f.dtype.bit_length(), self.fields))
         else:
             raise TypeError("Can not request bit_lenght on size which has not fixed size")
     
@@ -85,7 +85,7 @@ class HStruct(HdlType):
         """
         s = 0
         for f in self.template:
-            s += f.type.bit_length()
+            s += f.dtype.bit_length()
 
         if s % 8 == 0:
             return s // 8
@@ -111,9 +111,9 @@ class HStruct(HdlType):
         buff = ["struct %s{" % name]
         for f in self.fields:
             if f.name is None:
-                buff.append("    //%r empty space" % (f.type))
+                buff.append("    //%r empty space" % (f.dtype))
             else:
-                buff.append("    %r %s" % (f.type, f.name))
+                buff.append("    %r %s" % (f.dtype, f.name))
 
         buff.append("}")
         return "\n".join(buff)
