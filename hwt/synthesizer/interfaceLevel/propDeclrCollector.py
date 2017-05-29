@@ -10,7 +10,7 @@ def nameAvailabilityCheck(obj, propName, prop):
     Check if not redefining property on obj
     """
     if getattr(obj, propName, None) is not None:
-        raise IntfLvlConfErr("Already has parameter %s old:%s new:%s" % 
+        raise IntfLvlConfErr("Already has property %s old:%s new:%s" % 
                              (propName, repr(getattr(obj, propName)), prop))
 
 
