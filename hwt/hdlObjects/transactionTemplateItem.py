@@ -10,13 +10,13 @@ class TransactionTemplateItem(object):
     :ivar parent: if is derived from HStruct field this is instance of FrameTemplate for this HStruct else None
     :ivar children: if represents field of type HStruct this is instance of FrameTemplate else None
     :ivar inFrameBitOffset: number of bits before start of this item in frame
-    :ivar internalInterface: internal interface for a field in unit where this template was used
     :ivar transactionParts: list of instances of TransactionPart which specifies in which databus word 
         this field will appear (requires resolveFieldPossitionsInFrame call)
+    :ivar origin: object from which this item was generated from
     :attention: only fields of simple type like Bits have transactionParts 
         (HStruct have them on it's children, Array have information just about first word)
     """
-    def __init__(self, name, dtype, inFrameBitOffset, parent=None, children=None):
+    def __init__(self, name, dtype, inFrameBitOffset, origin=None, parent=None, children=None):
         self.name = name
         self.dtype = dtype
         self.parent = None
@@ -27,8 +27,7 @@ class TransactionTemplateItem(object):
         self.inFrameBitOffset = inFrameBitOffset
         if isinstance(dtype, Bits):
             self.transactionParts = []
-
-        self.internalInterface = None
+        self.origin = origin
 
     def _addField(self, parent, dataWidth, frameIndex, inStructBitAddr, inFrameBitAddr, fieldWidth):
         # discover parts in bus words
