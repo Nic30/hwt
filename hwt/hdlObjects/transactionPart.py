@@ -41,13 +41,6 @@ class TransactionPart():
         offset = self.offsetOfPart
         return (self.width + offset, offset)
     
-    def getSignal(self, busDataSignal):
-        # [TODO] should be part of indexing operator
-        if self.busWordBitRange == (busDataSignal._dtype.bit_length(), 0):
-            return busDataSignal
-        else:
-            return busDataSignal[self.busWordBitRange[0]:self.busWordBitRange[1]]
-
     def __repr__(self):
         return "<TransactionPart frameIndex:%d, inStructBitAddr:%d, inFrameBitAddr:%r, width:%r, offsetOfPart:%r>" % (
                 self.frameIndex, self.inStructBitAddr, self.inFrameBitAddr, self.width, self.offsetOfPart)
