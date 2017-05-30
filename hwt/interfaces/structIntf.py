@@ -1,6 +1,7 @@
-from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.types.struct import HStruct
+from hwt.synthesizer.interfaceLevel.interface import Interface
+
 
 class StructIntf(Interface):
     """
@@ -34,3 +35,7 @@ class StructIntf(Interface):
                 self._fieldsToInterfaces[field] = intf
                 
                 setattr(self, field.name, intf)
+    
+    def _getSimAgent(self):
+        from hwt.interfaces.agents.structIntf import StructIntfAgent
+        return StructIntfAgent
