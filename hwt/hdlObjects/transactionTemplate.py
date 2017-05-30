@@ -3,6 +3,7 @@ from math import inf
 from hwt.hdlObjects.transactionTemplateItem import TransactionTemplateItem
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStruct
+from hwt.hdlObjects.typeShortcuts import vecT
 
 
 class TransactionTemplate(list):
@@ -84,14 +85,22 @@ class TransactionTemplate(list):
     def _fromHStruct(cls, structT, inFrameOffset):
         for f in structT.fields:
             t = f.dtype
-            if isinstance(t, HStruct):
+            origin = f
+            isPadding = f.name is None
+
+            if isPadding:
+                # do not care about structure when it is only padding, replace it with Bits of same size 
+                origin = None
+                t = vecT(t.bit_length())
+                children = None
+            elif isinstance(t, HStruct):
                 children = cls(cls._fromHStruct(t, inFrameOffset))
                 for chch in children:
                     chch.parent = children
             else:
                 children = None
 
-            fi = TransactionTemplateItem(f.name, t, inFrameOffset, children=children)
+            fi = TransactionTemplateItem(f.name, t, inFrameOffset, children=children, origin=origin)
             yield fi
 
             inFrameOffset += t.bit_length()
@@ -147,31 +156,36 @@ class TransactionTemplate(list):
                                          frameIndex,
                                          trim)
 
-        lastChild = self[-1]
-        while not isinstance(lastChild.dtype, Bits):
-            lastChild = lastChild.children[-1]
-
-        if pendingPaddingBits:
-            inStructBitAddr, inFrameBitAddr, frameIndex = \
-            lastChild._addField(None,
+        def appendPadding(bits, inStructBitAddr, inFrameBitAddr, frameIndex):
+            t = vecT(bits)
+            ti = TransactionTemplateItem(None, t, inFrameBitAddr, origin=None, parent=self)
+            self.append(ti)
+            return ti._addField(None,
                                 dataWidth,
                                 frameIndex,
-                                inStructBitAddr - pendingPaddingBits,
-                                inFrameBitAddr - pendingPaddingBits,
-                                pendingPaddingBits)
+                                inStructBitAddr,
+                                inFrameBitAddr,
+                                bits)
+
+        if pendingPaddingBits:
+            inStructBitAddr, inFrameBitAddr, frameIndex = appendPadding(pendingPaddingBits,
+                                                                        inStructBitAddr - pendingPaddingBits,
+                                                                        inFrameBitAddr - pendingPaddingBits,
+                                                                        frameIndex,
+                                                                        )
         
         if applyPaddingAtEnd:
             pendingPaddingBits = dataWidth - (inStructBitAddr % dataWidth)
             if pendingPaddingBits and pendingPaddingBits != dataWidth:
-                inStructBitAddr, inFrameBitAddr, frameIndex = \
-                lastChild._addField(None,
-                                dataWidth,
-                                frameIndex,
-                                inStructBitAddr - pendingPaddingBits,
-                                inFrameBitAddr - pendingPaddingBits,
-                                pendingPaddingBits)
-            
-    
+                inStructBitAddr, inFrameBitAddr, frameIndex = appendPadding(
+                                                                            pendingPaddingBits,
+                                                                            inStructBitAddr,
+                                                                            inFrameBitAddr,
+                                                                            frameIndex,
+                                                                            )
+
+        return inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex
+
     def discoverTransactionInfos(self,
                                  dataWidth,
                                  inStructBitAddr=0,
