@@ -5,6 +5,8 @@ from hwt.hdlObjects.types.struct import HStruct
 class StructIntf(Interface):
     """
     Create dynamic interface based on HStruct description
+    
+    :ivar _fieldsToInterfaces: dictionary {field from HStruct template: sub interface for it}
     """
     def __init__(self, structT, instantiateFieldFn, masterDir=DIRECTION.OUT, multipliedBy=None, loadConfig=True):
         """
@@ -15,6 +17,7 @@ class StructIntf(Interface):
         Interface.__init__(self, masterDir=masterDir, multipliedBy=multipliedBy, loadConfig=loadConfig)
         self._structT = structT
         self._instantiateFieldFn = instantiateFieldFn
+        self._fieldsToInterfaces = {}
     
     def _declr(self):
         for field in self._structT.fields:
@@ -24,7 +27,10 @@ class StructIntf(Interface):
                 t = field.dtype
                 if isinstance(t, HStruct):
                     intf = StructIntf(t, self._instantiateFieldFn)
+                    intf._fieldsToInterfaces = self._fieldsToInterfaces
                 else:
                     intf = self._instantiateFieldFn(field)
+                
+                self._fieldsToInterfaces[field] = intf
                 
                 setattr(self, field.name, intf)
