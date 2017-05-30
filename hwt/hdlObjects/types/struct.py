@@ -5,7 +5,7 @@ from hwt.hdlObjects.value import Value
 class HStructField(object):
     def __init__(self, typ, name, info=None):
         assert isinstance(name, str) or name is None, name
-        assert isinstance(typ, HdlType),typ
+        assert isinstance(typ, HdlType), typ
         self.name = name
         self.dtype = typ
         self.info = info
@@ -49,6 +49,8 @@ class HStruct(HdlType):
                     self.isFixedSize = False
 
         self.fields = tuple(self.fields)
+        if self.isFixedSize:
+            self.__bit_length_val = self.__bit_length()
 
         class StructVal(Value):
             __structType = self
@@ -72,9 +74,13 @@ class HStruct(HdlType):
 
     def bit_length(self):
         if self.isFixedSize:
-            return sum(map(lambda f: f.dtype.bit_length(), self.fields))
+            return self.__bit_length_val
         else:
             raise TypeError("Can not request bit_lenght on size which has not fixed size")
+    
+    def __bit_length(self):
+        return sum(map(lambda f: f.dtype.bit_length(), self.fields))
+    
     
     def getValueCls(self):
         return self.valueCls
