@@ -18,6 +18,7 @@ class TransactionTemplateItem(object):
     """
     def __init__(self, name, dtype, inFrameBitOffset, origin=None, parent=None, children=None):
         self.name = name
+        self.isPadding = name is None
         self.dtype = dtype
         self.parent = None
         self.children = children
@@ -83,8 +84,7 @@ class TransactionTemplateItem(object):
         t = self.dtype
         if isinstance(t, Bits):
             fieldWidth = self.dtype.bit_length()
-            isPadding = self.name is None
-            if isPadding:
+            if self.isPadding:
                 # [TODO] padding to next boundary of word
                 # [TODO] increment frame number if needed
                 # [TODO] trim

@@ -40,7 +40,7 @@ class TransactionTemplate(list):
 
         for transactionPart in self.walkTransactionParts():
             assert transactionPart.frameIndex >= actualFrame
-            isPadding = transactionPart.parent is None
+            isPadding = transactionPart.isPadding
 
             w = indx(transactionPart.inFrameBitAddr)
             

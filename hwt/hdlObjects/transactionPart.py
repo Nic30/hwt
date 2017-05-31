@@ -20,6 +20,7 @@ class TransactionPart():
         
         """
         self.parent = parent
+        self.isPadding = parent is None or parent.isPadding
         self.frameIndex = frameIndex
         self.inStructBitAddr = inStructBitAddr
         self.inFrameBitAddr = inFrameBitAddr
