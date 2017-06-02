@@ -176,7 +176,7 @@ class TransactionTemplate(list):
 
         return inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex
 
-    def discoverTransactionInfos(self,
+    def discoverTransactionParts(self,
                                  dataWidth,
                                  inStructBitAddr=0,
                                  inFrameBitAddr=0,
