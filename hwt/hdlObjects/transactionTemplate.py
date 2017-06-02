@@ -1,9 +1,10 @@
 from math import inf
 
 from hwt.hdlObjects.transactionTemplateItem import TransactionTemplateItem
+from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStruct
-from hwt.hdlObjects.typeShortcuts import vecT
+from hwt.synthesizer.param import evalParam
 
 
 class TransactionTemplateConfig():
@@ -18,10 +19,19 @@ class TransactionTemplateConfig():
         dummy words are cut off and rest of fields is in next frame
     :ivar trim: remove padding words from start and end of frame
     """
-    def __init__(self, dataWidth, mkChildFn, mkPaddingFn, maxFrameBitLen=inf, maxPaddingWords=inf, trim=False):
+    def __init__(self, dataWidth, mkChildFn=None, mkPaddingFn=None,
+                 maxFrameBitLen=inf, maxPaddingWords=inf, trim=False):
         self.dataWidth = dataWidth
-        self.mkChildFn = mkChildFn
-        self.mkPaddingFn = mkPaddingFn
+        if mkChildFn is None:
+            self.mkChildFn = self.defaultMkChildFn
+        else:
+            self.mkChildFn = mkChildFn
+
+        #if mkPaddingFn is None:
+        #    self.mkPaddingFn = self.defaultMkPaddingFn
+        #else:
+        #    self.mkPaddingFn = mkPaddingFn
+        
         self.maxFrameBitLen = maxFrameBitLen
         self.maxPaddingWords = maxPaddingWords
         self.trim = trim
@@ -29,80 +39,110 @@ class TransactionTemplateConfig():
     def defaultMkChildFn(self):
         raise NotImplementedError()
 
-    def defaultMkPaddingFn(self, config, isTop, inStructBitAddr, inFrameBitAddr,
-                           frameIndex, pendingPaddingBits):
-        _pendingPaddingBits = pendingPaddingBits
-        DW = config.dataWidth
+    def paddingBeforeItem(self):
+        pass
 
-        if isTop:
-            aligin = DW - (inStructBitAddr % DW)
-            if aligin and aligin != DW:
-                _pendingPaddingBits += aligin
+    def paddingAfterItem(self):
+        pass
 
-        if _pendingPaddingBits:
-            inStructBitAddr -= pendingPaddingBits
-            inFrameBitAddr -= pendingPaddingBits
-            t = vecT(_pendingPaddingBits)
-            ti = TransactionTemplateItem(None, t, inFrameBitAddr, origin=None, parent=self)
-            self.append(ti)
+    def paddingBeforeFrame(self):
+        pass
 
-            (inStructBitAddr,
-             inFrameBitAddr,
-             frameIndex) = ti._addField(None,
-                                        DW,
-                                        frameIndex,
-                                        inStructBitAddr,
-                                        inFrameBitAddr,
-                                        _pendingPaddingBits)
-            pendingPaddingBits = 0
+    def paddingAfterFrame(self):
+        pass
+    
+    
 
-        # endOfFrameWithPadding = inFrameBitAddr + pendingPaddingBits
-        # if endOfFrameWithPadding >= config.maxFrameBitLen:
-        #     if config.trim:
-        #         # trim padding words from end of frame
-        #         raise NotImplementedError()
-        #     else:
-        #         # instantiate padding if not bigger than maxPaddingWords
-        #         raise NotImplementedError()
+    #def defaultMkPaddingFn(self, config, isTop, inStructBitAddr, inFrameBitAddr,
+    #                      frameIndex, pendingPaddingBits):
+    #   # padding items are not created only addr space is dense
+    #   # in some cases we wont to cut padding from start/end of frame or split frame when padding
+    #   # is too high, this is why we need pendingPaddingBits
+    #   # 
+    #   # padding in HStruct
+    #   # * padding od start/end of struct is merged with surrounding one
+    #   # padding in Array
+    #   # * start of array and size is noted in array
+    #   # * used parts of element are stored in child of TransactionTemplateItem which represents this Array
+    #   # * 
+    #   _pendingPaddingBits = pendingPaddingBits
+    #   DW = config.dataWidth
+    #   # [TODO] padding to next boundary of word
+    #   # [TODO] increment frame number if needed
+    #   # [TODO] trim
+    #
+    #   if isTop:
+    #       aligin = DW - (inStructBitAddr % DW)
+    #       if aligin and aligin != DW:
+    #           _pendingPaddingBits += aligin
+    #
+    #   if _pendingPaddingBits:
+    #       inStructBitAddr -= pendingPaddingBits
+    #       inFrameBitAddr -= pendingPaddingBits
+    #       t = vecT(_pendingPaddingBits)
+    #       ti = TransactionTemplateItem(None, t, inFrameBitAddr, origin=None, parent=self)
+    #       self.append(ti)
+    #
+    #       (inStructBitAddr,
+    #        inFrameBitAddr,
+    #        frameIndex) = ti._addField(None,
+    #                                   DW,
+    #                                   frameIndex,
+    #                                   inStructBitAddr,
+    #                                   inFrameBitAddr,
+    #                                   _pendingPaddingBits)
+    #       pendingPaddingBits = 0
+    #
+    #   # endOfFrameWithPadding = inFrameBitAddr + pendingPaddingBits
+    #   # if endOfFrameWithPadding >= config.maxFrameBitLen:
+    #   #     if config.trim:
+    #   #         # trim padding words from end of frame
+    #   #         raise NotImplementedError()
+    #   #     else:
+    #   #         # instantiate padding if not bigger than maxPaddingWords
+    #   #         raise NotImplementedError()
+    #
+    #
+    #   # isFirstNonPaddingInFrame = pendingPaddingBits == inFrameBitAddr - 1
+    #   # paddingLargerThanWord = (pendingPaddingBits // DW) > 0
+    #   # 
+    #   # if config.trim and isFirstNonPaddingInFrame and paddingLargerThanWord:
+    #   #     # trim padding words from beginning of frame
+    #   #     pendingPaddingBits %= DW
+    #   # 
+    #   # if pendingPaddingBits:
+    #   #     # add padding before
+    #   #     (inStructBitAddr,
+    #   #      inFrameBitAddr,
+    #   #      frameIndex) = self._addFieldAsTransParts(
+    #   #                                None,
+    #   #                                DW,
+    #   #                                frameIndex,
+    #   #                                inStructBitAddr - pendingPaddingBits,
+    #   #                                inFrameBitAddr - pendingPaddingBits,
+    #   #                                pendingPaddingBits)
+    #   # 
+    #   #     pendingPaddingBits = 0
+    #
+    #   return (inStructBitAddr, inFrameBitAddr, frameIndex, pendingPaddingBits)
 
 
-        # isFirstNonPaddingInFrame = pendingPaddingBits == inFrameBitAddr - 1
-        # paddingLargerThanWord = (pendingPaddingBits // DW) > 0
-        # 
-        # if config.trim and isFirstNonPaddingInFrame and paddingLargerThanWord:
-        #     # trim padding words from beginning of frame
-        #     pendingPaddingBits %= DW
-        # 
-        # if pendingPaddingBits:
-        #     # add padding before
-        #     (inStructBitAddr,
-        #      inFrameBitAddr,
-        #      frameIndex) = self._addFieldAsTransParts(
-        #                                None,
-        #                                DW,
-        #                                frameIndex,
-        #                                inStructBitAddr - pendingPaddingBits,
-        #                                inFrameBitAddr - pendingPaddingBits,
-        #                                pendingPaddingBits)
-        # 
-        #     pendingPaddingBits = 0
-
-        return (inStructBitAddr, inFrameBitAddr, frameIndex, pendingPaddingBits)
-
-
-class TransactionTemplate(list):
+class TransactionTemplate(object):
     """
-    Container of informations about frames generated from HStruct
+    Container of informations about frames generated from any HType (HStruct etc.)
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, dtype, bitAddr=0, parent=None, origin=None):
         """
         :ivar config: original TransactionTemplateConfig which was use to generate this template
         """
+        self.parent = parent
+        self.origin = origin
+        self.dtype = dtype
 
-        list.__init__(self, *args, **kwargs)
-        self.parent = None
-        self.config = None
-
+        self.children = []
+        
+        self._loadFromHType(dtype, bitAddr)
+        
     def walkParts(self):
         for fi in self:
             t = fi.dtype
@@ -166,100 +206,94 @@ class TransactionTemplate(list):
 
     def wordIndxFromBitAddr(self, bitAddr):
         dataWidth = self.config.dataWidth
-
         return bitAddr // dataWidth
 
-    @classmethod
-    def _fromHStruct(cls, structT, inFrameOffset):
-        for f in structT.fields:
+    def _loadFromArray(self, dtype, bitAddr):
+        self.itemCnt = evalParam(dtype.size).val
+        self.children = TransactionTemplate(dtype.elmType, 0, self, origin=self.origin)
+        
+        return self.itemCnt * self.children.bitAddrEnd
+        
+    def _loadFromBits(self, dtype, bitAddr):
+        return bitAddr + dtype.bit_length()
+
+    def _loadFromHType(self, dtype, bitAddr):
+        self.bitAddr = bitAddr
+
+        if isinstance(dtype, HStruct):
+            ld = self._loadFromHStruct
+        elif isinstance(dtype, Array):
+            ld = self._loadFromArray
+        else:
+            ld = self._loadFromBits
+        
+        self.bitAddrEnd = ld(dtype, bitAddr)        
+        
+    def _loadFromHStruct(self, dtype, bitAddr):
+        for f in dtype.fields:
             t = f.dtype
             origin = f
             isPadding = f.name is None
 
             if isPadding:
-                # do not care about structure when it is only padding, replace it with Bits of same size
-                origin = None
-                t = vecT(t.bit_length())
-                children = None
-            elif isinstance(t, HStruct):
-                children = cls(cls._fromHStruct(t, inFrameOffset))
-                for chch in children:
-                    chch.parent = children
+                width = t.bit_length()
+                bitAddr += width
             else:
-                children = None
-
-            fi = TransactionTemplateItem(f.name, t, inFrameOffset, children=children, origin=origin)
-            yield fi
-
-            inFrameOffset += t.bit_length()
-
-    @classmethod
-    def fromHStruct(cls, structT):
-        self = cls(cls._fromHStruct(structT, 0))
-        for fi in self:
-            fi.parent = self
-
-        return self
-
-    def _translateHStruct(self,
-                          config,
-                          inStructBitAddr,
-                          inFrameBitAddr,
-                          pendingPaddingBits,
-                          frameIndex,
-                          isTop=False):
+                fi = TransactionTemplate(t, bitAddr, parent=self, origin=origin)
+                self.children.append(fi)
+                bitAddr = fi.bitAddrEnd
+        
+        return bitAddr
+    
+    def _translate(self, config, inFrameBitAddr, pendingPaddingBits, frameIndex,
+                        isTop=False):
         """
-        :note: same like translateHStruct, just pending bits added
-        :param pendingPaddingBits: number of padding bits before this item
+        :note: same like translate, just pending bits added
         :param isTop: tells if this call is on top of structure (used when you need to resolve f.e. end of transaction)
 
-        :return: tuple (actual inStructBitAddr, actual inFrameBitAddr, actual pendingPaddingBits, actualFrameIndex)
+        :return: tuple (actual inFrameBitAddr, actual pendingPaddingBits, actualFrameIndex)
         """
         self.config = config
 
         for fi in self:
-            (inStructBitAddr, inFrameBitAddr,
-             pendingPaddingBits, frameIndex) = fi._translateHStruct(config,
-                                                                    inStructBitAddr,
-                                                                    inFrameBitAddr,
-                                                                    pendingPaddingBits,
-                                                                    frameIndex)
+            (inFrameBitAddr,
+             pendingPaddingBits,
+             frameIndex) = fi._translate(config,
+                                         inFrameBitAddr,
+                                         pendingPaddingBits,
+                                         frameIndex)
 
-        (inStructBitAddr, inFrameBitAddr,
-         frameIndex, pendingPaddingBits) = config.mkPaddingFn(config, isTop, inStructBitAddr,
-                                                              inFrameBitAddr, frameIndex,
-                                                              pendingPaddingBits)
-        assert pendingPaddingBits == 0
-        return (inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex)
+        (inFrameBitAddr,
+         frameIndex,
+         pendingPaddingBits) = config.mkPaddingFn(self, config, isTop,
+                                                  inFrameBitAddr, frameIndex,
+                                                  pendingPaddingBits)
 
-    def translateHStruct(self,
-                         config,
-                         inStructBitAddr=0,
-                         inFrameBitAddr=0,
-                         pendingPaddingBits=0,
-                         frameIndex=0):
+        assert pendingPaddingBits == 0, "Should be discarded or used by mkPaddingFn"
+        return (inFrameBitAddr, pendingPaddingBits, frameIndex)
+
+    def translate(self, config, inFrameBitAddr=0, pendingPaddingBits=0, frameIndex=0):
         """
-        Resolve in which words field appears
+        Resolve in which words field appears, and how transaction will be divided into frames and padding
 
         :param config: instance of TransactionTemplateConfig
-        :param inStructBitAddr: base bit address of this in original HStruct
         :param inFrameBitAddr: base bit address of this in actual frame
         :note: initial padding is part of frame len
         :param frameIndex: index of actual frame
 
-        :return: tuple (actual inStructBitAddr, actual inFrameBitAddr, actual pendingPaddingBits, actualFrameIndex)
+        :return: tuple (inFrameBitAddrEnd, lastFrameIndex)
         """
 
         assert isinstance(config, TransactionTemplateConfig), config
-        (inStructBitAddr, inFrameBitAddr,
-         _, frameIndex) = self._translateHStruct(config,
-                                                 inStructBitAddr,
-                                                 inFrameBitAddr,
-                                                 pendingPaddingBits,
-                                                 frameIndex,
-                                                 isTop=True)
 
-        return (inStructBitAddr, inFrameBitAddr, frameIndex)
+        (inFrameBitAddr,
+         _, frameIndex) = self._translateDtype(config,
+                                              inFrameBitAddr,
+                                              pendingPaddingBits,
+                                              frameIndex,
+                                              isTop=True)
+
+        return (inFrameBitAddr, frameIndex)
 
     def __repr__getName(self, transactionPart, fieldWidth):
         names = []

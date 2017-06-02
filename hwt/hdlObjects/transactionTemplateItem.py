@@ -1,6 +1,8 @@
 from hwt.hdlObjects.transactionPart import TransactionPart
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStruct
+from hwt.hdlObjects.types.array import Array
+from hwt.synthesizer.param import evalParam
 
 
 class TransactionTemplateItem(object):
@@ -9,14 +11,15 @@ class TransactionTemplateItem(object):
     :ivar dtype: dtype of this item, like dtype in struct field
     :ivar parent: if is derived from HStruct field this is instance of FrameTemplate for this HStruct else None
     :ivar children: if represents field of type HStruct this is instance of FrameTemplate else None
-    :ivar inFrameBitOffset: number of bits before start of this item in frame
+    :ivar bitAddr: address of this item in template, bit precise 
+    :ivar bitAddrEnd: address of end of this item in template, bit precise 
     :ivar parts: list of instances of TransactionPart which specifies in which databus word
         this field will appear (requires resolveFieldPossitionsInFrame call)
     :ivar origin: object from which this item was generated from
     :attention: only fields of simple type like Bits have parts
         (HStruct have them on it's children, Array have information just about first word)
     """
-    def __init__(self, name, dtype, inFrameBitOffset, origin=None, parent=None, children=None):
+    def __init__(self, name, dtype, bitAddr, bitAddrEnd, origin=None, parent=None, children=None):
         self.name = name
         self.isPadding = name is None
         self.dtype = dtype
@@ -25,87 +28,75 @@ class TransactionTemplateItem(object):
         if children is not None:
             children.parent = self
 
-        self.inFrameBitOffset = inFrameBitOffset
-        if isinstance(dtype, Bits):
-            self.parts = []
+        self.bitAddr = bitAddr
+        self.bitAddrEnd = bitAddrEnd
+        
+        self.parts = []
         self.origin = origin
 
-    def _addFieldAsTransParts(self, parent, dataWidth, frameIndex, inStructBitAddr, inFrameBitAddr, fieldWidth):
+    def _addFieldAsTransParts(self, parent, config, frameIndex, inStructBitAddr, inFrameBitAddr,
+                              width, repetitionCnt=None):
         # discover parts in bus words
+        DW = config.dataWidth
         partOffset = 0
-        while fieldWidth != 0:
-            wordIndex = inStructBitAddr // dataWidth
-            endOfWord = dataWidth * (wordIndex + 1)
-            widthOfPart = min(endOfWord, inStructBitAddr + fieldWidth) - inStructBitAddr
+        if repetitionCnt is None:
+            repetitionCnt = 0
+        _width = width
+
+        while width != 0 and repetitionCnt > 0:
+            wordIndex = inStructBitAddr // DW
+            endOfWord = DW * (wordIndex + 1)
+            
+            widthOfPart = min(endOfWord, inStructBitAddr + width) - inStructBitAddr
 
             p = TransactionPart(parent, frameIndex, inStructBitAddr, inFrameBitAddr,
-                                widthOfPart, dataWidth, partOffset)
+                                widthOfPart, DW, partOffset)
             self.parts.append(p)
 
             inStructBitAddr += widthOfPart
             inFrameBitAddr += widthOfPart
-            fieldWidth -= widthOfPart
-            # [TODO] increment frame number if needed
+            width -= widthOfPart
+            
+            if inFrameBitAddr == config.maxFrameBitLen:
+                inFrameBitAddr = 0
+                frameIndex += 1
+            
+            if width == 0:
+                repetitionCnt -= 1
+                if repetitionCnt:
+                    width = _width
 
         return inStructBitAddr, inFrameBitAddr, frameIndex
 
-    def _translateHStruct(self,
-                          config,
-                          inStructBitAddr,
-                          inFrameBitAddr,
-                          pendingPaddingBits,
-                          frameIndex):
+    def _translateDtype(self, config, bitAddr):
         """
         Some fields has to be internally split due data-width of bus,
         there we discover how to split field to words on bus
         and we resolve in which frame this item will be
 
-        :note: params and return same as TransactionTemplate._translateHStruct
+        :note: params and return same as TransactionTemplate._translateDtype
         """
-        DW = config.dataWidth
-        assert (inStructBitAddr % DW) == (inFrameBitAddr % DW), "Only padding words can be discarded, offset should be same ins HStruct and in frame"
-
         t = self.dtype
-        if isinstance(t, Bits):
-            fieldWidth = self.dtype.bit_length()
-            if self.isPadding:
-                # [TODO] padding to next boundary of word
-                # [TODO] increment frame number if needed
-                # [TODO] trim
-                pendingPaddingBits += fieldWidth
-                # stag padding
-                inStructBitAddr += fieldWidth
-                inFrameBitAddr += fieldWidth
-            else:
-                if pendingPaddingBits:
-                            (inStructBitAddr, inFrameBitAddr,
-                             frameIndex, pendingPaddingBits) = config.mkPaddingFn(
-                                                                        config,
-                                                                        False,
-                                                                        inStructBitAddr,
-                                                                        inFrameBitAddr,
-                                                                        frameIndex,
-                                                                        pendingPaddingBits)
+        fieldWidth = self.dtype.bit_length()
 
-                # discover parts in bus words
-                inStructBitAddr, inFrameBitAddr, frameIndex = \
-                    self._addField(self,
-                                   DW,
-                                   frameIndex,
-                                   inStructBitAddr,
-                                   inFrameBitAddr,
-                                   fieldWidth)
+        if self.isPadding:
+            pass
+        elif isinstance(t, Bits):
+            # discover parts in bus words
+            bitAddr = self._addFieldAsTransParts(self,
+                                                 config,
+                                                 bitAddr,
+                                                 fieldWidth)
 
         elif isinstance(t, HStruct):
             for ch in self.children:
-                (inStructBitAddr, inFrameBitAddr,
-                 pendingPaddingBits, frameIndex) = ch._translateHStruct(
-                                                                config,
-                                                                inStructBitAddr,
-                                                                inFrameBitAddr,
-                                                                pendingPaddingBits,
-                                                                frameIndex)
+                bitAddr = ch._translateDtype(config,
+                                             bitAddr)
+        elif isinstance(t, Array):
+            self.children._translateDtype(config,
+                                          bitAddr,
+                                          repetitionCnt=evalParam(t.size).val)
         else:
             raise NotImplementedError(t)
 
-        return inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex
+        return self.bitAddrEnd 
