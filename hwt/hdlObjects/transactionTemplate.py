@@ -161,7 +161,7 @@ class TransactionTemplate(list):
             if aligin and aligin != dataWidth:
                 _pendingPaddingBits += aligin
 
-        if pendingPaddingBits:
+        if _pendingPaddingBits:
             inStructBitAddr -= pendingPaddingBits
             inFrameBitAddr -= pendingPaddingBits
             t = vecT(_pendingPaddingBits)
