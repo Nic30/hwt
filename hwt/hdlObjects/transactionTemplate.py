@@ -23,7 +23,7 @@ class TransactionTemplate(list):
                 yield from fi.children.walkTransactionParts()
             else:
                 raise NotImplementedError(t)
-    
+
     def walkFrameWords(self, skipPadding=True):
         """
         Walks words in all frames
@@ -35,7 +35,7 @@ class TransactionTemplate(list):
         actualFrame = 0
         actualWord = 0
         wordsInPrevFrames = 0
-        
+
         indx = self.wordIndxFromBitAddr
 
         for transactionPart in self.walkTransactionParts():
@@ -43,7 +43,7 @@ class TransactionTemplate(list):
             isPadding = transactionPart.isPadding
 
             w = indx(transactionPart.inFrameBitAddr)
-            
+
             if transactionPart.frameIndex > actualFrame:
                 # this part is in next frame
                 if wordRecord:
@@ -54,13 +54,13 @@ class TransactionTemplate(list):
                     wordRecord = [transactionPart, ]
                 wordsInPrevFrames += actualWord
                 actualWord = w
-                actualFrame = transactionPart.frameIndex    
+                actualFrame = transactionPart.frameIndex
             elif w == actualWord:
                 # this part is in this same word
                 if not (isPadding and skipPadding):
                     wordRecord.append(transactionPart)
             elif w > actualWord:
-                # this part is in next word 
+                # this part is in next word
                 if wordRecord:
                     yield wordsInPrevFrames + actualWord, wordRecord
 
@@ -71,11 +71,10 @@ class TransactionTemplate(list):
                 actualWord = w
             else:
                 raise NotImplementedError("Input frame info has to be sorted")
-            
 
         if wordRecord:
             yield wordsInPrevFrames + actualWord, wordRecord
-    
+
     def wordIndxFromBitAddr(self, bitAddr):
         dataWidth = self.busDataWidth
 
@@ -89,7 +88,7 @@ class TransactionTemplate(list):
             isPadding = f.name is None
 
             if isPadding:
-                # do not care about structure when it is only padding, replace it with Bits of same size 
+                # do not care about structure when it is only padding, replace it with Bits of same size
                 origin = None
                 t = vecT(t.bit_length())
                 children = None
@@ -104,7 +103,7 @@ class TransactionTemplate(list):
             yield fi
 
             inFrameOffset += t.bit_length()
-        
+
     @classmethod
     def fromHStruct(cls, structT):
         self = cls(cls._fromHStruct(structT, 0))
@@ -112,7 +111,7 @@ class TransactionTemplate(list):
             fi.parent = self
 
         return self
-    
+
     def _discoverTransactionParts(self,
                                   dataWidth,
                                   inStructBitAddr,
@@ -125,18 +124,18 @@ class TransactionTemplate(list):
                                   applyPaddingAtEnd=False):
         """
         :note: same like discoverTransactionInfos, just applyPaddingAtEnd added
-        
+
         :param dataWidth: width of data signal of interface for which is template builded
         :param inStructBitAddr: base bit address of this in original HStruct
         :param inFrameBitAddr: base bit address of this in actual frame
         :param maxFrameBitLen: maximum length of frame in bits
         :note: initial padding is part of frame len
         :param maxPaddingWords: threshold for maximum length of padding word sequence, if is exceeded
-            dummy words are cut off and rest of fields is in next frame 
+            dummy words are cut off and rest of fields is in next frame
         :param pendingPaddingBits: number of padding bits before this item
         :param frameIndex: index of actual frame
         :param trim: remove padding words from start and end of frame
-        
+
         :param applyPaddingAtEnd: if True pendingPaddingBits will be used to create padding at the end of frame
             (if trim is True it has no effect)
 
@@ -144,7 +143,7 @@ class TransactionTemplate(list):
 
         """
         self.busDataWidth = dataWidth
-        
+
         for fi in self:
             inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex = \
             fi._discoverTransactionParts(dataWidth,
@@ -161,7 +160,7 @@ class TransactionTemplate(list):
             aligin = dataWidth - (inStructBitAddr % dataWidth)
             if aligin and aligin != dataWidth:
                 _pendingPaddingBits += aligin
- 
+
         if pendingPaddingBits:
             inStructBitAddr -= pendingPaddingBits
             inFrameBitAddr -= pendingPaddingBits
@@ -195,11 +194,11 @@ class TransactionTemplate(list):
         :param maxFrameBitLen: maximum length of frame in bits
         :note: initial padding is part of frame len
         :param maxPaddingWords: threshold for maximum length of padding word sequence, if is exceeded
-            dummy words are cut off and rest of fields is in next frame 
+            dummy words are cut off and rest of fields is in next frame
         :param pendingPaddingBits: number of padding bits before this item
         :param frameIndex: index of actual frame
         :param trim: remove padding words from start and end of frame
-        
+
         :return: tuple (actual inStructBitAddr, actual inFrameBitAddr, actual pendingPaddingBits, actualFrameIndex)
         """
         assert isinstance(dataWidth, int), dataWidth
@@ -212,7 +211,7 @@ class TransactionTemplate(list):
                                               frameIndex,
                                               trim,
                                               applyPaddingAtEnd=True)
-    
+
     def __repr__getName(self, transactionPart, fieldWidth):
         names = []
         tp = transactionPart
@@ -226,7 +225,7 @@ class TransactionTemplate(list):
             return "X"*fieldWidth
         else:
             return ".".join(reversed(names))
-        
+
     def __repr__word(self, index, width, padding, transactionParts):
         buff = ["{0: <{padding}}|".format(index, padding=padding)]
         for tp in reversed(transactionParts):
@@ -234,7 +233,7 @@ class TransactionTemplate(list):
             # -1 for ending |
             fieldWidth = max(0, int(percentOfWidth * width) - 1)
             assert fieldWidth >= 0
-            
+
             # percentOffset = (tp.inFrameBitAddr % self.busDataWidth) / self.busDataWidth
             # offset = int(percentOffset * width)
             name = self.__repr__getName(tp, fieldWidth)
@@ -246,13 +245,13 @@ class TransactionTemplate(list):
         buff = []
         padding = 5
         width = int(self.busDataWidth * scale)
-        
+
         buff.append('{0: <{padding}}{1: <{halfLineWidth}}{2: >{halfLineWidth}}'.format(
             "", self.busDataWidth - 1, 0, padding=padding, halfLineWidth=width // 2))
         line = '{0: <{padding}}{1:-<{lineWidth}}'.format(
             "", "", padding=padding, lineWidth=width + 1)
         buff.append(line)
-        
+
         lastW = -1
         lastFrame = 0
         for w, transactionParts in self.walkFrameWords(skipPadding=False):
@@ -264,11 +263,11 @@ class TransactionTemplate(list):
             if transactionParts[0].frameIndex != lastFrame:
                 # space between frames
                 buff.append("")
-            
+
             buff.append(self.__repr__word(w, width, padding, transactionParts))
             lastW = w
             lastFrame = transactionParts[0].frameIndex
-        
+
         buff.append(line)
 
         return "\n".join(buff)

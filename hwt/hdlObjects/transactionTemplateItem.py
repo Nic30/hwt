@@ -10,10 +10,10 @@ class TransactionTemplateItem(object):
     :ivar parent: if is derived from HStruct field this is instance of FrameTemplate for this HStruct else None
     :ivar children: if represents field of type HStruct this is instance of FrameTemplate else None
     :ivar inFrameBitOffset: number of bits before start of this item in frame
-    :ivar transactionParts: list of instances of TransactionPart which specifies in which databus word 
+    :ivar transactionParts: list of instances of TransactionPart which specifies in which databus word
         this field will appear (requires resolveFieldPossitionsInFrame call)
     :ivar origin: object from which this item was generated from
-    :attention: only fields of simple type like Bits have transactionParts 
+    :attention: only fields of simple type like Bits have transactionParts
         (HStruct have them on it's children, Array have information just about first word)
     """
     def __init__(self, name, dtype, inFrameBitOffset, origin=None, parent=None, children=None):
@@ -37,16 +37,16 @@ class TransactionTemplateItem(object):
             wordIndex = inStructBitAddr // dataWidth
             endOfWord = dataWidth * (wordIndex + 1)
             widthOfPart = min(endOfWord, inStructBitAddr + fieldWidth) - inStructBitAddr
-        
+
             p = TransactionPart(parent, frameIndex, inStructBitAddr, inFrameBitAddr,
                                 widthOfPart, dataWidth, partOffset)
             self.transactionParts.append(p)
-        
+
             inStructBitAddr += widthOfPart
             inFrameBitAddr += widthOfPart
             fieldWidth -= widthOfPart
             # [TODO] increment frame number if needed
-        
+
         return inStructBitAddr, inFrameBitAddr, frameIndex
 
     def _discoverTransactionParts(self,
@@ -64,23 +64,23 @@ class TransactionTemplateItem(object):
         and we resolve in which frame this item will be
 
         :note: params same as TransactionTemplate._discoverTransactionParts
-        
+
         :param dataWidth: width of data signal of interface for which is template builded
         :param inStructBitAddr: base bit address of this in original HStruct
         :param inFrameBitAddr: base bit address of this in actual frame
         :param maxFrameBitLen: maximum length of frame in bits
         :note: initial padding is part of frame len
         :param maxPaddingWords: threshold for maximum length of padding word sequence, if is exceeded
-            dummy words are cut off and rest of fields is in next frame 
+            dummy words are cut off and rest of fields is in next frame
         :param pendingPaddingBits: number of padding bits before this item
         :param frameIndex: index of actual frame
         :param trim: remove padding words from start and end of frame
-        
+
         :return: tuple (actual inStructBitAddr, actual inFrameBitAddr, actual pendingPaddingBits, actualFrameIndex)
 
         """
         assert (inStructBitAddr % dataWidth) == (inFrameBitAddr % dataWidth), "Only padding words can be discarded, offset should be same ins HStruct and in frame"
-        
+
         t = self.dtype
         if isinstance(t, Bits):
             fieldWidth = self.dtype.bit_length()
@@ -97,7 +97,7 @@ class TransactionTemplateItem(object):
                     else:
                         # instantiate padding if not bigger than maxPaddingWords
                         raise NotImplementedError()
-                        
+
                 # stag padding
                 inStructBitAddr += fieldWidth
                 inFrameBitAddr += fieldWidth
@@ -112,14 +112,14 @@ class TransactionTemplateItem(object):
 
                     if pendingPaddingBits:
                         # add padding before
-                        inStructBitAddr, inFrameBitAddr, frameIndex = \
+                        inStructBitAddr, inFrameBitAddr, frameIndex =\
                         self._addField(None,
                                        dataWidth,
                                        frameIndex,
                                        inStructBitAddr - pendingPaddingBits,
                                        inFrameBitAddr - pendingPaddingBits,
                                        pendingPaddingBits)
-                
+
                         pendingPaddingBits = 0
 
                 # discover parts in bus words
@@ -130,20 +130,19 @@ class TransactionTemplateItem(object):
                                    inStructBitAddr,
                                    inFrameBitAddr,
                                    fieldWidth)
-                     
 
         elif isinstance(t, HStruct):
             for ch in self.children:
-                inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex = \
+                inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex =\
                 ch._discoverTransactionParts(dataWidth,
-                                  inStructBitAddr,
-                                  inFrameBitAddr,
-                                  maxFrameBitLen,
-                                  maxPaddingWords,
-                                  pendingPaddingBits,
-                                  frameIndex,
-                                  trim)
+                                             inStructBitAddr,
+                                             inFrameBitAddr,
+                                             maxFrameBitLen,
+                                             maxPaddingWords,
+                                             pendingPaddingBits,
+                                             frameIndex,
+                                             trim)
         else:
             raise NotImplementedError(t)
-        
+
         return inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex
