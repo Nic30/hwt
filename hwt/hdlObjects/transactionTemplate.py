@@ -113,7 +113,7 @@ class TransactionTemplate(list):
 
         return self
     
-    def _discoverTransactionInfos(self,
+    def _discoverTransactionParts(self,
                                   dataWidth,
                                   inStructBitAddr,
                                   inFrameBitAddr,
@@ -147,7 +147,7 @@ class TransactionTemplate(list):
         
         for fi in self:
             inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex = \
-            fi._discoverTransactionInfos(dataWidth,
+            fi._discoverTransactionParts(dataWidth,
                                          inStructBitAddr,
                                          inFrameBitAddr,
                                          maxFrameBitLen,
@@ -156,8 +156,16 @@ class TransactionTemplate(list):
                                          frameIndex,
                                          trim)
 
-        def appendPadding(bits, inStructBitAddr, inFrameBitAddr, frameIndex):
-            t = vecT(bits)
+        _pendingPaddingBits = pendingPaddingBits
+        if applyPaddingAtEnd:
+            aligin = dataWidth - (inStructBitAddr % dataWidth)
+            if aligin and aligin != dataWidth:
+                _pendingPaddingBits += aligin
+ 
+        if pendingPaddingBits:
+            inStructBitAddr -= pendingPaddingBits
+            inFrameBitAddr -= pendingPaddingBits
+            t = vecT(_pendingPaddingBits)
             ti = TransactionTemplateItem(None, t, inFrameBitAddr, origin=None, parent=self)
             self.append(ti)
             return ti._addField(None,
@@ -165,24 +173,7 @@ class TransactionTemplate(list):
                                 frameIndex,
                                 inStructBitAddr,
                                 inFrameBitAddr,
-                                bits)
-
-        if pendingPaddingBits:
-            inStructBitAddr, inFrameBitAddr, frameIndex = appendPadding(pendingPaddingBits,
-                                                                        inStructBitAddr - pendingPaddingBits,
-                                                                        inFrameBitAddr - pendingPaddingBits,
-                                                                        frameIndex,
-                                                                        )
-        
-        if applyPaddingAtEnd:
-            pendingPaddingBits = dataWidth - (inStructBitAddr % dataWidth)
-            if pendingPaddingBits and pendingPaddingBits != dataWidth:
-                inStructBitAddr, inFrameBitAddr, frameIndex = appendPadding(
-                                                                            pendingPaddingBits,
-                                                                            inStructBitAddr,
-                                                                            inFrameBitAddr,
-                                                                            frameIndex,
-                                                                            )
+                                _pendingPaddingBits)
 
         return inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex
 
@@ -212,7 +203,7 @@ class TransactionTemplate(list):
         :return: tuple (actual inStructBitAddr, actual inFrameBitAddr, actual pendingPaddingBits, actualFrameIndex)
         """
         assert isinstance(dataWidth, int), dataWidth
-        return self._discoverTransactionInfos(dataWidth,
+        return self._discoverTransactionParts(dataWidth,
                                               inStructBitAddr,
                                               inFrameBitAddr,
                                               maxFrameBitLen,

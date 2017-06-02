@@ -49,7 +49,7 @@ class TransactionTemplateItem(object):
         
         return inStructBitAddr, inFrameBitAddr, frameIndex
 
-    def _discoverTransactionInfos(self,
+    def _discoverTransactionParts(self,
                                   dataWidth,
                                   inStructBitAddr,
                                   inFrameBitAddr,
@@ -63,7 +63,7 @@ class TransactionTemplateItem(object):
         there we discover how to split field to words on bus 
         and we resolve in which frame this item will be
 
-        :note: params same as TransactionTemplate._discoverTransactionInfos
+        :note: params same as TransactionTemplate._discoverTransactionParts
         
         :param dataWidth: width of data signal of interface for which is template builded
         :param inStructBitAddr: base bit address of this in original HStruct
@@ -107,7 +107,7 @@ class TransactionTemplateItem(object):
                     paddingLargerThanWord = (pendingPaddingBits // dataWidth) > 0
 
                     if trim and isFirstNonPaddingInFrame and paddingLargerThanWord:
-                        # trim padding words from begining of frame
+                        # trim padding words from beginning of frame
                         pendingPaddingBits %= dataWidth
 
                     if pendingPaddingBits:
@@ -135,7 +135,7 @@ class TransactionTemplateItem(object):
         elif isinstance(t, HStruct):
             for ch in self.children:
                 inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex = \
-                ch._discoverTransactionInfos(dataWidth,
+                ch._discoverTransactionParts(dataWidth,
                                   inStructBitAddr,
                                   inFrameBitAddr,
                                   maxFrameBitLen,
@@ -144,6 +144,6 @@ class TransactionTemplateItem(object):
                                   frameIndex,
                                   trim)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(t)
         
         return inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex
