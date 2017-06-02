@@ -167,14 +167,14 @@ class TransactionTemplate(list):
             t = vecT(_pendingPaddingBits)
             ti = TransactionTemplateItem(None, t, inFrameBitAddr, origin=None, parent=self)
             self.append(ti)
-            return ti._addField(None,
-                                dataWidth,
-                                frameIndex,
-                                inStructBitAddr,
-                                inFrameBitAddr,
-                                _pendingPaddingBits)
+            inStructBitAddr, inFrameBitAddr, frameIndex = ti._addField(None,
+                                                                       dataWidth,
+                                                                       frameIndex,
+                                                                       inStructBitAddr,
+                                                                       inFrameBitAddr,
+                                                                       _pendingPaddingBits)
 
-        return inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex
+        return (inStructBitAddr, inFrameBitAddr, pendingPaddingBits, frameIndex)
 
     def discoverTransactionParts(self,
                                  dataWidth,
@@ -202,15 +202,18 @@ class TransactionTemplate(list):
         :return: tuple (actual inStructBitAddr, actual inFrameBitAddr, actual pendingPaddingBits, actualFrameIndex)
         """
         assert isinstance(dataWidth, int), dataWidth
-        return self._discoverTransactionParts(dataWidth,
-                                              inStructBitAddr,
-                                              inFrameBitAddr,
-                                              maxFrameBitLen,
-                                              maxPaddingWords,
-                                              pendingPaddingBits,
-                                              frameIndex,
-                                              trim,
-                                              applyPaddingAtEnd=True)
+        inStructBitAddr, inFrameBitAddr, _, frameIndex = \
+        self._discoverTransactionParts(dataWidth,
+                                       inStructBitAddr,
+                                       inFrameBitAddr,
+                                       maxFrameBitLen,
+                                       maxPaddingWords,
+                                       pendingPaddingBits,
+                                       frameIndex,
+                                       trim,
+                                       applyPaddingAtEnd=True)
+
+        return (inStructBitAddr, inFrameBitAddr, frameIndex)
 
     def __repr__getName(self, transactionPart, fieldWidth):
         names = []
