@@ -106,6 +106,7 @@ class FrameTemplate(object):
                     endOfWord = (self._wordIndx(lastEnd) + 1) * self.dataWidth
                     endOfPadding = min(endOfWord, end)
                     _p = TransactionPart(None, lastEnd, endOfPadding, 0)
+                    _p.parent = self
                     parts.append(_p)
 
                     if endOfPadding >= endOfWord:
@@ -138,6 +139,7 @@ class FrameTemplate(object):
                     endOfWord = lastEnd + self.dataWidth
                     endOfPadding = min(endOfWord, end)
                     _p = TransactionPart(None, lastEnd, endOfPadding, 0)
+                    _p.parent = self
                     parts.append(_p)
 
                     if endOfPadding >= endOfWord:
@@ -249,6 +251,9 @@ class TransactionPart():
         """
         offset = self.inFieldOffset
         return (self.getWidth() + offset, offset)
+
+    def isLastPart(self):
+        return self.tmpl.bitAddrEnd == self.endOfPart
 
     def __repr__(self):
         return "<TransactionPart startOfPart:%d, endOfPart:%d>" % (
