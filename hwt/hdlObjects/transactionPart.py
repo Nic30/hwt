@@ -240,15 +240,15 @@ class TransactionPart():
         """
         :return: bit range which contains data of this part on bus data signal
         """
-        offset = self.inStructBitAddr % self.busDataWidth
-        return (offset + self.width, offset)
+        offset = self.startOfPart % self.parent.dataWidth
+        return (offset + self.getWidth(), offset)
 
     def getFieldBitRange(self):
         """
         :return: bit range which contains data of this part on interface of field
         """
-        offset = self.offsetOfPart
-        return (self.width + offset, offset)
+        offset = self.inFieldOffset
+        return (self.getWidth() + offset, offset)
 
     def __repr__(self):
         return "<TransactionPart startOfPart:%d, endOfPart:%d>" % (
