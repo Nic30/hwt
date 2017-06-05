@@ -1,4 +1,4 @@
-from math import inf, floor
+from math import inf, floor, ceil
 import re
 
 from hwt.hdlObjects.types.array import Array
@@ -103,7 +103,10 @@ class FrameTemplate(object):
 
     def _wordIndx(self, addr):
         return floor(addr / self.dataWidth)
-
+    
+    def getWordCnt(self):
+        return ceil((self.endBitAddr - self.startBitAddr) / self.dataWidth) 
+    
     def walkWords(self, showPadding=False):
         wIndex = 0
         lastEnd = 0
