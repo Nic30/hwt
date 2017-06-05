@@ -1,14 +1,16 @@
 from math import inf, floor
+import re
 
 from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStruct
-import re
 
 
-def walkFlatten(transactionTmpl, offset=None):
+def walkFlatten(transactionTmpl, offset=None, shouldEnterFn=lambda transTmpl: True):
     """
     Walk fields in instance of TransactionTemplate
+    :param shouldEnterFn: function (transTmpl) which returns True when field should
+        be split on it's children
     """
     t = transactionTmpl.dtype
     base = transactionTmpl.bitAddr
@@ -21,12 +23,21 @@ def walkFlatten(transactionTmpl, offset=None):
     if isinstance(t, Bits):
         yield ((base, end), transactionTmpl)
     elif isinstance(t, HStruct):
-        for ch in transactionTmpl.children:
-            yield from walkFlatten(ch)
+        if shouldEnterFn(transactionTmpl):
+            for ch in transactionTmpl.children:
+                yield from walkFlatten(ch, shouldEnterFn=shouldEnterFn)
+        else:
+            yield ((base, end), transactionTmpl)
+
     elif isinstance(t, Array):
-        itemSize = (transactionTmpl.bitAddrEnd - transactionTmpl.bitAddr) // transactionTmpl.itemCnt
-        for i in range(transactionTmpl.itemCnt):
-            yield from walkFlatten(transactionTmpl.children, offset=base + i * itemSize)
+        if shouldEnterFn(transactionTmpl):
+            itemSize = (transactionTmpl.bitAddrEnd - transactionTmpl.bitAddr) // transactionTmpl.itemCnt
+            for i in range(transactionTmpl.itemCnt):
+                yield from walkFlatten(transactionTmpl.children,
+                                       offset=base + i * itemSize,
+                                       shouldEnterFn=shouldEnterFn)
+        else:
+            yield ((base, end), transactionTmpl)
     else:
         raise NotImplementedError(t)
 
@@ -187,7 +198,7 @@ class FrameTemplate(object):
         DW = self.dataWidth
 
         for tp in reversed(transactionParts):
-            percentOfWidth = tp.getWidth() / DW
+            percentOfWidth = tp.bit_length() / DW
             # -1 for ending |
             fieldWidth = max(0, int(percentOfWidth * width) - 1)
             assert fieldWidth >= 0
@@ -223,7 +234,7 @@ class FrameTemplate(object):
         return "\n".join(buff)
 
 
-class TransactionPart():
+class TransactionPart(object):
     """
     Container for informations about parts of TransactionTemplateItem split on databus words
     """
@@ -235,7 +246,7 @@ class TransactionPart():
         self.inFieldOffset = inFieldOffset
         self.parent = None
 
-    def getWidth(self):
+    def bit_length(self):
         return self.endOfPart - self.startOfPart
 
     def getBusWordBitRange(self):
@@ -243,14 +254,14 @@ class TransactionPart():
         :return: bit range which contains data of this part on bus data signal
         """
         offset = self.startOfPart % self.parent.dataWidth
-        return (offset + self.getWidth(), offset)
+        return (offset + self.bit_length(), offset)
 
     def getFieldBitRange(self):
         """
         :return: bit range which contains data of this part on interface of field
         """
         offset = self.inFieldOffset
-        return (self.getWidth() + offset, offset)
+        return (self.bit_length() + offset, offset)
 
     def isLastPart(self):
         return self.tmpl.bitAddrEnd == self.endOfPart

@@ -19,7 +19,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
         self.mem = {}
         self.requireInit = True
-    
+
     def doReq(self, s, req):
         rw = req[0]
         addr = req[1]
@@ -42,7 +42,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             raise NotImplementedError(rw)
 
         intf = self.intf
-        w = s.write 
+        w = s.write
         w(rw, intf.we)
         w(addr, intf.addr)
         w(wdata, intf.din)
@@ -89,7 +89,6 @@ class BramPort_withoutClkAgent(SyncAgentBase):
                 assert t == WRITE
                 s.write(None, intf.dout)
                 self.mem[addr.val] = req[2]
-
 
     def driver(self, s):
         intf = self.intf

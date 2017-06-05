@@ -187,7 +187,7 @@ def _ForEach_callBody(fn, item, index):
         return fn(item, index)
 
 
-def ForEach(parentUnit, items, bodyFn, name=""):
+def StaticForEach(parentUnit, items, bodyFn, name=""):
     """
     Generate for loop for static items
 
