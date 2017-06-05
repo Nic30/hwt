@@ -109,7 +109,7 @@ def split(arr, size):
 
 
 def flatten(iterables):
-    if isinstance(iterables, (list, tuple, GeneratorType)):
+    if isinstance(iterables, (list, tuple, GeneratorType, map)):
         for i in iterables:
             yield from flatten(i)
     else:
