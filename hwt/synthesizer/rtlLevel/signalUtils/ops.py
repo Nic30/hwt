@@ -172,7 +172,7 @@ class RtlSignalOps():
         if isinstance(source, InterfaceBase):
             assert source._isAccessible
             source = source._sig
-    
+
         if source is None:
             source = self._dtype.fromPy(None)
         else:
@@ -184,22 +184,20 @@ class RtlSignalOps():
                 err = True
             if err:
                 raise TypeConversionErr("Can not connect %r (of type %r) to %r (of type %r) due type incompatibility"
-                            % (source, source._dtype, self, self._dtype))
-    
+                                        % (source, source._dtype, self, self._dtype))
+
         tmp = self._getIndexCascade()
         if tmp:
             mainSig, indexCascade = tmp
             self = mainSig
         else:
             indexCascade = None
-    
+
         # self = self._tryMyIndexToEndpoint()
         a = Assignment(source, self, indexCascade)
-    
+
         self.drivers.append(a)
         if not isinstance(source, Value):
             source.endpoints.append(a)
-    
-        return [a]
 
-        
+        return [a]
