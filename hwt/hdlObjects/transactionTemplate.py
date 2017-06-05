@@ -98,6 +98,9 @@ class TransactionTemplate(object):
 
         return addr >> subAddrBits, subAddrBits
 
+    def bit_length(self):
+        return self.bitAddrEnd - self.bitAddr
+
     def __repr__(self, offset=0):
         offsetStr = "".join(["    " for _ in range(offset)])
 
