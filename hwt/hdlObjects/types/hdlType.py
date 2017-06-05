@@ -1,19 +1,6 @@
 from hwt.synthesizer.exceptions import TypeConversionErr
 
 
-class InvalidVHDLTypeExc(Exception):
-    def __init__(self, vhdlType):
-        self.vhdlType = vhdlType
-
-    def __str__(self):
-        variableName = self.variable.name
-        return ("Invalid type, width is %s in the context of variable %s"
-                % (str(self.vhdlType.getWidth()), variableName))
-
-    def __repr__(self):
-        return self.__str__()
-
-
 class HdlType():
     def __init__(self):
         self.constrain = None

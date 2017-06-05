@@ -10,7 +10,6 @@ from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BOOL, BIT
 from hwt.hdlObjects.types.enum import Enum
-from hwt.hdlObjects.types.hdlType import InvalidVHDLTypeExc
 from hwt.hdlObjects.value import Value
 from hwt.hdlObjects.variables import SignalItem
 from hwt.pyUtils.arrayQuery import arr_any, groupedby
@@ -333,12 +332,8 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
 
     @classmethod
     def PortItem(cls, pi, createTmpVarFn):
-        try:
-            return "%s : %s %s" % (pi.name, cls.DIRECTION(pi.direction),
-                                   cls.HdlType(pi._dtype, createTmpVarFn))
-        except InvalidVHDLTypeExc as e:
-            e.variable = pi
-            raise e
+        return "%s : %s %s" % (pi.name, cls.DIRECTION(pi.direction),
+                               cls.HdlType(pi._dtype, createTmpVarFn))
 
     @classmethod
     def sensitivityListItem(cls, item, createTmpVarFn):
