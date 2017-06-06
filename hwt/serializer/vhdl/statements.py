@@ -33,10 +33,9 @@ def ternaryOpsToIf(statements):
                     raise DoesNotContainsTernary()
                 else:
                     ifc = IfContainer(d.ops[0],
-                                      [Assignment(d.ops[1], st.dst)]
-                                      ,
+                                      [Assignment(d.ops[1], st.dst)],
                                       [Assignment(d.ops[2], st.dst)]
-                           )
+                                      )
                     stms.append(ifc)
 
             except (MultipleDriversExc, DoesNotContainsTernary):
@@ -61,8 +60,13 @@ class VhdlSerializer_statements():
     def Assignment(cls, a, createTmpVarFn):
         dst = a.dst
         assert isinstance(dst, SignalItem)
-        asHdl = lambda obj : cls.asHdl(obj, createTmpVarFn)
-        valAsHdl = lambda v: cls.Value(v, createTmpVarFn)
+
+        def asHdl(obj):
+            return cls.asHdl(obj, createTmpVarFn)
+
+        def valAsHdl(v):
+            return cls.Value(v, createTmpVarFn)
+
         if dst.virtualOnly:
             symbol = ":="
         else:
@@ -86,18 +90,20 @@ class VhdlSerializer_statements():
                 if sLen == dLen:
                     if sLen == 1 and srcT.forceVector != dstT.forceVector:
                         if srcT.forceVector:
-                            return "%s %s %s(0)" % (asHdl(dst), symbol, valAsHdl(a.src)) 
+                            return "%s %s %s(0)" % (asHdl(dst), symbol, valAsHdl(a.src))
                         else:
-                            return "%s(0) %s %s" % (asHdl(dst), symbol, valAsHdl(a.src)) 
+                            return "%s(0) %s %s" % (asHdl(dst), symbol, valAsHdl(a.src))
                     elif srcT.signed is not dstT.signed:
                         return "%s %s %s" % (asHdl(dst), symbol, valAsHdl(a.src._convSign(dstT.signed)))
 
-            raise SerializerException("%s %s %s  is not valid assignment\n because types are different (%s; %s) " % 
-                         (asHdl(dst), symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
+            raise SerializerException("%s %s %s  is not valid assignment\n because types are different (%s; %s) " %
+                                      (asHdl(dst), symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
 
     @classmethod
     def IfContainer(cls, ifc, createTmpVarFn):
-        asHdl = lambda obj : cls.asHdl(obj, createTmpVarFn)
+        def asHdl(obj):
+            return cls.asHdl(obj, createTmpVarFn)
+
         cond = cls.condAsHdl(ifc.cond, True, createTmpVarFn)
         elIfs = []
         if cls.VHDL_VER < VhdlVersion.v2008:
@@ -116,11 +122,12 @@ class VhdlSerializer_statements():
         return IfTmpl.render(cond=cond,
                              ifTrue=[asHdl(s) for s in ifTrue],
                              elIfs=elIfs,
-                             ifFalse=[asHdl(s) for s in ifFalse])  
+                             ifFalse=[asHdl(s) for s in ifFalse])
 
     @classmethod
     def SwitchContainer(cls, sw, createTmpVarFn):
-        asHdl = lambda obj : cls.asHdl(obj, createTmpVarFn)
+        def asHdl(obj):
+            return cls.asHdl(obj, createTmpVarFn)
         switchOn = cls.condAsHdl(sw.switchOn, False, createTmpVarFn)
 
         cases = []

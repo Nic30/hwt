@@ -1,5 +1,6 @@
-from time import  time
+from time import time
 
+from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.ip_packager.busInterface import BusInterface
 from hwt.serializer.ip_packager.helpers import appendSpiElem, appendStrElements, \
          mkSpiElm, ns, whereEndsWithExt, whereEndsWithExts
@@ -7,16 +8,15 @@ from hwt.serializer.ip_packager.model import Model
 from hwt.serializer.ip_packager.otherXmlObjs import VendorExtensions, FileSet, File, \
     Parameter, Value
 from hwt.serializer.ip_packager.port import Port
-from hwt.pyUtils.arrayQuery import arr_any
-import xml.etree.ElementTree as etree
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
+import xml.etree.ElementTree as etree
 
 
 vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
 vhdl_sim_fileSetName = "xilinx_vhdlbehavioralsimulation_view_fileset"
 tcl_fileSetName = "xilinx_xpgui_view_fileset"
 
-   
+
 class Component():
     """
     Xilinx xml is element position dependent

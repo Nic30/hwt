@@ -69,9 +69,7 @@ def splitStatementsOnCond(statements, resolvedCondCnt):
                 ifFalse.append(s)
             else:
                 independent.append(s)
-        #raise NotImplementedError("Can not use statement ", s,
-        #                          " because its position in if-tree is not decisable",
-        #                          " topCond:", topCond, " c:", c)
+
         ifTrue = list(renderIfTree(ifTrue, resolvedCondCnt + 1))
         ifFalse = list(renderIfTree(ifFalse, resolvedCondCnt + 1))
         topCond = [topCond, ]

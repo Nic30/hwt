@@ -10,7 +10,7 @@ indentIncr = ["^entity", "^port\s*\(", "^port\s*map\s*\(", "^generic\s*map\s*\("
               "^architecture", "^if", "^case", "^port\s+map\s*\(", "^process", "^while", "^component",
               "\S+\s*:\s*process"]
 indentDecr = ["^end[^\w\d_]", "^\)"]
-indentPeak = ["^begin", "^elsif", "^else", "^when",]
+indentPeak = ["^begin", "^elsif", "^else", "^when"]
 
 indentIncr = list(map(lambda x: re.compile(x, re.IGNORECASE), indentIncr))
 indentDecr = list(map(lambda x: re.compile(x, re.IGNORECASE), indentDecr))

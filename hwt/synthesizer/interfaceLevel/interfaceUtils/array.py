@@ -71,8 +71,8 @@ class InterfaceArray():
         if self._arrayElemCache:
             for indx, e in enumerate(self._arrayElemCache):
                 elemHasConnections = arr_any(walkPhysInterfaces(e),
-                                             lambda x: bool(x._sig.endpoints)
-                                                       or bool(x._sig.drivers))
+                                             lambda x: (bool(x._sig.endpoints) or
+                                                        bool(x._sig.drivers)))
                 if elemHasConnections:
                     e._resolveDirections()
 
@@ -83,7 +83,7 @@ class InterfaceArray():
 
     def __getitem__(self, key):
         if self._multipliedBy is None:
-            raise IntfLvlConfErr("interface %s is not array and can not be indexe on" % self._name)
+            raise IntfLvlConfErr("interface %s is not array and can not be indexed on" % self._name)
         return self._arrayElemCache[key]
 
     def _mkElemItem(self):

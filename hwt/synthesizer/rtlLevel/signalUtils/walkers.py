@@ -1,8 +1,8 @@
 from hwt.hdlObjects.assignment import Assignment
+from hwt.hdlObjects.constants import DIRECTION, SENSITIVITY
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps, isEventDependentOp
 from hwt.hdlObjects.portItem import PortItem
-from hwt.hdlObjects.constants import DIRECTION, SENSITIVITY
 from hwt.hdlObjects.statements import IfContainer, SwitchContainer
 from hwt.hdlObjects.value import Value
 from hwt.pyUtils.arrayQuery import where
@@ -90,7 +90,7 @@ def walkSignalsInExpr(expr):
         else:
             yield expr
     else:
-        raise Exception("Unknown node '%s' type %s" % 
+        raise Exception("Unknown node '%s' type %s" %
                         (repr(expr), str(expr.__class__)))
 
 

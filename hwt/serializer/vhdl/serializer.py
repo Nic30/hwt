@@ -207,7 +207,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         uniqComponents.sort(key=lambda c: c.name)
         components = list(map(lambda c: cls.Component(c, createTmpVarFn),
                               uniqComponents))
-        
+
         componentInstances = list(map(lambda c: cls.ComponentInstance(c, createTmpVarFn, scope),
                                       arch.componentInstances))
 

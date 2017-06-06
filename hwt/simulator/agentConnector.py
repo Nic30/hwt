@@ -16,8 +16,8 @@ def autoAddAgents(unit):
         try:
             agentCls = intf._getSimAgent()
         except NotImplementedError:
-            raise NotImplementedError(("Interface %s\n" + 
-                            "has not any simulation agent class assigned") % (str(intf)))
+            raise NotImplementedError(("Interface %s\n" +
+                                       "has not any simulation agent class assigned") % (str(intf)))
 
         if intf._multipliedBy is not None:
             agentCnt = evalParam(intf._multipliedBy).val

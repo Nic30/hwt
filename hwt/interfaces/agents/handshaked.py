@@ -10,7 +10,6 @@ class HandshakedAgent(SyncAgentBase):
 
     :attention: requires clk and rst/rstn signal
         (if you do not have any create simulation wrapper with it)
-    
     """
     def __init__(self, intf):
         super().__init__(intf)
@@ -44,16 +43,16 @@ class HandshakedAgent(SyncAgentBase):
             if self._lastRd is not 1:
                 s.write(1, self._rd)
                 self._lastRd = 1
-                
+
                 # try to run onMonitorReady if there is any
                 try:
                     onMonitorReady = self.onMonitorReady
                 except AttributeError:
                     onMonitorReady = None
-                
+
                 if onMonitorReady is not None:
                     onMonitorReady(s)
-            
+
             # wait for response of master
             yield s.updateComplete
             vld = r(self._vld)
@@ -85,7 +84,6 @@ class HandshakedAgent(SyncAgentBase):
         rd = s.read(self._rd)
         assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
 
-
     def driver(self, s):
         """
         Push data to interface
@@ -93,13 +91,13 @@ class HandshakedAgent(SyncAgentBase):
         set vld high and wait on rd in high then pass new data
         """
         r = s.read
-    
+
         # pop new data if there are not any pending
         if self.actualData is NOP and self.data:
             self.actualData = self.data.pop(0)
 
         doSend = self.actualData is not NOP
-        
+
         # update data on signals if is required
         if self.actualData is not self._lastWritten:
             if doSend:
@@ -113,7 +111,6 @@ class HandshakedAgent(SyncAgentBase):
         if self._lastVld is not vld:
             s.write(vld, self._vld)
             self._lastVld = vld
-    
 
         if not self.enable:
             # we can not check rd it in this function because we can not wait
@@ -130,24 +127,25 @@ class HandshakedAgent(SyncAgentBase):
             return
 
         if rd.val:
-            # slave did read data, take new one 
+            # slave did read data, take new one
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, wrote, %d: %r\n" % (
                                            self.intf._getFullName(), s.now, self.actualData))
-            
+
             # pop new data, because actual was read by slave
             if self.data:
                 self.actualData = self.data.pop(0)
             else:
                 self.actualData = NOP
 
-            # try to run onDriverWirteAck if there is any 
+            # try to run onDriverWirteAck if there is any
             try:
                 onDriverWirteAck = self.onDriverWirteAck
             except AttributeError:
                 onDriverWirteAck = None
             if onDriverWirteAck is not None:
                 onDriverWirteAck(s)
+
 
 class HandshakeSyncAgent(HandshakedAgent):
     """

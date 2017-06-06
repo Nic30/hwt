@@ -149,7 +149,4 @@ for l in s.splitlines():
     m = regex.match(l)
     if m:
         print(m.group(1) + "=%s" % m.group(2))
-    
-    
-
 

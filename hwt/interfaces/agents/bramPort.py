@@ -99,7 +99,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             self.requireInit = False
 
         readPending = self.readPending
-        yield s.updateComplete         
+        yield s.updateComplete
         # now we are after clk edge
 
         if self.requests and self.enable:

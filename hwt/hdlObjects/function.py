@@ -1,5 +1,6 @@
 from hwt.hdlObjects.statements import ReturnCalled
 
+
 class Function():
     """
     Container for hdl cunction
@@ -28,13 +29,13 @@ class Function():
         for p, a in zip(self.params, args):
             a.updateTime = 0
             p._val = a
-        
+
         try:
             for s in self.exprList:
                 s.seqEval()
         except ReturnCalled as r:
             return r.val
         return None
-    
+
     def staticEval(self):
         return self

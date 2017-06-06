@@ -1,11 +1,11 @@
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdlObjects.operatorDefs import AllOps
 
-opPrecedence = {AllOps.NOT : 4,
+opPrecedence = {AllOps.NOT: 4,
                 AllOps.EVENT: 1,
                 AllOps.RISING_EDGE: 1,
                 AllOps.DIV: 4,
-                AllOps.ADD : 5,
+                AllOps.ADD: 5,
                 AllOps.SUB: 5,
                 AllOps.MUL: 4,
                 AllOps.XOR: 9,
@@ -21,6 +21,7 @@ opPrecedence = {AllOps.NOT : 4,
                 AllOps.TERNARY: 1,
                 AllOps.CALL: 1,
                 }
+
 
 class SimModelSerializer_ops():
     @classmethod
@@ -40,12 +41,13 @@ class SimModelSerializer_ops():
                 except Exception:
                     pass
             return " %s " % s
-        
+
         ops = op.ops
         o = op.operator
+
         def _bin(name):
             return "(%s).%s(%s)" % (p(ops[0]).strip(), name, p(ops[1]).strip())
-        
+
         if o == AllOps.AND_LOG:
             return _bin('_and__val')
         elif o == AllOps.OR_LOG:
@@ -88,7 +90,7 @@ class SimModelSerializer_ops():
         elif o == AllOps.ADD:
             return _bin('_add__val')
         elif o == AllOps.TERNARY:
-            return "(%s)._ternary__val(%s, %s)" % tuple(map(cls.asHdl, ops)) 
+            return "(%s)._ternary__val(%s, %s)" % tuple(map(cls.asHdl, ops))
         elif o == AllOps.RISING_EDGE:
             assert len(ops) == 1
             return "(%s)._onRisingEdge__val(sim.now)" % (p(ops[0]))
@@ -97,13 +99,13 @@ class SimModelSerializer_ops():
             return "(%s)._onFallingEdge__val(sim.now)" % (p(ops[0]))
         elif o == AllOps.BitsAsSigned:
             assert len(ops) == 1
-            return  "(%s)._convSign__val(True)" % p(ops[0])
+            return "(%s)._convSign__val(True)" % p(ops[0])
         elif o == AllOps.BitsAsUnsigned:
             assert len(ops) == 1
-            return  "(%s)._convSign__val(False)" % p(ops[0])
+            return "(%s)._convSign__val(False)" % p(ops[0])
         elif o == AllOps.BitsAsVec:
             assert len(ops) == 1
-            return  "(%s)._convSign__val(None)" % p(ops[0])
+            return "(%s)._convSign__val(None)" % p(ops[0])
         elif o == AllOps.BitsToInt:
             assert len(ops) == 1
             op = ops[0]
@@ -112,11 +114,11 @@ class SimModelSerializer_ops():
             assert len(ops) == 1
             resT = op.result._dtype
             return "convertSimInteger__val(%s, %s, %s)" % (cls.HdlType(ops[0]._dtype),
-                                                   cls.asHdl(ops[0]),
-                                                   cls.HdlType_bits(resT))
-            
+                                                           cls.asHdl(ops[0]),
+                                                           cls.HdlType_bits(resT))
+
         elif o == AllOps.POW:
             assert len(ops) == 2
-            return  "power(%s, %s)" % (p(ops[0]), p(ops[1]))
+            return "power(%s, %s)" % (p(ops[0]), p(ops[1]))
         else:
             raise NotImplementedError("Do not know how to convert %s to simModel" % (o))

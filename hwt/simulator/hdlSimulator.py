@@ -262,4 +262,3 @@ class HdlSimulator(HdlEnvironmentCore):
         self._initUnitSignals(synthesisedUnit)
 
         self.run(until=time)
-

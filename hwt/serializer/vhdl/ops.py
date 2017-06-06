@@ -3,11 +3,11 @@ from hwt.hdlObjects.operatorDefs import AllOps
 
 
 # keep in mind that there is no such a thing in vhdl itself
-opPrecedence = {AllOps.NOT : 2,
+opPrecedence = {AllOps.NOT: 2,
                 AllOps.EVENT: 1,
                 AllOps.RISING_EDGE: 1,
                 AllOps.DIV: 3,
-                AllOps.ADD : 3,
+                AllOps.ADD: 3,
                 AllOps.SUB: 3,
                 AllOps.MUL: 3,
                 AllOps.MUL: 3,
@@ -28,7 +28,7 @@ opPrecedence = {AllOps.NOT : 2,
 
 def isResultOfTypeConversion(sig):
     try:
-        d = sig.drivers[0]
+        sig.drivers[0]
     except IndexError:
         return False
 

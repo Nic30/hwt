@@ -1,9 +1,10 @@
-from hwt.hdlObjects.types.boolean import Boolean
+from hwt.bitmask import mask
 from hwt.hdlObjects.types.bits import Bits
-from hwt.simulator.types.simInt import SIM_INT
+from hwt.hdlObjects.types.boolean import Boolean
 from hwt.hdlObjects.types.defs import INT
 from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.bitmask import mask
+from hwt.simulator.types.simInt import SIM_INT
+
 
 def convertSimBits__val(self, sigOrVal, toType):
     if isinstance(toType, Boolean):
@@ -12,10 +13,11 @@ def convertSimBits__val(self, sigOrVal, toType):
         if self.bit_length() == toType.bit_length():
             return sigOrVal._convSign(toType.signed)
     elif toType == INT or toType == SIM_INT:
-        
+
         if self.signed:
             raise NotImplementedError()
         else:
             fullMask = mask(self.bit_length())
             return INT.getValueCls()(sigOrVal.val, INT, sigOrVal.vldMask == fullMask, sigOrVal.updateTime)
+
     return HdlType.defaultConvert(self, sigOrVal, toType)

@@ -72,7 +72,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
     __keywords_dict = {kw: LangueKeyword() for kw in kwlist + simCls_reservedWords}
 
     fileExtension = '.py'
-    formater = lambda s: s
+
+    @staticmethod
+    def formater(s):
+        return s
 
     @classmethod
     def getBaseNameScope(cls):
@@ -150,19 +153,19 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             procs.append(cls.HWProcess(p, scope, 0))
 
         # architecture names can be same for different entities
-        # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)    
+        # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
 
         return unitTmpl.render({
-            "name"               : arch.getEntityName(),
-            "ports"              : list(map(lambda p: (p.name, cls.HdlType(p._dtype)), arch.entity.ports)),
-            "signals"            : list(map(serializeVar, variables)),
-            "extraTypes"         : extraTypes_serialized,
-            "processes"          : procs,
-            "processObjects"     : arch.processes,
-            "processesNames"     : map(lambda p: p.name, arch.processes),
-            "componentInstances" : arch.componentInstances,
-            "isOp"               : lambda x: isinstance(x, Operator),
-            "sensitivityByOp"    : sensitivityByOp
+            "name": arch.getEntityName(),
+            "ports": list(map(lambda p: (p.name, cls.HdlType(p._dtype)), arch.entity.ports)),
+            "signals": list(map(serializeVar, variables)),
+            "extraTypes": extraTypes_serialized,
+            "processes": procs,
+            "processObjects": arch.processes,
+            "processesNames": map(lambda p: p.name, arch.processes),
+            "componentInstances": arch.componentInstances,
+            "isOp": lambda x: isinstance(x, Operator),
+            "sensitivityByOp": sensitivityByOp
             })
 
     @classmethod
@@ -179,8 +182,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             if not (dst._dtype == a.src._dtype):
                 srcT = a.src._dtype
                 dstT = dst._dtype
-                if (isinstance(srcT, Bits) and isinstance(dstT, Bits) and
-                    srcT.bit_length() == dstT.bit_length() == 1):
+                if (isinstance(srcT, Bits) and
+                        isinstance(dstT, Bits) and
+                        srcT.bit_length() == dstT.bit_length() == 1):
+
                     if srcT.forceVector != dstT.forceVector:
                         if srcT.forceVector:
                             return "%syield (self.%s, (%s)._getitem__val(simHInt(0)), %s)" % (
@@ -190,7 +195,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
                                     indentStr, dst.name, cls.Value(a.src), ev)
 
                 raise SerializerException(("%s <= %s  is not valid assignment\n" +
-                                          " because types are different (%r; %r) ") % 
+                                          " because types are different (%r; %r) ") %
                                           (cls.asHdl(dst), cls.Value(a.src),
                                           dst._dtype, a.src._dtype))
             else:
@@ -244,8 +249,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
     @classmethod
     def SwitchContainer(cls, sw, indent, enclosure=None):
         switchOn = sw.switchOn
-        mkCond = lambda c: {Operator(AllOps.EQ,
-                                     [switchOn, c])}
+
+        def mkCond(c):
+            return {Operator(AllOps.EQ,
+                             [switchOn, c])}
         elIfs = []
 
         for key, statements in sw.cases:

@@ -8,13 +8,14 @@ def defaultUnitName(unit, sugestedName=None):
             defNameFn = unit._getDefaultName
         except AttributeError:
             pass
-        
+
         if defNameFn:
             return defNameFn()
-            
+
         return unit.__class__.__name__
     else:
         return sugestedName
+
 
 def walkSignalOnUnit(unit):
     for i in unit._interfaces:

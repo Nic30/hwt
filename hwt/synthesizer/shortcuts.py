@@ -4,10 +4,8 @@
 import os
 import shutil
 
-
 from hwt.hdlObjects.architecture import Architecture
 from hwt.hdlObjects.entity import Entity
-
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.interfaceLevel.unit import Unit
@@ -65,7 +63,7 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
                 name = ""
 
             codeBuff.append(serializer.comment("Object of class %s%s was not serialized due its serializer mode" % (obj.__class__.__name__, name)))
-    
+
     return serializer.formater(
                      "\n".join(codeBuff)
                      )
@@ -117,7 +115,7 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 try:
                     s = mouduleScopes[obj.entity]
                 except KeyError:
-                    raise SerializerException("Entity should be serialized before architecture of %s" % 
+                    raise SerializerException("Entity should be serialized before architecture of %s" %
                                               (obj.getEntityName()))
                 sc = serializer.Architecture(obj, s)
                 fName = obj.getEntityName() + serializer.fileExtension

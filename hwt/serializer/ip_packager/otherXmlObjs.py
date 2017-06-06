@@ -28,29 +28,31 @@ class Value():
             except KeyError:
                 pass
         return self
-    
+
     @classmethod
     def fromGeneric(cls, idPrefix, g, resolve):
         self = cls()
         self.id = idPrefix + g.name
         self.resolve = resolve
         t = g._dtype
+
         def getVal():
-            v = evalParam(g.defaultVal) 
+            v = evalParam(g.defaultVal)
             if v.vldMask:
                 return v.val
             else:
-                return 0  
+                return 0
+
         def bitString(w):
             self.format = "bitString"
             digits = math.ceil(w / 4)
-            self.text = ('0x%0' + str(digits) + 'X') % getVal() 
+            self.text = ('0x%0' + str(digits) + 'X') % getVal()
             self.bitStringLength = str(w)
-            
+
         if t == BOOL:
             self.format = "bool"
-            self.text = str(bool(getVal())).lower() 
-        elif isinstance(t, Integer) :
+            self.text = str(bool(getVal())).lower()
+        elif isinstance(t, Integer):
             self.format = "long"
             self.text = str(getVal())
         elif t == STR:
@@ -61,54 +63,60 @@ class Value():
         else:
             raise NotImplementedError("Not implemented for datatype %s" % repr(t))
         return self
-        
+
     def asElem(self):
         e = mkSpiElm("value")
         appendSpiAtribs(self, e, spi_ns_prefix, reqPropNames=['id', 'resolve'],
                         optPropNames=['format', 'bitStringLength'])
-        
+
         e.text = str(self.text)
         return e
+
 
 class FileSet():
     def __init__(self):
         self.name = ""
         self.files = []
+
     def asElem(self):
         e = mkSpiElm("fileSet")
         appendSpiElem(e, "name").text = self.name
         for f in self.files:
             e.append(f.asElem())
         return e
-                    
+
+
 class File():
-    _strValues = ["name", "fileType", "userFileType"]    
+    _strValues = ["name", "fileType", "userFileType"]
+
     def __init__(self):
         self.name = ""
         self.fileType = ""
         self.userFileType = ""
-        
+
     @classmethod
     def fromFileName(cls, fileName):
         self = cls()
         extDict = {
                    ".vhd": ("vhdlSource", "IMPORTED_FILE"),
                    ".tcl": ("tclSource", "XGUI_VERSION_2"),
-                   ".v"  : ("verilogSource", "IMPORTED_FILE")
+                   ".v":   ("verilogSource", "IMPORTED_FILE")
                    }
         fileType = extDict[os.path.splitext(fileName.lower())[1]]
-        self.fileType = fileType[0] 
+        self.fileType = fileType[0]
         self.userFileType = fileType[1]
         self.name = fileName
         return self
-                
+
     def asElem(self):
         e = mkSpiElm("file")
         appendStrElements(e, self, self._strValues)
         return e
-    
+
+
 class Parameter():
     __slots__ = ["name", 'displayName', "value", 'order']
+
     def __init__(self):
         self.name = ""
         self.value = Value()
@@ -120,29 +128,29 @@ class Parameter():
     #    v = elm.find('spirit:value', ns)
     #    self.value = Value.fromElem(v)
     #    return self
-        
+
     def asElem(self):
         e = mkSpiElm("parameter")
         appendSpiElem(e, "name").text = self.name
         e.append(self.value.asElem())
         return e
-    
+
 
 class CoreExtensions():
     def __init__(self):
         self.supportedFamilies = {
-                                  "zynq" : "Production",
-                                  "atrix7" : "Production",
-                                  "kintex7" : "Production",
-                                  "virtex7" : "Production"
+                                  "zynq": "Production",
+                                  "atrix7": "Production",
+                                  "kintex7": "Production",
+                                  "virtex7": "Production"
                                   }
         self.taxonomies = [
                            "/BaseIP"
                            ]
         self.displayName = ""
         self.coreRevision = ""
-        self.coreCreationDateTime = gmtime() 
-              
+        self.coreCreationDateTime = gmtime()
+
     def asElem(self, displayName, revision):
         r = mkXiElm("coreExtensions")
         sf = appendXiElem(r, "supportedFamilies")
@@ -150,27 +158,30 @@ class CoreExtensions():
             f = appendXiElem(sf, "family")
             f.text = family
             f.attrib["xilinx:lifeCycle"] = lifeCycle
-            
+
         ta = appendXiElem(r, "taxonomies")
         for t in self.taxonomies:
             appendXiElem(ta, "taxonomy").text = t
-            
+
         appendXiElem(r, "displayName").text = displayName
         appendXiElem(r, "coreRevision").text = revision
         appendXiElem(r, "coreCreationDateTime").text = strftime("%Y-%m-%dT%H:%M:%SZ", self.coreCreationDateTime)
         return r
 
+
 #  [TODO] XILINX_VERSION has to be extracted into some configuration
 class VendorExtensions():
     XILINX_VERSION = "2014.4.1"
+
     def __init__(self):
         self.coreExtensions = CoreExtensions()
         self.packagingInfo = {"xilinxVersion": self.XILINX_VERSION}
+
     def asElem(self, displayName, revision):
         r = mkSpiElm("vendorExtensions")
         r.append(self.coreExtensions.asElem(displayName, revision))
         pi = appendXiElem(r, "packagingInfo")
         for key, val in self.packagingInfo.items():
             appendXiElem(pi, key).text = val
-        
+
         return r

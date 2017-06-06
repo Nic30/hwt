@@ -3,6 +3,7 @@ from hwt.hdlObjects.types.integer import Integer
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 
+
 class FunctionContainer(list):
     """
     Hdl container for functions with same name to support function overloading
@@ -11,10 +12,10 @@ class FunctionContainer(list):
         super(FunctionContainer, self).__init__()
         self.name = name
         self.parent = parent
-    
+
     def __hash__(self):
         return hash((id(self), self.name))
-        
+
     def append(self, fn, suppressRedefinition=False):
         """
         Append function definition
@@ -48,15 +49,14 @@ class FunctionContainer(list):
             if same:
                 return fn
         raise KeyError("Function was not found")
-    
+
     def call(self, *args):
         # this is called on header
         body = self.parent.body[self.name]
-        
+
         fn = body.lookup(*args)
         return Operator.withRes(AllOps.CALL, [fn, *args], fn.returnT)
-        
+
     def staticEval(self):
         # function id does not have to be evalueated
         pass
-    

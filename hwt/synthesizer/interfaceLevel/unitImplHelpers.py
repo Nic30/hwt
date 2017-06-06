@@ -14,7 +14,7 @@ def getClk(unit):
         return unit.clk
     except AttributeError:
         pass
-    
+
     raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
 
 
@@ -23,12 +23,12 @@ def getRst(unit):
         return unit.rst
     except AttributeError:
         pass
-    
+
     try:
         return unit.rst_n
     except AttributeError:
         pass
-    
+
     raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
 
 
@@ -114,7 +114,7 @@ class UnitImplHelpers(object):
             self._boundIntfSignalToEntity(s, inftToPortDict)
 
     def _boundIntfSignalToEntity(self, interface, inftToPortDict):
-        portItem = single(self._entity.ports, lambda x : x._interface == interface)
+        portItem = single(self._entity.ports, lambda x: x._interface == interface)
         interface._boundedEntityPort = portItem
         d = INTF_DIRECTION.asDirection(interface._direction)
 
@@ -124,7 +124,7 @@ class UnitImplHelpers(object):
         if portItem.direction != d:
             # print(self._entity)
             # print(self._architecture)
-            raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
+            raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" %
                                  (self._name, portItem.name, repr(interface), portItem.direction, d))
 
     def _shareParamsWithPrefix(self, obj, prefix, paramNames):
@@ -142,7 +142,7 @@ class UnitImplHelpers(object):
         excluded = set()
         if exclude is not None:
             exclude = set(exclude)
-        
+
         for parentP in parent._params:
             if exclude and parentP in exclude:
                 excluded.add(parentP)
@@ -154,6 +154,6 @@ class UnitImplHelpers(object):
             except AttributeError:
                 continue
             p.set(parentP)
-        
+
         if exclude is not None:
             assert excluded == exclude

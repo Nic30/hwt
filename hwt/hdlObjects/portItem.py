@@ -1,6 +1,7 @@
 from hwt.hdlObjects.variables import SignalItem
 from hwt.hdlObjects.constants import DIRECTION
 
+
 class PortItem(SignalItem):
     """basic hdl entity port item"""
     def __init__(self, name, direction, dtype, unit):
@@ -10,15 +11,13 @@ class PortItem(SignalItem):
         self._dtype = dtype
         self.src = None
         self.dst = None
-    
-    
+
     def simEval(self, simulator):
         """
         dst signal is updated when src signal is updated no specific reevaluating is needen
         """
         pass
-    
-    
+
     def connectSig(self, signal):
         """
         Connect to port item on subunit
@@ -27,20 +26,20 @@ class PortItem(SignalItem):
             if self.src is not None:
                 raise Exception("Port %s is already associated with %s" % (self.name, str(self.src)))
             self.src = signal
-            
+
             signal.endpoints.append(self)
         elif self.direction == DIRECTION.OUT:
             if self.dst is not None:
                 raise Exception("Port %s is already associated with %s" % (self.name, str(self.dst)))
             self.dst = signal
-            
+
             signal.drivers.append(self)
         else:
             raise NotImplementedError()
-    
+
         signal.hidden = False
         signal.ctx.subUnits.add(self.unit)
-    
+
     def reigsterInternSig(self, signal):
         """
         Connect internal signal to port item,
@@ -69,8 +68,7 @@ class PortItem(SignalItem):
             self.dst.drivers.append(self)
         else:
             raise NotImplementedError()
-        
+
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
-        return VhdlSerializer.PortItem(self, onlyPrintDefaultValues) 
-
+        return VhdlSerializer.PortItem(self, onlyPrintDefaultValues)
