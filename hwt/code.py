@@ -176,7 +176,7 @@ def In(sigOrVal, iterable):
             res = sigOrVal._eq(i)
         else:
             res = res | sigOrVal._eq(i)
-    assert res is not None
+    assert res is not None, "Parameter iterable is empty"
     return res
 
 
