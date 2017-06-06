@@ -85,6 +85,7 @@ class FrameTemplate(object):
 
                     if not trimPaddingWordsOnStart and padding > dataWidth:
                         startOfThisFrame += (padding // dataWidth) * dataWidth
+
                     endOfThisFrame = startOfThisFrame + maxFrameLen
 
                 wordIndex = startOfPart // dataWidth
@@ -109,7 +110,7 @@ class FrameTemplate(object):
     
     def walkWords(self, showPadding=False):
         wIndex = 0
-        lastEnd = 0
+        lastEnd = self.startBitAddr
         parts = []
         for p in self.parts:
             end = p.startOfPart
