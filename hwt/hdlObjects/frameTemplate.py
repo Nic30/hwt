@@ -63,8 +63,11 @@ class FrameTemplate(object):
         self.startBitAddr = startBitAddr
         self.endBitAddr = endBitAddr
         self.parts = transactionParts
+        
         for p in self.parts:
             p.parent = self
+            assert p.startOfPart >= startBitAddr, (p, startBitAddr, self)
+            assert p.endOfPart <= endBitAddr, (p, endBitAddr, self)
     
         
     
@@ -114,11 +117,14 @@ class FrameTemplate(object):
             startOfPart = base
             while startOfPart != end:
                 assert startOfThisFrame % wordWidth == 0, startOfThisFrame
+                # parts are always in single word
                 if startOfPart == endOfThisFrame:
                     # cut off padding at end of frame
                     paddingWords = fullWordCnt(endOfPart, endOfThisFrame)  
                     if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
                         _endOfThisFrame = endOfThisFrame - paddingWords * wordWidth
+                        # align end of frame to word
+                        _endOfThisFrame = ceil(_endOfThisFrame / wordWidth) * wordWidth
                     
                     yield FrameTemplate(wordWidth, startOfThisFrame, _endOfThisFrame, parts)
                     
@@ -167,6 +173,9 @@ class FrameTemplate(object):
             paddingWords = fullWordCnt(endOfPart, endOfThisFrame)  
             if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
                 endOfThisFrame -= paddingWords * wordWidth
+                # align end of frame to word
+            endOfThisFrame = ceil(endOfThisFrame / wordWidth) * wordWidth
+                    
             yield FrameTemplate(wordWidth, startOfThisFrame, endOfThisFrame, parts)
 
     def _wordIndx(self, addr):
