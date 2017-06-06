@@ -65,7 +65,9 @@ class FrameTemplate(object):
         self.parts = transactionParts
         for p in self.parts:
             p.parent = self
-
+    
+        
+    
     @staticmethod
     def framesFromTransactionTemplate(transactionTmpl,
                                       wordWidth,
@@ -98,35 +100,46 @@ class FrameTemplate(object):
         if maxPaddingWords < inf:
             assert trimPaddingWordsOnStart or trimPaddingWordsOnEnd 
         
-        maxPaddig = maxPaddingWords * wordWidth
+        def fullWordCnt(start, end):
+            """Count of complete words between two addresses
+            """
+            startWIndex = start // wordWidth
+            endWIndex = end // wordWidth
+            
+            assert startWIndex <= endWIndex, (start, end)
+            
+            return endWIndex - startWIndex
 
         for (base, end), tmpl in walkFlatten(transactionTmpl):
             startOfPart = base
             while startOfPart != end:
+                assert startOfThisFrame % wordWidth == 0, startOfThisFrame
                 if startOfPart == endOfThisFrame:
                     # cut off padding at end of frame
-                    padding = endOfThisFrame - endOfPart  
-                    if trimPaddingWordsOnEnd and padding > maxPaddig:
-                        endOfThisFrame -= (padding // wordWidth) * wordWidth
+                    paddingWords = fullWordCnt(endOfPart, endOfThisFrame)  
+                    if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
+                        _endOfThisFrame = endOfThisFrame - paddingWords * wordWidth
                     
-                    yield FrameTemplate(wordWidth, startOfThisFrame, endOfThisFrame, parts)
+                    yield FrameTemplate(wordWidth, startOfThisFrame, _endOfThisFrame, parts)
                     
                     # prepare for start of new frame
                     parts = []
                     isFirstInFrame = True
                     partsPending = False
-                    startOfThisFrame = endOfThisFrame
+                    # start on new 
+                    startOfThisFrame = (endOfThisFrame // wordWidth) * wordWidth
                     endOfThisFrame = startOfThisFrame + maxFrameLen
                     endOfPart = endOfThisFrame
+                    
                     continue
 
                 if isFirstInFrame:
                     partsPending = True
                     isFirstInFrame = False
                     # cut off padding at start of frame
-                    padding = base - startOfThisFrame
-                    if trimPaddingWordsOnStart and padding > maxPaddig:
-                        startOfThisFrame += (padding // wordWidth) * wordWidth
+                    paddingWords = fullWordCnt(startOfThisFrame, base) 
+                    if trimPaddingWordsOnStart and paddingWords > maxPaddingWords:
+                        startOfThisFrame += paddingWords * wordWidth
 
                     endOfThisFrame = startOfThisFrame + maxFrameLen
                 else:
@@ -151,9 +164,9 @@ class FrameTemplate(object):
         if partsPending:
             endOfThisFrame = max(startOfPart, transactionTmpl.bitAddrEnd)
             # cut off padding at end of frame
-            padding = endOfThisFrame - endOfPart  
-            if trimPaddingWordsOnEnd and padding > maxPaddig:
-                endOfThisFrame -= (padding // wordWidth) * wordWidth
+            paddingWords = fullWordCnt(endOfPart, endOfThisFrame)  
+            if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
+                endOfThisFrame -= paddingWords * wordWidth
             yield FrameTemplate(wordWidth, startOfThisFrame, endOfThisFrame, parts)
 
     def _wordIndx(self, addr):
