@@ -43,10 +43,22 @@ def walkFlatten(transactionTmpl, offset=None, shouldEnterFn=lambda transTmpl: Tr
 
 
 class FrameTemplate(object):
+    """
+    Container for informations about frame,
+    template which is used for resolving how data should be formated into words and frames
+    on target interface
+    """
     __RE_RM_ARRAY_DOTS = re.compile("(\.\[)")
 
-    def __init__(self, dataWidth, startBitAddr, endBitAddr, transactionParts):
-        self.dataWidth = dataWidth
+    def __init__(self, wordWidth, startBitAddr, endBitAddr, transactionParts):
+        """
+        
+        :param wordWidth: width of word on interface where this template should be used
+        :param startBitAddr: bit offset where this frame starts
+        :param endBitAddr: bit offset where this frame ends (bit index of first bit behind this frame)
+        :param transactionParts: instances of TransactionPart which are parts of this frame
+        """
+        self.wordWidth = wordWidth
         self.startBitAddr = startBitAddr
         self.endBitAddr = endBitAddr
         self.parts = transactionParts
@@ -55,7 +67,7 @@ class FrameTemplate(object):
 
     @staticmethod
     def framesFromTransactionTemplate(transactionTmpl,
-                                      dataWidth,
+                                      wordWidth,
                                       maxFrameLen=inf,
                                       maxPaddingWords=inf,
                                       trimPaddingWordsOnStart=False,
@@ -64,7 +76,7 @@ class FrameTemplate(object):
         Convert transaction template into FrameTemplates
         
         :param transactionTmpl: transaction template used which are FrameTemplates created from
-        :param dataWidth: width of data signal in target interface where frames will be used
+        :param wordWidth: width of data signal in target interface where frames will be used
         :param maxFrameLen: maximum length of frame, if exceeded another frame will be created
         :param maxPaddingWords: maximum of continual padding words in frame,
             if exceed frame is split and words are cut of
@@ -75,37 +87,57 @@ class FrameTemplate(object):
         """
         isFirstInFrame = True
         partsPending = False
-        frameIndex = 0
 
         startOfThisFrame = 0
         endOfThisFrame = maxFrameLen
         parts = []
-
+        endOfPart = 0
+        assert maxFrameLen > 0
+        assert maxPaddingWords >= 0
         if maxPaddingWords < inf:
             assert trimPaddingWordsOnStart or trimPaddingWordsOnEnd 
+        
+        maxPaddig = maxPaddingWords * wordWidth
 
         for (base, end), tmpl in walkFlatten(transactionTmpl):
             startOfPart = base
             while startOfPart != end:
                 if startOfPart == endOfThisFrame:
-                    frameIndex += 1
+                    # cut off padding at end of frame
+                    padding = endOfThisFrame - endOfPart  
+                    if trimPaddingWordsOnEnd and padding > maxPaddig:
+                        endOfThisFrame -= (padding // wordWidth) * wordWidth
+                    
+                    yield FrameTemplate(wordWidth, startOfThisFrame, endOfThisFrame, parts)
+                    
+                    # prepare for start of new frame
+                    parts = []
                     isFirstInFrame = True
-                    startOfThisFrame = endOfThisFrame
                     partsPending = False
-                    yield FrameTemplate(dataWidth, startOfThisFrame, endOfThisFrame, parts)
+                    startOfThisFrame = endOfThisFrame
+                    endOfThisFrame = startOfThisFrame + maxFrameLen
+                    endOfPart = endOfThisFrame
+                    continue
 
                 if isFirstInFrame:
                     partsPending = True
                     isFirstInFrame = False
+                    # cut off padding at start of frame
                     padding = base - startOfThisFrame
-
-                    if trimPaddingWordsOnStart and padding > dataWidth:
-                        startOfThisFrame += (padding // dataWidth) * dataWidth
+                    if trimPaddingWordsOnStart and padding > maxPaddig:
+                        startOfThisFrame += (padding // wordWidth) * wordWidth
 
                     endOfThisFrame = startOfThisFrame + maxFrameLen
-
-                wordIndex = startOfPart // dataWidth
-                endOfWord = dataWidth * (wordIndex + 1)
+                else:
+                    padding = startOfPart - endOfPart
+                    if trimPaddingWordsOnEnd and padding >= wordWidth:
+                        # there is too much continual padding
+                        endOfThisFrame = startOfPart            
+                        continue
+                    
+                
+                wordIndex = startOfPart // wordWidth
+                endOfWord = wordWidth * (wordIndex + 1)
 
                 endOfPart = min(endOfWord, end, endOfThisFrame)
 
@@ -116,15 +148,33 @@ class FrameTemplate(object):
                 startOfPart = endOfPart
 
         if partsPending:
-            yield FrameTemplate(dataWidth, startOfThisFrame, startOfPart, parts)
+            endOfThisFrame = max(startOfPart, transactionTmpl.bitAddrEnd)
+            # cut off padding at end of frame
+            padding = endOfThisFrame - endOfPart  
+            if trimPaddingWordsOnEnd and padding > maxPaddig:
+                endOfThisFrame -= (padding // wordWidth) * wordWidth
+            yield FrameTemplate(wordWidth, startOfThisFrame, endOfThisFrame, parts)
 
     def _wordIndx(self, addr):
-        return floor(addr / self.dataWidth)
+        """
+        convert bit address to index of word where this address is
+        """
+        return floor(addr / self.wordWidth)
     
     def getWordCnt(self):
-        return ceil((self.endBitAddr - self.startBitAddr) / self.dataWidth) 
+        """
+        Get count of words in this frame
+        """
+        return ceil((self.endBitAddr - self.startBitAddr) / self.wordWidth) 
     
     def walkWords(self, showPadding=False):
+        """
+        Walk enumerated words in this frame
+
+        :attention: not all indexes has to be present, only words with items will be generated when not showPadding
+        :param showPadding: padding TransactionParts are also present
+        :return: generator of tuples (wordIndex, list of TransactionParts in this word)
+        """
         wIndex = 0
         lastEnd = self.startBitAddr
         parts = []
@@ -134,7 +184,7 @@ class FrameTemplate(object):
                 # insert padding
                 while end != lastEnd:
                     assert end >= lastEnd, (end, lastEnd)
-                    endOfWord = (self._wordIndx(lastEnd) + 1) * self.dataWidth
+                    endOfWord = (self._wordIndx(lastEnd) + 1) * self.wordWidth
                     endOfPadding = min(endOfWord, end)
                     _p = TransactionPart(None, lastEnd, endOfPadding, 0)
                     _p.parent = self
@@ -156,18 +206,18 @@ class FrameTemplate(object):
 
             parts.append(p)
             lastEnd = p.endOfPart
-            if lastEnd % self.dataWidth == 0:
+            if lastEnd % self.wordWidth == 0:
                 yield (wIndex, parts)
 
                 wIndex += 1
                 parts = []
 
-        if showPadding and (parts or lastEnd != self.endBitAddr or lastEnd % self.dataWidth != 0):
-            end = (self._wordIndx(self.endBitAddr) + 1) * self.dataWidth
+        if showPadding and (parts or lastEnd != self.endBitAddr or lastEnd % self.wordWidth != 0):
+            end = (self._wordIndx(self.endBitAddr - 1) + 1) * self.wordWidth
             if showPadding:
                 while end != lastEnd:
                     assert end >= lastEnd, (end, lastEnd)
-                    endOfWord = lastEnd + self.dataWidth
+                    endOfWord = lastEnd + self.wordWidth
                     endOfPadding = min(endOfWord, end)
                     _p = TransactionPart(None, lastEnd, endOfPadding, 0)
                     _p.parent = self
@@ -215,7 +265,7 @@ class FrameTemplate(object):
 
     def __repr__word(self, index, width, padding, transactionParts):
         buff = ["{0: <{padding}}|".format(index, padding=padding)]
-        DW = self.dataWidth
+        DW = self.wordWidth
 
         for tp in reversed(transactionParts):
             percentOfWidth = tp.bit_length() / DW
@@ -237,7 +287,7 @@ class FrameTemplate(object):
             return s + ">"
 
         padding = 5
-        DW = self.dataWidth
+        DW = self.wordWidth
         width = int(DW * scale)
 
         buff.append('{0: <{padding}}{1: <{halfLineWidth}}{2: >{halfLineWidth}}'.format(
@@ -273,7 +323,7 @@ class TransactionPart(object):
         """
         :return: bit range which contains data of this part on bus data signal
         """
-        offset = self.startOfPart % self.parent.dataWidth
+        offset = self.startOfPart % self.parent.wordWidth
         return (offset + self.bit_length(), offset)
 
     def getFieldBitRange(self):
@@ -287,5 +337,5 @@ class TransactionPart(object):
         return self.tmpl.bitAddrEnd == self.endOfPart
 
     def __repr__(self):
-        return "<TransactionPart startOfPart:%d, endOfPart:%d>" % (
-               self.startOfPart, self.endOfPart)
+        return "<TransactionPart %r, startOfPart:%d, endOfPart:%d>" % (
+               self.tmpl, self.startOfPart, self.endOfPart)
