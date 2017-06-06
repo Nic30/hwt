@@ -58,8 +58,21 @@ class FrameTemplate(object):
                                       dataWidth,
                                       maxFrameLen=inf,
                                       maxPaddingWords=inf,
-                                      trimPaddingWordsOnEnd=False,
-                                      trimPaddingWordsOnStart=False):
+                                      trimPaddingWordsOnStart=False,
+                                      trimPaddingWordsOnEnd=False):
+        """
+        Convert transaction template into FrameTemplates
+        
+        :param transactionTmpl: transaction template used which are FrameTemplates created from
+        :param dataWidth: width of data signal in target interface where frames will be used
+        :param maxFrameLen: maximum length of frame, if exceeded another frame will be created
+        :param maxPaddingWords: maximum of continual padding words in frame,
+            if exceed frame is split and words are cut of
+        :attention: if maxPaddingWords<inf trimPaddingWordsOnEnd or trimPaddingWordsOnStart has to be True
+            to decide where padding should be trimmed
+        :param trimPaddingWordsOnStart: trim padding from start of frame at word granularity
+        :param trimPaddingWordsOnEnd: trim padding from end of frame at word granularity
+        """
         isFirstInFrame = True
         partsPending = False
         frameIndex = 0
@@ -67,6 +80,9 @@ class FrameTemplate(object):
         startOfThisFrame = 0
         endOfThisFrame = maxFrameLen
         parts = []
+
+        if maxPaddingWords < inf:
+            assert trimPaddingWordsOnStart or trimPaddingWordsOnEnd 
 
         for (base, end), tmpl in walkFlatten(transactionTmpl):
             startOfPart = base
@@ -83,7 +99,7 @@ class FrameTemplate(object):
                     isFirstInFrame = False
                     padding = base - startOfThisFrame
 
-                    if not trimPaddingWordsOnStart and padding > dataWidth:
+                    if trimPaddingWordsOnStart and padding > dataWidth:
                         startOfThisFrame += (padding // dataWidth) * dataWidth
 
                     endOfThisFrame = startOfThisFrame + maxFrameLen
