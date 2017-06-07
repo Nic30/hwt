@@ -14,9 +14,10 @@ install:
 - pip3 install pytest coveralls
 - git clone --depth=1 https://github.com/Nic30/hwtLib.git
 - cd hwtLib
-- python3 setup.py install
+#- python3 setup.py install
 
 script:
+- export PYTHONPATH=`pwd` `pwd`/../hwtLib
 - coverage run --source=hwt ../hwtLib/setup.py test
 
 deploy:
