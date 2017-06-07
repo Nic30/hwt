@@ -8,6 +8,11 @@ cache:
 python:
 - '3.5'
 
+env:
+  global:
+  - HWT=`pwd`
+  - HWT_LIB=`pwd`/../hwtLib
+  - PYTHONPATH=$HWT $HWT_LIB
 install:
 - python3 setup.py install
 - cd ..
@@ -17,7 +22,6 @@ install:
 #- python3 setup.py install
 
 script:
-- export PYTHONPATH=`pwd` `pwd`/../hwtLib
 - coverage run --source=hwt ../hwtLib/setup.py test
 
 deploy:
