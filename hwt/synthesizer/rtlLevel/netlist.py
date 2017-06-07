@@ -223,7 +223,7 @@ class RtlNetlist():
             if s.hidden and s.defaultVal.vldMask and not s.drivers:
                 # constant
                 s.hidden = False
-            
+
             if s not in interfaces and not s.hidden:
                 arch.variables.append(s)
 

@@ -252,7 +252,7 @@ class BramPort(BramPort_withoutClk):
         self.clk = s(masterDir=D.OUT)
         with self._associated(clk=self.clk):
             super()._declr()
-        
+
         self._associatedClk = self.clk
 
     def _getSimAgent(self):

@@ -164,14 +164,20 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(ifc), repr(mIfc)))
 
-                    yield from ifc._connectTo(mIfc, masterIndex=masterIndex, slaveIndex=slaveIndex,
-                                                    exclude=exclude, fit=fit)
+                    yield from ifc._connectTo(mIfc,
+                                              masterIndex=masterIndex,
+                                              slaveIndex=slaveIndex,
+                                              exclude=exclude,
+                                              fit=fit)
                 else:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(mIfc), repr(ifc)))
 
-                    yield from mIfc._connectTo(ifc, masterIndex=slaveIndex, slaveIndex=masterIndex,
-                                                    exclude=exclude, fit=fit)
+                    yield from mIfc._connectTo(ifc,
+                                               masterIndex=slaveIndex,
+                                               slaveIndex=masterIndex,
+                                               exclude=exclude,
+                                               fit=fit)
         else:
             dstSig = toHVal(self)
             srcSig = toHVal(master)
@@ -313,7 +319,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         If interface has associated rst(_n) return it otherwise try to find rst(_n) on parent recursively
         """
         a = self._associatedRst
-        
+
         if a is not None:
             return a
 
@@ -330,7 +336,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         If interface has associated clk return it otherwise try to find clk on parent recursively
         """
         a = self._associatedClk
-        
+
         if a is not None:
             return a
 

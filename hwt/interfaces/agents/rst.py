@@ -27,15 +27,16 @@ def pullUpAfter(sig, intDelay=6 * Time.ns):
 
     return _pullDownAfter
 
+
 class PullUpAgent(AgentBase):
     def __init__(self, intf, intDelay=6 * Time.ns):
         self.intDelay = intDelay
         self.data = []
         self.driver = pullUpAfter(intf, intDelay=intDelay)
-        
+
+
 class PullDownAgent(AgentBase):
     def __init__(self, intf, intDelay=6 * Time.ns):
         self.intDelay = intDelay
         self.data = []
         self.driver = pullDownAfter(intf, intDelay=intDelay)
-        

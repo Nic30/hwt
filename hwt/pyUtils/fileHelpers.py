@@ -1,4 +1,6 @@
-import os, fnmatch
+import os
+import fnmatch
+
 
 def find_files(directory, pattern, recursive=True):
     if not os.path.isdir(directory):
@@ -18,27 +20,29 @@ def find_files(directory, pattern, recursive=True):
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
                 yield filename
-        
-            
+
+
 def applyReplacesOnFile(fileName, replaces, write=True):
     with open(fileName) as f:
         content = f.read()
-    
+
     for r in replaces:
-        content = content.replace(r, replaces[r])    
-    if write:    
+        content = content.replace(r, replaces[r])
+    if write:
         with open(fileName, "w") as f:
             f.write(content)
     else:
         return content
 
-class ChDir:
-    """cd with backtrack"""         
-    def __init__(self, newPath):  
+
+class ChDir():
+    """cd with backtrack"""
+    def __init__(self, newPath):
         self.newPath = newPath
+
     def __enter__(self):
         self.savedPath = os.getcwd()
         os.chdir(self.newPath)
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self, t, value, tb):
         os.chdir(self.savedPath)

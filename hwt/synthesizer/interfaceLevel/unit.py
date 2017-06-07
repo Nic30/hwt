@@ -14,12 +14,12 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
     :cvar _serializerMode: mode for serializer (drives when unit should be serialized)
 
-    :ivar _interfaces: all interfaces 
+    :ivar _interfaces: all interfaces
     :ivar _units: all units defined on this obj in configuration/declaration
     :ivar _params: all params defined on this obj in configuration/declaration
     :ivar _parent: parent object (Unit instance)
-    
-    :ivar _checkIntferfaces: flag - after synthesis check if interfaces are present 
+
+    :ivar _checkIntferfaces: flag - after synthesis check if interfaces are present
     :ivar _lazyLoaded : container of rtl object which were lazy loaded in implementation phase
         (this object has to be returned from _toRtl of parent before it it's own objects)
     """
@@ -70,11 +70,11 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
                     if i._isExtern:
                         fn(i)
 
-        forAllInterfaces(lambda i : i._connectMyElems())
+        forAllInterfaces(lambda i: i._connectMyElems())
 
         if self._checkIntferfaces and not self._externInterf:
-            raise Exception("Can not find any external interface for unit " + self._name\
-                            + "- there is no such a thing as unit without interfaces")
+            raise Exception("Can not find any external interface for unit " + self._name +
+                            "- there is no such a thing as unit without interfaces")
 
         yield from self._synthetiseContext(self._externInterf)
         self._checkArchCompInstances()
@@ -91,7 +91,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         self._architecture = s[1]
 
-        for intf in self._interfaces: 
+        for intf in self._interfaces:
             if intf._isExtern:
                 intf._resolveDirections()
                 # reverse because other components looks at this one from outside

@@ -1,7 +1,6 @@
 
 
 def removeUnconnectedSignals(netlist):
-    
     toDelete = set()
     while True:
         for sig in netlist.signals:
@@ -12,8 +11,8 @@ def removeUnconnectedSignals(netlist):
                 except AttributeError:
                     pass
                 toDelete.add(sig)
-                
-        if toDelete:        
+
+        if toDelete:
             for sig in toDelete:
                 netlist.signals.remove(sig)
             toDelete = set()

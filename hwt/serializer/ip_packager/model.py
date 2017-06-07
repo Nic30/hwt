@@ -11,16 +11,17 @@ class FileSetRef():
         self = cls()
         self.localName = findS(elm, 'localName').text
         return self
-    
+
     def asElem(self):
         e = etree.Element(spi_ns_prefix + "fileSetRef")
         appendSpiElem(e, "localName").text = self.localName
         return e
 
+
 class View():
     _requiredVal = ["name", "displayName", "envIdentifier"]
     _optionalVal = ["language", "modelName"]
-    
+
     @classmethod
     def fromElem(cls, elm):
         self = cls()
@@ -34,11 +35,10 @@ class View():
             if e is None:
                 continue
             setattr(self, n, e.text)
-        
-            
+
         self.fileSetRef = FileSetRef.fromElem(findS(elm, "fileSetRef"))
         return self
-    
+
     def asElem(self):
         e = mkSpiElm("view")
         appendStrElements(e, self,
@@ -47,21 +47,24 @@ class View():
         e.append(self.fileSetRef.asElem())
         return e
 
+
 class ModelParameter():
-    def __init__(self, name:str, displayName:str, datatype:str, value:Value):
+    def __init__(self, name: str, displayName: str, datatype: str, value: Value):
         self.name = name
         self.displayName = displayName
         self.datatype = datatype
         self.value = value
+
     @classmethod
     def fromGeneric(cls, g):
         val = Value.fromGeneric("MODELPARAM_VALUE.", g, Value.RESOLVE_GENERATED)
+
         def createTmpVar(suggestedName, dtype):
             raise NotImplementedError("Value of generic %s can not be converted do ipcore format (%s)", g.name, repr(val))
         return cls(g.name,
                    g.name.replace("_", " "),
                    VivadoTclExpressionSerializer.HdlType(g._dtype, createTmpVar).lower(), val)
-    
+
     def asElem(self):
         e = mkSpiElm("modelParameter")
         e.attrib["spirit:dataType"] = self.datatype
@@ -70,8 +73,9 @@ class ModelParameter():
         e.append(self.value.asElem())
         return e
 
+
 class Model():
-    
+
     def __init__(self, vhdl_syn_fileSetName, vhdl_sim_fileSetName, tcl_fileSetName):
         self.views = []
         self.ports = []
@@ -79,7 +83,7 @@ class Model():
         self.vhdl_syn_fileSetName = vhdl_syn_fileSetName
         self.vhdl_sim_fileSetName = vhdl_sim_fileSetName
         self.tcl_fileSetName = tcl_fileSetName
-        
+
     def addDefaultViews(self, unit):
         viewsTemplate = ("""
        <views xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -120,8 +124,7 @@ class Model():
         for g in unit._entity.generics:
             mp = ModelParameter.fromGeneric(g)
             self.modelParameters.append(mp)
-            
-    
+
     # @classmethod
     # def fromElem(cls, elm):
     #    self = cls()
@@ -132,11 +135,11 @@ class Model():
     #    for p in ports:
     #        self.ports.append(Port.fromElem(p))
     #    return self
-    
+
     def asElem(self):
         e = mkSpiElm("model")
         appendSpiArray(e, 'views', self.views)
         appendSpiArray(e, 'ports', self.ports)
         appendSpiArray(e, 'modelParameters', self.modelParameters)
-            
+
         return e

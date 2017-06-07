@@ -2,9 +2,11 @@
 class LangueKeyword(object):
     pass
 
+
 class NameOccupiedErr(Exception):
     def __init__(self, usedOn):
         self.usedOn = usedOn
+
 
 class NameScopeItem(dict):
     """
@@ -15,17 +17,17 @@ class NameScopeItem(dict):
         super().__init__()
         self.myLvl = myLvl
 
-        # some names are specified just as prefix and serializer 
+        # some names are specified just as prefix and serializer
         # should resolve correct name for object
         # this happens for most of generated objects
         self.cntrsForPrefixNames = {}
-    
+
     def getChild(self, parent):
         try:
             return parent[self.myLvl + 1]
         except IndexError:
             return None
-        
+
     def getParent(self, parent):
 
         i = self.myLvl - 1
@@ -46,20 +48,20 @@ class NameScopeItem(dict):
             else:
                 # prefix is not registered at any child
                 break
-            
+
         usableName = prefix + str(currentVal)
         return usableName
-    
+
     def __registerName(self, name, obj, parent):
         # search if name is already defined on me and parents
         actual = self
         o = None
-        
+
         if parent.ignorecase:
             _name = name.lower()
         else:
             _name = name
-            
+
         while actual is not None:
             try:
                 o = actual[_name]
@@ -67,13 +69,13 @@ class NameScopeItem(dict):
                 actual = actual.getParent(parent)
                 continue
             break
-        
-        if o is None or o is obj: 
+
+        if o is None or o is obj:
             # we can use use the name, because it is not used
             self[_name] = obj
         else:
             raise NameOccupiedErr(o)
-            
+
     def getUsableName(self, suggestedName, obj, parent):
         if not suggestedName.endswith("_"):
             try:
@@ -81,32 +83,33 @@ class NameScopeItem(dict):
                 return suggestedName
             except NameOccupiedErr:
                 suggestedName += "_"
-        
+
         actual = self
         try:
             cntrVal = actual.cntrsForPrefixNames[suggestedName]
         except KeyError:
             cntrVal = -1
-        
+
         # setup for me and propagate to children
         usableName = self.__incrPrefixCntrsForChilds(suggestedName, cntrVal, parent)
         self.__registerName(usableName, obj, parent)
         return usableName
-    
+
+
 class NameScope(list):
     """
     Scope of used names in hdl
     """
     def __init__(self, ignorecase):
         super().__init__()
-        self.ignorecase = ignorecase 
-    
+        self.ignorecase = ignorecase
+
     def fork(self, lvl):
         f = NameScope(self.ignorecase)
         for i in range(lvl):
             f.append(self[i])
         return f
-        
+
     def setLevel(self, lvl):
         """
         Trim or extend scope

@@ -2,18 +2,19 @@ from copy import deepcopy
 
 from hwt.hdlObjects.function import Function
 from hwt.hdlObjects.value import Value
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase 
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
 
 
 class InvalidOperandExc(Exception):
     pass
+
 
 def getCtxFromOps(ops):
     for o in ops:
         if isinstance(o, RtlSignalBase):
             return o.ctx
     raise TypeError("Can not find context because there is no signal in ops")
-    
+
 
 class Operator():
     """
@@ -21,7 +22,7 @@ class Operator():
 
     :ivar ops: list of operands
     :ivar evalFn: function to evaluate this operator
-    :ivar operator: OpDefinition instance 
+    :ivar operator: OpDefinition instance
     :ivar result: result signal of this operator
     """
     def __init__(self, operator, operands):
@@ -29,7 +30,7 @@ class Operator():
         self.operator = operator
         self.result = None
         self._isDriver = True
-            
+
     def registerSignals(self, outputs=[]):
         """
         Register potential signals to drivers/endpoints
@@ -52,19 +53,20 @@ class Operator():
         for o in self.ops:
             o.staticEval()
         self.result._val = self.evalFn()
-        
+
     def evalFn(self, simulator=None):
         """
         Syntax sugar
         """
         return self.operator.eval(self, simulator=simulator)
-    
+
     def __eq__(self, other):
         return self is other or (
-             type(self) == type(other) 
-            and self.operator == other.operator \
-            and self.ops == other.ops)
-    
+                                 type(self) == type(other) and
+                                 self.operator == other.operator and
+                                 self.ops == other.ops
+                                )
+
     @staticmethod
     def withRes(opDef, operands, resT, outputs=[]):
         """
@@ -76,9 +78,9 @@ class Operator():
         out.origin = op
         op.result = out
         op.registerSignals(outputs)
-        
+
         return out
-    
+
     def __deepcopy__(self, memo=None):
         try:
             return memo[self]
@@ -89,11 +91,10 @@ class Operator():
                 setattr(o, k, deepcopy(v, memo))
 
             return o
-                
+
     def __hash__(self):
         return hash((self.operator, frozenset(self.ops)))
-    
-        
+
     def __repr__(self):
         return "<%s operator:%s, ops:%s>" % (self.__class__.__name__,
                                              repr(self.operator), repr(self.ops))

@@ -6,7 +6,7 @@ from hwt.synthesizer.interfaceLevel.interface import Interface
 class StructIntf(Interface):
     """
     Create dynamic interface based on HStruct description
-    
+
     :ivar _fieldsToInterfaces: dictionary {field from HStruct template: sub interface for it}
     """
     def __init__(self, structT, instantiateFieldFn, masterDir=DIRECTION.OUT, multipliedBy=None, loadConfig=True):
@@ -19,7 +19,7 @@ class StructIntf(Interface):
         self._structT = structT
         self._instantiateFieldFn = instantiateFieldFn
         self._fieldsToInterfaces = {}
-    
+
     def _declr(self):
         for field in self._structT.fields:
             # skip padding
@@ -31,11 +31,11 @@ class StructIntf(Interface):
                     intf._fieldsToInterfaces = self._fieldsToInterfaces
                 else:
                     intf = self._instantiateFieldFn(field)
-                
+
                 self._fieldsToInterfaces[field] = intf
-                
+
                 setattr(self, field.name, intf)
-    
+
     def _getSimAgent(self):
         from hwt.interfaces.agents.structIntf import StructIntfAgent
         return StructIntfAgent

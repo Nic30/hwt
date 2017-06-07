@@ -1,5 +1,8 @@
+
+
 class RedefinitionErr(Exception):
     pass
+
 
 class NonRedefDict(dict):
     def __setitem__(self, key, val):

@@ -13,12 +13,13 @@ def isPulledUpTristateRising(intf, sim):
 
     return bool(t._onFallingEdge(sim.now))
 
+
 class TristatePullUpAgent(AgentBase):
     def __init__(self, intf, onRisingCallback=None, onFallingCallback=None):
         AgentBase.__init__(self, intf)
         self.onRisingCallback = onRisingCallback
         self.onFallingCallback = onFallingCallback
-    
+
     def monitor(self, sim):
         intf = self.intf
         t = sim.read(intf.t)
@@ -28,19 +29,19 @@ class TristatePullUpAgent(AgentBase):
             assert t.vldMask, sim.now
             assert o.vldMask
             assert not o.val, "This is open drain mode, ioblock would burn"
-        
+
         if t.val:
             v = 0
         else:
             v = 1
-        
+
         last = sim.read(intf.i).val
         sim.write(v, intf.i)
         if not last and v and self.onRisingCallback:
             self.onRisingCallback(sim)
         if not v and last and self.onFallingCallback:
             self.onFallingCallback(sim)
-    
+
     def getMonitors(self):
         return [self.onTWriteCallback]
 

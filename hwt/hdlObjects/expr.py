@@ -7,6 +7,7 @@ from hwt.synthesizer.rtlLevel.signalUtils.walkers import walkAllOriginSignals
 def areInstanceOf(a, b, cls):
     return isinstance(a, cls) and isinstance(b, cls)
 
+
 class ExprComparator():
     @staticmethod
     def isSimilar(exprA, exprB, diffInA):
@@ -38,13 +39,13 @@ class ExprComparator():
         elif areInstanceOf(exprA, exprB, Value) and exprA._eq(exprB).val:
             return (True, None)
         return (False, None)
-    
-    @staticmethod    
+
+    @staticmethod
     def findExprDiffInParam(exprA, exprB):
         params = list(walkAllOriginSignals(exprA))
         l = len(params)
         if l == 0:
-            return 
+            return
         elif l == 1:
             m = ExprComparator.isSimilar(exprA, exprB, params[0])
             if m[0] and m[1] is not None:

@@ -11,7 +11,7 @@ DEFAULT_CLOCK = 100000000
 class Type():
     __slots__ = ['name', 'version', 'vendor', 'library']
 
-    @classmethod 
+    @classmethod
     def fromElem(cls, elm):
         self = cls()
         for s in ['name', 'version', 'vendor', 'library']:

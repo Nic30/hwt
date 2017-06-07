@@ -48,7 +48,7 @@ class AgentBase():
 class SyncAgentBase(AgentBase):
     """
     Agent which discovers clk, rst signal and runs only at specified edge of clk
-    
+
     :attention: requires clk and rst/rstn signal
         (if you do not have any create simulation wrapper with it)
     """
@@ -64,7 +64,7 @@ class SyncAgentBase(AgentBase):
                 pass
             else:
                 raise e
-            
+
         # run monitor, driver only on rising edge of clk
         self.monitor = onRisingEdge(self.clk, self.monitor)
         self.driver = onRisingEdge(self.clk, self.driver)

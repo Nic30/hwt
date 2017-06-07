@@ -3,6 +3,7 @@
 class TclObj():
     pass
 
+
 class GuiParam(TclObj):
     def __init__(self, name, parent):
         self.name = name
@@ -14,16 +15,16 @@ class GuiParam(TclObj):
 
 class GuiPage(TclObj):
     __slots__ = ["name", 'parent']
-    
+
     def __init__(self, name):
         self.name = name
         self.elements = []
-        
+
     def param(self, name):
         p = GuiParam(name, self)
         self.elements.append(p)
         return p
-    
+
     def __str__(self):
         params = []
         for n in self.__slots__:
@@ -37,36 +38,39 @@ class GuiPage(TclObj):
         page = 'set %s [ipgui::add_page $IPINST %s]' % (self.name, ' '.join(params))
         elements = '\n'.join(map(lambda x: str(x), self.elements))
         return '\n'.join([page, elements])
-   
+
+
 class GuiBuilder():
-    
+
     def __init__(self):
         self.elements = []
-    
+
     def page(self, name):
         p = GuiPage(name)
         self.elements.append(p)
         return p
-        
+
     def asTcl(self):
         init_gui = TclFn("init_gui", ["IPINST"], self.elements)
         return str(init_gui)
 
+
 class TclFn(TclObj):
-    
+
     def __init__(self, name, params, body):
-        self.name = name 
+        self.name = name
         self.params = params
         self.body = body
-        
+
     def __str__(self):
         return "proc %s { %s } {\n %s \n}" % (self.name,
-                                            ' '.join(map(lambda x: str(x), self.params)),
-                                            '\n'.join(map(lambda x: str(x), self.body)))
+                                              ' '.join(map(lambda x: str(x), self.params)),
+                                              '\n'.join(map(lambda x: str(x), self.body)))
 
 
 def setParamOnModel(propName):
     return "set_property value [get_property value ${PARAM_VALUE.%s}] ${MODELPARAM_VALUE.%s}" % (propName, propName)
+
 
 def paramManipulatorFns(paramName):
     pv = 'PARAM_VALUE.' + paramName

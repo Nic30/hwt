@@ -5,16 +5,16 @@ from hwt.hdlObjects.types.sliceVal import SliceVal
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.typeShortcuts import vec
 
+
 def getWidthExpr(vectorTypeInst):
     c = vectorTypeInst.constrain
     if isinstance(c, SliceVal):
         return c.val[0] + 1
     downto = c.singleDriver()
-    
+
     assert downto.operator == AllOps.DOWNTO
     assert downto.ops[1].val == 0
-    
-    
+
     widthMinOne = downto.ops[0]
     if isinstance(widthMinOne, Value) and isinstance(widthMinOne._dtype, Integer):
         w = widthMinOne.clone()
@@ -24,8 +24,9 @@ def getWidthExpr(vectorTypeInst):
         widthMinOne = widthMinOne.singleDriver()
     assert widthMinOne.operator == AllOps.SUB
     assert widthMinOne.ops[1].val == 1
-    
+
     return widthMinOne.ops[0]
+
 
 def aplyIndexOnSignal(sig, dstType, index):
     if sig._dtype == BIT or dstType == BIT:
@@ -36,12 +37,13 @@ def aplyIndexOnSignal(sig, dstType, index):
     else:
         raise NotImplementedError()
 
+
 def fitTo(what, to):
     """
     Slice signal "what" to fit in "to" 
     or
     extend "what" with zeros to same width as "to"
-    
+
     little-endian impl.
     """
 

@@ -14,6 +14,7 @@ from hwt.pyUtils.stringUtils import matchIgnorecase
 class InterfaceIncompatibilityExc(Exception):
     pass
 
+
 def updateParam(intfParam, unitParam):
     if isinstance(unitParam, Param):
         intfParam.replace(unitParam)
@@ -22,13 +23,15 @@ def updateParam(intfParam, unitParam):
     else:
         # parameter resolution was not successful
         pass
-    
+
+
 def typeIsParametrized(dtype):
     c = dtype.constrain
     if c is None:
         return False
     else:
         return arr_any(list(walkSignalsInExpr(c)), lambda x: True)
+
 
 class ExtractableInterface(InterfaceArray):
 
@@ -39,11 +42,11 @@ class ExtractableInterface(InterfaceArray):
         """
         intfObj = cls()
         intfObj._loadDeclarations()
-        
+
         # find first signal in this interface
         parent = intfObj
         child = intfObj
-        
+
         while child._interfaces:
             parent = child
             child = child._interfaces[0]
@@ -56,17 +59,17 @@ class ExtractableInterface(InterfaceArray):
             else:
                 if prefix != '':
                     prefix += parent._NAME_SEPARATOR
-                
+
         o = child
         name = child._name
-            
-        # search for alternative names as well    
+
+        # search for alternative names as well
         firstIntfNames = []
         for n in o._alternativeNames:
             firstIntfNames.append(prefix + n)
         firstIntfNames.append(prefix + name)
-        
-        # search ports names for firstIntfNames  
+
+        # search ports names for firstIntfNames
         for firstIntfName in firstIntfNames:
             for p in ports:
                 if not hasattr(p, "_interface") and p.name.lower().endswith(firstIntfName):
@@ -76,7 +79,7 @@ class ExtractableInterface(InterfaceArray):
                         yield p.name
                     else:
                         yield p.name[:-nameLen]
-                
+
     def _unExtrac(self):
         """undo extracting process for this interface"""
         if self._interfaces:
@@ -87,7 +90,7 @@ class ExtractableInterface(InterfaceArray):
                 if hasattr(self._boundedEntityPort, "_interface"):
                     del self._boundedEntityPort._interface
                 del self._boundedEntityPort
-                
+
     def _extractDtype(self, multipliedBy=None):
         """
         Compare signal _dtype and _dtype of interface declaration and try match parameters
@@ -103,14 +106,14 @@ class ExtractableInterface(InterfaceArray):
             if intfTConstr is not None and isinstance(intfTConstr, (RtlSignalBase, SliceVal)):
                 unitTConstr = self._boundedEntityPort._dtype.constrain
                 paramDiff = list(ExprComparator.findExprDiffInParam(intfTConstr, unitTConstr))
-                    
+
                 for intfParam, unitParam in paramDiff:
                     if multipliedBy is not None and isinstance(unitParam, RtlSignalBase):
                         mulOp = unitParam.singleDriver()
                         assert mulOp.operator == AllOps.MUL
                         op0 = mulOp.ops[0]
                         op1 = mulOp.ops[1]
-                        
+
                         if type(op0) == type(multipliedBy) and op0 == multipliedBy:
                             _unitParam = op1
                         else:
@@ -118,23 +121,26 @@ class ExtractableInterface(InterfaceArray):
                             _unitParam = op0
                     else:
                         assert multipliedBy is None
-                        _unitParam = unitParam 
+                        _unitParam = unitParam
 
                 if len(paramDiff) == 0:
                     # [TODO] and port is not parametrized
                     origT = self._boundedEntityPort._dtype
                     t = self._dtype
-                    self._dtypeMatch = origT == t and not typeIsParametrized(origT) and not typeIsParametrized(t) 
+                    self._dtypeMatch = (origT == t and
+                                        not typeIsParametrized(origT) and
+                                        not typeIsParametrized(t))
                 else:
                     self._dtypeMatch = isinstance(_unitParam, (Param, Value))
                     updateParam(intfParam, _unitParam)
             else:
                 self._dtypeMatch = self._boundedEntityPort._dtype == self._dtype
-        
+
     def _tryToExtractByName(self, prefix, ports):
         """
         :return: self if extraction was successful
-        :raise InterfaceIncompatibilityExc: if this interface with this prefix does not fit for this entity 
+        :raise InterfaceIncompatibilityExc: if this interface with this prefix
+            does not fit for this entity
         """
         if self._interfaces:
             # extract subinterfaces and propagate params
@@ -150,13 +156,12 @@ class ExtractableInterface(InterfaceArray):
                     else:
                         dirMatches = intf._boundedEntityPort.direction == intf._masterDir
                     allDirMatch = allDirMatch and dirMatches
-                    noneDirMatch = noneDirMatch  and not dirMatches     
+                    noneDirMatch = noneDirMatch and not dirMatches
             except InterfaceIncompatibilityExc as e:
                 for intf in self._interfaces:
                     intf._unExtrac()
                 raise e
-            
-                
+
             if allDirMatch:
                 self._direction = INTF_DIRECTION.MASTER
             elif noneDirMatch:
@@ -164,7 +169,7 @@ class ExtractableInterface(InterfaceArray):
             else:
                 self._unExtrac()
                 raise InterfaceIncompatibilityExc("Direction mismatch")
-        
+
         else:
             # extract signal(Signal , etc.)
             # collect all possible names
@@ -172,21 +177,21 @@ class ExtractableInterface(InterfaceArray):
             if hasattr(self, "_name"):
                 intfNames.append(self._name)
             intfNames.extend(self._alternativeNames)
-            # try find suitable portItem in entity port 
+            # try find suitable portItem in entity port
             for n in intfNames:
                 name = prefix + n
                 try:
                     self._boundedEntityPort = single(ports,
-                                            lambda p : matchIgnorecase(p.name, name))
+                                                     lambda p: matchIgnorecase(p.name, name))
                     break
                 except NoValueExc as e:
                     continue
             if not hasattr(self, "_boundedEntityPort"):
                 self._unExtrac()
-                raise  InterfaceIncompatibilityExc("Missing " + prefix + n)
+                raise InterfaceIncompatibilityExc("Missing " + prefix + n)
 
             self._extractDtype()
-            
+
             # assign references to hdl objects
             self._boundedEntityPort._interface = self
             # resolve direction
@@ -197,8 +202,8 @@ class ExtractableInterface(InterfaceArray):
                 self._direction = INTF_DIRECTION.SLAVE
 
         return self
-    
-    @classmethod        
+
+    @classmethod
     def _tryToExtract(cls, ports):
         """
         :return: iterator over tuples (interface name. extracted interface)
@@ -208,8 +213,8 @@ class ExtractableInterface(InterfaceArray):
             try:
                 intfInst = cls()
                 intfInst._loadDeclarations()
-                prefix = name 
-                     
+                prefix = name
+
                 intf = intfInst._tryToExtractByName(prefix, ports)
                 if name == "":
                     if intf._interfaces:
@@ -218,18 +223,18 @@ class ExtractableInterface(InterfaceArray):
                         name = intf._boundedEntityPort.name
                 else:
                     name += intf._name
-                
+
                 if name.endswith("_"):
                     name = name[:-1]
-                
-                if intf._interfaces:  # if is possible to determine size of this potential intf. array 
-                    # if interface is actually array of interfaces extract the size of this array 
+
+                if intf._interfaces:  # if is possible to determine size of this potential intf. array
+                    # if interface is actually array of interfaces extract the size of this array
                     mf = intf._tryExtractMultiplicationFactor()
                     if mf is not None:
                         intf._extractDtype(multipliedBy=mf)
                         intf._setMultipliedBy(mf, updateTypes=False)
                 intfInst._setAsExtern(True)
-                yield (name, intf) 
-            except InterfaceIncompatibilityExc as e:
+                yield (name, intf)
+            except InterfaceIncompatibilityExc:
                 # pass if interface was not found in ports
                 pass

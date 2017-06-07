@@ -10,7 +10,7 @@ class RegCntrlAgent(SyncAgentBase):
     def __init__(self, intf):
         AgentBase.__init__(self, intf)
         super().__init__(intf)
-        
+
         self._din = SignalAgent(intf.din)
         self._dout = VldSyncedAgent(intf.dout, allowNoReset=True)
 

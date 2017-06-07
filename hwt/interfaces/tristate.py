@@ -4,6 +4,7 @@ from hwt.interfaces.std import Signal, Clk
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.constants import DIRECTION
 
+
 class TristateSig(Interface):
     """
     Tristate interface
@@ -12,13 +13,17 @@ class TristateSig(Interface):
     def _config(self):
         self.DATA_WIDTH = Param(1)
         self.forceVector = False
-        
+
     def _declr(self):
         t = Bits((self.DATA_WIDTH-1)._downto(0), self.forceVector)
-        
-        self.t = Signal(dtype=t) # connect
-        self.i = Signal(dtype=t, masterDir=DIRECTION.IN) # input
-        self.o = Signal(dtype=t) # output
+
+        # connect
+        self.t = Signal(dtype=t)
+        # input
+        self.i = Signal(dtype=t, masterDir=DIRECTION.IN)
+        # output
+        self.o = Signal(dtype=t)
+
 
 class TristateClk(Clk, TristateSig):
     def _getIpCoreIntfClass(self):

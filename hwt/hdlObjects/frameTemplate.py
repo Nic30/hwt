@@ -53,7 +53,6 @@ class FrameTemplate(object):
 
     def __init__(self, wordWidth, startBitAddr, endBitAddr, transactionParts):
         """
-        
         :param wordWidth: width of word on interface where this template should be used
         :param startBitAddr: bit offset where this frame starts
         :param endBitAddr: bit offset where this frame ends (bit index of first bit behind this frame)
@@ -63,14 +62,12 @@ class FrameTemplate(object):
         self.startBitAddr = startBitAddr
         self.endBitAddr = endBitAddr
         self.parts = transactionParts
-        
+
         for p in self.parts:
             p.parent = self
             assert p.startOfPart >= startBitAddr, (p, startBitAddr, self)
             assert p.endOfPart <= endBitAddr, (p, endBitAddr, self)
-    
-        
-    
+
     @staticmethod
     def framesFromTransactionTemplate(transactionTmpl,
                                       wordWidth,
@@ -80,7 +77,7 @@ class FrameTemplate(object):
                                       trimPaddingWordsOnEnd=False):
         """
         Convert transaction template into FrameTemplates
-        
+
         :param transactionTmpl: transaction template used which are FrameTemplates created from
         :param wordWidth: width of data signal in target interface where frames will be used
         :param maxFrameLen: maximum length of frame, if exceeded another frame will be created
@@ -101,16 +98,16 @@ class FrameTemplate(object):
         assert maxFrameLen > 0
         assert maxPaddingWords >= 0
         if maxPaddingWords < inf:
-            assert trimPaddingWordsOnStart or trimPaddingWordsOnEnd 
-        
+            assert trimPaddingWordsOnStart or trimPaddingWordsOnEnd
+
         def fullWordCnt(start, end):
             """Count of complete words between two addresses
             """
             startWIndex = start // wordWidth
             endWIndex = end // wordWidth
-            
+
             assert startWIndex <= endWIndex, (start, end)
-            
+
             return endWIndex - startWIndex
 
         for (base, end), tmpl in walkFlatten(transactionTmpl):
@@ -120,30 +117,30 @@ class FrameTemplate(object):
                 # parts are always in single word
                 if startOfPart == endOfThisFrame:
                     # cut off padding at end of frame
-                    paddingWords = fullWordCnt(endOfPart, endOfThisFrame)  
+                    paddingWords = fullWordCnt(endOfPart, endOfThisFrame)
                     if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
                         _endOfThisFrame = endOfThisFrame - paddingWords * wordWidth
                         # align end of frame to word
                         _endOfThisFrame = ceil(_endOfThisFrame / wordWidth) * wordWidth
-                    
+
                     yield FrameTemplate(wordWidth, startOfThisFrame, _endOfThisFrame, parts)
-                    
+
                     # prepare for start of new frame
                     parts = []
                     isFirstInFrame = True
                     partsPending = False
-                    # start on new 
+                    # start on new
                     startOfThisFrame = (endOfThisFrame // wordWidth) * wordWidth
                     endOfThisFrame = startOfThisFrame + maxFrameLen
                     endOfPart = endOfThisFrame
-                    
+
                     continue
 
                 if isFirstInFrame:
                     partsPending = True
                     isFirstInFrame = False
                     # cut off padding at start of frame
-                    paddingWords = fullWordCnt(startOfThisFrame, base) 
+                    paddingWords = fullWordCnt(startOfThisFrame, base)
                     if trimPaddingWordsOnStart and paddingWords > maxPaddingWords:
                         startOfThisFrame += paddingWords * wordWidth
 
@@ -152,10 +149,9 @@ class FrameTemplate(object):
                     padding = startOfPart - endOfPart
                     if trimPaddingWordsOnEnd and padding >= wordWidth:
                         # there is too much continual padding
-                        endOfThisFrame = startOfPart            
+                        endOfThisFrame = startOfPart
                         continue
-                    
-                
+
                 wordIndex = startOfPart // wordWidth
                 endOfWord = wordWidth * (wordIndex + 1)
 
@@ -170,12 +166,12 @@ class FrameTemplate(object):
         if partsPending:
             endOfThisFrame = max(startOfPart, transactionTmpl.bitAddrEnd)
             # cut off padding at end of frame
-            paddingWords = fullWordCnt(endOfPart, endOfThisFrame)  
+            paddingWords = fullWordCnt(endOfPart, endOfThisFrame)
             if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
                 endOfThisFrame -= paddingWords * wordWidth
                 # align end of frame to word
             endOfThisFrame = ceil(endOfThisFrame / wordWidth) * wordWidth
-                    
+
             yield FrameTemplate(wordWidth, startOfThisFrame, endOfThisFrame, parts)
 
     def _wordIndx(self, addr):
@@ -183,13 +179,13 @@ class FrameTemplate(object):
         convert bit address to index of word where this address is
         """
         return floor(addr / self.wordWidth)
-    
+
     def getWordCnt(self):
         """
         Get count of words in this frame
         """
-        return ceil((self.endBitAddr - self.startBitAddr) / self.wordWidth) 
-    
+        return ceil((self.endBitAddr - self.startBitAddr) / self.wordWidth)
+
     def walkWords(self, showPadding=False):
         """
         Walk enumerated words in this frame

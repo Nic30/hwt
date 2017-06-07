@@ -5,7 +5,7 @@ class PortMap():
     def __init__(self, signal, portItem):
         self.sig = signal
         self.portItem = portItem
-    
+
     @classmethod
     def fromPortItem(cls, portItem):
         d = portItem.direction
@@ -15,10 +15,10 @@ class PortMap():
             sig = portItem.dst
         else:
             raise NotImplementedError()
-        
+
         assert sig is not None
-        
+
         return cls(sig, portItem)
-    
+
     def __repr__(self):
-        return "<PortMap %s => %s>" % (self.portItem.name, self.sig.name) 
+        return "<PortMap %s => %s>" % (self.portItem.name, self.sig.name)

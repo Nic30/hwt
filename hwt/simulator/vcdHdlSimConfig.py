@@ -4,9 +4,9 @@ import sys
 
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.boolean import Boolean
+from hwt.hdlObjects.types.enum import Enum
 from hwt.simulator.hdlSimConfig import HdlSimConfig
 from hwt.simulator.vcdWritter import VcdWritter
-from hwt.hdlObjects.types.enum import Enum
 
 
 class VcdHdlSimConfig(HdlSimConfig):
@@ -27,7 +27,7 @@ class VcdHdlSimConfig(HdlSimConfig):
     def logPropagation(self, simulator, signal, process):
         print("%d: Signal.simPropagateChanges %s -> %s"
               % (simulator.now, signal.name, str(process.name))
-        )
+              )
 
     def vcdRegisterUnit(self, unit):
         with self.vcdWritter.module(unit._name) as m:

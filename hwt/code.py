@@ -79,8 +79,8 @@ class If(StmCntx):
 
     def Elif(self, cond, *statements):
         cond = _intfToSig(cond)
-        self.nowIsEventDependent = self.nowIsEventDependent or\
-                                   arr_any(discoverEventDependency(cond), lambda x: True)
+        self.nowIsEventDependent = (self.nowIsEventDependent or
+                                    arr_any(discoverEventDependency(cond), lambda x: True))
         thisCond = AndReducedContainer()
         thisCond.add(cond)
         for c in reversed(self.elifConds):
@@ -116,7 +116,7 @@ class Switch(StmCntx):
 
     def addCases(self, tupesValStmnts):
         """
-        Add multiple case statements from iterable of tuleles (caseVal, statements) 
+        Add multiple case statements from iterable of tuleles (caseVal, statements)
         """
         s = self
         for val, statements in tupesValStmnts:
@@ -138,7 +138,7 @@ class Switch(StmCntx):
 def SwitchLogic(cases, default=None):
     """
     generate if tree for cases like
-    
+
     if cond0:
         statements0
     elif cond1:
@@ -146,7 +146,7 @@ def SwitchLogic(cases, default=None):
     ...
     else:
         default
-        
+
     :param case: iterable of tuples (condition, statements)
     :param default: default statements
     """
@@ -281,7 +281,7 @@ class FsmBuilder(StmCntx):
 
             # building decision tree
             top = If(condition,
-                        c(newvalue, self.stateReg)
+                        self.stateReg ** newvalue
                     ).Else(
                         top
                     )

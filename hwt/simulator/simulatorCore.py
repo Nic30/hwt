@@ -1,6 +1,7 @@
 from simpy import Environment, Event
-from simpy.events import URGENT, PENDING
 from simpy.core import BoundClass, Process
+from simpy.events import URGENT, PENDING
+
 
 class Initialize(Event):
     """Initializes a process. Only used internally by :class:`Process`.
@@ -20,6 +21,7 @@ class Initialize(Event):
         # generator has not yet been started could be interrupted.
         self._ok = True
         env.schedule(self, priority)
+
 
 class HdlProcess(Process):
     """
@@ -51,6 +53,7 @@ class HdlProcess(Process):
 
         # Schedule the start of the execution of the process.
         self._target = Initialize(env, self, priority)
+
 
 class HdlEnvironmentCore(Environment):
     """
