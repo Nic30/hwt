@@ -9,42 +9,6 @@ from hwt.simulator.types.simBits import simBitsT
 from hwt.bitmask import mask, selectBitRange, setBitRange
 
 
-def walkFlatten(transactionTmpl, offset=None, shouldEnterFn=lambda transTmpl: True):
-    """
-    Walk fields in instance of TransTmpl
-    :param shouldEnterFn: function (transTmpl) which returns True when field should
-        be split on it's children
-    """
-    t = transactionTmpl.dtype
-    base = transactionTmpl.bitAddr
-    end = transactionTmpl.bitAddrEnd
-
-    if offset is not None:
-        base += offset
-        end += offset
-
-    if isinstance(t, Bits):
-        yield ((base, end), transactionTmpl)
-    elif isinstance(t, HStruct):
-        if shouldEnterFn(transactionTmpl):
-            for ch in transactionTmpl.children:
-                yield from walkFlatten(ch, shouldEnterFn=shouldEnterFn)
-        else:
-            yield ((base, end), transactionTmpl)
-
-    elif isinstance(t, Array):
-        if shouldEnterFn(transactionTmpl):
-            itemSize = (transactionTmpl.bitAddrEnd - transactionTmpl.bitAddr) // transactionTmpl.itemCnt
-            for i in range(transactionTmpl.itemCnt):
-                yield from walkFlatten(transactionTmpl.children,
-                                       offset=base + i * itemSize,
-                                       shouldEnterFn=shouldEnterFn)
-        else:
-            yield ((base, end), transactionTmpl)
-    else:
-        raise NotImplementedError(t)
-
-
 class FrameTemplate(object):
     """
     Frame template container for informations about frame,
@@ -134,7 +98,7 @@ class FrameTemplate(object):
 
             return endWIndex - startWIndex
 
-        for (base, end), tmpl in walkFlatten(transactionTmpl):
+        for (base, end), tmpl in transactionTmpl.walkFlatten():
             startOfPart = base
             while startOfPart != end:
                 assert startOfThisFrame % wordWidth == 0, startOfThisFrame
@@ -147,7 +111,7 @@ class FrameTemplate(object):
                         # align end of frame to word
                         _endOfThisFrame = ceil(_endOfThisFrame / wordWidth) * wordWidth
 
-                    yield FrameTemplate(wordWidth, startOfThisFrame, _endOfThisFrame, parts)
+                    yield FrameTemplate(transactionTmpl, wordWidth, startOfThisFrame, _endOfThisFrame, parts)
 
                     # prepare for start of new frame
                     parts = []
@@ -196,7 +160,7 @@ class FrameTemplate(object):
                 # align end of frame to word
             endOfThisFrame = ceil(endOfThisFrame / wordWidth) * wordWidth
 
-            yield FrameTemplate(wordWidth, startOfThisFrame, endOfThisFrame, parts)
+            yield FrameTemplate(transactionTmpl, wordWidth, startOfThisFrame, endOfThisFrame, parts)
 
     def _wordIndx(self, addr):
         """
@@ -310,7 +274,7 @@ class FrameTemplate(object):
         typeOfWord = simBitsT(self.wordWidth, None)
         fieldToVal = self._fieldToTPart
         if fieldToVal is None:
-            fieldToVal = self._fieldToTPart = self.buildFieldToDataDict(self.origin, data)
+            fieldToVal = self._fieldToTPart = self.buildFieldToDataDict(self.origin.dtype, data, {})
 
         for _, transactionParts in self.walkWords(showPadding=True):
             actualVldMask = 0

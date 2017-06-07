@@ -2,6 +2,7 @@ from hwt.bitmask import mask
 from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.struct import HStruct
 from hwt.synthesizer.param import evalParam
+from hwt.hdlObjects.types.bits import Bits
 
 
 class TransTmpl(object):
@@ -100,6 +101,40 @@ class TransTmpl(object):
 
     def bit_length(self):
         return self.bitAddrEnd - self.bitAddr
+
+    def walkFlatten(self, offset=None, shouldEnterFn=lambda transTmpl: True):
+        """
+        Walk fields in instance of TransTmpl
+        :param shouldEnterFn: function (transTmpl) which returns True when field should
+            be split on it's children
+        """
+        t = self.dtype
+        base = self.bitAddr
+        end = self.bitAddrEnd
+    
+        if offset is not None:
+            base += offset
+            end += offset
+    
+        if isinstance(t, Bits):
+            yield ((base, end), self)
+        elif isinstance(t, HStruct):
+            if shouldEnterFn(self):
+                for ch in self.children:
+                    yield from ch.walkFlatten(shouldEnterFn=shouldEnterFn)
+            else:
+                yield ((base, end), self)
+    
+        elif isinstance(t, Array):
+            if shouldEnterFn(self):
+                itemSize = (self.bitAddrEnd - self.bitAddr) // self.itemCnt
+                for i in range(self.itemCnt):
+                    yield from self.children.walkFlatten(offset=base + i * itemSize,
+                                                         shouldEnterFn=shouldEnterFn)
+            else:
+                yield ((base, end), self)
+        else:
+            raise NotImplementedError(t)
 
     def __repr__(self, offset=0):
         offsetStr = "".join(["    " for _ in range(offset)])
