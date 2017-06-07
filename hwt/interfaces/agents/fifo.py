@@ -25,10 +25,6 @@ class FifoReaderAgent(SyncAgentBase):
 
             if rd:
                 self.readPending = True
-            #    self.readPending
-            #    yield s.updateComplete
-            #    d = s.read(intf.data)
-            #    self.data.append(d)
         else:
             s.write(0, intf.en)
 
@@ -50,7 +46,8 @@ class FifoWriterAgent(SyncAgentBase):
             wait = r(intf.wait)
             assert wait.vldMask
             if not wait.val:
-                w(self.data.pop(0), intf.data)
+                d = self.data.pop(0)
+                w(d, intf.data)
                 w(1, intf.en)
                 return
 
