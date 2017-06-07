@@ -4,7 +4,7 @@ from hwt.hdlObjects.types.struct import HStruct
 from hwt.synthesizer.param import evalParam
 
 
-class TransactionTemplate(object):
+class TransTmpl(object):
     """
     Container of informations about frames generated from any HType (HStruct etc.)
 
@@ -33,7 +33,7 @@ class TransactionTemplate(object):
 
     def _loadFromArray(self, dtype, bitAddr):
         self.itemCnt = evalParam(dtype.size).val
-        self.children = TransactionTemplate(dtype.elmType, 0, self, origin=self.origin)
+        self.children = TransTmpl(dtype.elmType, 0, self, origin=self.origin)
         return bitAddr + self.itemCnt * self.children.bitAddrEnd
 
     def _loadFromBits(self, dtype, bitAddr):
@@ -61,7 +61,7 @@ class TransactionTemplate(object):
                 width = t.bit_length()
                 bitAddr += width
             else:
-                fi = TransactionTemplate(t, bitAddr, parent=self, origin=origin)
+                fi = TransTmpl(t, bitAddr, parent=self, origin=origin)
                 self.children.append(fi)
                 bitAddr = fi.bitAddrEnd
 
@@ -114,7 +114,7 @@ class TransactionTemplate(object):
         else:
             name = ""
 
-        s = "%s<TransactionTemplate%s start:%d, end:%d" % (offsetStr, name, self.bitAddr, self.bitAddrEnd)
+        s = "%s<TransTmpl%s start:%d, end:%d" % (offsetStr, name, self.bitAddr, self.bitAddrEnd)
         if isinstance(self.dtype, Array):
             s += ", itemCnt:%d" % (self.itemCnt) + "\n"
             s += self.children.__repr__(offset=offset + 1) + "\n"

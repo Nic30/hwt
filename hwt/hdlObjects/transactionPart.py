@@ -1,7 +1,7 @@
 
 class TransactionPart(object):
     """
-    Container for informations about parts of TransactionTemplateItem split on databus words
+    Container for informations about parts of TransTmpl split on databus words
     """
     def __init__(self, tmpl, startOfPart, endOfPart, inFieldOffset):
         self.tmpl = tmpl
