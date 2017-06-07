@@ -13,7 +13,7 @@ install:
 - cd ..
 - pip3 install pytest coveralls
 - git clone --depth=1 https://github.com/Nic30/hwtLib.git
-- cd ../hwtLib
+- cd hwtLib
 - python3 setup.py install
 
 script:
