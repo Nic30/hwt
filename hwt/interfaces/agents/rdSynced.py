@@ -10,21 +10,28 @@ class RdSyncedAgent(SyncAgentBase):
         super().__init__(intf, allowNoReset=allowNoReset)
         self.actualData = NOP
         self.data = []
-        self._rd = intf.rd
+        self._rd = self.getRd(intf)
+    
+    def getRd(self, intf):
+        return intf.rd
+    
+    def isRd(self, readFn):
+        return readFn(self._rd)
 
+    def wrRd(self, writeFn, val):
+        writeFn(val, self._rd)
+    
     def monitor(self, s):
         """Collect data from interface"""
-        intf = self.intf
-
         if self.notReset(s) and self.enable:
-            s.write(1, intf.rd)
+            self.wrRd(s.write, 1)
 
             yield s.updateComplete
 
             d = self.doRead(s)
             self.data.append(d)
         else:
-            s.write(0, intf.rd)
+            self.wrRd(s.write, 0)
 
     def doRead(self, s):
         """extract data from interface"""
@@ -47,13 +54,13 @@ class RdSyncedAgent(SyncAgentBase):
         else:
             self.doWrite(s, None)
 
-        en = r(self.rst_n).val and self.enable
+        en = self.notReset(s) and self.enable
         if not (en and do):
             return
 
         yield s.updateComplete
 
-        rd = r(self._rd)
+        rd = self.isRd(r)
         if en:
             assert rd.vldMask, "%r: ready signal for interface %r is in invalid state, this would cause desynchronization" % (s.now, self.intf)
         if rd.val:

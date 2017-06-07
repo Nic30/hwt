@@ -28,10 +28,28 @@ class HandshakedAgent(SyncAgentBase):
     def getRd(self):
         """get "ready" signal"""
         return self.intf.rd
-
+    
+    def isRd(self, readFn):
+        """
+        get value of "ready" signal
+        """
+        return readFn(self._rd)
+    
+    def wrRd(self, wrFn, val):
+        wrFn(val, self._rd)
+    
     def getVld(self):
         """get "valid" signal"""
         return self.intf.vld
+
+    def isVld(self, readFn):
+        """
+        get value of "valid" signal, override f.e. when you need to use signal with reversed polarity
+        """
+        return readFn(self._vld)
+
+    def wrVld(self, wrFn, val):
+        wrFn(val, self._vld)
 
     def monitor(self, s):
         """
@@ -41,7 +59,7 @@ class HandshakedAgent(SyncAgentBase):
         if r(self.rst_n).val and self.enable:
             # update rd signal only if required
             if self._lastRd is not 1:
-                s.write(1, self._rd)
+                self.wrRd(s.write, 1)
                 self._lastRd = 1
 
                 # try to run onMonitorReady if there is any
@@ -55,7 +73,7 @@ class HandshakedAgent(SyncAgentBase):
 
             # wait for response of master
             yield s.updateComplete
-            vld = r(self._vld)
+            vld = self.isVld(r)
             assert vld.vldMask, "valid signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
 
             if vld.val:
@@ -68,7 +86,7 @@ class HandshakedAgent(SyncAgentBase):
         else:
             if self._lastRd is not 0:
                 # can not receive, say it to masters
-                s.write(0, self._rd)
+                self.wrRd(s.write, 0)
                 self._lastRd = 0
 
     def doRead(self, s):
@@ -81,7 +99,7 @@ class HandshakedAgent(SyncAgentBase):
 
     def checkIfRdWillBeValid(self, s):
         yield s.updateComplete
-        rd = s.read(self._rd)
+        rd = self.isRd(s.read)
         assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
 
     def driver(self, s):
@@ -109,7 +127,7 @@ class HandshakedAgent(SyncAgentBase):
         en = r(self.rst_n).val and self.enable
         vld = int(en and doSend)
         if self._lastVld is not vld:
-            s.write(vld, self._vld)
+            self.wrVld(s.write, vld)
             self._lastVld = vld
 
         if not self.enable:
@@ -121,7 +139,7 @@ class HandshakedAgent(SyncAgentBase):
         # wait of response of slave
         yield s.updateComplete
 
-        rd = r(self._rd)
+        rd = self.isRd(r)
         assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
         if not vld:
             return
@@ -152,8 +170,8 @@ class HandshakeSyncAgent(HandshakedAgent):
     Simulation/verification agent for HandshakedSycn interface
 
     :attention: there is no data channel on this interface it is synchronization only
-                and it actually does not have any meaningful data collected data in monitor
-                mode are just values of simulation time when item was collected
+        and it actually does not have any meaningful data collected data in monitor
+        mode are just values of simulation time when item was collected
     """
 
     def doWrite(self, s, data):
