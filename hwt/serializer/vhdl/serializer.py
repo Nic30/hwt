@@ -16,6 +16,7 @@ from hwt.pyUtils.arrayQuery import arr_any, groupedby
 from hwt.serializer.constants import SERI_MODE
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.nameScope import LangueKeyword, NameScope
+from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.mapExpr import MapExpr
 from hwt.serializer.serializerClases.portMap import PortMap
 from hwt.serializer.utils import maxStmId
@@ -79,7 +80,11 @@ def onlyPrintDefaultValues(suggestedName, dtype):
 class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_types, VhdlSerializer_statements):
     VHDL_VER = VhdlVersion.v2002
     __keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
-    formater = formatVhdl
+    # formater = formatVhdl
+    @staticmethod
+    def formater(s):
+        return s
+
     fileExtension = '.vhd'
 
     @classmethod
@@ -147,7 +152,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             raise NotImplementedError("Not implemented serializer mode %r on unit %r" % (m, unit))
 
     @classmethod
-    def asHdl(cls, obj, createTmpVarFn):
+    def asHdl(cls, obj, createTmpVarFn, indent=0):
         """
         Convert object to VHDL string
 
@@ -156,9 +161,9 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             this function will be called to create tmp variables
         """
         if hasattr(obj, "asVhdl"):
-            return obj.asVhdl(cls, createTmpVarFn)
+            return obj.asVhdl(cls, createTmpVarFn, indent)
         elif isinstance(obj, RtlSignalBase):
-            return cls.SignalItem(obj, createTmpVarFn)
+            return cls.SignalItem(obj, createTmpVarFn, indent)
         elif isinstance(obj, Value):
             return cls.Value(obj, createTmpVarFn)
         else:
@@ -166,14 +171,14 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
                 serFn = getattr(cls, obj.__class__.__name__)
             except AttributeError:
                 raise NotImplementedError("Not implemented for %s" % (repr(obj)))
-            return serFn(obj, createTmpVarFn)
+            return serFn(obj, createTmpVarFn, indent)
 
     @classmethod
     def FunctionContainer(cls, fn):
         return fn.name
 
     @classmethod
-    def Architecture(cls, arch, scope):
+    def Architecture(cls, arch, scope, indent=0):
         variables = []
         procs = []
         extraTypes = set()
@@ -194,24 +199,25 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
                 extraTypes_serialized.append(cls.HdlType(t, createTmpVarFn, scope, declaration=True))
 
             v.name = scope.checkedName(v.name, v)
-            serializedVar = cls.SignalItem(v, createTmpVarFn, declaration=True)
+            serializedVar = cls.SignalItem(v, createTmpVarFn, declaration=True, indent=indent + 1)
             variables.append(serializedVar)
 
         for p in arch.processes:
-            procs.append(cls.HWProcess(p, scope))
+            procs.append(cls.HWProcess(p, scope, indent=indent + 1))
 
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
 
         uniqComponents = list(map(lambda x: x[1][0], groupedby(arch.components, lambda c: c.name)))
         uniqComponents.sort(key=lambda c: c.name)
-        components = list(map(lambda c: cls.Component(c, createTmpVarFn),
+        components = list(map(lambda c: cls.Component(c, createTmpVarFn, indent + 1),
                               uniqComponents))
 
-        componentInstances = list(map(lambda c: cls.ComponentInstance(c, createTmpVarFn, scope),
+        componentInstances = list(map(lambda c: cls.ComponentInstance(c, createTmpVarFn, scope, indent + 1),
                                       arch.componentInstances))
 
         return architectureTmpl.render({
+            "indent": getIndent(indent),
             "entityName": arch.getEntityName(),
             "name": arch.name,
             "variables": variables,
@@ -226,17 +232,18 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         return "--" + comentStr.replace("\n", "\n--")
 
     @classmethod
-    def Component(cls, entity, createTmpVar):
+    def Component(cls, entity, createTmpVar, indent=0):
         entity.ports.sort(key=lambda x: x.name)
         entity.generics.sort(key=lambda x: x.name)
         return componentTmpl.render({
+                "indent": getIndent(indent),
                 "ports": [cls.PortItem(pi, createTmpVar) for pi in entity.ports],
                 "generics": [cls.GenericItem(g, createTmpVar) for g in entity.generics],
                 "entity": entity
                 })
 
     @classmethod
-    def ComponentInstance(cls, entity, createTmpVarFn, scope):
+    def ComponentInstance(cls, entity, createTmpVarFn, scope, indent=0):
         portMaps = []
         for pi in entity.ports:
             pm = PortMap.fromPortItem(pi)
@@ -252,6 +259,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
 
         # [TODO] check component instance name
         return componentInstanceTmpl.render({
+                "indent": getIndent(indent),
                 "instanceName": entity._name,
                 "entity": entity,
                 "portMaps": [cls.PortConnection(x, createTmpVarFn) for x in portMaps],
@@ -259,7 +267,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
                 })
 
     @classmethod
-    def Entity(cls, ent, scope):
+    def Entity(cls, ent, scope, indent=0):
         ports = []
         generics = []
         ent.ports.sort(key=lambda x: x.name)
@@ -278,6 +286,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             generics.append(cls.GenericItem(g, createTmpVarFn))
 
         entVhdl = entityTmpl.render({
+                "indent":getIndent(indent),
                 "name": ent.name,
                 "ports": ports,
                 "generics": generics
@@ -342,7 +351,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         return cls.asHdl(item, createTmpVarFn)
 
     @classmethod
-    def HWProcess(cls, proc, scope):
+    def HWProcess(cls, proc, scope, indent=0):
         """
         Serialize HWProcess objects as VHDL
 
@@ -362,11 +371,17 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             extraVarsSerialized.append(serializedS)
             return s
 
-        sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, None), proc.sensitivityList))
-        statemets = [cls.asHdl(s, createTmpVarFn) for s in body]
-
         hasToBeVhdlProcess = extraVars or arr_any(body, lambda x: isinstance(x,
                                         (IfContainer, SwitchContainer, WhileContainer, WaitStm)))
+
+        sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, None), proc.sensitivityList))
+
+        if hasToBeVhdlProcess:
+            sIndent = indent + 1
+        else:
+            sIndent = indent
+            
+        statemets = [cls.asHdl(s, createTmpVarFn, indent=sIndent) for s in body]
 
         if hasToBeVhdlProcess:
             proc.name = scope.checkedName(proc.name, proc)
@@ -374,9 +389,10 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         extraVarsInit = []
         for s in extraVars:
             a = Assignment(s.defaultVal, s, virtualOnly=True)
-            extraVarsInit.append(cls.Assignment(a, createTmpVarFn))
+            extraVarsInit.append(cls.Assignment(a, createTmpVarFn, indent=indent + 1))
 
         return processTmpl.render({
+              "indent": getIndent(indent),
               "name": proc.name,
               "hasToBeVhdlProcess": hasToBeVhdlProcess,
               "extraVars": extraVarsSerialized,

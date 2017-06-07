@@ -1,8 +1,6 @@
-COMPONENT {{ entity.name }} IS
-   {% if generics|length >0 %}GENERIC ( 
-	{{generics|join(';\n')}} 
-   );
-   {% endif %}{% if ports|length >0 %}PORT (
-	{{ports|join(';\n')}}
-   );{% endif %}
-END COMPONENT;
+{{indent}}COMPONENT {{ entity.name }} IS
+{% if generics|length >0 %}{{indent}}   GENERIC ({{generics|join(';\n            ')}} 
+{{indent}}   );
+{% endif %}{% if ports|length >0 %}{{indent}}   PORT ({{ports|join(';\n            ')}}
+{{indent}}   );{% endif %}
+{{indent}}END COMPONENT;

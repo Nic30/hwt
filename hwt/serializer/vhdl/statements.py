@@ -9,6 +9,7 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.vhdl.utils import VhdlVersion, vhdlTmplEnv
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hwt.serializer.serializerClases.indent import getIndent
 
 
 IfTmpl = vhdlTmplEnv.get_template('if.vhd')
@@ -57,7 +58,7 @@ class VhdlSerializer_statements():
             raise NotImplementedError()
 
     @classmethod
-    def Assignment(cls, a, createTmpVarFn):
+    def Assignment(cls, a, createTmpVarFn, indent=0):
         dst = a.dst
         assert isinstance(dst, SignalItem)
 
@@ -78,9 +79,11 @@ class VhdlSerializer_statements():
                     i = i.clone()
                     i.val = (i.val[0] + 1, i.val[1])
                 dst = dst[i]
-
+        
+        indent_str = getIndent(indent)
+        dstStr = asHdl(dst)
         if dst._dtype == a.src._dtype:
-            return "%s %s %s" % (asHdl(dst), symbol, valAsHdl(a.src))
+            return "%s%s %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src))
         else:
             srcT = a.src._dtype
             dstT = dst._dtype
@@ -90,19 +93,19 @@ class VhdlSerializer_statements():
                 if sLen == dLen:
                     if sLen == 1 and srcT.forceVector != dstT.forceVector:
                         if srcT.forceVector:
-                            return "%s %s %s(0)" % (asHdl(dst), symbol, valAsHdl(a.src))
+                            return "%s%s %s %s(0)" % (indent_str, dstStr, symbol, valAsHdl(a.src))
                         else:
-                            return "%s(0) %s %s" % (asHdl(dst), symbol, valAsHdl(a.src))
+                            return "%s%s(0) %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src))
                     elif srcT.signed is not dstT.signed:
-                        return "%s %s %s" % (asHdl(dst), symbol, valAsHdl(a.src._convSign(dstT.signed)))
+                        return "%s, %s %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src._convSign(dstT.signed)))
 
-            raise SerializerException("%s %s %s  is not valid assignment\n because types are different (%s; %s) " %
-                                      (asHdl(dst), symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
+            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%s; %s) " % 
+                                      (indent_str, dstStr, symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
 
     @classmethod
-    def IfContainer(cls, ifc, createTmpVarFn):
+    def IfContainer(cls, ifc, createTmpVarFn, indent=0):
         def asHdl(obj):
-            return cls.asHdl(obj, createTmpVarFn)
+            return cls.asHdl(obj, createTmpVarFn, indent=indent + 1)
 
         cond = cls.condAsHdl(ifc.cond, True, createTmpVarFn)
         elIfs = []
@@ -119,15 +122,17 @@ class VhdlSerializer_statements():
 
             elIfs.append((cls.condAsHdl(c, True, createTmpVarFn), [asHdl(s) for s in statements]))
 
-        return IfTmpl.render(cond=cond,
-                             ifTrue=[asHdl(s) for s in ifTrue],
-                             elIfs=elIfs,
-                             ifFalse=[asHdl(s) for s in ifFalse])
+        return IfTmpl.render(
+                            indent=getIndent(indent),
+                            cond=cond,
+                            ifTrue=[asHdl(s) for s in ifTrue],
+                            elIfs=elIfs,
+                            ifFalse=[asHdl(s) for s in ifFalse])
 
     @classmethod
-    def SwitchContainer(cls, sw, createTmpVarFn):
+    def SwitchContainer(cls, sw, createTmpVarFn, indent=0):
         def asHdl(obj):
-            return cls.asHdl(obj, createTmpVarFn)
+            return cls.asHdl(obj, createTmpVarFn, indent=indent + 1)
         switchOn = cls.condAsHdl(sw.switchOn, False, createTmpVarFn)
 
         cases = []
@@ -142,8 +147,10 @@ class VhdlSerializer_statements():
         if sw.default:
             cases.append((None, [asHdl(s) for s in sw.default]))
 
-        return SwitchTmpl.render(switchOn=switchOn,
-                                 cases=cases)
+        return SwitchTmpl.render(
+                            indent=getIndent(indent),
+                            switchOn=switchOn,
+                            cases=cases)
 
     @classmethod
     def MapExpr(cls, m, createTmpVar):

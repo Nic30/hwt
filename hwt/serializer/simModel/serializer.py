@@ -18,6 +18,7 @@ from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdlObjects.types.bits import Bits
+from hwt.serializer.serializerClases.indent import getIndent
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
@@ -55,19 +56,6 @@ simCls_reservedWords = ['sim',
                         'SimSignal'
                         'SliceVal']
 
-_indent = "    "
-_indentCache = {}
-
-
-def getIndent(indentNum):
-    try:
-        return _indentCache[indentNum]
-    except KeyError:
-        i = "".join([_indent for _ in range(indentNum)])
-        _indentCache[indentNum] = i
-        return i
-
-
 class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimModelSerializer_types):
     __keywords_dict = {kw: LangueKeyword() for kw in kwlist + simCls_reservedWords}
 
@@ -103,12 +91,12 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             return serFn(obj)
 
     @classmethod
-    def stmAsHdl(cls, obj, indent=0, enclosure=None):
+    def stmAsHdl(cls, obj, enclosure=None, indent=0):
         try:
             serFn = getattr(cls, obj.__class__.__name__)
         except AttributeError:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
-        return serFn(obj, indent, enclosure)
+        return serFn(obj, enclosure, indent)
 
     @classmethod
     def FunctionContainer(cls, fn):
@@ -169,7 +157,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             })
 
     @classmethod
-    def Assignment(cls, a, indent=0, default=None):
+    def Assignment(cls, a, default=None, indent=0):
         dst = a.dst
         indentStr = getIndent(indent)
         ev = a.isEventDependent
@@ -194,8 +182,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
                             return "%syield (self.%s, %s, (simHInt(0),), %s)" % (
                                     indentStr, dst.name, cls.Value(a.src), ev)
 
-                raise SerializerException(("%s <= %s  is not valid assignment\n" +
-                                          " because types are different (%r; %r) ") %
+                raise SerializerException(("%s <= %s  is not valid assignment\n" + 
+                                          " because types are different (%r; %r) ") % 
                                           (cls.asHdl(dst), cls.Value(a.src),
                                           dst._dtype, a.src._dtype))
             else:
@@ -212,7 +200,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         return "%s" % (",".join(map(lambda x: cls.asHdl(x), cond)))
 
     @classmethod
-    def IfContainer(cls, ifc, indent, enclosure=None):
+    def IfContainer(cls, ifc, enclosure=None, indent=0):
         cond = cls.condAsHdl(ifc.cond)
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
@@ -229,21 +217,21 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
 
             lastIf.ifFalse = ifc.ifFalse
 
-            return cls.IfContainer(topIf, indent, enclosure)
+            return cls.IfContainer(topIf, enclosure, indent)
         else:
             if enclosure is None:
                 _enclosure = getIndent(indent + 1) + "pass"
             else:
-                _enclosure = cls.stmAsHdl(enclosure, indent + 1)
+                _enclosure = cls.stmAsHdl(enclosure, indent=indent + 1)
 
             return ifTmpl.render(
                 indent=getIndent(indent),
                 indentNum=indent,
                 cond=cond,
                 enclosure=_enclosure,
-                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1, enclosure),
+                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, enclosure, indent=indent + 1),
                                  ifTrue)),
-                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, indent + 1, enclosure),
+                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, enclosure, indent=indent + 1),
                                   ifFalse)))
 
     @classmethod
@@ -298,10 +286,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         proc.name = scope.checkedName(proc.name, proc)
         sensitivityList = sorted(map(cls.sensitivityListItem, proc.sensitivityList))
         if len(body) == 1:
-            _body = cls.stmAsHdl(body[0], 2)
+            _body = cls.stmAsHdl(body[0], indent=2)
         elif len(body) == 2:
             # first statement is taken as default
-            _body = cls.stmAsHdl(body[1], 2, body[0])
+            _body = cls.stmAsHdl(body[1], body[0], indent=2)
         else:
             raise NotImplementedError()
 

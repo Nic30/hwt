@@ -45,7 +45,7 @@ class VhdlSerializer_ops():
         return cls.asHdl(cast.sig) + "=='%d'" % v
 
     @classmethod
-    def Operator(cls, op, createTmpVarFn):
+    def Operator(cls, op, createTmpVarFn, indent=0):
         def p(operand):
             s = cls.asHdl(operand, createTmpVarFn)
             if isinstance(operand, RtlSignalBase):

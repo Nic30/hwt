@@ -9,6 +9,7 @@ from hwt.hdlObjects.types.string import String
 from hwt.hdlObjects.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.serializer.serializerClases.indent import getIndent
 
 
 class VhdlSerializer_Value():
@@ -40,7 +41,7 @@ class VhdlSerializer_Value():
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val)))
 
     @classmethod
-    def SignalItem(cls, si, createTmpVarFn, declaration=False):
+    def SignalItem(cls, si, createTmpVarFn, declaration=False, indent=0):
         if declaration:
             v = si.defaultVal
             if si.virtualOnly:
@@ -54,7 +55,7 @@ class VhdlSerializer_Value():
             else:
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)
 
-            s = prefix + " %s : %s" % (si.name, cls.HdlType(si._dtype, createTmpVarFn))
+            s = "%s%s %s : %s" % (getIndent(indent), prefix, si.name, cls.HdlType(si._dtype, createTmpVarFn))
             if isinstance(v, RtlSignalBase):
                 return s + " := %s" % cls.asHdl(v, createTmpVarFn)
             elif isinstance(v, Value):
@@ -66,6 +67,7 @@ class VhdlSerializer_Value():
                 raise NotImplementedError(v)
 
         else:
+            assert indent == 0
             if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin, createTmpVarFn)
             else:
