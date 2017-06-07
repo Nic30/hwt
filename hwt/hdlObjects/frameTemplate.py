@@ -51,7 +51,8 @@ class FrameTemplate(object):
     template which is used for resolving how data should be formated into words and frames
     on target interface
 
-    :ivar _fieldToTPart:
+    :ivar _fieldToTPart: dictionary {HStructField: TransactionPart} to resolve this association,
+        None by default, builded when packData is called and is not builded
     """
     __RE_RM_ARRAY_DOTS = re.compile("(\.\[)")
 
