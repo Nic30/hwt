@@ -17,6 +17,12 @@ class HStructField(object):
 class HStruct(HdlType):
     """
     C-like structure type
+    
+    :ivar fields: tuple of HStructField instances in this struct
+    :ivar name: name of this HStruct type
+    :ivar isFixedSize: flag which tells if size of this HStruct can resolved or not, 
+        f.e. field with type of HStream can cause isFixedSize to become False
+    :ivar valueCls: Class of value for this type as usual in HdlType implementations
     """
     def __init__(self, *template, name=None):
         """
@@ -52,24 +58,39 @@ class HStruct(HdlType):
         if self.isFixedSize:
             self.__bit_length_val = self.__bit_length()
 
+        
         class StructVal(Value):
-            __structType = self
             __slots__ = fieldNames
 
-            def __init__(self):
-                for f in self.__structType.fields:
-                    if f.name is not None:
-                        setattr(self, f.name, None)
+            def __init__(self, val, typeObj):
+                self._dtype = typeObj
 
-            def __str__(self):
+                for f in self._dtype.fields:
+                    if f.name is None:
+                        continue
+                    v = val.get(f.name, None)
+                    if not isinstance(v, Value):
+                        v = f.dtype.fromPy(v)
+                    setattr(self, f.name, v)
+
+            @classmethod
+            def fromPy(cls, val, typeObj):
+                self = cls(val, typeObj)
+                return self
+
+            def __repr__(self):
                 buff = ["{"]
-                for f in self.__structType.fields:
+                for f in self._dtype.fields:
                     if f.name is not None:
                         val = getattr(self, f.name)
                         buff.append("    %s %r" % (f.name, val))
                 buff.append("}")
                 return "\n".join(buff)
-
+            
+        protectedNames = set(["clone", "staticEval", "fromPy", "_dtype"])
+        usedNames = set(fieldNames)
+        assert not protectedNames.intersection(usedNames), protectedNames.intersection(usedNames)
+        
         self.valueCls = StructVal
 
     def bit_length(self):
@@ -80,7 +101,6 @@ class HStruct(HdlType):
     
     def __bit_length(self):
         return sum(map(lambda f: f.dtype.bit_length(), self.fields))
-    
     
     def getValueCls(self):
         return self.valueCls
