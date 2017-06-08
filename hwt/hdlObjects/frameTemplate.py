@@ -294,8 +294,8 @@ class FrameTemplate(object):
                     newBits = selectBitRange(val, flow, fhigh - flow)
                     vld = mask(high - low) << low
     
-                setBitRange(actualVal, low, high - low, newBits)
-                setBitRange(actualVal, low, high - low, vld)
+                actualVal = setBitRange(actualVal, low, high - low, newBits)
+                actualVldMask = setBitRange(actualVal, low, high - low, vld)
                     
             yield typeOfWord.getValueCls()(actualVal, typeOfWord, actualVldMask, -1)
 
