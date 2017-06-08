@@ -351,6 +351,7 @@ class FrameTemplate(object):
         s = "<%s start:%d, end:%d" % (self.__class__.__name__, self.startBitAddr, self.endBitAddr)
         if not self.parts:
             return s + ">"
+        buff.append(s)
 
         padding = 5
         DW = self.wordWidth
@@ -366,5 +367,5 @@ class FrameTemplate(object):
             buff.append(self.__repr__word(w, width, padding, transactionParts))
 
         buff.append(line)
-
+        buff.append(">")
         return "\n".join(buff)
