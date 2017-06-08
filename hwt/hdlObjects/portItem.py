@@ -12,12 +12,6 @@ class PortItem(SignalItem):
         self.src = None
         self.dst = None
 
-    def simEval(self, simulator):
-        """
-        dst signal is updated when src signal is updated no specific reevaluating is needen
-        """
-        pass
-
     def connectSig(self, signal):
         """
         Connect to port item on subunit

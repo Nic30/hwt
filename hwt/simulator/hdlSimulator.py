@@ -16,15 +16,10 @@ def isEvDependentOn(sig, process):
 
 class HdlSimulator(HdlEnvironmentCore):
     """
-    [HOW IT WORKS]
+    Circuit simulator with support for external agents
 
     Every signal is initialized at start with its default value
     -> (no drove, constant drove solved)
-
-    Every signal value changing object (assignment, index...) should on simEval() yield
-       tuple (updateDelayTime, applicator) where applicator is function(oldValue)
-       and returns tuple (newValue, valueHasChangedFlag)
-    -> (updating value in arrays, structs etc. solved)
 
     Every interprocess signal is marked by synthesizer and it can not be directly updated
        by any process, process should only return tuple (updateDelayTime, applicator)

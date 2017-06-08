@@ -9,9 +9,16 @@ class Value():
     """
     __slots__ = ["val", "_dtype", "vldMask", "updateTime"]
 
-    def __init__(self, val, _type, vldMask, updateTime=-1):
+    def __init__(self, val, dtype, vldMask, updateTime=-1):
+        """
+        :param val: pythonic value representing this value
+        :param dtype: data type object which was this value derived from
+        :param vldMask: validity mask for value
+        :param updateTime: time for simulation when last update of this value happend
+        """
+
         self.val = val
-        self._dtype = _type
+        self._dtype = dtype
         self.vldMask = vldMask
         self.updateTime = updateTime
 
@@ -19,12 +26,10 @@ class Value():
         return self.vldMask == self._dtype.all_mask()
 
     def _convert(self, toT):
+        "type cast"
         return self._dtype.convert(self, toT)
 
     def staticEval(self):
-        return self.clone()
-
-    def simEval(self, simulator):
         return self.clone()
 
     def clone(self):
