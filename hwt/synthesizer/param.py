@@ -31,10 +31,6 @@ class Param(RtlSignal):
     def setReadOnly(self):
         self.__isReadOnly = True
 
-    def setHdlName(self, name):
-        self.hasGenericName = False
-        self.name = name
-
     def get(self):
         if self.replacedWith is not None:
             raise Exception("Trying to read param '%s' which is already replaced by '%s'" %
