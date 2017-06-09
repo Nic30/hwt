@@ -145,7 +145,7 @@ class FrameTemplate(object):
 
                 endOfPart = min(endOfWord, end, endOfThisFrame)
 
-                inFieldOffset = end - endOfPart
+                inFieldOffset = startOfPart - base
                 p = TransactionPart(tmpl, startOfPart, endOfPart, inFieldOffset)
                 parts.append(p)
 
@@ -294,6 +294,7 @@ class FrameTemplate(object):
                     newBits = selectBitRange(val, flow, fhigh - flow)
                     vld = mask(high - low) << low
     
+                print(actualVal, low, high- low, newBits)
                 actualVal = setBitRange(actualVal, low, high - low, newBits)
                 actualVldMask = setBitRange(actualVal, low, high - low, vld)
                     
