@@ -69,32 +69,6 @@ class TransTmpl(object):
             raise TypeError()
         return (self.bitAddr - self.bitAddrEnd) // self.itemCnt
 
-    def getMyAddrPrefix(self, addrStep):
-        """
-        :summary: resolve how many bits can be used as prefix and how many bits can be used as address in arrays
-        :param addrStep: number of bits per 1 add unit
-        :return: None if base addr is not aligned to size and prefix can not be used
-            tuple (prefix, subAddrBits) if can be mapped by prefix
-        """
-        if not isinstance(self.dtype, Array):
-            raise TypeError()
-
-        size = self.itemCnt
-        assert self.bitAddr % addrStep == 0, "Has to be addressable by address with this step"
-
-        addr = self.bitAddr // size
-
-        if size == 1:
-            return addr, 0
-        else:
-            subAddrBits = (size - 1).bit_length()
-
-        if addr & mask(subAddrBits):
-            # is addr is not aligned to size
-            return None
-
-        return addr >> subAddrBits, subAddrBits
-
     def bit_length(self):
         return self.bitAddrEnd - self.bitAddr
 
