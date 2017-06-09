@@ -20,11 +20,9 @@ class Signal(SignalOps, Interface):
                  masterDir=D.OUT,
                  multipliedBy=None,
                  dtype=BIT,
-                 alternativeNames=None,
                  loadConfig=True):
         super().__init__(masterDir=masterDir,
                          multipliedBy=multipliedBy,
-                         alternativeNames=alternativeNames,
                          loadConfig=loadConfig)
         self._dtype = dtype
         self._setMultipliedBy(multipliedBy, updateTypes=True)
@@ -68,7 +66,6 @@ def VectSignal(width,
                signed=None,
                masterDir=D.OUT,
                multipliedBy=None,
-               alternativeNames=None,
                loadConfig=True):
     """
     Create basic :class:`.Signal` interface where type is vector
@@ -76,7 +73,6 @@ def VectSignal(width,
     return Signal(masterDir,
                   multipliedBy,
                   vecT(width, signed),
-                  alternativeNames,
                   loadConfig)
 
 
@@ -289,7 +285,7 @@ class FifoWriter(Interface):
     def _declr(self):
         self.en = s()
         self.wait = s(masterDir=D.IN)
-        self.data = s(dtype=vecT(self.DATA_WIDTH), alternativeNames=[''])
+        self.data = s(dtype=vecT(self.DATA_WIDTH))
 
     def _getSimAgent(self):
         from hwt.interfaces.agents.fifo import FifoWriterAgent

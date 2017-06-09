@@ -1,31 +1,28 @@
-from copy import copy
-
 from hwt.hdlObjects.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.synthesizer.interfaceLevel.interfaceUtils.array import InterfaceArray
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import InterfaceDirectionFns
-from hwt.synthesizer.interfaceLevel.interfaceUtils.hdlExtraction import ExtractableInterface
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
+from hwt.synthesizer.interfaceLevel.unitImplHelpers import getRst, getClk
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.vectorUtils import fitTo, aplyIndexOnSignal
-from hwt.synthesizer.interfaceLevel.unitImplHelpers import getRst, getClk
 
 
 def _defaultUpdater(self, onParentName, p):
     self._replaceParam(onParentName, p)
 
 
-class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, InterfaceDirectionFns):
+class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDirectionFns):
     """
     Base class for all interfaces in interface synthesizer
 
     :cvar _NAME_SEPARATOR: separator for nested interface names
     :ivar _params: [] of parameter
     :ivar _interfaces: [] sub interfaces
-    :ivar _alternativeNames: [] of alternative names
     :ivar _name: name assigned during synthesis
     :ivar _parent: parent object (Unit or Interface instance)
     :ivar _isExtern: If true synthesizer sets it as external port of unit
@@ -58,7 +55,7 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
 
     _NAME_SEPARATOR = "_"
 
-    def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None, alternativeNames=None, loadConfig=True):
+    def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None, loadConfig=True):
         """
         This constructor is called when constructing new interface, it is usually done
         manually while creating Unit or
@@ -67,8 +64,6 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         :param masterDir: direction which this interface should have for master
         :param multiplyedBy: this can be instance of integer or Param, this mean the interface
                          is array of the interfaces where multiplyedBy is the size
-        :param alternativeNames: alternative names which are used for interface extraction from hdl
-                                [TODO] remove
         :param loadConfig: do load config in __init__
         """
         self._setAttrListener = None
@@ -82,22 +77,6 @@ class Interface(InterfaceBase, ExtractableInterface, PropDeclrCollector, Interfa
         self._multipliedBy = multipliedBy
         self._masterDir = masterDir
         self._direction = INTF_DIRECTION.UNKNOWN
-
-        # resolve alternative names
-        if not alternativeNames:
-            if hasattr(self.__class__, "_alternativeNames"):
-                self._alternativeNames = copy(self.__class__._alternativeNames)
-            else:
-                self._alternativeNames = []
-        else:
-            self._alternativeNames = alternativeNames
-
-        # set default name to this interface
-        if not hasattr(self, "_name"):
-            if self._alternativeNames:
-                self._name = self._alternativeNames[0]
-            else:
-                self._name = ''
 
         self._cntx = RtlNetlist(self)
 
