@@ -20,7 +20,6 @@ from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.mapExpr import MapExpr
 from hwt.serializer.serializerClases.portMap import PortMap
 from hwt.serializer.utils import maxStmId
-from hwt.serializer.vhdl.formater import formatVhdl
 from hwt.serializer.vhdl.ops import VhdlSerializer_ops
 from hwt.serializer.vhdl.statements import VhdlSerializer_statements
 from hwt.serializer.vhdl.types import VhdlSerializer_types
@@ -80,7 +79,7 @@ def onlyPrintDefaultValues(suggestedName, dtype):
 class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_types, VhdlSerializer_statements):
     VHDL_VER = VhdlVersion.v2002
     __keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
-    # formater = formatVhdl
+
     @staticmethod
     def formater(s):
         return s
@@ -216,16 +215,16 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
         componentInstances = list(map(lambda c: cls.ComponentInstance(c, createTmpVarFn, scope, indent + 1),
                                       arch.componentInstances))
 
-        return architectureTmpl.render({
-            "indent": getIndent(indent),
-            "entityName": arch.getEntityName(),
-            "name": arch.name,
-            "variables": variables,
-            "extraTypes": extraTypes_serialized,
-            "processes": procs,
-            "components": components,
-            "componentInstances": componentInstances
-            })
+        return architectureTmpl.render(
+            indent=getIndent(indent),
+            entityName=arch.getEntityName(),
+            name=arch.name,
+            variables=variables,
+            extraTypes=extraTypes_serialized,
+            processes=procs,
+            components=components,
+            componentInstances=componentInstances
+            )
 
     @classmethod
     def comment(cls, comentStr):
@@ -235,12 +234,12 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
     def Component(cls, entity, createTmpVar, indent=0):
         entity.ports.sort(key=lambda x: x.name)
         entity.generics.sort(key=lambda x: x.name)
-        return componentTmpl.render({
-                "indent": getIndent(indent),
-                "ports": [cls.PortItem(pi, createTmpVar) for pi in entity.ports],
-                "generics": [cls.GenericItem(g, createTmpVar) for g in entity.generics],
-                "entity": entity
-                })
+        return componentTmpl.render(
+                indent=getIndent(indent),
+                ports=[cls.PortItem(pi, createTmpVar) for pi in entity.ports],
+                generics=[cls.GenericItem(g, createTmpVar) for g in entity.generics],
+                entity=entity
+                )
 
     @classmethod
     def ComponentInstance(cls, entity, createTmpVarFn, scope, indent=0):
@@ -258,13 +257,13 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             raise Exception("Incomplete component instance")
 
         # [TODO] check component instance name
-        return componentInstanceTmpl.render({
-                "indent": getIndent(indent),
-                "instanceName": entity._name,
-                "entity": entity,
-                "portMaps": [cls.PortConnection(x, createTmpVarFn) for x in portMaps],
-                "genericMaps": [cls.MapExpr(x, createTmpVarFn) for x in genericMaps]
-                })
+        return componentInstanceTmpl.render(
+                indent=getIndent(indent),
+                instanceName=entity._name,
+                entity=entity,
+                portMaps=[cls.PortConnection(x, createTmpVarFn) for x in portMaps],
+                genericMaps=[cls.MapExpr(x, createTmpVarFn) for x in genericMaps]
+                )
 
     @classmethod
     def Entity(cls, ent, scope, indent=0):
@@ -285,12 +284,12 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             g.name = scope.checkedName(g.name, g)
             generics.append(cls.GenericItem(g, createTmpVarFn))
 
-        entVhdl = entityTmpl.render({
-                "indent":getIndent(indent),
-                "name": ent.name,
-                "ports": ports,
-                "generics": generics
-                })
+        entVhdl = entityTmpl.render(
+                indent=getIndent(indent),
+                name=ent.name,
+                ports=ports,
+                generics=generics
+                )
 
         doc = ent.__doc__
         if doc and id(doc) != id(Entity.__doc__):
@@ -391,10 +390,11 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             a = Assignment(s.defaultVal, s, virtualOnly=True)
             extraVarsInit.append(cls.Assignment(a, createTmpVarFn, indent=indent + 1))
 
-        return processTmpl.render({
-              "indent": getIndent(indent),
-              "name": proc.name,
-              "hasToBeVhdlProcess": hasToBeVhdlProcess,
-              "extraVars": extraVarsSerialized,
-              "sensitivityList": ", ".join(sensitivityList),
-              "statements": extraVarsInit + statemets})
+        return processTmpl.render(
+            indent=getIndent(indent),
+            name=proc.name,
+            hasToBeVhdlProcess=hasToBeVhdlProcess,
+            extraVars=extraVarsSerialized,
+            sensitivityList=", ".join(sensitivityList),
+            statements=extraVarsInit + statemets
+            )
