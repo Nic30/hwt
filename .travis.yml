@@ -13,7 +13,7 @@ env:
   - HWT=`pwd`
   - HWT_LIB=`pwd`/../hwtLib
   - PYTHONPATH=$HWT $HWT_LIB
-  - DIST_PACKAGES=/home/travis/virtualenv/python3.5.2/lib/python3.5/site-packages
+  - DIST_PACKAGES=$(whreis python3)/../lib/python3.5/site-packages
 install:
 - python3 setup.py install
 - cd ..
