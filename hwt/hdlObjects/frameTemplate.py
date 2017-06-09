@@ -294,7 +294,6 @@ class FrameTemplate(object):
                     newBits = selectBitRange(val, flow, fhigh - flow)
                     vld = mask(high - low) << low
     
-                print(actualVal, low, high- low, newBits)
                 actualVal = setBitRange(actualVal, low, high - low, newBits)
                 actualVldMask = setBitRange(actualVal, low, high - low, vld)
                     
