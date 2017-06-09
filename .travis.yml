@@ -13,12 +13,15 @@ env:
   - HWT=`pwd`
   - HWT_LIB=`pwd`/../hwtLib
   - PYTHONPATH=$HWT $HWT_LIB
+  - DIST_PACKAGES=`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
 install:
 - python3 setup.py install
 - cd ..
 - pip3 install pytest coveralls
 - git clone --depth=1 https://github.com/Nic30/hwtLib.git
-- cd hwtLib
+- cd HWToolkit
+- rm -rf $DIST_PACKAGES/hwt-*
+- ln -s hwt $DIST_PACKAGES/hwt
 #- python3 setup.py install
 
 script:

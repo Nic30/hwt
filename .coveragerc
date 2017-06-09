@@ -2,7 +2,7 @@
 
 
 source =
-    hwtLib
+    hwt
 
 [report]
 exclude_lines =
