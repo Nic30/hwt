@@ -1,7 +1,8 @@
 import itertools
-from hwt.hdlObjects.types.integer import Integer
+
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
+from hwt.hdlObjects.types.integer import Integer
 
 
 class FunctionContainer(list):
