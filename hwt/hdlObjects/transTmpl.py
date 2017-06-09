@@ -28,10 +28,6 @@ class TransTmpl(object):
         self.children = []
         self._loadFromHType(dtype, bitAddr)
 
-    def wordIndxFromBitAddr(self, bitAddr):
-        dataWidth = self.config.dataWidth
-        return bitAddr // dataWidth
-
     def _loadFromArray(self, dtype, bitAddr):
         self.itemCnt = evalParam(dtype.size).val
         self.children = TransTmpl(dtype.elmType, 0, self, origin=self.origin)
