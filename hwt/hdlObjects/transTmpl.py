@@ -1,8 +1,7 @@
-from hwt.bitmask import mask
 from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStruct
 from hwt.synthesizer.param import evalParam
-from hwt.hdlObjects.types.bits import Bits
 
 
 class TransTmpl(object):
