@@ -62,19 +62,27 @@ class VerilogSerializer_statements():
                     elif srcT.signed is not dstT.signed:
                         return "%s %s %s" % (firstPartOfStr, symbol, valAsHdl(a.src._convSign(dstT.signed)))
 
-            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%s; %s) " %
+            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%s; %s) " % 
                                       (indent_str, dstStr, symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
 
     @classmethod
     def IfContainer(cls, ifc, createTmpVarFn, indent=0):
         def asHdl(obj):
             return cls.asHdl(obj, createTmpVarFn, indent=indent + 1)
+        try:
+            cond = cls.condAsHdl(ifc.cond, True, createTmpVarFn)
+        except UnsupportedEventOpErr as e:
+            cond = None
 
-        cond = cls.condAsHdl(ifc.cond, True, createTmpVarFn)
+        if cond is None:
+            assert not ifc.elIfs
+            assert not ifc.ifFalse
+            stmBuff = [cls.asHdl(s, createTmpVarFn, indent=indent) for s in ifc.ifTrue]
+            return ";\n".join(stmBuff)
+
         elIfs = []
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
-
         for c, statements in ifc.elIfs:
             try:
                 elIfs.append((cls.condAsHdl(c, True, createTmpVarFn), [asHdl(s) for s in statements]))
