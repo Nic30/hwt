@@ -10,6 +10,7 @@ from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.types.defs import BOOL, BIT
 from hwt.hdlObjects.types.bits import Bits
+from hwt.synthesizer.param import getParam
 
 
 class VerilogSerializer_Value(GenericSerializer_Value):
@@ -119,6 +120,14 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             return prefix + cls.asHdl(item, createTmpVarFn)
 
         return cls.asHdl(item, createTmpVarFn)
+
+    @classmethod
+    def GenericItem(cls, g, createTmpVarFn):
+        s = "%s %s" % (cls.HdlType(g._dtype, createTmpVarFn, SIGNAL_TYPE.PORT), g.name)
+        if g.defaultVal is None:
+            return s
+        else:
+            return "parameter %s = %s" % (s, cls.Value(getParam(g.defaultVal).staticEval(), createTmpVarFn))
 
     @classmethod
     def PortItem(cls, pi, createTmpVarFn):
