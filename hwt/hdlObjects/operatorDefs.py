@@ -5,6 +5,7 @@ from hwt.hdlObjects.constants import SENSITIVITY
 from hwt.hdlObjects.function import Function
 from hwt.hdlObjects.types.defs import INT
 from hwt.hdlObjects.value import Value
+from _operator import neg
 
 
 class OpDefinition():
@@ -125,6 +126,7 @@ class AllOps():
     RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
     FALLIGN_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary
 
+    NEG = OpDefinition(neg)
     DIV = OpDefinition(floordiv)
     ADD = OpDefinition(add)
     SUB = OpDefinition(sub)
@@ -135,8 +137,8 @@ class AllOps():
 
     NOT = OpDefinition(inv)
     XOR = OpDefinition(xor)
-    AND_LOG = OpDefinition(and_)
-    OR_LOG = OpDefinition(or_)
+    AND_LOG = OpDefinition(and_) # [FIXME] is bit-wise
+    OR_LOG = OpDefinition(or_) # [FIXME] is bit-wise
 
     DOT = OpDefinition(dotOpFn)
     DOWNTO = OpDefinition(downtoFn)
