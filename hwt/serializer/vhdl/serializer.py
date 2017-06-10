@@ -235,7 +235,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             genericMaps.append(gm)
 
         if len(portMaps) == 0:
-            raise Exception("Incomplete component instance")
+            raise SerializerException("Incomplete component instance")
 
         # [TODO] check component instance name
         return componentInstanceTmpl.render(
@@ -306,14 +306,6 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             return s
         else:
             return "%s := %s" % (s, cls.Value(getParam(g.defaultVal).staticEval(), createTmpVarFn))
-
-    @classmethod
-    def PortConnection(cls, pc, createTmpVarFn):
-        if pc.portItem._dtype != pc.sig._dtype:
-            raise SerializerException("Port map %s is nod valid (types does not match)  (%s, %s)" % (
-                      "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, createTmpVarFn)),
-                      repr(pc.portItem._dtype), repr(pc.sig._dtype)))
-        return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, createTmpVarFn))
 
     @classmethod
     def DIRECTION(cls, d):
