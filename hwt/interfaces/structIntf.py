@@ -28,12 +28,13 @@ class StructIntf(Interface):
                 t = field.dtype
                 if isinstance(t, HStruct):
                     intf = StructIntf(t, self._instantiateFieldFn)
-                    intf._fieldsToInterfaces = self._fieldsToInterfaces
                 else:
                     intf = self._instantiateFieldFn(field)
-
+                
+                if isinstance(intf, StructIntf):
+                    intf._fieldsToInterfaces = self._fieldsToInterfaces
+                
                 self._fieldsToInterfaces[field] = intf
-
                 setattr(self, field.name, intf)
 
     def _getSimAgent(self):
