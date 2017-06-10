@@ -4,6 +4,7 @@ from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.integer import Integer
 from hwt.serializer.verilog.utils import SIGNAL_TYPE
+from hwt.serializer.exceptions import SerializerException
 
 
 class VerilogSerializer_types():
@@ -50,3 +51,17 @@ class VerilogSerializer_types():
             nameBuff.append("[%s]" % cls.Value(c, createTmpVarFn))
 
         return " ".join(nameBuff)
+
+    @classmethod
+    def HdlType_int(cls, typ, scope, sigType, declaration=False):
+        ma = typ.max
+        mi = typ.min
+        noMax = ma is None
+        noMin = mi is None
+        if noMin and noMax:
+            if sigType is SIGNAL_TYPE.PORT:
+                return ""
+            else:
+                return "int"
+        else:
+            raise SerializerException("Verilog does not have integer range type")
