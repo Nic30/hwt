@@ -1,3 +1,4 @@
+from hwt.hdlObjects.portItem import PortItem
 from hwt.hdlObjects.types.enum import Enum
 from hwt.pyUtils.arrayQuery import arr_any
 
@@ -10,7 +11,7 @@ def verilogTypeOfSig(signalItem):
     """
     Check if is register or wire
     """
-    if arr_any(signalItem.drivers, lambda d: d.isEventDependent):
+    if arr_any(signalItem.drivers, lambda d: not isinstance(d, PortItem) and d.isEventDependent):
         return SIGNAL_TYPE.REG
     else:
         return SIGNAL_TYPE.WIRE

@@ -31,10 +31,10 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             else:
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)
 
-            s = "%s%s %s %s" % (getIndent(indent),
-                                  prefix,
-                                  cls.HdlType(si._dtype, createTmpVarFn, st),
-                                  si.name)
+            s = "%s%s%s %s" % (getIndent(indent),
+                               prefix,
+                               cls.HdlType(si._dtype, createTmpVarFn, st),
+                               si.name)
             if isinstance(v, RtlSignalBase):
                 return s + " = %s" % cls.asHdl(v, createTmpVarFn)
             elif isinstance(v, Value):

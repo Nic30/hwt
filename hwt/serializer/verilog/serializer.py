@@ -7,8 +7,6 @@ from hwt.hdlObjects.statements import IfContainer, SwitchContainer, \
 from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.value import Value
-from hwt.hdlObjects.variables import SignalItem
-from hwt.pyUtils.arrayQuery import groupedby, arr_any
 from hwt.serializer.nameScope import LangueKeyword, NameScope
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.utils import maxStmId
@@ -16,15 +14,14 @@ from hwt.serializer.verilog.keywords import VERILOG_KEYWORDS
 from hwt.serializer.verilog.ops import VerilogSerializer_ops
 from hwt.serializer.verilog.statements import VerilogSerializer_statements
 from hwt.serializer.verilog.templates import moduleHeadTmpl, moduleBodyTmpl, \
-    processTmpl
+    componentInstanceTmpl
 from hwt.serializer.verilog.types import VerilogSerializer_types
-from hwt.serializer.verilog.utils import SIGNAL_TYPE
 from hwt.serializer.verilog.value import VerilogSerializer_Value
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdlObjects.types.defs import BIT, BOOL
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.constants import DIRECTION
+from hwt.serializer.serializerClases.portMap import PortMap
+from hwt.serializer.serializerClases.mapExpr import MapExpr
+from hwt.serializer.exceptions import SerializerException
 
 
 class VerilogSerializer(VerilogSerializer_types, VerilogSerializer_Value, VerilogSerializer_statements, VerilogSerializer_ops):
@@ -107,7 +104,6 @@ class VerilogSerializer(VerilogSerializer_types, VerilogSerializer_Value, Verilo
         extraTypes_serialized = []
         arch.variables.sort(key=lambda x: x.name)
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
-        arch.components.sort(key=lambda x: x.name)
         arch.componentInstances.sort(key=lambda x: x._name)
 
         def createTmpVarFn(suggestedName, dtype):
@@ -129,12 +125,6 @@ class VerilogSerializer(VerilogSerializer_types, VerilogSerializer_Value, Verilo
 
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
-
-        uniqComponents = list(map(lambda x: x[1][0], groupedby(arch.components, lambda c: c.name)))
-        uniqComponents.sort(key=lambda c: c.name)
-        components = list(map(lambda c: cls.Component(c, createTmpVarFn, indent + 1),
-                              uniqComponents))
-
         componentInstances = list(map(lambda c: cls.ComponentInstance(c, createTmpVarFn, scope, indent + 1),
                                       arch.componentInstances))
 
@@ -145,9 +135,32 @@ class VerilogSerializer(VerilogSerializer_types, VerilogSerializer_Value, Verilo
             variables=variables,
             extraTypes=extraTypes_serialized,
             processes=procs,
-            components=components,
             componentInstances=componentInstances
             )
+
+    @classmethod
+    def ComponentInstance(cls, entity, createTmpVarFn, scope, indent=0):
+        portMaps = []
+        for pi in entity.ports:
+            pm = PortMap.fromPortItem(pi)
+            portMaps.append(pm)
+
+        genericMaps = []
+        for g in entity.generics:
+            gm = MapExpr(g, g._val)
+            genericMaps.append(gm)
+
+        if len(portMaps) == 0:
+            raise SerializerException("Incomplete component instance")
+
+        # [TODO] check component instance name
+        return componentInstanceTmpl.render(
+                indent=getIndent(indent),
+                instanceName=entity._name,
+                entity=entity,
+                portMaps=[cls.PortConnection(x, createTmpVarFn) for x in portMaps],
+                genericMaps=[cls.MapExpr(x, createTmpVarFn) for x in genericMaps]
+                )
 
     @classmethod
     def comment(cls, comentStr):

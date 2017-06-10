@@ -121,7 +121,7 @@ class VerilogSerializer_statements():
                                                                         WhileContainer,
                                                                         WaitStm)))
 
-        anyIsEventDependnt = arr_any(proc.sensitivityList, lambda s: isinstance(s, Operator)) 
+        anyIsEventDependnt = arr_any(proc.sensitivityList, lambda s: isinstance(s, Operator))
         sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, None, anyIsEventDependnt),
                                      proc.sensitivityList))
 
@@ -148,3 +148,15 @@ class VerilogSerializer_statements():
             sensitivityList=" or ".join(sensitivityList),
             statements=extraVarsInit + statemets
             )
+
+    @classmethod
+    def PortConnection(cls, pc, createTmpVarFn):
+        if pc.portItem._dtype != pc.sig._dtype:
+            raise SerializerException("Port map %s is nod valid (types does not match)  (%s, %s)" % (
+                      "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, createTmpVarFn)),
+                      repr(pc.portItem._dtype), repr(pc.sig._dtype)))
+        return ".%s(%s)" % (pc.portItem.name, cls.asHdl(pc.sig, createTmpVarFn))
+
+    @classmethod
+    def MapExpr(cls, m, createTmpVar):
+        return ".%s(%s)" % (m.compSig.name, cls.asHdl(m.value, createTmpVar))

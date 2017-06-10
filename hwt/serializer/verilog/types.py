@@ -34,7 +34,7 @@ class VerilogSerializer_types():
         elif sigType is SIGNAL_TYPE.REG:
             nameBuff.append("reg")
         elif sigType is SIGNAL_TYPE.WIRE:
-            nameBuff.append("reg")
+            nameBuff.append("wire")
         else:
             raise NotImplementedError()
 
