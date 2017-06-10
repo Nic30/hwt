@@ -11,20 +11,20 @@ from hwt.serializer.exceptions import SerializerException
 class VhdlSerializer_types():
     @classmethod
     def HdlType_bits(cls, typ, createTmpVarFn, declaration=False):
-        disableRange = False
+        isVector = typ.forceVector or typ.bit_length() > 1
+
         if typ.signed is None:
-            if typ.forceVector or typ.bit_length() > 1:
+            if isVector:
                 name = 'STD_LOGIC_VECTOR'
             else:
                 name = 'STD_LOGIC'
-                disableRange = True
         elif typ.signed:
             name = "SIGNED"
         else:
             name = 'UNSIGNED'
 
         c = typ.constrain
-        if disableRange or c is None or isinstance(c, Unconstrained):
+        if not isVector or c is None or isinstance(c, Unconstrained):
             constr = ""
         elif isinstance(c, (int, float)):
             constr = "(%d DOWNTO 0)" % (c - 1)

@@ -6,14 +6,11 @@ from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.sliceVal import SliceVal
 from hwt.hdlObjects.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.vhdl.utils import VhdlVersion, vhdlTmplEnv
+from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.serializer.serializerClases.indent import getIndent
-
-
-IfTmpl = vhdlTmplEnv.get_template('if.vhd')
-SwitchTmpl = vhdlTmplEnv.get_template('switch.vhd')
+from hwt.serializer.vhdl.templates import SwitchTmpl, IfTmpl
 
 
 class DoesNotContainsTernary(Exception):
@@ -79,7 +76,7 @@ class VhdlSerializer_statements():
                     i = i.clone()
                     i.val = (i.val[0] + 1, i.val[1])
                 dst = dst[i]
-        
+
         indent_str = getIndent(indent)
         dstStr = asHdl(dst)
         if dst._dtype == a.src._dtype:
@@ -99,7 +96,7 @@ class VhdlSerializer_statements():
                     elif srcT.signed is not dstT.signed:
                         return "%s, %s %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src._convSign(dstT.signed)))
 
-            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%s; %s) " % 
+            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%s; %s) " %
                                       (indent_str, dstStr, symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
 
     @classmethod

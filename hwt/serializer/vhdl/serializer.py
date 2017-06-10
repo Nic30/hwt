@@ -20,36 +20,17 @@ from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.mapExpr import MapExpr
 from hwt.serializer.serializerClases.portMap import PortMap
 from hwt.serializer.utils import maxStmId
+from hwt.serializer.vhdl.keywords import VHLD_KEYWORDS
 from hwt.serializer.vhdl.ops import VhdlSerializer_ops
 from hwt.serializer.vhdl.statements import VhdlSerializer_statements
 from hwt.serializer.vhdl.types import VhdlSerializer_types
-from hwt.serializer.vhdl.utils import VhdlVersion, vhdlTmplEnv
+from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.serializer.vhdl.value import VhdlSerializer_Value
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.param import getParam, evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-
-
-architectureTmpl = vhdlTmplEnv.get_template('architecture.vhd')
-entityTmpl = vhdlTmplEnv.get_template('entity.vhd')
-processTmpl = vhdlTmplEnv.get_template('process.vhd')
-componentTmpl = vhdlTmplEnv.get_template('component.vhd')
-componentInstanceTmpl = vhdlTmplEnv.get_template('component_instance.vhd')
-
-VHLD_KEYWORDS = [
-    "abs", "access", "across", "after", "alias", "all", "and", "architecture", "array",
-    "assert", "attribute", "begin", "block", "body", "break", "bugger", "bus", "case",
-    "component", "configuration", "constant", "disconnect", "downto", "end", "entity",
-    "else", "elsif", "exit", "file", "for", "function", "generate", "generic", "group",
-    "guarded", "if", "impure", "in", "inertial", "inout", "is", "label", "library", "limit",
-    "linkage", "literal", "loop", "map", "mod", "nand", "nature", "new", "next", "noise",
-    "nor", "not", "null", "of", "on", "open", "or", "others", "out", "package", "port",
-    "postponed", "process", "procedure", "procedural", "pure", "quantity", "range",
-    "reverse_range", "reject", "rem", "record", "reference", "register", "report", "return",
-    "rol", "ror", "select", "severity", "shared", "signal", "sla", "sll", "spectrum", "sra",
-    "srl", "subnature", "subtype", "terminal", "then", "through", "to", "tolerance", "transport",
-    "type", "unaffected", "units", "until", "use", "variable", "wait", "with", "when", "while",
-    "xnor", "xor"]
+from hwt.serializer.vhdl.templates import entityTmpl, processTmpl, \
+    componentInstanceTmpl, componentTmpl, architectureTmpl
 
 
 def freeze_dict(data):
@@ -309,10 +290,10 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             if not forceBool or c._dtype == BOOL:
                 return cls.asHdl(c, createTmpVarFn)
             elif c._dtype == BIT:
-                return "(" + cls.asHdl(c, createTmpVarFn) + ")=" + cls.BitLiteral(1, 1)
+                return "(%s)=%s" % (cls.asHdl(c, createTmpVarFn), cls.BitLiteral(1, 1))
             elif isinstance(c._dtype, Bits):
                 width = c._dtype.bit_length()
-                return "(" + cls.asHdl(c, createTmpVarFn) + ")/=" + cls.BitString(0, width)
+                return "(%s)/=%s" % (cls.asHdl(c, createTmpVarFn), cls.BitString(0, width))
             else:
                 raise NotImplementedError()
         else:
@@ -370,8 +351,12 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             extraVarsSerialized.append(serializedS)
             return s
 
-        hasToBeVhdlProcess = extraVars or arr_any(body, lambda x: isinstance(x,
-                                        (IfContainer, SwitchContainer, WhileContainer, WaitStm)))
+        hasToBeVhdlProcess = extraVars or arr_any(body,
+                                                  lambda x: isinstance(x,
+                                                                       (IfContainer,
+                                                                        SwitchContainer,
+                                                                        WhileContainer,
+                                                                        WaitStm)))
 
         sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, None), proc.sensitivityList))
 
@@ -379,7 +364,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             sIndent = indent + 1
         else:
             sIndent = indent
-            
+
         statemets = [cls.asHdl(s, createTmpVarFn, indent=sIndent) for s in body]
 
         if hasToBeVhdlProcess:

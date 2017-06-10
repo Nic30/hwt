@@ -2,6 +2,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdlObjects.operatorDefs import AllOps
 
 opPrecedence = {AllOps.NOT: 4,
+                AllOps.NEG: 4,
                 AllOps.EVENT: 1,
                 AllOps.RISING_EDGE: 1,
                 AllOps.DIV: 4,
@@ -16,6 +17,8 @@ opPrecedence = {AllOps.NOT: 4,
                 AllOps.DOWNTO: 1,
                 AllOps.GREATERTHAN: 10,
                 AllOps.LOWERTHAN: 10,
+                AllOps.GE: 10,
+                AllOps.LE: 10,
                 AllOps.CONCAT: 1,
                 AllOps.INDEX: 1,
                 AllOps.TERNARY: 1,
@@ -69,7 +72,7 @@ class SimModelSerializer_ops():
             return '(%s)._eq__val(%s)' % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EVENT:
             assert len(ops) == 1
-            return p(ops[0]) + "._hasEvent__val(sim)"
+            return "(%s)._hasEvent__val(sim)" % p(ops[0])
         elif o == AllOps.GREATERTHAN:
             return _bin('_gt__val')
         elif o == AllOps.GE:
@@ -89,6 +92,8 @@ class SimModelSerializer_ops():
             return _bin('_ne__val')
         elif o == AllOps.ADD:
             return _bin('_add__val')
+        elif o == AllOps.NEG:
+            return "(%s)._neg__val()" % (p(ops[0]))
         elif o == AllOps.TERNARY:
             return "(%s)._ternary__val(%s, %s)" % tuple(map(cls.asHdl, ops))
         elif o == AllOps.RISING_EDGE:
