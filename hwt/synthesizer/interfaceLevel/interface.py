@@ -99,6 +99,9 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
             # inherit _multipliedBy and update dtype on physical interfaces
             if i._multipliedBy is None:
                 i._multipliedBy = self._multipliedBy
+            else:
+                i._multipliedBy = i._multipliedBy * self._multipliedBy
+
             i._isExtern = self._isExtern
             i._loadDeclarations()
 
@@ -106,7 +109,15 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
             if i._multipliedBy is not None:
                 if not i._interfaces:
                     i._injectMultiplerToDtype()
-                    i._initArrayItems()
+
+        mb = self._multipliedBy
+        if mb is not None:
+            try:
+                intfMultipliedOnMyLvl = self._multipliedBy is not self.parent._multipliedBy
+            except AttributeError:
+                intfMultipliedOnMyLvl = True
+            if intfMultipliedOnMyLvl:
+                self._initArrayItems()
         for p in self._params:
             p.setReadOnly()
 
