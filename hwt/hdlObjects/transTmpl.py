@@ -66,34 +66,34 @@ class TransTmpl(object):
     def getItemWidth(self):
         if not isinstance(self.dtype, Array):
             raise TypeError()
-        return (self.bitAddr - self.bitAddrEnd) // self.itemCnt
+        return (self.bitAddrEnd - self.bitAddr) // self.itemCnt
 
     def bit_length(self):
         return self.bitAddrEnd - self.bitAddr
 
-    def walkFlatten(self, offset=None, shouldEnterFn=lambda transTmpl: True):
+    def walkFlatten(self, offset=0, shouldEnterFn=lambda transTmpl: True):
         """
         Walk fields in instance of TransTmpl
+
+        :param offset: optional offset for all children in this TransTmpl
         :param shouldEnterFn: function (transTmpl) which returns True when field should
             be split on it's children
+        :return: generator of tuples ((startBitAddress, endBitAddress), TransTmpl instance)
         """
+
         t = self.dtype
-        base = self.bitAddr
-        end = self.bitAddrEnd
-    
-        if offset is not None:
-            base += offset
-            end += offset
-    
+        base = self.bitAddr + offset
+        end = self.bitAddrEnd + offset
+
         if isinstance(t, Bits):
             yield ((base, end), self)
         elif isinstance(t, HStruct):
             if shouldEnterFn(self):
                 for ch in self.children:
-                    yield from ch.walkFlatten(shouldEnterFn=shouldEnterFn)
+                    yield from ch.walkFlatten(offset=offset, shouldEnterFn=shouldEnterFn)
             else:
                 yield ((base, end), self)
-    
+
         elif isinstance(t, Array):
             if shouldEnterFn(self):
                 itemSize = (self.bitAddrEnd - self.bitAddr) // self.itemCnt
