@@ -20,7 +20,6 @@ class InterfaceDirectionFns():
     def __directionProbe(self):
         if not self._interfaces:
             s = self._sig
-            d = self._masterDir
             return (not bool(s.drivers), bool(s.drivers))
 
         allInMasterConf = True

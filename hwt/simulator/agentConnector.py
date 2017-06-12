@@ -23,9 +23,10 @@ def autoAddAgents(unit):
             agentCnt = evalParam(intf._multipliedBy).val
             agent = []
             for i in range(agentCnt):
-                a = agentCls(intf[i])
+                _intf = intf[i]
+                a = agentCls(_intf)
                 agent.append(a)
-                intf[i]._ag = a
+                _intf._ag = a
         else:
             agent = agentCls(intf)
             intf._ag = agent

@@ -35,13 +35,13 @@ class Signal(SignalOps, Interface):
         elif isinstance(t, Bits):
             w = getWidthExpr(t)
             if isinstance(w, RtlSignalBase):
-                # bouth Param or factor Value
+                # both Param or factor Value
                 newW = w * factor
             elif isinstance(factor, RtlSignalBase):
                 # w is Value
                 newW = factor * w
             else:
-                # bouth Value
+                # both Value
                 newW = w.clone()
                 newW.val *= factor.val
             newT = vecT(newW)
