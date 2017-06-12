@@ -61,17 +61,6 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._loadMyImplementations()
         yield from self._lazyLoaded
 
-        def forAllInterfaces(fn):
-            for i in self._interfaces:
-                fn(i)
-
-            for u in self._units:
-                for i in u._interfaces:
-                    if i._isExtern:
-                        fn(i)
-
-        forAllInterfaces(lambda i: i._connectMyElems())
-
         if self._checkIntferfaces and not self._externInterf:
             raise Exception("Can not find any external interface for unit " + self._name +
                             "- there is no such a thing as unit without interfaces")

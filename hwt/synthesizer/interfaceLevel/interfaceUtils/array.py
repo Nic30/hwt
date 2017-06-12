@@ -1,8 +1,7 @@
-from hwt.hdlObjects.constants import INTF_DIRECTION
 from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.pyUtils.arrayQuery import arr_any
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
+from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 
@@ -29,22 +28,14 @@ class InterfaceArray():
     def __init__(self):
         self._arrayElemCache = []
 
-    def _setMultipliedBy(self, factor, updateTypes=True):
-        self._multipliedBy = factor
-        for i in self._interfaces:
-            i._setMultipliedBy(factor, updateTypes=updateTypes)
-
     def __len__(self):
-        return self._multipliedBy
+        return evalParam(self._multipliedBy).val
 
     def _initArrayItems(self):
         "instantiate my items into _arrayElemCache"
         self._arrayElemCache = []
-        for index in range(self._multipliedBy.staticEval().val):
-            e = self._mkElemItem()
-            e._name = "%d" % index
-            e._parent = self
-            e._isExtern = self._isExtern
+        for index in range(len(self)):
+            e = InterfaceProxy(self, index, None)
             self._arrayElemCache.append(e)
 
     def _isInterfaceArray(self):
@@ -59,20 +50,6 @@ class InterfaceArray():
                 return True
         else:
             return False
-
-    def _connectMyElems(self):
-        if self._arrayElemCache:
-            for indx, e in enumerate(self._arrayElemCache):
-                elemHasConnections = arr_any(walkPhysInterfaces(e),
-                                             lambda x: (bool(x._sig.endpoints) or
-                                                        bool(x._sig.drivers)))
-                if elemHasConnections:
-                    e._resolveDirections()
-
-                    if e._direction == INTF_DIRECTION.MASTER:
-                        e._connectTo(self, masterIndex=indx)
-                    else:
-                        self._connectTo(e, slaveIndex=indx)
 
     def __getitem__(self, key):
         if not self._isInterfaceArray():

@@ -111,7 +111,7 @@ def reconectArrayIntfSignalsToModel(parent, item):
             lowerIndex = (width * index)
             upperIndex = (width * (index + 1))
 
-        i._sigInside = IndexSimSignalProxy(i._name,
+        i._sigInside = IndexSimSignalProxy(i._origIntf._name,
                                            p._sigInside,
                                            simBitsT(width, s._dtype.signed),
                                            upperIndex,

@@ -37,12 +37,6 @@ class StructIntf(Interface):
                 self._fieldsToInterfaces[field] = intf
                 setattr(self, field.name, intf)
 
-    def _mkElemItem(self):
-        e = self.__class__(self._structT, self._instantiateFieldFn, masterDir=self._masterDir)
-        e._updateParamsFrom(self)
-        e._loadDeclarations()
-        return e
-
     def _getSimAgent(self):
         from hwt.interfaces.agents.structIntf import StructIntfAgent
         return StructIntfAgent

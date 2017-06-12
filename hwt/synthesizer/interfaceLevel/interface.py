@@ -90,11 +90,15 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         self._ag = None
 
     def _loadDeclarations(self):
+        """
+        load declaratoins from _declr method
+        """
         if not hasattr(self, "_interfaces"):
             self._interfaces = []
         self._setAttrListener = self._declrCollector
         self._declr()
         self._setAttrListener = None
+
         for i in self._interfaces:
             # inherit _multipliedBy and update dtype on physical interfaces
             if self._multipliedBy is not None:
@@ -106,10 +110,9 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
             i._isExtern = self._isExtern
             i._loadDeclarations()
 
-            # apply multiplier at dtype of signals
-            if i._multipliedBy is not None:
-                if not i._interfaces:
-                    i._injectMultiplerToDtype()
+        # apply multiplier at dtype of signals
+        if not self._interfaces and self._multipliedBy is not None:
+            self._injectMultiplerToDtype()
 
         if self._isInterfaceArray():
             self._initArrayItems()
@@ -145,7 +148,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
 
                 if exclude and mIfc in exclude:
                     continue
-
+                
                 if mIfc._masterDir == DIRECTION.OUT:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(ifc), repr(mIfc)))
@@ -197,6 +200,9 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         """
         generate _sig for each interface which has no subinterface
         if already has _sig return it instead
+
+        :param context: instance of RtlNetlist where signals should be created
+        :paramprefix: name prefix for created signals
         :param typeTransform: optional function (type) returns modified type for signal
         """
         sigs = []
@@ -223,7 +229,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         if self._multipliedBy is not None:
             for elemIntf in self._arrayElemCache:
                 # elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name
-                elemIntf._signalsForInterface(context, prefix, typeTransform=typeTransform)
+                elemIntf._signalsForInterface(context)
                 # they are not in sigs because they are not main signals
 
         return sigs
