@@ -108,12 +108,6 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         i._loadDeclarations()
         i._setAsExtern(isExtern)
 
-        if i._multipliedBy is not None:
-            if i._interfaces:
-                i._initArrayItems()
-            else:
-                i._injectMultiplerToDtype()
-
     def _loadDeclarations(self):
         """
         Load all declarations from _decl() method, recursively for all interfaces/units.

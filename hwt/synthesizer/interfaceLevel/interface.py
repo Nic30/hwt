@@ -97,10 +97,11 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         self._setAttrListener = None
         for i in self._interfaces:
             # inherit _multipliedBy and update dtype on physical interfaces
-            if i._multipliedBy is None:
-                i._multipliedBy = self._multipliedBy
-            else:
-                i._multipliedBy = i._multipliedBy * self._multipliedBy
+            if self._multipliedBy is not None:
+                if i._multipliedBy is None:
+                    i._multipliedBy = self._multipliedBy
+                else:
+                    i._multipliedBy = i._multipliedBy * self._multipliedBy
 
             i._isExtern = self._isExtern
             i._loadDeclarations()
