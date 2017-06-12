@@ -2,29 +2,12 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import evalParam
 
 
-
-signalMethods = ['__div__', '__floordiv__', '__mod__', '__mul__', '__truediv__',
-                 "_convert",
-                 "_onRisingEdge",
-                 "_onFallingEdge",
-                 "_hasEvent",
-                 "_isOn",
-                 "_eq",
-                 "__ne__",
-                 "__gt__",
-                 "__lt__",
-                 "__ge__",
-                 "__le__",
-                 "__invert__",
-                 "__neg__",
-                 "__and__",
-                 "__xor__",
-                 "__or__",
-                 "__add__",
-                 "__sub__",
-                 "__mul__",
-                 "_reversed",
-                 "_concat",
+signalMethods = ["_convert",
+                 "_onRisingEdge", "_onFallingEdge", "_hasEvent",
+                 '__div__', '__floordiv__', '__mod__', '__mul__', '__truediv__',
+                 "_isOn", "_eq", "__ne__", "__gt__", "__lt__", "__ge__", "__le__",
+                 "__invert__", "__neg__", "__and__", "__xor__", "__or__", "__add__", "__sub__", "__mul__",
+                 "_reversed", "_concat",
                  "_getAssociatedClk", "_getAssociatedRst", "_connectToIter"]
 
 
@@ -33,22 +16,28 @@ def delegated_methods(methodNames):
     Delegate methods on object under "propName" property
     """
     def add_method(op, cls):
-        
-        def delegated_op(self, *args, **kwargs):
-            """
-            call function from interface with self=me
-            """
-            if op == "_connectToIter":
+        if op == "_connectToIter":
+            def delegated_op(self, *args, **kwargs):
+                """
+                call function from interface with self=me
+                """
                 o = self._origIntf
-            else:
+    
+                fn = getattr(o.__class__, op)
+                return fn(self, *args, **kwargs)
+        else:
+            def delegated_op(self, *args, **kwargs):
+                """
+                call function from interface with self=me
+                """
                 try:
                     o = self._sig
                 except AttributeError:
                     o = self._origIntf
+    
+                fn = getattr(o.__class__, op)
+                return fn(self, *args, **kwargs)
 
-            fn = getattr(o.__class__, op)
-            return fn(self, *args, **kwargs)
-        
         setattr(cls, op, delegated_op)
 
     def decorator(cls):
@@ -57,6 +46,7 @@ def delegated_methods(methodNames):
         return cls
 
     return decorator
+
 
 @delegated_methods(signalMethods)
 class InterfaceProxy(InterfaceBase):
@@ -68,6 +58,7 @@ class InterfaceProxy(InterfaceBase):
     :ivar _interfaces: list of proxies on interfaces from origInterface
     :ivar offset: tells how many items of this type was before this item f.e.
         arr = [[ item for i in range(3)] for i in range(3)] for array[2][0] index=0 and offset=2*3
+    :ivar _itemsCnt: if this is an proxy for array this is size of this array
     """
     def __init__(self, origInterface, index, parentProxy):
         """
@@ -78,14 +69,23 @@ class InterfaceProxy(InterfaceBase):
         self._origIntf = origInterface
         self._index = index
         
+        m = origInterface._multipliedBy
+        if m is None:
+            self._itemsCnt = None
+        else:
+            self._itemsCnt = evalParam(origInterface._multipliedBy).val
+        
         if parentProxy is None:
             self._offset = 0
         else:
             self._offset = parentProxy._myArrOffset()
-        
+            pm = parentProxy._origIntf._multipliedBy
+            if pm is not None:
+                self._itemsCnt // evalParam(pm).val
+            
         self._interfaces = []
         for intf in origInterface._interfaces:
-            p = InterfaceProxy(intf, 0, self)
+            p = InterfaceProxy(intf, self._index, self)
             setattr(self, intf._name, p)
             self._interfaces.append(p)
  
@@ -95,7 +95,7 @@ class InterfaceProxy(InterfaceBase):
         Returns index in items on physical interface which corresponds to signals of this proxy
         """
         o = self._offset 
-        if self._origIntf is not None:
+        if self._origIntf is not None and self._index is not None:
             o += self._index
         return o
     
@@ -110,7 +110,7 @@ class InterfaceProxy(InterfaceBase):
             widthOfItem = width // itemsCnt
             index = self._myArrOffset()
 
-            if widthOfItem == 1:
+            if widthOfItem == 1:  # [FIXME] it is not sure that type was originally bit or vector of len=1 
                 # as single bit it was single bit in original interface
                 self._sig = s[index]
             else:
@@ -147,6 +147,9 @@ class InterfaceProxy(InterfaceBase):
         :attention: ** operator is used as "assignment" it creates connection between interface and other
         """
         return self._connectTo(other)
+
+    def __getitem__(self, key):
+        return self._origIntf[self._myArrOffset() + key]
 
     def __getattr__(self, name):
         try:
