@@ -78,6 +78,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         yield from self._synthetiseContext(self._externInterf)
         self._checkArchCompInstances()
+        for intf in self._interfaces:
+            intf._setDirLock(True)
 
     def _wasSynthetised(self):
         return self._cntx.synthesised
