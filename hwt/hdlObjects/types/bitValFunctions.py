@@ -44,7 +44,7 @@ def bitsCmp(self, other, op, evalFn=None):
         elif isinstance(other._dtype, Integer):
             other = other._convert(self._dtype)
         else:
-            raise TypeError("Values of types (%s, %s) are not comparable" % (repr(self._dtype), repr(other._dtype)))
+            raise TypeError("Values of types (%r, %r) are not comparable" % (self._dtype, other._dtype))
 
         return Operator.withRes(op, [self, other], BOOL)
 
@@ -74,12 +74,12 @@ def bitsBitOp(self, other, op, getVldFn):
     else:
         if other._dtype == BOOL:
             self = self._convert(BOOL)
-            return op._evalFn(self,  other)
+            return op._evalFn(self, other)
         elif self._dtype == other._dtype:
             pass
         else:
-            raise TypeError("Types are not comparable (%s, %s)" %
-                            (repr(self._dtype), repr(other._dtype)))
+            raise TypeError("Can not apply operator %r (%r, %r)" % 
+                            (op, self._dtype, other._dtype))
 
         return Operator.withRes(op, [self, other], self._dtype)
 
@@ -119,7 +119,7 @@ def bitsArithOp(self, other, op):
         elif isinstance(other._dtype, Integer):
             pass
         else:
-            raise TypeError("%s %s %s" % (repr(self), repr(op), repr(other)))
+            raise TypeError("%r %r %r" % (self, op, other))
 
         o = Operator.withRes(op, [self, other], self._dtype)
         return o._convert(resT)
@@ -135,7 +135,7 @@ def boundryFromType(sigOrVal, boundaryIndex):
 
 def getMulResT(firstT, secondT):
     if isinstance(secondT, Integer):
-        return firstT # [maybe wrong]
+        return firstT  # [maybe wrong]
 
     width = firstT.bit_length() + secondT.bit_length()
     return vecT(width, firstT.signed)
