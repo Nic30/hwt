@@ -63,7 +63,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
 
         :param masterDir: direction which this interface should have for master
         :param multiplyedBy: this can be instance of integer or Param, this mean the interface
-                         is array of the interfaces where multiplyedBy is the size
+            is array of the interfaces where multiplyedBy is the size
         :param loadConfig: do load config in __init__
         """
         self._setAttrListener = None
