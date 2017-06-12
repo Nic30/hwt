@@ -9,13 +9,13 @@ class StructIntfAgent(AgentBase):
     """
     def __init__(self, intf):
         AgentBase.__init__(self, intf)
-        for _, intf in intf._fieldsToInterfaces.items():
+        for intf in intf._interfaces:
             intf._ag = intf._getSimAgent()(intf)
 
     def getMonitors(self):
-        for _, intf in self.intf._fieldsToInterfaces.items():
+        for intf in self.intf._interfaces:
             yield from intf._ag.getMonitors()
 
     def getDrivers(self):
-        for _, intf in self.intf._fieldsToInterfaces.items():
+        for intf in self.intf._interfaces:
             yield from intf._ag.getDrivers()
