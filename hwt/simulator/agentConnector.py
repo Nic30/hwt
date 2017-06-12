@@ -4,7 +4,7 @@ from hwt.synthesizer.param import evalParam
 
 def autoAddAgents(unit):
     """
-    Walk all interfaces on unit and instantiate actor for every interface.
+    Walk all interfaces on unit and instantiate agent for every interface.
 
     :return: all monitor/driver functions which should be added to simulation as processes
     """
