@@ -19,7 +19,7 @@ def autoAddAgents(unit):
             raise NotImplementedError(("Interface %s\n" +
                                        "has not any simulation agent class assigned") % (str(intf)))
 
-        if intf._multipliedBy is not None:
+        if intf._isInterfaceArray():
             agentCnt = evalParam(intf._multipliedBy).val
             agent = []
             for i in range(agentCnt):

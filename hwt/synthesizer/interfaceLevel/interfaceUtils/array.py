@@ -1,10 +1,9 @@
-from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.constants import INTF_DIRECTION
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.synthesizer.vectorUtils import getWidthExpr
+from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 
 def splitToTermSet(width):
@@ -48,6 +47,19 @@ class InterfaceArray():
             e._isExtern = self._isExtern
             self._arrayElemCache.append(e)
 
+    def _isInterfaceArray(self):
+        """Check if this interface is array itself,
+            _multipliedBy can be set by parent and does not necessary means that this is array interface 
+        """
+        mb = self._multipliedBy
+        if mb is not None:
+            try:
+                return self._multipliedBy is not self._parent._multipliedBy
+            except AttributeError:
+                return True
+        else:
+            return False
+
     def _connectMyElems(self):
         if self._arrayElemCache:
             for indx, e in enumerate(self._arrayElemCache):
@@ -63,7 +75,7 @@ class InterfaceArray():
                         self._connectTo(e, slaveIndex=indx)
 
     def __getitem__(self, key):
-        if self._multipliedBy is None:
+        if not self._isInterfaceArray():
             raise IntfLvlConfErr("interface %s is not array and can not be indexed on" % self._name)
         return self._arrayElemCache[key]
 

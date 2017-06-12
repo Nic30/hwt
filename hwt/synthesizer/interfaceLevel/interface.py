@@ -110,14 +110,9 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
                 if not i._interfaces:
                     i._injectMultiplerToDtype()
 
-        mb = self._multipliedBy
-        if mb is not None:
-            try:
-                intfMultipliedOnMyLvl = self._multipliedBy is not self.parent._multipliedBy
-            except AttributeError:
-                intfMultipliedOnMyLvl = True
-            if intfMultipliedOnMyLvl:
-                self._initArrayItems()
+        if self._isInterfaceArray():
+            self._initArrayItems()
+        
         for p in self._params:
             p.setReadOnly()
 
