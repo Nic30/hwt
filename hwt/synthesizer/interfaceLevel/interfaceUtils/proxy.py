@@ -11,7 +11,6 @@ signalMethods = ["_convert",
                  "_getAssociatedClk", "_getAssociatedRst", "_connectToIter"]
 
 
-
 def delegated_methods(methodNames):
     """
     Delegate methods on object under "propName" property
@@ -23,7 +22,7 @@ def delegated_methods(methodNames):
                 call function from interface with self=me
                 """
                 o = self._origIntf
-    
+
                 fn = getattr(o.__class__, op)
                 return fn(self, *args, **kwargs)
         else:
@@ -35,7 +34,7 @@ def delegated_methods(methodNames):
                     o = self._sig
                 except AttributeError:
                     o = self._origIntf
-    
+
                 fn = getattr(o.__class__, op)
                 return fn(self, *args, **kwargs)
 
@@ -54,8 +53,8 @@ class InterfaceProxy(InterfaceBase):
     """
     Interface proxy which is used to create virtual arrays on interfaces
     goal is to have arrays just by multiplying the width of signals
-    to allow intuitive access by [] operator to his arrays we need this proxy  
-    
+    to allow intuitive access by [] operator to his arrays we need this proxy
+
     :ivar _interfaces: list of proxies on interfaces from origInterface
     :ivar offset: tells how many items of this type was before this item f.e.
         arr = [[ item for i in range(3)] for i in range(3)] for array[2][0] index=0 and offset=2*3
@@ -65,13 +64,13 @@ class InterfaceProxy(InterfaceBase):
     def __init__(self, origInterface, offset, index, itemsCnt, itemsInOne, parentProxy):
         """
         :param origInterface: interface which is this proxy created for
-        :param offset: how many of this items items have appeared in previous arrays (take a look at doc of class) 
+        :param offset: how many of this items items have appeared in previous arrays (take a look at doc of class)
         :param index: index in current array of proxies, use None when parent proxy is not an array
         :param itemsCnt: if this is array specify how many items is in int
         :param parentProxy: proxy for parent interface of origInterface can be None
         """
         # if parentProxy is None this is constructed as element for _arrElemCache
-        
+
         self._origIntf = origInterface
         self._index = index
         self._offset = offset
@@ -85,7 +84,7 @@ class InterfaceProxy(InterfaceBase):
                 _intfItemsCnt = evalParam(intf._getMyMultiplier()).val
             except TypeError:
                 _intfItemsCnt = None
-            
+
             if _intfItemsCnt is not None and itemsCnt is not None:
                 _itemsCnt = _intfItemsCnt * itemsCnt
             else:
@@ -103,7 +102,7 @@ class InterfaceProxy(InterfaceBase):
             p = InterfaceProxy(intf, o, None, _itemsCnt, _itemsInOne, self)
             setattr(self, intf._name, p)
             self._interfaces.append(p)
-        
+
         if itemsCnt is not None:
             self._initArrayItems()
 
@@ -111,7 +110,7 @@ class InterfaceProxy(InterfaceBase):
         return self._itemsCnt
 
     def _getMyMultiplier(self):
-        return self._itemsCnt 
+        return self._itemsCnt
 
     def _myArrOffset(self):
         """
@@ -130,16 +129,16 @@ class InterfaceProxy(InterfaceBase):
         """
 
         if not self._interfaces:
-            # this is proxy for signal interface, select bits from it as _sig of this proxy 
+            # this is proxy for signal interface, select bits from it as _sig of this proxy
             s = self._origIntf._sig
             w = self._origIntf._widthMultiplier
             assert w is not None, ("InterfceProxy is not expected to be on interfaces without multiplier", self)
             sigItemsCnt = evalParam(w).val
-            
+
             width = self._origIntf._dtype.bit_length()
             widthOfItem = (width // sigItemsCnt)
             index = self._myArrOffset()
-            if widthOfItem == 1:  # [FIXME] it is not sure that type was originally bit or vector of len=1 
+            if widthOfItem == 1:  # [FIXME] it is not sure that type was originally bit or vector of len=1
                 # as single bit it was single bit in original interface
                 self._sig = s[index]
             else:
@@ -167,7 +166,7 @@ class InterfaceProxy(InterfaceBase):
 
         # for e in self._arrayElemCache:
         #    e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
-    
+
     def _connectTo(self, master, masterIndex=None, slaveIndex=None, exclude=None, fit=False):
         """
         connect to another interface interface (on rtl level)
@@ -204,4 +203,3 @@ class InterfaceProxy(InterfaceBase):
 
     def __repr__(self):
         return "<InterfaceProxy for %r, itemsInOne:%d, itemsCnt=%r, offset=%r, index=%r>" % (self._origIntf, self._itemsInOne, self._itemsCnt, self._offset, self._index)
-    
