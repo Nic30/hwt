@@ -3,4 +3,4 @@
 {{indent}}BEGIN{% for s in statements %}
 {{s}};{% endfor %}
 {{indent}}END PROCESS;
-{% else %}{% for s in statements %}{{s}}; {% endfor %}{% endif %}
+{% else %}{% for s in statements %}{{s}};{% endfor %}{% endif %}
