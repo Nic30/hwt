@@ -9,13 +9,13 @@ class StructIntf(Interface):
 
     :ivar _fieldsToInterfaces: dictionary {field from HStruct template: sub interface for it}
     """
-    def __init__(self, structT, instantiateFieldFn, masterDir=DIRECTION.OUT, multipliedBy=None, loadConfig=True):
+    def __init__(self, structT, instantiateFieldFn, masterDir=DIRECTION.OUT, asArraySize=None, loadConfig=True):
         """
         :param structT: HStruct instance used as template for this interface
         :param instantiateFieldFn: function(FieldTemplateItem instance) used to instantiate fields
             (is called only on fields which have different type than HStruct)
         """
-        Interface.__init__(self, masterDir=masterDir, multipliedBy=multipliedBy, loadConfig=loadConfig)
+        Interface.__init__(self, masterDir=masterDir, asArraySize=asArraySize, loadConfig=loadConfig)
         self._structT = structT
         self._instantiateFieldFn = instantiateFieldFn
         self._fieldsToInterfaces = {}

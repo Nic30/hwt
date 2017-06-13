@@ -7,7 +7,7 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getRst, getClk
-from hwt.synthesizer.param import Param
+from hwt.synthesizer.param import Param, evalParam
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.vectorUtils import fitTo, aplyIndexOnSignal
 
@@ -55,7 +55,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
 
     _NAME_SEPARATOR = "_"
 
-    def __init__(self, masterDir=DIRECTION.OUT, multipliedBy=None, loadConfig=True):
+    def __init__(self, masterDir=DIRECTION.OUT, asArraySize=None, loadConfig=True):
         """
         This constructor is called when constructing new interface, it is usually done
         manually while creating Unit or
@@ -72,9 +72,14 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         self._parent = None
 
         super().__init__()
-        if multipliedBy is not None:
-            multipliedBy = toHVal(multipliedBy)
-        self._multipliedBy = multipliedBy
+        if asArraySize is not None:
+            asArraySize = toHVal(asArraySize)
+            self._widthMultiplier = asArraySize
+        else:
+            self._widthMultiplier = None
+            
+        self._asArraySize = asArraySize
+        
         self._masterDir = masterDir
         self._direction = INTF_DIRECTION.UNKNOWN
 
@@ -92,26 +97,29 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
     def _loadDeclarations(self):
         """
         load declaratoins from _declr method
+        This function is called first for parent and then for children
         """
         if not hasattr(self, "_interfaces"):
             self._interfaces = []
         self._setAttrListener = self._declrCollector
         self._declr()
         self._setAttrListener = None
-
+        
         for i in self._interfaces:
-            # inherit _multipliedBy and update dtype on physical interfaces
-            if self._multipliedBy is not None:
-                if i._multipliedBy is None:
-                    i._multipliedBy = self._multipliedBy
+            # inherit _asArraySize and update dtype on physical interfaces
+            w = i._widthMultiplier
+            if self._widthMultiplier is not None:
+                if w is None:
+                    w = self._widthMultiplier
                 else:
-                    i._multipliedBy = i._multipliedBy * self._multipliedBy
-
+                    w = w * self._widthMultiplier
+            
+            i._widthMultiplier = w
             i._isExtern = self._isExtern
             i._loadDeclarations()
 
         # apply multiplier at dtype of signals
-        if not self._interfaces and self._multipliedBy is not None:
+        if not self._interfaces and self._widthMultiplier is not None:
             self._injectMultiplerToDtype()
 
         if self._isInterfaceArray():
@@ -202,7 +210,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         if already has _sig return it instead
 
         :param context: instance of RtlNetlist where signals should be created
-        :paramprefix: name prefix for created signals
+        :param prefix: name prefix for created signals
         :param typeTransform: optional function (type) returns modified type for signal
         """
         sigs = []
@@ -226,7 +234,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
                     self._boundedEntityPort.connectSig(self._sig)
                 sigs = [s]
 
-        if self._multipliedBy is not None:
+        if self._asArraySize is not None:
             for elemIntf in self._arrayElemCache:
                 # elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name
                 elemIntf._signalsForInterface(context)

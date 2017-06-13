@@ -20,7 +20,7 @@ def autoAddAgents(unit):
                                        "has not any simulation agent class assigned") % (str(intf)))
 
         if intf._isInterfaceArray():
-            agentCnt = evalParam(intf._multipliedBy).val
+            agentCnt = evalParam(intf._asArraySize).val
             agent = []
             for i in range(agentCnt):
                 _intf = intf[i]
@@ -31,7 +31,7 @@ def autoAddAgents(unit):
             agent = agentCls(intf)
             intf._ag = agent
 
-        if intf._multipliedBy is None:
+        if intf._asArraySize is None:
             agent = [agent, ]
 
         if intf._direction == INTF_DIRECTION.MASTER:

@@ -18,18 +18,20 @@ class Signal(SignalOps, Interface):
     """
     def __init__(self,
                  masterDir=D.OUT,
-                 multipliedBy=None,
+                 asArraySize=None,
                  dtype=BIT,
                  loadConfig=True):
         super().__init__(masterDir=masterDir,
-                         multipliedBy=multipliedBy,
+                         asArraySize=asArraySize,
                          loadConfig=loadConfig)
         self._dtype = dtype
-        self._setMultipliedBy(multipliedBy, updateTypes=True)
 
     def _injectMultiplerToDtype(self):
+        """
+        Make signal wider, used when there is an array of signals stored in one wider signal
+        """
         t = self._dtype
-        factor = self._multipliedBy
+        factor = self._widthMultiplier
         if t == BIT:
             newT = vecT(factor)
         elif isinstance(t, Bits):
@@ -46,16 +48,9 @@ class Signal(SignalOps, Interface):
                 newW.val *= factor.val
             newT = vecT(newW)
         else:
-            raise NotImplementedError("type:%s" % (repr(t)))
-        self._dtype = newT
+            raise TypeError("Can not multiply width of type %r" % (repr(t),))
 
-    def _setMultipliedBy(self, factor, updateTypes=True):
-        if type(self._multipliedBy) == type(factor) and self._multipliedBy == factor:
-            pass
-        else:
-            self._multipliedBy = factor
-            if updateTypes and factor is not None:
-                self._injectMultiplerToDtype()
+        self._dtype = newT
 
     def _getSimAgent(self):
         from hwt.interfaces.agents.signal import SignalAgent
@@ -65,13 +60,13 @@ class Signal(SignalOps, Interface):
 def VectSignal(width,
                signed=None,
                masterDir=D.OUT,
-               multipliedBy=None,
+               asArraySize=None,
                loadConfig=True):
     """
     Create basic :class:`.Signal` interface where type is vector
     """
     return Signal(masterDir,
-                  multipliedBy,
+                  asArraySize,
                   vecT(width, signed),
                   loadConfig)
 

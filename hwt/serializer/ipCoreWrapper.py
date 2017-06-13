@@ -26,8 +26,8 @@ class IpCoreWrapper(Unit):
         origToWrapInfMap = {}
 
         for intf in self.baseUnit._interfaces:
-            if intf._multipliedBy is not None:
-                for i in range(evalParam(intf._multipliedBy).val):
+            if intf._asArraySize is not None:
+                for i in range(evalParam(intf._asArraySize).val):
                     myIntf = cloneIntf(intf)
                     name = intf._name + "_%d" % i
 

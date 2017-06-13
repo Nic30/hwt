@@ -82,7 +82,7 @@ def reconectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls):
     """
     subInterfaces = synthesisedUnitOrIntf._interfaces
     try:
-        reconnectArrayItems = synthesisedUnitOrIntf._multipliedBy is not None
+        reconnectArrayItems = synthesisedUnitOrIntf._asArraySize is not None
     except AttributeError:
         reconnectArrayItems = False
 

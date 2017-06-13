@@ -29,47 +29,33 @@ class InterfaceArray():
         self._arrayElemCache = []
 
     def __len__(self):
-        return evalParam(self._multipliedBy).val
+        return evalParam(self._asArraySize).val
 
     def _initArrayItems(self):
         "instantiate my items into _arrayElemCache"
         self._arrayElemCache = []
+        wm = evalParam(self._widthMultiplier).val // evalParam(self._asArraySize).val
         for index in range(len(self)):
-            e = InterfaceProxy(self, 0, index, None)
+            e = InterfaceProxy(self, 0, index, None, wm, None)
             self._arrayElemCache.append(e)
 
     def _getMyMultiplier(self):
         """
-        :return: original _multipliedBy specified in contructor
+        :return: original _asArraySize specified in contructor
         """
-        m = self._multipliedBy
-        if m is None:
-            raise TypeError()
-        
-        try:
-            parentMult = self._parent._multipliedBy
-        except AttributeError:
-            return m
-        
-        return m // parentMult
+        return self._asArraySize
 
     def _isInterfaceArray(self):
-        """Check if this interface is array itself,
-            _multipliedBy can be set by parent and does not necessary means that this is array interface 
-        """
-        mb = self._multipliedBy
-        if mb is not None:
-            try:
-                return self._multipliedBy is not self._parent._multipliedBy
-            except AttributeError:
-                return True
-        else:
-            return False
+        return self._asArraySize is not None
 
     def __getitem__(self, key):
-        if not self._isInterfaceArray():
-            raise IntfLvlConfErr("interface %s is not array and can not be indexed on" % self._name)
-        return self._arrayElemCache[key]
+        try:
+            return self._arrayElemCache[key]
+        except IndexError as e:
+            if not self._isInterfaceArray():
+                raise IntfLvlConfErr("interface %s is not array and can not be indexed on" % self._name)
+            else:
+                raise e
 
     def _mkElemItem(self):
         "create element for this interface array"

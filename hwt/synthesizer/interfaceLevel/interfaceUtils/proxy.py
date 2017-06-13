@@ -11,6 +11,7 @@ signalMethods = ["_convert",
                  "_getAssociatedClk", "_getAssociatedRst", "_connectToIter"]
 
 
+
 def delegated_methods(methodNames):
     """
     Delegate methods on object under "propName" property
@@ -61,10 +62,12 @@ class InterfaceProxy(InterfaceBase):
     :ivar _itemsCnt: if this is an proxy for array this is size of this array
     """
 
-    def __init__(self, origInterface, offset, index, parentProxy):
+    def __init__(self, origInterface, offset, index, itemsCnt, itemsInOne, parentProxy):
         """
         :param origInterface: interface which is this proxy created for
+        :param offset: how many of this items items have appeared in previous arrays (take a look at doc of class) 
         :param index: index in current array of proxies, use None when parent proxy is not an array
+        :param itemsCnt: if this is array specify how many items is in int
         :param parentProxy: proxy for parent interface of origInterface can be None
         """
         # if parentProxy is None this is constructed as element for _arrElemCache
@@ -72,47 +75,81 @@ class InterfaceProxy(InterfaceBase):
         self._origIntf = origInterface
         self._index = index
         self._offset = offset
-        #print(origInterface._getFullName(), offset, index)
+        self._itemsCnt = itemsCnt
+        self._arrayElemCache = []
+        self._itemsInOne = itemsInOne
 
-        m = origInterface._multipliedBy
-        if m is None:
-            self._itemsCnt = None
-        else:
-            self._itemsCnt = evalParam(origInterface._getMyMultiplier()).val
-            
-            
         self._interfaces = []
         for intf in origInterface._interfaces:
-            p = InterfaceProxy(intf, offset + index, 0, self)
+            try:
+                _intfItemsCnt = evalParam(intf._getMyMultiplier()).val
+            except TypeError:
+                _intfItemsCnt = None
+            
+            if _intfItemsCnt is not None and itemsCnt is not None:
+                _itemsCnt = _intfItemsCnt * itemsCnt
+            else:
+                _itemsCnt = _intfItemsCnt
+
+            o = offset
+            if index is not None:
+                o += index
+
+            if _itemsCnt is not None:
+                _itemsInOne = _itemsCnt * itemsInOne
+            else:
+                _itemsInOne = itemsInOne
+
+            p = InterfaceProxy(intf, o, None, _itemsCnt, _itemsInOne, self)
             setattr(self, intf._name, p)
             self._interfaces.append(p)
+        
+        if itemsCnt is not None:
+            self._initArrayItems()
+
+    def __len__(self):
+        return self._itemsCnt
 
     def _getMyMultiplier(self):
-        return self._itemsCnt
+        return self._itemsCnt 
 
     def _myArrOffset(self):
         """
         Returns index in items on physical interface which corresponds to signals of this proxy
         """
-        return self._offset + self._index
-    
+        o = self._offset
+        i = self._index
+        if i is None:
+            return o
+        else:
+            return o + i
+
     def _signalsForInterface(self, context):
         """
         :param context: instance of RtlNetlist where signals should be created
         """
-        if not self._interfaces:
-            s = self._origIntf._sig
-            itemsCnt = evalParam(self._origIntf._multipliedBy).val
-            width = self._origIntf._dtype.bit_length()
-            widthOfItem = width // itemsCnt
-            index = self._myArrOffset()
 
+        if not self._interfaces:
+            # this is proxy for signal interface, select bits from it as _sig of this proxy 
+            s = self._origIntf._sig
+            w = self._origIntf._widthMultiplier
+            assert w is not None, ("InterfceProxy is not expected to be on interfaces without multiplier", self)
+            sigItemsCnt = evalParam(w).val
+            
+            width = self._origIntf._dtype.bit_length()
+            widthOfItem = (width // sigItemsCnt)
+            index = self._myArrOffset()
             if widthOfItem == 1:  # [FIXME] it is not sure that type was originally bit or vector of len=1 
                 # as single bit it was single bit in original interface
                 self._sig = s[index]
             else:
-                self._sig = s[((index + 1) * widthOfItem):(index * widthOfItem)]
+                h = ((index + 1) * widthOfItem)
+                l = (index * widthOfItem)
+                # assert s._dtype.bit_length() >= h, h
+                self._sig = s[h:l]
         else:
+            # there we know that all are proxies and all are part of array with dimension
+            # specified in this Proxy or it's  parents
             for proxy in self._interfaces:
                 proxy._signalsForInterface(context)
 
@@ -148,15 +185,23 @@ class InterfaceProxy(InterfaceBase):
     def __getitem__(self, key):
         if key >= self._itemsCnt:
             raise IndexError()
-        return self._origIntf[self._myArrOffset() * self._itemsCnt + key]
+        offset = (self._myArrOffset() * self._itemsCnt) // self._itemsInOne
+        return self._origIntf[offset + key]
 
     def __getattr__(self, name):
-        try:
-            return super().__getattribute__(name)
-        except AttributeError:
-            if name == "_dtype" or name == "_getIndexCascade" or name == "naryOp":
-                o = self._sig
-            else:
-                o = self._origIntf
+        if name == "_dtype" or name == "_getIndexCascade" or name == "naryOp":
+            o = self._sig
+        else:
+            o = self._origIntf
 
-            return getattr(o, name)
+        return getattr(o, name)
+
+    def _initArrayItems(self):
+        "instantiate my items into _arrayElemCache"
+        for index in range(len(self)):
+            e = InterfaceProxy(self, 0, index, None, self._itemsInOne // self._itemsCnt, self)
+            self._arrayElemCache.append(e)
+
+    def __repr__(self):
+        return "<InterfaceProxy for %r, itemsInOne:%d, itemsCnt=%r, offset=%r, index=%r>" % (self._origIntf, self._itemsInOne, self._itemsCnt, self._offset, self._index)
+    
