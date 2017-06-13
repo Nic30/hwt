@@ -60,44 +60,41 @@ class InterfaceProxy(InterfaceBase):
         arr = [[ item for i in range(3)] for i in range(3)] for array[2][0] index=0 and offset=2*3
     :ivar _itemsCnt: if this is an proxy for array this is size of this array
     """
-    def __init__(self, origInterface, index, parentProxy):
+
+    def __init__(self, origInterface, offset, index, parentProxy):
         """
         :param origInterface: interface which is this proxy created for
         :param index: index in current array of proxies, use None when parent proxy is not an array
         :param parentProxy: proxy for parent interface of origInterface can be None
         """
+        # if parentProxy is None this is constructed as element for _arrElemCache
+        
         self._origIntf = origInterface
         self._index = index
-        
+        self._offset = offset
+        #print(origInterface._getFullName(), offset, index)
+
         m = origInterface._multipliedBy
         if m is None:
             self._itemsCnt = None
         else:
-            self._itemsCnt = evalParam(origInterface._multipliedBy).val
-        
-        if parentProxy is None:
-            self._offset = 0
-        else:
-            self._offset = parentProxy._myArrOffset()
-            pm = parentProxy._origIntf._multipliedBy
-            if pm is not None:
-                self._itemsCnt // evalParam(pm).val
+            self._itemsCnt = evalParam(origInterface._getMyMultiplier()).val
+            
             
         self._interfaces = []
         for intf in origInterface._interfaces:
-            p = InterfaceProxy(intf, self._index, self)
+            p = InterfaceProxy(intf, offset + index, 0, self)
             setattr(self, intf._name, p)
             self._interfaces.append(p)
- 
+
+    def _getMyMultiplier(self):
+        return self._itemsCnt
 
     def _myArrOffset(self):
         """
         Returns index in items on physical interface which corresponds to signals of this proxy
         """
-        o = self._offset 
-        if self._origIntf is not None and self._index is not None:
-            o += self._index
-        return o
+        return self._offset + self._index
     
     def _signalsForInterface(self, context):
         """
@@ -149,7 +146,9 @@ class InterfaceProxy(InterfaceBase):
         return self._connectTo(other)
 
     def __getitem__(self, key):
-        return self._origIntf[self._myArrOffset() + key]
+        if key >= self._itemsCnt:
+            raise IndexError()
+        return self._origIntf[self._myArrOffset() * self._itemsCnt + key]
 
     def __getattr__(self, name):
         try:

@@ -35,8 +35,23 @@ class InterfaceArray():
         "instantiate my items into _arrayElemCache"
         self._arrayElemCache = []
         for index in range(len(self)):
-            e = InterfaceProxy(self, index, None)
+            e = InterfaceProxy(self, 0, index, None)
             self._arrayElemCache.append(e)
+
+    def _getMyMultiplier(self):
+        """
+        :return: original _multipliedBy specified in contructor
+        """
+        m = self._multipliedBy
+        if m is None:
+            raise TypeError()
+        
+        try:
+            parentMult = self._parent._multipliedBy
+        except AttributeError:
+            return m
+        
+        return m // parentMult
 
     def _isInterfaceArray(self):
         """Check if this interface is array itself,
