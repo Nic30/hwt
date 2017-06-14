@@ -7,7 +7,7 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getRst, getClk
-from hwt.synthesizer.param import Param, evalParam
+from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.vectorUtils import fitTo, aplyIndexOnSignal
 
@@ -236,7 +236,6 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
 
         if self._asArraySize is not None:
             for elemIntf in self._arrayElemCache:
-                # elemPrefix = prefix + self._NAME_SEPARATOR + elemIntf._name
                 elemIntf._signalsForInterface(context)
                 # they are not in sigs because they are not main signals
 
