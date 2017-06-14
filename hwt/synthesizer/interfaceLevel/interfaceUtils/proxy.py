@@ -1,14 +1,13 @@
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import evalParam
 
-
-signalMethods = ["_convert",
+intfMethods = ["_getAssociatedClk", "_getAssociatedRst", "_connectToIter"]
+signalMethods = ["_convert"
                  "_onRisingEdge", "_onFallingEdge", "_hasEvent",
                  '__div__', '__floordiv__', '__mod__', '__mul__', '__truediv__',
                  "_isOn", "_eq", "__ne__", "__gt__", "__lt__", "__ge__", "__le__",
                  "__invert__", "__neg__", "__and__", "__xor__", "__or__", "__add__", "__sub__", "__mul__",
-                 "_reversed", "_concat",
-                 "_getAssociatedClk", "_getAssociatedRst", "_connectToIter"]
+                 "_reversed", "_concat"]
 
 
 def delegated_methods(methodNames):
@@ -16,12 +15,14 @@ def delegated_methods(methodNames):
     Delegate methods on object under "propName" property
     """
     def add_method(op, cls):
-        if op == "_connectToIter":
+        if op in intfMethods:
             def delegated_op(self, *args, **kwargs):
                 """
                 call function from interface with self=me
                 """
                 o = self._origIntf
+                while isinstance(o, InterfaceProxy):
+                    o = o._origIntf
 
                 fn = getattr(o.__class__, op)
                 return fn(self, *args, **kwargs)
@@ -48,7 +49,7 @@ def delegated_methods(methodNames):
     return decorator
 
 
-@delegated_methods(signalMethods)
+@delegated_methods(signalMethods + intfMethods)
 class InterfaceProxy(InterfaceBase):
     """
     Interface proxy which is used to create virtual arrays on interfaces
@@ -136,7 +137,7 @@ class InterfaceProxy(InterfaceBase):
             sigItemsCnt = evalParam(w).val
 
             width = self._origIntf._dtype.bit_length()
-            widthOfItem = (width // sigItemsCnt)
+            widthOfItem = (width // sigItemsCnt) * self._itemsInOne
             index = self._myArrOffset()
             if widthOfItem == 1:  # [FIXME] it is not sure that type was originally bit or vector of len=1
                 # as single bit it was single bit in original interface
@@ -182,10 +183,13 @@ class InterfaceProxy(InterfaceBase):
         return self._connectTo(other)
 
     def __getitem__(self, key):
-        if key >= self._itemsCnt:
-            raise IndexError()
-        offset = (self._myArrOffset() * self._itemsCnt) // self._itemsInOne
-        return self._origIntf[offset + key]
+        return self._arrayElemCache[key]
+
+    # def __getitem__(self, key):
+    #    if key >= self._itemsCnt:
+    #        raise IndexError()
+    #    offset = (self._myArrOffset() * self._itemsCnt) // self._itemsInOne
+    #    return self._origIntf[offset + key]
 
     def __getattr__(self, name):
         if name == "_dtype" or name == "_getIndexCascade" or name == "naryOp":
@@ -198,6 +202,7 @@ class InterfaceProxy(InterfaceBase):
     def _initArrayItems(self):
         "instantiate my items into _arrayElemCache"
         for index in range(len(self)):
+            #print(self, index)
             e = InterfaceProxy(self, 0, index, None, self._itemsInOne // self._itemsCnt, self)
             self._arrayElemCache.append(e)
 
