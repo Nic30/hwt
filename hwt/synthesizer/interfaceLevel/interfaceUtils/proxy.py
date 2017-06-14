@@ -1,15 +1,13 @@
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import evalParam
 
-
-signalMethods = ["_convert",
+intfMethods = ["_getAssociatedClk", "_getAssociatedRst", "_connectToIter"]
+signalMethods = ["_convert"
                  "_onRisingEdge", "_onFallingEdge", "_hasEvent",
                  '__div__', '__floordiv__', '__mod__', '__mul__', '__truediv__',
                  "_isOn", "_eq", "__ne__", "__gt__", "__lt__", "__ge__", "__le__",
                  "__invert__", "__neg__", "__and__", "__xor__", "__or__", "__add__", "__sub__", "__mul__",
-                 "_reversed", "_concat",
-                 "_getAssociatedClk", "_getAssociatedRst", "_connectToIter"]
-
+                 "_reversed", "_concat"]
 
 
 def delegated_methods(methodNames):
@@ -17,13 +15,15 @@ def delegated_methods(methodNames):
     Delegate methods on object under "propName" property
     """
     def add_method(op, cls):
-        if op == "_connectToIter":
+        if op in intfMethods:
             def delegated_op(self, *args, **kwargs):
                 """
                 call function from interface with self=me
                 """
                 o = self._origIntf
-    
+                while isinstance(o, InterfaceProxy):
+                    o = o._origIntf
+
                 fn = getattr(o.__class__, op)
                 return fn(self, *args, **kwargs)
         else:
@@ -35,7 +35,7 @@ def delegated_methods(methodNames):
                     o = self._sig
                 except AttributeError:
                     o = self._origIntf
-    
+
                 fn = getattr(o.__class__, op)
                 return fn(self, *args, **kwargs)
 
@@ -49,13 +49,13 @@ def delegated_methods(methodNames):
     return decorator
 
 
-@delegated_methods(signalMethods)
+@delegated_methods(signalMethods + intfMethods)
 class InterfaceProxy(InterfaceBase):
     """
     Interface proxy which is used to create virtual arrays on interfaces
     goal is to have arrays just by multiplying the width of signals
-    to allow intuitive access by [] operator to his arrays we need this proxy  
-    
+    to allow intuitive access by [] operator to his arrays we need this proxy
+
     :ivar _interfaces: list of proxies on interfaces from origInterface
     :ivar offset: tells how many items of this type was before this item f.e.
         arr = [[ item for i in range(3)] for i in range(3)] for array[2][0] index=0 and offset=2*3
@@ -65,13 +65,13 @@ class InterfaceProxy(InterfaceBase):
     def __init__(self, origInterface, offset, index, itemsCnt, itemsInOne, parentProxy):
         """
         :param origInterface: interface which is this proxy created for
-        :param offset: how many of this items items have appeared in previous arrays (take a look at doc of class) 
+        :param offset: how many of this items items have appeared in previous arrays (take a look at doc of class)
         :param index: index in current array of proxies, use None when parent proxy is not an array
         :param itemsCnt: if this is array specify how many items is in int
         :param parentProxy: proxy for parent interface of origInterface can be None
         """
         # if parentProxy is None this is constructed as element for _arrElemCache
-        
+
         self._origIntf = origInterface
         self._index = index
         self._offset = offset
@@ -85,7 +85,7 @@ class InterfaceProxy(InterfaceBase):
                 _intfItemsCnt = evalParam(intf._getMyMultiplier()).val
             except TypeError:
                 _intfItemsCnt = None
-            
+
             if _intfItemsCnt is not None and itemsCnt is not None:
                 _itemsCnt = _intfItemsCnt * itemsCnt
             else:
@@ -103,7 +103,7 @@ class InterfaceProxy(InterfaceBase):
             p = InterfaceProxy(intf, o, None, _itemsCnt, _itemsInOne, self)
             setattr(self, intf._name, p)
             self._interfaces.append(p)
-        
+
         if itemsCnt is not None:
             self._initArrayItems()
 
@@ -111,7 +111,7 @@ class InterfaceProxy(InterfaceBase):
         return self._itemsCnt
 
     def _getMyMultiplier(self):
-        return self._itemsCnt 
+        return self._itemsCnt
 
     def _myArrOffset(self):
         """
@@ -130,16 +130,16 @@ class InterfaceProxy(InterfaceBase):
         """
 
         if not self._interfaces:
-            # this is proxy for signal interface, select bits from it as _sig of this proxy 
+            # this is proxy for signal interface, select bits from it as _sig of this proxy
             s = self._origIntf._sig
             w = self._origIntf._widthMultiplier
             assert w is not None, ("InterfceProxy is not expected to be on interfaces without multiplier", self)
             sigItemsCnt = evalParam(w).val
-            
+
             width = self._origIntf._dtype.bit_length()
-            widthOfItem = (width // sigItemsCnt)
+            widthOfItem = (width // sigItemsCnt) * self._itemsInOne
             index = self._myArrOffset()
-            if widthOfItem == 1:  # [FIXME] it is not sure that type was originally bit or vector of len=1 
+            if widthOfItem == 1:  # [FIXME] it is not sure that type was originally bit or vector of len=1
                 # as single bit it was single bit in original interface
                 self._sig = s[index]
             else:
@@ -167,7 +167,7 @@ class InterfaceProxy(InterfaceBase):
 
         # for e in self._arrayElemCache:
         #    e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
-    
+
     def _connectTo(self, master, masterIndex=None, slaveIndex=None, exclude=None, fit=False):
         """
         connect to another interface interface (on rtl level)
@@ -183,10 +183,13 @@ class InterfaceProxy(InterfaceBase):
         return self._connectTo(other)
 
     def __getitem__(self, key):
-        if key >= self._itemsCnt:
-            raise IndexError()
-        offset = (self._myArrOffset() * self._itemsCnt) // self._itemsInOne
-        return self._origIntf[offset + key]
+        return self._arrayElemCache[key]
+
+    # def __getitem__(self, key):
+    #    if key >= self._itemsCnt:
+    #        raise IndexError()
+    #    offset = (self._myArrOffset() * self._itemsCnt) // self._itemsInOne
+    #    return self._origIntf[offset + key]
 
     def __getattr__(self, name):
         if name == "_dtype" or name == "_getIndexCascade" or name == "naryOp":
@@ -199,9 +202,9 @@ class InterfaceProxy(InterfaceBase):
     def _initArrayItems(self):
         "instantiate my items into _arrayElemCache"
         for index in range(len(self)):
+            #print(self, index)
             e = InterfaceProxy(self, 0, index, None, self._itemsInOne // self._itemsCnt, self)
             self._arrayElemCache.append(e)
 
     def __repr__(self):
         return "<InterfaceProxy for %r, itemsInOne:%d, itemsCnt=%r, offset=%r, index=%r>" % (self._origIntf, self._itemsInOne, self._itemsCnt, self._offset, self._index)
-    

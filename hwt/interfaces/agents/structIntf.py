@@ -13,15 +13,13 @@ class StructIntfAgent(AgentBase):
         # if interface is InterfaceProxy and this proxy is container of another array
         # we generate agents on items in array
         # otherwise generate agents for each subinterface
-        
+
         for intf in intf._interfaces:
-            if isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache:
+            if intf._isInterfaceArray():
                 agCls = intf[0]._getSimAgent()
                 for p in intf:
-                    #print("arr", id(p), p._origIntf, p._offset, p._index)
                     p._ag = agCls(p)
             else:
-                #print("non-arr", id(intf), intf._origIntf, intf._offset, intf._index)
                 intf._ag = intf._getSimAgent()(intf)
 
     def getMonitors(self):
