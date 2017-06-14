@@ -36,14 +36,8 @@ class InterfaceArray():
         self._arrayElemCache = []
         wm = evalParam(self._widthMultiplier).val // evalParam(self._asArraySize).val
         for index in range(len(self)):
-            e = InterfaceProxy(self, 0, index, None, wm, None)
+            e = InterfaceProxy(self, index, index, None, wm)
             self._arrayElemCache.append(e)
-
-    def _getMyMultiplier(self):
-        """
-        :return: original _asArraySize specified in contructor
-        """
-        return self._asArraySize
 
     def _isInterfaceArray(self):
         return self._asArraySize is not None
