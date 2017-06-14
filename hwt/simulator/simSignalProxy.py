@@ -79,4 +79,7 @@ class IndexSimSignalProxy(SimSignal):
         s._oldVal[self.__index] = self._val.clone()
         s._oldVal.vldMask = 0
 
+    def __repr__(self):
+        return "<IndexSimSignalProxy %s%r>" % (self._signal.name, self.__index)
+
     # [TODO] _getFullName
