@@ -29,7 +29,7 @@ class StructIntf(Interface):
                 if isinstance(t, HStruct):
                     intf = StructIntf(t, self._instantiateFieldFn)
                 else:
-                    intf = self._instantiateFieldFn(field)
+                    intf = self._instantiateFieldFn(self, field)
 
                 if isinstance(intf, StructIntf):
                     intf._fieldsToInterfaces = self._fieldsToInterfaces
