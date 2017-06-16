@@ -31,19 +31,11 @@ class StructIntf(Interface):
                 else:
                     intf = self._instantiateFieldFn(self, field)
 
-                if isinstance(intf, StructIntf):
-                    intf._fieldsToInterfaces = self._fieldsToInterfaces
-                try:
-                    l = len(intf)
-                except TypeError:
-                    l = None
-                
-                if l is not None:
-                    for i, _intf in enumerate(intf):
-                        self._fieldsToInterfaces[(field, i)] = _intf
-                
                 self._fieldsToInterfaces[field] = intf
                 setattr(self, field.name, intf)
+
+                if isinstance(intf, StructIntf):
+                    intf._fieldsToInterfaces = self._fieldsToInterfaces
 
     def _getSimAgent(self):
         from hwt.interfaces.agents.structIntf import StructIntfAgent

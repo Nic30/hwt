@@ -60,7 +60,7 @@ class InterfaceProxy(InterfaceBase):
     :ivar _itemsCnt: if this is an proxy for array this is size of this array
     :ivar _itemsInOne: data width multiplier for this proxy
     """
-
+    
     def __init__(self, origInterface, offset, index, itemsCnt, itemsInOne):
         """
         :param origInterface: interface which is this proxy created for
@@ -104,6 +104,9 @@ class InterfaceProxy(InterfaceBase):
         Returns index in items on physical interface which corresponds to signals of this proxy
         """
         return self._offset
+    
+    def _isInterfaceArray(self):
+        return self._itemsCnt is not None
     
     def _getMySigSelector(self):
         w = self._origIntf._widthMultiplier
@@ -199,6 +202,27 @@ class InterfaceProxy(InterfaceBase):
  
             e = InterfaceProxy(self._origIntf, offset + index, index, None, itemsInOne)
             self._arrayElemCache.append(e)
+
+    def _walkFlatten(self, shouldEnterIntfFn):
+        """
+        :param shouldEnterIntfFn: function (actual interface) returns tuple (shouldEnter, shouldYield)
+        """
+        for intf in self._interfaces:
+            shouldEnter, shouldYield = shouldEnterIntfFn(intf)
+            if shouldYield:
+                yield intf
+
+            if shouldEnter:
+                yield from intf._walkFlatten(shouldEnterIntfFn)
+
+        if self._isInterfaceArray():
+            for intf in self:
+                shouldEnter, shouldYield = shouldEnterIntfFn(intf)
+                if shouldYield:
+                    yield intf
+    
+                if shouldEnter:
+                    yield from intf._walkFlatten(shouldEnterIntfFn)
 
     def __repr__(self):
         return "<InterfaceProxy for %r, itemsInOne:%d, itemsCnt=%r, offset=%r, index=%r>" % (self._origIntf, self._itemsInOne, self._itemsCnt, self._offset, self._index)

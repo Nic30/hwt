@@ -26,7 +26,7 @@ class InterfaceArray():
     :ivar _arrayElemCache: list of elements in this interface array
     """
     def __init__(self):
-        self._arrayElemCache = []
+        self._arrayElemCache = None
 
     def __len__(self):
         return evalParam(self._asArraySize).val

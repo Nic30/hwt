@@ -141,8 +141,10 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         self._dirLocked = False
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
-        for e in self._arrayElemCache:
-            e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
+        
+        if self._isInterfaceArray():
+            for e in self._arrayElemCache:
+                e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
 
     def _connectToIter(self, master, masterIndex=None, slaveIndex=None, exclude=None, fit=False):
         if exclude and (self in exclude or master in exclude):
@@ -346,6 +348,27 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
             return getClk(p)
         else:
             return p._getAssociatedClk()
+
+    def _walkFlatten(self, shouldEnterIntfFn):
+        """
+        :param shouldEnterIntfFn: function (actual interface) returns tuple (shouldEnter, shouldYield)
+        """
+        for intf in self._interfaces:
+            shouldEnter, shouldYield = shouldEnterIntfFn(intf)
+            if shouldYield:
+                yield intf
+
+            if shouldEnter:
+                yield from intf._walkFlatten(shouldEnterIntfFn)
+
+        if self._isInterfaceArray():
+            for intf in self:
+                shouldEnter, shouldYield = shouldEnterIntfFn(intf)
+                if shouldYield:
+                    yield intf
+    
+                if shouldEnter:
+                    yield from intf._walkFlatten(shouldEnterIntfFn)
 
     def __repr__(self):
         s = [self.__class__.__name__]
