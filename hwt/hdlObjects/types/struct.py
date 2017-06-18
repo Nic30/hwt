@@ -17,10 +17,10 @@ class HStructField(object):
 class HStruct(HdlType):
     """
     C-like structure type
-    
+
     :ivar fields: tuple of HStructField instances in this struct
     :ivar name: name of this HStruct type
-    :ivar isFixedSize: flag which tells if size of this HStruct can resolved or not, 
+    :ivar isFixedSize: flag which tells if size of this HStruct can resolved or not,
         f.e. field with type of HStream can cause isFixedSize to become False
     :ivar valueCls: Class of value for this type as usual in HdlType implementations
     """
@@ -42,8 +42,7 @@ class HStruct(HdlType):
                 field = f
             if not isinstance(field, HStructField):
                 raise TypeError("Template for struct field %s is not in valid format" % repr(f))
-            
-            
+
             self.fields.append(field)
             if field.name is not None:
                 fieldNames.append(field.name)
@@ -58,7 +57,6 @@ class HStruct(HdlType):
         if self.isFixedSize:
             self.__bit_length_val = self.__bit_length()
 
-        
         class StructVal(Value):
             __slots__ = fieldNames
 
@@ -86,11 +84,11 @@ class HStruct(HdlType):
                         buff.append("    %s %r" % (f.name, val))
                 buff.append("}")
                 return "\n".join(buff)
-            
+
         protectedNames = set(["clone", "staticEval", "fromPy", "_dtype"])
         usedNames = set(fieldNames)
         assert not protectedNames.intersection(usedNames), protectedNames.intersection(usedNames)
-        
+
         self.valueCls = StructVal
 
     def bit_length(self):
@@ -98,10 +96,10 @@ class HStruct(HdlType):
             return self.__bit_length_val
         else:
             raise TypeError("Can not request bit_lenght on size which has not fixed size")
-    
+
     def __bit_length(self):
         return sum(map(lambda f: f.dtype.bit_length(), self.fields))
-    
+
     def getValueCls(self):
         return self.valueCls
 
@@ -117,7 +115,7 @@ class HStruct(HdlType):
             return s // 8
         else:
             return s // 8 + 1
-    
+
     def __hash__(self):
         return hash((self.name, self.fields))
 
