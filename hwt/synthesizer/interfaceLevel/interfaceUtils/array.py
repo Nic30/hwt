@@ -1,22 +1,6 @@
-from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.param import evalParam
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-
-
-def splitToTermSet(width):
-    """
-    try split width expression to multiplicands
-    """
-    try:
-        width = width.singleDriver()
-    except (AttributeError, MultipleDriversExc):
-        return set([width])
-    if width.operator == AllOps.DIV:
-        pass
-    assert width.operator == AllOps.MUL
-    return set(width.ops)
 
 
 class InterfaceArray():
