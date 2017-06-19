@@ -10,10 +10,6 @@ def bitField(_from, to):
     return mask(w) << _from
 
 
-def extendWithSet(mask, actualWidth, toWidth):
-    return bitField(actualWidth - 1, toWidth) | mask
-
-
 def selectBit(val, bitNo):
     """
     select bit from integer
