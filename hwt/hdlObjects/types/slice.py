@@ -7,7 +7,7 @@ class Slice(Array):
         super().__init__(Integer(), 2)
 
     def __hash__(self):
-        return hash(self.constrain)
+        return hash(self.elmType)
 
     @classmethod
     def getValueCls(cls):

@@ -1,9 +1,13 @@
 from copy import copy
 from operator import eq, ne, lt, gt, ge, le
 
+from hwt.bitmask import mask, selectBit, selectBitRange, bitSetTo, \
+    setBitRange
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.typeShortcuts import vecT
+from hwt.hdlObjects.types.bitValFunctions import bitsCmp__val, bitsCmp, \
+    bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, getMulResT
 from hwt.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForXor, \
     vldMaskForAnd, vldMaskForOr
 from hwt.hdlObjects.types.bits import Bits
@@ -17,11 +21,6 @@ from hwt.hdlObjects.value import Value, areValues
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.hdlObjects.types.bitValFunctions import boundryFromType, \
-    bitsCmp__val, bitsCmp, bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, \
-    getMulResT
-from hwt.bitmask import mask, selectBit, selectBitRange, bitSetTo, \
-    setBitRange
 
 
 class BitsVal(EventCapableVal):
@@ -164,12 +163,12 @@ class BitsVal(EventCapableVal):
                 stop = key.stop
 
                 if key.start is None:
-                    start = boundryFromType(self, 0) + 1
+                    start = st.width
                 else:
                     start = toHVal(key.start)
 
                 if key.stop is None:
-                    stop = boundryFromType(self, 1)
+                    stop = 0
                 else:
                     stop = toHVal(key.stop)
             else:
@@ -183,10 +182,11 @@ class BitsVal(EventCapableVal):
             if iamVal and indexesAreValues:
                 raise NotImplementedError("[TODO] bit select on value")
             else:
+                if isinstance(start, int):
+                    start = INT.fromPy(start)
                 key = (start - INT.fromPy(1))._downto(stop)
-                # [TODO] type can be wrong, but we need to get rid off widthConstr and use only width
-                _resWidth = (start - 1 - stop)._downto(0)
-                resT = Bits(widthConstr=_resWidth, forceVector=True, signed=st.signed)
+                _resWidth = start - stop
+                resT = Bits(width=_resWidth, forceVector=True, signed=st.signed)
 
         elif isinstance(key, (int, IntegerVal)):
             key = toHVal(key)
@@ -197,7 +197,7 @@ class BitsVal(EventCapableVal):
             if isinstance(t, Integer):
                 resT = BIT
             elif isinstance(t, Slice):
-                resT = Bits(widthConstr=key, forceVector=st.forceVector, signed=st.signed)
+                resT = Bits(width=key._size(), forceVector=st.forceVector, signed=st.signed)
             elif isinstance(t, Bits):
                 resT = BIT
                 key = key._convert(INT)

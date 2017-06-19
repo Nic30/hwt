@@ -2,14 +2,12 @@ from hwt.synthesizer.exceptions import TypeConversionErr
 
 
 class HdlType():
-    def __init__(self):
-        self.constrain = None
 
     def __eq__(self, other):
         return type(self) is type(other)
 
     def __hash__(self):
-        return hash((self.name, self.constrain))
+        return hash((self.name))
 
     def fromPy(self, v):
         return self.getValueCls().fromPy(v, self)

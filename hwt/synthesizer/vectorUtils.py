@@ -1,38 +1,13 @@
-from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.types.defs import Integer, BIT
-from hwt.hdlObjects.value import Value
-from hwt.hdlObjects.types.sliceVal import SliceVal
-from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.typeShortcuts import vec
-
-
-def getWidthExpr(vectorTypeInst):
-    c = vectorTypeInst.constrain
-    if isinstance(c, SliceVal):
-        return c.val[0] + 1
-    downto = c.singleDriver()
-
-    assert downto.operator == AllOps.DOWNTO
-    assert downto.ops[1].val == 0
-
-    widthMinOne = downto.ops[0]
-    if isinstance(widthMinOne, Value) and isinstance(widthMinOne._dtype, Integer):
-        w = widthMinOne.clone()
-        w.val += 1
-        return w
-    else:
-        widthMinOne = widthMinOne.singleDriver()
-    assert widthMinOne.operator == AllOps.SUB
-    assert widthMinOne.ops[1].val == 1
-
-    return widthMinOne.ops[0]
+from hwt.hdlObjects.types.bits import Bits
+from hwt.hdlObjects.types.defs import BIT
 
 
 def aplyIndexOnSignal(sig, dstType, index):
     if sig._dtype == BIT or dstType == BIT:
         return sig[index]
     elif isinstance(dstType, Bits):
-        w = getWidthExpr(dstType)
+        w = dstType.width
         return sig[(w * (index + 1)):(w * index)]
     else:
         raise NotImplementedError()
@@ -40,7 +15,7 @@ def aplyIndexOnSignal(sig, dstType, index):
 
 def fitTo(what, to):
     """
-    Slice signal "what" to fit in "to" 
+    Slice signal "what" to fit in "to"
     or
     extend "what" with zeros to same width as "to"
 

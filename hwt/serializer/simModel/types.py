@@ -3,9 +3,9 @@ from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.integer import Integer
-from hwt.hdlObjects.types.sliceVal import SliceVal
 from hwt.serializer.exceptions import SerializerException
 from hwt.synthesizer.param import evalParam
+from hwt.hdlObjects.types.integerVal import IntegerVal
 
 
 class SimModelSerializer_types():
@@ -15,17 +15,16 @@ class SimModelSerializer_types():
             if not (typ.forceVector or typ.bit_length() > 1):
                 return 'SIM_BIT'
 
-        c = typ.constrain
-        if isinstance(c, (int, float)):
+        w = typ.width
+        if isinstance(w, int):
             pass
         else:
-            c = evalParam(c)
-            if isinstance(c, SliceVal):
-                c = c._size()
-            else:
-                c = c.val
+            w = evalParam(w)
+            assert isinstance(w, IntegerVal)
+            assert w._isFullVld()
+            w = w.val
 
-        return "simBitsT(%d, %r)" % (c, typ.signed)
+        return "simBitsT(%d, %r)" % (w, typ.signed)
 
     @classmethod
     def HdlType_enum(cls, typ, scope, declaration=False):

@@ -29,7 +29,6 @@ class Operator():
         self.ops = list(operands)
         self.operator = operator
         self.result = None
-        self._isDriver = True
 
     def registerSignals(self, outputs=[]):
         """
