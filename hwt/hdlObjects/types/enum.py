@@ -10,15 +10,6 @@ class Enum(HdlType):
             v = self.fromPy(n)
             setattr(self, n, v)
 
-    def _add(self, name):
-        """
-        Add member of the enum
-        """
-        self._allValues.append(name)
-        v = self.fromPy(name)
-        setattr(self, name, v)
-        return v
-
     def all_mask(self):
         return 1
 
