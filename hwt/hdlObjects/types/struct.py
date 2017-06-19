@@ -138,16 +138,28 @@ class HStruct(HdlType):
             name = self.name + " "
         else:
             name = ""
+        
+            
         myIndent = getIndent(indent)
-        childIndent = getIndent(indent+1)
-        buff = ["%sstruct %s{" % (myIndent, name)]
+        childIndent = getIndent(indent + 1)
+        header = "%sstruct %s{" % (myIndent, name) 
+
+        buff = [header, ]
         for f in self.fields:
-            if f.name is None:
-                buff.append("%s//%r empty space" % (childIndent, f.dtype))
+            if withAddr is not None:
+                addrTag = " // start:0x%x(bit) 0x%x(byte)" % (withAddr, withAddr // 8)
             else:
-                buff.append("%s %s" % (f.dtype.__repr__(indent=indent+1,
+                addrTag = ""
+
+            if f.name is None:
+                buff.append("%s//%r empty space%s" % (childIndent, f.dtype, addrTag))
+            else:
+                buff.append("%s %s%s" % (f.dtype.__repr__(indent=indent + 1,
                                                         withAddr=withAddr,
                                                         expandStructs=expandStructs),
-                                       f.name))
+                                       f.name, addrTag))
+            if withAddr is not None:
+                withAddr += f.dtype.bit_length()
+
         buff.append("%s}" % (myIndent))
         return "\n".join(buff)
