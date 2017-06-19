@@ -165,13 +165,12 @@ class InterfaceProxy(InterfaceBase):
         for e in self._arrayElemCache:
             e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
 
-    def _connectTo(self, master, masterIndex=None, slaveIndex=None, exclude=None, fit=False):
+    def _connectTo(self, master, exclude=None, fit=False):
         """
         connect to another interface interface (on rtl level)
         works like self <= master in VHDL
         """
-        return list(self._connectToIter(master, masterIndex, slaveIndex,
-                                        exclude, fit))
+        return list(self._connectToIter(master, exclude, fit))
 
     def __pow__(self, other):
         """

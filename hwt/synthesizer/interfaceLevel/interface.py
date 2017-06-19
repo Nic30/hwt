@@ -146,7 +146,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
             for e in self._arrayElemCache:
                 e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
 
-    def _connectToIter(self, master, masterIndex=None, slaveIndex=None, exclude=None, fit=False):
+    def _connectToIter(self, master, exclude=None, fit=False):
         if exclude and (self in exclude or master in exclude):
             return
 
@@ -164,8 +164,6 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(ifc), repr(mIfc)))
 
                     yield from ifc._connectTo(mIfc,
-                                              masterIndex=masterIndex,
-                                              slaveIndex=slaveIndex,
                                               exclude=exclude,
                                               fit=fit)
                 else:
@@ -173,32 +171,23 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(mIfc), repr(ifc)))
 
                     yield from mIfc._connectTo(ifc,
-                                               masterIndex=slaveIndex,
-                                               slaveIndex=masterIndex,
                                                exclude=exclude,
                                                fit=fit)
         else:
             dstSig = toHVal(self)
             srcSig = toHVal(master)
 
-            if masterIndex is not None:
-                srcSig = aplyIndexOnSignal(srcSig, dstSig._dtype, masterIndex)
-
-            if slaveIndex is not None:
-                dstSig = aplyIndexOnSignal(dstSig, srcSig._dtype, slaveIndex)
-
             if fit:
                 srcSig = fitTo(srcSig, dstSig)
 
             yield dstSig.__pow__(srcSig)
 
-    def _connectTo(self, master, masterIndex=None, slaveIndex=None, exclude=None, fit=False):
+    def _connectTo(self, master, exclude=None, fit=False):
         """
         connect to another interface interface (on rtl level)
         works like self <= master in VHDL
         """
-        return list(self._connectToIter(master, masterIndex, slaveIndex,
-                                        exclude, fit))
+        return list(self._connectToIter(master, exclude, fit))
 
     def __pow__(self, other):
         """
