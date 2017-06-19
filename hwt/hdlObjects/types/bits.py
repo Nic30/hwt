@@ -3,6 +3,7 @@ from copy import copy
 from hwt.hdlObjects.constants import Unconstrained
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.bitmask import mask
+from hwt.serializer.serializerClases.indent import getIndent
 
 
 class Bits(HdlType):
@@ -62,7 +63,13 @@ class Bits(HdlType):
             cls._valCls = BitsVal
             return cls._valCls
 
-    def __repr__(self):
+    def __repr__(self, indent=0, withAddr=None, expandStructs=False):
+        """
+        :param indent: number of indentation
+        :param withAddr: if is not none is used as a additional information about where
+            on which address this type is stored (used only by HStruct)
+        :param expandStructs: expand HStructTypes (used by HStruct and Array)
+        """
         from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
         c = self.constrain
         if isinstance(c, int):
@@ -73,8 +80,9 @@ class Bits(HdlType):
             except AttributeError:
                 constr = ""
         else:
-            constr = VhdlSerializer.asHdl(self.constrain, onlyPrintDefaultValues) +\
+            constr = VhdlSerializer.asHdl(self.constrain, onlyPrintDefaultValues) + \
                      (", %dbits" % self.bit_length())
 
-        return "<HdlType %s, %s>" % (
-            self.__class__.__name__, constr)
+        return "%s<HdlType %s, %s>" % (getIndent(indent),
+                                       self.__class__.__name__,
+                                       constr)

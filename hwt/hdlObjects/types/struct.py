@@ -1,5 +1,6 @@
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.value import Value
+from hwt.serializer.serializerClases.indent import getIndent
 
 
 class HStructField(object):
@@ -126,18 +127,27 @@ class HStruct(HdlType):
         assert isinstance(other, HStruct)
         return HStruct(*self.fields, *other.fields)
 
-    def __str__(self):
+    def __repr__(self, indent=0, withAddr=None, expandStructs=False):
+        """
+        :param indent: number of indentation
+        :param withAddr: if is not none is used as a additional information about where
+            on which address this type is stored (used only by HStruct)
+        :param expandStructs: expand HStructTypes (used by HStruct and Array)
+        """
         if self.name:
             name = self.name + " "
         else:
             name = ""
-
-        buff = ["struct %s{" % name]
+        myIndent = getIndent(indent)
+        childIndent = getIndent(indent+1)
+        buff = ["%sstruct %s{" % (myIndent, name)]
         for f in self.fields:
             if f.name is None:
-                buff.append("    //%r empty space" % (f.dtype))
+                buff.append("%s//%r empty space" % (childIndent, f.dtype))
             else:
-                buff.append("    %r %s" % (f.dtype, f.name))
-
-        buff.append("}")
+                buff.append("%s %s" % (f.dtype.__repr__(indent=indent+1,
+                                                        withAddr=withAddr,
+                                                        expandStructs=expandStructs),
+                                       f.name))
+        buff.append("%s}" % (myIndent))
         return "\n".join(buff)
