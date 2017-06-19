@@ -1,11 +1,11 @@
-from hwt.synthesizer.param import evalParam
-from hwt.hdlObjects.types.sliceVal import SliceVal
+from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.enum import Enum
-from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.serializer.exceptions import SerializerException
 from hwt.hdlObjects.types.integer import Integer
+from hwt.hdlObjects.types.sliceVal import SliceVal
+from hwt.serializer.exceptions import SerializerException
+from hwt.synthesizer.param import evalParam
 
 
 class SimModelSerializer_types():
@@ -30,11 +30,7 @@ class SimModelSerializer_types():
     @classmethod
     def HdlType_enum(cls, typ, scope, declaration=False):
         if declaration:
-            try:
-                name = typ.name
-            except AttributeError:
-                name = "enumT_"
-            typ.name = scope.checkedName(name, typ)
+            typ.name = scope.checkedName(typ.name, typ)
 
             return '%s = Enum( "%s", [%s])' % (typ.name,
                                                typ.name,
