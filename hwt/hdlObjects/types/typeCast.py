@@ -23,9 +23,3 @@ def toHVal(op):
         if hType is None:
             raise TypeError("%s" % (op.__class__))
         return  hType.fromPy(op)
-    
-def checkOperands(ops):
-    _ops = []
-    for op in ops:
-        _ops.append(toHVal(op))
-    return _ops
