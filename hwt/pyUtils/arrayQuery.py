@@ -1,6 +1,7 @@
 # select = map, groupBy = itertools.groupby
 from types import GeneratorType
 from itertools import zip_longest
+from math import inf
 
 
 class DuplicitValueExc(Exception):
@@ -108,14 +109,20 @@ def split(arr, size):
     yield arr
 
 
-def flatten(iterables):
-    if isinstance(iterables, (list, tuple, GeneratorType, map)):
+def flatten(iterables, level=inf):
+    """
+    Flatten nested lists, tuples, generators and maps
+    
+    :param level: maximum depth of flattening 
+    """
+    if level >= 0 and isinstance(iterables, (list, tuple, GeneratorType, map, zip)):
+        level -= 1
         for i in iterables:
-            yield from flatten(i)
+            yield from flatten(i, level=level)
     else:
         yield iterables
 
 
 def grouper(n, iterable, padvalue=None):
     "grouper(3, 'abcdefg', 'x') --> ('a','b','c'), ('d','e','f'), ('g','x','x')"
-    return zip_longest(*[iter(iterable)]*n, fillvalue=padvalue)
+    return zip_longest(*[iter(iterable)] * n, fillvalue=padvalue)
