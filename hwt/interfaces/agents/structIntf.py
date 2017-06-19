@@ -24,7 +24,7 @@ class StructIntfAgent(AgentBase):
 
     def getMonitors(self):
         for intf in self.intf._interfaces:
-            if isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache:
+            if intf._arrayElemCache or (isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache):
                 for p in intf:
                     yield from p._ag.getMonitors()
             else:
@@ -32,7 +32,7 @@ class StructIntfAgent(AgentBase):
 
     def getDrivers(self):
         for intf in self.intf._interfaces:
-            if isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache:
+            if intf._arrayElemCache or (isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache):
                 for p in intf:
                     yield from p._ag.getDrivers()
             else:
