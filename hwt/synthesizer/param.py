@@ -32,7 +32,7 @@ class Param(RtlSignal):
 
     def get(self):
         if self.replacedWith is not None:
-            raise Exception("Trying to read param '%s' which is already replaced by '%s'" %
+            raise Exception("Trying to read param '%s' which is already replaced by '%s'" % 
                             (str(self), str(self.replacedWith)))
         return self._val
 
@@ -60,6 +60,16 @@ class Param(RtlSignal):
             name = ""
 
         return "<%s, name=%s, val=%s>" % (self.__class__.__name__, name, str(val))
+
+    def __bool__(self):
+        v = evalParam(self)
+        assert v._isFullVld()
+        return bool(v.val)
+
+    def __int__(self):
+        v = evalParam(self)
+        assert v._isFullVld()
+        return int(v.val)
 
 
 def evalParam(p):
