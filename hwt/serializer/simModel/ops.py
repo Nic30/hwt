@@ -26,7 +26,7 @@ opPrecedence = {AllOps.NOT: 4,
 class SimModelSerializer_ops():
     @classmethod
     def BitToBool(cls, cast):
-        v = 0 if cast.sig.negated else 1
+        v = 0 if cast.sig._dtype.negated else 1
         return cls.asHdl(cast.sig) + "._eq__val(hBit(%d))" % v
 
     @classmethod

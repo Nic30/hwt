@@ -4,13 +4,17 @@ from hwt.serializer.serializerClases.indent import getIndent
 
 
 class Bits(HdlType):
-
-    def __init__(self, width, forceVector=False, signed=None):
+    """
+    Elemental HDL type representing bits (vector or single bit)
+    """
+    def __init__(self, width, forceVector=False, signed=None, negated=False):
         """
+        :param negated: if true the value is in negated form
         :param forceVector: use always hdl vector type
             (for example std_logic_vector(0 downto 0) instead of std_logic)
         """
         self.forceVector = forceVector
+        self.negated = negated
 
         if isinstance(width, int):
             assert width > 0
