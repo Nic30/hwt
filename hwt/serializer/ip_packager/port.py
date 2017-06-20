@@ -6,6 +6,7 @@ from hwt.serializer.ip_packager.helpers import appendSpiElem, \
          findS, mkSpiElm, ns
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.param import evalParam
 
 
 class WireTypeDef():
@@ -67,7 +68,7 @@ class Port():
         if dt == BIT:
             port.vector = False
         elif isinstance(dt, Bits):
-            port.vector = dt.constrain.staticEval().val
+            port.vector = [evalParam(dt.width) - 1, hInt(0)]
         t.viewNameRefs = ["xilinx_vhdlsynthesis", "xilinx_vhdlbehavioralsimulation"]
         return port
 
@@ -88,7 +89,7 @@ class Port():
                 if isinstance(val, RtlSignalBase):
                     # value is simple type and does not contains generic etc...
                     resolve = 'dependent'
-                    d.attrib["spirit:dependency"] = "(" +\
+                    d.attrib["spirit:dependency"] = "(" + \
                                                     VivadoTclExpressionSerializer.asHdl(val) + ")"
                     d.text = VivadoTclExpressionSerializer.asHdl(val.staticEval())
                 else:

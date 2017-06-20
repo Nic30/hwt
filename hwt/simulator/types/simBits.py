@@ -23,8 +23,8 @@ class SimBitsT(Bits):
     """
     Simplified Bits type for simulation purposes
     """
-    def __init__(self, widthConstr, signed):
-        self.constrain = widthConstr
+    def __init__(self, width, signed):
+        self.width = width
         self.signed = signed
         self._allMask = mask(self.bit_length())
 
@@ -33,13 +33,13 @@ class SimBitsT(Bits):
             and self.signed == other.signed
 
     def __hash__(self):
-        return hash((self.constrain, self.signed))
+        return hash((self.width, self.signed))
 
     def all_mask(self):
         return self._allMask
 
     def bit_length(self):
-        return self.constrain
+        return self.width
 
     def convert(self, sigOrVal, toType):
         return convertSimBits__val(self, sigOrVal, toType)

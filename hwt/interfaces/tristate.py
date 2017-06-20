@@ -15,7 +15,7 @@ class TristateSig(Interface):
         self.forceVector = False
 
     def _declr(self):
-        t = Bits((self.DATA_WIDTH-1)._downto(0), self.forceVector)
+        t = Bits(self.DATA_WIDTH, self.forceVector)
 
         # connect
         self.t = Signal(dtype=t)

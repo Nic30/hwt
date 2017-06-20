@@ -6,7 +6,6 @@ from hwt.interfaces.signalOps import SignalOps
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.param import Param, evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.vectorUtils import getWidthExpr
 
 
 D = DIRECTION
@@ -35,8 +34,10 @@ class Signal(SignalOps, Interface):
         if t == BIT:
             newT = vecT(factor)
         elif isinstance(t, Bits):
-            w = getWidthExpr(t)
-            if isinstance(w, RtlSignalBase):
+            w = t.width
+            if isinstance(w, int):
+                newW = factor * w
+            elif isinstance(w, RtlSignalBase):
                 # both Param or factor Value
                 newW = w * factor
             elif isinstance(factor, RtlSignalBase):

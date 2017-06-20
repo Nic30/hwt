@@ -9,7 +9,7 @@ from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getRst, getClk
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
-from hwt.synthesizer.vectorUtils import fitTo, aplyIndexOnSignal
+from hwt.synthesizer.vectorUtils import fitTo
 
 
 def _defaultUpdater(self, onParentName, p):
@@ -77,9 +77,9 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
             self._widthMultiplier = asArraySize
         else:
             self._widthMultiplier = None
-            
+
         self._asArraySize = asArraySize
-        
+
         self._masterDir = masterDir
         self._direction = INTF_DIRECTION.UNKNOWN
 
@@ -104,7 +104,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         self._setAttrListener = self._declrCollector
         self._declr()
         self._setAttrListener = None
-        
+
         for i in self._interfaces:
             # inherit _asArraySize and update dtype on physical interfaces
             w = i._widthMultiplier
@@ -113,7 +113,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
                     w = self._widthMultiplier
                 else:
                     w = w * self._widthMultiplier
-            
+
             i._widthMultiplier = w
             i._isExtern = self._isExtern
             i._loadDeclarations()
@@ -124,7 +124,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
 
         if self._isInterfaceArray():
             self._initArrayItems()
-        
+
         for p in self._params:
             p.setReadOnly()
 
@@ -141,7 +141,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         self._dirLocked = False
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
-        
+
         if self._isInterfaceArray():
             for e in self._arrayElemCache:
                 e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
@@ -158,7 +158,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
 
                 if exclude and mIfc in exclude:
                     continue
-                
+
                 if mIfc._masterDir == DIRECTION.OUT:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(ifc), repr(mIfc)))
@@ -259,7 +259,12 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         return name
 
     def _replaceParam(self, pName, newP):
-        """Replace parameter in configuration stage"""
+        """
+        Replace parameter on this interface (in configuration stage)
+
+        :ivar pName: actual name of param on me
+        :ivar newP: new Param instance by which should be old replaced 
+        """
         p = getattr(self, pName)
         i = self._params.index(p)
         assert i > -1

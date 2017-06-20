@@ -6,6 +6,9 @@ from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.integer import Integer
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
+from hwt.hdlObjects.operator import Operator
+from hwt.hdlObjects.operatorDefs import AllOps
+from hwt.hdlObjects.typeShortcuts import hInt
 
 
 class VhdlSerializer_types():
@@ -23,13 +26,14 @@ class VhdlSerializer_types():
         else:
             name = 'UNSIGNED'
 
-        c = typ.constrain
-        if disableRange or c is None or isinstance(c, Unconstrained):
+        w = typ.width
+        if disableRange or w is None or isinstance(w, Unconstrained):
             constr = ""
-        elif isinstance(c, (int, float)):
-            constr = "(%d DOWNTO 0)" % (c - 1)
+        elif isinstance(w, int):
+            constr = "(%d DOWNTO 0)" % (w - 1)
         else:
-            constr = "(%s)" % cls.Value(c, createTmpVarFn)
+            o = Operator(AllOps.SUB, (w, hInt(1)))
+            constr = "(%s DOWNTO 0)" % cls.Operator(o, createTmpVarFn)
         return name + constr
 
     @classmethod

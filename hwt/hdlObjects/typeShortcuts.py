@@ -32,7 +32,7 @@ def vecT(width, signed=None):
     """Make vector type with specified width for example
        std_logic_vector(width-1 downto 0) in vhdl
     """
-    return Bits(widthConstr=mkRange(width), signed=signed, forceVector=True)
+    return Bits(width=width, signed=signed, forceVector=True)
 
 
 def vec(val, width, signed=None):

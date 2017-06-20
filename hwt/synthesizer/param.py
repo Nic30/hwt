@@ -37,25 +37,6 @@ class Param(RtlSignal):
                             (str(self), str(self.replacedWith)))
         return self._val
 
-    def replace(self, replaceWith):
-        """
-        self will always have value of parent
-        """
-        if areSameSignals(self, replaceWith):
-            return
-
-        if self.replacedWith is not None:
-            raise Exception("replacing '%s' with '%s' and it was already replaced by '%s'" %
-                            (str(self), str(replaceWith), str(self.replacedWith)))
-
-        for dr in self.drivers:
-            dr.ops = [replaceWith if x is self else x for x in dr.ops]
-
-        for ep in self.endpoints:
-            ep.ops = [replaceWith if x is self else x for x in ep.ops]
-
-        self.replacedWith = replaceWith
-
     def set(self, val):
         """
         set value of this param

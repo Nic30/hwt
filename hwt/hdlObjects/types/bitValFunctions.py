@@ -125,14 +125,6 @@ def bitsArithOp(self, other, op):
         return o._convert(resT)
 
 
-def boundryFromType(sigOrVal, boundaryIndex):
-    c = sigOrVal._dtype.constrain
-    if isinstance(c, Value):  # slice
-        return c.val[boundaryIndex]
-    else:  # downto / to
-        return c.singleDriver().ops[boundaryIndex]
-
-
 def getMulResT(firstT, secondT):
     if isinstance(secondT, Integer):
         return firstT  # [maybe wrong]

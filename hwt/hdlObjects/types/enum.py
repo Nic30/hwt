@@ -10,6 +10,9 @@ class Enum(HdlType):
             v = self.fromPy(n)
             setattr(self, n, v)
 
+    def __hash__(self):
+        return hash((self.name, tuple(self._allValues)))
+
     def all_mask(self):
         return 1
 

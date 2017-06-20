@@ -1,53 +1,41 @@
-from copy import copy
-
-from hwt.hdlObjects.constants import Unconstrained
-from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.bitmask import mask
+from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.serializer.serializerClases.indent import getIndent
 
 
 class Bits(HdlType):
 
-    def __init__(self, widthConstr=None, forceVector=False, signed=None):
+    def __init__(self, width, forceVector=False, signed=None):
         """
         :param forceVector: use always hdl vector type
             (for example std_logic_vector(0 downto 0) instead of std_logic)
         """
-        super().__init__()
         self.forceVector = forceVector
-        self.signed = signed
-        if widthConstr is None:
-            self.constrain = Unconstrained()
+
+        if isinstance(width, int):
+            assert width > 0
         else:
-            self.constrain = widthConstr
+            w = width.staticEval()
+            assert w._isFullVld() and w.val > 0
+
+        self.signed = signed
+        self.width = width
 
     def __eq__(self, other):
         return isinstance(other, Bits) and other.bit_length() == self.bit_length()\
             and self.signed == other.signed and self.forceVector == other.forceVector
 
     def __hash__(self):
-        return hash((self.signed, id(self.constrain), self.forceVector))
-
-    def applySpecificator(self, const):
-        assert isinstance(self.constrain, Unconstrained)
-        s = copy(self)
-        s.constrain = const
-        return s
+        return hash((self.signed, self.bit_length(), self.forceVector))
 
     def all_mask(self):
         return mask(self.bit_length())
 
     def bit_length(self):
-        if isinstance(self.constrain, (int, float)):
-            return int(self.constrain)
-        elif isinstance(self.constrain, Unconstrained):
-            try:
-                return self.constrain.derivedWidth
-            except AttributeError:
-                return None
+        if isinstance(self.width, int):
+            return self.width
         else:
-            w = self.constrain.staticEval()
-            return abs(w.val[0].val - w.val[1].val) + 1
+            return self.width.staticEval().val
 
     @classmethod
     def getConvertor(cls):
@@ -71,16 +59,11 @@ class Bits(HdlType):
         :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
         from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
-        c = self.constrain
+        c = self.width
         if isinstance(c, int):
-            constr = "width:%d" % c
-        elif isinstance(c, Unconstrained):
-            try:
-                constr = "derivedWidth:%d" % (c.derivedWidth)
-            except AttributeError:
-                constr = ""
+            constr = "%dbits" % c
         else:
-            constr = VhdlSerializer.asHdl(self.constrain, onlyPrintDefaultValues) + \
+            constr = VhdlSerializer.asHdl(self.width, onlyPrintDefaultValues) + \
                      (", %dbits" % self.bit_length())
 
         return "%s<HdlType %s, %s>" % (getIndent(indent),

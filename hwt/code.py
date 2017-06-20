@@ -13,7 +13,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
-from hwt.synthesizer.vectorUtils import getWidthExpr, fitTo
+from hwt.synthesizer.vectorUtils import fitTo
 from hwt.synthesizer.andReducedContainer import AndReducedContainer
 
 
@@ -391,7 +391,7 @@ def connectUnpacked(src, dst, exclude=[]):
             s = src[hInt(offset)]
             offset += 1
         else:
-            w = getWidthExpr(t)
+            w = t.width
             s = src[(w + offset): offset]
             offset += t.bit_length()
         connections.append(sig ** s)

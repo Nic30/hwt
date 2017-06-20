@@ -86,7 +86,7 @@ class UnitImplHelpers(object):
             # (because this signals are for parent unit)
             if isinstance(t, Bits):
                 t = copy(t)
-                t.constrain = mkRange(t.bit_length())
+                t.width = t.bit_length()
                 return t
             else:
                 return t
