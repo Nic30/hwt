@@ -81,6 +81,7 @@ def splitStatementsOnCond(statements, resolvedCondCnt):
 def disolveConditionAsEq(condList):
     """
     detect if condition is in format signal == value
+
     :return: None if condList is not in format [ a == val] or [val == a]
         else return tuple (a, val)
     """

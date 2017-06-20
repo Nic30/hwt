@@ -31,24 +31,24 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
     :ivar _associatedRst: rst(_n) Signal (interface) associated with this interface if is none
         simulation agent try to search it on parent
 
-    #only interfaces without _interfaces have:
+    only interfaces without _interfaces have
 
     :ivar _sig: rtl level signal instance
-    :ivar _sigInside : _sig after toRtl conversion is made (after toRtl conversion
+    :ivar _sigInside: _sig after toRtl conversion is made (after toRtl conversion
         _sig is signal for parent unit and _sigInside is signal
         in original unit, this separates process of translating units)
     :ivar _boundedEntityPort: entityPort for which was this interface created
     :ivar _boundedSigLvlUnit: RTL unit for which was this interface created
 
 
-    Agenda of direction:
+    Agenda of direction
 
     :ivar _masterDir: specifies which direction has this interface at master
     :ivar _direction: means actual direction of this interface resolved by its drivers
     :ivar _cntx: rtl netlist context of all signals and params on this interface
         after interface is registered on parent _cntx is merged
 
-    Agenda of simulations:
+    Agenda of simulations
 
     :ivar _ag: agent object connected to this interface (initialized by simulator)
     """

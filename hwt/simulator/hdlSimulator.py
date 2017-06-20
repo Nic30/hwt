@@ -18,44 +18,40 @@ class HdlSimulator(HdlEnvironmentCore):
     """
     Circuit simulator with support for external agents
 
-    Every signal is initialized at start with its default value
-    -> (no drove, constant drove solved)
+    .. note::
+        Every signal is initialized at start with its default value
+        (sig. without driver, sig with constant driver solved)
 
-    Every interprocess signal is marked by synthesizer and it can not be directly updated
-       by any process, process should only return tuple (updateDelayTime, applicator)
-       and let simulator to update it for others, any other signals are evaluated as expression
-       by every process
-    every process drives only one signal
-    every process uses sensitivity-list like in other languages (but it is generated automatically)
-    -> (communication between process solved)
+    .. note::
+        Every interprocess signal is marked by synthesizer and it can not be directly updated
+        by any process, process should only return tuple (updateDestionation, updateFn, isEventDependentFlag)
+        and let simulator to update it for others, any other signals are evaluated as expression
+        by every process
+        every process drives only one signal
+        every process uses sensitivity-list like in other languages (but it is generated automatically)
+        (communication between process solved)
 
-    Hdlprocesses can not contain any wait statements etc. only simulation processes can.
-    Simulation processes are written in python.
-    -> (using hdl as main simulator driver is not efficient and thats why it is not supported
+    .. note::
+        Hdlprocesses can not contain any wait statements etc. only simulation processes can.
+        Simulation processes are written in python.
+        (using hdl as main simulator driver is not efficient and thats why it is not supported
         and it is easy to just read hdl process with unsupported statements and translate them to
         simulator commands)
 
-    HWprocesses have lower priority than simulation processes
-    this allows simplify logic of all agents
-    when simulation process is executed HW part did not anything in this time
-    so simulation process can prepare anything for HW part (= can write)
-    if simulation process need to read it has to yield simulator.updateComplete
-    first, process then be waken after reaction of HW in this time
-    -> agents are greatly simplified, they just need to yield simulator.updateComplete
-       before read
-       Do not read before write in single time (potential combinational loop), because
-       of event dependent HW processes will not be reevalueated
-
-    This simulation is made to check if hsl code behaves the same way as hdl.
-    It has some limitations from HDL point of view but every single one can be rewritten to supported format.
-    Hdl synthesizer of HWToolkit does it automatically.
-
+    .. note::
+        HWprocesses have lower priority than simulation processes this allows simplify logic of all agents
+        when simulation process is executed HW part did not anything in this time
+        so simulation process can prepare anything for HW part (= can write)
+        if simulation process need to read, it has to yield simulator.updateComplete
+        first, process then will be waken after reaction of HW in this time:
+        agents are greatly simplified, they just need to yield simulator.updateComplete
+        before first read and then the can not write in this time
+    
     :ivar updateComplete: this event is triggered when there are not any values to apply in this time
     :ivar valuesToApply: is container to for quantum of values which should be applied in single time
     :ivar env: simply environment
     :ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
-    :ivar seqProcsToRun: list of event dependent processes which should be evaluated after
-        applyValEv
+    :ivar seqProcsToRun: list of event dependent processes which should be evaluated after applyValEv
     """
     # time after values which are event dependent will be applied
     # this is random number smaller than any clock half-period

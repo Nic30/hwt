@@ -115,12 +115,13 @@ def bitsAsVec(a):
 
 
 class AllOps():
-    _idsInited = False
     """
-    :attention: Remember that and operator "and" is & and "or" is |, "and" and "or" can not be used because
+    :attention: Remember that and operator "and" is & and "or" is \|, "and" and "or" can not be used because
         they can not be overloaded
     :attention: These are operators of internal AST, the are not equal to verilog or vhdl operators
     """
+    _idsInited = False
+
     EVENT = OpDefinition(eventFn)
     RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
     FALLIGN_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary

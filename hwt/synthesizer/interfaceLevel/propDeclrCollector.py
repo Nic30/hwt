@@ -74,9 +74,13 @@ class MakeClkRstAssociations(object):
 
 
 class PropDeclrCollector(object):
+    """
+    Collect properties of this object to containers by specified listeners
+    """
     def _config(self):
         """
         Configure object parameters
+
         * setup all parameters on this object,
           use Param class instances to allow use of parametr inheritance
         * called in __init__ of class
@@ -86,6 +90,7 @@ class PropDeclrCollector(object):
     def _declr(self):
         """
         declarations
+
         * do all declarations of externally accessible objects there (Interfaces)
         * is called after _config
         * _declr method is called after _config
@@ -97,6 +102,7 @@ class PropDeclrCollector(object):
     def _impl(self):
         """
         implementations
+
         * implement functionality of design there
         * called after _declr
         """
@@ -163,9 +169,9 @@ class PropDeclrCollector(object):
         """
         associate newly added interfaces to "self" with selected clk, rst
         (if interface is not associated agents try to find clk/rst by _getAssociatedClk/_getAssociatedRst
-         which will search for any clk/rst on parent recursively)
+        which will search for any clk/rst on parent recursively)
         Usage:
-        
+
         .. code-block:: python
 
             with self._associated(clk=self.myClk, rst=self.myRst):

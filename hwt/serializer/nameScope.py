@@ -11,7 +11,7 @@ class NameOccupiedErr(Exception):
 class NameScopeItem(dict):
     """
     if name is discovered in scope it is converted to name_id
-    where id is sequential number for prefix name_
+    where id is sequential number for prefix name\_
     """
     def __init__(self, myLvl):
         super().__init__()

@@ -9,18 +9,15 @@ from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 
 class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     """
-    Class members:
-    #resolved automatically during configuration/declaration:
+    Container of the netlist with interfaces and internal hierarchical structure
 
     :cvar _serializerMode: mode for serializer (drives when unit should be serialized)
-
     :ivar _interfaces: all interfaces
     :ivar _units: all units defined on this obj in configuration/declaration
     :ivar _params: all params defined on this obj in configuration/declaration
     :ivar _parent: parent object (Unit instance)
-
     :ivar _checkIntferfaces: flag - after synthesis check if interfaces are present
-    :ivar _lazyLoaded : container of rtl object which were lazy loaded in implementation phase
+    :ivar _lazyLoaded: container of rtl object which were lazy loaded in implementation phase
         (this object has to be returned from _toRtl of parent before it it's own objects)
     """
 
@@ -62,7 +59,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         yield from self._lazyLoaded
 
         if self._checkIntferfaces and not self._externInterf:
-            raise Exception("Can not find any external interface for unit " + self._name +
+            raise Exception("Can not find any external interface for unit " + self._name + 
                             "- there is no such a thing as unit without interfaces")
 
         yield from self._synthetiseContext(self._externInterf)
@@ -143,7 +140,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             p.name = n.upper()
             n = n.lower()
             if n in globalNames:
-                raise IntfLvlConfErr("Redefinition of generic '%s' while synthesis old:%s, new:%s" %
+                raise IntfLvlConfErr("Redefinition of generic '%s' while synthesis old:%s, new:%s" % 
                                      (n, repr(globalNames[n]), repr(p)))
             globalNames[n] = p
 
@@ -181,8 +178,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             inRtl = set(map(lambda x: x.name, self._architecture.componentInstances))
             inIntf = set(map(lambda x: x._name + "_inst", self._units))
             if cInstances > units:
-                raise IntfLvlConfErr("_toRtl unit(s) %s were found in rtl but were not registered at %s" %
+                raise IntfLvlConfErr("_toRtl unit(s) %s were found in rtl but were not registered at %s" % 
                                      (str(inRtl - inIntf), self._name))
             elif cInstances < units:
-                raise IntfLvlConfErr("_toRtl of %s: unit(s) %s were lost" %
+                raise IntfLvlConfErr("_toRtl of %s: unit(s) %s were lost" % 
                                      (self._name, str(inIntf - inRtl)))

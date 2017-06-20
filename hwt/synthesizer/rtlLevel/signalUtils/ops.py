@@ -17,6 +17,10 @@ def tv(signal):
 
 
 class RtlSignalOps():
+    """
+    Definitions of operators and other operator functions for RtlSignal
+    """
+
     def _convert(self, toT):
         return tv(self)._convert(self, toT)
 

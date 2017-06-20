@@ -139,13 +139,13 @@ def SwitchLogic(cases, default=None):
     """
     generate if tree for cases like
 
-    if cond0:
-        statements0
-    elif cond1:
-        statements1
-    ...
-    else:
-        default
+    ..code-block:: python
+        if cond0:
+            statements0
+        elif cond1:
+            statements1
+        else:
+            default
 
     :param case: iterable of tuples (condition, statements)
     :param default: default statements

@@ -3,17 +3,16 @@ from hwt.hdlObjects.statements import ReturnCalled
 
 class Function():
     """
-    Container for hdl cunction
+    Container for hdl function
     """
     def __init__(self, name, returnT, ctx, params, _locals, exprList, isOperator=False):
-        """
-        class to store hdl function
+        """class to store hdl function
 
         :param name: name of the function
         :param returnT: return type
         :param ctx: hdl context of this funtion
         :param params: list of argument signals
-        :param _locals : local variables in this function
+        :param _locals: local variables in this function
         :param exprList: list of expressions in body
         :param isOperator: is operator flag
         """
