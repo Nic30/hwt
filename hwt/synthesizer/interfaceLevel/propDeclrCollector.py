@@ -10,8 +10,8 @@ def nameAvailabilityCheck(obj, propName, prop):
     Check if not redefining property on obj
     """
     if getattr(obj, propName, None) is not None:
-        raise IntfLvlConfErr("Already has property %s old:%s new:%s" %
-                             (propName, repr(getattr(obj, propName)), prop))
+        raise IntfLvlConfErr("%r already has property %s old:%s new:%s" %
+                             (obj, propName, repr(getattr(obj, propName)), prop))
 
 
 class MakeParamsShared(object):
