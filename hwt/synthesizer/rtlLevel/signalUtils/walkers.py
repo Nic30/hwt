@@ -1,7 +1,6 @@
 from hwt.hdlObjects.assignment import Assignment
-from hwt.hdlObjects.constants import DIRECTION, SENSITIVITY
 from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.operatorDefs import AllOps, isEventDependentOp
+from hwt.hdlObjects.operatorDefs import isEventDependentOp
 from hwt.hdlObjects.portItem import PortItem
 from hwt.hdlObjects.statements import IfContainer, SwitchContainer
 from hwt.hdlObjects.value import Value
@@ -29,20 +28,6 @@ def walkSignalDrivers(sig):
     return where(sig.drivers, assign2Me)
 
 
-def walkSigExpr(sig):
-    """
-    Walk any object connected to this signal
-    """
-    yield from sig.drivers
-    yield from sig.endpoints
-
-
-def walkUnitInputPorts(unit):
-    for portItem in unit.ports:
-        if portItem.direction == DIRECTION.IN:
-            yield portItem
-
-
 def walkAllOriginSignals(sig, discovered=None):
     """
     Walk every signal which has no driver and is used as driver of this signal.
@@ -61,37 +46,16 @@ def walkAllOriginSignals(sig, discovered=None):
 
     if sig.drivers:
         for obj in sig.drivers:
-            if isinstance(obj, Value):
-                return
-            elif isinstance(obj, Operator):
+            if isinstance(obj, Operator):
                 for op in obj.ops:
                     if isinstance(op, RtlSignalBase):
                         yield from walkAllOriginSignals(op, discovered=discovered)
-            elif isinstance(obj, RtlSignalBase):
-                yield from walkAllOriginSignals(obj, discovered)
             elif isinstance(obj, Assignment):
                 yield from walkAllOriginSignals(obj.src, discovered)
             else:
                 raise TypeError("walkAllOriginSignals not implemented for %s" % (str(obj)))
     else:
         yield sig
-
-
-def walkSignalsInExpr(expr):
-    if isinstance(expr, Value):
-        return
-    elif isinstance(expr, Operator):
-        for op in expr.ops:
-            if op is not expr:
-                yield from walkSignalsInExpr(op)
-    elif isinstance(expr, RtlSignalBase):
-        if hasattr(expr, "origin"):
-            yield from walkSignalsInExpr(expr.origin)
-        else:
-            yield expr
-    else:
-        raise Exception("Unknown node '%s' type %s" %
-                        (repr(expr), str(expr.__class__)))
 
 
 class EventDependencyReached(Exception):
@@ -163,10 +127,6 @@ def discoverEventDependency(sig):
                     yield from discoverEventDependency(op)
 
 
-def isEdgeDependent(sens):
-    return sens == SENSITIVITY.RISING or sens == SENSITIVITY.FALLING
-
-
 def _discoverSensitivityForList(cond, seenSet):
     """
     Discover sensitivity for list of signals
@@ -227,25 +187,4 @@ def discoverSensitivity(statement):
         where sensitivity is member of SENSITIVITY enum
     """
     yield from _discoverSensitivity(statement, set(), True)
-
-
-def walkSigSouces(sig, parent=None):
-    """
-    walks code, and returns assignments and port items which are driving this signal
-    """
-    if isinstance(sig, Operator):
-        if sig.operator != AllOps.INDEX:  # [TODO] more test to assert this cond. will work
-            for op in sig.ops:
-                if op is not parent:
-                    yield from walkSigSouces(op)
-    elif isinstance(sig, RtlSignalBase):
-        for e in sig.drivers:
-            if isinstance(e, PortItem):
-                if not e.unit.discovered:
-                    yield e
-            elif isinstance(e, Assignment) and e.src is not sig:
-                yield e
-            else:
-                yield from walkSigSouces(e, sig)
-    else:
-        raise Exception("Cant walk node %s" % repr(sig))
+    
