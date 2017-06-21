@@ -16,7 +16,7 @@ def autoAddAgents(unit):
         try:
             agentCls = intf._getSimAgent()
         except NotImplementedError:
-            raise NotImplementedError(("Interface %s\n" +
+            raise NotImplementedError(("Interface %s\n" + 
                                        "has not any simulation agent class assigned") % (str(intf)))
 
         if intf._isInterfaceArray():
@@ -52,8 +52,12 @@ def valuesToInts(values):
     Iterable of values to ints (nonvalid = None)
     """
     res = []
+    append = res.append
     for d in values:
-        res.append(valToInt(d))
+        if isinstance(d, int):
+            append(d)
+        else:
+            append(valToInt(d))
     return res
 
 
