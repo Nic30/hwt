@@ -35,6 +35,9 @@ class ArrayVal(Value):
         return cls(elements, typeObj, int(val is not None))
 
     def _getitem__val(self, key):
+        """
+        :atention: this will clone item from array, iterate over .val if you need to modify items
+        """
         v = self.val[key.val].clone()
         if not key._isFullVld():
             v.vldMask = 0
