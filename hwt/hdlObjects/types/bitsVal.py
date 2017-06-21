@@ -7,7 +7,8 @@ from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.typeShortcuts import vecT
 from hwt.hdlObjects.types.bitValFunctions import bitsCmp__val, bitsCmp, \
-    bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, getMulResT
+    bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, getMulResT, \
+    signFix
 from hwt.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForXor, \
     vldMaskForAnd, vldMaskForOr
 from hwt.hdlObjects.types.bits import Bits
@@ -44,21 +45,21 @@ class BitsVal(EventCapableVal):
         return v
 
     def _convSign(self, signed):
-            if isinstance(self, Value):
-                return self._convSign__val(signed)
+        if isinstance(self, Value):
+            return self._convSign__val(signed)
+        else:
+            if self._dtype.signed == signed:
+                return self
+            t = copy(self._dtype)
+            t.signed = signed
+            if signed is None:
+                cnv = AllOps.BitsAsVec
+            elif signed:
+                cnv = AllOps.BitsAsSigned
             else:
-                if self._dtype.signed == signed:
-                    return self
-                t = copy(self._dtype)
-                t.signed = signed
-                if signed is None:
-                    cnv = AllOps.BitsAsVec
-                elif signed:
-                    cnv = AllOps.BitsAsSigned
-                else:
-                    cnv = AllOps.BitsAsUnsigned
+                cnv = AllOps.BitsAsUnsigned
 
-                return Operator.withRes(cnv, [self], t)
+            return Operator.withRes(cnv, [self], t)
 
     def _signed(self):
         return self._convSign(True)
@@ -71,12 +72,27 @@ class BitsVal(EventCapableVal):
 
     @classmethod
     def fromPy(cls, val, typeObj):
-        if not isinstance(val, (int, bool)) and val is not None:
-            raise TypeError(val, type(val))
-        vld = 0 if val is None else mask(typeObj.bit_length())
-        if not vld:
+        allMask = typeObj.all_mask()
+        w = typeObj.bit_length()
+        if val is None:
+            vld = 0
             val = 0
-        return cls(int(val), typeObj, vld)
+        else:
+            val = int(val)
+            vld = allMask
+
+        if val < 0:
+            assert typeObj.signed
+            assert signFix(val & allMask, w) == val, (val, signFix(val & allMask, w))
+        else:
+            if typeObj.signed:
+                msb = 1 << (w - 1)
+                if msb & val:
+                    assert val < 0, val
+
+            assert val & allMask == val, (val, val & allMask)
+
+        return cls(val, typeObj, vld)
 
     def _concat__val(self, other):
         w = self._dtype.bit_length()
@@ -235,6 +251,8 @@ class BitsVal(EventCapableVal):
         v.val = ~v.val
         w = v._dtype.bit_length()
         v.val &= mask(w)
+        if self._dtype.signed:
+            v.val = signFix(v.val, w)
         return v
 
     def __invert__(self):
@@ -318,27 +336,16 @@ class BitsVal(EventCapableVal):
         return bitsArithOp(self, other, AllOps.ADD)
 
     def _mul__val(self, other):
-        resT = getMulResT(self._dtype, other._dtype)
-        val = self.val * other.val
-        result = resT.fromPy(val)
-
-        raise NotImplementedError()
-        # # [TODO] value check range
-        # if isinstance(other._dtype, Integer):
-        #    if other.vldMask:
-        #        v.vldMask = self.vldMask
-        #    else:
-        #        v.vldMask = 0
-        #
-        # elif isinstance(other._dtype, Bits):
-        #    v.vldMask = self.vldMask & other.vldMask
-        # else:
-        #    raise TypeError("Incompatible type for multiplication: %s" % (repr(other._dtype)))
-        # # [TODO] correct overflow detection for signed values
-        # w = v._dtype.bit_length()
-        # v.val &= Bitmask.mask(2*w)
-        # v.updateTime = max(self.updateTime, other.updateTime)
-        # return v
+        if isinstance(other._dtype, Bits):
+            resT = getMulResT(self._dtype, other._dtype)
+            v = self.val * other.val
+            result = resT.fromPy(v)
+            if not self._isFullVld() or not other._isFullVld():
+                result.vldMask = 0
+            result.updateTime = max(self.updateTime, other.updateTime)
+            return result
+        else:
+            raise TypeError("Incompatible type for multiplication: %s" % (repr(other._dtype)))
 
     def __mul__(self, other):
         other = toHVal(other)
@@ -360,3 +367,12 @@ class BitsVal(EventCapableVal):
             subResT = vecT(resT.bit_length(), self._dtype.signed)
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
             return o._convert(resT)
+
+    def __int__(self):
+        if isinstance(self, Value):
+            if self._isFullVld():
+                return self.val
+            else:
+                return None
+
+        raise NotImplementedError()

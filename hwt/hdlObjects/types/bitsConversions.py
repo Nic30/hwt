@@ -24,25 +24,16 @@ def convertBits__val(self, sigOrVal, toType):
 
 
 def convertBits(self, sigOrVal, toType):
-    isVal = isinstance(sigOrVal, Value)
-
+    if isinstance(sigOrVal, Value):
+        return convertBits__val(self, sigOrVal, toType)
     if isinstance(toType, Boolean):
-        if isVal:
-            return sigOrVal._eq(self.getValueCls().fromPy(1, self))
-        elif self.bit_length() == 1:
+        if self.bit_length() == 1:
             v = 0 if sigOrVal._dtype.negated else 1
             return sigOrVal._eq(self.getValueCls().fromPy(v, self))
     elif isinstance(toType, Bits):
         if self.bit_length() == toType.bit_length():
             return sigOrVal._convSign(toType.signed)
     elif toType == INT:
-        if isVal:
-            if self.signed:
-                raise NotImplementedError()
-            else:
-                fullMask = mask(self.bit_length())
-                return INT.getValueCls()(sigOrVal.val, INT, sigOrVal.vldMask == fullMask, sigOrVal.updateTime)
-        else:
-            return Operator.withRes(AllOps.BitsToInt, [sigOrVal], toType)
+        return Operator.withRes(AllOps.BitsToInt, [sigOrVal], toType)
 
     return HdlType.defaultConvert(self, sigOrVal, toType)

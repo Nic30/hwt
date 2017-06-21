@@ -1,13 +1,22 @@
-from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.hdlObjects.value import Value, areValues
+from hwt.bitmask import mask
+from hwt.hdlObjects.operator import Operator
+from hwt.hdlObjects.typeShortcuts import vecT
+from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BOOL
 from hwt.hdlObjects.types.integer import Integer
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.typeShortcuts import vecT
-from hwt.bitmask import mask
+from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.hdlObjects.value import Value, areValues
+
 
 BoolVal = BOOL.getValueCls()
+
+
+def signFix(val, width):
+    if val > 0:
+        msb = 1 << (width - 1)
+        if val & msb:
+            val -= mask(width) + 1
+    return val
 
 
 def bitsCmp__val(self, other, op, evalFn):
@@ -56,6 +65,8 @@ def bitsBitOp__val(self, other, op, getVldFn):
     vld = getVldFn(self, other)
     res = op._evalFn(self.val, other.val) & vld
     updateTime = max(self.updateTime, other.updateTime)
+    if self._dtype.signed:
+        res = signFix(res, w)
 
     return self.__class__(res, self._dtype, vld, updateTime)
 
