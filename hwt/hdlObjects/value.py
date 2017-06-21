@@ -76,9 +76,6 @@ class Value():
     def __ceil__(self):
         raise NotImplementedError()
 
-    def __trunc__(self):
-        raise NotImplementedError()
-
     def __add__(self, other):
         raise NotImplementedError()
 
