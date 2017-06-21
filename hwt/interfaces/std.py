@@ -1,7 +1,7 @@
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.typeShortcuts import vecT
 from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.defs import BIT
+from hwt.hdlObjects.types.defs import BIT, BIT_N
 from hwt.interfaces.signalOps import SignalOps
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.param import Param, evalParam
@@ -102,17 +102,15 @@ class Rst_n(Signal):
     """
     Basic :class:`.Signal` interface which is interpreted as reset signal with negative polarity (active in 0)
     """
-    def _signalsForInterface(self,
-                             context,
-                             prefix='',
-                             typeTransform=None):
-        sigs = Signal._signalsForInterface(self,
-                                           context,
-                                           prefix,
-                                           typeTransform=typeTransform)
-        for s in sigs:
-            s.negated = True
-        return sigs
+    def __init__(self,
+                 masterDir=D.OUT,
+                 asArraySize=None,
+                 dtype=BIT_N,
+                 loadConfig=True):
+        super(Rst_n, self).__init__(masterDir=D.OUT,
+                                    asArraySize=asArraySize,
+                                    dtype=dtype,
+                                    loadConfig=dtype)
 
     def _getIpCoreIntfClass(self):
         from hwt.serializer.ip_packager.interfaces.std import IP_Rst_n

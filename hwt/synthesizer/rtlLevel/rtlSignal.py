@@ -10,13 +10,11 @@ from hwt.synthesizer.uniqList import UniqList
 
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
-    more like net
+    RtlSignal signal is container of connection between statements and operators
 
     :ivar _usedOps: dictionary of used operators which can be reused
     :ivar endpoints: UniqList of operators and statements for which this signal is driver.
     :ivar drivers: UniqList of operators and statements which can drive this signal.
-    :ivar negated: this value represents that the value of signal has opposite meaning
-        [TODO] mv negated to Bits hdl type.
     :ivar hiden: means that this signal is part of expression and should not be rendered
     :ivar processCrossing: means that this signal is crossing process boundary
 
@@ -28,7 +26,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     def __init__(self, ctx, name, dtype, defaultVal=None, nopVal=None, useNopVal=False):
         """
         :param ctx: context - RtlNetlist which is this signal part of
-        :param name: name hint for this signal, if is None name is choosen automaticaly
+        :param name: name hint for this signal, if is None name is chosen automatically
         :param defaultVal: value which is used for reset and as default value in hdl
         :param useNopVal: use nopVal or ignore it
         :param nopVal: value which is used to fill up statements when no other value is assigned
@@ -45,14 +43,14 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         self.ctx = ctx
 
         if ctx:
-            # params does not have any signal on created and it is assigned after param is bounded to unit
+            # params does not have any context on created
+            # and it is assigned after param is bounded to unit or interface
             ctx.signals.add(self)
 
-        # set can not be used because hash of items are changign
+        # set can not be used because hash of items are changing
         self.endpoints = UniqList()
         self.drivers = UniqList()
         self._usedOps = {}
-        self.negated = False
         self.hidden = True
         self._instId = RtlSignal._nextInstId()
 

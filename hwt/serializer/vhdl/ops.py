@@ -41,7 +41,7 @@ class VhdlSerializer_ops():
 
     @classmethod
     def BitToBool(cls, cast):
-        v = 0 if cast.sig.negated else 1
+        v = 0 if cast.sig._dtype.negated else 1
         return cls.asHdl(cast.sig) + "=='%d'" % v
 
     @classmethod
