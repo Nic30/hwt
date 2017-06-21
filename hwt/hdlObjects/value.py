@@ -52,6 +52,9 @@ class Value():
     def __bool__(self):
         raise NotImplementedError()
 
+    def __int___(self):
+        raise NotImplementedError()
+
     def __pos__(self):
         raise NotImplementedError()
 
