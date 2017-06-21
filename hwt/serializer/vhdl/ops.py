@@ -56,7 +56,7 @@ class VhdlSerializer_ops():
                 except Exception:
                     pass
             return " %s " % s
-
+        # [TODO] no nested ternary in expressions like ( '1'  WHEN r = f ELSE  '0' ) & "0"
         ops = op.ops
         o = op.operator
 

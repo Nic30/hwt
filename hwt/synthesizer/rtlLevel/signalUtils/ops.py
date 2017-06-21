@@ -19,12 +19,18 @@ def tv(signal):
 class RtlSignalOps():
     """
     Definitions of operators and other operator functions for RtlSignal
+
+    :ivar _usedOps: cache for expressions with this signal
     """
 
     def _convert(self, toT):
         return tv(self)._convert(self, toT)
 
     def naryOp(self, operator, opCreateDelegate, *otherOps):
+        """
+        Try lookup operator with this parameters in _usedOps
+        if not found create new one and soter it in _usedOps
+        """
         k = (operator, *otherOps)
         try:
             return self._usedOps[k]
