@@ -1,6 +1,7 @@
 from hwt.hdlObjects.constants import Time
 from hwt.simulator.agentBase import AgentBase
 from hwt.simulator.shortcuts import onRisingEdge
+from hwt.synthesizer.exceptions import IntfLvlConfErr
 
 
 DEFAULT_CLOCK = 10 * Time.ns
@@ -13,17 +14,28 @@ class SignalAgent(AgentBase):
 
     :attention: clock synchronization has higher priority
     """
-    def __init__(self, intf, clk=None, rstn=None, delay=DEFAULT_CLOCK):
+    def __init__(self, intf, delay=DEFAULT_CLOCK):
         self.delay = delay
         self.initDelay = 0
-        self.clk = clk
-        self.rstn = rstn
         self.intf = intf
+
+        # resolve clk and rstn
+        try:
+            self.clk = self.intf._getAssociatedClk()
+        except IntfLvlConfErr:
+            self.clk = None
+
+        try:
+            self.rst = self.intf._getAssociatedRst()
+            assert self.clk is not None
+        except IntfLvlConfErr:
+            self.rst = None
+            
         self.data = []
 
         self.initPending = True
 
-        if clk is not None:
+        if self.clk is not None:
             self.monitor = onRisingEdge(self.clk, self.monitor)
             self.driver = onRisingEdge(self.clk, self.driver)
 
@@ -53,8 +65,13 @@ class SignalAgent(AgentBase):
             # if clock is specified this function is periodicaly called every
             # clk tick
             if self.data:
-                self.doWrite(s, self.data.pop(0))
-
+                try:
+                    d = self.data.pop(0)
+                except AttributeError:
+                    d = next(self.data)
+                
+                self.doWrite(s, d)
+                    
     def monitor(self, s):
         if self.clk is None:
             if self.initPending and self.initDelay:
