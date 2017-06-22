@@ -1,16 +1,4 @@
 from hwt.hdlObjects.typeShortcuts import vec
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.defs import BIT
-
-
-def aplyIndexOnSignal(sig, dstType, index):
-    if sig._dtype == BIT or dstType == BIT:
-        return sig[index]
-    elif isinstance(dstType, Bits):
-        w = dstType.width
-        return sig[(w * (index + 1)):(w * index)]
-    else:
-        raise NotImplementedError()
 
 
 def fitTo(what, to):
@@ -30,5 +18,7 @@ def fitTo(what, to):
         # slice
         return what[toWidth:]
     else:
+        if what._dtype.signed:
+            raise NotImplementedError("Signed extension")
         # extend
         return vec(0, toWidth - whatWidth)._concat(what)
