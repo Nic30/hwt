@@ -20,8 +20,10 @@ def signFix(val, width):
 
 
 def bitsCmp__val(self, other, op, evalFn):
+    ot = other._dtype
+
     w = self._dtype.bit_length()
-    assert w == other._dtype.bit_length(), "%d, %d" % (w, other._dtype.bit_length())
+    assert w == ot.bit_length(), "%d, %d" % (w, ot.bit_length())
 
     vld = self.vldMask & other.vldMask
     _vld = vld == mask(w)
@@ -36,6 +38,8 @@ def bitsCmp(self, other, op, evalFn=None):
     :attention: If other is Bool signal convert this to boolean (not ideal, due VHDL event operator)
     """
     other = toHVal(other)
+    t = self._dtype
+    ot = other._dtype
 
     iamVal = isinstance(self, Value)
     otherIsVal = isinstance(other, Value)
@@ -44,13 +48,22 @@ def bitsCmp(self, other, op, evalFn=None):
         evalFn = op._evalFn
 
     if iamVal and otherIsVal:
+        if ot == BOOL:
+            self = self._convert(BOOL)
+        elif t == ot:
+            pass
+        elif isinstance(ot, Integer):
+            other = other._convert(t)
+        else:
+            raise TypeError("Values of types (%r, %r) are not comparable" % (self._dtype, other._dtype))
+
         return bitsCmp__val(self, other, op, evalFn)
     else:
-        if other._dtype == BOOL:
+        if ot == BOOL:
             self = self._convert(BOOL)
-        elif self._dtype == other._dtype:
+        elif t == ot:
             pass
-        elif isinstance(other._dtype, Integer):
+        elif isinstance(ot, Integer):
             other = other._convert(self._dtype)
         else:
             raise TypeError("Values of types (%r, %r) are not comparable" % (self._dtype, other._dtype))
@@ -89,7 +102,7 @@ def bitsBitOp(self, other, op, getVldFn):
         elif self._dtype == other._dtype:
             pass
         else:
-            raise TypeError("Can not apply operator %r (%r, %r)" % 
+            raise TypeError("Can not apply operator %r (%r, %r)" %
                             (op, self._dtype, other._dtype))
 
         return Operator.withRes(op, [self, other], self._dtype)
