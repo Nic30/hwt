@@ -1,10 +1,10 @@
-from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.hdlObjects.value import Value
-from hwt.hdlObjects.types.boolean import Boolean
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.defs import INT
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
+from hwt.hdlObjects.types.bits import Bits
+from hwt.hdlObjects.types.boolean import Boolean
+from hwt.hdlObjects.types.defs import INT
+from hwt.hdlObjects.types.hdlType import HdlType
+from hwt.hdlObjects.value import Value
 
 
 def convertBits__val(self, sigOrVal, toType):
