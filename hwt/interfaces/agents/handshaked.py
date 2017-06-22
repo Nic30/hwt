@@ -56,7 +56,7 @@ class HandshakedAgent(SyncAgentBase):
         Collect data from interface
         """
         r = s.read
-        if r(self.rst_n).val and self.enable:
+        if self.notReset(s) and self.enable:
             # update rd signal only if required
             if self._lastRd is not 1:
                 self.wrRd(s.write, 1)
@@ -124,7 +124,7 @@ class HandshakedAgent(SyncAgentBase):
                 self.doWrite(s, None)
             self._lastWritten = self.actualData
 
-        en = r(self.rst_n).val and self.enable
+        en = self.notReset(s) and self.enable
         vld = int(en and doSend)
         if self._lastVld is not vld:
             self.wrVld(s.write, vld)

@@ -1,7 +1,6 @@
 from copy import copy
 
 from hwt.hdlObjects.constants import INTF_DIRECTION, DIRECTION
-from hwt.hdlObjects.typeShortcuts import mkRange
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BIT
 from hwt.pyUtils.arrayQuery import single

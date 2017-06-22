@@ -102,7 +102,7 @@ def bitsBitOp(self, other, op, getVldFn):
         elif self._dtype == other._dtype:
             pass
         else:
-            raise TypeError("Can not apply operator %r (%r, %r)" %
+            raise TypeError("Can not apply operator %r (%r, %r)" % 
                             (op, self._dtype, other._dtype))
 
         return Operator.withRes(op, [self, other], self._dtype)
@@ -115,11 +115,20 @@ def bitsArithOp__val(self, other, op):
 
     v.val = op._evalFn(self.val, other.val)
 
-    # [TODO] correct overflow detection for signed values
     w = v._dtype.bit_length()
-    v.val &= mask(w)
+    if self._dtype.signed:
+        _v = v.val
+        _max = mask(w-1) 
+        _min = -_max - 1
+        if _v > _max:
+            _v = _min + (_v - _max - 1)
+        elif _v < _min:
+            _v = _max - (_v - _min + 1) 
 
-    # [TODO] value check range
+        v.val = _v
+    else:
+        v.val &= mask(w)
+
     if self_vld and other_vld:
         v.vldMask = mask(w)
     else:

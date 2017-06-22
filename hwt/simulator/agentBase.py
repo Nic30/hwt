@@ -58,7 +58,7 @@ class SyncAgentBase(AgentBase):
         # resolve clk and rstn
         self.clk = self.intf._getAssociatedClk()
         try:
-            self.rst_n = self.getRst_n(allowNoReset=allowNoReset)
+            self.rst = self.intf._getAssociatedRst()
         except IntfLvlConfErr as e:
             if allowNoReset:
                 pass
@@ -69,24 +69,13 @@ class SyncAgentBase(AgentBase):
         self.monitor = onRisingEdge(self.clk, self.monitor)
         self.driver = onRisingEdge(self.clk, self.driver)
 
-    def getRst_n(self, allowNoReset):
-        """
-        If interface has associated rst(_n) return it otherwise try to find rst(_n) on parent recursively
-        """
-        a = self.intf._getAssociatedRst()
-        if a is not None:
-            if isinstance(a, Rst_n):
-                return a
-            else:
-                return ~a
-
-        if allowNoReset:
-            return None
-        else:
-            raise Exception("Can not find reset for %s" % (self.intf._getFullName()))
-
     def notReset(self, s):
-        if self.rst_n is None:
+        if self.rst is None:
             return True
         else:
-            return s.read(self.rst_n).val
+            rst = self.rst
+            rstVal = s.read(self.rst).val
+            if isinstance(rst, Rst_n):
+                return rstVal
+            else:
+                return not rstVal
