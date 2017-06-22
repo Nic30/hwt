@@ -34,13 +34,14 @@ class BitsVal(EventCapableVal):
         selfSign = self._dtype.signed
         v = self.clone()
         w = self._dtype.bit_length()
-        msbVal = 1 << (w - 1)
+        _v = v.val
         if selfSign and not signed:
-            if v.val < 0:
-                v.val += msbVal
+            if _v < 0:
+                v.val = mask(w) + _v + 1
         elif not selfSign and signed:
-            if v.val >= msbVal:
-                v.val -= (msbVal - 1)
+            msbMask = 1 << (w - 1)
+            if _v >= msbMask:
+                v.val = -_v + msbMask + mask(w - 1) - 1
 
         return v
 
