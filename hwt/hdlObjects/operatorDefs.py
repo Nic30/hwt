@@ -2,7 +2,6 @@ from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
     xor, gt, ge, lt, le, getitem
 
 from hwt.hdlObjects.constants import SENSITIVITY
-from hwt.hdlObjects.function import Function
 from hwt.hdlObjects.types.defs import INT
 from hwt.hdlObjects.value import Value
 
@@ -27,7 +26,7 @@ class OpDefinition():
     def eval(self, operator, simulator=None):
         """Load all operands and process them by self._evalFn"""
         def getVal(v):
-            while not isinstance(v, (Value, Function)):
+            while not isinstance(v, Value):
                 v = v._val
 
             return v

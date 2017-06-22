@@ -1,6 +1,5 @@
 from copy import deepcopy
 
-from hwt.hdlObjects.function import Function
 from hwt.hdlObjects.value import Value
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
 
@@ -40,7 +39,7 @@ class Operator():
                     o.drivers.append(self)
                 else:
                     o.endpoints.append(self)
-            elif isinstance(o, (Value, Function)):
+            elif isinstance(o, Value):
                 pass
             else:
                 raise NotImplementedError("Operator operands can be only signal or values got:%s" % repr(o))
