@@ -1,18 +1,29 @@
-from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.hdlObjects.value import Value, areValues
+from hwt.bitmask import mask
+from hwt.hdlObjects.operator import Operator
+from hwt.hdlObjects.typeShortcuts import vecT
+from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BOOL
 from hwt.hdlObjects.types.integer import Integer
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.typeShortcuts import vecT
-from hwt.bitmask import mask
+from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.hdlObjects.value import Value, areValues
+
 
 BoolVal = BOOL.getValueCls()
 
 
+def signFix(val, width):
+    if val > 0:
+        msb = 1 << (width - 1)
+        if val & msb:
+            val -= mask(width) + 1
+    return val
+
+
 def bitsCmp__val(self, other, op, evalFn):
+    ot = other._dtype
+
     w = self._dtype.bit_length()
-    assert w == other._dtype.bit_length(), "%d, %d" % (w, other._dtype.bit_length())
+    assert w == ot.bit_length(), "%d, %d" % (w, ot.bit_length())
 
     vld = self.vldMask & other.vldMask
     _vld = vld == mask(w)
@@ -27,6 +38,8 @@ def bitsCmp(self, other, op, evalFn=None):
     :attention: If other is Bool signal convert this to boolean (not ideal, due VHDL event operator)
     """
     other = toHVal(other)
+    t = self._dtype
+    ot = other._dtype
 
     iamVal = isinstance(self, Value)
     otherIsVal = isinstance(other, Value)
@@ -35,13 +48,22 @@ def bitsCmp(self, other, op, evalFn=None):
         evalFn = op._evalFn
 
     if iamVal and otherIsVal:
+        if ot == BOOL:
+            self = self._convert(BOOL)
+        elif t == ot:
+            pass
+        elif isinstance(ot, Integer):
+            other = other._convert(t)
+        else:
+            raise TypeError("Values of types (%r, %r) are not comparable" % (self._dtype, other._dtype))
+
         return bitsCmp__val(self, other, op, evalFn)
     else:
-        if other._dtype == BOOL:
+        if ot == BOOL:
             self = self._convert(BOOL)
-        elif self._dtype == other._dtype:
+        elif t == ot:
             pass
-        elif isinstance(other._dtype, Integer):
+        elif isinstance(ot, Integer):
             other = other._convert(self._dtype)
         else:
             raise TypeError("Values of types (%r, %r) are not comparable" % (self._dtype, other._dtype))
@@ -56,6 +78,8 @@ def bitsBitOp__val(self, other, op, getVldFn):
     vld = getVldFn(self, other)
     res = op._evalFn(self.val, other.val) & vld
     updateTime = max(self.updateTime, other.updateTime)
+    if self._dtype.signed:
+        res = signFix(res, w)
 
     return self.__class__(res, self._dtype, vld, updateTime)
 
@@ -78,7 +102,7 @@ def bitsBitOp(self, other, op, getVldFn):
         elif self._dtype == other._dtype:
             pass
         else:
-            raise TypeError("Can not apply operator %r (%r, %r)" % 
+            raise TypeError("Can not apply operator %r (%r, %r)" %
                             (op, self._dtype, other._dtype))
 
         return Operator.withRes(op, [self, other], self._dtype)
