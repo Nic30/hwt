@@ -1,5 +1,3 @@
-from hwt.synthesizer.param import Param, getParam
-
 
 class NotSpecified(Exception):
     """
@@ -8,13 +6,6 @@ class NotSpecified(Exception):
     f.e. you have to implement Simulation agent for interface when you create new one and you can not use existing
     """
     pass
-
-
-def sameIntfAs(intf):
-    _intf = intf.__class__()
-    for p in intf._params:
-        _intf._replaceParam(p._name, Param(getParam(p)))
-    return _intf
 
 
 def walkPhysInterfaces(intf):
