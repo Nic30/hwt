@@ -73,6 +73,7 @@ class BitsVal(EventCapableVal):
 
     @classmethod
     def fromPy(cls, val, typeObj):
+        assert not isinstance(val, Value)
         allMask = typeObj.all_mask()
         w = typeObj.bit_length()
         if val is None:

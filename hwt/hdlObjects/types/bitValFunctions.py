@@ -94,6 +94,10 @@ def bitsBitOp(self, other, op, getVldFn):
     otherIsVal = isinstance(other, Value)
 
     if iamVal and otherIsVal:
+        ot = other._dtype
+        if ot == BOOL or isinstance(ot, Integer):
+            other = other._convert(self._dtype)
+
         return bitsBitOp__val(self, other, op, getVldFn)
     else:
         if other._dtype == BOOL:
