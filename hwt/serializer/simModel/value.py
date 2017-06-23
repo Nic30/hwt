@@ -7,6 +7,7 @@ from hwt.hdlObjects.types.string import String
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdlObjects.types.slice import Slice
 from hwt.synthesizer.param import Param, evalParam
+from hwt.hdlObjects.variables import SignalItem
 
 
 class SimModelSerializer_value():
@@ -23,6 +24,8 @@ class SimModelSerializer_value():
         else:
             if isinstance(si, Param):
                 return cls.Value(evalParam(si))
+            if isinstance(si, SignalItem) and si._const:
+                return cls.Value(si._val)
             if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin)
             else:
