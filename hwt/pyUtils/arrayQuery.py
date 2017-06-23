@@ -48,17 +48,33 @@ def arr_any(iterable, fn):
     return False
 
 
+def arr_all(iterable, fn):
+    """
+    returns True if fn(item) for all items in interable or iterable is empty else False
+    """
+    for item in iterable:
+        if not fn(item):
+            return False
+    return True
+
+
 def where(iterable, fn):
+    """
+    Select items from iterable where fn(item)
+    """
     for i in iterable:
         if fn(i):
             yield i
 
 
-def last_iter(it):
+def last_iter(iterable):
+    """
+    Iterate iterable and yield tuples (isLastFlag, item)
+    """
     # Ensure it's an iterator and get the first field
-    it = iter(it)
-    prev = next(it)
-    for item in it:
+    iterable = iter(iterable)
+    prev = next(iterable)
+    for item in iterable:
         # Lag by one item so I know I'm not at the end
         yield False, prev
         prev = item
@@ -67,18 +83,13 @@ def last_iter(it):
 
 
 def extendLen(arr, newLen, useValue=None):
+    """
+    Extend size of arr to newLen and use padding value specified by useValue
+    """
     lenNow = len(arr)
     toAdd = newLen - lenNow
     assert toAdd > 0
     arr.extend([useValue for _ in range(toAdd)])
-
-
-def indexUsigIs(iterable, item):
-    i = 0
-    for v in iterable:
-        if v is item:
-            return i
-        i += 1
 
 
 def groupedby(collection, fn):
@@ -101,6 +112,9 @@ def groupedby(collection, fn):
 
 
 def split(arr, size):
+    """
+    split arr on smaller arrays of size
+    """
     arr = list(arr)
     while len(arr) > size:
         pice = arr[:size]
@@ -112,8 +126,8 @@ def split(arr, size):
 def flatten(iterables, level=inf):
     """
     Flatten nested lists, tuples, generators and maps
-    
-    :param level: maximum depth of flattening 
+
+    :param level: maximum depth of flattening
     """
     if level >= 0 and isinstance(iterables, (list, tuple, GeneratorType, map, zip)):
         level -= 1
