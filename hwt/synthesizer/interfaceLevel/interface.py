@@ -74,6 +74,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         super().__init__()
         if asArraySize is not None:
             asArraySize = toHVal(asArraySize)
+            assert int(asArraySize) > 0
             self._widthMultiplier = asArraySize
         else:
             self._widthMultiplier = None

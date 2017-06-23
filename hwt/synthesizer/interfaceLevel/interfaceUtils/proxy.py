@@ -1,5 +1,4 @@
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hwt.synthesizer.param import evalParam
 
 intfMethods = ["_getAssociatedClk", "_getAssociatedRst", "_connectToIter"]
 signalMethods = ["_convert"
@@ -60,7 +59,7 @@ class InterfaceProxy(InterfaceBase):
     :ivar _itemsCnt: if this is an proxy for array this is size of this array
     :ivar _itemsInOne: data width multiplier for this proxy
     """
-    
+
     def __init__(self, origInterface, offset, index, itemsCnt, itemsInOne):
         """
         :param origInterface: interface which is this proxy created for
@@ -77,18 +76,18 @@ class InterfaceProxy(InterfaceBase):
         self._arrayElemCache = []
         assert itemsInOne > 0
         self._itemsInOne = itemsInOne
-        
+
         self._interfaces = []
         for intf in origInterface._interfaces:
             _itemsCnt = intf._asArraySize
             if _itemsCnt is not None:
-                _itemsCnt = evalParam(_itemsCnt).val
-            
+                _itemsCnt = int(_itemsCnt)
+
             if itemsCnt is not None:
                 _itemsInOne = itemsInOne * itemsCnt
             else:
                 _itemsInOne = itemsInOne
-            
+
             p = InterfaceProxy(intf, offset, None, _itemsCnt, _itemsInOne)
             setattr(self, intf._name, p)
             self._interfaces.append(p)
@@ -104,14 +103,14 @@ class InterfaceProxy(InterfaceBase):
         Returns index in items on physical interface which corresponds to signals of this proxy
         """
         return self._offset
-    
+
     def _isInterfaceArray(self):
         return self._itemsCnt is not None
-    
+
     def _getMySigSelector(self):
         w = self._origIntf._widthMultiplier
         assert w is not None, ("InterfceProxy is not expected to be on interfaces without multiplier", self)
-        sigItemsCnt = evalParam(w).val
+        sigItemsCnt = int(w)
 
         width = self._origIntf._dtype.bit_length()
         widthOfItem = (width // sigItemsCnt) * self._itemsInOne
@@ -125,8 +124,7 @@ class InterfaceProxy(InterfaceBase):
             l = (index * widthOfItem)
             # assert h <= width, self
             return (h, l)
-        
-    
+
     def _signalsForInterface(self, context):
         """
         :param context: instance of RtlNetlist where signals should be created
@@ -193,12 +191,12 @@ class InterfaceProxy(InterfaceBase):
         "instantiate my items into _arrayElemCache"
         # I am the array proxy and now I instantiate proxies for my elements
         offset = self._myArrOffset() * self._itemsCnt
-        
+
         for index in range(len(self)):
             itemsInOne = self._itemsInOne
             if self._itemsInOne is not None:
                 itemsInOne = self._itemsInOne * itemsInOne
- 
+
             e = InterfaceProxy(self._origIntf, offset + index, index, None, itemsInOne)
             self._arrayElemCache.append(e)
 
@@ -219,7 +217,7 @@ class InterfaceProxy(InterfaceBase):
                 shouldEnter, shouldYield = shouldEnterIntfFn(intf)
                 if shouldYield:
                     yield intf
-    
+
                 if shouldEnter:
                     yield from intf._walkFlatten(shouldEnterIntfFn)
 

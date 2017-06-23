@@ -1,5 +1,4 @@
 from hwt.hdlObjects.constants import INTF_DIRECTION
-from hwt.synthesizer.param import evalParam
 
 
 def autoAddAgents(unit):
@@ -20,7 +19,7 @@ def autoAddAgents(unit):
                                        "has not any simulation agent class assigned") % (str(intf)))
 
         if intf._isInterfaceArray():
-            agentCnt = evalParam(intf._asArraySize).val
+            agentCnt = int(intf._asArraySize)
             agent = []
             for i in range(agentCnt):
                 _intf = intf[i]

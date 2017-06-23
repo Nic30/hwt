@@ -150,7 +150,3 @@ class BooleanVal(EventCapableVal):
     def __or__(self, other):
         return boolLogOp(self, other, AllOps.OR_LOG, vldMaskForOr, whenOneIsVal_or)
 
-    # for evaluating only, not convertible to hdl
-    def __bool__(self):
-        assert isinstance(self, Value)
-        return bool(self.val and self.vldMask)

@@ -505,12 +505,13 @@ def log2ceil(x):
     """
 
     if not isinstance(x, (int, float)):
-        x = evalParam(x).val
+        x = int(x)
 
     if x == 0 or x == 1:
         res = 1
     else:
         res = math.ceil(math.log2(x))
+
     return hInt(res)
 
 

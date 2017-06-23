@@ -1,6 +1,5 @@
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import INT, BOOL, STR, BIT
-from hwt.synthesizer.param import evalParam
 
 
 # create hdl integer value (for example integer value in vhdl)
@@ -25,5 +24,5 @@ def vecT(width, signed=None):
 
 def vec(val, width, signed=None):
     """create hdl vector value"""
-    assert val < evalParam(hInt(2)._pow(width)).val
+    assert val < (2 ** int(width))
     return vecT(width, signed).fromPy(val)
