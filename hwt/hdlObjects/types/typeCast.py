@@ -17,6 +17,11 @@ def toHVal(op):
     elif isinstance(op, InterfaceBase):
         return op._sig
     else:
+        if isinstance(op, int):
+            if op >= 1 << 31:
+                raise TypeError("Number %d is too big to fit in 32 bit integer of HDL use Bits type instead" % op)
+            elif op < -(1 << 31):
+                raise TypeError("Number %d is too small to fit in 32 bit integer of HDL use Bits type instead" % op)
         try:
             hType = defaultConversions[type(op)]
         except KeyError:
