@@ -56,6 +56,7 @@ simCls_reservedWords = ['sim',
                         'SimSignal'
                         'SliceVal']
 
+
 class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimModelSerializer_types):
     __keywords_dict = {kw: LangueKeyword() for kw in kwlist + simCls_reservedWords}
 

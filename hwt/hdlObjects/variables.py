@@ -2,7 +2,10 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class SignalItem(object):
-    """basic hdl signal"""
+    """
+    basic hdl signal used to design circuits
+    """
+
     def __init__(self, name, dtype, defaultVal=None,  virtualOnly=False):
         """
         :param name: name for better orientation in netlists (used only in serialization)

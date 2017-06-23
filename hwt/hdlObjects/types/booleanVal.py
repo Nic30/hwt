@@ -1,19 +1,22 @@
+from operator import eq, ne
+
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
+from hwt.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForOr, \
+    vldMaskForAnd
 from hwt.hdlObjects.types.defs import BOOL
 from hwt.hdlObjects.types.eventCapableVal import EventCapableVal
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.hdlObjects.value import Value, areValues
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForOr, \
-    vldMaskForAnd
-from operator import eq, ne
+
 
 def boolLogOp__val(self, other, op, getVldFn):
     v = bool(op._evalFn(bool(self.val), (other.val)))
     return BooleanVal(v, BOOL,
-            getVldFn(self, other),
-            max(self.updateTime, other.updateTime))
+                      getVldFn(self, other),
+                      max(self.updateTime, other.updateTime))
+
 
 def boolLogOp(self, other, op, getVldFn, whenOneIsVal):
     other = toHVal(other)
@@ -26,24 +29,27 @@ def boolLogOp(self, other, op, getVldFn, whenOneIsVal):
     else:
         if isinstance(other, Value):
             return whenOneIsVal(other, self)
-        
+
     return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
+
 
 def boolCmpOp__val(self, other, op, evalFn):
     v = evalFn(bool(self.val), bool(other.val)) and (self.vldMask == other.vldMask == 1)
     return BooleanVal(v, BOOL,
-            self.vldMask & other.vldMask,
-            max(self.updateTime, other.updateTime))
-    
+                      self.vldMask & other.vldMask,
+                      max(self.updateTime, other.updateTime))
+
+
 def boolCmpOp(self, other, op, evalFn=None):
     other = toHVal(other)
     if evalFn is None:
         evalFn = op._evalFn
-    
+
     if areValues(self, other):
         return boolCmpOp__val(self, other, op, evalFn)
     else:
         return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
+
 
 def whenOneIsVal_and(val, other):
     if val.vldMask:
@@ -55,7 +61,7 @@ def whenOneIsVal_and(val, other):
             return v
     else:
         return val
-    
+
 
 def whenOneIsVal_or(val, other):
     if val.vldMask:
@@ -65,9 +71,10 @@ def whenOneIsVal_or(val, other):
             return other
     else:
         return val
-    
+
+
 class BooleanVal(EventCapableVal):
-    
+
     @classmethod
     def fromPy(cls, val, typeObj):
         """
@@ -83,11 +90,13 @@ class BooleanVal(EventCapableVal):
 
     def _eq__val(self, other):
         return boolCmpOp__val(self, other, AllOps.EQ, eq)
+
     def _eq(self, other):
         return boolCmpOp(self, other, AllOps.EQ, evalFn=eq)
 
     def _ne__val(self, other):
         return boolCmpOp__val(self, other, AllOps.NEQ, ne)
+
     def __ne__(self, other):
         return boolCmpOp(self, other, AllOps.NEQ)
 
@@ -95,6 +104,7 @@ class BooleanVal(EventCapableVal):
         v = self.clone()
         v.val = not v.val
         return v
+
     def __invert__(self):
         if isinstance(self, Value):
             return self._invert__val()
@@ -117,10 +127,11 @@ class BooleanVal(EventCapableVal):
             if not self.vldMask:
                 ifFalse.vldMask = 0
             return ifFalse
+
     def _ternary(self, ifTrue, ifFalse):
         ifTrue = toHVal(ifTrue)
         ifFalse = toHVal(ifFalse)
-        
+
         if isinstance(self, Value):
             return self._ternary__val(ifTrue, ifFalse)
         else:
@@ -129,17 +140,17 @@ class BooleanVal(EventCapableVal):
     # logic
     def _and__val(self, other):
         return boolLogOp__val(self, other, AllOps.AND_LOG, vldMaskForAnd)
+
     def __and__(self, other):
         return boolLogOp(self, other, AllOps.AND_LOG, vldMaskForAnd, whenOneIsVal_and)
 
     def _or__val(self, other):
         return boolLogOp__val(self, other, AllOps.OR_LOG, vldMaskForOr)
+
     def __or__(self, other):
         return boolLogOp(self, other, AllOps.OR_LOG, vldMaskForOr, whenOneIsVal_or)
-
 
     # for evaluating only, not convertible to hdl
     def __bool__(self):
         assert isinstance(self, Value)
         return bool(self.val and self.vldMask)
-    
