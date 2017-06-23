@@ -8,6 +8,8 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 defaultConversions = {int: INT,
                       str: STR,
                       bool: BOOL}
+
+
 def toHVal(op):
     """Convert python value object to object of hdl type value"""
     if isinstance(op, Value) or isinstance(op, SignalItem):
@@ -19,7 +21,8 @@ def toHVal(op):
             hType = defaultConversions[type(op)]
         except KeyError:
             hType = None
-        
+
         if hType is None:
             raise TypeError("%s" % (op.__class__))
-        return  hType.fromPy(op)
+
+        return hType.fromPy(op)
