@@ -16,12 +16,10 @@ def walkPhysInterfaces(intf):
         yield intf
 
 
-def forAllParams(intf, discovered=None):
-    if discovered is None:
-        discovered = set()
+def walkParams(intf, discovered):
 
     for si in intf._interfaces:
-        yield from forAllParams(si, discovered)
+        yield from walkParams(si, discovered)
 
     for p in intf._params:
         if p not in discovered:
