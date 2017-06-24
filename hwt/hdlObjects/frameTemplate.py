@@ -35,7 +35,7 @@ class FrameTemplate(object):
         self.parts = transactionParts
 
         self._fieldToTPart = None
-        
+
         for p in self.parts:
             p.parent = self
             assert p.startOfPart >= startBitAddr, (p, startBitAddr, self)
@@ -55,7 +55,7 @@ class FrameTemplate(object):
                                                       maxPaddingWords=maxPaddingWords,
                                                       trimPaddingWordsOnStart=trimPaddingWordsOnStart,
                                                       trimPaddingWordsOnEnd=trimPaddingWordsOnEnd))
-    
+
     @staticmethod
     def framesFromTransTmpl(transactionTmpl,
                             wordWidth,
@@ -248,7 +248,7 @@ class FrameTemplate(object):
                 fVal = data[f.name]
             except KeyError:
                 fVal = None
-            
+
             if isinstance(f.dtype, Bits):
                 if fVal is not None:
                     assert isinstance(fVal, int)
@@ -260,15 +260,15 @@ class FrameTemplate(object):
                 if fVal:
                     # assert isinstance(fVal, class_or_tuple)
                     res[f] = fVal
-        
+
         return res
-    
+
     def packData(self, data):
         """
         Pack data into list of BitsVal of specified dataWidth
-    
+
         :param data: dict of values for struct fields {fieldName: value}
-    
+
         :return: list of BitsVal which are representing values of words
         """
         typeOfWord = simBitsT(self.wordWidth, None)
@@ -286,17 +286,17 @@ class FrameTemplate(object):
                     val = fieldToVal.get(tPart.tmpl.origin, None)
                 else:
                     val = None
-    
+
                 if val is None:
                     newBits = 0
                     vld = 0
                 else:
                     newBits = selectBitRange(val, flow, fhigh - flow)
                     vld = mask(high - low) << low
-    
+
                 actualVal = setBitRange(actualVal, low, high - low, newBits)
                 actualVldMask = setBitRange(actualVal, low, high - low, vld)
-                    
+
             yield typeOfWord.getValueCls()(actualVal, typeOfWord, actualVldMask, -1)
 
     def __repr__getName(self, transactionPart, fieldWidth):

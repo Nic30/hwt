@@ -49,11 +49,23 @@ class Value():
     def __nonzero__(self):
         raise NotImplementedError()
 
-    def __bool__(self):
-        raise NotImplementedError()
+    def __int__(self):
+        if isinstance(self, Value) or self._const:
+            if self._isFullVld():
+                return self.val
+            else:
+                raise ValueError("Value of %r is not fully defined" % self)
 
-    def __int___(self):
-        raise NotImplementedError()
+        raise ValueError("Value of %r is not constant it can be statically solved" % self)
+
+    def __bool__(self):
+        if isinstance(self, Value) or self._const:
+            if self._isFullVld():
+                return bool(self.val)
+            else:
+                raise ValueError("Value of %r is not fully defined" % self)
+
+        raise ValueError("Value of %r is not constant it can be statically solved" % self)
 
     def __pos__(self):
         raise NotImplementedError()
@@ -120,7 +132,8 @@ class Value():
 
     def __eq__(self, other):
         if areValues(self, other):
-            return self._dtype == other._dtype and  bool(self._eq(other))
+            return self._dtype == other._dtype and \
+                self.vldMask == other.vldMask and self.val == other.val
         else:
             super().__eq__(other)
 

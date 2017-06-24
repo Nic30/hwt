@@ -19,7 +19,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     :ivar processCrossing: means that this signal is crossing process boundary
 
     :cvar __instCntr: counter used for generating instance ids
-    :ivar _instId: internaly used only for intuitive sorting of statements
+    :ivar _instId: internally used only for intuitive sorting of statements in serialized code
     """
     __instCntr = 0
 
@@ -56,6 +56,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
 
         self._nopVal = nopVal
         self._useNopVal = useNopVal
+        self._const = False
 
     @classmethod
     def _nextInstId(cls):

@@ -211,3 +211,15 @@ class RtlSignalOps():
             source.endpoints.append(a)
 
         return [a]
+
+    def __int__(self):
+        if not self._const:
+            raise TypeError("Int value of signal can be evaluated because it is not constant expression:", self)
+        else:
+            return int(self._val)
+
+    def __bool__(self):
+        if not self._const:
+            raise TypeError("Bool value of signal can be evaluated because it is not constant expression:", self)
+        else:
+            return bool(self._val)

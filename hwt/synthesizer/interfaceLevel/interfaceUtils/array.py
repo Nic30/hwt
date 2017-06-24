@@ -1,6 +1,5 @@
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
-from hwt.synthesizer.param import evalParam
 
 
 class InterfaceArray():
@@ -13,12 +12,12 @@ class InterfaceArray():
         self._arrayElemCache = None
 
     def __len__(self):
-        return evalParam(self._asArraySize).val
+        return int(self._asArraySize)
 
     def _initArrayItems(self):
         "instantiate my items into _arrayElemCache"
         self._arrayElemCache = []
-        wm = evalParam(self._widthMultiplier).val // evalParam(self._asArraySize).val
+        wm = int(self._widthMultiplier) // int(self._asArraySize)
         for index in range(len(self)):
             e = InterfaceProxy(self, index, index, None, wm)
             self._arrayElemCache.append(e)

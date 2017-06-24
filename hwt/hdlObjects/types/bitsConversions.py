@@ -1,11 +1,10 @@
-from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.hdlObjects.value import Value
-from hwt.hdlObjects.types.boolean import Boolean
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.defs import INT
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.bitmask import mask
+from hwt.hdlObjects.types.bits import Bits
+from hwt.hdlObjects.types.boolean import Boolean
+from hwt.hdlObjects.types.defs import INT
+from hwt.hdlObjects.types.hdlType import HdlType
+from hwt.hdlObjects.value import Value
 
 
 def convertBits__val(self, sigOrVal, toType):
@@ -15,11 +14,11 @@ def convertBits__val(self, sigOrVal, toType):
         if self.bit_length() == toType.bit_length():
             return sigOrVal._convSign(toType.signed)
     elif toType == INT:
-        if self.signed:
-            raise NotImplementedError()
-        else:
-            fullMask = mask(self.bit_length())
-            return INT.getValueCls()(sigOrVal.val, INT, sigOrVal.vldMask == fullMask, sigOrVal.updateTime)
+        return INT.getValueCls()(sigOrVal.val,
+                                 INT,
+                                 int(sigOrVal._isFullVld()),
+                                 sigOrVal.updateTime)
+
     return HdlType.defaultConvert(self, sigOrVal, toType)
 
 

@@ -4,7 +4,7 @@ from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BIT, BIT_N
 from hwt.interfaces.signalOps import SignalOps
 from hwt.synthesizer.interfaceLevel.interface import Interface
-from hwt.synthesizer.param import Param, evalParam
+from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -231,7 +231,7 @@ class BramPort_withoutClk(Interface):
         :return: how many bits is one unit of address (f.e. 8 bits for  char * pointer,
              36 for 36 bit bram)
         """
-        return evalParam(self.DATA_WIDTH).val
+        return int(self.DATA_WIDTH)
 
 
 class BramPort(BramPort_withoutClk):

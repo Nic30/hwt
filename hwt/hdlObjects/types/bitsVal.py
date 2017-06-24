@@ -73,6 +73,7 @@ class BitsVal(EventCapableVal):
 
     @classmethod
     def fromPy(cls, val, typeObj):
+        assert not isinstance(val, Value)
         allMask = typeObj.all_mask()
         w = typeObj.bit_length()
         if val is None:
@@ -368,12 +369,3 @@ class BitsVal(EventCapableVal):
             subResT = vecT(resT.bit_length(), self._dtype.signed)
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
             return o._convert(resT)
-
-    def __int__(self):
-        if isinstance(self, Value):
-            if self._isFullVld():
-                return self.val
-            else:
-                return None
-
-        raise NotImplementedError()

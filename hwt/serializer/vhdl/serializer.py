@@ -370,8 +370,12 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             extraVarsSerialized.append(serializedS)
             return s
 
-        hasToBeVhdlProcess = extraVars or arr_any(body, lambda x: isinstance(x,
-                                        (IfContainer, SwitchContainer, WhileContainer, WaitStm)))
+        hasToBeVhdlProcess = extraVars or arr_any(body,
+                                                  lambda x: isinstance(x,
+                                                                       (IfContainer,
+                                                                        SwitchContainer,
+                                                                        WhileContainer,
+                                                                        WaitStm)))
 
         sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, None), proc.sensitivityList))
 
@@ -379,7 +383,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             sIndent = indent + 1
         else:
             sIndent = indent
-            
+
         statemets = [cls.asHdl(s, createTmpVarFn, indent=sIndent) for s in body]
 
         if hasToBeVhdlProcess:

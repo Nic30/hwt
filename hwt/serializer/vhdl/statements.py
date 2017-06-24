@@ -49,11 +49,13 @@ def ternaryOpsToIf(statements):
 class VhdlSerializer_statements():
 
     @classmethod
-    def WaitStm(cls, w, createTmpVarFn):
+    def WaitStm(cls, w, createTmpVarFn, indent=0):
+        indent_str = getIndent(indent)
+
         if w.isTimeWait:
-            return "wait for %d ns" % w.waitForWhat
+            return "%swait for %d ns" % (indent_str, w.waitForWhat)
         elif w.waitForWhat is None:
-            return "wait"
+            return "%swait" % indent_str
         else:
             raise NotImplementedError()
 
@@ -79,7 +81,7 @@ class VhdlSerializer_statements():
                     i = i.clone()
                     i.val = (i.val[0] + 1, i.val[1])
                 dst = dst[i]
-        
+
         indent_str = getIndent(indent)
         dstStr = asHdl(dst)
         if dst._dtype == a.src._dtype:

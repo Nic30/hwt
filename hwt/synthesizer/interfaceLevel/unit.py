@@ -1,6 +1,6 @@
 from hwt.serializer.constants import SERI_MODE
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import forAllParams
+from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers
@@ -59,8 +59,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         yield from self._lazyLoaded
 
         if self._checkIntferfaces and not self._externInterf:
-            raise Exception("Can not find any external interface for unit " + self._name + 
-                            "- there is no such a thing as unit without interfaces")
+            raise Exception(("Can not find any external interface for unit %s"
+                             "- there is no such a thing as unit without interfaces") % self._name)
 
         yield from self._synthetiseContext(self._externInterf)
         self._checkArchCompInstances()
@@ -140,8 +140,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             p.name = n.upper()
             n = n.lower()
             if n in globalNames:
-                raise IntfLvlConfErr("Redefinition of generic '%s' while synthesis old:%s, new:%s" % 
-                                     (n, repr(globalNames[n]), repr(p)))
+                raise IntfLvlConfErr("Redefinition of generic '%s' while synthesis old:%r, new:%r" % 
+                                     (n, globalNames[n], p))
             globalNames[n] = p
 
         def nameForNestedParam(p):
@@ -162,7 +162,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             addP(p.name, p)
 
         for intf in self._interfaces:
-            for p in forAllParams(intf, discoveredParams):
+            for p in walkParams(intf, discoveredParams):
                 n = nameForNestedParam(p)
                 addP(n, p)
 

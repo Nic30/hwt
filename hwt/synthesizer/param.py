@@ -20,6 +20,7 @@ class Param(RtlSignal):
         self.__isReadOnly = False
         # unit: (ctx, name)
         self._scopes = {}
+        self._const = True
 
     def _registerScope(self, name, unit):
         self._scopes[unit] = (unit._cntx, name)
@@ -32,8 +33,8 @@ class Param(RtlSignal):
 
     def get(self):
         if self.replacedWith is not None:
-            raise Exception("Trying to read param '%s' which is already replaced by '%s'" % 
-                            (str(self), str(self.replacedWith)))
+            raise Exception("Trying to read param '%r' which is already replaced by '%r'" %
+                            (self, self.replacedWith))
         return self._val
 
     def set(self, val):
@@ -59,7 +60,7 @@ class Param(RtlSignal):
         except AttributeError:
             name = ""
 
-        return "<%s, name=%s, val=%s>" % (self.__class__.__name__, name, str(val))
+        return "<%s, name=%s, val=%r>" % (self.__class__.__name__, name, val)
 
     def __bool__(self):
         v = evalParam(self)

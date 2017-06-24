@@ -1,7 +1,5 @@
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import INT, BOOL, STR, BIT
-from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.synthesizer.param import evalParam
 
 
 # create hdl integer value (for example integer value in vhdl)
@@ -17,17 +15,6 @@ hStr = lambda val: STR.fromPy(val)
 hBit = lambda val: BIT.fromPy(val)
 
 
-def mkRange(width):
-    """
-    Make hdl range (for example 1 downto 0 in vhdl)
-
-    :return: (width -1, 0)
-    """
-    to = toHVal(width)
-    to = to - 1
-    return to._downto(0)
-
-
 def vecT(width, signed=None):
     """Make vector type with specified width for example
        std_logic_vector(width-1 downto 0) in vhdl
@@ -37,5 +24,5 @@ def vecT(width, signed=None):
 
 def vec(val, width, signed=None):
     """create hdl vector value"""
-    assert val < evalParam(hInt(2)._pow(width)).val
+    assert val < (2 ** int(width))
     return vecT(width, signed).fromPy(val)

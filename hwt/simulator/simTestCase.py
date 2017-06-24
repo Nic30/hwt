@@ -59,7 +59,6 @@ class SimTestCase(unittest.TestCase):
         if d:
             os.makedirs(d, exist_ok=True)
         with open(outputFileName, 'w') as outputFile:
-            # return _simUnitVcd(simModel, stimulFunctions, outputFile=f, time=time)
             sim = HdlSimulator()
 
             # configure simulator to log in vcd
@@ -69,27 +68,34 @@ class SimTestCase(unittest.TestCase):
             sim.simUnit(self.model, time=time, extraProcesses=self.procs)
             return sim
 
+    def __serializeTestbenchDump(self, time, file):
+        sim = HdlSimulator()
+
+        # configure simulator to log in vcd
+        sim.config = HdlSimConfigVhdlTestbench(self.u)
+
+        # run simulation, stimul processes are register after initial initialization
+        sim.simUnit(self.model, time=time, extraProcesses=self.procs)
+
+        sim.config.dump(file)
+
+        return sim
+
     def dumpHdlTestbench(self, time, file=None):
-        if file:
+        if file is not None:
             outputFileName = file
         else:
             outputFileName = "tmp/" + self.getTestName() + "_tb.vhd"
-        d = os.path.dirname(outputFileName)
-        if d:
-            os.makedirs(d, exist_ok=True)
-        with open(outputFileName, 'w') as outputFile:
-            # return _simUnitVcd(simModel, stimulFunctions, outputFile=f, time=time)
-            sim = HdlSimulator()
 
-            # configure simulator to log in vcd
-            sim.config = HdlSimConfigVhdlTestbench(self.u)
+        if isinstance(file, str):
+            d = os.path.dirname(outputFileName)
+            if d:
+                os.makedirs(d, exist_ok=True)
+            with open(outputFileName, 'w') as outputFile:
+                return self.__serializeTestbenchDump(time, outputFile)
 
-            # run simulation, stimul processes are register after initial initialization
-            sim.simUnit(self.model, time=time, extraProcesses=self.procs)
-
-            sim.config.dump(outputFile)
-
-            return sim
+        else:
+            return self.__serializeTestbenchDump(time, file)
 
     def assertValEqual(self, first, second, msg=None):
         if isinstance(first, SimSignal):
@@ -148,7 +154,7 @@ class SimTestCase(unittest.TestCase):
                 return
 
             differing = '%ss differ: %s != %s\n' % (
-                    (seq_type_name.capitalize(),) +
+                    (seq_type_name.capitalize(),) + 
                     _common_shorten_repr(seq1, seq2))
 
             for i in range(min(len1, len2)):
@@ -180,7 +186,7 @@ class SimTestCase(unittest.TestCase):
                 differing += ('\nFirst %s contains %d additional '
                               'elements.\n' % (seq_type_name, len1 - len2))
                 try:
-                    differing += ('First extra element %d:\n%s\n' %
+                    differing += ('First extra element %d:\n%s\n' % 
                                   (len2, safe_repr(seq1[len2])))
                 except (TypeError, IndexError, NotImplementedError):
                     differing += ('Unable to index element %d '
@@ -189,7 +195,7 @@ class SimTestCase(unittest.TestCase):
                 differing += ('\nSecond %s contains %d additional '
                               'elements.\n' % (seq_type_name, len2 - len1))
                 try:
-                    differing += ('First extra element %d:\n%s\n' %
+                    differing += ('First extra element %d:\n%s\n' % 
                                   (len1, safe_repr(seq2[len1])))
                 except (TypeError, IndexError, NotImplementedError):
                     differing += ('Unable to index element %d '

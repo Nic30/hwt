@@ -1,5 +1,3 @@
-from hwt.synthesizer.param import Param, getParam
-
 
 class NotSpecified(Exception):
     """
@@ -10,13 +8,6 @@ class NotSpecified(Exception):
     pass
 
 
-def sameIntfAs(intf):
-    _intf = intf.__class__()
-    for p in intf._params:
-        _intf._replaceParam(p._name, Param(getParam(p)))
-    return _intf
-
-
 def walkPhysInterfaces(intf):
     if intf._interfaces:
         for si in intf._interfaces:
@@ -25,12 +16,10 @@ def walkPhysInterfaces(intf):
         yield intf
 
 
-def forAllParams(intf, discovered=None):
-    if discovered is None:
-        discovered = set()
+def walkParams(intf, discovered):
 
     for si in intf._interfaces:
-        yield from forAllParams(si, discovered)
+        yield from walkParams(si, discovered)
 
     for p in intf._params:
         if p not in discovered:

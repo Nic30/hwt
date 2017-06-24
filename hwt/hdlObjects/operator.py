@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 from hwt.hdlObjects.value import Value
+from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
 
 
@@ -13,6 +14,10 @@ def getCtxFromOps(ops):
         if isinstance(o, RtlSignalBase):
             return o.ctx
     raise TypeError("Can not find context because there is no signal in ops")
+
+
+def isConst(item):
+    return isinstance(item, Value) or item._const
 
 
 class Operator():
@@ -72,11 +77,13 @@ class Operator():
         """
         op = Operator(opDef, operands)
         out = RtlSignal(getCtxFromOps(operands), None, resT)
+        out._const = arr_all(op.ops, isConst)
         out.drivers.append(op)
         out.origin = op
         op.result = out
         op.registerSignals(outputs)
-
+        if out._const:
+            out.staticEval()
         return out
 
     def __deepcopy__(self, memo=None):
