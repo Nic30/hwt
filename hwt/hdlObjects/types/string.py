@@ -6,11 +6,6 @@ class String(HdlType):
         super().__init__()
         self.name = "STRING"
 
-    @classmethod
-    def getConvertor(cls):
-        from hwt.hdlObjects.types.stringConversions import convertString
-        return convertString
-
     def all_mask(self):
         return 1
 
