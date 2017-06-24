@@ -1,5 +1,4 @@
 from datetime import datetime
-from pprint import pprint
 import sys
 
 from hwt.hdlObjects.types.bits import Bits
@@ -17,18 +16,6 @@ class VcdHdlSimConfig(HdlSimConfig):
         self.logPropagation = False
         self.logApplyingValues = False
 
-        # unit :  signal | unit
-        # signal : None
-        self.registered = {}
-
-    def logApplyingValues(self, simulator, values):
-        pprint((simulator.now, values))
-
-    def logPropagation(self, simulator, signal, process):
-        print("%d: Signal.simPropagateChanges %s -> %s"
-              % (simulator.now, signal.name, str(process.name))
-              )
-
     def vcdRegisterUnit(self, unit):
         with self.vcdWritter.module(unit._name) as m:
             for se in unit._cntx.signals:
@@ -37,9 +24,6 @@ class VcdHdlSimConfig(HdlSimConfig):
 
             for u in unit._units:
                 self.vcdRegisterUnit(u)
-
-    def _registerSignal(self, sig):
-        self.registered[sig] = None
 
     def beforeSim(self, simulator, synthesisedUnit):
         """
