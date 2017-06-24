@@ -46,7 +46,8 @@ class HdlSimulator(HdlEnvironmentCore):
         first, process then will be waken after reaction of HW in this time:
         agents are greatly simplified, they just need to yield simulator.updateComplete
         before first read and then the can not write in this time
-    
+
+    :ivar now: actual simulation time
     :ivar updateComplete: this event is triggered when there are not any values to apply in this time
     :ivar valuesToApply: is container to for quantum of values which should be applied in single time
     :ivar env: simply environment
