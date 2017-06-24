@@ -30,7 +30,8 @@ if "{{c.name}}" not in locals(): # support for all models in single file
 class {{ name }}(SimModel):
     _name = "{{ name }}" 
     _cntx = RtlNetlist(){% for t in extraTypes %} 
-    {{t}}{% endfor %}
+    {{t}}{% endfor %}{% for c in constants %}
+    {{c[0]}} = {{c[1]}}{% endfor %}
     
     # ports{% for name, dtype in ports %}
     {{name}} = SimSignal(_cntx, "{{name}}", {{dtype}}){% endfor %}

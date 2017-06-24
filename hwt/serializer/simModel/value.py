@@ -1,13 +1,11 @@
 from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.boolean import Boolean
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.integer import Integer
-from hwt.hdlObjects.types.string import String
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdlObjects.types.slice import Slice
-from hwt.synthesizer.param import Param, evalParam
 from hwt.hdlObjects.variables import SignalItem
+from hwt.synthesizer.param import Param, evalParam
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class SimModelSerializer_value():
@@ -18,16 +16,16 @@ class SimModelSerializer_value():
             val.val, dtype.bit_length(), dtype.signed, val.vldMask)
 
     @classmethod
-    def SignalItem(cls, si, declaration=False):
+    def SignalItem(cls, si, constStore, declaration=False):
         if declaration:
             raise NotImplementedError()
         else:
             if isinstance(si, Param):
-                return cls.Value(evalParam(si))
+                return cls.Value(evalParam(si), constStore)
             if isinstance(si, SignalItem) and si._const:
-                return cls.Value(si._val)
+                return cls.Value(si._val, constStore)
             if si.hidden and hasattr(si, "origin"):
-                return cls.asHdl(si.origin)
+                return cls.asHdl(si.origin, constStore)
             else:
                 return "self.%s._oldVal" % si.name
 
@@ -40,7 +38,11 @@ class SimModelSerializer_value():
 
     @classmethod
     def Array_valAsVhdl(cls, t, val):
-        return "ArrayVal([%s], %s, %d)" % (",\n".join(map(cls.Value, val.val)), cls.HdlType(t), val.vldMask)
+        return "ArrayVal([%s], %s, %d)" % (
+                ",\n".join(map(lambda v: cls.Value(v, None),
+                               val.val)),
+                cls.HdlType(t),
+                val.vldMask)
 
     @classmethod
     def Slice_valAsVhdl(cls, t, val):
@@ -54,29 +56,30 @@ class SimModelSerializer_value():
         return "self.%s.%s" % (t.name, val.val)
 
     @classmethod
-    def Value(cls, val):
+    def Value(cls, val, constStore):
         """
         :param dst: is signal connected with value
         :param val: value object, can be instance of Signal or Value
         """
+
         t = val._dtype
 
         if isinstance(val, RtlSignalBase):
-            return cls.SignalItem(val)
+            return cls.SignalItem(val, constStore)
+        elif isinstance(t, Enum):
+            return cls.Enum_valAsVhdl(t, val)
+
+        elif constStore is not None:
+            return "self." + constStore.getConstName(val)
+
         elif isinstance(t, Slice):
             return cls.Slice_valAsVhdl(t, val)
         elif isinstance(t, Array):
             return cls.Array_valAsVhdl(t, val)
         elif isinstance(t, Bits):
             return cls.Bits_valAsVhdl(t, val)
-        elif isinstance(t, Boolean):
-            return cls.Bool_valAsVhdl(t, val)
-        elif isinstance(t, Enum):
-            return cls.Enum_valAsVhdl(t, val)
         elif isinstance(t, Integer):
             return cls.Integer_valAsVhdl(t, val)
-        elif isinstance(t, String):
-            return cls.String_valAsVhdl(t, val)
         else:
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (
                                 repr(val)))

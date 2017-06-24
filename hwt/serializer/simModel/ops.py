@@ -1,5 +1,6 @@
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdlObjects.operatorDefs import AllOps
+from hwt.hdlObjects.typeShortcuts import hBit
 
 opPrecedence = {AllOps.NOT: 4,
                 AllOps.EVENT: 1,
@@ -25,14 +26,15 @@ opPrecedence = {AllOps.NOT: 4,
 
 class SimModelSerializer_ops():
     @classmethod
-    def BitToBool(cls, cast):
+    def BitToBool(cls, cast, constStore):
         v = 0 if cast.sig._dtype.negated else 1
-        return cls.asHdl(cast.sig) + "._eq__val(hBit(%d))" % v
+        c = constStore.getConstName(hBit(v))
+        return cls.asHdl(cast.sig, constStore) + "._eq__val(self.%s)" % c
 
     @classmethod
-    def Operator(cls, op):
+    def Operator(cls, op, constStore):
         def p(operand):
-            s = cls.asHdl(operand)
+            s = cls.asHdl(operand, constStore)
             if isinstance(operand, RtlSignalBase):
                 try:
                     o = operand.singleDriver()
@@ -78,7 +80,7 @@ class SimModelSerializer_ops():
             return _bin('_le__val')
         elif o == AllOps.INDEX:
             assert len(ops) == 2
-            return "(%s)._getitem__val(%s)" % ((cls.asHdl(ops[0])).strip(), p(ops[1]))
+            return "(%s)._getitem__val(%s)" % ((cls.asHdl(ops[0], constStore)).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('_lt__val')
         elif o == AllOps.SUB:
@@ -90,7 +92,7 @@ class SimModelSerializer_ops():
         elif o == AllOps.ADD:
             return _bin('_add__val')
         elif o == AllOps.TERNARY:
-            return "(%s)._ternary__val(%s, %s)" % tuple(map(cls.asHdl, ops))
+            return "(%s)._ternary__val(%s, %s)" % tuple(map(lambda x: cls.asHdl(x, constStore), ops))
         elif o == AllOps.RISING_EDGE:
             assert len(ops) == 1
             return "(%s)._onRisingEdge__val(sim.now)" % (p(ops[0]))
@@ -109,12 +111,13 @@ class SimModelSerializer_ops():
         elif o == AllOps.BitsToInt:
             assert len(ops) == 1
             op = ops[0]
-            return "convertSimBits__val(%s, %s, SIM_INT)" % (cls.HdlType_bits(op._dtype), cls.asHdl(op))
+            return "convertSimBits__val(%s, %s, SIM_INT)" % (cls.HdlType_bits(op._dtype),
+                                                             cls.asHdl(op, constStore))
         elif o == AllOps.IntToBits:
             assert len(ops) == 1
             resT = op.result._dtype
             return "convertSimInteger__val(%s, %s, %s)" % (cls.HdlType(ops[0]._dtype),
-                                                           cls.asHdl(ops[0]),
+                                                           cls.asHdl(ops[0], constStore),
                                                            cls.HdlType_bits(resT))
 
         elif o == AllOps.POW:
