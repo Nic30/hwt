@@ -58,10 +58,9 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
     supported_type_classes = (Boolean, Bits, Enum)
 
     def __init__(self, top):
-        super().__init__()
-        self.logPropagation = False
-        self.logApplyingValues = False
         self.top = top
+        self.logPropagation = None
+        self.logApplyingValues = None
 
         # unit :  signal | unit
         # signal : None
