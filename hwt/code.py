@@ -475,6 +475,7 @@ def iterBits(sigOrVal, bitsInOne=1, skipPadding=True):
                     yield Concat(actual, f[takeFromThis:])
                     actual = f[:takeFromThis]
                     actualOffset = takeFromThis
+                    actuallyHave -= bitsInOne
                 else:
                     # concat to actual because it is not enough
                     actual = Concat(f, actual)
