@@ -261,15 +261,15 @@ class BitsVal(EventCapableVal):
             if startIsVal:
                 _start = int(start)
                 if _start < 0 or _start > l:
-                    raise IndexError()
+                    raise IndexError(_start, l)
 
             if stopIsVal:
                 _stop = int(stop)
                 if _stop < 0 or _stop > l:
-                    raise IndexError()
+                    raise IndexError(_stop, l)
             
             if startIsVal and stopIsVal and _start - _stop <= 0:
-                raise IndexError()
+                raise IndexError(_start, _stop)
             
             if iamVal:
                 return self._getitem__val(key)
