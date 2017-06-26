@@ -10,11 +10,13 @@ from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.pyUtils.arrayQuery import arr_any, flatten
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from hwt.synthesizer.vectorUtils import fitTo
 from hwt.synthesizer.andReducedContainer import AndReducedContainer
+from hwt.hdlObjects.types.struct import HStruct
+from hwt.hdlObjects.types.structUtils import walkFlattenFields
+from hwt.hdlObjects.types.array import Array
 
 
 def _intfToSig(obj):
@@ -445,13 +447,54 @@ Xor = _mkOp(xor)
 Concat = _mkOp(concatFn)
 
 
-def iterBits(sig):
+def iterBits(sigOrVal, bitsInOne=1, skipPadding=True):
     """
     Iterate over bits in vector
+    
+    :param sig: signal or value to iterate over
+    :param bitsInOne: number of bits in one part
+    :param skipPadding: if true padding is skipped in dense types
     """
-    l = sig._dtype.bit_length()
-    for bit in range(l):
-        yield sig[bit]
+    t = sigOrVal._dtype
+    if isinstance(t, (HStruct, Array)):
+        actual = None
+        actualOffset = 0
+        
+        for f in walkFlattenFields(sigOrVal, skipPadding=skipPadding):
+            thisFieldLen = f._dtype.bit_length()
+
+            if actual is None:
+                actual = f
+                actuallyHave = thisFieldLen
+            else:
+                bitsInActual = actual._dtype.bit_length() - actualOffset
+                actuallyHave = bitsInActual + thisFieldLen
+                if actuallyHave > bitsInOne:
+                    # consume what was remained in actual
+                    takeFromThis = bitsInOne - bitsInActual
+                    yield Concat(actual, f[takeFromThis:])
+                    actual = f[:takeFromThis]
+                    actualOffset = takeFromThis
+                else:
+                    # concat to actual because it is not enough
+                    actual = Concat(f, actual)
+                  
+              
+            while actuallyHave >= bitsInOne:
+                yield actual[(actualOffset + bitsInOne):actualOffset]
+                # update slice out what was taken           
+                actuallyHave -= bitsInOne
+                actualOffset += bitsInOne
+            
+            if actuallyHave == 0:
+                actual = None
+                actualOffset = 0
+        
+        assert actual is None, "Width of object has to be divisible by bitsInOne"
+    else:
+        l = sigOrVal._dtype.bit_length()
+        for bit in range(l):
+            yield sigOrVal[bit]
 
 
 def splitOnParts(sig, numberOfParts):
