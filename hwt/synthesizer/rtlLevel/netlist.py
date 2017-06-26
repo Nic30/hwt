@@ -213,6 +213,12 @@ class RtlNetlist():
             ent.ports.append(pi)
 
         removeUnconnectedSignals(self)
+        
+        # check if all signals are driver by something
+        _interfaces = set(interfaces)
+        for sig in self.signals:
+            if not sig.drivers and sig not in _interfaces:
+                assert sig.defaultVal._isFullVld(), (sig, "Signal without any driver or value")
 
         arch = Architecture(ent)
         for p in self.buildProcessesOutOfAssignments():
