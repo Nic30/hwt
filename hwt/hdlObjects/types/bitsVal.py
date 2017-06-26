@@ -81,13 +81,16 @@ class BitsVal(EventCapableVal):
             vld = 0
             val = 0
         else:
-            try:
-                val = int(val)
-            except TypeError as e:
-                if isinstance(val, enum.Enum):
-                    val = int(val.value)
-                else:
-                    raise e
+            if isinstance(val, bytes):
+                val = int.from_bytes(val, byteorder="little", signed=bool(typeObj.signed))
+            else:
+                try:
+                    val = int(val)
+                except TypeError as e:
+                    if isinstance(val, enum.Enum):
+                        val = int(val.value)
+                    else:
+                        raise e
 
             vld = allMask
 
@@ -158,7 +161,7 @@ class BitsVal(EventCapableVal):
             if keyVld:
                 val = selectBit(self.val, key.val)
                 vld = selectBit(self.vldMask, key.val)
-            return BitsVal(val, BIT, vld, updateTime=updateTime)
+            return self.__class__(val, BIT, vld, updateTime=updateTime)
         elif key._dtype == SLICE:
             if keyVld:
                 firstBitNo = key.val[1].val
@@ -166,7 +169,7 @@ class BitsVal(EventCapableVal):
                 val = selectBitRange(self.val, firstBitNo, size)
                 vld = selectBitRange(self.vldMask, firstBitNo, size)
             retT = vecT(size, signed=self._dtype.signed)
-            return BitsVal(val, retT, vld, updateTime=updateTime)
+            return self.__class__(val, retT, vld, updateTime=updateTime)
         else:
             raise TypeError(key)
 
@@ -189,27 +192,30 @@ class BitsVal(EventCapableVal):
                 stop = key.stop
 
                 if key.start is None:
-                    start = st.width
+                    start = INT.fromPy(l)
                 else:
                     start = toHVal(key.start)
 
                 if key.stop is None:
-                    stop = 0
+                    stop = INT.fromPy(0)
                 else:
                     stop = toHVal(key.stop)
+
+            
             else:
                 start = key.val[0]
                 stop = key.val[1]
+
             indexesAreValues = isinstance(start, Value) and isinstance(stop, Value)
             if indexesAreValues and start.val == l and stop.val == 0:
                 # selecting all bits no conversion needed
                 return self
-
+            
             if iamVal and indexesAreValues:
-                raise NotImplementedError("[TODO] bit select on value")
+                key = Slice.getValueCls()([start, stop], SLICE, 1, max(start.updateTime, stop.updateTime))
+                return self._getitem__val(key)
             else:
-                if isinstance(start, int):
-                    start = INT.fromPy(start)
+
                 key = (start - INT.fromPy(1))._downto(stop)
                 _resWidth = start - stop
                 resT = Bits(width=_resWidth, forceVector=True, signed=st.signed)
