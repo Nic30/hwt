@@ -1,4 +1,5 @@
 from copy import copy
+import enum
 from operator import eq, ne, lt, gt, ge, le
 
 from hwt.bitmask import mask, selectBit, selectBitRange, bitSetTo, \
@@ -80,7 +81,14 @@ class BitsVal(EventCapableVal):
             vld = 0
             val = 0
         else:
-            val = int(val)
+            try:
+                val = int(val)
+            except TypeError as e:
+                if isinstance(val, enum.Enum):
+                    val = int(val.value)
+                else:
+                    raise e
+
             vld = allMask
 
         if val < 0:
