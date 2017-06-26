@@ -67,7 +67,10 @@ class HStruct(HdlType):
                 for f in self._dtype.fields:
                     if f.name is None:
                         continue
-                    v = val.get(f.name, None)
+                    if val is None:
+                        v = None
+                    else:
+                        v = val.get(f.name, None)
                     if not isinstance(v, Value):
                         v = f.dtype.fromPy(v)
                     setattr(self, f.name, v)
@@ -76,6 +79,9 @@ class HStruct(HdlType):
             def fromPy(cls, val, typeObj):
                 self = cls(val, typeObj)
                 return self
+
+            def __pow__(self, other):
+                raise NotImplementedError("[TODO]")
 
             def __repr__(self):
                 buff = ["{"]
