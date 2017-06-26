@@ -40,9 +40,13 @@ class ArrayVal(Value):
         """
         v = self.val[key.val].clone()
         if not key._isFullVld():
+            v.val = 0
             v.vldMask = 0
 
         return v
+
+    def _isFullVld(self):
+        return self.vldMask == 1
 
     def __getitem__(self, key):
         iamVal = isinstance(self, Value)
