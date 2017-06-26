@@ -3,10 +3,10 @@ from copy import copy
 from hwt.hdlObjects.constants import INTF_DIRECTION, DIRECTION
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BIT
+from hwt.hdlObjects.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
-from hwt.hdlObjects.types.struct import HStruct
 
 
 def getClk(unit):
@@ -60,6 +60,8 @@ class UnitImplHelpers(object):
         s = self._cntx.sig
 
         if isinstance(dtype, HStruct):
+            if defVal is not None:
+                raise NotImplementedError()
             container = dtype.fromPy(None)
             for f in dtype.fields:
                 if f.name is not None:
