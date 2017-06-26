@@ -16,5 +16,9 @@ class UniqList(list):
             list.append(self, item)
             return True
 
+    def remove(self, item):
+        self.__s.remove(item)
+        return list.remove(self, item)
+
     def __contains__(self, key):
         return key in self.__s
