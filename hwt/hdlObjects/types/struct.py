@@ -71,14 +71,15 @@ class HStruct(HdlType):
                         v = None
                     else:
                         v = val.get(f.name, None)
+
                     if not isinstance(v, Value):
                         v = f.dtype.fromPy(v)
+
                     setattr(self, f.name, v)
 
             @classmethod
             def fromPy(cls, val, typeObj):
-                self = cls(val, typeObj)
-                return self
+                return cls(val, typeObj)
 
             def __pow__(self, other):
                 raise NotImplementedError("[TODO]")
