@@ -450,7 +450,7 @@ Concat = _mkOp(concatFn)
 def iterBits(sigOrVal, bitsInOne=1, skipPadding=True):
     """
     Iterate over bits in vector
-    
+
     :param sig: signal or value to iterate over
     :param bitsInOne: number of bits in one part
     :param skipPadding: if true padding is skipped in dense types
@@ -459,7 +459,7 @@ def iterBits(sigOrVal, bitsInOne=1, skipPadding=True):
     if isinstance(t, (HStruct, Array)):
         actual = None
         actualOffset = 0
-        
+
         for f in walkFlattenFields(sigOrVal, skipPadding=skipPadding):
             thisFieldLen = f._dtype.bit_length()
 
@@ -469,28 +469,30 @@ def iterBits(sigOrVal, bitsInOne=1, skipPadding=True):
             else:
                 bitsInActual = actual._dtype.bit_length() - actualOffset
                 actuallyHave = bitsInActual + thisFieldLen
-                if actuallyHave > bitsInOne:
+                if actuallyHave >= bitsInOne:
                     # consume what was remained in actual
                     takeFromThis = bitsInOne - bitsInActual
                     yield Concat(actual, f[takeFromThis:])
-                    actual = f[:takeFromThis]
                     actualOffset = takeFromThis
                     actuallyHave -= bitsInOne
+                    if actuallyHave > 0:
+                        actual = f
+                    else:
+                        actual = None
                 else:
                     # concat to actual because it is not enough
                     actual = Concat(f, actual)
-                  
-              
+
             while actuallyHave >= bitsInOne:
                 yield actual[(actualOffset + bitsInOne):actualOffset]
-                # update slice out what was taken           
+                # update slice out what was taken
                 actuallyHave -= bitsInOne
                 actualOffset += bitsInOne
-            
+
             if actuallyHave == 0:
                 actual = None
                 actualOffset = 0
-        
+
         assert actual is None, "Width of object has to be divisible by bitsInOne"
     else:
         l = sigOrVal._dtype.bit_length()
