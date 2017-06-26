@@ -69,7 +69,12 @@ class Bits(HdlType):
         else:
             constr = VhdlSerializer.asHdl(self.width, onlyPrintDefaultValues) + \
                      (", %dbits" % self.bit_length())
-
+        
+        if self.signed:
+            constr += ", signed"
+        elif self.signed is False:
+            constr += ", unsigned"
+        
         return "%s<HdlType %s, %s>" % (getIndent(indent),
                                        self.__class__.__name__,
                                        constr)
