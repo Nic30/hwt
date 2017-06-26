@@ -12,4 +12,4 @@ class SliceVal(ArrayVal):
 
     def _size(self):
         assert isinstance(self, Value)
-        return self.val[0].val - self.val[1].val + 1
+        return self.val[0].val - self.val[1].val

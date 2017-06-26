@@ -79,7 +79,9 @@ class VhdlSerializer_ops():
         elif o == AllOps.DIV:
             return _bin('/')
         elif o == AllOps.DOWNTO:
-            return _bin('DOWNTO')
+            return _bin('-1 DOWNTO')
+        elif o == AllOps.TO:
+            return _bin('-1 TO')
         elif o == AllOps.EQ:
             return _bin('=')
         elif o == AllOps.EVENT:

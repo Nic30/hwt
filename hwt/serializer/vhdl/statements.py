@@ -79,7 +79,7 @@ class VhdlSerializer_statements():
             for i in a.indexes:
                 if isinstance(i, SliceVal):
                     i = i.clone()
-                    i.val = (i.val[0] + 1, i.val[1])
+                    i.val = (i.val[0], i.val[1])
                 dst = dst[i]
 
         indent_str = getIndent(indent)

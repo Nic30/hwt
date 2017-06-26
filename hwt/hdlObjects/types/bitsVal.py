@@ -47,6 +47,12 @@ class BitsVal(EventCapableVal):
         return v
 
     def _convSign(self, signed):
+        """
+        Convert signum, no bit manipulation just data are represented differently
+        
+        :param signed: if True value will be signed, if False value will be unsigned,
+            if None value will be vector without any sign specification 
+        """
         if isinstance(self, Value):
             return self._convSign__val(signed)
         else:
@@ -74,6 +80,9 @@ class BitsVal(EventCapableVal):
 
     @classmethod
     def fromPy(cls, val, typeObj):
+        """
+        Construct value from pythonic value (int, bytes, enum.Enum member) 
+        """
         assert not isinstance(val, Value)
         allMask = typeObj.all_mask()
         w = typeObj.bit_length()
@@ -122,6 +131,9 @@ class BitsVal(EventCapableVal):
         return v
 
     def _concat(self, other):
+        """
+        Concatenate this with other to one wider value/signal
+        """
         w = self._dtype.bit_length()
         other_w = other._dtype.bit_length()
         resWidth = w + other_w
@@ -157,6 +169,8 @@ class BitsVal(EventCapableVal):
         val = 0
         vld = 0
 
+        # using self.__class__ because in simulator this method is called for SimBits and we
+        # do not want to work with Bits in sim
         if isinstance(key._dtype, Integer):
             if keyVld:
                 val = selectBit(self.val, key.val)
@@ -168,61 +182,110 @@ class BitsVal(EventCapableVal):
                 size = key._size()
                 val = selectBitRange(self.val, firstBitNo, size)
                 vld = selectBitRange(self.vldMask, firstBitNo, size)
-            retT = vecT(size, signed=self._dtype.signed)
+            retT = self._dtype.__class__(size, signed=self._dtype.signed)
             return self.__class__(val, retT, vld, updateTime=updateTime)
         else:
             raise TypeError(key)
 
     def __getitem__(self, key):
+        """
+        [] operator
+        
+        :attention: Table below is for litle endian bit order (MSB:LSB) which is default.
+            This is **reversed** as it is in pure python where it is [0, len(self)].
+  
+        :attention: slice on slice f signal is automatically reduced to single slice
+
+        +-----------------------------+----------------------------------------------------------------------------------+
+        | a[up:low]                   | items low through up; a[16:8] selects upper byte from 16b vector a               |
+        +-----------------------------+----------------------------------------------------------------------------------+
+        | a[up:]                      | low is automatically substituted with 0; a[8:] will select lower 8 bits          |
+        +-----------------------------+----------------------------------------------------------------------------------+
+        | a[:end]                     | up is automatically substituted; a[:8] will select upper byte from 16b vector a  |
+        +-----------------------------+----------------------------------------------------------------------------------+
+        | a[:], a[-1], a[-2:], a[:-2] | raises NotImplementedError   (not implemented due to complicated support in hdl) |
+        +-----------+----------------------------------------------------------------------------------------------------+
+        """
         iamVal = isinstance(self, Value)
         st = self._dtype
         l = st.bit_length()
-        if l == 1:
-            assert st.forceVector  # assert not indexing on single bit
+        if l == 1 and not st.forceVector:
+            # assert not indexing on single bit
+            raise TypeError()
 
-        isSlice = isinstance(key, slice)
-        isSLICE = isinstance(key, Slice.getValueCls())
-        if areValues(self, key):
-            return self._getitem__val(key)
-        elif isSlice or isSLICE:
-            if isSlice:
-                if key.step is not None:
-                    raise NotImplementedError()
-                start = key.start
-                stop = key.stop
+        if isinstance(key, slice):
+            # convert python slice to SLICE hdl type
+            if key.step is not None:
+                raise NotImplementedError()
+            start = key.start
+            stop = key.stop
 
-                if key.start is None:
-                    start = INT.fromPy(l)
-                else:
-                    start = toHVal(key.start)
-
-                if key.stop is None:
-                    stop = INT.fromPy(0)
-                else:
-                    stop = toHVal(key.stop)
-
-            
+            if key.start is None:
+                start = INT.fromPy(l)
             else:
+                start = toHVal(key.start)
+
+            if key.stop is None:
+                stop = INT.fromPy(0)
+            else:
+                stop = toHVal(key.stop)
+                
+            startIsVal = isinstance(start, Value)
+            stopIsVal = isinstance(stop, Value)
+            
+            indexesAreValues = startIsVal and stopIsVal
+            if indexesAreValues:
+                updateTime = max(start.updateTime, stop.updateTime)
+            else:
+                updateTime = -1
+
+            key = Slice.getValueCls()([start, stop], SLICE, 1, updateTime)
+            isSLICE = True
+        else:
+            isSLICE = isinstance(key, Slice.getValueCls())
+            if isSLICE:
+                # :note: downto notation
                 start = key.val[0]
                 stop = key.val[1]
+                startIsVal = isinstance(start, Value)
+                stopIsVal = isinstance(stop, Value)
+                indexesAreValues = startIsVal and stopIsVal
+            else:
+                key = toHVal(key)
 
-            indexesAreValues = isinstance(start, Value) and isinstance(stop, Value)
+        if isSLICE:
             if indexesAreValues and start.val == l and stop.val == 0:
                 # selecting all bits no conversion needed
                 return self
+
+            if startIsVal:
+                _start = int(start)
+                if _start < 0 or _start > l:
+                    raise IndexError()
+
+            if stopIsVal:
+                _stop = int(stop)
+                if _stop < 0 or _stop > l:
+                    raise IndexError()
             
-            if iamVal and indexesAreValues:
-                key = Slice.getValueCls()([start, stop], SLICE, 1, max(start.updateTime, stop.updateTime))
+            if startIsVal and stopIsVal and _start - _stop <= 0:
+                raise IndexError()
+            
+            if iamVal:
                 return self._getitem__val(key)
             else:
-
-                key = (start - INT.fromPy(1))._downto(stop)
+                key = start._downto(stop)
                 _resWidth = start - stop
                 resT = Bits(width=_resWidth, forceVector=True, signed=st.signed)
 
-        elif isinstance(key, (int, IntegerVal)):
-            key = toHVal(key)
+        elif isinstance(key, IntegerVal):
+            _v = int(key)
+            if _v < 0 or _v > l - 1:
+                raise IndexError(_v)
+  
             resT = BIT
+            if iamVal:
+                return self._getitem__val(key)
 
         elif isinstance(key, RtlSignalBase):
             t = key._dtype

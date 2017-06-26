@@ -28,7 +28,7 @@ class IndexSimSignalProxy(SimSignal):
         if lowerIndex is None:
             self.__index = toHVal(upperIndex)
         else:
-            self.__index = SLICE.fromPy([upperIndex - 1, lowerIndex])
+            self.__index = SLICE.fromPy([upperIndex, lowerIndex])
         self._setDefValue()
 
     def _generic_val_get(self, v):

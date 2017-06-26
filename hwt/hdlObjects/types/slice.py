@@ -3,6 +3,9 @@ from hwt.hdlObjects.types.integer import Integer
 
 
 class Slice(Array):
+    """
+    Slice type, used for selecting items from arrays 
+    """
     def __init__(self):
         super().__init__(Integer(), 2)
 

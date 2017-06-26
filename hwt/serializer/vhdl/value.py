@@ -159,7 +159,14 @@ class VhdlSerializer_Value():
 
     @classmethod
     def Slice_valAsVhdl(cls, dtype, val, createTmpVarFn):
-        return "%s DOWNTO %s" % (cls.Value(val.val[0], createTmpVarFn), cls.Value(val.val[1], createTmpVarFn))
+        upper = val.val[0]
+        if isinstance(upper, Value):
+            upper = upper - 1
+            _format = "%s DOWNTO %s"
+        else:
+            _format = "%s-1 DOWNTO %s"
+        
+        return _format % (cls.Value(upper, createTmpVarFn), cls.Value(val.val[1], createTmpVarFn))
 
     @classmethod
     def String_valAsVhdl(cls, dtype, val):
