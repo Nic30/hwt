@@ -6,6 +6,7 @@ from hwt.hdlObjects.types.defs import BIT
 from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hwt.hdlObjects.types.struct import HStruct
 
 
 def getClk(unit):
@@ -57,6 +58,15 @@ class UnitImplHelpers(object):
             rst = getRst(self)._sig
 
         s = self._cntx.sig
+
+        if isinstance(dtype, HStruct):
+            container = dtype.fromPy(None)
+            for f in dtype.fields:
+                if f.name is not None:
+                    r = self._reg(f.name, f.dtype)
+                    setattr(container, f.name, r)
+
+            return container
 
         return s(name,
                  typ=dtype,
@@ -123,7 +133,7 @@ class UnitImplHelpers(object):
         if portItem.direction != d:
             # print(self._entity)
             # print(self._architecture)
-            raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" %
+            raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
                                  (self._name, portItem.name, repr(interface), portItem.direction, d))
 
     def _shareParamsWithPrefix(self, obj, prefix, paramNames):
