@@ -1,3 +1,5 @@
+from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStructField, HStruct
 
 
@@ -58,3 +60,22 @@ def HStruct_selectFields(structT, fieldsToUse):
     assert fieldsToUse.issubset(foundNames)
 
     return HStruct(*template)
+
+
+def walkFlattenFields(structVal, skipPadding=True):
+    """
+    Walk all simple values in HStruct or Array
+    """
+    t = structVal._dtype
+    if isinstance(t, Bits):
+        yield structVal
+    elif isinstance(t, HStruct):
+        for f in t.fields:
+            if skipPadding and not f.name is None:
+                yield from walkFlattenFields(getattr(structVal, f.name))
+    elif isinstance(t, Array):
+        for item in structVal:
+            yield from walkFlattenFields(item)
+    else:
+        raise NotImplementedError()
+
