@@ -115,9 +115,7 @@ class HStruct(HdlType):
         """
         get size of struct in bytes
         """
-        s = 0
-        for f in self.template:
-            s += f.dtype.bit_length()
+        s = self.bit_length()
 
         if s % 8 == 0:
             return s // 8
