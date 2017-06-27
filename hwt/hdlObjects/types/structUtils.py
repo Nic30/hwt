@@ -1,6 +1,7 @@
 from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStructField, HStruct
+from hwt.hdlObjects.types.typeCast import toHVal
 
 
 # [TODO] remove
@@ -86,3 +87,70 @@ def walkFlattenFields(structVal, skipPadding=True):
     else:
         raise NotImplementedError()
 
+
+def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
+    """
+    opposite of packAxiSFrame
+    """
+    if getDataFn is None:
+        assert dataWidth is not None
+        def _getDataFn(x):
+            return toHVal(x)._convert(Bits(dataWidth))
+
+        getDataFn = _getDataFn
+
+    val = structT.fromPy(None)
+
+    fData = iter(data)
+    
+    # actual is storage variable for items from frameData
+    actualOffset = 0
+    actual = None
+
+    for v in walkFlattenFields(val, skipPadding=False):
+        # walk flatten fields and take values from fData and parse them to field
+        required = v._dtype.bit_length()
+
+        if actual is None:
+            actualOffset = 0
+            try:
+                actual = getDataFn(next(fData))
+            except StopIteration:
+                raise Exception("Input data too short")
+            
+            if dataWidth is None:
+                dataWidth = actual._dtype.bit_length()
+            actuallyHave = dataWidth
+        else:
+            actuallyHave = actual._dtype.bit_length() - actualOffset
+
+        while actuallyHave < required:
+            # collect data for this field
+            try:
+                d = getDataFn(next(fData))
+            except StopIteration:
+                raise Exception("Input data too short")
+      
+            actual = d._concat(actual)
+            actuallyHave += dataWidth
+
+        if actuallyHave >= required:
+            # parse value of actual to field
+            
+            # skip padding
+            _v = actual[(required + actualOffset): actualOffset]._convert(v._dtype)
+            v.val = _v.val
+            v.vldMask = _v.vldMask
+            v.updateTime = _v.updateTime
+
+            # update slice out what was taken
+            actuallyHave -= required
+            actualOffset += required
+
+        if actuallyHave == 0:
+            actual = None
+
+    if actual is not None:
+        assert actual._dtype.bit_length() - actualOffset < dataWidth, "It should be just a padding at the end of frame"
+
+    return val
