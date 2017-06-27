@@ -1,6 +1,7 @@
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.value import Value
 from hwt.serializer.serializerClases.indent import getIndent
+from hwt.hdlObjects.types.structValBase import StructValBase
 
 
 class HStructField(object):
@@ -58,47 +59,13 @@ class HStruct(HdlType):
         if self.isFixedSize:
             self.__bit_length_val = self.__bit_length()
 
-        class StructVal(Value):
-            __slots__ = fieldNames
-
-            def __init__(self, val, typeObj):
-                self._dtype = typeObj
-                if val is not None:
-                    assert set(self.__slots__).issuperset(set(val.keys())),\
-                        set(val.keys()).difference(set(self.__slots__))
-
-                for f in self._dtype.fields:
-                    if f.name is None:
-                        continue
-                    if val is None:
-                        v = None
-                    else:
-                        v = val.get(f.name, None)
-
-                    if not isinstance(v, Value):
-                        v = f.dtype.fromPy(v)
-
-                    setattr(self, f.name, v)
-
-            @classmethod
-            def fromPy(cls, val, typeObj):
-                return cls(val, typeObj)
-
-            def __pow__(self, other):
-                raise NotImplementedError("[TODO]")
-
-            def __repr__(self):
-                buff = ["{"]
-                for f in self._dtype.fields:
-                    if f.name is not None:
-                        val = getattr(self, f.name)
-                        buff.append("    %s %r" % (f.name, val))
-                buff.append("}")
-                return "\n".join(buff)
-
         protectedNames = set(["clone", "staticEval", "fromPy", "_dtype"])
         usedNames = set(fieldNames)
         assert not protectedNames.intersection(usedNames), protectedNames.intersection(usedNames)
+
+        class StructVal(StructValBase):
+            __slots__ = fieldNames
+
 
         self.valueCls = StructVal
 
