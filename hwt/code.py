@@ -17,6 +17,7 @@ from hwt.synthesizer.andReducedContainer import AndReducedContainer
 from hwt.hdlObjects.types.struct import HStruct
 from hwt.hdlObjects.types.structUtils import walkFlattenFields
 from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.bits import Bits
 
 
 def _intfToSig(obj):
@@ -447,7 +448,7 @@ Xor = _mkOp(xor)
 Concat = _mkOp(concatFn)
 
 
-def iterBits(sigOrVal, bitsInOne=1, skipPadding=True):
+def iterBits(sigOrVal, bitsInOne=1, skipPadding=True, fillup=False):
     """
     Iterate over bits in vector
 
@@ -472,7 +473,7 @@ def iterBits(sigOrVal, bitsInOne=1, skipPadding=True):
                 if actuallyHave >= bitsInOne:
                     # consume what was remained in actual
                     takeFromThis = bitsInOne - bitsInActual
-                    yield Concat(actual, f[takeFromThis:])
+                    yield Concat(f[takeFromThis:], actual[:actualOffset])
                     actualOffset = takeFromThis
                     actuallyHave -= bitsInOne
                     if actuallyHave > 0:
@@ -493,7 +494,13 @@ def iterBits(sigOrVal, bitsInOne=1, skipPadding=True):
                 actual = None
                 actualOffset = 0
 
-        assert actual is None, "Width of object has to be divisible by bitsInOne"
+        if actual is not None and fillup:
+            fillupW = bitsInOne - actuallyHave
+            t = f._dtype
+            padding = Bits(fillupW, signed=t.signed, negated=t.negated).fromPy(None)
+            yield Concat(padding, actual[:actualOffset])
+        else:
+            assert actual is None, "Width of object has to be divisible by bitsInOne"
     else:
         l = sigOrVal._dtype.bit_length()
         for bit in range(l):
