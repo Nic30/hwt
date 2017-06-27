@@ -63,6 +63,9 @@ class HStruct(HdlType):
 
             def __init__(self, val, typeObj):
                 self._dtype = typeObj
+                if val is not None:
+                    assert set(self.__slots__).issuperset(set(val.keys())),\
+                        set(val.keys()).difference(set(self.__slots__))
 
                 for f in self._dtype.fields:
                     if f.name is None:
