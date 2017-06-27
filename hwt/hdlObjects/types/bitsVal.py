@@ -18,6 +18,7 @@ from hwt.hdlObjects.types.eventCapableVal import EventCapableVal
 from hwt.hdlObjects.types.integer import Integer
 from hwt.hdlObjects.types.integerVal import IntegerVal
 from hwt.hdlObjects.types.slice import Slice
+from hwt.hdlObjects.types.sliceUtils import slice_to_SLICE
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.hdlObjects.value import Value, areValues
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -214,50 +215,36 @@ class BitsVal(EventCapableVal):
             raise TypeError()
 
         if isinstance(key, slice):
-            # convert python slice to SLICE hdl type
-            if key.step is not None:
-                raise NotImplementedError()
-            start = key.start
-            stop = key.stop
-
-            if key.start is None:
-                start = INT.fromPy(l)
-            else:
-                start = toHVal(key.start)
-
-            if key.stop is None:
-                stop = INT.fromPy(0)
-            else:
-                stop = toHVal(key.stop)
-                
-            startIsVal = isinstance(start, Value)
-            stopIsVal = isinstance(stop, Value)
-            
-            indexesAreValues = startIsVal and stopIsVal
-            if indexesAreValues:
-                updateTime = max(start.updateTime, stop.updateTime)
-            else:
-                updateTime = -1
-
-            key = Slice.getValueCls()([start, stop], SLICE, 1, updateTime)
+            key = slice_to_SLICE(key, l)
             isSLICE = True
         else:
             isSLICE = isinstance(key, Slice.getValueCls())
-            if isSLICE:
-                # :note: downto notation
-                start = key.val[0]
-                stop = key.val[1]
-                startIsVal = isinstance(start, Value)
-                stopIsVal = isinstance(stop, Value)
-                indexesAreValues = startIsVal and stopIsVal
-            else:
-                key = toHVal(key)
+        
+        if isSLICE:
+            # :note: downto notation
+            start = key.val[0]
+            stop = key.val[1]
+            startIsVal = isinstance(start, Value)
+            stopIsVal = isinstance(stop, Value)
+            indexesAreValues = startIsVal and stopIsVal
+        else:
+            key = toHVal(key)
 
+        iAmResultOfIndexing = not iamVal and len(self.drivers) == 1 and isinstance(self.origin, Operator) and self.origin.operator == AllOps.INDEX
         if isSLICE:
             if indexesAreValues and start.val == l and stop.val == 0:
                 # selecting all bits no conversion needed
                 return self
 
+            if iAmResultOfIndexing:
+                # try reduce self and parent slice to one
+                original, parentIndex = self.origin.ops
+                if isinstance(parentIndex._dtype, Slice):
+                    parentLower = parentIndex.val[1]
+                    start = start + parentLower
+                    stop = stop + parentLower
+                    return original[start:stop]
+            
             if startIsVal:
                 _start = int(start)
                 if _start < 0 or _start > l:
@@ -302,7 +289,7 @@ class BitsVal(EventCapableVal):
         else:
             raise TypeError("Index operation not implemented for index %s" % (repr(key)))
 
-        # [TODO] boundary check
+
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
     def _setitem__val(self, index, value):

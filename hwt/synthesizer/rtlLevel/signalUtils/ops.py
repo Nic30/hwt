@@ -1,12 +1,13 @@
 from hwt.hdlObjects.assignment import Assignment
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.types.defs import BOOL
+from hwt.hdlObjects.types.sliceUtils import slice_to_SLICE
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.hdlObjects.value import Value
+from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.synthesizer.exceptions import TypeConversionErr
 
 
 def tv(signal):
@@ -119,10 +120,9 @@ class RtlSignalOps():
     def __getitem__(self, key):
         operator = AllOps.INDEX
         if isinstance(key, slice):
-            hashableKey = (key.start, key.stop, key.step)
-        else:
-            hashableKey = key
-        k = (operator, hashableKey)
+            key = slice_to_SLICE(key, self._dtype.bit_length())
+
+        k = (operator, key)
         try:
             return self._usedOps[k]
         except KeyError:
