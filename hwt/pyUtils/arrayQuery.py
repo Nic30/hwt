@@ -58,6 +58,23 @@ def arr_all(iterable, fn):
     return True
 
 
+def take(iterrable, howMay):
+    """
+    take first n items from iterrable
+    """
+    assert howMay >= 0
+
+    if not howMay:
+        return
+
+    last = howMay - 1
+    for i, item in enumerate(iterrable):
+        yield item
+        if i == last:
+            return
+        
+
+
 def where(iterable, fn):
     """
     Select items from iterable where fn(item)
