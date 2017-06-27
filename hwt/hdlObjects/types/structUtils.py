@@ -71,8 +71,15 @@ def walkFlattenFields(structVal, skipPadding=True):
         yield structVal
     elif isinstance(t, HStruct):
         for f in t.fields:
-            if skipPadding and not f.name is None:
-                yield from walkFlattenFields(getattr(structVal, f.name))
+            isPadding = f.name is None
+            if not isPadding  or not skipPadding:
+                if isPadding:
+                    v = f.dtype.fromPy(None)
+                else:
+                    v = getattr(structVal, f.name)
+
+                yield from walkFlattenFields(v)
+
     elif isinstance(t, Array):
         for item in structVal:
             yield from walkFlattenFields(item)
