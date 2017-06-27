@@ -67,7 +67,7 @@ def where(iterable, fn):
             yield i
 
 
-def last_iter(iterable):
+def iter_with_last(iterable):
     """
     Iterate iterable and yield tuples (isLastFlag, item)
     """
