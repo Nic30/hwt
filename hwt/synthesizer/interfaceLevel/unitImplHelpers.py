@@ -65,7 +65,7 @@ class UnitImplHelpers(object):
             container = dtype.fromPy(None)
             for f in dtype.fields:
                 if f.name is not None:
-                    r = self._reg(f.name, f.dtype)
+                    r = self._reg("%s_%s" % (name, f.name), f.dtype)
                     setattr(container, f.name, r)
 
             return container
