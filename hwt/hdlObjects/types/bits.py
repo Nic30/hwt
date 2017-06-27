@@ -62,13 +62,14 @@ class Bits(HdlType):
             on which address this type is stored (used only by HStruct)
         :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
-        from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
+        from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
         c = self.width
+        tmpVars = DebugTmpVarStack()
         if isinstance(c, int):
             constr = "%dbits" % c
         else:
-            constr = VhdlSerializer.asHdl(self.width, onlyPrintDefaultValues) + \
-                     (", %dbits" % self.bit_length())
+            constr = VhdlSerializer.asHdl(self.width, tmpVars.createTmpVarFn)
+            constr = "%s%s, %dbits" % (tmpVars.serialize(indent), constr, self.bit_length())
         
         if self.signed:
             constr += ", signed"

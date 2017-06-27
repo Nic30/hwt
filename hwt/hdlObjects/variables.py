@@ -6,7 +6,7 @@ class SignalItem(object):
     basic hdl signal used to design circuits
     """
 
-    def __init__(self, name, dtype, defaultVal=None,  virtualOnly=False):
+    def __init__(self, name, dtype, defaultVal=None, virtualOnly=False):
         """
         :param name: name for better orientation in netlists (used only in serialization)
         :param dtype: data type of this signal
@@ -32,5 +32,8 @@ class SignalItem(object):
         self._oldVal.vldMask = 0
 
     def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
-        return VhdlSerializer.SignalItem(self, onlyPrintDefaultValues)
+        from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
+        tmpVars = DebugTmpVarStack()
+        
+        s = VhdlSerializer.SignalItem(self, tmpVars.createTmpVarFn)
+        return "%s%s" % (tmpVars.serialize(), s)

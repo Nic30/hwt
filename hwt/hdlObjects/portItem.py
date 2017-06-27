@@ -64,5 +64,8 @@ class PortItem(SignalItem):
             raise NotImplementedError()
 
     def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
-        return VhdlSerializer.PortItem(self, onlyPrintDefaultValues)
+        from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
+        tmpVars = DebugTmpVarStack()
+        
+        s = VhdlSerializer.PortItem(self, tmpVars.createTmpVarFn)
+        return "%s%s" % (tmpVars.serialize(), s)

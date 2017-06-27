@@ -66,14 +66,37 @@ def paramsToValTuple(unit):
         d[name] = v
     return freeze_dict(d)
 
+class DebugTmpVarStack():
+    def __init__(self):
+        """
+        :ivar vars: list of serialized variable declarations
+        """
+        self.vars = []
+        self.serializer = VhdlSerializer
+    
+    def createTmpVarFn(self, suggestedName, dtype):
+        # [TODO] it is better to use RtlSignal
+        ser = self.serializer
 
-def onlyPrintDefaultValues(suggestedName, dtype):
-    # [TODO] it is better to use RtlSignal
-    s = SignalItem(suggestedName, dtype, virtualOnly=True)
-    s.hidden = False
-    serializedS = VhdlSerializer.SignalItem(s, onlyPrintDefaultValues, declaration=True)
-    print(serializedS)
-    return s
+        s = SignalItem(suggestedName, dtype, virtualOnly=True)
+        s.hidden = False
+        serializedS = ser.SignalItem(s, self.createTmpVarFn, declaration=True)
+        self.vars.append((serializedS, s))
+        
+        return s
+    
+    def _serializeItem(self, item):
+        var, s = item
+        # assignemt of value for this tmp variable
+        a = Assignment(s.defaultVal, s, virtualOnly=True)
+        return "%s\n%s" % (var, self.serializer.Assignment(a, self.createTmpVarFn))
+    
+    def serialize(self, indent=0):
+        if not self.vars:
+            return ""
+        
+        separator = getIndent(indent) + "\n"
+        return separator.join(map(self._serializeItem, self.vars)) + "\n"
 
 
 class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_types, VhdlSerializer_statements):
@@ -370,12 +393,12 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             extraVarsSerialized.append(serializedS)
             return s
 
-        hasToBeVhdlProcess = extraVars or arr_any(body,
-                                                  lambda x: isinstance(x,
-                                                                       (IfContainer,
-                                                                        SwitchContainer,
-                                                                        WhileContainer,
-                                                                        WaitStm)))
+        hasToBeVhdlProcess = arr_any(body,
+                                     lambda x: isinstance(x,
+                                                          (IfContainer,
+                                                           SwitchContainer,
+                                                           WhileContainer,
+                                                           WaitStm)))
 
         sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, None), proc.sensitivityList))
 
@@ -385,14 +408,15 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             sIndent = indent
 
         statemets = [cls.asHdl(s, createTmpVarFn, indent=sIndent) for s in body]
-
-        if hasToBeVhdlProcess:
-            proc.name = scope.checkedName(proc.name, proc)
+        proc.name = scope.checkedName(proc.name, proc)
 
         extraVarsInit = []
         for s in extraVars:
             a = Assignment(s.defaultVal, s, virtualOnly=True)
             extraVarsInit.append(cls.Assignment(a, createTmpVarFn, indent=indent + 1))
+
+        
+        hasToBeVhdlProcess = extraVars or hasToBeVhdlProcess
 
         return processTmpl.render(
             indent=getIndent(indent),

@@ -6,8 +6,15 @@ def seqEvalCond(cond):
 
     return _cond
 
+class CodeStatement():
+    def __repr__(self):
+        from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
+        tmpVars = DebugTmpVarStack()
+        
+        s = getattr(VhdlSerializer, self.__class__.__name__)(self, tmpVars.createTmpVarFn)
+        return "%s%s" % (tmpVars.serialize(), s)
 
-class IfContainer():
+class IfContainer(CodeStatement):
     """
     Structural container of if statement for hdl rendering
     """
@@ -38,12 +45,8 @@ class IfContainer():
             for s in self.ifFalse:
                 s.seqEval()
 
-    def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
-        return VhdlSerializer.IfContainer(self, onlyPrintDefaultValues)
 
-
-class SwitchContainer():
+class SwitchContainer(CodeStatement):
     """
     Structural container for switch statement for hdl rendering
     """
@@ -55,12 +58,8 @@ class SwitchContainer():
     def seqEval(self):
         raise NotImplementedError()
 
-    def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
-        return VhdlSerializer.SwitchContainer(self, onlyPrintDefaultValues)
 
-
-class WhileContainer():
+class WhileContainer(CodeStatement):
     """
     Structural container of while statement for hdl rendering
     """
@@ -74,7 +73,7 @@ class WhileContainer():
                 s.seqEval()
 
 
-class WaitStm():
+class WaitStm(CodeStatement):
     """
     Structural container of wait statemnet for hdl rendering
     """

@@ -51,5 +51,8 @@ class Assignment(object):
         self.dst._val = self.src.staticEval()
 
     def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer, onlyPrintDefaultValues
-        return VhdlSerializer.Assignment(self, onlyPrintDefaultValues)
+        from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
+        tmpVars = DebugTmpVarStack()
+        
+        s = VhdlSerializer.Assignment(self, tmpVars.createTmpVarFn)
+        return "%s%s" % (tmpVars.serialize(), s)
