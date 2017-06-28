@@ -230,7 +230,11 @@ class BitsVal(EventCapableVal):
         else:
             key = toHVal(key)
 
-        iAmResultOfIndexing = not iamVal and len(self.drivers) == 1 and isinstance(self.origin, Operator) and self.origin.operator == AllOps.INDEX
+        iAmResultOfIndexing = (not iamVal and
+                               hasattr(self, "origin") and
+                               len(self.drivers) == 1 and
+                               isinstance(self.origin, Operator) and
+                               self.origin.operator == AllOps.INDEX)
         if isSLICE:
             if indexesAreValues and start.val == l and stop.val == 0:
                 # selecting all bits no conversion needed
