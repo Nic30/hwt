@@ -61,8 +61,8 @@ class IP_Handshake(IntfConfig):
         self.version = "1.0"
         self.vendor = "hwt"
         self.library = "user"
-        self.map = {"rd": "ap_vld",
-                    "rd": "ap_ack",
+        self.map = {"vld": "valid",
+                    "rd": "ready",
                     "data": "data"}
 
 
