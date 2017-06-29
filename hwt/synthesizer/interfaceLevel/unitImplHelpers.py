@@ -7,6 +7,7 @@ from hwt.hdlObjects.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 
 
 def getClk(unit):
@@ -153,6 +154,8 @@ class UnitImplHelpers(object):
         excluded = set()
         if exclude is not None:
             exclude = set(exclude)
+        if isinstance(parent, InterfaceProxy):
+            parent = parent._origIntf
 
         for parentP in parent._params:
             if exclude and parentP in exclude:
