@@ -14,7 +14,7 @@ python:
 #  global:
   #- HWT=`pwd`
   #- HWT_LIB=`pwd`/../hwtLib
-  #- DIST_PACKAGES=/home/travis/virtualenv/python3.5.2/lib/python3.5/site-packages
+  - DIST_PACKAGES=/home/travis/virtualenv/python3.5.2/lib/python3.5/site-packages
 # PYTHONPATH is overriden because of coverals, it can not find library files when installed as usuall
   #- PYTHONPATH="${DIST_PACKAGES}/:${PYTHONPATH}:${HWT}:${HWT_LIB}"
   #- PY_INSTALL_OPTS="--user --install-dir $(DIST_PACKAGES)"
