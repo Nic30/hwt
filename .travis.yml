@@ -1,4 +1,3 @@
-sudo: required
 dist: trusty
 language: python
 git:
@@ -15,9 +14,9 @@ env:
   - PYTHONPATH=$HWT $HWT_LIB
   - DIST_PACKAGES=/home/travis/virtualenv/python3.5.2/lib/python3.5/site-packages
 install:
-- python3 setup.py install
+- python3 setup.py install --user
 - cd ..
-- pip3 install pytest coveralls
+- pip3 install pytest coveralls --user
 - git clone --depth=1 https://github.com/Nic30/hwtLib.git
 - cd HWToolkit
 - rm -rf $DIST_PACKAGES/hwt-*
