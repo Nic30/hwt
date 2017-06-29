@@ -7,22 +7,23 @@ cache:
 python:
 - '3.5'
 
-env:
-  global:
-  - HWT=`pwd`
-  - HWT_LIB=`pwd`/../hwtLib
-  - DIST_PACKAGES=/home/travis/virtualenv/python3.5.2/lib/python3.5/site-packages
-  - PYTHONPATH="${DIST_PACKAGES}/:${PYTHONPATH}:${HWT}:${HWT_LIB}"
-  - PY_INSTALL_OPTS="--user --install-dir $(DIST_PACKAGES)"
+#env:
+#  global:
+  #- HWT=`pwd`
+  #- HWT_LIB=`pwd`/../hwtLib
+  #- DIST_PACKAGES=/home/travis/virtualenv/python3.5.2/lib/python3.5/site-packages
+# PYTHONPATH is overriden because of coverals, it can not find library files when installed as usuall
+  #- PYTHONPATH="${DIST_PACKAGES}/:${PYTHONPATH}:${HWT}:${HWT_LIB}"
+  #- PY_INSTALL_OPTS="--user --install-dir $(DIST_PACKAGES)"
 install:
-- python3 setup.py install ${PY_INSTALL_OPTS}
-- cd ..
-- pip3 install pytest coveralls ${PY_INSTALL_OPTS}
-- git clone --depth=1 https://github.com/Nic30/hwtLib.git
-- cd HWToolkit
-- rm -rf $DIST_PACKAGES/hwt-*
-- ln -s hwt $DIST_PACKAGES/hwt
-#- python3 setup.py install
+  - python3 setup.py develop --user
+  - cd ..
+  - pip3 install pytest coveralls --user
+  - git clone --depth=1 https://github.com/Nic30/hwtLib.git
+  - cd HWToolkit
+  - rm -rf $DIST_PACKAGES/hwt-*
+  - ln -s hwt $DIST_PACKAGES/hwt
+  #- python3 setup.py install
 
 script:
 - coverage run --source=hwt ../hwtLib/setup.py test
