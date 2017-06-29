@@ -16,7 +16,7 @@ python:
   #- PYTHONPATH="${DIST_PACKAGES}/:${PYTHONPATH}:${HWT}:${HWT_LIB}"
   #- PY_INSTALL_OPTS="--user --install-dir $(DIST_PACKAGES)"
 install:
-  - python3 setup.py develop --user
+  - python3 setup.py install --user
   - cd ..
   - pip3 install pytest coveralls --user
   - git clone --depth=1 https://github.com/Nic30/hwtLib.git
