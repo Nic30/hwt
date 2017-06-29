@@ -388,7 +388,7 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             s = SignalItem(None, dtype, virtualOnly=True)
             s.name = scope.checkedName(suggestedName, s)
             s.hidden = False
-            serializedS = cls.SignalItem(s, createTmpVarFn, declaration=True)
+            serializedS = cls.SignalItem(s, createTmpVarFn, declaration=True, indent=indent + 1)
             extraVars.append(s)
             extraVarsSerialized.append(serializedS)
             return s
@@ -415,8 +415,13 @@ class VhdlSerializer(VhdlSerializer_Value, VhdlSerializer_ops, VhdlSerializer_ty
             a = Assignment(s.defaultVal, s, virtualOnly=True)
             extraVarsInit.append(cls.Assignment(a, createTmpVarFn, indent=indent + 1))
 
-        
+        _hasToBeVhdlProcess = hasToBeVhdlProcess
         hasToBeVhdlProcess = extraVars or hasToBeVhdlProcess
+
+        if hasToBeVhdlProcess and not _hasToBeVhdlProcess:
+            # add indent because we did not added it before because we did not know t
+            oneIndent = getIndent(1)
+            statemets = list(map(lambda x: oneIndent + x, statemets))
 
         return processTmpl.render(
             indent=getIndent(indent),
