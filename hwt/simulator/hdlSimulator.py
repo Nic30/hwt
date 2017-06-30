@@ -1,11 +1,11 @@
-from simpy.events import NORMAL
+from simpy.core import BoundClass
+from simpy.events import NORMAL, Timeout
 
 from hwt.hdlObjects.value import Value
 from hwt.simulator.hdlSimConfig import HdlSimConfig
 from hwt.simulator.simModel import mkUpdater, mkArrayUpdater
 from hwt.simulator.simulatorCore import HdlEnvironmentCore
 from hwt.simulator.utils import valueHasChanged
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 
 def isEvDependentOn(sig, process):
@@ -180,17 +180,19 @@ class HdlSimulator(HdlEnvironmentCore):
         va = self.valuesToApply
 
         # log if there are items to log
-        if va and self.config.logApplyingValues:
-            self.config.logApplyingValues(self, va)
+        lav = self.config.logApplyingValues
+        if va and lav:
+            lav(self, va)
 
         self.valuesToApply = []
 
         # apply values to signals, values can overwrite each other
         # but each signal should be driven by only one process and
         # it should resolve value collision
+        addSp = self.seqProcsToRun.append
         for s, vUpdater, isEventDependent, comesFrom in va:
             if isEventDependent:
-                self.seqProcsToRun.append(comesFrom)
+                addSp(comesFrom)
             else:
                 s.simUpdateVal(self, vUpdater)
 
@@ -208,37 +210,45 @@ class HdlSimulator(HdlEnvironmentCore):
         """
         Read value from signal or interface
         """
-        if isinstance(sig, InterfaceBase):
-            sig = sig._sigInside
-        return sig._val.clone()
+        try:
+            v = sig._val
+        except AttributeError:
+            v = sig._sigInside._val
+
+        return v.clone()
 
     def write(self, val, sig):
         """
         Write value to signal or interface.
         """
-        if isinstance(sig, InterfaceBase):
+
+        try:
+            simSensProcs = sig.simSensProcs
+        except AttributeError:
             sig = sig._sigInside
+            simSensProcs = sig.simSensProcs
+
+        t = sig._dtype
 
         if isinstance(val, Value):
             v = val.clone()
         else:
             # assert type(sig._dtype) is not Bits, "Bits type is slow and should be automatically replaced by SimBitsT (on: %s)" % (sig._getFullName())
-            v = sig._dtype.fromPy(val)
+            v = t.fromPy(val)
 
         v.updateTime = self.now
 
-        v = v._convert(sig._dtype)
+        v = v._convert(t)
 
         sig.simUpdateVal(self, lambda curentV: (valueHasChanged(curentV, v), v))
 
-        if not sig.simSensProcs and self.applyValEv is not None:
+        if not simSensProcs and self.applyValEv is not None:
             # in some cases simulation process can wait on all values applied
             # signal value was changed but there are no sensitive processes to it
             # because of this applyValues is never planed and but should be
             self.scheduleApplyValues()
 
-    def wait(self, time):
-        return self.timeout(time)
+    wait = BoundClass(Timeout)
 
     def simUnit(self, synthesisedUnit, time, extraProcesses=[]):
         """
