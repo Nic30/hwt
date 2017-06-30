@@ -27,20 +27,20 @@ class HandshakedAgent(SyncAgentBase):
 
     def getRd(self):
         """get "ready" signal"""
-        return self.intf.rd
-    
+        return self.intf.rd._sigInside
+
     def isRd(self, readFn):
         """
         get value of "ready" signal
         """
         return readFn(self._rd)
-    
+
     def wrRd(self, wrFn, val):
         wrFn(val, self._rd)
-    
+
     def getVld(self):
         """get "valid" signal"""
-        return self.intf.vld
+        return self.intf.vld._sigInside
 
     def isVld(self, readFn):
         """
