@@ -5,7 +5,6 @@ from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForOr, \
     vldMaskForAnd
 from hwt.hdlObjects.types.defs import BOOL
-from hwt.hdlObjects.types.eventCapableVal import EventCapableVal
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.hdlObjects.value import Value, areValues
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
@@ -73,7 +72,7 @@ def whenOneIsVal_or(val, other):
         return val
 
 
-class BooleanVal(EventCapableVal):
+class BooleanVal(Value):
 
     @classmethod
     def fromPy(cls, val, typeObj):

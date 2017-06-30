@@ -2,24 +2,24 @@ from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
 from keyword import kwlist
 
+from hwt.hdlObjects.constants import SENSITIVITY
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps, sensitivityByOp
-from hwt.hdlObjects.constants import SENSITIVITY
 from hwt.hdlObjects.statements import IfContainer
+from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.enumVal import EnumVal
 from hwt.hdlObjects.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.nameScope import LangueKeyword, NameScope
-from hwt.serializer.simModel.value import SimModelSerializer_value
+from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.simModel.constantStore import ConstantStore
 from hwt.serializer.simModel.ops import SimModelSerializer_ops
 from hwt.serializer.simModel.types import SimModelSerializer_types
+from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdlObjects.types.bits import Bits
-from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.simModel.constantStore import ConstantStore
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))

@@ -51,9 +51,6 @@ class RtlSignalOps():
     def _onFallingEdge(self, now=None):
         return self.naryOp(AllOps.FALLIGN_EDGE, tv(self)._onFallingEdge, now)
 
-    def _hasEvent(self, now=None):
-        raise self.naryOp(AllOps.EVENT, tv(self)._hasEvent, now)
-
     def _isOn(self):
         return self._dtype.convert(self, BOOL)
 

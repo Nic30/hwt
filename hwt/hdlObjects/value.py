@@ -161,9 +161,6 @@ class Value():
     def __ge__(self, other):
         raise NotImplementedError()
 
-    def _hasEvent(self, now):
-        raise NotImplementedError()
-
     def _onRisingEdge(self, now):
         raise NotImplementedError()
 

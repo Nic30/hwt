@@ -1,10 +1,9 @@
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdlObjects.operatorDefs import AllOps 
+from hwt.hdlObjects.operatorDefs import AllOps
 
 
 # keep in mind that there is no such a thing in vhdl itself
 opPrecedence = {AllOps.NOT: 2,
-                AllOps.EVENT: 1,
                 AllOps.RISING_EDGE: 1,
                 AllOps.DIV: 3,
                 AllOps.ADD: 3,
@@ -84,9 +83,6 @@ class VhdlSerializer_ops():
             return _bin('-1 TO')
         elif o == AllOps.EQ:
             return _bin('=')
-        elif o == AllOps.EVENT:
-            assert len(ops) == 1
-            return p(ops[0]) + "'EVENT"
         elif o == AllOps.GREATERTHAN:
             return _bin('>')
         elif o == AllOps.GE:

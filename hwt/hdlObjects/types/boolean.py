@@ -1,10 +1,11 @@
-from hwt.hdlObjects.types.hdlType import HdlType 
+from hwt.hdlObjects.types.hdlType import HdlType
+
 
 class Boolean(HdlType):
     def __init__(self):
         super().__init__()
         self.name = 'boolean'
-    
+
     @classmethod
     def getConvertor(cls):
         from hwt.hdlObjects.types.booleanConversions import convertBoolean
@@ -21,6 +22,6 @@ class Boolean(HdlType):
         try:
             return cls._valCls
         except AttributeError:
-            from hwt.hdlObjects.types.booleanVal import BooleanVal 
+            from hwt.hdlObjects.types.booleanVal import BooleanVal
             cls._valCls = BooleanVal
             return cls._valCls

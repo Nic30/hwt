@@ -24,22 +24,16 @@ class SimBitsT(Bits):
     Simplified Bits type for simulation purposes
     """
     def __init__(self, width, signed):
-        self.width = width
+        self._widthVal = width
         self.signed = signed
-        self._allMask = mask(self.bit_length())
+        self._allMask = mask(self._widthVal)
 
     def __eq__(self, other):
-        return isinstance(other, Bits) and other.bit_length() == self.bit_length()\
+        return isinstance(other, Bits) and other._widthVal == self._widthVal\
             and self.signed == other.signed
 
     def __hash__(self):
-        return hash((self.width, self.signed))
-
-    def all_mask(self):
-        return self._allMask
-
-    def bit_length(self):
-        return self.width
+        return hash((self._widthVal, self.signed))
 
     def convert(self, sigOrVal, toType):
         return convertSimBits__val(self, sigOrVal, toType)
