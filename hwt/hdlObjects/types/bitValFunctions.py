@@ -22,8 +22,8 @@ def signFix(val, width):
 def bitsCmp__val(self, other, op, evalFn):
     ot = other._dtype
 
-    w = self._dtype.bit_length()
-    assert w == ot.bit_length(), "%d, %d" % (w, ot.bit_length())
+    w = self._dtype._widthVal
+    assert w == ot._widthVal, "%d, %d" % (w, ot._widthVal)
 
     vld = self.vldMask & other.vldMask
     _vld = vld == mask(w)
