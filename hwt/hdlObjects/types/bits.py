@@ -16,30 +16,27 @@ class Bits(HdlType):
         self.forceVector = forceVector
         self.negated = negated
 
-        if isinstance(width, int):
-            assert width > 0
-        else:
-            w = width.staticEval()
-            assert w._isFullVld() and w.val > 0
+        w = int(width)
+        assert isinstance(w, int) and w > 0
+        self._widthVal = w
 
         self.signed = signed
         self.width = width
 
+        self._allMask = mask(self._widthVal)
+
     def __eq__(self, other):
-        return isinstance(other, Bits) and other.bit_length() == self.bit_length()\
+        return isinstance(other, Bits) and other._widthVal == self._widthVal\
             and self.signed == other.signed and self.forceVector == other.forceVector
 
     def __hash__(self):
-        return hash((self.signed, self.bit_length(), self.forceVector))
+        return hash((self.signed, self._widthVal, self.forceVector))
 
     def all_mask(self):
-        return mask(self.bit_length())
+        return self._allMask
 
     def bit_length(self):
-        if isinstance(self.width, int):
-            return self.width
-        else:
-            return self.width.staticEval().val
+        return self._widthVal
 
     @classmethod
     def getConvertor(cls):
