@@ -18,6 +18,7 @@ class OscilatorAgent(AgentBase):
         super(OscilatorAgent, self).__init__(intf)
         self.period = period
         self.initWait = 0
+        self.intf = self.intf._sigInside
 
     def driver(self, s):
         sig = self.intf
