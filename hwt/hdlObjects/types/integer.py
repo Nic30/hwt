@@ -4,14 +4,13 @@ from hwt.hdlObjects.types.hdlType import HdlType
 class Integer(HdlType):
     
     def __init__(self, _min=None, _max=None):
-        super(Integer, self).__init__()
         self.min = _min
         self.max = _max
     
     def __eq__(self, other):
         return self is other or (
-            type(self) == type(other) and self.max == other.max and self.min == other.min
-                                 )
+                type(self) == type(other) and self.max == other.max and self.min == other.min
+            )
     def __hash__(self):
         return hash((self.max, self.min))
     

@@ -39,6 +39,10 @@ class IntegerVal(Value):
     :ivar vldMask: can be only 0 or 1
     :ivar updateTime: time when this value was set, used in simulator
     """
+    
+    def _isFullVld(self):
+        return bool(self.vldMask)
+    
     @classmethod
     def fromPy(cls, val, typeObj):
         """

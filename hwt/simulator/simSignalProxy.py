@@ -51,7 +51,7 @@ class IndexSimSignalProxy(SimSignal):
         Method called by simulator to update new value for this object
         we are only delegating update on parent signal
         """
-        dirtyFlag, newVal = valUpdater(self._oldVal)
+        dirtyFlag, newVal = valUpdater(self._generic_val_get(self._signal._oldVal))
         newVal.updateTime = simulator.now
 
         if dirtyFlag:

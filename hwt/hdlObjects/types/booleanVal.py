@@ -74,6 +74,9 @@ def whenOneIsVal_or(val, other):
 
 class BooleanVal(Value):
 
+    def _isFullVld(self):
+        return bool(self.vldMask)
+
     @classmethod
     def fromPy(cls, val, typeObj):
         """

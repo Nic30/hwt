@@ -30,6 +30,9 @@ class BitsVal(EventCapableVal):
     """
     :attention: operator on signals are using value operator functions as well
     """
+    def _isFullVld(self):
+        return self.vldMask == self._dtype._allMask
+
     def _convSign__val(self, signed):
         t = self._dtype
         if t.signed == signed:
@@ -166,27 +169,38 @@ class BitsVal(EventCapableVal):
             return Operator.withRes(AllOps.CONCAT, [self, other], resT)\
                            ._convert(vecT(resWidth, signed=self._dtype.signed))
 
-    def _getitem__val(self, key):
+    def _getitem__val_int(self, key):
         updateTime = max(self.updateTime, key.updateTime)
         keyVld = key._isFullVld()
-        val = 0
-        vld = 0
 
+        if keyVld:
+            val = selectBit(self.val, key.val)
+            vld = selectBit(self.vldMask, key.val)
+        else:
+            val = 0
+            vld = 0
+
+        return self.__class__(val, BIT, vld, updateTime=updateTime)
+    
+    def _getitem__val_slice(self, key):
+        updateTime = max(self.updateTime, key.updateTime)
+        assert key._isFullVld()
+        size = key._size()
+
+        firstBitNo = key.val[1].val
+        val = selectBitRange(self.val, firstBitNo, size)
+        vld = selectBitRange(self.vldMask, firstBitNo, size)
+        
+        retT = self._dtype.__class__(size, signed=self._dtype.signed)
+        return self.__class__(val, retT, vld, updateTime=updateTime)
+        
+    def _getitem__val(self, key):
         # using self.__class__ because in simulator this method is called for SimBits and we
         # do not want to work with Bits in sim
         if isinstance(key._dtype, Integer):
-            if keyVld:
-                val = selectBit(self.val, key.val)
-                vld = selectBit(self.vldMask, key.val)
-            return self.__class__(val, BIT, vld, updateTime=updateTime)
+            return self._getitem__val_int(key)
         elif key._dtype == SLICE:
-            if keyVld:
-                firstBitNo = key.val[1].val
-                size = key._size()
-                val = selectBitRange(self.val, firstBitNo, size)
-                vld = selectBitRange(self.vldMask, firstBitNo, size)
-            retT = self._dtype.__class__(size, signed=self._dtype.signed)
-            return self.__class__(val, retT, vld, updateTime=updateTime)
+            return self._getitem__val_slice(key)
         else:
             raise TypeError(key)
 
