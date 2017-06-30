@@ -1,11 +1,11 @@
-from hwt.hdlObjects.value import Value
-from hwt.hdlObjects.types.integer import Integer
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.types.defs import BOOL
+from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.booleanVal import BooleanVal
+from hwt.hdlObjects.types.defs import BOOL
+from hwt.hdlObjects.types.hdlType import HdlType
+from hwt.hdlObjects.types.integer import Integer
+from hwt.hdlObjects.value import Value
 
 
 def convertInteger(self, sigOrVal, toType):
