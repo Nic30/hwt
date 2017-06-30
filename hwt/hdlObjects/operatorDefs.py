@@ -45,11 +45,7 @@ class OpDefinition():
 
 
 def isEventDependentOp(operator):
-    return operator in (AllOps.RISING_EDGE, AllOps.EVENT, AllOps.FALLIGN_EDGE)
-
-
-def eventFn(a, now):
-    return a._hasEvent(now)
+    return operator in (AllOps.RISING_EDGE, AllOps.FALLIGN_EDGE)
 
 
 def onRisingEdgeFn(a, now):
@@ -121,7 +117,6 @@ class AllOps():
     """
     _idsInited = False
 
-    EVENT = OpDefinition(eventFn)
     RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
     FALLIGN_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary
 
@@ -182,5 +177,4 @@ def sensitivityByOp(op):
     elif op == AllOps.FALLIGN_EDGE:
         return SENSITIVITY.FALLING
     else:
-        assert op == AllOps.EVENT
-        return SENSITIVITY.ANY
+        raise TypeError()

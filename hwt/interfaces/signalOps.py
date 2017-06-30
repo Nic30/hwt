@@ -15,9 +15,6 @@ class SignalOps(object):
     def _onFallingEdge(self):
         return self._sig._onFallingEdge()
 
-    def _hasEvent(self):
-        return self._sig._hasEvent()
-
     # comparison
     def _isOn(self):
         """

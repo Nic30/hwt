@@ -2,7 +2,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 intfMethods = ["_getAssociatedClk", "_getAssociatedRst", "_connectToIter"]
 signalMethods = ["_convert"
-                 "_onRisingEdge", "_onFallingEdge", "_hasEvent",
+                 "_onRisingEdge", "_onFallingEdge",
                  '__div__', '__floordiv__', '__mod__', '__mul__', '__truediv__',
                  "_isOn", "_eq", "__ne__", "__gt__", "__lt__", "__ge__", "__le__",
                  "__invert__", "__neg__", "__and__", "__xor__", "__or__", "__add__", "__sub__", "__mul__",

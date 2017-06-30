@@ -3,7 +3,6 @@ from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.typeShortcuts import hBit
 
 opPrecedence = {AllOps.NOT: 4,
-                AllOps.EVENT: 1,
                 AllOps.RISING_EDGE: 1,
                 AllOps.DIV: 4,
                 AllOps.ADD: 5,
@@ -69,9 +68,6 @@ class SimModelSerializer_ops():
             return "SliceVal((%s, %s), SLICE, True)" % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EQ:
             return '(%s)._eq__val(%s)' % (p(ops[0]), p(ops[1]))
-        elif o == AllOps.EVENT:
-            assert len(ops) == 1
-            return p(ops[0]) + "._hasEvent__val(sim)"
         elif o == AllOps.GREATERTHAN:
             return _bin('_gt__val')
         elif o == AllOps.GE:

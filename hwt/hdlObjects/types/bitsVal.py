@@ -31,28 +31,30 @@ class BitsVal(EventCapableVal):
     :attention: operator on signals are using value operator functions as well
     """
     def _convSign__val(self, signed):
-        if self._dtype.signed == signed:
+        t = self._dtype
+        if t.signed == signed:
             return self
-        selfSign = self._dtype.signed
+        selfSign = t.signed
         v = self.clone()
-        w = self._dtype.bit_length()
+        w = t._widthVal
+        m = t._allMask
         _v = v.val
         if selfSign and not signed:
             if _v < 0:
-                v.val = mask(w) + _v + 1
+                v.val = m + _v + 1
         elif not selfSign and signed:
             msbMask = 1 << (w - 1)
             if _v >= msbMask:
-                v.val = -_v + msbMask + mask(w - 1) - 1
+                v.val = -_v + msbMask + (m >> 1) - 1
 
         return v
 
     def _convSign(self, signed):
         """
         Convert signum, no bit manipulation just data are represented differently
-        
+
         :param signed: if True value will be signed, if False value will be unsigned,
-            if None value will be vector without any sign specification 
+            if None value will be vector without any sign specification
         """
         if isinstance(self, Value):
             return self._convSign__val(signed)
@@ -82,7 +84,7 @@ class BitsVal(EventCapableVal):
     @classmethod
     def fromPy(cls, val, typeObj):
         """
-        Construct value from pythonic value (int, bytes, enum.Enum member) 
+        Construct value from pythonic value (int, bytes, enum.Enum member)
         """
         assert not isinstance(val, Value)
         allMask = typeObj.all_mask()
@@ -191,10 +193,10 @@ class BitsVal(EventCapableVal):
     def __getitem__(self, key):
         """
         [] operator
-        
+
         :attention: Table below is for litle endian bit order (MSB:LSB) which is default.
             This is **reversed** as it is in pure python where it is [0, len(self)].
-  
+
         :attention: slice on slice f signal is automatically reduced to single slice
 
         +-----------------------------+----------------------------------------------------------------------------------+
@@ -219,7 +221,7 @@ class BitsVal(EventCapableVal):
             isSLICE = True
         else:
             isSLICE = isinstance(key, Slice.getValueCls())
-        
+
         if isSLICE:
             # :note: downto notation
             start = key.val[0]
@@ -248,7 +250,7 @@ class BitsVal(EventCapableVal):
                     start = start + parentLower
                     stop = stop + parentLower
                     return original[start:stop]
-            
+
             if startIsVal:
                 _start = int(start)
                 if _start < 0 or _start > l:
@@ -258,10 +260,10 @@ class BitsVal(EventCapableVal):
                 _stop = int(stop)
                 if _stop < 0 or _stop > l:
                     raise IndexError(_stop, l)
-            
+
             if startIsVal and stopIsVal and _start - _stop <= 0:
                 raise IndexError(_start, _stop)
-            
+
             if iamVal:
                 return self._getitem__val(key)
             else:
@@ -273,7 +275,7 @@ class BitsVal(EventCapableVal):
             _v = int(key)
             if _v < 0 or _v > l - 1:
                 raise IndexError(_v)
-  
+
             resT = BIT
             if iamVal:
                 return self._getitem__val(key)
@@ -292,7 +294,6 @@ class BitsVal(EventCapableVal):
 
         else:
             raise TypeError("Index operation not implemented for index %s" % (repr(key)))
-
 
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 

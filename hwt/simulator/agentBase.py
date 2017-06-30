@@ -56,10 +56,13 @@ class SyncAgentBase(AgentBase):
         super().__init__(intf)
 
         # resolve clk and rstn
-        self.clk = self.intf._getAssociatedClk()
+        self.clk = self.intf._getAssociatedClk()._sigInside
         try:
             self.rst = self.intf._getAssociatedRst()
+            self.rstOffIn = isinstance(self.rst, Rst_n)
+            self.rst = self.rst._sigInside
         except IntfLvlConfErr as e:
+            self.rst = None
             if allowNoReset:
                 pass
             else:
@@ -70,12 +73,9 @@ class SyncAgentBase(AgentBase):
         self.driver = onRisingEdge(self.clk, self.driver)
 
     def notReset(self, s):
-        if self.rst is None:
+        rst = self.rst
+        if rst is None:
             return True
         else:
-            rst = self.rst
-            rstVal = s.read(self.rst).val
-            if isinstance(rst, Rst_n):
-                return rstVal
-            else:
-                return not rstVal
+            rstVal = s.read(rst).val
+            return bool(rstVal) == self.rstOffIn

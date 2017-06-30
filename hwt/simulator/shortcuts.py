@@ -79,7 +79,7 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls, destroyProxies=
     """
     Reconnect model signals to unit to run simulation with simulation model
     but use original unit interfaces for communication
-    
+
     :param synthesisedUnitOrIntf: interface where should be signals replaced from signals from modelCls
     :param modelCls: simulation model form where signals for synthesisedUnitOrIntf should be taken
     :param destroyProxies: destroy proxies, is true when this interface is part of array and potentially proxies under this
@@ -97,7 +97,7 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls, destroyProxies=
         for intf in subInterfaces:
             # proxies are destroyed on original interfaces and only proxies on array items will remain
             reconnectUnitSignalsToModel(intf, modelCls, destroyProxies=destroyProxies or hasProxies)
-        
+
         if not destroyProxies and hasProxies:
             # if this this interface has proxies for array items let them reconnect
             for proxy in obj._arrayElemCache:
@@ -128,7 +128,7 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls, destroyProxies=
                     while isinstance(p, InterfaceProxy):
                         assert p._itemsInOne == 1, (p, "Now there should be proxies only for leaves and proxies on partial arrays should be deleted")
                         p = p._origIntf
-        
+
                     s = p._sigInside
                     index = obj._getMySigSelector()
 
@@ -139,12 +139,11 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls, destroyProxies=
                         lowerIndex = None
                         upperIndex = index
                         width = 1
-                    #print(obj, index, width)
                     obj._sigInside = IndexSimSignalProxy(obj._origIntf._name,
-                                                       p._sigInside,
-                                                       simBitsT(width, s._dtype.signed),
-                                                       upperIndex,
-                                                       lowerIndex)
+                                                         p._sigInside,
+                                                         simBitsT(width, s._dtype.signed),
+                                                         upperIndex,
+                                                         lowerIndex)
         else:
             # reconnect signal from model
             s = synthesisedUnitOrIntf
@@ -231,7 +230,7 @@ class CallbackLoop(object):
 
 
 def isRising(sig, sim):
-    return bool(sim.read(sig)._onRisingEdge(sim.now))
+    return bool(sim.read(sig)._onRisingEdge__val(sim.now))
 
 
 def onRisingEdge(sig, fn):
@@ -241,8 +240,10 @@ def onRisingEdge(sig, fn):
     c = CallbackLoop(sig, isRising, fn)
     return c.initProcess
 
+
 def isFalling(sig, sim):
-    return bool(sim.read(sig)._onFallingEdge(sim.now))
+    return bool(sim.read(sig)._onFallingEdge__val(sim.now))
+
 
 def onFallingEdge(sig, fn):
     """
@@ -250,6 +251,7 @@ def onFallingEdge(sig, fn):
     """
     c = CallbackLoop(sig, isFalling, fn)
     return c.initProcess
+
 
 def oscilate(sig, period=10 * Time.ns, initWait=0):
     """
@@ -269,6 +271,3 @@ def oscilate(sig, period=10 * Time.ns, initWait=0):
             s.write(False, sig)
 
     return oscillateStimul
-
-
-
