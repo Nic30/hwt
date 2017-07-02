@@ -5,25 +5,31 @@
 [![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest) 
 [![Join the chat at https://gitter.im/HWToolkit/Lobby](https://badges.gitter.im/HWToolkit/Lobby.svg)](https://gitter.im/HWToolkit/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+## HWToolkit is basically more intuitive SystemC in Python and it contains:
 
-HWToolkit is:
-
-* collection of classes which are some form of information about hardware property like
-  RtlSignal, RtlNetlist, HdlType etc. and there low level objects are then used in more
-  abstract classes like Interface, Unit, AxiStream, Fifo etc.
-
-  * This creates clear hierarchy of objects which is the representation of hardware which 
-    can be then serialized to VHDL/Verilog and others. 
-
+* hardware description language
 * digital circuit simulator with UVM like verification environment
+* circuit simulator 
+* tolls for static analisis
+
+
+# Ideology
+
+* HWT uses netlist for representation of target design.
+* It is typical that this netlist are used on multiple levels (stream, data dependency, signals...)
+* Netlists are generated from usual code like statements, function calls etc.
+* HWT is not hidding reality, parts of netlists are registered on it's parents and are directly visible to user
+  as signals. Everything whtat HWT have strict order and reliable behaviour. (=Very unusual for HLS like code generators)
+* Netlist can be simulated directly but they are optimalized before simulation (converted to SimModel or SystemC)
+* For HWT size does not matter.
+
+
+Typical flow is:
+* Stream netlist description provide by user -> RtlNetlist -> architecture -serializer-> target HDL.
+
 
 Also keep in mind that HWT itself is usualy used just like api for code generating by more adwanced tools.
-Take look at hwtLib where are many useful components. 
-There are may HLS like features like:
-* loop/FSM generators, function calls in hw (look at hwt.code)
-* stream/bus builders (search for Builder)
-* abstract structure manipulation and mapping to streams/memories/busses (search for Factory, Parser, StructEndpoint)
+* There is library full of examples and real designs as well at https://github.com/Nic30/hwtLib (for hwt is like stdlib for C).
+* (System) Verilog/VHDL compatibility layer at https://github.com/Nic30/hwtHdlParsers which allows you to import objects from HDL (unmaintained). 
 
 
-* There is library full of examples and real designs as well at https://github.com/Nic30/hwtLib.
-* (System) Verilog/VHDL compatibility layer at https://github.com/Nic30/hwtHdlParsers which allows you to import objects from HDL. 
