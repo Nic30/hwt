@@ -14,8 +14,17 @@ class SerializerCtx():
     def __init__(self, scope, indent, createTmpVarFn, constCache=None):
         self.scope = scope
         self.indent = indent
-        self.createTmpVarFn = createTmpVarFn
+
+        if createTmpVarFn is None:
+            self.createTmpVarFn = self.defaultCreateTmpVarFn
+        else:
+            self.createTmpVarFn = createTmpVarFn
+        
+        
         self.constCache = constCache
+
+    def defaultCreateTmpVarFn(self, sugestedName, dtype):
+        raise NotImplementedError()
 
     def withIndent(self, indent=1):
         return SerializerCtx(self.scope, self.indent + indent, self.createTmpVarFn, self.constCache)

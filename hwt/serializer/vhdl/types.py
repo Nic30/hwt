@@ -10,18 +10,20 @@ class VhdlSerializer_types():
     @classmethod
     def HdlType_bits(cls, typ, ctx, declaration=False):
         disableRange = False
+        l = typ.bit_length()
+        w = typ.width
+        isVector = typ.forceVector or l > 1
+
         if typ.signed is None:
-            if typ.forceVector or typ.bit_length() > 1:
+            if isVector:
                 name = 'STD_LOGIC_VECTOR'
             else:
-                name = 'STD_LOGIC'
-                disableRange = True
+                return 'STD_LOGIC'
         elif typ.signed:
             name = "SIGNED"
         else:
             name = 'UNSIGNED'
 
-        w = typ.width
         if disableRange or w is None or isinstance(w, Unconstrained):
             constr = ""
         elif isinstance(w, int):

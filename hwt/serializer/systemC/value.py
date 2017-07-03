@@ -1,10 +1,11 @@
 from hwt.hdlObjects.value import Value
 from hwt.serializer.exceptions import SerializerException
+from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-class SystemCSerializer_value():
+class SystemCSerializer_value(GenericSerializer_Value):
     
     @classmethod
     def SignalItem(cls, si, createTmpVarFn, scope, declaration=False, indent=0):

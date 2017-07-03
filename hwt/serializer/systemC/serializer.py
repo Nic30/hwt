@@ -3,7 +3,7 @@ from jinja2.loaders import PackageLoader
 
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.enumVal import EnumVal
-from hwt.serializer.serializerClases.base import SerializerBase
+from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.nameScope import LangueKeyword
 from hwt.serializer.systemC.keywords import SYSTEMC_KEYWORDS
 from hwt.serializer.systemC.statements import SystemCSerializer_statements
@@ -13,7 +13,7 @@ from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
 
 
-class SystemCSerializer(SerializerBase, SystemCSerializer_value, SystemCSerializer_type, SystemCSerializer_statements):
+class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSerializer_type, SystemCSerializer_statements):
     """
     Serialized used to convert HWT design to SystemC code
     """

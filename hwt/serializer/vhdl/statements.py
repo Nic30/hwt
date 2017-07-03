@@ -119,7 +119,7 @@ class VhdlSerializer_statements():
                     elif srcT.signed is not dstT.signed:
                         return "%s, %s %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src._convSign(dstT.signed)))
 
-            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%s; %s) " % 
+            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%s; %s) " %
                                       (indent_str, dstStr, symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
 
     @classmethod
@@ -241,3 +241,4 @@ class VhdlSerializer_statements():
             sensitivityList=", ".join(sensitivityList),
             statements=extraVarsInit + statemets
             )
+

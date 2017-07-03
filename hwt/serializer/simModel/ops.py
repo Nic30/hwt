@@ -4,6 +4,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 opPrecedence = {AllOps.NOT: 4,
+                AllOps.NEG: 4,
                 AllOps.RISING_EDGE: 1,
                 AllOps.DIV: 4,
                 AllOps.ADD: 5,
@@ -17,6 +18,8 @@ opPrecedence = {AllOps.NOT: 4,
                 AllOps.DOWNTO: 1,
                 AllOps.GREATERTHAN: 10,
                 AllOps.LOWERTHAN: 10,
+                AllOps.GE: 10,
+                AllOps.LE: 10,
                 AllOps.CONCAT: 1,
                 AllOps.INDEX: 1,
                 AllOps.TERNARY: 1,
@@ -86,6 +89,8 @@ class SimModelSerializer_ops():
             return _bin('_ne__val')
         elif o == AllOps.ADD:
             return _bin('_add__val')
+        elif o == AllOps.NEG:
+            return "(%s)._neg__val()" % (p(ops[0]))
         elif o == AllOps.TERNARY:
             return "(%s)._ternary__val(%s, %s)" % tuple(map(lambda x: cls.asHdl(x, ctx), ops))
         elif o == AllOps.RISING_EDGE:

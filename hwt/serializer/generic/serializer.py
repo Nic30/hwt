@@ -29,7 +29,7 @@ def paramsToValTuple(unit):
         d[name] = v
     return freeze_dict(d)
 
-class SerializerBase():
+class GenericSerializer():
     """
     Base class for serializers
     """

@@ -10,7 +10,7 @@ from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.enumVal import EnumVal
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.serializerClases.base import SerializerBase
+from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.constCache import ConstCache
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.nameScope import LangueKeyword
@@ -28,7 +28,7 @@ processTmpl = env.get_template('process.py')
 ifTmpl = env.get_template("if.py")
 
 
-class SimModelSerializer(SerializerBase, SimModelSerializer_value,
+class SimModelSerializer(GenericSerializer, SimModelSerializer_value,
                          SimModelSerializer_ops, SimModelSerializer_types):
     _keywords_dict = {kw: LangueKeyword() for kw in SIMMODEL_KEYWORDS}
     fileExtension = '.py'

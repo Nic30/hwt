@@ -5,7 +5,7 @@ from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.variables import SignalItem
 from hwt.pyUtils.arrayQuery import groupedby
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.serializerClases.base import SerializerBase
+from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.context import SerializerCtx
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.mapExpr import MapExpr
@@ -55,7 +55,7 @@ class DebugTmpVarStack():
         return separator.join(map(self._serializeItem, self.vars)) + "\n"
 
 
-class VhdlSerializer(SerializerBase, VhdlTmplContainer, VhdlSerializer_Value, 
+class VhdlSerializer(GenericSerializer, VhdlTmplContainer, VhdlSerializer_Value, 
                      VhdlSerializer_ops, VhdlSerializer_types, VhdlSerializer_statements):
     VHDL_VER = VhdlVersion.v2002
     _keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
@@ -153,7 +153,7 @@ class VhdlSerializer(SerializerBase, VhdlTmplContainer, VhdlSerializer_Value,
             genericMaps.append(gm)
 
         if len(portMaps) == 0:
-            raise Exception("Incomplete component instance")
+            raise SerializerException("Incomplete component instance")
 
         # [TODO] check component instance name
         return cls.componentInstanceTmpl.render(
@@ -214,6 +214,7 @@ class VhdlSerializer(SerializerBase, VhdlTmplContainer, VhdlSerializer_Value,
                       repr(pc.portItem._dtype), repr(pc.sig._dtype)))
         return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
 
+
     @classmethod
     def DIRECTION(cls, d):
         return d.name
@@ -226,3 +227,4 @@ class VhdlSerializer(SerializerBase, VhdlTmplContainer, VhdlSerializer_Value,
     @classmethod
     def MapExpr(cls, m, ctx):
         return "%s => %s" % (m.compSig.name, cls.asHdl(m.value, ctx))
+

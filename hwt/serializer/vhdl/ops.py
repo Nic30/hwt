@@ -5,10 +5,10 @@ from hwt.hdlObjects.operatorDefs import AllOps
 # keep in mind that there is no such a thing in vhdl itself
 opPrecedence = {AllOps.NOT: 2,
                 AllOps.RISING_EDGE: 1,
+                AllOps.NEG: 2,
                 AllOps.DIV: 3,
                 AllOps.ADD: 3,
                 AllOps.SUB: 3,
-                AllOps.MUL: 3,
                 AllOps.MUL: 3,
                 AllOps.XOR: 2,
                 AllOps.EQ: 2,
@@ -18,6 +18,8 @@ opPrecedence = {AllOps.NOT: 2,
                 AllOps.DOWNTO: 2,
                 AllOps.GREATERTHAN: 2,
                 AllOps.LOWERTHAN: 2,
+                AllOps.GE: 2,
+                AllOps.LE: 2,
                 AllOps.CONCAT: 2,
                 AllOps.INDEX: 1,
                 AllOps.TERNARY: 1,
@@ -107,6 +109,8 @@ class VhdlSerializer_ops():
             return _bin('/=')
         elif o == AllOps.ADD:
             return _bin('+')
+        elif o == AllOps.NEG:
+            return "-(%s)"% (p(ops[0]))
         elif o == AllOps.TERNARY:
             return p(ops[1]) + " WHEN " + cls.condAsHdl([ops[0]], True, createTmpVarFn) + " ELSE " + p(ops[2])
         elif o == AllOps.RISING_EDGE:

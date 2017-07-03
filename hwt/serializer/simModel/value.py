@@ -1,17 +1,13 @@
-from hwt.hdlObjects.types.array import Array
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.enum import Enum
-from hwt.hdlObjects.types.integer import Integer
-from hwt.hdlObjects.types.slice import Slice
 from hwt.hdlObjects.variables import SignalItem
+from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.synthesizer.param import Param, evalParam
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.serializer.serializerClases.indent import getIndent
 
 
-class SimModelSerializer_value():
+class SimModelSerializer_value(GenericSerializer_Value):
 
     @classmethod
-    def Bits_valAsVhdl(cls, dtype, val):
+    def Bits_valAsHdl(cls, dtype, val, ctx):
         return "BitsVal(%d, simBitsT(%d, %r), %d)" % (
             val.val, dtype.bit_length(), dtype.signed, val.vldMask)
 
@@ -30,57 +26,28 @@ class SimModelSerializer_value():
                 return "self.%s._oldVal" % si.name
 
     @classmethod
-    def Integer_valAsVhdl(cls, t, i):
+    def Integer_valAsHdl(cls, t, i, ctx):
         if i.vldMask:
             return "simHInt(%d)" % i.val
         else:
             return "simHInt(None)"
 
     @classmethod
-    def Array_valAsVhdl(cls, t, val, ctx):
+    def Array_valAsHdl(cls, t, val, ctx):
         return "ArrayVal([%s], %s, %d)" % (
-                ",\n".join(map(lambda v: cls.Value(v, ctx),
+                (",\n" + getIndent(ctx.indent + 1)).join(map(lambda v: cls.Value(v, ctx),
                                val.val)),
                 cls.HdlType(t, ctx),
                 val.vldMask)
 
     @classmethod
-    def Slice_valAsVhdl(cls, t, val):
+    def Slice_valAsHdl(cls, t, val, ctx):
         return "SliceVal((simHInt(%d), simHInt(%d)), SLICE, %d)" % (
                     evalParam(val.val[0]).val,
                     evalParam(val.val[1]).val,
                     val.vldMask)
 
     @classmethod
-    def Enum_valAsVhdl(cls, t, val):
+    def Enum_valAsHdl(cls, t, val, ctx):
         return "self.%s.%s" % (t.name, val.val)
-
-    @classmethod
-    def Value(cls, val, ctx):
-        """
-        :param dst: is signal connected with value
-        :param val: value object, can be instance of Signal or Value
-        """
-
-        t = val._dtype
-
-        if isinstance(val, RtlSignalBase):
-            return cls.SignalItem(val, ctx)
-        elif isinstance(t, Enum):
-            return cls.Enum_valAsVhdl(t, val)
-
-        elif ctx.constCache is not None:
-            return "self." + ctx.constCache.getConstName(val)
-
-        elif isinstance(t, Slice):
-            return cls.Slice_valAsVhdl(t, val)
-        elif isinstance(t, Array):
-            return cls.Array_valAsVhdl(t, val, ctx)
-        elif isinstance(t, Bits):
-            return cls.Bits_valAsVhdl(t, val)
-        elif isinstance(t, Integer):
-            return cls.Integer_valAsVhdl(t, val)
-        else:
-            raise Exception("value2vhdlformat can not resolve value serialization for %s" % (
-                                repr(val)))
 
