@@ -1,4 +1,3 @@
-from hwt.hdlObjects.constants import Unconstrained
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.typeShortcuts import hInt
@@ -24,7 +23,7 @@ class VhdlSerializer_types():
         else:
             name = 'UNSIGNED'
 
-        if disableRange or w is None or isinstance(w, Unconstrained):
+        if disableRange:
             constr = ""
         elif isinstance(w, int):
             constr = "(%d DOWNTO 0)" % (w - 1)

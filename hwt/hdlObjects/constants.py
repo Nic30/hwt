@@ -1,10 +1,6 @@
 from enum import Enum
 
 
-class Unconstrained():
-    __slots__ = ["derivedWidth"]
-
-
 class INTF_DIRECTION(Enum):
     MASTER = 0
     SLAVE = 1
