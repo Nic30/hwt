@@ -122,13 +122,14 @@ class BooleanVal(Value):
 
     def _ternary__val(self, ifTrue, ifFalse):
         if self.val:
-            if not self.vldMask:
-                ifTrue.vldMask = 0
-            return ifTrue
+            res = ifTrue.clone()
         else:
-            if not self.vldMask:
-                ifFalse.vldMask = 0
-            return ifFalse
+            res = ifFalse.clone()
+
+        if not self.vldMask:
+            res.vldMask = 0
+
+        return res
 
     def _ternary(self, ifTrue, ifFalse):
         ifTrue = toHVal(ifTrue)
