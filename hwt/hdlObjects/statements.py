@@ -10,8 +10,10 @@ class CodeStatement():
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
         tmpVars = DebugTmpVarStack()
+        ctx = VhdlSerializer.getBaseContext()
+        ctx.createTmpVarFn = tmpVars.createTmpVarFn
         
-        s = getattr(VhdlSerializer, self.__class__.__name__)(self, tmpVars.createTmpVarFn)
+        s = getattr(VhdlSerializer, self.__class__.__name__)(self, ctx)
         return "%s%s" % (tmpVars.serialize(), s)
 
 class IfContainer(CodeStatement):

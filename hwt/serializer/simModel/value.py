@@ -16,16 +16,16 @@ class SimModelSerializer_value():
             val.val, dtype.bit_length(), dtype.signed, val.vldMask)
 
     @classmethod
-    def SignalItem(cls, si, constStore, declaration=False):
+    def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
             raise NotImplementedError()
         else:
             if isinstance(si, Param):
-                return cls.Value(evalParam(si), constStore)
+                return cls.Value(evalParam(si), ctx)
             if isinstance(si, SignalItem) and si._const:
-                return cls.Value(si._val, constStore)
+                return cls.Value(si._val, ctx)
             if si.hidden and hasattr(si, "origin"):
-                return cls.asHdl(si.origin, constStore)
+                return cls.asHdl(si.origin, ctx)
             else:
                 return "self.%s._oldVal" % si.name
 
@@ -37,11 +37,11 @@ class SimModelSerializer_value():
             return "simHInt(None)"
 
     @classmethod
-    def Array_valAsVhdl(cls, t, val):
+    def Array_valAsVhdl(cls, t, val, ctx):
         return "ArrayVal([%s], %s, %d)" % (
-                ",\n".join(map(lambda v: cls.Value(v, None),
+                ",\n".join(map(lambda v: cls.Value(v, ctx),
                                val.val)),
-                cls.HdlType(t),
+                cls.HdlType(t, ctx),
                 val.vldMask)
 
     @classmethod
@@ -56,7 +56,7 @@ class SimModelSerializer_value():
         return "self.%s.%s" % (t.name, val.val)
 
     @classmethod
-    def Value(cls, val, constStore):
+    def Value(cls, val, ctx):
         """
         :param dst: is signal connected with value
         :param val: value object, can be instance of Signal or Value
@@ -65,17 +65,17 @@ class SimModelSerializer_value():
         t = val._dtype
 
         if isinstance(val, RtlSignalBase):
-            return cls.SignalItem(val, constStore)
+            return cls.SignalItem(val, ctx)
         elif isinstance(t, Enum):
             return cls.Enum_valAsVhdl(t, val)
 
-        elif constStore is not None:
-            return "self." + constStore.getConstName(val)
+        elif ctx.constCache is not None:
+            return "self." + ctx.constCache.getConstName(val)
 
         elif isinstance(t, Slice):
             return cls.Slice_valAsVhdl(t, val)
         elif isinstance(t, Array):
-            return cls.Array_valAsVhdl(t, val)
+            return cls.Array_valAsVhdl(t, val, ctx)
         elif isinstance(t, Bits):
             return cls.Bits_valAsVhdl(t, val)
         elif isinstance(t, Integer):

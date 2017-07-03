@@ -53,6 +53,7 @@ class Assignment(object):
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
         tmpVars = DebugTmpVarStack()
-        
-        s = VhdlSerializer.Assignment(self, tmpVars.createTmpVarFn)
+        ctx = VhdlSerializer.getBaseContext()
+        ctx.createTmpVarFn = tmpVars.createTmpVarFn
+        s = VhdlSerializer.Assignment(self, ctx)
         return "%s%s" % (tmpVars.serialize(), s)

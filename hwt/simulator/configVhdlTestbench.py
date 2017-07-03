@@ -1,9 +1,10 @@
 import sys
 
+from hwt.code import connect
 from hwt.hdlObjects.architecture import Architecture
+from hwt.hdlObjects.constants import INTF_DIRECTION
 from hwt.hdlObjects.entity import Entity
 from hwt.hdlObjects.process import HWProcess
-from hwt.hdlObjects.constants import INTF_DIRECTION
 from hwt.hdlObjects.statements import WaitStm
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.boolean import Boolean
@@ -11,7 +12,6 @@ from hwt.hdlObjects.types.defs import BIT
 from hwt.hdlObjects.types.enum import Enum
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.simulator.hdlSimConfig import HdlSimConfig
-from hwt.code import connect
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -124,6 +124,6 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
         else:
             _dumpFile = dumpFile
 
-        sc = VhdlSerializer.getBaseNameScope()
-        _dumpFile.write(VhdlSerializer.formater(VhdlSerializer.Entity(self.tbEnt, sc)))
-        _dumpFile.write(VhdlSerializer.formater(VhdlSerializer.Architecture(self.tbArch, sc)))
+        ctx = VhdlSerializer.getBaseContext()
+        _dumpFile.write(VhdlSerializer.formater(VhdlSerializer.Entity(self.tbEnt, ctx)))
+        _dumpFile.write(VhdlSerializer.formater(VhdlSerializer.Architecture(self.tbArch, ctx)))

@@ -15,18 +15,18 @@ from hwt.serializer.serializerClases.indent import getIndent
 class VhdlSerializer_Value():
 
     @classmethod
-    def Value(cls, val, createTmpVarFn):
+    def Value(cls, val, ctx):
         """
         :param dst: is signal connected with value
         :param val: value object, can be instance of Signal or Value
         """
         t = val._dtype
         if isinstance(val, RtlSignalBase):
-            return cls.SignalItem(val, createTmpVarFn)
+            return cls.SignalItem(val, ctx)
         elif isinstance(t, Slice):
-            return cls.Slice_valAsVhdl(t, val, createTmpVarFn)
+            return cls.Slice_valAsVhdl(t, val, ctx)
         elif isinstance(t, Array):
-            return cls.Array_valAsVhdl(t, val, createTmpVarFn)
+            return cls.Array_valAsVhdl(t, val, ctx)
         elif isinstance(t, Bits):
             return cls.Bits_valAsVhdl(t, val)
         elif isinstance(t, Boolean):
@@ -41,7 +41,7 @@ class VhdlSerializer_Value():
             raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val)))
 
     @classmethod
-    def SignalItem(cls, si, createTmpVarFn, declaration=False, indent=0):
+    def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
             v = si.defaultVal
             if si.virtualOnly:
@@ -55,21 +55,20 @@ class VhdlSerializer_Value():
             else:
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)
 
-            s = "%s%s %s : %s" % (getIndent(indent), prefix, si.name, cls.HdlType(si._dtype, createTmpVarFn))
+            s = "%s%s %s : %s" % (getIndent(ctx.indent), prefix, si.name, cls.HdlType(si._dtype, ctx))
             if isinstance(v, RtlSignalBase):
-                return s + " := %s" % cls.asHdl(v, createTmpVarFn)
+                return s + " := %s" % cls.asHdl(v, ctx)
             elif isinstance(v, Value):
                 if si.defaultVal.vldMask:
-                    return s + " := %s" % cls.Value(si.defaultVal, createTmpVarFn)
+                    return s + " := %s" % cls.Value(si.defaultVal, ctx)
                 else:
                     return s
             else:
                 raise NotImplementedError(v)
 
         else:
-            assert indent == 0
             if si.hidden and hasattr(si, "origin"):
-                return cls.asHdl(si.origin, createTmpVarFn)
+                return cls.asHdl(si.origin, ctx)
             else:
                 return si.name
 
@@ -78,8 +77,8 @@ class VhdlSerializer_Value():
         return '%s' % str(val.val)
 
     @classmethod
-    def Array_valAsVhdl(cls, dtype, val, createTmpVarFn):
-        return "(" + (",\n".join([cls.Value(v, createTmpVarFn) for v in val.val])) + ")"
+    def Array_valAsVhdl(cls, dtype, val, ctx):
+        return "(" + (",\n".join([cls.Value(v, ctx) for v in val.val])) + ")"
 
     @classmethod
     def Bits_valAsVhdl(cls, dtype, val):
@@ -158,7 +157,7 @@ class VhdlSerializer_Value():
         return str(int(val.val))
 
     @classmethod
-    def Slice_valAsVhdl(cls, dtype, val, createTmpVarFn):
+    def Slice_valAsVhdl(cls, dtype, val, ctx):
         upper = val.val[0]
         if isinstance(upper, Value):
             upper = upper - 1
@@ -166,7 +165,7 @@ class VhdlSerializer_Value():
         else:
             _format = "%s-1 DOWNTO %s"
         
-        return _format % (cls.Value(upper, createTmpVarFn), cls.Value(val.val[1], createTmpVarFn))
+        return _format % (cls.Value(upper, ctx), cls.Value(val.val[1], ctx))
 
     @classmethod
     def String_valAsVhdl(cls, dtype, val):

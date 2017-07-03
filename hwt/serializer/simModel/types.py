@@ -1,16 +1,15 @@
-from hwt.hdlObjects.types.array import Array
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.enum import Enum
-from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.hdlObjects.types.integer import Integer
+from hwt.hdlObjects.types.integerVal import IntegerVal
 from hwt.serializer.exceptions import SerializerException
 from hwt.synthesizer.param import evalParam
-from hwt.hdlObjects.types.integerVal import IntegerVal
 
 
 class SimModelSerializer_types():
+    """
+    part of SimModelSerializer responsible for type serialization
+    """
+
     @classmethod
-    def HdlType_bits(cls, typ, declaration=False):
+    def HdlType_bits(cls, typ, ctx, declaration=False):
         if typ.signed is None:
             if not (typ.forceVector or typ.bit_length() > 1):
                 return 'SIM_BIT'
@@ -27,9 +26,9 @@ class SimModelSerializer_types():
         return "simBitsT(%d, %r)" % (w, typ.signed)
 
     @classmethod
-    def HdlType_enum(cls, typ, scope, declaration=False):
+    def HdlType_enum(cls, typ, ctx, declaration=False):
         if declaration:
-            typ.name = scope.checkedName(typ.name, typ)
+            typ.name = ctx.scope.checkedName(typ.name, typ)
 
             return '%s = Enum( "%s", [%s])' % (typ.name,
                                                typ.name,
@@ -39,7 +38,7 @@ class SimModelSerializer_types():
             return typ.name
 
     @classmethod
-    def HdlType_int(cls, typ, scope, declaration=False):
+    def HdlType_int(cls, typ, ctx, declaration=False):
         ma = typ.max
         mi = typ.min
         noMax = ma is None
@@ -62,24 +61,7 @@ class SimModelSerializer_types():
                 raise NotImplementedError()
 
     @classmethod
-    def HdlType_array(cls, typ, scope, declaration=False):
+    def HdlType_array(cls, typ, ctx, declaration=False):
         assert not declaration
-        return "Array(%s, %d)" % (cls.HdlType(typ.elmType), evalParam(typ.size).val)
-
-    @classmethod
-    def HdlType(cls, typ, scope=None, declaration=False):
-        if isinstance(typ, Bits):
-            return cls.HdlType_bits(typ, declaration=declaration)
-        elif isinstance(typ, Enum):
-            return cls.HdlType_enum(typ, scope, declaration=declaration)
-        elif isinstance(typ, Array):
-            return cls.HdlType_array(typ, scope, declaration=declaration)
-        elif isinstance(typ, Integer):
-            return cls.HdlType_int(typ, scope, declaration=declaration)
-        else:
-            if declaration:
-                raise NotImplementedError("type declaration is not implemented for type %s"
-                                          % (typ.name))
-            else:
-                assert isinstance(typ, HdlType)
-                return typ.name.upper()
+        return "Array(%s, %d)" % (cls.HdlType(typ.elmType, ctx, declaration=declaration),
+                                  evalParam(typ.size).val)

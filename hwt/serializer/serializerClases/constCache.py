@@ -1,5 +1,5 @@
 
-class ConstantStore(object):
+class ConstCache(object):
     """
     Container of constants for serializer
     """
@@ -14,6 +14,11 @@ class ConstantStore(object):
         try:
             return self._cache[val]
         except KeyError:
-            c = self.nameCheckFn("const_", val)
+            if isinstance(val.val, int):
+                name = "const_%d_" % val.val
+            else:
+                name = "const_"
+
+            c = self.nameCheckFn(name, val)
             self._cache[val] = c
             return c

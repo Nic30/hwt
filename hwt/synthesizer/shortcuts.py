@@ -10,6 +10,7 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.uniqList import UniqList
+from hwt.serializer.serializerClases.context import SerializerCtx
 
 
 def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
@@ -43,15 +44,17 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
             if isinstance(obj, Entity):
                 s = globScope.fork(1)
                 s.setLevel(2)
-                mouduleScopes[obj] = s
-                sc = serializer.Entity(obj, s)
+                ctx = SerializerCtx(s, 0, None, None)
+                mouduleScopes[obj] = ctx
+                
+                sc = serializer.Entity(obj, ctx)
             elif isinstance(obj, Architecture):
                 try:
-                    s = mouduleScopes[obj.entity]
+                    ctx = mouduleScopes[obj.entity]
                 except KeyError:
                     raise SerializerException("Entity should be serialized before architecture of %s" %
                                               (obj.getEntityName()))
-                sc = serializer.Architecture(obj, s)
+                sc = serializer.Architecture(obj, ctx)
             else:
                 sc = serializer.asHdl(obj)
 
@@ -105,19 +108,20 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 # we need to serialize before we take name, before name can change
                 s = globScope.fork(1)
                 s.setLevel(2)
-                mouduleScopes[obj] = s
-
-                sc = serializer.Entity(obj, s)
+                ctx = SerializerCtx(s, 0, None, None)
+                mouduleScopes[obj] = ctx
+                
+                sc = serializer.Entity(obj, ctx)
                 fName = obj.name + serializer.fileExtension
                 fileMode = 'w'
 
             elif isinstance(obj, Architecture):
                 try:
-                    s = mouduleScopes[obj.entity]
+                    ctx = mouduleScopes[obj.entity]
                 except KeyError:
                     raise SerializerException("Entity should be serialized before architecture of %s" %
                                               (obj.getEntityName()))
-                sc = serializer.Architecture(obj, s)
+                sc = serializer.Architecture(obj, ctx)
                 fName = obj.getEntityName() + serializer.fileExtension
                 fileMode = 'a'
             else:
