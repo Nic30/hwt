@@ -51,7 +51,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
 
     @staticmethod
     def BitString_binary(v, width, vldMask=None):
-        buff = []
+        buff = ['"']
         for i in range(width - 1, -1, -1):
             mask = (1 << i)
             b = v & mask
@@ -61,7 +61,8 @@ class VhdlSerializer_Value(GenericSerializer_Value):
             else:
                 s = "X"
             buff.append(s)
-        return '"%s"' % (''.join(buff))
+        buff.append('"')
+        return ''.join(buff)
 
     @classmethod
     def BitString(cls, v, width, vldMask=None):
@@ -116,7 +117,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
             _format = "%s DOWNTO %s"
         else:
             _format = "%s-1 DOWNTO %s"
-        
+
         return _format % (cls.Value(upper, ctx), cls.Value(val.val[1], ctx))
 
     @classmethod

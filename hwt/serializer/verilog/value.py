@@ -75,7 +75,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
 
     @staticmethod
     def BitString_binary(v, width, vldMask=None):
-        buff = []
+        buff = ["2'b"]
         for i in range(width - 1, -1, -1):
             mask = (1 << i)
             b = v & mask
@@ -85,7 +85,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             else:
                 s = "x"
             buff.append(s)
-        return "2'b%s" % (''.join(buff))
+        return ''.join(buff)
 
     @classmethod
     def DIRECTION(cls, d):
