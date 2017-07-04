@@ -23,6 +23,7 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
     moduleTmpl = env.get_template('module.cpp')
     mehtodTmpl = env.get_template("method.cpp")
     ifTmpl = env.get_template("if.cpp")
+    switchStm env.get_template("switch.cpp")
 
     @classmethod
     def comment(cls, comentStr):
@@ -31,7 +32,7 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
     @classmethod
     def PortItem(cls, pi, ctx):
         d = cls.DIRECTION(pi.direction)
-        
+
         return "sc_%s<%s> %s;" % (d,
                                   cls.HdlType(pi._dtype, ctx),
                                   pi.name)

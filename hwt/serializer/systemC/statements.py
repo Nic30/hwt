@@ -23,9 +23,30 @@ class SystemCSerializer_statements():
             name=proc.name,
             statements=statemets
             )
-        
-        
-    
+
+    @classmethod
+    def SwitchContainer(cls, sw, ctx):
+        childCtx = ctx.withIndent(2)
+
+        def asHdl(statements):
+            return [cls.asHdl(s, childCtx) for s in statements]
+
+        switchOn = cls.condAsHdl(sw.switchOn, False, ctx)
+
+        cases = []
+        for key, statements in sw.cases:
+            key = cls.asHdl(key, ctx)
+
+            cases.append((key, asHdl(statements)))
+
+        if sw.default:
+            cases.append((None, asHdl(sw.default)))
+
+        return cls.switchTmpl.render(
+                            indent=getIndent(ctx.indent),
+                            switchOn=switchOn,
+                            cases=cases)
+
     @classmethod
     def IfContainer(cls, ifc, ctx):
         """
