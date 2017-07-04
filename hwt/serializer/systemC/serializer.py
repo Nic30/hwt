@@ -23,7 +23,7 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
     moduleTmpl = env.get_template('module.cpp')
     mehtodTmpl = env.get_template("method.cpp")
     ifTmpl = env.get_template("if.cpp")
-    switchStm env.get_template("switch.cpp")
+    switchStm = env.get_template("switch.cpp")
 
     @classmethod
     def comment(cls, comentStr):
