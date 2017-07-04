@@ -6,7 +6,6 @@ from hwt.hdlObjects.types.defs import BIT
 # http://www.asicguru.com/verilog/tutorial/operators/57/
 opPrecedence = {AllOps.NOT: 3,
                 AllOps.NEG: 5,
-                AllOps.EVENT: 0,
                 AllOps.RISING_EDGE: 0,
                 AllOps.DIV: 6,
                 AllOps.ADD: 7,
@@ -110,7 +109,7 @@ class VerilogSerializer_ops():
                 return "%s ? %s : %s" % (cls.condAsHdl([ops[0]], True, createTmpVarFn),
                                          p(ops[1]),
                                          p(ops[2]))
-        elif o == AllOps.RISING_EDGE or o == AllOps.FALLIGN_EDGE or o == AllOps.EVENT:
+        elif o == AllOps.RISING_EDGE or o == AllOps.FALLIGN_EDGE:
             raise UnsupportedEventOpErr()
         elif o == AllOps.BitsAsSigned:
             assert len(ops) == 1
