@@ -21,9 +21,9 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
     _keywords_dict = {kw: LangueKeyword() for kw in SYSTEMC_KEYWORDS}
     env = Environment(loader=PackageLoader('hwt', 'serializer/systemC/templates'))
     moduleTmpl = env.get_template('module.cpp')
-    mehtodTmpl = env.get_template("method.cpp")
+    methodTmpl = env.get_template("method.cpp")
     ifTmpl = env.get_template("if.cpp")
-    switchStm = env.get_template("switch.cpp")
+    switchTmpl = env.get_template("switch.cpp")
 
     @classmethod
     def comment(cls, comentStr):

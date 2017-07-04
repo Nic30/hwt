@@ -1,3 +1,4 @@
+from hwt.bitmask import mask
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BOOL, BIT
 from hwt.hdlObjects.value import Value
@@ -5,7 +6,6 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.bitmask import mask
 
 
 class SystemCSerializer_value(GenericSerializer_Value):
@@ -40,7 +40,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
             if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin, ctx)
             else:
-                return si.name
+                return "%s.read()" % si.name
 
     @classmethod
     def condAsHdl(cls, cond, forceBool, createTmpVarFn):
@@ -75,7 +75,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
     @classmethod
     def BitLiteral(cls, v, vldMask):
         if vldMask:
-            return "%d" % int(bool(v))
+            return "'%d'" % int(bool(v))
         else:
             return "'X'"
 
