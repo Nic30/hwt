@@ -87,7 +87,8 @@ class GenericSerializer():
         """
         Decide if this unit should be serialized or not eventually fix name to fit same already serialized unit
 
-        :param serializedClasses: unitCls : unitobj
+        :param obj: object to serialize
+        :param serializedClasses: dict {unitCls : unitobj}
         :param serializedConfiguredUnits: (unitCls, paramsValues) : unitObj
             where paramsValues are named tuple name:value
         """
