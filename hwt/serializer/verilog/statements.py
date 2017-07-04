@@ -62,18 +62,19 @@ class VerilogSerializer_statements():
                                       (indent_str, dstStr, symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
 
     @classmethod
-    def IfContainer(cls, ifc, createTmpVarFn, indent=0):
+    def IfContainer(cls, ifc, ctx):
+        childCtx = ctx.withIndent()
         def asHdl(obj):
-            return cls.asHdl(obj, createTmpVarFn, indent=indent + 1)
+            return cls.asHdl(obj, childCtx)
         try:
-            cond = cls.condAsHdl(ifc.cond, True, createTmpVarFn)
+            cond = cls.condAsHdl(ifc.cond, True, ctx)
         except UnsupportedEventOpErr as e:
             cond = None
 
         if cond is None:
             assert not ifc.elIfs
             assert not ifc.ifFalse
-            stmBuff = [cls.asHdl(s, createTmpVarFn, indent=indent) for s in ifc.ifTrue]
+            stmBuff = [cls.asHdl(s, ctx) for s in ifc.ifTrue]
             return ";\n".join(stmBuff)
 
         elIfs = []
@@ -81,7 +82,7 @@ class VerilogSerializer_statements():
         ifFalse = ifc.ifFalse
         for c, statements in ifc.elIfs:
             try:
-                elIfs.append((cls.condAsHdl(c, True, createTmpVarFn), [asHdl(s) for s in statements]))
+                elIfs.append((cls.condAsHdl(c, True, ctx), [asHdl(s) for s in statements]))
             except UnsupportedEventOpErr as e:
                 if len(ifc.elIfs) == 1 and not ifFalse:
                     # register expression is in valid format and this is just register
@@ -91,7 +92,7 @@ class VerilogSerializer_statements():
                     raise e
 
         return cls.ifTmpl.render(
-                            indent=getIndent(indent),
+                            indent=getIndent(ctx.indent),
                             cond=cond,
                             ifTrue=[asHdl(s) for s in ifTrue],
                             elIfs=elIfs,
