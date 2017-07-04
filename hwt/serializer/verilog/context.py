@@ -16,5 +16,5 @@ class VerilogSerializerCtx(SerializerCtx):
 
     def forSignal(self, signalItem):
         ctx = copy(self)
-        ctx.signalType = verilogTypeOfSig(SerializerCtx)
+        ctx.signalType = verilogTypeOfSig(signalItem)
         return ctx
