@@ -1,3 +1,5 @@
+from copy import copy
+
 
 class SerializerCtx():
     """
@@ -19,13 +21,16 @@ class SerializerCtx():
             self.createTmpVarFn = self.defaultCreateTmpVarFn
         else:
             self.createTmpVarFn = createTmpVarFn
-        
-        
+
         self.constCache = constCache
 
     def defaultCreateTmpVarFn(self, sugestedName, dtype):
         raise NotImplementedError()
 
     def withIndent(self, indent=1):
-        return SerializerCtx(self.scope, self.indent + indent, self.createTmpVarFn, self.constCache)
-    
+        """
+        Create copy of this context with increased indent
+        """
+        ctx = copy(self)
+        ctx.indent += indent
+        return ctx

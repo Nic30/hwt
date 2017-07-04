@@ -6,7 +6,6 @@ from hwt.hdlObjects.variables import SignalItem
 from hwt.pyUtils.arrayQuery import groupedby
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
-from hwt.serializer.serializerClases.context import SerializerCtx
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.mapExpr import MapExpr
 from hwt.serializer.serializerClases.nameScope import LangueKeyword, NameScope
@@ -29,7 +28,7 @@ class DebugTmpVarStack():
         """
         self.vars = []
         self.serializer = VhdlSerializer
-    
+
     def createTmpVarFn(self, suggestedName, dtype):
         # [TODO] it is better to use RtlSignal
         ser = self.serializer
@@ -38,24 +37,24 @@ class DebugTmpVarStack():
         s.hidden = False
         serializedS = ser.SignalItem(s, self.createTmpVarFn, declaration=True)
         self.vars.append((serializedS, s))
-        
+
         return s
-    
+
     def _serializeItem(self, item):
         var, s = item
         # assignemt of value for this tmp variable
         a = Assignment(s.defaultVal, s, virtualOnly=True)
         return "%s\n%s" % (var, self.serializer.Assignment(a, self.createTmpVarFn))
-    
+
     def serialize(self, indent=0):
         if not self.vars:
             return ""
-        
+
         separator = getIndent(indent) + "\n"
         return separator.join(map(self._serializeItem, self.vars)) + "\n"
 
 
-class VhdlSerializer(GenericSerializer, VhdlTmplContainer, VhdlSerializer_Value, 
+class VhdlSerializer(GenericSerializer, VhdlTmplContainer, VhdlSerializer_Value,
                      VhdlSerializer_ops, VhdlSerializer_types, VhdlSerializer_statements):
     VHDL_VER = VhdlVersion.v2002
     _keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
@@ -67,10 +66,6 @@ class VhdlSerializer(GenericSerializer, VhdlTmplContainer, VhdlSerializer_Value,
         s.setLevel(1)
         s[0].update(cls._keywords_dict)
         return s
-    
-    @classmethod
-    def getBaseContext(cls):
-        return SerializerCtx(cls.getBaseNameScope(), 0, None, None)
 
     @classmethod
     def Architecture(cls, arch, ctx):
@@ -83,11 +78,7 @@ class VhdlSerializer(GenericSerializer, VhdlTmplContainer, VhdlSerializer_Value,
         arch.components.sort(key=lambda x: x.name)
         arch.componentInstances.sort(key=lambda x: x._name)
 
-        def createTmpVarFn(suggestedName, dtype):
-            raise NotImplementedError()
-
         childCtx = ctx.withIndent()
-        childCtx.createTmpVarFn = createTmpVarFn
 
         for v in arch.variables:
             t = v._dtype
@@ -171,18 +162,16 @@ class VhdlSerializer(GenericSerializer, VhdlTmplContainer, VhdlSerializer_Value,
         ent.ports.sort(key=lambda x: x.name)
         ent.generics.sort(key=lambda x: x.name)
 
-        def createTmpVarFn(suggestedName, dtype):
-            raise NotImplementedError()
-
         scope = ctx.scope
         ent.name = scope.checkedName(ent.name, ent, isGlobal=True)
         for p in ent.ports:
             p.name = scope.checkedName(p.name, p)
-            ports.append(cls.PortItem(p, createTmpVarFn))
+            p.getSigInside().name = p.name
+            ports.append(cls.PortItem(p, ctx))
 
         for g in ent.generics:
             g.name = scope.checkedName(g.name, g)
-            generics.append(cls.GenericItem(g, createTmpVarFn))
+            generics.append(cls.GenericItem(g, ctx))
 
         entVhdl = cls.entityTmpl.render(
                 indent=getIndent(ctx.indent),
@@ -214,7 +203,6 @@ class VhdlSerializer(GenericSerializer, VhdlTmplContainer, VhdlSerializer_Value,
                       repr(pc.portItem._dtype), repr(pc.sig._dtype)))
         return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
 
-
     @classmethod
     def DIRECTION(cls, d):
         return d.name
@@ -227,4 +215,3 @@ class VhdlSerializer(GenericSerializer, VhdlTmplContainer, VhdlSerializer_Value,
     @classmethod
     def MapExpr(cls, m, ctx):
         return "%s => %s" % (m.compSig.name, cls.asHdl(m.value, ctx))
-

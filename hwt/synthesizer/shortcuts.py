@@ -44,7 +44,8 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
             if isinstance(obj, Entity):
                 s = globScope.fork(1)
                 s.setLevel(2)
-                ctx = SerializerCtx(s, 0, None, None)
+                ctx = serializer.getBaseContext()
+                ctx.scope = s
                 mouduleScopes[obj] = ctx
                 
                 sc = serializer.Entity(obj, ctx)
@@ -52,7 +53,7 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
                 try:
                     ctx = mouduleScopes[obj.entity]
                 except KeyError:
-                    raise SerializerException("Entity should be serialized before architecture of %s" %
+                    raise SerializerException("Entity should be serialized before architecture of %s" % 
                                               (obj.getEntityName()))
                 sc = serializer.Architecture(obj, ctx)
             else:
@@ -108,9 +109,10 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 # we need to serialize before we take name, before name can change
                 s = globScope.fork(1)
                 s.setLevel(2)
-                ctx = SerializerCtx(s, 0, None, None)
+                ctx = serializer.getBaseContext()
+                ctx.scope = s
                 mouduleScopes[obj] = ctx
-                
+
                 sc = serializer.Entity(obj, ctx)
                 fName = obj.name + serializer.fileExtension
                 fileMode = 'w'
@@ -119,7 +121,7 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 try:
                     ctx = mouduleScopes[obj.entity]
                 except KeyError:
-                    raise SerializerException("Entity should be serialized before architecture of %s" %
+                    raise SerializerException("Entity should be serialized before architecture of %s" % 
                                               (obj.getEntityName()))
                 sc = serializer.Architecture(obj, ctx)
                 fName = obj.getEntityName() + serializer.fileExtension
