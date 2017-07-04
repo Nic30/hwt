@@ -1,10 +1,10 @@
 #include <systemc.h>
 SC_MODULE({{name}}) {
-	//interfaces{% for name, dtype in ports %}
-	{{dtype}} {{name}};{% endfor %}
+	//interfaces{% for p in ports %}
+	{{p}}{% endfor %}
 
-    //internal signals{% for name, dtype, defVal in signals %}
-	{{dtype}} {{name}};{% endfor %}
+    //internal signals{% for s in signals %}
+	{{s}}{% endfor %}
 
     //processes inside this component{% for method in processes %}
 {{method}}{% endfor %}
