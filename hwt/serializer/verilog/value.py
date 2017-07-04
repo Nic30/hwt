@@ -1,24 +1,24 @@
-from hwt.hdlObjects.value import Value
-from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.value import GenericSerializer_Value
-from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.verilog.utils import verilogTypeOfSig, SIGNAL_TYPE
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.bitmask import mask
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.types.defs import BOOL, BIT
 from hwt.hdlObjects.types.bits import Bits
+from hwt.hdlObjects.types.defs import BOOL, BIT
+from hwt.hdlObjects.value import Value
+from hwt.serializer.exceptions import SerializerException
+from hwt.serializer.generic.value import GenericSerializer_Value
+from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.verilog.utils import SIGNAL_TYPE
 from hwt.synthesizer.param import getParam
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class VerilogSerializer_Value(GenericSerializer_Value):
 
     @classmethod
-    def SignalItem(cls, si, createTmpVarFn, declaration=False, indent=0):
+    def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
-            st = verilogTypeOfSig(si)
+            ctx = ctx.forSignal(si)
 
             v = si.defaultVal
             prefix = ""
@@ -32,24 +32,23 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             else:
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)
 
-            s = "%s%s%s %s" % (getIndent(indent),
+            s = "%s%s%s %s" % (getIndent(ctx.indent),
                                prefix,
-                               cls.HdlType(si._dtype, createTmpVarFn, st),
+                               cls.HdlType(si._dtype, ctx),
                                si.name)
             if isinstance(v, RtlSignalBase):
-                return s + " = %s" % cls.asHdl(v, createTmpVarFn)
+                return s + " = %s" % cls.asHdl(v, ctx)
             elif isinstance(v, Value):
                 if si.defaultVal.vldMask:
-                    return s + " = %s" % cls.Value(si.defaultVal, createTmpVarFn)
+                    return s + " = %s" % cls.Value(si.defaultVal, ctx)
                 else:
                     return s
             else:
                 raise NotImplementedError(v)
 
         else:
-            assert indent == 0
             if si.hidden and hasattr(si, "origin"):
-                return cls.asHdl(si.origin, createTmpVarFn)
+                return cls.asHdl(si.origin, ctx)
             else:
                 return si.name
 
@@ -76,7 +75,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
 
     @staticmethod
     def BitString_binary(v, width, vldMask=None):
-        buff = []
+        buff = ["2'b"]
         for i in range(width - 1, -1, -1):
             mask = (1 << i)
             b = v & mask
@@ -86,7 +85,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             else:
                 s = "x"
             buff.append(s)
-        return "2'b%s" % (''.join(buff))
+        return ''.join(buff)
 
     @classmethod
     def DIRECTION(cls, d):
@@ -120,20 +119,6 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             return prefix + cls.asHdl(item, createTmpVarFn)
 
         return cls.asHdl(item, createTmpVarFn)
-
-    @classmethod
-    def GenericItem(cls, g, createTmpVarFn):
-        s = "%s %s" % (cls.HdlType(g._dtype, createTmpVarFn, SIGNAL_TYPE.PORT), g.name)
-        if g.defaultVal is None:
-            return s
-        else:
-            return "parameter %s = %s" % (s, cls.Value(getParam(g.defaultVal).staticEval(), createTmpVarFn))
-
-    @classmethod
-    def PortItem(cls, pi, createTmpVarFn):
-        return "%s %s %s" % (cls.DIRECTION(pi.direction),
-                             cls.HdlType(pi._dtype, createTmpVarFn, SIGNAL_TYPE.PORT),
-                             pi.name)
 
     @classmethod
     def condAsHdl(cls, cond, forceBool, createTmpVarFn):

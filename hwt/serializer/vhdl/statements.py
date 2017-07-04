@@ -153,8 +153,10 @@ class VhdlSerializer_statements():
 
     @classmethod
     def SwitchContainer(cls, sw, ctx):
+        childCtx = ctx.withIndent()
+
         def asHdl(statements):
-            return [cls.asHdl(s, ctx) for s in statements]
+            return [cls.asHdl(s, childCtx) for s in statements]
 
         switchOn = cls.condAsHdl(sw.switchOn, False, ctx)
 

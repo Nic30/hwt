@@ -12,4 +12,3 @@ class VhdlTmplContainer():
     componentInstanceTmpl = tmplEnv.get_template('component_instance.vhd')
     ifTmpl = tmplEnv.get_template('if.vhd')
     switchTmpl = tmplEnv.get_template('switch.vhd')
-

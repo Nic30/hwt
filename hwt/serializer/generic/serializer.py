@@ -9,6 +9,7 @@ from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.integer import Integer
 from hwt.hdlObjects.value import Value
 from hwt.serializer.constants import SERI_MODE
+from hwt.serializer.serializerClases.context import SerializerCtx
 from hwt.serializer.serializerClases.nameScope import NameScope
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.param import evalParam
@@ -29,6 +30,7 @@ def paramsToValTuple(unit):
         d[name] = v
     return freeze_dict(d)
 
+
 class GenericSerializer():
     """
     Base class for serializers
@@ -46,6 +48,10 @@ class GenericSerializer():
         s.setLevel(1)
         s[0].update(cls._keywords_dict)
         return s
+
+    @classmethod
+    def getBaseContext(cls):
+        return SerializerCtx(cls.getBaseNameScope(), 0, None, None)
 
     @classmethod
     def asHdl(cls, obj, ctx):
@@ -81,7 +87,8 @@ class GenericSerializer():
         """
         Decide if this unit should be serialized or not eventually fix name to fit same already serialized unit
 
-        :param serializedClasses: unitCls : unitobj
+        :param obj: object to serialize
+        :param serializedClasses: dict {unitCls : unitobj}
         :param serializedConfiguredUnits: (unitCls, paramsValues) : unitObj
             where paramsValues are named tuple name:value
         """

@@ -11,7 +11,7 @@ def verilogTypeOfSig(signalItem):
     """
     Check if is register or wire
     """
-    if arr_any(signalItem.drivers, lambda d: not isinstance(d, PortItem) and d.isEventDependent):
+    if len(signalItem.drivers) > 1 or arr_any(signalItem.drivers, lambda d: not isinstance(d, PortItem) and d.isEventDependent):
         return SIGNAL_TYPE.REG
     else:
         return SIGNAL_TYPE.WIRE

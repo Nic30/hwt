@@ -1,4 +1,5 @@
 from hwt.hdlObjects.assignment import Assignment
+from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.statements import IfContainer, SwitchContainer, \
     WhileContainer, WaitStm
 from hwt.hdlObjects.types.bits import Bits
@@ -8,29 +9,24 @@ from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.verilog.ops import UnsupportedEventOpErr
-from hwt.serializer.verilog.templates import ifTmpl, processTmpl
 from hwt.serializer.verilog.utils import verilogTypeOfSig, SIGNAL_TYPE
-from hwt.hdlObjects.operator import Operator
 
 
 class VerilogSerializer_statements():
     @classmethod
-    def Assignment(cls, a, createTmpVarFn, indent=0):
+    def Assignment(cls, a, ctx):
         dst = a.dst
         assert isinstance(dst, SignalItem)
 
-        def asHdl(obj):
-            return cls.asHdl(obj, createTmpVarFn)
-
         def valAsHdl(v):
-            return cls.Value(v, createTmpVarFn)
+            return cls.Value(v, ctx)
 
         dstSignalType = verilogTypeOfSig(dst)
 
         assert not dst.virtualOnly
         if dstSignalType is SIGNAL_TYPE.REG:
             prefix = ""
-            symbol = "<="
+            symbol = "="
         else:
             prefix = "assign "
             symbol = "="
@@ -42,8 +38,8 @@ class VerilogSerializer_statements():
                     i.val = (i.val[0] + 1, i.val[1])
                 dst = dst[i]
 
-        indent_str = getIndent(indent)
-        dstStr = asHdl(dst)
+        indent_str = getIndent(ctx.indent)
+        dstStr = cls.asHdl(dst, ctx)
         firstPartOfStr = "%s%s%s" % (indent_str, prefix, dstStr)
         if dst._dtype == a.src._dtype:
             return "%s %s %s" % (firstPartOfStr, symbol, valAsHdl(a.src))
@@ -94,7 +90,7 @@ class VerilogSerializer_statements():
                 else:
                     raise e
 
-        return ifTmpl.render(
+        return cls.ifTmpl.render(
                             indent=getIndent(indent),
                             cond=cond,
                             ifTrue=[asHdl(s) for s in ifTrue],
@@ -102,25 +98,36 @@ class VerilogSerializer_statements():
                             ifFalse=[asHdl(s) for s in ifFalse])
 
     @classmethod
-    def HWProcess(cls, proc, scope, indent=0):
-        """
-        Serialize HWProcess objects as VHDL
+    def SwitchContainer(cls, sw, ctx):
+        childCtx = ctx.withIndent(2)
 
-        :param scope: name scope to prevent name collisions
+        def asHdl(statements):
+            return [cls.asHdl(s, childCtx) for s in statements]
+
+        switchOn = cls.condAsHdl(sw.switchOn, False, ctx)
+
+        cases = []
+        for key, statements in sw.cases:
+            key = cls.asHdl(key, ctx)
+
+            cases.append((key, asHdl(statements)))
+
+        if sw.default:
+            cases.append((None, asHdl(sw.default)))
+
+        return cls.switchTmpl.render(
+                            indent=getIndent(ctx.indent),
+                            switchOn=switchOn,
+                            cases=cases)
+
+    @classmethod
+    def HWProcess(cls, proc, ctx):
+        """
+        Serialize HWProcess objects
         """
         body = proc.statements
         extraVars = []
         extraVarsSerialized = []
-
-        def createTmpVarFn(suggestedName, dtype):
-            # [TODO] it is better to use RtlSignal
-            s = SignalItem(None, dtype, virtualOnly=True)
-            s.name = scope.checkedName(suggestedName, s)
-            s.hidden = False
-            serializedS = cls.SignalItem(s, createTmpVarFn, declaration=True)
-            extraVars.append(s)
-            extraVarsSerialized.append(serializedS)
-            return s
 
         hasToBeVhdlProcess = extraVars or arr_any(body,
                                                   lambda x: isinstance(x,
@@ -134,37 +141,37 @@ class VerilogSerializer_statements():
                                      proc.sensitivityList))
 
         if hasToBeVhdlProcess:
-            sIndent = indent + 1
+            childCtx = ctx.withIndent()
         else:
-            sIndent = indent
+            childCtx = ctx
 
-        statemets = [cls.asHdl(s, createTmpVarFn, indent=sIndent) for s in body]
+        def createTmpVarFn(suggestedName, dtype):
+            # [TODO] it is better to use RtlSignal
+            s = SignalItem(None, dtype, virtualOnly=True)
+            s.name = childCtx.scope.checkedName(suggestedName, s)
+            s.hidden = False
+            serializedS = cls.SignalItem(s, childCtx, declaration=True)
+            extraVars.append(s)
+            extraVarsSerialized.append(serializedS)
+            return s
+
+        childCtx.createTmpVarFn = createTmpVarFn
+
+        statemets = [cls.asHdl(s, childCtx) for s in body]
 
         if hasToBeVhdlProcess:
-            proc.name = scope.checkedName(proc.name, proc)
+            proc.name = ctx.scope.checkedName(proc.name, proc)
 
         extraVarsInit = []
         for s in extraVars:
             a = Assignment(s.defaultVal, s, virtualOnly=True)
-            extraVarsInit.append(cls.Assignment(a, createTmpVarFn, indent=indent + 1))
+            extraVarsInit.append(cls.Assignment(a, childCtx))
 
-        return processTmpl.render(
-            indent=getIndent(indent),
+        return cls.processTmpl.render(
+            indent=getIndent(ctx.indent),
             name=proc.name,
             hasToBeVhdlProcess=hasToBeVhdlProcess,
             extraVars=extraVarsSerialized,
             sensitivityList=" or ".join(sensitivityList),
             statements=extraVarsInit + statemets
             )
-
-    @classmethod
-    def PortConnection(cls, pc, createTmpVarFn):
-        if pc.portItem._dtype != pc.sig._dtype:
-            raise SerializerException("Port map %s is nod valid (types does not match)  (%s, %s)" % (
-                      "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, createTmpVarFn)),
-                      repr(pc.portItem._dtype), repr(pc.sig._dtype)))
-        return ".%s(%s)" % (pc.portItem.name, cls.asHdl(pc.sig, createTmpVarFn))
-
-    @classmethod
-    def MapExpr(cls, m, createTmpVar):
-        return ".%s(%s)" % (m.compSig.name, cls.asHdl(m.value, createTmpVar))

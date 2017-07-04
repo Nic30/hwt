@@ -8,18 +8,24 @@ from hwt.serializer.serializerClases.mapExpr import MapExpr
 from hwt.serializer.serializerClases.nameScope import LangueKeyword
 from hwt.serializer.serializerClases.portMap import PortMap
 from hwt.serializer.utils import maxStmId
+from hwt.serializer.verilog.context import VerilogSerializerCtx
 from hwt.serializer.verilog.keywords import VERILOG_KEYWORDS
 from hwt.serializer.verilog.ops import VerilogSerializer_ops
 from hwt.serializer.verilog.statements import VerilogSerializer_statements
-from hwt.serializer.verilog.templates import moduleHeadTmpl, moduleBodyTmpl, \
-    componentInstanceTmpl
+from hwt.serializer.verilog.tmplContainer import VerilogTmplContainer
 from hwt.serializer.verilog.types import VerilogSerializer_types
+from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
+from hwt.synthesizer.param import getParam
 
 
-class VerilogSerializer(GenericSerializer, VerilogSerializer_types, VerilogSerializer_Value, VerilogSerializer_statements, VerilogSerializer_ops):
+class VerilogSerializer(GenericSerializer, VerilogTmplContainer, VerilogSerializer_types, VerilogSerializer_Value, VerilogSerializer_statements, VerilogSerializer_ops):
     _keywords_dict = {kw: LangueKeyword() for kw in VERILOG_KEYWORDS}
     fileExtension = '.v'
+
+    @classmethod
+    def getBaseContext(cls):
+        return VerilogSerializerCtx(cls.getBaseNameScope(), 0, None, None)
 
     @classmethod
     def Entity(cls, ent, ctx):
@@ -37,7 +43,7 @@ class VerilogSerializer(GenericSerializer, VerilogSerializer_types, VerilogSeria
             g.name = ctx.scope.checkedName(g.name, g)
             generics.append(cls.GenericItem(g, ctx))
 
-        entVerilog = moduleHeadTmpl.render(
+        entVerilog = cls.moduleHeadTmpl.render(
                 indent=getIndent(ctx.indent),
                 name=ent.name,
                 ports=ports,
@@ -81,7 +87,7 @@ class VerilogSerializer(GenericSerializer, VerilogSerializer_types, VerilogSeria
         componentInstances = list(map(lambda c: cls.ComponentInstance(c, childCtx),
                                       arch.componentInstances))
 
-        return moduleBodyTmpl.render(
+        return cls.moduleBodyTmpl.render(
             indent=getIndent(ctx.indent),
             entityName=arch.getEntityName(),
             name=arch.name,
@@ -107,7 +113,7 @@ class VerilogSerializer(GenericSerializer, VerilogSerializer_types, VerilogSeria
             raise SerializerException("Incomplete component instance")
 
         # [TODO] check component instance name
-        return componentInstanceTmpl.render(
+        return cls.componentInstanceTmpl.render(
                 indent=getIndent(ctx.indent),
                 instanceName=entity._name,
                 entity=entity,
@@ -118,3 +124,34 @@ class VerilogSerializer(GenericSerializer, VerilogSerializer_types, VerilogSeria
     @classmethod
     def comment(cls, comentStr):
         return "\n".join(["/*", comentStr, "*/"])
+
+    @classmethod
+    def GenericItem(cls, g, ctx):
+        s = "%s %s" % (cls.HdlType(g._dtype, ctx.forPort()), g.name)
+        if g.defaultVal is None:
+            return s
+        else:
+            return "parameter %s = %s" % (s, cls.Value(getParam(g.defaultVal).staticEval(), ctx))
+
+    @classmethod
+    def PortItem(cls, pi, ctx):
+        if verilogTypeOfSig(pi.getSigInside()) == SIGNAL_TYPE.REG:
+            f = "%s reg %s %s"
+        else:
+            f = "%s %s %s"
+
+        return f % (cls.DIRECTION(pi.direction),
+                    cls.HdlType(pi._dtype, ctx.forPort()),
+                    pi.name)
+
+    @classmethod
+    def PortConnection(cls, pc, ctx):
+        if pc.portItem._dtype != pc.sig._dtype:
+            raise SerializerException("Port map %s is nod valid (types does not match)  (%s, %s)" % (
+                      "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx)),
+                      repr(pc.portItem._dtype), repr(pc.sig._dtype)))
+        return ".%s(%s)" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
+
+    @classmethod
+    def MapExpr(cls, m, createTmpVar):
+        return ".%s(%s)" % (m.compSig.name, cls.asHdl(m.value, createTmpVar))
