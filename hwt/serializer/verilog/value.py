@@ -18,9 +18,9 @@ class VerilogSerializer_Value(GenericSerializer_Value):
     @classmethod
     def BitLiteral(cls, v, vldMask):
         if vldMask:
-            return "2'b%d" % int(bool(v))
+            return "1'b%d" % int(bool(v))
         else:
-            return "2'bx"
+            return "1'bx"
 
     @classmethod
     def BitString(cls, v, width, vldMask=None):
