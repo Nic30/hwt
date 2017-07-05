@@ -16,6 +16,73 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 class VerilogSerializer_Value(GenericSerializer_Value):
 
     @classmethod
+    def BitLiteral(cls, v, vldMask):
+        if vldMask:
+            return "2'b%d" % int(bool(v))
+        else:
+            return "2'bx"
+
+    @classmethod
+    def BitString(cls, v, width, vldMask=None):
+        if vldMask is None:
+            vldMask = mask(width)
+        # if can be in hex
+        if width % 4 == 0 and vldMask == (1 << width) - 1:
+            return ("16'b%0" + str(width // 4) + 'x"') % (v)
+        else:  # else in binary
+            return cls.BitString_binary(v, width, vldMask)
+
+    @staticmethod
+    def BitString_binary(v, width, vldMask=None):
+        buff = ["2'b"]
+        for i in range(width - 1, -1, -1):
+            mask = (1 << i)
+            b = v & mask
+
+            if vldMask & mask:
+                s = "1" if b else "0"
+            else:
+                s = "x"
+            buff.append(s)
+        return ''.join(buff)
+
+    @classmethod
+    def Bool_valAsHdl(cls, dtype, val, ctx):
+        return str(int(val.val))
+
+    @classmethod
+    def DIRECTION(cls, d):
+        if d is DIRECTION.IN:
+            return "input"
+        elif d is DIRECTION.OUT:
+            return "output"
+        elif d is DIRECTION.INOUT:
+            return "inout"
+        else:
+            raise NotImplementedError(d)
+
+    @classmethod
+    def condAsHdl(cls, cond, forceBool, createTmpVarFn):
+        if isinstance(cond, RtlSignalBase):
+            cond = [cond]
+        else:
+            cond = list(cond)
+        if len(cond) == 1:
+            c = cond[0]
+            if not forceBool or c._dtype == BOOL:
+                return cls.asHdl(c, createTmpVarFn)
+            elif c._dtype == BIT:
+                return "(%s)==%s" % (cls.asHdl(c, createTmpVarFn), cls.BitLiteral(1, 1))
+            elif isinstance(c._dtype, Bits):
+                width = c._dtype.bit_length()
+                return "(%s)!=%s" % (cls.asHdl(c, createTmpVarFn), cls.BitString(0, width))
+            else:
+                raise NotImplementedError()
+        else:
+            return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool, createTmpVarFn), cond))
+
+
+    @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
             ctx = ctx.forSignal(si)
@@ -57,48 +124,6 @@ class VerilogSerializer_Value(GenericSerializer_Value):
         return "%s:%s" % (cls.Value(val.val[0], createTmpVarFn), cls.Value(val.val[1], createTmpVarFn))
 
     @classmethod
-    def BitString(cls, v, width, vldMask=None):
-        if vldMask is None:
-            vldMask = mask(width)
-        # if can be in hex
-        if width % 4 == 0 and vldMask == (1 << width) - 1:
-            return ("16'b%0" + str(width // 4) + 'x"') % (v)
-        else:  # else in binary
-            return cls.BitString_binary(v, width, vldMask)
-
-    @classmethod
-    def BitLiteral(cls, v, vldMask):
-        if vldMask:
-            return "2'b%d" % int(bool(v))
-        else:
-            return "2'bx"
-
-    @staticmethod
-    def BitString_binary(v, width, vldMask=None):
-        buff = ["2'b"]
-        for i in range(width - 1, -1, -1):
-            mask = (1 << i)
-            b = v & mask
-
-            if vldMask & mask:
-                s = "1" if b else "0"
-            else:
-                s = "x"
-            buff.append(s)
-        return ''.join(buff)
-
-    @classmethod
-    def DIRECTION(cls, d):
-        if d is DIRECTION.IN:
-            return "input"
-        elif d is DIRECTION.OUT:
-            return "output"
-        elif d is DIRECTION.INOUT:
-            return "inout"
-        else:
-            raise NotImplementedError(d)
-
-    @classmethod
     def sensitivityListItem(cls, item, createTmpVarFn, anyIsEventDependent):
         if isinstance(item, Operator):
             o = item.operator
@@ -120,22 +145,3 @@ class VerilogSerializer_Value(GenericSerializer_Value):
 
         return cls.asHdl(item, createTmpVarFn)
 
-    @classmethod
-    def condAsHdl(cls, cond, forceBool, createTmpVarFn):
-        if isinstance(cond, RtlSignalBase):
-            cond = [cond]
-        else:
-            cond = list(cond)
-        if len(cond) == 1:
-            c = cond[0]
-            if not forceBool or c._dtype == BOOL:
-                return cls.asHdl(c, createTmpVarFn)
-            elif c._dtype == BIT:
-                return "(%s)==%s" % (cls.asHdl(c, createTmpVarFn), cls.BitLiteral(1, 1))
-            elif isinstance(c._dtype, Bits):
-                width = c._dtype.bit_length()
-                return "(%s)!=%s" % (cls.asHdl(c, createTmpVarFn), cls.BitString(0, width))
-            else:
-                raise NotImplementedError()
-        else:
-            return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool, createTmpVarFn), cond))
