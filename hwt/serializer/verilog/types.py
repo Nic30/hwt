@@ -3,6 +3,10 @@ from hwt.serializer.exceptions import SerializerException
 
 
 class VerilogSerializer_types():
+    @classmethod
+    def HdlType_bool(cls, typ, ctx, declaration=False):
+        assert not declaration
+        return ""
 
     @classmethod
     def HdlType_bits(cls, typ, ctx, declaration=False):
@@ -27,7 +31,7 @@ class VerilogSerializer_types():
         elif isinstance(w, int):
             nameBuff.append("[%d:0]" % (w - 1))
         else:
-            nameBuff.append("[%s]" % cls.Value(w, ctx))
+            nameBuff.append("[%s- 1:0]" % cls.Value(w, ctx))
 
         return " ".join(nameBuff)
 

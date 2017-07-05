@@ -6,6 +6,12 @@ from hwt.serializer.exceptions import SerializerException
 
 
 class VhdlSerializer_types():
+    
+    @classmethod
+    def HdlType_bool(cls, typ, ctx, declaration=False):
+        assert not declaration
+        return "BOOLEAN"
+    
     @classmethod
     def HdlType_bits(cls, typ, ctx, declaration=False):
         disableRange = False
