@@ -137,7 +137,8 @@ class VerilogSerializer_statements():
                                                                        (IfContainer,
                                                                         SwitchContainer,
                                                                         WhileContainer,
-                                                                        WaitStm)))
+                                                                        WaitStm)) or 
+                                                            isinstance(x, Assignment) and x.indexes)
 
         anyIsEventDependnt = arr_any(proc.sensitivityList, lambda s: isinstance(s, Operator))
         sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, None, anyIsEventDependnt),
