@@ -46,9 +46,9 @@ class VhdlSerializer_ops():
         return cls.asHdl(cast.sig) + "=='%d'" % v
 
     @classmethod
-    def Operator(cls, op, createTmpVarFn, indent=0):
+    def Operator(cls, op, ctx):
         def p(operand):
-            s = cls.asHdl(operand, createTmpVarFn)
+            s = cls.asHdl(operand, ctx)
             if isinstance(operand, RtlSignalBase):
                 try:
                     o = operand.singleDriver()
@@ -95,10 +95,10 @@ class VhdlSerializer_ops():
             assert len(ops) == 2
             o1 = ops[0]
             if isResultOfTypeConversion(o1):
-                o1 = createTmpVarFn("tmpTypeConv", o1._dtype)
+                o1 = ctx.createTmpVarFn("tmpTypeConv", o1._dtype)
                 o1.defaultVal = ops[0]
 
-            return "%s(%s)" % (cls.asHdl(o1, createTmpVarFn).strip(), p(ops[1]))
+            return "%s(%s)" % (cls.asHdl(o1, ctx).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('<')
         elif o == AllOps.SUB:
@@ -112,7 +112,7 @@ class VhdlSerializer_ops():
         elif o == AllOps.NEG:
             return "-(%s)"% (p(ops[0]))
         elif o == AllOps.TERNARY:
-            return p(ops[1]) + " WHEN " + cls.condAsHdl([ops[0]], True, createTmpVarFn) + " ELSE " + p(ops[2])
+            return p(ops[1]) + " WHEN " + cls.condAsHdl([ops[0]], True, ctx) + " ELSE " + p(ops[2])
         elif o == AllOps.RISING_EDGE:
             assert len(ops) == 1
             return "RISING_EDGE(" + p(ops[0]) + ")"
@@ -130,14 +130,14 @@ class VhdlSerializer_ops():
             return "STD_LOGIC_VECTOR(" + p(ops[0]) + ")"
         elif o == AllOps.BitsToInt:
             assert len(ops) == 1
-            op = cls.asHdl(ops[0], createTmpVarFn)
+            op = cls.asHdl(ops[0], ctx)
             if ops[0]._dtype.signed is None:
                 op = "UNSIGNED(%s)" % op
             return "TO_INTEGER(%s)" % op
         elif o == AllOps.IntToBits:
             assert len(ops) == 1
             resT = op.result._dtype
-            op_str = cls.asHdl(ops[0], createTmpVarFn)
+            op_str = cls.asHdl(ops[0], ctx)
             w = resT.bit_length()
 
             if resT.signed is None:
