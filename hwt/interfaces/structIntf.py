@@ -15,7 +15,11 @@ class StructIntf(Interface):
         :param instantiateFieldFn: function(FieldTemplateItem instance) used to instantiate fields
             (is called only on fields which have different type than HStruct)
         """
-        Interface.__init__(self, masterDir=masterDir, asArraySize=asArraySize, loadConfig=loadConfig)
+        Interface.__init__(self,
+                           masterDir=masterDir,
+                           asArraySize=asArraySize,
+                           loadConfig=loadConfig)
+
         self._structT = structT
         self._instantiateFieldFn = instantiateFieldFn
         self._fieldsToInterfaces = {}

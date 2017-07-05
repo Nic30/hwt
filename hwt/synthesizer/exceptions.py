@@ -1,5 +1,5 @@
 
-class TypeConversionErr(Exception):
+class TypeConversionErr(TypeError):
     pass
 
 

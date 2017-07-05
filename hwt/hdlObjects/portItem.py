@@ -4,6 +4,7 @@ from hwt.hdlObjects.constants import DIRECTION
 
 class PortItem(SignalItem):
     """basic hdl entity port item"""
+
     def __init__(self, name, direction, dtype, unit):
         self.name = name
         self.unit = unit

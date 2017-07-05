@@ -11,5 +11,8 @@ class SliceVal(ArrayVal):
         return self.val[0]._isFullVld() and self.val[1]._isFullVld()
 
     def _size(self):
+        """
+        :return: how many bits is this slice selecting
+        """
         assert isinstance(self, Value)
         return self.val[0].val - self.val[1].val

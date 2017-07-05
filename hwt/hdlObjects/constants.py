@@ -2,6 +2,9 @@ from enum import Enum
 
 
 class INTF_DIRECTION(Enum):
+    """
+    Interface direction, used in interface direction resolving process.
+    """
     MASTER = 0
     SLAVE = 1
     TRISTATE = 2
@@ -35,6 +38,9 @@ NOP = "NOP"
 
 
 class DIRECTION(Enum):
+    """
+    Used to describe direction of signal.
+    """
     IN = 0
     OUT = 1
     INOUT = 2
@@ -63,6 +69,9 @@ class DIRECTION(Enum):
 
 
 class Time():
+    """
+    Time units used mainly by simulator
+    """
     ps = 1
     ns = 1000
     us = ns * 1000
@@ -71,6 +80,9 @@ class Time():
 
 
 class SENSITIVITY(Enum):
+    """
+    Sensitivity used in sensitivity resolver
+    """
     ANY = 0b11
     RISING = 0b01
     FALLING = 0b10

@@ -9,7 +9,7 @@ from _operator import neg
 
 class OpDefinition():
     """
-    OperatorDefinition
+    Operator definition
 
     :ivar id: name of operator
     :ivar _evalFn: function which evaluates operands
@@ -174,6 +174,9 @@ if not AllOps._idsInited:
 
 
 def sensitivityByOp(op):
+    """
+    get sensitivity type for operator
+    """
     if op == AllOps.RISING_EDGE:
         return SENSITIVITY.RISING
     elif op == AllOps.FALLIGN_EDGE:

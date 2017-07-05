@@ -16,6 +16,9 @@ class Array(HdlType):
         return hash((self.elmType, self.size))
 
     def bit_length(self):
+        """
+        :return: bit width for this type
+        """
         try:
             itemSize = self.elmType.bit_length
         except AttributeError:
@@ -25,7 +28,7 @@ class Array(HdlType):
 
         s = self.size
         if isinstance(s, RtlSignalBase):
-            s = s.staticEval()
+            s = int(s.staticEval())
         return s * itemSize()
 
     @classmethod

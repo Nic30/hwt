@@ -12,9 +12,9 @@ class Value():
     def __init__(self, val, dtype, vldMask, updateTime=-1):
         """
         :param val: pythonic value representing this value
-        :param dtype: data type object which was this value derived from
+        :param dtype: data type object from which this value was derived from
         :param vldMask: validity mask for value
-        :param updateTime: time for simulation when last update of this value happend
+        :param updateTime: simulation time when this value vas created
         """
 
         self.val = val
@@ -46,9 +46,6 @@ class Value():
     def fromPy(cls, val, typeObj):
         raise NotImplementedError("fromPy fn is not implemented for %s" % (str(cls)))
 
-    def __nonzero__(self):
-        raise NotImplementedError()
-
     def __int__(self):
         if isinstance(self, Value) or self._const:
             if self._isFullVld():
@@ -68,67 +65,67 @@ class Value():
         raise ValueError("Value of %r is not constant it can be statically solved" % self)
 
     def __pos__(self):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __neg__(self):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __abs__(self):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __invert__(self):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __round__(self, n):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __floor__(self):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __ceil__(self):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __add__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __sub__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __mul__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __floordiv__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __div__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __truediv__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __mod__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __divmod__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __pow__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __lshift__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __rshift__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __and__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __or__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __xor__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __eq__(self, other):
         if areValues(self, other):
@@ -139,7 +136,7 @@ class Value():
             return super().__eq__(other)
 
     def _eq(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __ne__(self, other):
         eq = self._eq(other)
@@ -147,22 +144,22 @@ class Value():
         return eq
 
     def _concat(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __lt__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __le__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __gt__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def __ge__(self, other):
-        raise NotImplementedError()
+        raise TypeError()
 
     def _onRisingEdge(self, now):
-        raise NotImplementedError()
+        raise TypeError()
 
 
 def areValues(*items):

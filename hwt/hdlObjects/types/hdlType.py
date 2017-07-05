@@ -2,6 +2,9 @@ from hwt.synthesizer.exceptions import TypeConversionErr
 
 
 class HdlType():
+    """
+    Base class for all hardware related types.
+    """
 
     def __eq__(self, other):
         return type(self) is type(other)
@@ -10,9 +13,18 @@ class HdlType():
         return hash((self.name))
 
     def fromPy(self, v):
+        """
+        Construct value of this type.
+        Delegated on value class for this type
+        """
         return self.getValueCls().fromPy(v, self)
 
     def convert(self, sigOrVal, toType):
+        """
+        Cast value or signal of this type to another.
+        :param sigOrVal: instance of signal or value to cast
+        :param toType: instance of HdlType to cast into
+        """
         if sigOrVal._dtype == toType:
             return sigOrVal
 
@@ -26,11 +38,23 @@ class HdlType():
 
     @classmethod
     def getConvertor(cls):
+        """
+        Get method for converting type
+        """
         return HdlType.defaultConvert
 
     def defaultConvert(self, sigOrVal, toType):
         raise TypeConversionErr("Conversion of %r of type \n%r to type %r is not implemented"
                                 % (sigOrVal, self, toType))
+
+    @classmethod
+    def getValueCls(cls):
+        """
+        :attention: Overrode in implementation of concrete HdlType.
+
+        :return: class for value derived from this type
+        """
+        raise NotImplementedError()
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
