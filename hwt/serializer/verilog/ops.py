@@ -42,9 +42,9 @@ class UnsupportedEventOpErr(SerializerException):
 
 class VerilogSerializer_ops():
     @classmethod
-    def Operator(cls, op, createTmpVarFn, indent=0):
+    def Operator(cls, op, ctx):
         def p(operand):
-            s = cls.asHdl(operand, createTmpVarFn)
+            s = cls.asHdl(operand, ctx)
             if isinstance(operand, RtlSignalBase):
                 try:
                     o = operand.singleDriver()
@@ -90,7 +90,7 @@ class VerilogSerializer_ops():
         elif o == AllOps.INDEX:
             assert len(ops) == 2
             o1 = ops[0]
-            return "%s[%s]" % (cls.asHdl(o1, createTmpVarFn).strip(), p(ops[1]))
+            return "%s[%s]" % (cls.asHdl(o1, ctx).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('<')
         elif o == AllOps.SUB:
@@ -104,9 +104,10 @@ class VerilogSerializer_ops():
         elif o == AllOps.TERNARY:
             zero, one = BIT.fromPy(0), BIT.fromPy(1)
             if ops[1] == one and ops[2] == zero:
-                return cls.condAsHdl([ops[0]], True, createTmpVarFn)
+                # ignore redundant x ? 1 : 0
+                return cls.condAsHdl([ops[0]], True, ctx)
             else:
-                return "%s ? %s : %s" % (cls.condAsHdl([ops[0]], True, createTmpVarFn),
+                return "%s ? %s : %s" % (cls.condAsHdl([ops[0]], True, ctx),
                                          p(ops[1]),
                                          p(ops[2]))
         elif o == AllOps.RISING_EDGE or o == AllOps.FALLIGN_EDGE:
@@ -122,10 +123,10 @@ class VerilogSerializer_ops():
             return "$unsigned(" + p(ops[0]) + ")"
         elif o == AllOps.BitsToInt:
             # no conversion required
-            return cls.asHdl(ops[0], createTmpVarFn)
+            return cls.asHdl(ops[0], ctx)
         elif o == AllOps.IntToBits:
             # no conversion required
-            return cls.asHdl(ops[0], createTmpVarFn)
+            return cls.asHdl(ops[0], ctx)
 
         elif o == AllOps.POW:
             assert len(ops) == 2
