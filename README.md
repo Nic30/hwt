@@ -5,13 +5,12 @@
 [![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest) 
 [![Join the chat at https://gitter.im/HWToolkit/Lobby](https://badges.gitter.im/HWToolkit/Lobby.svg)](https://gitter.im/HWToolkit/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-## HWToolkit is basically more intuitive SystemC in Python and it contains:
+## HWToolkit is library for hardware developement, it contains:
 
 * hardware description language
 * digital circuit simulator with UVM like verification environment
-* circuit simulator 
 * tolls for static analisis
-
+* serializers to export HWT designs into multiple target HDLs
 
 # Ideology
 
@@ -30,6 +29,6 @@ Typical flow is:
 
 Also keep in mind that HWT itself is usualy used just like api for code generating by more adwanced tools.
 * There is library full of examples and real designs as well at https://github.com/Nic30/hwtLib (for hwt is like stdlib for C).
-* (System) Verilog/VHDL compatibility layer at https://github.com/Nic30/hwtHdlParsers which allows you to import objects from HDL (unmaintained). 
+* (System) Verilog/VHDL compatibility layer at https://github.com/Nic30/hwtHdlParsers which allows you to import objects from HDL (not maintained). 
 
 
