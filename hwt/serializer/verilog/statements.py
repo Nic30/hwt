@@ -65,7 +65,7 @@ class VerilogSerializer_statements():
     def IfContainer(cls, ifc, ctx):
         childCtx = ctx.withIndent()
 
-        def asHdl(obj):
+        def asHdl(statements):
             return [cls.asHdl(s, childCtx) for s in statements]
 
         try:
