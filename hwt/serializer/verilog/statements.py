@@ -35,7 +35,7 @@ class VerilogSerializer_statements():
             for i in a.indexes:
                 if isinstance(i, SliceVal):
                     i = i.clone()
-                    i.val = (i.val[0] + 1, i.val[1])
+                    i.val = (i.val[0], i.val[1])
                 dst = dst[i]
 
         indent_str = getIndent(ctx.indent)
@@ -58,14 +58,16 @@ class VerilogSerializer_statements():
                     elif srcT.signed is not dstT.signed:
                         return "%s %s %s" % (firstPartOfStr, symbol, valAsHdl(a.src._convSign(dstT.signed)))
 
-            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%s; %s) " % 
-                                      (indent_str, dstStr, symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
+            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%r; %r) " % 
+                                      (indent_str, dstStr, symbol, valAsHdl(a.src), dst._dtype, a.src._dtype))
 
     @classmethod
     def IfContainer(cls, ifc, ctx):
         childCtx = ctx.withIndent()
+
         def asHdl(obj):
-            return cls.asHdl(obj, childCtx)
+            return [cls.asHdl(s, childCtx) for s in statements]
+
         try:
             cond = cls.condAsHdl(ifc.cond, True, ctx)
         except UnsupportedEventOpErr as e:
@@ -82,7 +84,7 @@ class VerilogSerializer_statements():
         ifFalse = ifc.ifFalse
         for c, statements in ifc.elIfs:
             try:
-                elIfs.append((cls.condAsHdl(c, True, ctx), [asHdl(s) for s in statements]))
+                elIfs.append((cls.condAsHdl(c, True, ctx), asHdl(statements)))
             except UnsupportedEventOpErr as e:
                 if len(ifc.elIfs) == 1 and not ifFalse:
                     # register expression is in valid format and this is just register
@@ -94,9 +96,9 @@ class VerilogSerializer_statements():
         return cls.ifTmpl.render(
                             indent=getIndent(ctx.indent),
                             cond=cond,
-                            ifTrue=[asHdl(s) for s in ifTrue],
+                            ifTrue=asHdl(ifTrue),
                             elIfs=elIfs,
-                            ifFalse=[asHdl(s) for s in ifFalse])
+                            ifFalse=asHdl(ifFalse))
 
     @classmethod
     def SwitchContainer(cls, sw, ctx):
