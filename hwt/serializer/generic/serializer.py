@@ -14,6 +14,7 @@ from hwt.serializer.serializerClases.nameScope import NameScope
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdlObjects.types.boolean import Boolean
 
 
 def freeze_dict(data):
@@ -150,12 +151,10 @@ class GenericSerializer():
             sFn = cls.HdlType_array
         elif isinstance(typ, Integer):
             sFn = cls.HdlType_int
+        elif isinstance(typ, Boolean):
+            sFn = cls.HdlType_bool
         else:
-            if declaration:
                 raise NotImplementedError("type declaration is not implemented for type %s"
                                           % (typ.name))
-            else:
-                assert isinstance(typ, HdlType)
-                return typ.name.upper()
 
         return sFn(typ, ctx, declaration=declaration)
