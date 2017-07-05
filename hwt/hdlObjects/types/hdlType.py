@@ -56,6 +56,14 @@ class HdlType():
         """
         raise NotImplementedError()
 
+    def __getitem__(self, key):
+        """
+        [] operator to create an array of this type.
+        """
+        assert int(key) > 0
+        from hwt.hdlObjects.types.array import Array
+        return Array(self, key)
+
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
         :param indent: number of indentation
