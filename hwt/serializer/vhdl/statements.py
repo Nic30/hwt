@@ -50,37 +50,6 @@ def ternaryOpsToIf(statements):
 class VhdlSerializer_statements():
 
     @classmethod
-    def condAsHdl(cls, cond, forceBool, ctx):
-        if isinstance(cond, RtlSignalBase):
-            cond = [cond]
-        else:
-            cond = list(cond)
-        if len(cond) == 1:
-            c = cond[0]
-            if not forceBool or c._dtype == BOOL:
-                return cls.asHdl(c, ctx)
-            elif c._dtype == BIT:
-                return "(" + cls.asHdl(c, ctx) + ")=" + cls.BitLiteral(1, 1)
-            elif isinstance(c._dtype, Bits):
-                width = c._dtype.bit_length()
-                return "(" + cls.asHdl(c, ctx) + ")/=" + cls.BitString(0, width)
-            else:
-                raise NotImplementedError()
-        else:
-            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool, ctx), cond))
-
-    @classmethod
-    def WaitStm(cls, w, ctx):
-        indent_str = getIndent(ctx.indent)
-
-        if w.isTimeWait:
-            return "%swait for %d ns" % (indent_str, w.waitForWhat)
-        elif w.waitForWhat is None:
-            return "%swait" % indent_str
-        else:
-            raise NotImplementedError()
-
-    @classmethod
     def Assignment(cls, a, ctx):
         dst = a.dst
         assert isinstance(dst, SignalItem)
@@ -121,6 +90,87 @@ class VhdlSerializer_statements():
 
             raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%s; %s) " %
                                       (indent_str, dstStr, symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
+
+    @classmethod
+    def condAsHdl(cls, cond, forceBool, ctx):
+        if isinstance(cond, RtlSignalBase):
+            cond = [cond]
+        else:
+            cond = list(cond)
+        if len(cond) == 1:
+            c = cond[0]
+            if not forceBool or c._dtype == BOOL:
+                return cls.asHdl(c, ctx)
+            elif c._dtype == BIT:
+                return "(" + cls.asHdl(c, ctx) + ")=" + cls.BitLiteral(1, 1)
+            elif isinstance(c._dtype, Bits):
+                width = c._dtype.bit_length()
+                return "(" + cls.asHdl(c, ctx) + ")/=" + cls.BitString(0, width)
+            else:
+                raise NotImplementedError()
+        else:
+            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool, ctx), cond))
+
+    @classmethod
+    def HWProcess(cls, proc, ctx):
+        """
+        Serialize HWProcess objects as VHDL
+
+        :param scope: name scope to prevent name collisions
+        """
+        body = proc.statements
+        extraVars = []
+        extraVarsSerialized = []
+
+        hasToBeVhdlProcess = arr_any(body,
+                                     lambda x: isinstance(x,
+                                                          (IfContainer,
+                                                           SwitchContainer,
+                                                           WhileContainer,
+                                                           WaitStm)))
+
+        sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, None), proc.sensitivityList))
+
+        if hasToBeVhdlProcess:
+            childCtx = ctx.withIndent()
+        else:
+            childCtx = copy(ctx)
+
+        def createTmpVarFn(suggestedName, dtype):
+            # [TODO] it is better to use RtlSignal
+            s = SignalItem(None, dtype, virtualOnly=True)
+            s.name = ctx.scope.checkedName(suggestedName, s)
+            s.hidden = False
+            serializedS = cls.SignalItem(s, childCtx, declaration=True)
+            extraVars.append(s)
+            extraVarsSerialized.append(serializedS)
+            return s
+        childCtx.createTmpVarFn = createTmpVarFn
+
+        statemets = [cls.asHdl(s, childCtx) for s in body]
+        proc.name = ctx.scope.checkedName(proc.name, proc)
+
+        extraVarsInit = []
+        for s in extraVars:
+            a = Assignment(s.defaultVal, s, virtualOnly=True)
+            extraVarsInit.append(cls.Assignment(a, childCtx))
+
+        _hasToBeVhdlProcess = hasToBeVhdlProcess
+        hasToBeVhdlProcess = extraVars or hasToBeVhdlProcess
+
+        if hasToBeVhdlProcess and not _hasToBeVhdlProcess:
+            # add indent because we did not added it before because we did not know t
+            oneIndent = getIndent(1)
+            statemets = list(map(lambda x: oneIndent + x, statemets))
+
+        return cls.processTmpl.render(
+            indent=getIndent(ctx.indent),
+            name=proc.name,
+            hasToBeVhdlProcess=hasToBeVhdlProcess,
+            extraVars=extraVarsSerialized,
+            sensitivityList=", ".join(sensitivityList),
+            statements=extraVarsInit + statemets
+            )
 
     @classmethod
     def IfContainer(cls, ifc, ctx):
@@ -184,63 +234,14 @@ class VhdlSerializer_statements():
         return cls.asHdl(item, ctx)
 
     @classmethod
-    def HWProcess(cls, proc, ctx):
-        """
-        Serialize HWProcess objects as VHDL
+    def WaitStm(cls, w, ctx):
+        indent_str = getIndent(ctx.indent)
 
-        :param scope: name scope to prevent name collisions
-        """
-        body = proc.statements
-        extraVars = []
-        extraVarsSerialized = []
-
-        hasToBeVhdlProcess = arr_any(body,
-                                     lambda x: isinstance(x,
-                                                          (IfContainer,
-                                                           SwitchContainer,
-                                                           WhileContainer,
-                                                           WaitStm)))
-
-        sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, None), proc.sensitivityList))
-
-        if hasToBeVhdlProcess:
-            childCtx = ctx.withIndent()
+        if w.isTimeWait:
+            return "%swait for %d ns" % (indent_str, w.waitForWhat)
+        elif w.waitForWhat is None:
+            return "%swait" % indent_str
         else:
-            childCtx = copy(ctx)
-        
-        def createTmpVarFn(suggestedName, dtype):
-            # [TODO] it is better to use RtlSignal
-            s = SignalItem(None, dtype, virtualOnly=True)
-            s.name = ctx.scope.checkedName(suggestedName, s)
-            s.hidden = False
-            serializedS = cls.SignalItem(s, childCtx, declaration=True)
-            extraVars.append(s)
-            extraVarsSerialized.append(serializedS)
-            return s
-        childCtx.createTmpVarFn = createTmpVarFn
+            raise NotImplementedError()
 
-        statemets = [cls.asHdl(s, childCtx) for s in body]
-        proc.name = ctx.scope.checkedName(proc.name, proc)
-
-        extraVarsInit = []
-        for s in extraVars:
-            a = Assignment(s.defaultVal, s, virtualOnly=True)
-            extraVarsInit.append(cls.Assignment(a, childCtx))
-
-        _hasToBeVhdlProcess = hasToBeVhdlProcess
-        hasToBeVhdlProcess = extraVars or hasToBeVhdlProcess
-
-        if hasToBeVhdlProcess and not _hasToBeVhdlProcess:
-            # add indent because we did not added it before because we did not know t
-            oneIndent = getIndent(1)
-            statemets = list(map(lambda x: oneIndent + x, statemets))
-
-        return cls.processTmpl.render(
-            indent=getIndent(ctx.indent),
-            name=proc.name,
-            hasToBeVhdlProcess=hasToBeVhdlProcess,
-            extraVars=extraVarsSerialized,
-            sensitivityList=", ".join(sensitivityList),
-            statements=extraVarsInit + statemets
-            )
 
