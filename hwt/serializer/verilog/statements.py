@@ -26,7 +26,7 @@ class VerilogSerializer_statements():
         assert not dst.virtualOnly
         if dstSignalType is SIGNAL_TYPE.REG:
             prefix = ""
-            symbol = "="
+            symbol = "<="
         else:
             prefix = "assign "
             symbol = "="
@@ -58,8 +58,8 @@ class VerilogSerializer_statements():
                     elif srcT.signed is not dstT.signed:
                         return "%s %s %s" % (firstPartOfStr, symbol, valAsHdl(a.src._convSign(dstT.signed)))
 
-            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%r; %r) " % 
-                                      (indent_str, dstStr, symbol, valAsHdl(a.src), dst._dtype, a.src._dtype))
+            raise SerializerException("%s %s %s  is not valid assignment\n because types are different (%r; %r) " % 
+                                      (dstStr, symbol, valAsHdl(a.src), dst._dtype, a.src._dtype))
 
     @classmethod
     def IfContainer(cls, ifc, ctx):
