@@ -1,6 +1,5 @@
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.serializer.serializerClases.indent import getIndent
 
 
 class Array(HdlType):
@@ -46,9 +45,7 @@ class Array(HdlType):
         :param expandStructs: expand HStruct types (used by HStruct and Array)
         """
 
-        return "%s<HdlType %s of\n%s[%r]>" % (getIndent(indent),
-                                              self.__class__.__name__,
-                                              self.elmType.__repr__(indent=indent + 1,
-                                                                    withAddr=withAddr,
-                                                                    expandStructs=expandStructs),
-                                              self.size)
+        return "%s[%r]" % (self.elmType.__repr__(indent=indent,
+                                                 withAddr=withAddr,
+                                                 expandStructs=expandStructs),
+                           self.size)

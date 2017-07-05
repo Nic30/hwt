@@ -73,6 +73,6 @@ class Bits(HdlType):
         elif self.signed is False:
             constr += ", unsigned"
         
-        return "%s<HdlType %s, %s>" % (getIndent(indent),
-                                       self.__class__.__name__,
-                                       constr)
+        return "%s<%s, %s>" % (getIndent(indent),
+                               self.__class__.__name__,
+                               constr)

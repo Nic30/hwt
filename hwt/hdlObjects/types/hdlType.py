@@ -39,4 +39,4 @@ class HdlType():
             on which address this type is stored (used only by HStruct)
         :param expandStructs: expand HStruct types (used by HStruct and Array)
         """
-        return "<HdlType %s>" % (self.__class__.__name__)
+        return "<%s>" % (self.__class__.__name__)

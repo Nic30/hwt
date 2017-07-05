@@ -1,7 +1,6 @@
 from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.hdlObjects.value import Value
-from hwt.serializer.serializerClases.indent import getIndent
 from hwt.hdlObjects.types.structValBase import StructValBase
+from hwt.serializer.serializerClases.indent import getIndent
 
 
 class HStructField(object):
