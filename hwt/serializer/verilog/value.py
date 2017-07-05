@@ -28,13 +28,13 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             vldMask = mask(width)
         # if can be in hex
         if width % 4 == 0 and vldMask == (1 << width) - 1:
-            return ("16'b%0" + str(width // 4) + 'x"') % (v)
+            return ("%d'h%0" + str(width // 4) + 'x"') % (width, v)
         else:  # else in binary
             return cls.BitString_binary(v, width, vldMask)
 
     @staticmethod
     def BitString_binary(v, width, vldMask=None):
-        buff = ["2'b"]
+        buff = ["%d'b" % width]
         for i in range(width - 1, -1, -1):
             mask = (1 << i)
             b = v & mask
@@ -120,8 +120,15 @@ class VerilogSerializer_Value(GenericSerializer_Value):
                 return si.name
 
     @classmethod
-    def Slice_valAsHdl(cls, dtype, val, createTmpVarFn):
-        return "%s:%s" % (cls.Value(val.val[0], createTmpVarFn), cls.Value(val.val[1], createTmpVarFn))
+    def Slice_valAsHdl(cls, dtype, val, ctx):
+        upper = val.val[0]
+        if isinstance(upper, Value):
+            upper = upper - 1
+            _format = "%s:%s"
+        else:
+            _format = "%s-1:%s"
+
+        return _format % (cls.Value(upper, ctx), cls.Value(val.val[1], ctx))
 
     @classmethod
     def sensitivityListItem(cls, item, createTmpVarFn, anyIsEventDependent):
