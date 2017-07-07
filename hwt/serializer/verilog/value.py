@@ -8,8 +8,6 @@ from hwt.hdlObjects.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.verilog.utils import SIGNAL_TYPE
-from hwt.synthesizer.param import getParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -28,7 +26,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             vldMask = mask(width)
         # if can be in hex
         if width % 4 == 0 and vldMask == (1 << width) - 1:
-            return ("%d'h%0" + str(width // 4) + 'x"') % (width, v)
+            return ("%d'h%0" + str(width // 4) + 'x') % (width, v)
         else:  # else in binary
             return cls.BitString_binary(v, width, vldMask)
 
@@ -131,7 +129,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
         return _format % (cls.Value(upper, ctx), cls.Value(val.val[1], ctx))
 
     @classmethod
-    def sensitivityListItem(cls, item, createTmpVarFn, anyIsEventDependent):
+    def sensitivityListItem(cls, item, ctx, anyIsEventDependent):
         if isinstance(item, Operator):
             o = item.operator
             item = item.ops[0]
@@ -141,14 +139,37 @@ class VerilogSerializer_Value(GenericSerializer_Value):
                 prefix = "negedge "
             else:
                 raise NotImplementedError()
-            return prefix + cls.asHdl(item, createTmpVarFn)
+            return prefix + cls.asHdl(item, ctx)
         elif anyIsEventDependent:
             if item.negated:
                 prefix = "negedge "
             else:
                 prefix = "posedge "
 
-            return prefix + cls.asHdl(item, createTmpVarFn)
+            return prefix + cls.asHdl(item, ctx)
 
-        return cls.asHdl(item, createTmpVarFn)
+        return cls.asHdl(item, ctx)
+    
+    @classmethod
+    def SignedBitString(cls, v, width, forceVector, vldMask):
+        if vldMask != mask(width):
+            if forceVector or width > 1:
+                v = cls.BitString(v, width, vldMask)
+            else:
+                v = cls.BitLiteral(v, width, vldMask)
+        else:
+            v = str(v)
+        # [TODO] parametrized width
+        return "$signed(%s)" % (v)
 
+    @classmethod
+    def UnsignedBitString(cls, v, width, forceVector, vldMask):
+        if vldMask != mask(width):
+            if forceVector or width > 1:
+                v = cls.BitString(v, width, vldMask)
+            else:
+                v = cls.BitLiteral(v, width, vldMask)
+        else:
+            v = str(v)
+        # [TODO] parametrized width
+        return "$unsigned(%s)" % (v)
