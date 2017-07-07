@@ -26,9 +26,13 @@ class Bits(HdlType):
         self._allMask = mask(self._widthVal)
 
     def __eq__(self, other):
-        return isinstance(other, Bits) and other._widthVal == self._widthVal\
-            and self.signed == other.signed and self.forceVector == other.forceVector
-
+        if self._widthVal == 1:
+            return isinstance(other, Bits) and other._widthVal == 1\
+                and self.signed == other.signed and self.forceVector == other.forceVector
+        else:
+            return isinstance(other, Bits) and other._widthVal == self._widthVal\
+                and self.signed == other.signed
+            
     def __hash__(self):
         return hash((self.signed, self._widthVal, self.forceVector))
 
