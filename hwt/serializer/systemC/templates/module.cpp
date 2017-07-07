@@ -26,10 +26,10 @@ SC_MODULE({{name}}) {
 	endfor %}
 
 
-    SC_CTOR({{name}}){{'{'}}{% for method in processesObjs %}
-        SC_METHOD(method.name);
+    SC_CTOR({{name}}){{'{'}}{% for methodName, sensitivityList in processesSensitivity %}
+        SC_METHOD({{methodName}});
         sensitive << {%
-        for s in method.sensitivityList %}{{ asHdl(s, sensitivityCtx) }}{%
+        for s in sensitivityList|sort %}{{ s }}{%
            if not loop.last %} << {% endif %}{%
         endfor %};{%
      endfor %}{%

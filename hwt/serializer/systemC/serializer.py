@@ -84,19 +84,20 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
 
         for p in arch.processes:
             procs.append(cls.HWProcess(p, childCtx))
-
-        constants = []
-
+            
+        processesSensitivity = []
+        sensitivityCtx = ctx.forTarget()
+        for p in arch.processes:
+            sens = list(map(lambda s: cls.asHdl(s, sensitivityCtx), p.sensitivityList))
+            processesSensitivity.append((p.name, sens))
+        
         return cls.moduleTmpl.render(
-            asHdl=cls.asHdl,
-            sensitivityCtx=ctx.forTarget(),
+            processesSensitivity=processesSensitivity,
             name=arch.getEntityName(),
-            constants=constants,
             ports=ports,
             signals=list(map(serializeVar, variables)),
             extraTypes=extraTypes_serialized,
             processes=procs,
-            processesObjs=arch.processes,
             processObjects=arch.processes,
             componentInstances=arch.componentInstances,
             )
