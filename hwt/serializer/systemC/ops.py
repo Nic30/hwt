@@ -4,7 +4,6 @@ from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-# http://www.asicguru.com/verilog/tutorial/operators/57/
 opPrecedence = {AllOps.NOT: 3,
                 AllOps.NEG: 5,
                 AllOps.RISING_EDGE: 0,
@@ -18,6 +17,7 @@ opPrecedence = {AllOps.NOT: 3,
                 AllOps.XOR: 12,
                 AllOps.OR_LOG: 13,
                 AllOps.DOWNTO: 2,
+                AllOps.TO: 2,
                 AllOps.GREATERTHAN: 9,
                 AllOps.LOWERTHAN: 9,
                 AllOps.GE: 9,
@@ -28,12 +28,10 @@ opPrecedence = {AllOps.NOT: 3,
                 AllOps.CALL: 2,
                 # AllOps.SHIFTL:8,
                 # AllOps.SHIFTR:8,
-                # AllOps.DOWNTO:
-                # AllOps.TO:
                 }
 
 
-class VerilogSerializer_ops():
+class SystemCSerializer_ops():
     @classmethod
     def Operator(cls, op, ctx):
         def p(operand):
@@ -104,25 +102,20 @@ class VerilogSerializer_ops():
                                          p(ops[1]),
                                          p(ops[2]))
         elif o == AllOps.RISING_EDGE or o == AllOps.FALLIGN_EDGE:
-            raise UnsupportedEventOpErr()
-        elif o == AllOps.BitsAsSigned:
+            if ctx.isSensitivityList:
+                if o == AllOps.RISING_EDGE:
+                    _o = ".pos()"
+                else:
+                    _o = ".neg()"
+                return p(ops[0]) + _o
+            else:
+                raise UnsupportedEventOpErr()
+        elif o in [AllOps.BitsAsSigned, AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.BitsToInt, AllOps.IntToBits]:
             assert len(ops) == 1
-            return "$signed(" + p(ops[0]) + ")"
-        elif o == AllOps.BitsAsUnsigned:
-            assert len(ops) == 1
-            return "$unsigned(" + p(ops[0]) + ")"
-        elif o == AllOps.BitsAsVec:
-            assert len(ops) == 1
-            return "$unsigned(" + p(ops[0]) + ")"
-        elif o == AllOps.BitsToInt:
-            # no conversion required
-            return cls.asHdl(ops[0], ctx)
-        elif o == AllOps.IntToBits:
-            # no conversion required
-            return cls.asHdl(ops[0], ctx)
-
+            return "static_cast<%s>(%s)" % (cls.asHdl(op.result._dtype, ctx), p(ops[0]))
         elif o == AllOps.POW:
             assert len(ops) == 2
-            return _bin('**')
+            raise NotImplementedError()
+            #return _bin('**')
         else:
             raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))

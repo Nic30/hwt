@@ -8,7 +8,6 @@ from hwt.hdlObjects.variables import SignalItem
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.verilog.ops import UnsupportedEventOpErr
 from hwt.serializer.verilog.utils import verilogTypeOfSig, SIGNAL_TYPE
 
 
@@ -61,67 +60,6 @@ class VerilogSerializer_statements():
             raise SerializerException("%s %s %s is not valid assignment\n because types are different (%r; %r) " % 
                                       (dstStr, symbol, valAsHdl(a.src), dst._dtype, a.src._dtype))
 
-    @classmethod
-    def IfContainer(cls, ifc, ctx):
-        childCtx = ctx.withIndent()
-
-        def asHdl(statements):
-            return [cls.asHdl(s, childCtx) for s in statements]
-
-        try:
-            cond = cls.condAsHdl(ifc.cond, True, ctx)
-        except UnsupportedEventOpErr as e:
-            cond = None
-
-        if cond is None:
-            assert not ifc.elIfs
-            assert not ifc.ifFalse
-            stmBuff = [cls.asHdl(s, ctx) for s in ifc.ifTrue]
-            return ";\n".join(stmBuff)
-
-        elIfs = []
-        ifTrue = ifc.ifTrue
-        ifFalse = ifc.ifFalse
-        for c, statements in ifc.elIfs:
-            try:
-                elIfs.append((cls.condAsHdl(c, True, ctx), asHdl(statements)))
-            except UnsupportedEventOpErr as e:
-                if len(ifc.elIfs) == 1 and not ifFalse:
-                    # register expression is in valid format and this is just register
-                    # with asynchronous reset or etc...
-                    ifFalse = statements
-                else:
-                    raise e
-
-        return cls.ifTmpl.render(
-                            indent=getIndent(ctx.indent),
-                            cond=cond,
-                            ifTrue=asHdl(ifTrue),
-                            elIfs=elIfs,
-                            ifFalse=asHdl(ifFalse))
-
-    @classmethod
-    def SwitchContainer(cls, sw, ctx):
-        childCtx = ctx.withIndent(2)
-
-        def asHdl(statements):
-            return [cls.asHdl(s, childCtx) for s in statements]
-
-        switchOn = cls.condAsHdl(sw.switchOn, False, ctx)
-
-        cases = []
-        for key, statements in sw.cases:
-            key = cls.asHdl(key, ctx)
-
-            cases.append((key, asHdl(statements)))
-
-        if sw.default:
-            cases.append((None, asHdl(sw.default)))
-
-        return cls.switchTmpl.render(
-                            indent=getIndent(ctx.indent),
-                            switchOn=switchOn,
-                            cases=cases)
 
     @classmethod
     def HWProcess(cls, proc, ctx):

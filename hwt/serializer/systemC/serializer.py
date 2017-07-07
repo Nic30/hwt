@@ -12,9 +12,12 @@ from hwt.serializer.systemC.type import SystemCSerializer_type
 from hwt.serializer.systemC.value import SystemCSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
+from hwt.serializer.systemC.ops import SystemCSerializer_ops
+from hwt.hdlObjects.entity import Entity
 
 
-class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSerializer_type, SystemCSerializer_statements):
+class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSerializer_type,
+                        SystemCSerializer_statements, SystemCSerializer_ops):
     """
     Serialized used to convert HWT design to SystemC code
     """
@@ -46,6 +49,13 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
     @classmethod
     def DIRECTION(cls, d):
         return d.name.lower()
+
+    @classmethod
+    def Entity(cls, ent, ctx):
+        doc = ent.__doc__
+        if doc and id(doc) != id(Entity.__doc__):
+            return cls.comment(doc) + "\n"
+        return ""
 
     @classmethod
     def Architecture(cls, arch, ctx):
@@ -80,13 +90,13 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
             else:
                 dv = cls.Value(dv, None)
 
-            return v.name, cls.HdlType(v._dtype), dv
+            return "sc_signal<%s> %s(%s);" % (cls.HdlType(v._dtype, ctx), v.name, dv)
 
         for p in arch.processes:
             procs.append(cls.HWProcess(p, childCtx))
             
         processesSensitivity = []
-        sensitivityCtx = ctx.forTarget()
+        sensitivityCtx = ctx.forSensitivityList()
         for p in arch.processes:
             sens = list(map(lambda s: cls.asHdl(s, sensitivityCtx), p.sensitivityList))
             processesSensitivity.append((p.name, sens))

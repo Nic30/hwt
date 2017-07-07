@@ -4,17 +4,19 @@ from hwt.hdlObjects.architecture import Architecture
 from hwt.hdlObjects.entity import Entity
 from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.bits import Bits
+from hwt.hdlObjects.types.boolean import Boolean
 from hwt.hdlObjects.types.enum import Enum
-from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.integer import Integer
 from hwt.hdlObjects.value import Value
 from hwt.serializer.constants import SERI_MODE
+from hwt.serializer.exceptions import SerializerException
+from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.serializerClases.context import SerializerCtx
+from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.nameScope import NameScope
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdlObjects.types.boolean import Boolean
 
 
 def freeze_dict(data):
@@ -70,7 +72,7 @@ class GenericSerializer():
             try:
                 serFn = getattr(cls, obj.__class__.__name__)
             except AttributeError:
-                raise NotImplementedError("Not implemented for %s" % (repr(obj)))
+                raise SerializerException("Not implemented for %s" % (repr(obj)))
             return serFn(obj, ctx)
 
     @classmethod
@@ -158,3 +160,66 @@ class GenericSerializer():
                                           % (typ.name))
 
         return sFn(typ, ctx, declaration=declaration)
+
+
+    @classmethod
+    def IfContainer(cls, ifc, ctx):
+        childCtx = ctx.withIndent()
+
+        def asHdl(statements):
+            return [cls.asHdl(s, childCtx) for s in statements]
+
+        try:
+            cond = cls.condAsHdl(ifc.cond, True, ctx)
+        except UnsupportedEventOpErr as e:
+            cond = None
+
+        if cond is None:
+            assert not ifc.elIfs
+            assert not ifc.ifFalse
+            stmBuff = [cls.asHdl(s, ctx) for s in ifc.ifTrue]
+            return ";\n".join(stmBuff)
+
+        elIfs = []
+        ifTrue = ifc.ifTrue
+        ifFalse = ifc.ifFalse
+        for c, statements in ifc.elIfs:
+            try:
+                elIfs.append((cls.condAsHdl(c, True, ctx), asHdl(statements)))
+            except UnsupportedEventOpErr as e:
+                if len(ifc.elIfs) == 1 and not ifFalse:
+                    # register expression is in valid format and this is just register
+                    # with asynchronous reset or etc...
+                    ifFalse = statements
+                else:
+                    raise e
+
+        return cls.ifTmpl.render(
+                            indent=getIndent(ctx.indent),
+                            cond=cond,
+                            ifTrue=asHdl(ifTrue),
+                            elIfs=elIfs,
+                            ifFalse=asHdl(ifFalse))
+
+    @classmethod
+    def SwitchContainer(cls, sw, ctx):
+        childCtx = ctx.withIndent(2)
+
+        def asHdl(statements):
+            return [cls.asHdl(s, childCtx) for s in statements]
+
+        switchOn = cls.condAsHdl(sw.switchOn, False, ctx)
+
+        cases = []
+        for key, statements in sw.cases:
+            key = cls.asHdl(key, ctx)
+
+            cases.append((key, asHdl(statements)))
+
+        if sw.default:
+            cases.append((None, asHdl(sw.default)))
+
+        return cls.switchTmpl.render(
+                            indent=getIndent(ctx.indent),
+                            switchOn=switchOn,
+                            cases=cases)
