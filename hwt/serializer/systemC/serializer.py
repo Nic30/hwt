@@ -25,10 +25,10 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
     fileExtension = '.cpp'
     _keywords_dict = {kw: LangueKeyword() for kw in SYSTEMC_KEYWORDS}
     env = Environment(loader=PackageLoader('hwt', 'serializer/systemC/templates'))
-    moduleTmpl = env.get_template('module.cpp')
-    methodTmpl = env.get_template("method.cpp")
-    ifTmpl = env.get_template("if.cpp")
-    switchTmpl = env.get_template("switch.cpp")
+    moduleTmpl = env.get_template('module.cpp.template')
+    methodTmpl = env.get_template("method.cpp.template")
+    ifTmpl = env.get_template("if.cpp.template")
+    switchTmpl = env.get_template("switch.cpp.template")
 
     @classmethod
     def getBaseContext(cls):
@@ -45,7 +45,6 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
         return "sc_%s<%s> %s;" % (d,
                                   cls.HdlType(pi._dtype, ctx),
                                   pi.name)
-
 
     @classmethod
     def DIRECTION(cls, d):

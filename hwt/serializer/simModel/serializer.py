@@ -23,9 +23,9 @@ from hwt.synthesizer.param import evalParam
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
-unitTmpl = env.get_template('modelCls.py')
-processTmpl = env.get_template('process.py')
-ifTmpl = env.get_template("if.py")
+unitTmpl = env.get_template('modelCls.py.template')
+processTmpl = env.get_template('process.py.template')
+ifTmpl = env.get_template("if.py.template")
 
 
 class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
