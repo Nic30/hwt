@@ -56,10 +56,6 @@ class SystemCSerializer_statements():
         :param scope: name scope to prevent name collisions
         """
         body = proc.statements
-
-        def createTmpVarFn(suggestedName, dtype):
-            raise NotImplementedError()
-
         childCtx = ctx.withIndent()
         statemets = [cls.asHdl(s, childCtx) for s in body]
         proc.name = ctx.scope.checkedName(proc.name, proc)

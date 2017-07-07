@@ -58,8 +58,8 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
                 sc = serializer.Architecture(obj, ctx)
             else:
                 sc = serializer.asHdl(obj)
-
-            codeBuff.append(sc)
+            if sc:
+                codeBuff.append(sc)
         else:
             try:
                 name = "(" + obj.name + ")"
@@ -136,7 +136,7 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 else:
                     sc = serializer.asHdl(obj)
 
-            if fName is not None:
+            if fName is not None and sc:
                 fp = os.path.join(folderName, fName)
                 files.append(fp)
 

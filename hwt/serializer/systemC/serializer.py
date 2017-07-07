@@ -5,6 +5,7 @@ from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.enumVal import EnumVal
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.nameScope import LangueKeyword
+from hwt.serializer.systemC.context import SystemCCtx
 from hwt.serializer.systemC.keywords import SYSTEMC_KEYWORDS
 from hwt.serializer.systemC.statements import SystemCSerializer_statements
 from hwt.serializer.systemC.type import SystemCSerializer_type
@@ -24,6 +25,10 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
     methodTmpl = env.get_template("method.cpp")
     ifTmpl = env.get_template("if.cpp")
     switchTmpl = env.get_template("switch.cpp")
+
+    @classmethod
+    def getBaseContext(cls):
+        return SystemCCtx(cls.getBaseNameScope(), 0, None, None)
 
     @classmethod
     def comment(cls, comentStr):
@@ -83,12 +88,15 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
         constants = []
 
         return cls.moduleTmpl.render(
+            asHdl=cls.asHdl,
+            sensitivityCtx=ctx.forTarget(),
             name=arch.getEntityName(),
             constants=constants,
             ports=ports,
             signals=list(map(serializeVar, variables)),
             extraTypes=extraTypes_serialized,
             processes=procs,
+            processesObjs=arch.processes,
             processObjects=arch.processes,
             componentInstances=arch.componentInstances,
             )
