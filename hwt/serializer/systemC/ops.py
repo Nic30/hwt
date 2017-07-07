@@ -1,5 +1,5 @@
 from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.types.defs import BIT
+from hwt.hdlObjects.types.defs import BIT, SLICE
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
@@ -80,8 +80,12 @@ class SystemCSerializer_ops():
             return _bin('<=')
         elif o == AllOps.INDEX:
             assert len(ops) == 2
-            o1 = ops[0]
-            return "%s[%s]" % (cls.asHdl(o1, ctx).strip(), p(ops[1]))
+            o0, o1 = ops
+            o0_str = cls.asHdl(o0, ctx).strip()
+            if ops[1]._dtype == SLICE:
+                return "%s.range(%s, %s)" % (o0_str, p(o1.val[0]), p(o1.val[1]))
+            else:
+                return "%s[%s]" % (o0_str, p(o1))
         elif o == AllOps.LOWERTHAN:
             return _bin('<')
         elif o == AllOps.SUB:
@@ -116,6 +120,6 @@ class SystemCSerializer_ops():
         elif o == AllOps.POW:
             assert len(ops) == 2
             raise NotImplementedError()
-            #return _bin('**')
+            # return _bin('**')
         else:
             raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))

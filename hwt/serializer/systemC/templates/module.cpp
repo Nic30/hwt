@@ -23,15 +23,29 @@ SC_MODULE({{name}}) {
 
     for method in processes %}
 {{method}}{%
-	endfor %}
+	endfor %}{% if componentInstances %}
 
+    // components inside this component
+{% endif %}{%
+    for c in componentInstances %}
+    {{    c.name}} {{c._name}};{%
+    endfor %}
 
-    SC_CTOR({{name}}){{'{'}}{% for methodName, sensitivityList in processesSensitivity %}
+    SC_CTOR({{name}}) {%
+        if componentInstances %}: {%
+            for c in componentInstances%}{{
+                c._name}}("{{c._name}}"){%
+                if not loop.last %}, {% endif %}{%
+            endfor %} {%
+    	endif %}{{'{'}}
+    	{% for methodName, sensitivityList in processesSensitivity %}
         SC_METHOD({{methodName}});
-        sensitive << {%
-        for s in sensitivityList|sort %}{{ s }}{%
-           if not loop.last %} << {% endif %}{%
-        endfor %};{%
+        {% if sensitivityList
+            %}sensitive << {%
+            for s in sensitivityList|sort %}{{ s }}{%
+               if not loop.last %} << {% endif %}{%
+            endfor %};{%
+         endif%}{%
      endfor %}{%
 
      if componentInstances %}

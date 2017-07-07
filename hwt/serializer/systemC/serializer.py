@@ -14,6 +14,7 @@ from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
 from hwt.serializer.systemC.ops import SystemCSerializer_ops
 from hwt.hdlObjects.entity import Entity
+from hwt.hdlObjects.constants import DIRECTION
 
 
 class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSerializer_type,
@@ -110,4 +111,5 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
             processes=procs,
             processObjects=arch.processes,
             componentInstances=arch.componentInstances,
+            DIRECTION=DIRECTION,
             )
