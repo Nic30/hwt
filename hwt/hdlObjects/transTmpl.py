@@ -8,7 +8,7 @@ class TransTmpl(object):
     """
     Container of informations about frames generated from any HType (HStruct etc.)
 
-    * contains precalculated address range for this addrpace item
+    * contains precalculated address range for this addrspace item
 
     """
     def __init__(self, dtype, bitAddr=0, parent=None, origin=None):

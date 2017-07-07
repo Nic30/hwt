@@ -51,7 +51,7 @@ class InterfaceProxy(InterfaceBase):
     """
     Interface proxy which is used to create virtual arrays on interfaces
     goal is to have arrays just by multiplying the width of signals
-    to allow intuitive access by [] operator to his arrays we need this proxy
+    to allow intuitive access by [] operator to such a array we need this proxy
 
     :ivar _interfaces: list of proxies on interfaces from origInterface
     :ivar offset: tells how many items of this type was before this item f.e.
@@ -96,7 +96,14 @@ class InterfaceProxy(InterfaceBase):
             self._initArrayItems()
 
     def __len__(self):
-        return self._itemsCnt
+        """
+        :return: number of items in this array proxy (they are proxy too)
+        """
+        c = self._itemsCnt
+        if c is None:
+            raise TypeError("This is not an array")
+
+        return c
 
     def _myArrOffset(self):
         """
@@ -108,6 +115,10 @@ class InterfaceProxy(InterfaceBase):
         return self._itemsCnt is not None
 
     def _getMySigSelector(self):
+        """
+        :return: tuple (upper, lower) for selecting signal for this proxy from parent
+            signal
+        """
         w = self._origIntf._widthMultiplier
         assert w is not None, ("InterfceProxy is not expected to be on interfaces without multiplier", self)
         sigItemsCnt = int(w)
@@ -127,6 +138,8 @@ class InterfaceProxy(InterfaceBase):
 
     def _signalsForInterface(self, context):
         """
+        Set _sig property for all signals recursively as a select from parent signals
+
         :param context: instance of RtlNetlist where signals should be created
         """
 
@@ -181,6 +194,7 @@ class InterfaceProxy(InterfaceBase):
 
     def __getattr__(self, name):
         if name == "_getIndexCascade" or name == "naryOp":
+            # called on _sig to avoid inf. loop
             o = self._sig
         else:
             o = self._origIntf

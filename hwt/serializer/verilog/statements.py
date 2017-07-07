@@ -26,7 +26,7 @@ class VerilogSerializer_statements():
         assert not dst.virtualOnly
         if dstSignalType is SIGNAL_TYPE.REG:
             prefix = ""
-            symbol = "="
+            symbol = "<="
         else:
             prefix = "assign "
             symbol = "="
@@ -42,7 +42,7 @@ class VerilogSerializer_statements():
         dstStr = cls.asHdl(dst, ctx)
         firstPartOfStr = "%s%s%s" % (indent_str, prefix, dstStr)
         if dst._dtype == a.src._dtype:
-            return "%s %s %s" % (firstPartOfStr, symbol, valAsHdl(a.src))
+            return "%s %s %s;" % (firstPartOfStr, symbol, valAsHdl(a.src))
         else:
             srcT = a.src._dtype
             dstT = dst._dtype
@@ -52,14 +52,14 @@ class VerilogSerializer_statements():
                 if sLen == dLen:
                     if sLen == 1 and srcT.forceVector != dstT.forceVector:
                         if srcT.forceVector:
-                            return "%s %s %s(0)" % (firstPartOfStr, symbol, valAsHdl(a.src))
+                            return "%s %s %s[0];" % (firstPartOfStr, symbol, valAsHdl(a.src))
                         else:
-                            return "%s(0) %s %s" % (firstPartOfStr, symbol, valAsHdl(a.src))
+                            return "%s[0] %s %s;" % (firstPartOfStr, symbol, valAsHdl(a.src))
                     elif srcT.signed is not dstT.signed:
-                        return "%s %s %s" % (firstPartOfStr, symbol, valAsHdl(a.src._convSign(dstT.signed)))
+                        return "%s %s %s;" % (firstPartOfStr, symbol, valAsHdl(a.src._convSign(dstT.signed)))
 
-            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%r; %r) " % 
-                                      (indent_str, dstStr, symbol, valAsHdl(a.src), dst._dtype, a.src._dtype))
+            raise SerializerException("%s %s %s is not valid assignment\n because types are different (%r; %r) " % 
+                                      (dstStr, symbol, valAsHdl(a.src), dst._dtype, a.src._dtype))
 
     @classmethod
     def IfContainer(cls, ifc, ctx):

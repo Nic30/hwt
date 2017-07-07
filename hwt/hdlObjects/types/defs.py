@@ -4,6 +4,10 @@ from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.string import String
 from hwt.hdlObjects.types.slice import Slice
 
+"""
+Definitions of most common types
+"""
+
 BOOL = Boolean()
 INT = Integer()
 UINT = Integer(_min=0)

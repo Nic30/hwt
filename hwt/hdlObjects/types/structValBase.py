@@ -3,6 +3,10 @@ from hwt.serializer.serializerClases.indent import getIndent
 
 
 class StructValBase(Value):
+    """
+    Base class for values for structure types.
+    Every structure type has it's own value class derived from this.
+    """
     __slots__ = []
 
     def __init__(self, val, typeObj):

@@ -13,6 +13,7 @@ def addClkRst(self):
 
 
 def _tryConnect(src, unit, intfName):
+    "try connect src to interface of specified name on unit"
     try:
         dst = getattr(unit, intfName)
     except AttributeError:
@@ -22,12 +23,18 @@ def _tryConnect(src, unit, intfName):
 
 
 def propagateClk(self):
+    """
+    Propagate "clk" clock signal to all subcomponents
+    """
     clk = self.clk
     for u in self._units:
         _tryConnect(clk, u, 'clk')
 
 
 def propagateClkRstn(self):
+    """
+    Propagate "clk" clock and negative reset "rst_n" signal to all subcomponents
+    """
     clk = self.clk
     rst_n = self.rst_n
 
@@ -38,6 +45,9 @@ def propagateClkRstn(self):
 
 
 def propagateClkRst(self):
+    """
+    Propagate "clk" clock and reset "rst" signal to all subcomponents
+    """
     clk = self.clk
     rst = self.rst
 
@@ -48,6 +58,9 @@ def propagateClkRst(self):
 
 
 def cloneIntf(intf):
+    """
+    Create same interface as template
+    """
     i = intf.__class__()
     i._updateParamsFrom(intf)
     return i

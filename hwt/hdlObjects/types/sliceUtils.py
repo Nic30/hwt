@@ -5,7 +5,7 @@ from hwt.hdlObjects.value import Value
 
 
 def slice_to_SLICE(sliceVals, width):
-    # convert python slice to SLICE hdl type
+    """convert python slice to value of SLICE hdl type"""
     if sliceVals.step is not None:
         raise NotImplementedError()
 
@@ -21,10 +21,10 @@ def slice_to_SLICE(sliceVals, width):
         stop = INT.fromPy(0)
     else:
         stop = toHVal(sliceVals.stop)
-        
+
     startIsVal = isinstance(start, Value)
     stopIsVal = isinstance(stop, Value)
-    
+
     indexesAreValues = startIsVal and stopIsVal
     if indexesAreValues:
         updateTime = max(start.updateTime, stop.updateTime)

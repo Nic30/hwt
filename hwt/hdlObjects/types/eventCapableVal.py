@@ -7,6 +7,9 @@ BoolVal = BOOL.getValueCls()
 
 
 class EventCapableVal(Value):
+    """
+    Base class for event capable values
+    """
 
     def _onFallingEdge__val(self, now):
         v = BoolVal(self.updateTime == now,

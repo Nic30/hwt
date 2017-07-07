@@ -5,29 +5,48 @@ from math import inf
 
 
 class DuplicitValueExc(Exception):
+    """
+    Exception which means that there are multiple items which this query selected
+    but it should return only one
+    """
     pass
 
 
 class NoValueExc(Exception):
+    """
+    Exception which means that query did not selected any item
+    """
     pass
 
 
 def distinctBy(iterable, fn):
+    """
+    uniq operation with key selector
+    """
     s = set()
     for i in iterable:
         r = fn(i)
         if r not in s:
-            s.add(fn(i))
+            s.add(r)
             yield i
 
 
 def first(iterable, fn):
-    for i in iterable:
-        if fn(i):
-            return i
+    """
+    get first item where fn(item)
+    """
+    for item in iterable:
+        if fn(item):
+            return item
 
 
 def single(iterable, fn):
+    """
+    Get value from iterable where fn(item) and check there is not fn(other item)
+
+    :raise DuplicitValueExc: when there are multiple items satisfying fn()
+    :raise NoValueExc: when no value satisfying fn(item) found
+    """
     found = False
     ret = None
 
@@ -37,20 +56,26 @@ def single(iterable, fn):
                 raise DuplicitValueExc(i)
             found = True
             ret = i
+
     if not found:
         raise NoValueExc()
+
     return ret
 
 
 def arr_any(iterable, fn):
-    for _ in where(iterable, fn):
-        return True
+    """
+    :return: True if fn(item) for any item else False
+    """
+    for item in iterable:
+        if fn(item):
+            return True
     return False
 
 
 def arr_all(iterable, fn):
     """
-    returns True if fn(item) for all items in interable or iterable is empty else False
+    :return: True if fn(item) for all items in interable or iterable is empty else False
     """
     for item in iterable:
         if not fn(item):
@@ -60,7 +85,7 @@ def arr_all(iterable, fn):
 
 def take(iterrable, howMay):
     """
-    take first n items from iterrable
+    :return: generator of first n items from iterrable
     """
     assert howMay >= 0
 
@@ -72,12 +97,11 @@ def take(iterrable, howMay):
         yield item
         if i == last:
             return
-        
 
 
 def where(iterable, fn):
     """
-    Select items from iterable where fn(item)
+    :return: generator of items from iterable where fn(item)
     """
     for i in iterable:
         if fn(i):
@@ -86,7 +110,7 @@ def where(iterable, fn):
 
 def iter_with_last(iterable):
     """
-    Iterate iterable and yield tuples (isLastFlag, item)
+    :return: generator of tuples (isLastFlag, item)
     """
     # Ensure it's an iterator and get the first field
     iterable = iter(iterable)
@@ -111,7 +135,9 @@ def extendLen(arr, newLen, useValue=None):
 
 def groupedby(collection, fn):
     """
-    This function does not needs initial sorting like itertools.groupby
+    same like itertools.groupby
+
+    :note: This function does not needs initial sorting like itertools.groupby
 
     :attention: Order of pairs is not deterministic.
     """
@@ -130,7 +156,8 @@ def groupedby(collection, fn):
 
 def split(arr, size):
     """
-    split arr on smaller arrays of size
+    :return: generator of smaller lists of specified size
+    :attention: last list can be smaller
     """
     arr = list(arr)
     while len(arr) > size:

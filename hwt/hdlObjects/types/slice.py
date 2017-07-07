@@ -4,7 +4,7 @@ from hwt.hdlObjects.types.integer import Integer
 
 class Slice(Array):
     """
-    Slice type, used for selecting items from arrays 
+    Slice type, used for selecting items from arrays or vectors
     """
     def __init__(self):
         super().__init__(Integer(), 2)
