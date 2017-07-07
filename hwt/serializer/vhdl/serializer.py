@@ -54,8 +54,8 @@ class DebugTmpVarStack():
         return separator.join(map(self._serializeItem, self.vars)) + "\n"
 
 
-class VhdlSerializer(GenericSerializer, VhdlTmplContainer, VhdlSerializer_Value,
-                     VhdlSerializer_ops, VhdlSerializer_types, VhdlSerializer_statements):
+class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
+                     VhdlSerializer_ops, VhdlSerializer_types, VhdlSerializer_statements, GenericSerializer):
     VHDL_VER = VhdlVersion.v2002
     _keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
     fileExtension = '.vhd'

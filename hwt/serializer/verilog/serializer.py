@@ -19,7 +19,8 @@ from hwt.serializer.verilog.value import VerilogSerializer_Value
 from hwt.synthesizer.param import getParam
 
 
-class VerilogSerializer(GenericSerializer, VerilogTmplContainer, VerilogSerializer_types, VerilogSerializer_Value, VerilogSerializer_statements, VerilogSerializer_ops):
+class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSerializer_Value,
+                        VerilogSerializer_statements, VerilogSerializer_ops, GenericSerializer):
     _keywords_dict = {kw: LangueKeyword() for kw in VERILOG_KEYWORDS}
     fileExtension = '.v'
 

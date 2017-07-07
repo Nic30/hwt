@@ -17,8 +17,8 @@ from hwt.hdlObjects.entity import Entity
 from hwt.hdlObjects.constants import DIRECTION
 
 
-class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSerializer_type,
-                        SystemCSerializer_statements, SystemCSerializer_ops):
+class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemCSerializer_statements,
+                        SystemCSerializer_ops, GenericSerializer):
     """
     Serialized used to convert HWT design to SystemC code
     """
@@ -36,7 +36,7 @@ class SystemCSerializer(GenericSerializer, SystemCSerializer_value, SystemCSeria
 
     @classmethod
     def comment(cls, comentStr):
-        return "/* %s */" % comentStr
+        return "\n".join(["/*", comentStr, "*/"])
 
     @classmethod
     def PortItem(cls, pi, ctx):

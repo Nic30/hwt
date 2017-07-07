@@ -37,8 +37,8 @@ SC_MODULE({{name}}) {
                 c._name}}("{{c._name}}"){%
                 if not loop.last %}, {% endif %}{%
             endfor %} {%
-    	endif %}{{'{'}}
-    	{% for methodName, sensitivityList in processesSensitivity %}
+    	endif %}{{'{'}}{%
+    	for methodName, sensitivityList in processesSensitivity %}
         SC_METHOD({{methodName}});
         {% if sensitivityList
             %}sensitive << {%
