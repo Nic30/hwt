@@ -94,6 +94,7 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
     """
     if getDataFn is None:
         assert dataWidth is not None
+
         def _getDataFn(x):
             return toHVal(x)._convert(Bits(dataWidth))
 
@@ -102,7 +103,7 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
     val = structT.fromPy(None)
 
     fData = iter(data)
-    
+
     # actual is storage variable for items from frameData
     actualOffset = 0
     actual = None
@@ -117,7 +118,7 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
                 actual = getDataFn(next(fData))
             except StopIteration:
                 raise Exception("Input data too short")
-            
+
             if dataWidth is None:
                 dataWidth = actual._dtype.bit_length()
             actuallyHave = dataWidth
@@ -130,13 +131,12 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
                 d = getDataFn(next(fData))
             except StopIteration:
                 raise Exception("Input data too short")
-      
+
             actual = d._concat(actual)
             actuallyHave += dataWidth
 
         if actuallyHave >= required:
             # parse value of actual to field
-            
             # skip padding
             _v = actual[(required + actualOffset): actualOffset]._convert(v._dtype)
             v.val = _v.val

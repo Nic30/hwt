@@ -1,9 +1,9 @@
 from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.hdlObjects.value import Value
-from hwt.serializer.serializerClases.indent import getIndent
 from hwt.hdlObjects.types.structValBase import StructValBase
+from hwt.serializer.serializerClases.indent import getIndent
 
 
+# [TODO] rename fields to members
 class HStructField(object):
     def __init__(self, typ, name, info=None):
         assert isinstance(name, str) or name is None, name
@@ -18,7 +18,7 @@ class HStructField(object):
 
 class HStruct(HdlType):
     """
-    C-like structure type
+    hld structure type
 
     :ivar fields: tuple of HStructField instances in this struct
     :ivar name: name of this HStruct type

@@ -2,17 +2,24 @@ from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import INT, BOOL, STR, BIT
 
 
-# create hdl integer value (for example integer value in vhdl)
-hInt = lambda val: INT.fromPy(val)
+def hInt(pyVal):
+    """ create hdl integer value (for example integer value in vhdl)"""
+    return INT.fromPy(pyVal)
 
-# create hdl boolean value (for example boolean value in vhdl)
-hBool = lambda val: BOOL.fromPy(val)
 
-# create hdl string value (for example string value in vhdl)
-hStr = lambda val: STR.fromPy(val)
+def hBool(pyVal):
+    """ create hdl boolean value (for example boolean value in vhdl)"""
+    return BOOL.fromPy(pyVal)
 
-# create hdl bit value (for example STD_LOGIC value in vhdl)
-hBit = lambda val: BIT.fromPy(val)
+
+def hStr(pyVal):
+    """create hdl string value (for example string value in vhdl)"""
+    return STR.fromPy(pyVal)
+
+
+def hBit(pyVal):
+    """create hdl bit value (for example STD_LOGIC value in vhdl)"""
+    return BIT.fromPy(pyVal)
 
 
 def vecT(width, signed=None):

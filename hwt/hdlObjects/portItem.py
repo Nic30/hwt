@@ -4,6 +4,7 @@ from hwt.hdlObjects.constants import DIRECTION
 
 class PortItem(SignalItem):
     """basic hdl entity port item"""
+
     def __init__(self, name, direction, dtype, unit):
         self.name = name
         self.unit = unit
@@ -63,9 +64,21 @@ class PortItem(SignalItem):
         else:
             raise NotImplementedError()
 
+    def getSigInside(self):
+        """
+        return signal inside unit which has this port
+        """
+        d = self.direction
+        if d is DIRECTION.IN:
+            return self.dst
+        elif d is DIRECTION.OUT:
+            return self.src
+        else:
+            raise NotImplementedError(d)
+
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
         tmpVars = DebugTmpVarStack()
-        
+
         s = VhdlSerializer.PortItem(self, tmpVars.createTmpVarFn)
         return "%s%s" % (tmpVars.serialize(), s)

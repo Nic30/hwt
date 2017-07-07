@@ -1,47 +1,15 @@
 from hwt.bitmask import mask
-from hwt.hdlObjects.types.array import Array
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.boolean import Boolean
-from hwt.hdlObjects.types.enum import Enum
-from hwt.hdlObjects.types.integer import Integer
-from hwt.hdlObjects.types.slice import Slice
-from hwt.hdlObjects.types.string import String
 from hwt.hdlObjects.value import Value
 from hwt.serializer.exceptions import SerializerException
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.serializerClases.indent import getIndent
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-class VhdlSerializer_Value():
-
-    @classmethod
-    def Value(cls, val, createTmpVarFn):
-        """
-        :param dst: is signal connected with value
-        :param val: value object, can be instance of Signal or Value
-        """
-        t = val._dtype
-        if isinstance(val, RtlSignalBase):
-            return cls.SignalItem(val, createTmpVarFn)
-        elif isinstance(t, Slice):
-            return cls.Slice_valAsVhdl(t, val, createTmpVarFn)
-        elif isinstance(t, Array):
-            return cls.Array_valAsVhdl(t, val, createTmpVarFn)
-        elif isinstance(t, Bits):
-            return cls.Bits_valAsVhdl(t, val)
-        elif isinstance(t, Boolean):
-            return cls.Bool_valAsVhdl(t, val)
-        elif isinstance(t, Enum):
-            return cls.Enum_valAsVhdl(t, val)
-        elif isinstance(t, Integer):
-            return cls.Integer_valAsVhdl(t, val)
-        elif isinstance(t, String):
-            return cls.String_valAsVhdl(t, val)
-        else:
-            raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val)))
+class VhdlSerializer_Value(GenericSerializer_Value):
 
     @classmethod
-    def SignalItem(cls, si, createTmpVarFn, declaration=False, indent=0):
+    def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
             v = si.defaultVal
             if si.virtualOnly:
@@ -55,48 +23,35 @@ class VhdlSerializer_Value():
             else:
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)
 
-            s = "%s%s %s : %s" % (getIndent(indent), prefix, si.name, cls.HdlType(si._dtype, createTmpVarFn))
+            s = "%s%s %s : %s" % (getIndent(ctx.indent), prefix, si.name, cls.HdlType(si._dtype, ctx))
             if isinstance(v, RtlSignalBase):
-                return s + " := %s" % cls.asHdl(v, createTmpVarFn)
+                return s + " := %s" % cls.asHdl(v, ctx)
             elif isinstance(v, Value):
                 if si.defaultVal.vldMask:
-                    return s + " := %s" % cls.Value(si.defaultVal, createTmpVarFn)
+                    return s + " := %s" % cls.Value(si.defaultVal, ctx)
                 else:
                     return s
             else:
                 raise NotImplementedError(v)
 
         else:
-            assert indent == 0
             if si.hidden and hasattr(si, "origin"):
-                return cls.asHdl(si.origin, createTmpVarFn)
+                return cls.asHdl(si.origin, ctx)
             else:
                 return si.name
 
     @classmethod
-    def Enum_valAsVhdl(cls, dtype, val):
+    def Enum_valAsHdl(cls, dtype, val, ctx):
         return '%s' % str(val.val)
 
     @classmethod
-    def Array_valAsVhdl(cls, dtype, val, createTmpVarFn):
-        return "(" + (",\n".join([cls.Value(v, createTmpVarFn) for v in val.val])) + ")"
-
-    @classmethod
-    def Bits_valAsVhdl(cls, dtype, val):
-        w = dtype.bit_length()
-        if dtype.signed is None:
-            if dtype.forceVector or w > 1:
-                return cls.BitString(val.val, w, val.vldMask)
-            else:
-                return cls.BitLiteral(val.val, val.vldMask)
-        elif dtype.signed:
-            return cls.SignedBitString(val.val, w, dtype.forceVector, val.vldMask)
-        else:
-            return cls.UnsignedBitString(val.val, w, dtype.forceVector, val.vldMask)
+    def Array_valAsHdl(cls, dtype, val, ctx):
+        separator = ",\n" + getIndent(ctx.indent + 1)
+        return "".join(["(", separator.join([cls.Value(v, ctx) for v in val.val]), ")"])
 
     @staticmethod
     def BitString_binary(v, width, vldMask=None):
-        buff = []
+        buff = ['"']
         for i in range(width - 1, -1, -1):
             mask = (1 << i)
             b = v & mask
@@ -106,7 +61,8 @@ class VhdlSerializer_Value():
             else:
                 s = "X"
             buff.append(s)
-        return '"%s"' % (''.join(buff))
+        buff.append('"')
+        return ''.join(buff)
 
     @classmethod
     def BitString(cls, v, width, vldMask=None):
@@ -150,24 +106,20 @@ class VhdlSerializer_Value():
         return "TO_UNSIGNED(%s, %d)" % (v, width)
 
     @classmethod
-    def Bool_valAsVhdl(cls, dtype, val):
+    def Bool_valAsHdl(cls, dtype, val, ctx):
         return str(bool(val.val))
 
     @classmethod
-    def Integer_valAsVhdl(cls, dtype, val):
-        return str(int(val.val))
-
-    @classmethod
-    def Slice_valAsVhdl(cls, dtype, val, createTmpVarFn):
+    def Slice_valAsHdl(cls, dtype, val, ctx):
         upper = val.val[0]
         if isinstance(upper, Value):
             upper = upper - 1
             _format = "%s DOWNTO %s"
         else:
             _format = "%s-1 DOWNTO %s"
-        
-        return _format % (cls.Value(upper, createTmpVarFn), cls.Value(val.val[1], createTmpVarFn))
+
+        return _format % (cls.Value(upper, ctx), cls.Value(val.val[1], ctx))
 
     @classmethod
-    def String_valAsVhdl(cls, dtype, val):
+    def String_valAsHdl(cls, dtype, val, ctx):
         return '"%s"' % str(val.val)

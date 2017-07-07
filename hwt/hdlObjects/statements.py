@@ -6,13 +6,21 @@ def seqEvalCond(cond):
 
     return _cond
 
+
 class CodeStatement():
+    """
+    Base class for code statements
+    """
+
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
         tmpVars = DebugTmpVarStack()
-        
-        s = getattr(VhdlSerializer, self.__class__.__name__)(self, tmpVars.createTmpVarFn)
+        ctx = VhdlSerializer.getBaseContext()
+        ctx.createTmpVarFn = tmpVars.createTmpVarFn
+
+        s = getattr(VhdlSerializer, self.__class__.__name__)(self, ctx)
         return "%s%s" % (tmpVars.serialize(), s)
+
 
 class IfContainer(CodeStatement):
     """

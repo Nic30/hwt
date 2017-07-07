@@ -1,50 +1,52 @@
-from hwt.hdlObjects.constants import Unconstrained
-from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.hdlObjects.types.array import Array
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.enum import Enum
-from hwt.hdlObjects.types.integer import Integer
-from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.serializer.exceptions import SerializerException
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.typeShortcuts import hInt
+from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.serializer.exceptions import SerializerException
 
 
 class VhdlSerializer_types():
+    
     @classmethod
-    def HdlType_bits(cls, typ, createTmpVarFn, declaration=False):
+    def HdlType_bool(cls, typ, ctx, declaration=False):
+        assert not declaration
+        return "BOOLEAN"
+    
+    @classmethod
+    def HdlType_bits(cls, typ, ctx, declaration=False):
         disableRange = False
+        l = typ.bit_length()
+        w = typ.width
+        isVector = typ.forceVector or l > 1
+
         if typ.signed is None:
-            if typ.forceVector or typ.bit_length() > 1:
+            if isVector:
                 name = 'STD_LOGIC_VECTOR'
             else:
-                name = 'STD_LOGIC'
-                disableRange = True
+                return 'STD_LOGIC'
         elif typ.signed:
             name = "SIGNED"
         else:
             name = 'UNSIGNED'
 
-        w = typ.width
-        if disableRange or w is None or isinstance(w, Unconstrained):
+        if disableRange:
             constr = ""
         elif isinstance(w, int):
             constr = "(%d DOWNTO 0)" % (w - 1)
         else:
             o = Operator(AllOps.SUB, (w, hInt(1)))
-            constr = "(%s DOWNTO 0)" % cls.Operator(o, createTmpVarFn)
+            constr = "(%s DOWNTO 0)" % cls.Operator(o, ctx)
         return name + constr
 
     @classmethod
-    def HdlType_enum(cls, typ, scope, declaration=False):
+    def HdlType_enum(cls, typ, ctx, declaration=False):
         buff = []
         if declaration:
             try:
                 name = typ.name
             except AttributeError:
                 name = "enumT_"
-            typ.name = scope.checkedName(name, typ)
+            typ.name = ctx.scope.checkedName(name, typ)
 
             buff.extend(["TYPE ", typ.name.upper(), ' IS ('])
             # [TODO] check enum values names
@@ -55,17 +57,19 @@ class VhdlSerializer_types():
             return typ.name
 
     @classmethod
-    def HdlType_array(cls, typ, createTmpVarFn, scope, declaration=False):
+    def HdlType_array(cls, typ, ctx, declaration=False):
         if declaration:
             try:
                 name = typ.name
             except AttributeError:
                 name = "arrT_"
 
-            typ.name = scope.checkedName(name, typ)
+            typ.name = ctx.scope.checkedName(name, typ)
 
             return "TYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
-                (typ.name, cls.asHdl(toHVal(typ.size) - 1, createTmpVarFn), cls.HdlType(typ.elmType, createTmpVarFn))
+                (typ.name,
+                 cls.asHdl(toHVal(typ.size) - 1, ctx),
+                 cls.HdlType(typ.elmType, ctx, declaration=declaration))
         else:
             try:
                 return typ.name
@@ -76,7 +80,7 @@ class VhdlSerializer_types():
                 return "arrT_%d" % id(typ)
 
     @classmethod
-    def HdlType_int(cls, typ, scope, declaration=False):
+    def HdlType_int(cls, typ, ctx, declaration=False):
         ma = typ.max
         mi = typ.min
         noMax = ma is None
@@ -96,21 +100,3 @@ class VhdlSerializer_types():
                     raise SerializerException("If max is specified min has to be specified as well")
             else:
                 return "INTEGER RANGE %d to %d" % (mi, ma)
-
-    @classmethod
-    def HdlType(cls, typ, createTmpVarFn, scope=None, declaration=False):
-        if isinstance(typ, Bits):
-            return cls.HdlType_bits(typ, createTmpVarFn, declaration=declaration)
-        elif isinstance(typ, Enum):
-            return cls.HdlType_enum(typ, scope, declaration=declaration)
-        elif isinstance(typ, Array):
-            return cls.HdlType_array(typ, createTmpVarFn, scope, declaration=declaration)
-        elif isinstance(typ, Integer):
-            return cls.HdlType_int(typ, scope, declaration=declaration)
-        else:
-            if declaration:
-                raise NotImplementedError("type declaration is not implemented for type %s" %
-                                          (typ.name))
-            else:
-                assert isinstance(typ, HdlType)
-                return typ.name.upper()

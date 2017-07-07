@@ -33,9 +33,15 @@ class Bits(HdlType):
         return hash((self.signed, self._widthVal, self.forceVector))
 
     def all_mask(self):
+        """
+        :return: mask for bites of this type ( 0b111 for Bits(3) )
+        """
         return self._allMask
 
     def bit_length(self):
+        """
+        :return: bit width for this type
+        """
         return self._widthVal
 
     @classmethod
@@ -67,12 +73,12 @@ class Bits(HdlType):
         else:
             constr = VhdlSerializer.asHdl(self.width, tmpVars.createTmpVarFn)
             constr = "%s%s, %dbits" % (tmpVars.serialize(indent), constr, self.bit_length())
-        
+
         if self.signed:
             constr += ", signed"
         elif self.signed is False:
             constr += ", unsigned"
-        
-        return "%s<HdlType %s, %s>" % (getIndent(indent),
-                                       self.__class__.__name__,
-                                       constr)
+
+        return "%s<%s, %s>" % (getIndent(indent),
+                               self.__class__.__name__,
+                               constr)

@@ -17,7 +17,7 @@ def convertInteger(self, sigOrVal, toType):
                 assert v.val >= toType.min
             if toType.max is not None:
                 assert v.val <= toType.max
-                
+
             v._dtype = toType
             return v
         else:
@@ -27,16 +27,16 @@ def convertInteger(self, sigOrVal, toType):
             v = sigOrVal.val
             assert v == 0 or v == 1
             return BooleanVal(v, BOOL, sigOrVal.vldMask, sigOrVal.updateTime)
-            
+
     elif isinstance(toType, Bits):
         if isVal:
-            _v = sigOrVal.val 
+            _v = sigOrVal.val
             w = toType.bit_length()
             assert _v.bit_length() <= w, "%d can not fit into %d bits" % (_v, w)
             v = toType.fromPy(_v)
-            
+
             v.updateTime = sigOrVal.updateTime
-             
+
             v._dtype = toType
             if not sigOrVal.vldMask:
                 v.vldMask = 0
@@ -44,5 +44,4 @@ def convertInteger(self, sigOrVal, toType):
         else:
             return Operator.withRes(AllOps.IntToBits, [sigOrVal], toType)
 
-            
     return HdlType.defaultConvert(self, sigOrVal, toType)

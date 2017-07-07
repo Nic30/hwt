@@ -1,6 +1,6 @@
+from copy import copy
 from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
-from keyword import kwlist
 
 from hwt.hdlObjects.constants import SENSITIVITY
 from hwt.hdlObjects.operator import Operator
@@ -9,17 +9,17 @@ from hwt.hdlObjects.statements import IfContainer
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.enumVal import EnumVal
-from hwt.hdlObjects.value import Value
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.nameScope import LangueKeyword, NameScope
+from hwt.serializer.generic.serializer import GenericSerializer
+from hwt.serializer.serializerClases.constCache import ConstCache
 from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.simModel.constantStore import ConstantStore
+from hwt.serializer.serializerClases.nameScope import LangueKeyword
+from hwt.serializer.simModel.keywords import SIMMODEL_KEYWORDS
 from hwt.serializer.simModel.ops import SimModelSerializer_ops
 from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
@@ -27,52 +27,11 @@ unitTmpl = env.get_template('modelCls.py')
 processTmpl = env.get_template('process.py')
 ifTmpl = env.get_template("if.py")
 
-simCls_reservedWords = ['sim',
-                        'self'
-                        'reload',
-                        'vecT',
-                        'Array',
-                        'ArrayVal',
-                        'convertBits__val',
-                        'BitsVal',
-                        'SLICE',
-                        'Enum'
-                        'DIRECTION',
-                        'SENSITIVITY',
-                        'convertSimInteger__val',
-                        'simHInt',
-                        'SIM_INT',
-                        'simBitsT',
-                        'SIM_BIT',
-                        'convertSimBits__val',
-                        'SimModel',
-                        'sensitivity',
-                        'connectSimPort',
-                        'simEvalCond',
-                        'mkUpdater',
-                        'mkArrayUpdater'
-                        'Concat',
-                        'power'
-                        'RtlNetlist'
-                        'SimSignal'
-                        'SliceVal']
 
-
-class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimModelSerializer_types):
-    __keywords_dict = {kw: LangueKeyword() for kw in kwlist + simCls_reservedWords}
-
+class SimModelSerializer(GenericSerializer, SimModelSerializer_value,
+                         SimModelSerializer_ops, SimModelSerializer_types):
+    _keywords_dict = {kw: LangueKeyword() for kw in SIMMODEL_KEYWORDS}
     fileExtension = '.py'
-
-    @staticmethod
-    def formater(s):
-        return s
-
-    @classmethod
-    def getBaseNameScope(cls):
-        s = NameScope(True)
-        s.setLevel(1)
-        s[0].update(cls.__keywords_dict)
-        return s
 
     @classmethod
     def serializationDecision(cls, obj, serializedClasses, serializedConfiguredUnits):
@@ -80,33 +39,15 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         return True
 
     @classmethod
-    def asHdl(cls, obj, constStore):
-        if isinstance(obj, RtlSignalBase):
-            return cls.SignalItem(obj, constStore)
-        elif isinstance(obj, Value):
-            return cls.Value(obj, constStore)
-        else:
-            try:
-                serFn = getattr(cls, obj.__class__.__name__)
-            except AttributeError:
-                raise NotImplementedError("Not implemented for %s" % (repr(obj)))
-            return serFn(obj, constStore)
-
-    @classmethod
-    def stmAsHdl(cls, obj, constStore, enclosure=None, indent=0):
+    def stmAsHdl(cls, obj, ctx, enclosure=None):
         try:
             serFn = getattr(cls, obj.__class__.__name__)
         except AttributeError:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
-        return serFn(obj, constStore, enclosure=enclosure, indent=indent)
+        return serFn(obj, ctx, enclosure=enclosure)
 
     @classmethod
-    def Entity(cls, ent, scope):
-        ent.name = scope.checkedName(ent.name, ent, isGlobal=True)
-        return ""
-
-    @classmethod
-    def Architecture(cls, arch, scope):
+    def Architecture(cls, arch, ctx):
         variables = []
         procs = []
         extraTypes = set()
@@ -114,36 +55,38 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         arch.variables.sort(key=lambda x: x.name)
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.componentInstances.sort(key=lambda x: x._name)
-
-        ports = list(map(lambda p: (p.name, cls.HdlType(p._dtype, scope)), arch.entity.ports))
+        
+        ports = list(map(lambda p: (p.name, cls.HdlType(p._dtype, ctx)), arch.entity.ports))
 
         for v in arch.variables:
             t = v._dtype
             # if type requires extra definition
             if isinstance(t, Enum) and t not in extraTypes:
                 extraTypes.add(v._dtype)
-                extraTypes_serialized.append(cls.HdlType(t, scope, declaration=True))
+                extraTypes_serialized.append(cls.HdlType(t, ctx, declaration=True))
 
-            v.name = scope.checkedName(v.name, v)
+            v.name = ctx.scope.checkedName(v.name, v)
             variables.append(v)
 
-        constStore = ConstantStore(scope.checkedName)
+        constCache = ConstCache(ctx.scope.checkedName)
+        childCtx = copy(ctx)
+        childCtx.constCache = constCache
 
         def serializeVar(v):
             dv = evalParam(v.defaultVal)
             if isinstance(dv, EnumVal):
                 dv = "%s.%s" % (dv._dtype.name, dv.val)
             else:
-                dv = cls.Value(dv, None)
+                dv = cls.Value(dv, ctx)
 
-            return v.name, cls.HdlType(v._dtype), dv
+            return v.name, cls.HdlType(v._dtype, childCtx), dv
 
         for p in arch.processes:
-            procs.append(cls.HWProcess(p, scope, constStore, indent=0))
+            procs.append(cls.HWProcess(p, childCtx))
 
         constants = []
-        for c in sorted(constStore._cache.items(), key=lambda x: x[1], reverse=True):
-            constants.append((c[1], cls.Value(c[0], None)))
+        for c in sorted(childCtx.constCache._cache.items(), key=lambda x: x[1], reverse=True):
+            constants.append((c[1], cls.Value(c[0], ctx)))
 
         return unitTmpl.render(
             name=arch.getEntityName(),
@@ -160,16 +103,16 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             )
 
     @classmethod
-    def Assignment(cls, a, constStore, enclosure=None, indent=0):
+    def Assignment(cls, a, ctx, enclosure=None):
         dst = a.dst
-        indentStr = getIndent(indent)
+        indentStr = getIndent(ctx.indent)
         ev = a.isEventDependent
 
-        srcStr = "%s" % cls.Value(a.src, None)
+        srcStr = "%s" % cls.Value(a.src, ctx)
         if a.indexes is not None:
             return "%syield (self.%s, %s, (%s,), %s)" % (
                         indentStr, dst.name, srcStr,
-                        ", ".join(map(lambda x: cls.asHdl(x, constStore),
+                        ", ".join(map(lambda x: cls.asHdl(x, ctx),
                                       a.indexes)),
                         ev)
         else:
@@ -189,8 +132,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
                                     indentStr, dst.name, srcStr, ev)
 
                 raise SerializerException(("%s <= %s  is not valid assignment\n"
-                                           " because types are different (%r; %r) ") %
-                                          (cls.asHdl(dst, constStore), srcStr,
+                                           " because types are different (%r; %r) ") % 
+                                          (cls.asHdl(dst, ctx), srcStr,
                                           dst._dtype, a.src._dtype))
             else:
                 return "%syield (self.%s, %s, %s)" % (
@@ -201,13 +144,13 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
         return "#" + comentStr.replace("\n", "\n#")
 
     @classmethod
-    def condAsHdl(cls, cond, constStore):
+    def condAsHdl(cls, cond, ctx):
         cond = list(cond)
-        return "%s" % (",".join(map(lambda x: cls.asHdl(x, constStore), cond)))
+        return "%s" % (",".join(map(lambda x: cls.asHdl(x, ctx), cond)))
 
     @classmethod
-    def IfContainer(cls, ifc, constStore, enclosure=None, indent=0):
-        cond = cls.condAsHdl(ifc.cond, constStore)
+    def IfContainer(cls, ifc, ctx, enclosure=None):
+        cond = cls.condAsHdl(ifc.cond, ctx)
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
 
@@ -223,25 +166,26 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
 
             lastIf.ifFalse = ifc.ifFalse
 
-            return cls.IfContainer(topIf, constStore, enclosure, indent)
+            return cls.IfContainer(topIf, ctx, enclosure=enclosure)
         else:
+            childCtx = ctx.withIndent()
             if enclosure is None:
-                _enclosure = getIndent(indent + 1) + "pass"
+                _enclosure = getIndent(childCtx.indent) + "pass"
             else:
-                _enclosure = cls.stmAsHdl(enclosure, constStore, indent=indent + 1)
+                _enclosure = cls.stmAsHdl(enclosure, childCtx)
 
             return ifTmpl.render(
-                indent=getIndent(indent),
-                indentNum=indent,
+                indent=getIndent(ctx.indent),
+                indentNum=ctx.indent,
                 cond=cond,
                 enclosure=_enclosure,
-                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, constStore, enclosure, indent=indent + 1),
+                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, childCtx, enclosure=enclosure),
                                  ifTrue)),
-                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, constStore, enclosure, indent=indent + 1),
+                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, childCtx, enclosure=enclosure),
                                   ifFalse)))
 
     @classmethod
-    def SwitchContainer(cls, sw, constStore, enclosure=None, indent=0):
+    def SwitchContainer(cls, sw, ctx, enclosure=None):
         switchOn = sw.switchOn
 
         def mkCond(c):
@@ -259,7 +203,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
                             ifFalse,
                             elIfs)
 
-        return cls.IfContainer(topIf, constStore, enclosure=enclosure, indent=indent)
+        return cls.IfContainer(topIf, ctx, enclosure=enclosure)
 
     @classmethod
     def sensitivityListItem(cls, item):
@@ -270,23 +214,24 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops, SimMo
             elif op == AllOps.FALLIGN_EDGE:
                 sens = SENSITIVITY.FALLING
             else:
-                assert op == AllOps.EVENT
-                sens = SENSITIVITY.ANY
+                raise TypeError("This is not an event sensitivity", op)
 
             return "(%s, %s)" % (str(sens), item.ops[0].name)
         else:
             return item.name
 
     @classmethod
-    def HWProcess(cls, proc, scope, constStore, indent):
+    def HWProcess(cls, proc, ctx):
         body = proc.statements
-        proc.name = scope.checkedName(proc.name, proc)
+        proc.name = ctx.scope.checkedName(proc.name, proc)
         sensitivityList = sorted(map(cls.sensitivityListItem, proc.sensitivityList))
+        
+        childCtx = ctx.withIndent(2)
         if len(body) == 1:
-            _body = cls.stmAsHdl(body[0], constStore, enclosure=None, indent=indent + 2)
+            _body = cls.stmAsHdl(body[0], childCtx)
         elif len(body) == 2:
             # first statement is taken as default
-            _body = cls.stmAsHdl(body[1], constStore, enclosure=body[0], indent=indent + 2)
+            _body = cls.stmAsHdl(body[1], childCtx, enclosure=body[0])
         else:
             raise NotImplementedError()
 

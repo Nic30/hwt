@@ -9,16 +9,18 @@ from operator import pow, add, sub, mul, floordiv, eq, ne, le, lt, ge, gt
 BoolVal = BOOL.getValueCls()
 SliceVal = SLICE.getValueCls()
 
+
 def intOp__val(self, other, op, resT, evalFn):
     v = evalFn(self.val, other.val)
     vldMask = int(self.vldMask and other.vldMask)
     updateTime = max(self.updateTime, other.updateTime)
     return resT.getValueCls()(v, resT, vldMask, updateTime)
 
+
 def intOp(self, other, op, resT, evalFn=None):
     if evalFn is None:
         evalFn = op._evalFn
-        
+
     other = toHVal(other)._convert(INT)
     if areValues(self, other):
         return intOp__val(self, other, op, resT, evalFn)
@@ -35,14 +37,10 @@ def intCmpOp(self, other, op, evalFn=None):
 
 
 class IntegerVal(Value):
-    """
-    :ivar vldMask: can be only 0 or 1
-    :ivar updateTime: time when this value was set, used in simulator
-    """
-    
+
     def _isFullVld(self):
         return bool(self.vldMask)
-    
+
     @classmethod
     def fromPy(cls, val, typeObj):
         """

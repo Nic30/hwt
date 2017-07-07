@@ -4,11 +4,12 @@ from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
 from hwt.hdlObjects.constants import SENSITIVITY
 from hwt.hdlObjects.types.defs import INT
 from hwt.hdlObjects.value import Value
+from _operator import neg
 
 
 class OpDefinition():
     """
-    OperatorDefinition
+    Operator definition
 
     :ivar id: name of operator
     :ivar _evalFn: function which evaluates operands
@@ -120,6 +121,7 @@ class AllOps():
     RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
     FALLIGN_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary
 
+    NEG = OpDefinition(neg)
     DIV = OpDefinition(floordiv)
     ADD = OpDefinition(add)
     SUB = OpDefinition(sub)
@@ -130,8 +132,8 @@ class AllOps():
 
     NOT = OpDefinition(inv)
     XOR = OpDefinition(xor)
-    AND_LOG = OpDefinition(and_)
-    OR_LOG = OpDefinition(or_)
+    AND_LOG = OpDefinition(and_) # [FIXME] is bit-wise
+    OR_LOG = OpDefinition(or_) # [FIXME] is bit-wise
 
     DOT = OpDefinition(dotOpFn)
     DOWNTO = OpDefinition(downtoFn)
@@ -172,6 +174,9 @@ if not AllOps._idsInited:
 
 
 def sensitivityByOp(op):
+    """
+    get sensitivity type for operator
+    """
     if op == AllOps.RISING_EDGE:
         return SENSITIVITY.RISING
     elif op == AllOps.FALLIGN_EDGE:
