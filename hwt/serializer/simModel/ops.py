@@ -13,8 +13,8 @@ opPrecedence = {AllOps.NOT: 4,
                 AllOps.XOR: 9,
                 AllOps.EQ: 10,
                 AllOps.NEQ: 10,
-                AllOps.AND_LOG: 10,
-                AllOps.OR_LOG: 10,
+                AllOps.AND: 10,
+                AllOps.OR: 10,
                 AllOps.DOWNTO: 1,
                 AllOps.GREATERTHAN: 10,
                 AllOps.LOWERTHAN: 10,
@@ -53,9 +53,9 @@ class SimModelSerializer_ops():
         def _bin(name):
             return "(%s).%s(%s)" % (p(ops[0]).strip(), name, p(ops[1]).strip())
 
-        if o == AllOps.AND_LOG:
+        if o == AllOps.AND:
             return _bin('_and__val')
-        elif o == AllOps.OR_LOG:
+        elif o == AllOps.OR:
             return _bin('_or__val')
         elif o == AllOps.XOR:
             return _bin('_xor__val')

@@ -142,14 +142,14 @@ class BooleanVal(Value):
 
     # logic
     def _and__val(self, other):
-        return boolLogOp__val(self, other, AllOps.AND_LOG, vldMaskForAnd)
+        return boolLogOp__val(self, other, AllOps.AND, vldMaskForAnd)
 
     def __and__(self, other):
-        return boolLogOp(self, other, AllOps.AND_LOG, vldMaskForAnd, whenOneIsVal_and)
+        return boolLogOp(self, other, AllOps.AND, vldMaskForAnd, whenOneIsVal_and)
 
     def _or__val(self, other):
-        return boolLogOp__val(self, other, AllOps.OR_LOG, vldMaskForOr)
+        return boolLogOp__val(self, other, AllOps.OR, vldMaskForOr)
 
     def __or__(self, other):
-        return boolLogOp(self, other, AllOps.OR_LOG, vldMaskForOr, whenOneIsVal_or)
+        return boolLogOp(self, other, AllOps.OR, vldMaskForOr, whenOneIsVal_or)
 

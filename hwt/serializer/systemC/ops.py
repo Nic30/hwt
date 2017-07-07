@@ -13,9 +13,9 @@ opPrecedence = {AllOps.NOT: 3,
                 AllOps.MUL: 3,
                 AllOps.EQ: 10,
                 AllOps.NEQ: 10,
-                AllOps.AND_LOG: 11,
+                AllOps.AND: 11,
                 AllOps.XOR: 12,
-                AllOps.OR_LOG: 13,
+                AllOps.OR: 13,
                 AllOps.DOWNTO: 2,
                 AllOps.TO: 2,
                 AllOps.GREATERTHAN: 9,
@@ -51,9 +51,9 @@ class SystemCSerializer_ops():
         def _bin(name):
             return (" %s " % (name,)).join(map(lambda x: x.strip(), map(p, ops)))
 
-        if o == AllOps.AND_LOG:
+        if o == AllOps.AND:
             return _bin('&')
-        elif o == AllOps.OR_LOG:
+        elif o == AllOps.OR:
             return _bin('|')
         elif o == AllOps.XOR:
             return _bin('^')

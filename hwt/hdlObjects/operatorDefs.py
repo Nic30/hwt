@@ -132,8 +132,8 @@ class AllOps():
 
     NOT = OpDefinition(inv)
     XOR = OpDefinition(xor)
-    AND_LOG = OpDefinition(and_) # [FIXME] is bit-wise
-    OR_LOG = OpDefinition(or_) # [FIXME] is bit-wise
+    AND = OpDefinition(and_)
+    OR = OpDefinition(or_)
 
     DOT = OpDefinition(dotOpFn)
     DOWNTO = OpDefinition(downtoFn)

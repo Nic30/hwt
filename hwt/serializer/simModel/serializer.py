@@ -28,8 +28,8 @@ processTmpl = env.get_template('process.py')
 ifTmpl = env.get_template("if.py")
 
 
-class SimModelSerializer(GenericSerializer, SimModelSerializer_value,
-                         SimModelSerializer_ops, SimModelSerializer_types):
+class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
+                         SimModelSerializer_types, GenericSerializer):
     _keywords_dict = {kw: LangueKeyword() for kw in SIMMODEL_KEYWORDS}
     fileExtension = '.py'
 

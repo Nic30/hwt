@@ -69,13 +69,13 @@ class RtlSignalOps():
 
     # logic
     def __and__(self, other):
-        return self.naryOp(AllOps.AND_LOG, tv(self).__and__, other)
+        return self.naryOp(AllOps.AND, tv(self).__and__, other)
 
     def __xor__(self, other):
         return self.naryOp(AllOps.XOR, tv(self).__xor__, other)
 
     def __or__(self, other):
-        return self.naryOp(AllOps.OR_LOG, tv(self).__or__, other)
+        return self.naryOp(AllOps.OR, tv(self).__or__, other)
 
     # cmp
     def _eq(self, other):

@@ -1,7 +1,8 @@
 
 class ConstCache(object):
     """
-    Container of constants for serializer
+    Container of constants for serializer.
+    Used to extract constants as constant variables.
     """
 
     def __init__(self, nameCheckFn):

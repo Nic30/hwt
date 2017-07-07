@@ -397,16 +397,16 @@ class BitsVal(EventCapableVal):
         return bitsBitOp(self, other, AllOps.XOR, vldMaskForXor)
 
     def _and__val(self, other):
-        return bitsBitOp__val(self, other, AllOps.AND_LOG, vldMaskForAnd)
+        return bitsBitOp__val(self, other, AllOps.AND, vldMaskForAnd)
 
     def __and__(self, other):
-        return bitsBitOp(self, other, AllOps.AND_LOG, vldMaskForAnd)
+        return bitsBitOp(self, other, AllOps.AND, vldMaskForAnd)
 
     def _or__val(self, other):
-        return bitsBitOp__val(self, other, AllOps.OR_LOG, vldMaskForOr)
+        return bitsBitOp__val(self, other, AllOps.OR, vldMaskForOr)
 
     def __or__(self, other):
-        return bitsBitOp(self, other, AllOps.OR_LOG, vldMaskForOr)
+        return bitsBitOp(self, other, AllOps.OR, vldMaskForOr)
 
     def _sub__val(self, other):
         return bitsArithOp__val(self, other, AllOps.SUB)

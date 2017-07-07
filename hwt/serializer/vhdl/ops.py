@@ -13,8 +13,8 @@ opPrecedence = {AllOps.NOT: 2,
                 AllOps.XOR: 2,
                 AllOps.EQ: 2,
                 AllOps.NEQ: 2,
-                AllOps.AND_LOG: 2,
-                AllOps.OR_LOG: 2,
+                AllOps.AND: 2,
+                AllOps.OR: 2,
                 AllOps.DOWNTO: 2,
                 AllOps.GREATERTHAN: 2,
                 AllOps.LOWERTHAN: 2,
@@ -64,9 +64,9 @@ class VhdlSerializer_ops():
         def _bin(name):
             return (" " + name + " ").join(map(lambda x: x.strip(), map(p, ops)))
 
-        if o == AllOps.AND_LOG:
+        if o == AllOps.AND:
             return _bin('AND')
-        elif o == AllOps.OR_LOG:
+        elif o == AllOps.OR:
             return _bin('OR')
         elif o == AllOps.XOR:
             return _bin('XOR')
