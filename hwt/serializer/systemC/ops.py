@@ -72,8 +72,12 @@ class SystemCSerializer_ops():
             return _bin(':')
         elif o == AllOps.EQ:
             return _bin('==')
+        elif o == AllOps.NEQ:
+            return _bin('!=')
         elif o == AllOps.GREATERTHAN:
             return _bin('>')
+        elif o == AllOps.LOWERTHAN:
+            return _bin('<')
         elif o == AllOps.GE:
             return _bin('>=')
         elif o == AllOps.LE:
@@ -86,14 +90,11 @@ class SystemCSerializer_ops():
                 return "%s.range(%s, %s)" % (o0_str, p(o1.val[0]), p(o1.val[1]))
             else:
                 return "%s[%s]" % (o0_str, p(o1))
-        elif o == AllOps.LOWERTHAN:
-            return _bin('<')
+
         elif o == AllOps.SUB:
             return _bin('-')
         elif o == AllOps.MUL:
             return _bin('*')
-        elif o == AllOps.NEQ:
-            return _bin('!=')
         elif o == AllOps.ADD:
             return _bin('+')
         elif o == AllOps.TERNARY:

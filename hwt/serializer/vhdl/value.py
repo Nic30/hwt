@@ -1,12 +1,34 @@
 from hwt.bitmask import mask
+from hwt.hdlObjects.types.bits import Bits
+from hwt.hdlObjects.types.defs import BOOL, BIT
 from hwt.hdlObjects.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdlObjects.operator import Operator
 
 
 class VhdlSerializer_Value(GenericSerializer_Value):
+    @classmethod
+    def condAsHdl(cls, cond, forceBool, ctx):
+        if isinstance(cond, RtlSignalBase):
+            cond = [cond]
+        else:
+            cond = list(cond)
+        if len(cond) == 1:
+            c = cond[0]
+            if not forceBool or c._dtype == BOOL:
+                return cls.asHdl(c, ctx)
+            elif c._dtype == BIT:
+                return "(" + cls.asHdl(c, ctx) + ")=" + cls.BitLiteral(1, 1)
+            elif isinstance(c._dtype, Bits):
+                width = c._dtype.bit_length()
+                return "(" + cls.asHdl(c, ctx) + ")/=" + cls.BitString(0, width)
+            else:
+                raise NotImplementedError()
+        else:
+            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool, ctx), cond))
 
     @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
@@ -80,6 +102,12 @@ class VhdlSerializer_Value(GenericSerializer_Value):
             return "'%d'" % int(bool(v))
         else:
             return "'X'"
+
+    @classmethod
+    def sensitivityListItem(cls, item, ctx):
+        if isinstance(item, Operator):
+            item = item.ops[0]
+        return cls.asHdl(item, ctx)
 
     @classmethod
     def SignedBitString(cls, v, width, forceVector, vldMask):

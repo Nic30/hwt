@@ -6,7 +6,6 @@ from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.statements import IfContainer, SwitchContainer, \
     WhileContainer, WaitStm
 from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.defs import BOOL, BIT
 from hwt.hdlObjects.types.sliceVal import SliceVal
 from hwt.hdlObjects.variables import SignalItem
 from hwt.pyUtils.arrayQuery import arr_any
@@ -71,6 +70,7 @@ class VhdlSerializer_statements():
 
         indent_str = getIndent(ctx.indent)
         dstStr = cls.asHdl(dst, ctx)
+
         if dst._dtype == a.src._dtype:
             return "%s%s %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src))
         else:
@@ -88,28 +88,8 @@ class VhdlSerializer_statements():
                     elif srcT.signed is not dstT.signed:
                         return "%s, %s %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src._convSign(dstT.signed)))
 
-            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%s; %s) " %
-                                      (indent_str, dstStr, symbol, valAsHdl(a.src), repr(dst._dtype), repr(a.src._dtype)))
-
-    @classmethod
-    def condAsHdl(cls, cond, forceBool, ctx):
-        if isinstance(cond, RtlSignalBase):
-            cond = [cond]
-        else:
-            cond = list(cond)
-        if len(cond) == 1:
-            c = cond[0]
-            if not forceBool or c._dtype == BOOL:
-                return cls.asHdl(c, ctx)
-            elif c._dtype == BIT:
-                return "(" + cls.asHdl(c, ctx) + ")=" + cls.BitLiteral(1, 1)
-            elif isinstance(c._dtype, Bits):
-                width = c._dtype.bit_length()
-                return "(" + cls.asHdl(c, ctx) + ")/=" + cls.BitString(0, width)
-            else:
-                raise NotImplementedError()
-        else:
-            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool, ctx), cond))
+            raise SerializerException("%s%s %s %s  is not valid assignment\n because types are different (%r; %r) " % 
+                                      (indent_str, dstStr, symbol, valAsHdl(a.src), dst._dtype, a.src._dtype))
 
     @classmethod
     def HWProcess(cls, proc, ctx):
@@ -226,12 +206,6 @@ class VhdlSerializer_statements():
                             indent=getIndent(ctx.indent),
                             switchOn=switchOn,
                             cases=cases)
-
-    @classmethod
-    def sensitivityListItem(cls, item, ctx):
-        if isinstance(item, Operator):
-            item = item.ops[0]
-        return cls.asHdl(item, ctx)
 
     @classmethod
     def WaitStm(cls, w, ctx):
