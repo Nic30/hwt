@@ -90,7 +90,7 @@ class RtlNetlist():
         self.subUnits = set()
         self.synthesised = False
 
-    def sig(self, name, typ=BIT, clk=None, syncRst=None, defVal=None):
+    def sig(self, name, dtype=BIT, clk=None, syncRst=None, defVal=None):
         """
         generate new signal in context
 
@@ -101,12 +101,12 @@ class RtlNetlist():
             if isinstance(defVal, (InterfaceBase)):
                 _defVal = defVal._sig
             else:
-                _defVal = typ.fromPy(defVal)
+                _defVal = dtype.fromPy(defVal)
         else:
-            _defVal = defVal._convert(typ)
+            _defVal = defVal._convert(dtype)
 
         if clk is not None:
-            s = RtlSyncSignal(self, name, typ, _defVal)
+            s = RtlSyncSignal(self, name, dtype, _defVal)
             if syncRst is not None and defVal is None:
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
@@ -124,7 +124,7 @@ class RtlNetlist():
         else:
             if syncRst:
                 raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
-            s = RtlSignal(self, name, typ, defaultVal=_defVal)
+            s = RtlSignal(self, name, dtype, defaultVal=_defVal)
 
         self.signals.add(s)
 
