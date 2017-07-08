@@ -64,69 +64,6 @@ class Value():
 
         raise ValueError("Value of %r is not constant it can be statically solved" % self)
 
-    def __pos__(self):
-        raise TypeError()
-
-    def __neg__(self):
-        raise TypeError()
-
-    def __abs__(self):
-        raise TypeError()
-
-    def __invert__(self):
-        raise TypeError()
-
-    def __round__(self, n):
-        raise TypeError()
-
-    def __floor__(self):
-        raise TypeError()
-
-    def __ceil__(self):
-        raise TypeError()
-
-    def __add__(self, other):
-        raise TypeError()
-
-    def __sub__(self, other):
-        raise TypeError()
-
-    def __mul__(self, other):
-        raise TypeError()
-
-    def __floordiv__(self, other):
-        raise TypeError()
-
-    def __div__(self, other):
-        raise TypeError()
-
-    def __truediv__(self, other):
-        raise TypeError()
-
-    def __mod__(self, other):
-        raise TypeError()
-
-    def __divmod__(self, other):
-        raise TypeError()
-
-    def __pow__(self, other):
-        raise TypeError()
-
-    def __lshift__(self, other):
-        raise TypeError()
-
-    def __rshift__(self, other):
-        raise TypeError()
-
-    def __and__(self, other):
-        raise TypeError()
-
-    def __or__(self, other):
-        raise TypeError()
-
-    def __xor__(self, other):
-        raise TypeError()
-
     def __eq__(self, other):
         if areValues(self, other):
             return self._dtype == other._dtype and \
@@ -143,23 +80,89 @@ class Value():
         eq.val = not eq.val
         return eq
 
-    def _concat(self, other):
-        raise TypeError()
-
-    def __lt__(self, other):
-        raise TypeError()
-
-    def __le__(self, other):
-        raise TypeError()
-
-    def __gt__(self, other):
-        raise TypeError()
-
-    def __ge__(self, other):
-        raise TypeError()
-
-    def _onRisingEdge(self, now):
-        raise TypeError()
+    # def __pos__(self):
+    #     raise TypeError()
+    #
+    # def __neg__(self):
+    #     raise TypeError()
+    #
+    # def __abs__(self):
+    #     raise TypeError()
+    #
+    # def __invert__(self):
+    #     raise TypeError()
+    #
+    # def __round__(self, n):
+    #     raise TypeError()
+    #
+    # def __floor__(self):
+    #     raise TypeError()
+    #
+    # def __ceil__(self):
+    #     raise TypeError()
+    #
+    # def __add__(self, other):
+    #     raise TypeError()
+    #
+    # def __sub__(self, other):
+    #     raise TypeError()
+    #
+    # def __mul__(self, other):
+    #     raise TypeError()
+    #
+    # def __floordiv__(self, other):
+    #     raise TypeError()
+    #
+    # def __div__(self, other):
+    #     raise TypeError()
+    #
+    # def __truediv__(self, other):
+    #     raise TypeError()
+    #
+    # def __mod__(self, other):
+    #     raise TypeError()
+    #
+    # def __divmod__(self, other):
+    #     raise TypeError()
+    #
+    # def __pow__(self, other):
+    #     raise TypeError()
+    #
+    # def __lshift__(self, other):
+    #     raise TypeError()
+    #
+    # def __rshift__(self, other):
+    #     raise TypeError()
+    #
+    # def __and__(self, other):
+    #     raise TypeError()
+    #
+    # def __or__(self, other):
+    #     raise TypeError()
+    #
+    # def __xor__(self, other):
+    #     raise TypeError()
+    #
+    # def _concat(self, other):
+    #     raise TypeError()
+    #
+    # def __lt__(self, other):
+    #     raise TypeError()
+    #
+    # def __le__(self, other):
+    #     raise TypeError()
+    #
+    # def __gt__(self, other):
+    #     raise TypeError()
+    #
+    # def __ge__(self, other):
+    #     raise TypeError()
+    #
+    # def _onRisingEdge(self, now):
+    #     raise TypeError()
+    #
+    # def _onFallingEdge(self, now):
+    #     raise TypeError()
 
 
 def areValues(*items):
