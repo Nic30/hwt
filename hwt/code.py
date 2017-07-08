@@ -183,13 +183,6 @@ def In(sigOrVal, iterable):
     return res
 
 
-def _ForEach_callBody(fn, item, index):
-    if fn.__code__.co_argcount == 1:
-        return fn(item)
-    else:
-        return fn(item, index)
-
-
 def StaticForEach(parentUnit, items, bodyFn, name=""):
     """
     Generate for loop for static items
@@ -207,7 +200,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
         return []
     elif l == 1:
         # if there is only one item do not generate counter logic generate
-        return _ForEach_callBody(bodyFn, items[0], 0)
+        return bodyFn(items[0], 0)
     else:
         # if there is multiple items we have to generate counter logic
         index = parentUnit._reg(name + "for_index",
@@ -216,7 +209,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
         ackSig = parentUnit._sig(name + "for_ack")
 
         statementLists = []
-        for i, (statementList, ack) in [(i, _ForEach_callBody(bodyFn, item, i))
+        for i, (statementList, ack) in [(i, bodyFn(item, i))
                                         for i, item in enumerate(items)]:
             statementLists.append(statementList + [(ackSig ** ack), ])
 
@@ -231,7 +224,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
                     .addCases(
                       enumerate(statementLists)
                     ).Default(
-                      _ForEach_callBody(bodyFn, items[0], 0)[0]
+                      bodyFn(items[0], 0)[0]
                     )
 
 
@@ -382,7 +375,6 @@ def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
 
 def connectUnpacked(src, dst, exclude=[]):
     """src is packed and it is unpacked and connected to dst"""
-    # [TODO] parametrized offsets
     offset = 0
     connections = []
     for i in reversed(list(walkPhysInterfaces(dst))):
@@ -569,7 +561,8 @@ def log2ceil(x):
 
 
 def isPow2(num):
-    assert isinstance(num, int)
+    if not isinstance(num, int):
+        num = int(int)
     return num != 0 and ((num & (num - 1)) == 0)
 
 
