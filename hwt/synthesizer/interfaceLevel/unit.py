@@ -13,10 +13,9 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
     :cvar _serializerMode: mode for serializer (drives when unit should be serialized)
     :ivar _interfaces: all interfaces
-    :ivar _units: all units defined on this obj in configuration/declaration
-    :ivar _params: all params defined on this obj in configuration/declaration
+    :ivar _units: all units defined on this obj
+    :ivar _params: all params defined on this obj
     :ivar _parent: parent object (Unit instance)
-    :ivar _checkIntferfaces: flag - after synthesis check if interfaces are present
     :ivar _lazyLoaded: container of rtl object which were lazy loaded in implementation phase
         (this object has to be returned from _toRtl of parent before it it's own objects)
     """
@@ -25,7 +24,6 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
     def __init__(self):
         self._parent = None
-        self._checkIntferfaces = True
         self._lazyLoaded = []
         self._cntx = RtlNetlist(self)
 
@@ -58,7 +56,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._loadMyImplementations()
         yield from self._lazyLoaded
 
-        if self._checkIntferfaces and not self._externInterf:
+        if not self._externInterf:
             raise Exception(("Can not find any external interface for unit %s"
                              "- there is no such a thing as unit without interfaces") % self._name)
 
@@ -136,9 +134,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         globalNames = {}
 
         def addP(n, p):
-            # [TODO] case sensitivity based on active HDL
-            p.name = n.upper()
-            n = n.lower()
+            p.name = n
             if n in globalNames:
                 raise IntfLvlConfErr("Redefinition of generic '%s' while synthesis old:%r, new:%r" % 
                                      (n, globalNames[n], p))
