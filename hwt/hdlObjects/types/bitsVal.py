@@ -8,8 +8,7 @@ from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.typeShortcuts import vecT
 from hwt.hdlObjects.types.bitValFunctions import bitsCmp__val, bitsCmp, \
-    bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, getMulResT, \
-    signFix
+    bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, signFix
 from hwt.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForXor, \
     vldMaskForAnd, vldMaskForOr
 from hwt.hdlObjects.types.bits import Bits
@@ -422,8 +421,12 @@ class BitsVal(EventCapableVal):
 
     def _mul__val(self, other):
         if isinstance(other._dtype, Bits):
-            resT = getMulResT(self._dtype, other._dtype)
+            resT = self._dtype
             v = self.val * other.val
+            v &= resT.all_mask()
+            if resT.signed:
+                v = signFix(v, resT.bit_length())
+
             result = resT.fromPy(v)
             if not self._isFullVld() or not other._isFullVld():
                 result.vldMask = 0
@@ -439,7 +442,7 @@ class BitsVal(EventCapableVal):
         if areValues(self, other):
             return self._mul__val(other)
         else:
-            resT = getMulResT(self._dtype, other._dtype)
+            resT = self._dtype
             if self._dtype.signed is None:
                 self = self._unsigned()
             if isinstance(other._dtype, Bits) and other._dtype.signed is None:

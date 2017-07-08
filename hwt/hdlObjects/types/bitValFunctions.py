@@ -122,12 +122,12 @@ def bitsArithOp__val(self, other, op):
     w = v._dtype.bit_length()
     if self._dtype.signed:
         _v = v.val
-        _max = mask(w-1) 
+        _max = mask(w-1)
         _min = -_max - 1
         if _v > _max:
             _v = _min + (_v - _max - 1)
         elif _v < _min:
-            _v = _max - (_v - _min + 1) 
+            _v = _max - (_v - _min + 1)
 
         v.val = _v
     else:
@@ -160,11 +160,3 @@ def bitsArithOp(self, other, op):
 
         o = Operator.withRes(op, [self, other], self._dtype)
         return o._convert(resT)
-
-
-def getMulResT(firstT, secondT):
-    if isinstance(secondT, Integer):
-        return firstT  # [maybe wrong]
-
-    width = firstT.bit_length() + secondT.bit_length()
-    return vecT(width, firstT.signed)
