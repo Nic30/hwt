@@ -66,7 +66,6 @@ class HStruct(HdlType):
         class StructVal(StructValBase):
             __slots__ = fieldNames
 
-
         self.valueCls = StructVal
 
     def bit_length(self):
