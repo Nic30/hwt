@@ -73,7 +73,7 @@ def walkFlattenFields(structVal, skipPadding=True):
     elif isinstance(t, HStruct):
         for f in t.fields:
             isPadding = f.name is None
-            if not isPadding  or not skipPadding:
+            if not isPadding or not skipPadding:
                 if isPadding:
                     v = f.dtype.fromPy(None)
                 else:

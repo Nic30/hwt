@@ -1,5 +1,6 @@
 from hwt.code import Concat
 
+
 def reverseByteOrder(signalOrVal):
     """
     Reverse byteorder (littleendian/bigendian) of signal or value
@@ -13,5 +14,5 @@ def reverseByteOrder(signalOrVal):
         lower = max(i - 8, 0)
         items.append(signalOrVal[i:lower])
         i -= 8
-        
+
     return Concat(*items)
