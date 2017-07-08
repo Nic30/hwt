@@ -17,6 +17,11 @@ from hwt.serializer.verilog.types import VerilogSerializer_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
 from hwt.synthesizer.param import getParam
+from hwt.hdlObjects.operator import Operator
+from hwt.hdlObjects.operatorDefs import AllOps
+from hwt.hdlObjects.process import HWProcess
+from hwt.hdlObjects.statements import SwitchContainer
+from hwt.hdlObjects.types.typeCast import toHVal
 
 
 class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSerializer_Value,
@@ -38,6 +43,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
         ent.name = ctx.scope.checkedName(ent.name, ent, isGlobal=True)
         for p in ent.ports:
             p.name = ctx.scope.checkedName(p.name, p)
+            p.getSigInside().name = p.name
             ports.append(cls.PortItem(p, ctx))
 
         for g in ent.generics:
@@ -59,27 +65,96 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
             return entVerilog
 
     @classmethod
+    def hardcodeRomIntoProcess(cls, rom):
+        """
+        Due to verilog restrictions it is not posible to use array constants
+        and rom memories has to be hardcoded as process
+        """
+        processes = []
+        signals = []
+        for e in rom.endpoints:
+            assert isinstance(e, Operator) and e.operator == AllOps.INDEX, e
+            me, index = e.ops
+            assert me is rom
+
+            # construct output of the rom
+            romValSig = rom.ctx.sig(rom.name, dtype=e.result._dtype)
+            signals.append(romValSig)
+            romValSig.hidden = False
+
+            # construct process which will represent content of the rom
+            p = HWProcess(rom.name)
+            p.sensitivityList.add(index)
+            cases = [(toHVal(i), romValSig ** v)
+                     for i, v in enumerate(rom.defaultVal.val)]
+            p.statements.append(SwitchContainer(index, cases))
+            processes.append(p)
+
+            # override usage of original index operator on rom
+            # to use signal generated from this process
+            def replaceOrigRomIndexExpr(x):
+                if x is e.result:
+                    return romValSig
+                else:
+                    return x
+            for _e in e.result.endpoints:
+                _e.ops = tuple(map(replaceOrigRomIndexExpr, _e.ops))
+                e.result = romValSig
+
+        return processes, signals
+
+    @classmethod
+    def Architecture_var(cls, v, serializerVars, extraTypes,
+                         extraTypes_serialized, ctx, childCtx):
+        """
+        :return: list of extra discovered processes
+        """
+        t = v._dtype
+        # if type requires extra definition
+        if isinstance(t, Enum) and t not in extraTypes:
+            extraTypes.add(v._dtype)
+            s = cls.HdlType(t, childCtx, declaration=True)
+            extraTypes_serialized.append(s)
+        elif isinstance(t, Array) and v.defaultVal.vldMask:
+            if v.drivers:
+                raise SerializerException("Verilog does not support RAMs"
+                                          " with initialized value")
+            eProcs, eVars = cls.hardcodeRomIntoProcess(v)
+            for _v in eVars:
+                _procs = cls.Architecture_var(_v, serializerVars, extraTypes,
+                                              extraTypes_serialized, ctx, childCtx)
+                eProcs.extend(_procs)
+            return eProcs
+
+        v.name = ctx.scope.checkedName(v.name, v)
+        serializedVar = cls.SignalItem(v, childCtx, declaration=True)
+        serializerVars.append(serializedVar)
+
+        return []
+
+    @classmethod
     def Architecture(cls, arch, ctx):
-        variables = []
+        serializerVars = []
         procs = []
         extraTypes = set()
         extraTypes_serialized = []
         arch.variables.sort(key=lambda x: x.name)
-        arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.componentInstances.sort(key=lambda x: x._name)
 
         childCtx = ctx.withIndent()
+        extraProcesses = []
         for v in arch.variables:
-            t = v._dtype
-            # if type requires extra definition
-            if isinstance(t, (Enum, Array)) and t not in extraTypes:
-                extraTypes.add(v._dtype)
-                extraTypes_serialized.append(cls.HdlType(t, childCtx, declaration=True))
+            _eProc = cls.Architecture_var(v,
+                                          serializerVars,
+                                          extraTypes,
+                                          extraTypes_serialized,
+                                          ctx,
+                                          childCtx)
 
-            v.name = ctx.scope.checkedName(v.name, v)
-            serializedVar = cls.SignalItem(v, childCtx, declaration=True)
-            variables.append(serializedVar)
+            extraProcesses.extend(_eProc)
 
+        arch.processes.extend(extraProcesses)
+        arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         for p in arch.processes:
             procs.append(cls.HWProcess(p, childCtx))
 
@@ -92,7 +167,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
             indent=getIndent(ctx.indent),
             entityName=arch.getEntityName(),
             name=arch.name,
-            variables=variables,
+            variables=serializerVars,
             extraTypes=extraTypes_serialized,
             processes=procs,
             componentInstances=componentInstances
