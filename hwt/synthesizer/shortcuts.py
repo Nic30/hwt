@@ -10,7 +10,6 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.uniqList import UniqList
-from hwt.serializer.serializerClases.context import SerializerCtx
 
 
 def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
@@ -47,7 +46,7 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
                 ctx = serializer.getBaseContext()
                 ctx.scope = s
                 mouduleScopes[obj] = ctx
-                
+
                 sc = serializer.Entity(obj, ctx)
             elif isinstance(obj, Architecture):
                 try:
