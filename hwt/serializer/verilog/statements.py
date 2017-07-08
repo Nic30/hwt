@@ -60,7 +60,6 @@ class VerilogSerializer_statements():
             raise SerializerException("%s %s %s is not valid assignment\n because types are different (%r; %r) " % 
                                       (dstStr, symbol, valAsHdl(a.src), dst._dtype, a.src._dtype))
 
-
     @classmethod
     def HWProcess(cls, proc, ctx):
         """
@@ -75,8 +74,9 @@ class VerilogSerializer_statements():
                                                                        (IfContainer,
                                                                         SwitchContainer,
                                                                         WhileContainer,
-                                                                        WaitStm)) or 
-                                                            isinstance(x, Assignment) and x.indexes)
+                                                                        WaitStm)) or
+                                                            (isinstance(x, Assignment) and
+                                                             x.indexes))
 
         anyIsEventDependnt = arr_any(proc.sensitivityList, lambda s: isinstance(s, Operator))
         sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, ctx, anyIsEventDependnt),
