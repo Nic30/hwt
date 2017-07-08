@@ -161,7 +161,6 @@ class GenericSerializer():
 
         return sFn(typ, ctx, declaration=declaration)
 
-
     @classmethod
     def IfContainer(cls, ifc, ctx):
         childCtx = ctx.withIndent()

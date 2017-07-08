@@ -3,6 +3,7 @@ from hwt.serializer.ip_packager.helpers import mkSpiElm, spi_ns_prefix
 from hwt.serializer.ip_packager.otherXmlObjs import Parameter
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.pyUtils.arrayQuery import single
+from hwt.serializer.vhdl.serializer import VhdlSerializer
 
 
 DEFAULT_CLOCK = 100000000
@@ -45,11 +46,14 @@ class IntfConfig(Type):
         return p
 
     def addWidthParam(self, thisIntf, name, value):
+        ctx = VhdlSerializer.getBaseContext()
+
         def createTmpVar(suggestedName, dtype):
             raise NotImplementedError("Value of generic %s can not be converted do ipcore format (%s)", name, repr(value))
+        ctx.createTmpVarFn = createTmpVar
 
         p = self.addSimpleParam(thisIntf, "ADDR_WIDTH",
-                                VivadoTclExpressionSerializer.asHdl(value.staticEval(), createTmpVar))
+                                VivadoTclExpressionSerializer.asHdl(value.staticEval(), ctx))
         if isinstance(value, RtlSignalBase):
             p.value.resolve = "user"
 

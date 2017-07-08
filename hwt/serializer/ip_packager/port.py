@@ -57,9 +57,7 @@ class Port():
         t = port.type
         dt = p._dtype
 
-        def createTmpVar(suggestedName, dtype):
-            pass
-        t.typeName = VhdlSerializer.HdlType(dt, createTmpVar)
+        t.typeName = VhdlSerializer.HdlType(dt, VhdlSerializer.getBaseContext())
         try:
             t.typeName = t.typeName[:t.typeName.index('(')]
         except ValueError:

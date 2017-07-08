@@ -16,9 +16,20 @@ class GenericSerializer_Value():
         :param val: value object, can be instance of Signal or Value
         """
         t = val._dtype
+
         if isinstance(val, RtlSignalBase):
             return cls.SignalItem(val, ctx)
-        elif isinstance(t, Slice):
+
+        # try to extract value as constant
+        try:
+            consGetter = ctx.constCache.getConstName
+        except AttributeError:
+            consGetter = None
+
+        if consGetter and not isinstance(t, Enum):
+            return "self." + consGetter(val)
+
+        if isinstance(t, Slice):
             return cls.Slice_valAsHdl(t, val, ctx)
         elif isinstance(t, Array):
             return cls.Array_valAsHdl(t, val, ctx)
