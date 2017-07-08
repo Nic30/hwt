@@ -1,20 +1,20 @@
 from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
 
+from hwt.hdlObjects.constants import DIRECTION
+from hwt.hdlObjects.entity import Entity
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.enumVal import EnumVal
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.nameScope import LangueKeyword
 from hwt.serializer.systemC.context import SystemCCtx
 from hwt.serializer.systemC.keywords import SYSTEMC_KEYWORDS
+from hwt.serializer.systemC.ops import SystemCSerializer_ops
 from hwt.serializer.systemC.statements import SystemCSerializer_statements
 from hwt.serializer.systemC.type import SystemCSerializer_type
 from hwt.serializer.systemC.value import SystemCSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
-from hwt.serializer.systemC.ops import SystemCSerializer_ops
-from hwt.hdlObjects.entity import Entity
-from hwt.hdlObjects.constants import DIRECTION
 
 
 class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemCSerializer_statements,
