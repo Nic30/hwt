@@ -65,10 +65,9 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
         extraTypes_serialized = []
         scope = ctx.scope
         childCtx = ctx.withIndent()
-        arch.variables.sort(key=lambda x: x.name)
+        arch.variables.sort(key=lambda x: (x.name, x._instId))
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.componentInstances.sort(key=lambda x: x._name)
-
 
         ports = list(map(lambda pi: cls.PortItem(pi, childCtx), arch.entity.ports))
 
@@ -82,7 +81,6 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
             v.name = scope.checkedName(v.name, v)
             variables.append(v)
 
-
         def serializeVar(v):
             dv = evalParam(v.defaultVal)
             if isinstance(dv, EnumVal):
@@ -94,13 +92,13 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
 
         for p in arch.processes:
             procs.append(cls.HWProcess(p, childCtx))
-            
+
         processesSensitivity = []
         sensitivityCtx = ctx.forSensitivityList()
         for p in arch.processes:
             sens = list(map(lambda s: cls.asHdl(s, sensitivityCtx), p.sensitivityList))
             processesSensitivity.append((p.name, sens))
-        
+
         return cls.moduleTmpl.render(
             processesSensitivity=processesSensitivity,
             name=arch.getEntityName(),

@@ -138,7 +138,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
         procs = []
         extraTypes = set()
         extraTypes_serialized = []
-        arch.variables.sort(key=lambda x: x.name)
+        arch.variables.sort(key=lambda x: (x.name, x._instId))
         arch.componentInstances.sort(key=lambda x: x._name)
 
         childCtx = ctx.withIndent()
