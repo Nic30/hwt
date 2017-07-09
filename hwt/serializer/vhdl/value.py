@@ -69,7 +69,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
     @classmethod
     def Array_valAsHdl(cls, dtype, val, ctx):
         separator = ",\n" + getIndent(ctx.indent + 1)
-        return "".join(["(", separator.join([cls.Value(v, ctx) for v in val.val]), ")"])
+        return "".join(["(", separator.join([cls.Value(v, ctx) for v in val]), ")"])
 
     @staticmethod
     def BitString_binary(v, width, vldMask=None):

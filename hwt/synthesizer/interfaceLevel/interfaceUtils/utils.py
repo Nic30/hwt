@@ -52,9 +52,9 @@ def connectPacked(srcPacked, dstInterface, exclude=None):
             s = srcPacked[offset]
             offset += 1
         else:
-            w = t.width
+            w = t.bit_length()
             s = srcPacked[(w + offset): offset]
-            offset += t.bit_length()
+            offset += w
         connections.append(sig ** s)
 
     return connections
