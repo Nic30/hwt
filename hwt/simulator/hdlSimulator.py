@@ -6,6 +6,7 @@ from hwt.simulator.hdlSimConfig import HdlSimConfig
 from hwt.simulator.simModel import mkUpdater, mkArrayUpdater
 from hwt.simulator.simulatorCore import HdlEnvironmentCore
 from hwt.simulator.utils import valueHasChanged
+from hwt.synthesizer.uniqList import UniqList
 
 
 def isEvDependentOn(sig, process):
@@ -75,7 +76,8 @@ class HdlSimulator(HdlEnvironmentCore):
         # (signal, value) tupes which should be applied before new round of processes
         #  will be executed
         self.valuesToApply = []
-        self.seqProcsToRun = []
+        self.seqProcsToRun = UniqList()
+        self.combProcsToRun = UniqList()
 
     def addHwProcToRun(self, trigger, proc):
         # first process in time has to plan executing of apply values on the end of this time
@@ -87,15 +89,8 @@ class HdlSimulator(HdlEnvironmentCore):
             if self.now == 0:
                 return  # pass event dependent on startup
             self.seqProcsToRun.append(proc)
-
         else:
-            actionSet = set(proc(self))
-            res = self.conflictResolvStrategy(actionSet)
-            if res:
-                dst, updater, isEvDependent = res
-                # if trigger is not None:
-                #    assert not isEvDependent, "trigger %r, proc %r" % (trigger, proc)
-                self.valuesToApply.append((dst, updater, isEvDependent, proc))
+            self.combProcsToRun.append(proc)
 
     def _initUnitSignals(self, unit):
         """
@@ -149,7 +144,7 @@ class HdlSimulator(HdlEnvironmentCore):
             res = actionSet.pop()
         else:
             # we are driving signal with two different values so we invalidate result
-            res = list(actionSet.pop())
+            res = actionSet.pop()
             invalidate = True
 
         l = len(res)
@@ -159,31 +154,49 @@ class HdlSimulator(HdlEnvironmentCore):
         else:
             dst, val, isEvDependent = res
 
-            # print(self.now, dst, val)
             return (dst, mkUpdater(val, invalidate), isEvDependent)
 
+    def runCombProcesses(self):
+        """
+        Delta step for combinational processes
+        """
+
+        for proc in self.combProcsToRun:
+            actionSet = set(proc(self))
+            res = self.conflictResolvStrategy(actionSet)
+            if res:
+                dst, updater, isEvDependent = res
+                self.valuesToApply.append((dst, updater, isEvDependent, proc))
+
+        self.combProcsToRun = UniqList()
+
     def runSeqProcesses(self, ev):
+        """
+        Delta step for sequential processes
+        """
         updates = []
         for proc in self.seqProcsToRun:
-            # print(self.now, "runSeq", proc)
             actionSet = set(proc(self))
             if actionSet:
                 v = self.conflictResolvStrategy(actionSet)
                 updates.append(v)
 
-        self.seqProcsToRun = []
+        self.seqProcsToRun = UniqList()
         self.runSeqProcessesEv = None
         for s, updater, _ in updates:
             s.simUpdateVal(self, updater)
 
     def applyValues(self, ev):
+        """
+        Perform actual delta step
+        """
         va = self.valuesToApply
 
         # log if there are items to log
         lav = self.config.logApplyingValues
         if va and lav:
             lav(self, va)
-
+        # print(int(self.now // 1000), va)
         self.valuesToApply = []
 
         # apply values to signals, values can overwrite each other
@@ -195,6 +208,7 @@ class HdlSimulator(HdlEnvironmentCore):
                 addSp(comesFrom)
             else:
                 s.simUpdateVal(self, vUpdater)
+        self.runCombProcesses()
 
         # processes triggered from simUpdateVal can add new values
         if self.valuesToApply:
@@ -232,13 +246,11 @@ class HdlSimulator(HdlEnvironmentCore):
 
         if isinstance(val, Value):
             v = val.clone()
+            v = v._convert(t)
         else:
-            # assert type(sig._dtype) is not Bits, "Bits type is slow and should be automatically replaced by SimBitsT (on: %s)" % (sig._getFullName())
             v = t.fromPy(val)
 
         v.updateTime = self.now
-
-        v = v._convert(t)
 
         sig.simUpdateVal(self, lambda curentV: (valueHasChanged(curentV, v), v))
 

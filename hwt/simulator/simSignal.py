@@ -53,10 +53,10 @@ class SimSignal(SignalItem):
         """
 
         dirtyFlag, newVal = valUpdater(self._oldVal)
-        self._val = newVal
-        newVal.updateTime = simulator.now
 
         if dirtyFlag:
+            self._val = newVal
+            newVal.updateTime = simulator.now
             log = simulator.config.logChange
             if log:
                 log(simulator.now, self, newVal)
