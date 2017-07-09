@@ -26,8 +26,8 @@ def simPrepare(unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
     :param modelCls: class of rtl simulation model to run simulation on, if is None
         rtl sim model will be generated from unit
     :param dumpModelIn: folder to where put sim model files (if is None sim model will be constructed only in memory)
-    :param onAfterToRtl: callback fn(unit) which will be called unit after it will
-        be synthesised to rtl
+    :param onAfterToRtl: callback fn(unit, modelCls) which will be called
+        after unit will be synthesised to rtl
 
     :return: tuple (fully loaded unit with connected sim model,
         connected simulation model,
@@ -40,7 +40,7 @@ def simPrepare(unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
         synthesised(unit)
 
     if onAfterToRtl:
-        onAfterToRtl(unit)
+        onAfterToRtl(unit, modelCls)
 
     reconnectUnitSignalsToModel(unit, modelCls)
     model = modelCls()
