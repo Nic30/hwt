@@ -73,7 +73,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
         procs = []
         extraTypes = set()
         extraTypes_serialized = []
-        arch.variables.sort(key=lambda x: x.name)
+        arch.variables.sort(key=lambda x: (x.name, x._instId))
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.components.sort(key=lambda x: x.name)
         arch.componentInstances.sort(key=lambda x: x._name)

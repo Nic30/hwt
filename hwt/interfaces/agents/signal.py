@@ -30,7 +30,7 @@ class SignalAgent(AgentBase):
             assert self.clk is not None
         except IntfLvlConfErr:
             self.rst = None
-            
+
         self.data = []
 
         self.initPending = True
@@ -69,9 +69,9 @@ class SignalAgent(AgentBase):
                     d = self.data.pop(0)
                 except AttributeError:
                     d = next(self.data)
-                
+
                 self.doWrite(s, d)
-                    
+
     def monitor(self, s):
         if self.clk is None:
             if self.initPending and self.initDelay:

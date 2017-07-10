@@ -9,6 +9,8 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.typeCast import toHVal
 
 
 class VerilogSerializer_Value(GenericSerializer_Value):
@@ -79,7 +81,6 @@ class VerilogSerializer_Value(GenericSerializer_Value):
         else:
             return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool, createTmpVarFn), cond))
 
-
     @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
@@ -97,10 +98,24 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             else:
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)
 
+            t = si._dtype
+            dimensions = []
+            while isinstance(t, Array):
+                # collect array dimensions
+                dimensions.append(t.size)
+                t = t.elmType
+
             s = "%s%s%s %s" % (getIndent(ctx.indent),
                                prefix,
-                               cls.HdlType(si._dtype, ctx),
+                               cls.HdlType(t, ctx),
                                si.name)
+            if dimensions:
+                # to make a space between name and dimensoins
+                dimensions = list(map(lambda x: "[%s-1:0]" % cls.asHdl(toHVal(x), ctx),
+                                      dimensions))
+                dimensions.append("")
+                s += " ".join(reversed(dimensions))
+
             if isinstance(v, RtlSignalBase):
                 return s + " = %s" % cls.asHdl(v, ctx)
             elif isinstance(v, Value):
@@ -149,7 +164,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             return prefix + cls.asHdl(item, ctx)
 
         return cls.asHdl(item, ctx)
-    
+
     @classmethod
     def SignedBitString(cls, v, width, forceVector, vldMask):
         if vldMask != mask(width):

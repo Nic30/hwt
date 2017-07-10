@@ -3,10 +3,9 @@ from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.array import InterfaceArray
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import InterfaceDirectionFns
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
+from hwt.synthesizer.interfaceLevel.interfaceUtils.implDependent import InterfaceceImplDependentFns
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
-from hwt.synthesizer.interfaceLevel.unitImplHelpers import getRst, getClk
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.vectorUtils import fitTo
@@ -16,7 +15,8 @@ def _defaultUpdater(self, onParentName, p):
     self._replaceParam(onParentName, p)
 
 
-class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDirectionFns):
+class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
+                PropDeclrCollector, InterfaceDirectionFns):
     """
     Base class for all interfaces in interface synthesizer
 
@@ -26,12 +26,12 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
     :ivar _name: name assigned during synthesis
     :ivar _parent: parent object (Unit or Interface instance)
     :ivar _isExtern: If true synthesizer sets it as external port of unit
-    :ivar _associatedClk: clock Signal (interface) associated with this interface if is none
-        simulation agent try to search it on parent
-    :ivar _associatedRst: rst(_n) Signal (interface) associated with this interface if is none
-        simulation agent try to search it on parent
+    :ivar _associatedClk: clock Signal (interface) associated with
+        this interface if is none simulation agent try to search it on parent
+    :ivar _associatedRst: rst(_n) Signal (interface) associated with this interface
+        if is none simulation agent try to search it on parent
 
-    only interfaces without _interfaces have
+    :note: only interfaces without _interfaces have
 
     :ivar _sig: rtl level signal instance
     :ivar _sigInside: _sig after toRtl conversion is made (after toRtl conversion
@@ -95,6 +95,12 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         self._dirLocked = False
         self._ag = None
 
+    def __pow__(self, other):
+        """
+        :attention: ** operator is used as "assignment" it creates connection between interface and other
+        """
+        return self._connectTo(other)
+
     def _loadDeclarations(self):
         """
         load declaratoins from _declr method
@@ -130,8 +136,11 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
             p.setReadOnly()
 
     def _clean(self, rmConnetions=True, lockNonExternal=True):
-        """Remove all signals from this interface (used after unit is synthesized
-         and its parent is connecting its interface to this unit)"""
+        """
+        Remove all signals from this interface (used after unit is synthesized
+        and its parent is connecting its interface to this unit)
+        """
+
         if self._interfaces:
             for i in self._interfaces:
                 i._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
@@ -162,14 +171,14 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
 
                 if mIfc._masterDir == DIRECTION.OUT:
                     if ifc._masterDir != mIfc._masterDir:
-                        raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(ifc), repr(mIfc)))
+                        raise IntfLvlConfErr("Invalid connection %r <= %r" % (ifc, mIfc))
 
                     yield from ifc._connectTo(mIfc,
                                               exclude=exclude,
                                               fit=fit)
                 else:
                     if ifc._masterDir != mIfc._masterDir:
-                        raise IntfLvlConfErr("Invalid connection %s <= %s" % (repr(mIfc), repr(ifc)))
+                        raise IntfLvlConfErr("Invalid connection %r <= %r" % (mIfc, ifc))
 
                     yield from mIfc._connectTo(ifc,
                                                exclude=exclude,
@@ -182,19 +191,6 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
                 srcSig = fitTo(srcSig, dstSig)
 
             yield dstSig.__pow__(srcSig)
-
-    def _connectTo(self, master, exclude=None, fit=False):
-        """
-        connect to another interface interface (on rtl level)
-        works like self <= master in VHDL
-        """
-        return list(self._connectToIter(master, exclude, fit))
-
-    def __pow__(self, other):
-        """
-        :attention: ** operator is used as "assignment" it creates connection between interface and other
-        """
-        return self._connectTo(other)
 
     def _signalsForInterface(self, context, prefix='', typeTransform=None):
         """
@@ -244,7 +240,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         """get all name hierarchy separated by '.' """
         name = ""
         tmp = self
-        while isinstance(tmp, Interface):
+        while isinstance(tmp, InterfaceBase):
             if hasattr(tmp, "_name"):
                 n = tmp._name
             else:
@@ -264,7 +260,7 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         Replace parameter on this interface (in configuration stage)
 
         :ivar pName: actual name of param on me
-        :ivar newP: new Param instance by which should be old replaced 
+        :ivar newP: new Param instance by which should be old replaced
         """
         p = getattr(self, pName)
         i = self._params.index(p)
@@ -304,66 +300,33 @@ class Interface(InterfaceBase, InterfaceArray, PropDeclrCollector, InterfaceDire
         if exclude is not None:
             assert excluded == exclude
 
-    def _getIpCoreIntfClass(self):
-        raise NotSpecified()
+    def _bit_length(self):
+        """Sum of all width of interfaces in this interface"""
+        try:
+            interfaces = self._interfaces
+        except AttributeError:
+            interfaces = None
 
-    def _getSimAgent(self):
-        raise NotSpecified("Override this function in your interface implementation (from %r)" % self)
+        if interfaces is None:
+            # not loaded interface
+            _intf = self._clone()
+            _intf._loadDeclarations()
+            interfaces = _intf._interfaces
 
-    def _getAssociatedRst(self):
-        """
-        If interface has associated rst(_n) return it otherwise try to find rst(_n) on parent recursively
-        """
-        a = self._associatedRst
-
-        if a is not None:
-            return a
-
-        p = self._parent
-        assert p is not None
-
-        if isinstance(p, UnitBase):
-            return getRst(p)
+        if interfaces:
+            w = 0
+            for i in interfaces:
+                w += i._bit_length()
+            return w
         else:
-            return p._getAssociatedRst()
+            return self._dtype.bit_length()
 
-    def _getAssociatedClk(self):
+    def _connectTo(self, master, exclude=None, fit=False):
         """
-        If interface has associated clk return it otherwise try to find clk on parent recursively
+        connect to another interface interface (on rtl level)
+        works like self <= master in VHDL
         """
-        a = self._associatedClk
-
-        if a is not None:
-            return a
-
-        p = self._parent
-        assert p is not None
-
-        if isinstance(p, UnitBase):
-            return getClk(p)
-        else:
-            return p._getAssociatedClk()
-
-    def _walkFlatten(self, shouldEnterIntfFn):
-        """
-        :param shouldEnterIntfFn: function (actual interface) returns tuple (shouldEnter, shouldYield)
-        """
-        for intf in self._interfaces:
-            shouldEnter, shouldYield = shouldEnterIntfFn(intf)
-            if shouldYield:
-                yield intf
-
-            if shouldEnter:
-                yield from intf._walkFlatten(shouldEnterIntfFn)
-
-        if self._isInterfaceArray():
-            for intf in self:
-                shouldEnter, shouldYield = shouldEnterIntfFn(intf)
-                if shouldYield:
-                    yield intf
-    
-                if shouldEnter:
-                    yield from intf._walkFlatten(shouldEnterIntfFn)
+        return list(self._connectToIter(master, exclude, fit))
 
     def __repr__(self):
         s = [self.__class__.__name__]

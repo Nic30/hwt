@@ -9,6 +9,7 @@ from hwt.hdlObjects.statements import IfContainer
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.enumVal import EnumVal
+from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.constCache import ConstCache
@@ -23,13 +24,16 @@ from hwt.synthesizer.param import evalParam
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
-unitTmpl = env.get_template('modelCls.py')
-processTmpl = env.get_template('process.py')
-ifTmpl = env.get_template("if.py")
+unitTmpl = env.get_template('modelCls.py.template')
+processTmpl = env.get_template('process.py.template')
+ifTmpl = env.get_template("if.py.template")
 
 
 class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                          SimModelSerializer_types, GenericSerializer):
+    """
+    Serializer which converts Unit instances to simulator code
+    """
     _keywords_dict = {kw: LangueKeyword() for kw in SIMMODEL_KEYWORDS}
     fileExtension = '.py'
 
@@ -55,7 +59,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         arch.variables.sort(key=lambda x: x.name)
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.componentInstances.sort(key=lambda x: x._name)
-        
+
         ports = list(map(lambda p: (p.name, cls.HdlType(p._dtype, ctx)), arch.entity.ports))
 
         for v in arch.variables:
@@ -68,9 +72,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             v.name = ctx.scope.checkedName(v.name, v)
             variables.append(v)
 
-        constCache = ConstCache(ctx.scope.checkedName)
         childCtx = copy(ctx)
-        childCtx.constCache = constCache
+        childCtx.constCache = ConstCache(ctx.scope.checkedName)
 
         def serializeVar(v):
             dv = evalParam(v.defaultVal)
@@ -124,12 +127,13 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                         srcT.bit_length() == dstT.bit_length() == 1):
 
                     if srcT.forceVector != dstT.forceVector:
+                        _0 = cls.Value(toHVal(0), ctx)
                         if srcT.forceVector:
-                            return "%syield (self.%s, (%s)._getitem__val(simHInt(0)), %s)" % (
-                                    indentStr, dst.name, srcStr, ev)
+                            return "%syield (self.%s, (%s)._getitem__val(%s), %s)" % (
+                                    indentStr, dst.name, srcStr, _0, ev)
                         else:
-                            return "%syield (self.%s, %s, (simHInt(0),), %s)" % (
-                                    indentStr, dst.name, srcStr, ev)
+                            return "%syield (self.%s, %s, (%s,), %s)" % (
+                                    indentStr, dst.name, srcStr, _0, ev)
 
                 raise SerializerException(("%s <= %s  is not valid assignment\n"
                                            " because types are different (%r; %r) ") % 
@@ -142,11 +146,6 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
     @classmethod
     def comment(cls, comentStr):
         return "#" + comentStr.replace("\n", "\n#")
-
-    @classmethod
-    def condAsHdl(cls, cond, ctx):
-        cond = list(cond)
-        return "%s" % (",".join(map(lambda x: cls.asHdl(x, ctx), cond)))
 
     @classmethod
     def IfContainer(cls, ifc, ctx, enclosure=None):
@@ -225,7 +224,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         body = proc.statements
         proc.name = ctx.scope.checkedName(proc.name, proc)
         sensitivityList = sorted(map(cls.sensitivityListItem, proc.sensitivityList))
-        
+
         childCtx = ctx.withIndent(2)
         if len(body) == 1:
             _body = cls.stmAsHdl(body[0], childCtx)

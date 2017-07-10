@@ -34,5 +34,7 @@ class SignalItem(object):
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
         tmpVars = DebugTmpVarStack()
-        s = VhdlSerializer.SignalItem(self, tmpVars.createTmpVarFn)
+        ctx = VhdlSerializer.getBaseContext()
+        ctx.createTmpVarFn = tmpVars.createTmpVarFn
+        s = VhdlSerializer.SignalItem(self, ctx)
         return "%s%s" % (tmpVars.serialize(), s)

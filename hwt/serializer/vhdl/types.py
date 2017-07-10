@@ -3,15 +3,16 @@ from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.typeShortcuts import hInt
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
+from hwt.serializer.serializerClases.indent import getIndent
 
 
 class VhdlSerializer_types():
-    
+
     @classmethod
     def HdlType_bool(cls, typ, ctx, declaration=False):
         assert not declaration
         return "BOOLEAN"
-    
+
     @classmethod
     def HdlType_bits(cls, typ, ctx, declaration=False):
         disableRange = False
@@ -48,7 +49,7 @@ class VhdlSerializer_types():
                 name = "enumT_"
             typ.name = ctx.scope.checkedName(name, typ)
 
-            buff.extend(["TYPE ", typ.name.upper(), ' IS ('])
+            buff.extend(["%sTYPE " % getIndent(ctx.indent), typ.name.upper(), ' IS ('])
             # [TODO] check enum values names
             buff.append(", ".join(typ._allValues))
             buff.append(")")
@@ -66,8 +67,9 @@ class VhdlSerializer_types():
 
             typ.name = ctx.scope.checkedName(name, typ)
 
-            return "TYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
-                (typ.name,
+            return "%sTYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
+                (getIndent(ctx.indent),
+                 typ.name,
                  cls.asHdl(toHVal(typ.size) - 1, ctx),
                  cls.HdlType(typ.elmType, ctx, declaration=declaration))
         else:

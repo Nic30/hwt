@@ -117,7 +117,7 @@ class SystemCSerializer_ops():
                 raise UnsupportedEventOpErr()
         elif o in [AllOps.BitsAsSigned, AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.BitsToInt, AllOps.IntToBits]:
             assert len(ops) == 1
-            return "static_cast<%s>(%s)" % (cls.asHdl(op.result._dtype, ctx), p(ops[0]))
+            return "static_cast<%s>(%s)" % (cls.HdlType(op.result._dtype, ctx), p(ops[0]))
         elif o == AllOps.POW:
             assert len(ops) == 2
             raise NotImplementedError()

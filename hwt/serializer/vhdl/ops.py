@@ -62,7 +62,8 @@ class VhdlSerializer_ops():
         o = op.operator
 
         def _bin(name):
-            return (" " + name + " ").join(map(lambda x: x.strip(), map(p, ops)))
+            return (" " + name + " ").join(map(lambda x: x.strip(),
+                                               map(p, ops)))
 
         if o == AllOps.AND:
             return _bin('AND')

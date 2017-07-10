@@ -43,23 +43,10 @@ class VerilogSerializer_statements():
         if dst._dtype == a.src._dtype:
             return "%s %s %s;" % (firstPartOfStr, symbol, valAsHdl(a.src))
         else:
-            srcT = a.src._dtype
-            dstT = dst._dtype
-            if isinstance(srcT, Bits) and isinstance(dstT, Bits):
-                sLen = srcT.bit_length()
-                dLen = dstT.bit_length()
-                if sLen == dLen:
-                    if sLen == 1 and srcT.forceVector != dstT.forceVector:
-                        if srcT.forceVector:
-                            return "%s %s %s[0];" % (firstPartOfStr, symbol, valAsHdl(a.src))
-                        else:
-                            return "%s[0] %s %s;" % (firstPartOfStr, symbol, valAsHdl(a.src))
-                    elif srcT.signed is not dstT.signed:
-                        return "%s %s %s;" % (firstPartOfStr, symbol, valAsHdl(a.src._convSign(dstT.signed)))
-
-            raise SerializerException("%s %s %s is not valid assignment\n because types are different (%r; %r) " % 
-                                      (dstStr, symbol, valAsHdl(a.src), dst._dtype, a.src._dtype))
-
+            raise SerializerException("%s %s %s is not valid assignment\n"
+                                      " because types are different (%r; %r) " %
+                                      (dstStr, symbol, valAsHdl(a.src),
+                                       dst._dtype, a.src._dtype))
 
     @classmethod
     def HWProcess(cls, proc, ctx):
@@ -75,8 +62,9 @@ class VerilogSerializer_statements():
                                                                        (IfContainer,
                                                                         SwitchContainer,
                                                                         WhileContainer,
-                                                                        WaitStm)) or 
-                                                            isinstance(x, Assignment) and x.indexes)
+                                                                        WaitStm)) or
+                                                            (isinstance(x, Assignment) and
+                                                             x.indexes))
 
         anyIsEventDependnt = arr_any(proc.sensitivityList, lambda s: isinstance(s, Operator))
         sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, ctx, anyIsEventDependnt),

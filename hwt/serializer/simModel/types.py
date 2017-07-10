@@ -1,5 +1,4 @@
 from hwt.hdlObjects.types.integerVal import IntegerVal
-from hwt.serializer.exceptions import SerializerException
 from hwt.synthesizer.param import evalParam
 
 
@@ -36,29 +35,6 @@ class SimModelSerializer_types():
                                                              typ._allValues)))
         else:
             return typ.name
-
-    @classmethod
-    def HdlType_int(cls, typ, ctx, declaration=False):
-        ma = typ.max
-        mi = typ.min
-        noMax = ma is None
-        noMin = mi is None
-        if noMin:
-            if noMax:
-                return "SIM_INT"
-            else:
-                raise SerializerException("If max is specified min has to be specified as well")
-        else:
-            if noMax:
-                # [TODO] convert these to sim as well
-                if mi == 0:
-                    return "UINT"
-                elif mi == 1:
-                    return "PINT"
-                else:
-                    raise SerializerException("If max is specified min has to be specified as well")
-            else:
-                raise NotImplementedError()
 
     @classmethod
     def HdlType_array(cls, typ, ctx, declaration=False):

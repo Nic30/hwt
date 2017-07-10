@@ -1,23 +1,20 @@
 import math
 from operator import and_, or_, xor
 
-from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.operatorDefs import concatFn
 from hwt.hdlObjects.typeShortcuts import hInt, vec, vecT
-from hwt.hdlObjects.types.defs import BIT
+from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.enum import Enum
+from hwt.hdlObjects.types.struct import HStruct
+from hwt.hdlObjects.types.structUtils import walkFlattenFields
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.pyUtils.arrayQuery import arr_any, flatten
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hwt.synthesizer.andReducedContainer import AndReducedContainer
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from hwt.synthesizer.vectorUtils import fitTo
-from hwt.synthesizer.andReducedContainer import AndReducedContainer
-from hwt.hdlObjects.types.struct import HStruct
-from hwt.hdlObjects.types.structUtils import walkFlattenFields
-from hwt.hdlObjects.types.array import Array
-from hwt.hdlObjects.types.bits import Bits
 
 
 def _intfToSig(obj):
@@ -183,13 +180,6 @@ def In(sigOrVal, iterable):
     return res
 
 
-def _ForEach_callBody(fn, item, index):
-    if fn.__code__.co_argcount == 1:
-        return fn(item)
-    else:
-        return fn(item, index)
-
-
 def StaticForEach(parentUnit, items, bodyFn, name=""):
     """
     Generate for loop for static items
@@ -207,7 +197,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
         return []
     elif l == 1:
         # if there is only one item do not generate counter logic generate
-        return _ForEach_callBody(bodyFn, items[0], 0)
+        return bodyFn(items[0], 0)
     else:
         # if there is multiple items we have to generate counter logic
         index = parentUnit._reg(name + "for_index",
@@ -216,7 +206,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
         ackSig = parentUnit._sig(name + "for_ack")
 
         statementLists = []
-        for i, (statementList, ack) in [(i, _ForEach_callBody(bodyFn, item, i))
+        for i, (statementList, ack) in [(i, bodyFn(item, i))
                                         for i, item in enumerate(items)]:
             statementLists.append(statementList + [(ackSig ** ack), ])
 
@@ -231,7 +221,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
                     .addCases(
                       enumerate(statementLists)
                     ).Default(
-                      _ForEach_callBody(bodyFn, items[0], 0)[0]
+                      bodyFn(items[0], 0)[0]
                     )
 
 
@@ -302,13 +292,6 @@ class FsmBuilder(StmCntx):
         return d
 
 
-# class While(StmCntx):
-#    def __init__(self, cond):
-#        self.cnd = _intfToSig(cond)
-#
-#    def Do(self, *statements):
-
-
 def _connect(src, dst, exclude, fit):
 
     if isinstance(src, InterfaceBase):
@@ -345,90 +328,12 @@ def connect(src, *destinations, exclude=set(), fit=False):
     return assignemnts
 
 
-def packed(intf, masterDirEqTo=DIRECTION.OUT, exclude=set()):
-    """
-    Concatenate all signals to one big signal, recursively
-    """
-    if not intf._interfaces:
-        if intf._masterDir == masterDirEqTo:
-            return intf._sig
-        return None
-
-    res = None
-    for i in intf._interfaces:
-        if i in exclude:
-            continue
-
-        if i._interfaces:
-            if i._masterDir == DIRECTION.IN:
-                d = DIRECTION.opposite(masterDirEqTo)
-            else:
-                d = masterDirEqTo
-            s = packed(i, d, exclude=exclude)
-        else:
-            if i._masterDir == masterDirEqTo:
-                s = i._sig
-            else:
-                s = None
-
-        if s is not None:
-            if res is None:
-                res = s
-            else:
-                res = Concat(res, s)
-
-    return res
-
-
-def connectUnpacked(src, dst, exclude=[]):
-    """src is packed and it is unpacked and connected to dst"""
-    # [TODO] parametrized offsets
-    offset = 0
-    connections = []
-    for i in reversed(list(walkPhysInterfaces(dst))):
-        if i in exclude:
-            continue
-        sig = i._sig
-        t = sig._dtype
-        if t == BIT:
-            s = src[hInt(offset)]
-            offset += 1
-        else:
-            w = t.width
-            s = src[(w + offset): offset]
-            offset += t.bit_length()
-        connections.append(sig ** s)
-
-    return connections
-
-
-def packedWidth(intf):
-    """Sum of all width of interfaces in this interface"""
-    if isinstance(intf, type):
-        # interface class
-        intf = intf()
-        intf._loadDeclarations()
-    elif isinstance(intf, InterfaceBase) and not hasattr(intf, "_interfaces"):
-        # not loaded interface
-        _intf = intf
-
-        intf = _intf.__class__()
-        intf._updateParamsFrom(_intf)
-        intf._loadDeclarations()
-
-    if intf._interfaces:
-        w = 0
-        for i in intf._interfaces:
-            w += packedWidth(i)
-        return w
-    else:
-        t = intf._dtype
-        if t == BIT:
-            return 1
-        return t.bit_length()
-
-
 def _mkOp(fn):
+    """
+    Function to create variadic operator function
+
+    :param fn: function to perform binary operation
+    """
     def op(*ops):
         assert ops, ops
         top = None
@@ -446,75 +351,6 @@ And = _mkOp(and_)
 Or = _mkOp(or_)
 Xor = _mkOp(xor)
 Concat = _mkOp(concatFn)
-
-
-def iterBits(sigOrVal, bitsInOne=1, skipPadding=True, fillup=False):
-    """
-    Iterate over bits in vector
-
-    :param sig: signal or value to iterate over
-    :param bitsInOne: number of bits in one part
-    :param skipPadding: if true padding is skipped in dense types
-    """
-    t = sigOrVal._dtype
-    if isinstance(t, (HStruct, Array)):
-        actual = None
-        actualOffset = 0
-
-        for f in walkFlattenFields(sigOrVal, skipPadding=skipPadding):
-            thisFieldLen = f._dtype.bit_length()
-
-            if actual is None:
-                actual = f
-                actuallyHave = thisFieldLen
-            else:
-                bitsInActual = actual._dtype.bit_length() - actualOffset
-                actuallyHave = bitsInActual + thisFieldLen
-                if actuallyHave >= bitsInOne:
-                    # consume what was remained in actual
-                    takeFromThis = bitsInOne - bitsInActual
-                    yield Concat(f[takeFromThis:], actual[:actualOffset])
-                    actualOffset = takeFromThis
-                    actuallyHave -= bitsInOne
-                    if actuallyHave > 0:
-                        actual = f
-                    else:
-                        actual = None
-                else:
-                    # concat to actual because it is not enough
-                    actual = Concat(f, actual)
-
-            while actuallyHave >= bitsInOne:
-                yield actual[(actualOffset + bitsInOne):actualOffset]
-                # update slice out what was taken
-                actuallyHave -= bitsInOne
-                actualOffset += bitsInOne
-
-            if actuallyHave == 0:
-                actual = None
-                actualOffset = 0
-
-        if actual is not None and fillup:
-            fillupW = bitsInOne - actuallyHave
-            t = f._dtype
-            padding = Bits(fillupW, signed=t.signed, negated=t.negated).fromPy(None)
-            yield Concat(padding, actual[:actualOffset])
-        else:
-            assert actual is None, "Width of object has to be divisible by bitsInOne"
-    else:
-        l = sigOrVal._dtype.bit_length()
-        for bit in range(l):
-            yield sigOrVal[bit]
-
-
-def splitOnParts(sig, numberOfParts):
-    """Split signal on parts of same width"""
-    l = sig._dtype.bit_length()
-    assert l % numberOfParts == 0, (l, numberOfParts)
-
-    partWidth = l // numberOfParts
-    for i in range(numberOfParts):
-        yield sig[((i + 1) * partWidth):(i * partWidth)]
 
 
 def power(base, exp):
@@ -569,7 +405,8 @@ def log2ceil(x):
 
 
 def isPow2(num):
-    assert isinstance(num, int)
+    if not isinstance(num, int):
+        num = int(int)
     return num != 0 and ((num & (num - 1)) == 0)
 
 

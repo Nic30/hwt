@@ -65,7 +65,7 @@ class VerilogSerializer_ops():
         elif o == AllOps.CALL:
             return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
-            return _bin('&')
+            return "{%s}" % _bin(',')
         elif o == AllOps.DIV:
             return _bin('/')
         elif o == AllOps.DOWNTO:

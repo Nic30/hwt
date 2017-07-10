@@ -17,36 +17,50 @@ class ArrayVal(Value):
     def fromPy(cls, val, typeObj):
         size = evalParam(typeObj.size)
         if isinstance(size, Value):
-            size = size.val
+            size = int(size)
 
+        elements = {}
         if val is None:
-            v = typeObj.elmType.fromPy(None)
-            elements = [v.clone() for _ in range(size)]
+            pass
+        elif isinstance(val, dict):
+            for k, v in val:
+                if not isinstance(k, int):
+                    k = int(k)
+                elements[k] = v
         else:
-            elements = []
-            for v in val:
+            for k, v in enumerate(val):
                 if isinstance(v, RtlSignalBase):  # is signal
                     assert v._dtype == typeObj.elmType
                     e = v
                 else:
                     e = typeObj.elmType.fromPy(v)
-                elements.append(e)
+                elements[k] = e
 
-        return cls(elements, typeObj, int(val is not None))
+        return cls(elements, typeObj, int(bool(val)))
+
+    def __hash__(self):
+        return hash((self._dtype, self.updateTime))
+        # return hash((self._dtype, self.val, self.vldMask, self.updateTime))
+
+    def _isFullVld(self):
+        return self.vldMask == 1
 
     def _getitem__val(self, key):
         """
         :atention: this will clone item from array, iterate over .val if you need to modify items
         """
-        v = self.val[key.val].clone()
-        if not key._isFullVld():
-            v.val = 0
-            v.vldMask = 0
+        try:
+            kv = key.val
+            if not key._isFullVld():
+                raise KeyError()
+            else:
+                if kv >= self._dtype.size:
+                    raise IndexError()
 
-        return v
-
-    def _isFullVld(self):
-        return self.vldMask == 1
+            v = self.val[kv]
+            return v.clone()
+        except KeyError:
+            return self._dtype.elmType.fromPy(None)
 
     def __getitem__(self, key):
         iamVal = isinstance(self, Value)
@@ -73,10 +87,7 @@ class ArrayVal(Value):
         if index._isFullVld():
             self.val[index.val] = value.clone()
         else:
-            for v in self.val:
-                v.vldMask = 0
-                v.updateTime = self.updateTime
-            self.vldMask = 0
+            self.val = {}
 
     def __setitem__(self, index, value):
         assert isinstance(self, Value)
@@ -91,11 +102,14 @@ class ArrayVal(Value):
         first = self.val[0]
         vld = first.vldMask
         updateTime = first.updateTime
-
-        for a, b in zip(self.val, other.val):
-            eq = eq and a == b
-            vld = vld & a.vldMask & b.vldMask
-            updateTime = max(updateTime, a.updateTime, b.updateTime)
+        if self.vldMask and other.vldMask:
+            for a, b in zip(self.val, other.val):
+                eq = eq and a == b
+                vld = vld & a.vldMask & b.vldMask
+                updateTime = max(updateTime, a.updateTime, b.updateTime)
+        else:
+            eq = False
+            vld = 0
         return BOOL.getValueCls()(eq, BOOL, vld, updateTime)
 
     def _eq(self, other):

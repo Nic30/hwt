@@ -72,7 +72,7 @@ class GenericSerializer():
             try:
                 serFn = getattr(cls, obj.__class__.__name__)
             except AttributeError:
-                raise SerializerException("Not implemented for %s" % (repr(obj)))
+                raise SerializerException("Not implemented for %r" % (obj))
             return serFn(obj, ctx)
 
     @classmethod
@@ -160,7 +160,6 @@ class GenericSerializer():
                                           % (typ.name))
 
         return sFn(typ, ctx, declaration=declaration)
-
 
     @classmethod
     def IfContainer(cls, ifc, ctx):

@@ -171,7 +171,7 @@ class Handshaked(VldSynced):
 class HandshakeSync(Interface):
     """
     Only synchronization interface, like vld+rd signal with meaning like in :class:`.Handshaked` interface
-    
+
     :ivar rd: when high slave is ready to receive data
     :ivar vld: when high master is sending data to slave
 
@@ -248,28 +248,6 @@ class BramPort(BramPort_withoutClk):
     def _getSimAgent(self):
         from hwt.interfaces.agents.bramPort import BramPortAgent
         return BramPortAgent
-
-    @classmethod
-    def fromBramPort_withoutClk(cls, bramPort, clk):
-        assert isinstance(bramPort, BramPort_withoutClk)
-        assert isinstance(clk, Clk)
-        self = cls()
-        rp = self._replaceParam
-
-        def setIntf(name, intf):
-            setattr(self, name, intf)
-            self._interfaces.append(intf)
-
-        rp("ADDR_WIDTH", bramPort.ADDR_WIDTH)
-        rp("DATA_WIDTH", bramPort.DATA_WIDTH)
-
-        self._interfaces = []
-        for iName in ["addr", "din", "dout", "en", "we"]:
-            intf = getattr(bramPort, iName)
-            setIntf(iName, intf)
-        setIntf("clk", clk)
-
-        return self
 
 
 class FifoWriter(Interface):

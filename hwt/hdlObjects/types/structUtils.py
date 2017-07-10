@@ -24,8 +24,11 @@ def HStruct_selectFields(structT, fieldsToUse):
     Select fields from structure (rest will become spacing)
 
     :param structT: HStruct type instance
-    :param fieldsToUse: dict {name:{...}} or set of names to select, dictionary is used to select nested fields
-        in HStruct or HUnion fields (f.e. {"struct1": {"field1", "field2"}, "field3":{}}
+    :param fieldsToUse: dict {name:{...}} or set of names to select,
+        dictionary is used to select nested fields
+        in HStruct or HUnion fields
+        (f.e. {"struct1": {"field1", "field2"},
+                                     "field3":{}}
         will select field1 and 2 from struct1 and field3 from root)
     """
 
@@ -49,7 +52,8 @@ def HStruct_selectFields(structT, fieldsToUse):
                 name = None
 
         if name is not None and subfields:
-            template.append(HStructField(HStruct_selectFields(f.dtype, subfields), name))
+            fields = HStruct_selectFields(f.dtype, subfields)
+            template.append(HStructField(fields, name))
         else:
             template.append(HStructField(f.dtype, name))
 
@@ -73,7 +77,7 @@ def walkFlattenFields(structVal, skipPadding=True):
     elif isinstance(t, HStruct):
         for f in t.fields:
             isPadding = f.name is None
-            if not isPadding  or not skipPadding:
+            if not isPadding or not skipPadding:
                 if isPadding:
                     v = f.dtype.fromPy(None)
                 else:
