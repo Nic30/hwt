@@ -40,10 +40,15 @@ def simEvalCond(simulator, *conds):
 
 
 class SimModel(object):
-    pass
+    """
+    Base class for model in simulator
+    """
 
 
 def connectSimPort(simUnit, subSimUnit, srcName, dstName, direction):
+    """
+    Connect ports of simulation models by name
+    """
     if direction == DIRECTION.OUT:
         origPort = getattr(subSimUnit, srcName)
         newPort = getattr(simUnit, dstName)
