@@ -6,11 +6,11 @@ import xml.etree.ElementTree as etree
 
 
 class FileSetRef():
-    # @classmethod
-    # def fromElem(cls, elm):
-    #     self = cls()
-    #     self.localName = findS(elm, 'localName').text
-    #     return self
+    @classmethod
+    def fromElem(cls, elm):
+        self = cls()
+        self.localName = findS(elm, 'localName').text
+        return self
 
     def asElem(self):
         e = etree.Element(spi_ns_prefix + "fileSetRef")
@@ -22,22 +22,22 @@ class View():
     _requiredVal = ["name", "displayName", "envIdentifier"]
     _optionalVal = ["language", "modelName"]
 
-    # @classmethod
-    # def fromElem(cls, elm):
-    #     self = cls()
-    #     for n in self._requiredVal:
-    #         e = findS(elm, n)
-    #         if e is None:
-    #             raise Exception("View is missing " + n)
-    #         setattr(self, n, e.text)
-    #     for n in self._optionalVal:
-    #         e = findS(elm, n)
-    #         if e is None:
-    #             continue
-    #         setattr(self, n, e.text)
-    # 
-    #     self.fileSetRef = FileSetRef.fromElem(findS(elm, "fileSetRef"))
-    #     return self
+    @classmethod
+    def fromElem(cls, elm):
+        self = cls()
+        for n in self._requiredVal:
+            e = findS(elm, n)
+            if e is None:
+                raise Exception("View is missing " + n)
+            setattr(self, n, e.text)
+        for n in self._optionalVal:
+            e = findS(elm, n)
+            if e is None:
+                continue
+            setattr(self, n, e.text)
+
+        self.fileSetRef = FileSetRef.fromElem(findS(elm, "fileSetRef"))
+        return self
 
     def asElem(self):
         e = mkSpiElm("view")
