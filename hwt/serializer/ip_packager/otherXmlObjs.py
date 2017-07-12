@@ -1,11 +1,12 @@
-import os, math
+import math
+import os
 from time import gmtime, strftime
 
-from hwt.serializer.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
-    appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BOOL, STR
 from hwt.hdlObjects.types.integer import Integer
+from hwt.serializer.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
+    appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
 from hwt.synthesizer.param import evalParam
 
 
@@ -14,20 +15,20 @@ class Value():
     RESOLVE_GENERATED = "generated"
     RESOLVE_USER = "user"
 
-    @classmethod
-    def fromElem(cls, elm):
-        self = cls()
-        self.id = elm.attrib[spi_ns_prefix + 'id']
-        self.text = elm.text
-        self.resolve = elm.attrib[spi_ns_prefix + 'resolve']
-        self.dependency = elm.attrib[spi_ns_prefix + 'dependency']
-        for n in ['format', 'bitStringLength']:
-            try:
-                value = elm.attrib[spi_ns_prefix + n]
-                setattr(self, n, value)
-            except KeyError:
-                pass
-        return self
+    # @classmethod
+    # def fromElem(cls, elm):
+    #     self = cls()
+    #     self.id = elm.attrib[spi_ns_prefix + 'id']
+    #     self.text = elm.text
+    #     self.resolve = elm.attrib[spi_ns_prefix + 'resolve']
+    #     self.dependency = elm.attrib[spi_ns_prefix + 'dependency']
+    #     for n in ['format', 'bitStringLength']:
+    #         try:
+    #             value = elm.attrib[spi_ns_prefix + n]
+    #             setattr(self, n, value)
+    #         except KeyError:
+    #             pass
+    #     return self
 
     @classmethod
     def fromGeneric(cls, idPrefix, g, resolve):

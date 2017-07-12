@@ -12,15 +12,15 @@ from hwt.synthesizer.param import evalParam
 class WireTypeDef():
     _requiredVal = ["typeName"]
 
-    @classmethod
-    def fromElem(cls, elm):
-        self = cls()
-        for s in cls._requiredVal:
-            setattr(self, s, findS(elm, s).text)
-        self.viewNameRefs = []
-        for r in elm.findall("spirit:viewNameRef", ns):
-            self.viewNameRefs.append(r.text)
-        return self
+    # @classmethod
+    # def fromElem(cls, elm):
+    #     self = cls()
+    #     for s in cls._requiredVal:
+    #         setattr(self, s, findS(elm, s).text)
+    #     self.viewNameRefs = []
+    #     for r in elm.findall("spirit:viewNameRef", ns):
+    #         self.viewNameRefs.append(r.text)
+    #     return self
 
     def asElem(self):
         e = mkSpiElm("wireTypeDef")
@@ -33,20 +33,20 @@ class WireTypeDef():
 
 class Port():
 
-    @classmethod
-    def fromElem(cls, elm):
-        self = cls()
-        self.name = findS(elm, "name").text
-        vec = findS(elm, "vector")
-        if vec is not None:
-            self.vector = [findS(vec, "left").text, findS(vec, "right").text]
-        else:
-            self.vector = None
-
-        wire = findS(elm, "wire")
-        self.direction = findS(wire, "direction").text
-        self.type = WireTypeDef.fromElem(findS(findS(wire, "wireTypeDefs"), "wiretypedef"))
-        return self
+    # @classmethod
+    # def fromElem(cls, elm):
+    #     self = cls()
+    #     self.name = findS(elm, "name").text
+    #     vec = findS(elm, "vector")
+    #     if vec is not None:
+    #         self.vector = [findS(vec, "left").text, findS(vec, "right").text]
+    #     else:
+    #         self.vector = None
+    # 
+    #     wire = findS(elm, "wire")
+    #     self.direction = findS(wire, "direction").text
+    #     self.type = WireTypeDef.fromElem(findS(findS(wire, "wireTypeDefs"), "wiretypedef"))
+    #     return self
 
     @staticmethod
     def _entPort2CompPort(e, p):

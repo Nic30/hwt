@@ -31,15 +31,6 @@ def distinctBy(iterable, fn):
             yield i
 
 
-def first(iterable, fn):
-    """
-    get first item where fn(item)
-    """
-    for item in iterable:
-        if fn(item):
-            return item
-
-
 def single(iterable, fn):
     """
     Get value from iterable where fn(item) and check there is not fn(other item)
@@ -123,16 +114,6 @@ def iter_with_last(iterable):
     yield True, prev
 
 
-def extendLen(arr, newLen, useValue=None):
-    """
-    Extend size of arr to newLen and use padding value specified by useValue
-    """
-    lenNow = len(arr)
-    toAdd = newLen - lenNow
-    assert toAdd > 0
-    arr.extend([useValue for _ in range(toAdd)])
-
-
 def groupedby(collection, fn):
     """
     same like itertools.groupby
@@ -152,19 +133,6 @@ def groupedby(collection, fn):
         arr.append(item)
 
     yield from d.items()
-
-
-def split(arr, size):
-    """
-    :return: generator of smaller lists of specified size
-    :attention: last list can be smaller
-    """
-    arr = list(arr)
-    while len(arr) > size:
-        pice = arr[:size]
-        yield pice
-        arr = arr[size:]
-    yield arr
 
 
 def flatten(iterables, level=inf):

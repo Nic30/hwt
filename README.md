@@ -12,7 +12,7 @@
 * tolls for static analisis
 * serializers to export HWT designs into multiple target HDLs
 
-# Ideology
+## Ideology
 
 * HWT uses netlist for representation of target design.
 * It is typical that this netlist are used on multiple levels (stream, data dependency, signals...)
@@ -32,3 +32,8 @@ Also keep in mind that HWT itself is usualy used just like api for code generati
 * (System) Verilog/VHDL compatibility layer at https://github.com/Nic30/hwtHdlParsers which allows you to import objects from HDL (not maintained). 
 
 
+## Similar projects:
+
+https://chisel.eecs.berkeley.edu/
+
+https://github.com/myhdl/myhdl
