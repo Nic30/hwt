@@ -20,23 +20,6 @@ from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverSensitivity
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 
 
-def isSignalHiddenInExpr(sig):
-    """
-    Some signals are just only connections in expression they done need to be rendered because
-    they are hidden inside expression for example sig. from a+b in a+b+c
-    """
-    if isinstance(sig, Value):
-        return True
-    try:
-        d = sig.singleDriver()
-        if isinstance(d, Operator):
-            return True
-    except MultipleDriversExc:
-        pass
-
-    return False
-
-
 def _isEnclosed(objList):
     if not objList:
         return False
