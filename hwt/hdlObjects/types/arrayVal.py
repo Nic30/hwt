@@ -23,10 +23,10 @@ class ArrayVal(Value):
         if val is None:
             pass
         elif isinstance(val, dict):
-            for k, v in val:
+            for k, v in val.items():
                 if not isinstance(k, int):
                     k = int(k)
-                elements[k] = v
+                elements[k] = typeObj.elmType.fromPy(v)
         else:
             for k, v in enumerate(val):
                 if isinstance(v, RtlSignalBase):  # is signal
@@ -90,6 +90,13 @@ class ArrayVal(Value):
             self.val = {}
 
     def __setitem__(self, index, value):
+        """
+        Only syntax sugar for user, not used inside HWT
+
+        * In HW design is not used (__getitem__ returns "reference" and it is used)
+
+        * In simulator is used _setitem__val directly
+        """
         assert isinstance(self, Value)
         assert index._dtype == INT, index._dtype
         return self._setitem__val(index, value)
@@ -99,17 +106,27 @@ class ArrayVal(Value):
         assert self._dtype.size == other._dtype.size
 
         eq = True
-        first = self.val[0]
-        vld = first.vldMask
-        updateTime = first.updateTime
-        if self.vldMask and other.vldMask:
-            for a, b in zip(self.val, other.val):
+        vld = 1
+        updateTime = -1
+        keysA = set(self.val)
+        keysB = set(other.val)
+        sharedKeys = keysA.union(keysB)
+        
+        lsh = len(sharedKeys) 
+        if lsh == int(self._dtype.size) and len(keysA) == lsh and len(keysB) == lsh:
+            for k in sharedKeys:
+                a = self.val[k]
+                b = other.val[k]
+
                 eq = eq and a == b
+                if not eq:
+                    break
                 vld = vld & a.vldMask & b.vldMask
                 updateTime = max(updateTime, a.updateTime, b.updateTime)
         else:
             eq = False
             vld = 0
+
         return BOOL.getValueCls()(eq, BOOL, vld, updateTime)
 
     def _eq(self, other):
