@@ -36,4 +36,6 @@ Also keep in mind that HWT itself is usualy used just like api for code generati
 
 https://chisel.eecs.berkeley.edu/
 
+https://github.com/m-labs/migen
+
 https://github.com/myhdl/myhdl
