@@ -220,3 +220,6 @@ class RtlSignalOps():
             raise TypeError("Bool value of signal can be evaluated because it is not constant expression:", self)
         else:
             return bool(self._val)
+
+    def _isFullVld(self):
+        return self._const and self._val._isFullVld()
