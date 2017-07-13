@@ -214,26 +214,5 @@ class InterfaceProxy(InterfaceBase):
             e = InterfaceProxy(self._origIntf, offset + index, index, None, itemsInOne)
             self._arrayElemCache.append(e)
 
-    def _walkFlatten(self, shouldEnterIntfFn):
-        """
-        :param shouldEnterIntfFn: function (actual interface) returns tuple (shouldEnter, shouldYield)
-        """
-        for intf in self._interfaces:
-            shouldEnter, shouldYield = shouldEnterIntfFn(intf)
-            if shouldYield:
-                yield intf
-
-            if shouldEnter:
-                yield from intf._walkFlatten(shouldEnterIntfFn)
-
-        if self._isInterfaceArray():
-            for intf in self:
-                shouldEnter, shouldYield = shouldEnterIntfFn(intf)
-                if shouldYield:
-                    yield intf
-
-                if shouldEnter:
-                    yield from intf._walkFlatten(shouldEnterIntfFn)
-
     def __repr__(self):
         return "<InterfaceProxy for %r, itemsInOne:%d, itemsCnt=%r, offset=%r, index=%r>" % (self._origIntf, self._itemsInOne, self._itemsCnt, self._offset, self._index)

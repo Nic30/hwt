@@ -22,4 +22,5 @@ def find_files(directory, pattern, recursive=True):
         for basename in os.listdir(root):
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
-                yield filename
+                if os.path.isfile(filename):
+                    yield filename
