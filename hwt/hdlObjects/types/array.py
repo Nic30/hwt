@@ -12,6 +12,13 @@ class Array(HdlType):
         self.elmType = elmType
         self.size = size
 
+    def __eq__(self, other):
+        return (
+            type(self) is type(other) and
+            self.elmType == other.elmType and
+            self.size == other.size
+            )
+
     def __hash__(self):
         return hash((self.elmType, self.size))
 

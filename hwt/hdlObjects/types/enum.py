@@ -23,6 +23,9 @@ class Enum(HdlType):
             v = self.fromPy(n)
             setattr(self, n, v)
 
+    def __eq__(self, other):
+        return self is other
+
     def __hash__(self):
         return hash((self.name, self._allValues))
 

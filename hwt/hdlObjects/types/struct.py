@@ -11,6 +11,13 @@ class HStructField(object):
         self.name = name
         self.dtype = typ
         self.info = info
+    
+    def __eq__(self, other):
+        return (
+            self.name == other.name and
+            self.dtype == other.dtype and
+            self.info == other.info
+            )
 
     def __hash__(self):
         return hash((self.dtype, self.name))
@@ -90,6 +97,12 @@ class HStruct(HdlType):
             return s // 8
         else:
             return s // 8 + 1
+
+    def __eq__(self, other):
+        return (
+            type(self) is type(other) and 
+            self.bit_length() == other.bit_length() and
+            self.fields == other.fields)
 
     def __hash__(self):
         return hash((self.name, self.fields))

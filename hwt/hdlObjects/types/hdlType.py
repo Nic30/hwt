@@ -6,12 +6,6 @@ class HdlType():
     Base class for all hardware related types.
     """
 
-    def __eq__(self, other):
-        return type(self) is type(other)
-
-    def __hash__(self):
-        return hash((self.name))
-
     def fromPy(self, v):
         """
         Construct value of this type.
@@ -60,7 +54,7 @@ class HdlType():
         """
         [] operator to create an array of this type.
         """
-        assert int(key) > 0
+        assert int(key) > 0, key # array has to have some items
         from hwt.hdlObjects.types.array import Array
         return Array(self, key)
 

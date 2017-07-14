@@ -11,7 +11,7 @@ class Integer(HdlType):
         self.max = _max
 
     def __eq__(self, other):
-        return self is other or (
+        return (
                 type(self) == type(other) and self.max == other.max and self.min == other.min
             )
 

@@ -2,9 +2,12 @@ from hwt.hdlObjects.types.hdlType import HdlType
 
 
 class Boolean(HdlType):
-    def __init__(self):
-        super().__init__()
-        self.name = 'boolean'
+
+    def __eq__(self, other):
+        return type(self) is type(other)
+
+    def __hash__(self):
+        return hash(Boolean)
 
     @classmethod
     def getConvertor(cls):
