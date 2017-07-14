@@ -64,11 +64,11 @@ class Operator():
         return self.operator.eval(self, simulator=simulator)
 
     def __eq__(self, other):
-        return self is other or (
-                                 type(self) == type(other) and
-                                 self.operator == other.operator and
-                                 self.ops == other.ops
-                                )
+        return (
+                 type(self) is type(other) and
+                 self.operator == other.operator and
+                 self.ops == other.ops
+                )
 
     @staticmethod
     def withRes(opDef, operands, resT, outputs=[]):
