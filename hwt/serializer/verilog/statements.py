@@ -40,11 +40,14 @@ class VerilogSerializer_statements():
         indent_str = getIndent(ctx.indent)
         dstStr = cls.asHdl(dst, ctx)
         firstPartOfStr = "%s%s%s" % (indent_str, prefix, dstStr)
-        if dst._dtype == a.src._dtype:
+        src_t = a.src._dtype
+        dst_t = dst._dtype
+        
+        if dst_t == src_t or (isinstance(src_t, Bits) and isinstance(dst_t, Bits) and src_t.bit_length() == dst_t.bit_length() == 1):
             return "%s %s %s;" % (firstPartOfStr, symbol, valAsHdl(a.src))
         else:
             raise SerializerException("%s %s %s is not valid assignment\n"
-                                      " because types are different (%r; %r) " %
+                                      " because types are different (%r; %r) " % 
                                       (dstStr, symbol, valAsHdl(a.src),
                                        dst._dtype, a.src._dtype))
 

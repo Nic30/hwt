@@ -13,6 +13,7 @@ from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hwt.hdlObjects.types.bits import Bits
 
 
 class DoesNotContainsTernary(Exception):
@@ -69,10 +70,19 @@ class VhdlSerializer_statements():
 
         indent_str = getIndent(ctx.indent)
         dstStr = cls.asHdl(dst, ctx)
+        src_t = a.src._dtype
+        dst_t = dst._dtype
 
-        if dst._dtype == a.src._dtype:
+        if dst_t == src_t:
             return "%s%s %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src))
         else:
+            
+            if isinstance(dst_t, Bits) and isinstance(src_t, Bits) and  dst_t.bit_length() == src_t.bit_length() == 1:
+                if dst_t.forceVector and not src_t.forceVector:
+                    return "%s%s(0) %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src))
+                if not dst_t.forceVector and src_t.forceVector:
+                    return "%s%s %s %s(0)" % (indent_str, dstStr, symbol, valAsHdl(a.src))
+
             raise SerializerException("%s%s %s %s  is not valid assignment\n"
                                       " because types are different (%r; %r) " % 
                                       (indent_str, dstStr, symbol, valAsHdl(a.src),
