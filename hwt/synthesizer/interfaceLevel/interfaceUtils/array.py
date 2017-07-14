@@ -33,7 +33,9 @@ class InterfaceArray():
                 raise IntfLvlConfErr("interface %s is not array and can not be indexed on" % self._name)
             else:
                 raise e
-
+        except TypeError:
+            raise TypeError("Interface is not an array")
+            
     def _mkElemItem(self):
         "create element for this interface array"
         e = self.__class__()
