@@ -2,9 +2,12 @@ import keyword
 
 
 SIMMODEL_KEYWORDS = keyword.kwlist + [
+    # names defined in SimModel constructor
     '_cntx',
-    'sim',
-    'self'
+    '_interfaces',
+    '_processes',
+    '_units',
+    # imports
     'hwt',
     'importlib',
     'reload',
@@ -29,7 +32,6 @@ SIMMODEL_KEYWORDS = keyword.kwlist + [
     'simEvalCond',
     'mkUpdater',
     'mkArrayUpdater'
-    'Concat',
     'power'
     'RtlNetlist'
     'SimSignal'
