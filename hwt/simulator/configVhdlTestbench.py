@@ -47,7 +47,7 @@ def makeTestbenchTemplate(unit, name=None):
 
 
 def mkDriverProc(intf, tbCtx):
-    d = HWProcess(intf._sigInside.name + "_driver")
+    d = HWProcess(intf._sigInside.name + "_driver", [], set(), set(), set())
     d.actualTime = -1
     d.driverFor = tbCtx[intf]
 

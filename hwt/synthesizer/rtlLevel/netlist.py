@@ -135,25 +135,21 @@ class RtlNetlist():
             # (conversion from netlist to statements)
             hasCombDriver = False
             for stm in renderIfTree(dps):
-
-                p = HWProcess("assig_process_" + name)
-                if sig._useNopVal and not isEnclosed(stm):
-                    n = sig._nopVal
-                    p.statements.append(Assignment(n, sig))
-                    if isinstance(n, RtlSignal):
-                        p.sensitivityList.add(n)
-
-                p.statements.append(stm)
+                statements = []
                 sProbe = InOutStmProbe()
                 sProbe.discover(stm)
-                p.sensitivityList.update(sProbe.sensitivity)
-                #print()
-                #print(sProbe.sensitivity)
-                #print(sProbe.inputs)
-                #print(p)
+
+                # inject nopVal if needed
+                if sig._useNopVal and not isEnclosed(stm):
+                    n = sig._nopVal
+                    statements.append(Assignment(n, sig))
+                    if isinstance(n, RtlSignal):
+                        sProbe.sensitivity.add(n)
+
+                statements.append(stm)
 
                 isEventDependent = False
-                for s in p.sensitivityList:
+                for s in sProbe.sensitivity:
                     if isinstance(s, Operator):
                         # event operator
                         s.ops[0].hidden = False
@@ -166,7 +162,10 @@ class RtlNetlist():
 
                 hasCombDriver = hasCombDriver or not isEventDependent
 
-                yield p
+                outputs = {sig, }
+                yield HWProcess("assig_process_" + name,
+                                statements, sProbe.sensitivity,
+                                sProbe.inputs, outputs)
 
     def mergeWith(self, other):
         """

@@ -83,11 +83,12 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
             romValSig.hidden = False
 
             # construct process which will represent content of the rom
-            p = HWProcess(rom.name)
-            p.sensitivityList.add(index)
             cases = [(toHVal(i), romValSig ** v)
                      for i, v in enumerate(rom.defaultVal.val)]
-            p.statements.append(SwitchContainer(index, cases))
+            statements = [SwitchContainer(index, cases), ]
+
+            p = HWProcess(rom.name, statements, {index, },
+                          {index, }, {romValSig, })
             processes.append(p)
 
             # override usage of original index operator on rom
