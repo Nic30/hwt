@@ -76,8 +76,7 @@ class VhdlSerializer_statements():
         if dst_t == src_t:
             return "%s%s %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src))
         else:
-            
-            if isinstance(dst_t, Bits) and isinstance(src_t, Bits) and  dst_t.bit_length() == src_t.bit_length() == 1:
+            if isinstance(dst_t, Bits) and isinstance(src_t, Bits) and dst_t.bit_length() == src_t.bit_length() == 1:
                 if dst_t.forceVector and not src_t.forceVector:
                     return "%s%s(0) %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src))
                 if not dst_t.forceVector and src_t.forceVector:
@@ -214,4 +213,3 @@ class VhdlSerializer_statements():
             return "%swait" % indent_str
         else:
             raise NotImplementedError()
-

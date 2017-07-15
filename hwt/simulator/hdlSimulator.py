@@ -55,17 +55,13 @@ class HdlSimulator(HdlEnvironmentCore):
     :ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
     :ivar seqProcsToRun: list of event dependent processes which should be evaluated after applyValEv
     """
-    # time after values which are event dependent will be applied
-    # this is random number smaller than any clock half-period
-    EV_DEPENDENCY_SLOWDOWN = 500
-
     PRIORITY_APPLY_COMB = NORMAL + 1
     PRIORITY_APPLY_SEQ = PRIORITY_APPLY_COMB + 1
 
-    # http://heather.cs.ucdavis.edu/~matloff/156/PLN/DESimIntro.pdf
     def __init__(self, config=None):
         super(HdlSimulator, self).__init__()
         if config is None:
+            # default config
             config = HdlSimConfig()
 
         self.config = config
@@ -73,7 +69,8 @@ class HdlSimulator(HdlEnvironmentCore):
         self.applyValEv = None
         self.runSeqProcessesEv = None
 
-        # (signal, value) tupes which should be applied before new round of processes
+        # (signal, value) tuples which should be applied before
+        # new round of processes
         #  will be executed
         self.valuesToApply = []
         self.seqProcsToRun = UniqList()
@@ -121,7 +118,6 @@ class HdlSimulator(HdlEnvironmentCore):
         if self.runSeqProcessesEv is not None:
             return
 
-        # print(self.now, "sched")
         assert not self.seqProcsToRun
         runSeq = self.runSeqProcessesEv = self.event()
         runSeq._ok = True
@@ -130,7 +126,7 @@ class HdlSimulator(HdlEnvironmentCore):
 
         self.schedule(runSeq, priority=self.PRIORITY_APPLY_SEQ)
 
-    def conflictResolvStrategy(self, actionSet):
+    def conflictResolveStrategy(self, actionSet):
         """
         This functions resolves
 
@@ -138,6 +134,7 @@ class HdlSimulator(HdlEnvironmentCore):
         """
         invalidate = False
         l = len(actionSet)
+        # resolve if there is no write collision
         if l == 0:
             return
         elif l == 1:
@@ -149,11 +146,12 @@ class HdlSimulator(HdlEnvironmentCore):
 
         l = len(res)
         if l == 4:
+            # update for item in array
             dst, val, indexes, isEvDependent = res
             return (dst, mkArrayUpdater(val, indexes, invalidate), isEvDependent)
         else:
+            # update for simple signal
             dst, val, isEvDependent = res
-
             return (dst, mkUpdater(val, invalidate), isEvDependent)
 
     def runCombProcesses(self):
@@ -163,10 +161,12 @@ class HdlSimulator(HdlEnvironmentCore):
 
         for proc in self.combProcsToRun:
             actionSet = set(proc(self))
-            res = self.conflictResolvStrategy(actionSet)
+            res = self.conflictResolveStrategy(actionSet)
             if res:
+                # prepare update
                 dst, updater, isEvDependent = res
                 self.valuesToApply.append((dst, updater, isEvDependent, proc))
+            # else value is latched
 
         self.combProcsToRun = UniqList()
 
@@ -178,7 +178,7 @@ class HdlSimulator(HdlEnvironmentCore):
         for proc in self.seqProcsToRun:
             actionSet = set(proc(self))
             if actionSet:
-                v = self.conflictResolvStrategy(actionSet)
+                v = self.conflictResolveStrategy(actionSet)
                 updates.append(v)
 
         self.seqProcsToRun = UniqList()
@@ -205,9 +205,12 @@ class HdlSimulator(HdlEnvironmentCore):
         addSp = self.seqProcsToRun.append
         for s, vUpdater, isEventDependent, comesFrom in va:
             if isEventDependent:
+                # now=0 and this was process initialization or async reg
                 addSp(comesFrom)
             else:
+                # regular combinational process
                 s.simUpdateVal(self, vUpdater)
+
         self.runCombProcesses()
 
         # processes triggered from simUpdateVal can add new values
@@ -235,13 +238,14 @@ class HdlSimulator(HdlEnvironmentCore):
         """
         Write value to signal or interface.
         """
-
+        # get target RtlSignal
         try:
             simSensProcs = sig.simSensProcs
         except AttributeError:
             sig = sig._sigInside
             simSensProcs = sig.simSensProcs
 
+        # type cast of input value
         t = sig._dtype
 
         if isinstance(val, Value):
@@ -252,6 +256,7 @@ class HdlSimulator(HdlEnvironmentCore):
 
         v.updateTime = self.now
 
+        # can not update value in signal directly due singnal proxies
         sig.simUpdateVal(self, lambda curentV: (valueHasChanged(curentV, v), v))
 
         if not simSensProcs and self.applyValEv is not None:
