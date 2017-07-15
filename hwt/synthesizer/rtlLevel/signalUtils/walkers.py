@@ -86,7 +86,6 @@ class InOutStmProbe():
         (they have to be revealuated after change on these inputs)
         set of tuples (sensitivity, signal) where sensitivity
         is member of SENSITIVITY enum
-    :ivar outputs: all seen outputs
     :ivar seen: all signals which were already visited
     :ivar _eventSensFound: flag telling if event dependent sensitivity
         discovered on actual branch and all other inputs
@@ -95,7 +94,6 @@ class InOutStmProbe():
     def __init__(self):
         self.inputs = set()
         self.sensitivity = set()
-        self.outputs = set()
         self.seen = set()
         self._eventSensFound = False
 
