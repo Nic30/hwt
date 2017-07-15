@@ -16,7 +16,7 @@ from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverSensitivity
+from hwt.synthesizer.rtlLevel.signalUtils.walkers import InOutStmProbe
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 
 
@@ -59,10 +59,10 @@ def isEnclosed(obj):
 
 class RtlNetlist():
     """
-    Container for signals and units
+    Hierarchical container for signals
 
     :ivar signals: dict of all signals in context
-    :ivar startsOfDataPaths: is set of nodes where datapaths starts
+    :ivar startsOfDataPaths: is set of nodes where datapaths starts (assignments)
     :ivar subUnits: is set of all units in this context
     """
     def __init__(self, parentForDebug=None):
@@ -103,7 +103,7 @@ class RtlNetlist():
 
             If(clk._onRisingEdge(),
                r
-               )
+            )
         else:
             if syncRst:
                 raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
@@ -144,9 +144,13 @@ class RtlNetlist():
                         p.sensitivityList.add(n)
 
                 p.statements.append(stm)
-
-                sensitivity = discoverSensitivity(stm)
-                p.sensitivityList.update(sensitivity)
+                sProbe = InOutStmProbe()
+                sProbe.discover(stm)
+                p.sensitivityList.update(sProbe.sensitivity)
+                #print()
+                #print(sProbe.sensitivity)
+                #print(sProbe.inputs)
+                #print(p)
 
                 isEventDependent = False
                 for s in p.sensitivityList:
@@ -159,6 +163,7 @@ class RtlNetlist():
 
                 if hasCombDriver and not isEventDependent and haveNotIndexes:
                     raise MultipleDriversExc("%s: Signal %s has multiple combinational drivers" % (self.getDebugScopeName(), name))
+
                 hasCombDriver = hasCombDriver or not isEventDependent
 
                 yield p
@@ -180,7 +185,7 @@ class RtlNetlist():
 
     def synthesize(self, name, interfaces):
         """
-        Build Entity and architecture out of netlist representation
+        Build Entity and Architecture instance out of netlist representation
         """
         ent = Entity(name)
         ent._name = name + "_inst"  # instance name
@@ -196,7 +201,7 @@ class RtlNetlist():
             ent.ports.append(pi)
 
         removeUnconnectedSignals(self)
-        
+
         # check if all signals are driver by something
         _interfaces = set(interfaces)
         for sig in self.signals:

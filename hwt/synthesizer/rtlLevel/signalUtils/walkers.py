@@ -58,56 +58,6 @@ def walkAllOriginSignals(sig, discovered=None):
         yield sig
 
 
-class EventDependencyReached(Exception):
-    """
-    Exception which signalize that walkDriversInExpr
-    has reached event dependent operator
-    """
-    def __init__(self, evOp):
-        self.evOp = evOp
-
-
-def walkDriversInExpr(expr, seenSet):
-    """
-    :return: generators of RtlSignal
-        where signal is in expression and is not used in event dependent expression
-    :raise EventDependencyReached: when this generator steps on event dependent operator
-    :attention: if event operator is found in expression, only sensitivity EventDependencyReached is raised
-        this may case some synthesis (Vivado, ISE, Quartus ...) to complain about sensitivity,
-        but it will work
-    """
-    if isinstance(expr, (Value, Param)):
-        pass
-    elif isinstance(expr, RtlSignalBase):
-        if expr in seenSet:
-            pass
-        else:
-            seenSet.add(expr)
-
-            if not expr.hidden:
-                yield expr
-                return
-
-            try:
-                op = expr.singleDriver()
-            except MultipleDriversExc:
-                yield expr
-                return
-
-            if not isinstance(op, Operator):
-                yield expr
-                return
-
-            if isEventDependentOp(op.operator):
-                raise EventDependencyReached(op)
-            else:
-                for operand in op.ops:
-                    yield from walkDriversInExpr(operand, seenSet)
-
-    else:
-        raise TypeError(expr)
-
-
 def discoverEventDependency(sig):
     """
     walk signals drivers and yields whose signals which are in some event operator
@@ -127,64 +77,125 @@ def discoverEventDependency(sig):
                     yield from discoverEventDependency(op)
 
 
-def _discoverSensitivityForList(cond, seenSet):
+class InOutStmProbe():
     """
-    Discover sensitivity for list of signals
+    Discover input, outputs and sensitivity of given statements
+
+    :ivar inputs: all seen inputs
+    :ivar sensitivity: input which are statements sensitive to
+        (they have to be revealuated after change on these inputs)
+        set of tuples (sensitivity, signal) where sensitivity
+        is member of SENSITIVITY enum
+    :ivar outputs: all seen outputs
+    :ivar seen: all signals which were already visited
+    :ivar _eventSensFound: flag telling if event dependent sensitivity
+        discovered on actual branch and all other inputs
+        should be skipped from sensitivity
     """
-    # do not yield directly to let EventDependencyReached exception propagate first
-    tmp = []
-    # if true
-    for c in cond:
-        tmp.extend(walkDriversInExpr(c, seenSet))
-    yield from tmp
+    def __init__(self):
+        self.inputs = set()
+        self.sensitivity = set()
+        self.outputs = set()
+        self.seen = set()
+        self._eventSensFound = False
 
+    def discover(self, statement):
+        self._discover(statement, True)
 
-def _discoverSensitivity(statement, seenSet, isTop):
-    try:
+    def _discover(self, statement, isTop):
+        discoverSequence = self._discoverSequence
+        walk = self.walkDrivers
+        discover = self._discover
+        _eventSensFound = self._eventSensFound
+
         if isinstance(statement, Assignment):
             if statement.indexes:
-                yield from _discoverSensitivityForList(statement.indexes, seenSet)
-            yield from walkDriversInExpr(statement.src, seenSet)
+                discoverSequence(statement.indexes)
+            walk(statement.src, self.sensitivity)
         elif isinstance(statement, IfContainer):
             # if true
-            yield from _discoverSensitivityForList(statement.cond, seenSet)
+            discoverSequence(statement.cond)
             for stm in statement.ifTrue:
-                yield from _discoverSensitivity(stm, seenSet, True)
+                discover(stm, True)
 
             # elifs
             for cond, stms in statement.elIfs:
-                yield from _discoverSensitivityForList(cond, seenSet)
+                discoverSequence(cond)
                 for stm in stms:
-                    yield from _discoverSensitivity(stm, seenSet, True)
+                    discover(stm, True)
             # else
             for stm in statement.ifFalse:
-                yield from _discoverSensitivity(stm, seenSet, True)
+                discover(stm, True)
 
         elif isinstance(statement, SwitchContainer):
-            # do not yield directly to let EventDependencyReached exception propagate first
-            tmp = list(walkDriversInExpr(statement.switchOn, seenSet))
-            yield from tmp
+            walk(statement.switchOn, self.sensitivity)
             for cond, stms in statement.cases:
-                # yield from walkDriversInExpr(cond, seenSet)
+                # walkDriversInExpr(cond, seenSet)
                 for stm in stms:
-                    yield from _discoverSensitivity(stm, seenSet, True)
+                    discover(stm, True)
 
             for stm in statement.default:
-                yield from _discoverSensitivity(stm, seenSet, True)
+                discover(stm, True)
         else:
             raise TypeError(statement)
 
-    except EventDependencyReached as e:
         if isTop:
-            yield e.evOp
+            # if event sensitivity was found cancel it
+            # because it was found just in this branch
+            self._eventSensFound = _eventSensFound
+
+    def _discoverSequence(self, seq):
+        """
+        Discover sensitivity for list of signals
+        """
+        casualSensitivity = set()
+        walk = self.walkDrivers
+        for c in seq:
+            walk(c, casualSensitivity)
+
+        # if event dependent sensitivity found do not add other sensitivity
+        if not self._eventSensFound:
+            self.sensitivity.update(casualSensitivity)
+
+    def walkDrivers(self, expr, casualSensitivity):
+        eventSensFound = self._eventSensFound
+        if isinstance(expr, (Value, Param)):
+            pass
+        elif isinstance(expr, RtlSignalBase):
+            if expr._const or expr in self.seen:
+                pass
+            else:
+                self.seen.add(expr)
+
+                if not expr.hidden:
+                    self.inputs.add(expr)
+                    if not eventSensFound:
+                        casualSensitivity.add(expr)
+                    return
+
+                try:
+                    op = expr.singleDriver()
+                except MultipleDriversExc:
+                    self.inputs.add(expr)
+                    if not eventSensFound:
+                        casualSensitivity.add(expr)
+                    return
+
+                if not isinstance(op, Operator):
+                    self.inputs.add(expr)
+                    if not eventSensFound:
+                        casualSensitivity.add(expr)
+                    return
+
+                if isEventDependentOp(op.operator):
+                    self.inputs.add(op.ops[0])
+                    if self._eventSensFound:
+                        assert op in self.sensitivity, "one clock per register"
+                    self._eventSensFound = True
+                    self.sensitivity.add(op)
+                else:
+                    # walk source of signal
+                    for operand in op.ops:
+                        self.walkDrivers(operand, casualSensitivity)
         else:
-            raise e
-
-
-def discoverSensitivity(statement):
-    """
-    :return: generators of (sensitivity, signal)
-        where sensitivity is member of SENSITIVITY enum
-    """
-    yield from _discoverSensitivity(statement, set(), True)
-    
+            raise TypeError(expr)
