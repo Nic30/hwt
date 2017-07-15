@@ -102,7 +102,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             processesNames=map(lambda p: p.name, arch.processes),
             componentInstances=arch.componentInstances,
             isOp=lambda x: isinstance(x, Operator),
-            sensitivityByOp=sensitivityByOp
+            sensitivityByOp=sensitivityByOp,
+            serialize_io=cls.sensitivityListItem,
             )
 
     @classmethod
@@ -235,6 +236,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             raise NotImplementedError()
 
         return processTmpl.render(
-              name=proc.name,
-              sensitivityList=sensitivityList,
-              stmLines=[_body])
+                      name=proc.name,
+                      sensitivityList=sensitivityList,
+                      stmLines=[_body]
+                      )

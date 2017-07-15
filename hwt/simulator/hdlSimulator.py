@@ -160,7 +160,7 @@ class HdlSimulator(HdlEnvironmentCore):
         """
 
         for proc in self.combProcsToRun:
-            actionSet = set(proc(self))
+            actionSet = set(proc(self, None))
             res = self.conflictResolveStrategy(actionSet)
             if res:
                 # prepare update
@@ -176,7 +176,7 @@ class HdlSimulator(HdlEnvironmentCore):
         """
         updates = []
         for proc in self.seqProcsToRun:
-            actionSet = set(proc(self))
+            actionSet = set(proc(self, None))
             if actionSet:
                 v = self.conflictResolveStrategy(actionSet)
                 updates.append(v)

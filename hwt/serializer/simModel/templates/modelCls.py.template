@@ -56,8 +56,9 @@ class {{ name }}(SimModel):
         {% endfor %}
         
         self._units = [{% for c in componentInstances %}self.{{c._name}},
-                       {% endfor %}
-                       ]
+                       {% endfor %}]
+
+        self._ios = {}
         {% for proc in processObjects %}
         sensitivity(self.{{proc.name}}, {% 
             for s in proc.sensitivityList %}{% 
@@ -66,5 +67,10 @@ class {{ name }}(SimModel):
                 endif %}{% 
                 if not loop.last %}, {% 
                 endif %}{% 
-            endfor %}){% 
+            endfor %})
+        self._ios[self.{{proc.name}}] = (
+            ({% for inp in proc.inputs %}
+                self.{{ serialize_io(inp) }},{% endfor %}),
+            ({% for outp in proc.outputs %}
+                self.{{ serialize_io(outp) }},{% endfor %})){% 
         endfor %}
