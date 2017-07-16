@@ -15,6 +15,33 @@ def isEvDependentOn(sig, process):
     return process in sig.simFallingSensProcs or process in sig.simRisingSensProcs
 
 
+class UpdateSet(set):
+    """
+    Set of updates for signal
+
+    :ivar destination: signal which are updates for
+    """
+    def __init__(self, destination):
+        self.destination = destination
+
+
+class IoContainer():
+    """
+    Container for outputs of process
+    """
+    __slots__ = ["_all_signals"]
+
+    def __init__(self, dstSignalsTuples):
+        """
+        :param dstSignalsTuples: tuples (name, signal)
+        """
+        self._all_signals = []
+        for name, s in dstSignalsTuples:
+            o = UpdateSet(s)
+            setattr(self, name, o)
+            self._all_signals.append(o)
+
+
 class HdlSimulator(HdlEnvironmentCore):
     """
     Circuit simulator with support for external agents
@@ -75,6 +102,8 @@ class HdlSimulator(HdlEnvironmentCore):
         self.valuesToApply = []
         self.seqProcsToRun = UniqList()
         self.combProcsToRun = UniqList()
+        # container of outputs for every process
+        self.outputContainers = {}
 
     def addHwProcToRun(self, trigger, proc):
         # first process in time has to plan executing of apply values on the end of this time
@@ -91,9 +120,9 @@ class HdlSimulator(HdlEnvironmentCore):
 
     def _initUnitSignals(self, unit):
         """
-        Inject default values to simulation
+        * Inject default values to simulation
 
-        :return: generator of all HWprocess
+        * Instantiate IOs for every process
         """
         for s in unit._cntx.signals:
             v = s.defaultVal.clone()
@@ -106,6 +135,16 @@ class HdlSimulator(HdlEnvironmentCore):
 
         for p in unit._processes:
             self.addHwProcToRun(None, p)
+
+        for p, outputs in unit._outputs.items():
+            # name has to be explicit because it may be possible that signal
+            # with has this name was replaced by signal from parent/child
+            containerNames = list(map(lambda x: x[0], outputs))
+
+            class SpecificIoContainer(IoContainer):
+                __slots__ = containerNames
+
+            self.outputContainers[p] = SpecificIoContainer(outputs)
 
     def scheduleApplyValues(self):
         applyVal = self.applyValEv = self.event()
@@ -145,14 +184,14 @@ class HdlSimulator(HdlEnvironmentCore):
             invalidate = True
 
         l = len(res)
-        if l == 4:
+        if l == 3:
             # update for item in array
-            dst, val, indexes, isEvDependent = res
-            return (dst, mkArrayUpdater(val, indexes, invalidate), isEvDependent)
+            val, indexes, isEvDependent = res
+            return (mkArrayUpdater(val, indexes, invalidate), isEvDependent)
         else:
             # update for simple signal
-            dst, val, isEvDependent = res
-            return (dst, mkUpdater(val, invalidate), isEvDependent)
+            val, isEvDependent = res
+            return (mkUpdater(val, invalidate), isEvDependent)
 
     def runCombProcesses(self):
         """
@@ -160,13 +199,16 @@ class HdlSimulator(HdlEnvironmentCore):
         """
 
         for proc in self.combProcsToRun:
-            actionSet = set(proc(self, None))
-            res = self.conflictResolveStrategy(actionSet)
-            if res:
-                # prepare update
-                dst, updater, isEvDependent = res
-                self.valuesToApply.append((dst, updater, isEvDependent, proc))
-            # else value is latched
+            outContainer = self.outputContainers[proc]
+            proc(self, outContainer)
+            for actionSet in outContainer._all_signals:
+                res = self.conflictResolveStrategy(actionSet)
+                if res:
+                    # prepare update
+                    updater, isEvDependent = res
+                    self.valuesToApply.append((actionSet.destination, updater, isEvDependent, proc))
+                    actionSet.clear()
+                # else value is latched
 
         self.combProcsToRun = UniqList()
 
@@ -176,15 +218,27 @@ class HdlSimulator(HdlEnvironmentCore):
         """
         updates = []
         for proc in self.seqProcsToRun:
-            actionSet = set(proc(self, None))
-            if actionSet:
-                v = self.conflictResolveStrategy(actionSet)
-                updates.append(v)
+            try:
+                outContainer = self.outputContainers[proc]
+            except KeyError:
+                # processes does not have to have outputs
+                outContainer = None
+
+            proc(self, outContainer)
+
+            if outContainer is not None:
+                updates.append(outContainer)
 
         self.seqProcsToRun = UniqList()
         self.runSeqProcessesEv = None
-        for s, updater, _ in updates:
-            s.simUpdateVal(self, updater)
+
+        for cont in updates:
+            for actionSet in cont._all_signals:
+                if actionSet:
+                    v = self.conflictResolveStrategy(actionSet)
+                    updater, _ = v
+                    actionSet.destination.simUpdateVal(self, updater)
+                    actionSet.clear()
 
     def applyValues(self, ev):
         """

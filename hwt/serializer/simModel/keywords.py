@@ -7,7 +7,7 @@ SIMMODEL_KEYWORDS = keyword.kwlist + [
     '_interfaces',
     '_processes',
     '_units',
-    '_ios',
+    '_outputs',
     # imports
     'hwt',
     'importlib',

@@ -114,7 +114,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
 
         srcStr = "%s" % cls.Value(a.src, ctx)
         if a.indexes is not None:
-            return "%syield (self.%s, %s, (%s,), %s)" % (
+            return "%sio.%s.add((%s, (%s,), %s))" % (
                         indentStr, dst.name, srcStr,
                         ", ".join(map(lambda x: cls.asHdl(x, ctx),
                                       a.indexes)),
@@ -130,10 +130,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                     if srcT.forceVector != dstT.forceVector:
                         _0 = cls.Value(toHVal(0), ctx)
                         if srcT.forceVector:
-                            return "%syield (self.%s, (%s)._getitem__val(%s), %s)" % (
+                            return "%sio.%s.add(((%s)._getitem__val(%s), %s))" % (
                                     indentStr, dst.name, srcStr, _0, ev)
                         else:
-                            return "%syield (self.%s, %s, (%s,), %s)" % (
+                            return "%sio.%s.add((%s, (%s,), %s))" % (
                                     indentStr, dst.name, srcStr, _0, ev)
 
                 raise SerializerException(("%s <= %s  is not valid assignment\n"
@@ -141,7 +141,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                                           (cls.asHdl(dst, ctx), srcStr,
                                           dst._dtype, a.src._dtype))
             else:
-                return "%syield (self.%s, %s, %s)" % (
+                return "%sio.%s.add((%s, %s))" % (
                         indentStr, dst.name, srcStr, ev)
 
     @classmethod

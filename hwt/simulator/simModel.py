@@ -80,7 +80,7 @@ def mkArrayUpdater(nextItemVal, indexes, invalidate):
     """
     def updater(currentVal):
         if len(indexes) > 1:
-            raise NotImplementedError()
+            raise NotImplementedError("[TODO] implement for more indexes")
 
         _nextItemVal = nextItemVal.clone()
         if invalidate:
