@@ -13,7 +13,8 @@ from hwt.synthesizer.assigRenderer import renderIfTree
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
-from hwt.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals
+from hwt.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals,\
+    reduceProcesses
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import InOutStmProbe
@@ -120,6 +121,11 @@ class RtlNetlist():
         assigments = where(self.startsOfDataPaths,
                            lambda x: isinstance(x, Assignment)
                            )
+        processes = []
+        # process ranks = how many assignments is probably in process
+        # used to minimize number of merge tries
+        procRanks = {}
+        # generate naive processes from assignments
         for sig, dps in groupedby(assigments, lambda x: x.dst):
             dps = list(dps)
             name = ""
@@ -163,9 +169,13 @@ class RtlNetlist():
                 hasCombDriver = hasCombDriver or not isEventDependent
 
                 outputs = {sig, }
-                yield HWProcess("assig_process_" + name,
-                                statements, sProbe.sensitivity,
-                                sProbe.inputs, outputs)
+                p = HWProcess("assig_process_" + name,
+                              statements, sProbe.sensitivity,
+                              sProbe.inputs, outputs)
+                processes.append(p)
+                procRanks[p] = len(dps)
+
+        yield from reduceProcesses(processes, procRanks)
 
     def mergeWith(self, other):
         """
@@ -220,7 +230,7 @@ class RtlNetlist():
             if s not in interfaces and not s.hidden:
                 arch.variables.append(s)
 
-        # instanciate subUnits in architecture
+        # instantiate subUnits in architecture
         for u in self.subUnits:
             arch.componentInstances.append(u)
 
