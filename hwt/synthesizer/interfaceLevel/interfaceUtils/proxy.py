@@ -94,7 +94,7 @@ class InterfaceProxy(InterfaceBase):
 
         if itemsCnt is not None:
             self._initArrayItems()
-
+        
     def __len__(self):
         """
         :return: number of items in this array proxy (they are proxy too)
@@ -193,7 +193,7 @@ class InterfaceProxy(InterfaceBase):
         return self._arrayElemCache[key]
 
     def __getattr__(self, name):
-        if name == "_getIndexCascade" or name == "naryOp":
+        if name == "_getIndexCascade" or name == "naryOp" or name == "_dtype":
             # called on _sig to avoid inf. loop
             o = self._sig
         else:
