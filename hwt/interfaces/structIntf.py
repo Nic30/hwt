@@ -1,7 +1,7 @@
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.typeShortcuts import vecT
 from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.hdlObjects.types.struct import HStruct
+from hwt.hdlObjects.types.struct import HStruct, HStructField
 from hwt.interfaces.std import Signal, VldSynced, RegCntrl, BramPort_withoutClk
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -70,7 +70,7 @@ def _HTypeFromIntfMap(intf):
     return (dtype, name)
 
 
-def HTypeFromIntfMap(interfaceMap):
+def HTypeFromIntfMap(interfaceMap, terminalNodes=None):
     """
     Generate flattened register map for HStruct
 
@@ -80,13 +80,18 @@ def HTypeFromIntfMap(interfaceMap):
         instance of hdl type (is used as padding) 
         tuple (list of interface, name)
     :param DATA_WIDTH: width of word
+    :param terminalNodes: None or set whre are placed StructField instances which are derived
+        directly from interface
     :return: generator of tuple (type, name, BusFieldInfo)
     """
     structFields = []
 
     for m in interfaceMap:
         if isinstance(m, (InterfaceBase, RtlSignalBase)):
-            structFields.append(_HTypeFromIntfMap(m))
+            f = HStructField(*_HTypeFromIntfMap(m))
+            if terminalNodes is not None:
+                terminalNodes.add(f)
+            structFields.append(f)
 
         elif isinstance(m, HdlType):
             # padding value
