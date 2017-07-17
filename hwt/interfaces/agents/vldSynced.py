@@ -1,3 +1,5 @@
+from collections import deque
+
 from hwt.hdlObjects.constants import NOP
 from hwt.simulator.agentBase import SyncAgentBase
 
@@ -5,7 +7,7 @@ from hwt.simulator.agentBase import SyncAgentBase
 class VldSyncedAgent(SyncAgentBase):
     def __init__(self, intf, allowNoReset=False):
         super(VldSyncedAgent, self).__init__(intf, allowNoReset=allowNoReset)
-        self.data = []
+        self.data = deque()
 
     def doRead(self, s):
         return s.read(self.intf.data)
@@ -31,7 +33,7 @@ class VldSyncedAgent(SyncAgentBase):
         intf = self.intf
 
         if self.enable and self.data and self.notReset(s):
-            d = self.data.pop(0)
+            d = self.data.popleft()
             if d is NOP:
                 self.doWrite(s, None)
                 s.write(0, intf.vld)

@@ -1,3 +1,5 @@
+from collections import deque
+
 from hwt.hdlObjects.constants import NOP
 from hwt.simulator.agentBase import SyncAgentBase
 
@@ -9,18 +11,18 @@ class RdSyncedAgent(SyncAgentBase):
     def __init__(self, intf, allowNoReset=True):
         super().__init__(intf, allowNoReset=allowNoReset)
         self.actualData = NOP
-        self.data = []
+        self.data = deque()
         self._rd = self.getRd(intf)
-    
+
     def getRd(self, intf):
         return intf.rd
-    
+
     def isRd(self, readFn):
         return readFn(self._rd)
 
     def wrRd(self, writeFn, val):
         writeFn(val, self._rd)
-    
+
     def monitor(self, s):
         """Collect data from interface"""
         if self.notReset(s) and self.enable:
@@ -45,7 +47,7 @@ class RdSyncedAgent(SyncAgentBase):
         """Push data to interface"""
         r = s.read
         if self.actualData is NOP and self.data:
-            self.actualData = self.data.pop(0)
+            self.actualData = self.data.popleft()
 
         do = self.actualData is not NOP
 
@@ -68,6 +70,6 @@ class RdSyncedAgent(SyncAgentBase):
                 self._debugOutput.write("%s, wrote, %d: %r\n" % (
                                            self.intf._getFullName(), s.now, self.actualData))
             if self.data:
-                self.actualData = self.data.pop(0)
+                self.actualData = self.data.popleft()
             else:
                 self.actualData = NOP

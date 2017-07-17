@@ -1,3 +1,5 @@
+from collections import deque
+
 from hwt.hdlObjects.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.simulator.shortcuts import oscilate
@@ -13,9 +15,9 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     def __init__(self, intf):
         super().__init__(intf, allowNoReset=True)
 
-        self.requests = []
+        self.requests = deque()
         self.readPending = False
-        self.readed = []
+        self.readed = deque()
 
         self.mem = {}
         self.requireInit = True
@@ -79,7 +81,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
                     self.onReadReq(s, addr)
 
         if self.requests:
-            req = self.requests.pop(0)
+            req = self.requests.popleft()
             t = req[0]
             addr = req[1]
             assert addr._isFullVld(), s.now
@@ -103,7 +105,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         # now we are after clk edge
 
         if self.requests and self.enable:
-            req = self.requests.pop(0)
+            req = self.requests.popleft()
             if req is NOP:
                 w(0, intf.en)
                 w(0, intf.we)

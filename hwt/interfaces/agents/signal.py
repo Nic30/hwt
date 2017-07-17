@@ -1,3 +1,5 @@
+from collections import deque
+
 from hwt.hdlObjects.constants import Time
 from hwt.simulator.agentBase import AgentBase
 from hwt.simulator.shortcuts import onRisingEdge
@@ -31,7 +33,7 @@ class SignalAgent(AgentBase):
         except IntfLvlConfErr:
             self.rst = None
 
-        self.data = []
+        self.data = deque()
 
         self.initPending = True
 
@@ -51,22 +53,22 @@ class SignalAgent(AgentBase):
             self.initPending = False
 
         if self.clk is None:
-            # if clock is specified this function is periodicaly called every
+            # if clock is specified this function is periodically called every
             # clk tick
             while True:
                 if self.data:
                     try:
-                        d = self.data.pop(0)
+                        d = self.data.popleft()
                     except AttributeError:
                         d = next(self.data)
                     self.doWrite(s, d)
                 yield s.wait(self.delay)
         else:
-            # if clock is specified this function is periodicaly called every
+            # if clock is specified this function is periodically called every
             # clk tick
             if self.data:
                 try:
-                    d = self.data.pop(0)
+                    d = self.data.popleft()
                 except AttributeError:
                     d = next(self.data)
 
@@ -84,7 +86,7 @@ class SignalAgent(AgentBase):
                 self.data.append(d)
                 yield s.wait(self.delay)
         else:
-            # if clock is specified this function is periodicaly called every
+            # if clock is specified this function is periodically called every
             # clk tick
             yield s.updateComplete
             d = self.doRead(s)

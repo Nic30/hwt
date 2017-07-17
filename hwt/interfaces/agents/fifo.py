@@ -1,3 +1,5 @@
+from collections import deque
+
 from hwt.simulator.agentBase import SyncAgentBase
 
 
@@ -5,7 +7,7 @@ class FifoReaderAgent(SyncAgentBase):
 
     def __init__(self, intf, allowNoReset=False):
         super(FifoReaderAgent, self).__init__(intf, allowNoReset)
-        self.data = []
+        self.data = deque()
         self.readPending = False
 
     def monitor(self, s):
@@ -33,6 +35,9 @@ class FifoReaderAgent(SyncAgentBase):
 
 
 class FifoWriterAgent(SyncAgentBase):
+    def __init__(self, intf, allowNoReset=False):
+        super(FifoWriterAgent, self).__init__(intf, allowNoReset=allowNoReset)
+        self.data = deque()
 
     def monitor(self, s):
         raise NotImplementedError()
@@ -46,7 +51,7 @@ class FifoWriterAgent(SyncAgentBase):
             wait = r(intf.wait)
             assert wait.vldMask
             if not wait.val:
-                d = self.data.pop(0)
+                d = self.data.popleft()
                 w(d, intf.data)
                 w(1, intf.en)
                 return
