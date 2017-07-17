@@ -140,7 +140,7 @@ def tryToMergeStm(stmA, stmB):
             isMergableStmList(stmA.default, stmB.default)):
 
         cases = []
-        for (vA, caseA), (vB, caseB) in zip(stmA.cases, stmA.cases):
+        for (vA, caseA), (vB, caseB) in zip(stmA.cases, stmB.cases):
             if vA != vB or not isMergableStmList(caseA, caseB):
                 raise IncompatibleStructure()
             cases.append((vA, mergeStmLists(caseA, caseB)))

@@ -202,8 +202,8 @@ class HdlSimulator(HdlEnvironmentCore):
             outContainer = self.outputContainers[proc]
             proc(self, outContainer)
             for actionSet in outContainer._all_signals:
-                res = self.conflictResolveStrategy(actionSet)
-                if res:
+                if actionSet:
+                    res = self.conflictResolveStrategy(actionSet)
                     # prepare update
                     updater, isEvDependent = res
                     self.valuesToApply.append((actionSet.destination, updater, isEvDependent, proc))
