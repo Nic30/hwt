@@ -36,16 +36,18 @@ class If(StmCntx):
     If statement generator
 
     :ivar nowIsEventDependent: flag if current scope of if is event dependent
+        (is used to mark statements as event dependent)
     """
     def __init__(self, cond, *statements):
         """
-        :param cond: condition in if
+        :param cond: condition in if statement
         :param statements: list of statements which should be active if condition is met
         """
         self.cond = _intfToSig(cond)
         assert isinstance(self.cond, RtlSignalBase)
 
-        self.nowIsEventDependent = bool(list(discoverEventDependency(cond)))
+        self.nowIsEventDependent = arr_any(discoverEventDependency(cond),
+                                           lambda x: True)
         self.elifConds = []
 
         c = AndReducedContainer()
@@ -80,7 +82,8 @@ class If(StmCntx):
     def Elif(self, cond, *statements):
         cond = _intfToSig(cond)
         self.nowIsEventDependent = (self.nowIsEventDependent or
-                                    arr_any(discoverEventDependency(cond), lambda x: True))
+                                    arr_any(discoverEventDependency(cond),
+                                            lambda x: True))
         thisCond = AndReducedContainer()
         thisCond.add(cond)
         for c in reversed(self.elifConds):

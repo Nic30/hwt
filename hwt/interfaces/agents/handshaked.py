@@ -1,5 +1,6 @@
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.hdlObjects.constants import NOP
+from collections import deque
 
 
 class HandshakedAgent(SyncAgentBase):
@@ -14,7 +15,7 @@ class HandshakedAgent(SyncAgentBase):
     def __init__(self, intf):
         super().__init__(intf)
         self.actualData = NOP
-        self.data = []
+        self.data = deque()
         # these signals are extracted like this to make
         # agent more configurable
         self._rd = self.getRd()
@@ -112,7 +113,7 @@ class HandshakedAgent(SyncAgentBase):
 
         # pop new data if there are not any pending
         if self.actualData is NOP and self.data:
-            self.actualData = self.data.pop(0)
+            self.actualData = self.data.popleft()
 
         doSend = self.actualData is not NOP
 
@@ -152,7 +153,7 @@ class HandshakedAgent(SyncAgentBase):
 
             # pop new data, because actual was read by slave
             if self.data:
-                self.actualData = self.data.pop(0)
+                self.actualData = self.data.popleft()
             else:
                 self.actualData = NOP
 

@@ -42,7 +42,7 @@ class VerilogSerializer_statements():
         firstPartOfStr = "%s%s%s" % (indent_str, prefix, dstStr)
         src_t = a.src._dtype
         dst_t = dst._dtype
-        
+
         if dst_t == src_t or (isinstance(src_t, Bits) and isinstance(dst_t, Bits) and src_t.bit_length() == dst_t.bit_length() == 1):
             return "%s %s %s;" % (firstPartOfStr, symbol, valAsHdl(a.src))
         else:

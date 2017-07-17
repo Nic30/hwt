@@ -21,6 +21,7 @@ from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
+from hwt.hdlObjects.assignment import Assignment
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
@@ -102,7 +103,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             processesNames=map(lambda p: p.name, arch.processes),
             componentInstances=arch.componentInstances,
             isOp=lambda x: isinstance(x, Operator),
-            sensitivityByOp=sensitivityByOp
+            sensitivityByOp=sensitivityByOp,
+            serialize_io=cls.sensitivityListItem,
             )
 
     @classmethod
@@ -113,7 +115,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
 
         srcStr = "%s" % cls.Value(a.src, ctx)
         if a.indexes is not None:
-            return "%syield (self.%s, %s, (%s,), %s)" % (
+            return "%sio.%s.add((%s, (%s,), %s))" % (
                         indentStr, dst.name, srcStr,
                         ", ".join(map(lambda x: cls.asHdl(x, ctx),
                                       a.indexes)),
@@ -129,10 +131,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                     if srcT.forceVector != dstT.forceVector:
                         _0 = cls.Value(toHVal(0), ctx)
                         if srcT.forceVector:
-                            return "%syield (self.%s, (%s)._getitem__val(%s), %s)" % (
+                            return "%sio.%s.add(((%s)._getitem__val(%s), %s))" % (
                                     indentStr, dst.name, srcStr, _0, ev)
                         else:
-                            return "%syield (self.%s, %s, (%s,), %s)" % (
+                            return "%sio.%s.add((%s, (%s,), %s))" % (
                                     indentStr, dst.name, srcStr, _0, ev)
 
                 raise SerializerException(("%s <= %s  is not valid assignment\n"
@@ -140,7 +142,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                                           (cls.asHdl(dst, ctx), srcStr,
                                           dst._dtype, a.src._dtype))
             else:
-                return "%syield (self.%s, %s, %s)" % (
+                return "%sio.%s.add((%s, %s))" % (
                         indentStr, dst.name, srcStr, ev)
 
     @classmethod
@@ -171,7 +173,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             if enclosure is None:
                 _enclosure = getIndent(childCtx.indent) + "pass"
             else:
-                _enclosure = cls.stmAsHdl(enclosure, childCtx)
+                _enclosure = "\n".join([cls.stmAsHdl(e, childCtx) for e in enclosure])
 
             return ifTmpl.render(
                 indent=getIndent(ctx.indent),
@@ -228,13 +230,17 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         childCtx = ctx.withIndent(2)
         if len(body) == 1:
             _body = cls.stmAsHdl(body[0], childCtx)
-        elif len(body) == 2:
-            # first statement is taken as default
-            _body = cls.stmAsHdl(body[1], childCtx, enclosure=body[0])
         else:
-            raise NotImplementedError()
+            for i, stm in enumerate(body):
+                if not isinstance(stm, Assignment):
+                    break
+            # first statement is taken as default
+            enclosure = body[:i]
+            _body = "\n".join([cls.stmAsHdl(stm, childCtx, enclosure=enclosure)
+                               for stm in body[i:]])
 
         return processTmpl.render(
-              name=proc.name,
-              sensitivityList=sensitivityList,
-              stmLines=[_body])
+                      name=proc.name,
+                      sensitivityList=sensitivityList,
+                      stmLines=[_body]
+                      )

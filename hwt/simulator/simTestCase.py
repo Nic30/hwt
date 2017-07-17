@@ -1,4 +1,5 @@
 from _random import Random
+from collections import deque
 from inspect import isgenerator
 import os
 import unittest
@@ -23,7 +24,7 @@ def allValuesToInts(sequenceOrVal):
         return valToInt(sequenceOrVal)
     elif not sequenceOrVal:
         return sequenceOrVal
-    elif isinstance(sequenceOrVal, (list, tuple)) or isgenerator(sequenceOrVal):
+    elif isinstance(sequenceOrVal, (list, tuple, deque)) or isgenerator(sequenceOrVal):
         l = []
         for i in sequenceOrVal:
             l.append(allValuesToInts(i))

@@ -13,10 +13,11 @@ from hwt.synthesizer.assigRenderer import renderIfTree
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
-from hwt.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals
+from hwt.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals,\
+    reduceProcesses
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverSensitivity
+from hwt.synthesizer.rtlLevel.signalUtils.walkers import InOutStmProbe
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 
 
@@ -59,10 +60,10 @@ def isEnclosed(obj):
 
 class RtlNetlist():
     """
-    Container for signals and units
+    Hierarchical container for signals
 
     :ivar signals: dict of all signals in context
-    :ivar startsOfDataPaths: is set of nodes where datapaths starts
+    :ivar startsOfDataPaths: is set of nodes where datapaths starts (assignments)
     :ivar subUnits: is set of all units in this context
     """
     def __init__(self, parentForDebug=None):
@@ -103,7 +104,7 @@ class RtlNetlist():
 
             If(clk._onRisingEdge(),
                r
-               )
+            )
         else:
             if syncRst:
                 raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
@@ -120,6 +121,11 @@ class RtlNetlist():
         assigments = where(self.startsOfDataPaths,
                            lambda x: isinstance(x, Assignment)
                            )
+        processes = []
+        # process ranks = how many assignments is probably in process
+        # used to minimize number of merge tries
+        procRanks = {}
+        # generate naive processes from assignments
         for sig, dps in groupedby(assigments, lambda x: x.dst):
             dps = list(dps)
             name = ""
@@ -135,21 +141,21 @@ class RtlNetlist():
             # (conversion from netlist to statements)
             hasCombDriver = False
             for stm in renderIfTree(dps):
+                statements = []
+                sProbe = InOutStmProbe()
+                sProbe.discover(stm)
 
-                p = HWProcess("assig_process_" + name)
+                # inject nopVal if needed
                 if sig._useNopVal and not isEnclosed(stm):
                     n = sig._nopVal
-                    p.statements.append(Assignment(n, sig))
+                    statements.append(Assignment(n, sig))
                     if isinstance(n, RtlSignal):
-                        p.sensitivityList.add(n)
+                        sProbe.sensitivity.add(n)
 
-                p.statements.append(stm)
-
-                sensitivity = discoverSensitivity(stm)
-                p.sensitivityList.update(sensitivity)
+                statements.append(stm)
 
                 isEventDependent = False
-                for s in p.sensitivityList:
+                for s in sProbe.sensitivity:
                     if isinstance(s, Operator):
                         # event operator
                         s.ops[0].hidden = False
@@ -159,9 +165,17 @@ class RtlNetlist():
 
                 if hasCombDriver and not isEventDependent and haveNotIndexes:
                     raise MultipleDriversExc("%s: Signal %s has multiple combinational drivers" % (self.getDebugScopeName(), name))
+
                 hasCombDriver = hasCombDriver or not isEventDependent
 
-                yield p
+                outputs = {sig, }
+                p = HWProcess("assig_process_" + name,
+                              statements, sProbe.sensitivity,
+                              sProbe.inputs, outputs)
+                processes.append(p)
+                procRanks[p] = len(dps)
+
+        yield from reduceProcesses(processes, procRanks)
 
     def mergeWith(self, other):
         """
@@ -180,7 +194,7 @@ class RtlNetlist():
 
     def synthesize(self, name, interfaces):
         """
-        Build Entity and architecture out of netlist representation
+        Build Entity and Architecture instance out of netlist representation
         """
         ent = Entity(name)
         ent._name = name + "_inst"  # instance name
@@ -196,7 +210,7 @@ class RtlNetlist():
             ent.ports.append(pi)
 
         removeUnconnectedSignals(self)
-        
+
         # check if all signals are driver by something
         _interfaces = set(interfaces)
         for sig in self.signals:
@@ -216,7 +230,7 @@ class RtlNetlist():
             if s not in interfaces and not s.hidden:
                 arch.variables.append(s)
 
-        # instanciate subUnits in architecture
+        # instantiate subUnits in architecture
         for u in self.subUnits:
             arch.componentInstances.append(u)
 

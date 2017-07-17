@@ -152,3 +152,10 @@ def flatten(iterables, level=inf):
 def grouper(n, iterable, padvalue=None):
     "grouper(3, 'abcdefg', 'x') --> ('a','b','c'), ('d','e','f'), ('g','x','x')"
     return zip_longest(*[iter(iterable)] * n, fillvalue=padvalue)
+
+
+def areSetsIntersets(setA, setB):
+    """
+    Check if intersection of sets is not empty
+    """
+    return any(x in setA for x in setB)
