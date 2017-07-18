@@ -38,4 +38,7 @@ class SimBitsT(Bits):
     def convert(self, sigOrVal, toType):
         return convertSimBits__val(self, sigOrVal, toType)
 
+    def __repr__(self, indent=0, withAddr=None, expandStructs=False):
+        return "<SimBitsT, signed:%r, %dbits>" % (self.signed, self._widthVal)
+
 SIM_BIT = SimBitsT(1, None)
