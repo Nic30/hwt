@@ -284,10 +284,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
             if exclude and parentP in exclude:
                 excluded.add(parentP)
                 continue
-            try:
-                _, onParentName = parentP._scopes[otherObj]
-            except KeyError as e:
-                raise e
+            _, onParentName = parentP._scopes[otherObj]
             try:
                 myP = getattr(self, onParentName)
                 if not isinstance(myP, Param):
