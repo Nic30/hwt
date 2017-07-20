@@ -1,5 +1,4 @@
 from hwt.hdlObjects.constants import INTF_DIRECTION
-from hwt.interfaces.utils import cloneIntf
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.param import evalParam, Param
 
@@ -27,8 +26,9 @@ class IpCoreWrapper(Unit):
 
         for intf in self.baseUnit._interfaces:
             if intf._asArraySize is not None:
-                for i in range(evalParam(intf._asArraySize).val):
-                    myIntf = cloneIntf(intf)
+                # create array of interfaces instead of array interface
+                for i in range(int(intf._asArraySize)):
+                    myIntf = intf._clone()
                     name = intf._name + "_%d" % i
 
                     self._registerInterface(name, myIntf)
@@ -43,7 +43,8 @@ class IpCoreWrapper(Unit):
                     ia.append(myIntf)
 
             else:
-                myIntf = cloneIntf(intf)
+                # clone interface
+                myIntf = intf._clone()
 
                 self._registerInterface(intf._name, myIntf)
                 object.__setattr__(self, intf._name, myIntf)

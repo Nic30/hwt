@@ -55,12 +55,3 @@ def propagateClkRst(self):
         _tryConnect(clk, u, 'clk')
         _tryConnect(~rst, u, 'rst_n')
         _tryConnect(rst, u, 'rst')
-
-
-def cloneIntf(intf):
-    """
-    Create same interface as template
-    """
-    i = intf.__class__()
-    i._updateParamsFrom(intf)
-    return i
