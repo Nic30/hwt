@@ -82,6 +82,12 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool, createTmpVarFn), cond))
 
     @classmethod
+    def Enum_valAsHdl(cls, dtype, val, ctx):
+        i = dtype._allValues.index(val.val)
+        assert i >= 0
+        return '%d' % i 
+
+    @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
             ctx = ctx.forSignal(si)

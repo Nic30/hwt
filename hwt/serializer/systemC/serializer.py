@@ -3,7 +3,6 @@ from jinja2.loaders import PackageLoader
 
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.entity import Entity
-from hwt.hdlObjects.types.enum import Enum
 from hwt.interfaces.std import Clk
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.nameScope import LangueKeyword
@@ -66,14 +65,6 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
         """
         :return: list of extra discovered processes
         """
-        t = v._dtype
-        # if type requires extra definition
-        if isinstance(t, Enum) and t not in extraTypes:
-            extraTypes.add(v._dtype)
-            s = cls.HdlType(t, childCtx, declaration=True)
-            extraTypes_serialized.append(s)
-
-
         v.name = ctx.scope.checkedName(v.name, v)
         serializedVar = cls.SignalItem(v, childCtx, declaration=True)
         serializerVars.append(serializedVar)

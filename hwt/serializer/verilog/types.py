@@ -1,5 +1,6 @@
 from hwt.serializer.verilog.utils import SIGNAL_TYPE
 from hwt.serializer.exceptions import SerializerException
+from hwt.hdlObjects.types.bits import Bits
 
 
 class VerilogSerializer_types():
@@ -34,6 +35,14 @@ class VerilogSerializer_types():
             nameBuff.append("[%s- 1:0]" % cls.Value(w, ctx))
 
         return " ".join(nameBuff)
+
+    @classmethod
+    def HdlType_enum(cls, typ, ctx, declaration=False):
+        if declaration:
+            raise TypeError("Verilog does not have enum types, hwt uses Bits instead")
+        else:
+            valueCnt = len(typ._allValues)
+            return cls.HdlType_bits(Bits(valueCnt.bit_length()), ctx, declaration=declaration)
 
     @classmethod
     def HdlType_int(cls, typ, ctx, declaration=False):

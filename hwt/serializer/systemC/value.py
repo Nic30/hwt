@@ -136,7 +136,13 @@ class SystemCSerializer_value(GenericSerializer_Value):
             v = str(v)
         # [TODO] parametrized width
         return "%s<%d>(%s)" % (typeName, width, v)
-    
+
+    @classmethod
+    def Enum_valAsHdl(cls, dtype, val, ctx):
+        i = dtype._allValues.index(val.val)
+        assert i >= 0
+        return '%d' % i 
+
     @classmethod
     def SignedBitString(cls, v, width, forceVector, vldMask):
         return cls._BitString("sc_biguint", v, width, forceVector, vldMask)

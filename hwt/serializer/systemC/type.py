@@ -1,3 +1,4 @@
+from hwt.hdlObjects.types.bits import Bits
 
 
 class SystemCSerializer_type():
@@ -20,3 +21,11 @@ class SystemCSerializer_type():
                 typeBaseName = "biguint"
             
         return "sc_%s<%d>" % (typeBaseName, w)
+    
+    @classmethod
+    def HdlType_enum(cls, typ, ctx, declaration=False):
+        if declaration:
+            raise TypeError("There is problem with tracing of c enums, use Bits instead")
+        else:
+            valueCnt = len(typ._allValues)
+            return cls.HdlType_bits(Bits(valueCnt.bit_length()), ctx, declaration=declaration)

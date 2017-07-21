@@ -112,11 +112,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
         """
         t = v._dtype
         # if type requires extra definition
-        if isinstance(t, Enum) and t not in extraTypes:
-            extraTypes.add(v._dtype)
-            s = cls.HdlType(t, childCtx, declaration=True)
-            extraTypes_serialized.append(s)
-        elif isinstance(t, Array) and v.defaultVal.vldMask:
+        if isinstance(t, Array) and v.defaultVal.vldMask:
             if v.drivers:
                 raise SerializerException("Verilog does not support RAMs"
                                           " with initialized value")
