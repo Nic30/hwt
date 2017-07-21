@@ -4,7 +4,7 @@ from jinja2.loaders import PackageLoader
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.entity import Entity
 from hwt.hdlObjects.types.enum import Enum
-from hwt.hdlObjects.types.enumVal import EnumVal
+from hwt.interfaces.std import Clk
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.nameScope import LangueKeyword
 from hwt.serializer.systemC.context import SystemCCtx
@@ -14,7 +14,6 @@ from hwt.serializer.systemC.statements import SystemCSerializer_statements
 from hwt.serializer.systemC.type import SystemCSerializer_type
 from hwt.serializer.systemC.value import SystemCSerializer_value
 from hwt.serializer.utils import maxStmId
-from hwt.synthesizer.param import evalParam
 
 
 class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemCSerializer_statements,
@@ -39,12 +38,16 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
         return "\n".join(["/*", comentStr, "*/"])
 
     @classmethod
-    def PortItem(cls, pi, ctx):
-        d = cls.DIRECTION(pi.direction)
+    def PortItem(cls, p, ctx):
+        d = cls.DIRECTION(p.direction)
+        p.name = ctx.scope.checkedName(p.name, p)
+        p.getSigInside().name = p.name
+        if isinstance(p.getSigInside()._interface, Clk):
+            return  "sc_%s_clk %s;" % (d, p.name)
 
         return "sc_%s<%s> %s;" % (d,
-                                  cls.HdlType(pi._dtype, ctx),
-                                  pi.name)
+                                  cls.HdlType(p._dtype, ctx),
+                                  p.name)
 
     @classmethod
     def DIRECTION(cls, d):
@@ -58,41 +61,54 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
         return ""
 
     @classmethod
+    def Architecture_var(cls, v, serializerVars, extraTypes,
+                         extraTypes_serialized, ctx, childCtx):
+        """
+        :return: list of extra discovered processes
+        """
+        t = v._dtype
+        # if type requires extra definition
+        if isinstance(t, Enum) and t not in extraTypes:
+            extraTypes.add(v._dtype)
+            s = cls.HdlType(t, childCtx, declaration=True)
+            extraTypes_serialized.append(s)
+
+
+        v.name = ctx.scope.checkedName(v.name, v)
+        serializedVar = cls.SignalItem(v, childCtx, declaration=True)
+        serializerVars.append(serializedVar)
+
+
+    @classmethod
     def Architecture(cls, arch, ctx):
-        variables = []
+        serializerVars = []
         procs = []
         extraTypes = set()
         extraTypes_serialized = []
-        scope = ctx.scope
-        childCtx = ctx.withIndent()
         arch.variables.sort(key=lambda x: (x.name, x._instId))
-        arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.componentInstances.sort(key=lambda x: x._name)
 
+        childCtx = ctx.withIndent()
         ports = list(map(lambda pi: cls.PortItem(pi, childCtx), arch.entity.ports))
-
+                
+        extraProcesses = []
         for v in arch.variables:
-            t = v._dtype
-            # if type requires extra definition
-            if isinstance(t, Enum) and t not in extraTypes:
-                extraTypes.add(v._dtype)
-                extraTypes_serialized.append(cls.HdlType(t, scope, declaration=True))
+            cls.Architecture_var(v,
+                                 serializerVars,
+                                 extraTypes,
+                                 extraTypes_serialized,
+                                 ctx,
+                                 childCtx)
 
-            v.name = scope.checkedName(v.name, v)
-            variables.append(v)
-
-        def serializeVar(v):
-            dv = evalParam(v.defaultVal)
-            if isinstance(dv, EnumVal):
-                dv = "%s.%s" % (dv._dtype.name, dv.val)
-            else:
-                dv = cls.Value(dv, None)
-
-            return "sc_signal<%s> %s(%s);" % (cls.HdlType(v._dtype, ctx), v.name, dv)
-
+        arch.processes.extend(extraProcesses)
+        arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         for p in arch.processes:
             procs.append(cls.HWProcess(p, childCtx))
 
+        # architecture names can be same for different entities
+        # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
+        componentInstances = list(map(lambda c: cls.ComponentInstance(c, childCtx),
+                                      arch.componentInstances))
         processesSensitivity = []
         sensitivityCtx = ctx.forSensitivityList()
         for p in arch.processes:
@@ -103,10 +119,10 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
             processesSensitivity=processesSensitivity,
             name=arch.getEntityName(),
             ports=ports,
-            signals=list(map(serializeVar, variables)),
+            signals=serializerVars,
             extraTypes=extraTypes_serialized,
             processes=procs,
             processObjects=arch.processes,
-            componentInstances=arch.componentInstances,
+            componentInstances=componentInstances,
             DIRECTION=DIRECTION,
             )
