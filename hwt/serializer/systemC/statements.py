@@ -1,7 +1,8 @@
 from hwt.hdlObjects.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
+from hwt.serializer.serializerClases.constants import SIGNAL_TYPE
 from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
+from hwt.serializer.systemC.utils import systemCTypeOfSig
 
 
 class SystemCSerializer_statements():
@@ -24,7 +25,7 @@ class SystemCSerializer_statements():
         assert isinstance(dst, SignalItem)
         assert not dst.virtualOnly, "should not be required"
 
-        typeOfDst = verilogTypeOfSig(dst)
+        typeOfDst = systemCTypeOfSig(dst)
         if a.indexes is not None:
             for i in a.indexes:
                 dst = dst[i]

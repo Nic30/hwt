@@ -6,8 +6,9 @@ from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.hdlObjects.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
+from hwt.serializer.serializerClases.constants import SIGNAL_TYPE
 from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
+from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -15,7 +16,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
 
     @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
-        sigType = verilogTypeOfSig(si)
+        sigType = systemCTypeOfSig(si)
         if declaration:
             if sigType is SIGNAL_TYPE.REG:
                 fmt = "%s%s %s"
