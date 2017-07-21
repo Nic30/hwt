@@ -41,11 +41,6 @@ def isResultOfTypeConversion(sig):
 class VhdlSerializer_ops():
 
     @classmethod
-    def BitToBool(cls, cast):
-        v = 0 if cast.sig._dtype.negated else 1
-        return cls.asHdl(cast.sig) + "=='%d'" % v
-
-    @classmethod
     def Operator(cls, op, ctx):
         def p(operand):
             s = cls.asHdl(operand, ctx)

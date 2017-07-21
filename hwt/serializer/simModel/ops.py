@@ -28,11 +28,6 @@ opPrecedence = {AllOps.NOT: 4,
 
 
 class SimModelSerializer_ops():
-    @classmethod
-    def BitToBool(cls, cast, ctx):
-        v = 0 if cast.sig._dtype.negated else 1
-        c = ctx.constCache.getConstName(hBit(v))
-        return cls.asHdl(cast.sig, ctx) + "._eq__val(self.%s)" % c
 
     @classmethod
     def Operator(cls, op, ctx):
