@@ -107,8 +107,6 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
 
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
-        componentInstances = list(map(lambda c: cls.ComponentInstance(c, childCtx),
-                                      arch.componentInstances))
         processesSensitivity = []
         sensitivityCtx = ctx.forSensitivityList()
         for p in arch.processes:
@@ -123,6 +121,6 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
             extraTypes=extraTypes_serialized,
             processes=procs,
             processObjects=arch.processes,
-            componentInstances=componentInstances,
+            componentInstances=arch.componentInstances,
             DIRECTION=DIRECTION,
             )
