@@ -42,10 +42,10 @@ class SimModelSerializer_ops():
                 try:
                     o = operand.singleDriver()
                     if opPrecedence[o.operator] <= opPrecedence[op.operator]:
-                        return " (%s) " % s
+                        return "(%s)" % s
                 except Exception:
                     pass
-            return " %s " % s
+            return s
 
         ops = op.ops
         o = op.operator
@@ -78,7 +78,7 @@ class SimModelSerializer_ops():
             return _bin('_le__val')
         elif o == AllOps.INDEX:
             assert len(ops) == 2
-            return "(%s)._getitem__val(%s)" % ((cls.asHdl(ops[0], ctx)).strip(), p(ops[1]))
+            return "(%s)._getitem__val(%s)" % ((cls.asHdl(ops[0], ctx)), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
             return _bin('_lt__val')
         elif o == AllOps.SUB:
@@ -116,7 +116,7 @@ class SimModelSerializer_ops():
         elif o == AllOps.IntToBits:
             assert len(ops) == 1
             resT = op.result._dtype
-            return "convertSimInteger__val(%s, %s, %s)" % (cls.HdlType(ops[0]._dtype),
+            return "convertSimInteger__val(%s, %s, %s)" % (cls.HdlType(ops[0]._dtype, ctx),
                                                            cls.asHdl(ops[0], ctx),
                                                            cls.HdlType_bits(resT, ctx))
 
