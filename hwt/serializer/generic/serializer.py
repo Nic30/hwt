@@ -177,7 +177,7 @@ class GenericSerializer():
             assert not ifc.elIfs
             assert not ifc.ifFalse
             stmBuff = [cls.asHdl(s, ctx) for s in ifc.ifTrue]
-            return ";\n".join(stmBuff)
+            return "\n".join(stmBuff)
 
         elIfs = []
         ifTrue = ifc.ifTrue
@@ -202,7 +202,7 @@ class GenericSerializer():
 
     @classmethod
     def SwitchContainer(cls, sw, ctx):
-        childCtx = ctx.withIndent(2)
+        childCtx = ctx.withIndent(1)
 
         def asHdl(statements):
             return [cls.asHdl(s, childCtx) for s in statements]
