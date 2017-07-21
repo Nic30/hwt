@@ -4,25 +4,12 @@ from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.booleanVal import BooleanVal
 from hwt.hdlObjects.types.defs import BOOL
 from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.hdlObjects.types.integer import Integer
 from hwt.hdlObjects.value import Value
 
 
 def convertInteger(self, sigOrVal, toType):
     isVal = isinstance(sigOrVal, Value)
-    if isinstance(toType, Integer):
-        if isVal:
-            v = sigOrVal.clone()
-            if toType.min is not None:
-                assert v.val >= toType.min
-            if toType.max is not None:
-                assert v.val <= toType.max
-
-            v._dtype = toType
-            return v
-        else:
-            return sigOrVal  # [TODO] use convertor op
-    elif toType == BOOL:
+    if toType == BOOL:
         if isVal:
             v = sigOrVal.val
             assert v == 0 or v == 1

@@ -2,7 +2,6 @@ from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.typeShortcuts import hInt
 from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.serializerClases.indent import getIndent
 
 
@@ -83,22 +82,4 @@ class VhdlSerializer_types():
 
     @classmethod
     def HdlType_int(cls, typ, ctx, declaration=False):
-        ma = typ.max
-        mi = typ.min
-        noMax = ma is None
-        noMin = mi is None
-        if noMin:
-            if noMax:
-                return "INTEGER"
-            else:
-                raise SerializerException("If max is specified min has to be specified as well")
-        else:
-            if noMax:
-                if mi == 0:
-                    return "NATURAL"
-                elif mi == 1:
-                    return "POSITIVE"
-                else:
-                    raise SerializerException("If max is specified min has to be specified as well")
-            else:
-                return "INTEGER RANGE %d to %d" % (mi, ma)
+        return "INTEGER"

@@ -1,6 +1,5 @@
-from hwt.serializer.verilog.utils import SIGNAL_TYPE
-from hwt.serializer.exceptions import SerializerException
 from hwt.hdlObjects.types.bits import Bits
+from hwt.serializer.verilog.utils import SIGNAL_TYPE
 
 
 class VerilogSerializer_types():
@@ -46,14 +45,7 @@ class VerilogSerializer_types():
 
     @classmethod
     def HdlType_int(cls, typ, ctx, declaration=False):
-        ma = typ.max
-        mi = typ.min
-        noMax = ma is None
-        noMin = mi is None
-        if noMin and noMax:
-            if ctx.signalType is SIGNAL_TYPE.PORT:
-                return ""
-            else:
-                return "int"
+        if ctx.signalType is SIGNAL_TYPE.PORT:
+            return ""
         else:
-            raise SerializerException("Verilog does not have integer range type")
+            return "int"
