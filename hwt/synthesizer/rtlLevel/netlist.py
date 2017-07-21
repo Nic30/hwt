@@ -13,7 +13,7 @@ from hwt.synthesizer.assigRenderer import renderIfTree
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
-from hwt.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals,\
+from hwt.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals, \
     reduceProcesses
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
@@ -216,6 +216,7 @@ class RtlNetlist():
         for sig in self.signals:
             if not sig.drivers and sig not in _interfaces:
                 assert sig.defaultVal._isFullVld(), (sig, "Signal without any driver or value")
+                sig._const = True
 
         arch = Architecture(ent)
         for p in self.buildProcessesOutOfAssignments():
