@@ -212,14 +212,25 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
 
     @classmethod
     def PortItem(cls, pi, ctx):
+        t = cls.HdlType(pi._dtype, ctx.forPort())
         if verilogTypeOfSig(pi.getSigInside()) == SIGNAL_TYPE.REG:
-            f = "%s reg %s %s"
+            if t:
+                f = "%s reg %s %s"
+            else:
+                f = "%s reg %s"
         else:
-            f = "%s %s %s"
+            if t:
+                f = "%s %s %s"
+            else:
+                f = "%s %s"
 
-        return f % (cls.DIRECTION(pi.direction),
-                    cls.HdlType(pi._dtype, ctx.forPort()),
-                    pi.name)
+        if t:
+            return f % (cls.DIRECTION(pi.direction),
+                        t, pi.name)
+        else:
+            return f % (cls.DIRECTION(pi.direction),
+                        pi.name)
+            
 
     @classmethod
     def PortConnection(cls, pc, ctx):
