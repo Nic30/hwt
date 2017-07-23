@@ -135,6 +135,8 @@ class GenericSerializer():
                     return True
 
                 obj.name = prevUnit._entity.name
+                obj.ports.sort(key=lambda x: x.name)
+                obj.generics.sort(key=lambda x: x.name)
                 return False
 
             return serializedConfiguredUnits[k] is unit
