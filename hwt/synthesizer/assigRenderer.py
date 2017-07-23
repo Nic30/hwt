@@ -1,23 +1,43 @@
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.statements import IfContainer, SwitchContainer
+from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.synthesizer.termUsageResolver import getBaseCond
-from hwt.hdlObjects.types.bits import Bits
 
+"""
+AssigRenderer is responsible for converting sequence of conditional statements
+(usually assignments) to code elements like if-then-else statements
+to realize conditions of original statements
 
-# (max count of elsifs with eq on same variable)
+List of conditional statements is used to simplify code manipulation.
+
+:var SWITCH_THRESHOLD: max count of elsifs with eq on same variable
+    to convert this if-then-else statement to switch statement
+"""
+
 SWITCH_THRESHOLD = 2
 
 
 def condWithoutResolved(cond, resolvedCnt):
+    """
+    Filter already resolved items from condition list of statement
+    """
     return reversed(cond[:len(cond) - resolvedCnt])
 
 
 def splitStatementsOnCond(statements, resolvedCondCnt):
+    """
+    Try to discover condition for top if statement
+
+    :param statements: sequence of statements
+    :param resolvedCnt: number of resolved conditions in concition sets
+        of statements
+    """
+
     # resolve how many condition items can we take into into actual if statement
     simplestStm = statements[0]
     cntOfSameConditions = len(simplestStm.cond)
@@ -102,6 +122,9 @@ def disolveConditionAsEq(condList):
 
 
 def typeDomainSize(t):
+    """
+    :return: how many values can have specified type
+    """
     if isinstance(t, Enum):
         return len(t._allValues)
     elif isinstance(t, Bits):
@@ -113,6 +136,10 @@ def typeDomainSize(t):
 def renderIfTree(statements, resolvedCnt=0):
     """
     Walk assignments and resolve if tree from conditions
+
+    :param statements: sequence of statements
+    :param resolvedCnt: number of resolved conditions in concition sets
+        of statements
     """
 
     # filter statements which are not under any condition
