@@ -68,7 +68,7 @@ class RtlNetlist():
     """
     def __init__(self, parentForDebug=None):
         self.parentForDebug = parentForDebug
-        self.globals = {}
+        self.params = {}
         self.signals = set()
         self.startsOfDataPaths = set()
         self.subUnits = set()
@@ -184,7 +184,7 @@ class RtlNetlist():
         :attention: "others" becomes invalid because all signals etc. will be transferred into this
         """
         assert not other.synthesised
-        self.globals.update(other.globals)
+        self.params.update(other.params)
         self.signals.update(other.signals)
         self.startsOfDataPaths.update(other.startsOfDataPaths)
         self.subUnits.update(other.subUnits)
@@ -200,7 +200,7 @@ class RtlNetlist():
         ent._name = name + "_inst"  # instance name
 
         # create generics
-        for _, v in self.globals.items():
+        for _, v in self.params.items():
             ent.generics.append(v)
 
         # create ports

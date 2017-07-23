@@ -30,8 +30,8 @@ class EmptyUnit(Unit):
             i._setDirectionsLikeIn(INTF_DIRECTION.MASTER)
 
         self._loadMyImplementations()
-        # construct globals (generics for entity)
-        self._cntx.globals = self._globalsFromParams()
+        # construct params for entity (generics)
+        self._cntx.params = self._buildParams()
         externInterf = []
         # prepare connections
         for i in self._interfaces:

@@ -36,7 +36,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         assert not self._wasSynthetised()
         if not hasattr(self, "_name"):
             self._name = self._getDefaultName()
-        self._cntx.globals = self._globalsFromParams()
+        self._cntx.params = self._buildParams()
         self._externInterf = []
 
         # prepare subunits
@@ -129,8 +129,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         pass
 
-    def _globalsFromParams(self):
-        # construct globals (generics for entity)
+    def _buildParams(self):
+        # construct params for entity (generics)
         globalNames = {}
 
         def addP(n, p):
