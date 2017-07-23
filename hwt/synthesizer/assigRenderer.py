@@ -151,7 +151,8 @@ def renderIfTree(statements, resolvedCnt=0):
             yield a
 
     if _statements:
-        topCond, ifTrue, ifFalse, independent = splitStatementsOnCond(_statements, resolvedCnt)
+        topCond, ifTrue, ifFalse, independent = splitStatementsOnCond(_statements,
+                                                                      resolvedCnt)
         if independent:
             yield from renderIfTree(independent, resolvedCnt)
 
@@ -175,7 +176,9 @@ def renderIfTree(statements, resolvedCnt=0):
 
                         setDefault = False
                         try:
-                            setDefault = not stm.default and typeDomainSize(switchOn._dtype) == len(stm.cases)
+                            tValues = typeDomainSize(switchOn._dtype)
+                            caseLen = len(stm.cases)
+                            setDefault = not stm.default and tValues == caseLen
                         except TypeError:
                             pass
                         if setDefault:
@@ -221,7 +224,25 @@ def renderIfTree(statements, resolvedCnt=0):
                     yield SwitchContainer(switchOn, cases, default)
                     return
 
-        yield IfContainer(topCond,
+        # try to reduce redundant "if"s
+        if not ifFalse and not elIfs:
+            # try reduce
+            # if a:
+            #     if b:
+            # to if a and b:
+            try:
+                subIf, = ifTrue
+            except ValueError:
+                subIf = None
+
+            if isinstance(subIf, IfContainer):
+                topCond = list(reversed(topCond))
+                topCond.extend(subIf.cond)
+                subIf.cond = topCond
+                yield subIf
+                return
+
+        yield IfContainer(list(reversed(topCond)),
                           ifTrue,
                           ifFalse,
                           elIfs)
