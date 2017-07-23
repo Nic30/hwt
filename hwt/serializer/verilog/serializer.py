@@ -226,7 +226,6 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
         else:
             return f % (cls.DIRECTION(pi.direction),
                         pi.name)
-            
 
     @classmethod
     def PortConnection(cls, pc, ctx):
