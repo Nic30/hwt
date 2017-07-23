@@ -119,6 +119,8 @@ class GenericSerializer():
                     return True
 
                 obj.name = prevUnit._entity.name
+                obj.ports.sort(key=lambda x: x.name)
+                obj.generics.sort(key=lambda x: x.name)
                 return False
 
             return serializedClasses[unit.__class__] is unit
@@ -139,6 +141,9 @@ class GenericSerializer():
         elif m == SERI_MODE.EXCLUDE:
             if isEnt:
                 obj.name = unit.__class__.__name__
+                obj.ports.sort(key=lambda x: x.name)
+                obj.generics.sort(key=lambda x: x.name)
+
             return False
         else:
             raise NotImplementedError("Not implemented serializer mode %r on unit %r" % (m, unit))

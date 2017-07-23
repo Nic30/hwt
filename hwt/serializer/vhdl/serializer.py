@@ -157,10 +157,10 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
     @classmethod
     def Entity(cls, ent, ctx):
-        ports = []
         generics = []
-        ent.ports.sort(key=lambda x: x.name)
+        ports = []
         ent.generics.sort(key=lambda x: x.name)
+        ent.ports.sort(key=lambda x: x.name)
 
         scope = ctx.scope
         ent.name = scope.checkedName(ent.name, ent, isGlobal=True)
