@@ -98,36 +98,57 @@ def splitStatementsOnCond(statements, resolvedCondCnt):
     return topCond, ifTrue, ifFalse, independent
 
 
+def withoutItemOnIndex(items, index):
+    """
+    :return: generator of items from "items" without item
+        on specified index
+    """
+    for i, item in enumerate(items):
+        if i != index:
+            yield item
+
+
+def _disolveConditionAsEq(cond):
+    try:
+        op = cond.singleDriver()
+    except MultipleDriversExc:
+        return
+    if isinstance(op, Operator) and op.operator == AllOps.EQ:
+        op0 = op.ops[0]
+        op1 = op.ops[1]
+        if isinstance(op0, RtlSignalBase) and isinstance(op1, Value):
+            return op0, op1
+        elif isinstance(op1, RtlSignalBase) and isinstance(op0, Value):
+            return op1, op0
+
+
 def disolveConditionAsEq(condList):
     """
     detect if condition is in format signal == value
 
     :return: None if condList is not in format [ a == val] or [val == a]
-        else return tuple (a, val)
+        else return tuple (a, val, restOfCodList)
     """
-    try:
-        if len(condList) > 1:
-            raise MultipleDriversExc()
+    rest = []
+    if len(condList) == 1:
+        dis = _disolveConditionAsEq(condList[0])
+    else:
+        for i, cond in enumerate(condList):
+            dis = _disolveConditionAsEq(cond)
+            if dis is not None:
+                rest = list(withoutItemOnIndex(condList, i))
+                break
 
-        op = condList[0].singleDriver()
-        if isinstance(op, Operator) and op.operator == AllOps.EQ:
-            op0 = op.ops[0]
-            op1 = op.ops[1]
-            if isinstance(op0, RtlSignalBase) and isinstance(op1, Value):
-                return op0, op1
-            elif isinstance(op1, RtlSignalBase) and isinstance(op0, Value):
-                return op1, op0
-    except MultipleDriversExc:
-        pass
+    if dis is not None:
+        a, val = dis
+        return (a, val, rest)
 
 
 def typeDomainSize(t):
     """
     :return: how many values can have specified type
     """
-    if isinstance(t, Enum):
-        return len(t._allValues)
-    elif isinstance(t, Bits):
+    if isinstance(t, (Enum, Bits)):
         return 2 ** t.bit_length()
     else:
         raise TypeError(t)
@@ -169,23 +190,31 @@ def renderIfTree(statements, resolvedCnt=0):
                 # try to extend switch statement
                 dis = disolveConditionAsEq(topCond)
                 if dis:
-                    switchOn, topVal = dis
+                    switchOn, topVal, restOfCond = dis
                     if stm.switchOn is switchOn:
                         assert not elIfs
+                        if restOfCond:
+                            ifTrue = [IfContainer(restOfCond, ifTrue), ]
                         stm.cases.insert(0, (topVal, ifTrue))
 
-                        setDefault = False
-                        try:
-                            tValues = typeDomainSize(switchOn._dtype)
-                            caseLen = len(stm.cases)
-                            setDefault = not stm.default and tValues == caseLen
-                        except TypeError:
-                            pass
-                        if setDefault:
-                            # we can use any item as default because switch contains case for
-                            # every possible value from type
-                            c = stm.cases.pop()
-                            stm.default = c[1]
+                        t = switchOn._dtype
+                        # it type is enum and all values are used in switch and
+                        # if enum bit representation can have more values than
+                        # enum itself try to set last case as default to prevent
+                        # latches in hdl
+                        if isinstance(t, Enum):
+                            setDefault = False
+                            try:
+                                tValues = typeDomainSize(t)
+                                caseLen = len(stm.cases)
+                                setDefault = not stm.default and tValues != caseLen
+                            except TypeError:
+                                pass
+                            if setDefault:
+                                # we can use any item as default because switch contains case for
+                                # every possible value from type
+                                c = stm.cases.pop()
+                                stm.default = c[1]
                         yield stm
                         return
             break
@@ -195,7 +224,9 @@ def renderIfTree(statements, resolvedCnt=0):
             cases = []
             disolvedTopCond = disolveConditionAsEq(topCond)
             if disolvedTopCond is not None:
-                switchOn, topVal = disolvedTopCond
+                switchOn, topVal, restOfCond = disolvedTopCond
+                if restOfCond:
+                    ifTrue = [IfContainer(restOfCond, ifTrue), ]
                 cases.append((topVal, ifTrue))
                 canBeConvertedToSwitch = True
                 for elIf in elIfs:
@@ -204,7 +235,11 @@ def renderIfTree(statements, resolvedCnt=0):
                         canBeConvertedToSwitch = False
                         break
                     else:
-                        cases.append((dis[1], elIf[1]))
+                        _, v, restOfCond = dis
+                        stms = elIf[1]
+                        if restOfCond:
+                            stms = [IfContainer(restOfCond, stms), ]
+                        cases.append((v, stms))
 
                 # if only last can not be part of the switch case it can be default
                 if not canBeConvertedToSwitch and len(elIfs) == len(cases):
@@ -214,11 +249,16 @@ def renderIfTree(statements, resolvedCnt=0):
 
                 if canBeConvertedToSwitch:
                     t = switchOn._dtype
-                    # if nothing else and we have enum ad we used all the values
-                    if not ifFalse and isinstance(t, Enum) and len(t._allValues) == len(cases):
-                        # convert last to default, because hdl languages usually need this
-                        ifFalse = cases[-1][1]
-                        cases = cases[:-1]
+                    if not ifFalse:
+                        # it type is enum and all values are used in switch and
+                        # if enum bit representation can have more values than
+                        # enum itself try to set last case as default to prevent
+                        # latches in hdl
+                        if (isinstance(t, Enum) and
+                                typeDomainSize(t) > len(t._allValues) and
+                                len(t._allValues) == len(cases)):
+                            ifFalse = cases[-1][1]
+                            cases = cases[:-1]
                     default = ifFalse
 
                     yield SwitchContainer(switchOn, cases, default)
@@ -235,7 +275,10 @@ def renderIfTree(statements, resolvedCnt=0):
             except ValueError:
                 subIf = None
 
-            if isinstance(subIf, IfContainer):
+            if (isinstance(subIf, IfContainer) and
+                    subIf.ifTrue and
+                    not subIf.ifFalse and
+                    not subIf.elIfs):
                 topCond = list(reversed(topCond))
                 topCond.extend(subIf.cond)
                 subIf.cond = topCond
