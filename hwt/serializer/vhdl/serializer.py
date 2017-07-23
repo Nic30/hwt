@@ -189,7 +189,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
     @classmethod
     def GenericItem(cls, g, ctx):
-        s = "%s : %s" % (g.name, cls.HdlType(g._dtype, ctx))
+        s = "%s: %s" % (g.name, cls.HdlType(g._dtype, ctx))
         if g.defaultVal is None:
             return s
         else:
@@ -201,7 +201,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
             raise SerializerException("Port map %s is nod valid (types does not match)  (%s, %s)" % (
                       "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx)),
                       repr(pc.portItem._dtype), repr(pc.sig._dtype)))
-        return " %s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
+        return "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
 
     @classmethod
     def DIRECTION(cls, d):
@@ -209,8 +209,8 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
     @classmethod
     def PortItem(cls, pi, ctx):
-        return "%s : %s %s" % (pi.name, cls.DIRECTION(pi.direction),
-                               cls.HdlType(pi._dtype, ctx))
+        return "%s: %s %s" % (pi.name, cls.DIRECTION(pi.direction),
+                              cls.HdlType(pi._dtype, ctx))
 
     @classmethod
     def MapExpr(cls, m, ctx):

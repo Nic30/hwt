@@ -44,7 +44,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
             else:
                 raise SerializerException("Signal %s should be declared but it is not used" % si.name)
 
-            s = "%s%s %s : %s" % (getIndent(ctx.indent), prefix, si.name, cls.HdlType(si._dtype, ctx))
+            s = "%s%s %s: %s" % (getIndent(ctx.indent), prefix, si.name, cls.HdlType(si._dtype, ctx))
             if isinstance(v, RtlSignalBase):
                 return s + " := %s" % cls.asHdl(v, ctx)
             elif isinstance(v, Value):
