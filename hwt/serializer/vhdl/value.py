@@ -1,4 +1,5 @@
 from hwt.bitmask import mask
+from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BOOL, BIT
 from hwt.hdlObjects.value import Value
@@ -6,7 +7,6 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdlObjects.operator import Operator
 
 
 class VhdlSerializer_Value(GenericSerializer_Value):
@@ -21,10 +21,9 @@ class VhdlSerializer_Value(GenericSerializer_Value):
             if not forceBool or c._dtype == BOOL:
                 return cls.asHdl(c, ctx)
             elif c._dtype == BIT:
-                return "(" + cls.asHdl(c, ctx) + ")=" + cls.BitLiteral(1, 1)
+                return cls.asHdl(c._eq(1), ctx)
             elif isinstance(c._dtype, Bits):
-                width = c._dtype.bit_length()
-                return "(" + cls.asHdl(c, ctx) + ")/=" + cls.BitString(0, width)
+                return cls.asHdl(c != 0, ctx)
             else:
                 raise NotImplementedError()
         else:

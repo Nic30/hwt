@@ -82,12 +82,17 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool, createTmpVarFn), cond))
 
     @classmethod
+    def Enum_valAsHdl(cls, dtype, val, ctx):
+        i = dtype._allValues.index(val.val)
+        assert i >= 0
+        return '%d' % i 
+
+    @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
             ctx = ctx.forSignal(si)
 
             v = si.defaultVal
-            prefix = ""
             if si.virtualOnly:
                 pass
             elif si.drivers:
@@ -105,8 +110,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
                 dimensions.append(t.size)
                 t = t.elmType
 
-            s = "%s%s%s %s" % (getIndent(ctx.indent),
-                               prefix,
+            s = "%s%s %s" % (getIndent(ctx.indent),
                                cls.HdlType(t, ctx),
                                si.name)
             if dimensions:
@@ -166,7 +170,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
         return cls.asHdl(item, ctx)
 
     @classmethod
-    def SignedBitString(cls, v, width, forceVector, vldMask):
+    def _BitString(cls, typeName, v, width, forceVector, vldMask):
         if vldMask != mask(width):
             if forceVector or width > 1:
                 v = cls.BitString(v, width, vldMask)
@@ -175,16 +179,15 @@ class VerilogSerializer_Value(GenericSerializer_Value):
         else:
             v = str(v)
         # [TODO] parametrized width
-        return "$signed(%s)" % (v)
+        if typeName:
+            return "%s(%s)" % (typeName, v)
+        else:
+            return v
+
+    @classmethod
+    def SignedBitString(cls, v, width, forceVector, vldMask):
+        return cls._BitString("$signed", v, width, forceVector, vldMask)
 
     @classmethod
     def UnsignedBitString(cls, v, width, forceVector, vldMask):
-        if vldMask != mask(width):
-            if forceVector or width > 1:
-                v = cls.BitString(v, width, vldMask)
-            else:
-                v = cls.BitLiteral(v, width, vldMask)
-        else:
-            v = str(v)
-        # [TODO] parametrized width
-        return "$unsigned(%s)" % (v)
+        return cls._BitString("", v, width, forceVector, vldMask)

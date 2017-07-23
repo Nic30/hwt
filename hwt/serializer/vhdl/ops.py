@@ -41,11 +41,6 @@ def isResultOfTypeConversion(sig):
 class VhdlSerializer_ops():
 
     @classmethod
-    def BitToBool(cls, cast):
-        v = 0 if cast.sig._dtype.negated else 1
-        return cls.asHdl(cast.sig) + "=='%d'" % v
-
-    @classmethod
     def Operator(cls, op, ctx):
         def p(operand):
             s = cls.asHdl(operand, ctx)
@@ -53,45 +48,44 @@ class VhdlSerializer_ops():
                 try:
                     o = operand.singleDriver()
                     if o.operator != op.operator and opPrecedence[o.operator] <= opPrecedence[op.operator]:
-                        return " (%s) " % s
+                        return "(%s)" % s
                 except Exception:
                     pass
-            return " %s " % s
+            return s
         # [TODO] no nested ternary in expressions like ( '1'  WHEN r = f ELSE  '0' ) & "0"
         ops = op.ops
         o = op.operator
 
         def _bin(name):
-            return (" " + name + " ").join(map(lambda x: x.strip(),
-                                               map(p, ops)))
+            return name.join(map(p, ops))
 
         if o == AllOps.AND:
-            return _bin('AND')
+            return _bin(' AND ')
         elif o == AllOps.OR:
-            return _bin('OR')
+            return _bin(' OR ')
         elif o == AllOps.XOR:
-            return _bin('XOR')
+            return _bin(' XOR ')
         elif o == AllOps.NOT:
             assert len(ops) == 1
             return "NOT " + p(ops[0])
         elif o == AllOps.CALL:
             return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
-            return _bin('&')
+            return _bin(' & ')
         elif o == AllOps.DIV:
-            return _bin('/')
+            return _bin(' / ')
         elif o == AllOps.DOWNTO:
-            return _bin('-1 DOWNTO')
+            return _bin('-1 DOWNTO ')
         elif o == AllOps.TO:
-            return _bin('-1 TO')
+            return _bin('-1 TO ')
         elif o == AllOps.EQ:
-            return _bin('=')
+            return _bin(' = ')
         elif o == AllOps.GREATERTHAN:
-            return _bin('>')
+            return _bin(' > ')
         elif o == AllOps.GE:
-            return _bin('>=')
+            return _bin(' >= ')
         elif o == AllOps.LE:
-            return _bin('<=')
+            return _bin(' <= ')
         elif o == AllOps.INDEX:
             assert len(ops) == 2
             o1 = ops[0]
@@ -101,17 +95,17 @@ class VhdlSerializer_ops():
 
             return "%s(%s)" % (cls.asHdl(o1, ctx).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
-            return _bin('<')
+            return _bin(' < ')
         elif o == AllOps.SUB:
-            return _bin('-')
+            return _bin(' - ')
         elif o == AllOps.MUL:
-            return _bin('*')
+            return _bin(' * ')
         elif o == AllOps.NEQ:
-            return _bin('/=')
+            return _bin(' /= ')
         elif o == AllOps.ADD:
-            return _bin('+')
+            return _bin(' + ')
         elif o == AllOps.NEG:
-            return "-(%s)"% (p(ops[0]))
+            return "-(%s)" % (p(ops[0]))
         elif o == AllOps.TERNARY:
             return p(ops[1]) + " WHEN " + cls.condAsHdl([ops[0]], True, ctx) + " ELSE " + p(ops[2])
         elif o == AllOps.RISING_EDGE:
@@ -150,6 +144,6 @@ class VhdlSerializer_ops():
 
         elif o == AllOps.POW:
             assert len(ops) == 2
-            return _bin('**')
+            return _bin(' ** ')
         else:
             raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))

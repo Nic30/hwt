@@ -42,58 +42,58 @@ class VerilogSerializer_ops():
                 try:
                     o = operand.singleDriver()
                     if o.operator != op.operator and opPrecedence[o.operator] <= opPrecedence[op.operator]:
-                        return " (%s) " % s
+                        return "(%s)" % s
                 except Exception:
                     pass
-            return " %s " % s
+            return s
 
         ops = op.ops
         o = op.operator
 
         def _bin(name):
-            return (" %s " % (name,)).join(map(lambda x: x.strip(), map(p, ops)))
+            return name.join(map(p, ops))
 
         if o == AllOps.AND:
-            return _bin('&')
+            return _bin(' & ')
         elif o == AllOps.OR:
-            return _bin('|')
+            return _bin(' | ')
         elif o == AllOps.XOR:
-            return _bin('^')
+            return _bin(' ^ ')
         elif o == AllOps.NOT:
             assert len(ops) == 1
             return "~" + p(ops[0])
         elif o == AllOps.CALL:
             return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
-            return "{%s}" % _bin(',')
+            return "{%s}" % _bin(', ')
         elif o == AllOps.DIV:
-            return _bin('/')
+            return _bin(' / ')
         elif o == AllOps.DOWNTO:
             return _bin(':')
         elif o == AllOps.TO:
             return _bin(':')
         elif o == AllOps.EQ:
-            return _bin('==')
+            return _bin(' == ')
         elif o == AllOps.GREATERTHAN:
-            return _bin('>')
+            return _bin(' > ')
         elif o == AllOps.GE:
-            return _bin('>=')
+            return _bin(' >= ')
         elif o == AllOps.LE:
-            return _bin('<=')
+            return _bin(' <= ')
         elif o == AllOps.INDEX:
             assert len(ops) == 2
             o1 = ops[0]
             return "%s[%s]" % (cls.asHdl(o1, ctx).strip(), p(ops[1]))
         elif o == AllOps.LOWERTHAN:
-            return _bin('<')
+            return _bin(' < ')
         elif o == AllOps.SUB:
-            return _bin('-')
+            return _bin(' - ')
         elif o == AllOps.MUL:
-            return _bin('*')
+            return _bin(' * ')
         elif o == AllOps.NEQ:
-            return _bin('!=')
+            return _bin(' != ')
         elif o == AllOps.ADD:
-            return _bin('+')
+            return _bin(' + ')
         elif o == AllOps.TERNARY:
             zero, one = BIT.fromPy(0), BIT.fromPy(1)
             if ops[1] == one and ops[2] == zero:
@@ -108,12 +108,12 @@ class VerilogSerializer_ops():
         elif o == AllOps.BitsAsSigned:
             assert len(ops) == 1
             return "$signed(" + p(ops[0]) + ")"
-        elif o == AllOps.BitsAsUnsigned:
-            assert len(ops) == 1
-            return "$unsigned(" + p(ops[0]) + ")"
-        elif o == AllOps.BitsAsVec:
-            assert len(ops) == 1
-            return "$unsigned(" + p(ops[0]) + ")"
+        elif o in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec]:
+            op, = ops
+            if bool(op._dtype.signed):
+                return "$unsigned(" + p(op) + ")"
+            else:
+                return p(op)
         elif o == AllOps.BitsToInt:
             # no conversion required
             return cls.asHdl(ops[0], ctx)
@@ -123,6 +123,6 @@ class VerilogSerializer_ops():
 
         elif o == AllOps.POW:
             assert len(ops) == 2
-            return _bin('**')
+            return _bin(' ** ')
         else:
             raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))

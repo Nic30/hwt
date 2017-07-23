@@ -10,8 +10,6 @@ Definitions of most common types
 
 BOOL = Boolean()
 INT = Integer()
-UINT = Integer(_min=0)
-PINT = Integer(_min=1)
 BIT = Bits(width=1)
 BIT_N = Bits(width=1, negated=True)
 STR = String()

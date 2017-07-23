@@ -6,17 +6,13 @@ class Integer(HdlType):
     Hdl integer type
     """
 
-    def __init__(self, _min=None, _max=None):
-        self.min = _min
-        self.max = _max
-
     def __eq__(self, other):
         return (
-                type(self) == type(other) and self.max == other.max and self.min == other.min
-            )
+                type(self) == type(other)
+               )
 
     def __hash__(self):
-        return hash((self.max, self.min))
+        return hash(type(self))
 
     def all_mask(self):
         return 1

@@ -13,7 +13,7 @@ SC_MODULE({{name}}) {
     endif %}{%
 
     for s in signals %}
-    {{s}}{%
+{{s}};{%
     endfor %}{%
 
     if processes %}
@@ -61,5 +61,4 @@ SC_MODULE({{name}}) {
            endfor %}{%
      endfor %}
     }
-  }
 };

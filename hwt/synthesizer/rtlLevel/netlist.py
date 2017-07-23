@@ -60,7 +60,8 @@ def isEnclosed(obj):
 
 def buildProcessesOutOfAssignments(startsOfDataPaths, getDebugScopeNameFn):
     """
-    Render conditional assignments to statements and wrap them with process statement
+    Render conditional assignments to statements
+    and wrap them with process statement
     """
     assigments = where(startsOfDataPaths,
                        lambda x: isinstance(x, Assignment)
@@ -219,6 +220,7 @@ class RtlNetlist():
             if not sig.drivers and sig not in _interfaces:
                 assert sig.defaultVal._isFullVld(), (sig,
                                                      "Signal without any driver or value")
+                sig._const = True
 
         arch = Architecture(ent)
         for p in buildProcessesOutOfAssignments(self.startsOfDataPaths,
