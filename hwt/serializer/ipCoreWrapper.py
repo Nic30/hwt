@@ -60,7 +60,7 @@ class IpCoreWrapper(Unit):
         return self._baseUnit.__class__.__name__
 
     def _lazyLoadParamsAndInterfaces(self):
-        self._cntx.globals = self._globalsFromParams()
+        self._cntx.params = self._buildParams()
 
         # prepare signals for interfaces
         for i in self._interfaces:

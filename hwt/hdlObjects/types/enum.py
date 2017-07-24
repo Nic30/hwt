@@ -32,6 +32,9 @@ class Enum(HdlType):
     def all_mask(self):
         return 1
 
+    def bit_length(self):
+        return len(self._allValues).bit_length()
+
     @classmethod
     def getValueCls(cls):
         try:
