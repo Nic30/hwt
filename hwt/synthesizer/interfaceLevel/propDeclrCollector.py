@@ -155,7 +155,7 @@ class PropDeclrCollector(object):
         """
         Auto-propagate params by name to child components and interfaces
         Usage:
-        
+
         .. code-block:: python
 
             with self._paramsShared():
@@ -164,7 +164,7 @@ class PropDeclrCollector(object):
         :param exclude: params which should not be shared
         """
         return MakeParamsShared(self, exclude=exclude)
-    
+
     def _associated(self, clk=None, rst=None):
         """
         associate newly added interfaces to "self" with selected clk, rst
@@ -175,7 +175,7 @@ class PropDeclrCollector(object):
         .. code-block:: python
 
             with self._associated(clk=self.myClk, rst=self.myRst):
-                self.myAxi = AxiStrem() 
+                self.myAxi = AxiStrem()
                 # this interface is associated with myClk and myRst
                 # simulation agents and component builders will use them
 
@@ -183,7 +183,6 @@ class PropDeclrCollector(object):
         :param exclude: params which should not be shared
         """
         return MakeClkRstAssociations(self, clk, rst)
-
 
     # declaration phase
     def _registerUnit(self, uName, unit):
