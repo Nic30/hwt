@@ -219,7 +219,7 @@ class RtlNetlist():
         for sig in self.signals:
             if not sig.drivers and sig not in _interfaces:
                 assert sig.defaultVal._isFullVld(), (sig,
-                                                     "Signal without any driver or value")
+                                                     "Signal without any driver or value in ", name)
                 sig._const = True
 
         arch = Architecture(ent)
