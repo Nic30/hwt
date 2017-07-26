@@ -15,7 +15,9 @@ class StructIntf(Interface):
 
     :ivar _fieldsToInterfaces: dictionary {field from HStruct template: sub interface for it}
     """
-    def __init__(self, structT, instantiateFieldFn, masterDir=DIRECTION.OUT, asArraySize=None, loadConfig=True):
+    def __init__(self, structT, instantiateFieldFn,
+                 masterDir=DIRECTION.OUT, asArraySize=None,
+                 loadConfig=True):
         """
         :param structT: HStruct instance used as template for this interface
         :param instantiateFieldFn: function(FieldTemplateItem instance) used to instantiate fields
