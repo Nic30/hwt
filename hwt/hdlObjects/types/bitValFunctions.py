@@ -107,13 +107,15 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
 
         if otherIsVal:
             r = reduceCheckFn(self, other)
+            if r is not None:
+                return r
+
         elif iamVal:
             r = reduceCheckFn(other, self)
+            if r is not None:
+                    return r
 
-        if r is not None:
-            return r
-        else:
-            return Operator.withRes(op, [self, other], self._dtype)
+        return Operator.withRes(op, [self, other], self._dtype)
 
 
 def bitsArithOp__val(self, other, op):

@@ -30,13 +30,15 @@ def boolLogOp(self, other, op, getVldFn, reduceCheckFn):
     else:
         if otherIsVal:
             r = reduceCheckFn(self, other)
+            if r is not None:
+                return r
+
         elif iamVal:
             r = reduceCheckFn(other, self)
+            if r is not None:
+                    return r
 
-        if r is not None:
-            return r
-        else:
-            return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
+        return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
 
 
 def boolCmpOp__val(self, other, op, evalFn):
