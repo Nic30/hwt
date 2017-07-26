@@ -1,0 +1,47 @@
+
+def tryReduceAnd(sig, val):
+    """
+    Return sig and val reduced by & operator or None
+    if it is not possible to statically reduce expression
+    """
+    m = sig._dtype.all_mask()
+    if val._isFullVld():
+        v = val.val
+        if v == m:
+            return sig
+        elif v == 0:
+            return val
+
+
+def tryReduceOr(sig, val):
+    """
+    Return sig and val reduced by | operator or None
+    if it is not possible to statically reduce expression
+    """
+    m = sig._dtype.all_mask()
+    if not val.vldMask:
+        return val
+
+    if val._isFullVld():
+        v = val.val
+        if v == m:
+            return val
+        elif v == 0:
+            return sig
+
+
+def tryReduceXor(sig, val):
+    """
+    Return sig and val reduced by ^ operator or None
+    if it is not possible to statically reduce expression
+    """
+    m = sig._dtype.all_mask()
+    if not val.vldMask:
+        return val
+
+    if val._isFullVld():
+        v = val.val
+        if v == m:
+            return ~sig
+        elif v == 0:
+            return sig

@@ -3,7 +3,9 @@ from operator import eq, ne
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForOr, \
-    vldMaskForAnd
+    vldMaskForAnd, vldMaskForXor
+from hwt.hdlObjects.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
+    tryReduceXor
 from hwt.hdlObjects.types.defs import BOOL
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.hdlObjects.value import Value, areValues
@@ -17,19 +19,24 @@ def boolLogOp__val(self, other, op, getVldFn):
                       max(self.updateTime, other.updateTime))
 
 
-def boolLogOp(self, other, op, getVldFn, whenOneIsVal):
+def boolLogOp(self, other, op, getVldFn, reduceCheckFn):
     other = toHVal(other)
 
-    if isinstance(self, Value):
-        if isinstance(other, Value):
-            return boolLogOp__val(self, other, op, getVldFn)
+    iamVal = isinstance(self, Value)
+    otherIsVal = isinstance(other, Value)
 
-        return whenOneIsVal(self, other)
+    if iamVal and otherIsVal:
+        return boolLogOp__val(self, other, op, getVldFn)
     else:
-        if isinstance(other, Value):
-            return whenOneIsVal(other, self)
+        if otherIsVal:
+            r = reduceCheckFn(self, other)
+        elif iamVal:
+            r = reduceCheckFn(other, self)
 
-    return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
+        if r is not None:
+            return r
+        else:
+            return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
 
 
 def boolCmpOp__val(self, other, op, evalFn):
@@ -48,28 +55,6 @@ def boolCmpOp(self, other, op, evalFn=None):
         return boolCmpOp__val(self, other, op, evalFn)
     else:
         return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
-
-
-def whenOneIsVal_and(val, other):
-    if val.vldMask:
-        if val.val:
-            return other
-        else:
-            v = val.clone()
-            v.val = 0
-            return v
-    else:
-        return val
-
-
-def whenOneIsVal_or(val, other):
-    if val.vldMask:
-        if val.val:
-            return val
-        else:
-            return other
-    else:
-        return val
 
 
 class BooleanVal(Value):
@@ -145,11 +130,16 @@ class BooleanVal(Value):
         return boolLogOp__val(self, other, AllOps.AND, vldMaskForAnd)
 
     def __and__(self, other):
-        return boolLogOp(self, other, AllOps.AND, vldMaskForAnd, whenOneIsVal_and)
+        return boolLogOp(self, other, AllOps.AND, vldMaskForAnd, tryReduceAnd)
 
     def _or__val(self, other):
         return boolLogOp__val(self, other, AllOps.OR, vldMaskForOr)
 
     def __or__(self, other):
-        return boolLogOp(self, other, AllOps.OR, vldMaskForOr, whenOneIsVal_or)
+        return boolLogOp(self, other, AllOps.OR, vldMaskForOr, tryReduceOr)
 
+    def _xor__val(self, other):
+        return boolLogOp__val(self, other, AllOps.OR, vldMaskForOr)
+
+    def __xor__(self, other):
+        return boolLogOp(self, other, AllOps.XOR, vldMaskForXor, tryReduceXor)
