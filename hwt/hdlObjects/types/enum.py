@@ -19,9 +19,10 @@ class Enum(HdlType):
         super(Enum, self).__init__()
         self.name = name
         self._allValues = tuple(valueNames)
-        for n in valueNames:
-            v = self.fromPy(n)
-            setattr(self, n, v)
+        for name in valueNames:
+            v = self.fromPy(name)
+            assert not hasattr(self, name)
+            setattr(self, name, v)
 
     def __eq__(self, other):
         return self is other

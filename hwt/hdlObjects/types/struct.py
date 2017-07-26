@@ -3,7 +3,6 @@ from hwt.hdlObjects.types.structValBase import StructValBase
 from hwt.serializer.serializerClases.indent import getIndent
 
 
-# [TODO] rename fields to members
 class HStructField(object):
     def __init__(self, typ, name, info=None):
         assert isinstance(name, str) or name is None, name
@@ -11,7 +10,7 @@ class HStructField(object):
         self.name = name
         self.dtype = typ
         self.info = info
-    
+
     def __eq__(self, other):
         return (
             self.name == other.name and
