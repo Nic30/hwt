@@ -34,6 +34,12 @@ def paramsToValTuple(unit):
     return freeze_dict(d)
 
 
+def prepareEntity(ent, name):
+    ent.name = name
+    ent.ports.sort(key=lambda x: x.name)
+    ent.generics.sort(key=lambda x: x.name)
+
+
 class GenericSerializer():
     """
     Base class for serializers
@@ -117,10 +123,7 @@ class GenericSerializer():
                     serializedClasses[unit.__class__] = unit
                     obj.name = unit.__class__.__name__
                     return True
-
-                obj.name = prevUnit._entity.name
-                obj.ports.sort(key=lambda x: x.name)
-                obj.generics.sort(key=lambda x: x.name)
+                prepareEntity(obj, prevUnit._entity.name)
                 return False
 
             return serializedClasses[unit.__class__] is unit
@@ -133,19 +136,13 @@ class GenericSerializer():
                 except KeyError:
                     serializedConfiguredUnits[k] = unit
                     return True
-
-                obj.name = prevUnit._entity.name
-                obj.ports.sort(key=lambda x: x.name)
-                obj.generics.sort(key=lambda x: x.name)
+                prepareEntity(obj, prevUnit._entity.name)
                 return False
 
             return serializedConfiguredUnits[k] is unit
         elif m == SERI_MODE.EXCLUDE:
             if isEnt:
-                obj.name = unit.__class__.__name__
-                obj.ports.sort(key=lambda x: x.name)
-                obj.generics.sort(key=lambda x: x.name)
-
+                prepareEntity(obj, unit.__class__.__name__)
             return False
         else:
             raise NotImplementedError("Not implemented serializer mode %r on unit %r" % (m, unit))
