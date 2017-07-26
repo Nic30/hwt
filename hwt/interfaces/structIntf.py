@@ -27,6 +27,7 @@ class StructIntf(Interface):
                            loadConfig=loadConfig)
 
         self._structT = structT
+        assert isinstance(structT, HStruct)
         self._instantiateFieldFn = instantiateFieldFn
         self._fieldsToInterfaces = {}
 
@@ -126,13 +127,21 @@ def HTypeFromIntfMap(interfaceMap, terminalNodes=None):
             
             elif isinstance(typeOrListOfInterfaces, HdlType):
                 dtype = typeOrListOfInterfaces
+            elif isinstance(typeOrListOfInterfaces, (InterfaceBase, RtlSignalBase)):
+                # renamed interface, ignore original name
+                dtype = _HTypeFromIntfMap(typeOrListOfInterfaces)[0]
+                f = HStructField(dtype, nameOrPrefix)
+                if terminalNodes is not None:
+                    terminalNodes.add(f)
+                structFields.append(f)
+                continue
+
             else:
                 # tuple (tuple of interfaces, prefix)
-                try:
-                    assert isinstance(typeOrListOfInterfaces, tuple), typeOrListOfInterfaces
-                except AssertionError as e:
-                    raise e
+                assert isinstance(typeOrListOfInterfaces, tuple), typeOrListOfInterfaces
                 dtype = HTypeFromIntfMap(typeOrListOfInterfaces)
+
+            assert isinstance(nameOrPrefix, str) or nameOrPrefix is None, nameOrPrefix
             structFields.append((dtype, nameOrPrefix))
 
     return HStruct(*structFields)

@@ -71,13 +71,16 @@ class TransTmpl(object):
     def bit_length(self):
         return self.bitAddrEnd - self.bitAddr
 
-    def walkFlatten(self, offset=0, shouldEnterFn=lambda transTmpl: True):
+    def walkFlatten(self, offset=0, shouldEnterFn=lambda transTmpl: (True, True)):
         """
         Walk fields in instance of TransTmpl
 
         :param offset: optional offset for all children in this TransTmpl
         :param shouldEnterFn: function (transTmpl) which returns True when field should
             be split on it's children
+        :param shouldEnterFn: function(transTmpl) which should return (shouldEnter, shouldUse)
+            where shouldEnter is flag that means iterator should look inside of this actual object
+            and shouldUse flag means that this field should be used (=generator should yield it) 
         :return: generator of tuples ((startBitAddress, endBitAddress), TransTmpl instance)
         """
 
@@ -85,25 +88,23 @@ class TransTmpl(object):
         base = self.bitAddr + offset
         end = self.bitAddrEnd + offset
 
-        if isinstance(t, Bits):
+        shouldEnter, shouldYield = shouldEnterFn(self)
+        if shouldYield:
             yield ((base, end), self)
-        elif isinstance(t, HStruct):
-            if shouldEnterFn(self):
+
+        if shouldEnter:
+            if isinstance(t, HStruct):
                 for ch in self.children:
                     yield from ch.walkFlatten(offset=offset, shouldEnterFn=shouldEnterFn)
-            else:
-                yield ((base, end), self)
-
-        elif isinstance(t, Array):
-            if shouldEnterFn(self):
+            elif isinstance(t, Array):
                 itemSize = (self.bitAddrEnd - self.bitAddr) // self.itemCnt
                 for i in range(self.itemCnt):
                     yield from self.children.walkFlatten(offset=base + i * itemSize,
                                                          shouldEnterFn=shouldEnterFn)
+            elif isinstance(t, Bits):
+                pass
             else:
-                yield ((base, end), self)
-        else:
-            raise NotImplementedError(t)
+                raise TypeError(t)
 
     def __repr__(self, offset=0):
         offsetStr = "".join(["    " for _ in range(offset)])
