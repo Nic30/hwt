@@ -1,6 +1,5 @@
 from hwt.bitmask import mask
 from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.typeShortcuts import vecT
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BOOL
 from hwt.hdlObjects.types.integer import Integer
@@ -84,7 +83,7 @@ def bitsBitOp__val(self, other, op, getVldFn):
     return self.__class__(res, self._dtype, vld, updateTime)
 
 
-def bitsBitOp(self, other, op, getVldFn):
+def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
     """
     :attention: If other is Bool signal, convert this to boolean (not ideal, due VHDL event operator)
     """
@@ -94,10 +93,7 @@ def bitsBitOp(self, other, op, getVldFn):
     otherIsVal = isinstance(other, Value)
 
     if iamVal and otherIsVal:
-        ot = other._dtype
-        if ot == BOOL or isinstance(ot, Integer):
-            other = other._convert(self._dtype)
-
+        other = other._convert(self._dtype)
         return bitsBitOp__val(self, other, op, getVldFn)
     else:
         if other._dtype == BOOL:
@@ -108,6 +104,16 @@ def bitsBitOp(self, other, op, getVldFn):
         else:
             raise TypeError("Can not apply operator %r (%r, %r)" % 
                             (op, self._dtype, other._dtype))
+
+        if otherIsVal:
+            r = reduceCheckFn(self, other)
+            if r is not None:
+                return r
+
+        elif iamVal:
+            r = reduceCheckFn(other, self)
+            if r is not None:
+                    return r
 
         return Operator.withRes(op, [self, other], self._dtype)
 
@@ -122,7 +128,7 @@ def bitsArithOp__val(self, other, op):
     w = v._dtype.bit_length()
     if self._dtype.signed:
         _v = v.val
-        _max = mask(w-1)
+        _max = mask(w - 1)
         _min = -_max - 1
         if _v > _max:
             _v = _min + (_v - _max - 1)

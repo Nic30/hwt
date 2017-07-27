@@ -71,7 +71,9 @@ class TransTmpl(object):
     def bit_length(self):
         return self.bitAddrEnd - self.bitAddr
 
-    def walkFlatten(self, offset=0, shouldEnterFn=lambda transTmpl: (True, True)):
+    def walkFlatten(self, offset=0,
+                    shouldEnterFn=lambda transTmpl: (bool(transTmpl.children),
+                                                     not bool(transTmpl.children))):
         """
         Walk fields in instance of TransTmpl
 

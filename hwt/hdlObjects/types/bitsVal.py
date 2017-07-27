@@ -11,6 +11,8 @@ from hwt.hdlObjects.types.bitValFunctions import bitsCmp__val, bitsCmp, \
     bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, signFix
 from hwt.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForXor, \
     vldMaskForAnd, vldMaskForOr
+from hwt.hdlObjects.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
+    tryReduceXor
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BOOL, INT, BIT, SLICE
 from hwt.hdlObjects.types.eventCapableVal import EventCapableVal
@@ -180,7 +182,7 @@ class BitsVal(EventCapableVal):
             vld = 0
 
         return self.__class__(val, BIT, vld, updateTime=updateTime)
-    
+
     def _getitem__val_slice(self, key):
         updateTime = max(self.updateTime, key.updateTime)
         assert key._isFullVld()
@@ -189,10 +191,10 @@ class BitsVal(EventCapableVal):
         firstBitNo = key.val[1].val
         val = selectBitRange(self.val, firstBitNo, size)
         vld = selectBitRange(self.vldMask, firstBitNo, size)
-        
+
         retT = self._dtype.__class__(size, signed=self._dtype.signed)
         return self.__class__(val, retT, vld, updateTime=updateTime)
-        
+
     def _getitem__val(self, key):
         # using self.__class__ because in simulator this method is called for SimBits and we
         # do not want to work with Bits in sim
@@ -393,19 +395,19 @@ class BitsVal(EventCapableVal):
         return bitsBitOp__val(self, other, AllOps.XOR, vldMaskForXor)
 
     def __xor__(self, other):
-        return bitsBitOp(self, other, AllOps.XOR, vldMaskForXor)
+        return bitsBitOp(self, other, AllOps.XOR, vldMaskForXor, tryReduceXor)
 
     def _and__val(self, other):
         return bitsBitOp__val(self, other, AllOps.AND, vldMaskForAnd)
 
     def __and__(self, other):
-        return bitsBitOp(self, other, AllOps.AND, vldMaskForAnd)
+        return bitsBitOp(self, other, AllOps.AND, vldMaskForAnd, tryReduceAnd)
 
     def _or__val(self, other):
         return bitsBitOp__val(self, other, AllOps.OR, vldMaskForOr)
 
     def __or__(self, other):
-        return bitsBitOp(self, other, AllOps.OR, vldMaskForOr)
+        return bitsBitOp(self, other, AllOps.OR, vldMaskForOr, tryReduceOr)
 
     def _sub__val(self, other):
         return bitsArithOp__val(self, other, AllOps.SUB)
