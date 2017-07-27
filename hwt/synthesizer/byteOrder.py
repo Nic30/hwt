@@ -1,4 +1,5 @@
 from hwt.code import Concat
+from hwt.synthesizer.vectorUtils import iterBits
 
 
 def reverseByteOrder(signalOrVal):
@@ -16,3 +17,7 @@ def reverseByteOrder(signalOrVal):
         i -= 8
 
     return Concat(*items)
+
+
+def reversedBits(sigOrVal):
+    return Concat(* list(iterBits(sigOrVal)))
