@@ -35,10 +35,3 @@ class InterfaceArray():
                 raise e
         except TypeError:
             raise TypeError("Interface is not an array")
-            
-    def _mkElemItem(self):
-        "create element for this interface array"
-        e = self.__class__()
-        e._updateParamsFrom(self)
-        e._loadDeclarations()
-        return e
