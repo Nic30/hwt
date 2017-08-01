@@ -73,7 +73,10 @@ class Bits(HdlType):
         if isinstance(c, int):
             constr = "%dbits" % c
         else:
-            constr = "%r, %dbits" % (self.width, self.bit_length())
+            from hwt.serializer.vhdl.serializer import VhdlSerializer
+            ctx = VhdlSerializer.getBaseContext()
+            constr = VhdlSerializer.asHdl(self.width, ctx)
+            constr = "%s, %dbits" % (constr, self.bit_length())
 
         if self.signed:
             constr += ", signed"
