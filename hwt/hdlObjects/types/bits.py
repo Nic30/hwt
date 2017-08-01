@@ -73,7 +73,7 @@ class Bits(HdlType):
         if isinstance(c, int):
             constr = "%dbits" % c
         else:
-            constr = "%r, %dbits" % (self.width, constr, self.bit_length())
+            constr = "%r, %dbits" % (self.width, self.bit_length())
 
         if self.signed:
             constr += ", signed"
