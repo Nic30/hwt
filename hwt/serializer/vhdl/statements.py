@@ -121,6 +121,7 @@ class VhdlSerializer_statements():
             extraVars.append(s)
             extraVarsSerialized.append(serializedS)
             return s
+
         childCtx.createTmpVarFn = createTmpVarFn
 
         statemets = [cls.asHdl(s, childCtx) for s in body]
