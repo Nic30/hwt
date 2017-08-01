@@ -1,19 +1,6 @@
 from hwt.simulator.agentBase import AgentBase
 
 
-def isPulledUpTristateRising(intf, sim):
-    """
-    check if there is a rising edge on tristate interface with pull up (open drain)
-    """
-    t = sim.read(intf.t)
-    assert t.vldMask
-    o = sim.read(intf.o)
-    assert o.vldMask
-    assert not o.val, "This is open drain mode, ioblock would burn"
-
-    return bool(t._onFallingEdge(sim.now))
-
-
 class TristatePullUpAgent(AgentBase):
     def __init__(self, intf, onRisingCallback=None, onFallingCallback=None):
         AgentBase.__init__(self, intf)
