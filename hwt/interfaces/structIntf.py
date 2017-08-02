@@ -1,7 +1,7 @@
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.typeShortcuts import vecT
 from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.hdlObjects.types.struct import HStruct, HStructField
+from hwt.hdlObjects.types.struct import HStruct, HStructField, HStructFieldMeta
 from hwt.interfaces.std import Signal, VldSynced, RegCntrl, BramPort_withoutClk
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -73,7 +73,68 @@ def _HTypeFromIntfMap(intf):
     return (dtype, name)
 
 
-def HTypeFromIntfMap(interfaceMap, terminalNodes=None):
+def isIntfMap(intfMap):
+    if not isinstance(intfMap, tuple):
+        return False
+    elif len(intfMap) == 2 and (intfMap[1] is None or isinstance(intfMap, str)):
+        return False
+    else:
+        return True
+
+
+def HTypeFromIntfMapItem(interfaceMapItem):
+    isTerminal = False
+    if isinstance(interfaceMapItem, (InterfaceBase, RtlSignalBase)):
+        dtype, nameOrPrefix = _HTypeFromIntfMap(interfaceMapItem)
+        isTerminal = True
+    else:
+        typeOrListOfInterfaces, nameOrPrefix = interfaceMapItem
+            
+        
+        if isinstance(typeOrListOfInterfaces, list):
+            # tuple (list or items, name of this array)
+            types = []
+            reference = None
+    
+            for item in typeOrListOfInterfaces:
+                if isIntfMap(item):
+                    t = HTypeFromIntfMap(item)
+                else:
+                    f = HTypeFromIntfMapItem(item)
+                    t = f.dtype
+
+                types.append(t)
+                if reference is None:
+                    reference = t
+                else:
+                    assert reference == t, ("all items in array has to have same type")
+
+            dtype = reference[len(types)]
+        
+        elif isinstance(typeOrListOfInterfaces, HdlType):
+            dtype = typeOrListOfInterfaces
+            isTerminal = True
+        elif isinstance(typeOrListOfInterfaces, (InterfaceBase, RtlSignalBase)):
+            # renamed interface, ignore original name
+            dtype = _HTypeFromIntfMap(typeOrListOfInterfaces)[0]
+            isTerminal = True
+
+        else:
+            # tuple (tuple of interfaces, prefix)
+            assert isinstance(typeOrListOfInterfaces, tuple), typeOrListOfInterfaces
+            dtype = HTypeFromIntfMap(typeOrListOfInterfaces)
+            
+    assert isinstance(nameOrPrefix, str) or nameOrPrefix is None, nameOrPrefix
+
+    f = HStructField(dtype, nameOrPrefix)
+
+    if not isTerminal:
+        f.meta = HStructFieldMeta(split=True)
+
+    return f
+
+
+def HTypeFromIntfMap(interfaceMap):
     """
     Generate flattened register map for HStruct
 
@@ -90,60 +151,7 @@ def HTypeFromIntfMap(interfaceMap, terminalNodes=None):
     structFields = []
 
     for m in interfaceMap:
-        if isinstance(m, (InterfaceBase, RtlSignalBase)):
-            f = HStructField(*_HTypeFromIntfMap(m))
-            if terminalNodes is not None:
-                terminalNodes.add(f)
-            structFields.append(f)
-
-        elif isinstance(m, HdlType):
-            # padding value
-            structFields.append((m, None))
-
-        else:
-            typeOrListOfInterfaces, nameOrPrefix = m
-
-            if isinstance(typeOrListOfInterfaces, list):
-                # tuple (list or items, name of this array)
-                types = []
-                reference = None
-    
-                for item in typeOrListOfInterfaces:
-                    if isinstance(item, (list, map, tuple)):
-                        if (isinstance(interfaceMap, tuple) and
-                            len(interfaceMap) == 2 and
-                            isinstance(interfaceMap[1], str)):
-                            t, _ = _HTypeFromIntfMap(item)
-                        else:
-                            t = HTypeFromIntfMap(item)
-                    else:
-                        t, _ = _HTypeFromIntfMap(item)
-
-                    types.append(t)
-                    if reference is None:
-                        reference = t
-                    else:
-                        assert reference == t, ("all items in array has to have same type")
-
-                dtype = reference[len(types)]
-            
-            elif isinstance(typeOrListOfInterfaces, HdlType):
-                dtype = typeOrListOfInterfaces
-            elif isinstance(typeOrListOfInterfaces, (InterfaceBase, RtlSignalBase)):
-                # renamed interface, ignore original name
-                dtype = _HTypeFromIntfMap(typeOrListOfInterfaces)[0]
-                f = HStructField(dtype, nameOrPrefix)
-                if terminalNodes is not None:
-                    terminalNodes.add(f)
-                structFields.append(f)
-                continue
-
-            else:
-                # tuple (tuple of interfaces, prefix)
-                assert isinstance(typeOrListOfInterfaces, tuple), typeOrListOfInterfaces
-                dtype = HTypeFromIntfMap(typeOrListOfInterfaces)
-
-            assert isinstance(nameOrPrefix, str) or nameOrPrefix is None, nameOrPrefix
-            structFields.append((dtype, nameOrPrefix))
+        f = HTypeFromIntfMapItem(m)
+        structFields.append(f)
 
     return HStruct(*structFields)

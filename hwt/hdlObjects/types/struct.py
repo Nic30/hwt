@@ -2,24 +2,27 @@ from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.structValBase import StructValBase
 from hwt.serializer.serializerClases.indent import getIndent
 
+class HStructFieldMeta():
+    def __init__(self, split=False):
+        self.split = split
+    
+    def __eq__(self, other):
+        return self.split == other.split
+    
+    def __hash__(self):
+        return hash(self.split)
+
 
 class HStructField(object):
-    def __init__(self, typ, name, info=None):
+    def __init__(self, typ, name, meta=None):
         assert isinstance(name, str) or name is None, name
         assert isinstance(typ, HdlType), typ
         self.name = name
         self.dtype = typ
-        self.info = info
+        self.meta = meta
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.dtype == other.dtype and
-            self.info == other.info
-            )
-
-    def __hash__(self):
-        return hash((self.dtype, self.name))
+    def __repr__(self):
+        return "<HStructField %r, %s>" % (self.dtype, self.name)
 
 
 class HStruct(HdlType):
@@ -97,11 +100,21 @@ class HStruct(HdlType):
         else:
             return s // 8 + 1
 
+    def __fields__eq__(self, other):
+        if len(self.fields) != len(other.fields):
+            return False
+        for sf, of in zip(self.fields, other.fields):
+            if (sf.name != of.name or
+                 sf.dtype != of.dtype or
+                 sf.meta != of.meta):
+                return False
+        return True
+
     def __eq__(self, other):
         return (
             type(self) is type(other) and 
             self.bit_length() == other.bit_length() and
-            self.fields == other.fields)
+            self.__fields__eq__(other))
 
     def __hash__(self):
         return hash((self.name, self.fields))

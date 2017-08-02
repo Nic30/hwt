@@ -65,23 +65,18 @@ def walkFlatten(interface, shouldEnterIntfFn):
     :param shouldEnterIntfFn: function (actual interface)
         returns tuple (shouldEnter, shouldYield)
     """
-    for intf in interface._interfaces:
-        shouldEnter, shouldYield = shouldEnterIntfFn(intf)
-        if shouldYield:
-            yield intf
+    _shouldEnter, _shouldYield = shouldEnterIntfFn(interface)
+    if _shouldYield:
+        yield interface
 
-        if shouldEnter:
+    if shouldEnterIntfFn:
+        for intf in interface._interfaces:
             yield from walkFlatten(intf, shouldEnterIntfFn)
-
-    if interface._isInterfaceArray():
-        for intf in interface:
-            shouldEnter, shouldYield = shouldEnterIntfFn(intf)
-            if shouldYield:
-                yield intf
-
-            if shouldEnter:
+    
+        if interface._isInterfaceArray():
+            for intf in interface:
                 yield from walkFlatten(intf, shouldEnterIntfFn)
-
+    
 
 def packIntf(intf, masterDirEqTo=DIRECTION.OUT, exclude=None):
     """
