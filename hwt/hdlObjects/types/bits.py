@@ -32,7 +32,7 @@ class Bits(HdlType):
         else:
             return isinstance(other, Bits) and other._widthVal == self._widthVal\
                 and self.signed == other.signed
-            
+
     def __hash__(self):
         return hash((self.signed, self._widthVal, self.forceVector))
 
@@ -69,14 +69,14 @@ class Bits(HdlType):
             on which address this type is stored (used only by HStruct)
         :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
-        from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
         c = self.width
-        tmpVars = DebugTmpVarStack()
         if isinstance(c, int):
             constr = "%dbits" % c
         else:
-            constr = VhdlSerializer.asHdl(self.width, tmpVars.createTmpVarFn)
-            constr = "%s%s, %dbits" % (tmpVars.serialize(indent), constr, self.bit_length())
+            from hwt.serializer.vhdl.serializer import VhdlSerializer
+            ctx = VhdlSerializer.getBaseContext()
+            constr = VhdlSerializer.asHdl(self.width, ctx)
+            constr = "%s, %dbits" % (constr, self.bit_length())
 
         if self.signed:
             constr += ", signed"
