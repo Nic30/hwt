@@ -1,5 +1,3 @@
-from collections import namedtuple
-
 from hwt.hdlObjects.architecture import Architecture
 from hwt.hdlObjects.entity import Entity
 from hwt.hdlObjects.types.array import Array
@@ -8,36 +6,13 @@ from hwt.hdlObjects.types.boolean import Boolean
 from hwt.hdlObjects.types.enum import Enum
 from hwt.hdlObjects.types.integer import Integer
 from hwt.hdlObjects.value import Value
-from hwt.serializer.constants import SERI_MODE
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.serializerClases.context import SerializerCtx
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.nameScope import NameScope
 from hwt.synthesizer.interfaceLevel.unit import Unit
-from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-
-
-def freeze_dict(data):
-    keys = sorted(data.keys())
-    frozen_type = namedtuple(''.join(keys), keys)
-    return frozen_type(**data)
-
-
-def paramsToValTuple(unit):
-    d = {}
-    for p in unit._params:
-        name = p.getName(unit)
-        v = evalParam(p)
-        d[name] = v
-    return freeze_dict(d)
-
-
-def prepareEntity(ent, name):
-    ent.name = name
-    ent.ports.sort(key=lambda x: x.name)
-    ent.generics.sort(key=lambda x: x.name)
 
 
 class GenericSerializer():
@@ -82,6 +57,27 @@ class GenericSerializer():
             return serFn(obj, ctx)
 
     @classmethod
+    def Entity_prepare(cls, ent, ctx):
+        serializedGenerics = []
+        serializedPorts = []
+
+        scope = ctx.scope
+        ent.generics.sort(key=lambda x: x.name)
+        ent.ports.sort(key=lambda x: x.name)
+
+        ent.name = scope.checkedName(ent.name, ent, isGlobal=True)
+        for g in ent.generics:
+            g.name = scope.checkedName(g.name, g)
+            serializedGenerics.append(cls.GenericItem(g, ctx))
+
+        for p in ent.ports:
+            p.name = scope.checkedName(p.name, p)
+            p.getSigInside().name = p.name
+            serializedPorts.append(cls.PortItem(p, ctx))
+
+        return serializedGenerics, serializedPorts
+
+    @classmethod
     def Entity(cls, ent, ctx):
         """
         Entity is just forward declaration of Architecture, it is not used in most HDL languages
@@ -101,51 +97,24 @@ class GenericSerializer():
         :param serializedConfiguredUnits: (unitCls, paramsValues) : unitObj
             where paramsValues are named tuple name:value
         """
-        isEnt = isinstance(obj, Entity)
-        isArch = isinstance(obj, Architecture)
-        if isEnt:
+        isDeclaration = isinstance(obj, Entity)
+        isDefinition = isinstance(obj, Architecture)
+        if isDeclaration:
             unit = obj.origin
-        elif isArch:
+        elif isDefinition:
             unit = obj.entity.origin
         else:
             return True
 
         assert isinstance(unit, Unit)
-        m = unit._serializerMode
-
-        if m == SERI_MODE.ALWAYS:
+        sd = unit._serializeDecision
+        if sd is None:
             return True
-        elif m == SERI_MODE.ONCE:
-            if isEnt:
-                try:
-                    prevUnit = serializedClasses[unit.__class__]
-                except KeyError:
-                    serializedClasses[unit.__class__] = unit
-                    obj.name = unit.__class__.__name__
-                    return True
-                prepareEntity(obj, prevUnit._entity.name)
-                return False
-
-            return serializedClasses[unit.__class__] is unit
-        elif m == SERI_MODE.PARAMS_UNIQ:
-            params = paramsToValTuple(unit)
-            k = (unit.__class__, params)
-            if isEnt:
-                try:
-                    prevUnit = serializedConfiguredUnits[k]
-                except KeyError:
-                    serializedConfiguredUnits[k] = unit
-                    return True
-                prepareEntity(obj, prevUnit._entity.name)
-                return False
-
-            return serializedConfiguredUnits[k] is unit
-        elif m == SERI_MODE.EXCLUDE:
-            if isEnt:
-                prepareEntity(obj, unit.__class__.__name__)
-            return False
         else:
-            raise NotImplementedError("Not implemented serializer mode %r on unit %r" % (m, unit))
+            prevPriv = serializedClasses.get(unit.__class__, None)
+            seriazlize, nextPriv = sd(unit, obj, isDeclaration, prevPriv)
+            serializedClasses[unit.__class__] = nextPriv
+            return seriazlize
 
     @classmethod
     def HdlType(cls, typ, ctx, declaration=False):

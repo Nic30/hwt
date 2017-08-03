@@ -125,5 +125,9 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
             _dumpFile = dumpFile
 
         ctx = VhdlSerializer.getBaseContext()
+        ctx.scope.setLevel(2)
+        VhdlSerializer.Entity_prepare(self.tbArch.components[0], ctx)
+        ctx.scope.setLevel(1)
+
         _dumpFile.write(VhdlSerializer.formater(VhdlSerializer.Entity(self.tbEnt, ctx)))
         _dumpFile.write(VhdlSerializer.formater(VhdlSerializer.Architecture(self.tbArch, ctx)))

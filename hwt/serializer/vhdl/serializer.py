@@ -97,7 +97,9 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
 
-        uniqComponents = list(map(lambda x: x[1][0], groupedby(arch.components, lambda c: c.name)))
+        uniqComponents = list(map(lambda x: x[1][0],
+                                  groupedby(arch.components,
+                                            lambda c: c.name)))
         uniqComponents.sort(key=lambda c: c.name)
         components = list(map(lambda c: cls.Component(c, childCtx),
                               uniqComponents))
@@ -122,8 +124,6 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
     @classmethod
     def Component(cls, entity, ctx):
-        entity.ports.sort(key=lambda x: x.name)
-        entity.generics.sort(key=lambda x: x.name)
         return cls.componentTmpl.render(
                 indent=getIndent(ctx.indent),
                 ports=[cls.PortItem(pi, ctx) for pi in entity.ports],
@@ -157,21 +157,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
     @classmethod
     def Entity(cls, ent, ctx):
-        generics = []
-        ports = []
-        ent.generics.sort(key=lambda x: x.name)
-        ent.ports.sort(key=lambda x: x.name)
-
-        scope = ctx.scope
-        ent.name = scope.checkedName(ent.name, ent, isGlobal=True)
-        for p in ent.ports:
-            p.name = scope.checkedName(p.name, p)
-            p.getSigInside().name = p.name
-            ports.append(cls.PortItem(p, ctx))
-
-        for g in ent.generics:
-            g.name = scope.checkedName(g.name, g)
-            generics.append(cls.GenericItem(g, ctx))
+        generics, ports = cls.Entity_prepare(ent, ctx)
 
         entVhdl = cls.entityTmpl.render(
                 indent=getIndent(ctx.indent),

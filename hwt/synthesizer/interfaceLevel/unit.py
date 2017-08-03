@@ -1,4 +1,3 @@
-from hwt.serializer.constants import SERI_MODE
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
@@ -11,7 +10,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     """
     Container of the netlist with interfaces and internal hierarchical structure
 
-    :cvar _serializerMode: mode for serializer (drives when unit should be serialized)
+    :cvar _serializeDecision: function to decide if Hdl object derived from
+        this unit should be serialized or not, if None all is always serialized
     :ivar _interfaces: all interfaces
     :ivar _units: all units defined on this obj
     :ivar _params: all params defined on this obj
@@ -20,7 +20,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         (this object has to be returned from _toRtl of parent before it it's own objects)
     """
 
-    _serializerMode = SERI_MODE.ALWAYS
+    _serializeDecision = None
 
     def __init__(self):
         self._parent = None

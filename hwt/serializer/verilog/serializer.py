@@ -35,20 +35,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
 
     @classmethod
     def Entity(cls, ent, ctx):
-        ports = []
-        generics = []
-        ent.ports.sort(key=lambda x: x.name)
-        ent.generics.sort(key=lambda x: x.name)
-
-        ent.name = ctx.scope.checkedName(ent.name, ent, isGlobal=True)
-        for p in ent.ports:
-            p.name = ctx.scope.checkedName(p.name, p)
-            p.getSigInside().name = p.name
-            ports.append(cls.PortItem(p, ctx))
-
-        for g in ent.generics:
-            g.name = ctx.scope.checkedName(g.name, g)
-            generics.append(cls.GenericItem(g, ctx))
+        generics, ports = cls.Entity_prepare(ent, ctx)
 
         entVerilog = cls.moduleHeadTmpl.render(
                 indent=getIndent(ctx.indent),

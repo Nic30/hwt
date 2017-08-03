@@ -42,7 +42,7 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
         p.name = ctx.scope.checkedName(p.name, p)
         p.getSigInside().name = p.name
         if isinstance(p.getSigInside()._interface, Clk):
-            return  "sc_%s_clk %s;" % (d, p.name)
+            return "sc_%s_clk %s;" % (d, p.name)
 
         return "sc_%s<%s> %s;" % (d,
                                   cls.HdlType(p._dtype, ctx),
@@ -54,9 +54,16 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
 
     @classmethod
     def Entity(cls, ent, ctx):
+        generics, ports = cls.Entity_prepare(ent, ctx)
+        # [TODO] separate declarations from definitions
         doc = ent.__doc__
         if doc and id(doc) != id(Entity.__doc__):
             return cls.comment(doc) + "\n"
+        return ""
+
+    @classmethod
+    def GenericItem(cls, g, ctx):
+        # [TODO] params currently serialized evaluated
         return ""
 
     @classmethod
@@ -69,7 +76,6 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
         serializedVar = cls.SignalItem(v, childCtx, declaration=True)
         serializerVars.append(serializedVar)
 
-
     @classmethod
     def Architecture(cls, arch, ctx):
         serializerVars = []
@@ -81,7 +87,7 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
 
         childCtx = ctx.withIndent()
         ports = list(map(lambda pi: cls.PortItem(pi, childCtx), arch.entity.ports))
-                
+
         extraProcesses = []
         for v in arch.variables:
             cls.Architecture_var(v,

@@ -38,7 +38,9 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
 
     doSerialize = True
     for obj in u._toRtl():
-        doSerialize = serializer.serializationDecision(obj, serializedClasses, serializedConfiguredUnits)
+        doSerialize = serializer.serializationDecision(obj,
+                                                       serializedClasses,
+                                                       serializedConfiguredUnits)
         if doSerialize:
             if isinstance(obj, Entity):
                 s = globScope.fork(1)
@@ -61,11 +63,12 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
                 codeBuff.append(sc)
         else:
             try:
-                name = "(" + obj.name + ")"
+                name = '"%s"' % obj.name
             except AttributeError:
                 name = ""
 
-            codeBuff.append(serializer.comment("Object of class %s%s was not serialized due its serializer mode" % (obj.__class__.__name__, name)))
+            codeBuff.append(serializer.comment("Object of class %s, %s was not serialized as specified" % (
+                                                obj.__class__.__name__, name)))
 
     return serializer.formater(
                      "\n".join(codeBuff)
@@ -102,7 +105,9 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
 
     doSerialize = True
     for obj in unit._toRtl():
-        doSerialize = serializer.serializationDecision(obj, serializedClasses, serializedConfiguredUnits)
+        doSerialize = serializer.serializationDecision(obj,
+                                                       serializedClasses,
+                                                       serializedConfiguredUnits)
         if doSerialize:
             if isinstance(obj, Entity):
                 # we need to serialize before we take name, before name can change
