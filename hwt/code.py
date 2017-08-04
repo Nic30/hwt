@@ -119,10 +119,7 @@ class Switch(StmCntx):
         """
         s = self
         for val, statements in tupesValStmnts:
-            if val is None:
-                s = s.Default(*statements)
-            else:
-                s = s.Case(val, *statements)
+            s = s.Case(val, *statements)
         return s
 
     def Default(self, *statements):
@@ -278,11 +275,7 @@ class FsmBuilder(StmCntx):
                         top
                     )
 
-        if stateFrom is None:
-            s = Switch.Default(self, *top)
-        else:
-            s = Switch.Case(self, stateFrom, *top)
-
+        s = Switch.Case(self, stateFrom, *top)
         return s
 
     def Default(self, *condAndNextState):
