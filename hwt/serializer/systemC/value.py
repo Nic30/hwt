@@ -22,7 +22,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
                 fmt = "%s%s %s"
             else:
                 fmt = "%ssc_signal<%s> %s"
-            
+
             ctx = ctx.forSignal(si)
 
             v = si.defaultVal
@@ -141,7 +141,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
     def Enum_valAsHdl(cls, dtype, val, ctx):
         i = dtype._allValues.index(val.val)
         assert i >= 0
-        return '%d' % i 
+        return '%d' % i
 
     @classmethod
     def SignedBitString(cls, v, width, forceVector, vldMask):
