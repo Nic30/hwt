@@ -422,20 +422,18 @@ class BitsVal(EventCapableVal):
         return bitsArithOp(self, other, AllOps.ADD)
 
     def _mul__val(self, other):
-        if isinstance(other._dtype, Bits):
-            resT = self._dtype
-            v = self.val * other.val
-            v &= resT.all_mask()
-            if resT.signed:
-                v = signFix(v, resT.bit_length())
+        # [TODO] resT should be wider
+        resT = self._dtype
+        v = self.val * other.val
+        v &= resT.all_mask()
+        if resT.signed:
+            v = signFix(v, resT.bit_length())
 
-            result = resT.fromPy(v)
-            if not self._isFullVld() or not other._isFullVld():
-                result.vldMask = 0
-            result.updateTime = max(self.updateTime, other.updateTime)
-            return result
-        else:
-            raise TypeError("Incompatible type for multiplication: %s" % (repr(other._dtype)))
+        result = resT.fromPy(v)
+        if not self._isFullVld() or not other._isFullVld():
+            result.vldMask = 0
+        result.updateTime = max(self.updateTime, other.updateTime)
+        return result
 
     def __mul__(self, other):
         other = toHVal(other)
