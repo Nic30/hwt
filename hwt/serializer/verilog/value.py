@@ -160,7 +160,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
                 raise NotImplementedError()
             return prefix + cls.asHdl(item, ctx)
         elif anyIsEventDependent:
-            if item.negated:
+            if item._dtype.negated:
                 prefix = "negedge "
             else:
                 prefix = "posedge "
