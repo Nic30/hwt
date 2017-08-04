@@ -1,12 +1,12 @@
 from math import ceil, floor, inf
 import re
 
+from hwt.bitmask import mask, selectBitRange, setBitRange
 from hwt.hdlObjects.transactionPart import TransactionPart
 from hwt.hdlObjects.types.array import Array
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStruct
 from hwt.simulator.types.simBits import simBitsT
-from hwt.bitmask import mask, selectBitRange, setBitRange
 
 
 class FrameTemplate(object):
@@ -38,8 +38,8 @@ class FrameTemplate(object):
 
         for p in self.parts:
             p.parent = self
-            assert p.startOfPart >= startBitAddr, (p, startBitAddr, self)
-            assert p.endOfPart <= endBitAddr, (p, endBitAddr, self)
+            assert p.startOfPart >= startBitAddr, (p, startBitAddr)
+            assert p.endOfPart <= endBitAddr, (p, endBitAddr)
 
     @staticmethod
     def frameFromTransTmpl(transactionTmpl,
@@ -86,17 +86,14 @@ class FrameTemplate(object):
         assert maxFrameLen > 0
         assert maxPaddingWords >= 0
         if maxPaddingWords < inf:
-            assert trimPaddingWordsOnStart or trimPaddingWordsOnEnd
+            assert trimPaddingWordsOnStart or trimPaddingWordsOnEnd, "Padding has to be cut off somewhere"
 
         def fullWordCnt(start, end):
             """Count of complete words between two addresses
             """
-            startWIndex = start // wordWidth
-            endWIndex = end // wordWidth
-
-            assert startWIndex <= endWIndex, (start, end)
-
-            return endWIndex - startWIndex
+            assert end >= start
+            gap = max(0, (end - start) - (start % wordWidth))
+            return gap // wordWidth
 
         for (base, end), tmpl in transactionTmpl.walkFlatten():
             startOfPart = base
@@ -107,21 +104,25 @@ class FrameTemplate(object):
                     # cut off padding at end of frame
                     paddingWords = fullWordCnt(endOfPart, endOfThisFrame)
                     if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
-                        _endOfThisFrame = endOfThisFrame - paddingWords * wordWidth
-                        # align end of frame to word
-                        _endOfThisFrame = ceil(_endOfThisFrame / wordWidth) * wordWidth
+                        # cut off padding and align end of frame to word
+                        _endOfThisFrame = ceil(endOfPart / wordWidth) * wordWidth
+                    else:
+                        _endOfThisFrame = endOfThisFrame
 
-                    yield FrameTemplate(transactionTmpl, wordWidth, startOfThisFrame, _endOfThisFrame, parts)
+                    yield FrameTemplate(transactionTmpl,
+                                        wordWidth,
+                                        startOfThisFrame,
+                                        _endOfThisFrame,
+                                        parts)
 
                     # prepare for start of new frame
                     parts = []
                     isFirstInFrame = True
                     partsPending = False
-                    # start on new
-                    startOfThisFrame = (endOfThisFrame // wordWidth) * wordWidth
+                    # start on new word
+                    endOfPart = (endOfThisFrame // wordWidth) * wordWidth
+                    startOfThisFrame = endOfPart
                     endOfThisFrame = startOfThisFrame + maxFrameLen
-                    endOfPart = endOfThisFrame
-
                     continue
 
                 if isFirstInFrame:
@@ -131,18 +132,21 @@ class FrameTemplate(object):
                     paddingWords = fullWordCnt(startOfThisFrame, base)
                     if trimPaddingWordsOnStart and paddingWords > maxPaddingWords:
                         startOfThisFrame += paddingWords * wordWidth
+                        assert startOfThisFrame <= base
 
                     endOfThisFrame = startOfThisFrame + maxFrameLen
                 else:
-                    padding = startOfPart - endOfPart
-                    if trimPaddingWordsOnEnd and padding >= wordWidth:
-                        # there is too much continual padding
+                    # check if padding at the end of frame can be cut off
+                    # endOfPart is from last part
+                    if trimPaddingWordsOnEnd and fullWordCnt(endOfPart, startOfPart) >= 1:
+                        # there is too much continual padding,
+                        # cut it out and start new frame
                         endOfThisFrame = startOfPart
                         continue
 
+                # resolve end of this part
                 wordIndex = startOfPart // wordWidth
                 endOfWord = wordWidth * (wordIndex + 1)
-
                 endOfPart = min(endOfWord, end, endOfThisFrame)
 
                 inFieldOffset = startOfPart - base
@@ -160,7 +164,11 @@ class FrameTemplate(object):
                 # align end of frame to word
             endOfThisFrame = ceil(endOfThisFrame / wordWidth) * wordWidth
 
-            yield FrameTemplate(transactionTmpl, wordWidth, startOfThisFrame, endOfThisFrame, parts)
+            yield FrameTemplate(transactionTmpl,
+                                wordWidth,
+                                startOfThisFrame,
+                                endOfThisFrame,
+                                parts)
 
     def _wordIndx(self, addr):
         """
@@ -191,7 +199,7 @@ class FrameTemplate(object):
                 # insert padding
                 while end != lastEnd:
                     assert end >= lastEnd, (end, lastEnd)
-                    endOfWord = (self._wordIndx(lastEnd) + 1) * self.wordWidth
+                    endOfWord = ceil((lastEnd + 1) / self.wordWidth) * self.wordWidth
                     endOfPadding = min(endOfWord, end)
                     _p = TransactionPart(None, lastEnd, endOfPadding, 0)
                     _p.parent = self
@@ -220,11 +228,12 @@ class FrameTemplate(object):
                 parts = []
 
         if showPadding and (parts or lastEnd != self.endBitAddr or lastEnd % self.wordWidth != 0):
-            end = (self._wordIndx(self.endBitAddr - 1) + 1) * self.wordWidth
+            # align end to end of last word
+            end = ceil(self.endBitAddr / self.wordWidth) * self.wordWidth
             if showPadding:
                 while end != lastEnd:
                     assert end >= lastEnd, (end, lastEnd)
-                    endOfWord = lastEnd + self.wordWidth
+                    endOfWord = ((lastEnd // self.wordWidth) + 1) * self.wordWidth
                     endOfPadding = min(endOfWord, end)
                     _p = TransactionPart(None, lastEnd, endOfPadding, 0)
                     _p.parent = self
@@ -238,6 +247,7 @@ class FrameTemplate(object):
                     lastEnd = endOfPadding
 
             if parts:
+                # in the case end of frame is not aligned to end of word
                 yield (wIndex, parts)
 
     @staticmethod
