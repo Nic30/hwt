@@ -58,8 +58,6 @@ class UnitImplHelpers(object):
         else:
             rst = getRst(self)._sig
 
-        s = self._cntx.sig
-
         if isinstance(dtype, HStruct):
             if defVal is not None:
                 raise NotImplementedError()
@@ -71,16 +69,27 @@ class UnitImplHelpers(object):
 
             return container
 
-        return s(name,
-                 dtype=dtype,
-                 clk=clk._sig,
-                 syncRst=rst,
-                 defVal=defVal)
+        return self._cntx.sig(name,
+                              dtype=dtype,
+                              clk=clk._sig,
+                              syncRst=rst,
+                              defVal=defVal)
 
     def _sig(self, name, dtype=BIT, defVal=None):
         """
         Create signal in this unit
         """
+        if isinstance(dtype, HStruct):
+            if defVal is not None:
+                raise NotImplementedError()
+            container = dtype.fromPy(None)
+            for f in dtype.fields:
+                if f.name is not None:
+                    r = self._sig("%s_%s" % (name, f.name), f.dtype)
+                    setattr(container, f.name, r)
+
+            return container
+
         return self._cntx.sig(name, dtype=dtype, defVal=defVal)
 
     def _cleanAsSubunit(self):
