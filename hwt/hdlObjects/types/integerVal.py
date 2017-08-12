@@ -4,13 +4,13 @@ from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.hdlObjects.types.integer import Integer
-from operator import pow, add, sub, mul, floordiv, eq, ne, le, lt, ge, gt
+from operator import pow, eq
 
 BoolVal = BOOL.getValueCls()
 SliceVal = SLICE.getValueCls()
 
 
-def intOp__val(self, other, op, resT, evalFn):
+def intOp__val(self, other, resT, evalFn):
     v = evalFn(self.val, other.val)
     vldMask = int(self.vldMask and other.vldMask)
     updateTime = max(self.updateTime, other.updateTime)
@@ -23,7 +23,7 @@ def intOp(self, other, op, resT, evalFn=None):
 
     other = toHVal(other)._convert(INT)
     if areValues(self, other):
-        return intOp__val(self, other, op, resT, evalFn)
+        return intOp__val(self, other, resT, evalFn)
     else:
         return Operator.withRes(op, [self, other], resT)
 
@@ -59,7 +59,7 @@ class IntegerVal(Value):
     # arithmetic
     def _neg__val(self):
         v = self.clone()
-        v.val = -self.val 
+        v.val = -self.val
         return v
 
     def __neg__(self):
@@ -68,32 +68,17 @@ class IntegerVal(Value):
         else:
             return Operator.withRes(AllOps.UN_MINUS, [self], INT)
 
-    def _add__val(self, other):
-        return intOp__val(self, other, AllOps.ADD, INT, add)
-
     def __add__(self, other):
         return intAritmeticOp(self, other, AllOps.ADD)
-
-    def _sub__val(self, other):
-        return intOp__val(self, other, AllOps.SUB, INT, sub)
 
     def __sub__(self, other):
         return intAritmeticOp(self, other, AllOps.SUB)
 
-    def _mul__val(self, other):
-        return intOp__val(self, other, AllOps.MUL, INT, mul)
-
     def __mul__(self, other):
         return intAritmeticOp(self, other, AllOps.MUL)
 
-    def _pow__val(self, other):
-        return intOp__val(self, other, AllOps.POW, INT, pow)
-
     def _pow(self, other):
         return intOp(self, other, AllOps.POW, INT, pow)
-
-    def _floordiv__val(self, other):
-        return intOp__val(self, other, AllOps.DIV, INT, floordiv)
 
     def __floordiv__(self, other):
         return intAritmeticOp(self, other, AllOps.DIV)
@@ -111,35 +96,17 @@ class IntegerVal(Value):
             return Operator.withRes(AllOps.DOWNTO, [self, other], SLICE)
 
     # comparisons
-    def _eq__val(self, other):
-        return intOp__val(self, other, AllOps.EQ, BOOL, eq)
-
     def _eq(self, other):
         return intCmpOp(self, other, AllOps.EQ, eq)
-
-    def _ne__val(self, other):
-        return intOp__val(self, other, AllOps.NEQ, BOOL, ne)
 
     def __ne__(self, other):
         return intCmpOp(self, other, AllOps.NEQ)
 
-    def _le__val(self, other):
-        return intOp__val(self, other, AllOps.LE, BOOL, le)
-
     def __le__(self, other):
         return intCmpOp(self, other, AllOps.LE)
-
-    def _lt__val(self, other):
-        return intOp__val(self, other, AllOps.LOWERTHAN, BOOL, lt)
 
     def __lt__(self, other):
         return intCmpOp(self, other, AllOps.LOWERTHAN)
 
-    def _ge__val(self, other):
-        return intOp__val(self, other, AllOps.GE, BOOL, ge)
-
     def __ge__(self, other):
         return intCmpOp(self, other, AllOps.GE)
-
-    def _gt__val(self, other):
-        return intOp__val(self, other, AllOps.GREATERTHAN, BOOL, gt)
