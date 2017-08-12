@@ -40,8 +40,6 @@ class RtlSignalOps():
             self._usedOps[k] = o
             return o
 
-        return o
-
     def __invert__(self):
         return self.naryOp(AllOps.NOT, tv(self).__invert__)
 
@@ -127,18 +125,6 @@ class RtlSignalOps():
             self._usedOps[k] = o
             return o
 
-        return o
-
-    def _reversed(self):
-        length = self._dtype.bit_length()
-        concated = None
-        for i in range(length):
-            if i == 0:
-                concated = self[i]
-            else:
-                concated = concated._concat(self[i])
-        return concated
-
     def _concat(self, *operands):
         return self.naryOp(AllOps.CONCAT, tv(self)._concat, *operands)
 
@@ -164,7 +150,7 @@ class RtlSignalOps():
                     # [TODO] multidimensional indexing
                     return indexedOn, [d.ops[1]]
                 else:
-                    raise Exception("can not drive static value %s" % repr(indexedOn))
+                    raise Exception("can not drive static value %r" % indexedOn)
 
         except MultipleDriversExc:
             pass
@@ -190,7 +176,8 @@ class RtlSignalOps():
             except TypeConversionErr:
                 err = True
             if err:
-                raise TypeConversionErr("Can not connect %r (of type %r) to %r (of type %r) due type incompatibility"
+                raise TypeConversionErr(("Can not connect %r (of type %r) to %r "
+                                        "(of type %r) due type incompatibility")
                                         % (source, source._dtype, self, self._dtype))
 
         tmp = self._getIndexCascade()
@@ -211,13 +198,15 @@ class RtlSignalOps():
 
     def __int__(self):
         if not self._const:
-            raise TypeError("Int value of signal can be evaluated because it is not constant expression:", self)
+            raise TypeError("Int value of signal can be evaluated"
+                            " because it is not constant expression:", self)
         else:
             return int(self._val)
 
     def __bool__(self):
         if not self._const:
-            raise TypeError("Bool value of signal can be evaluated because it is not constant expression:", self)
+            raise TypeError("Bool value of signal can be evaluated"
+                            "because it is not constant expression:", self)
         else:
             return bool(self._val)
 
