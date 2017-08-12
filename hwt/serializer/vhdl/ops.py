@@ -89,7 +89,7 @@ class VhdlSerializer_ops():
         elif o == AllOps.INDEX:
             assert len(ops) == 2
             o1 = ops[0]
-            if isResultOfTypeConversion(o1):
+            if isinstance(o1, RtlSignalBase) and isResultOfTypeConversion(o1):
                 o1 = ctx.createTmpVarFn("tmpTypeConv", o1._dtype)
                 o1.defaultVal = ops[0]
 
