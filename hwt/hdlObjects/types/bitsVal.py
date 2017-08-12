@@ -6,7 +6,7 @@ from hwt.bitmask import mask, selectBit, selectBitRange, bitSetTo, \
     setBitRange
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.typeShortcuts import vecT
+from hwt.hdlObjects.typeShortcuts import vecT, hInt
 from hwt.hdlObjects.types.bitValFunctions import bitsCmp__val, bitsCmp, \
     bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, signFix
 from hwt.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForXor, \
@@ -119,7 +119,8 @@ class BitsVal(EventCapableVal):
                 if msb & val:
                     assert val < 0, val
 
-            assert val & allMask == val, (val, val & allMask)
+            if val & allMask != val:
+                raise ValueError("Not enought bits to represent value", val, val & allMask)
 
         return cls(val, typeObj, vld)
 
@@ -142,7 +143,12 @@ class BitsVal(EventCapableVal):
         Concatenate this with other to one wider value/signal
         """
         w = self._dtype.bit_length()
-        other_w = other._dtype.bit_length()
+        try:
+            other_bit_length = other._dtype.bit_length
+        except AttributeError:
+            raise TypeError("Can not concat bits and", other._dtype)
+
+        other_w = other_bit_length()
         resWidth = w + other_w
         resT = vecT(resWidth)
 
@@ -226,13 +232,13 @@ class BitsVal(EventCapableVal):
         """
         iamVal = isinstance(self, Value)
         st = self._dtype
-        l = st.bit_length()
-        if l == 1 and not st.forceVector:
+        length = st.bit_length()
+        if length == 1 and not st.forceVector:
             # assert not indexing on single bit
             raise TypeError()
 
         if isinstance(key, slice):
-            key = slice_to_SLICE(key, l)
+            key = slice_to_SLICE(key, length)
             isSLICE = True
         else:
             isSLICE = isinstance(key, Slice.getValueCls())
@@ -253,7 +259,7 @@ class BitsVal(EventCapableVal):
                                isinstance(self.origin, Operator) and
                                self.origin.operator == AllOps.INDEX)
         if isSLICE:
-            if indexesAreValues and start.val == l and stop.val == 0:
+            if indexesAreValues and start.val == length and stop.val == 0:
                 # selecting all bits no conversion needed
                 return self
 
@@ -268,13 +274,13 @@ class BitsVal(EventCapableVal):
 
             if startIsVal:
                 _start = int(start)
-                if _start < 0 or _start > l:
-                    raise IndexError(_start, l)
+                if _start < 0 or _start > length:
+                    raise IndexError(_start, length)
 
             if stopIsVal:
                 _stop = int(stop)
-                if _stop < 0 or _stop > l:
-                    raise IndexError(_stop, l)
+                if _stop < 0 or _stop > length:
+                    raise IndexError(_stop, length)
 
             if startIsVal and stopIsVal and _start - _stop <= 0:
                 raise IndexError(_start, _stop)
@@ -288,7 +294,7 @@ class BitsVal(EventCapableVal):
 
         elif isinstance(key, IntegerVal):
             _v = int(key)
-            if _v < 0 or _v > l - 1:
+            if _v < 0 or _v > length - 1:
                 raise IndexError(_v)
 
             resT = BIT
@@ -300,7 +306,7 @@ class BitsVal(EventCapableVal):
             if isinstance(t, Integer):
                 resT = BIT
             elif isinstance(t, Slice):
-                resT = Bits(width=key._size(), forceVector=st.forceVector, signed=st.signed)
+                resT = Bits(width=key.staticEval()._size(), forceVector=st.forceVector, signed=st.signed)
             elif isinstance(t, Bits):
                 resT = BIT
                 key = key._convert(INT)
@@ -314,14 +320,14 @@ class BitsVal(EventCapableVal):
 
     def _setitem__val(self, index, value):
         if index._isFullVld():
-            if isinstance(index._dtype, Integer):
-                self.val = bitSetTo(self.val, index.val, value.val)
-                self.vldMask = bitSetTo(self.vldMask, index.val, value.vldMask)
-            elif index._dtype == SLICE:
+            if index._dtype == SLICE:
                 size = index._size()
                 noOfFirstBit = index.val[1].val
                 self.val = setBitRange(self.val, noOfFirstBit, size, value.val)
                 self.vldMask = setBitRange(self.vldMask, noOfFirstBit, size, value.vldMask)
+            elif isinstance(index._dtype, Integer):
+                self.val = bitSetTo(self.val, index.val, value.val)
+                self.vldMask = bitSetTo(self.vldMask, index.val, value.vldMask)
             else:
                 raise TypeError("Not implemented for index %s" % repr(index))
             self.updateTime = max(index.updateTime, value.updateTime)
@@ -329,8 +335,52 @@ class BitsVal(EventCapableVal):
             self.vldMask = 0
 
     def __setitem__(self, index, value):
-        assert isinstance(self, Value)
-        return self._setitem__val(index, value)
+        """this can not be called in desing description on non static values,
+        only simulator can resolve this (in design use self[index] ** value
+        instead of self[index] = value)
+        """
+        # convert index to hSlice or hInt
+        indexConst = True
+        if not isinstance(index, Value):
+            if isinstance(index, RtlSignalBase):
+                if index._const:
+                    index = index.staticEval()
+                else:
+                    indexConst = False
+
+            elif isinstance(index, slice):
+                length = int(self._dtype.size)
+                index = slice_to_SLICE(index, length)
+            else:
+                index = hInt(index)
+        if indexConst and not index._isFullVld():
+            indexConst = False
+
+        # convert value to bits of length specified by index
+        if indexConst:
+            if index._dtype == SLICE:
+                itemT = Bits(index._size())
+            else:
+                itemT = BIT
+
+            if not isinstance(value, Value):
+                if isinstance(value, RtlSignalBase):
+                    if value._const:
+                        value = value.staticEval()._convert(itemT)
+                        valueConst = True
+                    else:
+                        valueConst = False
+                else:
+                    value = itemT.fromPy(value)
+                    valueConst = True
+            else:
+                valueConst = True
+                value = value._convert(itemT)
+
+        if indexConst and valueConst and isinstance(self, Value):
+            return self._setitem__val(index, value)
+
+        raise TypeError("Only simulator can resolve []= for signals or invalid index")
 
     def _invert__val(self):
         v = self.clone()
@@ -437,7 +487,8 @@ class BitsVal(EventCapableVal):
 
     def __mul__(self, other):
         other = toHVal(other)
-        assert isinstance(other._dtype, (Integer, Bits))
+        if not isinstance(other._dtype, (Integer, Bits)):
+            raise TypeError(other)
 
         if areValues(self, other):
             return self._mul__val(other)
@@ -450,7 +501,7 @@ class BitsVal(EventCapableVal):
             elif isinstance(other._dtype, Integer):
                 pass
             else:
-                raise TypeError("%s %s %s" % (repr(self), repr(AllOps.MUL), repr(other)))
+                raise TypeError("%r %r %r" % (self, AllOps.MUL, other))
 
             subResT = vecT(resT.bit_length(), self._dtype.signed)
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
