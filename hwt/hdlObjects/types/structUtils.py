@@ -4,21 +4,6 @@ from hwt.hdlObjects.types.struct import HStructField, HStruct
 from hwt.hdlObjects.types.typeCast import toHVal
 
 
-# [TODO] remove
-class BusFieldInfo(object):
-    def __init__(self, access="rw", fieldInterface=None, disolveArray=False):
-        """
-        :param access: "r", "w" or "rw" describes access mode from bus side
-        :param fieldInterface: interface for which this field was generated
-        :param disolveArray: interpret this array interface as bunch of items
-            instead of single memory space
-        """
-        assert access in ['r', 'w', 'rw']
-        self.access = access
-        self.fieldInterface = fieldInterface
-        self.disolveArray = disolveArray
-
-
 def HStruct_selectFields(structT, fieldsToUse):
     """
     Select fields from structure (rest will become spacing)
