@@ -311,10 +311,10 @@ class BitsVal(EventCapableVal):
                 resT = BIT
                 key = key._convert(INT)
             else:
-                raise TypeError("Index operation not implemented for index of type %s" % (repr(t)))
+                raise TypeError("Index operation not implemented for index of type %r" % (t))
 
         else:
-            raise TypeError("Index operation not implemented for index %s" % (repr(key)))
+            raise TypeError("Index operation not implemented for index %r" % (key))
 
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
@@ -329,7 +329,7 @@ class BitsVal(EventCapableVal):
                 self.val = bitSetTo(self.val, index.val, value.val)
                 self.vldMask = bitSetTo(self.vldMask, index.val, value.vldMask)
             else:
-                raise TypeError("Not implemented for index %s" % repr(index))
+                raise TypeError("Not implemented for index %r" % (index))
             self.updateTime = max(index.updateTime, value.updateTime)
         else:
             self.vldMask = 0
@@ -349,7 +349,7 @@ class BitsVal(EventCapableVal):
                     indexConst = False
 
             elif isinstance(index, slice):
-                length = int(self._dtype.size)
+                length = self._dtype.bit_length()
                 index = slice_to_SLICE(index, length)
             else:
                 index = hInt(index)
