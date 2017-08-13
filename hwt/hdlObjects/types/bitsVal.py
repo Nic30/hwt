@@ -265,7 +265,7 @@ class BitsVal(EventCapableVal):
 
             if iAmResultOfIndexing:
                 # try reduce self and parent slice to one
-                original, parentIndex = self.origin.ops
+                original, parentIndex = self.origin.operands
                 if isinstance(parentIndex._dtype, Slice):
                     parentLower = parentIndex.val[1]
                     start = start + parentLower
@@ -399,7 +399,7 @@ class BitsVal(EventCapableVal):
                 # double negation
                 d = self.singleDriver()
                 if isinstance(d, Operator) and d.operator == AllOps.NOT:
-                    return d.ops[0]
+                    return d.operands[0]
             except MultipleDriversExc:
                 pass
             return Operator.withRes(AllOps.NOT, [self], self._dtype)

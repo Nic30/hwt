@@ -103,7 +103,7 @@ def buildProcessesOutOfAssignments(startsOfDataPaths, getDebugScopeNameFn):
             for s in sProbe.sensitivity:
                 if isinstance(s, Operator):
                     # event operator
-                    s.ops[0].hidden = False
+                    s.operands[0].hidden = False
                     isEventDependent = True
                 else:
                     s.hidden = False

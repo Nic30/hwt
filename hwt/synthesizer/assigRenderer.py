@@ -114,8 +114,7 @@ def _disolveConditionAsEq(cond):
     except MultipleDriversExc:
         return
     if isinstance(op, Operator) and op.operator == AllOps.EQ:
-        op0 = op.ops[0]
-        op1 = op.ops[1]
+        op0, op1 = op.operands
         if isinstance(op0, RtlSignalBase) and isinstance(op1, Value):
             return op0, op1
         elif isinstance(op1, RtlSignalBase) and isinstance(op0, Value):

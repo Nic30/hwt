@@ -12,8 +12,7 @@ def HStruct_selectFields(structT, fieldsToUse):
     :param fieldsToUse: dict {name:{...}} or set of names to select,
         dictionary is used to select nested fields
         in HStruct or HUnion fields
-        (f.e. {"struct1": {"field1", "field2"},
-                                     "field3":{}}
+        (f.e. {"struct1": {"field1", "field2"}, "field3":{}}
         will select field1 and 2 from struct1 and field3 from root)
     """
 

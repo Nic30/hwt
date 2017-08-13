@@ -62,7 +62,7 @@ class {{ name }}(SimModel):
         {% for proc in processObjects %}
         sensitivity(self.{{proc.name}}, {% 
             for s in proc.sensitivityList %}{% 
-                if isOp(s) %}({{ sensitivityByOp(s.operator) }}, self.{{s.ops[0].name}}){% 
+                if isOp(s) %}({{ sensitivityByOp(s.operator) }}, self.{{s.operands[0].name}}){% 
                 else %}self.{{s.name}}{%
                 endif %}{% 
                 if not loop.last %}, {% 

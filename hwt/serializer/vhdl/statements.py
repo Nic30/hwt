@@ -33,9 +33,10 @@ def ternaryOpsToIf(statements):
                 if not isinstance(d, Operator) or d.operator != AllOps.TERNARY:
                     raise DoesNotContainsTernary()
                 else:
-                    ifc = IfContainer(d.ops[0],
-                                      [Assignment(d.ops[1], st.dst)],
-                                      [Assignment(d.ops[2], st.dst)]
+                    ops = d.operands
+                    ifc = IfContainer(ops[0],
+                                      [Assignment(ops[1], st.dst)],
+                                      [Assignment(ops[2], st.dst)]
                                       )
                     stms.append(ifc)
 

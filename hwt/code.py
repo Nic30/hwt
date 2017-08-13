@@ -326,10 +326,10 @@ def _mkOp(fn):
 
     :param fn: function to perform binary operation
     """
-    def op(*ops):
-        assert ops, ops
+    def op(*operands):
+        assert operands, operands
         top = None
-        for s in ops:
+        for s in operands:
             if top is None:
                 top = s
             else:
@@ -360,16 +360,16 @@ def rol(sig, howMany):
     """
     Rotate left
     """
-    l = sig._dtype.bit_length()
-    return sig[(l - howMany):]._concat(sig[:(l - howMany)])
+    width = sig._dtype.bit_length()
+    return sig[(width - howMany):]._concat(sig[:(width - howMany)])
 
 
 def sll(sig, howMany):
     """
     Logical shift left
     """
-    l = sig._dtype.bit_length()
-    return sig[(l - howMany):]._concat(vec(0, howMany))
+    width = sig._dtype.bit_length()
+    return sig[(width - howMany):]._concat(vec(0, howMany))
 
 
 def srl(sig, howMany):
@@ -403,8 +403,8 @@ def isPow2(num):
 
 
 def binToGray(sigOrVal):
-    l = sigOrVal._dtype.bit_length()
-    return Concat(sigOrVal[l - 1], sigOrVal[l - 1:0] ^ sigOrVal[l:1])
+    width = sigOrVal._dtype.bit_length()
+    return Concat(sigOrVal[width - 1], sigOrVal[width - 1:0] ^ sigOrVal[width:1])
 
 
 # shortcuts

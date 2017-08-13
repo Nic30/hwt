@@ -217,7 +217,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             else:
                 raise TypeError("This is not an event sensitivity", op)
 
-            return "(%s, %s)" % (str(sens), item.ops[0].name)
+            return "(%s, %s)" % (str(sens), item.operands[0].name)
         else:
             return item.name
 

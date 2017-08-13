@@ -20,8 +20,7 @@ from sphinx.apidoc import main
 import sphinx_bootstrap_theme
 import sys
 
-
-sys.path.insert(0,  os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../'))
 
 # -- General configuration ------------------------------------------------
 
@@ -35,7 +34,7 @@ sys.path.insert(0,  os.path.abspath('../'))
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'sphinx.ext.viewcode',
-              #'sphinx.ext.napoleon',
+              # 'sphinx.ext.napoleon',
               'sphinx.ext.graphviz']
 
 # Add any paths that contain templates here, relative to this directory.
@@ -88,7 +87,7 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'alabaster'
+# html_theme = 'alabaster'
 
 html_theme = 'bootstrap'
 html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
@@ -161,8 +160,6 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-
-
 # -- Options for Epub output ----------------------------------------------
 
 # Bibliographic Dublin Core info.
@@ -196,6 +193,6 @@ def skip(app, what, name, obj, skip, options):
 def setup(app):
     app.connect("autodoc-skip-member", skip)
 
-# update *.rst pages
-main(["-F", "-o", "../docs", "../hwt"])
 
+# update *.rst pages
+main([__name__, "--full", "-o", "../docs", "../hwt"])
