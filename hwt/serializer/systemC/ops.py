@@ -39,13 +39,14 @@ class SystemCSerializer_ops():
             if isinstance(operand, RtlSignalBase):
                 try:
                     o = operand.singleDriver()
-                    if o.operator != op.operator and opPrecedence[o.operator] <= opPrecedence[op.operator]:
+                    if (o.operator != op.operator and
+                            opPrecedence[o.operator] <= opPrecedence[op.operator]):
                         return "(%s)" % s
                 except Exception:
                     pass
             return s
 
-        ops = op.ops
+        ops = op.operands
         o = op.operator
 
         def _bin(name):

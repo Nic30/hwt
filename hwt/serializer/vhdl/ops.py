@@ -53,7 +53,7 @@ class VhdlSerializer_ops():
                     pass
             return s
         # [TODO] no nested ternary in expressions like ( '1'  WHEN r = f ELSE  '0' ) & "0"
-        ops = op.ops
+        ops = op.operands
         o = op.operator
 
         def _bin(name):

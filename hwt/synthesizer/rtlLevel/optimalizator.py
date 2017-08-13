@@ -31,7 +31,7 @@ def removeUnconnectedSignals(netlist):
                 for e in sig.drivers:
                     # drivers of this signal are useless rm them
                     if isinstance(e, Operator):
-                        for op in e.ops:
+                        for op in e.operands:
                             if not isinstance(op, Value):
                                 op.endpoints.remove(e)
                                 _toSearch.add(op)

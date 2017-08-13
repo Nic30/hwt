@@ -61,7 +61,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
         signals = []
         for e in rom.endpoints:
             assert isinstance(e, Operator) and e.operator == AllOps.INDEX, e
-            me, index = e.ops
+            me, index = e.operands
             assert me is rom
 
             # construct output of the rom
@@ -86,7 +86,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
                 else:
                     return x
             for _e in e.result.endpoints:
-                _e.ops = tuple(map(replaceOrigRomIndexExpr, _e.ops))
+                _e.operands = tuple(map(replaceOrigRomIndexExpr, _e.operands))
                 e.result = romValSig
 
         return processes, signals

@@ -15,7 +15,7 @@ def getBaseCond(c):
     if len(drivers) == 1:
         d = list(c.drivers)[0]
         if isinstance(d, Operator) and d.operator == AllOps.NOT:
-            c = d.ops[0]
+            c = d.operands[0]
             isNegated = True
 
     return (c, isNegated)

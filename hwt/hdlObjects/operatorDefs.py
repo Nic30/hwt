@@ -32,14 +32,14 @@ class OpDefinition():
 
             return v
 
-        ops = list(map(getVal, operator.ops))
+        operands = list(map(getVal, operator.operands))
 
         if isEventDependentOp(operator.operator):
-            ops.append(simulator.now)
+            operands.append(simulator.now)
         elif operator.operator == AllOps.IntToBits:
-            ops.append(operator.result._dtype)
+            operands.append(operator.result._dtype)
 
-        return self._evalFn(*ops)
+        return self._evalFn(*operands)
 
     def __repr__(self):
         return "<OpDefinition %s>" % (self.id)
@@ -86,8 +86,8 @@ def ternaryFn(a, b, c):
     return a._ternary(b, c)
 
 
-def callFn(fn, *ops):
-    return a.call(*ops)
+def callFn(fn, *operands):
+    return fn.call(*operands)
 
 
 def bitsToIntFn(a):
@@ -163,6 +163,7 @@ class AllOps():
     @classmethod
     def opByName(cls, name):
         return getattr(cls, name)
+
 
 if not AllOps._idsInited:
     for a in dir(AllOps):

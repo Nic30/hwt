@@ -145,10 +145,10 @@ class RtlSignalOps():
                 op = None
             if op == AllOps.INDEX:
                 # get signal on which is index applied
-                indexedOn = d.ops[0]
+                indexedOn = d.operands[0]
                 if isinstance(indexedOn, RtlSignalBase):
                     # [TODO] multidimensional indexing
-                    return indexedOn, [d.ops[1]]
+                    return indexedOn, [d.operands[1]]
                 else:
                     raise Exception("can not drive static value %r" % indexedOn)
 

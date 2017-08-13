@@ -105,7 +105,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
     @classmethod
     def sensitivityListItem(cls, item, ctx):
         if isinstance(item, Operator):
-            item = item.ops[0]
+            item = item.operands[0]
         return cls.asHdl(item, ctx)
 
     @classmethod

@@ -102,7 +102,7 @@ class BooleanVal(Value):
                 # double negation
                 d = self.singleDriver()
                 if isinstance(d, Operator) and d.operator == AllOps.NOT:
-                    return d.ops[0]
+                    return d.operands[0]
             except MultipleDriversExc:
                 pass
             return Operator.withRes(AllOps.NOT, [self], BOOL)

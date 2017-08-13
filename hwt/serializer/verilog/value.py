@@ -151,7 +151,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
     def sensitivityListItem(cls, item, ctx, anyIsEventDependent):
         if isinstance(item, Operator):
             o = item.operator
-            item = item.ops[0]
+            item = item.operands[0]
             if o is AllOps.RISING_EDGE:
                 prefix = "posedge "
             elif o is AllOps.FALLIGN_EDGE:

@@ -47,7 +47,7 @@ def walkAllOriginSignals(sig, discovered=None):
     if sig.drivers:
         for obj in sig.drivers:
             if isinstance(obj, Operator):
-                for op in obj.ops:
+                for op in obj.operands:
                     if isinstance(op, RtlSignalBase):
                         yield from walkAllOriginSignals(op, discovered=discovered)
             elif isinstance(obj, Assignment):
@@ -71,9 +71,9 @@ def discoverEventDependency(sig):
         d = drivers[0]
         if isinstance(d, Operator):
             if isEventDependentOp(d.operator):
-                yield d.ops[0]
+                yield d.operands[0]
             else:
-                for op in d.ops:
+                for op in d.operands:
                     yield from discoverEventDependency(op)
 
 
@@ -186,14 +186,14 @@ class InOutStmProbe():
                     return
 
                 if isEventDependentOp(op.operator):
-                    self.inputs.add(op.ops[0])
+                    self.inputs.add(op.operands[0])
                     if self._eventSensFound:
                         assert op in self.sensitivity, "one clock per register"
                     self._eventSensFound = True
                     self.sensitivity.add(op)
                 else:
                     # walk source of signal
-                    for operand in op.ops:
+                    for operand in op.operands:
                         self.walkDrivers(operand, casualSensitivity)
         else:
             raise TypeError(expr)

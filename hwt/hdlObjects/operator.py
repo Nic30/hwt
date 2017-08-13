@@ -9,8 +9,8 @@ class InvalidOperandExc(Exception):
     pass
 
 
-def getCtxFromOps(ops):
-    for o in ops:
+def getCtxFromOps(operands):
+    for o in operands:
         if isinstance(o, RtlSignalBase):
             return o.ctx
     raise TypeError("Can not find context because there is no signal in ops")
@@ -24,13 +24,13 @@ class Operator():
     """
     Class of operator in expression tree
 
-    :ivar ops: list of operands
+    :ivar operands: list of operands
     :ivar evalFn: function to evaluate this operator
     :ivar operator: OpDefinition instance
     :ivar result: result signal of this operator
     """
     def __init__(self, operator, operands):
-        self.ops = list(operands)
+        self.operands = list(operands)
         self.operator = operator
         self.result = None
 
@@ -38,7 +38,7 @@ class Operator():
         """
         Register potential signals to drivers/endpoints
         """
-        for o in self.ops:
+        for o in self.operands:
             if isinstance(o, RtlSignalBase):
                 if o in outputs:
                     o.drivers.append(self)
@@ -53,7 +53,7 @@ class Operator():
         """
         Recursively statistically evaluate result of this operator
         """
-        for o in self.ops:
+        for o in self.operands:
             o.staticEval()
         self.result._val = self.evalFn()
 
@@ -67,7 +67,7 @@ class Operator():
         return (
                  type(self) is type(other) and
                  self.operator == other.operator and
-                 self.ops == other.ops
+                 self.operands == other.operands
                 )
 
     @staticmethod
@@ -77,7 +77,7 @@ class Operator():
         """
         op = Operator(opDef, operands)
         out = RtlSignal(getCtxFromOps(operands), None, resT)
-        out._const = arr_all(op.ops, isConst)
+        out._const = arr_all(op.operands, isConst)
         out.drivers.append(op)
         out.origin = op
         op.result = out
@@ -98,8 +98,9 @@ class Operator():
             return o
 
     def __hash__(self):
-        return hash((self.operator, frozenset(self.ops)))
+        return hash((self.operator, frozenset(self.operands)))
 
     def __repr__(self):
-        return "<%s operator:%s, ops:%s>" % (self.__class__.__name__,
-                                             repr(self.operator), repr(self.ops))
+        return "<%s operator:%r, operands:%r>" % (self.__class__.__name__,
+                                                  self.operator,
+                                                  self.operands)

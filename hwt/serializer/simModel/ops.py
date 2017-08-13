@@ -42,7 +42,7 @@ class SimModelSerializer_ops():
                     pass
             return s
 
-        ops = op.ops
+        ops = op.operands
         o = op.operator
 
         def _bin(name):
