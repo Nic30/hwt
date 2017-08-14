@@ -21,10 +21,7 @@ def _intfToSig(obj):
 
 
 class StmCntx(list):
-    """
-    Base class of statement contexts
-    """
-    pass
+    "Base class of statement contexts"
 
 
 class If(StmCntx):
@@ -104,8 +101,7 @@ class Switch(StmCntx):
     _appendStatements = If._appendStatements
 
     def Case(self, caseVal, *statements):
-        """c-like case of switch statement
-        """
+        "c-like case of switch statement"
         cond = self.switchOn._eq(caseVal)
         if self.cond is None:
             If.__init__(self, cond, *statements)
@@ -225,7 +221,6 @@ class FsmBuilder(StmCntx):
     """
     :ivar stateReg: register with state
     """
-
     def __init__(self, parent, stateT, stateRegName="st"):
         """
         :param parent: parent unit where fsm should be builded
@@ -285,7 +280,6 @@ class FsmBuilder(StmCntx):
 
 
 def _connect(src, dst, exclude, fit):
-
     if isinstance(src, InterfaceBase):
         if isinstance(dst, InterfaceBase):
             return dst._connectTo(src, exclude=exclude, fit=fit)
@@ -350,32 +344,24 @@ def power(base, exp):
 
 
 def ror(sig, howMany):
-    """
-    Rotate right
-    """
+    "Rotate right"
     return sig[howMany:]._concat(sig[:howMany])
 
 
 def rol(sig, howMany):
-    """
-    Rotate left
-    """
+    "Rotate left"
     width = sig._dtype.bit_length()
     return sig[(width - howMany):]._concat(sig[:(width - howMany)])
 
 
 def sll(sig, howMany):
-    """
-    Logical shift left
-    """
+    "Logical shift left"
     width = sig._dtype.bit_length()
     return sig[(width - howMany):]._concat(vec(0, howMany))
 
 
 def srl(sig, howMany):
-    """
-    Logical shift right
-    """
+    "Logical shift right"
     return vec(0, howMany)._concat(sig[:howMany])
 
 
@@ -406,6 +392,11 @@ def binToGray(sigOrVal):
     width = sigOrVal._dtype.bit_length()
     return Concat(sigOrVal[width - 1], sigOrVal[width - 1:0] ^ sigOrVal[width:1])
 
+
+def sizeof(_type):
+    "get size of type in bytes"
+    s = _type.bit_length()
+    return math.ceil(s / 8)
 
 # shortcuts
 c = connect
