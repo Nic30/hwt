@@ -5,13 +5,13 @@ from setuptools import setup, find_packages
 
 
 setup(name='hwt',
-      version='1.7',
+      version='1.8',
       description='hdl synthesis toolkit',
       url='https://github.com/Nic30/HWToolkit',
       author='Michal Orsak',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
-        'simpy',  # discrete simulator 
+        'simpy',  # discrete simulator
         'jinja2',  # hdl templates renderer
       ],
       license='MIT',
