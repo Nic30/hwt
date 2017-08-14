@@ -2,15 +2,15 @@ from hwt.bitmask import mask
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
+from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BOOL, BIT
+from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.hdlObjects.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdlObjects.types.array import Array
-from hwt.hdlObjects.types.typeCast import toHVal
 
 
 class VerilogSerializer_Value(GenericSerializer_Value):
@@ -85,7 +85,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
     def Enum_valAsHdl(cls, dtype, val, ctx):
         i = dtype._allValues.index(val.val)
         assert i >= 0
-        return '%d' % i 
+        return '%d' % i
 
     @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
@@ -105,14 +105,14 @@ class VerilogSerializer_Value(GenericSerializer_Value):
 
             t = si._dtype
             dimensions = []
-            while isinstance(t, Array):
+            while isinstance(t, HArray):
                 # collect array dimensions
                 dimensions.append(t.size)
                 t = t.elmType
 
             s = "%s%s %s" % (getIndent(ctx.indent),
-                               cls.HdlType(t, ctx),
-                               si.name)
+                             cls.HdlType(t, ctx),
+                             si.name)
             if dimensions:
                 # to make a space between name and dimensoins
                 dimensions = list(map(lambda x: "[%s-1:0]" % cls.asHdl(toHVal(x), ctx),

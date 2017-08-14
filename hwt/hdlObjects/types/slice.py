@@ -1,8 +1,8 @@
-from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.integer import Integer
 
 
-class Slice(Array):
+class Slice(HArray):
     """
     Slice type, used for selecting items from arrays or vectors
     """

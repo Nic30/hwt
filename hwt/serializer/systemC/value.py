@@ -1,5 +1,5 @@
 from hwt.bitmask import mask
-from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BOOL, BIT
 from hwt.hdlObjects.types.typeCast import toHVal
@@ -38,7 +38,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
 
             t = si._dtype
             dimensions = []
-            while isinstance(t, Array):
+            while isinstance(t, HArray):
                 # collect array dimensions
                 dimensions.append(t.size)
                 t = t.elmType
@@ -152,6 +152,6 @@ class SystemCSerializer_value(GenericSerializer_Value):
         return cls._BitString("sc_biguint", v, width, forceVector, vldMask)
 
     @classmethod
-    def Array_valAsHdl(cls, dtype, val, ctx):
+    def HArrayValAsHdl(cls, dtype, val, ctx):
         separator = ",\n" + getIndent(ctx.indent + 1)
         return "".join(["{", separator.join([cls.Value(v, ctx) for v in val]), "}"])

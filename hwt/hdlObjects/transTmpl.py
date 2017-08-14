@@ -1,4 +1,4 @@
-from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStruct
 from hwt.synthesizer.param import evalParam
@@ -40,7 +40,7 @@ class TransTmpl(object):
 
         if isinstance(dtype, HStruct):
             ld = self._loadFromHStruct
-        elif isinstance(dtype, Array):
+        elif isinstance(dtype, HArray):
             ld = self._loadFromArray
         else:
             ld = self._loadFromBits
@@ -64,7 +64,7 @@ class TransTmpl(object):
         return bitAddr
 
     def getItemWidth(self):
-        if not isinstance(self.dtype, Array):
+        if not isinstance(self.dtype, HArray):
             raise TypeError()
         return (self.bitAddrEnd - self.bitAddr) // self.itemCnt
 
@@ -98,7 +98,7 @@ class TransTmpl(object):
             if isinstance(t, HStruct):
                 for ch in self.children:
                     yield from ch.walkFlatten(offset=offset, shouldEnterFn=shouldEnterFn)
-            elif isinstance(t, Array):
+            elif isinstance(t, HArray):
                 itemSize = (self.bitAddrEnd - self.bitAddr) // self.itemCnt
                 for i in range(self.itemCnt):
                     yield from self.children.walkFlatten(offset=base + i * itemSize,
@@ -122,7 +122,7 @@ class TransTmpl(object):
             name = ""
 
         s = "%s<TransTmpl%s start:%d, end:%d" % (offsetStr, name, self.bitAddr, self.bitAddrEnd)
-        if isinstance(self.dtype, Array):
+        if isinstance(self.dtype, HArray):
             s += ", itemCnt:%d" % (self.itemCnt) + "\n"
             s += self.children.__repr__(offset=offset + 1) + "\n"
             s += offsetStr + ">"

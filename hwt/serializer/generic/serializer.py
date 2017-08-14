@@ -1,6 +1,6 @@
 from hwt.hdlObjects.architecture import Architecture
 from hwt.hdlObjects.entity import Entity
-from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.boolean import Boolean
 from hwt.hdlObjects.types.enum import Enum
@@ -122,7 +122,7 @@ class GenericSerializer():
             sFn = cls.HdlType_bits
         elif isinstance(typ, Enum):
             sFn = cls.HdlType_enum
-        elif isinstance(typ, Array):
+        elif isinstance(typ, HArray):
             sFn = cls.HdlType_array
         elif isinstance(typ, Integer):
             sFn = cls.HdlType_int

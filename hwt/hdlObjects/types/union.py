@@ -90,7 +90,7 @@ class HUnion(HdlType):
         :param withAddr: if is not None is used as a additional
             information about on which address this type is stored
             (used only by HStruct)
-        :param expandStructs: expand HStructTypes (used by HStruct and Array)
+        :param expandStructs: expand HStructTypes (used by HStruct and HArray)
         """
         if self.name:
             name = self.name + " "

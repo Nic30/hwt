@@ -5,7 +5,7 @@ import os
 import unittest
 
 from hwt.hdlObjects.constants import Time
-from hwt.hdlObjects.types.arrayVal import ArrayVal
+from hwt.hdlObjects.types.arrayVal import HArrayVal
 from hwt.hdlObjects.value import Value
 from hwt.simulator.agentConnector import valToInt
 from hwt.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
@@ -17,7 +17,7 @@ from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 
 
 def allValuesToInts(sequenceOrVal):
-    if isinstance(sequenceOrVal, ArrayVal):
+    if isinstance(sequenceOrVal, HArrayVal):
         sequenceOrVal = sequenceOrVal.val
 
     if isinstance(sequenceOrVal, Value):

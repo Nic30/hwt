@@ -55,8 +55,8 @@ class HdlType():
         [] operator to create an array of this type.
         """
         assert int(key) > 0, key # array has to have some items
-        from hwt.hdlObjects.types.array import Array
-        return Array(self, key)
+        from hwt.hdlObjects.types.array import HArray
+        return HArray(self, key)
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
