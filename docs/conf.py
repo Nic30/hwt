@@ -19,7 +19,6 @@ import re
 from sphinx.apidoc import main
 import sphinx_bootstrap_theme
 import sys
-from sphinx import build_main
 
 sys.path.insert(0, os.path.abspath('../'))
 
@@ -196,4 +195,4 @@ def setup(app):
 
 
 # update *.rst pages
-main(["", "-F", "-o", "../docs", "../hwt"])
+main([__name__, "--full", "-o", "../docs", "../hwt"])
