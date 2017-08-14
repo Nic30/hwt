@@ -1,14 +1,16 @@
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.structValBase import StructValBase
 from hwt.serializer.serializerClases.indent import getIndent
+from cryptography.utils import bit_length
+
 
 class HStructFieldMeta():
     def __init__(self, split=False):
         self.split = split
-    
+
     def __eq__(self, other):
         return self.split == other.split
-    
+
     def __hash__(self):
         return hash(self.split)
 
@@ -25,27 +27,27 @@ class HStructField(object):
         return "<HStructField %r, %s>" % (self.dtype, self.name)
 
 
+protectedNames = {"clone", "staticEval", "fromPy", "_dtype"}
+
+
 class HStruct(HdlType):
     """
     hld structure type
 
     :ivar fields: tuple of HStructField instances in this struct
     :ivar name: name of this HStruct type
-    :ivar isFixedSize: flag which tells if size of this HStruct can resolved or not,
-        f.e. field with type of HStream can cause isFixedSize to become False
     :ivar valueCls: Class of value for this type as usual in HdlType implementations
     """
     def __init__(self, *template, name=None):
         """
         :param template: list of tuples (type, name) or HStructField objects
-            name can be None it means that there is space in structure
+            name can be None (= padding)
         :param name: optional name used for debugging purposes
         """
         self.fields = []
         self.name = name
         fieldNames = []
-        self.isFixedSize = True
-
+        bit_length = 0
         for f in template:
             try:
                 field = HStructField(*f)
@@ -59,54 +61,45 @@ class HStruct(HdlType):
                 fieldNames.append(field.name)
 
             t = field.dtype
-            if self.isFixedSize:
-                if (isinstance(t, HStruct) and not t.isFixedSize)\
-                              or not hasattr(t, "bit_length"):
-                    self.isFixedSize = False
+            if bit_length is not None:
+                try:
+                    _bit_length = t.bit_length()
+                    bit_length += _bit_length
+                except TypeError:
+                    bit_length = None
 
         self.fields = tuple(self.fields)
-        if self.isFixedSize:
-            self.__bit_length_val = self.__bit_length()
+        self.__bit_length_val = bit_length
 
-        protectedNames = set(["clone", "staticEval", "fromPy", "_dtype"])
         usedNames = set(fieldNames)
         assert not protectedNames.intersection(usedNames), protectedNames.intersection(usedNames)
 
         class StructVal(StructValBase):
             __slots__ = fieldNames
 
+        if name is not None:
+            StructVal.__name__ = name + "Val"
+
         self.valueCls = StructVal
 
     def bit_length(self):
-        if self.isFixedSize:
-            return self.__bit_length_val
+        bl = self.__bit_length_val
+        if bl is None:
+            raise TypeError("Can not request bit_lenght on size"
+                            " which has not fixed size")
         else:
-            raise TypeError("Can not request bit_lenght on size which has not fixed size")
-
-    def __bit_length(self):
-        return sum(map(lambda f: f.dtype.bit_length(), self.fields))
+            return self.__bit_length_val
 
     def getValueCls(self):
         return self.valueCls
-
-    def sizeof(self):
-        """
-        get size of struct in bytes
-        """
-        s = self.bit_length()
-
-        if s % 8 == 0:
-            return s // 8
-        else:
-            return s // 8 + 1
 
     def __fields__eq__(self, other):
         if len(self.fields) != len(other.fields):
             return False
         for sf, of in zip(self.fields, other.fields):
             if (sf.name != of.name or
-                 sf.dtype != of.dtype or
-                 sf.meta != of.meta):
+                    sf.dtype != of.dtype or
+                    sf.meta != of.meta):
                 return False
         return True
 
@@ -129,8 +122,9 @@ class HStruct(HdlType):
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
         :param indent: number of indentation
-        :param withAddr: if is not none is used as a additional information about where
-            on which address this type is stored (used only by HStruct)
+        :param withAddr: if is not None is used as a additional
+            information about on which address this type is stored
+            (used only by HStruct)
         :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
         if self.name:

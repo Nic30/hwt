@@ -50,11 +50,11 @@ class Array(HdlType):
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
         :param indent: number of indentation
-        :param withAddr: if is not none is used as a additional information about where
-            on which address this type is stored (used only by HStruct)
-        :param expandStructs: expand HStruct types (used by HStruct and Array)
+        :param withAddr: if is not None is used as a additional
+            information about on which address this type is stored
+            (used only by HStruct)
+        :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
-
         return "%s[%r]" % (self.elmType.__repr__(indent=indent,
                                                  withAddr=withAddr,
                                                  expandStructs=expandStructs),
