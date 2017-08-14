@@ -29,7 +29,7 @@ class SimModelSerializer_types():
         if declaration:
             typ.name = ctx.scope.checkedName(typ.name, typ)
 
-            return '%s = Enum( "%s", [%s])' % (typ.name,
+            return '%s = HEnum( "%s", [%s])' % (typ.name,
                                                typ.name,
                                                ", ".join(map(lambda x: '"%s"' % x,
                                                              typ._allValues)))

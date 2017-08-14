@@ -57,7 +57,7 @@ class SimModelSerializer_value(GenericSerializer_Value):
                     val.vldMask)
 
     @classmethod
-    def Enum_valAsHdl(cls, t, val, ctx):
+    def HEnumValAsHdl(cls, t, val, ctx):
         return "self.%s.%s" % (t.name, val.val)
 
     @classmethod

@@ -138,7 +138,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
         return "%s<%d>(%s)" % (typeName, width, v)
 
     @classmethod
-    def Enum_valAsHdl(cls, dtype, val, ctx):
+    def HEnumValAsHdl(cls, dtype, val, ctx):
         i = dtype._allValues.index(val.val)
         assert i >= 0
         return '%d' % i

@@ -3,13 +3,13 @@ import sys
 
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.boolean import Boolean
-from hwt.hdlObjects.types.enum import Enum
+from hwt.hdlObjects.types.enum import HEnum
 from hwt.simulator.hdlSimConfig import HdlSimConfig
 from hwt.simulator.vcdWritter import VcdWritter
 
 
 class VcdHdlSimConfig(HdlSimConfig):
-    supported_type_classes = (Boolean, Bits, Enum)
+    supported_type_classes = (Boolean, Bits, HEnum)
 
     def __init__(self, dumpFile=sys.stdout):
         self.vcdWritter = VcdWritter(dumpFile)

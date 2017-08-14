@@ -7,8 +7,8 @@ from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps, sensitivityByOp
 from hwt.hdlObjects.statements import IfContainer
 from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.enum import Enum
-from hwt.hdlObjects.types.enumVal import EnumVal
+from hwt.hdlObjects.types.enum import HEnum
+from hwt.hdlObjects.types.enumVal import HEnumVal
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
@@ -66,7 +66,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         for v in arch.variables:
             t = v._dtype
             # if type requires extra definition
-            if isinstance(t, Enum) and t not in extraTypes:
+            if isinstance(t, HEnum) and t not in extraTypes:
                 extraTypes.add(v._dtype)
                 extraTypes_serialized.append(cls.HdlType(t, ctx, declaration=True))
 
@@ -78,7 +78,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
 
         def serializeVar(v):
             dv = evalParam(v.defaultVal)
-            if isinstance(dv, EnumVal):
+            if isinstance(dv, HEnumVal):
                 dv = "%s.%s" % (dv._dtype.name, dv.val)
             else:
                 dv = cls.Value(dv, ctx)

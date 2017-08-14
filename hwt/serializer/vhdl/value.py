@@ -62,7 +62,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
                 return si.name
 
     @classmethod
-    def Enum_valAsHdl(cls, dtype, val, ctx):
+    def HEnumValAsHdl(cls, dtype, val, ctx):
         return '%s' % str(val.val)
 
     @classmethod

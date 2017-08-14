@@ -1,7 +1,7 @@
 from hwt.hdlObjects.types.hdlType import HdlType
 
 
-class Enum(HdlType):
+class HEnum(HdlType):
     """
     Hdl enum type
 
@@ -16,7 +16,7 @@ class Enum(HdlType):
         :param valueNames: sequence of string which will be used as names for enum
             members
         """
-        super(Enum, self).__init__()
+        super(HEnum, self).__init__()
         self.name = name
         self._allValues = tuple(valueNames)
         for name in valueNames:
@@ -41,6 +41,6 @@ class Enum(HdlType):
         try:
             return cls._valCls
         except AttributeError:
-            from hwt.hdlObjects.types.enumVal import EnumVal
-            cls._valCls = EnumVal
+            from hwt.hdlObjects.types.enumVal import HEnumVal
+            cls._valCls = HEnumVal
             return cls._valCls

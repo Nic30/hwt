@@ -32,6 +32,7 @@ class INTF_DIRECTION(Enum):
         else:
             raise Exception("%s is not interface direction" % (repr(d)))
 
+
 READ = "READ"
 WRITE = "WRITE"
 NOP = "NOP"

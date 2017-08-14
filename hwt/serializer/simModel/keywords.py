@@ -18,7 +18,7 @@ SIMMODEL_KEYWORDS = keyword.kwlist + [
     'convertBits__val',
     'BitsVal',
     'SLICE',
-    'Enum'
+    'HEnum'
     'DIRECTION',
     'SENSITIVITY',
     'convertSimInteger__val',
