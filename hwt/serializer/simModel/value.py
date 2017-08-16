@@ -43,8 +43,8 @@ class SimModelSerializer_value(GenericSerializer_Value):
         return "{%s}" % sep.join(map(sItem, val.items()))
 
     @classmethod
-    def Array_valAsHdl(cls, t, val, ctx):
-        return "ArrayVal(%s, %s, %d)" % (
+    def HArrayValAsHdl(cls, t, val, ctx):
+        return "HArrayVal(%s, %s, %d)" % (
                 cls.Dict_valAsHdl(val.val, ctx),
                 cls.HdlType(t, ctx),
                 val.vldMask)
@@ -57,7 +57,7 @@ class SimModelSerializer_value(GenericSerializer_Value):
                     val.vldMask)
 
     @classmethod
-    def Enum_valAsHdl(cls, t, val, ctx):
+    def HEnumValAsHdl(cls, t, val, ctx):
         return "self.%s.%s" % (t.name, val.val)
 
     @classmethod

@@ -1,8 +1,8 @@
-from hwt.hdlObjects.types.arrayVal import ArrayVal
+from hwt.hdlObjects.types.arrayVal import HArrayVal
 from hwt.hdlObjects.value import Value
 
 
-class SliceVal(ArrayVal):
+class SliceVal(HArrayVal):
     """
     Value class for Slice type
     """

@@ -29,7 +29,7 @@ class SimModelSerializer_types():
         if declaration:
             typ.name = ctx.scope.checkedName(typ.name, typ)
 
-            return '%s = Enum( "%s", [%s])' % (typ.name,
+            return '%s = HEnum( "%s", [%s])' % (typ.name,
                                                typ.name,
                                                ", ".join(map(lambda x: '"%s"' % x,
                                                              typ._allValues)))
@@ -39,5 +39,5 @@ class SimModelSerializer_types():
     @classmethod
     def HdlType_array(cls, typ, ctx, declaration=False):
         assert not declaration
-        return "Array(%s, %d)" % (cls.HdlType(typ.elmType, ctx, declaration=declaration),
-                                  evalParam(typ.size).val)
+        return "HArray(%s, %d)" % (cls.HdlType(typ.elmType, ctx, declaration=declaration),
+                                   evalParam(typ.size).val)

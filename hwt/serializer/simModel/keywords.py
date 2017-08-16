@@ -13,12 +13,12 @@ SIMMODEL_KEYWORDS = keyword.kwlist + [
     'importlib',
     'reload',
     'vecT',
-    'Array',
-    'ArrayVal',
+    'HArray',
+    'HArrayVal',
     'convertBits__val',
     'BitsVal',
     'SLICE',
-    'Enum'
+    'HEnum'
     'DIRECTION',
     'SENSITIVITY',
     'convertSimInteger__val',

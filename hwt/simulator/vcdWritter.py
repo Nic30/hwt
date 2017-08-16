@@ -3,7 +3,7 @@ from functools import wraps
 import sys
 
 from hwt.hdlObjects.types.defs import BIT
-from hwt.hdlObjects.types.enum import Enum
+from hwt.hdlObjects.types.enum import HEnum
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 
 
@@ -23,7 +23,7 @@ def dumpMethod(func):
 class VcdVarInfo():
     """Info about signal registered in vcd"""
     def __init__(self, _id, dtype):
-        if isinstance(dtype, Enum):
+        if isinstance(dtype, HEnum):
             self.width = 1
         else:
             self.width = dtype.bit_length()
@@ -87,7 +87,7 @@ class VcdModule():
     @dumpMethod
     def var(self, sig):
         vInf = self.vars.register(sig)
-        if isinstance(vInf._dtype, Enum):
+        if isinstance(vInf._dtype, HEnum):
             sigType = 'real'
         else:
             sigType = 'wire'
@@ -140,7 +140,7 @@ class VcdWritter():
     def change(self, time, sig, newVal):
         self.setTime(time)
         varInfo = self.vars[sig]
-        if isinstance(sig._dtype, Enum):
+        if isinstance(sig._dtype, HEnum):
             if newVal.vldMask:
                 val = newVal.val
             else:

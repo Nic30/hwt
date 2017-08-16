@@ -1,7 +1,7 @@
-from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.boolean import Boolean
-from hwt.hdlObjects.types.enum import Enum
+from hwt.hdlObjects.types.enum import HEnum
 from hwt.hdlObjects.types.integer import Integer
 from hwt.hdlObjects.types.slice import Slice
 from hwt.hdlObjects.types.string import String
@@ -26,19 +26,19 @@ class GenericSerializer_Value():
         except AttributeError:
             consGetter = None
 
-        if consGetter and not isinstance(t, Enum):
+        if consGetter and not isinstance(t, HEnum):
             return "self." + consGetter(val)
 
         if isinstance(t, Slice):
             return cls.Slice_valAsHdl(t, val, ctx)
-        elif isinstance(t, Array):
-            return cls.Array_valAsHdl(t, val, ctx)
+        elif isinstance(t, HArray):
+            return cls.HArrayValAsHdl(t, val, ctx)
         elif isinstance(t, Bits):
             return cls.Bits_valAsHdl(t, val, ctx)
         elif isinstance(t, Boolean):
             return cls.Bool_valAsHdl(t, val, ctx)
-        elif isinstance(t, Enum):
-            return cls.Enum_valAsHdl(t, val, ctx)
+        elif isinstance(t, HEnum):
+            return cls.HEnumValAsHdl(t, val, ctx)
         elif isinstance(t, Integer):
             return cls.Integer_valAsHdl(t, val, ctx)
         elif isinstance(t, String):

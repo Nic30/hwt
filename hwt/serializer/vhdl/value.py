@@ -62,11 +62,11 @@ class VhdlSerializer_Value(GenericSerializer_Value):
                 return si.name
 
     @classmethod
-    def Enum_valAsHdl(cls, dtype, val, ctx):
+    def HEnumValAsHdl(cls, dtype, val, ctx):
         return '%s' % str(val.val)
 
     @classmethod
-    def Array_valAsHdl(cls, dtype, val, ctx):
+    def HArrayValAsHdl(cls, dtype, val, ctx):
         separator = ",\n" + getIndent(ctx.indent + 1)
         return "".join(["(", separator.join([cls.Value(v, ctx) for v in val]), ")"])
 

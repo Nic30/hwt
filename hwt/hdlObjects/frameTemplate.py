@@ -3,7 +3,7 @@ import re
 
 from hwt.bitmask import mask, selectBitRange, setBitRange
 from hwt.hdlObjects.transactionPart import TransactionPart
-from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStruct
 from hwt.simulator.types.simBits import simBitsT
@@ -266,7 +266,7 @@ class FrameTemplate(object):
             elif isinstance(f.dtype, HStruct):
                 if fVal:
                     FrameTemplate.buildFieldToDataDict(f.dtype, fVal, res)
-            elif isinstance(f.dtype, Array):
+            elif isinstance(f.dtype, HArray):
                 if fVal:
                     # assert isinstance(fVal, class_or_tuple)
                     res[f] = fVal
@@ -317,7 +317,7 @@ class FrameTemplate(object):
             tp = transactionPart.tmpl
             while tp is not None:
                 try:
-                    isArrayElm = isinstance(tp.parent.dtype, Array)
+                    isArrayElm = isinstance(tp.parent.dtype, HArray)
                 except AttributeError:
                     isArrayElm = False
 

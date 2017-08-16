@@ -2,7 +2,7 @@ from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.statements import IfContainer, SwitchContainer
 from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.enum import Enum
+from hwt.hdlObjects.types.enum import HEnum
 from hwt.hdlObjects.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
@@ -147,7 +147,7 @@ def typeDomainSize(t):
     """
     :return: how many values can have specified type
     """
-    if isinstance(t, (Enum, Bits)):
+    if isinstance(t, (HEnum, Bits)):
         return 2 ** t.bit_length()
     else:
         raise TypeError(t)
@@ -201,7 +201,7 @@ def renderIfTree(statements, resolvedCnt=0):
                         # if enum bit representation can have more values than
                         # enum itself try to set last case as default to prevent
                         # latches in hdl
-                        if isinstance(t, Enum):
+                        if isinstance(t, HEnum):
                             setDefault = False
                             try:
                                 tValues = typeDomainSize(t)
@@ -253,7 +253,7 @@ def renderIfTree(statements, resolvedCnt=0):
                         # if enum bit representation can have more values than
                         # enum itself try to set last case as default to prevent
                         # latches in hdl
-                        if (isinstance(t, Enum) and
+                        if (isinstance(t, HEnum) and
                                 typeDomainSize(t) > len(t._allValues) and
                                 len(t._allValues) == len(cases)):
                             ifFalse = cases[-1][1]

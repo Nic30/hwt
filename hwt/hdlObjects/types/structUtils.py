@@ -1,4 +1,4 @@
-from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStructField, HStruct
 from hwt.hdlObjects.types.typeCast import toHVal
@@ -53,7 +53,7 @@ def HStruct_selectFields(structT, fieldsToUse):
 
 def walkFlattenFields(structVal, skipPadding=True):
     """
-    Walk all simple values in HStruct or Array
+    Walk all simple values in HStruct or HArray
     """
     t = structVal._dtype
     if isinstance(t, Bits):
@@ -69,7 +69,7 @@ def walkFlattenFields(structVal, skipPadding=True):
 
                 yield from walkFlattenFields(v)
 
-    elif isinstance(t, Array):
+    elif isinstance(t, HArray):
         for item in structVal:
             yield from walkFlattenFields(item)
     else:

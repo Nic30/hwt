@@ -1,7 +1,7 @@
 from hwt.hdlObjects.assignment import Assignment
 from hwt.hdlObjects.entity import Entity
-from hwt.hdlObjects.types.array import Array
-from hwt.hdlObjects.types.enum import Enum
+from hwt.hdlObjects.types.array import HArray
+from hwt.hdlObjects.types.enum import HEnum
 from hwt.hdlObjects.variables import SignalItem
 from hwt.pyUtils.arrayQuery import groupedby
 from hwt.serializer.exceptions import SerializerException
@@ -83,7 +83,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
         for v in arch.variables:
             t = v._dtype
             # if type requires extra definition
-            if isinstance(t, (Enum, Array)) and t not in extraTypes:
+            if isinstance(t, (HEnum, HArray)) and t not in extraTypes:
                 extraTypes.add(v._dtype)
                 extraTypes_serialized.append(cls.HdlType(t, childCtx, declaration=True))
 

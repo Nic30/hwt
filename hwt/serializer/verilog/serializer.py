@@ -1,6 +1,5 @@
 from hwt.hdlObjects.entity import Entity
-from hwt.hdlObjects.types.array import Array
-from hwt.hdlObjects.types.enum import Enum
+from hwt.hdlObjects.types.array import HArray
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.indent import getIndent
@@ -99,7 +98,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
         """
         t = v._dtype
         # if type requires extra definition
-        if isinstance(t, Array) and v.defaultVal.vldMask:
+        if isinstance(t, HArray) and v.defaultVal.vldMask:
             if v.drivers:
                 raise SerializerException("Verilog does not support RAMs"
                                           " with initialized value")

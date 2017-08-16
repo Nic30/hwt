@@ -11,7 +11,7 @@ setup(name='hwt',
       author='Michal Orsak',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
-        'simpy',  # discrete simulator 
+        'simpy',  # discrete simulator
         'jinja2',  # hdl templates renderer
       ],
       license='MIT',

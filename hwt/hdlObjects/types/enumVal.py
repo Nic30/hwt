@@ -6,7 +6,7 @@ from hwt.hdlObjects.operatorDefs import AllOps
 BoolVal = BOOL.getValueCls()
 
 
-class EnumVal(Value):
+class HEnumVal(Value):
     @classmethod
     def fromPy(cls, val, typeObj):
         """

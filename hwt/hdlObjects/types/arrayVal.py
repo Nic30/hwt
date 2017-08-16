@@ -8,7 +8,7 @@ from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-class ArrayVal(Value):
+class HArrayVal(Value):
     """
     Class of value of array
     """
@@ -111,7 +111,7 @@ class ArrayVal(Value):
         keysA = set(self.val)
         keysB = set(other.val)
         sharedKeys = keysA.union(keysB)
-        
+
         lsh = len(sharedKeys) 
         if lsh == int(self._dtype.size) and len(keysA) == lsh and len(keysB) == lsh:
             for k in sharedKeys:
@@ -130,5 +130,5 @@ class ArrayVal(Value):
         return BOOL.getValueCls()(eq, BOOL, vld, updateTime)
 
     def _eq(self, other):
-        assert isinstance(other, ArrayVal)
+        assert isinstance(other, HArrayVal)
         return self._eq__val(other)

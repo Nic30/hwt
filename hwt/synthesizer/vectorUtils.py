@@ -1,7 +1,7 @@
 import math
 
 from hwt.hdlObjects.typeShortcuts import vec
-from hwt.hdlObjects.types.array import Array
+from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStruct
 from hwt.hdlObjects.types.structUtils import walkFlattenFields
@@ -42,7 +42,7 @@ def iterBits(sigOrVal, bitsInOne=1, skipPadding=True, fillup=False):
         bitsInOne = int(bitsInOne)
 
     t = sigOrVal._dtype
-    if isinstance(t, (HStruct, Array)):
+    if isinstance(t, (HStruct, HArray)):
         actual = None
         actualOffset = 0
 

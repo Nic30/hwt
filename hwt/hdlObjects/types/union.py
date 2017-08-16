@@ -1,41 +1,14 @@
 from hwt.hdlObjects.types.hdlType import HdlType
-from hwt.hdlObjects.types.structValBase import StructValBase
+from hwt.hdlObjects.types.struct import HStructField
 from hwt.serializer.serializerClases.indent import getIndent
-
-
-class HStructFieldMeta():
-    def __init__(self, split=False):
-        self.split = split
-
-    def __eq__(self, other):
-        return self.split == other.split
-
-    def __hash__(self):
-        return hash(self.split)
-
-
-class HStructField(object):
-    def __init__(self, typ, name, meta=None):
-        assert isinstance(name, str) or name is None, name
-        assert isinstance(typ, HdlType), typ
-        self.name = name
-        self.dtype = typ
-        self.meta = meta
-
-    def __repr__(self):
-        return "<HStructField %r, %s>" % (self.dtype, self.name)
 
 
 protectedNames = {"clone", "staticEval", "fromPy", "_dtype"}
 
 
-class HStruct(HdlType):
+class HUnion(HdlType):
     """
-    hld structure type
-
-    :ivar fields: tuple of HStructField instances in this struct
-    :ivar name: name of this HStruct type
-    :ivar valueCls: Class of value for this type as usual in HdlType implementations
+    HDL union type (same data multiple representations)
     """
     def __init__(self, *template, name=None):
         """
@@ -46,7 +19,7 @@ class HStruct(HdlType):
         self.fields = []
         self.name = name
         fieldNames = []
-        bit_length = 0
+        bit_length = None
         for f in template:
             try:
                 field = HStructField(*f)
@@ -56,16 +29,16 @@ class HStruct(HdlType):
                 raise TypeError("Template for struct field %s is not in valid format" % repr(f))
 
             self.fields.append(field)
-            if field.name is not None:
-                fieldNames.append(field.name)
+            assert field.name is not None
+            fieldNames.append(field.name)
 
             t = field.dtype
-            if bit_length is not None:
-                try:
-                    _bit_length = t.bit_length()
-                    bit_length += _bit_length
-                except TypeError:
-                    bit_length = None
+            if bit_length is None:
+                bit_length = t.bit_length()
+            else:
+                _bit_length = t.bit_length()
+                if _bit_length != bit_length:
+                    raise TypeError(field.name, " has different size than others")
 
         self.fields = tuple(self.fields)
         self.__bit_length_val = bit_length
@@ -73,13 +46,13 @@ class HStruct(HdlType):
         usedNames = set(fieldNames)
         assert not protectedNames.intersection(usedNames), protectedNames.intersection(usedNames)
 
-        class StructVal(StructValBase):
+        class UnionVal():
             __slots__ = fieldNames
 
         if name is not None:
-            StructVal.__name__ = name + "Val"
+            UnionVal.__name__ = name + "Val"
 
-        self.valueCls = StructVal
+        self.valueCls = UnionVal
 
     def bit_length(self):
         bl = self.__bit_length_val
@@ -111,13 +84,6 @@ class HStruct(HdlType):
     def __hash__(self):
         return hash((self.name, self.fields))
 
-    def __add__(self, other):
-        """
-        override of addition, merge struct into one
-        """
-        assert isinstance(other, HStruct)
-        return HStruct(*self.fields, *other.fields)
-
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
         :param indent: number of indentation
@@ -133,24 +99,17 @@ class HStruct(HdlType):
 
         myIndent = getIndent(indent)
         childIndent = getIndent(indent + 1)
-        header = "%sstruct %s{" % (myIndent, name)
+        header = "%sunion %s{" % (myIndent, name)
 
         buff = [header, ]
         for f in self.fields:
-            if withAddr is not None:
-                addrTag = " // start:0x%x(bit) 0x%x(byte)" % (withAddr, withAddr // 8)
-            else:
-                addrTag = ""
-
             if f.name is None:
-                buff.append("%s//%r empty space%s" % (childIndent, f.dtype, addrTag))
+                buff.append("%s//%r empty space" % (childIndent, f.dtype))
             else:
-                buff.append("%s %s%s" % (f.dtype.__repr__(indent=indent + 1,
-                                                          withAddr=withAddr,
-                                                          expandStructs=expandStructs),
-                                         f.name, addrTag))
-            if withAddr is not None:
-                withAddr += f.dtype.bit_length()
+                buff.append("%s %s" % (f.dtype.__repr__(indent=indent + 1,
+                                                        withAddr=withAddr,
+                                                        expandStructs=expandStructs),
+                                       f.name))
 
         buff.append("%s}" % (myIndent))
         return "\n".join(buff)

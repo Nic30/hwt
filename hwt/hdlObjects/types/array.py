@@ -2,21 +2,23 @@ from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-class Array(HdlType):
+class HArray(HdlType):
     """
-    vldMask and eventMask on Array_val instance is not used instead of that
-    these flags on elements are used
+    HDL array type
+
+    :ivar elmType: type of elements
+    :ivar size: number of items
     """
     def __init__(self, elmType, size):
-        super(Array, self).__init__()
+        super(HArray, self).__init__()
         self.elmType = elmType
         self.size = size
 
     def __eq__(self, other):
         return (
             type(self) is type(other) and
-            self.elmType == other.elmType and
-            self.size == other.size
+            self.size == other.size and
+            self.elmType == other.elmType
             )
 
     def __hash__(self):
@@ -43,18 +45,18 @@ class Array(HdlType):
         try:
             return cls._valCls
         except AttributeError:
-            from hwt.hdlObjects.types.arrayVal import ArrayVal
-            cls._valCls = ArrayVal
+            from hwt.hdlObjects.types.arrayVal import HArrayVal
+            cls._valCls = HArrayVal
             return cls._valCls
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
         :param indent: number of indentation
-        :param withAddr: if is not none is used as a additional information about where
-            on which address this type is stored (used only by HStruct)
-        :param expandStructs: expand HStruct types (used by HStruct and Array)
+        :param withAddr: if is not None is used as a additional
+            information about on which address this type is stored
+            (used only by HStruct)
+        :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
-
         return "%s[%r]" % (self.elmType.__repr__(indent=indent,
                                                  withAddr=withAddr,
                                                  expandStructs=expandStructs),

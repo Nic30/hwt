@@ -1,4 +1,4 @@
-from hwt.hdlObjects.types.enum import Enum
+from enum import Enum
 
 
 class SIGNAL_TYPE(Enum):

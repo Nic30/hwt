@@ -55,14 +55,15 @@ class HdlType():
         [] operator to create an array of this type.
         """
         assert int(key) > 0, key # array has to have some items
-        from hwt.hdlObjects.types.array import Array
-        return Array(self, key)
+        from hwt.hdlObjects.types.array import HArray
+        return HArray(self, key)
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
         :param indent: number of indentation
-        :param withAddr: if is not none is used as a additional information about where
-            on which address this type is stored (used only by HStruct)
-        :param expandStructs: expand HStruct types (used by HStruct and Array)
+        :param withAddr: if is not None is used as a additional
+            information about on which address this type is stored
+            (used only by HStruct)
+        :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
         return "<%s>" % (self.__class__.__name__)
