@@ -1,14 +1,106 @@
+from collections import OrderedDict
+
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.struct import HStructField
+from hwt.hdlObjects.value import Value, areValues
 from hwt.serializer.serializerClases.indent import getIndent
 
 
-protectedNames = {"clone", "staticEval", "fromPy", "_dtype"}
+protectedNames = {"clone", "staticEval", "fromPy", "_dtype", "_usedField", "_val"}
+
+
+class UnionValBase(Value):
+    """
+    Base class for values for union types.
+    Every union type has it's own value class derived from this.
+    
+    :ivar _dtype: union type of this value
+    :ivar __usedField: member which is actually used to represent value
+    :ivar __val: value for __usedField
+    """
+    __slots__ = ["_dtype", "_val", "_usedField"]
+    def __init__(self, val, typeObj):
+        self._dtype = typeObj
+        if val is not None:
+            memberName, v = val
+        else:
+            memberName = next(iter((typeObj.fields.keys())))
+            v = None
+        
+        f = self._dtype.fields[memberName]
+        if not isinstance(v, Value):
+            v = f.dtype.fromPy(v)
+        else:
+            v._auto_cast(f.dtype)
+        self._val = v
+        self._usedField = f
+
+    @classmethod
+    def fromPy(cls, val, typeObj):
+        return cls(val, typeObj)
+
+    def __eq__(self, other):
+        if areValues(self, other):
+            if self._dtype == other._dtype:
+                otherVal = getattr(other, self.__usedField.name)
+                return self.__val == otherVal 
+            else:
+                return False
+        else:
+            return super(Value, self).__eq__(other)
+
+    def __repr__(self, indent=0):
+        buff = ["{"]
+        indentOfFields = getIndent(indent + 1)
+
+        for f in self._dtype.fields.items():
+            if f.name is not None:
+                val = getattr(self, f.name)
+                try:
+                    v = val.__repr__(indent=indent + 1)
+                except TypeError:
+                    v = repr(val)
+
+                buff.append("%s%s: %s" % (indentOfFields, f.name, v))
+        buff.append(getIndent(indent) + "}")
+        return ("\n").join(buff)
+
+
+class HUnionMemberHandler(object):
+    
+    def __init__(self, field):
+        self.field = field
+    
+    def set(self, parent, v):
+        f = parent._dtype.fields[self.field.name]
+        if not isinstance(v, Value):
+            v = f.dtype.fromPy(v)
+        else:
+            v._auto_cast(f.dtype)
+
+        parent._val = v
+        parent._usedField = f
+    
+    def get(self, parent):
+        name = self.field.name
+        v = parent._val
+        if parent._usedField.name == name:
+            return v
+        else:
+            f = parent._dtype.fields[name]
+            v = v._reinterpret_cast(f.dtype)
+            parent._val = v
+            parent._usedField = f
+            return v
 
 
 class HUnion(HdlType):
     """
     HDL union type (same data multiple representations)
+    
+    :ivar fields: read only OrderedDict {key:StructField} for each member in this union
+    :ivar name: name of this type 
+    :ivar __bit_length_val: precalculated bit_length of this type
     """
     def __init__(self, *template, name=None):
         """
@@ -16,10 +108,13 @@ class HUnion(HdlType):
             name can be None (= padding)
         :param name: optional name used for debugging purposes
         """
-        self.fields = []
+        self.fields = OrderedDict()
         self.name = name
-        fieldNames = []
         bit_length = None
+        
+        class UnionVal(UnionValBase):
+            pass
+
         for f in template:
             try:
                 field = HStructField(*f)
@@ -28,9 +123,8 @@ class HUnion(HdlType):
             if not isinstance(field, HStructField):
                 raise TypeError("Template for struct field %s is not in valid format" % repr(f))
 
-            self.fields.append(field)
             assert field.name is not None
-            fieldNames.append(field.name)
+            self.fields[field.name] = field
 
             t = field.dtype
             if bit_length is None:
@@ -39,15 +133,16 @@ class HUnion(HdlType):
                 _bit_length = t.bit_length()
                 if _bit_length != bit_length:
                     raise TypeError(field.name, " has different size than others")
+            
+            memberHandler = HUnionMemberHandler(field)
+            p = property(fget=memberHandler.get, fset=memberHandler.set)
+            setattr(UnionVal, field.name, p)
 
-        self.fields = tuple(self.fields)
+        self.fields = self.fields
         self.__bit_length_val = bit_length
 
-        usedNames = set(fieldNames)
+        usedNames = set(self.fields.keys())
         assert not protectedNames.intersection(usedNames), protectedNames.intersection(usedNames)
-
-        class UnionVal():
-            __slots__ = fieldNames
 
         if name is not None:
             UnionVal.__name__ = name + "Val"
@@ -68,11 +163,17 @@ class HUnion(HdlType):
     def __fields__eq__(self, other):
         if len(self.fields) != len(other.fields):
             return False
-        for sf, of in zip(self.fields, other.fields):
-            if (sf.name != of.name or
-                    sf.dtype != of.dtype or
+
+        for k, sf in self.fields.items():
+            try:
+                of = other.fields[k]
+            except KeyError:
+                return False
+
+            if (sf.dtype != of.dtype or
                     sf.meta != of.meta):
                 return False
+
         return True
 
     def __eq__(self, other):
