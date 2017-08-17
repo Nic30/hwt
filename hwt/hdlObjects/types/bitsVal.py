@@ -236,7 +236,7 @@ class BitsVal(EventCapableVal):
         length = st.bit_length()
         if length == 1 and not st.forceVector:
             # assert not indexing on single bit
-            raise TypeError()
+            raise TypeError("indexing on single bit")
 
         if isinstance(key, slice):
             key = slice_to_SLICE(key, length)
