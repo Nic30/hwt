@@ -67,7 +67,7 @@ def VectSignal(width,
     """
     return Signal(masterDir,
                   asArraySize,
-                  Bits(width, signed),
+                  Bits(width, signed, forceVector=True),
                   loadConfig)
 
 
