@@ -294,7 +294,7 @@ def _connect(src, dst, exclude, fit):
     if fit:
         src = fitTo(src, dst)
 
-    src = src._dtype.convert(src, dst._dtype)
+    src = src._auto_cast(dst._dtype)
 
     return dst ** src
 
@@ -397,6 +397,8 @@ def sizeof(_type):
     "get size of type in bytes"
     s = _type.bit_length()
     return math.ceil(s / 8)
+
+
 
 # shortcuts
 c = connect

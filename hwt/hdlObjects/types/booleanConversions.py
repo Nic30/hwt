@@ -10,4 +10,4 @@ def convertBoolean(self, sigOrVal, toType):
         else:
             return sigOrVal._ternary(BIT.fromPy(1), BIT.fromPy(0))
         
-    return HdlType.defaultConvert(self, sigOrVal, toType)
+    return HdlType.default_auto_cast_fn(self, sigOrVal, toType)

@@ -31,7 +31,7 @@ protectedNames = {"clone", "staticEval", "fromPy", "_dtype"}
 
 class HStruct(HdlType):
     """
-    hld structure type
+    HDL structure type
 
     :ivar fields: tuple of HStructField instances in this struct
     :ivar name: name of this HStruct type

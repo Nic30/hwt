@@ -24,8 +24,11 @@ class RtlSignalOps():
     :ivar _usedOps: cache for expressions with this signal
     """
 
-    def _convert(self, toT):
-        return tv(self)._convert(self, toT)
+    def _auto_cast(self, toT):
+        return self._dtype.auto_cast(self, toT)
+
+    def _reinterpret_cast(self, toT):
+        return self._dtype.reinterpret_cast(self, toT)
 
     def naryOp(self, operator, opCreateDelegate, *otherOps):
         """
@@ -50,7 +53,7 @@ class RtlSignalOps():
         return self.naryOp(AllOps.FALLIGN_EDGE, tv(self)._onFallingEdge, now)
 
     def _isOn(self):
-        return self._dtype.convert(self, BOOL)
+        return self._auto_cast(BOOL)
 
     # conversions
     def _convSign(self, signed):
@@ -172,7 +175,7 @@ class RtlSignalOps():
             source = toHVal(source)
             err = False
             try:
-                source = source._dtype.convert(source, self._dtype)
+                source = source._auto_cast(self._dtype)
             except TypeConversionErr:
                 err = True
             if err:

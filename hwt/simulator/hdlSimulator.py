@@ -304,7 +304,7 @@ class HdlSimulator(HdlEnvironmentCore):
 
         if isinstance(val, Value):
             v = val.clone()
-            v = v._convert(t)
+            v = v._auto_cast(t)
         else:
             v = t.fromPy(val)
 

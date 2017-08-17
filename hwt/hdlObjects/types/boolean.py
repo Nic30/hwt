@@ -10,7 +10,7 @@ class Boolean(HdlType):
         return hash(Boolean)
 
     @classmethod
-    def getConvertor(cls):
+    def get_auto_cast_fn(cls):
         from hwt.hdlObjects.types.booleanConversions import convertBoolean
         return convertBoolean
 

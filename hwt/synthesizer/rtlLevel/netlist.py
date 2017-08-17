@@ -153,7 +153,7 @@ class RtlNetlist():
             else:
                 _defVal = dtype.fromPy(defVal)
         else:
-            _defVal = defVal._convert(dtype)
+            _defVal = defVal._auto_cast(dtype)
 
         if clk is not None:
             s = RtlSyncSignal(self, name, dtype, _defVal)

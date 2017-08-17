@@ -4,6 +4,9 @@ from hwt.synthesizer.exceptions import TypeConversionErr
 class HdlType():
     """
     Base class for all hardware related types.
+    
+    :ivar _auto_cast_fn: convert function (attribute set on first convert function call)
+    :ivar _reinterpret_cast_fn: reinterpret function (attribute set on first convert function call)
     """
 
     def fromPy(self, v):
@@ -13,9 +16,10 @@ class HdlType():
         """
         return self.getValueCls().fromPy(v, self)
 
-    def convert(self, sigOrVal, toType):
+    def auto_cast(self, sigOrVal, toType):
         """
-        Cast value or signal of this type to another.
+        Cast value or signal of this type to another compatible type.
+
         :param sigOrVal: instance of signal or value to cast
         :param toType: instance of HdlType to cast into
         """
@@ -23,21 +27,52 @@ class HdlType():
             return sigOrVal
 
         try:
-            c = self._convert
+            c = self._auto_cast_fn
         except AttributeError:
-            c = self.getConvertor()
-            self._convertor = c
+            c = self.get_auto_cast_fn()
+            self._auto_cast_fn = c
 
         return c(self, sigOrVal, toType)
 
+    def reinterpret_cast(self, sigOrVal, toType):
+        """
+        Cast value or signal of this type to another type of same size.
+
+        :param sigOrVal: instance of signal or value to cast
+        :param toType: instance of HdlType to cast into
+        """
+        try:
+            return self.auto_cast(sigOrVal, toType)
+        except TypeConversionErr:
+            pass
+
+        try:
+            r = self._reinterpret_cast_fn
+        except AttributeError:
+            r = self.get_reinterpret_cast_fn()
+            self._reinterpret_cast_fn = r
+
+        return r(self, sigOrVal, toType)
+
     @classmethod
-    def getConvertor(cls):
+    def get_auto_cast_fn(cls):
         """
         Get method for converting type
         """
-        return HdlType.defaultConvert
+        return HdlType.default_auto_cast_fn
 
-    def defaultConvert(self, sigOrVal, toType):
+    @classmethod
+    def get_reinterpret_cast_fn(cls):
+        """
+        Get method for converting type
+        """
+        return HdlType.default_reinterpret_cast_fn
+
+    def default_reinterpret_cast_fn(self, sigOrVal, toType):
+        raise TypeConversionErr("Reinterpretation of %r of type \n%r to type %r is not implemented"
+                                % (sigOrVal, self, toType))
+
+    def default_auto_cast_fn(self, sigOrVal, toType):
         raise TypeConversionErr("Conversion of %r of type \n%r to type %r is not implemented"
                                 % (sigOrVal, self, toType))
 
@@ -54,7 +89,7 @@ class HdlType():
         """
         [] operator to create an array of this type.
         """
-        assert int(key) > 0, key # array has to have some items
+        assert int(key) > 0, key  # array has to have some items
         from hwt.hdlObjects.types.array import HArray
         return HArray(self, key)
 

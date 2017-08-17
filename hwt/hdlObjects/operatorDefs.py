@@ -91,11 +91,11 @@ def callFn(fn, *operands):
 
 
 def bitsToIntFn(a):
-    return a._convert(INT)
+    return a._auto_cast(INT)
 
 
 def intToBitsFn(a, t):
-    return a._convert(t)
+    return a._auto_cast(t)
 
 
 def bitsAsSignedFn(a):

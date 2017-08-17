@@ -5,8 +5,11 @@ class SignalOps(object):
     Operands for Signal interface,
     these operands are delegated on RtlSignal object for this interface
     """
-    def _convert(self, toT):
-        return self._sig._convert(toT)
+    def _auto_cast(self, toT):
+        return self._sig._auto_cast(toT)
+
+    def _reinterpret_cast(self, toT):
+        return self._sig._reinterpret_cast(toT)
 
     # events
     def _onRisingEdge(self):

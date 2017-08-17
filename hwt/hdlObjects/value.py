@@ -25,9 +25,13 @@ class Value():
     def _isFullVld(self):
         return self.vldMask == self._dtype.all_mask()
 
-    def _convert(self, toT):
-        "type cast"
-        return self._dtype.convert(self, toT)
+    def _auto_cast(self, toT):
+        "type cast to compatible type"
+        return self._dtype.auto_cast(self, toT)
+
+    def _reinterpret_cast(self, toT):
+        "type cast to type of same size"
+        return self._dtype.reinterpret_cast(self, toT)
 
     def staticEval(self):
         return self.clone()

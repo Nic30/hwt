@@ -38,7 +38,7 @@ def boolLogOp(self, other, op, getVldFn, reduceCheckFn):
             if r is not None:
                     return r
 
-        return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
+        return Operator.withRes(op, [self, other._auto_cast(BOOL)], BOOL)
 
 
 def boolCmpOp__val(self, other, op, evalFn):
@@ -56,7 +56,7 @@ def boolCmpOp(self, other, op, evalFn=None):
     if areValues(self, other):
         return boolCmpOp__val(self, other, op, evalFn)
     else:
-        return Operator.withRes(op, [self, other._convert(BOOL)], BOOL)
+        return Operator.withRes(op, [self, other._auto_cast(BOOL)], BOOL)
 
 
 class BooleanVal(Value):

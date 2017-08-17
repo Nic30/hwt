@@ -49,9 +49,14 @@ class Bits(HdlType):
         return self._widthVal
 
     @classmethod
-    def getConvertor(cls):
+    def get_auto_cast_fn(cls):
         from hwt.hdlObjects.types.bitsConversions import convertBits
         return convertBits
+
+    @classmethod
+    def get_reinterpret_cast_fn(cls):
+        from hwt.hdlObjects.types.bitsConversions import reinterpretBits
+        return reinterpretBits
 
     @classmethod
     def getValueCls(cls):

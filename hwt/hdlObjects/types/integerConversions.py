@@ -31,4 +31,4 @@ def convertInteger(self, sigOrVal, toType):
         else:
             return Operator.withRes(AllOps.IntToBits, [sigOrVal], toType)
 
-    return HdlType.defaultConvert(self, sigOrVal, toType)
+    return HdlType.default_auto_cast_fn(self, sigOrVal, toType)

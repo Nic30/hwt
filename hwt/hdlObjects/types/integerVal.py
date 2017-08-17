@@ -21,7 +21,7 @@ def intOp(self, other, op, resT, evalFn=None):
     if evalFn is None:
         evalFn = op._evalFn
 
-    other = toHVal(other)._convert(INT)
+    other = toHVal(other)._auto_cast(INT)
     if areValues(self, other):
         return intOp__val(self, other, resT, evalFn)
     else:
@@ -89,7 +89,7 @@ class IntegerVal(Value):
         return SliceVal((self, other), SLICE, vldMask, updateTime)
 
     def _downto(self, other):
-        other = toHVal(other)._convert(INT)
+        other = toHVal(other)._auto_cast(INT)
         if areValues(self, other):
             return self._downto__val(other)
         else:

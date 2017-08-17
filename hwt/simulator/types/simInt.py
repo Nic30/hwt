@@ -3,7 +3,7 @@ from hwt.hdlObjects.types.integer import Integer
 
 class SimInteger(Integer):
     @classmethod
-    def getConvertor(cls):
+    def getConvertFn(cls):
         raise TypeError("There should not be any need to dynamically convert Integer in simulation")
 
 

@@ -57,7 +57,8 @@ class BitsVal(EventCapableVal):
         """
         Convert signum, no bit manipulation just data are represented differently
 
-        :param signed: if True value will be signed, if False value will be unsigned,
+        :param signed: if True value will be signed,
+            if False value will be unsigned,
             if None value will be vector without any sign specification
         """
         if isinstance(self, Value):
@@ -166,7 +167,7 @@ class BitsVal(EventCapableVal):
                 if other._dtype.signed is not None:
                     other = other._vec()
             elif other._dtype == BOOL:
-                other = other._convert(BIT)
+                other = other._auto_cast(BIT)
             else:
                 raise TypeError(other._dtype)
 
@@ -174,7 +175,7 @@ class BitsVal(EventCapableVal):
                     self = self._vec()
 
             return Operator.withRes(AllOps.CONCAT, [self, other], resT)\
-                           ._convert(vecT(resWidth, signed=self._dtype.signed))
+                           ._auto_cast(vecT(resWidth, signed=self._dtype.signed))
 
     def _getitem__val_int(self, key):
         updateTime = max(self.updateTime, key.updateTime)
@@ -309,7 +310,7 @@ class BitsVal(EventCapableVal):
                 resT = Bits(width=key.staticEval()._size(), forceVector=st.forceVector, signed=st.signed)
             elif isinstance(t, Bits):
                 resT = BIT
-                key = key._convert(INT)
+                key = key._auto_cast(INT)
             else:
                 raise TypeError("Index operation not implemented for index of type %r" % (t))
 
@@ -366,7 +367,7 @@ class BitsVal(EventCapableVal):
             if not isinstance(value, Value):
                 if isinstance(value, RtlSignalBase):
                     if value._const:
-                        value = value.staticEval()._convert(itemT)
+                        value = value.staticEval()._auto_cast(itemT)
                         valueConst = True
                     else:
                         valueConst = False
@@ -375,7 +376,7 @@ class BitsVal(EventCapableVal):
                     valueConst = True
             else:
                 valueConst = True
-                value = value._convert(itemT)
+                value = value._auto_cast(itemT)
 
         if indexConst and valueConst and isinstance(self, Value):
             return self._setitem__val(index, value)
@@ -505,4 +506,4 @@ class BitsVal(EventCapableVal):
 
             subResT = vecT(resT.bit_length(), self._dtype.signed)
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
-            return o._convert(resT)
+            return o._auto_cast(resT)

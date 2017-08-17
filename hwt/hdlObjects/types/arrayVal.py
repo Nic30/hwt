@@ -10,7 +10,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 class HArrayVal(Value):
     """
-    Class of value of array
+    Class for values of array HDL type
     """
 
     @classmethod
@@ -70,7 +70,7 @@ class HArrayVal(Value):
         if isSLICE:
             raise NotImplementedError()
         elif isinstance(key, RtlSignalBase):
-            key = key._convert(INT)
+            key = key._auto_cast(INT)
         elif isinstance(key, Value):
             pass
         else:

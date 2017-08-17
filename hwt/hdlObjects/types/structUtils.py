@@ -84,7 +84,7 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
         assert dataWidth is not None
 
         def _getDataFn(x):
-            return toHVal(x)._convert(Bits(dataWidth))
+            return toHVal(x)._auto_cast(Bits(dataWidth))
 
         getDataFn = _getDataFn
 
@@ -126,7 +126,7 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
         if actuallyHave >= required:
             # parse value of actual to field
             # skip padding
-            _v = actual[(required + actualOffset): actualOffset]._convert(v._dtype)
+            _v = actual[(required + actualOffset): actualOffset]._auto_cast(v._dtype)
             v.val = _v.val
             v.vldMask = _v.vldMask
             v.updateTime = _v.updateTime

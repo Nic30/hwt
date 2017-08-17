@@ -48,22 +48,22 @@ def bitsCmp(self, other, op, evalFn=None):
 
     if iamVal and otherIsVal:
         if ot == BOOL:
-            self = self._convert(BOOL)
+            self = self._auto_cast(BOOL)
         elif t == ot:
             pass
         elif isinstance(ot, Integer):
-            other = other._convert(t)
+            other = other._auto_cast(t)
         else:
             raise TypeError("Values of types (%r, %r) are not comparable" % (self._dtype, other._dtype))
 
         return bitsCmp__val(self, other, op, evalFn)
     else:
         if ot == BOOL:
-            self = self._convert(BOOL)
+            self = self._auto_cast(BOOL)
         elif t == ot:
             pass
         elif isinstance(ot, Integer):
-            other = other._convert(self._dtype)
+            other = other._auto_cast(self._dtype)
         else:
             raise TypeError("Values of types (%r, %r) are not comparable" % (self._dtype, other._dtype))
 
@@ -93,11 +93,11 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
     otherIsVal = isinstance(other, Value)
 
     if iamVal and otherIsVal:
-        other = other._convert(self._dtype)
+        other = other._auto_cast(self._dtype)
         return bitsBitOp__val(self, other, op, getVldFn)
     else:
         if other._dtype == BOOL:
-            self = self._convert(BOOL)
+            self = self._auto_cast(BOOL)
             return op._evalFn(self, other)
         elif self._dtype == other._dtype:
             pass
@@ -165,4 +165,4 @@ def bitsArithOp(self, other, op):
             raise TypeError("%r %r %r" % (self, op, other))
 
         o = Operator.withRes(op, [self, other], self._dtype)
-        return o._convert(resT)
+        return o._auto_cast(resT)

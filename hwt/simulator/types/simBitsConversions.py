@@ -23,4 +23,4 @@ def convertSimBits__val(self, sigOrVal, toType):
                                      sigOrVal.vldMask == fullMask,
                                      sigOrVal.updateTime)
 
-    return HdlType.defaultConvert(self, sigOrVal, toType)
+    return HdlType.default_auto_cast_fn(self, sigOrVal, toType)
