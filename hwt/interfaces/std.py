@@ -1,5 +1,4 @@
 from hwt.hdlObjects.constants import DIRECTION
-from hwt.hdlObjects.typeShortcuts import vecT
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.defs import BIT, BIT_N
 from hwt.interfaces.signalOps import SignalOps
@@ -32,7 +31,7 @@ class Signal(SignalOps, Interface):
         t = self._dtype
         factor = self._widthMultiplier
         if t == BIT:
-            newT = vecT(factor)
+            newT = Bits(factor)
         elif isinstance(t, Bits):
             w = t.width
             if isinstance(w, int):
@@ -47,7 +46,7 @@ class Signal(SignalOps, Interface):
                 # both Value
                 newW = w.clone()
                 newW.val *= factor.val
-            newT = vecT(newW)
+            newT = Bits(newW)
         else:
             raise TypeError("Can not multiply width of type %r" % (repr(t),))
 
@@ -68,7 +67,7 @@ def VectSignal(width,
     """
     return Signal(masterDir,
                   asArraySize,
-                  vecT(width, signed),
+                  Bits(width, signed),
                   loadConfig)
 
 
@@ -129,7 +128,7 @@ class VldSynced(Interface):
         self.DATA_WIDTH = Param(64)
 
     def _declr(self):
-        self.data = s(dtype=vecT(self.DATA_WIDTH))
+        self.data = VectSignal(self.DATA_WIDTH)
         self.vld = s()
 
     def _getSimAgent(self):
@@ -145,7 +144,7 @@ class RdSynced(Interface):
         self.DATA_WIDTH = Param(64)
 
     def _declr(self):
-        self.data = s(dtype=vecT(self.DATA_WIDTH))
+        self.data = VectSignal(self.DATA_WIDTH)
         self.rd = s(masterDir=D.IN)
 
     def _getSimAgent(self):
@@ -206,9 +205,9 @@ class BramPort_withoutClk(Interface):
         self.DATA_WIDTH = Param(64)
 
     def _declr(self):
-        self.addr = s(dtype=vecT(self.ADDR_WIDTH))
-        self.din = s(dtype=vecT(self.DATA_WIDTH))
-        self.dout = s(masterDir=D.IN, dtype=vecT(self.DATA_WIDTH))
+        self.addr = VectSignal(self.ADDR_WIDTH)
+        self.din = VectSignal(self.DATA_WIDTH)
+        self.dout = VectSignal(self.DATA_WIDTH, masterDir=D.IN)
         self.en = s()
         self.we = s()
 
@@ -257,7 +256,7 @@ class FifoWriter(Interface):
     def _declr(self):
         self.en = s()
         self.wait = s(masterDir=D.IN)
-        self.data = s(dtype=vecT(self.DATA_WIDTH))
+        self.data = VectSignal(self.DATA_WIDTH)
 
     def _getSimAgent(self):
         from hwt.interfaces.agents.fifo import FifoWriterAgent
@@ -283,7 +282,7 @@ class RegCntrl(Interface):
         self.DATA_WIDTH = Param(8)
 
     def _declr(self):
-        self.din = Signal(dtype=vecT(self.DATA_WIDTH), masterDir=D.IN)
+        self.din = VectSignal(self.DATA_WIDTH, masterDir=D.IN)
         with self._paramsShared():
             self.dout = VldSynced()
 

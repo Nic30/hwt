@@ -6,7 +6,7 @@ from hwt.bitmask import mask, selectBit, selectBitRange, bitSetTo, \
     setBitRange
 from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.typeShortcuts import vecT, hInt
+from hwt.hdlObjects.typeShortcuts import hInt
 from hwt.hdlObjects.types.bitValFunctions import bitsCmp__val, bitsCmp, \
     bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, signFix
 from hwt.hdlObjects.types.bitVal_bitOpsVldMask import vldMaskForXor, \
@@ -129,7 +129,7 @@ class BitsVal(EventCapableVal):
         w = self._dtype.bit_length()
         other_w = other._dtype.bit_length()
         resWidth = w + other_w
-        resT = vecT(resWidth)
+        resT = Bits(resWidth)
 
         v = self.clone()
         v.val = (v.val << other_w) | other.val
@@ -151,7 +151,7 @@ class BitsVal(EventCapableVal):
 
         other_w = other_bit_length()
         resWidth = w + other_w
-        resT = vecT(resWidth)
+        resT = Bits(resWidth)
 
         if areValues(self, other):
             return self._concat__val(other)
@@ -159,7 +159,7 @@ class BitsVal(EventCapableVal):
             w = self._dtype.bit_length()
             other_w = other._dtype.bit_length()
             resWidth = w + other_w
-            resT = vecT(resWidth)
+            resT = Bits(resWidth)
             # is instance of signal
             if isinstance(other, InterfaceBase):
                 other = other._sig
@@ -175,7 +175,7 @@ class BitsVal(EventCapableVal):
                     self = self._vec()
 
             return Operator.withRes(AllOps.CONCAT, [self, other], resT)\
-                           ._auto_cast(vecT(resWidth, signed=self._dtype.signed))
+                           ._auto_cast(Bits(resWidth, signed=self._dtype.signed))
 
     def _getitem__val_int(self, key):
         updateTime = max(self.updateTime, key.updateTime)
@@ -504,6 +504,6 @@ class BitsVal(EventCapableVal):
             else:
                 raise TypeError("%r %r %r" % (self, AllOps.MUL, other))
 
-            subResT = vecT(resT.bit_length(), self._dtype.signed)
+            subResT = Bits(resT.bit_length(), self._dtype.signed)
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
             return o._auto_cast(resT)

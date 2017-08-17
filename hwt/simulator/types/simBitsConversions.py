@@ -1,7 +1,7 @@
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.boolean import Boolean
 from hwt.hdlObjects.types.defs import INT
-from hwt.hdlObjects.types.hdlType import HdlType
+from hwt.hdlObjects.types.hdlType import default_auto_cast_fn
 from hwt.simulator.types.simInt import SIM_INT
 
 
@@ -23,4 +23,4 @@ def convertSimBits__val(self, sigOrVal, toType):
                                      sigOrVal.vldMask == fullMask,
                                      sigOrVal.updateTime)
 
-    return HdlType.default_auto_cast_fn(self, sigOrVal, toType)
+    return default_auto_cast_fn(self, sigOrVal, toType)

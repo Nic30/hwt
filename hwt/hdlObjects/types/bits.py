@@ -7,7 +7,7 @@ class Bits(HdlType):
     """
     Elemental HDL type representing bits (vector or single bit)
     """
-    def __init__(self, width, forceVector=False, signed=None, negated=False):
+    def __init__(self, width, signed=None, forceVector=False, negated=False):
         """
         :param negated: if true the value is in negated form
         :param forceVector: use always hdl vector type

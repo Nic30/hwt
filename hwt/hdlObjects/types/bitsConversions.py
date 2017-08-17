@@ -4,7 +4,7 @@ from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.boolean import Boolean
 from hwt.hdlObjects.types.defs import INT
-from hwt.hdlObjects.types.hdlType import HdlType
+from hwt.hdlObjects.types.hdlType import default_auto_cast_fn
 from hwt.hdlObjects.types.struct import HStruct
 from hwt.hdlObjects.types.union import HUnion
 from hwt.hdlObjects.value import Value
@@ -22,7 +22,7 @@ def convertBits__val(self, val, toType):
                                  int(val._isFullVld()),
                                  val.updateTime)
 
-    return HdlType.default_auto_cast_fn(self, val, toType)
+    return default_auto_cast_fn(self, val, toType)
 
 
 def convertBits(self, sigOrVal, toType):
@@ -41,7 +41,7 @@ def convertBits(self, sigOrVal, toType):
     elif toType == INT:
         return Operator.withRes(AllOps.BitsToInt, [sigOrVal], toType)
 
-    return HdlType.default_auto_cast_fn(self, sigOrVal, toType)
+    return default_auto_cast_fn(self, sigOrVal, toType)
 
 def reinterpretBits__val(self, val, toType):
     raise NotImplementedError()
@@ -63,4 +63,4 @@ def reinterpretBits(self, sigOrVal, toType):
         elif isinstance(toType, HArray):
             raise not NotImplementedError()
     
-    return HdlType.default_auto_cast_fn(self, sigOrVal, toType)
+    return default_auto_cast_fn(self, sigOrVal, toType)

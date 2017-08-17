@@ -3,7 +3,7 @@ from hwt.hdlObjects.operatorDefs import AllOps
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.booleanVal import BooleanVal
 from hwt.hdlObjects.types.defs import BOOL
-from hwt.hdlObjects.types.hdlType import HdlType
+from hwt.hdlObjects.types.hdlType import default_auto_cast_fn
 from hwt.hdlObjects.value import Value
 
 
@@ -31,4 +31,4 @@ def convertInteger(self, sigOrVal, toType):
         else:
             return Operator.withRes(AllOps.IntToBits, [sigOrVal], toType)
 
-    return HdlType.default_auto_cast_fn(self, sigOrVal, toType)
+    return default_auto_cast_fn(self, sigOrVal, toType)

@@ -2,7 +2,7 @@ import math
 from operator import and_, or_, xor
 
 from hwt.hdlObjects.operatorDefs import concatFn
-from hwt.hdlObjects.typeShortcuts import hInt, vec, vecT
+from hwt.hdlObjects.typeShortcuts import hInt, vec
 from hwt.hdlObjects.types.enum import HEnum
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.pyUtils.arrayQuery import arr_any, flatten
@@ -11,6 +11,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from hwt.synthesizer.vectorUtils import fitTo
+from hwt.hdlObjects.types.bits import Bits
 
 
 def _intfToSig(obj):
@@ -193,7 +194,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
     else:
         # if there is multiple items we have to generate counter logic
         index = parentUnit._reg(name + "for_index",
-                                vecT(log2ceil(l + 1), signed=False),
+                                Bits(log2ceil(l + 1), signed=False),
                                 defVal=0)
         ackSig = parentUnit._sig(name + "for_ack")
 

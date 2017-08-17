@@ -1,6 +1,5 @@
 from importlib import reload
 
-from hwt.hdlObjects.typeShortcuts import vecT
 from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.arrayVal import HArrayVal
 from hwt.hdlObjects.types.bitsConversions import convertBits__val

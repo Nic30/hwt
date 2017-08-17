@@ -1,6 +1,7 @@
-from hwt.hdlObjects.value import Value
 from hwt.hdlObjects.types.defs import BIT
-from hwt.hdlObjects.types.hdlType import HdlType
+from hwt.hdlObjects.types.hdlType import default_auto_cast_fn
+from hwt.hdlObjects.value import Value
+
 
 def convertBoolean(self, sigOrVal, toType):
     if toType == BIT:
@@ -10,4 +11,4 @@ def convertBoolean(self, sigOrVal, toType):
         else:
             return sigOrVal._ternary(BIT.fromPy(1), BIT.fromPy(0))
         
-    return HdlType.default_auto_cast_fn(self, sigOrVal, toType)
+    return default_auto_cast_fn(self, sigOrVal, toType)

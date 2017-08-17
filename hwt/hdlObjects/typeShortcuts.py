@@ -22,14 +22,7 @@ def hBit(pyVal):
     return BIT.fromPy(pyVal)
 
 
-def vecT(width, signed=None):
-    """Make vector type with specified width for example
-       std_logic_vector(width-1 downto 0) in vhdl
-    """
-    return Bits(width=width, signed=signed, forceVector=True)
-
-
 def vec(val, width, signed=None):
     """create hdl vector value"""
     assert val < (2 ** int(width))
-    return vecT(width, signed).fromPy(val)
+    return Bits(width, signed, forceVector=True).fromPy(val)

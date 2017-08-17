@@ -1,5 +1,5 @@
 from hwt.hdlObjects.constants import DIRECTION
-from hwt.hdlObjects.typeShortcuts import vecT
+from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.struct import HStruct, HStructField, HStructFieldMeta
 from hwt.interfaces.std import Signal, VldSynced, RegCntrl, BramPort_withoutClk
@@ -64,7 +64,7 @@ def _HTypeFromIntfMap(intf):
     elif isinstance(intf, RegCntrl):
         dtype = intf.din._dtype
     elif isinstance(intf, BramPort_withoutClk):
-        dtype = vecT(int(intf.DATA_WIDTH))[2 ** int(intf.ADDR_WIDTH)]
+        dtype = Bits(int(intf.DATA_WIDTH))[2 ** int(intf.ADDR_WIDTH)]
     else:
         dtype, name = intf
         assert isinstance(dtype, HdlType)
