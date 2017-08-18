@@ -22,7 +22,7 @@ class HArray(HdlType):
             )
 
     def __hash__(self):
-        return hash((self.elmType, self.size))
+        return hash(id(self))
 
     def bit_length(self):
         """

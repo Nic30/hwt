@@ -97,9 +97,10 @@ class HUnionMemberHandler(object):
 class HUnion(HdlType):
     """
     HDL union type (same data multiple representations)
-    
-    :ivar fields: read only OrderedDict {key:StructField} for each member in this union
-    :ivar name: name of this type 
+
+    :ivar fields: read only OrderedDict {key:StructField} for each
+        member in this union
+    :ivar name: name of this type
     :ivar __bit_length_val: precalculated bit_length of this type
     """
     def __init__(self, *template, name=None):
@@ -111,7 +112,7 @@ class HUnion(HdlType):
         self.fields = OrderedDict()
         self.name = name
         bit_length = None
-        
+
         class UnionVal(UnionValBase):
             pass
 
@@ -133,7 +134,7 @@ class HUnion(HdlType):
                 _bit_length = t.bit_length()
                 if _bit_length != bit_length:
                     raise TypeError(field.name, " has different size than others")
-            
+
             memberHandler = HUnionMemberHandler(field)
             p = property(fget=memberHandler.get, fset=memberHandler.set)
             setattr(UnionVal, field.name, p)
@@ -183,7 +184,7 @@ class HUnion(HdlType):
             self.__fields__eq__(other))
 
     def __hash__(self):
-        return hash((self.name, self.fields))
+        return hash(id(self))
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """

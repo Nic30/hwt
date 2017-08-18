@@ -28,7 +28,7 @@ class HEnum(HdlType):
         return self is other
 
     def __hash__(self):
-        return hash((self.name, self._allValues))
+        return hash(id(self))
 
     def all_mask(self):
         return 1

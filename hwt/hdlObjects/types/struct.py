@@ -114,7 +114,7 @@ class HStruct(HdlType):
             self.__fields__eq__(other))
 
     def __hash__(self):
-        return hash((self.name, self.fields))
+        return hash(id(self))
 
     def __add__(self, other):
         """
