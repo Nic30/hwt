@@ -92,6 +92,11 @@ class HStruct(HdlType):
     def getValueCls(self):
         return self.valueCls
 
+    @classmethod
+    def get_reinterpret_cast_fn(cls):
+        from hwt.hdlObjects.types.structCast import hstruct_reinterpret
+        return hstruct_reinterpret
+
     def __fields__eq__(self, other):
         if len(self.fields) != len(other.fields):
             return False

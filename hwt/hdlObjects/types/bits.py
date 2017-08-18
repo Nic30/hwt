@@ -50,12 +50,12 @@ class Bits(HdlType):
 
     @classmethod
     def get_auto_cast_fn(cls):
-        from hwt.hdlObjects.types.bitsConversions import convertBits
+        from hwt.hdlObjects.types.bitsCast import convertBits
         return convertBits
 
     @classmethod
     def get_reinterpret_cast_fn(cls):
-        from hwt.hdlObjects.types.bitsConversions import reinterpretBits
+        from hwt.hdlObjects.types.bitsCast import reinterpretBits
         return reinterpretBits
 
     @classmethod

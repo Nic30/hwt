@@ -10,6 +10,7 @@ from hwt.hdlObjects.types.union import HUnion
 from hwt.hdlObjects.value import Value
 
 
+
 def convertBits__val(self, val, toType):
     if isinstance(toType, Boolean):
         return val._eq(self.getValueCls().fromPy(1, self))
@@ -21,8 +22,8 @@ def convertBits__val(self, val, toType):
                                  INT,
                                  int(val._isFullVld()),
                                  val.updateTime)
-
-    return default_auto_cast_fn(self, val, toType)
+    else:
+        return default_auto_cast_fn(self, val, toType)
 
 
 def convertBits(self, sigOrVal, toType):
@@ -31,7 +32,7 @@ def convertBits(self, sigOrVal, toType):
     """
     if isinstance(sigOrVal, Value):
         return convertBits__val(self, sigOrVal, toType)
-    if isinstance(toType, Boolean):
+    elif isinstance(toType, Boolean):
         if self.bit_length() == 1:
             v = 0 if sigOrVal._dtype.negated else 1
             return sigOrVal._eq(self.getValueCls().fromPy(v, self))
@@ -40,11 +41,41 @@ def convertBits(self, sigOrVal, toType):
             return sigOrVal._convSign(toType.signed)
     elif toType == INT:
         return Operator.withRes(AllOps.BitsToInt, [sigOrVal], toType)
+    else:
+        return default_auto_cast_fn(self, sigOrVal, toType)
 
-    return default_auto_cast_fn(self, sigOrVal, toType)
+
+
+def bits_to_hstruct(sig, hStructT):
+    """
+    Reinterpret signal of type Bits to signal of type HStruct
+    """
+    container = hStructT.fromPy(None)
+    offset = 0
+    for f in hStructT.fields:
+        if f.name is not None:
+            t = f.dtype
+            width = t.bit_length()
+            s = sig[(width + offset):offset]
+            s = s._reinterpret_cast(t)
+            setattr(container, f.name, s)
+            offset += width
+
+    return container
+
+
+bits_to_hstruct__val = bits_to_hstruct
+
 
 def reinterpretBits__val(self, val, toType):
-    raise NotImplementedError()
+    if isinstance(toType, HStruct):
+        return bits_to_hstruct__val(val, toType)
+    elif isinstance(toType, HUnion):
+        raise not NotImplementedError()
+    elif isinstance(toType, HArray):
+        raise not NotImplementedError()
+    else:
+        return default_auto_cast_fn(self, val, toType)
 
 def reinterpretBits(self, sigOrVal, toType):
     """
@@ -53,11 +84,10 @@ def reinterpretBits(self, sigOrVal, toType):
     """
     
     if isinstance(sigOrVal, Value):
-        return convertBits__val(self, sigOrVal, toType)
-
-    if self._dtype.bit_length() == toType.bit_length():
+        return reinterpretBits__val(self, sigOrVal, toType)
+    elif self._dtype.bit_length() == toType.bit_length():
         if isinstance(toType, HStruct):
-            raise NotImplementedError()
+            raise bits_to_hstruct(sigOrVal, toType)
         elif isinstance(toType, HUnion):
             raise not NotImplementedError()
         elif isinstance(toType, HArray):

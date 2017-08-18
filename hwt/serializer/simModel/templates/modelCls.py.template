@@ -2,7 +2,7 @@ from importlib import reload
 
 from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.arrayVal import HArrayVal
-from hwt.hdlObjects.types.bitsConversions import convertBits__val
+from hwt.hdlObjects.types.bitsCast import convertBits__val
 from hwt.hdlObjects.types.bitsVal import BitsVal
 from hwt.hdlObjects.types.defs import SLICE
 from hwt.hdlObjects.types.enum import HEnum
