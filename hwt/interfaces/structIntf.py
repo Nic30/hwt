@@ -2,6 +2,7 @@ from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.struct import HStruct, HStructField, HStructFieldMeta
+from hwt.hdlObjects.types.union import HUnion
 from hwt.interfaces.std import Signal, VldSynced, RegCntrl, BramPort_withoutClk
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -11,7 +12,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 class StructIntf(Interface):
     """
-    Create dynamic interface based on HStruct description
+    Create dynamic interface based on HStruct or HUnion description
 
     :ivar _fieldsToInterfaces: dictionary {field from HStruct template: sub interface for it}
     """
@@ -29,12 +30,18 @@ class StructIntf(Interface):
                            loadConfig=loadConfig)
 
         self._structT = structT
-        assert isinstance(structT, HStruct)
+        assert isinstance(structT, (HStruct, HUnion))
         self._instantiateFieldFn = instantiateFieldFn
         self._fieldsToInterfaces = {}
 
     def _declr(self):
-        for field in self._structT.fields:
+        _t = self._structT
+        if isinstance(_t, HStruct):
+            fields = _t.fields
+        else:
+            fields = _t.fields.values()
+
+        for field in fields:
             # skip padding
             if field.name is not None:
                 # generate interface based on struct field
