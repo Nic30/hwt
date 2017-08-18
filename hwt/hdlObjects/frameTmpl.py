@@ -9,7 +9,7 @@ from hwt.hdlObjects.types.struct import HStruct
 from hwt.simulator.types.simBits import simBitsT
 
 
-class FrameTemplate(object):
+class FrameTmpl(object):
     """
     Frame template container for informations about frame,
     template which is used for resolving how data should be formated into words and frames
@@ -22,7 +22,7 @@ class FrameTemplate(object):
 
     def __init__(self, origin, wordWidth, startBitAddr, endBitAddr, transactionParts):
         """
-        :param origin: instance of HType (usually HStruct) from which this FrameTemplate was generated from
+        :param origin: instance of HType (usually HStruct) from which this FrameTmpl was generated from
         :param wordWidth: width of word on interface where this template should be used
         :param startBitAddr: bit offset where this frame starts
         :param endBitAddr: bit offset where this frame ends (bit index of first bit behind this frame)
@@ -50,7 +50,7 @@ class FrameTemplate(object):
         """
         Params same as framesFromTransTmpl
         """
-        return next(FrameTemplate.framesFromTransTmpl(transactionTmpl,
+        return next(FrameTmpl.framesFromTransTmpl(transactionTmpl,
                                                       wordWidth,
                                                       maxPaddingWords=maxPaddingWords,
                                                       trimPaddingWordsOnStart=trimPaddingWordsOnStart,
@@ -64,9 +64,9 @@ class FrameTemplate(object):
                             trimPaddingWordsOnStart=False,
                             trimPaddingWordsOnEnd=False):
         """
-        Convert transaction template into FrameTemplates
+        Convert transaction template into FrameTmpls
 
-        :param transactionTmpl: transaction template used which are FrameTemplates created from
+        :param transactionTmpl: transaction template used which are FrameTmpls created from
         :param wordWidth: width of data signal in target interface where frames will be used
         :param maxFrameLen: maximum length of frame, if exceeded another frame will be created
         :param maxPaddingWords: maximum of continual padding words in frame,
@@ -109,7 +109,7 @@ class FrameTemplate(object):
                     else:
                         _endOfThisFrame = endOfThisFrame
 
-                    yield FrameTemplate(transactionTmpl,
+                    yield FrameTmpl(transactionTmpl,
                                         wordWidth,
                                         startOfThisFrame,
                                         _endOfThisFrame,
@@ -164,7 +164,7 @@ class FrameTemplate(object):
                 # align end of frame to word
             endOfThisFrame = ceil(endOfThisFrame / wordWidth) * wordWidth
 
-            yield FrameTemplate(transactionTmpl,
+            yield FrameTmpl(transactionTmpl,
                                 wordWidth,
                                 startOfThisFrame,
                                 endOfThisFrame,
@@ -265,7 +265,7 @@ class FrameTemplate(object):
                     res[f] = fVal
             elif isinstance(f.dtype, HStruct):
                 if fVal:
-                    FrameTemplate.buildFieldToDataDict(f.dtype, fVal, res)
+                    FrameTmpl.buildFieldToDataDict(f.dtype, fVal, res)
             elif isinstance(f.dtype, HArray):
                 if fVal:
                     # assert isinstance(fVal, class_or_tuple)
