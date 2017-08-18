@@ -49,6 +49,11 @@ class HArray(HdlType):
             cls._valCls = HArrayVal
             return cls._valCls
 
+    @classmethod
+    def get_reinterpret_cast_fn(cls):
+        from hwt.hdlObjects.types.arrayCast import reinterpret_cast_harray
+        return reinterpret_cast_harray
+
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
         :param indent: number of indentation

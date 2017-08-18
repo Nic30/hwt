@@ -11,7 +11,7 @@ class Bits(HdlType):
         """
         :param negated: if true the value is in negated form
         :param forceVector: use always hdl vector type
-            (for example std_logic_vector(0 downto 0) instead of std_logic)
+            (for example std_logic_vector(0 downto 0) instead of std_logic in VHDL)
         """
         self.forceVector = forceVector
         self.negated = negated

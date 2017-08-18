@@ -36,7 +36,7 @@ def makeTestbenchTemplate(unit, name=None):
     for p in unit._entity.ports:
         t = p._dtype
         if isinstance(t, Bits) and not t == BIT:
-            t = Bits(t.bit_length(), t.forceVector, t.signed)
+            t = Bits(t.bit_length(), signed=t.signed, forceVector=t.forceVector) 
         s = RtlSignal(nl, p.name, t, t.fromPy(0))
         ctx[p._interface] = s
         p.connectSig(s)

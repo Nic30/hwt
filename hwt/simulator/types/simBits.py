@@ -27,6 +27,7 @@ class SimBitsT(Bits):
         self._widthVal = width
         self.signed = signed
         self._allMask = mask(self._widthVal)
+        self.forceVector = False
 
     def __eq__(self, other):
         return isinstance(other, Bits) and other._widthVal == self._widthVal\

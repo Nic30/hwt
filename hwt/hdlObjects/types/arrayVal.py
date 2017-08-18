@@ -57,8 +57,7 @@ class HArrayVal(Value):
                 if kv >= self._dtype.size:
                     raise IndexError()
 
-            v = self.val[kv]
-            return v.clone()
+            return self.val[kv].clone()
         except KeyError:
             return self._dtype.elmType.fromPy(None)
 
@@ -97,9 +96,21 @@ class HArrayVal(Value):
 
         * In simulator is used _setitem__val directly
         """
-        assert isinstance(self, Value)
-        assert index._dtype == INT, index._dtype
+        if isinstance(index, int):
+            index = INT.fromPy(index)
+        else:
+            assert isinstance(self, Value)
+            assert index._dtype == INT, index._dtype
+
+        if not isinstance(value, Value):
+            value = self._dtype.elmType.fromPy(value)
+        else:
+            assert value._dtype == self._dtype.elmType, (value._dtype, self._dtype.elmType)
+                
         return self._setitem__val(index, value)
+
+    def __len__(self):
+        return int(self._dtype.size)
 
     def _eq__val(self, other):
         assert self._dtype.elmType == other._dtype.elmType

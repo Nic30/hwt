@@ -9,9 +9,10 @@ class StructValBase(Value):
     """
     __slots__ = []
 
-    def __init__(self, val, typeObj):
+    def __init__(self, val, typeObj, skipCheck=False):
         self._dtype = typeObj
-        if val is not None:
+        self.updateTime = -1
+        if not skipCheck and val is not None:
             assert set(self.__slots__).issuperset(set(val.keys())), \
                 set(val.keys()).difference(set(self.__slots__))
 
@@ -27,6 +28,17 @@ class StructValBase(Value):
                 v = f.dtype.fromPy(v)
 
             setattr(self, f.name, v)
+
+    def clone(self):
+        d = {}
+        for f in self._dtype.fields:
+            if f.name is None:
+                continue
+
+            v = getattr(self, f.name).clone()
+            d[f.name] = v
+
+        return self.__class__(d, self._dtype, skipCheck=True)
 
     @classmethod
     def fromPy(cls, val, typeObj):

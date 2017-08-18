@@ -50,7 +50,7 @@ class BitsVal(EventCapableVal):
             msbMask = 1 << (w - 1)
             if _v >= msbMask:
                 v.val = -_v + msbMask + (m >> 1) - 1
-
+        v._dtype = v._dtype.__class__(w, signed=signed)
         return v
 
     def _convSign(self, signed):
