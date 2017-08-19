@@ -32,7 +32,15 @@ class SimSignal(SignalItem):
 
             simulator.addHwProcToRun(self, p)
 
-        if self.simRisingSensProcs or self.simFallingSensProcs:
+        # run write callbacks we have to create new list to allow
+        # registering of new call backs in callbacks
+        callBacks = self._writeCallbacks
+        self._writeCallbacks = []
+        for c in callBacks:
+            # simulation processes
+            simulator.process(c(simulator))    
+
+        if self.simRisingSensProcs:
             if v.val or not v.vldMask:
                 for p in self.simRisingSensProcs:
                     if log:
@@ -40,6 +48,7 @@ class SimSignal(SignalItem):
 
                     simulator.addHwProcToRun(self, p)
 
+        if self.simFallingSensProcs:
             if not v.val or not v.vldMask:
                 for p in self.simFallingSensProcs:
                     if log:
@@ -61,12 +70,6 @@ class SimSignal(SignalItem):
             if log:
                 log(simulator.now, self, newVal)
 
-            # run write callbacks we have to create new list to allow
-            # registering of new call backs in callbacks
-            callBacks = self._writeCallbacks
-            self._writeCallbacks = []
-            for c in callBacks:
-                # simulation processes
-                simulator.process(c(simulator))
+
 
             self.simPropagateChanges(simulator)
