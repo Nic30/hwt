@@ -342,6 +342,17 @@ class FrameTmpl(object):
         buff = ["{0: <{padding}}|".format(index, padding=padding)]
         DW = self.wordWidth
         partsWithChoice = []
+
+        endAlignment = transactionParts[-1].endOfPart % DW
+        if endAlignment:
+            # -1 for ending |
+            percentOfWidth = (DW - endAlignment) / DW
+            # -1 for ending |
+            fieldWidth = max(0, int(percentOfWidth * width) - 1)
+            assert fieldWidth >= 0
+            s = '%s|' % ("^"*(fieldWidth))
+            buff.append(s)
+
         for tp in reversed(transactionParts):
             percentOfWidth = tp.bit_length() / DW
             # -1 for ending |
@@ -356,7 +367,6 @@ class FrameTmpl(object):
             else:
                 name = self.__repr__getName(tp, fieldWidth)
             buff.append('{0: ^{fieldWidth}}|'.format(name, fieldWidth=fieldWidth))
-
         return ("".join(buff), partsWithChoice)
 
     def __repr__(self, scale=1):

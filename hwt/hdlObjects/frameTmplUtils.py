@@ -73,8 +73,7 @@ class ChoiceOfFrameParts(list):
     on context
 
     :ivar startOfPart: bit addr of start of this group of frame parts
-    :ivar origin: origin HStructField with HUnion type or HUnion itself
-        when it is top type
+    :ivar origin: OneOfTransaction instance
     """
     def __init__(self, startOfPart, origin):
         self.origin = origin
@@ -95,7 +94,7 @@ class ChoiceOfFrameParts(list):
         return "<ChoiceOfFrameParts %s>" % list.__repr__(self)
 
 
-def groupIntoChoices(splitsOnWord, wordWidth):
+def groupIntoChoices(splitsOnWord, wordWidth, origin):
     """
     :param: splitsOnWord list of lists of parts (fields splited on word
         boundaries)
@@ -110,13 +109,13 @@ def groupIntoChoices(splitsOnWord, wordWidth):
     for i, item in iterSort(splitsOnWord, cmpWordIndex):
         _actualW = item.startOfPart // wordWidth
         if actual is None:
-            actual = ChoiceOfFrameParts(item.startOfPart)
+            actual = ChoiceOfFrameParts(item.startOfPart, origin)
             actual.extend([] for _ in range(itCnt))
             actualW = _actualW
         elif _actualW > actualW:
             actual.resolveEnd()
             yield actual
-            actual = ChoiceOfFrameParts(item.startOfPart)
+            actual = ChoiceOfFrameParts(item.startOfPart, origin)
             actual.extend([] for _ in range(itCnt))
             actualW = _actualW
         actual[i].append(item)
@@ -171,7 +170,7 @@ class TransTmplWordIterator():
             if isinstance(tmp, OneOfTransaction):
                 split = [self.splitOnWords(ch, end)
                          for ch in tmp.possibleTransactions]
-                yield from groupIntoChoices(split, wordWidth)
+                yield from groupIntoChoices(split, wordWidth, tmp)
                 end = addrOffset + tmp.possibleTransactions[0].bitAddrEnd
             else:
                 (base, end), tmpl = tmp
