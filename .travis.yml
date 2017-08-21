@@ -23,7 +23,7 @@ install:
   - ln -s hwt $DIST_PACKAGES/hwt
 
 script:
-- coverage run --source=hwt ../hwtLib/setup.py test
+- coverage run --branch --source=hwt ../hwtLib/setup.py test
 
 deploy:
   provider: pypi
