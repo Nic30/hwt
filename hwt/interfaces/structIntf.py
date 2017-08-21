@@ -46,7 +46,7 @@ class StructIntf(Interface):
             if field.name is not None:
                 # generate interface based on struct field
                 t = field.dtype
-                if isinstance(t, HStruct):
+                if isinstance(t, (HStruct, HUnion)):
                     intf = StructIntf(t, self._instantiateFieldFn)
                 else:
                     intf = self._instantiateFieldFn(self, field)

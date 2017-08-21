@@ -179,7 +179,7 @@ class HUnion(HdlType):
 
     def __eq__(self, other):
         return (
-            type(self) is type(other) and 
+            type(self) is type(other) and
             self.bit_length() == other.bit_length() and
             self.__fields__eq__(other))
 
@@ -204,7 +204,7 @@ class HUnion(HdlType):
         header = "%sunion %s{" % (myIndent, name)
 
         buff = [header, ]
-        for f in self.fields:
+        for f in self.fields.values():
             if f.name is None:
                 buff.append("%s//%r empty space" % (childIndent, f.dtype))
             else:

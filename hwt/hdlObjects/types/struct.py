@@ -109,7 +109,7 @@ class HStruct(HdlType):
 
     def __eq__(self, other):
         return (
-            type(self) is type(other) and 
+            type(self) is type(other) and
             self.bit_length() == other.bit_length() and
             self.__fields__eq__(other))
 
