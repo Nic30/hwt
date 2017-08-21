@@ -30,8 +30,11 @@ def simEvalCond(simulator, *conds):
     for v in conds:
         val = bool(v.val)
         fullVld = v.vldMask == 1
-        if not val and fullVld:
-            return False, True
+        if fullVld:
+            if not val:
+                return False, True
+        else:
+            return False, False
 
         _cond = _cond and val
         _vld = _vld and fullVld
