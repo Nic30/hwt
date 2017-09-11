@@ -19,6 +19,7 @@ from hwt.serializer.vhdl.types import VhdlSerializer_types
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.serializer.vhdl.value import VhdlSerializer_Value
 from hwt.synthesizer.param import getParam
+import re
 
 
 class DebugTmpVarStack():
@@ -54,6 +55,14 @@ class DebugTmpVarStack():
         return separator.join(map(self._serializeItem, self.vars)) + "\n"
 
 
+class VhdlNameScope(NameScope):
+    RE_MANY_UNDERSCORES = re.compile(r"(_{2,})")
+
+    def checkedName(self, actualName, actualObj, isGlobal=False):
+        actualName = self.RE_MANY_UNDERSCORES.sub(r"_", actualName)
+        return NameScope.checkedName(self, actualName, actualObj, isGlobal=isGlobal)
+
+
 class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
                      VhdlSerializer_ops, VhdlSerializer_types, VhdlSerializer_statements, GenericSerializer):
     VHDL_VER = VhdlVersion.v2002
@@ -62,7 +71,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
     @classmethod
     def getBaseNameScope(cls):
-        s = NameScope(True)
+        s = VhdlNameScope(True)
         s.setLevel(1)
         s[0].update(cls._keywords_dict)
         return s
@@ -146,7 +155,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
         if len(portMaps) == 0:
             raise SerializerException("Incomplete component instance")
 
-        # [TODO] check component instance name
+        entity._name = ctx.scope.checkedName(entity._name, entity)
         return cls.componentInstanceTmpl.render(
                 indent=getIndent(ctx.indent),
                 instanceName=entity._name,
