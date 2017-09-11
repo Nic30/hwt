@@ -3,7 +3,7 @@ from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 
 
-def setOut(*interfaces, defVal=None):
+def setOut(*interfaces):
     """
     set interfaces as output interfaces
 
