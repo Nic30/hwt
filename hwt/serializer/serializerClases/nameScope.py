@@ -105,7 +105,7 @@ class NameScope(list):
         self.ignorecase = ignorecase
 
     def fork(self, lvl):
-        f = NameScope(self.ignorecase)
+        f = self.__class__(self.ignorecase)
         for i in range(lvl):
             f.append(self[i])
         return f
