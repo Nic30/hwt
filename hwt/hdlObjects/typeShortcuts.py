@@ -24,5 +24,4 @@ def hBit(pyVal):
 
 def vec(val, width, signed=None):
     """create hdl vector value"""
-    assert val < (2 ** int(width))
     return Bits(width, signed, forceVector=True).fromPy(val)
