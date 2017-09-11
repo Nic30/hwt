@@ -1,10 +1,11 @@
-from hwt.hdlObjects.operator import Operator
+from itertools import islice, zip_longest
+
 from hwt.hdlObjects.assignment import Assignment
-from hwt.hdlObjects.value import Value
+from hwt.hdlObjects.operator import Operator
 from hwt.hdlObjects.statements import IfContainer, SwitchContainer
+from hwt.hdlObjects.value import Value
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import maxStmId
-from itertools import islice, zip_longest
 
 
 def removeUnconnectedSignals(netlist):
@@ -33,7 +34,12 @@ def removeUnconnectedSignals(netlist):
                     if isinstance(e, Operator):
                         for op in e.operands:
                             if not isinstance(op, Value):
-                                op.endpoints.remove(e)
+                                try:
+                                    op.endpoints.remove(e)
+                                except KeyError:
+                                    # this operator has 2x+ same operand
+                                    continue
+
                                 _toSearch.add(op)
 
                     elif isinstance(e, Assignment):
