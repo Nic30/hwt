@@ -43,8 +43,8 @@ class Value():
         return hash((self._dtype, self.val, self.vldMask, self.updateTime))
 
     def __repr__(self):
-        return "<{0:s} {1:s}, mask {2:b}, time {3:.2f}>".format(self.__class__.__name__,
-                    str(self.val), self.vldMask, self.updateTime)
+        return "<{0:s} {1:s}, mask {2:x}, time {3:.2f}>".format(
+            self.__class__.__name__, str(self.val), self.vldMask, self.updateTime)
 
     @classmethod
     def fromPy(cls, val, typeObj):
