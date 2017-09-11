@@ -1,5 +1,6 @@
 from hwt.hdlObjects.transTmpl import OneOfTransaction
-from hwt.hdlObjects.transactionPart import TransactionPart
+from hwt.hdlObjects.transPart import TransPart
+from typing import Tuple
 
 
 def iterSort(iterators, cmpFn):
@@ -66,16 +67,18 @@ def iterSort(iterators, cmpFn):
             actual[minimumIndex] = minimum
 
 
-class ChoiceOfFrameParts(list):
+class ChoicesOfFrameParts(list):
     """
-    List of lists of transaction parts
-    One of child list is used to represent the word, item depends
+    List of ChoiceOfFrameParts
+    One of ChoiceOfFrameParts is used to represent the word, item depends
     on context
 
-    :ivar startOfPart: bit addr of start of this group of frame parts
     :ivar origin: OneOfTransaction instance
+    :ivar startOfPart: bit addr of start of this group of frame parts
+    :ivar endOfPart: bit addr of end of this group of frame parts
     """
-    def __init__(self, startOfPart, origin):
+
+    def __init__(self, startOfPart: int, origin: OneOfTransaction):
         self.origin = origin
         self.startOfPart = startOfPart
         self.endOfPart = None
@@ -87,18 +90,38 @@ class ChoiceOfFrameParts(list):
                 end = max(end, max(itm.endOfPart for itm in items))
         self.endOfPart = end
 
+    def getBusWordBitRange(self) -> Tuple[int, int]:
+        """
+        :return: bit range which contains data of this part on bus data signal
+        """
+        offset = self.startOfPart % self.parent.wordWidth
+        return (offset + self.bit_length(), offset)
+
     def bit_length(self):
         return self.endOfPart - self.startOfPart
+
+    def __repr__(self):
+        return "<ChoicesOfFrameParts %s>" % list.__repr__(self)
+
+
+class ChoiceOfFrameParts(list):
+    """
+    :ivar origin: ChoicesOfFrameParts instance
+    :ivar tmpl: TransTmpl which was item generated from
+    """
+    def __init__(self, origin, tmpl):
+        self.origin = origin
+        self.tmpl = tmpl
 
     def __repr__(self):
         return "<ChoiceOfFrameParts %s>" % list.__repr__(self)
 
 
-def groupIntoChoices(splitsOnWord, wordWidth, origin):
+def groupIntoChoices(splitsOnWord, wordWidth: int, origin: OneOfTransaction):
     """
-    :param: splitsOnWord list of lists of parts (fields splited on word
+    :param splitsOnWord: list of lists of parts (fields splited on word
         boundaries)
-    :return: generators of ChoiceOfFrameParts for each word
+    :return: generators of ChoicesOfFrameParts for each word
         which are not crossing word boundaries
     """
     def cmpWordIndex(a, b):
@@ -109,36 +132,43 @@ def groupIntoChoices(splitsOnWord, wordWidth, origin):
     for i, item in iterSort(splitsOnWord, cmpWordIndex):
         _actualW = item.startOfPart // wordWidth
         if actual is None:
-            actual = ChoiceOfFrameParts(item.startOfPart, origin)
-            actual.extend([] for _ in range(itCnt))
+            actual = ChoicesOfFrameParts(item.startOfPart, origin)
+            actual.extend(
+                ChoiceOfFrameParts(actual,
+                                   origin.possibleTransactions[_i])
+                for _i in range(itCnt))
             actualW = _actualW
         elif _actualW > actualW:
             actual.resolveEnd()
             yield actual
-            actual = ChoiceOfFrameParts(item.startOfPart, origin)
-            actual.extend([] for _ in range(itCnt))
+            actual = ChoicesOfFrameParts(item.startOfPart, origin)
+            actual.extend(
+                ChoiceOfFrameParts(actual,
+                                   origin.possibleTransactions[_i])
+                for _i in range(itCnt))
             actualW = _actualW
         actual[i].append(item)
 
     if actual is not None:
-            actual.resolveEnd()
-            yield actual
+        actual.resolveEnd()
+        yield actual
 
 
 class TransTmplWordIterator():
     def __init__(self, wordWidth):
         self.wordWidth = wordWidth
 
-    def fullWordCnt(self, start, end):
+    def fullWordCnt(self, start: int, end: int):
         """Count of complete words between two addresses
         """
         assert end >= start, (start, end)
         gap = max(0, (end - start) - (start % self.wordWidth))
         return gap // self.wordWidth
 
-    def groupByWordIndex(self, transaction, offset):
+    def groupByWordIndex(self, transaction: 'TransTmpl', offset: int):
         """
         Group transaction parts splited on words to words
+        :param transaction: 
 
         :return: generator of tuples (wordIndex, list of transaction parts in this word)
         """
@@ -162,7 +192,7 @@ class TransTmplWordIterator():
 
     def splitOnWords(self, transaction, addrOffset=0):
         """
-        :return: generator of TransactionPart instance
+        :return: generator of TransPart instance
         """
         wordWidth = self.wordWidth
         end = addrOffset
@@ -180,5 +210,5 @@ class TransTmplWordIterator():
                     endOfWord = (wordIndex + 1) * wordWidth
                     endOfPart = min(endOfWord, end)
                     inFieldOffset = startOfPart - base
-                    yield TransactionPart(tmpl, startOfPart, endOfPart, inFieldOffset)
+                    yield TransPart(self, tmpl, startOfPart, endOfPart, inFieldOffset)
                     startOfPart = endOfPart

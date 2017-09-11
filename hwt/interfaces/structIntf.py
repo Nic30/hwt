@@ -2,7 +2,6 @@ from hwt.hdlObjects.constants import DIRECTION
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.hdlType import HdlType
 from hwt.hdlObjects.types.struct import HStruct, HStructField, HStructFieldMeta
-from hwt.hdlObjects.types.union import HUnion
 from hwt.interfaces.std import Signal, VldSynced, RegCntrl, BramPort_withoutClk
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -15,22 +14,17 @@ class StructIntf(Interface):
     Create dynamic interface based on HStruct or HUnion description
 
     :ivar _fieldsToInterfaces: dictionary {field from HStruct template: sub interface for it}
+    :ivar _structT: HStruct instance used as template for this interface
+    :param _instantiateFieldFn: function(FieldTemplateItem instance) return interface instance
     """
     def __init__(self, structT, instantiateFieldFn,
                  masterDir=DIRECTION.OUT, asArraySize=None,
                  loadConfig=True):
-        """
-        :param structT: HStruct instance used as template for this interface
-        :param instantiateFieldFn: function(FieldTemplateItem instance) used to instantiate fields
-            (is called only on fields which have different type than HStruct)
-        """
         Interface.__init__(self,
                            masterDir=masterDir,
                            asArraySize=asArraySize,
                            loadConfig=loadConfig)
-
         self._structT = structT
-        assert isinstance(structT, (HStruct, HUnion))
         self._instantiateFieldFn = instantiateFieldFn
         self._fieldsToInterfaces = {}
 
@@ -41,16 +35,13 @@ class StructIntf(Interface):
         else:
             fields = _t.fields.values()
 
+        self._fieldsToInterfaces[self._structT] = self
+
         for field in fields:
             # skip padding
             if field.name is not None:
                 # generate interface based on struct field
-                t = field.dtype
-                if isinstance(t, (HStruct, HUnion)):
-                    intf = StructIntf(t, self._instantiateFieldFn)
-                else:
-                    intf = self._instantiateFieldFn(self, field)
-
+                intf = self._instantiateFieldFn(self, field)
                 self._fieldsToInterfaces[field] = intf
                 setattr(self, field.name, intf)
 
@@ -96,13 +87,12 @@ def HTypeFromIntfMapItem(interfaceMapItem):
         isTerminal = True
     else:
         typeOrListOfInterfaces, nameOrPrefix = interfaceMapItem
-            
-        
+
         if isinstance(typeOrListOfInterfaces, list):
             # tuple (list or items, name of this array)
             types = []
             reference = None
-    
+
             for item in typeOrListOfInterfaces:
                 if isIntfMap(item):
                     t = HTypeFromIntfMap(item)
@@ -117,7 +107,7 @@ def HTypeFromIntfMapItem(interfaceMapItem):
                     assert reference == t, ("all items in array has to have same type")
 
             dtype = reference[len(types)]
-        
+
         elif isinstance(typeOrListOfInterfaces, HdlType):
             dtype = typeOrListOfInterfaces
             isTerminal = True
@@ -130,7 +120,7 @@ def HTypeFromIntfMapItem(interfaceMapItem):
             # tuple (tuple of interfaces, prefix)
             assert isinstance(typeOrListOfInterfaces, tuple), typeOrListOfInterfaces
             dtype = HTypeFromIntfMap(typeOrListOfInterfaces)
-            
+
     assert isinstance(nameOrPrefix, str) or nameOrPrefix is None, nameOrPrefix
 
     f = HStructField(dtype, nameOrPrefix)
@@ -148,7 +138,7 @@ def HTypeFromIntfMap(interfaceMap):
     :param interfaceMap: sequence of
         tuple (type, name) or (will create standard struct field member)
         interface or (will create a struct field from interface)
-        instance of hdl type (is used as padding) 
+        instance of hdl type (is used as padding)
         tuple (list of interface, name)
     :param DATA_WIDTH: width of word
     :param terminalNodes: None or set whre are placed StructField instances which are derived
