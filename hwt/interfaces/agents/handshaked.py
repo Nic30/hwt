@@ -141,7 +141,7 @@ class HandshakedAgent(SyncAgentBase):
         yield s.updateComplete
 
         rd = self.isRd(r)
-        assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
+        assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization, %d" % (self.intf, s.now)
         if not vld:
             return
 
