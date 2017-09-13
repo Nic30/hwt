@@ -6,8 +6,9 @@ from collections import deque
 class HandshakedAgent(SyncAgentBase):
     """
     Simulation/verification agent for :class:`hwt.interfaces.std.Handshaked` interface
-    there is onMonitorReady(simulator) and onDriverWirteAck(simulator) unimplemented method
-    which can be used for interfaces with bi-directional data streams
+    there is onMonitorReady(simulator) and onDriverWirteAck(simulator)
+    unimplemented method which can be used for interfaces
+    with bi-directional data streams
 
     :attention: requires clk and rst/rstn signal
         (if you do not have any create simulation wrapper with it)
@@ -45,7 +46,8 @@ class HandshakedAgent(SyncAgentBase):
 
     def isVld(self, readFn):
         """
-        get value of "valid" signal, override f.e. when you need to use signal with reversed polarity
+        get value of "valid" signal, override f.e. when you
+        need to use signal with reversed polarity
         """
         return readFn(self._vld)
 
@@ -75,7 +77,9 @@ class HandshakedAgent(SyncAgentBase):
             # wait for response of master
             yield s.updateComplete
             vld = self.isVld(r)
-            assert vld.vldMask, "valid signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
+            assert vld.vldMask, ("valid signal for interface %r is in invalid state,"
+                                 " this would cause desynchronization, %d") % (
+                                     self.intf, s.now)
 
             if vld.val:
                 # master responded with positive ack, do read data
@@ -101,7 +105,9 @@ class HandshakedAgent(SyncAgentBase):
     def checkIfRdWillBeValid(self, s):
         yield s.updateComplete
         rd = self.isRd(s.read)
-        assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization" % (self.intf)
+        assert rd.vldMask, ("ready signal for interface %r is in invalid state,"
+                            " this would cause desynchronization, %d") % (
+                                self.intf, s.now)
 
     def driver(self, s):
         """
@@ -141,7 +147,9 @@ class HandshakedAgent(SyncAgentBase):
         yield s.updateComplete
 
         rd = self.isRd(r)
-        assert rd.vldMask, "ready signal for interface %r is in invalid state, this would cause desynchronization, %d" % (self.intf, s.now)
+        assert rd.vldMask, ("ready signal for interface %r is in invalid state,"
+                            " this would cause desynchronization, %d") % (
+                                self.intf, s.now)
         if not vld:
             return
 
@@ -149,7 +157,9 @@ class HandshakedAgent(SyncAgentBase):
             # slave did read data, take new one
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, wrote, %d: %r\n" % (
-                                           self.intf._getFullName(), s.now, self.actualData))
+                                           self.intf._getFullName(),
+                                           s.now,
+                                           self.actualData))
 
             # pop new data, because actual was read by slave
             if self.data:

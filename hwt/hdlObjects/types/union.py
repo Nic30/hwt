@@ -13,12 +13,13 @@ class UnionValBase(Value):
     """
     Base class for values for union types.
     Every union type has it's own value class derived from this.
-    
+
     :ivar _dtype: union type of this value
     :ivar __usedField: member which is actually used to represent value
     :ivar __val: value for __usedField
     """
     __slots__ = ["_dtype", "_val", "_usedField"]
+
     def __init__(self, val, typeObj):
         self._dtype = typeObj
         if val is not None:
@@ -26,7 +27,7 @@ class UnionValBase(Value):
         else:
             memberName = next(iter((typeObj.fields.keys())))
             v = None
-        
+
         f = self._dtype.fields[memberName]
         if not isinstance(v, Value):
             v = f.dtype.fromPy(v)
@@ -43,7 +44,7 @@ class UnionValBase(Value):
         if areValues(self, other):
             if self._dtype == other._dtype:
                 otherVal = getattr(other, self.__usedField.name)
-                return self.__val == otherVal 
+                return self.__val == otherVal
             else:
                 return False
         else:
@@ -53,7 +54,7 @@ class UnionValBase(Value):
         buff = ["{"]
         indentOfFields = getIndent(indent + 1)
 
-        for f in self._dtype.fields.items():
+        for f in self._dtype.fields.values():
             if f.name is not None:
                 val = getattr(self, f.name)
                 try:
@@ -67,10 +68,10 @@ class UnionValBase(Value):
 
 
 class HUnionMemberHandler(object):
-    
+
     def __init__(self, field):
         self.field = field
-    
+
     def set(self, parent, v):
         f = parent._dtype.fields[self.field.name]
         if not isinstance(v, Value):
@@ -80,7 +81,7 @@ class HUnionMemberHandler(object):
 
         parent._val = v
         parent._usedField = f
-    
+
     def get(self, parent):
         name = self.field.name
         v = parent._val
