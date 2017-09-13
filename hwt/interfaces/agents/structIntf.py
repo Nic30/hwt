@@ -1,5 +1,23 @@
 from hwt.simulator.agentBase import AgentBase
 from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
+from typing import Union
+from hwt.synthesizer.interfaceLevel.interface import Interface
+
+
+def getMonitors(intf: Union[Interface, InterfaceProxy]):
+    if intf._arrayElemCache or (isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache):
+        for p in intf:
+            yield from p._ag.getMonitors()
+    else:
+        yield from intf._ag.getMonitors()
+
+
+def getDrivers(intf: Union[Interface, InterfaceProxy]):
+    if intf._arrayElemCache or (isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache):
+        for p in intf:
+            yield from p._ag.getDrivers()
+    else:
+        yield from intf._ag.getDrivers()
 
 
 class StructIntfAgent(AgentBase):
@@ -24,16 +42,8 @@ class StructIntfAgent(AgentBase):
 
     def getMonitors(self):
         for intf in self.intf._interfaces:
-            if intf._arrayElemCache or (isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache):
-                for p in intf:
-                    yield from p._ag.getMonitors()
-            else:
-                yield from intf._ag.getMonitors()
+            yield from getMonitors(intf)
 
     def getDrivers(self):
         for intf in self.intf._interfaces:
-            if intf._arrayElemCache or (isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache):
-                for p in intf:
-                    yield from p._ag.getDrivers()
-            else:
-                yield from intf._ag.getDrivers()
+            yield from getDrivers(intf)

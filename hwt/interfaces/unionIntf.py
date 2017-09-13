@@ -2,6 +2,7 @@ from hwt.code import log2ceil
 from hwt.hdlObjects.constants import DIRECTION
 from hwt.interfaces.std import Handshaked
 from hwt.interfaces.structIntf import StructIntf
+from hwt.interfaces.agents.unionIntf import UnionSourceAgent
 
 
 class UnionSink(StructIntf):
@@ -44,3 +45,6 @@ class UnionSource(UnionSink):
         StructIntf._declr(self)
         self._select = Handshaked(masterDir=DIRECTION.IN)
         self._select.DATA_WIDTH.set(log2ceil(len(self._structT.fields)))
+
+    def _getSimAgent(self):
+        return UnionSourceAgent
