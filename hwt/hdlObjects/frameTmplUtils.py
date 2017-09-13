@@ -1,6 +1,7 @@
-from hwt.hdlObjects.transTmpl import OneOfTransaction
-from hwt.hdlObjects.transPart import TransPart
 from typing import Tuple
+
+from hwt.hdlObjects.transPart import TransPart
+from hwt.hdlObjects.transTmpl import OneOfTransaction
 
 
 def iterSort(iterators, cmpFn):
@@ -76,12 +77,14 @@ class ChoicesOfFrameParts(list):
     :ivar origin: OneOfTransaction instance
     :ivar startOfPart: bit addr of start of this group of frame parts
     :ivar endOfPart: bit addr of end of this group of frame parts
+    :ivar _isLast: flag which means this is the last part of original union
     """
 
     def __init__(self, startOfPart: int, origin: OneOfTransaction):
         self.origin = origin
         self.startOfPart = startOfPart
         self.endOfPart = None
+        self._isLast = False
 
     def resolveEnd(self):
         end = self.startOfPart
@@ -89,6 +92,16 @@ class ChoicesOfFrameParts(list):
             if items:
                 end = max(end, max(itm.endOfPart for itm in items))
         self.endOfPart = end
+
+    def setIsLast(self, val: bool) -> None:
+        self._isLast = val
+
+    def isLastPart(self) -> bool:
+        """
+        :return: True if this part is last in parts derived from original field
+            else False
+        """
+        return self._isLast
 
     def getBusWordBitRange(self) -> Tuple[int, int]:
         """
@@ -150,6 +163,7 @@ def groupIntoChoices(splitsOnWord, wordWidth: int, origin: OneOfTransaction):
         actual[i].append(item)
 
     if actual is not None:
+        actual.setIsLast(True)
         actual.resolveEnd()
         yield actual
 
