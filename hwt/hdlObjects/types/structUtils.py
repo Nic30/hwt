@@ -2,6 +2,7 @@ from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStructField, HStruct
 from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.hdlObjects.types.union import HUnion
 
 
 def HStruct_selectFields(structT, fieldsToUse):
@@ -51,13 +52,15 @@ def HStruct_selectFields(structT, fieldsToUse):
     return HStruct(*template)
 
 
-def walkFlattenFields(structVal, skipPadding=True):
+def walkFlattenFields(sigOrVal, skipPadding=True):
     """
     Walk all simple values in HStruct or HArray
     """
-    t = structVal._dtype
+    t = sigOrVal._dtype
     if isinstance(t, Bits):
-        yield structVal
+        yield sigOrVal
+    elif isinstance(t, HUnion):
+        yield from walkFlattenFields(sigOrVal._val, skipPadding=skipPadding)
     elif isinstance(t, HStruct):
         for f in t.fields:
             isPadding = f.name is None
@@ -65,15 +68,15 @@ def walkFlattenFields(structVal, skipPadding=True):
                 if isPadding:
                     v = f.dtype.fromPy(None)
                 else:
-                    v = getattr(structVal, f.name)
+                    v = getattr(sigOrVal, f.name)
 
                 yield from walkFlattenFields(v)
 
     elif isinstance(t, HArray):
-        for item in structVal:
+        for item in sigOrVal:
             yield from walkFlattenFields(item)
     else:
-        raise NotImplementedError()
+        raise NotImplementedError(t)
 
 
 def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
