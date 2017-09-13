@@ -1,38 +1,52 @@
+from itertools import zip_longest
 from math import ceil, floor, inf
 import re
 
 from hwt.bitmask import mask, selectBitRange, setBitRange
-from hwt.hdlObjects.transactionPart import TransactionPart
+from hwt.hdlObjects.frameTmplUtils import TransTmplWordIterator, \
+    ChoicesOfFrameParts
+from hwt.hdlObjects.transPart import TransPart
 from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.struct import HStruct
+from hwt.pyUtils.arrayQuery import flatten
 from hwt.simulator.types.simBits import simBitsT
+from typing import Union, Generator
 
 
 class FrameTmpl(object):
     """
-    Frame template container for informations about frame,
-    template which is used for resolving how data should be formated into words and frames
-    on target interface
+    Frame template is metainfomation about data structure, it's the template
+    of transaction for specific interface
 
-    :ivar _fieldToTPart: dictionary {HStructField: TransactionPart} to resolve this association,
+    Usuall flow of frame generatig consists of these steps:
+
+    1. Describe format of data by HDL type (HStruct, HUnion ...)
+
+    2. Convert it to TransTmpl to resolve addresses of each field in structure
+
+    3. Split parts of TransTmpl into words
+
+    4. Use parts in words to assembly frames
+
+    :ivar _fieldToTPart: dictionary {HStructField: TransPart} to resolve this association,
         None by default, builded when packData is called and is not builded
     """
     __RE_RM_ARRAY_DOTS = re.compile("(\.\[)")
 
-    def __init__(self, origin, wordWidth, startBitAddr, endBitAddr, transactionParts):
+    def __init__(self, origin, wordWidth, startBitAddr, endBitAddr, transParts):
         """
         :param origin: instance of HType (usually HStruct) from which this FrameTmpl was generated from
         :param wordWidth: width of word on interface where this template should be used
         :param startBitAddr: bit offset where this frame starts
         :param endBitAddr: bit offset where this frame ends (bit index of first bit behind this frame)
-        :param transactionParts: instances of TransactionPart which are parts of this frame
+        :param transParts: instances of TransPart which are parts of this frame
         """
         self.origin = origin
         self.wordWidth = wordWidth
         self.startBitAddr = startBitAddr
         self.endBitAddr = endBitAddr
-        self.parts = transactionParts
+        self.parts = transParts
 
         self._fieldToTPart = None
 
@@ -42,33 +56,19 @@ class FrameTmpl(object):
             assert p.endOfPart <= endBitAddr, (p, endBitAddr)
 
     @staticmethod
-    def frameFromTransTmpl(transactionTmpl,
-                           wordWidth,
-                           maxPaddingWords=inf,
-                           trimPaddingWordsOnStart=False,
-                           trimPaddingWordsOnEnd=False):
-        """
-        Params same as framesFromTransTmpl
-        """
-        return next(FrameTmpl.framesFromTransTmpl(transactionTmpl,
-                                                      wordWidth,
-                                                      maxPaddingWords=maxPaddingWords,
-                                                      trimPaddingWordsOnStart=trimPaddingWordsOnStart,
-                                                      trimPaddingWordsOnEnd=trimPaddingWordsOnEnd))
-
-    @staticmethod
-    def framesFromTransTmpl(transactionTmpl,
-                            wordWidth,
-                            maxFrameLen=inf,
-                            maxPaddingWords=inf,
-                            trimPaddingWordsOnStart=False,
-                            trimPaddingWordsOnEnd=False):
+    def framesFromTransTmpl(transaction: 'TransTmpl',
+                            wordWidth: int,
+                            maxFrameLen: Union[int, float]=inf,
+                            maxPaddingWords: Union[int, float]=inf,
+                            trimPaddingWordsOnStart: bool=False,
+                            trimPaddingWordsOnEnd: bool=False) -> Generator['FrameTmpl', None, None]:
         """
         Convert transaction template into FrameTmpls
 
-        :param transactionTmpl: transaction template used which are FrameTmpls created from
+        :param transaction: transaction template used which are FrameTmpls created from
         :param wordWidth: width of data signal in target interface where frames will be used
-        :param maxFrameLen: maximum length of frame, if exceeded another frame will be created
+        :param maxFrameLen: maximum length of frame in bits, if exceeded another
+            frame will be created
         :param maxPaddingWords: maximum of continual padding words in frame,
             if exceed frame is split and words are cut of
         :attention: if maxPaddingWords<inf trimPaddingWordsOnEnd or trimPaddingWordsOnStart has to be True
@@ -80,97 +80,94 @@ class FrameTmpl(object):
         partsPending = False
 
         startOfThisFrame = 0
-        endOfThisFrame = maxFrameLen
-        parts = []
-        endOfPart = 0
         assert maxFrameLen > 0
         assert maxPaddingWords >= 0
         if maxPaddingWords < inf:
             assert trimPaddingWordsOnStart or trimPaddingWordsOnEnd, "Padding has to be cut off somewhere"
 
-        def fullWordCnt(start, end):
-            """Count of complete words between two addresses
-            """
-            assert end >= start
-            gap = max(0, (end - start) - (start % wordWidth))
-            return gap // wordWidth
-
-        for (base, end), tmpl in transactionTmpl.walkFlatten():
-            startOfPart = base
-            while startOfPart != end:
-                assert startOfThisFrame % wordWidth == 0, startOfThisFrame
-                # parts are always in single word
-                if startOfPart == endOfThisFrame:
-                    # cut off padding at end of frame
-                    paddingWords = fullWordCnt(endOfPart, endOfThisFrame)
-                    if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
-                        # cut off padding and align end of frame to word
-                        _endOfThisFrame = ceil(endOfPart / wordWidth) * wordWidth
-                    else:
-                        _endOfThisFrame = endOfThisFrame
-
-                    yield FrameTmpl(transactionTmpl,
-                                        wordWidth,
-                                        startOfThisFrame,
-                                        _endOfThisFrame,
-                                        parts)
-
-                    # prepare for start of new frame
-                    parts = []
-                    isFirstInFrame = True
-                    partsPending = False
-                    # start on new word
-                    endOfPart = (endOfThisFrame // wordWidth) * wordWidth
-                    startOfThisFrame = endOfPart
-                    endOfThisFrame = startOfThisFrame + maxFrameLen
-                    continue
-
-                if isFirstInFrame:
-                    partsPending = True
-                    isFirstInFrame = False
-                    # cut off padding at start of frame
-                    paddingWords = fullWordCnt(startOfThisFrame, base)
-                    if trimPaddingWordsOnStart and paddingWords > maxPaddingWords:
-                        startOfThisFrame += paddingWords * wordWidth
-                        assert startOfThisFrame <= base
-
-                    endOfThisFrame = startOfThisFrame + maxFrameLen
+        it = TransTmplWordIterator(wordWidth)
+        lastWordI = 0
+        endOfThisFrame = maxFrameLen
+        parts = []
+        for wordI, word in it.groupByWordIndex(transaction, 0):
+            if wordI * wordWidth >= endOfThisFrame:
+                # now in first+ word behind the frame
+                # cut off padding at end of frame
+                paddingWords = wordI - lastWordI
+                if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
+                    # cut off padding and align end of frame to word
+                    _endOfThisFrame = (lastWordI + 1) * wordWidth
                 else:
-                    # check if padding at the end of frame can be cut off
-                    # endOfPart is from last part
-                    if trimPaddingWordsOnEnd and fullWordCnt(endOfPart, startOfPart) >= 1:
-                        # there is too much continual padding,
-                        # cut it out and start new frame
-                        endOfThisFrame = startOfPart
-                        continue
+                    _endOfThisFrame = (wordI - 1) * wordWidth
 
-                # resolve end of this part
-                wordIndex = startOfPart // wordWidth
-                endOfWord = wordWidth * (wordIndex + 1)
-                endOfPart = min(endOfWord, end, endOfThisFrame)
-
-                inFieldOffset = startOfPart - base
-                p = TransactionPart(tmpl, startOfPart, endOfPart, inFieldOffset)
-                parts.append(p)
-
-                startOfPart = endOfPart
-
-        if partsPending:
-            endOfThisFrame = max(startOfPart, transactionTmpl.bitAddrEnd)
-            # cut off padding at end of frame
-            paddingWords = fullWordCnt(endOfPart, endOfThisFrame)
-            if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
-                endOfThisFrame -= paddingWords * wordWidth
-                # align end of frame to word
-            endOfThisFrame = ceil(endOfThisFrame / wordWidth) * wordWidth
-
-            yield FrameTmpl(transactionTmpl,
+                yield FrameTmpl(transaction,
                                 wordWidth,
                                 startOfThisFrame,
-                                endOfThisFrame,
+                                _endOfThisFrame,
                                 parts)
 
-    def _wordIndx(self, addr):
+                # prepare for start of new frame
+                parts = []
+                isFirstInFrame = True
+                partsPending = False
+                # start on new word
+                startOfThisFrame = _endOfThisFrame
+                endOfThisFrame = startOfThisFrame + maxFrameLen
+                lastWordI = wordI
+
+            # check if padding at potential end of frame can be cut off
+            if not isFirstInFrame and trimPaddingWordsOnEnd and wordI - lastWordI > 1:
+                # there is too much continual padding,
+                # cut it out and start new frame
+                _endOfThisFrame = (lastWordI + 1) * wordWidth
+                yield FrameTmpl(transaction,
+                                wordWidth,
+                                startOfThisFrame,
+                                _endOfThisFrame,
+                                parts)
+
+                # prepare for start of new frame
+                parts = []
+                isFirstInFrame = True
+                partsPending = False
+                # start on new word
+                startOfThisFrame = _endOfThisFrame
+                endOfThisFrame = startOfThisFrame + maxFrameLen
+                lastWordI = wordI - 1
+
+            if isFirstInFrame:
+                partsPending = True
+                isFirstInFrame = False
+                # cut off padding at start of frame
+                paddingWords = wordI - lastWordI
+                if trimPaddingWordsOnStart and paddingWords > maxPaddingWords:
+                    startOfThisFrame += paddingWords * wordWidth
+
+                endOfThisFrame = startOfThisFrame + maxFrameLen
+
+            # resolve end of this part
+            parts.extend(word)
+            lastWordI = wordI
+
+        if partsPending:
+            endOfThisFrame = transaction.bitAddrEnd
+            # cut off padding at end of frame
+            endOfLastWord = (lastWordI + 1) * wordWidth
+            if endOfThisFrame < endOfLastWord:
+                endOfThisFrame = endOfLastWord
+            else:
+                paddingWords = it.fullWordCnt(endOfLastWord, endOfThisFrame)
+                if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
+                    endOfThisFrame -= paddingWords * wordWidth
+                    # align end of frame to word
+
+            yield FrameTmpl(transaction,
+                            wordWidth,
+                            startOfThisFrame,
+                            endOfThisFrame,
+                            parts)
+
+    def _wordIndx(self, addr: int):
         """
         convert bit address to index of word where this address is
         """
@@ -182,13 +179,14 @@ class FrameTmpl(object):
         """
         return ceil((self.endBitAddr - self.startBitAddr) / self.wordWidth)
 
-    def walkWords(self, showPadding=False):
+    def walkWords(self, showPadding: bool=False):
         """
         Walk enumerated words in this frame
 
-        :attention: not all indexes has to be present, only words with items will be generated when not showPadding
-        :param showPadding: padding TransactionParts are also present
-        :return: generator of tuples (wordIndex, list of TransactionParts in this word)
+        :attention: not all indexes has to be present, only words
+            with items will be generated when not showPadding
+        :param showPadding: padding TransParts are also present
+        :return: generator of tuples (wordIndex, list of TransParts in this word)
         """
         wIndex = 0
         lastEnd = self.startBitAddr
@@ -201,8 +199,7 @@ class FrameTmpl(object):
                     assert end >= lastEnd, (end, lastEnd)
                     endOfWord = ceil((lastEnd + 1) / self.wordWidth) * self.wordWidth
                     endOfPadding = min(endOfWord, end)
-                    _p = TransactionPart(None, lastEnd, endOfPadding, 0)
-                    _p.parent = self
+                    _p = TransPart(self, None, lastEnd, endOfPadding, 0)
                     parts.append(_p)
 
                     if endOfPadding >= endOfWord:
@@ -235,7 +232,7 @@ class FrameTmpl(object):
                     assert end >= lastEnd, (end, lastEnd)
                     endOfWord = ((lastEnd // self.wordWidth) + 1) * self.wordWidth
                     endOfPadding = min(endOfWord, end)
-                    _p = TransactionPart(None, lastEnd, endOfPadding, 0)
+                    _p = TransPart(self, None, lastEnd, endOfPadding, 0)
                     _p.parent = self
                     parts.append(_p)
 
@@ -251,7 +248,11 @@ class FrameTmpl(object):
                 yield (wIndex, parts)
 
     @staticmethod
-    def buildFieldToDataDict(dtype, data, res):
+    def fieldToDataDict(dtype, data, res):
+        """
+        Construct dictionary {StructField:value} for faster lookup of values
+        for fields
+        """
         # assert data is None or isinstance(data, dict)
         for f in dtype.fields:
             try:
@@ -265,7 +266,7 @@ class FrameTmpl(object):
                     res[f] = fVal
             elif isinstance(f.dtype, HStruct):
                 if fVal:
-                    FrameTmpl.buildFieldToDataDict(f.dtype, fVal, res)
+                    FrameTmpl.fieldToDataDict(f.dtype, fVal, res)
             elif isinstance(f.dtype, HArray):
                 if fVal:
                     # assert isinstance(fVal, class_or_tuple)
@@ -284,12 +285,14 @@ class FrameTmpl(object):
         typeOfWord = simBitsT(self.wordWidth, None)
         fieldToVal = self._fieldToTPart
         if fieldToVal is None:
-            fieldToVal = self._fieldToTPart = self.buildFieldToDataDict(self.origin.dtype, data, {})
+            fieldToVal = self._fieldToTPart = self.fieldToDataDict(self.origin.dtype,
+                                                                   data,
+                                                                   {})
 
-        for _, transactionParts in self.walkWords(showPadding=True):
+        for _, transParts in self.walkWords(showPadding=True):
             actualVldMask = 0
             actualVal = 0
-            for tPart in transactionParts:
+            for tPart in transParts:
                 high, low = tPart.getBusWordBitRange()
                 fhigh, flow = tPart.getFieldBitRange()
                 if not tPart.isPadding:
@@ -309,12 +312,12 @@ class FrameTmpl(object):
 
             yield typeOfWord.getValueCls()(actualVal, typeOfWord, actualVldMask, -1)
 
-    def __repr__getName(self, transactionPart, fieldWidth):
-        if transactionPart.isPadding:
+    def __repr__getName(self, transPart, fieldWidth):
+        if transPart.isPadding:
             return "X"*fieldWidth
         else:
             names = []
-            tp = transactionPart.tmpl
+            tp = transPart.tmpl
             while tp is not None:
                 try:
                     isArrayElm = isinstance(tp.parent.dtype, HArray)
@@ -322,10 +325,10 @@ class FrameTmpl(object):
                     isArrayElm = False
 
                 if isArrayElm:
-                    arr = transactionPart.tmpl.parent
+                    arr = transPart.tmpl.parent
                     arrS = arr.bitAddr
                     itemW = (arr.bitAddrEnd - arrS) // arr.itemCnt
-                    s = transactionPart.startOfPart
+                    s = transPart.startOfPart
                     indx = (s - arrS) // itemW
                     names.append("[%d]" % indx)
                 else:
@@ -339,11 +342,22 @@ class FrameTmpl(object):
             # [HOTFIX] rm dots when indexing on array
             return self.__RE_RM_ARRAY_DOTS.sub("[", ".".join(reversed(names)))
 
-    def __repr__word(self, index, width, padding, transactionParts):
+    def __repr__word(self, index, width, padding, transParts):
         buff = ["{0: <{padding}}|".format(index, padding=padding)]
         DW = self.wordWidth
+        partsWithChoice = []
 
-        for tp in reversed(transactionParts):
+        endAlignment = transParts[-1].endOfPart % DW
+        if endAlignment:
+            # -1 for ending |
+            percentOfWidth = (DW - endAlignment) / DW
+            # -1 for ending |
+            fieldWidth = max(0, int(percentOfWidth * width) - 1)
+            assert fieldWidth >= 0
+            s = '%s|' % ("^"*(fieldWidth))
+            buff.append(s)
+
+        for tp in reversed(transParts):
             percentOfWidth = tp.bit_length() / DW
             # -1 for ending |
             fieldWidth = max(0, int(percentOfWidth * width) - 1)
@@ -351,10 +365,13 @@ class FrameTmpl(object):
 
             # percentOffset = (tp.inFrameBitAddr % DW) / DW
             # offset = int(percentOffset * width)
-            name = self.__repr__getName(tp, fieldWidth)
+            if isinstance(tp, ChoicesOfFrameParts):
+                name = "<union>"
+                partsWithChoice.append(tp)
+            else:
+                name = self.__repr__getName(tp, fieldWidth)
             buff.append('{0: ^{fieldWidth}}|'.format(name, fieldWidth=fieldWidth))
-
-        return "".join(buff)
+        return ("".join(buff), partsWithChoice)
 
     def __repr__(self, scale=1):
         buff = []
@@ -373,8 +390,15 @@ class FrameTmpl(object):
             "", "", padding=padding, lineWidth=width + 1)
         buff.append(line)
 
-        for w, transactionParts in self.walkWords(showPadding=True):
-            buff.append(self.__repr__word(w, width, padding, transactionParts))
+        for w, transParts in self.walkWords(showPadding=True):
+            wStr, partsWithChoice = self.__repr__word(w, width, padding, transParts)
+            buff.append(wStr)
+            while partsWithChoice:
+                for parts in zip_longest(*partsWithChoice):
+                    parts = list(flatten(parts, level=1))
+                    wStr, _partsWithChoice = self.__repr__word(w, width, padding, parts)
+                    buff.append(wStr)
+                partsWithChoice = _partsWithChoice
 
         buff.append(line)
         buff.append(">")

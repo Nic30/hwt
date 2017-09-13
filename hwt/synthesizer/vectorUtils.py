@@ -1,107 +1,180 @@
-import math
+from functools import reduce
+from math import ceil
+from typing import Union
 
 from hwt.hdlObjects.typeShortcuts import vec
-from hwt.hdlObjects.types.array import HArray
 from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.struct import HStruct
 from hwt.hdlObjects.types.structUtils import walkFlattenFields
+from hwt.hdlObjects.value import Value
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
-def fitTo(what, to):
+class BitWidthErr(Exception):
     """
-    Slice signal "what" to fit in "to"
+    Wrong bit width of signal/value
+    """
+
+
+def fitTo(what, where, extend=True, shrink=True):
+    """
+    Slice signal "what" to fit in "where"
     or
-    extend "what" with zeros to same width as "to"
+    extend "what" with zeros to same width as "where"
 
     little-endian impl.
     """
 
     whatWidth = what._dtype.bit_length()
-    toWidth = to._dtype.bit_length()
+    toWidth = where._dtype.bit_length()
     if toWidth == whatWidth:
         return what
     elif toWidth < whatWidth:
         # slice
+        if not shrink:
+            raise BitWidthErr()
+
         return what[toWidth:]
     else:
+        if not extend:
+            raise BitWidthErr()
+
+        w = toWidth - whatWidth
+
         if what._dtype.signed:
-            raise NotImplementedError("Signed extension")
-        # extend
-        return vec(0, toWidth - whatWidth)._concat(what)
+            # signed extension
+            msb = what[whatWidth - 1]
+            ext = reduce(lambda a, b: a._concat(b), [msb for _ in range(w)])
+        else:
+            # 0 extend
+            ext = vec(0, w)
+
+        return ext._concat(what)
+
+
+class NotEnoughtBitsErr(Exception):
+    """
+    More bits is required for such an operation
+    """
+
+
+class BitWalker():
+    """
+    Walker which can walk chunks of bits on signals/values of all types
+
+    :ivar sigOrVal: signal or value to iterate over
+    :ivar fillup: flag that means that if there is not enought bits for last iterm
+        fill it up with invalid bits (otherwise raise)
+    """
+    def __init__(self, sigOrVal: Union[RtlSignal, Value],
+                 skipPadding: bool=True,
+                 fillup: bool=False):
+        """
+        :param skipPadding: if true padding is skipped in dense types
+        """
+        self.it = walkFlattenFields(sigOrVal, skipPadding=skipPadding)
+        self.fillup = fillup
+        self.actuallyHave = 0
+        self.actual = None
+        self.actualOffset = 0
+
+    def _get(self, numberOfBits: int, doCollect: bool):
+        """
+        :param numberOfBits: number of bits to get from actual possition
+        :param doCollect: if False output is not collected just iterator moves
+            in structure
+        """
+        if not isinstance(numberOfBits, int):
+            numberOfBits = int(numberOfBits)
+
+        while self.actuallyHave < numberOfBits:
+            # accumulate while not has enought
+            try:
+                f = next(self.it)
+            except StopIteration:
+                if self.fillup and self.actual is not None:
+                    break
+                else:
+                    raise NotEnoughtBitsErr()
+
+            thisFieldLen = f._dtype.bit_length()
+            if self.actual is None:
+                if not doCollect and thisFieldLen <= numberOfBits:
+                    numberOfBits -= thisFieldLen
+                else:
+                    self.actual = f
+                    self.actuallyHave = thisFieldLen
+            else:
+                if not doCollect and self.actuallyHave < numberOfBits:
+                    self.actuallyHave = thisFieldLen
+                    self.actual = f
+                else:
+                    self.actuallyHave += thisFieldLen
+                    self.actual = f._concat(self.actual)
+
+        # slice out from actual
+        actual = self.actual
+        actualOffset = self.actualOffset
+
+        if self.actuallyHave < numberOfBits:
+            assert self.fillup
+            if doCollect:
+                t = self.actual._dtype
+                fillupW = numberOfBits - self.actuallyHave
+                padding_t = Bits(fillupW, signed=t.signed, negated=t.negated)
+                padding = padding_t.fromPy(None)
+                actual = padding._concat(actual)
+            self.actuallyHave = 0
+
+        # update about what was taken
+        self.actuallyHave -= numberOfBits
+        self.actualOffset += numberOfBits
+        if self.actuallyHave == 0:
+            self.actual = None
+            self.actualOffset = 0
+
+        if doCollect:
+            if numberOfBits == 1:
+                return actual[actualOffset]
+            else:
+                return actual[(actualOffset + numberOfBits):actualOffset]
+
+    def get(self, numberOfBits: int) -> Union[RtlSignal, Value]:
+        """
+        :param numberOfBits: number of bits to get from actual possition
+        :return: chunk of bits of specified size (instance of Value or RtlSignal)
+        """
+        return self._get(numberOfBits, True)
+
+    def skip(self, numberOfBits: int) -> None:
+        """
+        Move this iterator without care about item
+
+        :param numberOfBits: number of bits to get from actual possition
+        """
+        self._get(numberOfBits, False)
+
+    def assertIsOnEnd(self):
+        """
+        Assert there is nothing left in this iterator
+        """
+        try:
+            next(self.it)
+        except StopIteration:
+            return
+
+        assert False, "BitWalker there stil were some items"
 
 
 def iterBits(sigOrVal, bitsInOne=1, skipPadding=True, fillup=False):
     """
     Iterate over bits in vector
 
-    :param sig: signal or value to iterate over
+    :param sigOrVal: signal or value to iterate over
     :param bitsInOne: number of bits in one part
     :param skipPadding: if true padding is skipped in dense types
     """
-    if isinstance(bitsInOne, int):
-        bitsInOne = int(bitsInOne)
+    bw = BitWalker(sigOrVal, skipPadding, fillup)
+    for _ in range(ceil(sigOrVal._dtype.bit_length() / bitsInOne)):
+        yield bw.get(bitsInOne)
 
-    t = sigOrVal._dtype
-    if isinstance(t, (HStruct, HArray)):
-        actual = None
-        actualOffset = 0
-
-        for f in walkFlattenFields(sigOrVal, skipPadding=skipPadding):
-            thisFieldLen = f._dtype.bit_length()
-
-            if actual is None:
-                actual = f
-                actuallyHave = thisFieldLen
-            else:
-                bitsInActual = actual._dtype.bit_length() - actualOffset
-                actuallyHave = bitsInActual + thisFieldLen
-                if actuallyHave >= bitsInOne:
-                    # consume what was remained in actual
-                    takeFromThis = bitsInOne - bitsInActual
-                    yield f[takeFromThis:]._concat(actual[:actualOffset])
-                    actualOffset = takeFromThis
-                    actuallyHave -= bitsInOne
-                    if actuallyHave > 0:
-                        actual = f
-                    else:
-                        actual = None
-                else:
-                    # concat to actual because it is not enough
-                    actual = f._concat(actual)
-
-            while actuallyHave >= bitsInOne:
-                yield actual[(actualOffset + bitsInOne):actualOffset]
-                # update slice out what was taken
-                actuallyHave -= bitsInOne
-                actualOffset += bitsInOne
-
-            if actuallyHave == 0:
-                actual = None
-                actualOffset = 0
-
-        if actual is not None and fillup:
-            fillupW = bitsInOne - actuallyHave
-            t = f._dtype
-            padding = Bits(fillupW, signed=t.signed, negated=t.negated).fromPy(None)
-            yield padding._concat(actual[:actualOffset])
-        else:
-            assert actual is None, "Width of object has to be divisible by bitsInOne"
-    else:
-        w = sigOrVal._dtype.bit_length()
-        if bitsInOne == 1:
-            for bit in range(w):
-                yield sigOrVal[bit]
-        else:
-            items = math.ceil(w / bitsInOne)
-            for i in range(items):
-                h = min(bitsInOne * (i + 1), w)
-                l = bitsInOne * i
-                s = sigOrVal[h:l]
-                if i < items - 1 or s._dtype.bit_length() == bitsInOne:
-                    yield s
-                else:
-                    # is last and is not complete
-                    assert fillup
-                    _w = s._dtype.bit_length()
-                    padding = Bits(bitsInOne - _w).fromPy(None)
-                    yield padding._concat(s)
+    bw.assertIsOnEnd()

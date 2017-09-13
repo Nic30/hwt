@@ -3,6 +3,7 @@ from operator import and_, or_, xor
 
 from hwt.hdlObjects.operatorDefs import concatFn
 from hwt.hdlObjects.typeShortcuts import hInt, vec
+from hwt.hdlObjects.types.bits import Bits
 from hwt.hdlObjects.types.enum import HEnum
 from hwt.hdlObjects.types.typeCast import toHVal
 from hwt.pyUtils.arrayQuery import arr_any, flatten
@@ -11,7 +12,6 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
 from hwt.synthesizer.vectorUtils import fitTo
-from hwt.hdlObjects.types.bits import Bits
 
 
 def _intfToSig(obj):
@@ -321,7 +321,7 @@ def _mkOp(fn):
 
     :param fn: function to perform binary operation
     """
-    def op(*operands):
+    def op(*operands) -> RtlSignalBase:
         assert operands, operands
         top = None
         for s in operands:
@@ -340,28 +340,28 @@ Xor = _mkOp(xor)
 Concat = _mkOp(concatFn)
 
 
-def power(base, exp):
+def power(base, exp) -> RtlSignalBase:
     return toHVal(base)._pow(exp)
 
 
-def ror(sig, howMany):
+def ror(sig, howMany) -> RtlSignalBase:
     "Rotate right"
     return sig[howMany:]._concat(sig[:howMany])
 
 
-def rol(sig, howMany):
+def rol(sig, howMany) -> RtlSignalBase:
     "Rotate left"
     width = sig._dtype.bit_length()
     return sig[(width - howMany):]._concat(sig[:(width - howMany)])
 
 
-def sll(sig, howMany):
+def sll(sig, howMany) -> RtlSignalBase:
     "Logical shift left"
     width = sig._dtype.bit_length()
     return sig[(width - howMany):]._concat(vec(0, howMany))
 
 
-def srl(sig, howMany):
+def srl(sig, howMany) -> RtlSignalBase:
     "Logical shift right"
     return vec(0, howMany)._concat(sig[:howMany])
 
@@ -383,22 +383,21 @@ def log2ceil(x):
     return hInt(res)
 
 
-def isPow2(num):
+def isPow2(num) -> bool:
     if not isinstance(num, int):
         num = int(num)
     return num != 0 and ((num & (num - 1)) == 0)
 
 
-def binToGray(sigOrVal):
+def binToGray(sigOrVal) -> RtlSignalBase:
     width = sigOrVal._dtype.bit_length()
     return Concat(sigOrVal[width - 1], sigOrVal[width - 1:0] ^ sigOrVal[width:1])
 
 
-def sizeof(_type):
+def sizeof(_type) -> int:
     "get size of type in bytes"
     s = _type.bit_length()
     return math.ceil(s / 8)
-
 
 
 # shortcuts

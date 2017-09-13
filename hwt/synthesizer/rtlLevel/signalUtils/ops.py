@@ -172,7 +172,7 @@ class RtlSignalOps():
         if source is None:
             source = self._dtype.fromPy(None)
         else:
-            source = toHVal(source)
+            source = toHVal(source, suggestedType=self._dtype)
             err = False
             try:
                 source = source._auto_cast(self._dtype)

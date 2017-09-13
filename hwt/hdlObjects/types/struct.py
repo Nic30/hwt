@@ -43,7 +43,7 @@ class HStruct(HdlType):
             name can be None (= padding)
         :param name: optional name used for debugging purposes
         """
-        self.fields = []
+        fields = []
         self.name = name
         fieldNames = []
         bit_length = 0
@@ -55,7 +55,7 @@ class HStruct(HdlType):
             if not isinstance(field, HStructField):
                 raise TypeError("Template for struct field %s is not in valid format" % repr(f))
 
-            self.fields.append(field)
+            fields.append(field)
             if field.name is not None:
                 fieldNames.append(field.name)
 
@@ -67,7 +67,7 @@ class HStruct(HdlType):
                 except TypeError:
                     bit_length = None
 
-        self.fields = tuple(self.fields)
+        self.fields = tuple(fields)
         self.__bit_length_val = bit_length
 
         usedNames = set(fieldNames)
@@ -109,12 +109,12 @@ class HStruct(HdlType):
 
     def __eq__(self, other):
         return (
-            type(self) is type(other) and 
+            type(self) is type(other) and
             self.bit_length() == other.bit_length() and
             self.__fields__eq__(other))
 
     def __hash__(self):
-        return hash((self.name, self.fields))
+        return hash(id(self))
 
     def __add__(self, other):
         """

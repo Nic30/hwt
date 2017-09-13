@@ -1,17 +1,20 @@
 from hwt.synthesizer.exceptions import TypeConversionErr
 
+
 def default_reinterpret_cast_fn(typeFrom, sigOrVal, toType):
     raise TypeConversionErr("Reinterpretation of %r of type \n%r to type %r is not implemented"
                             % (sigOrVal, typeFrom, toType))
+
 
 def default_auto_cast_fn(typeFrom, sigOrVal, toType):
     raise TypeConversionErr("Conversion of %r of type \n%r to type %r is not implemented"
                             % (sigOrVal, typeFrom, toType))
 
+
 class HdlType():
     """
     Base class for all hardware related types.
-    
+
     :ivar _auto_cast_fn: convert function (attribute set on first convert function call)
     :ivar _reinterpret_cast_fn: reinterpret function (attribute set on first convert function call)
     """
