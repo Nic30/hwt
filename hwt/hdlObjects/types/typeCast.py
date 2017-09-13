@@ -1,5 +1,5 @@
 
-from typing import Optional
+from typing import Optional, Any
 
 from hwt.hdlObjects.types.defs import INT, STR, BOOL
 from hwt.hdlObjects.types.hdlType import HdlType
@@ -13,7 +13,7 @@ defaultConversions = {int: INT,
                       bool: BOOL}
 
 
-def toHVal(op, suggestedType: Optional[HdlType]=None):
+def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
     """Convert python or hdl value/signal object to hdl value/signal object"""
     if isinstance(op, Value) or isinstance(op, SignalItem):
         return op
