@@ -5,6 +5,7 @@ from hwt.code import Concat
 from hwt.hdlObjects.types.array import HArray
 from hwt.bitmask import selectBitRange, mask
 
+
 def getBits_from_array(array, wordWidth, start, end, reinterpretElmToType=None):
     """
     Gets value of bits between selected range from memory
@@ -58,6 +59,7 @@ def reinterptet_harray_to_bits(typeFrom, sigOrVal, bitsT):
     parts = [p._reinterpret_cast(partT) for p in sigOrVal]
     
     return Concat(*reversed(parts))._reinterpret_cast(bitsT)
+
 
 def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
     mySize = int(typeFrom.size)
