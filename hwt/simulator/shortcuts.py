@@ -70,6 +70,8 @@ def toSimModel(unit, dumpModelIn=None):
     else:
         sim_code = toRtl(unit, serializer=SimModelSerializer)
         simModule = imp.new_module('simModule')
+        # python supports only ~100 opened brackets
+        # it exceded it throws MemoryError: s_push: parser stack overflow
         exec(sim_code, simModule.__dict__)
 
     return simModule.__dict__[unit._name]
