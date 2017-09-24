@@ -46,7 +46,7 @@ class SimModelSerializer_ops():
         o = op.operator
 
         def _bin(name):
-            return "(%s).%s(%s)" % (p(ops[0]).strip(), name, p(ops[1]).strip())
+            return "%s.%s(%s)" % (p(ops[0]).strip(), name, p(ops[1]).strip())
 
         if o == AllOps.AND:
             return _bin('_and__val')
