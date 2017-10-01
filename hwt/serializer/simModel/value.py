@@ -1,4 +1,4 @@
-from hwt.hdlObjects.variables import SignalItem
+from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.synthesizer.param import Param, evalParam
 from hwt.serializer.serializerClases.indent import getIndent

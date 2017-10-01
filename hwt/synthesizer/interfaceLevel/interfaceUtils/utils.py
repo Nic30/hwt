@@ -1,5 +1,5 @@
-from hwt.hdlObjects.constants import DIRECTION
-from hwt.hdlObjects.types.defs import BIT
+from hwt.hdl.constants import DIRECTION
+from hwt.hdl.types.defs import BIT
 
 
 class NotSpecified(Exception):

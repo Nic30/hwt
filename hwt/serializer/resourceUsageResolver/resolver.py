@@ -1,14 +1,14 @@
 from typing import List
 
-from hwt.hdlObjects.architecture import Architecture
-from hwt.hdlObjects.assignment import Assignment
-from hwt.hdlObjects.entity import Entity
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.process import HWProcess
-from hwt.hdlObjects.statements import IfContainer, SwitchContainer
-from hwt.hdlObjects.types.array import HArray
-from hwt.hdlObjects.value import Value
+from hwt.hdl.architecture import Architecture
+from hwt.hdl.assignment import Assignment
+from hwt.hdl.entity import Entity
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.process import HWProcess
+from hwt.hdl.statements import IfContainer, SwitchContainer
+from hwt.hdl.types.array import HArray
+from hwt.hdl.value import Value
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.resourceUsageResolver.resourceTypes import Unconnected, \
     ResourceMUX, ResourceLatch, ResourceLatchWithMux

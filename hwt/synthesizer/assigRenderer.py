@@ -1,9 +1,9 @@
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.statements import IfContainer, SwitchContainer
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.enum import HEnum
-from hwt.hdlObjects.value import Value
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.statements import IfContainer, SwitchContainer
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.enum import HEnum
+from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.synthesizer.termUsageResolver import getBaseCond

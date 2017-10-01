@@ -1,5 +1,5 @@
 from hwt.bitmask import mask
-from hwt.hdlObjects.types.bits import Bits
+from hwt.hdl.types.bits import Bits
 from hwt.simulator.types.simBitsConversions import convertSimBits__val
 
 

@@ -1,9 +1,9 @@
 from hwt.bitmask import mask
-from hwt.hdlObjects.types.array import HArray
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.defs import BOOL, BIT
-from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.hdlObjects.value import Value
+from hwt.hdl.types.array import HArray
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.defs import BOOL, BIT
+from hwt.hdl.types.typeCast import toHVal
+from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.serializerClases.constants import SIGNAL_TYPE

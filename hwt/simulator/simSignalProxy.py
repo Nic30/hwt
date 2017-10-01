@@ -1,5 +1,5 @@
-from hwt.hdlObjects.types.defs import SLICE
-from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.hdl.types.defs import SLICE
+from hwt.hdl.types.typeCast import toHVal
 from hwt.simulator.simSignal import SimSignal
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 

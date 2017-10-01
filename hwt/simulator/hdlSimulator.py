@@ -1,7 +1,7 @@
 from simpy.core import BoundClass
 from simpy.events import NORMAL, Timeout
 
-from hwt.hdlObjects.value import Value
+from hwt.hdl.value import Value
 from hwt.simulator.hdlSimConfig import HdlSimConfig
 from hwt.simulator.simModel import mkUpdater, mkArrayUpdater
 from hwt.simulator.simulatorCore import HdlEnvironmentCore

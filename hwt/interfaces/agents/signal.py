@@ -1,6 +1,6 @@
 from collections import deque
 
-from hwt.hdlObjects.constants import Time
+from hwt.hdl.constants import Time
 from hwt.simulator.agentBase import AgentBase
 from hwt.simulator.shortcuts import onRisingEdge
 from hwt.synthesizer.exceptions import IntfLvlConfErr

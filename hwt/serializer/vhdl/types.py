@@ -1,7 +1,7 @@
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.typeShortcuts import hInt
-from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.typeShortcuts import hInt
+from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.serializerClases.indent import getIndent
 
 

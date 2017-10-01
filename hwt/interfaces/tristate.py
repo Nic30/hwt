@@ -1,8 +1,8 @@
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.param import Param
 from hwt.interfaces.std import Signal, Clk
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.constants import DIRECTION
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.constants import DIRECTION
 
 
 class TristateSig(Interface):

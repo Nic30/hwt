@@ -1,5 +1,5 @@
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.portItem import PortItem
+from hwt.hdl.operator import Operator
+from hwt.hdl.portItem import PortItem
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.serializerClases.constants import SIGNAL_TYPE
 

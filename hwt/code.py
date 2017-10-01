@@ -1,11 +1,11 @@
 import math
 from operator import and_, or_, xor
 
-from hwt.hdlObjects.operatorDefs import concatFn
-from hwt.hdlObjects.typeShortcuts import hInt, vec
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.enum import HEnum
-from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.hdl.operatorDefs import concatFn
+from hwt.hdl.typeShortcuts import hInt, vec
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.enum import HEnum
+from hwt.hdl.types.typeCast import toHVal
 from hwt.pyUtils.arrayQuery import arr_any, flatten
 from hwt.synthesizer.andReducedContainer import AndReducedContainer
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase

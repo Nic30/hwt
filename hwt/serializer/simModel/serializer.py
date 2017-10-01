@@ -2,14 +2,14 @@ from copy import copy
 from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
 
-from hwt.hdlObjects.constants import SENSITIVITY
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.operatorDefs import AllOps, sensitivityByOp
-from hwt.hdlObjects.statements import IfContainer
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.enum import HEnum
-from hwt.hdlObjects.types.enumVal import HEnumVal
-from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.hdl.constants import SENSITIVITY
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps, sensitivityByOp
+from hwt.hdl.statements import IfContainer
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.enum import HEnum
+from hwt.hdl.types.enumVal import HEnumVal
+from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.constCache import ConstCache
@@ -21,7 +21,7 @@ from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
-from hwt.hdlObjects.assignment import Assignment
+from hwt.hdl.assignment import Assignment
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))

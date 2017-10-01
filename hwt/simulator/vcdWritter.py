@@ -2,8 +2,8 @@
 from functools import wraps
 import sys
 
-from hwt.hdlObjects.types.defs import BIT
-from hwt.hdlObjects.types.enum import HEnum
+from hwt.hdl.types.defs import BIT
+from hwt.hdl.types.enum import HEnum
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 
 

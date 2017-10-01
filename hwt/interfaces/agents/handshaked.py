@@ -1,5 +1,5 @@
 from hwt.simulator.agentBase import SyncAgentBase
-from hwt.hdlObjects.constants import NOP
+from hwt.hdl.constants import NOP
 from collections import deque
 
 

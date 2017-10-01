@@ -1,5 +1,5 @@
-from hwt.hdlObjects.constants import DIRECTION, INTF_DIRECTION
-from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
+from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.array import InterfaceArray
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import InterfaceDirectionFns

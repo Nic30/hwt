@@ -1,7 +1,7 @@
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.boolean import Boolean
-from hwt.hdlObjects.types.defs import INT
-from hwt.hdlObjects.types.hdlType import default_auto_cast_fn
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.boolean import Boolean
+from hwt.hdl.types.defs import INT
+from hwt.hdl.types.hdlType import default_auto_cast_fn
 from hwt.simulator.types.simInt import SIM_INT
 
 

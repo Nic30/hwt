@@ -1,5 +1,5 @@
 from hwt.code import log2ceil
-from hwt.hdlObjects.constants import DIRECTION
+from hwt.hdl.constants import DIRECTION
 from hwt.interfaces.std import Handshaked
 from hwt.interfaces.structIntf import StructIntf
 from hwt.interfaces.agents.unionIntf import UnionSourceAgent

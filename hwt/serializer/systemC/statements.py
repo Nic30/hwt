@@ -1,4 +1,4 @@
-from hwt.hdlObjects.variables import SignalItem
+from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.serializerClases.constants import SIGNAL_TYPE
 from hwt.serializer.serializerClases.indent import getIndent

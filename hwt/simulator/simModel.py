@@ -1,4 +1,4 @@
-from hwt.hdlObjects.constants import DIRECTION, SENSITIVITY
+from hwt.hdl.constants import DIRECTION, SENSITIVITY
 from hwt.simulator.utils import valueHasChanged
 
 

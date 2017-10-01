@@ -1,5 +1,5 @@
-from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.types.defs import BIT, SLICE
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.types.defs import BIT, SLICE
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 

@@ -4,9 +4,9 @@ from inspect import isgenerator
 import os
 import unittest
 
-from hwt.hdlObjects.constants import Time
-from hwt.hdlObjects.types.arrayVal import HArrayVal
-from hwt.hdlObjects.value import Value
+from hwt.hdl.constants import Time
+from hwt.hdl.types.arrayVal import HArrayVal
+from hwt.hdl.value import Value
 from hwt.simulator.agentConnector import valToInt
 from hwt.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
 from hwt.simulator.hdlSimulator import HdlSimulator

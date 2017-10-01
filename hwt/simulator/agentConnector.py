@@ -1,4 +1,4 @@
-from hwt.hdlObjects.constants import INTF_DIRECTION
+from hwt.hdl.constants import INTF_DIRECTION
 
 
 def autoAddAgents(unit):

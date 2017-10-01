@@ -1,4 +1,4 @@
-from hwt.hdlObjects.types.bits import Bits
+from hwt.hdl.types.bits import Bits
 
 
 class SystemCSerializer_type():

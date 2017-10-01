@@ -1,4 +1,4 @@
-from hwt.hdlObjects.types.integer import Integer
+from hwt.hdl.types.integer import Integer
 
 
 class SimInteger(Integer):
