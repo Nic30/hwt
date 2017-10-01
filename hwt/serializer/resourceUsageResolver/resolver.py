@@ -177,7 +177,7 @@ class ResourceUsageResolver(GenericSerializer):
                         else:
                             doRegister = True
                             # check to bool conversion
-                            if op is AllOps.EQ and driver.operands[1]._dtype.bit_length() == 1:
+                            if op is AllOps.EQ and driver.operands[0]._dtype.bit_length() == 1:
                                 try:
                                     a = bool(driver.operands[1])
                                     # if this is just to bool conversion skip it
