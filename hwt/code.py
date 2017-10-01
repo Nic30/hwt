@@ -201,13 +201,13 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
         statementLists = []
         for i, (statementList, ack) in [(i, bodyFn(item, i))
                                         for i, item in enumerate(items)]:
-            statementLists.append(statementList + [(ackSig ** ack), ])
+            statementLists.append(statementList + [(ackSig(ack)), ])
 
         If(ackSig,
            If(index._eq(l - 1),
-              index ** 0
+              index(0)
            ).Else(
-               index ** (index + 1)
+               index(index + 1)
            )
         )
         return Switch(index)\
@@ -266,7 +266,7 @@ class FsmBuilder(StmCntx):
 
             # building decision tree
             top = If(condition,
-                        self.stateReg ** newvalue
+                        self.stateReg(newvalue)
                     ).Else(
                         top
                     )
@@ -297,7 +297,7 @@ def _connect(src, dst, exclude, fit):
 
     src = src._auto_cast(dst._dtype)
 
-    return dst ** src
+    return dst(src)
 
 
 def connect(src, *destinations, exclude=set(), fit=False):

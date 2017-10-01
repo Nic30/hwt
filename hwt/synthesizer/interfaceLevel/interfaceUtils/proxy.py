@@ -183,9 +183,9 @@ class InterfaceProxy(InterfaceBase):
         """
         return list(self._connectToIter(master, exclude, fit))
 
-    def __pow__(self, other):
+    def __call__(self, other):
         """
-        :attention: ** operator is used as "assignment" it creates connection between interface and other
+        :attention: it is not call of function it is operator of assignment
         """
         return self._connectTo(other)
 

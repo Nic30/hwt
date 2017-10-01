@@ -161,12 +161,12 @@ class RtlNetlist():
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                        [RtlSignal.__pow__(s, _defVal)]
+                        [RtlSignal.__call__(s, _defVal)]
                     ).Else(
-                        [RtlSignal.__pow__(s, s.next)]
+                        [RtlSignal.__call__(s, s.next)]
                     )
             else:
-                r = [RtlSignal.__pow__(s, s.next)]
+                r = [RtlSignal.__call__(s, s.next)]
 
             If(clk._onRisingEdge(),
                r

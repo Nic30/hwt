@@ -158,11 +158,11 @@ class RtlSignalOps():
         except MultipleDriversExc:
             pass
 
-    def __pow__(self, source):
+    def __call__(self, source):
         """
         Create assignment to this signal
 
-        :attention: it is not power operator it is assignment
+        :attention: it is not call of function it is operator of assignment
         :return: list of assignments
         """
         if isinstance(source, InterfaceBase):

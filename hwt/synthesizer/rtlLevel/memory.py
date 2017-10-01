@@ -23,7 +23,7 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         super().__init__(ctx, name, var_type, defaultVal)
         self.next = RtlSignal(ctx, name + "_next", var_type, nopVal=self, useNopVal=True)
 
-    def __pow__(self, source):
+    def __call__(self, source):
         """
         assign to signal which is next value of this register
 

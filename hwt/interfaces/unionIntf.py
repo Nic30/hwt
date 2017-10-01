@@ -22,7 +22,7 @@ class UnionSink(StructIntf):
         """
         for i, _intf in enumerate(self._interfaces):
             if _intf is intf:
-                return self._select ** i
+                return self._select(i)
 
         raise ValueError(self, "has not interface", intf)
 

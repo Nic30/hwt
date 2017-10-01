@@ -95,9 +95,9 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         self._dirLocked = False
         self._ag = None
 
-    def __pow__(self, other):
+    def __call__(self, other):
         """
-        :attention: ** operator is used as "assignment" it creates connection between interface and other
+        :attention: it is not call of function it is operator of assignment
         """
         return self._connectTo(other)
 
@@ -190,7 +190,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
             if fit:
                 srcSig = fitTo(srcSig, dstSig)
 
-            yield dstSig.__pow__(srcSig)
+            yield dstSig(srcSig)
 
     def _signalsForInterface(self, context, prefix='', typeTransform=None):
         """

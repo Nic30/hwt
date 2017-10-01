@@ -55,7 +55,7 @@ def connectPacked(srcPacked, dstInterface, exclude=None):
             w = t.bit_length()
             s = srcPacked[(w + offset): offset]
             offset += w
-        connections.append(sig ** s)
+        connections.append(sig(s))
 
     return connections
 
