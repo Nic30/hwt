@@ -19,14 +19,22 @@ resourceTransitions_override = {
     (Assignment, Unconnected): Assignment,  # written in another command
     (Unconnected, Assignment): Assignment,
 
+    (Assignment, ResourceMUX): ResourceMUX,  # written in another command
+    (ResourceMUX, Assignment): ResourceMUX,
+
+
     (ResourceFF, Unconnected): ResourceFF,  # written in another command
     (Unconnected, ResourceFF): ResourceFF,
     
     (ResourceMUX, Unconnected): ResourceMUX,  # written in another command
     (Unconnected, ResourceMUX): ResourceMUX,
 
+    (ResourceFFwithMux, Assignment): ResourceFFwithMux,  # written in another command
+    (Assignment, ResourceFFwithMux): ResourceFFwithMux,
+    
     (ResourceFFwithMux, Unconnected): ResourceFFwithMux,  # written in another command
     (Unconnected, ResourceFFwithMux): ResourceFFwithMux,
+    
     
     (ResourceMUX, ResourceLatch): ResourceMUX,  # written in another command
     (ResourceLatch, ResourceMUX): ResourceMUX,
