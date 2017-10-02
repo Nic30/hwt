@@ -1,4 +1,4 @@
-from hwt.hdlObjects.types.integerVal import IntegerVal
+from hwt.hdl.types.integerVal import IntegerVal
 from hwt.synthesizer.param import evalParam
 
 

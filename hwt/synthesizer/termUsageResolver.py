@@ -1,5 +1,5 @@
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.operatorDefs import AllOps
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
 
 
 def getBaseCond(c):

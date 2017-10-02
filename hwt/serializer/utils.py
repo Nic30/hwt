@@ -1,7 +1,7 @@
 from itertools import chain
 
-from hwt.hdlObjects.assignment import Assignment
-from hwt.hdlObjects.statements import WaitStm, IfContainer, \
+from hwt.hdl.assignment import Assignment
+from hwt.hdl.statements import WaitStm, IfContainer, \
     SwitchContainer
 
 

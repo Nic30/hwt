@@ -1,4 +1,4 @@
-from hwt.hdlObjects.constants import DIRECTION
+from hwt.hdl.constants import DIRECTION
 
 
 class PortMap():

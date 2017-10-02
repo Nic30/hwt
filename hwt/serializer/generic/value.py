@@ -1,10 +1,10 @@
-from hwt.hdlObjects.types.array import HArray
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.boolean import Boolean
-from hwt.hdlObjects.types.enum import HEnum
-from hwt.hdlObjects.types.integer import Integer
-from hwt.hdlObjects.types.slice import Slice
-from hwt.hdlObjects.types.string import String
+from hwt.hdl.types.array import HArray
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.boolean import Boolean
+from hwt.hdl.types.enum import HEnum
+from hwt.hdl.types.integer import Integer
+from hwt.hdl.types.slice import Slice
+from hwt.hdl.types.string import String
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 

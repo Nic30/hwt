@@ -1,6 +1,6 @@
-from hwt.hdlObjects.typeShortcuts import hInt
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.defs import BIT
+from hwt.hdl.typeShortcuts import hInt
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.defs import BIT
 from hwt.serializer.ip_packager.exprSerializer import VivadoTclExpressionSerializer
 from hwt.serializer.ip_packager.helpers import appendSpiElem, \
          findS, mkSpiElm, ns

@@ -4,8 +4,8 @@
 import os
 import shutil
 
-from hwt.hdlObjects.architecture import Architecture
-from hwt.hdlObjects.entity import Entity
+from hwt.hdl.architecture import Architecture
+from hwt.hdl.entity import Entity
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.interfaceLevel.unit import Unit

@@ -1,4 +1,4 @@
-from hwt.hdlObjects.constants import INTF_DIRECTION
+from hwt.hdl.constants import INTF_DIRECTION
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.param import evalParam, Param
 
@@ -73,15 +73,15 @@ class IpCoreWrapper(Unit):
             if baseIntf._direction is INTF_DIRECTION.MASTER:
                 if isinstance(wrapIntf, list):
                     for i, _wrapIntf in enumerate(wrapIntf):
-                        _wrapIntf ** baseIntf[i]
+                        _wrapIntf(baseIntf[i])
                 else:
-                    wrapIntf ** baseIntf
+                    wrapIntf(baseIntf)
             else:
                 if isinstance(wrapIntf, list):
                     for i, _wrapIntf in enumerate(wrapIntf):
-                        baseIntf[i] ** _wrapIntf
+                        baseIntf[i](_wrapIntf)
                 else:
-                    baseIntf ** wrapIntf
+                    baseIntf(wrapIntf)
 
     def _impl(self):
         self.baseUnit = self._baseUnit

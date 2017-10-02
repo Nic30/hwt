@@ -1,9 +1,9 @@
 from datetime import datetime
 import sys
 
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.boolean import Boolean
-from hwt.hdlObjects.types.enum import HEnum
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.boolean import Boolean
+from hwt.hdl.types.enum import HEnum
 from hwt.simulator.hdlSimConfig import HdlSimConfig
 from hwt.simulator.vcdWritter import VcdWritter
 

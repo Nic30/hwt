@@ -1,5 +1,5 @@
-from hwt.hdlObjects.portItem import PortItem
-from hwt.hdlObjects.constants import DIRECTION
+from hwt.hdl.portItem import PortItem
+from hwt.hdl.constants import DIRECTION
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import signalHasDriver
 
 

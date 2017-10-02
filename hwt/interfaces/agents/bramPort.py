@@ -1,6 +1,6 @@
 from collections import deque
 
-from hwt.hdlObjects.constants import READ, WRITE, NOP
+from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.simulator.shortcuts import oscilate
 

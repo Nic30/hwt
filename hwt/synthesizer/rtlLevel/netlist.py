@@ -1,13 +1,13 @@
 from hwt.code import If
-from hwt.hdlObjects.architecture import Architecture
-from hwt.hdlObjects.assignment import Assignment
-from hwt.hdlObjects.entity import Entity
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.process import HWProcess
-from hwt.hdlObjects.statements import IfContainer, WaitStm, \
+from hwt.hdl.architecture import Architecture
+from hwt.hdl.assignment import Assignment
+from hwt.hdl.entity import Entity
+from hwt.hdl.operator import Operator
+from hwt.hdl.process import HWProcess
+from hwt.hdl.statements import IfContainer, WaitStm, \
     SwitchContainer
-from hwt.hdlObjects.types.defs import BIT
-from hwt.hdlObjects.value import Value
+from hwt.hdl.types.defs import BIT
+from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import where, distinctBy, groupedby
 from hwt.synthesizer.assigRenderer import renderIfTree
 from hwt.synthesizer.exceptions import SigLvlConfErr
@@ -161,12 +161,12 @@ class RtlNetlist():
                 raise Exception("Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                        [RtlSignal.__pow__(s, _defVal)]
+                        [RtlSignal.__call__(s, _defVal)]
                     ).Else(
-                        [RtlSignal.__pow__(s, s.next)]
+                        [RtlSignal.__call__(s, s.next)]
                     )
             else:
-                r = [RtlSignal.__pow__(s, s.next)]
+                r = [RtlSignal.__call__(s, s.next)]
 
             If(clk._onRisingEdge(),
                r

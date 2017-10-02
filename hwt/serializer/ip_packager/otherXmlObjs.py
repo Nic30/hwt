@@ -2,9 +2,9 @@ import math
 import os
 from time import gmtime, strftime
 
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.defs import BOOL, STR
-from hwt.hdlObjects.types.integer import Integer
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.defs import BOOL, STR
+from hwt.hdl.types.integer import Integer
 from hwt.serializer.ip_packager.helpers import spi_ns_prefix, mkSpiElm, \
     appendSpiElem, appendStrElements, mkXiElm, appendXiElem, appendSpiAtribs
 from hwt.synthesizer.param import evalParam

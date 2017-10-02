@@ -1,5 +1,5 @@
-from hwt.hdlObjects.entity import Entity
-from hwt.hdlObjects.types.array import HArray
+from hwt.hdl.entity import Entity
+from hwt.hdl.types.array import HArray
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.indent import getIndent
@@ -16,11 +16,11 @@ from hwt.serializer.verilog.types import VerilogSerializer_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
 from hwt.synthesizer.param import getParam
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.process import HWProcess
-from hwt.hdlObjects.statements import SwitchContainer
-from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.process import HWProcess
+from hwt.hdl.statements import SwitchContainer
+from hwt.hdl.types.typeCast import toHVal
 
 
 class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSerializer_Value,
@@ -69,7 +69,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
             romValSig.hidden = False
 
             # construct process which will represent content of the rom
-            cases = [(toHVal(i), romValSig ** v)
+            cases = [(toHVal(i), romValSig(v))
                      for i, v in enumerate(rom.defaultVal.val)]
             statements = [SwitchContainer(index, cases), ]
 

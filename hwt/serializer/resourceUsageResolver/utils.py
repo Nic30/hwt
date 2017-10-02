@@ -1,8 +1,8 @@
 from typing import Dict
 
-from hwt.hdlObjects.assignment import Assignment
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.operatorDefs import AllOps
+from hwt.hdl.assignment import Assignment
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.resourceUsageResolver.resourceTypes import Unconnected, \
     ResourceFF, ResourceMUX, ResourceFFwithMux, ResourceLatch, ResourceRAM, \

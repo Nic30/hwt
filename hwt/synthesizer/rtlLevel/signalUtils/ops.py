@@ -1,9 +1,9 @@
-from hwt.hdlObjects.assignment import Assignment
-from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.types.defs import BOOL
-from hwt.hdlObjects.types.sliceUtils import slice_to_SLICE
-from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.hdlObjects.value import Value
+from hwt.hdl.assignment import Assignment
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.types.defs import BOOL
+from hwt.hdl.types.sliceUtils import slice_to_SLICE
+from hwt.hdl.types.typeCast import toHVal
+from hwt.hdl.value import Value
 from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -158,11 +158,11 @@ class RtlSignalOps():
         except MultipleDriversExc:
             pass
 
-    def __pow__(self, source):
+    def __call__(self, source):
         """
         Create assignment to this signal
 
-        :attention: it is not power operator it is assignment
+        :attention: it is not call of function it is operator of assignment
         :return: list of assignments
         """
         if isinstance(source, InterfaceBase):

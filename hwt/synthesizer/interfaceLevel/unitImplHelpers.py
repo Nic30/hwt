@@ -1,9 +1,9 @@
 from copy import copy
 
-from hwt.hdlObjects.constants import INTF_DIRECTION, DIRECTION
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.defs import BIT
-from hwt.hdlObjects.types.struct import HStruct
+from hwt.hdl.constants import INTF_DIRECTION, DIRECTION
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.defs import BIT
+from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces

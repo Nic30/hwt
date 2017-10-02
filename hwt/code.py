@@ -1,11 +1,11 @@
 import math
 from operator import and_, or_, xor
 
-from hwt.hdlObjects.operatorDefs import concatFn
-from hwt.hdlObjects.typeShortcuts import hInt, vec
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.enum import HEnum
-from hwt.hdlObjects.types.typeCast import toHVal
+from hwt.hdl.operatorDefs import concatFn
+from hwt.hdl.typeShortcuts import hInt, vec
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.enum import HEnum
+from hwt.hdl.types.typeCast import toHVal
 from hwt.pyUtils.arrayQuery import arr_any, flatten
 from hwt.synthesizer.andReducedContainer import AndReducedContainer
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -201,13 +201,13 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
         statementLists = []
         for i, (statementList, ack) in [(i, bodyFn(item, i))
                                         for i, item in enumerate(items)]:
-            statementLists.append(statementList + [(ackSig ** ack), ])
+            statementLists.append(statementList + [(ackSig(ack)), ])
 
         If(ackSig,
            If(index._eq(l - 1),
-              index ** 0
+              index(0)
            ).Else(
-               index ** (index + 1)
+               index(index + 1)
            )
         )
         return Switch(index)\
@@ -266,7 +266,7 @@ class FsmBuilder(StmCntx):
 
             # building decision tree
             top = If(condition,
-                        self.stateReg ** newvalue
+                        self.stateReg(newvalue)
                     ).Else(
                         top
                     )
@@ -297,7 +297,7 @@ def _connect(src, dst, exclude, fit):
 
     src = src._auto_cast(dst._dtype)
 
-    return dst ** src
+    return dst(src)
 
 
 def connect(src, *destinations, exclude=set(), fit=False):

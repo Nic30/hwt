@@ -113,12 +113,12 @@ class SignalOps(object):
     def _ternary(self, ifTrue, ifFalse):
         return self._sig._ternary(ifTrue, ifFalse)
 
-    def __pow__(self, source):
+    def __call__(self, source):
         """
         connect this signal to driver
 
-        :attention: it is not power operator it is assignment
+        :attention: it is not call of function it is operator of assignment
         :return: list of assignments
         """
         assert self._isAccessible
-        return self._sig.__pow__(source)
+        return self._sig(source)

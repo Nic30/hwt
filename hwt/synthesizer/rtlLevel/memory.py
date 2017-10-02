@@ -1,6 +1,6 @@
-from hwt.hdlObjects.assignment import Assignment
-from hwt.hdlObjects.types.typeCast import toHVal
-from hwt.hdlObjects.value import Value
+from hwt.hdl.assignment import Assignment
+from hwt.hdl.types.typeCast import toHVal
+from hwt.hdl.value import Value
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlMemoryBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -23,7 +23,7 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         super().__init__(ctx, name, var_type, defaultVal)
         self.next = RtlSignal(ctx, name + "_next", var_type, nopVal=self, useNopVal=True)
 
-    def __pow__(self, source):
+    def __call__(self, source):
         """
         assign to signal which is next value of this register
 

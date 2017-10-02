@@ -1,9 +1,9 @@
-from hwt.hdlObjects.assignment import Assignment
-from hwt.hdlObjects.operator import Operator
-from hwt.hdlObjects.operatorDefs import isEventDependentOp
-from hwt.hdlObjects.portItem import PortItem
-from hwt.hdlObjects.statements import IfContainer, SwitchContainer
-from hwt.hdlObjects.value import Value
+from hwt.hdl.assignment import Assignment
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import isEventDependentOp
+from hwt.hdl.portItem import PortItem
+from hwt.hdl.statements import IfContainer, SwitchContainer
+from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import where
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase

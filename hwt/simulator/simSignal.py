@@ -1,4 +1,4 @@
-from hwt.hdlObjects.variables import SignalItem
+from hwt.hdl.variables import SignalItem
 
 
 class SimSignal(SignalItem):

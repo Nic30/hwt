@@ -1,4 +1,4 @@
-from hwt.hdlObjects.constants import INTF_DIRECTION
+from hwt.hdl.constants import INTF_DIRECTION
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 
@@ -44,7 +44,7 @@ class EmptyUnit(Unit):
             # connect outputs to dummy value
             for s in signals:
                 if s._interface._direction == INTF_DIRECTION.SLAVE:
-                    s ** s._dtype.fromPy(self._defaultValue)
+                    s(s._dtype.fromPy(self._defaultValue))
 
         if not externInterf:
             raise Exception("Can not find any external interface for unit " + self._name +

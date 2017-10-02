@@ -2,10 +2,10 @@ from functools import reduce
 from math import ceil
 from typing import Union
 
-from hwt.hdlObjects.typeShortcuts import vec
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.structUtils import walkFlattenFields
-from hwt.hdlObjects.value import Value
+from hwt.hdl.typeShortcuts import vec
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.structUtils import walkFlattenFields
+from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 

@@ -1,8 +1,8 @@
 from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
 
-from hwt.hdlObjects.constants import DIRECTION
-from hwt.hdlObjects.entity import Entity
+from hwt.hdl.constants import DIRECTION
+from hwt.hdl.entity import Entity
 from hwt.interfaces.std import Clk
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.serializerClases.nameScope import LangueKeyword

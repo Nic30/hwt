@@ -1,5 +1,5 @@
-from hwt.hdlObjects.constants import DIRECTION
-from hwt.hdlObjects.types.defs import BIT
+from hwt.hdl.constants import DIRECTION
+from hwt.hdl.types.defs import BIT
 
 
 class NotSpecified(Exception):
@@ -55,7 +55,7 @@ def connectPacked(srcPacked, dstInterface, exclude=None):
             w = t.bit_length()
             s = srcPacked[(w + offset): offset]
             offset += w
-        connections.append(sig ** s)
+        connections.append(sig(s))
 
     return connections
 

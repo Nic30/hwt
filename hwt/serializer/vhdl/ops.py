@@ -1,5 +1,5 @@
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdlObjects.operatorDefs import AllOps
+from hwt.hdl.operatorDefs import AllOps
 
 
 # keep in mind that there is no such a thing in vhdl itself

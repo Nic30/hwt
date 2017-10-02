@@ -1,5 +1,5 @@
-from hwt.hdlObjects.operatorDefs import AllOps
-from hwt.hdlObjects.typeShortcuts import hBit
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.typeShortcuts import hBit
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 

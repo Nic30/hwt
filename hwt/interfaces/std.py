@@ -1,6 +1,6 @@
-from hwt.hdlObjects.constants import DIRECTION
-from hwt.hdlObjects.types.bits import Bits
-from hwt.hdlObjects.types.defs import BIT, BIT_N
+from hwt.hdl.constants import DIRECTION
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.defs import BIT, BIT_N
 from hwt.interfaces.signalOps import SignalOps
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.param import Param

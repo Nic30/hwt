@@ -1,12 +1,12 @@
 from importlib import reload
 
-from hwt.hdlObjects.types.array import HArray
-from hwt.hdlObjects.types.arrayVal import HArrayVal
-from hwt.hdlObjects.types.bitsCast import convertBits__val
-from hwt.hdlObjects.types.bitsVal import BitsVal
-from hwt.hdlObjects.types.defs import SLICE
-from hwt.hdlObjects.types.enum import HEnum
-from hwt.hdlObjects.constants import DIRECTION, SENSITIVITY
+from hwt.hdl.types.array import HArray
+from hwt.hdl.types.arrayVal import HArrayVal
+from hwt.hdl.types.bitsCast import convertBits__val
+from hwt.hdl.types.bitsVal import BitsVal
+from hwt.hdl.types.defs import SLICE
+from hwt.hdl.types.enum import HEnum
+from hwt.hdl.constants import DIRECTION, SENSITIVITY
 from hwt.simulator.types.simInt import simHInt, SIM_INT
 from hwt.simulator.types.simBits import simBitsT, SIM_BIT
 from hwt.simulator.types.simBitsConversions import convertSimBits__val
@@ -15,7 +15,7 @@ from hwt.simulator.simModel import (SimModel, sensitivity, connectSimPort,
 from hwt.code import power
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.simulator.simSignal import SimSignal
-from hwt.hdlObjects.types.sliceVal import SliceVal
+from hwt.hdl.types.sliceVal import SliceVal
 
 {% for c in componentInstances %}
 if "{{c.name}}" not in locals(): # support for all models in single file

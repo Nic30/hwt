@@ -4,9 +4,9 @@ from inspect import isgenerator
 import os
 import unittest
 
-from hwt.hdlObjects.constants import Time
-from hwt.hdlObjects.types.arrayVal import HArrayVal
-from hwt.hdlObjects.value import Value
+from hwt.hdl.constants import Time
+from hwt.hdl.types.arrayVal import HArrayVal
+from hwt.hdl.value import Value
 from hwt.simulator.agentConnector import valToInt
 from hwt.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
 from hwt.simulator.hdlSimulator import HdlSimulator
@@ -45,22 +45,27 @@ class SimTestCase(unittest.TestCase):
     :attention: self.model, self.procs has to be specified before running doSim (you can use prepareUnit method)
     """
     _defaultSeed = 317
-    _rand = Random(_defaultSeed)
 
     def getTestName(self):
         className, testName = self.id().split(".")[-2:]
         return "%s_%s" % (className, testName)
 
-    def doSim(self, time):
-        outputFileName = "tmp/" + self.getTestName() + ".vcd"
+    def doSim(self, time, name=None, config=None):
+        if name is None:
+            outputFileName = "tmp/" + self.getTestName() + ".vcd"
+        else:
+            outputFileName = name
+
         d = os.path.dirname(outputFileName)
         if d:
             os.makedirs(d, exist_ok=True)
         with open(outputFileName, 'w') as outputFile:
             sim = HdlSimulator()
 
-            # configure simulator to log in vcd
-            sim.config = VcdHdlSimConfig(outputFile)
+            if config is None:
+                # configure simulator to log in vcd
+                config = VcdHdlSimConfig(outputFile)
+            sim.config = config
 
             # run simulation, stimul processes are register after initial initialization
             sim.simUnit(self.model, time=time, extraProcesses=self.procs)
@@ -150,4 +155,4 @@ class SimTestCase(unittest.TestCase):
                                                     onAfterToRtl=onAfterToRtl)
 
     def setUp(self):
-        self._rand.seed(self._defaultSeed)
+        self._rand = Random(self._defaultSeed)
