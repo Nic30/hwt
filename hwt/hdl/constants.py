@@ -9,33 +9,13 @@ class INTF_DIRECTION(Enum):
     SLAVE = 1
     TRISTATE = 2
     UNKNOWN = 3
-
     @classmethod
     def asDirection(cls, val):
-        if val == INTF_DIRECTION.SLAVE:
-            return DIRECTION.IN
-        elif val == INTF_DIRECTION.MASTER:
-            return DIRECTION.OUT
-        elif val == INTF_DIRECTION.TRISTATE:
-            return DIRECTION.INOUT
-        else:
-            raise Exception("Parameter (%s) is not interface direction" % (repr(val)))
+        return INTF_DIRECTION_asDirecton[val]
 
     @classmethod
     def opposite(cls, d):
-        if d == cls.SLAVE:
-            return cls.MASTER
-        elif d == cls.MASTER:
-            return cls.SLAVE
-        elif d == cls.TRISTATE:
-            return d
-        else:
-            raise Exception("%s is not interface direction" % (repr(d)))
-
-
-READ = "READ"
-WRITE = "WRITE"
-NOP = "NOP"
+        return INTF_DIRECTION_opposite[d]
 
 
 class DIRECTION(Enum):
@@ -48,25 +28,44 @@ class DIRECTION(Enum):
 
     @classmethod
     def asIntfDirection(cls, d):
-        if d == cls.IN:
-            return INTF_DIRECTION.SLAVE
-        elif d == cls.OUT:
-            return INTF_DIRECTION.MASTER
-        elif d == cls.INOUT:
-            return INTF_DIRECTION.TRISTATE
-        else:
-            raise TypeError("Parameter %s is not direction" % (str(d)))
+        return DIRECTION_asIntfDirection[d]
 
     @classmethod
     def opposite(cls, d):
-        if d == cls.IN:
-            return cls.OUT
-        elif d == cls.OUT:
-            return cls.IN
-        elif d == cls.INOUT:
-            return d
-        else:
-            raise Exception("Parameter is not direction")
+        return DIRECTION_opposite[d]
+
+
+INTF_DIRECTION_opposite = {
+        INTF_DIRECTION.SLAVE: INTF_DIRECTION.MASTER,
+        INTF_DIRECTION.MASTER: INTF_DIRECTION.SLAVE,
+        INTF_DIRECTION.TRISTATE: INTF_DIRECTION.TRISTATE,
+    }
+
+
+INTF_DIRECTION_asDirecton = {
+        INTF_DIRECTION.SLAVE: DIRECTION.IN,
+        INTF_DIRECTION.MASTER: DIRECTION.OUT,
+        INTF_DIRECTION.TRISTATE: DIRECTION.INOUT,
+    }
+
+
+DIRECTION_asIntfDirection = {
+        DIRECTION.IN: INTF_DIRECTION.SLAVE,
+        DIRECTION.OUT: INTF_DIRECTION.MASTER,
+        DIRECTION.INOUT: INTF_DIRECTION.TRISTATE,
+    }
+
+
+DIRECTION_opposite = {
+        DIRECTION.IN: DIRECTION.OUT,
+        DIRECTION.OUT: DIRECTION.IN,
+        DIRECTION.INOUT: DIRECTION.INOUT,
+    }
+
+
+READ = "READ"
+WRITE = "WRITE"
+NOP = "NOP"
 
 
 class Time():
