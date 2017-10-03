@@ -48,6 +48,8 @@ resourceTransitions_override = {
     (Unconnected, ResourceLatchWithMux): ResourceLatchWithMux,
     (Unconnected, ResourceLatch): ResourceLatchWithMux,
     
+    (Assignment, ResourceLatchWithMux): ResourceMUX,
+    
     }
 
 
@@ -75,12 +77,23 @@ resourceTransitions_sameBranchLevel = {
     (ResourceLatchWithMux, Unconnected): ResourceLatchWithMux,
     
     (ResourceFF, ResourceFF): ResourceFFwithMux,
+    (ResourceFF, Unconnected): ResourceFF,
 
     (Assignment, ResourceFF): ResourceFFwithMux,
     (ResourceFF, Assignment): ResourceFFwithMux,
 
     (ResourceMUX, ResourceFF): ResourceFFwithMux,
     (ResourceFF, ResourceMUX): ResourceFFwithMux,
+    
+    (ResourceFFwithMux, Unconnected): ResourceFFwithMux,
+    (Unconnected, ResourceFFwithMux): ResourceFFwithMux,
+    
+    (ResourceRAM, Unconnected): ResourceRAM,
+    (ResourceROM, Unconnected): ResourceROM,
+    (ResourceAsyncRAM, Unconnected): ResourceAsyncRAM,
+    (ResourceAsyncROM, Unconnected): ResourceAsyncROM,
+    
+    
     }
 
 # resourceTransitions_clockBind = {
