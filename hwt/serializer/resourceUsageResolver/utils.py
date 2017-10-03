@@ -273,7 +273,8 @@ class ResourceContext():
             except KeyError:
                 ports = [0, 0, 0, 0]
                 addressSignals[index] = ports
-
+            
+            # readportscnt++
             if isEventDependent:
                 ports[0] += 1
             else:
@@ -294,15 +295,24 @@ class ResourceContext():
             wSyncPorts += w - rw
             
             rw = min(asyncR, asyncW)
-            rwSyncPorts += rw
-            rSyncPorts += asyncR - rw
-            wSyncPorts += asyncW - rw
+            rwAsyncPorts += rw
+            rAsyncPorts += asyncR - rw
+            wAsyncPorts += asyncW - rw
 
         m = ResourceRAM(width, items,
                         rwSyncPorts, rSyncPorts, wSyncPorts,
                         rwAsyncPorts, rAsyncPorts, wAsyncPorts)
         cnt = self.resources.get(m, 0)
-        self.resources[m] = cnt + 1 
+        self.resources[m] = cnt + 1
+        FFsInRam = (rwSyncPorts + rSyncPorts) * width
+        if FFsInRam:
+            ffs = self.resources[ResourceFF]
+            if ffs == FFsInRam:
+                del self.resources[ResourceFF]
+            elif ffs > FFsInRam:
+                self.resources[ResourceFF] = ffs - FFsInRam
+            else:
+                raise Exception("Incompatible ram description (read port did not found FFs as expected)")
 
     def register(self, sig: RtlSignal, resourceGues):
         """
