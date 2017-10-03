@@ -1,11 +1,13 @@
 import os
 from os.path import relpath
 import shutil
+from typing import List
 
 from hwt.serializer.ip_packager.component import Component
 from hwt.serializer.ip_packager.helpers import prettify
 from hwt.serializer.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
 from hwt.serializer.vhdl.serializer import VhdlSerializer
+from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.shortcuts import toRtlAndSave
 from hwt.synthesizer.uniqList import UniqList
 
@@ -15,9 +17,9 @@ class Packager(object):
     """
     Ipcore packager
     """
-    def __init__(self, topUnit, name=None,
-                 extraVhdlFiles=[],
-                 extraVerilogFiles=[],
+    def __init__(self, topUnit:Unit, name:str=None,
+                 extraVhdlFiles:List[str]=[],
+                 extraVerilogFiles:List[str]=[],
                  serializer=VhdlSerializer):
         assert not topUnit._wasSynthetised()
         self.topUnit = topUnit
@@ -95,7 +97,7 @@ class Packager(object):
         self.mkAutoGui()
 
         c = Component()
-        c._files = [relpath(p, ip_dir) for p in sorted(self.hdlFiles)] +\
+        c._files = [relpath(p, ip_dir) for p in sorted(self.hdlFiles)] + \
                    [relpath(guiFile, ip_dir)]
 
         c.vendor = vendor
