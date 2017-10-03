@@ -16,13 +16,13 @@ def convertBits__val(self, val, toType):
     if isinstance(toType, Boolean):
         return val._eq(self.getValueCls().fromPy(1, self))
     elif isinstance(toType, Bits):
-        if self.bit_length() == toType.bit_length():
-            return val._convSign__val(toType.signed)
+        return val._convSign__val(toType.signed)
     elif toType == INT:
         return INT.getValueCls()(val.val,
                                  INT,
                                  int(val._isFullVld()),
                                  val.updateTime)
+
     return default_auto_cast_fn(self, val, toType)
 
 
@@ -41,6 +41,7 @@ def convertBits(self, sigOrVal, toType):
             return sigOrVal._convSign(toType.signed)
     elif toType == INT:
         return Operator.withRes(AllOps.BitsToInt, [sigOrVal], toType)
+
     return default_auto_cast_fn(self, sigOrVal, toType)
 
 
@@ -52,14 +53,15 @@ def bits_to_hstruct(sigOrVal, hStructT):
     container = hStructT.fromPy(None)
     offset = 0
     for f in hStructT.fields:
+        t = f.dtype
+        width = t.bit_length()
         if f.name is not None:
-            t = f.dtype
-            width = t.bit_length()
             s = sigOrVal[(width + offset):offset]
             s = s._reinterpret_cast(t)
             setattr(container, f.name, s)
-            offset += width
 
+        offset += width
+        
     return container
 
 
@@ -89,7 +91,6 @@ def reinterpretBits(self, sigOrVal, toType):
     Cast object of same bit size between to other type
     (f.e. bits to struct, union or array)
     """
-    
     if isinstance(sigOrVal, Value):
         return reinterpretBits__val(self, sigOrVal, toType)
     elif self._dtype.bit_length() == toType.bit_length():
