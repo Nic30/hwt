@@ -6,10 +6,6 @@ class Architecture(object):
     """
     def __init__(self, entity):
         self.entity = entity
-        if entity:
-            self.entityName = entity.name
-        else:
-            self.entityName = None
         self.name = "rtl"
         self.variables = []
         self.processes = []
@@ -17,10 +13,7 @@ class Architecture(object):
         self.componentInstances = []
 
     def getEntityName(self):
-        if self.entity:
-            return self.entity.name
-        else:
-            return self.entityName
+        return self.entity.name
 
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer
