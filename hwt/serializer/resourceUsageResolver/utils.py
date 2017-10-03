@@ -350,9 +350,6 @@ class ResourceContext():
         elif resourceGues is ResourceFFwithMux:
             self.registerFF(sig)
             self.registerMUX(sig)
-        elif resourceGues is ResourceFFwithMux:
-            self.registerLatch(sig)
-            self.registerMUX(sig)
         elif resourceGues is ResourceLatch:
             self.registerLatch(sig)
         elif resourceGues is ResourceLatchWithMux:
