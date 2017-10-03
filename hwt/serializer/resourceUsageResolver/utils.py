@@ -96,19 +96,6 @@ resourceTransitions_sameBranchLevel = {
     
     }
 
-# resourceTransitions_clockBind = {
-#    Assignment: ResourceFF,
-#    ResourceFF: ResourceError("Register sensitive to more clock at one time"),
-#    ResourceFFwithMux: ResourceError("Register sensitive to more clock at one time"),
-#    ResourceLatch: ResourceFF,
-#    ResourceLatchWithMux: ResourceFFwithMux,
-#    
-#    ResourceAsyncRAM: ResourceRAM,
-#    ResourceAsyncROM: ResourceROM,
-#    ResourceRAM: ResourceError("RAM port sensitive to more clock at one time"),
-#    ResourceROM: ResourceError("RAM port sensitive to more clock at one time"),
-#    }
-#
 resourceTransitions_memoryAnotherInput = {
     ResourceAsyncROM: ResourceAsyncRAM,
     ResourceAsyncRAM: ResourceAsyncRAM,
@@ -134,27 +121,28 @@ def updateGuesFromAssignment(gues:Dict, assignment: Assignment) -> None:
     except KeyError:
         if isRam:
             if assignment.isEventDependent:
-                gues[sig] = ResourceRAM
+                g = ResourceRAM
             else:
-                gues[sig] = ResourceAsyncRAM
+                g = ResourceAsyncRAM
         else:
             if assignment.isEventDependent:
-                gues[sig] = ResourceFF
+                g = ResourceFF
             else:
-                gues[sig] = Assignment
+                g = Assignment
+        gues[sig] = g
         return
     
     if isRam:
         # [TODO] check for event dependency
-        nextType = resourceTransitions_memoryAnotherInput[current]
+        g = resourceTransitions_memoryAnotherInput[current]
     else:
         if assignment.isEventDependent:
             g = ResourceFF
         else:
             g = Assignment
         
-        nextType = resourceTransitions_sameBranchLevel[(current, g)]
-    gues[sig] = nextType 
+        g = resourceTransitions_sameBranchLevel[(current, g)]
+    gues[sig] = g 
 
 
 def mergeGues(gues: Dict, otherGues: Dict) -> None:
