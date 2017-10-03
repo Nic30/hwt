@@ -45,6 +45,9 @@ resourceTransitions_override = {
     (ResourceROM, Unconnected): ResourceROM,
     (Unconnected, ResourceROM): ResourceROM,
     
+    (Unconnected, ResourceLatchWithMux): ResourceLatchWithMux,
+    (Unconnected, ResourceLatch): ResourceLatchWithMux,
+    
     }
 
 
@@ -65,6 +68,12 @@ resourceTransitions_sameBranchLevel = {
     (Assignment, ResourceLatch): ResourceLatchWithMux,
     (ResourceLatch, Assignment): ResourceLatchWithMux,
 
+    (Assignment, ResourceLatchWithMux): ResourceLatchWithMux,
+    (ResourceLatchWithMux, Assignment): ResourceLatchWithMux,
+    
+    (Unconnected, ResourceLatchWithMux): ResourceLatchWithMux,
+    (ResourceLatchWithMux, Unconnected): ResourceLatchWithMux,
+    
     (ResourceFF, ResourceFF): ResourceFFwithMux,
 
     (Assignment, ResourceFF): ResourceFFwithMux,
@@ -215,10 +224,11 @@ class ResourceContext():
         and m is number of possible inputs
         """
         inputs = len(mux.drivers)
-        w = mux._dtype.bit_length()
-        k = (ResourceMUX, w, inputs)
-        muxs = self.resources.get(k, 0) 
-        self.resources[k] = muxs + 1
+        if inputs > 1:
+            w = mux._dtype.bit_length()
+            k = (ResourceMUX, w, inputs)
+            muxs = self.resources.get(k, 0) 
+            self.resources[k] = muxs + 1
 
     def registerFF(self, ff):
         res = self.resources
@@ -327,9 +337,12 @@ class ResourceContext():
         elif resourceGues is ResourceFFwithMux:
             self.registerFF(sig)
             self.registerMUX(sig)
+        elif resourceGues is ResourceFFwithMux:
+            self.registerLatch(sig)
+            self.registerMUX(sig)
         elif resourceGues is ResourceLatch:
             self.registerLatch(sig)
-        elif resourceGues is ResourceFFwithMux:
+        elif resourceGues is ResourceLatchWithMux:
             self.registerLatch(sig)
             self.registerMUX(sig)
         elif resourceGues in {ResourceAsyncRAM,

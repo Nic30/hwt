@@ -88,7 +88,10 @@ class ResourceUsageResolver(GenericSerializer):
             
         if ifc.ifFalse:
             ifFalse = cls.statementList(ifc.ifFalse, dstSignals, ctx)
-            mergeGues(ifTrue, ifFalse)
+        else:
+            ifFalse = {s: Unconnected for s in dstSignals}
+        mergeGues(ifTrue, ifFalse)
+            
             
         return ifTrue
 
