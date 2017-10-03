@@ -11,7 +11,6 @@ from hwt.hdl.value import Value
 from hwt.synthesizer.vectorUtils import iterBits
 
 
-
 def convertBits__val(self, val, toType):
     if isinstance(toType, Boolean):
         return val._eq(self.getValueCls().fromPy(1, self))
@@ -46,7 +45,7 @@ def convertBits(self, sigOrVal, toType):
 
 
 
-def bits_to_hstruct(sigOrVal, hStructT):
+def reinterpret_bits_to_hstruct(sigOrVal, hStructT):
     """
     Reinterpret signal of type Bits to signal of type HStruct
     """
@@ -65,7 +64,7 @@ def bits_to_hstruct(sigOrVal, hStructT):
     return container
 
 
-def bits_to_harray(sigOrVal, hArrayT):
+def reinterpret_bits_to_harray(sigOrVal, hArrayT):
     elmT = hArrayT.elmType
     elmWidth = elmT.bit_length()
     a = hArrayT.fromPy(None)
@@ -78,13 +77,13 @@ def bits_to_harray(sigOrVal, hArrayT):
 
 def reinterpretBits__val(self, val, toType):
     if isinstance(toType, HStruct):
-        return bits_to_hstruct(val, toType)
+        return reinterpret_bits_to_hstruct(val, toType)
     elif isinstance(toType, HUnion):
         raise NotImplementedError()
     elif isinstance(toType, HArray):
-        return bits_to_harray(val, toType)
-    else:
-        return default_auto_cast_fn(self, val, toType)
+        return reinterpret_bits_to_harray(val, toType)
+
+    return default_auto_cast_fn(self, val, toType)
 
 def reinterpretBits(self, sigOrVal, toType):
     """
@@ -95,10 +94,10 @@ def reinterpretBits(self, sigOrVal, toType):
         return reinterpretBits__val(self, sigOrVal, toType)
     elif self._dtype.bit_length() == toType.bit_length():
         if isinstance(toType, HStruct):
-            raise bits_to_hstruct(sigOrVal, toType)
+            raise reinterpret_bits_to_hstruct(sigOrVal, toType)
         elif isinstance(toType, HUnion):
             raise NotImplementedError()
         elif isinstance(toType, HArray):
-            bits_to_harray(sigOrVal, toType)
+            reinterpret_bits_to_harray(sigOrVal, toType)
     
     return default_auto_cast_fn(self, sigOrVal, toType)

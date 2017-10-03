@@ -13,7 +13,8 @@ def getCtxFromOps(operands):
     for o in operands:
         if isinstance(o, RtlSignalBase):
             return o.ctx
-    raise TypeError("Can not find context because there is no signal in ops")
+    raise TypeError("Can not find context because there is no signal in ops"
+                    "(value operators should be already resolved)")
 
 
 def isConst(item):
@@ -47,7 +48,8 @@ class Operator():
             elif isinstance(o, Value):
                 pass
             else:
-                raise NotImplementedError("Operator operands can be only signal or values got:%s" % repr(o))
+                raise NotImplementedError("Operator operands can be"
+                                          " only signal or values got:%r" % (o))
 
     def staticEval(self):
         """
@@ -64,7 +66,7 @@ class Operator():
         return self.operator.eval(self, simulator=simulator)
 
     def __eq__(self, other):
-        return (
+        return self is other or (
                  type(self) is type(other) and
                  self.operator == other.operator and
                  self.operands == other.operands

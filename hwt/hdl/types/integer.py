@@ -19,8 +19,8 @@ class Integer(HdlType):
 
     @classmethod
     def get_auto_cast_fn(cls):
-        from hwt.hdl.types.integerConversions import convertInteger
-        return convertInteger
+        from hwt.hdl.types.integerCast import cast_integer
+        return cast_integer
 
     @classmethod
     def getValueCls(cls):

@@ -7,7 +7,7 @@ from hwt.hdl.types.hdlType import default_auto_cast_fn
 from hwt.hdl.value import Value
 
 
-def convertInteger(self, sigOrVal, toType):
+def cast_integer(self, sigOrVal, toType):
     isVal = isinstance(sigOrVal, Value)
     if toType == BOOL:
         if isVal:

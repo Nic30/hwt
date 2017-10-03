@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
-from hwt.hdl.value import Value, areValues
+from hwt.hdl.value import Value
 from hwt.serializer.serializerClases.indent import getIndent
 
 

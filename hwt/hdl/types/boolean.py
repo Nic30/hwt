@@ -11,8 +11,8 @@ class Boolean(HdlType):
 
     @classmethod
     def get_auto_cast_fn(cls):
-        from hwt.hdl.types.booleanConversions import convertBoolean
-        return convertBoolean
+        from hwt.hdl.types.booleanCast import cast_boolean
+        return cast_boolean
 
     def bit_length(self):
         return 1

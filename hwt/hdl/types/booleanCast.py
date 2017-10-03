@@ -3,7 +3,7 @@ from hwt.hdl.types.hdlType import default_auto_cast_fn
 from hwt.hdl.value import Value
 
 
-def convertBoolean(self, sigOrVal, toType):
+def cast_boolean(self, sigOrVal, toType):
     if toType == BIT:
         if isinstance(sigOrVal, Value):
             v = BIT.getValueCls()(int(sigOrVal.val), BIT, sigOrVal.vldMask, sigOrVal.updateTime)
