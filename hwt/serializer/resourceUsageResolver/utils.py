@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
@@ -185,6 +185,12 @@ operatorsWithoutResource = conversions.union(
              AllOps.RISING_EDGE})
 
 
+RamOrRomResources = {ResourceAsyncRAM,
+                     ResourceAsyncROM,
+                     ResourceRAM,
+                     ResourceROM}
+
+
 def findAssingmentOf(sig: RtlSignal) -> Assignment:
     """
     Walk endpoints to neares assignment
@@ -255,15 +261,14 @@ class ResourceContext():
         latches = res.get(ResourceLatch, 0) 
         res[ResourceLatch] = latches + w
 
-    def registerMem(self, mem):
-        # [TODO] find clks
-        # walk all endpoints and drivers
-        # for each address signal collect number of read/write pors
-        # merge maximum or r/w ports to rw port for each address signal
-        width = mem._dtype.elmType.bit_length()
-        items = int(mem._dtype.size)
-        # address signal : [reads, writes]
+    def _extractRamPorts(self, mem: RtlSignal) -> Dict[RtlSignal, Tuple[int, int, int, int]]:
+        """
+        Resolve address signals and read/write ports of memory
+        :return: dict  address signal : [syncReads, syncWrites, asyncReads, asyncWrites]
+        """
+
         addressSignals = {}
+        # collect write ports
         for d in mem.drivers:
             assert isinstance(d, Assignment)
             assert len(d.indexes) == 1
@@ -278,7 +283,7 @@ class ResourceContext():
                 ports[1] += 1
             else:
                 ports[3] += 1
-
+        # collect read ports
         for e in mem.endpoints:
             if isinstance(e, Assignment):
                 assert len(e.indexes) == 1
@@ -303,6 +308,17 @@ class ResourceContext():
             else:
                 ports[2] += 1
 
+        return addressSignals
+
+    def registerMem(self, mem):
+        # [TODO] find clks
+        # walk all endpoints and drivers
+        # for each address signal collect number of read/write pors
+        # merge maximum or r/w ports to rw port for each address signal
+        width = mem._dtype.elmType.bit_length()
+        items = int(mem._dtype.size)
+        
+        # resolve conts of r/w ports
         rwSyncPorts = 0
         rSyncPorts = 0
         wSyncPorts = 0
@@ -311,6 +327,7 @@ class ResourceContext():
         rAsyncPorts = 0
         wAsyncPorts = 0
 
+        addressSignals = self._extractRamPorts(mem)
         for _, (r, w, asyncR, asyncW) in addressSignals.items():
             rw = min(r, w)
             rwSyncPorts += rw
@@ -322,11 +339,14 @@ class ResourceContext():
             rAsyncPorts += asyncR - rw
             wAsyncPorts += asyncW - rw
 
+        # register ram resource for this mem
         m = ResourceRAM(width, items,
                         rwSyncPorts, rSyncPorts, wSyncPorts,
                         rwAsyncPorts, rAsyncPorts, wAsyncPorts)
         cnt = self.resources.get(m, 0)
         self.resources[m] = cnt + 1
+        
+        # if has sync reads merge FFs into this resource
         FFsInRam = (rwSyncPorts + rSyncPorts) * width
         if FFsInRam:
             ffs = self.resources[ResourceFF]
@@ -355,10 +375,7 @@ class ResourceContext():
         elif resourceGues is ResourceLatchWithMux:
             self.registerLatch(sig)
             self.registerMUX(sig)
-        elif resourceGues in {ResourceAsyncRAM,
-                              ResourceAsyncROM,
-                              ResourceRAM,
-                              ResourceROM}:
+        elif resourceGues in RamOrRomResources:
             self.discoveredRamSignals.add(sig)
         else:
             raise NotImplementedError(resourceGues)
