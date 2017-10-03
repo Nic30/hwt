@@ -50,14 +50,14 @@ class ResourceUsageResolver(GenericSerializer):
         gues = {}
         guesOfChildren = []
         # resolve 
-        olnlyAssignmets = True
+        onlyAssignmets = True
         for stm in statements:
             if isinstance(stm, Assignment):
                 updateGuesFromAssignment(gues, stm)
                 if isinstance(stm.src, RtlSignal):
                     cls.Signal(stm.src, ctx)
             else:
-                olnlyAssignmets = False
+                onlyAssignmets = False
                 fn = getattr(cls, stm.__class__.__name__)
                 g = fn(stm, dstSignals, ctx)
                 guesOfChildren.append(g)
@@ -73,7 +73,7 @@ class ResourceUsageResolver(GenericSerializer):
                 gues[sig] = nextGues
 
         # mark signals which were not connected as unconnected
-        if olnlyAssignmets:
+        if onlyAssignmets and len(gues) != len(dstSignals):
             for sig in dstSignals:
                 if sig not in gues.keys():
                     gues[sig] = Unconnected
