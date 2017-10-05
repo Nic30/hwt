@@ -1,12 +1,6 @@
-from copy import deepcopy
-
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
-
-
-class InvalidOperandExc(Exception):
-    pass
 
 
 def getCtxFromOps(operands):
@@ -87,17 +81,6 @@ class Operator():
         if out._const:
             out.staticEval()
         return out
-
-    def __deepcopy__(self, memo=None):
-        try:
-            return memo[self]
-        except KeyError:
-            o = Operator(None, [])
-            memo[id(self)] = o
-            for k, v in self.__dict__.items():
-                setattr(o, k, deepcopy(v, memo))
-
-            return o
 
     def __hash__(self):
         return hash((self.operator, frozenset(self.operands)))

@@ -419,16 +419,16 @@ class BitsVal(EventCapableVal):
         return bitsCmp(self, other, AllOps.NEQ)
 
     def _lt__val(self, other):
-        return bitsCmp__val(self, other, AllOps.LOWERTHAN, lt)
+        return bitsCmp__val(self, other, AllOps.LT, lt)
 
     def __lt__(self, other):
-        return bitsCmp(self, other, AllOps.LOWERTHAN)
+        return bitsCmp(self, other, AllOps.LT)
 
     def _gt__val(self, other):
-        return bitsCmp__val(self, other, AllOps.GREATERTHAN, gt)
+        return bitsCmp__val(self, other, AllOps.GT, gt)
 
     def __gt__(self, other):
-        return bitsCmp(self, other, AllOps.GREATERTHAN)
+        return bitsCmp(self, other, AllOps.GT)
 
     def _ge__val(self, other):
         return bitsCmp__val(self, other, AllOps.GE, ge)

@@ -90,10 +90,10 @@ class RtlSignalOps():
         return self.naryOp(AllOps.GE, tv(self).__ge__, other)
 
     def __gt__(self, other):
-        return self.naryOp(AllOps.GREATERTHAN, tv(self).__gt__, other)
+        return self.naryOp(AllOps.GT, tv(self).__gt__, other)
 
     def __lt__(self, other):
-        return self.naryOp(AllOps.LOWERTHAN, tv(self).__lt__, other)
+        return self.naryOp(AllOps.LT, tv(self).__lt__, other)
 
     def __le__(self, other):
         return self.naryOp(AllOps.LE, tv(self).__le__, other)

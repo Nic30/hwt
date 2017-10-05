@@ -18,8 +18,8 @@ opPrecedence = {AllOps.NOT: 3,
                 AllOps.OR: 13,
                 AllOps.DOWNTO: 2,
                 AllOps.TO: 2,
-                AllOps.GREATERTHAN: 9,
-                AllOps.LOWERTHAN: 9,
+                AllOps.GT: 9,
+                AllOps.LT: 9,
                 AllOps.GE: 9,
                 AllOps.LE: 9,
                 AllOps.CONCAT: 5,
@@ -75,9 +75,9 @@ class SystemCSerializer_ops():
             return _bin(' == ')
         elif o == AllOps.NEQ:
             return _bin(' != ')
-        elif o == AllOps.GREATERTHAN:
+        elif o == AllOps.GT:
             return _bin(' > ')
-        elif o == AllOps.LOWERTHAN:
+        elif o == AllOps.LT:
             return _bin(' < ')
         elif o == AllOps.GE:
             return _bin(' >= ')

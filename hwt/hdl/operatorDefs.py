@@ -142,9 +142,9 @@ class AllOps():
 
     EQ = OpDefinition(eqFn)
     NEQ = OpDefinition(ne)
-    GREATERTHAN = OpDefinition(gt)
+    GT = OpDefinition(gt)
     GE = OpDefinition(ge)
-    LOWERTHAN = OpDefinition(lt)
+    LT = OpDefinition(lt)
     LE = OpDefinition(le)
 
     INDEX = OpDefinition(getitem)
@@ -159,10 +159,6 @@ class AllOps():
     BitsAsVec = OpDefinition(bitsAsVec)
 
     allOps = {}
-
-    @classmethod
-    def opByName(cls, name):
-        return getattr(cls, name)
 
 
 if not AllOps._idsInited:

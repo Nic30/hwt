@@ -16,8 +16,8 @@ opPrecedence = {AllOps.NOT: 4,
                 AllOps.AND: 10,
                 AllOps.OR: 10,
                 AllOps.DOWNTO: 1,
-                AllOps.GREATERTHAN: 10,
-                AllOps.LOWERTHAN: 10,
+                AllOps.GT: 10,
+                AllOps.LT: 10,
                 AllOps.GE: 10,
                 AllOps.LE: 10,
                 AllOps.CONCAT: 1,
@@ -65,7 +65,7 @@ class SimModelSerializer_ops():
             return "SliceVal((%s, %s), SLICE, True)" % (p(ops[0]), p(ops[1]))
         elif o == AllOps.EQ:
             return '(%s)._eq__val(%s)' % (p(ops[0]), p(ops[1]))
-        elif o == AllOps.GREATERTHAN:
+        elif o == AllOps.GT:
             return _bin('_gt__val')
         elif o == AllOps.GE:
             return _bin('_ge__val')
@@ -74,7 +74,7 @@ class SimModelSerializer_ops():
         elif o == AllOps.INDEX:
             assert len(ops) == 2
             return "(%s)._getitem__val(%s)" % ((cls.asHdl(ops[0], ctx)), p(ops[1]))
-        elif o == AllOps.LOWERTHAN:
+        elif o == AllOps.LT:
             return _bin('_lt__val')
         elif o == AllOps.SUB:
             return _bin('_sub__val')

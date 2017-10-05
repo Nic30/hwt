@@ -18,8 +18,8 @@ opPrecedence = {AllOps.NOT: 3,
                 AllOps.XOR: 12,
                 AllOps.OR: 13,
                 AllOps.DOWNTO: 2,
-                AllOps.GREATERTHAN: 9,
-                AllOps.LOWERTHAN: 9,
+                AllOps.GT: 9,
+                AllOps.LT: 9,
                 AllOps.GE: 9,
                 AllOps.LE: 9,
                 AllOps.CONCAT: 5,
@@ -74,7 +74,7 @@ class VerilogSerializer_ops():
             return _bin(':')
         elif o == AllOps.EQ:
             return _bin(' == ')
-        elif o == AllOps.GREATERTHAN:
+        elif o == AllOps.GT:
             return _bin(' > ')
         elif o == AllOps.GE:
             return _bin(' >= ')
@@ -84,7 +84,7 @@ class VerilogSerializer_ops():
             assert len(ops) == 2
             o1 = ops[0]
             return "%s[%s]" % (cls.asHdl(o1, ctx).strip(), p(ops[1]))
-        elif o == AllOps.LOWERTHAN:
+        elif o == AllOps.LT:
             return _bin(' < ')
         elif o == AllOps.SUB:
             return _bin(' - ')

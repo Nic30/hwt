@@ -16,8 +16,8 @@ opPrecedence = {AllOps.NOT: 2,
                 AllOps.AND: 2,
                 AllOps.OR: 2,
                 AllOps.DOWNTO: 2,
-                AllOps.GREATERTHAN: 2,
-                AllOps.LOWERTHAN: 2,
+                AllOps.GT: 2,
+                AllOps.LT: 2,
                 AllOps.GE: 2,
                 AllOps.LE: 2,
                 AllOps.CONCAT: 2,
@@ -80,7 +80,7 @@ class VhdlSerializer_ops():
             return _bin('-1 TO ')
         elif o == AllOps.EQ:
             return _bin(' = ')
-        elif o == AllOps.GREATERTHAN:
+        elif o == AllOps.GT:
             return _bin(' > ')
         elif o == AllOps.GE:
             return _bin(' >= ')
@@ -94,7 +94,7 @@ class VhdlSerializer_ops():
                 o1.defaultVal = ops[0]
 
             return "%s(%s)" % (cls.asHdl(o1, ctx).strip(), p(ops[1]))
-        elif o == AllOps.LOWERTHAN:
+        elif o == AllOps.LT:
             return _bin(' < ')
         elif o == AllOps.SUB:
             return _bin(' - ')
