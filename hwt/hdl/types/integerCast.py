@@ -11,9 +11,10 @@ def cast_integer(self, sigOrVal, toType):
     isVal = isinstance(sigOrVal, Value)
     if toType == BOOL:
         if isVal:
-            v = sigOrVal.val
-            assert v == 0 or v == 1
-            return HBoolVal(v, BOOL, sigOrVal.vldMask, sigOrVal.updateTime)
+            v = int(bool(sigOrVal.val))
+            return HBoolVal(v, BOOL,
+                            sigOrVal.vldMask,
+                            sigOrVal.updateTime)
 
     elif isinstance(toType, Bits):
         if isVal:
