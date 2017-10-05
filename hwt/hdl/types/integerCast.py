@@ -1,7 +1,7 @@
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.booleanVal import BooleanVal
+from hwt.hdl.types.boolVal import HBoolVal
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.hdlType import default_auto_cast_fn
 from hwt.hdl.value import Value
@@ -13,7 +13,7 @@ def cast_integer(self, sigOrVal, toType):
         if isVal:
             v = sigOrVal.val
             assert v == 0 or v == 1
-            return BooleanVal(v, BOOL, sigOrVal.vldMask, sigOrVal.updateTime)
+            return HBoolVal(v, BOOL, sigOrVal.vldMask, sigOrVal.updateTime)
 
     elif isinstance(toType, Bits):
         if isVal:

@@ -34,7 +34,7 @@ def bitsCmp__val(self, other, op, evalFn):
 
 def bitsCmp(self, other, op, evalFn=None):
     """
-    :attention: If other is Bool signal convert this to boolean (not ideal, due VHDL event operator)
+    :attention: If other is Bool signal convert this to bool (not ideal, due VHDL event operator)
     """
     other = toHVal(other)
     t = self._dtype
@@ -85,7 +85,7 @@ def bitsBitOp__val(self, other, op, getVldFn):
 
 def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
     """
-    :attention: If other is Bool signal, convert this to boolean (not ideal, due VHDL event operator)
+    :attention: If other is Bool signal, convert this to bool (not ideal, due VHDL event operator)
     """
     other = toHVal(other)
 

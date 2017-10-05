@@ -2,7 +2,7 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.boolean import Boolean
+from hwt.hdl.types.bool import HBool
 from hwt.hdl.types.defs import INT
 from hwt.hdl.types.hdlType import default_auto_cast_fn
 from hwt.hdl.types.struct import HStruct
@@ -12,7 +12,7 @@ from hwt.synthesizer.vectorUtils import iterBits
 
 
 def convertBits__val(self, val, toType):
-    if isinstance(toType, Boolean):
+    if isinstance(toType, HBool):
         return val._eq(self.getValueCls().fromPy(1, self))
     elif isinstance(toType, Bits):
         return val._convSign__val(toType.signed)
@@ -31,7 +31,7 @@ def convertBits(self, sigOrVal, toType):
     """
     if isinstance(sigOrVal, Value):
         return convertBits__val(self, sigOrVal, toType)
-    elif isinstance(toType, Boolean):
+    elif isinstance(toType, HBool):
         if self.bit_length() == 1:
             v = 0 if sigOrVal._dtype.negated else 1
             return sigOrVal._eq(self.getValueCls().fromPy(v, self))
