@@ -1,9 +1,8 @@
 from hwt.serializer.ip_packager.exprSerializer import VivadoTclExpressionSerializer
 from hwt.serializer.ip_packager.helpers import mkSpiElm, spi_ns_prefix
 from hwt.serializer.ip_packager.otherXmlObjs import Parameter
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.pyUtils.arrayQuery import single
 from hwt.serializer.vhdl.serializer import VhdlSerializer
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 DEFAULT_CLOCK = 100000000
@@ -12,12 +11,12 @@ DEFAULT_CLOCK = 100000000
 class Type():
     __slots__ = ['name', 'version', 'vendor', 'library']
 
-    @classmethod
-    def fromElem(cls, elm):
-        self = cls()
-        for s in ['name', 'version', 'vendor', 'library']:
-            setattr(self, s, elm.attrib[spi_ns_prefix + s])
-        return self
+    #@classmethod
+    #def fromElem(cls, elm):
+    #    self = cls()
+    #    for s in ['name', 'version', 'vendor', 'library']:
+    #        setattr(self, s, elm.attrib[spi_ns_prefix + s])
+    #    return self
 
     def asElem(self, elmName):
         e = mkSpiElm(elmName)
@@ -30,11 +29,6 @@ class IntfConfig(Type):
     def __init__(self):
         self.parameters = []
         self.map = {}
-
-    def findPort(self, logName):
-        logName = logName.lower()
-        p = single(self.port, lambda x: x.logName.lower() == logName)
-        return p
 
     def addSimpleParam(self, thisIntf, name, value):
         p = Parameter()
