@@ -46,34 +46,42 @@ class HdlSimulator(HdlEnvironmentCore):
     """
     Circuit simulator with support for external agents
 
-    .. note::
+    .. note:: *Signals without driver, constant driver, initial value*
         Every signal is initialized at start with its default value
-        (sig. without driver, sig with constant driver solved)
+
+    .. note:: *Communication between processes*
+        Every interprocess signal is marked by synthesizer.
+        For each output for every process there is an IO object
+        which is container container of updates to signals.
+        Every process has (generated) sensitivity-list.
+        Process is reevaluated when there is a new value on any signal
+        from sensitivity list.
+    
+    .. note: *Delta steps*
+        Delta step is minimum quantum of changes in simulation, on the begining
+        of delta step all read are performed and on the end all writes are performed.
+        Writes are causing revalution of HWprocesses which are planet into next delta step.
+        Delta steps does not update time. When there is no process to reevaluate
+        that means there is nothing to do in delta step this delta step is considered
+        as last in this time and time is shifted on begining of next event by simulator.
+
+    .. note:: *Simulation inputs*
+        HWprocess can not contain any blocking statement
+        Simulation processes are written in python and can contain anything.
+        (Using hdl as main simulator driver is not efficient.
+         That is why it is not supported.)
 
     .. note::
-        Every interprocess signal is marked by synthesizer and it can not be directly updated
-        by any process, process should only return tuple (updateDestionation, updateFn, isEventDependentFlag)
-        and let simulator to update it for others, any other signals are evaluated as expression
-        by every process
-        every process drives only one signal
-        every process uses sensitivity-list like in other languages (but it is generated automatically)
-        (communication between process solved)
-
-    .. note::
-        Hdlprocesses can not contain any wait statements etc. only simulation processes can.
-        Simulation processes are written in python.
-        (using hdl as main simulator driver is not efficient and thats why it is not supported
-        and it is easy to just read hdl process with unsupported statements and translate them to
-        simulator commands)
-
-    .. note::
-        HWprocesses have lower priority than simulation processes this allows simplify logic of all agents
-        when simulation process is executed HW part did not anything in this time
-        so simulation process can prepare anything for HW part (= can write)
-        if simulation process need to read, it has to yield simulator.updateComplete
-        first, process then will be waken after reaction of HW in this time:
-        agents are greatly simplified, they just need to yield simulator.updateComplete
-        before first read and then the can not write in this time
+        HWprocesses have lower priority than simulation processes
+        this allows simplify logic of all agents.
+        When simulation process is executed, HW part did not anything
+        in this time, Simulation process can prepare anything for HW part
+        (= can write) if simulation process need to read, it has to yield
+        simulator.updateComplete event first, process then will be wakened
+        after reaction of HW in this time:
+        agents are greatly simplified, they just need to yield
+        simulator.updateComplete before first read
+        and then can not write in this time
 
     :ivar now: actual simulation time
     :ivar updateComplete: this event is triggered when there are not any values to apply in this time
@@ -167,19 +175,20 @@ class HdlSimulator(HdlEnvironmentCore):
 
     def conflictResolveStrategy(self, actionSet):
         """
-        This functions resolves
+        This functions resolves write conflicts for signal
 
         :param actionSet: set of actions made by process
         """
         invalidate = False
         l = len(actionSet)
-        # resolve if there is no write collision
+        # resolve if there is write collision
         if l == 0:
             return
         elif l == 1:
             res = actionSet.pop()
         else:
-            # we are driving signal with two different values so we invalidate result
+            # we are driving signal with two or more different values
+            # we have to invalidate result
             res = actionSet.pop()
             invalidate = True
 
