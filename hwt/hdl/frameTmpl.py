@@ -1,6 +1,7 @@
 from itertools import zip_longest
 from math import ceil, floor, inf
 import re
+from typing import Union, Generator
 
 from hwt.bitmask import mask, selectBitRange, setBitRange
 from hwt.hdl.frameTmplUtils import TransTmplWordIterator, \
@@ -11,7 +12,6 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import flatten
 from hwt.simulator.types.simBits import simBitsT
-from typing import Union, Generator
 
 
 class FrameTmpl(object):
@@ -44,6 +44,7 @@ class FrameTmpl(object):
         """
         self.origin = origin
         self.wordWidth = wordWidth
+        assert startBitAddr <= endBitAddr
         self.startBitAddr = startBitAddr
         self.endBitAddr = endBitAddr
         self.parts = transParts
@@ -98,7 +99,7 @@ class FrameTmpl(object):
                     # cut off padding and align end of frame to word
                     _endOfThisFrame = (lastWordI + 1) * wordWidth
                 else:
-                    _endOfThisFrame = (wordI - 1) * wordWidth
+                    _endOfThisFrame = wordI * wordWidth
 
                 yield FrameTmpl(transaction,
                                 wordWidth,
@@ -149,8 +150,10 @@ class FrameTmpl(object):
             parts.extend(word)
             lastWordI = wordI
 
-        if partsPending:
-            endOfThisFrame = transaction.bitAddrEnd
+        # reminder in "parts" after last iteration
+        endOfThisFrame = transaction.bitAddrEnd
+        withPadding = not (trimPaddingWordsOnEnd or trimPaddingWordsOnStart)
+        if partsPending or (withPadding and endOfThisFrame != startOfThisFrame):
             # cut off padding at end of frame
             endOfLastWord = (lastWordI + 1) * wordWidth
             if endOfThisFrame < endOfLastWord:
@@ -160,12 +163,27 @@ class FrameTmpl(object):
                 if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
                     endOfThisFrame -= paddingWords * wordWidth
                     # align end of frame to word
+            endOfThisFrame = min(startOfThisFrame + maxFrameLen, endOfThisFrame)
 
             yield FrameTmpl(transaction,
                             wordWidth,
                             startOfThisFrame,
                             endOfThisFrame,
                             parts)
+            parts = []
+            startOfThisFrame = endOfThisFrame
+        
+        # final padding on the end
+        while withPadding and startOfThisFrame < transaction.bitAddrEnd:
+            endOfThisFrame = min(startOfThisFrame + maxFrameLen, transaction.bitAddrEnd)
+
+            yield FrameTmpl(transaction,
+                wordWidth,
+                startOfThisFrame,
+                endOfThisFrame,
+                [])
+
+            startOfThisFrame = endOfThisFrame
 
     def _wordIndx(self, addr: int):
         """
@@ -227,21 +245,20 @@ class FrameTmpl(object):
         if showPadding and (parts or lastEnd != self.endBitAddr or lastEnd % self.wordWidth != 0):
             # align end to end of last word
             end = ceil(self.endBitAddr / self.wordWidth) * self.wordWidth
-            if showPadding:
-                while end != lastEnd:
-                    assert end >= lastEnd, (end, lastEnd)
-                    endOfWord = ((lastEnd // self.wordWidth) + 1) * self.wordWidth
-                    endOfPadding = min(endOfWord, end)
-                    _p = TransPart(self, None, lastEnd, endOfPadding, 0)
-                    _p.parent = self
-                    parts.append(_p)
+            while end != lastEnd:
+                assert end >= lastEnd, (end, lastEnd)
+                endOfWord = ((lastEnd // self.wordWidth) + 1) * self.wordWidth
+                endOfPadding = min(endOfWord, end)
+                _p = TransPart(self, None, lastEnd, endOfPadding, 0)
+                _p.parent = self
+                parts.append(_p)
 
-                    if endOfPadding >= endOfWord:
-                        yield (wIndex, parts)
-                        wIndex += 1
-                        parts = []
+                if endOfPadding >= endOfWord:
+                    yield (wIndex, parts)
+                    wIndex += 1
+                    parts = []
 
-                    lastEnd = endOfPadding
+                lastEnd = endOfPadding
 
             if parts:
                 # in the case end of frame is not aligned to end of word
@@ -376,8 +393,6 @@ class FrameTmpl(object):
     def __repr__(self, scale=1):
         buff = []
         s = "<%s start:%d, end:%d" % (self.__class__.__name__, self.startBitAddr, self.endBitAddr)
-        if not self.parts:
-            return s + ">"
         buff.append(s)
 
         padding = 5
