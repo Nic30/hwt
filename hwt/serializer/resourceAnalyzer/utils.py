@@ -4,7 +4,7 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.pyUtils.arrayQuery import arr_any
-from hwt.serializer.resourceUsageResolver.resourceTypes import Unconnected, \
+from hwt.serializer.resourceAnalyzer.resourceTypes import Unconnected, \
     ResourceFF, ResourceMUX, ResourceFFwithMux, ResourceLatch, ResourceRAM, \
     ResourceROM, ResourceLatchWithMux, ResourceAsyncRAM, ResourceAsyncROM
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal

@@ -10,20 +10,20 @@ from hwt.hdl.statements import IfContainer, SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.value import Value
 from hwt.serializer.generic.serializer import GenericSerializer
-from hwt.serializer.resourceUsageResolver.resourceTypes import Unconnected, \
+from hwt.serializer.resourceAnalyzer.resourceTypes import Unconnected, \
     ResourceMUX, ResourceLatch, ResourceLatchWithMux
-from hwt.serializer.resourceUsageResolver.utils import ResourceContext, \
+from hwt.serializer.resourceAnalyzer.utils import ResourceContext, \
     updateGuesFromAssignment, resourceTransitions_override, mergeGues, \
     operatorsWithoutResource
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
-class ResourceUsageResolver(GenericSerializer):
+class ResourceAnalyzer(GenericSerializer):
     """
     Serializer which does not products any output just collect informations
     about used resources
     
-    :attention: Use instance of ResourceUsageResolver instead of class
+    :attention: Use instance of ResourceAnalyzer instead of class
     """
     _keywords_dict = {}
     def __init__(self):
@@ -125,7 +125,7 @@ class ResourceUsageResolver(GenericSerializer):
 
         :param dstSignals: list of signals which are driven by this assignments
         """
-        isEnclosed = swc.default or (1 << len(swc.cases))
+        isEnclosed = swc.default or len(swc.cases) >= (1 << swc.switchOn._dtype.bit_length())
         gues = None
         for k, c in swc.cases:
             g = cls.statementList(c, dstSignals, ctx)
