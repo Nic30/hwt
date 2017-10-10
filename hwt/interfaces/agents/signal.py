@@ -77,20 +77,14 @@ class SignalAgent(SyncAgentBase):
             # clk tick
             while True:
                 if self._enabled and self.data and self.notReset(sim):
-                    try:
-                        d = self.data.popleft()
-                    except AttributeError:
-                        d = next(self.data)
+                    d = self.data.popleft()
                     self.doWrite(sim, d)
                 yield sim.wait(self.delay)
         else:
             # if clock is specified this function is periodically called every
             # clk tick, when agent is enabled
             if self.data and self.notReset(sim):
-                try:
-                    d = self.data.popleft()
-                except AttributeError:
-                    d = next(self.data)
+                d = self.data.popleft()
                 self.doWrite(sim, d)
 
     def monitor(self, sim):
