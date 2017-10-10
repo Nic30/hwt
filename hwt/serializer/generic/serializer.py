@@ -57,9 +57,10 @@ class GenericSerializer():
             return serFn(obj, ctx)
 
     @classmethod
-    def Entity_prepare(cls, ent, ctx):
-        serializedGenerics = []
-        serializedPorts = []
+    def Entity_prepare(cls, ent, ctx, serialize=True):
+        if serialize:
+            serializedGenerics = []
+            serializedPorts = []
 
         scope = ctx.scope
         ent.generics.sort(key=lambda x: x.name)
@@ -68,14 +69,17 @@ class GenericSerializer():
         ent.name = scope.checkedName(ent.name, ent, isGlobal=True)
         for g in ent.generics:
             g.name = scope.checkedName(g.name, g)
-            serializedGenerics.append(cls.GenericItem(g, ctx))
+            if serialize:
+                serializedGenerics.append(cls.GenericItem(g, ctx))
 
         for p in ent.ports:
             p.name = scope.checkedName(p.name, p)
             p.getSigInside().name = p.name
-            serializedPorts.append(cls.PortItem(p, ctx))
-
-        return serializedGenerics, serializedPorts
+            if serialize:
+                serializedPorts.append(cls.PortItem(p, ctx))
+        
+        if serialize:
+            return serializedGenerics, serializedPorts
 
     @classmethod
     def Entity(cls, ent, ctx):

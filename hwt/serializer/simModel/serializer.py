@@ -2,6 +2,8 @@ from copy import copy
 from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
 
+from hwt.hdl.architecture import Architecture
+from hwt.hdl.assignment import Assignment
 from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps, sensitivityByOp
@@ -21,7 +23,6 @@ from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
-from hwt.hdl.assignment import Assignment
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
@@ -52,7 +53,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         return serFn(obj, ctx, enclosure=enclosure)
 
     @classmethod
-    def Architecture(cls, arch, ctx):
+    def Architecture(cls, arch:Architecture, ctx):
+        cls.Entity_prepare(arch.entity, ctx, serialize=False)
         variables = []
         procs = []
         extraTypes = set()
@@ -106,7 +108,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             sensitivityByOp=sensitivityByOp,
             serialize_io=cls.sensitivityListItem,
             )
-
+    
     @classmethod
     def Assignment(cls, a, ctx, enclosure=None):
         dst = a.dst
