@@ -43,6 +43,7 @@ class BitsVal(EventCapableVal):
         w = t._widthVal
         m = t._allMask
         _v = v.val
+
         if selfSign and not signed:
             if _v < 0:
                 v.val = m + _v + 1
@@ -51,6 +52,7 @@ class BitsVal(EventCapableVal):
             if _v >= msbMask:
                 v.val = -_v + msbMask + (m >> 1) - 1
         v._dtype = v._dtype.__class__(w, signed=signed)
+
         return v
 
     def _convSign(self, signed):
