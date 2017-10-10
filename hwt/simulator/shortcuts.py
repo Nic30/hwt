@@ -15,6 +15,7 @@ from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
+from hwt.simulator.simSignal import SimSignal
 
 
 def simPrepare(unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
@@ -192,67 +193,75 @@ def _simUnitVcd(simModel, stimulFunctions, outputFile, time):
 
 
 class CallbackLoop(object):
-    def __init__(self, sig, condFn, fn):
+    def __init__(self, sig: SimSignal, fn, shouldBeEnabledFn):
         """
         :param sig: signal on which write callback should be used
-        :param condFn: condition (function) which has to be satisfied in order to run callback
         :attention: if condFn is None callback function is always executed
 
+        :ivra fn: function/generator which is callback which should be executed
         :ivar isGenerator: flag if callback function is generator or normal function
+        :ivar _callbackIndex: index of callback in write callbacks on sig, if is None
+            callback was not registered yet
+        :ivar shouldBeEnabledFn; function() -> bool, which returns True if this
+            callback loop should be enabled
         """
-        self.isGenerator = inspect.isgeneratorfunction(fn)
-        self.condFn = condFn
+        assert not isinstance(fn, CallbackLoop)
         self.fn = fn
+        self.isGenerator = inspect.isgeneratorfunction(fn)
+        self.shouldBeEnabledFn = shouldBeEnabledFn
+        self._callbackIndex = None
+
         try:
             # if sig is interface we need internal signal
             self.sig = sig._sigInside
         except AttributeError:
             self.sig = sig
 
-    def onWriteCallback(self, sim):
-        s = self.sig
+    def setEnable(self, en, sim):
+        if self._callbackIndex is None:
+            return
 
-        cond = self.condFn(s, sim)
-        # exec callback when cond is True or when it is uncertain
-        if cond is None or cond:
+        if en:
+            c = self.onWriteCallback
+        else:
+            c = None
+        self.sig._writeCallbacks[self._callbackIndex] = c
+
+    def onWriteCallback(self, sim):
+        if self.isGenerator:
+            yield from self.fn(sim)
+        else:
+            self.fn(sim)
+
+    def __call__(self, sim):
+        """
+        Process for injecting of this callback loop into simulator
+        """
+        self._callbackIndex = self.sig.registerWriteCallback(
+                                            self.onWriteCallback,
+                                            self.shouldBeEnabledFn)
+        return
+        yield
+
+
+class OnRisingCallbackLoop(CallbackLoop):
+    
+    def onWriteCallback(self, sim):
+        if bool(sim.read(self.sig)._onRisingEdge__val(sim.now)):
             if self.isGenerator:
                 yield from self.fn(sim)
             else:
                 self.fn(sim)
-        s._writeCallbacks.append(self.onWriteCallback)
-        # no function just assert this function will be generator
-        yield sim.wait(0)
-
-    def initProcess(self, sim):
-        """
-        Process for injecting of this callback loop into simulator
-        """
-        self.sig._writeCallbacks.append(self.onWriteCallback)
-        yield sim.wait(0)
 
 
-def isRising(sig, sim):
-    return bool(sim.read(sig)._onRisingEdge__val(sim.now))
-
-
-def onRisingEdge(sig, fn):
-    """
-    Call function (or generator) every time when signal is on rising edge
-    """
-    c = CallbackLoop(sig, isRising, fn)
-    return c.initProcess
-
-
-def isFalling(sig, sim):
-    return bool(sim.read(sig)._onFallingEdge__val(sim.now))
-
-
-def onFallingEdge(sig, fn):
-    """
-    Call function (or generator) every time when signal is on rising edge
-    """
-    c = CallbackLoop(sig, isFalling, fn)
-    return c.initProcess
+class OnFallingCallbackLoop(CallbackLoop):
+    
+    def onWriteCallback(self, sim):
+        if bool(sim.read(self.sig)._onFallingEdge__val(sim.now)):
+            if self.isGenerator:
+                yield from self.fn(sim)
+            else:
+                self.fn(sim)
 
 
 def oscilate(sig, period=10 * Time.ns, initWait=0):
@@ -260,7 +269,6 @@ def oscilate(sig, period=10 * Time.ns, initWait=0):
     Oscillative simulation driver for your signal
     (usually used as clk generator)
     """
-
     def oscillateStimul(s):
         s.write(False, sig)
         halfPeriod = period / 2

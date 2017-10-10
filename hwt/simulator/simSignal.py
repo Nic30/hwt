@@ -5,8 +5,8 @@ class SimSignal(SignalItem):
     """
     Class of signal simulation functions
 
-    :ivar _writeCallbacks: list of callback functions(signal, simulator) which is called
-        when new (changed) value is written to this signal
+    :ivar _writeCallbacks: list of callback functions(signal, simulator)
+        which is called when new (changed) value is written to this signal
     """
     __slots__ = ["name", "_val", "_oldVal", "_writeCallbacks",
                  "simSensProcs", "simRisingSensProcs", "simFallingSensProcs"]
@@ -15,52 +15,71 @@ class SimSignal(SignalItem):
         ctx.signals.add(self)
         self.hidden = False
         self._writeCallbacks = []
+        self._writeCallbacksToEn = []
         self.simSensProcs = set()
         self.simRisingSensProcs = set()
         self.simFallingSensProcs = set()
         super(SimSignal, self).__init__(name, dtype, defaultVal)
 
+    def registerWriteCallback(self, callback, getEnFn) -> int:
+        """
+        Register writeCallback for signal.
+        Registration is evaluated at the end of deltastep of simulator.
+        
+        :param callback: simulation process represented by function(simulator)
+            which should be called after update of this signal
+        :param getEnFn: function() to get initial value for enable of callback
+        """
+        index = len(self._writeCallbacks)
+        self._writeCallbacks.append(None)
+        self._writeCallbacksToEn.append((index, callback, getEnFn))
+        return index
+
     def simPropagateChanges(self, simulator):
         v = self._val
         self._oldVal = v
 
+        # perform registration of new write callbacks
+        if self._writeCallbacksToEn:
+            for i, callback, reqEnFn in self._writeCallbacksToEn:
+                if reqEnFn():
+                    self._writeCallbacks[i] = callback 
+            self._writeCallbacksToEn = []
+        
         # run all sensitive processes
         log = simulator.config.logPropagation
+        if log:
+            log(simulator, self, self.simSensProcs)
         for p in self.simSensProcs:
-            if log:
-                log(simulator, self, p)
-
             simulator.addHwProcToRun(self, p)
 
         # run write callbacks we have to create new list to allow
         # registering of new call backs in callbacks
-        callBacks = self._writeCallbacks
-        self._writeCallbacks = []
-        for c in callBacks:
-            # simulation processes
-            simulator.process(c(simulator))    
-
+        for c in self._writeCallbacks:
+            if c:
+                # run simulation processes which are activated
+                simulator.process(c(simulator))    
+        
         if self.simRisingSensProcs:
             if v.val or not v.vldMask:
+                if log:
+                    log(simulator, self, self.simRisingSensProcs)
                 for p in self.simRisingSensProcs:
-                    if log:
-                        log(simulator, self, p)
 
                     simulator.addHwProcToRun(self, p)
 
         if self.simFallingSensProcs:
             if not v.val or not v.vldMask:
+                if log:
+                    log(simulator, self, self.simFallingSensProcs)
                 for p in self.simFallingSensProcs:
-                    if log:
-                        log(simulator, self, p)
-
                     simulator.addHwProcToRun(self, p)
+
 
     def simUpdateVal(self, simulator, valUpdater):
         """
         Method called by simulator to update new value for this object
         """
-
         dirtyFlag, newVal = valUpdater(self._oldVal)
 
         if dirtyFlag:
@@ -69,7 +88,5 @@ class SimSignal(SignalItem):
             log = simulator.config.logChange
             if log:
                 log(simulator.now, self, newVal)
-
-
 
             self.simPropagateChanges(simulator)

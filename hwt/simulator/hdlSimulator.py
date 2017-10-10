@@ -1,10 +1,11 @@
-from simpy.core import BoundClass
+from heapq import heappop
+from simpy.core import BoundClass, EmptySchedule, Environment
 from simpy.events import NORMAL, Timeout
 
 from hwt.hdl.value import Value
 from hwt.simulator.hdlSimConfig import HdlSimConfig
 from hwt.simulator.simModel import mkUpdater, mkArrayUpdater
-from hwt.simulator.simulatorCore import HdlEnvironmentCore
+from hwt.simulator.simulatorCore import HdlProcess
 from hwt.simulator.utils import valueHasChanged
 from hwt.synthesizer.uniqList import UniqList
 
@@ -42,7 +43,7 @@ class IoContainer():
             self._all_signals.append(o)
 
 
-class HdlSimulator(HdlEnvironmentCore):
+class HdlSimulator(Environment):
     """
     Circuit simulator with support for external agents
 
@@ -84,14 +85,25 @@ class HdlSimulator(HdlEnvironmentCore):
         and then can not write in this time
 
     :ivar now: actual simulation time
-    :ivar updateComplete: this event is triggered when there are not any values to apply in this time
-    :ivar valuesToApply: is container to for quantum of values which should be applied in single time
+    :ivar updateComplete: this event is triggered
+        when there are not any values to apply in this time
+    :ivar valuesToApply: is container of values
+        which should be applied in single delta step
     :ivar env: simply environment
-    :ivar applyValuesPlaned: flag if there is planed applyValues for current values quantum
-    :ivar seqProcsToRun: list of event dependent processes which should be evaluated after applyValEv
+    :ivar applyValuesPlaned: flag if there is planed applyValues
+        for current values quantum
+    :ivar seqProcsToRun: list of event dependent processes
+        which should be evaluated after applyValEv
     """
-    PRIORITY_APPLY_COMB = NORMAL + 1
-    PRIORITY_APPLY_SEQ = PRIORITY_APPLY_COMB + 1
+    # updating of combinational signals (wire updates)
+    PRIORITY_APPLY_COMB = NORMAL + 1 
+    # simulation agents waiting for updateComplete event
+    PRIORITY_AGENTS_UPDATE_DONE = PRIORITY_APPLY_COMB + 1
+    # updateing of event dependent signals (writing in gegisters,rams etc)
+    PRIORITY_APPLY_SEQ = PRIORITY_AGENTS_UPDATE_DONE + 1
+
+    process = BoundClass(HdlProcess)
+    wait = BoundClass(Timeout)
 
     def __init__(self, config=None):
         super(HdlSimulator, self).__init__()
@@ -100,7 +112,7 @@ class HdlSimulator(HdlEnvironmentCore):
             config = HdlSimConfig()
 
         self.config = config
-        self.updateComplete = self.event()
+        self.combUpdateDoneEv = None
         self.applyValEv = None
         self.runSeqProcessesEv = None
 
@@ -113,6 +125,12 @@ class HdlSimulator(HdlEnvironmentCore):
         # container of outputs for every process
         self.outputContainers = {}
 
+    def waitOnCombUpdate(self):
+        cud = self.combUpdateDoneEv
+        if cud is None:
+            return self.scheduleCombUpdateDoneEv()
+        return cud
+
     def addHwProcToRun(self, trigger, proc):
         # first process in time has to plan executing of apply values on the end of this time
         if self.applyValEv is None:
@@ -120,7 +138,7 @@ class HdlSimulator(HdlEnvironmentCore):
             self.scheduleApplyValues()
 
         if isEvDependentOn(trigger, proc):
-            if self.now == 0:
+            if self._now == 0:
                 return  # pass event dependent on startup
             self.seqProcsToRun.append(proc)
         else:
@@ -154,18 +172,40 @@ class HdlSimulator(HdlEnvironmentCore):
 
             self.outputContainers[p] = SpecificIoContainer(outputs)
 
+    def __deleteCombUpdateDoneEv(self, ev):
+        self.combUpdateDoneEv = None
+
+    def scheduleCombUpdateDoneEv(self):
+        """
+        Scheduele combUpdateDoneEv event to let agents know that current
+        delta step is ending and values from combinational logic are stable
+        """
+        #print("schedueled", self.now)
+        assert self.combUpdateDoneEv is None
+        cud = self.combUpdateDoneEv = self.event()
+        cud.callbacks.append(self.__deleteCombUpdateDoneEv)
+        cud._ok = True
+        cud._value = None
+        self.schedule(cud,
+                      priority=self.PRIORITY_AGENTS_UPDATE_DONE)
+        return cud
+
     def scheduleApplyValues(self):
+        #print("scheduleApplyValues", self.now)
+        assert self.applyValEv is None, self.now
         applyVal = self.applyValEv = self.event()
         applyVal._ok = True
         applyVal._value = None
         applyVal.callbacks.append(self.applyValues)
 
-        self.schedule(applyVal, priority=self.PRIORITY_APPLY_COMB)
-
+        self.schedule(applyVal,
+                      priority=self.PRIORITY_APPLY_COMB)
+        
         if self.runSeqProcessesEv is not None:
+            # if runSeqProcessesEv is already scheduled 
             return
 
-        assert not self.seqProcsToRun
+        assert not self.seqProcsToRun, self.now
         runSeq = self.runSeqProcessesEv = self.event()
         runSeq._ok = True
         runSeq._value = None
@@ -206,7 +246,6 @@ class HdlSimulator(HdlEnvironmentCore):
         """
         Delta step for combinational processes
         """
-
         for proc in self.combProcsToRun:
             outContainer = self.outputContainers[proc]
             proc(self, outContainer)
@@ -223,7 +262,7 @@ class HdlSimulator(HdlEnvironmentCore):
 
     def runSeqProcesses(self, ev):
         """
-        Delta step for sequential processes
+        Delta step for event dependent processes
         """
         updates = []
         for proc in self.seqProcsToRun:
@@ -251,15 +290,15 @@ class HdlSimulator(HdlEnvironmentCore):
 
     def applyValues(self, ev):
         """
-        Perform actual delta step
+        Perform delta step by writing stacked values to signals
         """
         va = self.valuesToApply
+        self.applyValEv = None
 
         # log if there are items to log
         lav = self.config.logApplyingValues
         if va and lav:
             lav(self, va)
-        # print(int(self.now // 1000), va)
         self.valuesToApply = []
 
         # apply values to signals, values can overwrite each other
@@ -277,14 +316,8 @@ class HdlSimulator(HdlEnvironmentCore):
         self.runCombProcesses()
 
         # processes triggered from simUpdateVal can add new values
-        if self.valuesToApply:
+        if self.valuesToApply and self.applyValEv is None:
             self.scheduleApplyValues()
-            return
-
-        # activate updateComplete if this was last applyValues() in this time
-        self.updateComplete.succeed()  # trigger
-        self.updateComplete = self.event()  # regenerate event
-        self.applyValEv = None
 
     def read(self, sig):
         """
@@ -317,18 +350,21 @@ class HdlSimulator(HdlEnvironmentCore):
         else:
             v = t.fromPy(val)
 
-        v.updateTime = self.now
-
         # can not update value in signal directly due singnal proxies
         sig.simUpdateVal(self, lambda curentV: (valueHasChanged(curentV, v), v))
-
-        if not simSensProcs and self.applyValEv is not None:
-            # in some cases simulation process can wait on all values applied
-            # signal value was changed but there are no sensitive processes to it
-            # because of this applyValues is never planed and but should be
-            self.scheduleApplyValues()
-
-    wait = BoundClass(Timeout)
+        
+        if self.applyValEv is None:
+            if not (simSensProcs or
+                    sig.simRisingSensProcs or
+                    sig.simFallingSensProcs):
+                # signal value was changed but there are no sensitive processes to it
+                # because of this applyValues is never planed and should be
+                self.scheduleApplyValues()
+            elif (sig._writeCallbacks or
+                  sig._writeCallbacksToEn):
+                # signal write did not caused any change on any other signal
+                # but there are still simulation agets waiting on updateComplete event
+                self.scheduleApplyValues()
 
     def simUnit(self, synthesisedUnit, time, extraProcesses=[]):
         """
@@ -342,5 +378,5 @@ class HdlSimulator(HdlEnvironmentCore):
             self.process(p(self))
 
         self._initUnitSignals(synthesisedUnit)
-
         self.run(until=time)
+

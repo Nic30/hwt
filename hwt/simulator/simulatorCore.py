@@ -1,5 +1,5 @@
-from simpy import Environment, Event
-from simpy.core import BoundClass, Process
+from simpy import Event
+from simpy.core import Process
 from simpy.events import URGENT, PENDING
 
 
@@ -54,9 +54,3 @@ class HdlProcess(Process):
         # Schedule the start of the execution of the process.
         self._target = Initialize(env, self, priority)
 
-
-class HdlEnvironmentCore(Environment):
-    """
-    Simpy Environment with patched processes to allow propcess start priotiry tweaks
-    """
-    process = BoundClass(HdlProcess)

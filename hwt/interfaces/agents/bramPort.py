@@ -22,7 +22,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         self.mem = {}
         self.requireInit = True
 
-    def doReq(self, s, req):
+    def doReq(self, sim, req):
         rw = req[0]
         addr = req[1]
 
@@ -32,86 +32,85 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             self.readPending = True
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, after %r read_req: %d\n" % (
-                                        self.intf._getFullName(), s.now, addr))
+                                        self.intf._getFullName(), sim.now, addr))
         elif rw == WRITE:
             wdata = req[2]
             rw = 1
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, after %r write: %d:%d\n" % (
-                                        self.intf._getFullName(), s.now, addr, wdata))
+                                        self.intf._getFullName(), sim.now,
+                                        addr, wdata))
 
         else:
             raise NotImplementedError(rw)
 
         intf = self.intf
-        w = s.write
+        w = sim.write
         w(rw, intf.we)
         w(addr, intf.addr)
         w(wdata, intf.din)
 
-    def onReadReq(self, s, addr):
+    def onReadReq(self, sim, addr):
         """
         on readReqRecieved in monitor mode
         """
         self.requests.append((READ, addr))
 
-    def onWriteReq(self, s, addr, data):
+    def onWriteReq(self, sim, addr, data):
         """
         on writeReqRecieved in monitor mode
         """
         self.requests.append((WRITE, addr, data))
 
-    def monitor(self, s):
+    def monitor(self, sim):
         intf = self.intf
 
-        yield s.updateComplete
+        yield sim.waitOnCombUpdate()
         # now we are after clk edge
-        if self.enable:
-            en = s.read(intf.en)
+        if self.notReset(sim):
+            en = sim.read(intf.en)
             assert en.vldMask
             if en.val:
-                we = s.read(intf.we)
+                we = sim.read(intf.we)
                 assert we.vldMask
 
-                addr = s.read(intf.addr)
+                addr = sim.read(intf.addr)
                 if we.val:
-                    data = s.read(intf.din)
-                    self.onWriteReq(s, addr, data)
+                    data = sim.read(intf.din)
+                    self.onWriteReq(sim, addr, data)
                 else:
-                    self.onReadReq(s, addr)
+                    self.onReadReq(sim, addr)
 
         if self.requests:
             req = self.requests.popleft()
             t = req[0]
             addr = req[1]
-            assert addr._isFullVld(), s.now
+            assert addr._isFullVld(), sim.now
             if t == READ:
-                s.write(self.mem[addr.val], intf.dout)
+                sim.write(self.mem[addr.val], intf.dout)
             else:
                 assert t == WRITE
-                s.write(None, intf.dout)
+                sim.write(None, intf.dout)
                 self.mem[addr.val] = req[2]
 
-    def driver(self, s):
+    def driver(self, sim):
         intf = self.intf
-        w = s.write
+        w = sim.write
         if self.requireInit:
             w(0, intf.en)
             w(0, intf.we)
             self.requireInit = False
 
+#        yield s.wait(2000)
         readPending = self.readPending
-        yield s.updateComplete
-        # now we are after clk edge
-
-        if self.requests and self.enable:
+        if self.requests and self.notReset(sim):
             req = self.requests.popleft()
             if req is NOP:
                 w(0, intf.en)
                 w(0, intf.we)
                 self.readPending = False
             else:
-                self.doReq(s, req)
+                self.doReq(sim, req)
                 w(1, intf.en)
         else:
             w(0, intf.en)
@@ -119,12 +118,14 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             self.readPending = False
 
         if readPending:
-            yield s.updateComplete
-            d = s.read(intf.dout)
+            yield sim.waitOnCombUpdate()
+            # now we are after clk edge
+            d = sim.read(intf.dout)
             self.readed.append(d)
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, on %r read_data: %d\n" % (
-                                        self.intf._getFullName(), s.now, d.val))
+                                        self.intf._getFullName(),
+                                        sim.now, d.val))
 
 
 class BramPortAgent(BramPort_withoutClkAgent):

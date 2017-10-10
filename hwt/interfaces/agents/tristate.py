@@ -1,42 +1,179 @@
-from hwt.simulator.agentBase import AgentBase
+from hwt.simulator.agentBase import AgentWitReset
+from hwt.interfaces.agents.signal import DEFAULT_CLOCK
+from hwt.hdl.constants import NOP
+from collections import deque
 
 
-class TristatePullUpAgent(AgentBase):
-    def __init__(self, intf, onRisingCallback=None, onFallingCallback=None):
-        AgentBase.__init__(self, intf)
-        self.onRisingCallback = onRisingCallback
-        self.onFallingCallback = onFallingCallback
+def toGenerator(fn):
+    def asGen(sim):
+        fn(sim)
+        return
+        yield
+
+    return asGen
+
+
+class TristateAgent(AgentWitReset):
+    def __init__(self, intf, allowNoReset=True):
+        super(TristateAgent, self).__init__(intf, allowNoReset=allowNoReset)
+        self.data = deque()
+        # can be (1: pull-up, 0: pull-down, None: disconnected)
+        self.pullMode = 1
+        self.selfSynchronization = True
+        self.collectData = True
 
     def monitor(self, sim):
         intf = self.intf
+        # read in pre-clock-edge
         t = sim.read(intf.t)
         o = sim.read(intf.o)
 
-        if sim.now > 0:
-            assert t.vldMask, sim.now
-            assert o.vldMask
-            assert not o.val, "This is open drain mode, ioblock would burn"
+        if self.pullMode is not None and sim.now > 0:
+            assert t.vldMask, (
+                sim.now, intf, "This mode, this value => ioblock would burn")
+            assert o.vldMask, (
+                sim.now, intf, "This mode, this value => ioblock would burn")
+            assert self.pullMode != o.val, (
+                sim.now, intf, "This mode, this value => ioblock would burn")
 
         if t.val:
-            v = 0
+            v = o
         else:
-            v = 1
+            v = self.pullMode
 
-        last = sim.read(intf.i).val
         sim.write(v, intf.i)
-        if not last and v and self.onRisingCallback:
-            self.onRisingCallback(sim)
-        if not v and last and self.onFallingCallback:
-            self.onFallingCallback(sim)
+        if self.collectData and sim.now > 0 and self.notReset(sim):
+            self.data.append(v)
 
     def getMonitors(self):
-        return [self.onTWriteCallback]
-
+        return [self.onTWriteCallback__init]
+    
     def onTWriteCallback(self, sim):
+        self.monitor(sim)
+        return
+        yield
+
+    def _write(self, val, sim):
+        if val is NOP:
+            # controll now has slave
+            t = 0
+            o = self.pullMode
+        else:
+            # controll now has this agent
+            t = 1
+            o = val
+
+        intf = self.intf
+        w = sim.write
+        w(t, intf.t)
+        w(o, intf.o)
+
+    def onTWriteCallback__init(self, sim):
         """
         Process for injecting of this callback loop into simulator
         """
-        self.monitor(sim)
-        self.intf.t._sigInside._writeCallbacks.append(self.onTWriteCallback)
-        # no function just asset this function will be generator
-        yield sim.wait(0)
+        yield from self.onTWriteCallback(sim)
+        self.intf.t._sigInside.registerWriteCallback(
+            self.onTWriteCallback,
+            self.getEnable)
+        self.intf.o._sigInside.registerWriteCallback(
+            self.onTWriteCallback,
+            self.getEnable)
+
+    def driver(self, sim):
+        while True:
+            if self.data:
+                b = self.data.popleft()
+                if b == self.START:
+                    return
+                self.sda._write(b, sim)
+            if self.selfSynchronization:
+                yield sim.wait(DEFAULT_CLOCK)
+            else:
+                break
+
+
+class TristateClkAgent(TristateAgent):
+    def __init__(self, intf, onRisingCallback=None, onFallingCallback=None):
+        super(TristateClkAgent, self).__init__(intf)
+        self.onRisingCallback = onRisingCallback
+        self.onFallingCallback = onFallingCallback
+        self.period = DEFAULT_CLOCK
+
+    def driver(self, sim):
+        o = self.intf.o
+        high = self.pullMode
+        low = not self.pullMode
+        halfPeriod = self.period / 2
+
+        sim.write(low, o)
+        sim.write(1, self.intf.t)
+        if high:
+            onHigh = self.onRisingCallback
+            onLow = self.onFallingCallback
+        else:
+            onHigh = self.onFallingCallback
+            onLow = self.onRisingCallback
+
+        while True:
+            yield sim.wait(halfPeriod)
+            sim.write(high, o)
+
+            if onHigh:
+                sim.process(onHigh(sim))
+
+            yield sim.wait(halfPeriod)
+            sim.write(low, o)
+
+            if onLow:
+                sim.process(onLow(sim))
+            
+
+    def monitor(self, sim):
+        intf = self.intf
+        yield sim.waitOnCombUpdate()
+        # read in pre-clock-edge
+        t = sim.read(intf.t)
+        o = sim.read(intf.o)
+
+        if sim.now > 0 and self.pullMode is not None:
+            assert t.vldMask, (
+                sim.now, intf, "This mode, this value => ioblock would burn")
+            assert o.vldMask, (
+                sim.now, intf, "This mode, this value => ioblock would burn") 
+            assert self.pullMode != o.val, (
+                sim.now, intf, "This mode, this value => ioblock would burn")
+
+        if t.val:
+            v = o
+        else:
+            v = self.pullMode
+
+        last = sim.read(intf.i)
+        sim.write(v, intf.i)
+
+        if self.onRisingCallback and (not last.val or not last.vldMask) and v:
+            sim.process(self.onRisingCallback(sim))
+
+        if self.onFallingCallback and not v and (last.val or not last.vldMask):
+            sim.process(self.onFallingCallback(sim))
+
+    def getMonitors(self):
+        return [self.onTWriteCallback__init]
+    
+    def onTWriteCallback(self, sim):
+        yield from self.monitor(sim)
+        return
+        yield
+
+    def onTWriteCallback__init(self, sim):
+        """
+        Process for injecting of this callback loop into simulator
+        """
+        yield from self.onTWriteCallback(sim)
+        self.intf.t._sigInside.registerWriteCallback(
+            self.onTWriteCallback,
+            self.getEnable)
+        self.intf.o._sigInside.registerWriteCallback(
+            self.onTWriteCallback,
+            self.getEnable)

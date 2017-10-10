@@ -21,6 +21,7 @@ class IndexSimSignalProxy(SimSignal):
 
         self.hidden = False
         self._writeCallbacks = []
+        self._writeCallbacksToEn = []
         self.simSensProcs = set()
         self.simRisingSensProcs = set()
         self.simFallingSensProcs = set()
@@ -55,13 +56,19 @@ class IndexSimSignalProxy(SimSignal):
         newVal.updateTime = simulator.now
 
         if dirtyFlag:
+            # perform registration of new write callbacks
+            if self._writeCallbacksToEn:
+                for i, callback, reqEnFn in self._writeCallbacksToEn:
+                    if reqEnFn():
+                        self._writeCallbacks[i] = callback 
+                self._writeCallbacksToEn = []
+        
             # run write callbacks we have to create new list to allow
             # registering of new call backs in callbacks
-            callBacks = self._writeCallbacks
-            self._writeCallbacks = []
-            for c in callBacks:
-                # simulation processes
-                simulator.process(c(simulator))
+            for c in self._writeCallbacks:
+                if c:
+                    # simulation processes
+                    simulator.process(c(simulator))
 
             def updateParent(oldVal):
                 oldVal[self.__index] = newVal
