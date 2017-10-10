@@ -86,8 +86,8 @@ def ternaryFn(a, b, c):
     return a._ternary(b, c)
 
 
-def callFn(fn, *operands):
-    return fn.call(*operands)
+def callFn(fn, *operands, **kwargs):
+    return fn(*operands, **kwargs)
 
 
 def bitsToIntFn(a):
@@ -116,8 +116,6 @@ class AllOps():
         they can not be overloaded
     :attention: These are operators of internal AST, the are not equal to verilog or vhdl operators
     """
-    _idsInited = False
-
     RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
     FALLIGN_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary
 
@@ -142,9 +140,9 @@ class AllOps():
 
     EQ = OpDefinition(eqFn)
     NEQ = OpDefinition(ne)
-    GREATERTHAN = OpDefinition(gt)
+    GT = OpDefinition(gt)
     GE = OpDefinition(ge)
-    LOWERTHAN = OpDefinition(lt)
+    LT = OpDefinition(lt)
     LE = OpDefinition(le)
 
     INDEX = OpDefinition(getitem)
@@ -158,20 +156,10 @@ class AllOps():
     BitsAsUnsigned = OpDefinition(bitsAsUnsignedFn)
     BitsAsVec = OpDefinition(bitsAsVec)
 
-    allOps = {}
-
-    @classmethod
-    def opByName(cls, name):
-        return getattr(cls, name)
-
-
-if not AllOps._idsInited:
-    for a in dir(AllOps):
-        o = getattr(AllOps, a)
-        if isinstance(o, OpDefinition):
-            o.id = a
-
-    AllOps._idsInited = True
+for a in dir(AllOps):
+    o = getattr(AllOps, a)
+    if isinstance(o, OpDefinition):
+        o.id = a
 
 
 def sensitivityByOp(op):

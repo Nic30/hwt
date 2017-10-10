@@ -1,12 +1,13 @@
 import os
 from os.path import relpath
 import shutil
+from typing import List
 
-from hwt.pyUtils.fileHelpers import find_files
 from hwt.serializer.ip_packager.component import Component
 from hwt.serializer.ip_packager.helpers import prettify
 from hwt.serializer.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
 from hwt.serializer.vhdl.serializer import VhdlSerializer
+from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.shortcuts import toRtlAndSave
 from hwt.synthesizer.uniqList import UniqList
 
@@ -16,8 +17,9 @@ class Packager(object):
     """
     Ipcore packager
     """
-    def __init__(self, topUnit, name=None, extraVhdlDirs=[], extraVhdlFiles=[],
-                 extraVerilogFiles=[], extraVerilogDirs=[],
+    def __init__(self, topUnit:Unit, name:str=None,
+                 extraVhdlFiles:List[str]=[],
+                 extraVerilogFiles:List[str]=[],
                  serializer=VhdlSerializer):
         assert not topUnit._wasSynthetised()
         self.topUnit = topUnit
@@ -29,16 +31,8 @@ class Packager(object):
 
         self.hdlFiles = UniqList()
 
-        for d in extraVhdlDirs:
-            for f in find_files(d, "*.vhd"):
-                self.hdlFiles.append(f)
-
         for f in extraVhdlFiles:
             self.hdlFiles.append(f)
-
-        for d in extraVerilogDirs:
-            for f in find_files(d, "*.v"):
-                self.hdlFiles.append(f)
 
         for f in extraVerilogFiles:
             self.hdlFiles.append(f)
@@ -70,14 +64,15 @@ class Packager(object):
 
     def mkAutoGui(self):
         gui = GuiBuilder()
-        p0 = gui.page("Page_0")
+        p0 = gui.page("Main")
         handlers = []
         for g in self.topUnit._entity.generics:
             p0.param(g.name)
             for fn in paramManipulatorFns(g.name):
                 handlers.append(fn)
+
         with open(self.guiFile, "w") as f:
-            s = gui.asTcl() + '\n' + '\n'.join(map(lambda x: str(x), handlers))
+            s = gui.asTcl() + '\n\n'.join(map(lambda x: str(x), handlers))
             f.write(s)
 
     def createPackage(self, repoDir, vendor="hwt", library="mylib", description=None):
@@ -85,6 +80,7 @@ class Packager(object):
         synthetise hdl if needed
         copy hdl files
         create gui file
+        create component.xml
         '''
         ip_dir = os.path.join(repoDir, self.name + "/")
         if os.path.exists(ip_dir):
@@ -101,7 +97,7 @@ class Packager(object):
         self.mkAutoGui()
 
         c = Component()
-        c._files = [relpath(p, ip_dir) for p in sorted(self.hdlFiles)] +\
+        c._files = [relpath(p, ip_dir) for p in sorted(self.hdlFiles)] + \
                    [relpath(guiFile, ip_dir)]
 
         c.vendor = vendor

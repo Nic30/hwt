@@ -1,6 +1,6 @@
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.boolean import Boolean
+from hwt.hdl.types.bool import HBool
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.integer import Integer
 from hwt.hdl.types.slice import Slice
@@ -35,7 +35,7 @@ class GenericSerializer_Value():
             return cls.HArrayValAsHdl(t, val, ctx)
         elif isinstance(t, Bits):
             return cls.Bits_valAsHdl(t, val, ctx)
-        elif isinstance(t, Boolean):
+        elif isinstance(t, HBool):
             return cls.Bool_valAsHdl(t, val, ctx)
         elif isinstance(t, HEnum):
             return cls.HEnumValAsHdl(t, val, ctx)

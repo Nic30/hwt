@@ -1,19 +1,14 @@
-from copy import deepcopy
-
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
-
-
-class InvalidOperandExc(Exception):
-    pass
 
 
 def getCtxFromOps(operands):
     for o in operands:
         if isinstance(o, RtlSignalBase):
             return o.ctx
-    raise TypeError("Can not find context because there is no signal in ops")
+    raise TypeError("Can not find context because there is no signal in ops"
+                    "(value operators should be already resolved)")
 
 
 def isConst(item):
@@ -47,7 +42,8 @@ class Operator():
             elif isinstance(o, Value):
                 pass
             else:
-                raise NotImplementedError("Operator operands can be only signal or values got:%s" % repr(o))
+                raise NotImplementedError("Operator operands can be"
+                                          " only signal or values got:%r" % (o))
 
     def staticEval(self):
         """
@@ -64,7 +60,7 @@ class Operator():
         return self.operator.eval(self, simulator=simulator)
 
     def __eq__(self, other):
-        return (
+        return self is other or (
                  type(self) is type(other) and
                  self.operator == other.operator and
                  self.operands == other.operands
@@ -85,17 +81,6 @@ class Operator():
         if out._const:
             out.staticEval()
         return out
-
-    def __deepcopy__(self, memo=None):
-        try:
-            return memo[self]
-        except KeyError:
-            o = Operator(None, [])
-            memo[id(self)] = o
-            for k, v in self.__dict__.items():
-                setattr(o, k, deepcopy(v, memo))
-
-            return o
 
     def __hash__(self):
         return hash((self.operator, frozenset(self.operands)))

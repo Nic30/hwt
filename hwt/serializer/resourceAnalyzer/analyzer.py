@@ -10,44 +10,54 @@ from hwt.hdl.statements import IfContainer, SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.value import Value
 from hwt.serializer.generic.serializer import GenericSerializer
-from hwt.serializer.resourceUsageResolver.resourceTypes import Unconnected, \
+from hwt.serializer.resourceAnalyzer.resourceTypes import Unconnected, \
     ResourceMUX, ResourceLatch, ResourceLatchWithMux
-from hwt.serializer.resourceUsageResolver.utils import ResourceContext, \
+from hwt.serializer.resourceAnalyzer.utils import ResourceContext, \
     updateGuesFromAssignment, resourceTransitions_override, mergeGues, \
     operatorsWithoutResource
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
-class ResourceUsageResolver(GenericSerializer):
+class ResourceAnalyzer(GenericSerializer):
     """
     Serializer which does not products any output just collect informations
     about used resources
     
-    :attention: Use instance of ResourceUsageResolver instead of class
+    :attention: Use instance of ResourceAnalyzer instead of class
     """
     _keywords_dict = {}
     def __init__(self):
         self.context = ResourceContext(None)
 
     @classmethod
-    def HWProcess(cls, proc: HWProcess, ctx: ResourceContext):
+    def HWProcess(cls, proc: HWProcess, ctx: ResourceContext) -> None:
+        """
+        Gues resource usage by HWProcess
+        """
         gues = cls.statementList(proc.statements, proc.outputs, ctx)
         for sig, resGues in gues.items():
             ctx.register(sig, resGues)
 
     @classmethod
-    def statementList(cls, statements, dstSignals, ctx: ResourceContext):
+    def statementList(cls, statements,
+                           dstSignals,
+                           ctx: ResourceContext) -> None:
+        """
+        Gues resource usage for list of statements
+        
+        :param dstSignals: list of signals which are driven by this assignments 
+        """
         gues = {}
         guesOfChildren = []
         # resolve 
-        olnlyAssignmets = True
+        onlyAssignmets = True
         for stm in statements:
             if isinstance(stm, Assignment):
                 updateGuesFromAssignment(gues, stm)
                 if isinstance(stm.src, RtlSignal):
                     cls.Signal(stm.src, ctx)
             else:
-                olnlyAssignmets = False
+                onlyAssignmets = False
                 fn = getattr(cls, stm.__class__.__name__)
                 g = fn(stm, dstSignals, ctx)
                 guesOfChildren.append(g)
@@ -63,7 +73,7 @@ class ResourceUsageResolver(GenericSerializer):
                 gues[sig] = nextGues
 
         # mark signals which were not connected as unconnected
-        if olnlyAssignmets:
+        if onlyAssignmets and len(gues) != len(dstSignals):
             for sig in dstSignals:
                 if sig not in gues.keys():
                     gues[sig] = Unconnected
@@ -71,12 +81,23 @@ class ResourceUsageResolver(GenericSerializer):
         return gues
     
     @classmethod
-    def condition(cls, condition:List[RtlSignal], ctx: ResourceContext):
+    def condition(cls, condition:List[RtlSignal],
+                       ctx: ResourceContext) -> None:
+        """
+        Gues resource usage by this condition expression
+        """
         for signal in condition:
             cls.Signal(signal, ctx)
     
     @classmethod
-    def IfContainer(cls, ifc: IfContainer, dstSignals, ctx: ResourceContext):
+    def IfContainer(cls, ifc: IfContainer,
+                         dstSignals,
+                         ctx: ResourceContext):
+        """
+        Gues resource usage by this if statement
+
+        :param dstSignals: list of signals which are driven by this assignments
+        """
         cls.condition(ifc.cond, ctx)
         
         ifTrue = cls.statementList(ifc.ifTrue, dstSignals, ctx)
@@ -88,13 +109,23 @@ class ResourceUsageResolver(GenericSerializer):
             
         if ifc.ifFalse:
             ifFalse = cls.statementList(ifc.ifFalse, dstSignals, ctx)
-            mergeGues(ifTrue, ifFalse)
+        else:
+            ifFalse = {s: Unconnected for s in dstSignals}
+        mergeGues(ifTrue, ifFalse)
+            
             
         return ifTrue
 
     @classmethod
-    def SwitchContainer(cls, swc: SwitchContainer, dstSignals, ctx: ResourceContext):
-        isEnclosed = swc.default or (1 << len(swc.cases))
+    def SwitchContainer(cls, swc: SwitchContainer,
+                             dstSignals,
+                             ctx: ResourceContext) -> None:
+        """
+        Gues resource usage by this switch statement
+
+        :param dstSignals: list of signals which are driven by this assignments
+        """
+        isEnclosed = swc.default or len(swc.cases) >= (1 << swc.switchOn._dtype.bit_length())
         gues = None
         for k, c in swc.cases:
             g = cls.statementList(c, dstSignals, ctx)
@@ -121,9 +152,48 @@ class ResourceUsageResolver(GenericSerializer):
             gues.update(update)
             
         return gues
-            
+    
     @classmethod
-    def Signal(cls, signal: RtlSignal, ctx: ResourceContext):
+    def operator(cls, driver:Operator, signal:RtlSignal, ctx:ResourceContext):
+        """
+        Resolve resource usage by operator
+        """
+        op = driver.operator
+        if op is AllOps.TERNARY:
+            # ternary can be to Bits(1) conversion
+            try:
+                a = bool(driver.operands[1])
+                b = bool(driver.operands[2])
+            except ValueError:
+                a = False
+                b = False
+
+            if a and not b:
+                # this is just to bit conversion if cond: 1 else 0
+                pass
+            else:
+                # this is multiplexer
+                width = signal._dtype.bit_length()
+                inputsCnt = 2
+                ctx.registerMUX_known(width, inputsCnt)
+
+        else:
+            doRegister = True
+            # check to bool conversion
+            if (op is AllOps.EQ
+                    and driver.operands[0]._dtype.bit_length() == 1):
+                try:
+                    a = bool(driver.operands[1])
+                    # if this is just to bool conversion skip it
+                    doRegister = not a
+                except ValueError:
+                    doRegister = True
+
+            if doRegister:
+                ctx.registerOperator(driver)
+      
+    @classmethod
+    def Signal(cls, signal: RtlSignal, ctx: ResourceContext) -> None:
         """
         Resolve resources for signal by walking it's drivers
         """
@@ -155,38 +225,7 @@ class ResourceUsageResolver(GenericSerializer):
                     # skip conversions/clk ops etc. which does not consume
                     # resources directly
                     elif op not in operatorsWithoutResource:
-                        
-                        if op is AllOps.TERNARY:
-                            # ternary can be to Bits(1) conversion
-                            try:
-                                a = bool(driver.operands[1])
-                                b = bool(driver.operands[2])
-                            except ValueError:
-                                a = False
-                                b = False
-
-                            if a and not b:
-                                # this is just to bit conversion if cond: 1 else 0
-                                pass
-                            else:
-                                # this is multiplexer
-                                width = signal._dtype.bit_length()
-                                inputsCnt = 2
-                                ctx.registerMUX_known(width, inputsCnt)
-
-                        else:
-                            doRegister = True
-                            # check to bool conversion
-                            if op is AllOps.EQ and driver.operands[0]._dtype.bit_length() == 1:
-                                try:
-                                    a = bool(driver.operands[1])
-                                    # if this is just to bool conversion skip it
-                                    doRegister = not a
-                                except ValueError:
-                                    doRegister = True
-
-                            if doRegister:
-                                ctx.registerOperator(driver)
+                        cls.operator(driver, signal, ctx)
 
                     # collect resources for other operators as well
                     for oper in driver.operands:
@@ -200,13 +239,13 @@ class ResourceUsageResolver(GenericSerializer):
                     raise NotImplementedError(driver)
 
     @classmethod
-    def Entity(cls, ent: Entity, ctx: ResourceContext):
+    def Entity(cls, ent: Entity, ctx: ResourceContext) -> None:
         """
         Entity is just header, we do not need to inspect it for resources
         """
         return
 
-    def getBaseContext(self):
+    def getBaseContext(self) -> ResourceContext:
         """
         Return context for collecting of resource informatins
         prepared on this instance
@@ -214,7 +253,7 @@ class ResourceUsageResolver(GenericSerializer):
         return self.context
     
     @classmethod
-    def Architecture(cls, arch: Architecture, ctx: ResourceContext):
+    def Architecture(cls, arch: Architecture, ctx: ResourceContext) -> None:
         for c in arch.componentInstances:
             raise NotImplementedError()
 

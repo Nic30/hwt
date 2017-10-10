@@ -8,7 +8,7 @@ def hInt(pyVal):
 
 
 def hBool(pyVal):
-    """ create hdl boolean value (for example boolean value in vhdl)"""
+    """ create hdl bool value (for example bool value in vhdl)"""
     return BOOL.fromPy(pyVal)
 
 

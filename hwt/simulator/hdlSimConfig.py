@@ -20,7 +20,7 @@ class HdlSimConfig():
         Log change of value for signal
         """
 
-    def logPropagation(self, simulator, signal, process):
+    def logPropagation(self, simulator, signal, proceses):
         """
         Log value propagation over netlist
         """

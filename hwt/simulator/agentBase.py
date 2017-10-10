@@ -1,5 +1,5 @@
 from hwt.interfaces.std import Rst_n
-from hwt.simulator.shortcuts import onRisingEdge
+from hwt.simulator.shortcuts import OnRisingCallbackLoop
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 
 
@@ -14,8 +14,14 @@ class AgentBase():
     """
     def __init__(self, intf):
         self.intf = intf
-        self.enable = True
+        self._enabled = True
         self._debugOutput = None
+
+    def setEnable(self, en, sim):
+        self._enabled = en
+
+    def getEnable(self):
+        return self._enabled
 
     def _debug(self, out):
         self._debugOutput = out
@@ -45,7 +51,35 @@ class AgentBase():
         raise NotImplementedError()
 
 
-class SyncAgentBase(AgentBase):
+class AgentWitReset(AgentBase):
+    def __init__(self, intf, allowNoReset=False):
+        super().__init__(intf)
+        self._discoverReset(allowNoReset)
+
+    def _discoverReset(self, allowNoReset):
+        try:
+            rst = self.intf._getAssociatedRst()
+            self.rstOffIn = isinstance(rst, Rst_n)
+            self.rst = rst._sigInside
+            self.notReset = self._notReset
+        except IntfLvlConfErr:
+            self.rst = None
+            self.notReset = self._notReset_dummy
+            
+            if allowNoReset:
+                pass
+            else:
+                raise
+
+    def _notReset_dummy(self, sim):
+        return True
+
+    def _notReset(self, sim):
+        rstVal = sim.read(self.rst).val
+        return rstVal == self.rstOffIn
+
+
+class SyncAgentBase(AgentWitReset):
     """
     Agent which discovers clk, rst signal and runs only at specified edge of clk
 
@@ -53,29 +87,32 @@ class SyncAgentBase(AgentBase):
         (if you do not have any create simulation wrapper with it)
     """
     def __init__(self, intf, allowNoReset=False):
-        super().__init__(intf)
+        super().__init__(intf, allowNoReset=allowNoReset)
 
         # resolve clk and rstn
         self.clk = self.intf._getAssociatedClk()._sigInside
-        try:
-            self.rst = self.intf._getAssociatedRst()
-            self.rstOffIn = isinstance(self.rst, Rst_n)
-            self.rst = self.rst._sigInside
-        except IntfLvlConfErr as e:
-            self.rst = None
-            if allowNoReset:
-                pass
-            else:
-                raise e
 
         # run monitor, driver only on rising edge of clk
-        self.monitor = onRisingEdge(self.clk, self.monitor)
-        self.driver = onRisingEdge(self.clk, self.driver)
+        self.monitor = OnRisingCallbackLoop(self.clk,
+                                            self.monitor,
+                                            self.getEnable)
+        self.driver = OnRisingCallbackLoop(self.clk,
+                                           self.driver,
+                                           self.getEnable)
 
-    def notReset(self, s):
-        rst = self.rst
-        if rst is None:
-            return True
-        else:
-            rstVal = s.read(rst).val
-            return bool(rstVal) == self.rstOffIn
+    def setEnable_asDriver(self, en, sim):
+        self._enabled = en
+        self.driver.setEnable(en, sim)
+
+    def setEnable_asMonitor(self, en, sim):
+        self._enabled = en
+        self.monitor.setEnable(en, sim)
+
+    def getDrivers(self):
+        self.setEnable = self.setEnable_asDriver
+        return AgentBase.getDrivers(self)
+
+    def getMonitors(self):
+        self.setEnable = self.setEnable_asMonitor
+        return AgentBase.getMonitors(self)
+

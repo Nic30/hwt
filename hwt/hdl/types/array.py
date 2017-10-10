@@ -15,7 +15,7 @@ class HArray(HdlType):
         self.size = size
 
     def __eq__(self, other):
-        return (
+        return self is other or (
             type(self) is type(other) and
             self.size == other.size and
             self.elmType == other.elmType

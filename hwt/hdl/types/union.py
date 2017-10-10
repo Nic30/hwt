@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
-from hwt.hdl.value import Value, areValues
+from hwt.hdl.value import Value
 from hwt.serializer.serializerClases.indent import getIndent
 
 
@@ -39,16 +39,6 @@ class UnionValBase(Value):
     @classmethod
     def fromPy(cls, val, typeObj):
         return cls(val, typeObj)
-
-    def __eq__(self, other):
-        if areValues(self, other):
-            if self._dtype == other._dtype:
-                otherVal = getattr(other, self.__usedField.name)
-                return self.__val == otherVal
-            else:
-                return False
-        else:
-            return super(Value, self).__eq__(other)
 
     def __repr__(self, indent=0):
         buff = ["{"]
@@ -154,7 +144,7 @@ class HUnion(HdlType):
     def bit_length(self):
         bl = self.__bit_length_val
         if bl is None:
-            raise TypeError("Can not request bit_lenght on size"
+            raise TypeError("Can not request bit_lenght on type"
                             " which has not fixed size")
         else:
             return self.__bit_length_val
@@ -179,7 +169,7 @@ class HUnion(HdlType):
         return True
 
     def __eq__(self, other):
-        return (
+        return self is other or (
             type(self) is type(other) and
             self.bit_length() == other.bit_length() and
             self.__fields__eq__(other))

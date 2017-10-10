@@ -1,3 +1,4 @@
+
 def vldMaskForAnd(a, b):
     # (val, vld)
     # (0, 0) & (0, 0) -> (0, 0)

@@ -106,7 +106,10 @@ class IntegerVal(Value):
         return intCmpOp(self, other, AllOps.LE)
 
     def __lt__(self, other):
-        return intCmpOp(self, other, AllOps.LOWERTHAN)
+        return intCmpOp(self, other, AllOps.LT)
 
     def __ge__(self, other):
         return intCmpOp(self, other, AllOps.GE)
+
+    def __gt__(self, other):
+        return intCmpOp(self, other, AllOps.GT)

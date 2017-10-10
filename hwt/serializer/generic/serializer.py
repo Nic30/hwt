@@ -2,7 +2,7 @@ from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.boolean import Boolean
+from hwt.hdl.types.bool import HBool
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.integer import Integer
 from hwt.hdl.value import Value
@@ -126,7 +126,7 @@ class GenericSerializer():
             sFn = cls.HdlType_array
         elif isinstance(typ, Integer):
             sFn = cls.HdlType_int
-        elif isinstance(typ, Boolean):
+        elif isinstance(typ, HBool):
             sFn = cls.HdlType_bool
         else:
                 raise NotImplementedError("type declaration is not implemented for type %s"

@@ -1,18 +1,18 @@
 from hwt.hdl.types.hdlType import HdlType
 
 
-class Boolean(HdlType):
+class HBool(HdlType):
 
     def __eq__(self, other):
         return type(self) is type(other)
 
     def __hash__(self):
-        return hash(Boolean)
+        return hash(HBool)
 
     @classmethod
     def get_auto_cast_fn(cls):
-        from hwt.hdl.types.booleanConversions import convertBoolean
-        return convertBoolean
+        from hwt.hdl.types.boolCast import cast_hbool
+        return cast_hbool
 
     def bit_length(self):
         return 1
@@ -25,6 +25,6 @@ class Boolean(HdlType):
         try:
             return cls._valCls
         except AttributeError:
-            from hwt.hdl.types.booleanVal import BooleanVal
-            cls._valCls = BooleanVal
+            from hwt.hdl.types.boolVal import HBoolVal
+            cls._valCls = HBoolVal
             return cls._valCls

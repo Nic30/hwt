@@ -24,12 +24,6 @@ class HEnum(HdlType):
             assert not hasattr(self, name)
             setattr(self, name, v)
 
-    def __eq__(self, other):
-        return self is other
-
-    def __hash__(self):
-        return hash(id(self))
-
     def all_mask(self):
         return 1
 

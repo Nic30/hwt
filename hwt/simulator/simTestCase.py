@@ -12,7 +12,6 @@ from hwt.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
 from hwt.simulator.hdlSimulator import HdlSimulator
 from hwt.simulator.shortcuts import simPrepare
 from hwt.simulator.simSignal import SimSignal
-from hwt.simulator.utils import agent_randomize
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 
 
@@ -129,13 +128,28 @@ class SimTestCase(unittest.TestCase):
         seq1 = allValuesToInts(seq1)
         self.assertSequenceEqual(seq1, seq2, msg, seq_type)
 
+    def simpleRandomizationProcess(self, agent):
+        seed = self._rand.getrandbits(64)
+        random = Random(seed)
+        timeQuantum = 10 * Time.ns  # default clk period
+
+        def randomEnProc(sim):
+            # small space at start to modify agents when they are inactive
+            yield sim.wait(timeQuantum / 4)
+            while True:
+                en = random.random() < 0.5
+                if agent.getEnable() != en:
+                    agent.setEnable(en, sim)
+                delay = int(random.random() * 2) * timeQuantum
+                yield sim.wait(delay)
+        return randomEnProc
+
     def randomize(self, intf):
         """
         Randomly disable and enable interface for testing purposes
-        """
-        self.procs.append(agent_randomize(intf._ag,
-                                          50 * Time.ns,
-                                          seed=self._rand.getrandbits(64)))
+        """    
+        randomEnProc = self.simpleRandomizationProcess(intf._ag)
+        self.procs.append(randomEnProc)
 
     def prepareUnit(self, unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
         """

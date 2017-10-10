@@ -9,7 +9,8 @@ class OscilatorAgent(AgentBase):
 
     * In driver mode oscillates at frequency specified by period
 
-    * In monitor driver captures tuples (time, nextVal) for each change on signal (nextVal is 1/0/None)
+    * In monitor driver captures tuples (time, nextVal) for each change on signal
+        (nextVal is 1/0/None)
 
     :ivar period: period of signal to generate
     :ivar initWait: time to wait before starting oscillation
@@ -19,35 +20,35 @@ class OscilatorAgent(AgentBase):
         self.period = period
         self.initWait = 0
         self.intf = self.intf._sigInside
+        self.monitor = CallbackLoop(self.intf, self.monitor, self.getEnable)
 
-    def driver(self, s):
+    def driver(self, sim):
         sig = self.intf
-        s.write(0, sig)
+        sim.write(0, sig)
         halfPeriod = self.period / 2
-        yield s.wait(self.initWait)
+        yield sim.wait(self.initWait)
 
         while True:
-            yield s.wait(halfPeriod)
-            s.write(1, sig)
-            yield s.wait(halfPeriod)
-            s.write(0, sig)
+            yield sim.wait(halfPeriod)
+            sim.write(1, sig)
+            yield sim.wait(halfPeriod)
+            sim.write(0, sig)
 
     def getMonitors(self):
         self.last = (-1, None)
         self.data = []
 
-        c = CallbackLoop(self.intf, lambda s, intf: True, self.monitor)
-        return [c.initProcess, ]
+        return [self.monitor]
 
-    def monitor(self, s):
-        yield s.updateComplete
-        v = s.read(self.intf)
+    def monitor(self, sim):
+        yield sim.waitOnCombUpdate()
+        v = sim.read(self.intf)
         if not v.vldMask:
             v = None
         else:
             v = v.val
 
-        now = s.now
+        now = sim.now
         last = self.last
 
         _next = (now, v)

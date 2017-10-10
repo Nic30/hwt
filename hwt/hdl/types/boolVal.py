@@ -14,9 +14,9 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 
 def boolLogOp__val(self, other, op, getVldFn):
     v = bool(op._evalFn(bool(self.val), (other.val)))
-    return BooleanVal(v, BOOL,
-                      getVldFn(self, other),
-                      max(self.updateTime, other.updateTime))
+    return HBoolVal(v, BOOL,
+                    getVldFn(self, other),
+                    max(self.updateTime, other.updateTime))
 
 
 def boolLogOp(self, other, op, getVldFn, reduceCheckFn):
@@ -43,9 +43,9 @@ def boolLogOp(self, other, op, getVldFn, reduceCheckFn):
 
 def boolCmpOp__val(self, other, op, evalFn):
     v = evalFn(bool(self.val), bool(other.val)) and (self.vldMask == other.vldMask == 1)
-    return BooleanVal(v, BOOL,
-                      self.vldMask & other.vldMask,
-                      max(self.updateTime, other.updateTime))
+    return HBoolVal(v, BOOL,
+                    self.vldMask & other.vldMask,
+                    max(self.updateTime, other.updateTime))
 
 
 def boolCmpOp(self, other, op, evalFn=None):
@@ -59,7 +59,7 @@ def boolCmpOp(self, other, op, evalFn=None):
         return Operator.withRes(op, [self, other._auto_cast(BOOL)], BOOL)
 
 
-class BooleanVal(Value):
+class HBoolVal(Value):
 
     def _isFullVld(self):
         return bool(self.vldMask)

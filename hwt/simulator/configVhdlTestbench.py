@@ -7,7 +7,7 @@ from hwt.hdl.entity import Entity
 from hwt.hdl.process import HWProcess
 from hwt.hdl.statements import WaitStm
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.boolean import Boolean
+from hwt.hdl.types.bool import HBool
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.enum import HEnum
 from hwt.serializer.vhdl.serializer import VhdlSerializer
@@ -55,7 +55,7 @@ def mkDriverProc(intf, tbCtx):
 
 
 class HdlSimConfigVhdlTestbench(HdlSimConfig):
-    supported_type_classes = (Boolean, Bits, HEnum)
+    supported_type_classes = (HBool, Bits, HEnum)
 
     def __init__(self, top):
         self.top = top
