@@ -132,24 +132,23 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 fileMode = 'a'
             else:
                 if hasattr(obj, "_hdlSources"):
-                    fName = None
                     for fn in obj._hdlSources:
                         if isinstance(fn, str):
                             shutil.copy2(fn, folderName)
                             files.append(fn)
                 else:
                     sc = serializer.asHdl(obj)
+                continue
 
-            if fName is not None and sc:
-                fp = os.path.join(folderName, fName)
-                files.append(fp)
+            fp = os.path.join(folderName, fName)
+            files.append(fp)
 
-                with open(fp, fileMode) as f:
-                    if fileMode == 'a':
-                        f.write("\n")
-                    f.write(
-                        serializer.formater(sc)
-                        )
+            with open(fp, fileMode) as f:
+                if fileMode == 'a':
+                    f.write("\n")
+                f.write(
+                    serializer.formater(sc)
+                    )
     return files
 
 
