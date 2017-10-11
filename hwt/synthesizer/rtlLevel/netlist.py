@@ -147,13 +147,15 @@ class RtlNetlist():
         :param clk: clk signal, if specified signal is synthesized as SyncSignal
         :param syncRst: reset
         """
-        if not isinstance(defVal, (Value, RtlSignal, InterfaceBase)):
-            if isinstance(defVal, (InterfaceBase)):
-                _defVal = defVal._sig
-            else:
-                _defVal = dtype.fromPy(defVal)
-        else:
+        if isinstance(defVal, RtlSignal):
+            assert defVal._const, "Initial value of register has to be constant"
             _defVal = defVal._auto_cast(dtype)
+        elif isinstance(defVal, Value):
+            _defVal = defVal._auto_cast(dtype)
+        elif isinstance(defVal, InterfaceBase):
+            _defVal = defVal._sig
+        else:
+            _defVal = dtype.fromPy(defVal)
 
         if clk is not None:
             s = RtlSyncSignal(self, name, dtype, _defVal)
