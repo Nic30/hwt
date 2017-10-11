@@ -1,5 +1,5 @@
-from hwt.interfaces.std import Clk, Rst_n, Rst
 from hwt.code import connect
+from hwt.interfaces.std import Clk, Rst_n, Rst
 
 
 def addClkRstn(self):

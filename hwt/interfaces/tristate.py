@@ -1,8 +1,9 @@
+from hwt.hdl.constants import DIRECTION
+from hwt.hdl.types.bits import Bits
+from hwt.interfaces.agents.tristate import TristateClkAgent, TristateAgent
+from hwt.interfaces.std import Signal, Clk
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.param import Param
-from hwt.interfaces.std import Signal, Clk
-from hwt.hdl.types.bits import Bits
-from hwt.hdl.constants import DIRECTION
 
 
 class TristateSig(Interface):
@@ -24,10 +25,13 @@ class TristateSig(Interface):
         # output
         self.o = Signal(dtype=t)
 
+    def _initSimAgent(self):
+        self._ag = TristateAgent(self)
+
 
 class TristateClk(Clk, TristateSig):
     def _getIpCoreIntfClass(self):
         raise NotImplementedError()
 
-    def _getSimAgent(self):
-        raise NotImplementedError()
+    def _initSimAgent(self):
+        self._ag = TristateClkAgent(self)

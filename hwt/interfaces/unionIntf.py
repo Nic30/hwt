@@ -27,5 +27,5 @@ class UnionSource(UnionSink):
         self._select = Handshaked(masterDir=DIRECTION.IN)
         self._select.DATA_WIDTH.set(log2ceil(len(self._structT.fields)))
 
-    def _getSimAgent(self):
-        return UnionSourceAgent
+    def _initSimAgent(self):
+        self._ag = UnionSourceAgent(self)

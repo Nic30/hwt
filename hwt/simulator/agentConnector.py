@@ -12,31 +12,34 @@ def autoAddAgents(unit):
         if not intf._isExtern:
             continue
 
-        try:
-            agentCls = intf._getSimAgent()
-        except NotImplementedError:
-            raise NotImplementedError(("Interface %s\n"
-                                       "has not any simulation agent class assigned") % (str(intf)))
-
+        
         if intf._isInterfaceArray():
             agentCnt = int(intf._asArraySize)
-            agent = []
+            agents = []
             for i in range(agentCnt):
                 _intf = intf[i]
-                a = agentCls(_intf)
-                agent.append(a)
-                _intf._ag = a
+                try:
+                    _intf._initSimAgent()
+                except NotImplementedError:
+                    raise NotImplementedError(("Interface %r\n"
+                                               "has not any simulation agent class assigned") % (
+                                                   intf))
+                assert _intf._ag is not None, intf
+                agents.append(_intf._ag)
         else:
-            agent = agentCls(intf)
-            intf._ag = agent
-
-        if intf._asArraySize is None:
-            agent = [agent, ]
+            try:
+                intf._initSimAgent()
+            except NotImplementedError:
+                raise NotImplementedError(("Interface %r\n"
+                                           "has not any simulation agent class assigned") % (
+                                               intf))
+            assert intf._ag is not None, intf
+            agents = [intf._ag, ]
 
         if intf._direction == INTF_DIRECTION.MASTER:
-            agProcs = list(map(lambda a: a.getMonitors(), agent))
+            agProcs = list(map(lambda a: a.getMonitors(), agents))
         elif intf._direction == INTF_DIRECTION.SLAVE:
-            agProcs = list(map(lambda a: a.getDrivers(), agent))
+            agProcs = list(map(lambda a: a.getDrivers(), agents))
         else:
             raise NotImplementedError("intf._direction %s for %r" % (str(intf._direction), intf))
 

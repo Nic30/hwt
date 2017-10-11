@@ -1,6 +1,19 @@
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BIT, BIT_N
+from hwt.interfaces.agents.bramPort import BramPortAgent
+from hwt.interfaces.agents.bramPort import BramPort_withoutClkAgent
+from hwt.interfaces.agents.clk import OscilatorAgent
+from hwt.interfaces.agents.fifo import FifoReaderAgent
+from hwt.interfaces.agents.fifo import FifoWriterAgent
+from hwt.interfaces.agents.handshaked import HandshakeSyncAgent
+from hwt.interfaces.agents.handshaked import HandshakedAgent
+from hwt.interfaces.agents.rdSynced import RdSyncedAgent
+from hwt.interfaces.agents.regCntrl import RegCntrlAgent
+from hwt.interfaces.agents.rst import PullDownAgent
+from hwt.interfaces.agents.rst import PullUpAgent
+from hwt.interfaces.agents.signal import SignalAgent
+from hwt.interfaces.agents.vldSynced import VldSyncedAgent
 from hwt.interfaces.signalOps import SignalOps
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.param import Param
@@ -52,9 +65,8 @@ class Signal(SignalOps, Interface):
 
         self._dtype = newT
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.signal import SignalAgent
-        return SignalAgent
+    def _initSimAgent(self):
+        self._ag = SignalAgent(self)
 
 
 def VectSignal(width,
@@ -79,9 +91,8 @@ class Clk(Signal):
         from hwt.serializer.ip_packager.interfaces.std import IP_Clk
         return IP_Clk
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.clk import OscilatorAgent
-        return OscilatorAgent
+    def _initSimAgent(self):
+        self._ag = OscilatorAgent(self)
 
 
 class Rst(Signal):
@@ -92,9 +103,8 @@ class Rst(Signal):
         from hwt.serializer.ip_packager.interfaces.std import IP_Rst
         return IP_Rst
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.rst import PullDownAgent
-        return PullDownAgent
+    def _initSimAgent(self):
+        self._ag = PullDownAgent(self)
 
 
 class Rst_n(Signal):
@@ -115,9 +125,8 @@ class Rst_n(Signal):
         from hwt.serializer.ip_packager.interfaces.std import IP_Rst_n
         return IP_Rst_n
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.rst import PullUpAgent
-        return PullUpAgent
+    def _initSimAgent(self):
+        self._ag = PullUpAgent(self)
 
 
 class VldSynced(Interface):
@@ -131,9 +140,8 @@ class VldSynced(Interface):
         self.data = VectSignal(self.DATA_WIDTH)
         self.vld = s()
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.vldSynced import VldSyncedAgent
-        return VldSyncedAgent
+    def _initSimAgent(self):
+        self._ag = VldSyncedAgent(self)
 
 
 class RdSynced(Interface):
@@ -147,9 +155,8 @@ class RdSynced(Interface):
         self.data = VectSignal(self.DATA_WIDTH)
         self.rd = s(masterDir=D.IN)
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.rdSynced import RdSyncedAgent
-        return RdSyncedAgent
+    def _initSimAgent(self):
+        self._ag = RdSyncedAgent(self)
 
 
 class Handshaked(VldSynced):
@@ -162,9 +169,8 @@ class Handshaked(VldSynced):
         super()._declr()
         self.rd = s(masterDir=D.IN)
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.handshaked import HandshakedAgent
-        return HandshakedAgent
+    def _initSimAgent(self):
+        self._ag = HandshakedAgent(self)
 
 
 class HandshakeSync(Interface):
@@ -181,9 +187,8 @@ class HandshakeSync(Interface):
         self.vld = s()
         self.rd = s(masterDir=D.IN)
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.handshaked import HandshakeSyncAgent
-        return HandshakeSyncAgent
+    def _initSimAgent(self):
+        self._ag = HandshakeSyncAgent(self)
 
 
 class ReqDoneSync(Interface):
@@ -211,14 +216,6 @@ class BramPort_withoutClk(Interface):
         self.en = s()
         self.we = s()
 
-    def _getIpCoreIntfClass(self):
-        from hwt.serializer.ip_packager.interfaces.std import IP_BlockRamPort
-        return IP_BlockRamPort
-
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.bramPort import BramPort_withoutClkAgent
-        return BramPort_withoutClkAgent
-
     def _getWordAddrStep(self):
         """
         :return: size of one word in unit of address
@@ -232,6 +229,13 @@ class BramPort_withoutClk(Interface):
         """
         return int(self.DATA_WIDTH)
 
+    def _getIpCoreIntfClass(self):
+        from hwt.serializer.ip_packager.interfaces.std import IP_BlockRamPort
+        return IP_BlockRamPort
+
+    def _initSimAgent(self):
+        self._ag = BramPort_withoutClkAgent(self)
+
 
 class BramPort(BramPort_withoutClk):
     """
@@ -244,9 +248,8 @@ class BramPort(BramPort_withoutClk):
 
         self._associatedClk = self.clk
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.bramPort import BramPortAgent
-        return BramPortAgent
+    def _initSimAgent(self):
+        self._ag = BramPortAgent(self)
 
 
 class FifoWriter(Interface):
@@ -258,9 +261,8 @@ class FifoWriter(Interface):
         self.wait = s(masterDir=D.IN)
         self.data = VectSignal(self.DATA_WIDTH)
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.fifo import FifoWriterAgent
-        return FifoWriterAgent
+    def _initSimAgent(self):
+        self._ag = FifoWriterAgent(self)
 
 
 class FifoReader(FifoWriter):
@@ -269,9 +271,8 @@ class FifoReader(FifoWriter):
         self.en._masterDir = D.IN
         self.wait._masterDir = D.OUT
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.fifo import FifoReaderAgent
-        return FifoReaderAgent
+    def _initSimAgent(self):
+        self._ag = FifoReaderAgent(self)
 
 
 class RegCntrl(Interface):
@@ -286,8 +287,8 @@ class RegCntrl(Interface):
         with self._paramsShared():
             self.dout = VldSynced()
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.regCntrl import RegCntrlAgent
-        return RegCntrlAgent
+    def _initSimAgent(self):
+        self._ag = RegCntrlAgent(self)
+
 
 s = Signal

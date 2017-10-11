@@ -196,6 +196,8 @@ class InterfaceProxy(InterfaceBase):
         if name == "_getIndexCascade" or name == "naryOp" or name == "_dtype":
             # called on _sig to avoid inf. loop
             o = self._sig
+        elif name == "_initSimAgent":
+            return lambda : self._origIntf.__class__._initSimAgent(self)
         else:
             o = self._origIntf
 

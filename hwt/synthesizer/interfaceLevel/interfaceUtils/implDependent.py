@@ -11,7 +11,7 @@ class InterfaceceImplDependentFns():
     def _getIpCoreIntfClass(self):
         raise NotSpecified()
 
-    def _getSimAgent(self):
+    def _initSimAgent(self):
         raise NotSpecified(("Override this function in your interface"
                            " implementation (from %r)") % self)
 

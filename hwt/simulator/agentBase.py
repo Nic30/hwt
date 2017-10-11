@@ -1,4 +1,3 @@
-from hwt.interfaces.std import Rst_n
 from hwt.simulator.shortcuts import OnRisingCallbackLoop
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 
@@ -59,8 +58,8 @@ class AgentWitReset(AgentBase):
     def _discoverReset(self, allowNoReset):
         try:
             rst = self.intf._getAssociatedRst()
-            self.rstOffIn = isinstance(rst, Rst_n)
             self.rst = rst._sigInside
+            self.rstOffIn = int(rst._dtype.negated)
             self.notReset = self._notReset
         except IntfLvlConfErr:
             self.rst = None

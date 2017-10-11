@@ -1,7 +1,8 @@
-from hwt.simulator.agentBase import AgentBase
-from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from typing import Union
+
+from hwt.simulator.agentBase import AgentBase
 from hwt.synthesizer.interfaceLevel.interface import Interface
+from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 
 
 def getMonitors(intf: Union[Interface, InterfaceProxy]):
@@ -34,11 +35,10 @@ class StructIntfAgent(AgentBase):
 
         for intf in intf._interfaces:
             if intf._isInterfaceArray():
-                agCls = intf[0]._getSimAgent()
                 for p in intf:
-                    p._ag = agCls(p)
+                    p._initSimAgent()
             else:
-                intf._ag = intf._getSimAgent()(intf)
+                intf._initSimAgent()
 
     def getMonitors(self):
         for intf in self.intf._interfaces:
