@@ -35,7 +35,8 @@ class HStruct(HdlType):
 
     :ivar fields: tuple of HStructField instances in this struct
     :ivar name: name of this HStruct type
-    :ivar valueCls: Class of value for this type as usual in HdlType implementations
+    :ivar valueCls: Class of value for this type as usual
+        in HdlType implementations
     """
     def __init__(self, *template, name=None):
         """
@@ -71,7 +72,8 @@ class HStruct(HdlType):
         self.__bit_length_val = bit_length
 
         usedNames = set(fieldNames)
-        assert not protectedNames.intersection(usedNames), protectedNames.intersection(usedNames)
+        assert not protectedNames.intersection(usedNames),\
+            protectedNames.intersection(usedNames)
 
         class StructVal(StructValBase):
             __slots__ = fieldNames
@@ -143,17 +145,20 @@ class HStruct(HdlType):
         buff = [header, ]
         for f in self.fields:
             if withAddr is not None:
-                addrTag = " // start:0x%x(bit) 0x%x(byte)" % (withAddr, withAddr // 8)
+                addrTag = " // start:0x%x(bit) 0x%x(byte)" % (
+                            withAddr, withAddr // 8)
             else:
                 addrTag = ""
 
             if f.name is None:
-                buff.append("%s//%r empty space%s" % (childIndent, f.dtype, addrTag))
+                buff.append("%s//%r empty space%s" % (
+                            childIndent, f.dtype, addrTag))
             else:
-                buff.append("%s %s%s" % (f.dtype.__repr__(indent=indent + 1,
-                                                          withAddr=withAddr,
-                                                          expandStructs=expandStructs),
-                                         f.name, addrTag))
+                buff.append("%s %s%s" % (
+                               f.dtype.__repr__(indent=indent + 1,
+                                                withAddr=withAddr,
+                                                expandStructs=expandStructs),
+                            f.name, addrTag))
             if withAddr is not None:
                 withAddr += f.dtype.bit_length()
 

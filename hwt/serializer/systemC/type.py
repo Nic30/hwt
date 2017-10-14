@@ -6,26 +6,28 @@ class SystemCSerializer_type():
     def HdlType_bits(cls, typ, ctx, declaration=False):
         if declaration:
             raise NotImplementedError()
-        
+
         w = typ.bit_length()
-        
+
         if w <= 64:
             if typ.signed:
-                typeBaseName = "int" 
+                typeBaseName = "int"
             else:
                 typeBaseName = "uint"
         else:
             if typ.signed:
-                typeBaseName = "bigint" 
+                typeBaseName = "bigint"
             else:
                 typeBaseName = "biguint"
-            
+
         return "sc_%s<%d>" % (typeBaseName, w)
-    
+
     @classmethod
     def HdlType_enum(cls, typ, ctx, declaration=False):
         if declaration:
-            raise TypeError("There is problem with tracing of c enums, use Bits instead")
+            raise TypeError(
+                "There is problem with tracing of c enums, use Bits instead")
         else:
             valueCnt = len(typ._allValues)
-            return cls.HdlType_bits(Bits(valueCnt.bit_length()), ctx, declaration=declaration)
+            return cls.HdlType_bits(Bits(valueCnt.bit_length()), ctx,
+                                    declaration=declaration)

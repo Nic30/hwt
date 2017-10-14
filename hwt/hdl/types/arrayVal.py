@@ -47,7 +47,8 @@ class HArrayVal(Value):
 
     def _getitem__val(self, key):
         """
-        :atention: this will clone item from array, iterate over .val if you need to modify items
+        :atention: this will clone item from array, iterate over .val
+            if you need to modify items
         """
         try:
             kv = key.val
@@ -73,8 +74,8 @@ class HArrayVal(Value):
         elif isinstance(key, Value):
             pass
         else:
-            raise NotImplementedError("Index operation not implemented for index %s"
-                                      % (repr(key)))
+            raise NotImplementedError(
+                "Index operation not implemented for index %r" % (key))
 
         if iamVal and isinstance(key, Value):
             return self._getitem__val(key)
@@ -92,7 +93,8 @@ class HArrayVal(Value):
         """
         Only syntax sugar for user, not used inside HWT
 
-        * In HW design is not used (__getitem__ returns "reference" and it is used)
+        * In HW design is not used (__getitem__ returns "reference"
+            and it is used)
 
         * In simulator is used _setitem__val directly
         """
@@ -105,8 +107,9 @@ class HArrayVal(Value):
         if not isinstance(value, Value):
             value = self._dtype.elmType.fromPy(value)
         else:
-            assert value._dtype == self._dtype.elmType, (value._dtype, self._dtype.elmType)
-                
+            assert value._dtype == self._dtype.elmType, (
+                value._dtype, self._dtype.elmType)
+
         return self._setitem__val(index, value)
 
     def __len__(self):
@@ -123,8 +126,10 @@ class HArrayVal(Value):
         keysB = set(other.val)
         sharedKeys = keysA.union(keysB)
 
-        lsh = len(sharedKeys) 
-        if lsh == int(self._dtype.size) and len(keysA) == lsh and len(keysB) == lsh:
+        lsh = len(sharedKeys)
+        if (lsh == int(self._dtype.size)
+                and len(keysA) == lsh
+                and len(keysB) == lsh):
             for k in sharedKeys:
                 a = self.val[k]
                 b = other.val[k]

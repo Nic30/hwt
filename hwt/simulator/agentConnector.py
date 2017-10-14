@@ -5,34 +5,24 @@ def autoAddAgents(unit):
     """
     Walk all interfaces on unit and instantiate agent for every interface.
 
-    :return: all monitor/driver functions which should be added to simulation as processes
+    :return: all monitor/driver functions which should be added to simulation
+         as processes
     """
     proc = []
     for intf in unit._interfaces:
         if not intf._isExtern:
             continue
 
-        
         if intf._isInterfaceArray():
             agentCnt = int(intf._asArraySize)
             agents = []
             for i in range(agentCnt):
                 _intf = intf[i]
-                try:
-                    _intf._initSimAgent()
-                except NotImplementedError:
-                    raise NotImplementedError(("Interface %r\n"
-                                               "has not any simulation agent class assigned") % (
-                                                   intf))
+                _intf._initSimAgent()
                 assert _intf._ag is not None, intf
                 agents.append(_intf._ag)
         else:
-            try:
-                intf._initSimAgent()
-            except NotImplementedError:
-                raise NotImplementedError(("Interface %r\n"
-                                           "has not any simulation agent class assigned") % (
-                                               intf))
+            intf._initSimAgent()
             assert intf._ag is not None, intf
             agents = [intf._ag, ]
 
@@ -41,7 +31,8 @@ def autoAddAgents(unit):
         elif intf._direction == INTF_DIRECTION.SLAVE:
             agProcs = list(map(lambda a: a.getDrivers(), agents))
         else:
-            raise NotImplementedError("intf._direction %s for %r" % (str(intf._direction), intf))
+            raise NotImplementedError("intf._direction %r for %r" % (
+                intf._direction, intf))
 
         for p in agProcs:
             proc.extend(p)

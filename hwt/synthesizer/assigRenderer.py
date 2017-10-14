@@ -38,13 +38,15 @@ def splitStatementsOnCond(statements, resolvedCondCnt):
         of statements
     """
 
-    # resolve how many condition items can we take into into actual if statement
+    # resolve how many condition items can we take into into actual if
+    # statement
     simplestStm = statements[0]
     cntOfSameConditions = len(simplestStm.cond)
     for a in statements:
         _cntOfSameConditions = 0
         for c0, c1 in zip(condWithoutResolved(a.cond, resolvedCondCnt),
-                          condWithoutResolved(simplestStm.cond, resolvedCondCnt)):
+                          condWithoutResolved(simplestStm.cond,
+                                              resolvedCondCnt)):
             if c0 is c1:
                 _cntOfSameConditions += 1
             else:
@@ -62,9 +64,12 @@ def splitStatementsOnCond(statements, resolvedCondCnt):
     if cntOfSameConditions > 0:
         # if cond:
         #   stm
-        l = len(simplestStm.cond)
-        topCond = simplestStm.cond[l - resolvedCondCnt - cntOfSameConditions:l - resolvedCondCnt]
-        ifTrue = list(renderIfTree(statements, resolvedCondCnt + cntOfSameConditions))
+        condLen = len(simplestStm.cond)
+        high = condLen - resolvedCondCnt - cntOfSameConditions
+        low = condLen - resolvedCondCnt
+        topCond = simplestStm.cond[high:low]
+        ifTrue = list(renderIfTree(
+            statements, resolvedCondCnt + cntOfSameConditions))
     else:
         # if cond:
         #    stm
@@ -74,8 +79,9 @@ def splitStatementsOnCond(statements, resolvedCondCnt):
         try:
             _topCond = simplestStm.cond[condIndx]
         except IndexError:
-            raise Exception("Error while resolving position in if-tree of statement %r with conditions %s"
-                            % (simplestStm, simplestStm.cond))
+            raise Exception(
+                "Error while resolving position in if-tree of statement %r"
+                " with conditions %s" % (simplestStm, simplestStm.cond))
 
         topCond, _ = getBaseCond(_topCond)
         topCondNeg = ~topCond
@@ -171,8 +177,9 @@ def renderIfTree(statements, resolvedCnt=0):
             yield a
 
     if _statements:
-        topCond, ifTrue, ifFalse, independent = splitStatementsOnCond(_statements,
-                                                                      resolvedCnt)
+        (topCond,
+         ifTrue, ifFalse,
+         independent) = splitStatementsOnCond(_statements, resolvedCnt)
         if independent:
             yield from renderIfTree(independent, resolvedCnt)
 
@@ -199,18 +206,20 @@ def renderIfTree(statements, resolvedCnt=0):
                         t = switchOn._dtype
                         # it type is enum and all values are used in switch and
                         # if enum bit representation can have more values than
-                        # enum itself try to set last case as default to prevent
-                        # latches in hdl
+                        # enum itself try to set last case as default
+                        # to prevent latches in hdl
                         if isinstance(t, HEnum):
                             setDefault = False
                             try:
                                 tValues = typeDomainSize(t)
                                 caseLen = len(stm.cases)
-                                setDefault = not stm.default and tValues != caseLen
+                                setDefault = (not stm.default
+                                              and tValues != caseLen)
                             except TypeError:
                                 pass
                             if setDefault:
-                                # we can use any item as default because switch contains case for
+                                # we can use any item as default
+                                # because switch contains case for
                                 # every possible value from type
                                 c = stm.cases.pop()
                                 stm.default = c[1]
@@ -240,7 +249,8 @@ def renderIfTree(statements, resolvedCnt=0):
                             stms = [IfContainer(restOfCond, stms), ]
                         cases.append((v, stms))
 
-                # if only last can not be part of the switch case it can be default
+                # if only last can not be part of the switch case it can be
+                # default
                 if not canBeConvertedToSwitch and len(elIfs) == len(cases):
                     default = elIfs[-1]
                     ifFalse = [IfContainer(default[0], default[1], ifFalse)]
@@ -251,8 +261,8 @@ def renderIfTree(statements, resolvedCnt=0):
                     if not ifFalse:
                         # it type is enum and all values are used in switch and
                         # if enum bit representation can have more values than
-                        # enum itself try to set last case as default to prevent
-                        # latches in hdl
+                        # enum itself try to set last case as default
+                        # to prevent latches in hdl
                         if (isinstance(t, HEnum) and
                                 typeDomainSize(t) > len(t._allValues) and
                                 len(t._allValues) == len(cases)):

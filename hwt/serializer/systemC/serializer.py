@@ -15,14 +15,16 @@ from hwt.serializer.systemC.value import SystemCSerializer_value
 from hwt.serializer.utils import maxStmId
 
 
-class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemCSerializer_statements,
-                        SystemCSerializer_ops, GenericSerializer):
+class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type,
+                        SystemCSerializer_statements, SystemCSerializer_ops,
+                        GenericSerializer):
     """
     Serialized used to convert HWT design to SystemC code
     """
     fileExtension = '.cpp'
     _keywords_dict = {kw: LangueKeyword() for kw in SYSTEMC_KEYWORDS}
-    env = Environment(loader=PackageLoader('hwt', 'serializer/systemC/templates'))
+    env = Environment(loader=PackageLoader('hwt',
+                                           'serializer/systemC/templates'))
     moduleTmpl = env.get_template('module.cpp.template')
     methodTmpl = env.get_template("method.cpp.template")
     ifTmpl = env.get_template("if.cpp.template")
@@ -54,7 +56,7 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
 
     @classmethod
     def Entity(cls, ent, ctx):
-        generics, ports = cls.Entity_prepare(ent, ctx)
+        cls.Entity_prepare(ent, ctx)
         # [TODO] separate declarations from definitions
         doc = ent.__doc__
         if doc and id(doc) != id(Entity.__doc__):
@@ -86,7 +88,8 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
         arch.componentInstances.sort(key=lambda x: x._name)
 
         childCtx = ctx.withIndent()
-        ports = list(map(lambda pi: cls.PortItem(pi, childCtx), arch.entity.ports))
+        ports = list(map(lambda pi: cls.PortItem(
+            pi, childCtx), arch.entity.ports))
 
         extraProcesses = []
         for v in arch.variables:
@@ -107,7 +110,8 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
         processesSensitivity = []
         sensitivityCtx = ctx.forSensitivityList()
         for p in arch.processes:
-            sens = list(map(lambda s: cls.asHdl(s, sensitivityCtx), p.sensitivityList))
+            sens = list(map(lambda s: cls.asHdl(
+                s, sensitivityCtx), p.sensitivityList))
             processesSensitivity.append((p.name, sens))
 
         return cls.moduleTmpl.render(
@@ -120,4 +124,4 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type, SystemC
             processObjects=arch.processes,
             componentInstances=arch.componentInstances,
             DIRECTION=DIRECTION,
-            )
+        )

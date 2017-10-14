@@ -1,6 +1,6 @@
 from hwt.hdl.constants import INTF_DIRECTION
 from hwt.serializer.ip_packager.helpers import appendSpiElem, \
-         mkSpiElm
+    mkSpiElm
 
 
 class BusInterface():
@@ -75,8 +75,10 @@ class BusInterface():
     def asElem(self):
         def mkPortMap(logicalName, physicalName):
             pm = mkSpiElm("portMap")
-            appendSpiElem(appendSpiElem(pm, "logicalPort"), "name").text = logicalName
-            appendSpiElem(appendSpiElem(pm, "physicalPort"), "name").text = physicalName
+            appendSpiElem(appendSpiElem(pm, "logicalPort"),
+                          "name").text = logicalName
+            appendSpiElem(appendSpiElem(pm, "physicalPort"),
+                          "name").text = physicalName
             return pm
 
         e = mkSpiElm("busInterface")
@@ -91,7 +93,8 @@ class BusInterface():
 
         pm = appendSpiElem(e, "portMaps")
 
-        for lName, pName in sorted(self._portMaps.items(), key=lambda pm: pm[0]):
+        for lName, pName in sorted(self._portMaps.items(),
+                                   key=lambda pm: pm[0]):
             pm.append(mkPortMap(lName, pName))
         if self.endianness is not None:
             appendSpiElem(e, "endianness").text = self.endianness

@@ -4,6 +4,7 @@ class ResourceError(Exception):
     Resource of this kind does not exists in current hardware
     """
 
+
 class Unconnected():
     pass
 
@@ -42,6 +43,7 @@ class ResourceRAM():
     """
     Specifier of type of RAM like memory
     """
+
     def __init__(self, width, items,
                  rwSyncPorts, rSyncPorts, wSyncPorts,
                  rwAsyncPorts, rAsyncPorts, wAsyncPorts):
@@ -71,15 +73,16 @@ class ResourceRAM():
             self.rwAsyncPorts == other.rwAsyncPorts and
             self.rAsyncPorts == other.rAsyncPorts and
             self.wAsyncPorts == other.wAsyncPorts
-            )
+        )
 
     def __repr__(self):
-        return "<%s, %dbx%d, syncPorts: (rw:%d, r:%d, w:%d), asyncPorts: (rw:%d, r:%d, w:%d)>" % (
+        return ("<%s, %dbx%d, syncPorts: (rw:%d, r:%d, w:%d), asyncPorts:"
+                " (rw:%d, r:%d, w:%d)>") % (
             self.__class__.__name__, self.width, self.items,
             self.rwSyncPorts, self.rSyncPorts, self.wSyncPorts,
             self.rwAsyncPorts, self.rAsyncPorts, self.wAsyncPorts
-            )
+        )
 
-    
+
 class ResourceROM():
     pass

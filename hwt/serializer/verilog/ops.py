@@ -41,7 +41,8 @@ class VerilogSerializer_ops():
             if isinstance(operand, RtlSignalBase):
                 try:
                     o = operand.singleDriver()
-                    if o.operator != op.operator and opPrecedence[o.operator] <= opPrecedence[op.operator]:
+                    if o.operator != op.operator \
+                            and opPrecedence[o.operator] <= opPrecedence[op.operator]:
                         return "(%s)" % s
                 except Exception:
                     pass
@@ -63,7 +64,8 @@ class VerilogSerializer_ops():
             assert len(ops) == 1
             return "~" + p(ops[0])
         elif o == AllOps.CALL:
-            return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
+            return "%s(%s)" % (cls.FunctionContainer(ops[0]),
+                               ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
             return "{%s}" % _bin(', ')
         elif o == AllOps.DIV:
@@ -125,4 +127,5 @@ class VerilogSerializer_ops():
             assert len(ops) == 2
             return _bin(' ** ')
         else:
-            raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))
+            raise NotImplementedError(
+                "Do not know how to convert %s to vhdl" % (o))

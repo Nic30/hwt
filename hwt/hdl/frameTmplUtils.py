@@ -6,11 +6,11 @@ from hwt.hdl.transTmpl import OneOfTransaction
 
 def iterSort(iterators, cmpFn):
     """
-    Sort items from iterators(generators) by alwas selecting item with lowest value
-    (min first)
+    Sort items from iterators(generators) by alwas selecting item
+    with lowest value (min first)
 
-    :return: generator of tuples (origin index, item) where origin index is index
-        of iterator in "iterators" from where item commes from
+    :return: generator of tuples (origin index, item) where origin index
+        is index of iterator in "iterators" from where item commes from
     """
     actual = []
     _iterators = []
@@ -122,6 +122,7 @@ class ChoiceOfFrameParts(list):
     :ivar origin: ChoicesOfFrameParts instance
     :ivar tmpl: TransTmpl which was item generated from
     """
+
     def __init__(self, origin, tmpl):
         self.origin = origin
         self.tmpl = tmpl
@@ -182,9 +183,11 @@ class TransTmplWordIterator():
     def groupByWordIndex(self, transaction: 'TransTmpl', offset: int):
         """
         Group transaction parts splited on words to words
-        :param transaction: 
 
-        :return: generator of tuples (wordIndex, list of transaction parts in this word)
+        :param transaction: TransTmpl instance which parts
+            should be grupped into words
+        :return: generator of tuples (wordIndex, list of transaction parts
+            in this word)
         """
         actualW = None
         partsInWord = []
@@ -224,5 +227,6 @@ class TransTmplWordIterator():
                     endOfWord = (wordIndex + 1) * wordWidth
                     endOfPart = min(endOfWord, end)
                     inFieldOffset = startOfPart - base
-                    yield TransPart(self, tmpl, startOfPart, endOfPart, inFieldOffset)
+                    yield TransPart(self, tmpl, startOfPart, endOfPart,
+                                    inFieldOffset)
                     startOfPart = endOfPart

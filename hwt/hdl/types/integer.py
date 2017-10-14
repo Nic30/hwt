@@ -7,9 +7,7 @@ class Integer(HdlType):
     """
 
     def __eq__(self, other):
-        return (
-                type(self) == type(other)
-               )
+        return type(self) == type(other)
 
     def __hash__(self):
         return hash(type(self))

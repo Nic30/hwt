@@ -5,6 +5,7 @@ class SignalOps(object):
     Operands for Signal interface,
     these operands are delegated on RtlSignal object for this interface
     """
+
     def _auto_cast(self, toT):
         return self._sig._auto_cast(toT)
 
@@ -27,7 +28,8 @@ class SignalOps(object):
 
     def _eq(self, other):
         """
-        Equality operator "==" is not used because it would damage python ecosystem
+        Equality operator "==" is not used because it would damage python
+        ecosystem
         """
         return self._sig._eq(other)
 

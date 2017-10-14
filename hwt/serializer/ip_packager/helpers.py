@@ -16,7 +16,8 @@ def findS(elm, name):
 
 
 def prettify(elm):
-    s = xml.dom.minidom.parseString(etree.tostring(elm))  # or xml.dom.minidom.parseString(xml_string)
+    # or xml.dom.minidom.parseString(xml_string)
+    s = xml.dom.minidom.parseString(etree.tostring(elm))
     pretty_xml_as_string = s.toprettyxml()
     return pretty_xml_as_string
 

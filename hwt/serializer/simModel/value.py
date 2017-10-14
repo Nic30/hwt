@@ -1,7 +1,7 @@
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.value import GenericSerializer_Value
-from hwt.synthesizer.param import Param, evalParam
 from hwt.serializer.serializerClases.indent import getIndent
+from hwt.synthesizer.param import Param, evalParam
 
 
 class SimModelSerializer_value(GenericSerializer_Value):
@@ -45,16 +45,16 @@ class SimModelSerializer_value(GenericSerializer_Value):
     @classmethod
     def HArrayValAsHdl(cls, t, val, ctx):
         return "HArrayVal(%s, %s, %d)" % (
-                cls.Dict_valAsHdl(val.val, ctx),
-                cls.HdlType(t, ctx),
-                val.vldMask)
+            cls.Dict_valAsHdl(val.val, ctx),
+            cls.HdlType(t, ctx),
+            val.vldMask)
 
     @classmethod
     def Slice_valAsHdl(cls, t, val, ctx):
         return "SliceVal((simHInt(%d), simHInt(%d)), SLICE, %d)" % (
-                    evalParam(val.val[0]).val,
-                    evalParam(val.val[1]).val,
-                    val.vldMask)
+            evalParam(val.val[0]).val,
+            evalParam(val.val[1]).val,
+            val.vldMask)
 
     @classmethod
     def HEnumValAsHdl(cls, t, val, ctx):

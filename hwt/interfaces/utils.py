@@ -2,56 +2,66 @@ from hwt.code import connect
 from hwt.interfaces.std import Clk, Rst_n, Rst
 
 
-def addClkRstn(self):
-    self.clk = Clk()
-    self.rst_n = Rst_n()
+def addClkRstn(obj):
+    """
+    Construct clk, rst_n signal on object (usually Unit/Interface instance)
+    """
+    obj.clk = Clk()
+    obj.rst_n = Rst_n()
 
 
-def addClkRst(self):
-    self.clk = Clk()
-    self.rst = Rst()
+def addClkRst(obj):
+    """
+    Construct clk, rst signal on object (usually Unit/Interface instance)
+    """
+    obj.clk = Clk()
+    obj.rst = Rst()
 
 
 def _tryConnect(src, unit, intfName):
-    "try connect src to interface of specified name on unit"
+    """
+    Try connect src to interface of specified name on unit.
+    Ignore if interface is not present or if it already has driver.
+    """
     try:
         dst = getattr(unit, intfName)
     except AttributeError:
-            dst = None
-    if dst is not None:
+        return
+    if not dst._sig.drivers:
         connect(src, dst)
 
 
-def propagateClk(self):
+def propagateClk(obj):
     """
     Propagate "clk" clock signal to all subcomponents
     """
-    clk = self.clk
-    for u in self._units:
+    clk = obj.clk
+    for u in obj._units:
         _tryConnect(clk, u, 'clk')
 
 
-def propagateClkRstn(self):
+def propagateClkRstn(obj):
     """
-    Propagate "clk" clock and negative reset "rst_n" signal to all subcomponents
+    Propagate "clk" clock and negative reset "rst_n" signal
+    to all subcomponents
     """
-    clk = self.clk
-    rst_n = self.rst_n
+    clk = obj.clk
+    rst_n = obj.rst_n
 
-    for u in self._units:
+    for u in obj._units:
         _tryConnect(clk, u, 'clk')
         _tryConnect(rst_n, u, 'rst_n')
         _tryConnect(~rst_n, u, 'rst')
 
 
-def propagateClkRst(self):
+def propagateClkRst(obj):
     """
     Propagate "clk" clock and reset "rst" signal to all subcomponents
     """
-    clk = self.clk
-    rst = self.rst
+    clk = obj.clk
+    rst = obj.rst
 
-    for u in self._units:
+    for u in obj._units:
         _tryConnect(clk, u, 'clk')
         _tryConnect(~rst, u, 'rst_n')
         _tryConnect(rst, u, 'rst')

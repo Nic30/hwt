@@ -13,7 +13,8 @@ class Param(RtlSignal):
 
     def __init__(self, initval):
         initval = toHVal(initval)
-        super(Param, self).__init__(None, None, initval._dtype, defaultVal=initval)
+        super(Param, self).__init__(None, None, initval._dtype,
+                                    defaultVal=initval)
         self._val = initval
         self.replacedWith = None
         self._parent = None
@@ -33,16 +34,20 @@ class Param(RtlSignal):
 
     def get(self):
         if self.replacedWith is not None:
-            raise Exception("Trying to read param '%r' which is already replaced by '%r'" %
-                            (self, self.replacedWith))
+            raise Exception("Trying to read param '%r' which is already"
+                            " replaced by '%r'" % (self, self.replacedWith))
         return self._val
 
     def set(self, val):
         """
         set value of this param
         """
-        assert not self.__isReadOnly, "This parameter(%s) was locked and now it can not be changed" % self.name
-        assert self.replacedWith is None, "This param was replaced with new one and this should not exists"
+        assert not self.__isReadOnly, \
+            ("This parameter(%s) was locked"
+             " and now it can not be changed" % self.name)
+        assert self.replacedWith is None, \
+            ("This param was replaced with new one and this "
+             "should not exists")
 
         val = toHVal(val)
         self.defaultVal = val

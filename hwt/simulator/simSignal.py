@@ -25,7 +25,7 @@ class SimSignal(SignalItem):
         """
         Register writeCallback for signal.
         Registration is evaluated at the end of deltastep of simulator.
-        
+
         :param callback: simulation process represented by function(simulator)
             which should be called after update of this signal
         :param getEnFn: function() to get initial value for enable of callback
@@ -35,17 +35,20 @@ class SimSignal(SignalItem):
         self._writeCallbacksToEn.append((index, callback, getEnFn))
         return index
 
+    def _loadWriteCallbacks(self):
+        wc = self._writeCallbacksToEn
+        self._writeCallbacksToEn = []
+        # perform registration of new write callbacks
+        for i, callback, reqEnFn in wc:
+            if reqEnFn():
+                self._writeCallbacks[i] = callback
+
     def simPropagateChanges(self, simulator):
         v = self._val
         self._oldVal = v
 
-        # perform registration of new write callbacks
         if self._writeCallbacksToEn:
-            for i, callback, reqEnFn in self._writeCallbacksToEn:
-                if reqEnFn():
-                    self._writeCallbacks[i] = callback 
-            self._writeCallbacksToEn = []
-        
+            self._loadWriteCallbacks()
         # run all sensitive processes
         log = simulator.config.logPropagation
         if log:
@@ -58,8 +61,8 @@ class SimSignal(SignalItem):
         for c in self._writeCallbacks:
             if c:
                 # run simulation processes which are activated
-                simulator.process(c(simulator))    
-        
+                simulator.process(c(simulator))
+
         if self.simRisingSensProcs:
             if v.val or not v.vldMask:
                 if log:
@@ -74,7 +77,6 @@ class SimSignal(SignalItem):
                     log(simulator, self, self.simFallingSensProcs)
                 for p in self.simFallingSensProcs:
                     simulator.addHwProcToRun(self, p)
-
 
     def simUpdateVal(self, simulator, valUpdater):
         """

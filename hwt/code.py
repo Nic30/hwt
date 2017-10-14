@@ -10,8 +10,10 @@ from hwt.pyUtils.arrayQuery import arr_any, flatten
 from hwt.synthesizer.andReducedContainer import AndReducedContainer
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.walkers import discoverEventDependency
+from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
+    discoverEventDependency
 from hwt.synthesizer.vectorUtils import fitTo
+from _operator import add
 
 
 def _intfToSig(obj):
@@ -32,10 +34,12 @@ class If(StmCntx):
     :ivar nowIsEventDependent: flag if current scope of if is event dependent
         (is used to mark statements as event dependent)
     """
+
     def __init__(self, cond, *statements):
         """
         :param cond: condition in if statement
-        :param statements: list of statements which should be active if condition is met
+        :param statements: list of statements which should be active
+            if condition is met
         """
         self.cond = _intfToSig(cond)
         assert isinstance(self.cond, RtlSignalBase)
@@ -64,10 +68,12 @@ class If(StmCntx):
 
     def _appendStatements(self, condSet, statements):
         """
-        Append statements to this container under conditions specified by condSet
+        Append statements to this container under conditions specified
+        by condSet
         """
         for stm in flatten(statements):
-            stm.isEventDependent = stm.isEventDependent or self.nowIsEventDependent
+            stm.isEventDependent = (stm.isEventDependent
+                                    or self.nowIsEventDependent)
             for c in condSet:
                 c.endpoints.append(stm)
             stm.cond.update(condSet)
@@ -95,6 +101,7 @@ class Switch(StmCntx):
     """
     Switch statement generator
     """
+
     def __init__(self, switchOn):
         self.switchOn = switchOn
         self.cond = None
@@ -150,17 +157,18 @@ def SwitchLogic(cases, default=None):
 
     for cond, statements in reversed(cases):
         assigTop = If(cond,
-                       statements
-                   ).Else(
-                       assigTop
-                   )
+                      statements
+                      ).Else(
+            assigTop
+        )
 
     return assigTop
 
 
 def In(sigOrVal, iterable):
     """
-    Hdl convertible in operator, check if any of items in "iterable" equals "sigOrVal"
+    Hdl convertible in operator, check if any of items
+    in "iterable" equals "sigOrVal"
     """
     res = None
     for i in iterable:
@@ -179,22 +187,24 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
 
     :param parentUnit: unit where this code should be instantiated
     :param items: items which this "for" itering on
-    :param bodyFn: function which fn(item, index) or fn(item) returns (statementList, ack).
-        It's content is performed in every iteration. When ack is high loop will fall to next iteration
+    :param bodyFn: function which fn(item, index) or fn(item)
+        returns (statementList, ack).
+        It's content is performed in every iteration.
+        When ack is high loop will fall to next iteration
     """
 
     items = list(items)
-    l = len(items)
-    if l == 0:
+    itemsCnt = len(items)
+    if itemsCnt == 0:
         # if there are no items there is nothing to generate
         return []
-    elif l == 1:
+    elif itemsCnt == 1:
         # if there is only one item do not generate counter logic generate
         return bodyFn(items[0], 0)
     else:
         # if there is multiple items we have to generate counter logic
         index = parentUnit._reg(name + "for_index",
-                                Bits(log2ceil(l + 1), signed=False),
+                                Bits(log2ceil(itemsCnt + 1), signed=False),
                                 defVal=0)
         ackSig = parentUnit._sig(name + "for_ack")
 
@@ -204,24 +214,25 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
             statementLists.append(statementList + [(ackSig(ack)), ])
 
         If(ackSig,
-           If(index._eq(l - 1),
+           If(index._eq(itemsCnt - 1),
               index(0)
            ).Else(
                index(index + 1)
            )
         )
         return Switch(index)\
-                    .addCases(
-                      enumerate(statementLists)
-                    ).Default(
-                      bodyFn(items[0], 0)[0]
-                    )
+            .addCases(
+            enumerate(statementLists)
+        ).Default(
+            bodyFn(items[0], 0)[0]
+        )
 
 
 class FsmBuilder(StmCntx):
     """
     :ivar stateReg: register with state
     """
+
     def __init__(self, parent, stateT, stateRegName="st"):
         """
         :param parent: parent unit where fsm should be builded
@@ -266,10 +277,10 @@ class FsmBuilder(StmCntx):
 
             # building decision tree
             top = If(condition,
-                        self.stateReg(newvalue)
-                    ).Else(
-                        top
-                    )
+                     self.stateReg(newvalue)
+                  ).Else(
+                     top
+                  )
 
         s = Switch.Case(self, stateFrom, *top)
         return s
@@ -335,6 +346,7 @@ def _mkOp(fn):
 
 # variadic operator functions
 And = _mkOp(and_)
+Add = _mkOp(add)
 Or = _mkOp(or_)
 Xor = _mkOp(xor)
 Concat = _mkOp(concatFn)
@@ -391,7 +403,8 @@ def isPow2(num) -> bool:
 
 def binToGray(sigOrVal) -> RtlSignalBase:
     width = sigOrVal._dtype.bit_length()
-    return Concat(sigOrVal[width - 1], sigOrVal[width - 1:0] ^ sigOrVal[width:1])
+    return Concat(sigOrVal[width - 1],
+                  sigOrVal[width - 1:0] ^ sigOrVal[width:1])
 
 
 def sizeof(_type) -> int:

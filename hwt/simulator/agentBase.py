@@ -11,6 +11,7 @@ class AgentBase():
     :ivar intf: interface assigned to this agent
     :ivar enable: flag to enable/disable this agent
     """
+
     def __init__(self, intf):
         self.intf = intf
         self._enabled = True
@@ -27,25 +28,29 @@ class AgentBase():
 
     def getDrivers(self):
         """
-        Called before simulation to collect all drivers of interfaces from this agent
+        Called before simulation to collect all drivers of interfaces
+        from this agent
         """
         return [self.driver]
 
     def getMonitors(self):
         """
-        Called before simulation to collect all monitors of interfaces from this agent
+        Called before simulation to collect all monitors of interfaces
+        from this agent
         """
         return [self.monitor]
 
     def driver(self, s):
         """
-        Implement this method to drive your interface in simulation/verification
+        Implement this method to drive your interface
+        in simulation/verification
         """
         raise NotImplementedError()
 
     def monitor(self, s):
         """
-        Implement this method to monitor your interface in simulation/verification
+        Implement this method to monitor your interface
+        in simulation/verification
         """
         raise NotImplementedError()
 
@@ -64,7 +69,7 @@ class AgentWitReset(AgentBase):
         except IntfLvlConfErr:
             self.rst = None
             self.notReset = self._notReset_dummy
-            
+
             if allowNoReset:
                 pass
             else:
@@ -80,11 +85,14 @@ class AgentWitReset(AgentBase):
 
 class SyncAgentBase(AgentWitReset):
     """
-    Agent which discovers clk, rst signal and runs only at specified edge of clk
+    Agent which discovers clk, rst signal and runs only
+    at specified edge of clk
 
     :attention: requires clk and rst/rstn signal
         (if you do not have any create simulation wrapper with it)
     """
+    SELECTE_EDGE_CALLBACK = OnRisingCallbackLoop
+
     def __init__(self, intf, allowNoReset=False):
         super().__init__(intf, allowNoReset=allowNoReset)
 
@@ -92,12 +100,9 @@ class SyncAgentBase(AgentWitReset):
         self.clk = self.intf._getAssociatedClk()._sigInside
 
         # run monitor, driver only on rising edge of clk
-        self.monitor = OnRisingCallbackLoop(self.clk,
-                                            self.monitor,
-                                            self.getEnable)
-        self.driver = OnRisingCallbackLoop(self.clk,
-                                           self.driver,
-                                           self.getEnable)
+        c = self.SELECTE_EDGE_CALLBACK
+        self.monitor = c(self.clk, self.monitor, self.getEnable)
+        self.driver = c(self.clk, self.driver, self.getEnable)
 
     def setEnable_asDriver(self, en, sim):
         self._enabled = en
@@ -114,4 +119,3 @@ class SyncAgentBase(AgentWitReset):
     def getMonitors(self):
         self.setEnable = self.setEnable_asMonitor
         return AgentBase.getMonitors(self)
-

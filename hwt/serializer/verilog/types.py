@@ -38,10 +38,12 @@ class VerilogSerializer_types():
     @classmethod
     def HdlType_enum(cls, typ, ctx, declaration=False):
         if declaration:
-            raise TypeError("Verilog does not have enum types, hwt uses Bits instead")
+            raise TypeError(
+                "Verilog does not have enum types, hwt uses Bits instead")
         else:
             valueCnt = len(typ._allValues)
-            return cls.HdlType_bits(Bits(valueCnt.bit_length()), ctx, declaration=declaration)
+            return cls.HdlType_bits(Bits(valueCnt.bit_length()), ctx,
+                                    declaration=declaration)
 
     @classmethod
     def HdlType_int(cls, typ, ctx, declaration=False):

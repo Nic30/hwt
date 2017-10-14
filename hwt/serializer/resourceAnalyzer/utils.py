@@ -15,7 +15,7 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 resourceTransitions_override = {
     (Assignment, Assignment): Assignment,  # overwrite
     (Unconnected, Unconnected): Unconnected,
-    
+
     (Assignment, Unconnected): Assignment,  # written in another command
     (Unconnected, Assignment): Assignment,
 
@@ -25,38 +25,40 @@ resourceTransitions_override = {
 
     (ResourceFF, Unconnected): ResourceFF,  # written in another command
     (Unconnected, ResourceFF): ResourceFF,
-    
+
     (ResourceMUX, Unconnected): ResourceMUX,  # written in another command
     (Unconnected, ResourceMUX): ResourceMUX,
 
-    (ResourceFFwithMux, Assignment): ResourceFFwithMux,  # written in another command
+    # written in another command
+    (ResourceFFwithMux, Assignment): ResourceFFwithMux,
     (Assignment, ResourceFFwithMux): ResourceFFwithMux,
-    
-    (ResourceFFwithMux, Unconnected): ResourceFFwithMux,  # written in another command
+
+    # written in another command
+    (ResourceFFwithMux, Unconnected): ResourceFFwithMux,
     (Unconnected, ResourceFFwithMux): ResourceFFwithMux,
-    
-    
+
+
     (ResourceMUX, ResourceLatch): ResourceMUX,  # written in another command
     (ResourceLatch, ResourceMUX): ResourceMUX,
-    
+
     (ResourceRAM, Unconnected): ResourceRAM,
     (Unconnected, ResourceRAM): ResourceRAM,
-    
+
     (ResourceROM, Unconnected): ResourceROM,
     (Unconnected, ResourceROM): ResourceROM,
-    
+
     (Unconnected, ResourceLatchWithMux): ResourceLatchWithMux,
     (Unconnected, ResourceLatch): ResourceLatchWithMux,
-    
+
     (Assignment, ResourceLatchWithMux): ResourceMUX,
-    
-    }
+
+}
 
 
 resourceTransitions_sameBranchLevel = {
     # current : now discovered
     (Assignment, Assignment): ResourceMUX,
-    
+
     (Unconnected, Unconnected): Unconnected,
     (Assignment, Unconnected): ResourceLatch,
     (Unconnected, Assignment): ResourceLatch,
@@ -72,10 +74,10 @@ resourceTransitions_sameBranchLevel = {
 
     (Assignment, ResourceLatchWithMux): ResourceLatchWithMux,
     (ResourceLatchWithMux, Assignment): ResourceLatchWithMux,
-    
+
     (Unconnected, ResourceLatchWithMux): ResourceLatchWithMux,
     (ResourceLatchWithMux, Unconnected): ResourceLatchWithMux,
-    
+
     (ResourceFF, ResourceFF): ResourceFFwithMux,
     (ResourceFF, Unconnected): ResourceFF,
 
@@ -84,27 +86,27 @@ resourceTransitions_sameBranchLevel = {
 
     (ResourceMUX, ResourceFF): ResourceFFwithMux,
     (ResourceFF, ResourceMUX): ResourceFFwithMux,
-    
+
     (ResourceFFwithMux, Unconnected): ResourceFFwithMux,
     (Unconnected, ResourceFFwithMux): ResourceFFwithMux,
-    
+
     (ResourceRAM, Unconnected): ResourceRAM,
     (ResourceROM, Unconnected): ResourceROM,
     (ResourceAsyncRAM, Unconnected): ResourceAsyncRAM,
     (ResourceAsyncROM, Unconnected): ResourceAsyncROM,
-    
-    
-    }
+
+
+}
 
 resourceTransitions_memoryAnotherInput = {
     ResourceAsyncROM: ResourceAsyncRAM,
     ResourceAsyncRAM: ResourceAsyncRAM,
     ResourceROM: ResourceRAM,
     ResourceRAM: ResourceRAM,
-    }
+}
 
 
-def updateGuesFromAssignment(gues:Dict, assignment: Assignment) -> None:
+def updateGuesFromAssignment(gues: Dict, assignment: Assignment) -> None:
     """
     Apply next assignment to this signal on current resoruce gues
     for this signal
@@ -112,7 +114,7 @@ def updateGuesFromAssignment(gues:Dict, assignment: Assignment) -> None:
     sig = assignment.dst
     if assignment.indexes:
         isRam = arr_any(assignment.indexes,
-                        lambda x:isinstance(x, RtlSignal) and not x._const)
+                        lambda x: isinstance(x, RtlSignal) and not x._const)
     else:
         isRam = False
 
@@ -131,7 +133,7 @@ def updateGuesFromAssignment(gues:Dict, assignment: Assignment) -> None:
                 g = Assignment
         gues[sig] = g
         return
-    
+
     if isRam:
         # [TODO] check for event dependency
         g = resourceTransitions_memoryAnotherInput[current]
@@ -140,9 +142,9 @@ def updateGuesFromAssignment(gues:Dict, assignment: Assignment) -> None:
             g = ResourceFF
         else:
             g = Assignment
-        
+
         g = resourceTransitions_sameBranchLevel[(current, g)]
-    gues[sig] = g 
+    gues[sig] = g
 
 
 def mergeGues(gues: Dict, otherGues: Dict) -> None:
@@ -163,14 +165,14 @@ conversions = {AllOps.BitsAsSigned,
                AllOps.BitsAsUnsigned,
                AllOps.BitsAsVec,
                AllOps.BitsToInt,
-               AllOps.IntToBits }
+               AllOps.IntToBits}
 
 
 operatorsWithoutResource = conversions.union(
-            {AllOps.CONCAT,
-             AllOps.CALL,
-             AllOps.FALLIGN_EDGE,
-             AllOps.RISING_EDGE})
+    {AllOps.CONCAT,
+     AllOps.CALL,
+     AllOps.FALLIGN_EDGE,
+     AllOps.RISING_EDGE})
 
 
 RamOrRomResources = {ResourceAsyncRAM,
@@ -196,11 +198,12 @@ def findAssingmentOf(sig: RtlSignal) -> Assignment:
 class ResourceContext():
     """
     Container of informations about resources used in architecture
-   
+
     :ivar unit: optional unit for which is this context build
     :ivar seen: set of seen objects
     :ivar resources: dictionary {type of resource: cnt}
-    :ivar discoveredRamSignals: set of signals which seems to be some kind of RAM/ROM memory
+    :ivar discoveredRamSignals: set of signals which seems to be some kind
+        of RAM/ROM memory
     """
 
     def __init__(self, unit):
@@ -208,7 +211,7 @@ class ResourceContext():
         self.seen = set()
         self.resources = {}
         self.discoveredRamSignals = set()
-        
+
     def registerOperator(self, op: Operator):
         w = op.operands[0]._dtype.bit_length()
         res = self.resources
@@ -221,7 +224,7 @@ class ResourceContext():
         Register MUX of known properties
         """
         k = (ResourceMUX, width, inputsCnt)
-        muxs = self.resources.get(k, 0) 
+        muxs = self.resources.get(k, 0)
         self.resources[k] = muxs + 1
 
     def registerMUX(self, mux):
@@ -234,25 +237,28 @@ class ResourceContext():
         if inputs > 1:
             w = mux._dtype.bit_length()
             k = (ResourceMUX, w, inputs)
-            muxs = self.resources.get(k, 0) 
+            muxs = self.resources.get(k, 0)
             self.resources[k] = muxs + 1
 
     def registerFF(self, ff):
         res = self.resources
         w = ff._dtype.bit_length()
-        ffs = res.get(ResourceFF, 0) 
+        ffs = res.get(ResourceFF, 0)
         res[ResourceFF] = ffs + w
 
     def registerLatch(self, latch):
         res = self.resources
         w = latch._dtype.bit_length()
-        latches = res.get(ResourceLatch, 0) 
+        latches = res.get(ResourceLatch, 0)
         res[ResourceLatch] = latches + w
 
-    def _extractRamPorts(self, mem: RtlSignal) -> Dict[RtlSignal, Tuple[int, int, int, int]]:
+    def _extractRamPorts(self, mem: RtlSignal) -> Dict[RtlSignal,
+                                                       Tuple[int, int,
+                                                             int, int]]:
         """
         Resolve address signals and read/write ports of memory
-        :return: dict  address signal : [syncReads, syncWrites, asyncReads, asyncWrites]
+        :return: dict  address signal : [syncReads, syncWrites,
+            asyncReads, asyncWrites]
         """
 
         addressSignals = {}
@@ -283,13 +289,13 @@ class ResourceContext():
                 isEventDependent = a.isEventDependent
             else:
                 raise NotImplementedError(e)
-            
+
             try:
                 ports = addressSignals[index]
             except KeyError:
                 ports = [0, 0, 0, 0]
                 addressSignals[index] = ports
-            
+
             # readportscnt++
             if isEventDependent:
                 ports[0] += 1
@@ -305,7 +311,7 @@ class ResourceContext():
         # merge maximum or r/w ports to rw port for each address signal
         width = mem._dtype.elmType.bit_length()
         items = int(mem._dtype.size)
-        
+
         # resolve conts of r/w ports
         rwSyncPorts = 0
         rSyncPorts = 0
@@ -321,7 +327,7 @@ class ResourceContext():
             rwSyncPorts += rw
             rSyncPorts += r - rw
             wSyncPorts += w - rw
-            
+
             rw = min(asyncR, asyncW)
             rwAsyncPorts += rw
             rAsyncPorts += asyncR - rw
@@ -333,7 +339,7 @@ class ResourceContext():
                         rwAsyncPorts, rAsyncPorts, wAsyncPorts)
         cnt = self.resources.get(m, 0)
         self.resources[m] = cnt + 1
-        
+
         # if has sync reads merge FFs into this resource
         FFsInRam = (rwSyncPorts + rSyncPorts) * width
         if FFsInRam:
@@ -343,7 +349,9 @@ class ResourceContext():
             elif ffs > FFsInRam:
                 self.resources[ResourceFF] = ffs - FFsInRam
             else:
-                raise Exception("Incompatible ram description (read port did not found FFs as expected)")
+                raise Exception(
+                    "Incompatible ram description (read port did not found FFs"
+                    " as expected)")
 
     def register(self, sig: RtlSignal, resourceGues):
         """
@@ -367,7 +375,7 @@ class ResourceContext():
             self.discoveredRamSignals.add(sig)
         else:
             raise NotImplementedError(resourceGues)
-            
+
     def finalize(self):
         """
         Resolve ports of discovered memories

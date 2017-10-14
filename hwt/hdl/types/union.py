@@ -6,7 +6,8 @@ from hwt.hdl.value import Value
 from hwt.serializer.serializerClases.indent import getIndent
 
 
-protectedNames = {"clone", "staticEval", "fromPy", "_dtype", "_usedField", "_val"}
+protectedNames = {"clone", "staticEval",
+                  "fromPy", "_dtype", "_usedField", "_val"}
 
 
 class UnionValBase(Value):
@@ -94,6 +95,7 @@ class HUnion(HdlType):
     :ivar name: name of this type
     :ivar __bit_length_val: precalculated bit_length of this type
     """
+
     def __init__(self, *template, name=None):
         """
         :param template: list of tuples (type, name) or HStructField objects
@@ -113,7 +115,9 @@ class HUnion(HdlType):
             except TypeError:
                 field = f
             if not isinstance(field, HStructField):
-                raise TypeError("Template for struct field %s is not in valid format" % repr(f))
+                raise TypeError(
+                    "Template for struct field %s is not"
+                    " in valid format" % repr(f))
 
             assert field.name is not None
             self.fields[field.name] = field
@@ -124,7 +128,8 @@ class HUnion(HdlType):
             else:
                 _bit_length = t.bit_length()
                 if _bit_length != bit_length:
-                    raise TypeError(field.name, " has different size than others")
+                    raise TypeError(
+                        field.name, " has different size than others")
 
             memberHandler = HUnionMemberHandler(field)
             p = property(fget=memberHandler.get, fset=memberHandler.set)
@@ -134,7 +139,8 @@ class HUnion(HdlType):
         self.__bit_length_val = bit_length
 
         usedNames = set(self.fields.keys())
-        assert not protectedNames.intersection(usedNames), protectedNames.intersection(usedNames)
+        assert not protectedNames.intersection(
+            usedNames), protectedNames.intersection(usedNames)
 
         if name is not None:
             UnionVal.__name__ = name + "Val"
@@ -199,10 +205,11 @@ class HUnion(HdlType):
             if f.name is None:
                 buff.append("%s//%r empty space" % (childIndent, f.dtype))
             else:
-                buff.append("%s %s" % (f.dtype.__repr__(indent=indent + 1,
-                                                        withAddr=withAddr,
-                                                        expandStructs=expandStructs),
-                                       f.name))
+                buff.append("%s %s" % (
+                                f.dtype.__repr__(indent=indent + 1,
+                                                 withAddr=withAddr,
+                                                 expandStructs=expandStructs),
+                            f.name))
 
         buff.append("%s}" % (myIndent))
         return "\n".join(buff)

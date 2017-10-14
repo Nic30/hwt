@@ -15,9 +15,9 @@ class VhdlSerializer_types():
     @classmethod
     def HdlType_bits(cls, typ, ctx, declaration=False):
         disableRange = False
-        l = typ.bit_length()
+        bitLength = typ.bit_length()
         w = typ.width
-        isVector = typ.forceVector or l > 1
+        isVector = typ.forceVector or bitLength > 1
 
         if typ.signed is None:
             if isVector:
@@ -48,7 +48,8 @@ class VhdlSerializer_types():
                 name = "enumT_"
             typ.name = ctx.scope.checkedName(name, typ)
 
-            buff.extend(["%sTYPE " % getIndent(ctx.indent), typ.name.upper(), ' IS ('])
+            buff.extend(["%sTYPE " % getIndent(ctx.indent),
+                         typ.name.upper(), ' IS ('])
             # [TODO] check enum values names
             buff.append(", ".join(typ._allValues))
             buff.append(")")
@@ -76,8 +77,9 @@ class VhdlSerializer_types():
                 return typ.name
             except AttributeError:
                 # [TODO]
-                # sometimes we need to debug expression and we need temporary type name
-                # this may be risk and this should be done by extra debug serializer
+                # sometimes we need to debug expression and we need temporary
+                # type name this may be risk and this should be done
+                # by extra debug serializer
                 return "arrT_%d" % id(typ)
 
     @classmethod

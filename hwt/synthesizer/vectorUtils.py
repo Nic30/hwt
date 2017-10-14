@@ -15,7 +15,8 @@ class BitWidthErr(Exception):
     """
 
 
-def fitTo(what, where, extend=True, shrink=True):
+def fitTo(what: Union[RtlSignal, Value], where: Union[RtlSignal, Value],
+          extend: bool=True, shrink: bool=True):
     """
     Slice signal "what" to fit in "where"
     or
@@ -162,10 +163,11 @@ class BitWalker():
         except StopIteration:
             return
 
-        assert False, "BitWalker there stil were some items"
+        raise AssertionError("BitWalker there stil were some items")
 
 
-def iterBits(sigOrVal, bitsInOne=1, skipPadding=True, fillup=False):
+def iterBits(sigOrVal: Union[RtlSignal, Value], bitsInOne: int=1,
+             skipPadding: bool=True, fillup: bool=False):
     """
     Iterate over bits in vector
 

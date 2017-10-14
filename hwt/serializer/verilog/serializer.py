@@ -23,8 +23,9 @@ from hwt.hdl.statements import SwitchContainer
 from hwt.hdl.types.typeCast import toHVal
 
 
-class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSerializer_Value,
-                        VerilogSerializer_statements, VerilogSerializer_ops, GenericSerializer):
+class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
+                        VerilogSerializer_Value, VerilogSerializer_statements,
+                        VerilogSerializer_ops, GenericSerializer):
     _keywords_dict = {kw: LangueKeyword() for kw in VERILOG_KEYWORDS}
     fileExtension = '.v'
 
@@ -37,11 +38,11 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
         generics, ports = cls.Entity_prepare(ent, ctx)
 
         entVerilog = cls.moduleHeadTmpl.render(
-                indent=getIndent(ctx.indent),
-                name=ent.name,
-                ports=ports,
-                generics=generics
-                )
+            indent=getIndent(ctx.indent),
+            name=ent.name,
+            ports=ports,
+            generics=generics
+        )
 
         doc = ent.__doc__
         if doc and id(doc) != id(Entity.__doc__):
@@ -105,7 +106,8 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
             eProcs, eVars = cls.hardcodeRomIntoProcess(v)
             for _v in eVars:
                 _procs = cls.Architecture_var(_v, serializerVars, extraTypes,
-                                              extraTypes_serialized, ctx, childCtx)
+                                              extraTypes_serialized, ctx,
+                                              childCtx)
                 eProcs.extend(_procs)
             return eProcs
 
@@ -143,8 +145,9 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
 
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
-        componentInstances = list(map(lambda c: cls.ComponentInstance(c, childCtx),
-                                      arch.componentInstances))
+        componentInstances = list(
+            map(lambda c: cls.ComponentInstance(c, childCtx),
+                arch.componentInstances))
 
         return cls.moduleBodyTmpl.render(
             indent=getIndent(ctx.indent),
@@ -154,7 +157,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
             extraTypes=extraTypes_serialized,
             processes=procs,
             componentInstances=componentInstances
-            )
+        )
 
     @classmethod
     def ComponentInstance(cls, entity, ctx):
@@ -173,12 +176,12 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
 
         # [TODO] check component instance name
         return cls.componentInstanceTmpl.render(
-                indent=getIndent(ctx.indent),
-                instanceName=entity._name,
-                entity=entity,
-                portMaps=[cls.PortConnection(x, ctx) for x in portMaps],
-                genericMaps=[cls.MapExpr(x, ctx) for x in genericMaps]
-                )
+            indent=getIndent(ctx.indent),
+            instanceName=entity._name,
+            entity=entity,
+            portMaps=[cls.PortConnection(x, ctx) for x in portMaps],
+            genericMaps=[cls.MapExpr(x, ctx) for x in genericMaps]
+        )
 
     @classmethod
     def comment(cls, comentStr):
@@ -190,7 +193,8 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
         if g.defaultVal is None:
             return s
         else:
-            return "parameter %s = %s" % (s, cls.Value(getParam(g.defaultVal).staticEval(), ctx))
+            return ("parameter %s = %s"
+                    % (s, cls.Value(getParam(g.defaultVal).staticEval(), ctx)))
 
     @classmethod
     def PortItem(cls, pi, ctx):
@@ -216,9 +220,10 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types, VerilogSe
     @classmethod
     def PortConnection(cls, pc, ctx):
         if pc.portItem._dtype != pc.sig._dtype:
-            raise SerializerException("Port map %s is nod valid (types does not match)  (%s, %s)" % (
-                      "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx)),
-                      repr(pc.portItem._dtype), repr(pc.sig._dtype)))
+            raise SerializerException(
+                "Port map %s is nod valid (types does not match)  (%s, %s)" % (
+                    "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx)),
+                    repr(pc.portItem._dtype), repr(pc.sig._dtype)))
         return ".%s(%s)" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
 
     @classmethod

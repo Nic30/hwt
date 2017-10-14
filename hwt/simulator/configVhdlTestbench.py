@@ -12,12 +12,14 @@ from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.enum import HEnum
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.simulator.hdlSimConfig import HdlSimConfig
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import \
+    walkPhysInterfaces
+from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
-def makeTestbenchTemplate(unit, name=None):
+def makeTestbenchTemplate(unit: Unit, name: str=None):
     """
     :param unit: synthesized unit
     :return: (entity, arch, context) of testbench
@@ -36,7 +38,8 @@ def makeTestbenchTemplate(unit, name=None):
     for p in unit._entity.ports:
         t = p._dtype
         if isinstance(t, Bits) and not t == BIT:
-            t = Bits(t.bit_length(), signed=t.signed, forceVector=t.forceVector) 
+            t = Bits(t.bit_length(), signed=t.signed,
+                     forceVector=t.forceVector)
         s = RtlSignal(nl, p.name, t, t.fromPy(0))
         ctx[p._interface] = s
         p.connectSig(s)
@@ -80,7 +83,8 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
             self.tbArch.processes.append(proc)
 
         for s in walkPhysInterfaces(top):
-            if s._direction is INTF_DIRECTION.SLAVE and isinstance(s._dtype, self.supported_type_classes):
+            if s._direction is INTF_DIRECTION.SLAVE\
+                    and isinstance(s._dtype, self.supported_type_classes):
                 reg(s)
 
     def logChange(self, nowTime, sig, nextVal):
@@ -105,7 +109,8 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
                 hwProc.actualTime = nowTime
 
         try:
-            # SimBits type does not have forceVector flag, but serializer requires it
+            # SimBits type does not have forceVector flag,
+            # but serializer requires it
             nextVal._dtype.forceVector = hwProc.driverFor._dtype.forceVector
         except AttributeError:
             pass
@@ -129,5 +134,7 @@ class HdlSimConfigVhdlTestbench(HdlSimConfig):
         VhdlSerializer.Entity_prepare(self.tbArch.components[0], ctx)
         ctx.scope.setLevel(1)
 
-        _dumpFile.write(VhdlSerializer.formater(VhdlSerializer.Entity(self.tbEnt, ctx)))
-        _dumpFile.write(VhdlSerializer.formater(VhdlSerializer.Architecture(self.tbArch, ctx)))
+        _dumpFile.write(VhdlSerializer.formater(
+            VhdlSerializer.Entity(self.tbEnt, ctx)))
+        _dumpFile.write(VhdlSerializer.formater(
+            VhdlSerializer.Architecture(self.tbArch, ctx)))

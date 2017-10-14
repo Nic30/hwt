@@ -16,6 +16,7 @@ class TransPart(object):
     :ivar endOfPart: bit addr of end of this part
     :ivar inFieldOffset: bit offset of this part in parent field
     """
+
     def __init__(self, parent: 'FrameTmpl',
                  tmpl: Union[HStructField, HdlType],
                  startOfPart: int,
@@ -43,7 +44,8 @@ class TransPart(object):
 
     def getFieldBitRange(self) -> Tuple[int, int]:
         """
-        :return: bit range which contains data of this part on interface of field
+        :return: bit range which contains data of this part on interface
+            of field
         """
         offset = self.inFieldOffset
         return (self.bit_length() + offset, offset)

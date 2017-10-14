@@ -6,6 +6,7 @@ class Slice(HArray):
     """
     Slice type, used for selecting items from arrays or vectors
     """
+
     def __init__(self):
         super().__init__(Integer(), 2)
 

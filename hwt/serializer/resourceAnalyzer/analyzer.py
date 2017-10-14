@@ -22,10 +22,11 @@ class ResourceAnalyzer(GenericSerializer):
     """
     Serializer which does not products any output just collect informations
     about used resources
-    
+
     :attention: Use instance of ResourceAnalyzer instead of class
     """
     _keywords_dict = {}
+
     def __init__(self):
         self.context = ResourceContext(None)
 
@@ -40,16 +41,16 @@ class ResourceAnalyzer(GenericSerializer):
 
     @classmethod
     def statementList(cls, statements,
-                           dstSignals,
-                           ctx: ResourceContext) -> None:
+                      dstSignals,
+                      ctx: ResourceContext) -> None:
         """
         Gues resource usage for list of statements
-        
+
         :param dstSignals: list of signals which are driven by this assignments 
         """
         gues = {}
         guesOfChildren = []
-        # resolve 
+        # resolve
         onlyAssignmets = True
         for stm in statements:
             if isinstance(stm, Assignment):
@@ -61,7 +62,7 @@ class ResourceAnalyzer(GenericSerializer):
                 fn = getattr(cls, stm.__class__.__name__)
                 g = fn(stm, dstSignals, ctx)
                 guesOfChildren.append(g)
-        
+
         for g in guesOfChildren:
             for sig, childGues in g.items():
                 try:
@@ -79,53 +80,53 @@ class ResourceAnalyzer(GenericSerializer):
                     gues[sig] = Unconnected
 
         return gues
-    
+
     @classmethod
-    def condition(cls, condition:List[RtlSignal],
-                       ctx: ResourceContext) -> None:
+    def condition(cls, condition: List[RtlSignal],
+                  ctx: ResourceContext) -> None:
         """
         Gues resource usage by this condition expression
         """
         for signal in condition:
             cls.Signal(signal, ctx)
-    
+
     @classmethod
     def IfContainer(cls, ifc: IfContainer,
-                         dstSignals,
-                         ctx: ResourceContext):
+                    dstSignals,
+                    ctx: ResourceContext):
         """
         Gues resource usage by this if statement
 
         :param dstSignals: list of signals which are driven by this assignments
         """
         cls.condition(ifc.cond, ctx)
-        
+
         ifTrue = cls.statementList(ifc.ifTrue, dstSignals, ctx)
-        
+
         for elifCond, elifStm in ifc.elIfs:
             cls.condition(elifCond, ctx)
             elifGues = cls.statementList(elifStm, dstSignals, ctx)
             mergeGues(ifTrue, elifGues)
-            
+
         if ifc.ifFalse:
             ifFalse = cls.statementList(ifc.ifFalse, dstSignals, ctx)
         else:
             ifFalse = {s: Unconnected for s in dstSignals}
         mergeGues(ifTrue, ifFalse)
-            
-            
+
         return ifTrue
 
     @classmethod
     def SwitchContainer(cls, swc: SwitchContainer,
-                             dstSignals,
-                             ctx: ResourceContext) -> None:
+                        dstSignals,
+                        ctx: ResourceContext) -> None:
         """
         Gues resource usage by this switch statement
 
         :param dstSignals: list of signals which are driven by this assignments
         """
-        isEnclosed = swc.default or len(swc.cases) >= (1 << swc.switchOn._dtype.bit_length())
+        isEnclosed = swc.default or len(swc.cases) >= (
+            1 << swc.switchOn._dtype.bit_length())
         gues = None
         for k, c in swc.cases:
             g = cls.statementList(c, dstSignals, ctx)
@@ -133,28 +134,29 @@ class ResourceAnalyzer(GenericSerializer):
                 gues = g
             else:
                 mergeGues(gues, g)
-        
+
         if swc.default:
             g = cls.statementList(swc.default, dstSignals, ctx)
             if gues is None:
                 gues = g
             else:
                 mergeGues(gues, g)
-        
+
         if not isEnclosed:
             # convert all multiplexers or assignments to latches
             update = {}
             for k, v in gues.items():
                 if v is Assignment:
-                    update[k] = ResourceLatch  
+                    update[k] = ResourceLatch
                 elif v is ResourceMUX:
                     update[k] = ResourceLatchWithMux
             gues.update(update)
-            
+
         return gues
-    
+
     @classmethod
-    def operator(cls, driver:Operator, signal:RtlSignal, ctx:ResourceContext):
+    def operator(cls, driver: Operator, signal: RtlSignal,
+                 ctx: ResourceContext):
         """
         Resolve resource usage by operator
         """
@@ -191,7 +193,7 @@ class ResourceAnalyzer(GenericSerializer):
 
             if doRegister:
                 ctx.registerOperator(driver)
-      
+
     @classmethod
     def Signal(cls, signal: RtlSignal, ctx: ResourceContext) -> None:
         """
@@ -207,7 +209,7 @@ class ResourceAnalyzer(GenericSerializer):
                     op = driver.operator
                     if op is AllOps.INDEX:
                         # index can be MUX/memory/static bit select
-                        i = driver.operands[1] 
+                        i = driver.operands[1]
                         if isinstance(i, Value) or i._const:
                             # bit selecting operator
                             pass
@@ -220,7 +222,7 @@ class ResourceAnalyzer(GenericSerializer):
                             else:
                                 # this indexing is MUX
                                 width = driver.result._dtype.bit_length()
-                                inputs = inputsSig._dtype.bit_length() // width 
+                                inputs = inputsSig._dtype.bit_length() // width
                                 ctx.registerMUX_known(width, inputs)
                     # skip conversions/clk ops etc. which does not consume
                     # resources directly
@@ -251,7 +253,7 @@ class ResourceAnalyzer(GenericSerializer):
         prepared on this instance
         """
         return self.context
-    
+
     @classmethod
     def Architecture(cls, arch: Architecture, ctx: ResourceContext) -> None:
         for c in arch.componentInstances:
@@ -259,9 +261,8 @@ class ResourceAnalyzer(GenericSerializer):
 
         for proc in arch.processes:
             cls.HWProcess(proc, ctx)
-        
+
         ctx.finalize()
 
     def report(self):
         return self.context.resources
-        

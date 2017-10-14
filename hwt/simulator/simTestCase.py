@@ -23,15 +23,16 @@ def allValuesToInts(sequenceOrVal):
         return valToInt(sequenceOrVal)
     elif not sequenceOrVal:
         return sequenceOrVal
-    elif isinstance(sequenceOrVal, (list, tuple, deque)) or isgenerator(sequenceOrVal):
-        l = []
+    elif (isinstance(sequenceOrVal, (list, tuple, deque))
+          or isgenerator(sequenceOrVal)):
+        seq = []
         for i in sequenceOrVal:
-            l.append(allValuesToInts(i))
+            seq.append(allValuesToInts(i))
 
         if isinstance(sequenceOrVal, tuple):
-            return tuple(l)
+            return tuple(seq)
 
-        return l
+        return seq
     else:
         return sequenceOrVal
 
@@ -41,7 +42,8 @@ class SimTestCase(unittest.TestCase):
     This is TestCase class contains methods which are usually used during
     hdl simulation.
 
-    :attention: self.model, self.procs has to be specified before running doSim (you can use prepareUnit method)
+    :attention: self.model, self.procs has to be specified before running
+        doSim (you can use prepareUnit method)
     """
     _defaultSeed = 317
 
@@ -66,7 +68,8 @@ class SimTestCase(unittest.TestCase):
                 config = VcdHdlSimConfig(outputFile)
             sim.config = config
 
-            # run simulation, stimul processes are register after initial initialization
+            # run simulation, stimul processes are register after initial
+            # initialization
             sim.simUnit(self.model, time=time, extraProcesses=self.procs)
             return sim
 
@@ -76,7 +79,8 @@ class SimTestCase(unittest.TestCase):
         # configure simulator to log in vcd
         sim.config = HdlSimConfigVhdlTestbench(self.u)
 
-        # run simulation, stimul processes are register after initial initialization
+        # run simulation, stimul processes are register after initial
+        # initialization
         sim.simUnit(self.model, time=time, extraProcesses=self.procs)
 
         sim.config.dump(file)
@@ -147,21 +151,23 @@ class SimTestCase(unittest.TestCase):
     def randomize(self, intf):
         """
         Randomly disable and enable interface for testing purposes
-        """    
+        """
         randomEnProc = self.simpleRandomizationProcess(intf._ag)
         self.procs.append(randomEnProc)
 
-    def prepareUnit(self, unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
+    def prepareUnit(self, unit, modelCls=None, dumpModelIn=None,
+                    onAfterToRtl=None):
         """
         Create simulation model and connect it with interfaces of original unit
         and decorate it with agents and collect all simulation processes
 
         :param unit: interface level unit which you wont prepare for simulation
-        :param modelCls: class of rtl simulation model to run simulation on, if is None
-            rtl sim model will be generated from unit
-        :param dumpModelIn: folder to where put sim model files (if is None sim model will be constructed only in memory)
-        :param onAfterToRtl: callback fn(unit) which will be called unit after it will
-            be synthesised to rtl
+        :param modelCls: class of rtl simulation model to run simulation on,
+            if is None rtl sim model will be generated from unit
+        :param dumpModelIn: folder to where put sim model files (if is None
+            sim model will be constructed only in memory)
+        :param onAfterToRtl: callback fn(unit) which will be called unit after
+            it will be synthesised to rtl
         """
         self.u, self.model, self.procs = simPrepare(unit,
                                                     modelCls=modelCls,

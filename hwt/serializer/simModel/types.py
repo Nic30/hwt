@@ -29,15 +29,17 @@ class SimModelSerializer_types():
         if declaration:
             typ.name = ctx.scope.checkedName(typ.name, typ)
 
-            return '%s = HEnum( "%s", [%s])' % (typ.name,
-                                               typ.name,
-                                               ", ".join(map(lambda x: '"%s"' % x,
-                                                             typ._allValues)))
+            return '%s = HEnum( "%s", [%s])' % (
+                typ.name,
+                typ.name,
+                ", ".join(map(lambda x: '"%s"' % x,
+                              typ._allValues)))
         else:
             return typ.name
 
     @classmethod
     def HdlType_array(cls, typ, ctx, declaration=False):
         assert not declaration
-        return "HArray(%s, %d)" % (cls.HdlType(typ.elmType, ctx, declaration=declaration),
+        return "HArray(%s, %d)" % (cls.HdlType(typ.elmType, ctx,
+                                               declaration=declaration),
                                    evalParam(typ.size).val)

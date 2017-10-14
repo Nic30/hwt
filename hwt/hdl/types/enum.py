@@ -13,8 +13,8 @@ class HEnum(HdlType):
     def __init__(self, name, valueNames):
         """
         :param name: name for this type
-        :param valueNames: sequence of string which will be used as names for enum
-            members
+        :param valueNames: sequence of string which will be used as names
+            for enum members
         """
         super(HEnum, self).__init__()
         self.name = name

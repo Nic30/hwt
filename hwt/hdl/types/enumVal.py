@@ -24,7 +24,7 @@ class HEnumVal(Value):
 
     def _eq__val(self, other):
         eq = self.val == other.val \
-             and self.vldMask == other.vldMask == 1
+            and self.vldMask == other.vldMask == 1
 
         vldMask = int(self.vldMask == other.vldMask == 1)
         updateTime = max(self.updateTime, other.updateTime)

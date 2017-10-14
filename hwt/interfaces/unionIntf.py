@@ -1,8 +1,8 @@
 from hwt.code import log2ceil
 from hwt.hdl.constants import DIRECTION
+from hwt.interfaces.agents.unionIntf import UnionSourceAgent
 from hwt.interfaces.std import Handshaked
 from hwt.interfaces.structIntf import StructIntf
-from hwt.interfaces.agents.unionIntf import UnionSourceAgent
 
 
 class UnionSink(StructIntf):
@@ -11,6 +11,7 @@ class UnionSink(StructIntf):
 
     Used when consumer chooses which member of union should be used.
     """
+
     def _declr(self):
         StructIntf._declr(self)
         self._select = Handshaked()
@@ -22,6 +23,7 @@ class UnionSource(UnionSink):
     Same like `UnionSink` but producer is selecting member of union
     which should be used.
     """
+
     def _declr(self):
         StructIntf._declr(self)
         self._select = Handshaked(masterDir=DIRECTION.IN)

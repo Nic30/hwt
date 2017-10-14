@@ -3,7 +3,8 @@ from jinja2.loaders import PackageLoader
 
 
 class VerilogTmplContainer():
-    tmplEnv = Environment(loader=PackageLoader('hwt', 'serializer/verilog/templates'))
+    tmplEnv = Environment(loader=PackageLoader(
+        'hwt', 'serializer/verilog/templates'))
 
     moduleHeadTmpl = tmplEnv.get_template('module_head.v')
     moduleBodyTmpl = tmplEnv.get_template('module_body.v')

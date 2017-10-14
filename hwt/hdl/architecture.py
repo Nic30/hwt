@@ -17,4 +17,5 @@ class Architecture(object):
 
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer
-        return VhdlSerializer.formater(VhdlSerializer.Architecture(self, VhdlSerializer.getBaseContext()))
+        return VhdlSerializer.formater(
+            VhdlSerializer.Architecture(self, VhdlSerializer.getBaseContext()))

@@ -1,12 +1,13 @@
 from hwt.hdl.typeShortcuts import hInt
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BIT
-from hwt.serializer.ip_packager.exprSerializer import VivadoTclExpressionSerializer
+from hwt.serializer.ip_packager.exprSerializer import \
+    VivadoTclExpressionSerializer
 from hwt.serializer.ip_packager.helpers import appendSpiElem, \
-         findS, mkSpiElm, ns
+    mkSpiElm
 from hwt.serializer.vhdl.serializer import VhdlSerializer
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.param import evalParam
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class WireTypeDef():
@@ -42,10 +43,11 @@ class Port():
     #         self.vector = [findS(vec, "left").text, findS(vec, "right").text]
     #     else:
     #         self.vector = None
-    # 
+    #
     #     wire = findS(elm, "wire")
     #     self.direction = findS(wire, "direction").text
-    #     self.type = WireTypeDef.fromElem(findS(findS(wire, "wireTypeDefs"), "wiretypedef"))
+    #     self.type = WireTypeDef.fromElem(findS(findS(wire, "wireTypeDefs"),
+    #                                            "wiretypedef"))
     #     return self
 
     @staticmethod
@@ -57,7 +59,8 @@ class Port():
         t = port.type
         dt = p._dtype
 
-        t.typeName = VhdlSerializer.HdlType(dt, VhdlSerializer.getBaseContext())
+        t.typeName = VhdlSerializer.HdlType(
+            dt, VhdlSerializer.getBaseContext())
         try:
             t.typeName = t.typeName[:t.typeName.index('(')]
         except ValueError:
@@ -67,7 +70,8 @@ class Port():
             port.vector = False
         elif isinstance(dt, Bits):
             port.vector = [evalParam(dt.width) - 1, hInt(0)]
-        t.viewNameRefs = ["xilinx_vhdlsynthesis", "xilinx_vhdlbehavioralsimulation"]
+        t.viewNameRefs = ["xilinx_vhdlsynthesis",
+                          "xilinx_vhdlbehavioralsimulation"]
         return port
 
     def asElem(self):
@@ -87,9 +91,10 @@ class Port():
                 if isinstance(val, RtlSignalBase):
                     # value is simple type and does not contains generic etc...
                     resolve = 'dependent'
-                    d.attrib["spirit:dependency"] = "(" + \
-                                                    VivadoTclExpressionSerializer.asHdl(val) + ")"
-                    d.text = VivadoTclExpressionSerializer.asHdl(val.staticEval())
+                    d.attrib["spirit:dependency"] = "(%s)" %\
+                        VivadoTclExpressionSerializer.asHdl(val)
+                    d.text = VivadoTclExpressionSerializer.asHdl(
+                        val.staticEval())
                 else:
                     resolve = "immediate"
                     d.text = VivadoTclExpressionSerializer.asHdl(val, None)

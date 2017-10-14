@@ -5,7 +5,8 @@ from typing import List
 
 from hwt.serializer.ip_packager.component import Component
 from hwt.serializer.ip_packager.helpers import prettify
-from hwt.serializer.ip_packager.tclGuiBuilder import GuiBuilder, paramManipulatorFns
+from hwt.serializer.ip_packager.tclGuiBuilder import GuiBuilder,\
+    paramManipulatorFns
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.shortcuts import toRtlAndSave
@@ -17,9 +18,10 @@ class Packager(object):
     """
     Ipcore packager
     """
-    def __init__(self, topUnit:Unit, name:str=None,
-                 extraVhdlFiles:List[str]=[],
-                 extraVerilogFiles:List[str]=[],
+
+    def __init__(self, topUnit: Unit, name: str=None,
+                 extraVhdlFiles: List[str]=[],
+                 extraVerilogFiles: List[str]=[],
                  serializer=VhdlSerializer):
         assert not topUnit._wasSynthetised()
         self.topUnit = topUnit
@@ -48,11 +50,11 @@ class Packager(object):
 
         files = self.hdlFiles
         self.hdlFiles = UniqList(
-                          toRtlAndSave(self.topUnit,
-                                       folderName=path,
-                                       name=self.name,
-                                       serializer=self.serializer)
-                        )
+            toRtlAndSave(self.topUnit,
+                         folderName=path,
+                         name=self.name,
+                         serializer=self.serializer)
+        )
 
         for srcF in files:
             dst = os.path.join(path,
@@ -75,7 +77,8 @@ class Packager(object):
             s = gui.asTcl() + '\n\n'.join(map(lambda x: str(x), handlers))
             f.write(s)
 
-    def createPackage(self, repoDir, vendor="hwt", library="mylib", description=None):
+    def createPackage(self, repoDir, vendor="hwt", library="mylib",
+                      description=None):
         '''
         synthetise hdl if needed
         copy hdl files

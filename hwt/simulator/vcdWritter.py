@@ -8,7 +8,8 @@ from hwt.serializer.vhdl.serializer import VhdlSerializer
 
 
 def dumpMethod(func):
-    """decorator which takes functions return and write it as line to dumpFile"""
+    """decorator which takes functions return and write it as line to dumpFile
+    """
     @wraps(func)
     def wrapped(*args, **kwrds):
         s = func(*args, **kwrds)
@@ -22,6 +23,7 @@ def dumpMethod(func):
 
 class VcdVarInfo():
     """Info about signal registered in vcd"""
+
     def __init__(self, _id, dtype):
         if isinstance(dtype, HEnum):
             self.width = 1
@@ -33,6 +35,7 @@ class VcdVarInfo():
 
 class VcdVarContext(dict):
     """Map of signals registered in this unit"""
+
     def __init__(self):
         super().__init__()
         self.nextId = 0
@@ -68,6 +71,7 @@ class VcdVarContext(dict):
 
 class VcdModule():
     """Vcd module - container for variables"""
+
     def __init__(self, dumpFile, _vars, name):
         self.name = name
         self.dumpFile = dumpFile
@@ -92,7 +96,8 @@ class VcdModule():
         else:
             sigType = 'wire'
 
-        return "$var %s %d %s %s $end" % (sigType, vInf.width, vInf.id, sig.name)
+        return "$var %s %d %s %s $end" % (sigType, vInf.width,
+                                          vInf.id, sig.name)
 
     @dumpMethod
     def footer(self):
@@ -134,7 +139,8 @@ class VcdWritter():
             self.lastTime = t
             return "#%d" % (t)
         else:
-            raise Exception("VcdWritter invalid time update %d -> %d" % (lt, t))
+            raise Exception("VcdWritter invalid time update %d -> %d" % (
+                            lt, t))
 
     @dumpMethod
     def change(self, time, sig, newVal):
@@ -147,7 +153,8 @@ class VcdWritter():
                 val = "XXXX"
             frmt = "s%s %s"
         else:
-            val = VhdlSerializer.BitString_binary(newVal.val, varInfo.width, newVal.vldMask)
+            val = VhdlSerializer.BitString_binary(
+                newVal.val, varInfo.width, newVal.vldMask)
             val = val.replace('"', "")
 
             if varInfo._dtype == BIT:

@@ -34,7 +34,8 @@ def bitsCmp__val(self, other, op, evalFn):
 
 def bitsCmp(self, other, op, evalFn=None):
     """
-    :attention: If other is Bool signal convert this to bool (not ideal, due VHDL event operator)
+    :attention: If other is Bool signal convert this to bool (not ideal,
+        due VHDL event operator)
     """
     other = toHVal(other)
     t = self._dtype
@@ -54,7 +55,8 @@ def bitsCmp(self, other, op, evalFn=None):
         elif isinstance(ot, Integer):
             other = other._auto_cast(t)
         else:
-            raise TypeError("Values of types (%r, %r) are not comparable" % (self._dtype, other._dtype))
+            raise TypeError("Values of types (%r, %r) are not comparable" % (
+                self._dtype, other._dtype))
 
         return bitsCmp__val(self, other, op, evalFn)
     else:
@@ -65,7 +67,8 @@ def bitsCmp(self, other, op, evalFn=None):
         elif isinstance(ot, Integer):
             other = other._auto_cast(self._dtype)
         else:
-            raise TypeError("Values of types (%r, %r) are not comparable" % (self._dtype, other._dtype))
+            raise TypeError("Values of types (%r, %r) are not comparable" % (
+                self._dtype, other._dtype))
 
         return Operator.withRes(op, [self, other], BOOL)
 
@@ -85,7 +88,8 @@ def bitsBitOp__val(self, other, op, getVldFn):
 
 def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
     """
-    :attention: If other is Bool signal, convert this to bool (not ideal, due VHDL event operator)
+    :attention: If other is Bool signal, convert this to bool
+        (not ideal, due VHDL event operator)
     """
     other = toHVal(other)
 
@@ -102,7 +106,7 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
         elif self._dtype == other._dtype:
             pass
         else:
-            raise TypeError("Can not apply operator %r (%r, %r)" % 
+            raise TypeError("Can not apply operator %r (%r, %r)" %
                             (op, self._dtype, other._dtype))
 
         if otherIsVal:
@@ -113,7 +117,7 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
         elif iamVal:
             r = reduceCheckFn(other, self)
             if r is not None:
-                    return r
+                return r
 
         return Operator.withRes(op, [self, other], self._dtype)
 

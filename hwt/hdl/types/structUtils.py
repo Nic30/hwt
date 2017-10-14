@@ -100,7 +100,8 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
     actual = None
 
     for v in walkFlattenFields(val, skipPadding=False):
-        # walk flatten fields and take values from fData and parse them to field
+        # walk flatten fields and take values from fData and parse them to
+        # field
         required = v._dtype.bit_length()
 
         if actual is None:
@@ -129,7 +130,8 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
         if actuallyHave >= required:
             # parse value of actual to field
             # skip padding
-            _v = actual[(required + actualOffset): actualOffset]._auto_cast(v._dtype)
+            _v = actual[(required + actualOffset):actualOffset]
+            _v = _v._auto_cast(v._dtype)
             v.val = _v.val
             v.vldMask = _v.vldMask
             v.updateTime = _v.updateTime
@@ -142,6 +144,7 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
             actual = None
 
     if actual is not None:
-        assert actual._dtype.bit_length() - actualOffset < dataWidth, "It should be just a padding at the end of frame"
+        assert actual._dtype.bit_length(
+        ) - actualOffset < dataWidth, "It should be just a padding at the end of frame"
 
     return val

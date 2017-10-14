@@ -43,13 +43,16 @@ class VerilogSerializer_statements():
         src_t = a.src._dtype
         dst_t = dst._dtype
 
-        if dst_t == src_t or (isinstance(src_t, Bits) and isinstance(dst_t, Bits) and src_t.bit_length() == dst_t.bit_length() == 1):
+        if dst_t == src_t \
+            or (isinstance(src_t, Bits)
+                and isinstance(dst_t, Bits)
+                and src_t.bit_length() == dst_t.bit_length() == 1):
             return "%s %s %s;" % (firstPartOfStr, symbol, valAsHdl(a.src))
         else:
             raise SerializerException("%s %s %s is not valid assignment\n"
-                                      " because types are different (%r; %r) " % 
-                                      (dstStr, symbol, valAsHdl(a.src),
-                                       dst._dtype, a.src._dtype))
+                                      " because types are different (%r; %r) "
+                                      % (dstStr, symbol, valAsHdl(a.src),
+                                         dst._dtype, a.src._dtype))
 
     @classmethod
     def HWProcess(cls, proc, ctx):
@@ -60,18 +63,22 @@ class VerilogSerializer_statements():
         extraVars = []
         extraVarsSerialized = []
 
-        hasToBeVhdlProcess = extraVars or arr_any(body,
-                                                  lambda x: isinstance(x,
-                                                                       (IfContainer,
-                                                                        SwitchContainer,
-                                                                        WhileContainer,
-                                                                        WaitStm)) or
-                                                            (isinstance(x, Assignment) and
-                                                             x.indexes))
+        hasToBeVhdlProcess = extraVars or\
+            arr_any(body,
+                    lambda x: isinstance(x,
+                                         (IfContainer,
+                                          SwitchContainer,
+                                          WhileContainer,
+                                          WaitStm)) or
+                    (isinstance(x, Assignment) and
+                     x.indexes))
 
-        anyIsEventDependnt = arr_any(proc.sensitivityList, lambda s: isinstance(s, Operator))
-        sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, ctx, anyIsEventDependnt),
-                                     proc.sensitivityList))
+        anyIsEventDependnt = arr_any(
+            proc.sensitivityList, lambda s: isinstance(s, Operator))
+        sensitivityList = sorted(
+            map(lambda s: cls.sensitivityListItem(s, ctx,
+                                                  anyIsEventDependnt),
+                proc.sensitivityList))
 
         if hasToBeVhdlProcess:
             childCtx = ctx.withIndent()
@@ -107,4 +114,4 @@ class VerilogSerializer_statements():
             extraVars=extraVarsSerialized,
             sensitivityList=" or ".join(sensitivityList),
             statements=extraVarsInit + statemets
-            )
+        )

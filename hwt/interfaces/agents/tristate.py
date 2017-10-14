@@ -47,7 +47,7 @@ class TristateAgent(AgentWitReset):
 
     def getMonitors(self):
         return [self.onTWriteCallback__init]
-    
+
     def onTWriteCallback(self, sim):
         self.monitor(sim)
         return
@@ -127,7 +127,6 @@ class TristateClkAgent(TristateAgent):
 
             if onLow:
                 sim.process(onLow(sim))
-            
 
     def monitor(self, sim):
         intf = self.intf
@@ -140,7 +139,7 @@ class TristateClkAgent(TristateAgent):
             assert t.vldMask, (
                 sim.now, intf, "This mode, this value => ioblock would burn")
             assert o.vldMask, (
-                sim.now, intf, "This mode, this value => ioblock would burn") 
+                sim.now, intf, "This mode, this value => ioblock would burn")
             assert self.pullMode != o.val, (
                 sim.now, intf, "This mode, this value => ioblock would burn")
 
@@ -160,7 +159,7 @@ class TristateClkAgent(TristateAgent):
 
     def getMonitors(self):
         return [self.onTWriteCallback__init]
-    
+
     def onTWriteCallback(self, sim):
         yield from self.monitor(sim)
         return

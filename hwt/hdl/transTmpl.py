@@ -15,7 +15,8 @@ def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
 
 class TransTmpl(object):
     """
-    Container of informations about frames generated from any HType (HStruct etc.)
+    Container of informations about frames generated from any HType
+    (HStruct etc.)
 
     * contains precalculated address range for all members of type
 
@@ -47,7 +48,8 @@ class TransTmpl(object):
         :return: address of it's end
         """
         self.itemCnt = evalParam(dtype.size).val
-        self.children = TransTmpl(dtype.elmType, 0, parent=self, origin=self.origin)
+        self.children = TransTmpl(
+            dtype.elmType, 0, parent=self, origin=self.origin)
         return bitAddr + self.itemCnt * self.children.bitAddrEnd
 
     def _loadFromBits(self, dtype: HdlType, bitAddr: int):
@@ -121,20 +123,23 @@ class TransTmpl(object):
         """
         return self.bitAddrEnd - self.bitAddr
 
-
     def walkFlatten(self, offset: int=0,
                     shouldEnterFn=_default_shouldEnterFn) -> Generator[
-            Union[Tuple[Tuple[int, int], 'TransTmpl'], 'OneOfTransaction'], None, None]:
+            Union[Tuple[Tuple[int, int], 'TransTmpl'], 'OneOfTransaction'],
+            None, None]:
         """
         Walk fields in instance of TransTmpl
 
         :param offset: optional offset for all children in this TransTmpl
-        :param shouldEnterFn: function (transTmpl) which returns True when field should
-            be split on it's children
-        :param shouldEnterFn: function(transTmpl) which should return (shouldEnter, shouldUse)
-            where shouldEnter is flag that means iterator should look inside of this actual object
-            and shouldUse flag means that this field should be used (=generator should yield it)
-        :return: generator of tuples ((startBitAddress, endBitAddress), TransTmpl instance)
+        :param shouldEnterFn: function (transTmpl) which returns True
+            when field should be split on it's children
+        :param shouldEnterFn: function(transTmpl) which should return
+            (shouldEnter, shouldUse) where shouldEnter is flag that means
+            iterator should look inside of this actual object
+            and shouldUse flag means that this field should be used
+            (=generator should yield it)
+        :return: generator of tuples ((startBitAddress, endBitAddress),
+            TransTmpl instance)
         """
 
         t = self.dtype
@@ -155,10 +160,12 @@ class TransTmpl(object):
             elif isinstance(t, HArray):
                 itemSize = (self.bitAddrEnd - self.bitAddr) // self.itemCnt
                 for i in range(self.itemCnt):
-                    yield from self.children.walkFlatten(offset=base + i * itemSize,
-                                                         shouldEnterFn=shouldEnterFn)
+                    yield from self.children.walkFlatten(
+                        offset=base + i * itemSize,
+                        shouldEnterFn=shouldEnterFn)
             elif isinstance(t, HUnion):
-                yield OneOfTransaction(self, offset, shouldEnterFn, self.children)
+                yield OneOfTransaction(self, offset, shouldEnterFn,
+                                       self.children)
             else:
                 raise TypeError(t)
 
@@ -197,16 +204,20 @@ class TransTmpl(object):
 
 class OneOfTransaction(object):
     """
-    Container of possible transactions for transactions deriverd from HUnion type
+    Container of possible transactions for transactions deriverd
+    from HUnion type
 
     :ivar parent: parent TransTmpl instance
     :ivar offset: bit addr offset in parent type structure
-    :ivar shouldEnterFn: function(transTmpl) which should return (shouldEnter, shouldUse)
-        where shouldEnter is flag that means iterator should look inside of this actual object
-        and shouldUse flag means that this field should be used (=generator should yield it)
-    :ivar possibleTransactions: tuple of TransTmpl instances from which only one can
-        be used in same time
+    :ivar shouldEnterFn: function(transTmpl) which should
+        return (shouldEnter, shouldUse)
+        where shouldEnter is flag that means iterator should look
+        inside of this actual object and shouldUse flag means that this field
+        should be used (=generator should yield it)
+    :ivar possibleTransactions: tuple of TransTmpl instances
+        from which only one can be used in same time
     """
+
     def __init__(self, parent: TransTmpl,
                  offset: int,
                  shouldEnterFn: Callable[[TransTmpl], Tuple[bool, bool]],
@@ -217,7 +228,8 @@ class OneOfTransaction(object):
         self.possibleTransactions = possibleTransactions
 
     def walkFlattenChilds(self) -> Generator[
-            Union[Tuple[Tuple[int, int], TransTmpl], 'OneOfTransaction'], None, None]:
+            Union[Tuple[Tuple[int, int], TransTmpl], 'OneOfTransaction'],
+            None, None]:
         """
         :return: generator of generators of tuples
             ((startBitAddress, endBitAddress), TransTmpl instance)

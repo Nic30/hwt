@@ -2,11 +2,11 @@ from time import time
 
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.ip_packager.busInterface import BusInterface
-from hwt.serializer.ip_packager.helpers import appendSpiElem, appendStrElements, \
-         mkSpiElm, ns, whereEndsWithExt, whereEndsWithExts
+from hwt.serializer.ip_packager.helpers import appendSpiElem, \
+    appendStrElements, mkSpiElm, ns, whereEndsWithExt, whereEndsWithExts
 from hwt.serializer.ip_packager.model import Model
-from hwt.serializer.ip_packager.otherXmlObjs import VendorExtensions, FileSet, File, \
-    Parameter, Value
+from hwt.serializer.ip_packager.otherXmlObjs import VendorExtensions,\
+    FileSet, File, Parameter, Value
 from hwt.serializer.ip_packager.port import Port
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 import xml.etree.ElementTree as etree
@@ -30,7 +30,8 @@ class Component():
         self.name = ""
         self.version = "1.0"
         self.busInterfaces = []
-        self.model = Model(vhdl_syn_fileSetName, vhdl_sim_fileSetName, tcl_fileSetName)
+        self.model = Model(vhdl_syn_fileSetName,
+                           vhdl_sim_fileSetName, tcl_fileSetName)
         self.fileSets = []
         self.description = ""
         self.parameters = []
@@ -99,7 +100,8 @@ class Component():
 
         appendStrElements(c, self, [self._strValues[-1]])
         self._xmlParameters(c)
-        c.append(self.vendorExtensions.asElem(self.name + "_v" + self.version, revision=str(int(time()))))
+        c.append(self.vendorExtensions.asElem(
+            self.name + "_v" + self.version, revision=str(int(time()))))
 
         return c
 
@@ -127,7 +129,8 @@ class Component():
             if biClass is not None:
                 bi = BusInterface.fromBiClass(intf, biClass)
                 intf._bi = bi
-                bi.busType.postProcess(self, self._topUnit, self.busInterfaces, intf)
+                bi.busType.postProcess(
+                    self, self._topUnit, self.busInterfaces, intf)
 
         # generate component parameters
         compNameParam = Parameter()

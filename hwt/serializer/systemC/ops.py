@@ -88,7 +88,8 @@ class SystemCSerializer_ops():
             o0, o1 = ops
             o0_str = cls.asHdl(o0, ctx)
             if ops[1]._dtype == SLICE:
-                return "%s.range(%s, %s)" % (o0_str, p(o1.val[0]), p(o1.val[1]))
+                return "%s.range(%s, %s)" % (o0_str, p(o1.val[0]),
+                                             p(o1.val[1]))
             else:
                 return "%s[%s]" % (o0_str, p(o1))
 
@@ -118,12 +119,15 @@ class SystemCSerializer_ops():
                 raise UnsupportedEventOpErr()
         elif o == AllOps.BitsToInt:
             return p(ops[0])
-        elif o in [AllOps.BitsAsSigned, AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.IntToBits]:
+        elif o in [AllOps.BitsAsSigned, AllOps.BitsAsUnsigned,
+                   AllOps.BitsAsVec, AllOps.IntToBits]:
             assert len(ops) == 1
-            return "static_cast<%s>(%s)" % (cls.HdlType(op.result._dtype, ctx), p(ops[0]))
+            return "static_cast<%s>(%s)" % (cls.HdlType(op.result._dtype, ctx),
+                                            p(ops[0]))
         elif o == AllOps.POW:
             assert len(ops) == 2
             raise NotImplementedError()
             # return _bin('**')
         else:
-            raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))
+            raise NotImplementedError(
+                "Do not know how to convert %s to vhdl" % (o))

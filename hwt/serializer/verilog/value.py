@@ -72,14 +72,18 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             if not forceBool or c._dtype == BOOL:
                 return cls.asHdl(c, createTmpVarFn)
             elif c._dtype == BIT:
-                return "(%s)==%s" % (cls.asHdl(c, createTmpVarFn), cls.BitLiteral(1, 1))
+                return "(%s)==%s" % (cls.asHdl(c, createTmpVarFn),
+                                     cls.BitLiteral(1, 1))
             elif isinstance(c._dtype, Bits):
                 width = c._dtype.bit_length()
-                return "(%s)!=%s" % (cls.asHdl(c, createTmpVarFn), cls.BitString(0, width))
+                return "(%s)!=%s" % (cls.asHdl(c, createTmpVarFn),
+                                     cls.BitString(0, width))
             else:
                 raise NotImplementedError()
         else:
-            return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool, createTmpVarFn), cond))
+            return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool,
+                                                           createTmpVarFn),
+                                   cond))
 
     @classmethod
     def HEnumValAsHdl(cls, dtype, val, ctx):
@@ -99,9 +103,13 @@ class VerilogSerializer_Value(GenericSerializer_Value):
                 pass
             elif si.endpoints or si.simSensProcs:
                 if not v.vldMask:
-                    raise SerializerException("Signal %s is constant and has undefined value" % si.name)
+                    raise SerializerException(
+                        "Signal %s is constant and has undefined value"
+                        % si.name)
             else:
-                raise SerializerException("Signal %s should be declared but it is not used" % si.name)
+                raise SerializerException(
+                    "Signal %s should be declared but it is not used"
+                    % si.name)
 
             t = si._dtype
             dimensions = []
@@ -115,7 +123,8 @@ class VerilogSerializer_Value(GenericSerializer_Value):
                              si.name)
             if dimensions:
                 # to make a space between name and dimensoins
-                dimensions = list(map(lambda x: "[%s-1:0]" % cls.asHdl(toHVal(x), ctx),
+                dimensions = list(map(lambda x: "[%s-1:0]"
+                                                % cls.asHdl(toHVal(x), ctx),
                                       dimensions))
                 dimensions.append("")
                 s += " ".join(reversed(dimensions))

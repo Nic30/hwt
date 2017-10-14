@@ -31,6 +31,7 @@ class BitsVal(EventCapableVal):
     """
     :attention: operator on signals are using value operator functions as well
     """
+
     def _isFullVld(self):
         return self.vldMask == self._dtype._allMask
 
@@ -57,7 +58,8 @@ class BitsVal(EventCapableVal):
 
     def _convSign(self, signed):
         """
-        Convert signum, no bit manipulation just data are represented differently
+        Convert signum, no bit manipulation just data are represented
+        differently
 
         :param signed: if True value will be signed,
             if False value will be unsigned,
@@ -101,7 +103,8 @@ class BitsVal(EventCapableVal):
             val = 0
         else:
             if isinstance(val, bytes):
-                val = int.from_bytes(val, byteorder="little", signed=bool(typeObj.signed))
+                val = int.from_bytes(
+                    val, byteorder="little", signed=bool(typeObj.signed))
             else:
                 try:
                     val = int(val)
@@ -115,7 +118,8 @@ class BitsVal(EventCapableVal):
 
         if val < 0:
             assert typeObj.signed
-            assert signFix(val & allMask, w) == val, (val, signFix(val & allMask, w))
+            assert signFix(val & allMask, w) == val, (
+                val, signFix(val & allMask, w))
         else:
             if typeObj.signed:
                 msb = 1 << (w - 1)
@@ -123,7 +127,8 @@ class BitsVal(EventCapableVal):
                     assert val < 0, val
 
             if val & allMask != val:
-                raise ValueError("Not enought bits to represent value", val, val & allMask)
+                raise ValueError(
+                    "Not enought bits to represent value", val, val & allMask)
 
         return cls(val, typeObj, vld)
 
@@ -174,10 +179,11 @@ class BitsVal(EventCapableVal):
                 raise TypeError(other._dtype)
 
             if self._dtype.signed is not None:
-                    self = self._vec()
+                self = self._vec()
 
             return Operator.withRes(AllOps.CONCAT, [self, other], resT)\
-                           ._auto_cast(Bits(resWidth, signed=self._dtype.signed))
+                           ._auto_cast(Bits(resWidth,
+                                            signed=self._dtype.signed))
 
     def _getitem__val_int(self, key):
         updateTime = max(self.updateTime, key.updateTime)
@@ -205,8 +211,8 @@ class BitsVal(EventCapableVal):
         return self.__class__(val, retT, vld, updateTime=updateTime)
 
     def _getitem__val(self, key):
-        # using self.__class__ because in simulator this method is called for SimBits and we
-        # do not want to work with Bits in sim
+        # using self.__class__ because in simulator this method is called
+        # for SimBits and we do not want to work with Bits in sim
         if isinstance(key._dtype, Integer):
             return self._getitem__val_int(key)
         elif key._dtype == SLICE:
@@ -218,10 +224,13 @@ class BitsVal(EventCapableVal):
         """
         [] operator
 
-        :attention: Table below is for litle endian bit order (MSB:LSB) which is default.
-            This is **reversed** as it is in pure python where it is [0, len(self)].
+        :attention: Table below is for litle endian bit order (MSB:LSB)
+            which is default.
+            This is **reversed** as it is in pure python
+            where it is [0, len(self)].
 
-        :attention: slice on slice f signal is automatically reduced to single slice
+        :attention: slice on slice f signal is automatically reduced
+            to single slice
 
         +-----------------------------+----------------------------------------------------------------------------------+
         | a[up:low]                   | items low through up; a[16:8] selects upper byte from 16b vector a               |
@@ -293,7 +302,8 @@ class BitsVal(EventCapableVal):
             else:
                 key = start._downto(stop)
                 _resWidth = start - stop
-                resT = Bits(width=_resWidth, forceVector=True, signed=st.signed)
+                resT = Bits(width=_resWidth, forceVector=True,
+                            signed=st.signed)
 
         elif isinstance(key, IntegerVal):
             _v = int(key)
@@ -309,15 +319,19 @@ class BitsVal(EventCapableVal):
             if isinstance(t, Integer):
                 resT = BIT
             elif isinstance(t, Slice):
-                resT = Bits(width=key.staticEval()._size(), forceVector=st.forceVector, signed=st.signed)
+                resT = Bits(width=key.staticEval()._size(),
+                            forceVector=st.forceVector, signed=st.signed)
             elif isinstance(t, Bits):
                 resT = BIT
                 key = key._auto_cast(INT)
             else:
-                raise TypeError("Index operation not implemented for index of type %r" % (t))
+                raise TypeError(
+                    "Index operation not implemented"
+                    " for index of type %r" % (t))
 
         else:
-            raise TypeError("Index operation not implemented for index %r" % (key))
+            raise TypeError(
+                "Index operation not implemented for index %r" % (key))
 
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
@@ -327,7 +341,8 @@ class BitsVal(EventCapableVal):
                 size = index._size()
                 noOfFirstBit = index.val[1].val
                 self.val = setBitRange(self.val, noOfFirstBit, size, value.val)
-                self.vldMask = setBitRange(self.vldMask, noOfFirstBit, size, value.vldMask)
+                self.vldMask = setBitRange(
+                    self.vldMask, noOfFirstBit, size, value.vldMask)
             elif isinstance(index._dtype, Integer):
                 self.val = bitSetTo(self.val, index.val, value.val)
                 self.vldMask = bitSetTo(self.vldMask, index.val, value.vldMask)
@@ -383,7 +398,8 @@ class BitsVal(EventCapableVal):
         if indexConst and valueConst and isinstance(self, Value):
             return self._setitem__val(index, value)
 
-        raise TypeError("Only simulator can resolve []= for signals or invalid index")
+        raise TypeError(
+            "Only simulator can resolve []= for signals or invalid index")
 
     def _invert__val(self):
         v = self.clone()

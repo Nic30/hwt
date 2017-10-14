@@ -4,7 +4,6 @@ from hwt.hdl.types.hdlType import HdlType
 class String(HdlType):
     def __init__(self):
         super().__init__()
-        self.name = "STRING"
 
     def all_mask(self):
         return 1

@@ -32,9 +32,13 @@ class SystemCSerializer_value(GenericSerializer_Value):
                 pass
             elif si.endpoints or si.simSensProcs:
                 if not v.vldMask:
-                    raise SerializerException("Signal %s is constant and has undefined value" % si.name)
+                    raise SerializerException(
+                        "Signal %s is constant and has undefined value"
+                        % si.name)
             else:
-                raise SerializerException("Signal %s should be declared but it is not used" % si.name)
+                raise SerializerException(
+                    "Signal %s should be declared but it is not used"
+                    % si.name)
 
             t = si._dtype
             dimensions = []
@@ -48,7 +52,8 @@ class SystemCSerializer_value(GenericSerializer_Value):
                        si.name)
             if dimensions:
                 # to make a space between name and dimensoins
-                dimensions = list(map(lambda x: "[%s]" % cls.asHdl(toHVal(x), ctx),
+                dimensions = list(map(lambda x: "[%s]" % cls.asHdl(toHVal(x),
+                                                                   ctx),
                                       dimensions))
                 dimensions.append("")
                 s += " ".join(reversed(dimensions))
@@ -89,7 +94,8 @@ class SystemCSerializer_value(GenericSerializer_Value):
             else:
                 raise NotImplementedError()
         else:
-            return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool, ctx), cond))
+            return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool, ctx),
+                                   cond))
 
     @classmethod
     def BitString(cls, v, width, vldMask=None):
@@ -154,4 +160,5 @@ class SystemCSerializer_value(GenericSerializer_Value):
     @classmethod
     def HArrayValAsHdl(cls, dtype, val, ctx):
         separator = ",\n" + getIndent(ctx.indent + 1)
-        return "".join(["{", separator.join([cls.Value(v, ctx) for v in val]), "}"])
+        return "".join(["{", separator.join([cls.Value(v, ctx) for v in val]),
+                        "}"])

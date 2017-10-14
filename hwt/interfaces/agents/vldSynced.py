@@ -29,15 +29,15 @@ class VldSyncedAgent(SyncAgentBase):
             vld = sim.read(intf.vld)
             assert vld.vldMask, (
                 ("valid signal for interface %r is in invalid state,"
-                 " this would cause desynchronization in %d") % 
-                 (self.intf, sim.now))
+                 " this would cause desynchronization in %d") %
+                (self.intf, sim.now))
             if vld.val:
                 d = self.doRead(sim)
 
                 if self._debugOutput is not None:
                     self._debugOutput.write("%s, read, %d: %r\n" % (
-                                              self.intf._getFullName(),
-                                              sim.now, d))
+                        self.intf._getFullName(),
+                        sim.now, d))
                 self.data.append(d)
 
     def driver(self, sim):
@@ -53,8 +53,8 @@ class VldSyncedAgent(SyncAgentBase):
                 sim.write(1, intf.vld)
                 if self._debugOutput is not None:
                     self._debugOutput.write("%s, wrote, %d: %r\n" % (
-                                                self.intf._getFullName(),
-                                                sim.now, self.actualData))
+                        self.intf._getFullName(),
+                        sim.now, self.actualData))
 
         else:
             self.doWrite(sim, None)

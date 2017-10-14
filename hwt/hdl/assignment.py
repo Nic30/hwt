@@ -9,8 +9,8 @@ class Assignment(object):
     :ivar dest: destination signal
     :ivar cond: set of terms if all them are evaluated to True,
         assignment is active
-    :ivar indexes: description of index selector on dst (list of Index/Slice objects)
-        (f.e. [[0], [1]] means  dst[0][1]  )
+    :ivar indexes: description of index selector on dst
+        (list of Index/Slice objects) (f.e. [[0], [1]] means  dst[0][1])
 
     :cvar __instCntr: counter used for generating instance ids
     :ivar _instId: internaly used only for intuitive sorting of statements
@@ -22,9 +22,10 @@ class Assignment(object):
         """
         :param dst: destination to assign to
         :param src: source which is assigned from
-        :param indexes: description of index selector on dst (list of Index/Slice objects)
-            (f.e. [[0], [1]] means  dst[0][1]  )
-        :param virtualOnly: flag indicates that this assignments is only virtual and should not be added into
+        :param indexes: description of index selector on dst
+            (list of Index/Slice objects) (f.e. [[0], [1]] means  dst[0][1])
+        :param virtualOnly: flag indicates that this assignments
+            is only virtual and should not be added into
             netlist, because it is only for internal notation
         """
         self.src = src
@@ -51,7 +52,8 @@ class Assignment(object):
         self.dst._val = self.src.staticEval()
 
     def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer, DebugTmpVarStack
+        from hwt.serializer.vhdl.serializer import VhdlSerializer,\
+            DebugTmpVarStack
         tmpVars = DebugTmpVarStack()
         ctx = VhdlSerializer.getBaseContext()
         ctx.createTmpVarFn = tmpVars.createTmpVarFn

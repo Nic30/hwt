@@ -1,5 +1,4 @@
-from heapq import heappop
-from simpy.core import BoundClass, EmptySchedule, Environment
+from simpy.core import BoundClass, Environment
 from simpy.events import NORMAL, Timeout
 
 from hwt.hdl.value import Value
@@ -13,7 +12,8 @@ from hwt.synthesizer.uniqList import UniqList
 def isEvDependentOn(sig, process):
     if sig is None:
         return False
-    return process in sig.simFallingSensProcs or process in sig.simRisingSensProcs
+    return process in sig.simFallingSensProcs\
+        or process in sig.simRisingSensProcs
 
 
 class UpdateSet(set):
@@ -22,6 +22,7 @@ class UpdateSet(set):
 
     :ivar destination: signal which are updates for
     """
+
     def __init__(self, destination):
         self.destination = destination
 
@@ -57,14 +58,17 @@ class HdlSimulator(Environment):
         Every process has (generated) sensitivity-list.
         Process is reevaluated when there is a new value on any signal
         from sensitivity list.
-    
+
     .. note: *Delta steps*
         Delta step is minimum quantum of changes in simulation, on the begining
-        of delta step all read are performed and on the end all writes are performed.
-        Writes are causing revalution of HWprocesses which are planet into next delta step.
-        Delta steps does not update time. When there is no process to reevaluate
-        that means there is nothing to do in delta step this delta step is considered
-        as last in this time and time is shifted on begining of next event by simulator.
+        of delta step all read are performed and on the end all writes
+        are performed. Writes are causing revalution of HWprocesses
+        which are planet into next delta step.
+        Delta steps does not update time.
+        When there is no process to reevaluate that means thereis nothing to do
+        in delta step this delta step is considered
+        as last in this time and time is shifted on begining of next event
+        by simulator.
 
     .. note:: *Simulation inputs*
         HWprocess can not contain any blocking statement
@@ -96,7 +100,7 @@ class HdlSimulator(Environment):
         which should be evaluated after applyValEv
     """
     # updating of combinational signals (wire updates)
-    PRIORITY_APPLY_COMB = NORMAL + 1 
+    PRIORITY_APPLY_COMB = NORMAL + 1
     # simulation agents waiting for updateComplete event
     PRIORITY_AGENTS_UPDATE_DONE = PRIORITY_APPLY_COMB + 1
     # updateing of event dependent signals (writing in gegisters,rams etc)
@@ -126,13 +130,21 @@ class HdlSimulator(Environment):
         self.outputContainers = {}
 
     def waitOnCombUpdate(self):
+        """
+        Sim processes can wait on combUpdateDoneEv by:
+        yield sim.waitOnCombUpdate()
+
+        Sim process is then woken up when all combinational updates
+        are done in this delta step
+        """
         cud = self.combUpdateDoneEv
         if cud is None:
             return self.scheduleCombUpdateDoneEv()
         return cud
 
     def addHwProcToRun(self, trigger, proc):
-        # first process in time has to plan executing of apply values on the end of this time
+        # first process in time has to plan executing of apply values on the
+        # end of this time
         if self.applyValEv is None:
             # (apply on end of this time to minimalize process reevaluation)
             self.scheduleApplyValues()
@@ -173,6 +185,9 @@ class HdlSimulator(Environment):
             self.outputContainers[p] = SpecificIoContainer(outputs)
 
     def __deleteCombUpdateDoneEv(self, ev):
+        """
+        Callback called on combUpdateDoneEv finished
+        """
         self.combUpdateDoneEv = None
 
     def scheduleCombUpdateDoneEv(self):
@@ -180,7 +195,6 @@ class HdlSimulator(Environment):
         Scheduele combUpdateDoneEv event to let agents know that current
         delta step is ending and values from combinational logic are stable
         """
-        #print("schedueled", self.now)
         assert self.combUpdateDoneEv is None
         cud = self.combUpdateDoneEv = self.event()
         cud.callbacks.append(self.__deleteCombUpdateDoneEv)
@@ -191,7 +205,9 @@ class HdlSimulator(Environment):
         return cud
 
     def scheduleApplyValues(self):
-        #print("scheduleApplyValues", self.now)
+        """
+        Apply stashed values to signals
+        """
         assert self.applyValEv is None, self.now
         applyVal = self.applyValEv = self.event()
         applyVal._ok = True
@@ -200,9 +216,9 @@ class HdlSimulator(Environment):
 
         self.schedule(applyVal,
                       priority=self.PRIORITY_APPLY_COMB)
-        
+
         if self.runSeqProcessesEv is not None:
-            # if runSeqProcessesEv is already scheduled 
+            # if runSeqProcessesEv is already scheduled
             return
 
         assert not self.seqProcsToRun, self.now
@@ -220,11 +236,11 @@ class HdlSimulator(Environment):
         :param actionSet: set of actions made by process
         """
         invalidate = False
-        l = len(actionSet)
+        asLen = len(actionSet)
         # resolve if there is write collision
-        if l == 0:
+        if asLen == 0:
             return
-        elif l == 1:
+        elif asLen == 1:
             res = actionSet.pop()
         else:
             # we are driving signal with two or more different values
@@ -232,8 +248,8 @@ class HdlSimulator(Environment):
             res = actionSet.pop()
             invalidate = True
 
-        l = len(res)
-        if l == 3:
+        resLen = len(res)
+        if resLen == 3:
             # update for item in array
             val, indexes, isEvDependent = res
             return (mkArrayUpdater(val, indexes, invalidate), isEvDependent)
@@ -254,7 +270,8 @@ class HdlSimulator(Environment):
                     res = self.conflictResolveStrategy(actionSet)
                     # prepare update
                     updater, isEvDependent = res
-                    self.valuesToApply.append((actionSet.destination, updater, isEvDependent, proc))
+                    self.valuesToApply.append(
+                        (actionSet.destination, updater, isEvDependent, proc))
                     actionSet.clear()
                 # else value is latched
 
@@ -351,19 +368,22 @@ class HdlSimulator(Environment):
             v = t.fromPy(val)
 
         # can not update value in signal directly due singnal proxies
-        sig.simUpdateVal(self, lambda curentV: (valueHasChanged(curentV, v), v))
-        
+        sig.simUpdateVal(self, lambda curentV: (
+            valueHasChanged(curentV, v), v))
+
         if self.applyValEv is None:
             if not (simSensProcs or
                     sig.simRisingSensProcs or
                     sig.simFallingSensProcs):
-                # signal value was changed but there are no sensitive processes to it
-                # because of this applyValues is never planed and should be
+                # signal value was changed but there are no sensitive processes
+                # to it because of this applyValues is never planed
+                # and should be
                 self.scheduleApplyValues()
             elif (sig._writeCallbacks or
                   sig._writeCallbacksToEn):
                 # signal write did not caused any change on any other signal
-                # but there are still simulation agets waiting on updateComplete event
+                # but there are still simulation agets waiting on
+                # updateComplete event
                 self.scheduleApplyValues()
 
     def simUnit(self, synthesisedUnit, time, extraProcesses=[]):
@@ -379,4 +399,3 @@ class HdlSimulator(Environment):
 
         self._initUnitSignals(synthesisedUnit)
         self.run(until=time)
-

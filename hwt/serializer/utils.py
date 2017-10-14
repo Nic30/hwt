@@ -10,7 +10,8 @@ def getMaxStmIdForStm(stm):
     if isinstance(stm, Assignment):
         return stm._instId
     elif isinstance(stm, IfContainer):
-        for _stm in chain(stm.ifTrue, *map(lambda _elif: _elif[1], stm.elIfs), stm.ifFalse):
+        for _stm in chain(stm.ifTrue, *map(lambda _elif: _elif[1], stm.elIfs),
+                          stm.ifFalse):
             maxId = max(maxId, getMaxStmIdForStm(_stm))
         return maxId
     elif isinstance(stm, SwitchContainer):

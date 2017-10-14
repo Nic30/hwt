@@ -2,10 +2,13 @@ from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.array import InterfaceArray
-from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import InterfaceDirectionFns
-from hwt.synthesizer.interfaceLevel.interfaceUtils.implDependent import InterfaceceImplDependentFns
+from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import \
+    InterfaceDirectionFns
+from hwt.synthesizer.interfaceLevel.interfaceUtils.implDependent import\
+    InterfaceceImplDependentFns
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
-from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
+from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
+    PropDeclrCollector
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.vectorUtils import fitTo
@@ -28,15 +31,17 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
     :ivar _isExtern: If true synthesizer sets it as external port of unit
     :ivar _associatedClk: clock Signal (interface) associated with
         this interface if is none simulation agent try to search it on parent
-    :ivar _associatedRst: rst(_n) Signal (interface) associated with this interface
-        if is none simulation agent try to search it on parent
+    :ivar _associatedRst: rst(_n) Signal (interface) associated
+        with this interface if is none simulation agent try to search
+        it on parent
 
     :note: only interfaces without _interfaces have
 
     :ivar _sig: rtl level signal instance
-    :ivar _sigInside: _sig after toRtl conversion is made (after toRtl conversion
-        _sig is signal for parent unit and _sigInside is signal
-        in original unit, this separates process of translating units)
+    :ivar _sigInside: _sig after toRtl conversion is made
+        (after toRtl conversion _sig is signal for parent unit
+        and _sigInside is signal in original unit, this separates process
+        of translating units)
     :ivar _boundedEntityPort: entityPort for which was this interface created
     :ivar _boundedSigLvlUnit: RTL unit for which was this interface created
 
@@ -44,26 +49,31 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
     Agenda of direction
 
     :ivar _masterDir: specifies which direction has this interface at master
-    :ivar _direction: means actual direction of this interface resolved by its drivers
-    :ivar _cntx: rtl netlist context of all signals and params on this interface
-        after interface is registered on parent _cntx is merged
+    :ivar _direction: means actual direction of this interface resolved
+        by its drivers
+    :ivar _cntx: rtl netlist context of all signals and params
+        on this interface after interface is registered on parent _cntx
+        is merged
 
     Agenda of simulations
 
-    :ivar _ag: agent object connected to this interface (initialized by simulator)
+    :ivar _ag: agent object connected to this interface
+        (initialized only before simultion)
     """
 
     _NAME_SEPARATOR = "_"
 
-    def __init__(self, masterDir=DIRECTION.OUT, asArraySize=None, loadConfig=True):
+    def __init__(self, masterDir=DIRECTION.OUT, asArraySize=None,
+                 loadConfig=True):
         """
-        This constructor is called when constructing new interface, it is usually done
-        manually while creating Unit or
+        This constructor is called when constructing new interface,
+        it is usually done manually while creating Unit or
         automatically while extracting interfaces from UnitWithSoure
 
         :param masterDir: direction which this interface should have for master
-        :param multiplyedBy: this can be instance of integer or Param, this mean the interface
-            is array of the interfaces where multiplyedBy is the size
+        :param multiplyedBy: this can be instance of integer or Param,
+            this mean the interface is array of the interfaces
+            where multiplyedBy is the size
         :param loadConfig: do load config in __init__
         """
         self._setAttrListener = None
@@ -143,7 +153,8 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
 
         if self._interfaces:
             for i in self._interfaces:
-                i._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
+                i._clean(rmConnetions=rmConnetions,
+                         lockNonExternal=lockNonExternal)
         else:
             self._sigInside = self._sig
             del self._sig
@@ -154,7 +165,8 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
 
         if self._isInterfaceArray():
             for e in self._arrayElemCache:
-                e._clean(rmConnetions=rmConnetions, lockNonExternal=lockNonExternal)
+                e._clean(rmConnetions=rmConnetions,
+                         lockNonExternal=lockNonExternal)
 
     def _connectToIter(self, master, exclude=None, fit=False):
         if exclude and (self in exclude or master in exclude):
@@ -171,14 +183,16 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
 
                 if mIfc._masterDir == DIRECTION.OUT:
                     if ifc._masterDir != mIfc._masterDir:
-                        raise IntfLvlConfErr("Invalid connection %r <= %r" % (ifc, mIfc))
+                        raise IntfLvlConfErr(
+                            "Invalid connection %r <= %r" % (ifc, mIfc))
 
                     yield from ifc._connectTo(mIfc,
                                               exclude=exclude,
                                               fit=fit)
                 else:
                     if ifc._masterDir != mIfc._masterDir:
-                        raise IntfLvlConfErr("Invalid connection %r <= %r" % (mIfc, ifc))
+                        raise IntfLvlConfErr(
+                            "Invalid connection %r <= %r" % (mIfc, ifc))
 
                     yield from mIfc._connectTo(ifc,
                                                exclude=exclude,
@@ -199,13 +213,15 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
 
         :param context: instance of RtlNetlist where signals should be created
         :param prefix: name prefix for created signals
-        :param typeTransform: optional function (type) returns modified type for signal
+        :param typeTransform: optional function (type) returns modified type
+            for signal
         """
         sigs = []
         if self._interfaces:
             for intf in self._interfaces:
-                sigs.extend(intf._signalsForInterface(context, prefix,
-                                                      typeTransform=typeTransform))
+                sigs.extend(
+                    intf._signalsForInterface(context, prefix,
+                                              typeTransform=typeTransform))
         else:
             if hasattr(self, '_sig'):
                 sigs = [self._sig]
@@ -270,11 +286,13 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         newP._registerScope(pName, self)
         setattr(self, pName, newP)
 
-    def _updateParamsFrom(self, otherObj, updater=_defaultUpdater, exclude=None):
+    def _updateParamsFrom(self, otherObj, updater=_defaultUpdater,
+                          exclude=None):
         """
         update all parameters which are defined on self from otherObj
 
-        :param exclude: iterable of parameter on other object which should be excluded
+        :param exclude: iterable of parameter on other object
+            which should be excluded
         """
         excluded = set()
         if exclude is not None:

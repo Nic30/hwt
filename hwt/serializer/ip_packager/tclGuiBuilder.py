@@ -10,7 +10,8 @@ class GuiParam(TclObj):
         self.parent = parent
 
     def __str__(self):
-        return 'ipgui::add_param $IPINST -name "%s" -parent ${%s}' % (self.name, self.parent.name)
+        return 'ipgui::add_param $IPINST -name "%s" -parent ${%s}' % (
+            self.name, self.parent.name)
 
 
 class GuiPage(TclObj):
@@ -35,7 +36,8 @@ class GuiPage(TclObj):
                 else:
                     s = '-%s "%s"' % (n, p)
                 params.append(s)
-        page = 'set %s [ipgui::add_page $IPINST %s]' % (self.name, ' '.join(params))
+        page = 'set %s [ipgui::add_page $IPINST %s]' % (
+            self.name, ' '.join(params))
         elements = '\n'.join(map(lambda x: str(x), self.elements))
         return '\n'.join([page, elements])
 
@@ -63,13 +65,16 @@ class TclFn(TclObj):
         self.body = body
 
     def __str__(self):
-        return "proc %s { %s } {\n %s \n}" % (self.name,
-                                              ' '.join(map(lambda x: str(x), self.params)),
-                                              '\n'.join(map(lambda x: str(x), self.body)))
+        return "proc %s { %s } {\n %s \n}" % (
+            self.name,
+            ' '.join(
+                map(lambda x: str(x), self.params)),
+            '\n'.join(map(lambda x: str(x), self.body)))
 
 
 def setParamOnModel(propName):
-    return "set_property value [get_property value ${PARAM_VALUE.%s}] ${MODELPARAM_VALUE.%s}" % (propName, propName)
+    return ("set_property value [get_property value ${PARAM_VALUE.%s}]"
+            " ${MODELPARAM_VALUE.%s}") % (propName, propName)
 
 
 def paramManipulatorFns(paramName):
@@ -79,14 +84,3 @@ def paramManipulatorFns(paramName):
     yield TclFn("update_MODELPARAM_VALUE." + paramName,
                 ["MODELPARAM_VALUE." + paramName, pv],
                 [setParamOnModel(paramName)])
-
-# def makeDummyXGUIFile(fileName):
-#    s = """
-#    # Definitional proc to organize widgets for parameters.
-# proc init_gui { IPINST } {
-#  #Adding Page
-#  ipgui::add_page $IPINST -name "Page 0"
-#
-# }"""
-#    with open(fileName, "w") as f:
-#        f.write(s)

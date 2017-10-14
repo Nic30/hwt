@@ -6,17 +6,15 @@ from math import inf
 
 class DuplicitValueExc(Exception):
     """
-    Exception which means that there are multiple items which this query selected
-    but it should return only one
+    Exception which means that there are multiple items which this query
+    selected but it should return only one
     """
-    pass
 
 
 class NoValueExc(Exception):
     """
     Exception which means that query did not selected any item
     """
-    pass
 
 
 def distinctBy(iterable, fn):
@@ -33,7 +31,8 @@ def distinctBy(iterable, fn):
 
 def single(iterable, fn):
     """
-    Get value from iterable where fn(item) and check there is not fn(other item)
+    Get value from iterable where fn(item) and check
+    if there is not fn(other item)
 
     :raise DuplicitValueExc: when there are multiple items satisfying fn()
     :raise NoValueExc: when no value satisfying fn(item) found
@@ -66,7 +65,8 @@ def arr_any(iterable, fn):
 
 def arr_all(iterable, fn):
     """
-    :return: True if fn(item) for all items in interable or iterable is empty else False
+    :return: True if fn(item) for all items in interable or iterable
+        is empty else False
     """
     for item in iterable:
         if not fn(item):
@@ -141,7 +141,8 @@ def flatten(iterables, level=inf):
 
     :param level: maximum depth of flattening
     """
-    if level >= 0 and isinstance(iterables, (list, tuple, GeneratorType, map, zip)):
+    if level >= 0 and isinstance(iterables, (list, tuple, GeneratorType,
+                                             map, zip)):
         level -= 1
         for i in iterables:
             yield from flatten(i, level=level)
@@ -150,7 +151,9 @@ def flatten(iterables, level=inf):
 
 
 def grouper(n, iterable, padvalue=None):
-    "grouper(3, 'abcdefg', 'x') --> ('a','b','c'), ('d','e','f'), ('g','x','x')"
+    """grouper(3, 'abcdefg', 'x') -->
+       ('a','b','c'), ('d','e','f'), ('g','x','x')
+    """
     return zip_longest(*[iter(iterable)] * n, fillvalue=padvalue)
 
 

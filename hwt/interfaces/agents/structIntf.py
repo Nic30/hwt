@@ -6,7 +6,8 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 
 
 def getMonitors(intf: Union[Interface, InterfaceProxy]):
-    if intf._arrayElemCache or (isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache):
+    if intf._arrayElemCache or (isinstance(intf, InterfaceProxy)
+                                and intf._origIntf._arrayElemCache):
         for p in intf:
             yield from p._ag.getMonitors()
     else:
@@ -14,7 +15,8 @@ def getMonitors(intf: Union[Interface, InterfaceProxy]):
 
 
 def getDrivers(intf: Union[Interface, InterfaceProxy]):
-    if intf._arrayElemCache or (isinstance(intf, InterfaceProxy) and intf._origIntf._arrayElemCache):
+    if intf._arrayElemCache or (isinstance(intf, InterfaceProxy)
+                                and intf._origIntf._arrayElemCache):
         for p in intf:
             yield from p._ag.getDrivers()
     else:
@@ -27,10 +29,11 @@ class StructIntfAgent(AgentBase):
 
     :summary: only purpose is to instantiate agents for child interfaces
     """
+
     def __init__(self, intf):
         AgentBase.__init__(self, intf)
-        # if interface is InterfaceProxy and this proxy is container of another array
-        # we generate agents on items in array
+        # if interface is InterfaceProxy and this proxy is container
+        # of another array we generate agents on items in array
         # otherwise generate agents for each subinterface
 
         for intf in intf._interfaces:

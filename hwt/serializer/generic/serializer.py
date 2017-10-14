@@ -77,24 +77,26 @@ class GenericSerializer():
             p.getSigInside().name = p.name
             if serialize:
                 serializedPorts.append(cls.PortItem(p, ctx))
-        
+
         if serialize:
             return serializedGenerics, serializedPorts
 
     @classmethod
     def Entity(cls, ent, ctx):
         """
-        Entity is just forward declaration of Architecture, it is not used in most HDL languages
-        as there is no recursion in hierarchy
+        Entity is just forward declaration of Architecture, it is not used
+        in most HDL languages as there is no recursion in hierarchy
         """
 
         ent.name = ctx.scope.checkedName(ent.name, ent, isGlobal=True)
         return ""
 
     @classmethod
-    def serializationDecision(cls, obj, serializedClasses, serializedConfiguredUnits):
+    def serializationDecision(cls, obj, serializedClasses,
+                              serializedConfiguredUnits):
         """
-        Decide if this unit should be serialized or not eventually fix name to fit same already serialized unit
+        Decide if this unit should be serialized or not eventually fix name
+        to fit same already serialized unit
 
         :param obj: object to serialize
         :param serializedClasses: dict {unitCls : unitobj}
@@ -122,6 +124,9 @@ class GenericSerializer():
 
     @classmethod
     def HdlType(cls, typ, ctx, declaration=False):
+        """
+        Serialize HdlType instance
+        """
         if isinstance(typ, Bits):
             sFn = cls.HdlType_bits
         elif isinstance(typ, HEnum):
@@ -133,13 +138,17 @@ class GenericSerializer():
         elif isinstance(typ, HBool):
             sFn = cls.HdlType_bool
         else:
-                raise NotImplementedError("type declaration is not implemented for type %s"
-                                          % (typ.name))
+            raise NotImplementedError("type declaration is not implemented"
+                                      " for type %s"
+                                      % (typ.name))
 
         return sFn(typ, ctx, declaration=declaration)
 
     @classmethod
     def IfContainer(cls, ifc, ctx):
+        """
+        Srialize IfContainer instance
+        """
         childCtx = ctx.withIndent()
 
         def asHdl(statements):
@@ -164,18 +173,18 @@ class GenericSerializer():
                 elIfs.append((cls.condAsHdl(c, True, ctx), asHdl(statements)))
             except UnsupportedEventOpErr as e:
                 if len(ifc.elIfs) == 1 and not ifFalse:
-                    # register expression is in valid format and this is just register
-                    # with asynchronous reset or etc...
+                    # register expression is in valid format and this
+                    # is just register with asynchronous reset or etc...
                     ifFalse = statements
                 else:
                     raise e
 
         return cls.ifTmpl.render(
-                            indent=getIndent(ctx.indent),
-                            cond=cond,
-                            ifTrue=asHdl(ifTrue),
-                            elIfs=elIfs,
-                            ifFalse=asHdl(ifFalse))
+            indent=getIndent(ctx.indent),
+            cond=cond,
+            ifTrue=asHdl(ifTrue),
+            elIfs=elIfs,
+            ifFalse=asHdl(ifFalse))
 
     @classmethod
     def SwitchContainer(cls, sw, ctx):
@@ -196,6 +205,6 @@ class GenericSerializer():
             cases.append((None, asHdl(sw.default)))
 
         return cls.switchTmpl.render(
-                            indent=getIndent(ctx.indent),
-                            switchOn=switchOn,
-                            cases=cases)
+            indent=getIndent(ctx.indent),
+            switchOn=switchOn,
+            cases=cases)

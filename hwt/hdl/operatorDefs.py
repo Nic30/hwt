@@ -14,6 +14,7 @@ class OpDefinition():
     :ivar id: name of operator
     :ivar _evalFn: function which evaluates operands
     """
+
     def __init__(self, evalFn):
         self.id = None  # assigned automatically in AllOps
         self._evalFn = evalFn
@@ -112,9 +113,10 @@ def bitsAsVec(a):
 
 class AllOps():
     """
-    :attention: Remember that and operator "and" is & and "or" is \|, "and" and "or" can not be used because
-        they can not be overloaded
-    :attention: These are operators of internal AST, the are not equal to verilog or vhdl operators
+    :attention: Remember that and operator "and" is & and "or" is \|, "and"
+        and "or" can not be used because they can not be overloaded
+    :attention: These are operators of internal AST,
+        they are not equal to verilog or vhdl operators
     """
     RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
     FALLIGN_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary
@@ -155,6 +157,7 @@ class AllOps():
     BitsAsSigned = OpDefinition(bitsAsSignedFn)
     BitsAsUnsigned = OpDefinition(bitsAsUnsignedFn)
     BitsAsVec = OpDefinition(bitsAsVec)
+
 
 for a in dir(AllOps):
     o = getattr(AllOps, a)
