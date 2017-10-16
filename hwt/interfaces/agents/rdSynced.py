@@ -69,9 +69,10 @@ class RdSyncedAgent(SyncAgentBase):
 
         rd = self.isRd(r)
         if en:
-            assert rd.vldMask, (("%r: ready signal for interface %r is in invalid state,"
-                                 " this would cause desynchronization") %
-                                 (sim.now, self.intf))
+            assert rd.vldMask, (
+                ("%r: ready signal for interface %r is in invalid state,"
+                 " this would cause desynchronization") %
+                (sim.now, self.intf))
         if rd.val:
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, wrote, %d: %r\n" % (

@@ -44,7 +44,8 @@ class GenericSerializer_Value():
         elif isinstance(t, String):
             return cls.String_valAsHdl(t, val, ctx)
         else:
-            raise Exception("value2vhdlformat can not resolve value serialization for %s" % (repr(val)))
+            raise Exception("value2vhdlformat can not resolve"
+                            "value serialization for %r" % (val))
 
     @classmethod
     def Integer_valAsHdl(cls, dtype, val, ctx):

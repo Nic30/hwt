@@ -27,7 +27,8 @@ class VhdlSerializer_Value(GenericSerializer_Value):
             else:
                 raise NotImplementedError()
         else:
-            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool, ctx), cond))
+            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool, ctx),
+                                    cond))
 
     @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
@@ -40,11 +41,16 @@ class VhdlSerializer_Value(GenericSerializer_Value):
             elif si.endpoints or si.simSensProcs:
                 prefix = "CONSTANT"
                 if not v.vldMask:
-                    raise SerializerException("Signal %s is constant and has undefined value" % si.name)
+                    raise SerializerException(
+                        "Signal %s is constant and has undefined value"
+                        % si.name)
             else:
-                raise SerializerException("Signal %s should be declared but it is not used" % si.name)
+                raise SerializerException(
+                    "Signal %s should be declared but it is not used"
+                    % si.name)
 
-            s = "%s%s %s: %s" % (getIndent(ctx.indent), prefix, si.name, cls.HdlType(si._dtype, ctx))
+            s = "%s%s %s: %s" % (getIndent(ctx.indent),
+                                 prefix, si.name, cls.HdlType(si._dtype, ctx))
             if isinstance(v, RtlSignalBase):
                 return s + " := %s" % cls.asHdl(v, ctx)
             elif isinstance(v, Value):
@@ -68,7 +74,9 @@ class VhdlSerializer_Value(GenericSerializer_Value):
     @classmethod
     def HArrayValAsHdl(cls, dtype, val, ctx):
         separator = ",\n" + getIndent(ctx.indent + 1)
-        return "".join(["(", separator.join([cls.Value(v, ctx) for v in val]), ")"])
+        return "".join(["(",
+                        separator.join([cls.Value(v, ctx) for v in val]),
+                        ")"])
 
     @staticmethod
     def BitString_binary(v, width, vldMask=None):

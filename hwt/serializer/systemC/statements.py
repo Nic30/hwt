@@ -14,7 +14,7 @@ class SystemCSerializer_statements():
         dstStr = cls.asHdl(dst, ctx.forTarget())
         if typeOfDst == SIGNAL_TYPE.REG:
             fmt = "%s%s = %s;"
-        else: 
+        else:
             fmt = "%s%s.write(%s);"
 
         return fmt % (indent_str, dstStr, cls.Value(src, ctx))
@@ -34,8 +34,8 @@ class SystemCSerializer_statements():
             return cls._Assignment(dst, typeOfDst, a.src, ctx)
         else:
             raise SerializerException("%r <= %r  is not valid assignment\n"
-                                      " because types are different (%r; %r) " % 
-                                      (dst, a.src, dst._dtype, a.src._dtype))
+                                      " because types are different (%r; %r) "
+                                      % (dst, a.src, dst._dtype, a.src._dtype))
 
     @classmethod
     def HWProcess(cls, proc, ctx):
@@ -53,4 +53,4 @@ class SystemCSerializer_statements():
             indent=getIndent(ctx.indent),
             name=proc.name,
             statements=statemets
-            )
+        )

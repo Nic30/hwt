@@ -13,6 +13,7 @@ class HWProcess():
         simple process which contains only unconditional assignment will
         be rendered just as assignment
     """
+
     def __init__(self, name, statements, sensitivityList, inputs, outputs):
         self.name = name
         self.statements = statements
@@ -23,5 +24,5 @@ class HWProcess():
     def __repr__(self):
         from hwt.serializer.vhdl.serializer import VhdlSerializer
         return VhdlSerializer.formater(
-                    VhdlSerializer.HWProcess(self,
-                                             VhdlSerializer.getBaseContext()))
+            VhdlSerializer.HWProcess(self,
+                                     VhdlSerializer.getBaseContext()))

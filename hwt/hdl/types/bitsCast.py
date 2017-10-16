@@ -27,7 +27,7 @@ def convertBits__val(self, val, toType):
 
 def convertBits(self, sigOrVal, toType):
     """
-    Cast signed-unsigned, to int or bool 
+    Cast signed-unsigned, to int or bool
     """
     if isinstance(sigOrVal, Value):
         return convertBits__val(self, sigOrVal, toType)
@@ -42,7 +42,6 @@ def convertBits(self, sigOrVal, toType):
         return Operator.withRes(AllOps.BitsToInt, [sigOrVal], toType)
 
     return default_auto_cast_fn(self, sigOrVal, toType)
-
 
 
 def reinterpret_bits_to_hstruct(sigOrVal, hStructT):
@@ -60,7 +59,7 @@ def reinterpret_bits_to_hstruct(sigOrVal, hStructT):
             setattr(container, f.name, s)
 
         offset += width
-        
+
     return container
 
 
@@ -68,7 +67,9 @@ def reinterpret_bits_to_harray(sigOrVal, hArrayT):
     elmT = hArrayT.elmType
     elmWidth = elmT.bit_length()
     a = hArrayT.fromPy(None)
-    for i, item in enumerate(iterBits(sigOrVal, bitsInOne=elmWidth, skipPadding=False)):
+    for i, item in enumerate(iterBits(sigOrVal,
+                                      bitsInOne=elmWidth,
+                                      skipPadding=False)):
         item = item._reinterpret_cast(elmT)
         a[i] = item
 
@@ -85,6 +86,7 @@ def reinterpretBits__val(self, val, toType):
 
     return default_auto_cast_fn(self, val, toType)
 
+
 def reinterpretBits(self, sigOrVal, toType):
     """
     Cast object of same bit size between to other type
@@ -99,5 +101,5 @@ def reinterpretBits(self, sigOrVal, toType):
             raise NotImplementedError()
         elif isinstance(toType, HArray):
             reinterpret_bits_to_harray(sigOrVal, toType)
-    
+
     return default_auto_cast_fn(self, sigOrVal, toType)

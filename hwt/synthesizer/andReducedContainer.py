@@ -3,6 +3,7 @@ class AndReducedContainer(list):
     """
     Container of and terms usually used as container for condition
     """
+
     def __init__(self):
         super(AndReducedContainer, self).__init__()
         self.__s = set()

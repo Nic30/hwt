@@ -8,12 +8,14 @@ class InterfaceceImplDependentFns():
     Interface functions which have high potential to be overloaded
     in concrete interface implementation
     """
+
     def _getIpCoreIntfClass(self):
         raise NotSpecified()
 
-    def _getSimAgent(self):
+    def _initSimAgent(self):
         raise NotSpecified(("Override this function in your interface"
-                           " implementation (from %r)") % self)
+                            " implementation to have simultion agent"
+                            " specified (%r)") % self)
 
     def _getAssociatedRst(self):
         """

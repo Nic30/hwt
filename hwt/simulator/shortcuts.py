@@ -9,24 +9,27 @@ from hwt.serializer.simModel.serializer import SimModelSerializer
 from hwt.simulator.agentConnector import autoAddAgents
 from hwt.simulator.hdlSimulator import HdlSimulator
 from hwt.simulator.simModel import SimModel
+from hwt.simulator.simSignal import SimSignal
 from hwt.simulator.simSignalProxy import IndexSimSignalProxy
 from hwt.simulator.types.simBits import simBitsT
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.interfaceLevel.unit import Unit
 from hwt.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
-from hwt.simulator.simSignal import SimSignal
 
 
-def simPrepare(unit, modelCls=None, dumpModelIn=None, onAfterToRtl=None):
+def simPrepare(unit: Unit, modelCls=None,
+               dumpModelIn=None, onAfterToRtl=None):
     """
     Create simulation model and connect it with interfaces of original unit
     and decorate it with agents
 
     :param unit: interface level unit which you wont prepare for simulation
-    :param modelCls: class of rtl simulation model to run simulation on, if is None
-        rtl sim model will be generated from unit
-    :param dumpModelIn: folder to where put sim model files (if is None sim model will be constructed only in memory)
+    :param modelCls: class of rtl simulation model to run simulation on,
+        if is None rtl sim model will be generated from unit
+    :param dumpModelIn: folder to where put sim model files
+        (if is None sim model will be constructed only in memory)
     :param onAfterToRtl: callback fn(unit, modelCls) which will be called
         after unit will be synthesised to rtl
 
@@ -54,7 +57,8 @@ def toSimModel(unit, dumpModelIn=None):
     Create a simulation model for unit
 
     :param unit: interface level unit which you wont prepare for simulation
-    :param dumpModelIn: folder to where put sim model files (otherwise sim model will be constructed only in memory)
+    :param dumpModelIn: folder to where put sim model files
+        (otherwise sim model will be constructed only in memory)
     """
     if dumpModelIn is not None:
         toRtlAndSave(unit, dumpModelIn, serializer=SimModelSerializer)
@@ -78,14 +82,18 @@ def toSimModel(unit, dumpModelIn=None):
     return simModule.__dict__[unit._name]
 
 
-def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls, destroyProxies=False):
+def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls,
+                                destroyProxies=False):
     """
     Reconnect model signals to unit to run simulation with simulation model
     but use original unit interfaces for communication
 
-    :param synthesisedUnitOrIntf: interface where should be signals replaced from signals from modelCls
-    :param modelCls: simulation model form where signals for synthesisedUnitOrIntf should be taken
-    :param destroyProxies: destroy proxies, is true when this interface is part of array and potentially proxies under this
+    :param synthesisedUnitOrIntf: interface where should be signals
+        replaced from signals from modelCls
+    :param modelCls: simulation model form where signals
+        for synthesisedUnitOrIntf should be taken
+    :param destroyProxies: destroy proxies, is true when this interface
+        is part of array and potentially proxies under this
         interface would interfere with other proxies
     """
     obj = synthesisedUnitOrIntf
@@ -98,11 +106,14 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls, destroyProxies=
 
     if not isProxy and subInterfaces:
         for intf in subInterfaces:
-            # proxies are destroyed on original interfaces and only proxies on array items will remain
-            reconnectUnitSignalsToModel(intf, modelCls, destroyProxies=destroyProxies or hasProxies)
+            # proxies are destroyed on original interfaces and only proxies on
+            # array items will remain
+            reconnectUnitSignalsToModel(
+                intf, modelCls, destroyProxies=destroyProxies or hasProxies)
 
         if not destroyProxies and hasProxies:
-            # if this this interface has proxies for array items let them reconnect
+            # if this this interface has proxies for array items let them
+            # reconnect
             for proxy in obj._arrayElemCache:
                 reconnectUnitSignalsToModel(proxy, modelCls)
     else:
@@ -110,12 +121,13 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls, destroyProxies=
             if hasProxies:
                 # this obj will become only container of elements for array
                 for subIntf in subInterfaces:
-                    # delete attributes because we can not use them in simulation
-                    # because they are managed by children
+                    # delete attributes because we can not use them
+                    # in simulation because they are managed by children
                     delattr(obj, subIntf._name)
                 del obj._interfaces
 
-                # if this interface is array we have to replace signals in array items
+                # if this interface is array we have to replace signals in
+                # array items
                 for item in obj._arrayElemCache:
                     reconnectUnitSignalsToModel(item, modelCls)
             else:
@@ -124,12 +136,17 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls, destroyProxies=
                     for intf in subInterfaces:
                         reconnectUnitSignalsToModel(intf, modelCls)
                 else:
-                    assert obj._itemsInOne == 1, (obj, "Now there should be proxies only for leaves and proxies on partial arrays should be deleted")
+                    assert obj._itemsInOne == 1, (
+                        obj, "Now there should be proxies only for leaves"
+                             "and proxies on partial arrays should be deleted")
 
                     # setup proxy on signal from model
                     p = obj._origIntf
                     while isinstance(p, InterfaceProxy):
-                        assert p._itemsInOne == 1, (p, "Now there should be proxies only for leaves and proxies on partial arrays should be deleted")
+                        assert p._itemsInOne == 1, (
+                            p,
+                            "Now there should be proxies only for leaves"
+                            "and proxies on partial arrays should be deleted")
                         p = p._origIntf
 
                     s = p._sigInside
@@ -144,7 +161,9 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls, destroyProxies=
                         width = 1
                     obj._sigInside = IndexSimSignalProxy(obj._origIntf._name,
                                                          p._sigInside,
-                                                         simBitsT(width, s._dtype.signed),
+                                                         simBitsT(
+                                                             width,
+                                                             s._dtype.signed),
                                                          upperIndex,
                                                          lowerIndex)
         else:
@@ -153,14 +172,16 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls, destroyProxies=
             s._sigInside = getattr(modelCls, s._sigInside.name)
 
 
-def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time.ns):
+def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout,
+               time=100 * Time.ns):
     """
     Syntax sugar
     If outputFile is string try to open it as file
 
     :return: hdl simulator object
     """
-    assert isinstance(simModel, SimModel), "Class of SimModel is required (got %r)" % (simModel)
+    assert isinstance(simModel, SimModel), \
+        "Class of SimModel is required (got %r)" % (simModel)
     if isinstance(outputFile, str):
         d = os.path.dirname(outputFile)
         if d:
@@ -176,8 +197,8 @@ def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout, time=100 * Time
 def _simUnitVcd(simModel, stimulFunctions, outputFile, time):
     """
     :param unit: interface level unit to simulate
-    :param stimulFunctions: iterable of function with single param env (simpy environment)
-        which are driving the simulation
+    :param stimulFunctions: iterable of function with single param env
+        (simpy environment) which are driving the simulation
     :param outputFile: file where vcd will be dumped
     :param time: endtime of simulation, time units are defined in HdlSimulator
     :return: hdl simulator object
@@ -187,7 +208,8 @@ def _simUnitVcd(simModel, stimulFunctions, outputFile, time):
     # configure simulator to log in vcd
     sim.config = VcdHdlSimConfig(outputFile)
 
-    # run simulation, stimul processes are register after initial initialization
+    # run simulation, stimul processes are register after initial
+    # initialization
     sim.simUnit(simModel, time=time, extraProcesses=stimulFunctions)
     return sim
 
@@ -199,9 +221,10 @@ class CallbackLoop(object):
         :attention: if condFn is None callback function is always executed
 
         :ivra fn: function/generator which is callback which should be executed
-        :ivar isGenerator: flag if callback function is generator or normal function
-        :ivar _callbackIndex: index of callback in write callbacks on sig, if is None
-            callback was not registered yet
+        :ivar isGenerator: flag if callback function is generator
+            or normal function
+        :ivar _callbackIndex: index of callback in write callbacks on sig,
+            if is None callback was not registered yet
         :ivar shouldBeEnabledFn; function() -> bool, which returns True if this
             callback loop should be enabled
         """
@@ -238,14 +261,14 @@ class CallbackLoop(object):
         Process for injecting of this callback loop into simulator
         """
         self._callbackIndex = self.sig.registerWriteCallback(
-                                            self.onWriteCallback,
-                                            self.shouldBeEnabledFn)
+            self.onWriteCallback,
+            self.shouldBeEnabledFn)
         return
         yield
 
 
 class OnRisingCallbackLoop(CallbackLoop):
-    
+
     def onWriteCallback(self, sim):
         if bool(sim.read(self.sig)._onRisingEdge__val(sim.now)):
             if self.isGenerator:
@@ -255,7 +278,7 @@ class OnRisingCallbackLoop(CallbackLoop):
 
 
 class OnFallingCallbackLoop(CallbackLoop):
-    
+
     def onWriteCallback(self, sim):
         if bool(sim.read(self.sig)._onFallingEdge__val(sim.now)):
             if self.isGenerator:

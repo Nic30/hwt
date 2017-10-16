@@ -5,40 +5,34 @@ def autoAddAgents(unit):
     """
     Walk all interfaces on unit and instantiate agent for every interface.
 
-    :return: all monitor/driver functions which should be added to simulation as processes
+    :return: all monitor/driver functions which should be added to simulation
+         as processes
     """
     proc = []
     for intf in unit._interfaces:
         if not intf._isExtern:
             continue
 
-        try:
-            agentCls = intf._getSimAgent()
-        except NotImplementedError:
-            raise NotImplementedError(("Interface %s\n"
-                                       "has not any simulation agent class assigned") % (str(intf)))
-
         if intf._isInterfaceArray():
             agentCnt = int(intf._asArraySize)
-            agent = []
+            agents = []
             for i in range(agentCnt):
                 _intf = intf[i]
-                a = agentCls(_intf)
-                agent.append(a)
-                _intf._ag = a
+                _intf._initSimAgent()
+                assert _intf._ag is not None, intf
+                agents.append(_intf._ag)
         else:
-            agent = agentCls(intf)
-            intf._ag = agent
-
-        if intf._asArraySize is None:
-            agent = [agent, ]
+            intf._initSimAgent()
+            assert intf._ag is not None, intf
+            agents = [intf._ag, ]
 
         if intf._direction == INTF_DIRECTION.MASTER:
-            agProcs = list(map(lambda a: a.getMonitors(), agent))
+            agProcs = list(map(lambda a: a.getMonitors(), agents))
         elif intf._direction == INTF_DIRECTION.SLAVE:
-            agProcs = list(map(lambda a: a.getDrivers(), agent))
+            agProcs = list(map(lambda a: a.getDrivers(), agents))
         else:
-            raise NotImplementedError("intf._direction %s for %r" % (str(intf._direction), intf))
+            raise NotImplementedError("intf._direction %r for %r" % (
+                intf._direction, intf))
 
         for p in agProcs:
             proc.extend(p)

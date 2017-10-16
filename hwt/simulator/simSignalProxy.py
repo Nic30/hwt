@@ -8,10 +8,12 @@ class IndexSimSignalProxy(SimSignal):
     """
     Proxy which allows place indexing operations on signal
     """
+
     def __init__(self, name, baseSignal, dtype, upperIndex, lowerIndex=None):
         """
-        :param lowerIndex: if this is none only upper index will be used like sig[upperIndex]
-            else range select like sig[upperIndex:lowerIndex]
+        :param lowerIndex: if this is none only upper index will be used
+            like sig[upperIndex] else range select like
+            sig[upperIndex:lowerIndex]
         """
         defaultVal = dtype.fromPy(None)
 
@@ -45,24 +47,23 @@ class IndexSimSignalProxy(SimSignal):
     _oldVal = property(_oldVal_get)
 
     def simPropagateChanges(self, simulator):
-        raise NotImplementedError("Call this function on real signals not on this proxy")
+        raise NotImplementedError(
+            "Call this function on real signals not on this proxy")
 
     def simUpdateVal(self, simulator, valUpdater):
         """
         Method called by simulator to update new value for this object
         we are only delegating update on parent signal
         """
-        dirtyFlag, newVal = valUpdater(self._generic_val_get(self._signal._oldVal))
+        dirtyFlag, newVal = valUpdater(
+            self._generic_val_get(self._signal._oldVal))
         newVal.updateTime = simulator.now
 
         if dirtyFlag:
             # perform registration of new write callbacks
             if self._writeCallbacksToEn:
-                for i, callback, reqEnFn in self._writeCallbacksToEn:
-                    if reqEnFn():
-                        self._writeCallbacks[i] = callback 
-                self._writeCallbacksToEn = []
-        
+                SimSignal._loadWriteCallbacks(self)
+
             # run write callbacks we have to create new list to allow
             # registering of new call backs in callbacks
             for c in self._writeCallbacks:
@@ -87,6 +88,5 @@ class IndexSimSignalProxy(SimSignal):
         s._oldVal.vldMask = 0
 
     def __repr__(self):
-        return "<IndexSimSignalProxy %s%r>" % (self._signal.name, self.__index)
-
-    # [TODO] _getFullName
+        return "<IndexSimSignalProxy %s[%r]>" % (
+            self._signal.name, self.__index)

@@ -1,3 +1,5 @@
+import re
+
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.entity import Entity
 from hwt.hdl.types.array import HArray
@@ -19,7 +21,6 @@ from hwt.serializer.vhdl.types import VhdlSerializer_types
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.serializer.vhdl.value import VhdlSerializer_Value
 from hwt.synthesizer.param import getParam
-import re
 
 
 class DebugTmpVarStack():
@@ -60,11 +61,13 @@ class VhdlNameScope(NameScope):
 
     def checkedName(self, actualName, actualObj, isGlobal=False):
         actualName = self.RE_MANY_UNDERSCORES.sub(r"_", actualName)
-        return NameScope.checkedName(self, actualName, actualObj, isGlobal=isGlobal)
+        return NameScope.checkedName(self, actualName, actualObj,
+                                     isGlobal=isGlobal)
 
 
 class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
-                     VhdlSerializer_ops, VhdlSerializer_types, VhdlSerializer_statements, GenericSerializer):
+                     VhdlSerializer_ops, VhdlSerializer_types,
+                     VhdlSerializer_statements, GenericSerializer):
     VHDL_VER = VhdlVersion.v2002
     _keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
     fileExtension = '.vhd'
@@ -94,7 +97,8 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
             # if type requires extra definition
             if isinstance(t, (HEnum, HArray)) and t not in extraTypes:
                 extraTypes.add(v._dtype)
-                extraTypes_serialized.append(cls.HdlType(t, childCtx, declaration=True))
+                extraTypes_serialized.append(
+                    cls.HdlType(t, childCtx, declaration=True))
 
             v.name = ctx.scope.checkedName(v.name, v)
             serializedVar = cls.SignalItem(v, childCtx, declaration=True)
@@ -113,8 +117,9 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
         components = list(map(lambda c: cls.Component(c, childCtx),
                               uniqComponents))
 
-        componentInstances = list(map(lambda c: cls.ComponentInstance(c, childCtx),
-                                      arch.componentInstances))
+        componentInstances = list(
+            map(lambda c: cls.ComponentInstance(c, childCtx),
+                arch.componentInstances))
 
         return cls.architectureTmpl.render(
             indent=getIndent(ctx.indent),
@@ -125,7 +130,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
             processes=procs,
             components=components,
             componentInstances=componentInstances
-            )
+        )
 
     @classmethod
     def comment(cls, comentStr):
@@ -134,11 +139,11 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
     @classmethod
     def Component(cls, entity, ctx):
         return cls.componentTmpl.render(
-                indent=getIndent(ctx.indent),
-                ports=[cls.PortItem(pi, ctx) for pi in entity.ports],
-                generics=[cls.GenericItem(g, ctx) for g in entity.generics],
-                entity=entity
-                )
+            indent=getIndent(ctx.indent),
+            ports=[cls.PortItem(pi, ctx) for pi in entity.ports],
+            generics=[cls.GenericItem(g, ctx) for g in entity.generics],
+            entity=entity
+        )
 
     @classmethod
     def ComponentInstance(cls, entity, ctx):
@@ -157,23 +162,23 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
         entity._name = ctx.scope.checkedName(entity._name, entity)
         return cls.componentInstanceTmpl.render(
-                indent=getIndent(ctx.indent),
-                instanceName=entity._name,
-                entity=entity,
-                portMaps=[cls.PortConnection(x, ctx) for x in portMaps],
-                genericMaps=[cls.MapExpr(x, ctx) for x in genericMaps]
-                )
+            indent=getIndent(ctx.indent),
+            instanceName=entity._name,
+            entity=entity,
+            portMaps=[cls.PortConnection(x, ctx) for x in portMaps],
+            genericMaps=[cls.MapExpr(x, ctx) for x in genericMaps]
+        )
 
     @classmethod
     def Entity(cls, ent, ctx):
         generics, ports = cls.Entity_prepare(ent, ctx)
 
         entVhdl = cls.entityTmpl.render(
-                indent=getIndent(ctx.indent),
-                name=ent.name,
-                ports=ports,
-                generics=generics
-                )
+            indent=getIndent(ctx.indent),
+            name=ent.name,
+            ports=ports,
+            generics=generics
+        )
 
         doc = ent.__doc__
         if doc and id(doc) != id(Entity.__doc__):
@@ -188,14 +193,17 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
         if g.defaultVal is None:
             return s
         else:
-            return "%s := %s" % (s, cls.Value(getParam(g.defaultVal).staticEval(), ctx))
+            return "%s := %s" % (
+                s, cls.Value(getParam(g.defaultVal).staticEval(), ctx))
 
     @classmethod
     def PortConnection(cls, pc, ctx):
         if pc.portItem._dtype != pc.sig._dtype:
-            raise SerializerException("Port map %s is nod valid (types does not match)  (%r, %r)" % (
-                      "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx)),
-                      pc.portItem._dtype, pc.sig._dtype))
+            raise SerializerException(
+                "Port map %s is nod valid"
+                " (types does not match)  (%r, %r)" % (
+                    "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx)),
+                    pc.portItem._dtype, pc.sig._dtype))
         return "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
 
     @classmethod

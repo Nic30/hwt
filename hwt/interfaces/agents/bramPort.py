@@ -7,11 +7,13 @@ from hwt.simulator.shortcuts import oscilate
 
 class BramPort_withoutClkAgent(SyncAgentBase):
     """
-    :ivar requests: list of tuples (request type, address, [write data]) - used for driver
+    :ivar requests: list of tuples (request type, address, [write data])
+        - used for driver
     :ivar data: list of data in memory, used for monitor
-    :ivar mem: if agent is in monitor mode (= is slave) all reads and writes are performed on
-        mem object
+    :ivar mem: if agent is in monitor mode (= is slave) all reads and writes
+        are performed on mem object
     """
+
     def __init__(self, intf):
         super().__init__(intf, allowNoReset=True)
 
@@ -32,7 +34,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             self.readPending = True
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, after %r read_req: %d\n" % (
-                                        self.intf._getFullName(), sim.now, addr))
+                                        self.intf._getFullName(),
+                                        sim.now, addr))
         elif rw == WRITE:
             wdata = req[2]
             rw = 1

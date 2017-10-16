@@ -77,16 +77,21 @@ class VhdlSerializer_statements():
         if dst_t == src_t:
             return "%s%s %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src))
         else:
-            if isinstance(dst_t, Bits) and isinstance(src_t, Bits) and dst_t.bit_length() == src_t.bit_length() == 1:
+            if (isinstance(dst_t, Bits)
+                    and isinstance(src_t, Bits)
+                    and dst_t.bit_length() == src_t.bit_length() == 1):
                 if dst_t.forceVector and not src_t.forceVector:
-                    return "%s%s(0) %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src))
+                    return "%s%s(0) %s %s" % (indent_str, dstStr, symbol,
+                                              valAsHdl(a.src))
                 if not dst_t.forceVector and src_t.forceVector:
-                    return "%s%s %s %s(0)" % (indent_str, dstStr, symbol, valAsHdl(a.src))
+                    return "%s%s %s %s(0)" % (indent_str, dstStr, symbol,
+                                              valAsHdl(a.src))
 
-            raise SerializerException("%s%s %s %s  is not valid assignment\n"
-                                      " because types are different (%r; %r) " % 
-                                      (indent_str, dstStr, symbol, valAsHdl(a.src),
-                                       dst._dtype, a.src._dtype))
+            raise SerializerException(
+                "%s%s %s %s  is not valid assignment\n"
+                " because types are different (%r; %r) " %
+                (indent_str, dstStr, symbol, valAsHdl(a.src),
+                 dst._dtype, a.src._dtype))
 
     @classmethod
     def HWProcess(cls, proc, ctx):
@@ -106,7 +111,9 @@ class VhdlSerializer_statements():
                                                            WhileContainer,
                                                            WaitStm)))
 
-        sensitivityList = sorted(map(lambda s: cls.sensitivityListItem(s, None), proc.sensitivityList))
+        sensitivityList = sorted(
+            map(lambda s: cls.sensitivityListItem(s, None),
+                proc.sensitivityList))
 
         if hasToBeVhdlProcess:
             childCtx = ctx.withIndent()
@@ -137,7 +144,8 @@ class VhdlSerializer_statements():
         hasToBeVhdlProcess = extraVars or hasToBeVhdlProcess
 
         if hasToBeVhdlProcess and not _hasToBeVhdlProcess:
-            # add indent because we did not added it before because we did not know t
+            # add indent because we did not added it before because we did not
+            # know t
             oneIndent = getIndent(1)
             statemets = list(map(lambda x: oneIndent + x, statemets))
 
@@ -148,7 +156,7 @@ class VhdlSerializer_statements():
             extraVars=extraVarsSerialized,
             sensitivityList=", ".join(sensitivityList),
             statements=extraVarsInit + statemets
-            )
+        )
 
     @classmethod
     def IfContainer(cls, ifc, ctx):
@@ -173,11 +181,11 @@ class VhdlSerializer_statements():
             elIfs.append((cls.condAsHdl(c, True, childCtx), asHdl(statements)))
 
         return cls.ifTmpl.render(
-                            indent=getIndent(ctx.indent),
-                            cond=cond,
-                            ifTrue=asHdl(ifTrue),
-                            elIfs=elIfs,
-                            ifFalse=asHdl(ifFalse))
+            indent=getIndent(ctx.indent),
+            cond=cond,
+            ifTrue=asHdl(ifTrue),
+            elIfs=elIfs,
+            ifFalse=asHdl(ifFalse))
 
     @classmethod
     def SwitchContainer(cls, sw, ctx):
@@ -201,9 +209,9 @@ class VhdlSerializer_statements():
             cases.append((None, asHdl(sw.default)))
 
         return cls.switchTmpl.render(
-                            indent=getIndent(ctx.indent),
-                            switchOn=switchOn,
-                            cases=cases)
+            indent=getIndent(ctx.indent),
+            switchOn=switchOn,
+            cases=cases)
 
     @classmethod
     def WaitStm(cls, w, ctx):

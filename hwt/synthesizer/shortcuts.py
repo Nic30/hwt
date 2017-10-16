@@ -38,9 +38,10 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
 
     doSerialize = True
     for obj in u._toRtl():
-        doSerialize = serializer.serializationDecision(obj,
-                                                       serializedClasses,
-                                                       serializedConfiguredUnits)
+        doSerialize = serializer.serializationDecision(
+            obj,
+            serializedClasses,
+            serializedConfiguredUnits)
         if doSerialize:
             if isinstance(obj, Entity):
                 s = globScope.fork(1)
@@ -54,8 +55,11 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
                 try:
                     ctx = mouduleScopes[obj.entity]
                 except KeyError:
-                    raise SerializerException("Entity should be serialized before architecture of %s" % 
-                                              (obj.getEntityName()))
+                    raise SerializerException(
+                        "Entity should be serialized"
+                        " before architecture of %s"
+                        % (obj.getEntityName()))
+
                 sc = serializer.Architecture(obj, ctx)
             else:
                 sc = serializer.asHdl(obj)
@@ -67,12 +71,13 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
             except AttributeError:
                 name = ""
 
-            codeBuff.append(serializer.comment("Object of class %s, %s was not serialized as specified" % (
-                                                obj.__class__.__name__, name)))
+            codeBuff.append(serializer.comment(
+                "Object of class %s, %s was not serialized as specified" % (
+                    obj.__class__.__name__, name)))
 
     return serializer.formater(
-                     "\n".join(codeBuff)
-                     )
+        "\n".join(codeBuff)
+    )
 
 
 def synthesised(u):
@@ -105,12 +110,14 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
 
     doSerialize = True
     for obj in unit._toRtl():
-        doSerialize = serializer.serializationDecision(obj,
-                                                       serializedClasses,
-                                                       serializedConfiguredUnits)
+        doSerialize = serializer.serializationDecision(
+            obj,
+            serializedClasses,
+            serializedConfiguredUnits)
         if doSerialize:
             if isinstance(obj, Entity):
-                # we need to serialize before we take name, before name can change
+                # we need to serialize before we take name, before name can
+                # change
                 s = globScope.fork(1)
                 s.setLevel(2)
                 ctx = serializer.getBaseContext()
@@ -125,35 +132,37 @@ def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
                 try:
                     ctx = mouduleScopes[obj.entity]
                 except KeyError:
-                    raise SerializerException("Entity should be serialized before architecture of %s" % 
-                                              (obj.getEntityName()))
+                    raise SerializerException(
+                        "Entity should be serialized before architecture of %s"
+                        % (obj.getEntityName()))
+
                 sc = serializer.Architecture(obj, ctx)
                 fName = obj.getEntityName() + serializer.fileExtension
                 fileMode = 'a'
             else:
                 if hasattr(obj, "_hdlSources"):
-                    fName = None
                     for fn in obj._hdlSources:
                         if isinstance(fn, str):
                             shutil.copy2(fn, folderName)
                             files.append(fn)
                 else:
                     sc = serializer.asHdl(obj)
+                continue
 
-            if fName is not None and sc:
-                fp = os.path.join(folderName, fName)
-                files.append(fp)
+            fp = os.path.join(folderName, fName)
+            files.append(fp)
 
-                with open(fp, fileMode) as f:
-                    if fileMode == 'a':
-                        f.write("\n")
-                    f.write(
-                        serializer.formater(sc)
-                        )
+            with open(fp, fileMode) as f:
+                if fileMode == 'a':
+                    f.write("\n")
+                f.write(
+                    serializer.formater(sc)
+                )
     return files
 
 
-def serializeAsIpcore(unit, folderName=".", name=None, serializer=VhdlSerializer):
+def serializeAsIpcore(unit, folderName=".", name=None,
+                      serializer=VhdlSerializer):
     from hwt.serializer.ip_packager.packager import Packager
     p = Packager(unit, name=name)
     p.createPackage(folderName)

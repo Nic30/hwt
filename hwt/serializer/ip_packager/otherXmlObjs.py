@@ -11,7 +11,8 @@ from hwt.synthesizer.param import evalParam
 
 
 class Value():
-    __slots__ = ['id', 'format', 'bitStringLength', 'resolve', 'dependency', 'text']
+    __slots__ = ['id', 'format', 'bitStringLength',
+                 'resolve', 'dependency', 'text']
     RESOLVE_GENERATED = "generated"
     RESOLVE_USER = "user"
 
@@ -62,7 +63,8 @@ class Value():
         elif isinstance(t, Bits):
             bitString(g.defaultVal._dtype.bit_length())
         else:
-            raise NotImplementedError("Not implemented for datatype %s" % repr(t))
+            raise NotImplementedError(
+                "Not implemented for datatype %s" % repr(t))
         return self
 
     def asElem(self):
@@ -99,10 +101,10 @@ class File():
     def fromFileName(cls, fileName):
         self = cls()
         extDict = {
-                   ".vhd": ("vhdlSource", "IMPORTED_FILE"),
-                   ".tcl": ("tclSource", "XGUI_VERSION_2"),
-                   ".v":   ("verilogSource", "IMPORTED_FILE")
-                   }
+            ".vhd": ("vhdlSource", "IMPORTED_FILE"),
+            ".tcl": ("tclSource", "XGUI_VERSION_2"),
+            ".v":   ("verilogSource", "IMPORTED_FILE")
+        }
         fileType = extDict[os.path.splitext(fileName.lower())[1]]
         self.fileType = fileType[0]
         self.userFileType = fileType[1]
@@ -140,14 +142,14 @@ class Parameter():
 class CoreExtensions():
     def __init__(self):
         self.supportedFamilies = {
-                                  "zynq": "Production",
-                                  "atrix7": "Production",
-                                  "kintex7": "Production",
-                                  "virtex7": "Production"
-                                  }
+            "zynq": "Production",
+            "atrix7": "Production",
+            "kintex7": "Production",
+            "virtex7": "Production"
+        }
         self.taxonomies = [
-                           "/BaseIP"
-                           ]
+            "/BaseIP"
+        ]
         self.displayName = ""
         self.coreRevision = ""
         self.coreCreationDateTime = gmtime()
@@ -166,7 +168,8 @@ class CoreExtensions():
 
         appendXiElem(r, "displayName").text = displayName
         appendXiElem(r, "coreRevision").text = revision
-        appendXiElem(r, "coreCreationDateTime").text = strftime("%Y-%m-%dT%H:%M:%SZ", self.coreCreationDateTime)
+        appendXiElem(r, "coreCreationDateTime").text = strftime(
+            "%Y-%m-%dT%H:%M:%SZ", self.coreCreationDateTime)
         return r
 
 

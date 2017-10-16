@@ -2,6 +2,8 @@ from copy import copy
 from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
 
+from hwt.hdl.architecture import Architecture
+from hwt.hdl.assignment import Assignment
 from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps, sensitivityByOp
@@ -21,7 +23,6 @@ from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
-from hwt.hdl.assignment import Assignment
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
@@ -39,7 +40,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
     fileExtension = '.py'
 
     @classmethod
-    def serializationDecision(cls, obj, serializedClasses, serializedConfiguredUnits):
+    def serializationDecision(cls, obj, serializedClasses,
+                              serializedConfiguredUnits):
         # we need all instances for simulation
         return True
 
@@ -52,7 +54,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         return serFn(obj, ctx, enclosure=enclosure)
 
     @classmethod
-    def Architecture(cls, arch, ctx):
+    def Architecture(cls, arch: Architecture, ctx):
+        cls.Entity_prepare(arch.entity, ctx, serialize=False)
         variables = []
         procs = []
         extraTypes = set()
@@ -61,14 +64,17 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.componentInstances.sort(key=lambda x: x._name)
 
-        ports = list(map(lambda p: (p.name, cls.HdlType(p._dtype, ctx)), arch.entity.ports))
+        ports = list(
+            map(lambda p: (p.name, cls.HdlType(p._dtype, ctx)),
+                arch.entity.ports))
 
         for v in arch.variables:
             t = v._dtype
             # if type requires extra definition
             if isinstance(t, HEnum) and t not in extraTypes:
                 extraTypes.add(v._dtype)
-                extraTypes_serialized.append(cls.HdlType(t, ctx, declaration=True))
+                extraTypes_serialized.append(
+                    cls.HdlType(t, ctx, declaration=True))
 
             v.name = ctx.scope.checkedName(v.name, v)
             variables.append(v)
@@ -89,7 +95,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             procs.append(cls.HWProcess(p, childCtx))
 
         constants = []
-        for c in sorted(childCtx.constCache._cache.items(), key=lambda x: x[1], reverse=True):
+        for c in sorted(childCtx.constCache._cache.items(), key=lambda x: x[1],
+                        reverse=True):
             constants.append((c[1], cls.Value(c[0], ctx)))
 
         return unitTmpl.render(
@@ -105,7 +112,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             isOp=lambda x: isinstance(x, Operator),
             sensitivityByOp=sensitivityByOp,
             serialize_io=cls.sensitivityListItem,
-            )
+        )
 
     @classmethod
     def Assignment(cls, a, ctx, enclosure=None):
@@ -116,10 +123,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         srcStr = "%s" % cls.Value(a.src, ctx)
         if a.indexes is not None:
             return "%sio.%s.add((%s, (%s,), %s))" % (
-                        indentStr, dst.name, srcStr,
-                        ", ".join(map(lambda x: cls.asHdl(x, ctx),
-                                      a.indexes)),
-                        ev)
+                indentStr, dst.name, srcStr,
+                ", ".join(map(lambda x: cls.asHdl(x, ctx),
+                              a.indexes)),
+                ev)
         else:
             if not (dst._dtype == a.src._dtype):
                 srcT = a.src._dtype
@@ -131,19 +138,20 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                     if srcT.forceVector != dstT.forceVector:
                         _0 = cls.Value(toHVal(0), ctx)
                         if srcT.forceVector:
-                            return "%sio.%s.add(((%s)._getitem__val(%s), %s))" % (
-                                    indentStr, dst.name, srcStr, _0, ev)
+                            return "%sio.%s.add(((%s)._getitem__val(%s), %s))"\
+                                % (indentStr, dst.name, srcStr, _0, ev)
                         else:
                             return "%sio.%s.add((%s, (%s,), %s))" % (
-                                    indentStr, dst.name, srcStr, _0, ev)
+                                indentStr, dst.name, srcStr, _0, ev)
 
-                raise SerializerException(("%s <= %s  is not valid assignment\n"
-                                           " because types are different (%r; %r) ") % 
-                                          (cls.asHdl(dst, ctx), srcStr,
-                                          dst._dtype, a.src._dtype))
+                raise SerializerException(
+                    ("%s <= %s  is not valid assignment\n"
+                     " because types are different (%r; %r) ") %
+                    (cls.asHdl(dst, ctx), srcStr,
+                     dst._dtype, a.src._dtype))
             else:
                 return "%sio.%s.add((%s, %s))" % (
-                        indentStr, dst.name, srcStr, ev)
+                    indentStr, dst.name, srcStr, ev)
 
     @classmethod
     def comment(cls, comentStr):
@@ -173,16 +181,19 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             if enclosure is None:
                 _enclosure = getIndent(childCtx.indent) + "pass"
             else:
-                _enclosure = "\n".join([cls.stmAsHdl(e, childCtx) for e in enclosure])
+                _enclosure = "\n".join(
+                    [cls.stmAsHdl(e, childCtx) for e in enclosure])
 
             return ifTmpl.render(
                 indent=getIndent(ctx.indent),
                 indentNum=ctx.indent,
                 cond=cond,
                 enclosure=_enclosure,
-                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, childCtx, enclosure=enclosure),
+                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, childCtx,
+                                                          enclosure=enclosure),
                                  ifTrue)),
-                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, childCtx, enclosure=enclosure),
+                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, childCtx,
+                                                           enclosure=enclosure),
                                   ifFalse)))
 
     @classmethod
@@ -225,7 +236,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
     def HWProcess(cls, proc, ctx):
         body = proc.statements
         proc.name = ctx.scope.checkedName(proc.name, proc)
-        sensitivityList = sorted(map(cls.sensitivityListItem, proc.sensitivityList))
+        sensitivityList = sorted(
+            map(cls.sensitivityListItem, proc.sensitivityList))
 
         childCtx = ctx.withIndent(2)
         if len(body) == 1:
@@ -240,7 +252,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                                for stm in body[i:]])
 
         return processTmpl.render(
-                      name=proc.name,
-                      sensitivityList=sensitivityList,
-                      stmLines=[_body]
-                      )
+            name=proc.name,
+            sensitivityList=sensitivityList,
+            stmLines=[_body]
+        )

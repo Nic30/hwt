@@ -1,8 +1,12 @@
+from typing import Tuple
+
 from hwt.hdl.constants import DIRECTION, SENSITIVITY
+from hwt.hdl.process import HWProcess
+from hwt.hdl.value import Value
 from hwt.simulator.utils import valueHasChanged
 
 
-def sensitivity(proc, *sensitiveTo):
+def sensitivity(proc: HWProcess, *sensitiveTo):
     """
     register sensitivity for process
     """
@@ -64,9 +68,14 @@ def connectSimPort(simUnit, subSimUnit, srcName, dstName, direction):
     subSimUnit._cntx.signals.remove(origPort)
 
 
-def mkUpdater(nextVal, invalidate):
+def mkUpdater(nextVal: Value, invalidate: bool):
     """
     Create value updater for simulation
+
+    :param nextVal: instance of Value which will be asssiggned to signal
+    :param invalidate: flag which tells if value has been compromised
+        and if it should be invaidated
+    :return: function(value) -> tuple(valueHasChangedFlag, nextVal)
     """
 
     def updater(currentVal):
@@ -77,9 +86,16 @@ def mkUpdater(nextVal, invalidate):
     return updater
 
 
-def mkArrayUpdater(nextItemVal, indexes, invalidate):
+def mkArrayUpdater(nextItemVal: Value, indexes: Tuple[Value],
+                   invalidate: bool):
     """
     Create value updater for simulation for value of array type
+
+    :param nextVal: instance of Value which will be asssiggned to signal
+    :param indexes: tuple on indexes where value should be updated
+        in target array
+
+    :return: function(value) -> tuple(valueHasChangedFlag, nextVal)
     """
     def updater(currentVal):
         if len(indexes) > 1:

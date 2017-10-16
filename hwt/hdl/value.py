@@ -37,18 +37,21 @@ class Value():
         return self.clone()
 
     def clone(self):
-        return self.__class__(self.val, self._dtype, self.vldMask, self.updateTime)
+        return self.__class__(self.val, self._dtype, self.vldMask,
+                              self.updateTime)
 
     def __hash__(self):
         return hash((self._dtype, self.val, self.vldMask, self.updateTime))
 
     def __repr__(self):
         return "<{0:s} {1:s}, mask {2:x}, time {3:.2f}>".format(
-            self.__class__.__name__, str(self.val), self.vldMask, self.updateTime)
+            self.__class__.__name__, str(self.val), self.vldMask,
+            self.updateTime)
 
     @classmethod
     def fromPy(cls, val, typeObj):
-        raise NotImplementedError("fromPy fn is not implemented for %s" % (str(cls)))
+        raise NotImplementedError(
+            "fromPy fn is not implemented for %s" % (str(cls)))
 
     def __int__(self):
         if isinstance(self, Value) or self._const:
@@ -57,7 +60,8 @@ class Value():
             else:
                 raise ValueError("Value of %r is not fully defined" % self)
 
-        raise ValueError("Value of %r is not constant it can be statically solved" % self)
+        raise ValueError(
+            "Value of %r is not constant it can be statically solved" % self)
 
     def __bool__(self):
         if isinstance(self, Value) or self._const:
@@ -66,13 +70,14 @@ class Value():
             else:
                 raise ValueError("Value of %r is not fully defined" % self)
 
-        raise ValueError("Value of %r is not constant it can be statically solved" % self)
+        raise ValueError(
+            "Value of %r is not constant it can be statically solved" % self)
 
     def __eq__(self, other):
         if areValues(self, other):
             return self._dtype == other._dtype and \
-                   self._isFullVld() and other._isFullVld() and\
-                   self.val == other.val
+                self._isFullVld() and other._isFullVld() and\
+                self.val == other.val
         else:
             return super().__eq__(other)
 

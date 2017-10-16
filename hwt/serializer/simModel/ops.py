@@ -1,5 +1,4 @@
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.typeShortcuts import hBit
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -73,7 +72,8 @@ class SimModelSerializer_ops():
             return _bin('_le__val')
         elif o == AllOps.INDEX:
             assert len(ops) == 2
-            return "(%s)._getitem__val(%s)" % ((cls.asHdl(ops[0], ctx)), p(ops[1]))
+            return "(%s)._getitem__val(%s)" % ((cls.asHdl(ops[0], ctx)),
+                                               p(ops[1]))
         elif o == AllOps.LT:
             return _bin('_lt__val')
         elif o == AllOps.SUB:
@@ -87,7 +87,8 @@ class SimModelSerializer_ops():
         elif o == AllOps.NEG:
             return "(%s)._neg__val()" % (p(ops[0]))
         elif o == AllOps.TERNARY:
-            return "(%s)._ternary__val(%s, %s)" % tuple(map(lambda x: cls.asHdl(x, ctx), ops))
+            return "(%s)._ternary__val(%s, %s)" %\
+                    tuple(map(lambda x: cls.asHdl(x, ctx), ops))
         elif o == AllOps.RISING_EDGE:
             assert len(ops) == 1
             return "(%s)._onRisingEdge__val(sim.now)" % (p(ops[0]))
@@ -106,17 +107,21 @@ class SimModelSerializer_ops():
         elif o == AllOps.BitsToInt:
             assert len(ops) == 1
             op = ops[0]
-            return "convertSimBits__val(%s, %s, SIM_INT)" % (cls.HdlType_bits(op._dtype, ctx),
-                                                             cls.asHdl(op, ctx))
+            return "convertSimBits__val(%s, %s, SIM_INT)" % (
+                cls.HdlType_bits(op._dtype, ctx),
+                cls.asHdl(op, ctx))
         elif o == AllOps.IntToBits:
             assert len(ops) == 1
             resT = op.result._dtype
-            return "convertSimInteger__val(%s, %s, %s)" % (cls.HdlType(ops[0]._dtype, ctx),
-                                                           cls.asHdl(ops[0], ctx),
-                                                           cls.HdlType_bits(resT, ctx))
+            return "convertSimInteger__val(%s, %s, %s)" % (
+                cls.HdlType(ops[0]._dtype, ctx),
+                cls.asHdl(
+                    ops[0], ctx),
+                cls.HdlType_bits(resT, ctx))
 
         elif o == AllOps.POW:
             assert len(ops) == 2
             return "power(%s, %s)" % (p(ops[0]), p(ops[1]))
         else:
-            raise NotImplementedError("Do not know how to convert %s to simModel" % (o))
+            raise NotImplementedError(
+                "Do not know how to convert %s to simModel" % (o))

@@ -2,6 +2,7 @@ from hwt.hdl.constants import DIRECTION
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct, HStructField, HStructFieldMeta
+from hwt.interfaces.agents.structIntf import StructIntfAgent
 from hwt.interfaces.std import Signal, VldSynced, RegCntrl, BramPort_withoutClk
 from hwt.synthesizer.interfaceLevel.interface import Interface
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -13,10 +14,13 @@ class StructIntf(Interface):
     """
     Create dynamic interface based on HStruct or HUnion description
 
-    :ivar _fieldsToInterfaces: dictionary {field from HStruct template: sub interface for it}
+    :ivar _fieldsToInterfaces: dictionary {field from HStruct template:
+        sub interface for it}
     :ivar _structT: HStruct instance used as template for this interface
-    :param _instantiateFieldFn: function(FieldTemplateItem instance) return interface instance
+    :param _instantiateFieldFn: function(FieldTemplateItem instance)
+        return interface instance
     """
+
     def __init__(self, structT, instantiateFieldFn,
                  masterDir=DIRECTION.OUT, asArraySize=None,
                  loadConfig=True):
@@ -48,9 +52,8 @@ class StructIntf(Interface):
                 if isinstance(intf, StructIntf):
                     intf._fieldsToInterfaces = self._fieldsToInterfaces
 
-    def _getSimAgent(self):
-        from hwt.interfaces.agents.structIntf import StructIntfAgent
-        return StructIntfAgent
+    def _initSimAgent(self):
+        self._ag = StructIntfAgent(self)
 
 
 def _HTypeFromIntfMap(intf):
@@ -74,7 +77,8 @@ def _HTypeFromIntfMap(intf):
 def isIntfMap(intfMap):
     if not isinstance(intfMap, tuple):
         return False
-    elif len(intfMap) == 2 and (intfMap[1] is None or isinstance(intfMap, str)):
+    elif len(intfMap) == 2 and (intfMap[1] is None
+                                or isinstance(intfMap, str)):
         return False
     else:
         return True
@@ -104,21 +108,24 @@ def HTypeFromIntfMapItem(interfaceMapItem):
                 if reference is None:
                     reference = t
                 else:
-                    assert reference == t, ("all items in array has to have same type")
+                    assert reference == t, (
+                        "all items in array has to have same type")
 
             dtype = reference[len(types)]
 
         elif isinstance(typeOrListOfInterfaces, HdlType):
             dtype = typeOrListOfInterfaces
             isTerminal = True
-        elif isinstance(typeOrListOfInterfaces, (InterfaceBase, RtlSignalBase)):
+        elif isinstance(typeOrListOfInterfaces,
+                        (InterfaceBase, RtlSignalBase)):
             # renamed interface, ignore original name
             dtype = _HTypeFromIntfMap(typeOrListOfInterfaces)[0]
             isTerminal = True
 
         else:
             # tuple (tuple of interfaces, prefix)
-            assert isinstance(typeOrListOfInterfaces, tuple), typeOrListOfInterfaces
+            assert isinstance(typeOrListOfInterfaces,
+                              tuple), typeOrListOfInterfaces
             dtype = HTypeFromIntfMap(typeOrListOfInterfaces)
 
     assert isinstance(nameOrPrefix, str) or nameOrPrefix is None, nameOrPrefix
@@ -141,8 +148,8 @@ def HTypeFromIntfMap(interfaceMap):
         instance of hdl type (is used as padding)
         tuple (list of interface, name)
     :param DATA_WIDTH: width of word
-    :param terminalNodes: None or set whre are placed StructField instances which are derived
-        directly from interface
+    :param terminalNodes: None or set whre are placed StructField instances
+        which are derived directly from interface
     :return: generator of tuple (type, name, BusFieldInfo)
     """
     structFields = []

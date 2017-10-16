@@ -47,12 +47,14 @@ class VhdlSerializer_ops():
             if isinstance(operand, RtlSignalBase):
                 try:
                     o = operand.singleDriver()
-                    if o.operator != op.operator and opPrecedence[o.operator] <= opPrecedence[op.operator]:
+                    if o.operator != op.operator and\
+                            opPrecedence[o.operator] <= opPrecedence[op.operator]:
                         return "(%s)" % s
                 except Exception:
                     pass
             return s
-        # [TODO] no nested ternary in expressions like ( '1'  WHEN r = f ELSE  '0' ) & "0"
+        # [TODO] no nested ternary in expressions like
+        # ( '1'  WHEN r = f ELSE  '0' ) & "0"
         ops = op.operands
         o = op.operator
 
@@ -69,7 +71,8 @@ class VhdlSerializer_ops():
             assert len(ops) == 1
             return "NOT " + p(ops[0])
         elif o == AllOps.CALL:
-            return "%s(%s)" % (cls.FunctionContainer(ops[0]), ", ".join(map(p, ops[1:])))
+            return "%s(%s)" % (cls.FunctionContainer(ops[0]),
+                               ", ".join(map(p, ops[1:])))
         elif o == AllOps.CONCAT:
             return _bin(' & ')
         elif o == AllOps.DIV:
@@ -107,7 +110,10 @@ class VhdlSerializer_ops():
         elif o == AllOps.NEG:
             return "-(%s)" % (p(ops[0]))
         elif o == AllOps.TERNARY:
-            return p(ops[1]) + " WHEN " + cls.condAsHdl([ops[0]], True, ctx) + " ELSE " + p(ops[2])
+            return " ".join([p(ops[1]), "WHEN",
+                             cls.condAsHdl([ops[0]], True, ctx),
+                             "ELSE",
+                             p(ops[2])])
         elif o == AllOps.RISING_EDGE:
             assert len(ops) == 1
             return "RISING_EDGE(" + p(ops[0]) + ")"
@@ -146,4 +152,5 @@ class VhdlSerializer_ops():
             assert len(ops) == 2
             return _bin(' ** ')
         else:
-            raise NotImplementedError("Do not know how to convert %s to vhdl" % (o))
+            raise NotImplementedError(
+                "Do not know how to convert %s to vhdl" % (o))

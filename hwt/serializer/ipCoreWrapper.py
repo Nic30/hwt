@@ -5,13 +5,14 @@ from hwt.synthesizer.param import evalParam, Param
 
 class IpCoreWrapper(Unit):
     """
-    Class which creates wrapper which converts all incompatible parts of unit to
-    ipcore compatible this means:
+    Class which creates wrapper which converts all incompatible parts of unit
+    to ipcore compatible this means:
 
     * convert array interface to multiple interfaces
 
     original unit will be placed inside as subunit named baseUnit
     """
+
     def __init__(self, baseUnit):
         super(IpCoreWrapper, self).__init__()
         self._baseUnit = baseUnit

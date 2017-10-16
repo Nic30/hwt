@@ -9,12 +9,13 @@ class OscilatorAgent(AgentBase):
 
     * In driver mode oscillates at frequency specified by period
 
-    * In monitor driver captures tuples (time, nextVal) for each change on signal
-        (nextVal is 1/0/None)
+    * In monitor driver captures tuples (time, nextVal) for each change
+        on signal (nextVal is 1/0/None)
 
     :ivar period: period of signal to generate
     :ivar initWait: time to wait before starting oscillation
     """
+
     def __init__(self, intf, period=10 * Time.ns):
         super(OscilatorAgent, self).__init__(intf)
         self.period = period

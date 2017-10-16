@@ -9,6 +9,7 @@ class FifoReaderAgent(SyncAgentBase):
     """
     Simulation agent for FifoReader interface
     """
+
     def __init__(self, intf, allowNoReset=False):
         super(FifoReaderAgent, self).__init__(intf, allowNoReset)
         self.data = deque()
@@ -52,7 +53,7 @@ class FifoReaderAgent(SyncAgentBase):
 
             if self.readPending_invalidate:
                 self.readPending = False
-            
+
     def getMonitors(self):
         self.dataReader = OnRisingCallbackLoop(self.clk,
                                                self.dataReader,
@@ -64,7 +65,7 @@ class FifoReaderAgent(SyncAgentBase):
     def monitor(self, sim):
         intf = self.intf
         r = sim.read
-            
+
         if self.notReset(sim):
             # speculative en set
             yield sim.waitOnCombUpdate()
@@ -81,8 +82,8 @@ class FifoReaderAgent(SyncAgentBase):
 
     def getDrivers(self):
         self.dataWriter = OnRisingCallbackLoop(self.clk,
-                                                  self.dataWriter,
-                                                  self.getEnable)
+                                               self.dataWriter,
+                                               self.getEnable)
         return ([self.driver_init] +
                 super(FifoReaderAgent, self).getDrivers() +
                 [self.dataWriter])
@@ -95,7 +96,7 @@ class FifoReaderAgent(SyncAgentBase):
         sim.write(self.lastData, self.intf.data)
         if self.lastData_invalidate:
             self.lastData = None
-        
+
     def driver(self, sim):
         # now we are before clock event
         # * set wait signal
@@ -117,7 +118,7 @@ class FifoReaderAgent(SyncAgentBase):
             # wait for potential update of en
             yield sim.waitOnCombUpdate()
             # check if write can be performed and if it possible do real write
-    
+
             en = sim.read(intf.en)
             assert en.vldMask, (intf, sim.now)
             if en.val:
@@ -125,11 +126,11 @@ class FifoReaderAgent(SyncAgentBase):
                 self.lastData = self.data.popleft()
 
 
-
 class FifoWriterAgent(SyncAgentBase):
     """
     Simulation agent for FifoWriter interface
     """
+
     def __init__(self, intf, allowNoReset=False):
         super(FifoWriterAgent, self).__init__(intf, allowNoReset=allowNoReset)
         self.data = deque()
@@ -169,7 +170,7 @@ class FifoWriterAgent(SyncAgentBase):
             self.data.append(sim.read(intf.data))
 
     def driver(self, sim):
-        # if wait == 0 set en=1 and set data 
+        # if wait == 0 set en=1 and set data
         intf = self.intf
         w = sim.write
 

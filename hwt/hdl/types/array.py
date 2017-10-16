@@ -9,6 +9,7 @@ class HArray(HdlType):
     :ivar elmType: type of elements
     :ivar size: number of items
     """
+
     def __init__(self, elmType, size):
         super(HArray, self).__init__()
         self.elmType = elmType
@@ -19,7 +20,7 @@ class HArray(HdlType):
             type(self) is type(other) and
             self.size == other.size and
             self.elmType == other.elmType
-            )
+        )
 
     def __hash__(self):
         return hash(id(self))
@@ -33,7 +34,9 @@ class HArray(HdlType):
         except AttributeError:
             itemSize = None
         if itemSize is None:
-            raise TypeError("Can not determine size of array because item has not determinable size")
+            raise TypeError(
+                "Can not determine size of array because item has"
+                " not determinable size")
 
         s = self.size
         if isinstance(s, RtlSignalBase):

@@ -4,8 +4,8 @@ from hwt.simulator.agentBase import AgentBase
 
 def pullDownAfter(sig, intDelay=6 * Time.ns):
     """
-    :return: simulation driver which keeps signal value high for intDelay then it sets
-        value to 0
+    :return: simulation driver which keeps signal value high for intDelay
+        then it sets value to 0
     """
     def _pullDownAfter(s):
         s.write(True, sig)
@@ -17,8 +17,8 @@ def pullDownAfter(sig, intDelay=6 * Time.ns):
 
 def pullUpAfter(sig, intDelay=6 * Time.ns):
     """
-    :return: Simulation driver which keeps signal value low for intDelay then it sets
-        value to 1
+    :return: Simulation driver which keeps signal value low for intDelay then
+        it sets value to 1
     """
     def _pullDownAfter(s):
         s.write(False, sig)

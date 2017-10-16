@@ -24,6 +24,7 @@ class Operator():
     :ivar operator: OpDefinition instance
     :ivar result: result signal of this operator
     """
+
     def __init__(self, operator, operands):
         self.operands = list(operands)
         self.operator = operator
@@ -42,8 +43,9 @@ class Operator():
             elif isinstance(o, Value):
                 pass
             else:
-                raise NotImplementedError("Operator operands can be"
-                                          " only signal or values got:%r" % (o))
+                raise NotImplementedError(
+                    "Operator operands can be"
+                    " only signal or values got:%r" % (o))
 
     def staticEval(self):
         """
@@ -61,10 +63,10 @@ class Operator():
 
     def __eq__(self, other):
         return self is other or (
-                 type(self) is type(other) and
-                 self.operator == other.operator and
-                 self.operands == other.operands
-                )
+            type(self) is type(other) and
+            self.operator == other.operator and
+            self.operands == other.operands
+        )
 
     @staticmethod
     def withRes(opDef, operands, resT, outputs=[]):

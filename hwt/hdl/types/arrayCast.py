@@ -6,13 +6,15 @@ from hwt.hdl.types.array import HArray
 from hwt.bitmask import selectBitRange, mask
 
 
-def getBits_from_array(array, wordWidth, start, end, reinterpretElmToType=None):
+def getBits_from_array(array, wordWidth, start, end,
+                       reinterpretElmToType=None):
     """
     Gets value of bits between selected range from memory
 
     :param start: bit address of start of bit of bits
     :param end: bit address of first bit behind bits
-    :return: instance of BitsVal (derived from SimBits type) which contains copy of selected bits
+    :return: instance of BitsVal (derived from SimBits type) which contains
+        copy of selected bits
     """
     inPartOffset = 0
     value = Bits(end - start, None).fromPy(None)
@@ -37,7 +39,7 @@ def getBits_from_array(array, wordWidth, start, end, reinterpretElmToType=None):
         m = mask(width)
         value.val |= (val & m) << inPartOffset
         value.vldMask |= (vldMask & m) << inPartOffset
-        value.updateMask = max(value.updateTime, updateTime) 
+        value.updateMask = max(value.updateTime, updateTime)
 
         inPartOffset += width
         start += width
@@ -53,11 +55,12 @@ def reinterptet_harray_to_bits(typeFrom, sigOrVal, bitsT):
     widthOfElm = typeFrom.elmType.bit_length()
     w = bitsT.bit_length()
     if size * widthOfElm != w:
-        raise TypeConversionErr("Size of types is different", size * widthOfElm , w)
-    
+        raise TypeConversionErr(
+            "Size of types is different", size * widthOfElm, w)
+
     partT = Bits(widthOfElm)
     parts = [p._reinterpret_cast(partT) for p in sigOrVal]
-    
+
     return Concat(*reversed(parts))._reinterpret_cast(bitsT)
 
 
@@ -66,25 +69,26 @@ def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
     myWidthOfElm = typeFrom.elmType.bit_length()
     size = int(arrayT.size)
     widthOfElm = arrayT.elmType.bit_length()
-   
+
     if size * widthOfElm != mySize * myWidthOfElm:
         raise TypeConversionErr("Size of types is different",
-                                size * widthOfElm , mySize * myWidthOfElm)
-    
+                                size * widthOfElm, mySize * myWidthOfElm)
+
     if isinstance(typeFrom.elmType, Bits):
         reinterpretElmToType = None
     else:
         reinterpretElmToType = Bits(myWidthOfElm)
-        
-    res = arrayT.fromPy(None)    
+
+    res = arrayT.fromPy(None)
     for i in range(size):
         start = i * widthOfElm
         end = (i + 1) * widthOfElm
-        item = getBits_from_array(sigOrVal, myWidthOfElm, start, end, reinterpretElmToType)
+        item = getBits_from_array(
+            sigOrVal, myWidthOfElm, start, end, reinterpretElmToType)
         res[i] = item._reinterpret_cast(arrayT.elmType)
-    
+
     return res
-            
+
 
 def reinterpret_cast_harray(typeFrom, sigOrVal, toType):
     if isinstance(toType, Bits):

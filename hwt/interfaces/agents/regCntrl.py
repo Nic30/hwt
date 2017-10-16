@@ -7,6 +7,7 @@ class RegCntrlAgent(SyncAgentBase):
     """
     Simulation/verification agent for RegCntrl interface
     """
+
     def __init__(self, intf):
         AgentBase.__init__(self, intf)
         super().__init__(intf)

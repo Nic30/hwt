@@ -9,8 +9,8 @@ class SerializerCtx():
     :ivar indent: number of visual indentations for code in this context
     :ivar createTmpVarFn: function (sugestedName, dtype) returns variable
         this function will be called to create tmp variables
-    :ivar constCache: constant cache to extract frequently used large constant values
-        from code (visual improvement)
+    :ivar constCache: constant cache to extract frequently used large constant
+        values from code (visual improvement)
     """
 
     def __init__(self, scope, indent, createTmpVarFn, constCache=None):

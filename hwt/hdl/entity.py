@@ -4,6 +4,7 @@ class Entity(object):
     """
     Hdl container of hdl configuration and interfaces
     """
+
     def __init__(self, name):
         self.name = name
         self.origin = None  # creator of this object

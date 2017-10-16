@@ -50,7 +50,8 @@ def removeUnconnectedSignals(netlist):
 
                         netlist.startsOfDataPaths.remove(e)
                     else:
-                        assert False, ("Drivers should be only index operators or assignments", e)
+                        raise AssertionError("Drivers should be only"
+                                             "index operators or assignments", e)
 
                 toDelete.add(sig)
 
@@ -83,7 +84,8 @@ def isMergableStmList(listA, listB):
 
 
 def checkIfIsTooSimple(proc):
-    """check if process is just unconditional assignments and it is useless to merge them"""
+    """check if process is just unconditional assignments
+       and it is useless to merge them"""
     try:
         a, = proc.statements
         if isinstance(a, Assignment):

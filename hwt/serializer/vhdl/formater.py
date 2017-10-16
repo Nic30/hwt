@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Simple and stupid implementation of vhdl formater, no parser based
+on regular expressions
+"""
+
 import re
 
-"""
-Simple and stupid implementation of vhdl formater, no parser based on regular expressions
-"""
 
-indentIncr = ["^entity", "^port\s*\(", "^port\s*map\s*\(", "^generic\s*map\s*\(", "^generic\s*\(",
-              "^architecture", "^if", "^case", "^port\s+map\s*\(", "^process", "^while", "^component",
+indentIncr = ["^entity", "^port\s*\(",
+              "^port\s*map\s*\(", "^generic\s*map\s*\(", "^generic\s*\(",
+              "^architecture", "^if", "^case", "^port\s+map\s*\(", "^process",
+              "^while", "^component",
               "\S+\s*:\s*process"]
 indentDecr = ["^end[^\w\d_]", "^\)"]
 indentPeak = ["^begin", "^elsif", "^else", "^when"]
@@ -28,16 +32,16 @@ def formatVhdl(vhdlString):
     def getIndent(i):
         return get_indent(i * 4)
 
-    for l in vhdlString.split("\n"):
-        l = l.strip()
-        if any([x.match(l) for x in indentDecr]):
+    for line in vhdlString.split("\n"):
+        line = line.strip()
+        if any([x.match(line) for x in indentDecr]):
             indent -= 1
-            lines.append(getIndent(indent) + l)
-        elif any([x.match(l) for x in indentIncr]):
-            lines.append(getIndent(indent) + l)
+            lines.append(getIndent(indent) + line)
+        elif any([x.match(line) for x in indentIncr]):
+            lines.append(getIndent(indent) + line)
             indent += 1
-        elif any([x.match(l) for x in indentPeak]):
-            lines.append(getIndent(indent - 1) + l)
+        elif any([x.match(line) for x in indentPeak]):
+            lines.append(getIndent(indent - 1) + line)
         else:
-            lines.append(getIndent(indent) + l)
+            lines.append(getIndent(indent) + line)
     return "\n".join(lines)

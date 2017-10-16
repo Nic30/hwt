@@ -1,6 +1,7 @@
-from hwt.serializer.ip_packager.exprSerializer import VivadoTclExpressionSerializer
-from hwt.serializer.ip_packager.helpers import appendSpiElem, appendStrElements, \
-         findS, mkSpiElm, spi_ns_prefix, appendSpiArray
+from hwt.serializer.ip_packager.exprSerializer import \
+    VivadoTclExpressionSerializer
+from hwt.serializer.ip_packager.helpers import appendSpiElem,\
+    appendStrElements, findS, mkSpiElm, spi_ns_prefix, appendSpiArray
 from hwt.serializer.ip_packager.otherXmlObjs import Value
 import xml.etree.ElementTree as etree
 
@@ -49,7 +50,8 @@ class View():
 
 
 class ModelParameter():
-    def __init__(self, name: str, displayName: str, datatype: str, value: Value):
+    def __init__(self, name: str, displayName: str, datatype: str,
+                 value: Value):
         self.name = name
         self.displayName = displayName
         self.datatype = datatype
@@ -57,13 +59,17 @@ class ModelParameter():
 
     @classmethod
     def fromGeneric(cls, g):
-        val = Value.fromGeneric("MODELPARAM_VALUE.", g, Value.RESOLVE_GENERATED)
+        val = Value.fromGeneric("MODELPARAM_VALUE.", g,
+                                Value.RESOLVE_GENERATED)
 
         def createTmpVar(suggestedName, dtype):
-            raise NotImplementedError("Value of generic %s can not be converted do ipcore format (%s)", g.name, repr(val))
+            raise NotImplementedError(
+                "Value of generic %s can not be converted do"
+                "ipcore format (%r)" % (g.name, val))
         return cls(g.name,
                    g.name.replace("_", " "),
-                   VivadoTclExpressionSerializer.HdlType(g._dtype, createTmpVar).lower(), val)
+                   VivadoTclExpressionSerializer.HdlType(g._dtype, createTmpVar
+                                                         ).lower(), val)
 
     def asElem(self):
         e = mkSpiElm("modelParameter")
@@ -76,7 +82,8 @@ class ModelParameter():
 
 class Model():
 
-    def __init__(self, vhdl_syn_fileSetName, vhdl_sim_fileSetName, tcl_fileSetName):
+    def __init__(self, vhdl_syn_fileSetName, vhdl_sim_fileSetName,
+                 tcl_fileSetName):
         self.views = []
         self.ports = []
         self.modelParameters = []

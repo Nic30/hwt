@@ -2,7 +2,6 @@ from collections import deque
 
 from hwt.hdl.constants import Time
 from hwt.simulator.agentBase import AgentBase, SyncAgentBase
-from hwt.simulator.shortcuts import OnRisingCallbackLoop
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 
 
@@ -12,11 +11,12 @@ DEFAULT_CLOCK = 10 * Time.ns
 
 class SignalAgent(SyncAgentBase):
     """
-    Agent for signal interface, it can use clock and reset interface for synchronization
-    or can be synchronized by delay
+    Agent for signal interface, it can use clock and reset interface
+    for synchronization or can be synchronized by delay
 
     :attention: clock synchronization has higher priority
     """
+
     def __init__(self, intf, delay=DEFAULT_CLOCK):
         AgentBase.__init__(self, intf)
         self.delay = delay
@@ -36,13 +36,10 @@ class SignalAgent(SyncAgentBase):
         if self.clk is not None:
             if self.initDelay:
                 raise NotImplementedError("initDelay only without clock")
-            self.monitor = OnRisingCallbackLoop(self.clk,
-                                                 self.monitor,
-                                                 self.getEnable)
- 
-            self.driver = OnRisingCallbackLoop(self.clk,
-                                               self.driver,
-                                               self.getEnable)
+            c = self.SELECTE_EDGE_CALLBACK
+            self.monitor = c(self.clk, self.monitor, self.getEnable)
+            self.driver = c(self.clk, self.driver, self.getEnable)
+
     def getDrivers(self):
         d = SyncAgentBase.getDrivers(self)
         if self.clk is None:
@@ -60,7 +57,7 @@ class SignalAgent(SyncAgentBase):
 
         return
         yield
-    
+
     def doRead(self, s):
         return s.read(self.intf)
 

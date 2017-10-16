@@ -25,9 +25,13 @@ def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
                 return suggestedType.fromPy(op)
 
             if op >= 1 << 31:
-                raise TypeError("Number %d is too big to fit in 32 bit integer of HDL use Bits type instead" % op)
+                raise TypeError(
+                    "Number %d is too big to fit in 32 bit integer of HDL"
+                    " use Bits type instead" % op)
             elif op < -(1 << 31):
-                raise TypeError("Number %d is too small to fit in 32 bit integer of HDL use Bits type instead" % op)
+                raise TypeError(
+                    "Number %d is too small to fit in 32 bit integer"
+                    " of HDL use Bits type instead" % op)
         try:
             hType = defaultPyConversions[type(op)]
         except KeyError:

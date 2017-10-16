@@ -20,7 +20,8 @@ def pprintInterface(intf, prefix="", indent=0, file=sys.stdout):
     if s is not "":
         s = " " + repr(s)
 
-    file.write("".join([getIndent(indent), prefix, repr(intf._getFullName()), s]))
+    file.write("".join([getIndent(indent), prefix, repr(intf._getFullName()),
+                        s]))
     file.write("\n")
 
     for i in intf._interfaces:
@@ -45,7 +46,8 @@ def pprintAgents(unitOrIntf, indent=0, prefix="", file=sys.stdout):
     if ag is not None:
         file.write("%s%s%r\n" % (getIndent(indent), prefix, ag))
     elif arrayElemCache:
-        file.write("%s%s\n" % (getIndent(indent), prefix + unitOrIntf._name + ":"))
+        file.write("%s%s\n" %
+                   (getIndent(indent), prefix + unitOrIntf._name + ":"))
 
     for i in unitOrIntf._interfaces:
         pprintAgents(i, indent + 1, file=file)

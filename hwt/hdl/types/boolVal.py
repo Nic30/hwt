@@ -36,13 +36,14 @@ def boolLogOp(self, other, op, getVldFn, reduceCheckFn):
         elif iamVal:
             r = reduceCheckFn(other, self)
             if r is not None:
-                    return r
+                return r
 
         return Operator.withRes(op, [self, other._auto_cast(BOOL)], BOOL)
 
 
 def boolCmpOp__val(self, other, op, evalFn):
-    v = evalFn(bool(self.val), bool(other.val)) and (self.vldMask == other.vldMask == 1)
+    v = evalFn(bool(self.val), bool(other.val)) and (
+        self.vldMask == other.vldMask == 1)
     return HBoolVal(v, BOOL,
                     self.vldMask & other.vldMask,
                     max(self.updateTime, other.updateTime))

@@ -13,6 +13,7 @@ class NameScopeItem(dict):
     if name is discovered in scope it is converted to name_id
     where id is sequential number for prefix name\_
     """
+
     def __init__(self, myLvl):
         super().__init__()
         self.myLvl = myLvl
@@ -91,7 +92,8 @@ class NameScopeItem(dict):
             cntrVal = -1
 
         # setup for me and propagate to children
-        usableName = self.__incrPrefixCntrsForChilds(suggestedName, cntrVal, parent)
+        usableName = self.__incrPrefixCntrsForChilds(
+            suggestedName, cntrVal, parent)
         self.__registerName(usableName, obj, parent)
         return usableName
 
@@ -100,6 +102,7 @@ class NameScope(list):
     """
     Scope of used names in hdl
     """
+
     def __init__(self, ignorecase):
         super().__init__()
         self.ignorecase = ignorecase

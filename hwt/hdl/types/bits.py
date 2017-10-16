@@ -11,7 +11,8 @@ class Bits(HdlType):
         """
         :param negated: if true the value is in negated form
         :param forceVector: use always hdl vector type
-            (for example std_logic_vector(0 downto 0) instead of std_logic in VHDL)
+            (for example std_logic_vector(0 downto 0)
+             instead of std_logic in VHDL)
         """
         self.forceVector = forceVector
         self.negated = negated
@@ -26,12 +27,18 @@ class Bits(HdlType):
         self._allMask = mask(self._widthVal)
 
     def __eq__(self, other):
+        if self is other:
+            return True
+
         if self._widthVal == 1:
-            return isinstance(other, Bits) and other._widthVal == 1\
-                and self.signed == other.signed and self.forceVector == other.forceVector
+            return (isinstance(other, Bits)
+                    and other._widthVal == 1
+                    and self.signed == other.signed
+                    and self.forceVector == other.forceVector)
         else:
-            return isinstance(other, Bits) and other._widthVal == self._widthVal\
-                and self.signed == other.signed
+            return (isinstance(other, Bits)
+                    and other._widthVal == self._widthVal
+                    and self.signed == other.signed)
 
     def __hash__(self):
         return hash((self.signed, self._widthVal, self.forceVector))
