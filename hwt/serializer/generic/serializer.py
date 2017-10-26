@@ -208,3 +208,20 @@ class GenericSerializer():
             indent=getIndent(ctx.indent),
             switchOn=switchOn,
             cases=cases)
+
+    @classmethod
+    def _operand(cls, operand, operator, ctx):
+        s = cls.asHdl(operand, ctx)
+        if isinstance(operand, RtlSignalBase):
+            try:
+                o = operand.singleDriver()
+                if o.operator != operator and\
+                        cls.opPrecedence[o.operator] <= cls.opPrecedence[operator]:
+                    return "(%s)" % s
+            except Exception:
+                pass
+        return s
+
+    @classmethod
+    def _bin_op(cls, operator, op_str, ctx, ops):
+        return op_str.join(map(lambda operand: cls._operand(operand, operator, ctx), ops))

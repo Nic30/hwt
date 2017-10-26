@@ -2,31 +2,6 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdl.operatorDefs import AllOps
 
 
-# keep in mind that there is no such a thing in vhdl itself
-opPrecedence = {AllOps.NOT: 2,
-                AllOps.RISING_EDGE: 1,
-                AllOps.NEG: 2,
-                AllOps.DIV: 3,
-                AllOps.ADD: 3,
-                AllOps.SUB: 3,
-                AllOps.MUL: 3,
-                AllOps.XOR: 2,
-                AllOps.EQ: 2,
-                AllOps.NEQ: 2,
-                AllOps.AND: 2,
-                AllOps.OR: 2,
-                AllOps.DOWNTO: 2,
-                AllOps.GT: 2,
-                AllOps.LT: 2,
-                AllOps.GE: 2,
-                AllOps.LE: 2,
-                AllOps.CONCAT: 2,
-                AllOps.INDEX: 1,
-                AllOps.TERNARY: 1,
-                AllOps.CALL: 1,
-                }
-
-
 def isResultOfTypeConversion(sig):
     try:
         sig.drivers[0]
@@ -39,6 +14,30 @@ def isResultOfTypeConversion(sig):
 
 
 class VhdlSerializer_ops():
+    # keep in mind that there is no such a thing in vhdl itself
+    opPrecedence = {
+        AllOps.NOT: 2,
+        AllOps.RISING_EDGE: 1,
+        AllOps.NEG: 2,
+        AllOps.DIV: 3,
+        AllOps.ADD: 3,
+        AllOps.SUB: 3,
+        AllOps.MUL: 3,
+        AllOps.XOR: 2,
+        AllOps.EQ: 2,
+        AllOps.NEQ: 2,
+        AllOps.AND: 2,
+        AllOps.OR: 2,
+        AllOps.DOWNTO: 2,
+        AllOps.GT: 2,
+        AllOps.LT: 2,
+        AllOps.GE: 2,
+        AllOps.LE: 2,
+        AllOps.CONCAT: 2,
+        AllOps.INDEX: 1,
+        AllOps.TERNARY: 1,
+        AllOps.CALL: 1,
+    }
     _binOps = {
         AllOps.AND: '%s AND %s',
         AllOps.OR: '%s OR %s',
@@ -67,23 +66,6 @@ class VhdlSerializer_ops():
         AllOps.BitsAsUnsigned: "UNSIGNED(%s)",
         AllOps.BitsAsVec: "STD_LOGIC_VECTOR(%s)",
     }
-
-    @classmethod
-    def _operand(cls, operand, operator, ctx):
-        s = cls.asHdl(operand, ctx)
-        if isinstance(operand, RtlSignalBase):
-            try:
-                o = operand.singleDriver()
-                if o.operator != operator and\
-                        opPrecedence[o.operator] <= opPrecedence[operator]:
-                    return "(%s)" % s
-            except Exception:
-                pass
-        return s
-
-    @classmethod
-    def _bin_op(cls, operator, op_str, ctx, ops):
-        return op_str.join(map(lambda operand: cls._operand(operand, operator, ctx), ops))
 
     @classmethod
     def Operator(cls, op, ctx):
