@@ -515,8 +515,15 @@ class BitsVal(EventCapableVal):
             resT = self._dtype
             if self._dtype.signed is None:
                 self = self._unsigned()
-            if isinstance(other._dtype, Bits) and other._dtype.signed is None:
-                other = other._unsigned()
+            if isinstance(other._dtype, Bits):
+                s = other._dtype.signed
+                if s is None:
+                    other = other._unsigned()
+                elif s is False:
+                    pass
+                else:
+                    raise NotImplementedError()
+
             elif isinstance(other._dtype, Integer):
                 pass
             else:
