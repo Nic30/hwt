@@ -94,7 +94,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         self._masterDir = masterDir
         self._direction = INTF_DIRECTION.UNKNOWN
 
-        self._cntx = RtlNetlist(self)
+        self._cntx = None
 
         if loadConfig:
             self._loadConfig()

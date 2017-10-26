@@ -203,7 +203,6 @@ class PropDeclrCollector(object):
         assert intf._parent is None
         intf._parent = self
         intf._name = iName
-        self._cntx.mergeWith(intf._cntx)
         intf._cntx = self._cntx
         self._interfaces.append(intf)
 
