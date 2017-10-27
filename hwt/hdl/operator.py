@@ -72,6 +72,10 @@ class Operator():
     def withRes(opDef, operands, resT, outputs=[]):
         """
         Create operator with result signal
+
+        :ivar resT: data type of result signal
+        :ivar outputs: iterable of singnals which are outputs
+            from this operator
         """
         op = Operator(opDef, operands)
         out = RtlSignal(getCtxFromOps(operands), None, resT)

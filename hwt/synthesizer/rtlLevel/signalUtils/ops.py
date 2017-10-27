@@ -209,7 +209,7 @@ class RtlSignalOps():
     def __bool__(self):
         if not self._const:
             raise TypeError("Bool value of signal can be evaluated"
-                            "because it is not constant expression:", self)
+                            " because it is not constant expression:", self)
         else:
             return bool(self._val)
 
