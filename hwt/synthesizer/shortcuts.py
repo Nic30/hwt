@@ -8,13 +8,21 @@ from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.vhdl.serializer import VhdlSerializer
-from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.uniqList import UniqList
+from hwt.synthesizer.unit import Unit
 
 
-def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
+def toRtl(unitOrCls, name=None, serializer=VhdlSerializer, saveTo=None):
     """
-    convert unit to rtl string using specified serializer
+    Convert unit to RTL using specified serializer
+
+    :param name: name override of top unit (if is None name is derived
+        form class name)
+    :param serializer: serializer which should be used for to RTL conversion
+    :param saveTo: directory where files should be stored
+        If None RTL is returned as string.
+    :raturn: if saveTo returns RTL string else returns list of file names
+        which were created
     """
     if not isinstance(unitOrCls, Unit):
         u = unitOrCls()
@@ -26,7 +34,6 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
         u._name = name
 
     globScope = serializer.getBaseNameScope()
-    codeBuff = []
     mouduleScopes = {}
 
     # unitCls : unitobj
@@ -37,6 +44,14 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
     serializedConfiguredUnits = {}
 
     doSerialize = True
+
+    createFiles = saveTo is not None
+    if createFiles:
+        os.makedirs(saveTo, exist_ok=True)
+        files = UniqList()
+    else:
+        codeBuff = []
+
     for obj in u._toRtl():
         doSerialize = serializer.serializationDecision(
             obj,
@@ -51,6 +66,10 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
                 mouduleScopes[obj] = ctx
 
                 sc = serializer.Entity(obj, ctx)
+                if createFiles:
+                    fName = obj.name + serializer.fileExtension
+                    fileMode = 'w'
+
             elif isinstance(obj, Architecture):
                 try:
                     ctx = mouduleScopes[obj.entity]
@@ -61,23 +80,48 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer):
                         % (obj.getEntityName()))
 
                 sc = serializer.Architecture(obj, ctx)
+                if createFiles:
+                    fName = obj.getEntityName() + serializer.fileExtension
+                    fileMode = 'a'
             else:
-                sc = serializer.asHdl(obj)
+                if hasattr(obj, "_hdlSources"):
+                    for fn in obj._hdlSources:
+                        if isinstance(fn, str):
+                            shutil.copy2(fn, saveTo)
+                            files.append(fn)
+                            continue
+                else:
+                    sc = serializer.asHdl(obj)
+
             if sc:
-                codeBuff.append(sc)
-        else:
+                if createFiles:
+                    if fileMode == 'w':
+                        fp = os.path.join(saveTo, fName)
+                        files.append(fp)
+                        with open(fp, fileMode) as f:
+                            if fileMode == 'a':
+                                f.write("\n")
+                            f.write(
+                                serializer.formater(sc)
+                            )
+                else:
+                    codeBuff.append(sc)
+
+        elif not createFiles:
             try:
                 name = '"%s"' % obj.name
             except AttributeError:
                 name = ""
-
             codeBuff.append(serializer.comment(
                 "Object of class %s, %s was not serialized as specified" % (
                     obj.__class__.__name__, name)))
 
-    return serializer.formater(
-        "\n".join(codeBuff)
-    )
+    if createFiles:
+        return files
+    else:
+        return serializer.formater(
+            "\n".join(codeBuff)
+        )
 
 
 def synthesised(u):
@@ -88,77 +132,6 @@ def synthesised(u):
     for _ in u._toRtl():
         pass
     return u
-
-
-# [TODO] merge toRtlAndSave and toRtl
-def toRtlAndSave(unit, folderName='.', name=None, serializer=VhdlSerializer):
-    unit._loadDeclarations()
-    os.makedirs(folderName, exist_ok=True)
-    files = UniqList()
-    if name is not None:
-        unit._name = name
-
-    globScope = serializer.getBaseNameScope()
-    mouduleScopes = {}
-
-    # unitCls : unitobj
-    serializedClasses = {}
-
-    # (unitCls, paramsValues) : unitObj
-    # where paramsValues are dict name:value
-    serializedConfiguredUnits = {}
-
-    doSerialize = True
-    for obj in unit._toRtl():
-        doSerialize = serializer.serializationDecision(
-            obj,
-            serializedClasses,
-            serializedConfiguredUnits)
-        if doSerialize:
-            if isinstance(obj, Entity):
-                # we need to serialize before we take name, before name can
-                # change
-                s = globScope.fork(1)
-                s.setLevel(2)
-                ctx = serializer.getBaseContext()
-                ctx.scope = s
-                mouduleScopes[obj] = ctx
-
-                sc = serializer.Entity(obj, ctx)
-                fName = obj.name + serializer.fileExtension
-                fileMode = 'w'
-
-            elif isinstance(obj, Architecture):
-                try:
-                    ctx = mouduleScopes[obj.entity]
-                except KeyError:
-                    raise SerializerException(
-                        "Entity should be serialized before architecture of %s"
-                        % (obj.getEntityName()))
-
-                sc = serializer.Architecture(obj, ctx)
-                fName = obj.getEntityName() + serializer.fileExtension
-                fileMode = 'a'
-            else:
-                if hasattr(obj, "_hdlSources"):
-                    for fn in obj._hdlSources:
-                        if isinstance(fn, str):
-                            shutil.copy2(fn, folderName)
-                            files.append(fn)
-                else:
-                    sc = serializer.asHdl(obj)
-                continue
-
-            fp = os.path.join(folderName, fName)
-            files.append(fp)
-
-            with open(fp, fileMode) as f:
-                if fileMode == 'a':
-                    f.write("\n")
-                f.write(
-                    serializer.formater(sc)
-                )
-    return files
 
 
 def serializeAsIpcore(unit, folderName=".", name=None,

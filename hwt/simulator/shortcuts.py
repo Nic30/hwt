@@ -16,7 +16,7 @@ from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.unit import Unit
-from hwt.synthesizer.shortcuts import toRtl, synthesised, toRtlAndSave
+from hwt.synthesizer.shortcuts import toRtl, synthesised
 
 
 def simPrepare(unit: Unit, modelCls=None,
@@ -60,8 +60,10 @@ def toSimModel(unit, dumpModelIn=None):
     :param dumpModelIn: folder to where put sim model files
         (otherwise sim model will be constructed only in memory)
     """
+    sim_code = toRtl(unit,
+                     saveTo=dumpModelIn,
+                     serializer=SimModelSerializer)
     if dumpModelIn is not None:
-        toRtlAndSave(unit, dumpModelIn, serializer=SimModelSerializer)
         d = os.path.join(os.getcwd(), dumpModelIn)
         dInPath = d in sys.path
         if not dInPath:
@@ -73,7 +75,6 @@ def toSimModel(unit, dumpModelIn=None):
         if not dInPath:
             sys.path.remove(d)
     else:
-        sim_code = toRtl(unit, serializer=SimModelSerializer)
         simModule = imp.new_module('simModule')
         # python supports only ~100 opened brackets
         # it exceded it throws MemoryError: s_push: parser stack overflow
