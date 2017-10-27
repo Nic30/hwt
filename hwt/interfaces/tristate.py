@@ -2,7 +2,7 @@ from hwt.hdl.constants import DIRECTION
 from hwt.hdl.types.bits import Bits
 from hwt.interfaces.agents.tristate import TristateClkAgent, TristateAgent
 from hwt.interfaces.std import Signal, Clk
-from hwt.synthesizer.interfaceLevel.interface import Interface
+from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.param import Param
 
 

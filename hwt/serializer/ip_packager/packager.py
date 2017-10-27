@@ -8,7 +8,7 @@ from hwt.serializer.ip_packager.helpers import prettify
 from hwt.serializer.ip_packager.tclGuiBuilder import GuiBuilder,\
     paramManipulatorFns
 from hwt.serializer.vhdl.serializer import VhdlSerializer
-from hwt.synthesizer.interfaceLevel.unit import Unit
+from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.shortcuts import toRtlAndSave
 from hwt.synthesizer.uniqList import UniqList
 

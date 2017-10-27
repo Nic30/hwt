@@ -11,7 +11,7 @@ from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.serializerClases.context import SerializerCtx
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.nameScope import NameScope
-from hwt.synthesizer.interfaceLevel.unit import Unit
+from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 

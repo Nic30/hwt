@@ -1,7 +1,7 @@
 from typing import Union
 
 from hwt.simulator.agentBase import AgentBase
-from hwt.synthesizer.interfaceLevel.interface import Interface
+from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 
 

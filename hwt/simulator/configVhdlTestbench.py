@@ -14,7 +14,7 @@ from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.simulator.hdlSimConfig import HdlSimConfig
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import \
     walkPhysInterfaces
-from hwt.synthesizer.interfaceLevel.unit import Unit
+from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
