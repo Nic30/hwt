@@ -16,7 +16,7 @@ from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.unit import Unit
-from hwt.synthesizer.shortcuts import toRtl, synthesised
+from hwt.synthesizer.utils import toRtl, synthesised
 
 
 def simPrepare(unit: Unit, modelCls=None,
