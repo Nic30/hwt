@@ -1,10 +1,9 @@
 from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
-    xor, gt, ge, lt, le, getitem
+    xor, gt, ge, lt, le, getitem, neg
 
 from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.types.defs import INT
 from hwt.hdl.value import Value
-from _operator import neg
 
 
 class OpDefinition():
