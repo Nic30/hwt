@@ -236,7 +236,7 @@ class PropDeclrCollector(object):
         """
         self._registerUnit(uName, u)
         u._loadDeclarations()
-        self._lazyLoaded.extend(u._toRtl())
+        self._lazyLoaded.extend(u._toRtl(self._targetPlatform))
         u._signalsForMyEntity(self._cntx, "sig_" + uName)
 
     def _registerIntfInImpl(self, iName, i):

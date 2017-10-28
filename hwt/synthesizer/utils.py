@@ -7,18 +7,25 @@ import shutil
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
 from hwt.serializer.exceptions import SerializerException
+from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.uniqList import UniqList
 from hwt.synthesizer.unit import Unit
 
 
-def toRtl(unitOrCls, name=None, serializer=VhdlSerializer, saveTo=None):
+def toRtl(unitOrCls: Unit, name: str=None,
+          serializer: GenericSerializer=VhdlSerializer,
+          targetPlatform=None, saveTo: str=None):
     """
     Convert unit to RTL using specified serializer
 
+    :param unitOrCls: unit instance or class, which should be converted
     :param name: name override of top unit (if is None name is derived
         form class name)
     :param serializer: serializer which should be used for to RTL conversion
+    :param targetPlatform: metainformatins about target platform, distributed
+        on every unit under _targetPlatform attribute
+        before Unit._impl() is called
     :param saveTo: directory where files should be stored
         If None RTL is returned as string.
     :raturn: if saveTo returns RTL string else returns list of file names
@@ -52,7 +59,7 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer, saveTo=None):
     else:
         codeBuff = []
 
-    for obj in u._toRtl():
+    for obj in u._toRtl(targetPlatform):
         doSerialize = serializer.serializationDecision(
             obj,
             serializedClasses,
@@ -122,16 +129,6 @@ def toRtl(unitOrCls, name=None, serializer=VhdlSerializer, saveTo=None):
         return serializer.formater(
             "\n".join(codeBuff)
         )
-
-
-def synthesised(u):
-    assert not u._wasSynthetised()
-    if not hasattr(u, "_interfaces"):
-        u._loadDeclarations()
-
-    for _ in u._toRtl():
-        pass
-    return u
 
 
 def serializeAsIpcore(unit, folderName=".", name=None,

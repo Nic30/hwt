@@ -8,7 +8,8 @@ from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 
 class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     """
-    Container of the netlist with interfaces and internal hierarchical structure
+    Container of the netlist with interfaces
+    and internal hierarchical structure
 
     :cvar _serializeDecision: function to decide if Hdl object derived from
         this unit should be serialized or not, if None all is always serialized
@@ -16,11 +17,17 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     :ivar _units: all units defined on this obj
     :ivar _params: all params defined on this obj
     :ivar _parent: parent object (Unit instance)
-    :ivar _lazyLoaded: container of rtl object which were lazy loaded in implementation phase
-        (this object has to be returned from _toRtl of parent before it it's own objects)
+    :ivar _lazyLoaded: container of rtl object which were lazy loaded
+        in implementation phase (this object has to be returned
+        from _toRtl of parent before it it's own objects)
+    :ivar _targetPlatform: metainformations about target platform
     """
 
     _serializeDecision = None
+    _PROTECTED_NAMES = set(["_PROTECTED_NAMES", "_interfaces",
+                            "_units", "_params", "_parent",
+                            "_lazyLoaded", "_cntx",
+                            "_externInterf", "_targetPlatform"])
 
     def __init__(self):
         self._parent = None
@@ -29,11 +36,14 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         self._loadConfig()
 
-    def _toRtl(self):
+    def _toRtl(self, targetPlatform):
         """
-        synthesize all subunits, make connections between them, build entity and component for this unit
+        synthesize all subunits, make connections between them,
+        build entity and component for this unit
         """
         assert not self._wasSynthetised()
+
+        self._targetPlatform = targetPlatform
         if not hasattr(self, "_name"):
             self._name = self._getDefaultName()
         self._cntx.params = self._buildParams()
@@ -41,7 +51,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         # prepare subunits
         for u in self._units:
-            yield from u._toRtl()
+            yield from u._toRtl(targetPlatform)
 
         for u in self._units:
             subUnitName = u._name
@@ -57,8 +67,10 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         yield from self._lazyLoaded
 
         if not self._externInterf:
-            raise Exception(("Can not find any external interface for unit %s"
-                             "- there is no such a thing as unit without interfaces") % self._name)
+            raise IntfLvlConfErr(
+                "Can not find any external interface for unit %s"
+                "- unit without interfaces are not allowed"
+                % self._name)
 
         yield from self._synthetiseContext(self._externInterf)
         self._checkArchCompInstances()
@@ -80,7 +92,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         for intf in self._interfaces:
             if intf._isExtern:
                 intf._resolveDirections()
-                # reverse because other components looks at this one from outside
+                # reverse because other components
+                # looks at this one from outside
                 intf._reverseDirection()
 
         # connect results of synthesized context to interfaces of this unit
@@ -96,7 +109,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
     def _loadDeclarations(self):
         """
-        Load all declarations from _decl() method, recursively for all interfaces/units.
+        Load all declarations from _decl() method, recursively
+        for all interfaces/units.
         """
         if not hasattr(self, "_interfaces"):
             self._interfaces = []
@@ -122,13 +136,6 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._loadInterface(intf, False)
         intf._signalsForInterface(self._cntx)
 
-    @classmethod
-    def _build(cls, multithread=True):
-        """
-        This Unit implementation does not require any preprocessing
-        """
-        pass
-
     def _buildParams(self):
         # construct params for entity (generics)
         globalNames = {}
@@ -136,8 +143,10 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         def addP(n, p):
             p.name = n
             if n in globalNames:
-                raise IntfLvlConfErr("Redefinition of generic '%s' while synthesis old:%r, new:%r" % 
-                                     (n, globalNames[n], p))
+                raise IntfLvlConfErr(
+                    "Redefinition of generic '%s' while synthesis"
+                    " old:%r, new:%r"
+                    % (n, globalNames[n], p))
             globalNames[n] = p
 
         def nameForNestedParam(p):
@@ -171,11 +180,14 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         cInstances = len(self._architecture.componentInstances)
         units = len(self._units)
         if cInstances != units:
-            inRtl = set(map(lambda x: x.name, self._architecture.componentInstances))
+            inRtl = set(
+                map(lambda x: x.name, self._architecture.componentInstances))
             inIntf = set(map(lambda x: x._name + "_inst", self._units))
             if cInstances > units:
-                raise IntfLvlConfErr("_toRtl unit(s) %s were found in rtl but were not registered at %s" % 
-                                     (str(inRtl - inIntf), self._name))
+                raise IntfLvlConfErr(
+                    "_toRtl unit(s) %s were found in rtl but were"
+                    " not registered at %s"
+                    % (str(inRtl - inIntf), self._name))
             elif cInstances < units:
-                raise IntfLvlConfErr("_toRtl of %s: unit(s) %s were lost" % 
-                                     (self._name, str(inIntf - inRtl)))
+                raise IntfLvlConfErr("_toRtl of %s: unit(s) %s were lost"
+                                     % (self._name, str(inIntf - inRtl)))
