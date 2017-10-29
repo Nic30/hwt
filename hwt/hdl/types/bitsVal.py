@@ -522,7 +522,7 @@ class BitsVal(EventCapableVal):
                 elif s is False:
                     pass
                 else:
-                    raise NotImplementedError()
+                    raise NotImplementedError("Signed multiplication")
 
             elif isinstance(other._dtype, Integer):
                 pass
