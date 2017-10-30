@@ -8,9 +8,9 @@ from hwt.serializer.ip_packager.helpers import prettify
 from hwt.serializer.ip_packager.tclGuiBuilder import GuiBuilder,\
     paramManipulatorFns
 from hwt.serializer.vhdl.serializer import VhdlSerializer
-from hwt.synthesizer.interfaceLevel.unit import Unit
-from hwt.synthesizer.shortcuts import toRtlAndSave
 from hwt.synthesizer.uniqList import UniqList
+from hwt.synthesizer.unit import Unit
+from hwt.synthesizer.utils import toRtl
 
 
 # [TODO] memory maps https://forums.xilinx.com/t5/Embedded-Processor-System-Design/exporting-AXI-BASEADDR-to-xparameters-h-from-Vivado-IP/td-p/428650
@@ -49,12 +49,10 @@ class Packager(object):
             os.makedirs(path)
 
         files = self.hdlFiles
-        self.hdlFiles = UniqList(
-            toRtlAndSave(self.topUnit,
-                         folderName=path,
-                         name=self.name,
-                         serializer=self.serializer)
-        )
+        self.hdlFiles = toRtl(self.topUnit,
+                              saveTo=path,
+                              name=self.name,
+                              serializer=self.serializer)
 
         for srcF in files:
             dst = os.path.join(path,

@@ -1,5 +1,5 @@
 from hwt.hdl.constants import INTF_DIRECTION
-from hwt.synthesizer.interfaceLevel.unit import Unit
+from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.param import evalParam, Param
 
 

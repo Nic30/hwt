@@ -4,7 +4,7 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct, HStructField, HStructFieldMeta
 from hwt.interfaces.agents.structIntf import StructIntfAgent
 from hwt.interfaces.std import Signal, VldSynced, RegCntrl, BramPort_withoutClk
-from hwt.synthesizer.interfaceLevel.interface import Interface
+from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
