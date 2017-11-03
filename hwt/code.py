@@ -216,10 +216,10 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
         If(ackSig,
            If(index._eq(itemsCnt - 1),
               index(0)
-           ).Else(
+              ).Else(
                index(index + 1)
            )
-        )
+           )
         return Switch(index)\
             .addCases(
             enumerate(statementLists)
@@ -278,9 +278,9 @@ class FsmBuilder(StmCntx):
             # building decision tree
             top = If(condition,
                      self.stateReg(newvalue)
-                  ).Else(
-                     top
-                  )
+                     ).Else(
+                top
+            )
 
         s = Switch.Case(self, stateFrom, *top)
         return s
@@ -332,15 +332,24 @@ def _mkOp(fn):
 
     :param fn: function to perform binary operation
     """
-    def op(*operands) -> RtlSignalBase:
+    def op(*operands, key=None) -> RtlSignalBase:
+        """
+        :param operands: variadic parameter of input uperands
+        :param key: optional function applied on every operand
+            before processing
+        """
         assert operands, operands
         top = None
+        if key is not None:
+            operands = map(key, operands)
+
         for s in operands:
             if top is None:
                 top = s
             else:
                 top = fn(top, s)
         return top
+
     return op
 
 

@@ -7,6 +7,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.structUtils import walkFlattenFields
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.hdl.types.hdlType import HdlType
 
 
 class BitWidthErr(Exception):
@@ -15,18 +16,19 @@ class BitWidthErr(Exception):
     """
 
 
-def fitTo(what: Union[RtlSignal, Value], where: Union[RtlSignal, Value],
-          extend: bool=True, shrink: bool=True):
+def fitTo_t(what: Union[RtlSignal, Value], where_t: HdlType,
+            extend: bool=True, shrink: bool=True):
     """
     Slice signal "what" to fit in "where"
     or
-    extend "what" with zeros to same width as "where"
+    arithmetically (for signed by MSB / unsigned, vector with 0) extend
+    "what" to same width as "where"
 
     little-endian impl.
     """
 
     whatWidth = what._dtype.bit_length()
-    toWidth = where._dtype.bit_length()
+    toWidth = where_t.bit_length()
     if toWidth == whatWidth:
         return what
     elif toWidth < whatWidth:
@@ -52,6 +54,11 @@ def fitTo(what: Union[RtlSignal, Value], where: Union[RtlSignal, Value],
         return ext._concat(what)
 
 
+def fitTo(what: Union[RtlSignal, Value], where: Union[RtlSignal, Value],
+          extend: bool=True, shrink: bool=True):
+    return fitTo_t(what, where._dtype, extend, shrink)
+
+
 class NotEnoughtBitsErr(Exception):
     """
     More bits is required for such an operation
@@ -63,9 +70,10 @@ class BitWalker():
     Walker which can walk chunks of bits on signals/values of all types
 
     :ivar sigOrVal: signal or value to iterate over
-    :ivar fillup: flag that means that if there is not enought bits for last iterm
-        fill it up with invalid bits (otherwise raise)
+    :ivar fillup: flag that means that if there is not enought bits
+        for last iterm fill it up with invalid bits (otherwise raise)
     """
+
     def __init__(self, sigOrVal: Union[RtlSignal, Value],
                  skipPadding: bool=True,
                  fillup: bool=False):

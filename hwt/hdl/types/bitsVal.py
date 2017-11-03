@@ -512,23 +512,28 @@ class BitsVal(EventCapableVal):
         if areValues(self, other):
             return self._mul__val(other)
         else:
-            resT = self._dtype
+            myT = self._dtype
             if self._dtype.signed is None:
                 self = self._unsigned()
+
             if isinstance(other._dtype, Bits):
                 s = other._dtype.signed
                 if s is None:
                     other = other._unsigned()
-                elif s is False:
-                    pass
-                else:
-                    raise NotImplementedError("Signed multiplication")
 
             elif isinstance(other._dtype, Integer):
                 pass
             else:
                 raise TypeError("%r %r %r" % (self, AllOps.MUL, other))
 
-            subResT = Bits(resT.bit_length(), self._dtype.signed)
+            if isinstance(other._dtype, Integer):
+                res_w = myT.bit_length() * 2
+                res_sign = self._dtype.signed
+            else:
+                res_w = myT.bit_length() + other._dtype.bit_length()
+                res_sign = self._dtype.signed or other._dtype.signed
+
+            subResT = Bits(res_w, signed=res_sign)
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
+            resT = Bits(res_w, signed=myT.signed)
             return o._auto_cast(resT)

@@ -8,7 +8,7 @@ from hwt.hdl.types.hdlType import default_auto_cast_fn
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
 from hwt.hdl.value import Value
-from hwt.synthesizer.vectorUtils import iterBits
+from hwt.synthesizer.vectorUtils import iterBits, fitTo, fitTo_t
 
 
 def convertBits__val(self, val, toType):
@@ -94,7 +94,9 @@ def reinterpretBits(self, sigOrVal, toType):
     """
     if isinstance(sigOrVal, Value):
         return reinterpretBits__val(self, sigOrVal, toType)
-    elif self._dtype.bit_length() == toType.bit_length():
+    elif isinstance(toType, Bits):
+        return fitTo_t(sigOrVal, toType)
+    elif sigOrVal._dtype.bit_length() == toType.bit_length():
         if isinstance(toType, HStruct):
             raise reinterpret_bits_to_hstruct(sigOrVal, toType)
         elif isinstance(toType, HUnion):

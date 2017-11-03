@@ -39,9 +39,10 @@ class RtlSignalOps():
         try:
             return self._usedOps[k]
         except KeyError:
-            o = opCreateDelegate(self, *otherOps)
-            self._usedOps[k] = o
-            return o
+            pass
+        o = opCreateDelegate(self, *otherOps)
+        self._usedOps[k] = o
+        return o
 
     def __invert__(self):
         return self.naryOp(AllOps.NOT, tv(self).__invert__)
@@ -153,7 +154,8 @@ class RtlSignalOps():
                     # [TODO] multidimensional indexing
                     return indexedOn, [d.operands[1]]
                 else:
-                    raise Exception("can not drive static value %r" % indexedOn)
+                    raise Exception(
+                        "can not drive static value %r" % indexedOn)
 
         except MultipleDriversExc:
             pass
@@ -180,7 +182,7 @@ class RtlSignalOps():
                 err = True
             if err:
                 raise TypeConversionErr(("Can not connect %r (of type %r) to %r "
-                                        "(of type %r) due type incompatibility")
+                                         "(of type %r) due type incompatibility")
                                         % (source, source._dtype, self, self._dtype))
 
         tmp = self._getIndexCascade()

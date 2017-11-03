@@ -161,7 +161,10 @@ def bitsArithOp(self, other, op):
         resT = self._dtype
         if self._dtype.signed is None:
             self = self._unsigned()
+
         if isinstance(other._dtype, Bits):
+            assert other._dtype.bit_length() == resT.bit_length(
+            ), (op, other._dtype.bit_length(), resT.bit_length())
             other = other._convSign(self._dtype.signed)
         elif isinstance(other._dtype, Integer):
             pass
