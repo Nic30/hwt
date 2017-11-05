@@ -21,6 +21,7 @@ from typing import Optional
 
 
 def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
+               targetPlatform=None,
                dumpModelIn: str=None, onAfterToRtl=None):
     """
     Create simulation model and connect it with interfaces of original unit
@@ -29,6 +30,7 @@ def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
     :param unit: interface level unit which you wont prepare for simulation
     :param modelCls: class of rtl simulation model to run simulation on,
         if is None rtl sim model will be generated from unit
+    :param targetPlatform: target platform for this synthes
     :param dumpModelIn: folder to where put sim model files
         (if is None sim model will be constructed only in memory)
     :param onAfterToRtl: callback fn(unit, modelCls) which will be called
@@ -40,7 +42,8 @@ def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
         )
     """
     if modelCls is None:
-        modelCls = toSimModel(unit, dumpModelIn=dumpModelIn)
+        modelCls = toSimModel(
+            unit, targetPlatform=targetPlatform, dumpModelIn=dumpModelIn)
     else:
         # to instantiate hierarchy of unit
         toSimModel(unit)
@@ -54,15 +57,17 @@ def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
     return unit, model, procs
 
 
-def toSimModel(unit, dumpModelIn=None):
+def toSimModel(unit, targetPlatform=None, dumpModelIn=None):
     """
     Create a simulation model for unit
 
     :param unit: interface level unit which you wont prepare for simulation
+    :param targetPlatform: target platform for this synthes
     :param dumpModelIn: folder to where put sim model files
         (otherwise sim model will be constructed only in memory)
     """
     sim_code = toRtl(unit,
+                     targetPlatform=targetPlatform,
                      saveTo=dumpModelIn,
                      serializer=SimModelSerializer)
     if dumpModelIn is not None:
