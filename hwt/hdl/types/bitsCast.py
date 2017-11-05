@@ -8,7 +8,7 @@ from hwt.hdl.types.hdlType import default_auto_cast_fn
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
 from hwt.hdl.value import Value
-from hwt.synthesizer.vectorUtils import iterBits, fitTo, fitTo_t
+from hwt.synthesizer.vectorUtils import iterBits, fitTo_t
 
 
 def convertBits__val(self, val, toType):

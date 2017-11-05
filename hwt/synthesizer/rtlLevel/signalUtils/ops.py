@@ -8,6 +8,7 @@ from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from typing import List
 
 
 def tv(signal):
@@ -160,7 +161,7 @@ class RtlSignalOps():
         except MultipleDriversExc:
             pass
 
-    def __call__(self, source):
+    def __call__(self, source) -> List[Assignment]:
         """
         Create assignment to this signal
 
