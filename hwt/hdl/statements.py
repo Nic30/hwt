@@ -1,3 +1,7 @@
+from hwt.hdl.assignment import Assignment
+from _functools import reduce
+from hwt.hdl.value import Value
+
 
 def seqEvalCond(cond):
     _cond = True
@@ -5,6 +9,31 @@ def seqEvalCond(cond):
         _cond = _cond and bool(c.staticEval().val)
 
     return _cond
+
+
+def isSameHVal(a, b):
+    return a is b or (isinstance(a, Value)
+                      and isinstance(b, Value)
+                      and a.val == b.val
+                      and a.vldMask == b.vldMask)
+
+
+def isSameStatement(stmA, stmB):
+    if isinstance(stmA, Assignment):
+        if isinstance(stmB, Assignment):
+            if isSameHVal(stmA.dst, stmB.dst)\
+                    and isSameHVal(stmA.src, stmB.src):
+                return True
+        return False
+    else:
+        return stmA.isSame(stmB)
+
+
+def isSameStatementList(stmListA, stmListB):
+    for a, b in zip(stmListA, stmListB):
+        if not isSameStatement(a, b):
+            return False
+    return True
 
 
 class CodeStatement():
@@ -21,6 +50,15 @@ class CodeStatement():
 
         s = getattr(VhdlSerializer, self.__class__.__name__)(self, ctx)
         return "%s%s" % (tmpVars.serialize(), s)
+
+
+def statementsAreSame(statements):
+    iterator = iter(statements)
+    try:
+        first = next(iterator)
+    except StopIteration:
+        return True
+    return all(isSameStatement(first, rest) for rest in iterator)
 
 
 class IfContainer(CodeStatement):
@@ -41,6 +79,52 @@ class IfContainer(CodeStatement):
         self.ifTrue = ifTrue
         self.elIfs = elIfs
         self.ifFalse = ifFalse
+
+    @classmethod
+    def potentialyReduced(cls, cond, ifTrue=[], ifFalse=[], elIfs=[]):
+        """
+        If conditions have no effect on result
+        IfContainer is reduced to just list of assignments
+        """
+        if IfContainer.condHasEffect(ifTrue, ifFalse, elIfs):
+            return [IfContainer(cond, ifTrue, ifFalse, elIfs), ]
+        else:
+            return ifTrue
+
+    @classmethod
+    def condHasEffect(cls, ifTrue, ifFalse, elIfs):
+        stmCnt = len(ifTrue)
+        if stmCnt == len(ifFalse) and reduce(lambda x, y: x and y,
+                                             [len(stm) == stmCnt
+                                              for _, stm in elIfs],
+                                             True):
+            for stms in zip(ifTrue, ifFalse, *map(lambda x: x[1], elIfs)):
+                if not statementsAreSame(stms):
+                    return True
+            return False
+        return True
+
+    def isSame(self, other):
+        """
+        :return: True if other has same meaning as this statement
+        """
+        if isinstance(other, IfContainer):
+            if self.cond == other.cond:
+                if len(self.ifTrue) == len(other.ifTrue) \
+                        and len(self.ifFalse) == len(other.ifFalse) \
+                        and len(self.elIfs) == len(other.elIfs):
+                    if not isSameStatementList(self.ifTrue,
+                                               other.ifTrue) \
+                            or not isSameStatementList(self.ifFalse,
+                                                       other.ifFalse):
+                        return False
+                    for (ac, astms), (bc, bstms) in zip(self.elIfs,
+                                                        other.elIfs):
+                        if not (ac == bc) or\
+                                not isSameStatementList(astms, bstms):
+                            return False
+                    return True
+        return False
 
     def seqEval(self):
         if seqEvalCond(self.cond):
@@ -66,6 +150,18 @@ class SwitchContainer(CodeStatement):
         self.switchOn = switchOn
         self.cases = cases
         self.default = default
+
+    def isSame(self, other):
+        if isinstance(other, SwitchContainer) \
+                and isSameHVal(self.switchOn, other.switchOn)\
+                and len(self.cases) == len(other.cases)\
+                and isSameStatementList(self.default, other.default):
+            for (ac, astm), (bc, bstm) in zip(self.cases, other.cases):
+                if not isSameHVal(ac, bc)\
+                        or not isSameStatementList(astm, bstm):
+                    return False
+            return True
+        return False
 
     def seqEval(self):
         raise NotImplementedError()
