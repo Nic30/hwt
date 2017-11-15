@@ -250,7 +250,7 @@ def renderIfTree(statements, resolvedCnt=0):
                         stms = elIf[1]
                         if restOfCond:
                             stms = IfContainer.potentialyReduced(restOfCond,
-                                                                  stms)
+                                                                 stms)
                         cases.append((v, stms))
 
                 # if only last can not be part of the switch case it can be
