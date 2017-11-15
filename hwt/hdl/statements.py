@@ -1,6 +1,7 @@
 from hwt.hdl.assignment import Assignment
 from _functools import reduce
 from hwt.hdl.value import Value
+from typing import List
 
 
 def seqEvalCond(cond):
@@ -81,10 +82,13 @@ class IfContainer(CodeStatement):
         self.ifFalse = ifFalse
 
     @classmethod
-    def potentialyReduced(cls, cond, ifTrue=[], ifFalse=[], elIfs=[]):
+    def potentialyReduced(cls, cond, ifTrue=[], ifFalse=[], elIfs=[])\
+            -> List[CodeStatement]:
         """
         If conditions have no effect on result
         IfContainer is reduced to just list of assignments
+
+        Params same as `IfContainer.__init__`
         """
         if IfContainer.condHasEffect(ifTrue, ifFalse, elIfs):
             return [IfContainer(cond, ifTrue, ifFalse, elIfs), ]
