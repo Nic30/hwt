@@ -284,16 +284,19 @@ class BitsVal(EventCapableVal):
                     stop = stop + parentLower
                     return original[start:stop]
 
+            # check start boundaries
             if startIsVal:
                 _start = int(start)
                 if _start < 0 or _start > length:
                     raise IndexError(_start, length)
 
+            # check end boundaries
             if stopIsVal:
                 _stop = int(stop)
                 if _stop < 0 or _stop > length:
                     raise IndexError(_stop, length)
 
+            # check width of selected range
             if startIsVal and stopIsVal and _start - _stop <= 0:
                 raise IndexError(_start, _stop)
 
@@ -306,6 +309,7 @@ class BitsVal(EventCapableVal):
                             signed=st.signed)
 
         elif isinstance(key, IntegerVal):
+            # check index range
             _v = int(key)
             if _v < 0 or _v > length - 1:
                 raise IndexError(_v)

@@ -182,9 +182,10 @@ class RtlSignalOps():
             except TypeConversionErr:
                 err = True
             if err:
-                raise TypeConversionErr(("Can not connect %r (of type %r) to %r "
-                                         "(of type %r) due type incompatibility")
-                                        % (source, source._dtype, self, self._dtype))
+                raise TypeConversionErr(
+                    ("Can not connect %r (of type %r) to %r "
+                     "(of type %r) due type incompatibility")
+                    % (source, source._dtype, self, self._dtype))
 
         tmp = self._getIndexCascade()
         if tmp:
