@@ -305,7 +305,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
             try:
                 myP = getattr(self, onParentName)
                 if not isinstance(myP, Param):
-                    raise AttributeError()
+                    continue
             except AttributeError:
                 continue
 

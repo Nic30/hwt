@@ -23,12 +23,12 @@ class HdlType():
         on first convert function call)
     """
 
-    def fromPy(self, v):
+    def fromPy(self, v, vldMask=None):
         """
         Construct value of this type.
         Delegated on value class for this type
         """
-        return self.getValueCls().fromPy(v, self)
+        return self.getValueCls().fromPy(v, self, vldMask=vldMask)
 
     def auto_cast(self, sigOrVal, toType):
         """

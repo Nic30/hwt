@@ -147,7 +147,8 @@ class RtlSignalOps():
             try:
                 op = d.operator
             except AttributeError:
-                op = None
+                return
+
             if op == AllOps.INDEX:
                 # get signal on which is index applied
                 indexedOn = d.operands[0]

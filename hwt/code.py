@@ -1,5 +1,5 @@
 import math
-from operator import and_, or_, xor
+from operator import and_, or_, xor, add
 
 from hwt.hdl.operatorDefs import concatFn
 from hwt.hdl.typeShortcuts import hInt, vec
@@ -13,7 +13,6 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
 from hwt.synthesizer.vectorUtils import fitTo
-from _operator import add
 
 
 def _intfToSig(obj):
@@ -88,10 +87,9 @@ class If(StmCntx):
         thisCond.add(cond)
         for c in reversed(self.elifConds):
             thisCond.add(~c)
+
         thisCond.add(~self.cond)
-
         self._appendStatements(thisCond, statements)
-
         self.elifConds.append(cond)
 
         return self
@@ -115,6 +113,7 @@ class Switch(StmCntx):
             If.__init__(self, cond, *statements)
         else:
             If.Elif(self, cond, *statements)
+
         return self
 
     def addCases(self, tupesValStmnts):
@@ -132,6 +131,7 @@ class Switch(StmCntx):
         if self.cond is None:
             # no cases were used
             return statements
+
         return If.Else(self, *statements)
 
 
@@ -177,6 +177,7 @@ def In(sigOrVal, iterable):
             res = sigOrVal._eq(i)
         else:
             res = res | sigOrVal._eq(i)
+
     assert res is not None, "Parameter iterable is empty"
     return res
 
@@ -219,7 +220,8 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
               ).Else(
                index(index + 1)
            )
-           )
+        )
+
         return Switch(index)\
             .addCases(
             enumerate(statementLists)

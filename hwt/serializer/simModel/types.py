@@ -9,6 +9,7 @@ class SimModelSerializer_types():
 
     @classmethod
     def HdlType_bits(cls, typ, ctx, declaration=False):
+        assert not declaration
         if typ.signed is None:
             if not (typ.forceVector or typ.bit_length() > 1):
                 return 'SIM_BIT'

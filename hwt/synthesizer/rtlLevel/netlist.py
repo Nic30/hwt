@@ -266,6 +266,6 @@ class RtlNetlist():
             try:
                 p = p._parent
             except AttributeError:
-                p = None
+                break
 
         return ".".join(reversed(scope))

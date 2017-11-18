@@ -37,7 +37,8 @@ class MakeParamsShared(object):
                                                 self.unit)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.unit._setAttrListener = self.orig
+        if exc_type is None:
+            self.unit._setAttrListener = self.orig
 
 
 class MakeClkRstAssociations(object):
@@ -70,7 +71,8 @@ class MakeClkRstAssociations(object):
                                                 self.unit)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.unit._setAttrListener = self.orig
+        if exc_type is None:
+            self.unit._setAttrListener = self.orig
 
 
 class PropDeclrCollector(object):

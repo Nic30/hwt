@@ -10,6 +10,11 @@ class StructValBase(Value):
     __slots__ = []
 
     def __init__(self, val, typeObj, skipCheck=False):
+        """
+        :param val: None or dict {field name: field value}
+        :param typeObj: instance of String HdlType
+        :param skipCheck: flag to skip field name consystency in val
+        """
         self._dtype = typeObj
         self.updateTime = -1
         if not skipCheck and val is not None:
@@ -41,7 +46,16 @@ class StructValBase(Value):
         return self.__class__(d, self._dtype, skipCheck=True)
 
     @classmethod
-    def fromPy(cls, val, typeObj):
+    def fromPy(cls, val, typeObj, vldMask=None):
+        """
+        :param val: None or dict {field name: field value}
+        :param typeObj: instance of String HdlType
+        :param vldMask: if is None validity is resolved from val
+            if is 0 value is invalidated
+            if is 1 value has to be valid
+        """
+        if vldMask == 0:
+            val = None
         return cls(val, typeObj)
 
     def __eq__(self, other):

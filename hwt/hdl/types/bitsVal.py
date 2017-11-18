@@ -91,17 +91,18 @@ class BitsVal(EventCapableVal):
         return self._convSign(None)
 
     @classmethod
-    def fromPy(cls, val, typeObj):
+    def fromPy(cls, val, typeObj, vldMask=None):
         """
         Construct value from pythonic value (int, bytes, enum.Enum member)
         """
         assert not isinstance(val, Value)
-        allMask = typeObj.all_mask()
-        w = typeObj.bit_length()
         if val is None:
             vld = 0
             val = 0
+            assert vldMask is None or vldMask == 0
         else:
+            allMask = typeObj.all_mask()
+            w = typeObj.bit_length()
             if isinstance(val, bytes):
                 val = int.from_bytes(
                     val, byteorder="little", signed=bool(typeObj.signed))
@@ -114,21 +115,28 @@ class BitsVal(EventCapableVal):
                     else:
                         raise e
 
-            vld = allMask
+            if vldMask is None:
+                vld = allMask
+            else:
+                assert vldMask <= allMask and vldMask >= 0
+                vld = vldMask
 
-        if val < 0:
-            assert typeObj.signed
-            assert signFix(val & allMask, w) == val, (
-                val, signFix(val & allMask, w))
-        else:
-            if typeObj.signed:
-                msb = 1 << (w - 1)
-                if msb & val:
-                    assert val < 0, val
+            if val < 0:
+                assert typeObj.signed
+                assert signFix(val & allMask, w) == val, (
+                    val, signFix(val & allMask, w))
+                val = signFix(val & vld, w)
+            else:
+                if typeObj.signed:
+                    msb = 1 << (w - 1)
+                    if msb & val:
+                        assert val < 0, val
 
-            if val & allMask != val:
-                raise ValueError(
-                    "Not enought bits to represent value", val, val & allMask)
+                if val & allMask != val:
+                    raise ValueError(
+                        "Not enought bits to represent value",
+                        val, val & allMask)
+                val = val & vld
 
         return cls(val, typeObj, vld)
 

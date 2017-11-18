@@ -14,12 +14,21 @@ class HArrayVal(Value):
     """
 
     @classmethod
-    def fromPy(cls, val, typeObj):
+    def fromPy(cls, val, typeObj, vldMask=None):
+        """
+        :param val: None or dictionary {index:value} or iterrable of values
+        :param vldMask: if is None validity is resolved from val
+            if is 0 value is invalidated
+            if is 1 value has to be valid
+        """
         size = evalParam(typeObj.size)
         if isinstance(size, Value):
             size = int(size)
 
         elements = {}
+        if vldMask == 0:
+            val = None
+
         if val is None:
             pass
         elif isinstance(val, dict):
@@ -36,7 +45,13 @@ class HArrayVal(Value):
                     e = typeObj.elmType.fromPy(v)
                 elements[k] = e
 
-        return cls(elements, typeObj, int(bool(val)))
+        _mask = int(bool(val))
+        if vldMask is None:
+            vldMask = _mask
+        else:
+            assert (vldMask == _mask)
+
+        return cls(elements, typeObj, vldMask)
 
     def __hash__(self):
         return hash((self._dtype, self.updateTime))
