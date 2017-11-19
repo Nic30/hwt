@@ -7,7 +7,7 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps, sensitivityByOp
-from hwt.hdl.statements import IfContainer
+from hwt.hdl.statements import IfContainer, SwitchContainer
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.serializer.generic.serializer import GenericSerializer
@@ -20,10 +20,14 @@ from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.nameScope import LangueKeyword
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
+from hwt.hdl.process import HWProcess
+from hwt.serializer.serializerClases.context import SerializerCtx
+from hwt.hdl.entity import Entity
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/hwt/templates'))
-unitTmpl = env.get_template('modelCls.py.template')
+unitHeadTmpl = env.get_template('unit_head.py.template')
+unitBodyTmpl = env.get_template('unit_body.py.template')
 processTmpl = env.get_template('process.py.template')
 ifTmpl = env.get_template("if.py.template")
 
@@ -43,7 +47,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         return True
 
     @classmethod
-    def stmAsHdl(cls, obj, ctx, enclosure=None):
+    def stmAsHdl(cls, obj, ctx: SerializerCtx, enclosure=None):
         try:
             serFn = getattr(cls, obj.__class__.__name__)
         except AttributeError:
@@ -51,8 +55,24 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         return serFn(obj, ctx, enclosure=enclosure)
 
     @classmethod
-    def Architecture(cls, arch: Architecture, ctx):
-        cls.Entity_prepare(arch.entity, ctx, serialize=False)
+    def Entity(cls, ent: Entity, ctx: SerializerCtx):
+        """
+        Entity is just forward declaration of Architecture, it is not used
+        in most HDL languages as there is no recursion in hierarchy
+        """
+
+        cls.Entity_prepare(ent, ctx, serialize=False)
+        ent.name = ctx.scope.checkedName(ent.name, ent, isGlobal=True)
+        ports = list(
+            map(lambda p: (p.name, cls.HdlType(p._dtype, ctx)),
+                ent.ports))
+        return unitHeadTmpl.render(
+            name=ent.name,
+            ports=ports,
+        )
+
+    @classmethod
+    def Architecture(cls, arch: Architecture, ctx: SerializerCtx):
         variables = []
         procs = []
         extraTypes = set()
@@ -60,10 +80,6 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         arch.variables.sort(key=lambda x: x.name)
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.componentInstances.sort(key=lambda x: x._name)
-
-        ports = list(
-            map(lambda p: (p.name, cls.HdlType(p._dtype, ctx)),
-                arch.entity.ports))
 
         for v in arch.variables:
             t = v._dtype
@@ -76,7 +92,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
             v.name = ctx.scope.checkedName(v.name, v)
             variables.append(v)
 
-        childCtx = copy(ctx)
+        childCtx = ctx.withIndent(2)
         childCtx.constCache = ConstCache(ctx.scope.checkedName)
 
         def serializeVar(v):
@@ -95,24 +111,23 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         for c in sorted(childCtx.constCache._cache.items(), key=lambda x: x[1],
                         reverse=True):
             constants.append((c[1], cls.Value(c[0], ctx)))
+        portNames = [p.name for p in arch.entity.ports]
+        portToLocalsRow = "%s = %s" % (
+            ", ".join(portNames),
+            ", ".join(["self." + n for n in portNames]))
 
-        return unitTmpl.render(
+        return unitBodyTmpl.render(
             name=arch.getEntityName(),
+            portToLocalsRow=portToLocalsRow,
             constants=constants,
-            ports=ports,
             signals=list(map(serializeVar, variables)),
             extraTypes=extraTypes_serialized,
             processes=procs,
-            processObjects=arch.processes,
-            processesNames=map(lambda p: p.name, arch.processes),
             componentInstances=arch.componentInstances,
-            isOp=lambda x: isinstance(x, Operator),
-            sensitivityByOp=sensitivityByOp,
-            serialize_io=cls.sensitivityListItem,
         )
 
     @classmethod
-    def Assignment(cls, a, ctx, enclosure=None):
+    def Assignment(cls, a: Assignment, ctx: SerializerCtx, enclosure=None):
         dst = a.dst
         indentStr = getIndent(ctx.indent)
         srcStr = "%s" % cls.Value(a.src, ctx)
@@ -128,11 +143,11 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         )
 
     @classmethod
-    def comment(cls, comentStr):
-        return "#" + comentStr.replace("\n", "\n#")
+    def comment(cls, coment: str):
+        return "#" + coment.replace("\n", "\n#")
 
     @classmethod
-    def IfContainer(cls, ifc, ctx, enclosure=None):
+    def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx, enclosure=None):
         cond = cls.condAsHdl(ifc.cond, ctx)
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
@@ -171,7 +186,8 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
                                   ifFalse)))
 
     @classmethod
-    def SwitchContainer(cls, sw, ctx, enclosure=None):
+    def SwitchContainer(cls, sw: SwitchContainer,
+                        ctx: SerializerCtx, enclosure=None):
         switchOn = sw.switchOn
 
         def mkCond(c):
@@ -207,25 +223,25 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
             return item.name
 
     @classmethod
-    def HWProcess(cls, proc, ctx):
+    def HWProcess(cls, proc: HWProcess, ctx: SerializerCtx):
         body = proc.statements
         proc.name = ctx.scope.checkedName(proc.name, proc)
         sensitivityList = sorted(
             map(cls.sensitivityListItem, proc.sensitivityList))
 
-        childCtx = ctx.withIndent(2)
         if len(body) == 1:
-            _body = cls.stmAsHdl(body[0], childCtx)
+            _body = cls.stmAsHdl(body[0], ctx)
         else:
             for i, stm in enumerate(body):
                 if not isinstance(stm, Assignment):
                     break
             # first statement is taken as default
             enclosure = body[:i]
-            _body = "\n".join([cls.stmAsHdl(stm, childCtx, enclosure=enclosure)
+            _body = "\n".join([cls.stmAsHdl(stm, ctx, enclosure=enclosure)
                                for stm in body[i:]])
 
         return processTmpl.render(
+            indent=getIndent(ctx.indent),
             name=proc.name,
             sensitivityList=sensitivityList,
             stmLines=[_body]

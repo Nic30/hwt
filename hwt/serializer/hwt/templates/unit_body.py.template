@@ -1,0 +1,23 @@
+    def _impl(self):
+        {{ portToLocalsRow }}{% 
+if signals %}
+        # internal signals{% for name, dtype, defVal in signals %}
+        {{name}} = self._sig("{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}{% 
+endif %}{% 
+if componentInstances %}{% 
+    for c in componentInstances %}
+        self.{{c._name}} = {{c.name}}()
+        # connect ports{%
+        for p in c.ports %}
+            self.{{c.name}}.{% 
+            if p.direction == "IN"
+               %}{{p.dst.name}}({{p.src.name}}){%
+            else 
+               %}{{p.src.name}}({{p.dst.name}}){%
+            endif %}
+        {% endfor %}{% 
+    endfor %}{% 
+endif %}{%
+for proc in processes %}
+{{    proc}}{%
+endfor %}

@@ -28,7 +28,7 @@ class HwtSerializer_value(GenericSerializer_Value):
             if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin, ctx)
             else:
-                return "self.%s._oldVal" % si.name
+                return "%s" % si.name
 
     @classmethod
     def Integer_valAsHdl(cls, t, i, ctx):

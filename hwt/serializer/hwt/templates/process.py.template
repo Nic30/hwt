@@ -1,4 +1,2 @@
-    # sensitivity: {{sensitivityList|join(", ")}}
-    def {{name}}(self, sim, io):
-        cVld_1 = True{% for stmLine in stmLines %}
+{{ indent }}# {{name}} sensitivity: {{sensitivityList|join(", ")}}{% for stmLine in stmLines %}
 {{ stmLine }}{% endfor %}
