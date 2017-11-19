@@ -1,3 +1,4 @@
+from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
@@ -15,7 +16,7 @@ def isConst(item):
     return isinstance(item, Value) or item._const
 
 
-class Operator():
+class Operator(HdlObject):
     """
     Class of operator in expression tree
 
@@ -90,8 +91,3 @@ class Operator():
 
     def __hash__(self):
         return hash((self.operator, frozenset(self.operands)))
-
-    def __repr__(self):
-        return "<%s operator:%r, operands:%r>" % (self.__class__.__name__,
-                                                  self.operator,
-                                                  self.operands)

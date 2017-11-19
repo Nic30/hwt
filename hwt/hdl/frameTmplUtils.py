@@ -170,6 +170,10 @@ def groupIntoChoices(splitsOnWord, wordWidth: int, origin: OneOfTransaction):
 
 
 class TransTmplWordIterator():
+    """
+    Iterator which reinterprets any structure
+    as generator of bits of specified width
+    """
     def __init__(self, wordWidth):
         self.wordWidth = wordWidth
 

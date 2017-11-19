@@ -1,7 +1,8 @@
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.hdlObject import HdlObject
 
 
-class SignalItem(object):
+class SignalItem(HdlObject):
     """
     basic hdl signal used to design circuits
     """
@@ -32,12 +33,3 @@ class SignalItem(object):
         self._val = v.clone()
         self._oldVal = self._val.clone()
         self._oldVal.vldMask = 0
-
-    def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer,\
-            DebugTmpVarStack
-        tmpVars = DebugTmpVarStack()
-        ctx = VhdlSerializer.getBaseContext()
-        ctx.createTmpVarFn = tmpVars.createTmpVarFn
-        s = VhdlSerializer.SignalItem(self, ctx)
-        return "%s%s" % (tmpVars.serialize(), s)

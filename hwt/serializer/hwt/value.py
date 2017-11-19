@@ -13,6 +13,10 @@ class HwtSerializer_value(GenericSerializer_Value):
             val.val, val.vldMask)
 
     @classmethod
+    def RtlSignal(cls, s, ctx, declaration=False):
+        return cls.SignalItem(s, ctx, declaration=declaration)
+
+    @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
             raise NotImplementedError()

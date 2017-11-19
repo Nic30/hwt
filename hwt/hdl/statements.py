@@ -1,7 +1,9 @@
-from hwt.hdl.assignment import Assignment
 from _functools import reduce
-from hwt.hdl.value import Value
 from typing import List
+
+from hwt.hdl.assignment import Assignment
+from hwt.hdl.hdlObject import HdlObject
+from hwt.hdl.value import Value
 
 
 def seqEvalCond(cond):
@@ -37,22 +39,6 @@ def isSameStatementList(stmListA, stmListB):
     return True
 
 
-class CodeStatement():
-    """
-    Base class for code statements
-    """
-
-    def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer,\
-            DebugTmpVarStack
-        tmpVars = DebugTmpVarStack()
-        ctx = VhdlSerializer.getBaseContext()
-        ctx.createTmpVarFn = tmpVars.createTmpVarFn
-
-        s = getattr(VhdlSerializer, self.__class__.__name__)(self, ctx)
-        return "%s%s" % (tmpVars.serialize(), s)
-
-
 def statementsAreSame(statements):
     iterator = iter(statements)
     try:
@@ -62,7 +48,7 @@ def statementsAreSame(statements):
     return all(isSameStatement(first, rest) for rest in iterator)
 
 
-class IfContainer(CodeStatement):
+class IfContainer(HdlObject):
     """
     Structural container of if statement for hdl rendering
     """
@@ -83,7 +69,7 @@ class IfContainer(CodeStatement):
 
     @classmethod
     def potentialyReduced(cls, cond, ifTrue=[], ifFalse=[], elIfs=[])\
-            -> List[CodeStatement]:
+            -> List[HdlObject]:
         """
         If conditions have no effect on result
         IfContainer is reduced to just list of assignments
@@ -145,7 +131,7 @@ class IfContainer(CodeStatement):
                 s.seqEval()
 
 
-class SwitchContainer(CodeStatement):
+class SwitchContainer(HdlObject):
     """
     Structural container for switch statement for hdl rendering
     """
@@ -171,7 +157,7 @@ class SwitchContainer(CodeStatement):
         raise NotImplementedError()
 
 
-class WhileContainer(CodeStatement):
+class WhileContainer(HdlObject):
     """
     Structural container of while statement for hdl rendering
     """
@@ -186,7 +172,7 @@ class WhileContainer(CodeStatement):
                 s.seqEval()
 
 
-class WaitStm(CodeStatement):
+class WaitStm(HdlObject):
     """
     Structural container of wait statemnet for hdl rendering
     """

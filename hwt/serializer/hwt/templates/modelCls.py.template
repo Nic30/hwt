@@ -1,21 +1,10 @@
 from importlib import reload
 
-from hwt.hdl.types.array import HArray
-from hwt.hdl.types.arrayVal import HArrayVal
-from hwt.hdl.types.bitsCast import convertBits__val
-from hwt.hdl.types.bitsVal import BitsVal
-from hwt.hdl.types.defs import SLICE
+from hwt.interfaces.std import Signal
+from hwt.synthesizer.unit import Unit
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.constants import DIRECTION, SENSITIVITY
-from hwt.simulator.types.simInt import simHInt, SIM_INT
-from hwt.simulator.types.simBits import simBitsT, SIM_BIT
-from hwt.simulator.types.simBitsConversions import convertSimBits__val
-from hwt.simulator.simModel import (SimModel, sensitivity, connectSimPort,
-                                            simEvalCond, mkUpdater, mkArrayUpdater)
-from hwt.code import power
-from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
-from hwt.simulator.simSignal import SimSignal
-from hwt.hdl.types.sliceVal import SliceVal
+from hwt.code import power, If, Concat
+from hwt.synthesizer.param import Param
 
 {% for c in componentInstances %}
 if "{{c.name}}" not in locals(): # support for all models in single file
@@ -26,21 +15,28 @@ if "{{c.name}}" not in locals(): # support for all models in single file
 {{imp}}
 {% endfor %}
 
-class {{ name }}(SimModel):
-    _name = "{{ name }}" 
-    _cntx = RtlNetlist(){% for t in extraTypes %} 
-    {{t}}{% endfor %}{% for c in constants %}
-    {{c[0]}} = {{c[1]}}{% endfor %}
+class {{ name }}(Unit):
+    {% if config %}
+    def _config(self):{% for cname, cval in config %}
+        self.{{cname}} = Param({{cval}}){% endfor %}{% endif %}
     
-    # ports{% for name, dtype in ports %}
-    {{name}} = SimSignal(_cntx, "{{name}}", {{dtype}}){% endfor %}
+    def _declr(self):{% for name, dtype in ports %}
+        self.{{name}} = Signal({{dtype}}){% endfor %}
+		{% for c in componentInstances %}
+        # connect ports{% for p in c.ports %}
+        connectSimPort(self, {{c.name}},"{{p.src.name}}", "{{p.dst.name}}", {{p.direction}}){% endfor %}
+        self.{{c._name}} = {{c.name}}()
+        {% endfor %}
+		
+
     
-    # internal signals{% for name, dtype, defVal in signals %}
-    {{name}} = SimSignal(_cntx, "{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}
+    def _impl(self):
+		# internal signals{% for name, dtype, defVal in signals %}
+		{{name}} = self._sig("{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}
     
-{% for proc in processes %}
+	{% for proc in processes %}
 {{proc}}
-{% endfor %}
+	{% endfor %}
     
     def __init__(self):
         self._interfaces = [{% for name, _ in ports   %}self.{{name}},
@@ -48,11 +44,6 @@ class {{ name }}(SimModel):
                             {% endfor %}]
         self._processes = [{% for procName in processesNames %}self.{{procName}},
                            {% endfor %}]
-        {% for c in componentInstances %}
-        # connect ports{% for p in c.ports %}
-        connectSimPort(self, {{c.name}},"{{p.src.name}}", "{{p.dst.name}}", {{p.direction}}){% endfor %}
-        self.{{c._name}} = {{c.name}}()
-        {% endfor %}
         
         self._units = [{% for c in componentInstances %}self.{{c._name}},
                        {% endfor %}]
