@@ -1,3 +1,6 @@
+{% if componentInstances %}{% for c in componentInstances %}
+        self.{{c._name}} = {{c.name}}(){% endfor %}
+{% endif %}
     def _impl(self):
         {{ portToLocalsRow }}{% 
 if signals %}
@@ -6,16 +9,14 @@ if signals %}
 endif %}{% 
 if componentInstances %}{% 
     for c in componentInstances %}
-        self.{{c._name}} = {{c.name}}()
-        # connect ports{%
+        # connect ports of {{ c._name }}{%
         for p in c.ports %}
-            self.{{c.name}}.{% 
-            if p.direction == "IN"
-               %}{{p.dst.name}}({{p.src.name}}){%
-            else 
-               %}{{p.src.name}}({{p.dst.name}}){%
-            endif %}
-        {% endfor %}{% 
+        {% if p.direction == DIRECTION_IN
+              %}self.{{c._name}}.{{p.dst.name}}({{p.src.name}}){%
+           else 
+              %}{{p.dst.name}}(self.{{c._name}}.{{p.src.name}}){%
+           endif %}{% 
+        endfor %}{% 
     endfor %}{% 
 endif %}{%
 for proc in processes %}

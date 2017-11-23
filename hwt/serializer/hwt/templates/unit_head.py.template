@@ -22,5 +22,3 @@ class {{ name }}(Unit):
 {% endif %}
     def _declr(self):{% for name, dtype in ports %}
         self.{{name}} = Signal({{dtype}}){% endfor %}
-		{% for c in componentInstances %}
-        self.{{c._name}} = {{c.name}}(){% endfor %}

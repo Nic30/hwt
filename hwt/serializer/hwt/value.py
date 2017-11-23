@@ -63,7 +63,7 @@ class HwtSerializer_value(GenericSerializer_Value):
 
     @classmethod
     def HEnumValAsHdl(cls, t, val, ctx):
-        return "self.%s.%s" % (t.name, val.val)
+        return "%s.%s" % (t.name, val.val)
 
     @classmethod
     def condAsHdl(cls, cond, ctx):

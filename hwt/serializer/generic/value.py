@@ -44,8 +44,8 @@ class GenericSerializer_Value():
         elif isinstance(t, String):
             return cls.String_valAsHdl(t, val, ctx)
         else:
-            raise Exception("value2vhdlformat can not resolve"
-                            "value serialization for %r" % (val))
+            raise Exception("can not resolve value serialization for %r"
+                            % (val))
 
     @classmethod
     def Integer_valAsHdl(cls, dtype, val, ctx):
@@ -60,6 +60,8 @@ class GenericSerializer_Value():
             else:
                 return cls.BitLiteral(val.val, val.vldMask)
         elif dtype.signed:
-            return cls.SignedBitString(val.val, w, dtype.forceVector, val.vldMask)
+            return cls.SignedBitString(val.val, w, dtype.forceVector,
+                                       val.vldMask)
         else:
-            return cls.UnsignedBitString(val.val, w, dtype.forceVector, val.vldMask)
+            return cls.UnsignedBitString(val.val, w, dtype.forceVector,
+                                         val.vldMask)

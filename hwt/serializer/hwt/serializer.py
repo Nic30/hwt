@@ -1,12 +1,13 @@
-from copy import copy
 from jinja2.environment import Environment
 from jinja2.loaders import PackageLoader
 
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.constants import SENSITIVITY
+from hwt.hdl.constants import SENSITIVITY, DIRECTION
+from hwt.hdl.entity import Entity
 from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps, sensitivityByOp
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.process import HWProcess
 from hwt.hdl.statements import IfContainer, SwitchContainer
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
@@ -16,13 +17,11 @@ from hwt.serializer.hwt.ops import HwtSerializer_ops
 from hwt.serializer.hwt.types import HwtSerializer_types
 from hwt.serializer.hwt.value import HwtSerializer_value
 from hwt.serializer.serializerClases.constCache import ConstCache
+from hwt.serializer.serializerClases.context import SerializerCtx
 from hwt.serializer.serializerClases.indent import getIndent
 from hwt.serializer.serializerClases.nameScope import LangueKeyword
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
-from hwt.hdl.process import HWProcess
-from hwt.serializer.serializerClases.context import SerializerCtx
-from hwt.hdl.entity import Entity
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/hwt/templates'))
@@ -111,12 +110,14 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         for c in sorted(childCtx.constCache._cache.items(), key=lambda x: x[1],
                         reverse=True):
             constants.append((c[1], cls.Value(c[0], ctx)))
+
         portNames = [p.name for p in arch.entity.ports]
         portToLocalsRow = "%s = %s" % (
             ", ".join(portNames),
             ", ".join(["self." + n for n in portNames]))
 
         return unitBodyTmpl.render(
+            DIRECTION_IN=DIRECTION.IN,
             name=arch.getEntityName(),
             portToLocalsRow=portToLocalsRow,
             constants=constants,
@@ -151,39 +152,31 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         cond = cls.condAsHdl(ifc.cond, ctx)
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
-
-        if ifc.elIfs:
-            # if has elifs rewind this to tree
-            ifFalse = []
-            topIf = IfContainer(ifc.cond, ifc.ifTrue, ifFalse)
-            for c, stms in ifc.elIfs:
-                _ifFalse = []
-                lastIf = IfContainer(c, stms, _ifFalse)
-                ifFalse.append(lastIf)
-                ifFalse = _ifFalse
-
-            lastIf.ifFalse = ifc.ifFalse
-
-            return cls.IfContainer(topIf, ctx, enclosure=enclosure)
+        childCtx = ctx.withIndent()
+        if enclosure is None:
+            _enclosure = "# no enclosure"
         else:
-            childCtx = ctx.withIndent()
-            if enclosure is None:
-                _enclosure = getIndent(childCtx.indent) + "pass"
-            else:
-                _enclosure = "\n".join(
-                    [cls.stmAsHdl(e, childCtx) for e in enclosure])
+            _enclosure = "\n".join(
+                [cls.stmAsHdl(e, childCtx) for e in enclosure])
 
-            return ifTmpl.render(
-                indent=getIndent(ctx.indent),
-                indentNum=ctx.indent,
-                cond=cond,
-                enclosure=_enclosure,
-                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, childCtx,
-                                                          enclosure=enclosure),
-                                 ifTrue)),
-                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, childCtx,
-                                                           enclosure=enclosure),
-                                  ifFalse)))
+        def serialize_statements(statements):
+            return [cls.stmAsHdl(obj, childCtx, enclosure=enclosure)
+                    for obj in statements]
+
+        def serialize_elif(elifCase):
+            cond, statements = elifCase
+            return (cls.condAsHdl(cond, ctx),
+                    serialize_statements(statements))
+
+        return ifTmpl.render(
+            indent=getIndent(ctx.indent),
+            indentNum=ctx.indent,
+            cond=cond,
+            enclosure=_enclosure,
+            ifTrue=serialize_statements(ifTrue),
+            elIfs=[serialize_elif(elIf) for elIf in ifc.elIfs],
+            ifFalse=serialize_statements(ifFalse)
+        )
 
     @classmethod
     def SwitchContainer(cls, sw: SwitchContainer,
