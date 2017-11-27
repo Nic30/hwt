@@ -87,21 +87,18 @@ ENTITY AxiLiteEndpoint IS
     GENERIC (ADDR_WIDTH: INTEGER := 8;
         DATA_WIDTH: INTEGER := 32;
         decoded_data0_ADDR_WIDTH: INTEGER := 2;
-        decoded_data1_ADDR_WIDTH: INTEGER := 2;
-        decoded_data2_ADDR_WIDTH: INTEGER := 1;
-        decoded_data4_data4a_DATA_WIDTH: INTEGER := 16;
-        decoded_data4_data4b_DATA_WIDTH: INTEGER := 16
+...
     );
     PORT (bus_ar_addr: IN STD_LOGIC_VECTOR(ADDR_WIDTH - 1 DOWNTO 0);
         bus_ar_ready: OUT STD_LOGIC;
         bus_ar_valid: IN STD_LOGIC;
-  ...
+...
         decoded_data0_addr: OUT STD_LOGIC_VECTOR(decoded_data0_ADDR_WIDTH - 1 DOWNTO 0);
         decoded_data0_din: OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
         decoded_data0_dout: IN STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
         decoded_data0_en: OUT STD_LOGIC;
         decoded_data0_we: OUT STD_LOGIC;
-  ...
+...
 <AxiLite, name=bus, _masterDir=DIRECTION.OUT>
 <RegCntrl, name=decoded.data3, _masterDir=DIRECTION.OUT>
 <StructIntf, name=decoded.data4, _masterDir=DIRECTION.OUT>
