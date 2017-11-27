@@ -33,6 +33,8 @@ Also keep in mind that HWT itself is usualy used just like api for code generati
 
 ## Example
 
+* AxiLiteEndpoint is derived from BusEndpoint class and implements slave decoder for AxiLite bus
+
 ```python
 from hwt.synthesizer.utils import toRtl
 from hwt.serializer.vhdl.serializer import VhdlSerializer
@@ -58,7 +60,8 @@ t = HStruct(
 
 # type flattening can be specified by shouldEnterFn parameter
 # target interface can be overriden by _mkFieldInterface function
-# there are other bus endpoints, for example:
+
+# There are other bus endpoints, for example:
 # IpifEndpoint, I2cEndpoint, AvalonMmEndpoint and others
 # decoded interfaces for data type will be same just bus interface
 # will difer
