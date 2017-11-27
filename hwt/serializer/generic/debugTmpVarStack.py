@@ -1,6 +1,6 @@
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.variables import SignalItem
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 
 
 class DebugTmpVarStack():

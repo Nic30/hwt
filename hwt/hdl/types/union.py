@@ -3,7 +3,7 @@ from collections import OrderedDict
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
 from hwt.hdl.value import Value
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 
 
 protectedNames = {"clone", "staticEval",

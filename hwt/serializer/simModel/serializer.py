@@ -14,9 +14,9 @@ from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
-from hwt.serializer.serializerClases.constCache import ConstCache
-from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.serializerClases.nameScope import LangueKeyword
+from hwt.serializer.generic.constCache import ConstCache
+from hwt.serializer.generic.indent import getIndent
+from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.simModel.keywords import SIMMODEL_KEYWORDS
 from hwt.serializer.simModel.ops import SimModelSerializer_ops
 from hwt.serializer.simModel.types import SimModelSerializer_types

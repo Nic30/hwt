@@ -5,7 +5,7 @@ from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 

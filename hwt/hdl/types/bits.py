@@ -1,6 +1,6 @@
 from hwt.bitmask import mask
 from hwt.hdl.types.hdlType import HdlType
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 
 
 class Bits(HdlType):

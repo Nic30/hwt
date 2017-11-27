@@ -1,5 +1,5 @@
 from hwt.hdl.value import Value, areValues
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 
 
 class StructValBase(Value):

@@ -1,7 +1,7 @@
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import PortItem
 from hwt.pyUtils.arrayQuery import arr_any
-from hwt.serializer.serializerClases.constants import SIGNAL_TYPE
+from hwt.serializer.generic.constants import SIGNAL_TYPE
 
 
 def _isEventDependentDriver(d):

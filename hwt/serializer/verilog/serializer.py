@@ -2,10 +2,10 @@ from hwt.hdl.entity import Entity
 from hwt.hdl.types.array import HArray
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
-from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.serializerClases.mapExpr import MapExpr
-from hwt.serializer.serializerClases.nameScope import LangueKeyword
-from hwt.serializer.serializerClases.portMap import PortMap
+from hwt.serializer.generic.indent import getIndent
+from hwt.serializer.generic.mapExpr import MapExpr
+from hwt.serializer.generic.nameScope import LangueKeyword
+from hwt.serializer.generic.portMap import PortMap
 from hwt.serializer.utils import maxStmId
 from hwt.serializer.verilog.context import VerilogSerializerCtx
 from hwt.serializer.verilog.keywords import VERILOG_KEYWORDS

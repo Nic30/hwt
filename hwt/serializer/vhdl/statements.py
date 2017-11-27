@@ -9,7 +9,7 @@ from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc

@@ -16,10 +16,10 @@ from hwt.serializer.hwt.keywords import HWT_KEYWORDS
 from hwt.serializer.hwt.ops import HwtSerializer_ops
 from hwt.serializer.hwt.types import HwtSerializer_types
 from hwt.serializer.hwt.value import HwtSerializer_value
-from hwt.serializer.serializerClases.constCache import ConstCache
-from hwt.serializer.serializerClases.context import SerializerCtx
-from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.serializerClases.nameScope import LangueKeyword
+from hwt.serializer.generic.constCache import ConstCache
+from hwt.serializer.generic.context import SerializerCtx
+from hwt.serializer.generic.indent import getIndent
+from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
 

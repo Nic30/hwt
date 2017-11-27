@@ -1,6 +1,6 @@
 from copy import copy
 
-from hwt.serializer.serializerClases.context import SerializerCtx
+from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.verilog.utils import verilogTypeOfSig, SIGNAL_TYPE
 
 
