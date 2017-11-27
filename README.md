@@ -71,7 +71,10 @@ u = AxiLiteEndpoint(t)
 u.ADDR_WIDTH.set(8)
 u.DATA_WIDTH.set(32)
 
+# convert unit instance to target HDL
 print(toRtl(u, serializer=VhdlSerializer))
+# print interfaces just for demonstration
+print(u.bus)
 print(u.decoded.data3)
 print(u.decoded.data4)
 ```
