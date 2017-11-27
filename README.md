@@ -73,7 +73,7 @@ print(u.decoded.data3)
 print(u.decoded.data4)
 ```
 
-Expected output:
+Expected output (trimmed):
 ```vhdl
 --
 --    Delegate request from AxiLite interface to fields of structure
