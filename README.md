@@ -25,8 +25,8 @@
 
 
 Also keep in mind that HWT itself is usualy used just like api for code generating by more adwanced tools.
-* There is library full of examples and real designs as well at https://github.com/Nic30/hwtLib (for hwt is like stdlib for C).
-* (System) Verilog/VHDL compatibility layer at https://github.com/Nic30/hwtHdlParsers which allows you to import objects from HDL (not maintained).
+* There is library full of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib) (for hwt is like stdlib for C).
+* (System) Verilog/VHDL compatibility layer at [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) which allows you to import objects from HDL (not maintained).
 * There is HDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
 * There is prototype (pre alfa) of IDE [hwtIde](https://github.com/Nic30/hwtIde)
 
