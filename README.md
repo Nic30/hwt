@@ -1,4 +1,5 @@
-# HWToolkit (hwt), the library for hardware developement in Python
+# HWToolkit (hwt),
+# the library for hardware developement in Python
 [![Build Status](https://travis-ci.org/Nic30/HWToolkit.svg?branch=master)](https://travis-ci.org/Nic30/HWToolkit)
 [![Coverage Status](https://coveralls.io/repos/github/Nic30/HWToolkit/badge.svg?branch=master)](https://coveralls.io/github/Nic30/HWToolkit?branch=master)
 [![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt) 
@@ -28,6 +29,83 @@ Also keep in mind that HWT itself is usualy used just like api for code generati
 * (System) Verilog/VHDL compatibility layer at https://github.com/Nic30/hwtHdlParsers which allows you to import objects from HDL (not maintained).
 * There is HDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
 * There is prototype (pre alfa) of IDE [hwtIde](https://github.com/Nic30/hwtIde)
+
+
+## Example
+
+```python
+from hwt.synthesizer.utils import toRtl
+from hwt.serializer.vhdl.serializer import VhdlSerializer
+from hwt.hdl.types.struct import HStruct
+from hwtLib.types.ctypes import uint32_t, uint16_t
+
+t = HStruct(
+    (uint32_t[4], "data0"),
+    # optimized address selection because data are aligned
+    (uint32_t[4], "data1"),
+    (uint32_t[2], "data2"),
+    (uint32_t, "data3"),
+    # padding
+    (uint32_t[32], None),
+    # type can be any type
+    (HStruct(
+        (uint16_t, "data4a"),
+        (uint16_t, "data4b"),
+        (uint32_t, "data4c")
+    ), "data4"),
+)
+
+# type flattening can be specified by shouldEnterFn parameter
+# target interface can be overriden by _mkFieldInterface function
+# there are other bus endpoints, for example:
+# IpifEndpoint, I2cEndpoint, AvalonMmEndpoint and others
+# decoded interfaces for data type will be same just bus interface
+# will difer
+u = AxiLiteEndpoint(t)
+
+# configuration
+u.ADDR_WIDTH.set(8)
+u.DATA_WIDTH.set(32)
+
+print(toRtl(u, serializer=VhdlSerializer))
+print(u.decoded.data3)
+print(u.decoded.data4)
+```
+
+Expected output:
+```vhdl
+--
+--    Delegate request from AxiLite interface to fields of structure
+--    write has higher priority
+--    
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+ENTITY AxiLiteEndpoint IS
+    GENERIC (ADDR_WIDTH: INTEGER := 8;
+        DATA_WIDTH: INTEGER := 32;
+        decoded_data0_ADDR_WIDTH: INTEGER := 2;
+        decoded_data1_ADDR_WIDTH: INTEGER := 2;
+        decoded_data2_ADDR_WIDTH: INTEGER := 1;
+        decoded_data4_data4a_DATA_WIDTH: INTEGER := 16;
+        decoded_data4_data4b_DATA_WIDTH: INTEGER := 16
+    );
+    PORT (bus_ar_addr: IN STD_LOGIC_VECTOR(ADDR_WIDTH - 1 DOWNTO 0);
+        bus_ar_ready: OUT STD_LOGIC;
+        bus_ar_valid: IN STD_LOGIC;
+  ...
+        decoded_data0_addr: OUT STD_LOGIC_VECTOR(decoded_data0_ADDR_WIDTH - 1 DOWNTO 0);
+        decoded_data0_din: OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
+        decoded_data0_dout: IN STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
+        decoded_data0_en: OUT STD_LOGIC;
+        decoded_data0_we: OUT STD_LOGIC;
+  ...
+<AxiLite, name=bus, _masterDir=DIRECTION.OUT>
+<RegCntrl, name=decoded.data3, _masterDir=DIRECTION.OUT>
+<StructIntf, name=decoded.data4, _masterDir=DIRECTION.OUT>
+```
+
 
 
 ## Similar projects:
