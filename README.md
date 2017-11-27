@@ -38,6 +38,7 @@ from hwt.synthesizer.utils import toRtl
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.hdl.types.struct import HStruct
 from hwtLib.types.ctypes import uint32_t, uint16_t
+from hwtLib.amba.axiLite_comp.endpoint import AxiLiteEndpoint
 
 t = HStruct(
     (uint32_t[4], "data0"),
