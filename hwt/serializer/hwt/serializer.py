@@ -22,6 +22,9 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.value import Value
+from hwt.serializer.exceptions import SerializerException
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/hwt/templates'))
@@ -44,6 +47,36 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
     def serializationDecision(cls, obj, serializedClasses,
                               serializedConfiguredUnits):
         return True
+
+    @classmethod
+    def asHdl(cls, obj, ctx):
+        """
+        Convert object to HDL string
+
+        :param obj: object to serialize
+        :param ctx: SerializerCtx instance
+        """
+        if isinstance(obj, RtlSignalBase):
+            return cls.SignalItem(obj, ctx)
+        elif isinstance(obj, Value):
+            return cls.Value(obj, ctx)
+        else:
+            try:
+                serFn = obj.asHwt
+            except AttributeError:
+                serFn = None
+            if serFn is not None:
+                return serFn(cls, ctx)
+
+            try:
+                serFn = getattr(cls, obj.__class__.__name__)
+            except AttributeError:
+                serFn = None
+
+            if serFn is not None:
+                return serFn(obj, ctx)
+
+            raise SerializerException("Not implemented for %r" % (obj))
 
     @classmethod
     def stmAsHdl(cls, obj, ctx: SerializerCtx, enclosure=None):
