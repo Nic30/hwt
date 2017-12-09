@@ -21,7 +21,8 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         :param defaultVal: default value for signal (used as def. val in hdl and for reset)
         """
         super().__init__(ctx, name, var_type, defaultVal)
-        self.next = RtlSignal(ctx, name + "_next", var_type, nopVal=self, useNopVal=True)
+        self.next = RtlSignal(ctx, name + "_next", var_type,
+                              nopVal=self, useNopVal=True)
 
     def __call__(self, source):
         """
@@ -44,3 +45,8 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         if not isinstance(source, Value):
             source.endpoints.append(a)
         return [a]
+
+    def __repr__(self):
+        from hwt.serializer.hwt.serializer import HwtSerializer
+        ctx = HwtSerializer.getBaseContext()
+        return HwtSerializer.SignalItem(self, ctx)
