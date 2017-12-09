@@ -4,7 +4,8 @@ from hwt.hdl.types.array import HArray
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.types.bitsCast import convertBits__val
 from hwt.hdl.types.bitsVal import BitsVal
-from hwt.hdl.types.defs import SLICE
+from hwt.hdl.types.boolVal import HBoolVal
+from hwt.hdl.types.defs import SLICE, BOOL
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.constants import DIRECTION, SENSITIVITY
 from hwt.simulator.types.simInt import simHInt, SIM_INT

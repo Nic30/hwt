@@ -26,6 +26,11 @@ class SimModelSerializer_types():
         return "simBitsT(%d, %r)" % (w, typ.signed)
 
     @classmethod
+    def HdlType_bool(cls, typ, ctx, declaration=False):
+        assert not declaration
+        return "BOOL"
+
+    @classmethod
     def HdlType_enum(cls, typ, ctx, declaration=False):
         if declaration:
             typ.name = ctx.scope.checkedName(typ.name, typ)

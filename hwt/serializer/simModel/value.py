@@ -12,6 +12,11 @@ class SimModelSerializer_value(GenericSerializer_Value):
             val.val, dtype.bit_length(), dtype.signed, val.vldMask)
 
     @classmethod
+    def Bool_valAsHdl(cls, dtype, val, ctx):
+        return "HBoolVal(%r, BOOL, %d)" % (
+                val.val, val.vldMask)
+
+    @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
             raise NotImplementedError()
