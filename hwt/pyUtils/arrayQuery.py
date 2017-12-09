@@ -162,3 +162,13 @@ def areSetsIntersets(setA, setB):
     Check if intersection of sets is not empty
     """
     return any(x in setA for x in setB)
+
+
+def balanced_reduce(arr, opFn):
+    while len(arr) > 1:
+        nextArr = []
+        for a, b in grouper(2, arr):
+            nextArr.append(opFn(a, b))
+        arr = nextArr
+
+    return arr[0]
