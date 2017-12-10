@@ -16,6 +16,10 @@ class UniqList(list):
             self.__s.add(item)
             list.append(self, item)
             return True
+    
+    def extend(self, items):
+        for item in items:
+            self.append(item)
 
     def remove(self, item):
         self.__s.remove(item)
