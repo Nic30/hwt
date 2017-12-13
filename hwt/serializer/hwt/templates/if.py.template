@@ -1,0 +1,29 @@
+{{ indent }}If({{ cond }},{%
+if ifTrue|length > 0 %}{% 
+    for stm in ifTrue %}
+{{      stm}},{% 
+    endfor %}{% 
+else %}
+{{    indent}}    #enclosure
+{{    enclosure}}{%
+endif %}{% for cond, stms in elIfs %}
+{{ indent }}).Elif({{ cond }},{%
+if stms|length > 0 %}{% 
+    for stm in stms %}
+{{      stm}},{% 
+    endfor %}{% 
+else %}
+{{    indent}}    #enclosure
+{{    enclosure}}{%
+endif %}{% endfor %}
+{{ indent }}).Else({% 
+if ifFalse|length > 0 %}{%
+    for stm in ifFalse %}
+{{stm}}{%
+    endfor%}
+{{ indent }}){% 
+else %}
+{{ indent }}    #enclosure
+{{ enclosure }}
+{{ indent }})
+{% endif %}

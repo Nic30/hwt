@@ -42,17 +42,25 @@ class IntegerVal(Value):
         return bool(self.vldMask)
 
     @classmethod
-    def fromPy(cls, val, typeObj):
+    def fromPy(cls, val, typeObj, vldMask=None):
         """
         :param val: value of python type int or None
-        :param typeObj: instance of HdlType
+        :param typeObj: instance of Integer
+        :param vldMask: None vldMask is resolved from val,
+            if is 0 value is invalidated
+            if is 1 value has to be valid
         """
         assert isinstance(typeObj, Integer)
         vld = int(val is not None)
         if not vld:
+            assert vldMask is None or vldMask == 0
             val = 0
         else:
-            val = int(val)
+            if vldMask == 0:
+                val = False
+                vld = 0
+            else:
+                val = int(val)
 
         return cls(val, typeObj, vld)
 

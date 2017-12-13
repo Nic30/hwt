@@ -6,8 +6,8 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
-from hwt.serializer.serializerClases.constants import SIGNAL_TYPE
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.constants import SIGNAL_TYPE
+from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 

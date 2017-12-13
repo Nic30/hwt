@@ -1,0 +1,24 @@
+from importlib import reload
+
+from hwt.interfaces.std import Signal
+from hwt.synthesizer.unit import Unit
+from hwt.hdl.types.enum import HEnum
+from hwt.code import power, If, Concat
+from hwt.synthesizer.param import Param
+
+{% for c in componentInstances %}
+if "{{c.name}}" not in locals(): # support for all models in single file
+    import {{c.name}}
+    reload({{c.name}})
+    from {{c.name}} import {{c.name}}{% endfor %}
+{% for imp in imports %}
+{{imp}}
+{% endfor %}
+
+class {{ name }}(Unit):
+{% if config %}
+    def _config(self):{% for cname, cval in config %}
+        self.{{cname}} = Param({{cval}}){% endfor %}
+{% endif %}
+    def _declr(self):{% for name, dtype in ports %}
+        self.{{name}} = Signal({{dtype}}){% endfor %}

@@ -1,7 +1,8 @@
+from hwt.hdl.hdlObject import HdlObject
 from hwt.synthesizer.andReducedContainer import AndReducedContainer
 
 
-class Assignment(object):
+class Assignment(HdlObject):
     """
     Assignment container
 
@@ -50,12 +51,3 @@ class Assignment(object):
     def seqEval(self):
         """Sequentially evaluate this assignment"""
         self.dst._val = self.src.staticEval()
-
-    def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer,\
-            DebugTmpVarStack
-        tmpVars = DebugTmpVarStack()
-        ctx = VhdlSerializer.getBaseContext()
-        ctx.createTmpVarFn = tmpVars.createTmpVarFn
-        s = VhdlSerializer.Assignment(self, ctx)
-        return "%s%s" % (tmpVars.serialize(), s)

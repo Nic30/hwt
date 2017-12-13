@@ -82,7 +82,8 @@ class VcdModule():
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.footer()
+        if exc_type is None:
+            self.footer()
 
     @dumpMethod
     def header(self):

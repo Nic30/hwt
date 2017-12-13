@@ -1,6 +1,6 @@
 import sys
 
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 

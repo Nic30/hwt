@@ -8,6 +8,7 @@ from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from typing import List
 
 
 def tv(signal):
@@ -39,9 +40,10 @@ class RtlSignalOps():
         try:
             return self._usedOps[k]
         except KeyError:
-            o = opCreateDelegate(self, *otherOps)
-            self._usedOps[k] = o
-            return o
+            pass
+        o = opCreateDelegate(self, *otherOps)
+        self._usedOps[k] = o
+        return o
 
     def __invert__(self):
         return self.naryOp(AllOps.NOT, tv(self).__invert__)
@@ -145,7 +147,8 @@ class RtlSignalOps():
             try:
                 op = d.operator
             except AttributeError:
-                op = None
+                return
+
             if op == AllOps.INDEX:
                 # get signal on which is index applied
                 indexedOn = d.operands[0]
@@ -153,12 +156,13 @@ class RtlSignalOps():
                     # [TODO] multidimensional indexing
                     return indexedOn, [d.operands[1]]
                 else:
-                    raise Exception("can not drive static value %r" % indexedOn)
+                    raise Exception(
+                        "can not drive static value %r" % indexedOn)
 
         except MultipleDriversExc:
             pass
 
-    def __call__(self, source):
+    def __call__(self, source) -> List[Assignment]:
         """
         Create assignment to this signal
 
@@ -179,9 +183,10 @@ class RtlSignalOps():
             except TypeConversionErr:
                 err = True
             if err:
-                raise TypeConversionErr(("Can not connect %r (of type %r) to %r "
-                                        "(of type %r) due type incompatibility")
-                                        % (source, source._dtype, self, self._dtype))
+                raise TypeConversionErr(
+                    ("Can not connect %r (of type %r) to %r "
+                     "(of type %r) due type incompatibility")
+                    % (source, source._dtype, self, self._dtype))
 
         tmp = self._getIndexCascade()
         if tmp:

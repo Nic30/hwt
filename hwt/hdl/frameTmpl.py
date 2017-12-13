@@ -32,6 +32,7 @@ class FrameTmpl(object):
     :ivar _fieldToTPart: dictionary {HStructField: TransPart} to resolve
         this association, None by default, builded when packData
         is called and is not builded
+    :note: others ivars described in __init__
     """
     __RE_RM_ARRAY_DOTS = re.compile("(\.\[)")
 

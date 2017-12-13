@@ -3,14 +3,14 @@ from hwt.synthesizer.exceptions import TypeConversionErr
 
 def default_reinterpret_cast_fn(typeFrom, sigOrVal, toType):
     raise TypeConversionErr(
-        "Reinterpretation of %r of type \n%r to type %r is not implemented"
-        % (sigOrVal, typeFrom, toType))
+        "Reinterpretation of %r of type \n%r to type %r is not implemented",
+        (sigOrVal, typeFrom, toType))
 
 
 def default_auto_cast_fn(typeFrom, sigOrVal, toType):
     raise TypeConversionErr(
-        "Conversion of %r of type \n%r to type %r is not implemented"
-        % (sigOrVal, typeFrom, toType))
+        "Conversion of %r of type \n%r to type %r is not implemented",
+        (sigOrVal, typeFrom, toType))
 
 
 class HdlType():
@@ -23,12 +23,12 @@ class HdlType():
         on first convert function call)
     """
 
-    def fromPy(self, v):
+    def fromPy(self, v, vldMask=None):
         """
         Construct value of this type.
         Delegated on value class for this type
         """
-        return self.getValueCls().fromPy(v, self)
+        return self.getValueCls().fromPy(v, self, vldMask=vldMask)
 
     def auto_cast(self, sigOrVal, toType):
         """

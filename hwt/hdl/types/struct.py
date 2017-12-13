@@ -1,6 +1,6 @@
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.structValBase import StructValBase
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 
 
 class HStructFieldMeta():

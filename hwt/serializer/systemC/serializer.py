@@ -5,7 +5,7 @@ from hwt.hdl.constants import DIRECTION
 from hwt.hdl.entity import Entity
 from hwt.interfaces.std import Clk
 from hwt.serializer.generic.serializer import GenericSerializer
-from hwt.serializer.serializerClases.nameScope import LangueKeyword
+from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.systemC.context import SystemCCtx
 from hwt.serializer.systemC.keywords import SYSTEMC_KEYWORDS
 from hwt.serializer.systemC.ops import SystemCSerializer_ops

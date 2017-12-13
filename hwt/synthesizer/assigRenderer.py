@@ -1,13 +1,3 @@
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.statements import IfContainer, SwitchContainer
-from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.enum import HEnum
-from hwt.hdl.value import Value
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.synthesizer.termUsageResolver import getBaseCond
-
 """
 AssigRenderer is responsible for converting sequence of conditional statements
 (usually assignments) to code elements like if-then-else statements
@@ -18,6 +8,17 @@ List of conditional statements is used to simplify code manipulation.
 :var SWITCH_THRESHOLD: max count of elsifs with eq on same variable
     to convert this if-then-else statement to switch statement
 """
+
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.statements import IfContainer, SwitchContainer
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.enum import HEnum
+from hwt.hdl.value import Value
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hwt.synthesizer.termUsageResolver import getBaseCond
+
 
 SWITCH_THRESHOLD = 2
 
@@ -200,7 +201,8 @@ def renderIfTree(statements, resolvedCnt=0):
                     if stm.switchOn is switchOn:
                         assert not elIfs
                         if restOfCond:
-                            ifTrue = [IfContainer(restOfCond, ifTrue), ]
+                            ifTrue = IfContainer.potentialyReduced(restOfCond,
+                                                                   ifTrue)
                         stm.cases.insert(0, (topVal, ifTrue))
 
                         t = switchOn._dtype
@@ -234,7 +236,8 @@ def renderIfTree(statements, resolvedCnt=0):
             if disolvedTopCond is not None:
                 switchOn, topVal, restOfCond = disolvedTopCond
                 if restOfCond:
-                    ifTrue = [IfContainer(restOfCond, ifTrue), ]
+                    ifTrue = IfContainer.potentialyReduced(restOfCond,
+                                                           ifTrue)
                 cases.append((topVal, ifTrue))
                 canBeConvertedToSwitch = True
                 for elIf in elIfs:
@@ -246,14 +249,17 @@ def renderIfTree(statements, resolvedCnt=0):
                         _, v, restOfCond = dis
                         stms = elIf[1]
                         if restOfCond:
-                            stms = [IfContainer(restOfCond, stms), ]
+                            stms = IfContainer.potentialyReduced(restOfCond,
+                                                                 stms)
                         cases.append((v, stms))
 
                 # if only last can not be part of the switch case it can be
                 # default
                 if not canBeConvertedToSwitch and len(elIfs) == len(cases):
                     default = elIfs[-1]
-                    ifFalse = [IfContainer(default[0], default[1], ifFalse)]
+                    ifFalse = IfContainer.potentialyReduced(default[0],
+                                                            default[1],
+                                                            ifFalse)
                     canBeConvertedToSwitch = True
 
                 if canBeConvertedToSwitch:
@@ -294,7 +300,8 @@ def renderIfTree(statements, resolvedCnt=0):
                 yield subIf
                 return
 
-        yield IfContainer(list(reversed(topCond)),
-                          ifTrue,
-                          ifFalse,
-                          elIfs)
+        yield from IfContainer.potentialyReduced(
+            list(reversed(topCond)),
+            ifTrue,
+            ifFalse,
+            elIfs)

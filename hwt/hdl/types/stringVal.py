@@ -9,11 +9,24 @@ class StringVal(Value):
     """
 
     @classmethod
-    def fromPy(cls, val, typeObj):
+    def fromPy(cls, val, typeObj, vldMask=None):
+        """
+        :param val: python string or None
+        :param typeObj: instance of String HdlType
+        :param vldMask: if is None validity is resolved from val
+            if is 0 value is invalidated
+            if is 1 value has to be valid
+        """
         assert isinstance(val, str) or val is None
         vld = 0 if val is None else 1
         if not vld:
+            assert vldMask is None or vldMask == 0
             val = ""
+        else:
+            if vldMask == 0:
+                val = ""
+                vld = 0
+
         return cls(val, typeObj, vld)
 
     def _eq__val(self, other):

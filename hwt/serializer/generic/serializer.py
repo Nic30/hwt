@@ -8,9 +8,9 @@ from hwt.hdl.types.integer import Integer
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
-from hwt.serializer.serializerClases.context import SerializerCtx
-from hwt.serializer.serializerClases.indent import getIndent
-from hwt.serializer.serializerClases.nameScope import NameScope
+from hwt.serializer.generic.context import SerializerCtx
+from hwt.serializer.generic.indent import getIndent
+from hwt.serializer.generic.nameScope import NameScope
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
@@ -53,7 +53,7 @@ class GenericSerializer():
             try:
                 serFn = getattr(cls, obj.__class__.__name__)
             except AttributeError:
-                raise SerializerException("Not implemented for %r" % (obj))
+                raise SerializerException("Not implemented for", obj)
             return serFn(obj, ctx)
 
     @classmethod

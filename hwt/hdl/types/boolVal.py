@@ -66,16 +66,25 @@ class HBoolVal(Value):
         return bool(self.vldMask)
 
     @classmethod
-    def fromPy(cls, val, typeObj):
+    def fromPy(cls, val, typeObj, vldMask=None):
         """
         :param val: value of python type bool or None
         :param typeObj: instance of HdlType
+        :param vldMask: None vldMask is resolved from val,
+            if is 0 value is invalidated
+            if is 1 value has to be valid
         """
         vld = int(val is not None)
         if not vld:
+            assert vldMask is None or vldMask == 0
             val = False
         else:
-            val = bool(val)
+            if vldMask == 0:
+                val = False
+                vld = 0
+            else:
+                val = bool(val)
+
         return cls(val, typeObj, vld)
 
     def _eq__val(self, other):

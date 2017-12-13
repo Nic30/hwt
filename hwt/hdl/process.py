@@ -1,5 +1,7 @@
+from hwt.hdl.hdlObject import HdlObject
 
-class HWProcess():
+
+class HWProcess(HdlObject):
     """
     Hdl process container
 
@@ -20,9 +22,3 @@ class HWProcess():
         self.sensitivityList = sensitivityList
         self.inputs = inputs
         self.outputs = outputs
-
-    def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer
-        return VhdlSerializer.formater(
-            VhdlSerializer.HWProcess(self,
-                                     VhdlSerializer.getBaseContext()))

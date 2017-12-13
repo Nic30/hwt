@@ -109,8 +109,9 @@ def buildProcessesOutOfAssignments(startsOfDataPaths, getDebugScopeNameFn):
                     s.hidden = False
 
             if hasCombDriver and not isEventDependent and haveNotIndexes:
-                raise MultipleDriversExc("%s: Signal %s has multiple combinational drivers" % 
-                                         (getDebugScopeNameFn(), name))
+                raise MultipleDriversExc(
+                    "%s: Signal %s has multiple combinational drivers" %
+                    (getDebugScopeNameFn(), name))
 
             hasCombDriver = hasCombDriver or not isEventDependent
 
@@ -129,9 +130,11 @@ class RtlNetlist():
     Hierarchical container for signals
 
     :ivar signals: dict of all signals in context
-    :ivar startsOfDataPaths: is set of nodes where datapaths starts (assignments)
+    :ivar startsOfDataPaths: is set of nodes where datapaths starts
+        (assignments)
     :ivar subUnits: is set of all units in this context
     """
+
     def __init__(self, parentForDebug=None):
         self.parentForDebug = parentForDebug
         self.params = {}
@@ -144,11 +147,13 @@ class RtlNetlist():
         """
         generate new signal in context
 
-        :param clk: clk signal, if specified signal is synthesized as SyncSignal
+        :param clk: clk signal, if specified signal is synthesized
+            as SyncSignal
         :param syncRst: reset
         """
         if isinstance(defVal, RtlSignal):
-            assert defVal._const, "Initial value of register has to be constant"
+            assert defVal._const, \
+                "Initial value of register has to be constant"
             _defVal = defVal._auto_cast(dtype)
         elif isinstance(defVal, Value):
             _defVal = defVal._auto_cast(dtype)
@@ -160,22 +165,24 @@ class RtlNetlist():
         if clk is not None:
             s = RtlSyncSignal(self, name, dtype, _defVal)
             if syncRst is not None and defVal is None:
-                raise Exception("Probably forgotten default value on sync signal %s", name)
+                raise Exception(
+                    "Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                        [RtlSignal.__call__(s, _defVal)]
-                    ).Else(
-                        [RtlSignal.__call__(s, s.next)]
-                    )
+                       [RtlSignal.__call__(s, _defVal)]
+                       ).Else(
+                    [RtlSignal.__call__(s, s.next)]
+                )
             else:
                 r = [RtlSignal.__call__(s, s.next)]
 
             If(clk._onRisingEdge(),
                r
-            )
+               )
         else:
             if syncRst:
-                raise SigLvlConfErr("Signal %s has reset but has no clk" % name)
+                raise SigLvlConfErr(
+                    "Signal %s has reset but has no clk" % name)
             s = RtlSignal(self, name, dtype, defaultVal=_defVal)
 
         self.signals.add(s)
@@ -186,7 +193,8 @@ class RtlNetlist():
         """
         Merge two instances into this
 
-        :attention: "others" becomes invalid because all signals etc. will be transferred into this
+        :attention: "others" becomes invalid because all signals etc.
+            will be transferred into this
         """
         assert not other.synthesised
         self.params.update(other.params)
@@ -220,8 +228,8 @@ class RtlNetlist():
         _interfaces = set(interfaces)
         for sig in self.signals:
             if not sig.drivers and sig not in _interfaces:
-                assert sig.defaultVal._isFullVld(), (sig,
-                                                     "Signal without any driver or value in ", name)
+                assert sig.defaultVal._isFullVld(), (
+                    sig, "Signal without any driver or value in ", name)
                 sig._const = True
 
         arch = Architecture(ent)
@@ -258,6 +266,6 @@ class RtlNetlist():
             try:
                 p = p._parent
             except AttributeError:
-                p = None
+                break
 
         return ".".join(reversed(scope))

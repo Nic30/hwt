@@ -142,10 +142,11 @@ def tryToMergeStm(stmA, stmB):
 
     aIsSwitch = isinstance(stmA, SwitchContainer)
     bIsSwitch = isinstance(stmB, SwitchContainer)
-    if (aIsSwitch and bIsSwitch and
-            stmA.switchOn is stmB.switchOn and
-            len(stmA.cases) == len(stmB.cases) and
-            isMergableStmList(stmA.default, stmB.default)):
+    if aIsSwitch and bIsSwitch:
+        if not (stmA.switchOn is stmB.switchOn and
+                len(stmA.cases) == len(stmB.cases) and
+                isMergableStmList(stmA.default, stmB.default)):
+            raise IncompatibleStructure()
 
         cases = []
         for (vA, caseA), (vB, caseB) in zip(stmA.cases, stmB.cases):
@@ -157,6 +158,9 @@ def tryToMergeStm(stmA, stmB):
 
         yield SwitchContainer(stmA.switchOn, cases, default)
         return
+
+    if (aIsSwitch and bIsIf) or (aIsIf and bIsSwitch):
+        raise IncompatibleStructure()
 
     raise NotImplementedError(stmA, stmB)
 

@@ -8,17 +8,25 @@ BoolVal = BOOL.getValueCls()
 
 class HEnumVal(Value):
     @classmethod
-    def fromPy(cls, val, typeObj):
+    def fromPy(cls, val, typeObj, vldMask=None):
         """
         :param val: value of python type bool or None
-        :param typeObj: instance of HdlType
+        :param typeObj: instance of HEnum
+        :param vldMask: if is None validity is resolved from val
+            if is 0 value is invalidated
+            if is 1 value has to be valid
         """
         if val is None:
+            assert vldMask is None or vldMask == 0
             valid = False
             val = typeObj._allValues[0]
         else:
-            assert isinstance(val, str)
-            valid = True
+            if vldMask is None or vldMask == 1:
+                assert isinstance(val, str)
+                valid = True
+            else:
+                valid = False
+                val = None
 
         return cls(val, typeObj, valid)
 

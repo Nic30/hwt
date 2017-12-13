@@ -87,6 +87,9 @@ resourceTransitions_sameBranchLevel = {
     (ResourceMUX, ResourceFF): ResourceFFwithMux,
     (ResourceFF, ResourceMUX): ResourceFFwithMux,
 
+    (ResourceMUX, Unconnected): ResourceLatchWithMux,
+    (Unconnected, ResourceMUX): ResourceLatchWithMux,
+
     (ResourceFFwithMux, Unconnected): ResourceFFwithMux,
     (Unconnected, ResourceFFwithMux): ResourceFFwithMux,
 

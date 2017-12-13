@@ -156,7 +156,7 @@ class SimTestCase(unittest.TestCase):
         self.procs.append(randomEnProc)
 
     def prepareUnit(self, unit, modelCls=None, dumpModelIn=None,
-                    onAfterToRtl=None):
+                    onAfterToRtl=None, targetPlatform=None):
         """
         Create simulation model and connect it with interfaces of original unit
         and decorate it with agents and collect all simulation processes
@@ -169,10 +169,12 @@ class SimTestCase(unittest.TestCase):
         :param onAfterToRtl: callback fn(unit) which will be called unit after
             it will be synthesised to rtl
         """
-        self.u, self.model, self.procs = simPrepare(unit,
-                                                    modelCls=modelCls,
-                                                    dumpModelIn=dumpModelIn,
-                                                    onAfterToRtl=onAfterToRtl)
+        self.u, self.model, self.procs = simPrepare(
+            unit,
+            modelCls=modelCls,
+            targetPlatform=targetPlatform,
+            dumpModelIn=dumpModelIn,
+            onAfterToRtl=onAfterToRtl)
 
     def setUp(self):
         self._rand = Random(self._defaultSeed)

@@ -1,4 +1,3 @@
 """
-Serializer which is used to convert HWT architecture
-represenatnio to VHDL rtl description language
+VHDL serializer serializes HDL objects to VHDL code.
 """

@@ -1,6 +1,7 @@
+from hwt.hdl.hdlObject import HdlObject
 
 
-class Entity(object):
+class Entity(HdlObject):
     """
     Hdl container of hdl configuration and interfaces
     """
@@ -12,7 +13,3 @@ class Entity(object):
         self.ports = []
         self.ctx = {}
         self.discovered = False
-
-    def __repr__(self):
-        from hwt.serializer.vhdl.serializer import VhdlSerializer
-        return VhdlSerializer.Entity(self, VhdlSerializer.getBaseContext())

@@ -1,1 +1,3 @@
-# [TODO] rename to synthesizer
+"""
+Sythesizer converts Unit instances to HDL objects.
+"""

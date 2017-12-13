@@ -1,6 +1,6 @@
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.value import GenericSerializer_Value
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.param import Param, evalParam
 
 
@@ -10,6 +10,11 @@ class SimModelSerializer_value(GenericSerializer_Value):
     def Bits_valAsHdl(cls, dtype, val, ctx):
         return "BitsVal(%d, simBitsT(%d, %r), %d)" % (
             val.val, dtype.bit_length(), dtype.signed, val.vldMask)
+
+    @classmethod
+    def Bool_valAsHdl(cls, dtype, val, ctx):
+        return "HBoolVal(%r, BOOL, %d)" % (
+                val.val, val.vldMask)
 
     @classmethod
     def SignalItem(cls, si, ctx, declaration=False):

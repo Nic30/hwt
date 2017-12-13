@@ -1,7 +1,7 @@
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.serializerClases.constants import SIGNAL_TYPE
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.constants import SIGNAL_TYPE
+from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 
 

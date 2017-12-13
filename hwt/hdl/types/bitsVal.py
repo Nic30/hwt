@@ -91,17 +91,18 @@ class BitsVal(EventCapableVal):
         return self._convSign(None)
 
     @classmethod
-    def fromPy(cls, val, typeObj):
+    def fromPy(cls, val, typeObj, vldMask=None):
         """
         Construct value from pythonic value (int, bytes, enum.Enum member)
         """
         assert not isinstance(val, Value)
-        allMask = typeObj.all_mask()
-        w = typeObj.bit_length()
         if val is None:
             vld = 0
             val = 0
+            assert vldMask is None or vldMask == 0
         else:
+            allMask = typeObj.all_mask()
+            w = typeObj.bit_length()
             if isinstance(val, bytes):
                 val = int.from_bytes(
                     val, byteorder="little", signed=bool(typeObj.signed))
@@ -114,21 +115,28 @@ class BitsVal(EventCapableVal):
                     else:
                         raise e
 
-            vld = allMask
+            if vldMask is None:
+                vld = allMask
+            else:
+                assert vldMask <= allMask and vldMask >= 0
+                vld = vldMask
 
-        if val < 0:
-            assert typeObj.signed
-            assert signFix(val & allMask, w) == val, (
-                val, signFix(val & allMask, w))
-        else:
-            if typeObj.signed:
-                msb = 1 << (w - 1)
-                if msb & val:
-                    assert val < 0, val
+            if val < 0:
+                assert typeObj.signed
+                assert signFix(val & allMask, w) == val, (
+                    val, signFix(val & allMask, w))
+                val = signFix(val & vld, w)
+            else:
+                if typeObj.signed:
+                    msb = 1 << (w - 1)
+                    if msb & val:
+                        assert val < 0, val
 
-            if val & allMask != val:
-                raise ValueError(
-                    "Not enought bits to represent value", val, val & allMask)
+                if val & allMask != val:
+                    raise ValueError(
+                        "Not enought bits to represent value",
+                        val, val & allMask)
+                val = val & vld
 
         return cls(val, typeObj, vld)
 
@@ -284,16 +292,19 @@ class BitsVal(EventCapableVal):
                     stop = stop + parentLower
                     return original[start:stop]
 
+            # check start boundaries
             if startIsVal:
                 _start = int(start)
                 if _start < 0 or _start > length:
                     raise IndexError(_start, length)
 
+            # check end boundaries
             if stopIsVal:
                 _stop = int(stop)
                 if _stop < 0 or _stop > length:
                     raise IndexError(_stop, length)
 
+            # check width of selected range
             if startIsVal and stopIsVal and _start - _stop <= 0:
                 raise IndexError(_start, _stop)
 
@@ -306,6 +317,7 @@ class BitsVal(EventCapableVal):
                             signed=st.signed)
 
         elif isinstance(key, IntegerVal):
+            # check index range
             _v = int(key)
             if _v < 0 or _v > length - 1:
                 raise IndexError(_v)
@@ -512,23 +524,28 @@ class BitsVal(EventCapableVal):
         if areValues(self, other):
             return self._mul__val(other)
         else:
-            resT = self._dtype
+            myT = self._dtype
             if self._dtype.signed is None:
                 self = self._unsigned()
+
             if isinstance(other._dtype, Bits):
                 s = other._dtype.signed
                 if s is None:
                     other = other._unsigned()
-                elif s is False:
-                    pass
-                else:
-                    raise NotImplementedError("Signed multiplication")
 
             elif isinstance(other._dtype, Integer):
                 pass
             else:
                 raise TypeError("%r %r %r" % (self, AllOps.MUL, other))
 
-            subResT = Bits(resT.bit_length(), self._dtype.signed)
+            if isinstance(other._dtype, Integer):
+                res_w = myT.bit_length() * 2
+                res_sign = self._dtype.signed
+            else:
+                res_w = myT.bit_length() + other._dtype.bit_length()
+                res_sign = self._dtype.signed or other._dtype.signed
+
+            subResT = Bits(res_w, signed=res_sign)
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
+            resT = Bits(res_w, signed=myT.signed)
             return o._auto_cast(resT)

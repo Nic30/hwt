@@ -49,9 +49,9 @@ class Value():
             self.updateTime)
 
     @classmethod
-    def fromPy(cls, val, typeObj):
+    def fromPy(cls, val, typeObj, vldMask=None):
         raise NotImplementedError(
-            "fromPy fn is not implemented for %s" % (str(cls)))
+            "fromPy fn is not implemented for %r" % (cls))
 
     def __int__(self):
         if isinstance(self, Value) or self._const:

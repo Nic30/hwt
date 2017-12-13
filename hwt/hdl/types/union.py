@@ -3,7 +3,7 @@ from collections import OrderedDict
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
 from hwt.hdl.value import Value
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 
 
 protectedNames = {"clone", "staticEval",
@@ -22,6 +22,10 @@ class UnionValBase(Value):
     __slots__ = ["_dtype", "_val", "_usedField"]
 
     def __init__(self, val, typeObj):
+        """
+        :param val: None or tuple (member name, member value)
+        :param typeObj: instance of HUnion HdlType for this value
+        """
         self._dtype = typeObj
         if val is not None:
             memberName, v = val
@@ -38,7 +42,16 @@ class UnionValBase(Value):
         self._usedField = f
 
     @classmethod
-    def fromPy(cls, val, typeObj):
+    def fromPy(cls, val, typeObj, vldMask=None):
+        """
+        :param val: None or tuple (member name, member value)
+        :param typeObj: instance of HUnion HdlType for this value
+        :param vldMask: if is None validity is resolved from val
+            if is 0 value is invalidated
+            if is 1 value has to be valid
+        """
+        if vldMask == 0:
+            val = None
         return cls(val, typeObj)
 
     def __repr__(self, indent=0):

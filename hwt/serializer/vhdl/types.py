@@ -2,7 +2,7 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.typeShortcuts import hInt
 from hwt.hdl.types.typeCast import toHVal
-from hwt.serializer.serializerClases.indent import getIndent
+from hwt.serializer.generic.indent import getIndent
 
 
 class VhdlSerializer_types():
