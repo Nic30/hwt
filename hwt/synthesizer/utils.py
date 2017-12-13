@@ -102,15 +102,15 @@ def toRtl(unitOrCls: Unit, name: str=None,
 
             if sc:
                 if createFiles:
-                    if fileMode == 'w':
-                        fp = os.path.join(saveTo, fName)
-                        files.append(fp)
-                        with open(fp, fileMode) as f:
-                            if fileMode == 'a':
-                                f.write("\n")
-                            f.write(
-                                serializer.formater(sc)
-                            )
+                    fp = os.path.join(saveTo, fName)
+                    files.append(fp)
+                    with open(fp, fileMode) as f:
+                        if fileMode == 'a':
+                            f.write("\n")
+
+                        f.write(
+                            serializer.formater(sc)
+                        )
                 else:
                     codeBuff.append(sc)
 
