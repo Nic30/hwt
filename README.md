@@ -16,7 +16,7 @@
 ## Ideology
 
 * Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes etc. library is all pythonic.
-* HWT uses hierarchy of netlist for representation of target design.
+* HWT uses hierarchy of netlists for representation of target design.
 * Optimized netlists are generated from usual code statements, function calls etc.
 * HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
 * Netlist can be simulated directly but they are optimalized before simulation (converted to SimModel or SystemC)
@@ -24,7 +24,7 @@
 
 
 
-Also keep in mind that HWT itself is usualy used just like api for code generating by more adwanced tools.
+HWT itself is just API for code generating by more advanced tools, but it can also be used directly by user.
 * There is library full of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib) (for hwt is like stdlib for C).
 * (System) Verilog/VHDL compatibility layer at [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) which allows you to import objects from HDL (not maintained).
 * There is HDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
