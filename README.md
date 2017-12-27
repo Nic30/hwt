@@ -18,7 +18,7 @@
 * Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes etc. library is all pythonic.
 * HWT uses hierarchy of netlist for representation of target design.
 * Optimized netlists are generated from usual code statements, function calls etc.
-* HWT performs no HLS planing or schedueling (done in [hwtHls](https://github.com/Nic30/hwtHls) )
+* HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
 * Netlist can be simulated directly but they are optimalized before simulation (converted to SimModel or SystemC)
 * HWT can run in parallel in default it runs in single thread and parallelization should be done on level of tests.
 
