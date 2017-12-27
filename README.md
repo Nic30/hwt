@@ -15,7 +15,7 @@
 
 ## Ideology
 
-* Every part of HWT is optional and can be replaced or ecluded by user, there are no magic classes etc. library is all pythonic.
+* Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes etc. library is all pythonic.
 * HWT uses hierarchy of netlist for representation of target design.
 * Optimized netlists are generated from usual code statements, function calls etc.
 * HWT performs no HLS planing or schedueling (done in [hwtHls](https://github.com/Nic30/hwtHls) )
