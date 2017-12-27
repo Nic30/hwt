@@ -10,7 +10,7 @@
 
 * hardware description language (example [showcase0.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py) )
 * digital circuit simulator with UVM like verification environment (example usage [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
-* tolls for static analisis (all design object are acessible to user any time, [resourceAnalyzer](https://github.com/Nic30/HWToolkit/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
+* tools for static analisis (all design object are acessible to user any time, [resourceAnalyzer](https://github.com/Nic30/HWToolkit/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
 * serializers to export HWT designs into multiple target HDLs (multiple standards [hwt, verilog, VHDL, system-c](https://github.com/Nic30/HWToolkit/tree/master/hwt/serializer))
 
 ## Ideology
