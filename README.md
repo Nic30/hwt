@@ -10,21 +10,21 @@
 
 * hardware description language (example [showcase0.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py) )
 * digital circuit simulator with UVM like verification environment (example usage [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
-* tolls for static analisis (all design object are acessible to user any time, [resourceAnalyzer](https://github.com/Nic30/HWToolkit/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
+* tools for static analysis (all design object are accessible to user any time, [resourceAnalyzer](https://github.com/Nic30/HWToolkit/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
 * serializers to export HWT designs into multiple target HDLs (multiple standards [hwt, verilog, VHDL, system-c](https://github.com/Nic30/HWToolkit/tree/master/hwt/serializer))
 
 ## Ideology
 
-* Every part of HWT is optional and can be replaced or ecluded by user, there are no magic classes etc. library is all pythonic.
-* HWT uses hierarchy of netlist for representation of target design.
+* Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes etc. library is all pythonic.
+* HWT uses hierarchy of netlists for representation of target design.
 * Optimized netlists are generated from usual code statements, function calls etc.
-* HWT performs no HLS planing or schedueling (done in [hwtHls](https://github.com/Nic30/hwtHls) )
+* HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
 * Netlist can be simulated directly but they are optimalized before simulation (converted to SimModel or SystemC)
 * HWT can run in parallel in default it runs in single thread and parallelization should be done on level of tests.
 
 
 
-Also keep in mind that HWT itself is usualy used just like api for code generating by more adwanced tools.
+HWT itself is just API for code generating by more advanced tools, but it can also be used directly by user.
 * There is library full of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib) (for hwt is like stdlib for C).
 * (System) Verilog/VHDL compatibility layer at [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) which allows you to import objects from HDL (not maintained).
 * There is HDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
