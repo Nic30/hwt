@@ -21,6 +21,11 @@ class UniqList(list):
         for item in items:
             self.append(item)
 
+    def pop(self, *args, **kwargs):
+        item = list.pop(self, *args, **kwargs)
+        self.__s.remove(item)
+        return item
+
     def remove(self, item):
         self.__s.remove(item)
         return list.remove(self, item)
