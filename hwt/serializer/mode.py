@@ -109,9 +109,9 @@ def _serializeOnce_eval(parentUnit, obj, isDeclaration, priv):
         priv = parentUnit
     elif isDeclaration:
         # prepare entity which will not be serialized
-        prepareEntity(obj, clsName, priv)
+        prepareEntity(obj, clsName, parentUnit)
 
-    serialize = priv is obj
+    serialize = priv is parentUnit
 
     return serialize, priv
 
