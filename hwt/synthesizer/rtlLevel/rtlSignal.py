@@ -10,7 +10,8 @@ from hwt.synthesizer.uniqList import UniqList
 
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
-    RtlSignal signal is container of connection between statements and operators
+    RtlSignal signal is container of connection
+    between statements and operators
 
     :ivar _usedOps: dictionary of used operators which can be reused
     :ivar endpoints: UniqList of operators and statements
