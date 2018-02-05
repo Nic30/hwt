@@ -27,7 +27,7 @@ class Operator(HdlObject):
     """
 
     def __init__(self, operator, operands):
-        self.operands = list(operands)
+        self.operands = tuple(operands)
         self.operator = operator
         self.result = None
 
@@ -90,4 +90,4 @@ class Operator(HdlObject):
         return out
 
     def __hash__(self):
-        return hash((self.operator, frozenset(self.operands)))
+        return hash((self.operator, self.operands))
