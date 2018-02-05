@@ -50,8 +50,10 @@ def removeUnconnectedSignals(netlist):
 
                         netlist.startsOfDataPaths.remove(e)
                     else:
-                        raise AssertionError("Drivers should be only"
-                                             "index operators or assignments", e)
+                        raise AssertionError(
+                            "Drivers should be only "
+                            "operators or assignments",
+                            e)
 
                 toDelete.add(sig)
 
