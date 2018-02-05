@@ -21,14 +21,18 @@ class UniqList(list):
         for item in items:
             self.append(item)
 
-    def pop(self, *args, **kwargs):
-        item = list.pop(self, *args, **kwargs)
-        self.__s.remove(item)
-        return item
+    def insert(self, i, x):
+        super(UniqList, self).insert(i, x)
+        self.__s.add(x)
 
     def remove(self, item):
         self.__s.remove(item)
         return list.remove(self, item)
+
+    def pop(self, *args, **kwargs):
+        item = list.pop(self, *args, **kwargs)
+        self.__s.remove(item)
+        return item
 
     def clear(self):
         list.clear(self)
