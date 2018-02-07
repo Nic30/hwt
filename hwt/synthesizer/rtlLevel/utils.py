@@ -1,10 +1,10 @@
-from hwt.hdl.portItem import PortItem
 from hwt.hdl.constants import DIRECTION
-from hwt.synthesizer.rtlLevel.signalUtils.walkers import signalHasDriver
+from hwt.hdl.portItem import PortItem
+from hwt.hdl.variables import SignalItem
 
 
-def portItemfromSignal(s, entity):
-    if signalHasDriver(s):
+def portItemfromSignal(s: SignalItem, entity):
+    if s.drivers:
         d = DIRECTION.OUT
     else:
         d = DIRECTION.IN

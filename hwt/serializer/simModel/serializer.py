@@ -5,18 +5,18 @@ from jinja2.loaders import PackageLoader
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.constants import SENSITIVITY
+from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps, sensitivityByOp
-from hwt.hdl.statements import IfContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.generic.constCache import ConstCache
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import LangueKeyword
+from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.simModel.keywords import SIMMODEL_KEYWORDS
 from hwt.serializer.simModel.ops import SimModelSerializer_ops
 from hwt.serializer.simModel.types import SimModelSerializer_types

@@ -1,10 +1,12 @@
 from copy import copy
 
 from hwt.hdl.assignment import Assignment
+from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.statements import IfContainer, SwitchContainer, \
-    WhileContainer, WaitStm
+from hwt.hdl.statements import WhileContainer, WaitStm
+from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.arrayQuery import arr_any
@@ -13,7 +15,6 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.hdl.types.bits import Bits
 
 
 class DoesNotContainsTernary(Exception):

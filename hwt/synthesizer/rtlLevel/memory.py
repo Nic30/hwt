@@ -41,9 +41,6 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
 
         a = Assignment(source, self.next)
 
-        self.next.drivers.append(a)
-        if not isinstance(source, Value):
-            source.endpoints.append(a)
         return [a]
 
     def __repr__(self):

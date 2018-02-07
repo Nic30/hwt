@@ -11,13 +11,14 @@ List of conditional statements is used to simplify code manipulation.
 
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.statements import IfContainer, SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.synthesizer.termUsageResolver import getBaseCond
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.switchContainer import SwitchContainer
 
 
 SWITCH_THRESHOLD = 2
@@ -159,8 +160,17 @@ def typeDomainSize(t):
     else:
         raise TypeError(t)
 
+# walk down and discard redundand signals in conditions
+#    when condition discarted reduce container
+#    remove unused else/default
+# merge conditions to have most flatten if-then-else tree
 
-def renderIfTree(statements, resolvedCnt=0):
+
+def renderIfTree(statements):
+    return statements
+
+
+def ____renderIfTree(statements, resolvedCnt=0):
     """
     Walk assignments and resolve if tree from conditions
 

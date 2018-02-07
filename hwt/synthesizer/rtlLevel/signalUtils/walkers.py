@@ -2,60 +2,13 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import isEventDependentOp
 from hwt.hdl.portItem import PortItem
-from hwt.hdl.statements import IfContainer, SwitchContainer
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import where
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-
-
-def signalHasDriver(sig):
-    for _ in walkSignalDrivers(sig):
-        return True
-    return False
-
-
-def walkSignalDrivers(sig):
-    def assign2Me(ep):
-        if isinstance(ep, Assignment):
-            return True
-        elif isinstance(ep, PortItem) and ep.dst is sig:
-            return True
-        else:
-            return None
-
-    return where(sig.drivers, assign2Me)
-
-
-def walkAllOriginSignals(sig, discovered=None):
-    """
-    Walk every signal which has no driver and is used as driver of this signal.
-    Goal is walk every generic in static expr. evaluation.
-    """
-    if discovered is None:
-        discovered = set()
-    if isinstance(sig, Value):
-        return
-    if not isinstance(sig, RtlSignalBase):
-        raise AssertionError("Expected only instances of signal, got: %s"
-                             % (repr(sig)))
-    if sig in discovered:
-        return
-    discovered.add(sig)
-
-    if sig.drivers:
-        for obj in sig.drivers:
-            if isinstance(obj, Operator):
-                for op in obj.operands:
-                    if isinstance(op, RtlSignalBase):
-                        yield from walkAllOriginSignals(op, discovered=discovered)
-            elif isinstance(obj, Assignment):
-                yield from walkAllOriginSignals(obj.src, discovered)
-            else:
-                raise TypeError("walkAllOriginSignals not implemented for %s" % (str(obj)))
-    else:
-        yield sig
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.switchContainer import SwitchContainer
 
 
 def discoverEventDependency(sig):

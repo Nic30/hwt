@@ -198,10 +198,6 @@ class RtlSignalOps():
         # self = self._tryMyIndexToEndpoint()
         a = Assignment(source, self, indexCascade)
 
-        self.drivers.append(a)
-        if not isinstance(source, Value):
-            source.endpoints.append(a)
-
         return [a]
 
     def __int__(self):

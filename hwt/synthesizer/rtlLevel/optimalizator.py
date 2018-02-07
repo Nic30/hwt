@@ -2,10 +2,11 @@ from itertools import islice, zip_longest
 
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
-from hwt.hdl.statements import IfContainer, SwitchContainer
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import maxStmId
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.switchContainer import SwitchContainer
 
 
 def removeUnconnectedSignals(netlist):

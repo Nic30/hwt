@@ -1,9 +1,10 @@
-from _functools import reduce
 from typing import List
 
-from hwt.hdl.assignment import Assignment
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.value import Value
+from hwt.pyUtils.arrayQuery import flatten
+from hwt.synthesizer.uniqList import UniqList
+from itertools import chain
 
 
 def seqEvalCond(cond):
@@ -21,20 +22,9 @@ def isSameHVal(a, b):
                       and a.vldMask == b.vldMask)
 
 
-def isSameStatement(stmA, stmB):
-    if isinstance(stmA, Assignment):
-        if isinstance(stmB, Assignment):
-            if isSameHVal(stmA.dst, stmB.dst)\
-                    and isSameHVal(stmA.src, stmB.src):
-                return True
-        return False
-    else:
-        return stmA.isSame(stmB)
-
-
 def isSameStatementList(stmListA, stmListB):
     for a, b in zip(stmListA, stmListB):
-        if not isSameStatement(a, b):
+        if not a.isSame(b):
             return False
     return True
 
@@ -45,119 +35,85 @@ def statementsAreSame(statements):
         first = next(iterator)
     except StopIteration:
         return True
-    return all(isSameStatement(first, rest) for rest in iterator)
+    return all(first.isSame(rest) for rest in iterator)
 
 
-class IfContainer(HdlObject):
-    """
-    Structural container of if statement for hdl rendering
-    """
+class HdlStatement(HdlObject):
+    def __init__(self, parentStm=None, event_dependent_on=None,
+                 is_completly_event_dependent=False):
+        self._is_completly_event_dependent = is_completly_event_dependent
+        self._now_is_event_dependent = is_completly_event_dependent
+        self.parentStm = parentStm
+        self._inputs = UniqList()
+        self._outputs = UniqList()
+        if not event_dependent_on:
+            event_dependent_on = UniqList()
+        self._event_dependent_on = event_dependent_on
 
-    def __init__(self, cond, ifTrue=[], ifFalse=[], elIfs=[]):
+    def _get_rtl_context(self):
+        for sig in chain(self._inputs, self._outputs):
+            return sig._cntx
+
+    def _iter_stms(self):
         """
-        :param cond: list of conditions for this if
-        :param ifTrue: list of statements which should be active if cond.
-            is met
-        :param elIfs: list of tuples (list of conditions, list of statements)
-        :param ifFalse: list of statements which should be active if cond.
-            and any other cond. in elIfs is met
+        :return: iterator over all children statements
         """
-        self.cond = cond
-        self.ifTrue = ifTrue
-        self.elIfs = elIfs
-        self.ifFalse = ifFalse
+        raise NotImplementedError("This menthod shoud be implemented"
+                                  " on class of statement")
 
-    @classmethod
-    def potentialyReduced(cls, cond, ifTrue=[], ifFalse=[], elIfs=[])\
-            -> List[HdlObject]:
+    def _on_parent_event_dependent(self):
         """
-        If conditions have no effect on result
-        IfContainer is reduced to just list of assignments
-
-        Params same as `IfContainer.__init__`
+        After parrent statement become event dependent
+        propagate event dependency flag to child statements
         """
-        if IfContainer.condHasEffect(ifTrue, ifFalse, elIfs):
-            return [IfContainer(cond, ifTrue, ifFalse, elIfs), ]
-        else:
-            return ifTrue
+        if not self._is_completly_event_dependent:
+            self._is_completly_event_dependent = True
+            for stm in self._iter_stms():
+                stm._on_parent_event_dependent()
 
-    @classmethod
-    def condHasEffect(cls, ifTrue, ifFalse, elIfs):
-        stmCnt = len(ifTrue)
-        if stmCnt == len(ifFalse) and reduce(lambda x, y: x and y,
-                                             [len(stm) == stmCnt
-                                              for _, stm in elIfs],
-                                             True):
-            for stms in zip(ifTrue, ifFalse, *map(lambda x: x[1], elIfs)):
-                if not statementsAreSame(stms):
-                    return True
-            return False
-        return True
-
-    def isSame(self, other):
+    def _set_parent_stm(self, parentStm: "HdlStatement"):
         """
-        :return: True if other has same meaning as this statement
+        Assign parent statement and propagate dependency flags if necessary
         """
-        if isinstance(other, IfContainer):
-            if self.cond == other.cond:
-                if len(self.ifTrue) == len(other.ifTrue) \
-                        and len(self.ifFalse) == len(other.ifFalse) \
-                        and len(self.elIfs) == len(other.elIfs):
-                    if not isSameStatementList(self.ifTrue,
-                                               other.ifTrue) \
-                            or not isSameStatementList(self.ifFalse,
-                                                       other.ifFalse):
-                        return False
-                    for (ac, astms), (bc, bstms) in zip(self.elIfs,
-                                                        other.elIfs):
-                        if not (ac == bc) or\
-                                not isSameStatementList(astms, bstms):
-                            return False
-                    return True
-        return False
+        self._parentStm = parentStm
+        if not self._now_is_event_dependent and parentStm._now_is_event_dependent:
+            self._on_parent_event_dependent()
 
-    def seqEval(self):
-        if seqEvalCond(self.cond):
-            for s in self.ifTrue:
-                s.seqEval()
-        else:
-            for c in self.elIfs:
-                if seqEvalCond(c[0]):
-                    for s in c[1]:
-                        s.seqEval()
-                    return
+        parent_out_add = parentStm._outputs.append
+        parent_in_add = parentStm._inputs.append
 
-            for s in self.ifFalse:
-                s.seqEval()
+        for inp in self._inputs:
+            inp.endpoints.remove(self)
+            inp.endpoints.append(parentStm)
+            parent_in_add(inp)
 
+        for outp in self._outputs:
+            outp.drivers.remove(self)
+            outp.drivers.append(parentStm)
+            parent_out_add(outp)
 
-class SwitchContainer(HdlObject):
-    """
-    Structural container for switch statement for hdl rendering
-    """
+        cntx = self._get_rtl_context()
+        cntx.startsOfDataPaths.remove(self)
 
-    def __init__(self, switchOn, cases, default=[]):
-        self.switchOn = switchOn
-        self.cases = cases
-        self.default = default
+    def _register_stements(self, statements: List["HdlStatement"],
+                           target: List["HdlStatement"]):
+        """
+        Append statements to this container under conditions specified
+        by condSet
+        """
+        for stm in flatten(statements):
+            stm._set_parent_stm(self)
+            target.append(stm)
 
-    def isSame(self, other):
-        if isinstance(other, SwitchContainer) \
-                and isSameHVal(self.switchOn, other.switchOn)\
-                and len(self.cases) == len(other.cases)\
-                and isSameStatementList(self.default, other.default):
-            for (ac, astm), (bc, bstm) in zip(self.cases, other.cases):
-                if not isSameHVal(ac, bc)\
-                        or not isSameStatementList(astm, bstm):
-                    return False
+    def isSame(self, other: "HdlStatement"):
+        if self is other:
             return True
-        return False
+        else:
+            raise NotImplementedError("This menthod shoud be implemented"
+                                      " on class of statement")
 
-    def seqEval(self):
-        raise NotImplementedError()
 
-
-class WhileContainer(HdlObject):
+class WhileContainer(HdlStatement):
     """
     Structural container of while statement for hdl rendering
     """
@@ -172,7 +128,7 @@ class WhileContainer(HdlObject):
                 s.seqEval()
 
 
-class WaitStm(HdlObject):
+class WaitStm(HdlStatement):
     """
     Structural container of wait statemnet for hdl rendering
     """

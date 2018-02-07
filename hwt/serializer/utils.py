@@ -1,8 +1,9 @@
 from itertools import chain
 
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements import WaitStm, IfContainer, \
-    SwitchContainer
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.statements import WaitStm
+from hwt.hdl.switchContainer import SwitchContainer
 
 
 def getMaxStmIdForStm(stm):

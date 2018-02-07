@@ -4,8 +4,7 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.entity import Entity
 from hwt.hdl.operator import Operator
 from hwt.hdl.process import HWProcess
-from hwt.hdl.statements import IfContainer, WaitStm, \
-    SwitchContainer
+from hwt.hdl.statements import WaitStm
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import where, distinctBy, groupedby
@@ -19,6 +18,8 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import InOutStmProbe
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.switchContainer import SwitchContainer
 
 
 def _isEnclosed(objList):
