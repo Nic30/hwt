@@ -6,7 +6,7 @@ from hwt.serializer.generic.constants import SIGNAL_TYPE
 
 def _isEventDependentDriver(d):
     return not isinstance(d, (PortItem, Operator)) \
-        and d.isEventDependent
+        and d._now_is_event_dependent
 
 
 def verilogTypeOfSig(signalItem):
@@ -15,10 +15,7 @@ def verilogTypeOfSig(signalItem):
     """
     if signalItem._const or len(signalItem.drivers) > 1 or\
        arr_any(signalItem.drivers, _isEventDependentDriver) or\
-       (signalItem._useNopVal
-            and len(signalItem.drivers) > 0
-            and signalItem.drivers[0].cond):
-
+       len(signalItem.drivers) > 0:
         return SIGNAL_TYPE.REG
     else:
         return SIGNAL_TYPE.WIRE

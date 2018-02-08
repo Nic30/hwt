@@ -82,7 +82,9 @@ class RtlSignalOps():
 
     # cmp
     def _eq(self, other):
-        """__eq__ is not overloaded because it will destroy hashability of object"""
+        """
+        __eq__ is not overloaded because it will destroy hashability of object
+        """
         return self.naryOp(AllOps.EQ, tv(self)._eq, other)
 
     def __ne__(self, other):
@@ -162,7 +164,7 @@ class RtlSignalOps():
         except MultipleDriversExc:
             pass
 
-    def __call__(self, source) -> List[Assignment]:
+    def __call__(self, source) -> Assignment:
         """
         Create assignment to this signal
 
@@ -196,9 +198,7 @@ class RtlSignalOps():
             indexCascade = None
 
         # self = self._tryMyIndexToEndpoint()
-        a = Assignment(source, self, indexCascade)
-
-        return [a]
+        return Assignment(source, self, indexCascade)
 
     def __int__(self):
         if not self._const:

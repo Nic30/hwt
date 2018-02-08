@@ -11,7 +11,7 @@ def systemCTypeOfSig(signalItem):
     if signalItem._const or\
        arr_any(signalItem.drivers,
                lambda d: not isinstance(d, (PortItem, Operator))
-               and d.isEventDependent):
+               and d._now_is_event_dependent):
 
         return SIGNAL_TYPE.REG
     else:

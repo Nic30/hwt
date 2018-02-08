@@ -8,7 +8,6 @@ from hwt.hdl.entity import Entity
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.process import HWProcess
-from hwt.hdl.statements import IfContainer, SwitchContainer
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.serializer.generic.serializer import GenericSerializer
@@ -25,6 +24,8 @@ from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.switchContainer import SwitchContainer
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/hwt/templates'))

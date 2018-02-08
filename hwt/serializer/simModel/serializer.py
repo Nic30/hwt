@@ -8,12 +8,15 @@ from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps, sensitivityByOp
+from hwt.hdl.process import HWProcess
+from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.constCache import ConstCache
+from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.generic.serializer import GenericSerializer
@@ -23,6 +26,7 @@ from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
+from hwt.pyUtils.arrayQuery import arr_any
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
@@ -46,7 +50,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         return True
 
     @classmethod
-    def stmAsHdl(cls, obj, ctx, enclosure=None):
+    def stmAsHdl(cls, obj, ctx: SerializerCtx, enclosure=None):
         try:
             serFn = getattr(cls, obj.__class__.__name__)
         except AttributeError:
@@ -54,7 +58,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         return serFn(obj, ctx, enclosure=enclosure)
 
     @classmethod
-    def Architecture(cls, arch: Architecture, ctx):
+    def Architecture(cls, arch: Architecture, ctx: SerializerCtx):
         cls.Entity_prepare(arch.entity, ctx, serialize=False)
         variables = []
         procs = []
@@ -115,10 +119,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         )
 
     @classmethod
-    def Assignment(cls, a, ctx, enclosure=None):
+    def Assignment(cls, a: Assignment, ctx: SerializerCtx, enclosure=None):
         dst = a.dst
         indentStr = getIndent(ctx.indent)
-        ev = a.isEventDependent
+        ev = a._is_completly_event_dependent
 
         srcStr = "%s" % cls.Value(a.src, ctx)
         if a.indexes is not None:
@@ -154,11 +158,11 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                     indentStr, dst.name, srcStr, ev)
 
     @classmethod
-    def comment(cls, comentStr):
+    def comment(cls, comentStr: str):
         return "#" + comentStr.replace("\n", "\n#")
 
     @classmethod
-    def IfContainer(cls, ifc, ctx, enclosure=None):
+    def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx, enclosure=None):
         cond = cls.condAsHdl(ifc.cond, ctx)
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
@@ -197,7 +201,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                                   ifFalse)))
 
     @classmethod
-    def SwitchContainer(cls, sw, ctx, enclosure=None):
+    def SwitchContainer(cls, sw: SwitchContainer,
+                        ctx: SerializerCtx, enclosure=None):
         switchOn = sw.switchOn
 
         def mkCond(c):
@@ -233,7 +238,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             return item.name
 
     @classmethod
-    def HWProcess(cls, proc, ctx):
+    def HWProcess(cls, proc: HWProcess, ctx: SerializerCtx):
         body = proc.statements
         proc.name = ctx.scope.checkedName(proc.name, proc)
         sensitivityList = sorted(
@@ -252,6 +257,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                                for stm in body[i:]])
 
         return processTmpl.render(
+            hasConditions=arr_any(
+                body, lambda stm: not isinstance(stm, Assignment)),
             name=proc.name,
             sensitivityList=sensitivityList,
             stmLines=[_body]

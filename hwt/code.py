@@ -46,20 +46,23 @@ class If(IfContainer):
             if condition is met
         """
         cond_sig = _intfToSig(cond)
-        if not isinstance(cond, RtlSignalBase):
+        if not isinstance(cond_sig, RtlSignalBase):
             raise IntfLvlConfErr("Condition is not signal, it is not certain"
-                                 " if this an error or desire")
+                                 " if this an error or desire ", cond_sig)
 
         cond = AndReducedContainer()
         cond.add(cond_sig)
         super(If, self).__init__(cond)
+        self._inputs.append(cond_sig)
 
         self.__else_used = False
         for clk in discoverEventDependency(cond):
             self._event_dependent_on.append(clk)
+
         self._is_completly_event_dependent = len(self._event_dependent_on) > 0
         self._now_is_event_dependent = self._is_completly_event_dependent
         self._register_stements(statements, self.ifTrue)
+        self._get_rtl_context().startsOfDataPaths.add(self)
 
     def Else(self, *statements):
         if self.__else_used:
@@ -82,7 +85,7 @@ class If(IfContainer):
         thisCond.add(cond)
 
         case = []
-        self.elIfs.append((cond, case))
+        self.elIfs.append((thisCond, case))
         self._register_stements(statements, case)
 
         return self
@@ -99,6 +102,7 @@ class Switch(SwitchContainer):
             raise IntfLvlConfErr("Condition is not signal, it is not certain"
                                  " if this an error or desire")
         super(Switch, self).__init__(switchOn)
+        self._get_rtl_context().startsOfDataPaths.append(self)
 
     def Case(self, caseVal, *statements):
         "c-like case of switch statement"
@@ -114,7 +118,8 @@ class Switch(SwitchContainer):
 
     def addCases(self, tupesValStmnts):
         """
-        Add multiple case statements from iterable of tuleles (caseVal, statements)
+        Add multiple case statements from iterable of tuleles
+        (caseVal, statements)
         """
         s = self
         for val, statements in tupesValStmnts:
@@ -319,7 +324,7 @@ def connect(src, *destinations, exclude=set(), fit=False):
     """
     assignemnts = []
     for dst in destinations:
-        assignemnts.extend(_connect(src, dst, exclude, fit))
+        assignemnts.append(_connect(src, dst, exclude, fit))
 
     return assignemnts
 

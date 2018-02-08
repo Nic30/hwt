@@ -1,0 +1,1 @@
+isEventDependent -> _now_is_event_dependent

@@ -1,14 +1,16 @@
+from copy import copy
+
 from hwt.code import If
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.entity import Entity
-from hwt.hdl.operator import Operator
+from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.process import HWProcess
-from hwt.hdl.statements import WaitStm
+from hwt.hdl.statements import WaitStm, HdlStatement
+from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import Value
-from hwt.pyUtils.arrayQuery import where, distinctBy, groupedby
-from hwt.synthesizer.assigRenderer import renderIfTree
+from hwt.pyUtils.arrayQuery import distinctBy
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
@@ -18,8 +20,8 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import InOutStmProbe
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
-from hwt.hdl.ifContainter import IfContainer
-from hwt.hdl.switchContainer import SwitchContainer
+from typing import List
+from hwt.synthesizer.uniqList import UniqList
 
 
 def _isEnclosed(objList):
@@ -59,69 +61,73 @@ def isEnclosed(obj):
         raise NotImplementedError(obj)
 
 
-def buildProcessesOutOfAssignments(startsOfDataPaths, getDebugScopeNameFn):
-    """
-    Render conditional assignments to statements
-    and wrap them with process statement
-    """
-    assigments = where(startsOfDataPaths,
-                       lambda x: isinstance(x, Assignment)
-                       )
-    processes = []
-    # process ranks = how many assignments is probably in process
-    # used to minimize number of merge tries
-    procRanks = {}
-    # generate naive processes from assignments
-    for sig, dps in groupedby(assigments, lambda x: x.dst):
-        dps = list(dps)
-        name = ""
-        if not sig.hasGenericName:
-            name = sig.name
-        sig.hidden = False
-
-        haveNotIndexes = True
-        for dp in dps:
-            haveNotIndexes = haveNotIndexes and not dp.indexes
-
-        # render sequential statements in process
-        # (conversion from netlist to statements)
-        hasCombDriver = False
-        for stm in renderIfTree(dps):
-            statements = []
-            sProbe = InOutStmProbe()
-            sProbe.discover(stm)
-
+def inject_nop_values(statements: List[HdlStatement], sProbe: InOutStmProbe):
+    for stm in statements:
+        for sig in stm._outputs:
             # inject nopVal if needed
             if sig._useNopVal and not isEnclosed(stm):
                 n = sig._nopVal
-                statements.append(Assignment(n, sig))
+                yield Assignment(n, sig)
                 if isinstance(n, RtlSignal):
                     sProbe.sensitivity.add(n)
 
-            statements.append(stm)
 
-            isEventDependent = False
-            for s in sProbe.sensitivity:
-                if isinstance(s, Operator):
-                    # event operator
-                    s.operands[0].hidden = False
-                    isEventDependent = True
-                else:
-                    s.hidden = False
+def name_for_process_and_mark_outputs(statements: List[HdlStatement]):
+    out_names = []
+    for stm in statements:
+        for sig in stm._outputs:
+            if not sig.hasGenericName:
+                out_names.append(sig.name)
+            sig.hidden = False
 
-            if hasCombDriver and not isEventDependent and haveNotIndexes:
-                raise MultipleDriversExc(
-                    "%s: Signal %s has multiple combinational drivers" %
-                    (getDebugScopeNameFn(), name))
+    if out_names:
+        return min(out_names)
+    else:
+        return ""
 
-            hasCombDriver = hasCombDriver or not isEventDependent
 
-            outputs = {sig, }
-            p = HWProcess("assig_process_" + name,
-                          statements, sProbe.sensitivity,
-                          sProbe.inputs, outputs)
-            processes.append(p)
-            procRanks[p] = len(dps)
+def buildProcessesOutOfAssignments(startsOfDataPaths):
+    """
+    Pack statements into HWProcess instances,
+    * for each out signal resolve it's drivers and collect them
+    * split statements if there is and combinational loop
+    * merge statements if it is possible
+    * resolve sensitivitilists
+    * wrap into HWProcess instance
+    * for every IO of process generate name if signal has not any
+    """
+    # create copy because this set will be reduced
+    startsOfDataPaths = copy(startsOfDataPaths)
+
+    # process ranks = how many assignments is probably in process
+    # used to minimize number of merge tries
+    procRanks = {}
+
+    processes = []
+    while startsOfDataPaths:
+        stm = startsOfDataPaths.pop()
+        sProbe = InOutStmProbe()
+        sProbe.discover(stm)
+        _statements = [stm, ]
+
+        # try to simplify statements
+        statements = []
+        for nop_initialier in inject_nop_values(_statements, sProbe):
+            statements.append(nop_initialier)
+
+        for _stm in _statements:
+            stms, _ = _stm._try_reduce()
+            statements.extend(stms)
+
+        outputs = copy(stm._outputs)
+
+        name = name_for_process_and_mark_outputs(statements)
+        p = HWProcess("assig_process_" + name,
+                      statements, sProbe.sensitivity,
+                      UniqList(sProbe.inputs), outputs)
+
+        procRanks[p] = 1
+        processes.append(p)
 
     yield from reduceProcesses(processes, procRanks)
 
@@ -228,14 +234,25 @@ class RtlNetlist():
         # check if all signals are driver by something
         _interfaces = set(interfaces)
         for sig in self.signals:
-            if not sig.drivers and sig not in _interfaces:
+            driver_cnt = len(sig.drivers)
+            if not driver_cnt and sig not in _interfaces:
                 assert sig.defaultVal._isFullVld(), (
                     sig, "Signal without any driver or value in ", name)
                 sig._const = True
 
+            has_comb_driver = False
+            if driver_cnt > 1:
+                for d in sig.drivers:
+                    for a in d._walk_assignments(dst=sig):
+                        if not a.indexes and not a._is_completly_event_dependent:
+                            if has_comb_driver:
+                                raise MultipleDriversExc(
+                                    "%s: Signal %s has multiple combinational drivers" %
+                                    (self.getDebugScopeName(), name))
+                            has_comb_driver = True
+
         arch = Architecture(ent)
-        for p in buildProcessesOutOfAssignments(self.startsOfDataPaths,
-                                                self.getDebugScopeName):
+        for p in buildProcessesOutOfAssignments(self.startsOfDataPaths):
             arch.processes.append(p)
 
         # add signals, variables etc. in architecture

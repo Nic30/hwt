@@ -33,38 +33,27 @@ def removeUnconnectedSignals(netlist):
                 for e in sig.drivers:
                     # drivers of this signal are useless rm them
                     if isinstance(e, Operator):
-                        for op in e.operands:
-                            if not isinstance(op, Value):
-                                try:
-                                    op.endpoints.remove(e)
-                                except KeyError:
-                                    # this operator has 2x+ same operand
-                                    continue
-
-                                _toSearch.add(op)
-
-                    elif isinstance(e, Assignment):
-                        op = e.src
-                        if not isinstance(op, Value):
-                            op.endpoints.remove(e)
-                            _toSearch.add(op)
-
-                        netlist.startsOfDataPaths.remove(e)
+                        inputs = e.operands
                     else:
-                        raise AssertionError(
-                            "Drivers should be only "
-                            "operators or assignments",
-                            e)
+                        inputs = e._inputs
+                        netlist.startsOfDataPaths.discard(e)
+
+                    for op in inputs:
+                        if not isinstance(op, Value):
+                            try:
+                                op.endpoints.remove(e)
+                            except KeyError:
+                                # this operator has 2x+ same operand
+                                continue
+
+                            _toSearch.add(op)
 
                 toDelete.add(sig)
 
         if toDelete:
             for sig in toDelete:
                 netlist.signals.remove(sig)
-                try:
-                    _toSearch.remove(sig)
-                except KeyError:
-                    pass
+                _toSearch.discard(sig)
             toDelete = set()
         toSearch = _toSearch
 
@@ -188,8 +177,8 @@ def tryToMerge(procA, procB):
         statements.extend(tryToMergeStm(stmA, stmB))
 
     procA.statements = statements
-    procA.outputs.update(procB.outputs)
-    procA.inputs.update(procB.inputs)
+    procA.outputs.extend(procB.outputs)
+    procA.inputs.extend(procB.inputs)
     procA.sensitivityList.update(procB.sensitivityList)
 
     return procA
@@ -200,8 +189,8 @@ def reduceProcesses(processes, procRanks):
     Try to merge processes as much is possible
 
     :param processes: list of processes instances
-    :param procRanks: process ranks = how many assignments is probably in process
-        used to minimize number of merge tries
+    :param procRanks: process ranks = how many assignments is probably
+        in process used to minimize number of merge tries
     """
     # sort to make order of merging same deterministic
     processes.sort(key=lambda x: (x.name, maxStmId(x)))
@@ -214,6 +203,7 @@ def reduceProcesses(processes, procRanks):
             for iB, pB in enumerate(islice(procs, iA + 1, None)):
                 if pB is None:
                     continue
+
                 try:
                     pA = tryToMerge(pA, pB)
                 except IncompatibleStructure:
