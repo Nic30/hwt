@@ -145,8 +145,8 @@ class GenericSerializer():
         return sFn(typ, ctx, declaration=declaration)
 
     @classmethod
-    def If(cls, ifc, ctx, enclosure=None):
-        return cls.IfContainer(ifc, ctx, enclosure=enclosure)
+    def If(cls, *args, **kwargs):
+        return cls.IfContainer(*args, **kwargs)
 
     @classmethod
     def IfContainer(cls, ifc, ctx, enclosure=None):

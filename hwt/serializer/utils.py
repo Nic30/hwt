@@ -1,28 +1,17 @@
-from itertools import chain
-
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.ifContainter import IfContainer
-from hwt.hdl.statements import WaitStm
-from hwt.hdl.switchContainer import SwitchContainer
 
 
 def getMaxStmIdForStm(stm):
+    """
+    Get maximum _instId from all assigments in statement
+    """
     maxId = 0
     if isinstance(stm, Assignment):
         return stm._instId
-    elif isinstance(stm, IfContainer):
-        for _stm in chain(stm.ifTrue, *map(lambda _elif: _elif[1], stm.elIfs),
-                          stm.ifFalse):
-            maxId = max(maxId, getMaxStmIdForStm(_stm))
-        return maxId
-    elif isinstance(stm, SwitchContainer):
-        for _stm in chain(*map(lambda _case: _case[1], stm.cases)):
-            maxId = max(maxId, getMaxStmIdForStm(_stm))
-        return maxId
-    elif isinstance(stm, WaitStm):
-        return maxId
     else:
-        raise NotImplementedError(stm)
+        for _stm in stm._iter_stms():
+            maxId = max(maxId, getMaxStmIdForStm(_stm))
+        return maxId
 
 
 def maxStmId(proc):

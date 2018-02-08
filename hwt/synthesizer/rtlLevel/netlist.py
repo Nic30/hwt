@@ -132,6 +132,15 @@ def buildProcessesOutOfAssignments(startsOfDataPaths):
     yield from reduceProcesses(processes, procRanks)
 
 
+def walk_assignments(stm, dst):
+    if isinstance(stm, Assignment):
+        if dst is stm.dst:
+            yield stm
+    else:
+        for _stm in stm._iter_stms():
+            yield from walk_assignments(_stm, dst)
+
+
 class RtlNetlist():
     """
     Hierarchical container for signals
@@ -243,13 +252,14 @@ class RtlNetlist():
             has_comb_driver = False
             if driver_cnt > 1:
                 for d in sig.drivers:
-                    for a in d._walk_assignments(dst=sig):
-                        if not a.indexes and not a._is_completly_event_dependent:
-                            if has_comb_driver:
-                                raise MultipleDriversExc(
-                                    "%s: Signal %s has multiple combinational drivers" %
-                                    (self.getDebugScopeName(), name))
-                            has_comb_driver = True
+                    if not d._now_is_event_dependent:
+                        for a in walk_assignments(d, sig):
+                            if not a.indexes and not a._is_completly_event_dependent:
+                                if has_comb_driver:
+                                    raise MultipleDriversExc(
+                                        "%s: Signal %s has multiple combinational drivers" %
+                                        (self.getDebugScopeName(), name))
+                                has_comb_driver = True
 
         arch = Architecture(ent)
         for p in buildProcessesOutOfAssignments(self.startsOfDataPaths):

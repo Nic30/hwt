@@ -101,17 +101,23 @@ class Switch(SwitchContainer):
         if not isinstance(switchOn, RtlSignalBase):
             raise IntfLvlConfErr("Condition is not signal, it is not certain"
                                  " if this an error or desire")
-        super(Switch, self).__init__(switchOn)
-        self._get_rtl_context().startsOfDataPaths.append(self)
+        super(Switch, self).__init__(switchOn, [])
+        self._inputs.append(switchOn)
+        self._get_rtl_context().startsOfDataPaths.add(self)
 
     def Case(self, caseVal, *statements):
         "c-like case of switch statement"
         caseVal = toHVal(caseVal, self.switchOn._dtype)
-        # [TODO]
+
         assert isinstance(caseVal, Value), caseVal
+        assert caseVal._isFullVld(), "Cmp with invalid value"
+        assert caseVal not in self._case_value_index, (
+            "Switch statement already has case for value ", caseVal)
 
         case = []
-        self.cases.add((caseVal, case))
+        self._case_value_index[caseVal] = len(self.cases)
+        self.cases.append((caseVal, case))
+
         self._register_stements(statements, case)
 
         return self
