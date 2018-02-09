@@ -7,6 +7,10 @@ from hwt.pyUtils.arrayQuery import flatten
 from hwt.synthesizer.uniqList import UniqList
 
 
+class HwtSyntaxError(Exception):
+    pass
+
+
 def seqEvalCond(cond):
     _cond = True
     for c in cond:
@@ -52,7 +56,13 @@ class HdlStatement(HdlObject):
 
     def _get_rtl_context(self):
         for sig in chain(self._inputs, self._outputs):
-            return sig.ctx
+            if sig.ctx:
+                return sig.ctx
+            else:
+                # Param instances does not have context
+                continue
+        raise HwtSyntaxError(
+            "Statement does not have any signal in any context", self)
 
     def _iter_stms(self):
         """
@@ -94,7 +104,7 @@ class HdlStatement(HdlObject):
                 cntx.startsOfDataPaths.update(result_statements)
 
                 for i in self._inputs:
-                    i.endpoints.remove(self)
+                    i.endpoints.discard(self)
                 for o in self._outputs:
                     o.drivers.remove(self)
 

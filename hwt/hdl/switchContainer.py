@@ -1,10 +1,12 @@
+from functools import reduce
 from itertools import chain
 from typing import List, Tuple
 
-from hwt.hdl.statements import HdlStatement, isSameHVal, isSameStatementList
+from hwt.hdl.statements import HdlStatement, isSameHVal, isSameStatementList,\
+    statementsAreSame
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from _functools import reduce
+from hwt.hdl.types.enum import HEnum
 
 
 class SwitchContainer(HdlStatement):
@@ -34,7 +36,7 @@ class SwitchContainer(HdlStatement):
 
         self._case_value_index = {}
         for i, (v, _) in enumerate(cases):
-            assert v not in self._case_values, v
+            assert v not in self._case_value_index, v
             self._case_value_index[v] = i
 
     def _iter_stms(self):
@@ -49,27 +51,49 @@ class SwitchContainer(HdlStatement):
             io_change = io_change or _io_change
             new_cases.append((val, _statements))
 
-        self.default, _io_update_required = self._try_reduce_list(self.default)
+        self.default, _io_change = self._try_reduce_list(self.default)
         io_change = io_change or _io_change
 
         reduce_self = not self._condHasEffect()
         if reduce_self:
-            res = self.ifTrue
+            if self.cases:
+                res = self.cases[0][1]
+            else:
+                res = self.default
         else:
             res = [self, ]
 
         self._on_reduce(reduce_self, io_change, res)
 
+        if not self.default:
+            t = self.switchOn._dtype
+            if isinstance(t, HEnum):
+                dom_size = t.domain_size()
+                val_cnt = len(t._allValues)
+                if len(self.cases) == val_cnt and val_cnt < dom_size:
+                    # bit representation is not fully matching enum description
+                    # need to set last case as default to prevent latches
+                    _, stms = self.cases.pop()
+                    self.default = stms
+
         return res, io_change
 
     def _condHasEffect(self):
+        if not self.cases:
+            return False
+
         # [TODO]
-        stmCnt = len(ifTrue)
-        if stmCnt == len(ifFalse) and reduce(lambda x, y: x and y,
-                                             [len(stm) == stmCnt
-                                              for _, stm in elIfs],
-                                             True):
-            for stms in zip(ifTrue, ifFalse, *map(lambda x: x[1], elIfs)):
+        type_domain_covered = bool(self.default) or len(
+            self.cases) == self.switchOn._dtype.domain_size()
+
+        stmCnt = len(self.cases[0])
+        if type_domain_covered and reduce(
+                lambda x, y: x and y,
+                [len(stm) == stmCnt
+                 for _, stm in self.cases],
+                True):
+            for stms in chain(*map(lambda x: x[1], self.cases),
+                              [self.default, ]):
                 if not statementsAreSame(stms):
                     return True
             return False

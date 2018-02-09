@@ -151,15 +151,6 @@ def disolveConditionAsEq(condList):
         return (a, val, rest)
 
 
-def typeDomainSize(t):
-    """
-    :return: how many values can have specified type
-    """
-    if isinstance(t, (HEnum, Bits)):
-        return 2 ** t.bit_length()
-    else:
-        raise TypeError(t)
-
 # walk down and discard redundand signals in conditions
 #    when condition discarted reduce container
 #    remove unused else/default

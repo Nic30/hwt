@@ -16,10 +16,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
 from hwt.synthesizer.vectorUtils import fitTo
-
-
-class HwtSyntaxError(Exception):
-    pass
+from hwt.hdl.statements import HwtSyntaxError
 
 
 def _intfToSig(obj):
@@ -54,6 +51,7 @@ class If(IfContainer):
         cond.add(cond_sig)
         super(If, self).__init__(cond)
         self._inputs.append(cond_sig)
+        cond_sig.endpoints.append(self)
 
         self.__else_used = False
         for clk in discoverEventDependency(cond):
@@ -83,6 +81,7 @@ class If(IfContainer):
 
         thisCond = AndReducedContainer()
         thisCond.add(cond)
+        cond.endpoints.append(self)
 
         case = []
         self.elIfs.append((thisCond, case))
@@ -129,7 +128,7 @@ class Switch(SwitchContainer):
         """
         s = self
         for val, statements in tupesValStmnts:
-            s = s.Case(val, *statements)
+            s = s.Case(val, statements)
         return s
 
     def Default(self, *statements):
@@ -287,11 +286,11 @@ class FsmBuilder(Switch):
             # building decision tree
             top = If(condition,
                      self.stateReg(newvalue)
-                     ).Else(
-                top
-            )
+                  ).Else(
+                     top
+                  )
 
-        s = Switch.Case(self, stateFrom, *top)
+        s = Switch.Case(self, stateFrom, top)
         return s
 
     def Default(self, *condAndNextState):

@@ -1,4 +1,5 @@
 from copy import copy
+from typing import List
 
 from hwt.code import If
 from hwt.hdl.architecture import Architecture
@@ -20,7 +21,6 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import InOutStmProbe
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
-from typing import List
 from hwt.synthesizer.uniqList import UniqList
 
 
@@ -86,7 +86,7 @@ def name_for_process_and_mark_outputs(statements: List[HdlStatement]):
         return ""
 
 
-def buildProcessesOutOfAssignments(startsOfDataPaths):
+def statements_to_HWProcesses(startsOfDataPaths):
     """
     Pack statements into HWProcess instances,
     * for each out signal resolve it's drivers and collect them
@@ -121,13 +121,18 @@ def buildProcessesOutOfAssignments(startsOfDataPaths):
 
         outputs = copy(stm._outputs)
 
-        name = name_for_process_and_mark_outputs(statements)
-        p = HWProcess("assig_process_" + name,
-                      statements, sProbe.sensitivity,
-                      UniqList(sProbe.inputs), outputs)
+        if statements:
+            name = name_for_process_and_mark_outputs(statements)
+            p = HWProcess("assig_process_" + name,
+                          statements, sProbe.sensitivity,
+                          UniqList(sProbe.inputs), outputs)
 
-        procRanks[p] = 1
-        processes.append(p)
+            procRanks[p] = 1
+            processes.append(p)
+        else:
+            assert not outputs
+            # this can happend f.e. when If does not contains any Assignment
+            pass
 
     yield from reduceProcesses(processes, procRanks)
 
@@ -185,9 +190,9 @@ class RtlNetlist():
                     "Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                       [RtlSignal.__call__(s, _defVal)]
+                       RtlSignal.__call__(s, _defVal)
                        ).Else(
-                    [RtlSignal.__call__(s, s.next)]
+                    RtlSignal.__call__(s, s.next)
                 )
             else:
                 r = [RtlSignal.__call__(s, s.next)]
@@ -262,7 +267,7 @@ class RtlNetlist():
                                 has_comb_driver = True
 
         arch = Architecture(ent)
-        for p in buildProcessesOutOfAssignments(self.startsOfDataPaths):
+        for p in statements_to_HWProcesses(self.startsOfDataPaths):
             arch.processes.append(p)
 
         # add signals, variables etc. in architecture

@@ -194,6 +194,14 @@ class GenericSerializer():
             ifFalse=asHdl(ifFalse))
 
     @classmethod
+    def Switch(cls, *args, **kwargs):
+        return cls.SwitchContainer(*args, **kwargs)
+
+    @classmethod
+    def FsmBuilder(cls, *args, **kwargs):
+        return cls.SwitchContainer(*args, **kwargs)
+
+    @classmethod
     def SwitchContainer(cls, sw, ctx):
         childCtx = ctx.withIndent(1)
 

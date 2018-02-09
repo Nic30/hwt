@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 from hwt.hdl.statements import HdlStatement, statementsAreSame,\
     isSameStatementList, seqEvalCond
+from hwt.synthesizer.andReducedContainer import AndReducedContainer
 
 
 class IfContainer(HdlStatement):
@@ -21,6 +22,7 @@ class IfContainer(HdlStatement):
         :param ifFalse: list of statements which should be active if cond.
             and any other cond. in elIfs is met
         """
+        assert isinstance(cond, AndReducedContainer)
         self.cond = cond
         super(IfContainer, self).__init__(
             parentStm,
@@ -81,7 +83,26 @@ class IfContainer(HdlStatement):
 
         self._on_reduce(reduce_self, io_change, res)
 
+        # try merge nested ifs as elifs
+        if len(self.ifFalse) == 1:
+            child = self.ifFalse[0]
+            if isinstance(child, IfContainer):
+                self._merge_nested_if_from_else(child)
+
         return res, io_change
+
+    def _merge_nested_if_from_else(self, ifStm: "IfContainer"):
+        """
+        Merge nested IfContarner form else branch to this IfContainer
+        as elif and else branches
+        """
+        if len(ifStm.cond) > 1:
+            raise NotImplementedError()
+
+        self.elIfs.append((ifStm.cond, ifStm.ifTrue))
+        self.elIfs.extend(ifStm.elIfs)
+
+        self.ifFalse = ifStm.ifFalse
 
     @classmethod
     def condHasEffect(cls, ifTrue, ifFalse, elIfs):
