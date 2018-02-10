@@ -1,5 +1,6 @@
 from hwt.hdl.statements import isSameHVal, HdlStatement
 from hwt.hdl.value import Value
+from typing import Tuple, List
 
 
 class Assignment(HdlStatement):
@@ -46,7 +47,7 @@ class Assignment(HdlStatement):
         if not isinstance(dst, Value):
             self._outputs.append(dst)
             if isReal:
-                src.drivers.append(self)
+                dst.drivers.append(self)
 
         self.indexes = indexes
         if indexes:
@@ -60,6 +61,12 @@ class Assignment(HdlStatement):
 
         if not virtualOnly:
             dst.ctx.startsOfDataPaths.add(self)
+
+    def _iter_stms(self):
+        yield self
+
+    def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
+        return [self, ], False
 
     def isSame(self, other):
         if isinstance(other, self.__class__):

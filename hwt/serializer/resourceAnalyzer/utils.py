@@ -125,12 +125,12 @@ def updateGuesFromAssignment(gues: Dict, assignment: Assignment) -> None:
         current = gues[sig]
     except KeyError:
         if isRam:
-            if assignment.isEventDependent:
+            if assignment._now_is_event_dependent:
                 g = ResourceRAM
             else:
                 g = ResourceAsyncRAM
         else:
-            if assignment.isEventDependent:
+            if assignment._now_is_event_dependent:
                 g = ResourceFF
             else:
                 g = Assignment
@@ -141,7 +141,7 @@ def updateGuesFromAssignment(gues: Dict, assignment: Assignment) -> None:
         # [TODO] check for event dependency
         g = resourceTransitions_memoryAnotherInput[current]
     else:
-        if assignment.isEventDependent:
+        if assignment._now_is_event_dependent:
             g = ResourceFF
         else:
             g = Assignment
@@ -276,7 +276,7 @@ class ResourceContext():
                 ports = [0, 0, 0, 0]
                 addressSignals[index] = ports
 
-            if d.isEventDependent:
+            if d._now_is_event_dependent:
                 ports[1] += 1
             else:
                 ports[3] += 1
@@ -285,11 +285,11 @@ class ResourceContext():
             if isinstance(e, Assignment):
                 assert len(e.indexes) == 1
                 index = e.indexes
-                isEventDependent = e.isEventDependent
+                isEventDependent = e._now_is_event_dependent
             elif isinstance(e, Operator) and e.operator == AllOps.INDEX:
                 index = e.operands[1]
                 a = findAssingmentOf(e.result)
-                isEventDependent = a.isEventDependent
+                isEventDependent = a._now_is_event_dependent
             else:
                 raise NotImplementedError(e)
 

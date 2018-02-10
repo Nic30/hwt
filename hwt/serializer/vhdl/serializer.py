@@ -1,17 +1,15 @@
 import re
 
-from hwt.hdl.assignment import Assignment
 from hwt.hdl.entity import Entity
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.arrayQuery import groupedby
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.mapExpr import MapExpr
 from hwt.serializer.generic.nameScope import LangueKeyword, NameScope
 from hwt.serializer.generic.portMap import PortMap
+from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.utils import maxStmId
 from hwt.serializer.vhdl.keywords import VHLD_KEYWORDS
 from hwt.serializer.vhdl.ops import VhdlSerializer_ops

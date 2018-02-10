@@ -7,6 +7,7 @@ class Bits(HdlType):
     """
     Elemental HDL type representing bits (vector or single bit)
     """
+
     def __init__(self, width, signed=None, forceVector=False, negated=False):
         """
         :param negated: if true the value is in negated form
@@ -54,6 +55,12 @@ class Bits(HdlType):
         :return: bit width for this type
         """
         return self._widthVal
+
+    def domain_size(self):
+        """
+        :return: how many values can have specified type
+        """
+        return int(2 ** self.bit_length())
 
     @classmethod
     def get_auto_cast_fn(cls):

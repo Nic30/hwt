@@ -1,20 +1,19 @@
 from hwt.hdl.assignment import Assignment
+from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import isEventDependentOp
-from hwt.hdl.portItem import PortItem
+from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.value import Value
-from hwt.pyUtils.arrayQuery import where
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.hdl.ifContainter import IfContainer
-from hwt.hdl.switchContainer import SwitchContainer
 
 
 def discoverEventDependency(sig):
     """
-    walk signals drivers and yields whose signals which are in some event operator
+    :return: generator of tuples (event operator, signal)
     """
+
     try:
         drivers = sig.drivers
     except AttributeError:
@@ -24,7 +23,7 @@ def discoverEventDependency(sig):
         d = drivers[0]
         if isinstance(d, Operator):
             if isEventDependentOp(d.operator):
-                yield d.operands[0]
+                yield (d.operator, d.operands[0])
             else:
                 for op in d.operands:
                     yield from discoverEventDependency(op)
@@ -44,6 +43,7 @@ class InOutStmProbe():
         discovered on actual branch and all other inputs
         should be skipped from sensitivity
     """
+
     def __init__(self):
         self.inputs = set()
         self.sensitivity = set()
@@ -60,9 +60,7 @@ class InOutStmProbe():
         _eventSensFound = self._eventSensFound
 
         if isinstance(statement, Assignment):
-            if statement.indexes:
-                discoverSequence(statement.indexes)
-            walk(statement.src, self.sensitivity)
+            discoverSequence(statement._inputs)
         elif isinstance(statement, IfContainer):
             # if true
             discoverSequence(statement.cond)

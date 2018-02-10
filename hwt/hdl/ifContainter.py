@@ -1,9 +1,10 @@
 from functools import reduce
 from itertools import chain
-from typing import List
+from typing import List, Tuple
 
 from hwt.hdl.statements import HdlStatement, statementsAreSame,\
     isSameStatementList, seqEvalCond
+from hwt.synthesizer.andReducedContainer import AndReducedContainer
 
 
 class IfContainer(HdlStatement):
@@ -11,7 +12,7 @@ class IfContainer(HdlStatement):
     Structural container of if statement for hdl rendering
     """
 
-    def __init__(self, cond, ifTrue=[], ifFalse=[], elIfs=[],
+    def __init__(self, cond, ifTrue=None, ifFalse=None, elIfs=None,
                  parentStm=None, is_completly_event_dependent=False):
         """
         :param cond: list of conditions for this if
@@ -21,33 +22,87 @@ class IfContainer(HdlStatement):
         :param ifFalse: list of statements which should be active if cond.
             and any other cond. in elIfs is met
         """
+        assert isinstance(cond, AndReducedContainer)
         self.cond = cond
         super(IfContainer, self).__init__(
             parentStm,
             is_completly_event_dependent)
         self.parentStm = None
-        self.ifTrue = ifTrue
-        self.elIfs = elIfs
-        self.ifFalse = ifFalse
+
+        if ifTrue is None:
+            self.ifTrue = []
+        else:
+            self.ifTrue = ifTrue
+
+        if elIfs is None:
+            self.elIfs = []
+        else:
+            self.elIfs = elIfs
+
+        if ifFalse is None:
+            self.ifFalse = []
+        else:
+            self.ifFalse = ifFalse
 
     def _iter_stms(self):
+        """
+        Get iterator over all statements inside this statement
+        """
         return chain(self.ifTrue,
                      *map(lambda x: x[1], self.elIfs),
                      self.ifFalse)
 
-    @classmethod
-    def potentialyReduced(cls, cond, ifTrue=[], ifFalse=[], elIfs=[])\
-            -> List[HdlStatement]:
+    def _try_reduce(self) -> Tuple[bool, List[HdlStatement]]:
         """
-        If conditions have no effect on result
-        IfContainer is reduced to just list of assignments
+        Try reduce useless branches of statement
 
-        Params same as `IfContainer.__init__`
+        :return: tuple (statements, io_update_required flag)
         """
-        if IfContainer.condHasEffect(ifTrue, ifFalse, elIfs):
-            return [IfContainer(cond, ifTrue, ifFalse, elIfs), ]
+        # flag if IO of statement has changed
+        io_change = False
+
+        self.ifTrue, _io_change = self._try_reduce_list(self.ifTrue)
+        io_change = io_change or _io_change
+
+        new_elifs = []
+        for cond, statements in self.elIfs:
+            _statements, _io_change = self._try_reduce_list(statements)
+            io_change = io_change or _io_change
+            new_elifs.append((cond, _statements))
+
+        self.ifFalse, _io_update_required = self._try_reduce_list(self.ifFalse)
+        io_change = io_change or _io_change
+
+        reduce_self = not self.condHasEffect(
+            self.ifTrue, self.ifFalse, self.elIfs)
+
+        if reduce_self:
+            res = self.ifTrue
         else:
-            return ifTrue
+            res = [self, ]
+
+        self._on_reduce(reduce_self, io_change, res)
+
+        # try merge nested ifs as elifs
+        if len(self.ifFalse) == 1:
+            child = self.ifFalse[0]
+            if isinstance(child, IfContainer):
+                self._merge_nested_if_from_else(child)
+
+        return res, io_change
+
+    def _merge_nested_if_from_else(self, ifStm: "IfContainer"):
+        """
+        Merge nested IfContarner form else branch to this IfContainer
+        as elif and else branches
+        """
+        if len(ifStm.cond) > 1:
+            raise NotImplementedError()
+
+        self.elIfs.append((ifStm.cond, ifStm.ifTrue))
+        self.elIfs.extend(ifStm.elIfs)
+
+        self.ifFalse = ifStm.ifFalse
 
     @classmethod
     def condHasEffect(cls, ifTrue, ifFalse, elIfs):
@@ -97,3 +152,8 @@ class IfContainer(HdlStatement):
 
             for s in self.ifFalse:
                 s.seqEval()
+
+    def __repr__(self):
+        from hwt.serializer.hwt.serializer import HwtSerializer
+        ctx = HwtSerializer.getBaseContext()
+        return HwtSerializer.IfContainer(self, ctx)

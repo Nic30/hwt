@@ -1,7 +1,6 @@
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
-from hwt.hdl.statements import IfContainer, SwitchContainer, \
-    WhileContainer, WaitStm
+from hwt.hdl.statements import WhileContainer, WaitStm
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
@@ -9,6 +8,8 @@ from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.verilog.utils import verilogTypeOfSig, SIGNAL_TYPE
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.switchContainer import SwitchContainer
 
 
 class VerilogSerializer_statements():

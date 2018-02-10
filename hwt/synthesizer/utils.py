@@ -38,6 +38,7 @@ def toRtl(unitOrCls: Unit, name: str=None,
 
     u._loadDeclarations()
     if name is not None:
+        assert isinstance(name, str)
         u._name = name
 
     globScope = serializer.getBaseNameScope()

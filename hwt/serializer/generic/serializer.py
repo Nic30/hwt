@@ -11,8 +11,8 @@ from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import NameScope
-from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.unit import Unit
 
 
 class GenericSerializer():
@@ -145,10 +145,17 @@ class GenericSerializer():
         return sFn(typ, ctx, declaration=declaration)
 
     @classmethod
-    def IfContainer(cls, ifc, ctx):
+    def If(cls, *args, **kwargs):
+        return cls.IfContainer(*args, **kwargs)
+
+    @classmethod
+    def IfContainer(cls, ifc, ctx, enclosure=None):
         """
         Srialize IfContainer instance
         """
+        if enclosure:
+            raise NotImplementedError()
+
         childCtx = ctx.withIndent()
 
         def asHdl(statements):
@@ -185,6 +192,14 @@ class GenericSerializer():
             ifTrue=asHdl(ifTrue),
             elIfs=elIfs,
             ifFalse=asHdl(ifFalse))
+
+    @classmethod
+    def Switch(cls, *args, **kwargs):
+        return cls.SwitchContainer(*args, **kwargs)
+
+    @classmethod
+    def FsmBuilder(cls, *args, **kwargs):
+        return cls.SwitchContainer(*args, **kwargs)
 
     @classmethod
     def SwitchContainer(cls, sw, ctx):

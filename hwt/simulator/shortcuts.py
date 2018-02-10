@@ -1,4 +1,3 @@
-import imp
 import importlib
 import inspect
 import os
@@ -18,6 +17,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
 from typing import Optional
+from types import ModuleType
 
 
 def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
@@ -82,7 +82,7 @@ def toSimModel(unit, targetPlatform=None, dumpModelIn=None):
         if not dInPath:
             sys.path.remove(d)
     else:
-        simModule = imp.new_module('simModule')
+        simModule = ModuleType('simModule')
         # python supports only ~100 opened brackets
         # it exceded it throws MemoryError: s_push: parser stack overflow
         exec(sim_code, simModule.__dict__)

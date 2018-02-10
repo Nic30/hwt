@@ -8,12 +8,16 @@ from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps, sensitivityByOp
+from hwt.hdl.process import HWProcess
+from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.typeCast import toHVal
+from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.constCache import ConstCache
+from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.generic.serializer import GenericSerializer
@@ -22,6 +26,7 @@ from hwt.serializer.simModel.ops import SimModelSerializer_ops
 from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
+from hwt.synthesizer.andReducedContainer import AndReducedContainer
 from hwt.synthesizer.param import evalParam
 
 
@@ -46,7 +51,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         return True
 
     @classmethod
-    def stmAsHdl(cls, obj, ctx, enclosure=None):
+    def stmAsHdl(cls, obj, ctx: SerializerCtx, enclosure=None):
         try:
             serFn = getattr(cls, obj.__class__.__name__)
         except AttributeError:
@@ -54,7 +59,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         return serFn(obj, ctx, enclosure=enclosure)
 
     @classmethod
-    def Architecture(cls, arch: Architecture, ctx):
+    def Architecture(cls, arch: Architecture, ctx: SerializerCtx):
         cls.Entity_prepare(arch.entity, ctx, serialize=False)
         variables = []
         procs = []
@@ -115,10 +120,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         )
 
     @classmethod
-    def Assignment(cls, a, ctx, enclosure=None):
+    def Assignment(cls, a: Assignment, ctx: SerializerCtx, enclosure=None):
         dst = a.dst
         indentStr = getIndent(ctx.indent)
-        ev = a.isEventDependent
+        ev = a._is_completly_event_dependent
 
         srcStr = "%s" % cls.Value(a.src, ctx)
         if a.indexes is not None:
@@ -154,11 +159,11 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                     indentStr, dst.name, srcStr, ev)
 
     @classmethod
-    def comment(cls, comentStr):
+    def comment(cls, comentStr: str):
         return "#" + comentStr.replace("\n", "\n#")
 
     @classmethod
-    def IfContainer(cls, ifc, ctx, enclosure=None):
+    def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx, enclosure=None):
         cond = cls.condAsHdl(ifc.cond, ctx)
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
@@ -168,6 +173,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             ifFalse = []
             topIf = IfContainer(ifc.cond, ifc.ifTrue, ifFalse)
             for c, stms in ifc.elIfs:
+                assert isinstance(c, AndReducedContainer), c
                 _ifFalse = []
                 lastIf = IfContainer(c, stms, _ifFalse)
                 ifFalse.append(lastIf)
@@ -189,20 +195,24 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                 indentNum=ctx.indent,
                 cond=cond,
                 enclosure=_enclosure,
-                ifTrue=tuple(map(lambda obj: cls.stmAsHdl(obj, childCtx,
-                                                          enclosure=enclosure),
-                                 ifTrue)),
-                ifFalse=tuple(map(lambda obj: cls.stmAsHdl(obj, childCtx,
-                                                           enclosure=enclosure),
-                                  ifFalse)))
+                ifTrue=tuple(map(
+                    lambda obj: cls.stmAsHdl(obj, childCtx,
+                                             enclosure=enclosure),
+                    ifTrue)),
+                ifFalse=tuple(map(
+                    lambda obj: cls.stmAsHdl(obj, childCtx,
+                                             enclosure=enclosure),
+                    ifFalse)))
 
     @classmethod
-    def SwitchContainer(cls, sw, ctx, enclosure=None):
+    def SwitchContainer(cls, sw: SwitchContainer,
+                        ctx: SerializerCtx, enclosure=None):
         switchOn = sw.switchOn
 
         def mkCond(c):
-            return {Operator(AllOps.EQ,
-                             [switchOn, c])}
+            cond = AndReducedContainer()
+            cond.add(switchOn._eq(c))
+            return cond
         elIfs = []
 
         for key, statements in sw.cases:
@@ -211,9 +221,9 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
 
         topCond = mkCond(sw.cases[0][0])
         topIf = IfContainer(topCond,
-                            sw.cases[0][1],
-                            ifFalse,
-                            elIfs)
+                            ifTrue=sw.cases[0][1],
+                            ifFalse=ifFalse,
+                            elIfs=elIfs)
 
         return cls.IfContainer(topIf, ctx, enclosure=enclosure)
 
@@ -233,8 +243,9 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             return item.name
 
     @classmethod
-    def HWProcess(cls, proc, ctx):
+    def HWProcess(cls, proc: HWProcess, ctx: SerializerCtx):
         body = proc.statements
+        assert body
         proc.name = ctx.scope.checkedName(proc.name, proc)
         sensitivityList = sorted(
             map(cls.sensitivityListItem, proc.sensitivityList))
@@ -243,15 +254,15 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         if len(body) == 1:
             _body = cls.stmAsHdl(body[0], childCtx)
         else:
-            for i, stm in enumerate(body):
-                if not isinstance(stm, Assignment):
-                    break
             # first statement is taken as default
-            enclosure = body[:i]
-            _body = "\n".join([cls.stmAsHdl(stm, childCtx, enclosure=enclosure)
-                               for stm in body[i:]])
+            enclosure = [body[0], ]
+            _body = "\n".join([
+                cls.stmAsHdl(stm, childCtx, enclosure=enclosure)
+                for stm in body[1:]])
 
         return processTmpl.render(
+            hasConditions=arr_any(
+                body, lambda stm: not isinstance(stm, Assignment)),
             name=proc.name,
             sensitivityList=sensitivityList,
             stmLines=[_body]

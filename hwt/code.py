@@ -16,10 +16,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
 from hwt.synthesizer.vectorUtils import fitTo
-
-
-class HwtSyntaxError(Exception):
-    pass
+from hwt.hdl.statements import HwtSyntaxError
 
 
 def _intfToSig(obj):
@@ -46,20 +43,24 @@ class If(IfContainer):
             if condition is met
         """
         cond_sig = _intfToSig(cond)
-        if not isinstance(cond, RtlSignalBase):
+        if not isinstance(cond_sig, RtlSignalBase):
             raise IntfLvlConfErr("Condition is not signal, it is not certain"
-                                 " if this an error or desire")
+                                 " if this an error or desire ", cond_sig)
 
         cond = AndReducedContainer()
         cond.add(cond_sig)
         super(If, self).__init__(cond)
+        self._inputs.append(cond_sig)
+        cond_sig.endpoints.append(self)
 
         self.__else_used = False
         for clk in discoverEventDependency(cond):
             self._event_dependent_on.append(clk)
+
         self._is_completly_event_dependent = len(self._event_dependent_on) > 0
         self._now_is_event_dependent = self._is_completly_event_dependent
         self._register_stements(statements, self.ifTrue)
+        self._get_rtl_context().startsOfDataPaths.add(self)
 
     def Else(self, *statements):
         if self.__else_used:
@@ -80,9 +81,10 @@ class If(IfContainer):
 
         thisCond = AndReducedContainer()
         thisCond.add(cond)
+        cond.endpoints.append(self)
 
         case = []
-        self.elIfs.append((cond, case))
+        self.elIfs.append((thisCond, case))
         self._register_stements(statements, case)
 
         return self
@@ -98,27 +100,35 @@ class Switch(SwitchContainer):
         if not isinstance(switchOn, RtlSignalBase):
             raise IntfLvlConfErr("Condition is not signal, it is not certain"
                                  " if this an error or desire")
-        super(Switch, self).__init__(switchOn)
+        super(Switch, self).__init__(switchOn, [])
+        self._inputs.append(switchOn)
+        self._get_rtl_context().startsOfDataPaths.add(self)
 
     def Case(self, caseVal, *statements):
         "c-like case of switch statement"
         caseVal = toHVal(caseVal, self.switchOn._dtype)
-        # [TODO]
+
         assert isinstance(caseVal, Value), caseVal
+        assert caseVal._isFullVld(), "Cmp with invalid value"
+        assert caseVal not in self._case_value_index, (
+            "Switch statement already has case for value ", caseVal)
 
         case = []
-        self.cases.add((caseVal, case))
+        self._case_value_index[caseVal] = len(self.cases)
+        self.cases.append((caseVal, case))
+
         self._register_stements(statements, case)
 
         return self
 
     def addCases(self, tupesValStmnts):
         """
-        Add multiple case statements from iterable of tuleles (caseVal, statements)
+        Add multiple case statements from iterable of tuleles
+        (caseVal, statements)
         """
         s = self
         for val, statements in tupesValStmnts:
-            s = s.Case(val, *statements)
+            s = s.Case(val, statements)
         return s
 
     def Default(self, *statements):
@@ -276,11 +286,11 @@ class FsmBuilder(Switch):
             # building decision tree
             top = If(condition,
                      self.stateReg(newvalue)
-                     ).Else(
-                top
-            )
+                  ).Else(
+                     top
+                  )
 
-        s = Switch.Case(self, stateFrom, *top)
+        s = Switch.Case(self, stateFrom, top)
         return s
 
     def Default(self, *condAndNextState):
@@ -319,7 +329,7 @@ def connect(src, *destinations, exclude=set(), fit=False):
     """
     assignemnts = []
     for dst in destinations:
-        assignemnts.extend(_connect(src, dst, exclude, fit))
+        assignemnts.append(_connect(src, dst, exclude, fit))
 
     return assignemnts
 

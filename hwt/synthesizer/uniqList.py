@@ -5,9 +5,9 @@ class UniqList(list):
     List of unique items
     """
 
-    def __init__(self):
-        super(UniqList, self).__init__()
-        self.__s = set()
+    def __init__(self, *args, **kwargs):
+        super(UniqList, self).__init__(*args, **kwargs)
+        self.__s = set(*args, **kwargs)
 
     def append(self, item):
         if item in self.__s:
@@ -24,6 +24,16 @@ class UniqList(list):
     def insert(self, i, x):
         super(UniqList, self).insert(i, x)
         self.__s.add(x)
+
+    def _get_set(self):
+        return self.__s
+
+    def intersection_set(self, other):
+        return self.__s.intersection(other._get_set())
+
+    def discard(self, item):
+        if item in self.__s:
+            return self.remove(item)
 
     def remove(self, item):
         self.__s.remove(item)
@@ -42,6 +52,9 @@ class UniqList(list):
         c = UniqList()
         c.extend(self)
         return c
+
+    def __copy__(self):
+        return self.copy()
 
     def __contains__(self, key):
         return key in self.__s

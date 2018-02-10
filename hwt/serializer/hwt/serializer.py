@@ -8,7 +8,6 @@ from hwt.hdl.entity import Entity
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.process import HWProcess
-from hwt.hdl.statements import IfContainer, SwitchContainer
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.serializer.generic.serializer import GenericSerializer
@@ -25,6 +24,9 @@ from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.switchContainer import SwitchContainer
+from hwt.synthesizer.andReducedContainer import AndReducedContainer
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/hwt/templates'))
@@ -215,10 +217,18 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
     def SwitchContainer(cls, sw: SwitchContainer,
                         ctx: SerializerCtx, enclosure=None):
         switchOn = sw.switchOn
+        if not sw.cases:
+            # this should be usually reduced, but can appear while debugging
+            if sw.default:
+                return "\n".join([cls.asHdl(obj, ctx) for obj in sw.default])
+            else:
+                return cls.comment(" fully reduced switch on %s" % cls.asHdl(switchOn, ctx))
 
         def mkCond(c):
-            return {Operator(AllOps.EQ,
-                             [switchOn, c])}
+            cond = AndReducedContainer()
+            cond.add(switchOn._eq(c))
+            return cond
+
         elIfs = []
 
         for key, statements in sw.cases:
@@ -251,6 +261,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
     @classmethod
     def HWProcess(cls, proc: HWProcess, ctx: SerializerCtx):
         body = proc.statements
+        assert body
         proc.name = ctx.scope.checkedName(proc.name, proc)
         sensitivityList = sorted(
             map(cls.sensitivityListItem, proc.sensitivityList))
@@ -258,13 +269,10 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         if len(body) == 1:
             _body = cls.stmAsHdl(body[0], ctx)
         else:
-            for i, stm in enumerate(body):
-                if not isinstance(stm, Assignment):
-                    break
             # first statement is taken as default
-            enclosure = body[:i]
+            enclosure = [body[0], ]
             _body = "\n".join([cls.stmAsHdl(stm, ctx, enclosure=enclosure)
-                               for stm in body[i:]])
+                               for stm in body[1:]])
 
         return processTmpl.render(
             indent=getIndent(ctx.indent),
