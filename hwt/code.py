@@ -1,29 +1,22 @@
 import math
 from operator import and_, or_, xor, add
 
+from hwt.code_utils import _mkOp, _connect, _intfToSig
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
+from hwt.hdl.statements import HwtSyntaxError
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.typeShortcuts import hInt, vec
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
-from hwt.synthesizer.andReducedContainer import AndReducedContainer
+from hwt.pyUtils.andReducedList import AndReducedList
+from hwt.pyUtils.arrayQuery import arr_any
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
-from hwt.synthesizer.vectorUtils import fitTo
-from hwt.hdl.statements import HwtSyntaxError
-
-
-def _intfToSig(obj):
-    if isinstance(obj, InterfaceBase):
-        return obj._sig
-    else:
-        return obj
 
 
 class If(IfContainer):
@@ -47,46 +40,94 @@ class If(IfContainer):
             raise IntfLvlConfErr("Condition is not signal, it is not certain"
                                  " if this an error or desire ", cond_sig)
 
-        cond = AndReducedContainer()
-        cond.add(cond_sig)
+        cond = AndReducedList([cond_sig, ])
         super(If, self).__init__(cond)
         self._inputs.append(cond_sig)
         cond_sig.endpoints.append(self)
 
-        self.__else_used = False
-        for clk in discoverEventDependency(cond):
-            self._event_dependent_on.append(clk)
+        ev_dep = arr_any(discoverEventDependency(cond_sig), lambda x: True)
+        self._is_completly_event_dependent = ev_dep
+        self._now_is_event_dependent = ev_dep
 
-        self._is_completly_event_dependent = len(self._event_dependent_on) > 0
-        self._now_is_event_dependent = self._is_completly_event_dependent
         self._register_stements(statements, self.ifTrue)
-        self._get_rtl_context().startsOfDataPaths.add(self)
+        self._get_rtl_context().statements.add(self)
 
-    def Else(self, *statements):
-        if self.__else_used:
-            raise HwtSyntaxError(
-                "Else on this if-then-else statemen was aready used")
-        self.__else_used = True
+    def _cut_off_drivers_of(self, sig: RtlSignalBase):
+        """
+        Cut off statements which are driver of specified signal
+        """
+        if len(self._outputs) == 1 and sig in self._outputs:
+            self.parentStm = None
+            return self
 
-        self._register_stements(statements, self.ifFalse)
-        return self
+        children_to_reconnect = []
+
+        newIfTrue = []
+        all_cut_off = True
+        all_cut_off &= self._cut_off_drivers_of_list(
+            sig, self.ifTrue, children_to_reconnect, newIfTrue)
+
+        newElifs = []
+        anyElifHit = False
+        for cond, stms in self.elIfs:
+            newCase = []
+            all_cut_off &= self._cut_off_drivers_of_list(
+                sig, stms, children_to_reconnect, newCase)
+            if newCase:
+                anyElifHit = True
+            newElifs.append((cond, newCase))
+
+        newIfFalse = None
+        if self.ifFalse:
+            newIfFalse = []
+            all_cut_off &= self._cut_off_drivers_of_list(
+                sig, self.ifFalse, children_to_reconnect, newIfFalse)
+
+        assert not all_cut_off, "everything was cut of but this should be already known at start"
+
+        if newIfTrue or newIfFalse or anyElifHit or newIfFalse:
+            # parts were cut off
+            # generate new statement for them
+            assert len(self.cond) == 1
+            cond_sig = self.cond[0]
+            n = self.__class__(cond_sig, newIfTrue)
+            for c, stms in newElifs:
+                assert len(c) == 1
+                c_sig = c[0]
+                n.Elif(c_sig, stms)
+            if newIfFalse is not None:
+                n.Else(newIfFalse)
+            # update io
+            if self.parentStm is None:
+                ctx = n._get_rtl_context()
+                ctx.statements.add(n)
+                for 
+                raise NotImplementedError()
+
+            return n
 
     def Elif(self, cond, *statements):
-        cond = _intfToSig(cond)
+        cond_sig = _intfToSig(cond)
 
-        for clk in discoverEventDependency(cond):
-            self._event_dependent_on.append(clk)
+        self._now_is_event_dependent = arr_any(
+            discoverEventDependency(cond_sig), lambda x: True)
 
-        self._now_is_event_dependent = bool(self._event_dependent_on)
-
-        thisCond = AndReducedContainer()
-        thisCond.add(cond)
-        cond.endpoints.append(self)
+        thisCond = AndReducedList([cond_sig, ])
+        cond_sig.endpoints.append(self)
 
         case = []
         self.elIfs.append((thisCond, case))
         self._register_stements(statements, case)
 
+        return self
+
+    def Else(self, *statements):
+        if self.ifFalse is not None:
+            raise HwtSyntaxError(
+                "Else on this if-then-else statemen was aready used")
+
+        self.ifFalse = []
+        self._register_stements(statements, self.ifFalse)
         return self
 
 
@@ -98,11 +139,28 @@ class Switch(SwitchContainer):
     def __init__(self, switchOn):
         switchOn = _intfToSig(switchOn)
         if not isinstance(switchOn, RtlSignalBase):
-            raise IntfLvlConfErr("Condition is not signal, it is not certain"
+            raise HwtSyntaxError("Select is not signal, it is not certain"
                                  " if this an error or desire")
+        if arr_any(discoverEventDependency(switchOn), lambda x: True):
+            raise HwtSyntaxError("Can not switch on result of event operator")
+
         super(Switch, self).__init__(switchOn, [])
         self._inputs.append(switchOn)
-        self._get_rtl_context().startsOfDataPaths.add(self)
+        switchOn.endpoints.append(self)
+        self._get_rtl_context().statements.add(self)
+
+    def _cut_off_drivers_of(self, sig: RtlSignalBase):
+        raise NotImplementedError()
+
+    def addCases(self, tupesValStmnts):
+        """
+        Add multiple case statements from iterable of tuleles
+        (caseVal, statements)
+        """
+        s = self
+        for val, statements in tupesValStmnts:
+            s = s.Case(val, statements)
+        return s
 
     def Case(self, caseVal, *statements):
         "c-like case of switch statement"
@@ -121,25 +179,11 @@ class Switch(SwitchContainer):
 
         return self
 
-    def addCases(self, tupesValStmnts):
-        """
-        Add multiple case statements from iterable of tuleles
-        (caseVal, statements)
-        """
-        s = self
-        for val, statements in tupesValStmnts:
-            s = s.Case(val, statements)
-        return s
-
     def Default(self, *statements):
         """c-like default of switch statement
         """
-        if not self.cases:
-            # no cases were used
-            return statements
-
+        self.default = []
         self._register_stements(statements, self.default)
-
         return self
 
 
@@ -266,7 +310,7 @@ class FsmBuilder(Switch):
         :attention: transitions has priority, first has the biggest
         :attention: if stateFrom is None it is evaluated as default
         """
-        top = None
+        top = []
         last = True
 
         for cAndS in reversed(condAndNextState):
@@ -276,7 +320,7 @@ class FsmBuilder(Switch):
                 try:
                     condition, newvalue = cAndS
                 except TypeError:
-                    top = c(cAndS, self.stateReg)
+                    top = self.stateReg(cAndS)
                     continue
                 top = []
 
@@ -284,39 +328,21 @@ class FsmBuilder(Switch):
                 condition, newvalue = cAndS
 
             # building decision tree
-            top = If(condition,
-                     self.stateReg(newvalue)
-                  ).Else(
-                     top
-                  )
-
-        s = Switch.Case(self, stateFrom, top)
-        return s
+            top = \
+                If(condition,
+                   self.stateReg(newvalue)
+                   ).Else(
+                    top
+                )
+        if stateFrom is None:
+            return Switch.Default(self, top)
+        else:
+            return Switch.Case(self, stateFrom, top)
 
     def Default(self, *condAndNextState):
         d = self.Trans(None, *condAndNextState)
         d.stateReg = self.stateReg
         return d
-
-
-def _connect(src, dst, exclude, fit):
-    if isinstance(src, InterfaceBase):
-        if isinstance(dst, InterfaceBase):
-            return dst._connectTo(src, exclude=exclude, fit=fit)
-        src = src._sig
-
-    assert not exclude, "this intf. is just a signal"
-    if src is None:
-        src = dst._dtype.fromPy(None)
-    else:
-        src = toHVal(src)
-
-    if fit:
-        src = fitTo(src, dst)
-
-    src = src._auto_cast(dst._dtype)
-
-    return dst(src)
 
 
 def connect(src, *destinations, exclude=set(), fit=False):
@@ -332,33 +358,6 @@ def connect(src, *destinations, exclude=set(), fit=False):
         assignemnts.append(_connect(src, dst, exclude, fit))
 
     return assignemnts
-
-
-def _mkOp(fn):
-    """
-    Function to create variadic operator function
-
-    :param fn: function to perform binary operation
-    """
-    def op(*operands, key=None) -> RtlSignalBase:
-        """
-        :param operands: variadic parameter of input uperands
-        :param key: optional function applied on every operand
-            before processing
-        """
-        assert operands, operands
-        top = None
-        if key is not None:
-            operands = map(key, operands)
-
-        for s in operands:
-            if top is None:
-                top = s
-            else:
-                top = fn(top, s)
-        return top
-
-    return op
 
 
 # variadic operator functions

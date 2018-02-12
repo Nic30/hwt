@@ -3,7 +3,7 @@ import keyword
 
 SIMMODEL_KEYWORDS = keyword.kwlist + [
     # names defined in SimModel constructor
-    '_cntx',
+    '_ctx',
     '_interfaces',
     '_processes',
     '_units',

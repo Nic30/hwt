@@ -26,8 +26,8 @@ from hwt.serializer.simModel.ops import SimModelSerializer_ops
 from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
-from hwt.synthesizer.andReducedContainer import AndReducedContainer
 from hwt.synthesizer.param import evalParam
+from hwt.pyUtils.andReducedList import AndReducedList
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
@@ -166,23 +166,29 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
     def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx, enclosure=None):
         cond = cls.condAsHdl(ifc.cond, ctx)
         ifTrue = ifc.ifTrue
-        ifFalse = ifc.ifFalse
 
         if ifc.elIfs:
             # if has elifs rewind this to tree
             ifFalse = []
             topIf = IfContainer(ifc.cond, ifc.ifTrue, ifFalse)
             for c, stms in ifc.elIfs:
-                assert isinstance(c, AndReducedContainer), c
+                assert isinstance(c, AndReducedList), c
                 _ifFalse = []
                 lastIf = IfContainer(c, stms, _ifFalse)
                 ifFalse.append(lastIf)
                 ifFalse = _ifFalse
 
-            lastIf.ifFalse = ifc.ifFalse
+            if ifc.ifFalse is None:
+                lastIf.ifFalse = []
+            else:
+                lastIf.ifFalse = ifc.ifFalse
 
             return cls.IfContainer(topIf, ctx, enclosure=enclosure)
         else:
+            ifFalse = ifc.ifFalse
+            if ifFalse is None:
+                ifFalse = []
+
             childCtx = ctx.withIndent()
             if enclosure is None:
                 _enclosure = getIndent(childCtx.indent) + "pass"
@@ -210,12 +216,11 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         switchOn = sw.switchOn
 
         def mkCond(c):
-            cond = AndReducedContainer()
-            cond.add(switchOn._eq(c))
+            cond = AndReducedList([switchOn._eq(c), ])
             return cond
         elIfs = []
 
-        for key, statements in sw.cases:
+        for key, statements in sw.cases[1:]:
             elIfs.append((mkCond(key), statements))
         ifFalse = sw.default
 

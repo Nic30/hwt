@@ -50,8 +50,8 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
     :ivar _masterDir: specifies which direction has this interface at master
     :ivar _direction: means actual direction of this interface resolved
         by its drivers
-    :ivar _cntx: rtl netlist context of all signals and params
-        on this interface after interface is registered on parent _cntx
+    :ivar _ctx: rtl netlist context of all signals and params
+        on this interface after interface is registered on parent _ctx
         is merged
 
     Agenda of simulations
@@ -93,7 +93,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         self._masterDir = masterDir
         self._direction = INTF_DIRECTION.UNKNOWN
 
-        self._cntx = None
+        self._ctx = None
 
         if loadConfig:
             self._loadConfig()

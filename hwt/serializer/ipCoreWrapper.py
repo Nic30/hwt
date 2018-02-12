@@ -61,12 +61,12 @@ class IpCoreWrapper(Unit):
         return self._baseUnit.__class__.__name__
 
     def _lazyLoadParamsAndInterfaces(self):
-        self._cntx.params = self._buildParams()
+        self._ctx.params = self._buildParams()
 
         # prepare signals for interfaces
         for i in self._interfaces:
             assert i._isExtern
-            signals = i._signalsForInterface(self._cntx)
+            signals = i._signalsForInterface(self._ctx)
             self._externInterf.extend(signals)
 
     def _connectBaseUnitToThisWrap(self, origToWrapInfMap):

@@ -1,12 +1,12 @@
 from functools import reduce
-from itertools import chain
+from operator import and_
 from typing import List, Tuple
 
 from hwt.hdl.statements import HdlStatement, isSameHVal, isSameStatementList,\
-    statementsAreSame
+    statementsAreSame, HwtSyntaxError
+from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.hdl.types.enum import HEnum
 
 
 class SwitchContainer(HdlStatement):
@@ -30,8 +30,6 @@ class SwitchContainer(HdlStatement):
         self.switchOn = switchOn
         self.cases = cases
 
-        if default is None:
-            default = []
         self.default = default
 
         self._case_value_index = {}
@@ -39,8 +37,31 @@ class SwitchContainer(HdlStatement):
             assert v not in self._case_value_index, v
             self._case_value_index[v] = i
 
+    def _discover_sensitivity(self, seen)->None:
+        """
+        Discover sensitivity of this statement
+        """
+        ctx = self._sensitivity
+        if ctx:
+            ctx.clear()
+
+        casual_sensitivity = set()
+        self.switchOn._walk_sensitivity(casual_sensitivity, seen, ctx)
+        if ctx.contains_ev_dependency:
+            raise HwtSyntaxError(
+                "Can not switch on event operator result", self.switchOn)
+        ctx.extend(casual_sensitivity)
+
+        for stm in self._iter_stms():
+            stm._discover_sensitivity(seen)
+            ctx.extend(stm._sensitivity)
+
     def _iter_stms(self):
-        return chain(*map(lambda x: x[1], self.cases), self.default)
+        for _, stms in self.cases:
+            yield from stms
+
+        if self.default is not None:
+            yield from self.default
 
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         io_change = False
@@ -51,15 +72,18 @@ class SwitchContainer(HdlStatement):
             io_change = io_change or _io_change
             new_cases.append((val, _statements))
 
-        self.default, _io_change = self._try_reduce_list(self.default)
-        io_change = io_change or _io_change
+        if self.default is not None:
+            self.default, _io_change = self._try_reduce_list(self.default)
+            io_change = io_change or _io_change
 
         reduce_self = not self._condHasEffect()
         if reduce_self:
             if self.cases:
                 res = self.cases[0][1]
-            else:
+            elif self.default is not None:
                 res = self.default
+            else:
+                res = []
         else:
             res = [self, ]
 
@@ -88,12 +112,12 @@ class SwitchContainer(HdlStatement):
 
         stmCnt = len(self.cases[0])
         if type_domain_covered and reduce(
-                lambda x, y: x and y,
+                and_,
                 [len(stm) == stmCnt
                  for _, stm in self.cases],
-                True):
-            for stms in chain(*map(lambda x: x[1], self.cases),
-                              [self.default, ]):
+                True) and (self.default is None
+                           or len(self.default) == stmCnt):
+            for stms in self._iter_stms():
                 if not statementsAreSame(stms):
                     return True
             return False

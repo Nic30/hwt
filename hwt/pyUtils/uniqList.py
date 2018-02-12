@@ -5,9 +5,12 @@ class UniqList(list):
     List of unique items
     """
 
-    def __init__(self, *args, **kwargs):
-        super(UniqList, self).__init__(*args, **kwargs)
-        self.__s = set(*args, **kwargs)
+    def __init__(self, initSeq=None):
+        super(UniqList, self).__init__()
+        self.__s = set()
+        if initSeq is not None:
+            for item in initSeq:
+                self.append(item)
 
     def append(self, item):
         if item in self.__s:

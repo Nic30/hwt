@@ -4,6 +4,8 @@
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.hdl.sensitivityCtx import SensitivityCtx
+from typing import Generator
 
 
 class Param(RtlSignal):
@@ -24,7 +26,7 @@ class Param(RtlSignal):
         self._const = True
 
     def _registerScope(self, name, unit):
-        self._scopes[unit] = (unit._cntx, name)
+        self._scopes[unit] = (unit._ctx, name)
 
     def getName(self, where):
         return self._scopes[where][1]
@@ -76,6 +78,15 @@ class Param(RtlSignal):
         v = evalParam(self)
         assert v._isFullVld()
         return int(v.val)
+
+    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx)\
+            -> Generator["RtlSignal", None, None]:
+        seen.add(self)
+        yield from []
+
+    def _walk_public_drivers(self, seen: set) -> Generator["RtlSignal", None, None]:
+        seen.add(self)
+        yield from []
 
 
 def evalParam(p):

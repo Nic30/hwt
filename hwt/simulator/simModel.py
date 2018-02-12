@@ -65,7 +65,7 @@ def connectSimPort(simUnit, subSimUnit, srcName, dstName, direction):
         newPort = getattr(simUnit, srcName)
         setattr(subSimUnit, dstName, newPort)
 
-    subSimUnit._cntx.signals.remove(origPort)
+    subSimUnit._ctx.signals.remove(origPort)
 
 
 def mkUpdater(nextVal: Value, invalidate: bool):

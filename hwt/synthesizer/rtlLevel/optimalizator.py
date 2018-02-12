@@ -36,7 +36,7 @@ def removeUnconnectedSignals(netlist):
                         inputs = e.operands
                     else:
                         inputs = e._inputs
-                        netlist.startsOfDataPaths.discard(e)
+                        netlist.statements.discard(e)
 
                     for op in inputs:
                         if not isinstance(op, Value):
@@ -66,6 +66,11 @@ class IncompatibleStructure(Exception):
 
 
 def isMergableStmList(listA, listB):
+    if listA is None and listB is None:
+        return True
+    elif listA is None or listB is None:
+        return False
+
     la = len(listA)
     lb = len(listB)
     if la == lb:
@@ -89,6 +94,8 @@ def checkIfIsTooSimple(proc):
 
 
 def mergeStmLists(stmsA, stmsB):
+    if stmsA is None and stmsB is None:
+        return None
     tmp = []
     for a, b in zip_longest(stmsA, stmsB, fillvalue=None):
         if b is None:
@@ -180,7 +187,7 @@ def tryToMerge(procA, procB):
     procA.statements = statements
     procA.outputs.extend(procB.outputs)
     procA.inputs.extend(procB.inputs)
-    procA.sensitivityList.update(procB.sensitivityList)
+    procA.sensitivityList.extend(procB.sensitivityList)
 
     return procA
 

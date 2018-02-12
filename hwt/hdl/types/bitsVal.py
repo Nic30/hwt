@@ -24,7 +24,8 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
+    NoDriverErr
 
 
 class BitsVal(EventCapableVal):
@@ -431,7 +432,7 @@ class BitsVal(EventCapableVal):
                 d = self.singleDriver()
                 if isinstance(d, Operator) and d.operator == AllOps.NOT:
                     return d.operands[0]
-            except MultipleDriversExc:
+            except (MultipleDriversErr, NoDriverErr):
                 pass
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
 

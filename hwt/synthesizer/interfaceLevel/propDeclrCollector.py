@@ -205,7 +205,7 @@ class PropDeclrCollector(object):
         assert intf._parent is None
         intf._parent = self
         intf._name = iName
-        intf._cntx = self._cntx
+        intf._ctx = self._ctx
         self._interfaces.append(intf)
 
     def _declrCollector(self, name, prop):
@@ -239,7 +239,7 @@ class PropDeclrCollector(object):
         self._registerUnit(uName, u)
         u._loadDeclarations()
         self._lazyLoaded.extend(u._toRtl(self._targetPlatform))
-        u._signalsForMyEntity(self._cntx, "sig_" + uName)
+        u._signalsForMyEntity(self._ctx, "sig_" + uName)
 
     def _registerIntfInImpl(self, iName, i):
         """

@@ -16,7 +16,7 @@ else %}
 {{    indent}}    #enclosure
 {{    enclosure}}{%
 endif %}{% endfor %}
-{{ indent }}).Else({% 
+{{ indent }}){% if ifFalse|length > 0 or enclosure %}.Else({% 
 if ifFalse|length > 0 %}{%
     for stm in ifFalse %}
 {{stm}}{%
@@ -26,4 +26,4 @@ else %}
 {{ indent }}    #enclosure
 {{ enclosure }}
 {{ indent }})
-{% endif %}
+{% endif %}{% endif %}

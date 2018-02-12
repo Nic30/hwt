@@ -6,7 +6,8 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
+    NoDriverErr
 
 
 def tv(signal):
@@ -63,9 +64,9 @@ class RtlSignalOps():
             if real_o is not None:
                 # destroy newly created operator and result, because it is same
                 # as
-                cntx = self.ctx
-                if cntx is not None:
-                    cntx.signals.remove(o)
+                ctx = self.ctx
+                if ctx is not None:
+                    ctx.signals.remove(o)
 
                 op = o.origin
                 o.origin = None
@@ -198,7 +199,7 @@ class RtlSignalOps():
                     raise Exception(
                         "can not drive static value %r" % indexedOn)
 
-        except MultipleDriversExc:
+        except (MultipleDriversErr, NoDriverErr):
             pass
 
     def __call__(self, source) -> Assignment:

@@ -6,7 +6,7 @@ from hwt.simulator.hdlSimConfig import HdlSimConfig
 from hwt.simulator.simModel import mkUpdater, mkArrayUpdater
 from hwt.simulator.simulatorCore import HdlProcess
 from hwt.simulator.utils import valueHasChanged
-from hwt.synthesizer.uniqList import UniqList
+from hwt.pyUtils.uniqList import UniqList
 
 
 def isEvDependentOn(sig, process):
@@ -162,7 +162,7 @@ class HdlSimulator(Environment):
 
         * Instantiate IOs for every process
         """
-        for s in unit._cntx.signals:
+        for s in unit._ctx.signals:
             v = s.defaultVal.clone()
 
             # force update all signals to deafut values and propagate it

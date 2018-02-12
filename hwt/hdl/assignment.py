@@ -1,6 +1,8 @@
+from typing import Tuple, List
+
 from hwt.hdl.statements import isSameHVal, HdlStatement
 from hwt.hdl.value import Value
-from typing import Tuple, List
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class Assignment(HdlStatement):
@@ -20,7 +22,7 @@ class Assignment(HdlStatement):
 
     def __init__(self, src, dst, indexes=None, virtualOnly=False,
                  parentStm=None,
-                 event_dependent_on=None,
+                 sensitivity=None,
                  is_completly_event_dependent=False):
         """
         :param dst: destination to assign to
@@ -33,7 +35,7 @@ class Assignment(HdlStatement):
         """
         super(Assignment, self).__init__(
             parentStm,
-            event_dependent_on,
+            sensitivity,
             is_completly_event_dependent)
         self.src = src
         isReal = not virtualOnly
@@ -60,10 +62,41 @@ class Assignment(HdlStatement):
         self._instId = Assignment._nextInstId()
 
         if not virtualOnly:
-            dst.ctx.startsOfDataPaths.add(self)
+            dst.ctx.statements.add(self)
+
+    def _cut_off_drivers_of(self, sig: RtlSignalBase):
+        """
+        Cut off statements which are driver of specified signal
+        """
+        if self.dst is sig:
+            self.parentStm = None
+            return self
+        else:
+            return None
+
+    def _discover_sensitivity(self, seen: set) -> None:
+        ctx = self._sensitivity
+        if ctx:
+            ctx.clear()
+        casualSensitivity = set()
+        for inp in self._inputs:
+            if inp not in seen:
+                seen.add(inp)
+                inp._walk_sensitivity(casualSensitivity, seen, ctx)
+        self._sensitivity.extend(casualSensitivity)
 
     def _iter_stms(self):
-        yield self
+        """
+        Iterate all statements in this statement
+        """
+        raise TypeError("This statement does not have any children")
+
+    def _on_parent_event_dependent(self):
+        """
+        After parrent statement become event dependent
+        """
+        if not self._is_completly_event_dependent:
+            self._is_completly_event_dependent = True
 
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         return [self, ], False

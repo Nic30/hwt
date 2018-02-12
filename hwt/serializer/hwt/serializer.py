@@ -26,7 +26,7 @@ from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.switchContainer import SwitchContainer
-from hwt.synthesizer.andReducedContainer import AndReducedContainer
+from hwt.pyUtils.andReducedList import AndReducedList
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/hwt/templates'))
@@ -187,12 +187,17 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         cond = cls.condAsHdl(ifc.cond, ctx)
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
+
+        if ifFalse is None:
+            ifFalse = []
+
         childCtx = ctx.withIndent()
         if enclosure is None:
-            _enclosure = "# no enclosure"
+            _enclosure = None
         else:
-            _enclosure = "\n".join(
-                [cls.stmAsHdl(e, childCtx) for e in enclosure])
+            e_items = [getIndent(ctx.indent) + "# enclosure"]
+            e_items.extend(cls.stmAsHdl(e, childCtx) for e in enclosure)
+            _enclosure = "\n".join(e_items)
 
         def serialize_statements(statements):
             return [cls.stmAsHdl(obj, childCtx, enclosure=enclosure)
@@ -225,13 +230,12 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
                 return cls.comment(" fully reduced switch on %s" % cls.asHdl(switchOn, ctx))
 
         def mkCond(c):
-            cond = AndReducedContainer()
-            cond.add(switchOn._eq(c))
+            cond = AndReducedList([switchOn._eq(c), ])
             return cond
 
         elIfs = []
 
-        for key, statements in sw.cases:
+        for key, statements in sw.cases[1:]:
             elIfs.append((mkCond(key), statements))
         ifFalse = sw.default
 

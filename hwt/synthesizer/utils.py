@@ -9,7 +9,7 @@ from hwt.hdl.entity import Entity
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.vhdl.serializer import VhdlSerializer
-from hwt.synthesizer.uniqList import UniqList
+from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.unit import Unit
 
 

@@ -1,4 +1,8 @@
+from typing import Generator, Union
+
 from hwt.hdl.hdlObject import HdlObject
+from hwt.hdl.operatorDefs import isEventDependentOp
+from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
@@ -61,6 +65,27 @@ class Operator(HdlObject):
         Syntax sugar
         """
         return self.operator.eval(self, simulator=simulator)
+
+    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx)\
+        -> Generator[Union[RtlSignalBase, "Operator"],
+                     None, None]:
+        seen.add(self)
+
+        if isEventDependentOp(self.operator):
+            if ctx.contains_ev_dependency:
+                assert self in ctx, "has to have only one clock one clock"
+            ctx.contains_ev_dependency = True
+            ctx.append(self)
+        else:
+            # walk source of signal
+            for operand in self.operands:
+                if operand not in seen:
+                    operand._walk_sensitivity(casualSensitivity, seen, ctx)
+
+    def _walk_public_drivers(self, seen: set) -> Generator["RtlSignal", None, None]:
+        for op in self.operands:
+            if not isinstance(op, Value) and op not in seen:
+                yield from op._walk_public_drivers(seen)
 
     def __eq__(self, other):
         return self is other or (

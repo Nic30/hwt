@@ -1,10 +1,9 @@
 from functools import reduce
-from itertools import chain
 from typing import List, Tuple
 
 from hwt.hdl.statements import HdlStatement, statementsAreSame,\
     isSameStatementList, seqEvalCond
-from hwt.synthesizer.andReducedContainer import AndReducedContainer
+from hwt.pyUtils.andReducedList import AndReducedList
 
 
 class IfContainer(HdlStatement):
@@ -22,7 +21,7 @@ class IfContainer(HdlStatement):
         :param ifFalse: list of statements which should be active if cond.
             and any other cond. in elIfs is met
         """
-        assert isinstance(cond, AndReducedContainer)
+        assert isinstance(cond, AndReducedList)
         self.cond = cond
         super(IfContainer, self).__init__(
             parentStm,
@@ -39,18 +38,55 @@ class IfContainer(HdlStatement):
         else:
             self.elIfs = elIfs
 
-        if ifFalse is None:
-            self.ifFalse = []
+        self.ifFalse = ifFalse
+
+    def _discover_sensitivity(self, seen: set)->None:
+        """
+        Discover sensitivity of this statement
+        """
+        ctx = self._sensitivity
+        if ctx:
+            ctx.clear()
+
+        self._discover_sensitivity_seq(self.cond, seen, ctx)
+        if ctx.contains_ev_dependency:
+            return
+
+        for stm in self.ifTrue:
+            stm._discover_sensitivity(seen)
+
+        # elifs
+        for cond, stms in self.elIfs:
+            if ctx.contains_ev_dependency:
+                break
+
+            self._discover_sensitivity_seq(cond, seen, ctx)
+            if ctx.contains_ev_dependency:
+                break
+
+            for stm in stms:
+                if ctx.contains_ev_dependency:
+                    break
+
+                stm._discover_sensitivity(seen)
+
+        if not ctx.contains_ev_dependency and self.ifFalse:
+            # else
+            for stm in self.ifFalse:
+                stm._discover_sensitivity(seen)
+
         else:
-            self.ifFalse = ifFalse
+            assert not self.ifFalse, "can not negate event"
 
     def _iter_stms(self):
         """
         Get iterator over all statements inside this statement
         """
-        return chain(self.ifTrue,
-                     *map(lambda x: x[1], self.elIfs),
-                     self.ifFalse)
+        yield from self.ifTrue
+        for _, stms in self.elIfs:
+            yield from stms
+        if self.ifFalse is not None:
+            yield from self.ifFalse
 
     def _try_reduce(self) -> Tuple[bool, List[HdlStatement]]:
         """
@@ -70,8 +106,10 @@ class IfContainer(HdlStatement):
             io_change = io_change or _io_change
             new_elifs.append((cond, _statements))
 
-        self.ifFalse, _io_update_required = self._try_reduce_list(self.ifFalse)
-        io_change = io_change or _io_change
+        if self.ifFalse is not None:
+            self.ifFalse, _io_update_required = self._try_reduce_list(
+                self.ifFalse)
+            io_change = io_change or _io_change
 
         reduce_self = not self.condHasEffect(
             self.ifTrue, self.ifFalse, self.elIfs)
@@ -84,7 +122,7 @@ class IfContainer(HdlStatement):
         self._on_reduce(reduce_self, io_change, res)
 
         # try merge nested ifs as elifs
-        if len(self.ifFalse) == 1:
+        if self.ifFalse is not None and len(self.ifFalse) == 1:
             child = self.ifFalse[0]
             if isinstance(child, IfContainer):
                 self._merge_nested_if_from_else(child)
@@ -104,13 +142,15 @@ class IfContainer(HdlStatement):
 
         self.ifFalse = ifStm.ifFalse
 
-    @classmethod
-    def condHasEffect(cls, ifTrue, ifFalse, elIfs):
+    @staticmethod
+    def condHasEffect(ifTrue, ifFalse, elIfs):
         stmCnt = len(ifTrue)
-        if stmCnt == len(ifFalse) and reduce(lambda x, y: x and y,
-                                             [len(stm) == stmCnt
-                                              for _, stm in elIfs],
-                                             True):
+        if ifFalse is not None \
+                and stmCnt == len(ifFalse) \
+                and reduce(lambda x, y: x and y,
+                           [len(stm) == stmCnt
+                            for _, stm in elIfs],
+                           True):
             for stms in zip(ifTrue, ifFalse, *map(lambda x: x[1], elIfs)):
                 if not statementsAreSame(stms):
                     return True

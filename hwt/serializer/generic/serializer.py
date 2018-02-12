@@ -74,7 +74,7 @@ class GenericSerializer():
 
         for p in ent.ports:
             p.name = scope.checkedName(p.name, p)
-            p.getSigInside().name = p.name
+            p.getInternSig().name = p.name
             if serialize:
                 serializedPorts.append(cls.PortItem(p, ctx))
 
@@ -175,6 +175,9 @@ class GenericSerializer():
         elIfs = []
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
+        if ifFalse is None:
+            ifFalse = []
+
         for c, statements in ifc.elIfs:
             try:
                 elIfs.append((cls.condAsHdl(c, True, ctx), asHdl(statements)))

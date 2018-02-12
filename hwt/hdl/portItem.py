@@ -1,5 +1,7 @@
 from hwt.hdl.variables import SignalItem
 from hwt.hdl.constants import DIRECTION
+from hwt.hdl.statements import HwtSyntaxError
+from hwt.hdl.sensitivityCtx import SensitivityCtx
 
 
 class PortItem(SignalItem):
@@ -19,25 +21,25 @@ class PortItem(SignalItem):
         """
         if self.direction == DIRECTION.IN:
             if self.src is not None:
-                raise Exception("Port %s is already associated with %s" % (
-                    self.name, str(self.src)))
+                raise HwtSyntaxError("Port %s is already associated with %r" % (
+                    self.name, self.src))
             self.src = signal
-
             signal.endpoints.append(self)
+
         elif self.direction == DIRECTION.OUT:
             if self.dst is not None:
-                raise Exception("Port %s is already associated with %s" % (
-                    self.name, str(self.dst)))
+                raise HwtSyntaxError("Port %s is already associated with %r" % (
+                    self.name, self.dst))
             self.dst = signal
-
             signal.drivers.append(self)
+
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(self)
 
         signal.hidden = False
         signal.ctx.subUnits.add(self.unit)
 
-    def reigsterInternSig(self, signal):
+    def registerInternSig(self, signal):
         """
         Connect internal signal to port item,
         this connection is used by simulator and only output port items
@@ -45,12 +47,12 @@ class PortItem(SignalItem):
         """
         if self.direction == DIRECTION.OUT:
             if self.src is not None:
-                raise Exception("Port %s is already associated with %s" % (
+                raise HwtSyntaxError("Port %s is already associated with %s" % (
                     self.name, str(self.src)))
             self.src = signal
         elif self.direction == DIRECTION.IN:
             if self.dst is not None:
-                raise Exception("Port %s is already associated with %s" % (
+                raise HwtSyntaxError("Port %s is already associated with %s" % (
                     self.name, str(self.dst)))
             self.dst = signal
         else:
@@ -60,23 +62,25 @@ class PortItem(SignalItem):
         """
         connet signal from internal side of of this component to this port
         """
-        if self.direction == DIRECTION.OUT:
+        d = self.direction
+        if d == DIRECTION.OUT:
             self.src.endpoints.append(self)
-        elif self.direction == DIRECTION.IN:
-            self.dst.drivers.append(self)
-        elif self.direction == DIRECTION.INOUT:
+        elif d == DIRECTION.IN or d == DIRECTION.INOUT:
             self.dst.drivers.append(self)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(d)
 
-    def getSigInside(self):
+    def getInternSig(self):
         """
         return signal inside unit which has this port
         """
         d = self.direction
-        if d is DIRECTION.IN:
+        if d == DIRECTION.IN:
             return self.dst
-        elif d is DIRECTION.OUT:
+        elif d == DIRECTION.OUT:
             return self.src
         else:
             raise NotImplementedError(d)
+
+    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
+        yield from []

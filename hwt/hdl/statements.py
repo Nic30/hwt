@@ -2,9 +2,11 @@ from itertools import chain
 from typing import List, Tuple
 
 from hwt.hdl.hdlObject import HdlObject
+from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import flatten
-from hwt.synthesizer.uniqList import UniqList
+from hwt.pyUtils.uniqList import UniqList
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class HwtSyntaxError(Exception):
@@ -27,9 +29,15 @@ def isSameHVal(a, b):
 
 
 def isSameStatementList(stmListA, stmListB):
+    if stmListA is None and stmListB is None:
+        return True
+    if stmListA is None or stmListB is None:
+        return False
+
     for a, b in zip(stmListA, stmListB):
         if not a.isSame(b):
             return False
+
     return True
 
 
@@ -43,18 +51,91 @@ def statementsAreSame(statements):
 
 
 class HdlStatement(HdlObject):
-    def __init__(self, parentStm=None, event_dependent_on=None,
+    """
+    :ivar _is_completly_event_dependent: statement does not have any cobinational statement
+    :ivar _now_is_event_dependent: statement is event (clk) dependent
+    :ivar parentStm: parent isnstance of HdlStatement or None
+    :ivar _inputs: UniqList of input signals for this statement
+    :ivar _outputs: UniqList of output signals for this statement
+    :ivar _sensitivity: UniqList of input signals
+        or (rising/falling) operator
+    """
+
+    def __init__(self, parentStm=None, sensitivity=None,
                  is_completly_event_dependent=False):
         self._is_completly_event_dependent = is_completly_event_dependent
         self._now_is_event_dependent = is_completly_event_dependent
         self.parentStm = parentStm
         self._inputs = UniqList()
         self._outputs = UniqList()
-        if not event_dependent_on:
-            event_dependent_on = UniqList()
-        self._event_dependent_on = event_dependent_on
+        if not sensitivity:
+            sensitivity = UniqList()
+        self._sensitivity = SensitivityCtx()
+
+    def isSame(self, other: "HdlStatement"):
+        if self is other:
+            return True
+        else:
+            raise NotImplementedError("This menthod shoud be implemented"
+                                      " on class of statement")
+
+    def _collect_io(self) -> None:
+        """
+        Collect inputs/outputs from all child statements
+        """
+        in_add = self._inputs.extend
+        out_add = self._outputs.extend
+
+        for stm in self._iter_stms():
+            in_add(stm._inputs)
+            out_add(stm._outputs)
+
+    @staticmethod
+    def _cut_off_drivers_of_list(sig: RtlSignalBase,
+                                 statements: List["HdlStatement"],
+                                 children_to_reconnect: List["HdlStatement"],
+                                 new_statements: List["HdlStatement"],):
+        all_cut_off = True
+        for stm in statements:
+            newStm = stm._cut_off_drivers_of(sig)
+            if newStm is None:
+                # statement is des not have drivers of sig
+                all_cut_off = False
+            elif newStm is stm:
+                # statement drives only sig
+                children_to_reconnect.append(newStm)
+                new_statements.append(newStm)
+            else:
+                # statement was splited on multiple statements
+                all_cut_off = False
+                new_statements.append(newStm)
+
+        return all_cut_off
+
+    def _discover_sensitivity(self, seen: set) -> None:
+        """
+        discover all sensitivity signals and store them to _sensitivity property
+        """
+        raise NotImplementedError(self)
+
+    def _discover_sensitivity_seq(self, seq, seen: set, ctx: SensitivityCtx) -> None:
+        """
+        Discover sensitivity for list of signals
+        """
+        casualSensitivity = set()
+        for c in seq:
+            c._walk_sensitivity(casualSensitivity, seen, ctx)
+            if ctx.contains_ev_dependency:
+                break
+
+        # if event dependent sensitivity found do not add other sensitivity
+        if not ctx.contains_ev_dependency:
+            ctx.extend(casualSensitivity)
 
     def _get_rtl_context(self):
+        """
+        get RtlNetlist context from signals
+        """
         for sig in chain(self._inputs, self._outputs):
             if sig.ctx:
                 return sig.ctx
@@ -70,17 +151,6 @@ class HdlStatement(HdlObject):
         """
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self)
-
-    def _collect_io(self) -> None:
-        """
-        Collect inputs/outputs from all child statements
-        """
-        in_add = self._inputs.extend
-        out_add = self._outputs.extend
-
-        for stm in self._iter_stms():
-            in_add(stm._inputs)
-            out_add(stm._outputs)
 
     def _on_reduce(self, self_reduced: bool, io_changed: bool,
                    result_statements: List["HdlStatement"]) -> None:
@@ -100,8 +170,8 @@ class HdlStatement(HdlObject):
             # update signal drivers/endpoints
             if was_top:
                 # disconnect self from signals
-                cntx = self._get_rtl_context()
-                cntx.startsOfDataPaths.update(result_statements)
+                ctx = self._get_rtl_context()
+                ctx.statements.update(result_statements)
 
                 for i in self._inputs:
                     i.endpoints.discard(self)
@@ -166,12 +236,12 @@ class HdlStatement(HdlObject):
             parent_in_add(inp)
 
         for outp in self._outputs:
-            outp.drivers.remove(self)
+            outp.drivers.discard(self)
             outp.drivers.append(parentStm)
             parent_out_add(outp)
 
-        cntx = self._get_rtl_context()
-        cntx.startsOfDataPaths.remove(self)
+        ctx = self._get_rtl_context()
+        ctx.statements.discard(self)
 
     def _register_stements(self, statements: List["HdlStatement"],
                            target: List["HdlStatement"]):
@@ -182,13 +252,6 @@ class HdlStatement(HdlObject):
         for stm in flatten(statements):
             stm._set_parent_stm(self)
             target.append(stm)
-
-    def isSame(self, other: "HdlStatement"):
-        if self is other:
-            return True
-        else:
-            raise NotImplementedError("This menthod shoud be implemented"
-                                      " on class of statement")
 
 
 class WhileContainer(HdlStatement):

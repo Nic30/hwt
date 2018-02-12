@@ -1,3 +1,4 @@
+from hwt.hdl.sensitivityCtx import SensitivityCtx
 
 
 class Value():
@@ -88,6 +89,10 @@ class Value():
         eq = self._eq(other)
         eq.val = not eq.val
         return eq
+
+    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
+        seen.add(self)
+        yield from []
 
     # def __pos__(self):
     #     raise TypeError()

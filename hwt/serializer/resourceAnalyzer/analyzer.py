@@ -17,6 +17,7 @@ from hwt.serializer.resourceAnalyzer.utils import ResourceContext, \
     updateGuesFromAssignment, resourceTransitions_override, mergeGues, \
     operatorsWithoutResource
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.hdl.statements import HdlStatement
 
 
 class ResourceAnalyzer(GenericSerializer):
@@ -235,7 +236,7 @@ class ResourceAnalyzer(GenericSerializer):
                         if isinstance(oper, RtlSignal):
                             cls.Signal(oper, ctx)
 
-                elif isinstance(driver, Assignment):
+                elif isinstance(driver, HdlStatement):
                     # processed by HWProcess
                     pass
                 else:

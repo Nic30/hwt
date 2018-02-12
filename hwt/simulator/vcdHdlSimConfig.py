@@ -18,7 +18,7 @@ class VcdHdlSimConfig(HdlSimConfig):
 
     def vcdRegisterUnit(self, unit):
         with self.vcdWritter.module(unit._name) as m:
-            for se in unit._cntx.signals:
+            for se in unit._ctx.signals:
                 if isinstance(se._dtype, self.supported_type_classes):
                     m.var(se)
 
