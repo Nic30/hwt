@@ -144,13 +144,15 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
                 raise HwtSyntaxError(
                     "Combinational loop on signal(s)", intersect)
             for sig in intersect:
-                print(proc_statements)
                 proc_statements, proc_stms_select = cut_off_drivers_of(
                     sig, proc_statements)
-                assert proc_stms_select, ("Result of stm separation is empty", sig)
+
+                assert proc_stms_select, (
+                    "Result of stm separation is empty", sig)
                 yield from _statements_to_HWProcesses(proc_stms_select, False)
 
-            if not proc_statements:
+            if proc_statements:
+                yield from _statements_to_HWProcesses(proc_statements, False)
                 return
 
         assert not intersect, intersect
@@ -189,8 +191,12 @@ def statements_to_HWProcesses(statements)\
         proc_statements = []
         for nop_initialier in inject_nop_values(_statements):
             proc_statements.append(nop_initialier)
+        if proc_statements:
+            proc_statements.extend(_statements)
+        else:
+            proc_statements = _statements
 
-        yield from _statements_to_HWProcesses(_statements, True)
+        yield from _statements_to_HWProcesses(proc_statements, True)
 
     yield from reduceProcesses(processes, procRanks)
 

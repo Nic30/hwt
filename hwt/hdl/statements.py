@@ -52,7 +52,8 @@ def statementsAreSame(statements):
 
 class HdlStatement(HdlObject):
     """
-    :ivar _is_completly_event_dependent: statement does not have any cobinational statement
+    :ivar _is_completly_event_dependent: statement does not have
+         any cobinational statement
     :ivar _now_is_event_dependent: statement is event (clk) dependent
     :ivar parentStm: parent isnstance of HdlStatement or None
     :ivar _inputs: UniqList of input signals for this statement
@@ -93,22 +94,25 @@ class HdlStatement(HdlObject):
     @staticmethod
     def _cut_off_drivers_of_list(sig: RtlSignalBase,
                                  statements: List["HdlStatement"],
-                                 children_to_reconnect: List["HdlStatement"],
+                                 keep_mask: List["HdlStatement"],
                                  new_statements: List["HdlStatement"],):
         all_cut_off = True
         for stm in statements:
             newStm = stm._cut_off_drivers_of(sig)
+            keep = True
             if newStm is None:
                 # statement is des not have drivers of sig
                 all_cut_off = False
             elif newStm is stm:
                 # statement drives only sig
-                children_to_reconnect.append(newStm)
+                keep = False
                 new_statements.append(newStm)
             else:
                 # statement was splited on multiple statements
                 all_cut_off = False
                 new_statements.append(newStm)
+
+            keep_mask.append(keep)
 
         return all_cut_off
 
@@ -118,7 +122,8 @@ class HdlStatement(HdlObject):
         """
         raise NotImplementedError(self)
 
-    def _discover_sensitivity_seq(self, seq, seen: set, ctx: SensitivityCtx) -> None:
+    def _discover_sensitivity_seq(self, seq, seen: set, ctx: SensitivityCtx)\
+            -> None:
         """
         Discover sensitivity for list of signals
         """
