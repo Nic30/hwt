@@ -17,6 +17,7 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
+from itertools import compress
 
 
 class If(IfContainer):
@@ -60,19 +61,26 @@ class If(IfContainer):
             self.parentStm = None
             return self
 
-        children_to_reconnect = []
+        child_keep_mask = []
 
         newIfTrue = []
         all_cut_off = True
         all_cut_off &= self._cut_off_drivers_of_list(
-            sig, self.ifTrue, children_to_reconnect, newIfTrue)
+            sig, self.ifTrue, child_keep_mask, newIfTrue)
+        self.ifTrue = list(compress(self.ifTrue, child_keep_mask))
 
         newElifs = []
         anyElifHit = False
         for cond, stms in self.elIfs:
             newCase = []
+            child_keep_mask.clear()
             all_cut_off &= self._cut_off_drivers_of_list(
-                sig, stms, children_to_reconnect, newCase)
+                sig, stms, child_keep_mask, newCase)
+
+            _stms = list(compress(stms, child_keep_mask))
+            stms.clear()
+            stms.extend(_stms)
+
             if newCase:
                 anyElifHit = True
             newElifs.append((cond, newCase))
@@ -80,8 +88,10 @@ class If(IfContainer):
         newIfFalse = None
         if self.ifFalse:
             newIfFalse = []
+            child_keep_mask.clear()
             all_cut_off &= self._cut_off_drivers_of_list(
-                sig, self.ifFalse, children_to_reconnect, newIfFalse)
+                sig, self.ifFalse, child_keep_mask, newIfFalse)
+            self.ifFalse = list(compress(self.ifFalse, child_keep_mask))
 
         assert not all_cut_off, "everything was cut of but this should be already known at start"
 
@@ -97,12 +107,31 @@ class If(IfContainer):
                 n.Elif(c_sig, stms)
             if newIfFalse is not None:
                 n.Else(newIfFalse)
-            # update io
+
             if self.parentStm is None:
                 ctx = n._get_rtl_context()
                 ctx.statements.add(n)
-                for 
-                raise NotImplementedError()
+
+            # update io of this
+            self._inputs.clear()
+            self._inputs.extend(self.cond)
+            for c, _ in self.elIfs:
+                self._inputs.extend(c)
+
+            self._inputs.extend(self.cond)
+            self._outputs.clear()
+
+            out_add = self._outputs.append
+            in_add = self._inputs.append
+
+            for stm in self._iter_stms():
+                for inp in stm._inputs:
+                    in_add(inp)
+
+                for outp in stm._outputs:
+                    out_add(outp)
+
+            # update sensitivity if already discovered
 
             return n
 
