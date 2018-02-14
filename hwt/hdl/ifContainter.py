@@ -181,8 +181,6 @@ class IfContainer(HdlStatement):
 
         :return: tuple (statements, io_update_required flag)
         """
-        for stm in self._iter_stms():
-            assert stm.parentStm == self, (self, stm)
         # flag if IO of statement has changed
         io_change = False
 
