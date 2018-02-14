@@ -188,6 +188,7 @@ def statements_to_HWProcesses(statements)\
         proc_statements = []
         for nop_initialier in inject_nop_values(_statements):
             proc_statements.append(nop_initialier)
+
         if proc_statements:
             proc_statements.extend(_statements)
         else:
