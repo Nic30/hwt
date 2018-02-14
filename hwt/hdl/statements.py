@@ -310,6 +310,9 @@ class HdlStatement(HdlObject):
                             stmA._merge_with_other_stm(stmB)
                             stms[iA + 1 + iB] = None
                             new_statements.append(stmA)
+                        else:
+                            new_statements.append(stmA)
+                            new_statements.append(stmB)
 
         new_statements.sort(key=lambda stm: order[stm])
         return new_statements, rank_decrease
@@ -379,10 +382,10 @@ class HdlStatement(HdlObject):
         for stm in statements:
             reduced, _io_change = stm._try_reduce()
             new_statements.extend(reduced)
-            io_change = io_change or _io_change
+            io_change |= _io_change
 
         new_statements, rank_decrease = HdlStatement._merge_statements(
-            statements)
+            new_statements)
 
         return new_statements, rank_decrease, io_change
 
