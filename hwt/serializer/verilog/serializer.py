@@ -70,7 +70,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
             romValSig.hidden = False
 
             # construct process which will represent content of the rom
-            cases = [(toHVal(i), romValSig(v))
+            cases = [(toHVal(i), [romValSig(v),])
                      for i, v in enumerate(rom.defaultVal.val)]
             statements = [SwitchContainer(index, cases), ]
 
