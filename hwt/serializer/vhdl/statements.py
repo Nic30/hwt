@@ -9,6 +9,7 @@ from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
+from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
@@ -16,7 +17,6 @@ from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
     NoDriverErr
-from hwt.pyUtils.andReducedList import AndReducedList
 
 
 class DoesNotContainsTernary(Exception):
@@ -47,7 +47,9 @@ def ternaryOpsToIf(statements):
             except (MultipleDriversErr, DoesNotContainsTernary):
                 pass
             except NoDriverErr:
-                assert st.src._interface is not None, st.src
+                assert (hasattr(st.src, "_interface")
+                        and st.src._interface is not None)\
+                    or st.src.defaultVal.vldMask, st.src
 
         stms.append(st)
     return stms

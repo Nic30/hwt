@@ -148,7 +148,6 @@ class HdlSimulator(Environment):
         if self.applyValEv is None:
             # (apply on end of this time to minimalize process reevaluation)
             self.scheduleApplyValues()
-
         if isEvDependentOn(trigger, proc):
             if self._now == 0:
                 return  # pass event dependent on startup

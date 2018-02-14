@@ -11,6 +11,11 @@ class SensitivityCtx(UniqList):
         UniqList.__init__(self, initSeq=initSeq)
         self.contains_ev_dependency = False
 
+    def extend(self, items):
+        UniqList.extend(self, items)
+        if isinstance(items, SensitivityCtx):
+            self.contains_ev_dependency |= items.contains_ev_dependency
+
     def clear(self):
         UniqList.clear(self)
         self.contains_ev_dependency = False

@@ -1,16 +1,22 @@
-from itertools import chain
+from itertools import chain, islice, zip_longest
 from typing import List, Tuple
 
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.value import Value
-from hwt.pyUtils.arrayQuery import flatten
+from hwt.pyUtils.arrayQuery import flatten, groupedby
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class HwtSyntaxError(Exception):
     pass
+
+
+class IncompatibleStructure(Exception):
+    """
+    Statements are not comparable due incompatible structure
+    """
 
 
 def seqEvalCond(cond):
@@ -50,6 +56,21 @@ def statementsAreSame(statements):
     return all(first.isSame(rest) for rest in iterator)
 
 
+def _get_stm_with_branches(stm_it):
+    """
+    :return: first statement with rank > 0 or None if iterator empty
+    """
+    last = None
+    while last is None or last.rank == 0:
+        try:
+            last = next(stm_it)
+        except StopIteration:
+            last = None
+            break
+
+    return last
+
+
 class HdlStatement(HdlObject):
     """
     :ivar _is_completly_event_dependent: statement does not have
@@ -60,6 +81,7 @@ class HdlStatement(HdlObject):
     :ivar _outputs: UniqList of output signals for this statement
     :ivar _sensitivity: UniqList of input signals
         or (rising/falling) operator
+    :ivar rank: number of used branches in statement, used as prefilter for statement comparing
     """
 
     def __init__(self, parentStm=None, sensitivity=None,
@@ -72,13 +94,7 @@ class HdlStatement(HdlObject):
         if not sensitivity:
             sensitivity = UniqList()
         self._sensitivity = SensitivityCtx()
-
-    def isSame(self, other: "HdlStatement"):
-        if self is other:
-            return True
-        else:
-            raise NotImplementedError("This menthod shoud be implemented"
-                                      " on class of statement")
+        self.rank = 0
 
     def _collect_io(self) -> None:
         """
@@ -120,7 +136,8 @@ class HdlStatement(HdlObject):
         """
         discover all sensitivity signals and store them to _sensitivity property
         """
-        raise NotImplementedError(self)
+        raise NotImplementedError("This menthod shoud be implemented"
+                                  " on class of statement", self.__class__, self)
 
     def _discover_sensitivity_seq(self, seq, seen: set, ctx: SensitivityCtx)\
             -> None:
@@ -155,7 +172,7 @@ class HdlStatement(HdlObject):
         :return: iterator over all children statements
         """
         raise NotImplementedError("This menthod shoud be implemented"
-                                  " on class of statement", self)
+                                  " on class of statement", self.__class__, self)
 
     def _on_reduce(self, self_reduced: bool, io_changed: bool,
                    result_statements: List["HdlStatement"]) -> None:
@@ -197,12 +214,165 @@ class HdlStatement(HdlObject):
                 self._outputs = UniqList()
                 self._collect_io()
 
+    def _on_merge(self, other):
+        """
+        After merging statements update IO, sensitivity and context
+
+        :attention: rank is not updated
+        """
+        self._inputs.extend(other._inputs)
+        self._outputs.extend(other._outputs)
+        self._sensitivity.extend(other._sensitivity)
+
+        if other.parentStm is None:
+            other._get_rtl_context().statements.remove(other)
+            for s in other._inputs:
+                s.endpoints.discard(other)
+                s.endpoints.append(self)
+
+            for s in other._outputs:
+                s.drivers.discard(other)
+                s.drivers.append(self)
+
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         raise NotImplementedError("This menthod shoud be implemented"
-                                  " on class of statement", self)
+                                  " on class of statement", self.__class__, self)
+
+    def _is_mergable(self, other: "HdlStatement") -> bool:
+        if self is other:
+            raise ValueError("Can not merge statment with itself")
+        else:
+            raise NotImplementedError("This menthod shoud be implemented"
+                                      " on class of statement", self.__class__, self)
+
+    @classmethod
+    def _is_mergable_statement_list(cls, stmsA, stmsB):
+        """
+        Walk statements and compare if they can be merged into one statement list
+        """
+        if stmsA is None and stmsB is None:
+            return Tuple
+
+        elif stmsA is None or stmsB is None:
+            return False
+
+        a_it = iter(stmsA)
+        b_it = iter(stmsB)
+
+        a = _get_stm_with_branches(a_it)
+        b = _get_stm_with_branches(b_it)
+        while a is not None or b is not None:
+            if a is None or b is None or not a._is_mergable(b):
+                return False
+
+            a = _get_stm_with_branches(a_it)
+            b = _get_stm_with_branches(b_it)
+
+        # lists are empty
+        return True
 
     @staticmethod
-    def _try_reduce_list(statements):
+    def _merge_statements(statements: List["HdlStatement"])\
+            -> Tuple[List["HdlStatement"], int]:
+        """
+        Merge statements in list to remove duplicated if-then-else trees
+
+        :return: tuple (list of merged statements, rank decrease due merging)
+        :note: rank decrease is sum of ranks of reduced statements
+        :attention: statement list has to me mergable
+        """
+        order = {}
+        for i, stm in enumerate(statements):
+            order[stm] = i
+
+        new_statements = []
+        rank_decrease = 0
+
+        for rank, stms in groupedby(statements, lambda s: s.rank):
+            if rank == 0:
+                new_statements.extend(stms)
+            else:
+                if len(stms) == 1:
+                    new_statements.extend(stms)
+                    continue
+
+                # try to merge statements if they are same condition tree
+                for iA, stmA in enumerate(stms):
+                    if stmA is None:
+                        continue
+
+                    for iB, stmB in enumerate(islice(stms, iA + 1, None)):
+                        if stmB is None:
+                            continue
+
+                        if stmA._is_mergable(stmB):
+                            rank_decrease += stmB.rank
+                            stmA._merge_with_other_stm(stmB)
+                            stms[iA + 1 + iB] = None
+                            new_statements.append(stmA)
+
+        new_statements.sort(key=lambda stm: order[stm])
+        return new_statements, rank_decrease
+
+    @staticmethod
+    def _merge_statement_lists(stmsA: List["HdlStatement"], stmsB: List["HdlStatement"])\
+            -> List["HdlStatement"]:
+        """
+        Merge two lists of statements into one
+
+        :return: list of merged statements
+        """
+        if stmsA is None and stmsB is None:
+            return None
+
+        tmp = []
+
+        a_it = iter(stmsA)
+        b_it = iter(stmsB)
+
+        a = None
+        b = None
+        a_empty = False
+        b_empty = False
+
+        while not a_empty and not b_empty:
+            while not a_empty:
+                a = next(a_it, None)
+                if a is None:
+                    a_empty = True
+                    break
+                elif a.rank == 0:
+                    # simple statement does not require merging
+                    tmp.append(a)
+                    a = None
+                else:
+                    break
+
+            while not b_empty:
+                b = next(b_it, None)
+                if b is None:
+                    b_empty = True
+                    break
+                elif b.rank == 0:
+                    # simple statement does not require merging
+                    tmp.append(b)
+                    b = None
+                else:
+                    break
+
+            if a is not None or b is not None:
+                a._merge_with_other_stm(b)
+                tmp.append(a)
+                a = None
+                b = None
+
+        return tmp
+
+    @staticmethod
+    def _try_reduce_list(statements: List["HdlStatement"]):
+        """
+        Simplify statements in the list
+        """
         io_change = False
         new_statements = []
 
@@ -211,7 +381,10 @@ class HdlStatement(HdlObject):
             new_statements.extend(reduced)
             io_change = io_change or _io_change
 
-        return new_statements, io_change
+        new_statements, rank_decrease = HdlStatement._merge_statements(
+            statements)
+
+        return new_statements, rank_decrease, io_change
 
     def _on_parent_event_dependent(self):
         """
@@ -227,7 +400,7 @@ class HdlStatement(HdlObject):
         """
         Assign parent statement and propagate dependency flags if necessary
         """
-        self._parentStm = parentStm
+        self.parentStm = parentStm
         if not self._now_is_event_dependent\
                 and parentStm._now_is_event_dependent:
             self._on_parent_event_dependent()
@@ -248,6 +421,8 @@ class HdlStatement(HdlObject):
         ctx = self._get_rtl_context()
         ctx.statements.discard(self)
 
+        parentStm.rank += self.rank
+
     def _register_stements(self, statements: List["HdlStatement"],
                            target: List["HdlStatement"]):
         """
@@ -257,6 +432,13 @@ class HdlStatement(HdlObject):
         for stm in flatten(statements):
             stm._set_parent_stm(self)
             target.append(stm)
+
+    def isSame(self, other: "HdlStatement") -> bool:
+        """
+        :return: True if other has same meaning as self
+        """
+        raise NotImplementedError("This menthod shoud be implemented"
+                                  " on class of statement", self.__class__, self)
 
 
 class WhileContainer(HdlStatement):

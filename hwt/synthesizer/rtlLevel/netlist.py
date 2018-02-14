@@ -114,6 +114,7 @@ def cut_off_drivers_of(dstSignal, statements):
 
 def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
         -> Generator[HWProcess, None, None]:
+    assert _statements
     # try to simplify statements
     proc_statements = []
     for _stm in _statements:
@@ -143,23 +144,21 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
             if not tryToSolveCombLoops:
                 raise HwtSyntaxError(
                     "Combinational loop on signal(s)", intersect)
+
+            # try to solve combinational loops by separating drivers of signals
+            # from statements
             for sig in intersect:
                 proc_statements, proc_stms_select = cut_off_drivers_of(
                     sig, proc_statements)
-
-                assert proc_stms_select, (
-                    "Result of stm separation is empty", sig)
                 yield from _statements_to_HWProcesses(proc_stms_select, False)
 
             if proc_statements:
                 yield from _statements_to_HWProcesses(proc_statements, False)
-                return
-
-        assert not intersect, intersect
-        name = name_for_process_and_mark_outputs(proc_statements)
-        yield HWProcess("assig_process_" + name,
-                        proc_statements, sensitivity,
-                        inputs, outputs)
+        else:
+            name = name_for_process_and_mark_outputs(proc_statements)
+            yield HWProcess("assig_process_" + name,
+                            proc_statements, sensitivity,
+                            inputs, outputs)
     else:
         assert not outputs
         # this can happend f.e. when If does not contains any Assignment
@@ -182,8 +181,6 @@ def statements_to_HWProcesses(statements)\
 
     # process ranks = how many assignments is probably in process
     # used to minimize number of merge tries
-    procRanks = {}
-
     processes = []
     while statements:
         stm = statements.pop()
@@ -196,9 +193,10 @@ def statements_to_HWProcesses(statements)\
         else:
             proc_statements = _statements
 
-        yield from _statements_to_HWProcesses(proc_statements, True)
+        ps = _statements_to_HWProcesses(proc_statements, True)
+        processes.extend(ps)
 
-    yield from reduceProcesses(processes, procRanks)
+    yield from reduceProcesses(processes)
 
 
 def walk_assignments(stm, dst) -> Generator[Assignment, None, None]:

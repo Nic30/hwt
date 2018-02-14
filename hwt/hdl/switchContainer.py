@@ -63,18 +63,57 @@ class SwitchContainer(HdlStatement):
         if self.default is not None:
             yield from self.default
 
+    def _is_mergable(self, other) -> bool:
+        """
+        :return: True if other can be merged into this statement else False
+        """
+        if not isinstance(other, SwitchContainer):
+            return False
+
+        if not (self.switchOn is other.switchOn and
+                len(self.cases) == len(other.cases) and
+                self._is_mergable_statement_list(self.default, other.default)):
+            return False
+
+        for (vA, caseA), (vB, caseB) in zip(self.cases, other.cases):
+            if vA != vB or not self._is_mergable_statement_list(caseA, caseB):
+                return False
+
+        return True
+
+    def _merge_with_other_stm(self, other: "IfContainer") -> None:
+        """
+        Merge other statement to this statement
+        """
+        merge = self._merge_statement_lists
+        newCases = []
+        for (c, caseA), (_, caseB) in zip(self.cases, other.cases):
+            newCases.append((c, merge(caseA, caseB)))
+
+        self.cases = newCases
+
+        if self.default is not None:
+            self.default = merge(self.default, other.default)
+
+        self._on_merge(other)
+
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         io_change = False
 
         new_cases = []
         for val, statements in self.cases:
-            _statements, _io_change = self._try_reduce_list(statements)
-            io_change = io_change or _io_change
+            _statements, rank_decrease, _io_change = self._try_reduce_list(
+                statements)
+            io_change |= _io_change
+            self.rank -= rank_decrease
             new_cases.append((val, _statements))
+        self.cases = new_cases
 
         if self.default is not None:
-            self.default, _io_change = self._try_reduce_list(self.default)
-            io_change = io_change or _io_change
+            self.default, rank_decrease, _io_change = self._try_reduce_list(
+                self.default)
+            self.rank -= rank_decrease
+            io_change |= _io_change
 
         reduce_self = not self._condHasEffect()
         if reduce_self:
@@ -126,6 +165,9 @@ class SwitchContainer(HdlStatement):
     def isSame(self, other: HdlStatement):
         if self is other:
             return True
+
+        if self.rank != other.rank:
+            return False
 
         if isinstance(other, SwitchContainer) \
                 and isSameHVal(self.switchOn, other.switchOn)\

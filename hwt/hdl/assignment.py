@@ -101,7 +101,11 @@ class Assignment(HdlStatement):
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         return [self, ], False
 
+    def _is_mergable(self, other: HdlStatement) -> bool:
+        return isinstance(other, self.__class__)
+
     def isSame(self, other):
+        # [TODO] indexes
         if isinstance(other, self.__class__):
             if isSameHVal(self.dst, other.dst)\
                     and isSameHVal(self.src, other.src):

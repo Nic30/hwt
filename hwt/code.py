@@ -1,3 +1,4 @@
+from itertools import compress
 import math
 from operator import and_, or_, xor, add
 
@@ -17,7 +18,6 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
-from itertools import compress
 
 
 class If(IfContainer):
@@ -43,6 +43,7 @@ class If(IfContainer):
 
         cond = AndReducedList([cond_sig, ])
         super(If, self).__init__(cond)
+        self.rank = 1
         self._inputs.append(cond_sig)
         cond_sig.endpoints.append(self)
 
@@ -53,89 +54,9 @@ class If(IfContainer):
         self._register_stements(statements, self.ifTrue)
         self._get_rtl_context().statements.add(self)
 
-    def _cut_off_drivers_of(self, sig: RtlSignalBase):
-        """
-        Cut off statements which are driver of specified signal
-        """
-        if len(self._outputs) == 1 and sig in self._outputs:
-            self.parentStm = None
-            return self
-
-        child_keep_mask = []
-
-        newIfTrue = []
-        all_cut_off = True
-        all_cut_off &= self._cut_off_drivers_of_list(
-            sig, self.ifTrue, child_keep_mask, newIfTrue)
-        self.ifTrue = list(compress(self.ifTrue, child_keep_mask))
-
-        newElifs = []
-        anyElifHit = False
-        for cond, stms in self.elIfs:
-            newCase = []
-            child_keep_mask.clear()
-            all_cut_off &= self._cut_off_drivers_of_list(
-                sig, stms, child_keep_mask, newCase)
-
-            _stms = list(compress(stms, child_keep_mask))
-            stms.clear()
-            stms.extend(_stms)
-
-            if newCase:
-                anyElifHit = True
-            newElifs.append((cond, newCase))
-
-        newIfFalse = None
-        if self.ifFalse:
-            newIfFalse = []
-            child_keep_mask.clear()
-            all_cut_off &= self._cut_off_drivers_of_list(
-                sig, self.ifFalse, child_keep_mask, newIfFalse)
-            self.ifFalse = list(compress(self.ifFalse, child_keep_mask))
-
-        assert not all_cut_off, "everything was cut of but this should be already known at start"
-
-        if newIfTrue or newIfFalse or anyElifHit or newIfFalse:
-            # parts were cut off
-            # generate new statement for them
-            assert len(self.cond) == 1
-            cond_sig = self.cond[0]
-            n = self.__class__(cond_sig, newIfTrue)
-            for c, stms in newElifs:
-                assert len(c) == 1
-                c_sig = c[0]
-                n.Elif(c_sig, stms)
-            if newIfFalse is not None:
-                n.Else(newIfFalse)
-
-            if self.parentStm is None:
-                ctx = n._get_rtl_context()
-                ctx.statements.add(n)
-
-            # update io of this
-            self._inputs.clear()
-            self._inputs.extend(self.cond)
-            for c, _ in self.elIfs:
-                self._inputs.extend(c)
-
-            self._inputs.extend(self.cond)
-            self._outputs.clear()
-
-            out_add = self._outputs.append
-            in_add = self._inputs.append
-
-            for stm in self._iter_stms():
-                for inp in stm._inputs:
-                    in_add(inp)
-
-                for outp in stm._outputs:
-                    out_add(outp)
-
-            # update sensitivity if already discovered
-
-            return n
-
     def Elif(self, cond, *statements):
+        assert self.parentStm is None
+        self.rank += 1
         cond_sig = _intfToSig(cond)
 
         self._now_is_event_dependent = arr_any(
@@ -151,9 +72,12 @@ class If(IfContainer):
         return self
 
     def Else(self, *statements):
+        assert self.parentStm is None
         if self.ifFalse is not None:
             raise HwtSyntaxError(
                 "Else on this if-then-else statemen was aready used")
+
+        self.rank += 1
 
         self.ifFalse = []
         self._register_stements(statements, self.ifFalse)
@@ -193,6 +117,7 @@ class Switch(SwitchContainer):
 
     def Case(self, caseVal, *statements):
         "c-like case of switch statement"
+        assert self.parentStm is None
         caseVal = toHVal(caseVal, self.switchOn._dtype)
 
         assert isinstance(caseVal, Value), caseVal
@@ -200,6 +125,7 @@ class Switch(SwitchContainer):
         assert caseVal not in self._case_value_index, (
             "Switch statement already has case for value ", caseVal)
 
+        self.rank += 1
         case = []
         self._case_value_index[caseVal] = len(self.cases)
         self.cases.append((caseVal, case))
@@ -211,6 +137,8 @@ class Switch(SwitchContainer):
     def Default(self, *statements):
         """c-like default of switch statement
         """
+        assert self.parentStm is None
+        self.rank += 1
         self.default = []
         self._register_stements(statements, self.default)
         return self
