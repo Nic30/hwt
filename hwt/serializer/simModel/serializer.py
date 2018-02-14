@@ -14,7 +14,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.typeCast import toHVal
-from hwt.pyUtils.arrayQuery import arr_any
+from hwt.pyUtils.arrayQuery import arr_any, where
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.constCache import ConstCache
 from hwt.serializer.generic.context import SerializerCtx
@@ -168,13 +168,22 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         ifTrue = ifc.ifTrue
 
         if ifc.elIfs:
-            # if has elifs rewind this to tree
+            # replace elifs with nested if statements
             ifFalse = []
             topIf = IfContainer(ifc.cond, ifc.ifTrue, ifFalse)
+            topIf._inputs = ifc._inputs
+            topIf._outputs = ifc._outputs
+            topIf._sensitivity = ifc._sensitivity
+
             for c, stms in ifc.elIfs:
                 assert isinstance(c, AndReducedList), c
                 _ifFalse = []
+
                 lastIf = IfContainer(c, stms, _ifFalse)
+                lastIf._inputs = ifc._inputs
+                lastIf._outputs = ifc._outputs
+                lastIf._sensitivity = ifc._sensitivity
+
                 ifFalse.append(lastIf)
                 ifFalse = _ifFalse
 
@@ -190,11 +199,19 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                 ifFalse = []
 
             childCtx = ctx.withIndent()
-            if enclosure is None:
-                _enclosure = getIndent(childCtx.indent) + "pass"
+
+            if enclosure:
+                _enclosure = list(
+                    where(enclosure, lambda stm: stm.dst in ifc._outputs))
             else:
+                _enclosure = None
+
+            if _enclosure:
                 _enclosure = "\n".join(
-                    [cls.stmAsHdl(e, childCtx) for e in enclosure])
+                    [cls.stmAsHdl(e, childCtx)
+                     for e in _enclosure])
+            else:
+                _enclosure = getIndent(childCtx.indent) + "pass"
 
             return ifTmpl.render(
                 indent=getIndent(ctx.indent),
@@ -230,6 +247,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                             ifFalse=ifFalse,
                             elIfs=elIfs)
 
+        topIf._sensitivity = sw._sensitivity
+        topIf._inputs = sw._inputs
+        topIf._outputs = sw._outputs
+
         return cls.IfContainer(topIf, ctx, enclosure=enclosure)
 
     @classmethod
@@ -259,11 +280,15 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         if len(body) == 1:
             _body = cls.stmAsHdl(body[0], childCtx)
         else:
+            for i, stm in enumerate(body):
+                if not isinstance(stm, Assignment):
+                    break
+
             # first statement is taken as default
-            enclosure = [body[0], ]
+            enclosure = body[:i]
             _body = "\n".join([
                 cls.stmAsHdl(stm, childCtx, enclosure=enclosure)
-                for stm in body[1:]])
+                for stm in body[i:]])
 
         return processTmpl.render(
             hasConditions=arr_any(
