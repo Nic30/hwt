@@ -59,10 +59,14 @@ class SystemCSerializer_value(GenericSerializer_Value):
                 s += " ".join(reversed(dimensions))
 
             if isinstance(v, RtlSignalBase):
-                return s + " = %s" % cls.asHdl(v, ctx)
+                if v._const:
+                    return s + " = %s" % cls.asHdl(v, ctx)
+                else:
+                    # default value has to be set by reset because it is only signal
+                    return s
             elif isinstance(v, Value):
                 if si.defaultVal.vldMask:
-                    return s + " = %s" % cls.Value(si.defaultVal, ctx)
+                    return s + " = %s" % cls.Value(v, ctx)
                 else:
                     return s
             else:
