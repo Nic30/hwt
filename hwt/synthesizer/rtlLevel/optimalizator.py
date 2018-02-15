@@ -1,4 +1,4 @@
-from itertools import islice, zip_longest
+from itertools import islice
 
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
@@ -57,22 +57,6 @@ def removeUnconnectedSignals(netlist):
                 _toSearch.discard(sig)
             toDelete = set()
         toSearch = _toSearch
-
-
-def isMergableStmList(listA, listB):
-    if listA is None and listB is None:
-        return True
-    elif listA is None or listB is None:
-        return False
-
-    la = len(listA)
-    lb = len(listB)
-    if la == lb:
-        return True
-    elif la > 0 and lb == 1:
-        return True
-    else:
-        return False
 
 
 def checkIfIsTooSimple(proc):
