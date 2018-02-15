@@ -47,7 +47,7 @@ class Assignment(HdlStatement):
         self.dst = dst
         if not isinstance(dst, Value):
             self._outputs.append(dst)
-            self._enclosed_for.append(dst)
+            self._enclosed_for.add(dst)
             if isReal:
                 dst.drivers.append(self)
 
