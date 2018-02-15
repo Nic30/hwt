@@ -37,7 +37,7 @@ class SwitchContainer(HdlStatement):
             assert v not in self._case_value_index, v
             self._case_value_index[v] = i
 
-    def _discover_sensitivity(self, seen)->None:
+    def _discover_sensitivity_and_enclose(self, seen)->None:
         """
         Discover sensitivity of this statement
         """
@@ -53,7 +53,7 @@ class SwitchContainer(HdlStatement):
         ctx.extend(casual_sensitivity)
 
         for stm in self._iter_stms():
-            stm._discover_sensitivity(seen)
+            stm._discover_sensitivity_and_enclose(seen)
             ctx.extend(stm._sensitivity)
 
     def _iter_stms(self):

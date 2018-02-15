@@ -11,7 +11,6 @@ class Assignment(HdlStatement):
 
     :ivar src: source
     :ivar dst: destination signal
-    :ivar parentStm: parent statement or None
     :ivar indexes: description of index selector on dst
         (list of Index/Slice objects) (f.e. [[0], [1]] means  dst[0][1])
 
@@ -48,6 +47,7 @@ class Assignment(HdlStatement):
         self.dst = dst
         if not isinstance(dst, Value):
             self._outputs.append(dst)
+            self._enclosed_for.append(dst)
             if isReal:
                 dst.drivers.append(self)
 
@@ -74,7 +74,7 @@ class Assignment(HdlStatement):
         else:
             return None
 
-    def _discover_sensitivity(self, seen: set) -> None:
+    def _discover_sensitivity_and_enclose(self, seen: set) -> None:
         ctx = self._sensitivity
         if ctx:
             ctx.clear()

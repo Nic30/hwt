@@ -81,6 +81,8 @@ class HdlStatement(HdlObject):
     :ivar _outputs: UniqList of output signals for this statement
     :ivar _sensitivity: UniqList of input signals
         or (rising/falling) operator
+    :ivar _enclosed_for: set of outputs for which this statement is enclosed
+        (for which there is not any unused branch)
     :ivar rank: number of used branches in statement, used as prefilter for statement comparing
     """
 
@@ -91,6 +93,8 @@ class HdlStatement(HdlObject):
         self.parentStm = parentStm
         self._inputs = UniqList()
         self._outputs = UniqList()
+        self._enclosed_for = set()
+
         if not sensitivity:
             sensitivity = UniqList()
         self._sensitivity = SensitivityCtx()
@@ -132,21 +136,25 @@ class HdlStatement(HdlObject):
 
         return all_cut_off
 
-    def _discover_sensitivity(self, seen: set) -> None:
+    def _discover_sensitivity_and_enclose(self, seen: set) -> None:
         """
         discover all sensitivity signals and store them to _sensitivity property
         """
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__, self)
 
-    def _discover_sensitivity_seq(self, seq, seen: set, ctx: SensitivityCtx)\
+    def _discover_sensitivity_and_enclose_seq(self,
+                                              signals: List[RtlSignalBase],
+                                              seen: set, ctx: SensitivityCtx)\
             -> None:
         """
         Discover sensitivity for list of signals
+
+        :return: enclosure for 
         """
         casualSensitivity = set()
-        for c in seq:
-            c._walk_sensitivity(casualSensitivity, seen, ctx)
+        for s in signals:
+            s._walk_sensitivity(casualSensitivity, seen, ctx)
             if ctx.contains_ev_dependency:
                 break
 
@@ -237,6 +245,9 @@ class HdlStatement(HdlObject):
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__, self)
+
+    def _is_enclosed(self) -> bool:
+        return 
 
     def _is_mergable(self, other: "HdlStatement") -> bool:
         if self is other:

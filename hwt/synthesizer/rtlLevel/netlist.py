@@ -6,12 +6,10 @@ from hwt.code import If
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.entity import Entity
-from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import PortItem
 from hwt.hdl.process import HWProcess
-from hwt.hdl.statements import WaitStm, HdlStatement, HwtSyntaxError
-from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.statements import HdlStatement, HwtSyntaxError
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import distinctBy
@@ -27,43 +25,6 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 
 
-def _isEnclosed(objList):
-    if not objList:
-        return False
-    for o in objList:
-        if not isEnclosed(o):
-            return False
-    return True
-
-
-def isEnclosed(obj):
-    """
-    Check if statement has any not used branch
-    """
-    if isinstance(obj, (Assignment, WaitStm)):
-        return True
-    elif isinstance(obj, IfContainer):
-        for ol in [obj.ifTrue, obj.ifFalse]:
-            if not _isEnclosed(ol):
-                return False
-        for _, ol in obj.elIfs:
-            if not _isEnclosed(ol):
-                return False
-
-        return True
-    elif isinstance(obj, SwitchContainer):
-        allCasesCovered = True
-        for cond, ol in obj.cases:
-            if cond is None:
-                allCasesCovered = True
-            if not _isEnclosed(ol):
-                return False
-
-        return allCasesCovered
-    else:
-        raise NotImplementedError(obj)
-
-
 def inject_nop_values(statements: List[HdlStatement])\
         -> Generator[Assignment, None, None]:
     """
@@ -72,7 +33,7 @@ def inject_nop_values(statements: List[HdlStatement])\
     for stm in statements:
         for sig in stm._outputs:
             # inject nopVal if needed
-            if sig._useNopVal and not isEnclosed(stm):
+            if sig._useNopVal and not stm._is_enclosed():
                 n = sig._nopVal
                 yield Assignment(n, sig)
 
@@ -126,7 +87,7 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
     sensitivity = UniqList()
     for _stm in proc_statements:
         seen = set()
-        _stm._discover_sensitivity(seen)
+        _stm._discover_sensitivity_and_enclose(seen)
         outputs.extend(_stm._outputs)
         _inputs.extend(_stm._inputs)
         sensitivity.extend(_stm._sensitivity)

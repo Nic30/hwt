@@ -124,7 +124,7 @@ class IfContainer(HdlStatement):
 
             return n
 
-    def _discover_sensitivity(self, seen: set)->None:
+    def _discover_sensitivity_and_enclose(self, seen: set)->None:
         """
         Discover sensitivity of this statement
         """
@@ -132,12 +132,12 @@ class IfContainer(HdlStatement):
         if ctx:
             ctx.clear()
 
-        self._discover_sensitivity_seq(self.cond, seen, ctx)
+        self._discover_sensitivity_and_enclose_seq(self.cond, seen, ctx)
         if ctx.contains_ev_dependency:
             return
 
         for stm in self.ifTrue:
-            stm._discover_sensitivity(seen)
+            stm._discover_sensitivity_and_enclose(seen)
             ctx.extend(stm._sensitivity)
 
         # elifs
@@ -145,7 +145,7 @@ class IfContainer(HdlStatement):
             if ctx.contains_ev_dependency:
                 break
 
-            self._discover_sensitivity_seq(cond, seen, ctx)
+            self._discover_sensitivity_and_enclose_seq(cond, seen, ctx)
             if ctx.contains_ev_dependency:
                 break
 
@@ -153,13 +153,13 @@ class IfContainer(HdlStatement):
                 if ctx.contains_ev_dependency:
                     break
 
-                stm._discover_sensitivity(seen)
+                stm._discover_sensitivity_and_enclose(seen)
                 ctx.extend(stm._sensitivity)
 
         if not ctx.contains_ev_dependency and self.ifFalse:
             # else
             for stm in self.ifFalse:
-                stm._discover_sensitivity(seen)
+                stm._discover_sensitivity_and_enclose(seen)
                 ctx.extend(stm._sensitivity)
 
         else:
