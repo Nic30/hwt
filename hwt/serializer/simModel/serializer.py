@@ -51,12 +51,12 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         return True
 
     @classmethod
-    def stmAsHdl(cls, obj, ctx: SerializerCtx, enclosure=None):
+    def stmAsHdl(cls, obj, ctx: SerializerCtx):
         try:
             serFn = getattr(cls, obj.__class__.__name__)
         except AttributeError:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
-        return serFn(obj, ctx, enclosure=enclosure)
+        return serFn(obj, ctx)
 
     @classmethod
     def Architecture(cls, arch: Architecture, ctx: SerializerCtx):
@@ -120,7 +120,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         )
 
     @classmethod
-    def Assignment(cls, a: Assignment, ctx: SerializerCtx, enclosure=None):
+    def Assignment(cls, a: Assignment, ctx: SerializerCtx):
         dst = a.dst
         indentStr = getIndent(ctx.indent)
         ev = a._is_completly_event_dependent
@@ -163,7 +163,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         return "#" + comentStr.replace("\n", "\n#")
 
     @classmethod
-    def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx, enclosure=None):
+    def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx):
         cond = cls.condAsHdl(ifc.cond, ctx)
         ifTrue = ifc.ifTrue
 
@@ -192,7 +192,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             else:
                 lastIf.ifFalse = ifc.ifFalse
 
-            return cls.IfContainer(topIf, ctx, enclosure=enclosure)
+            return cls.IfContainer(topIf, ctx)
         else:
             ifFalse = ifc.ifFalse
             if ifFalse is None:
@@ -200,36 +200,20 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
 
             childCtx = ctx.withIndent()
 
-            if enclosure:
-                _enclosure = list(
-                    where(enclosure, lambda stm: stm.dst in ifc._outputs))
-            else:
-                _enclosure = None
-
-            if _enclosure:
-                _enclosure = "\n".join(
-                    [cls.stmAsHdl(e, childCtx)
-                     for e in _enclosure])
-            else:
-                _enclosure = getIndent(childCtx.indent) + "pass"
-
             return ifTmpl.render(
                 indent=getIndent(ctx.indent),
                 indentNum=ctx.indent,
                 cond=cond,
-                enclosure=_enclosure,
                 ifTrue=tuple(map(
-                    lambda obj: cls.stmAsHdl(obj, childCtx,
-                                             enclosure=enclosure),
+                    lambda obj: cls.stmAsHdl(obj, childCtx),
                     ifTrue)),
                 ifFalse=tuple(map(
-                    lambda obj: cls.stmAsHdl(obj, childCtx,
-                                             enclosure=enclosure),
+                    lambda obj: cls.stmAsHdl(obj, childCtx),
                     ifFalse)))
 
     @classmethod
     def SwitchContainer(cls, sw: SwitchContainer,
-                        ctx: SerializerCtx, enclosure=None):
+                        ctx: SerializerCtx):
         switchOn = sw.switchOn
 
         def mkCond(c):
@@ -251,7 +235,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         topIf._inputs = sw._inputs
         topIf._outputs = sw._outputs
 
-        return cls.IfContainer(topIf, ctx, enclosure=enclosure)
+        return cls.IfContainer(topIf, ctx)
 
     @classmethod
     def sensitivityListItem(cls, item):
@@ -277,18 +261,9 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             map(cls.sensitivityListItem, proc.sensitivityList))
 
         childCtx = ctx.withIndent(2)
-        if len(body) == 1:
-            _body = cls.stmAsHdl(body[0], childCtx)
-        else:
-            for i, stm in enumerate(body):
-                if not isinstance(stm, Assignment):
-                    break
-
-            # first statement is taken as default
-            enclosure = body[:i]
-            _body = "\n".join([
-                cls.stmAsHdl(stm, childCtx, enclosure=enclosure)
-                for stm in body[i:]])
+        _body = "\n".join([
+            cls.stmAsHdl(stm, childCtx)
+            for stm in body])
 
         return processTmpl.render(
             hasConditions=arr_any(

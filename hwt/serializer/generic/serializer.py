@@ -149,13 +149,10 @@ class GenericSerializer():
         return cls.IfContainer(*args, **kwargs)
 
     @classmethod
-    def IfContainer(cls, ifc, ctx, enclosure=None):
+    def IfContainer(cls, ifc, ctx):
         """
         Srialize IfContainer instance
         """
-        if enclosure:
-            raise NotImplementedError()
-
         childCtx = ctx.withIndent()
 
         def asHdl(statements):

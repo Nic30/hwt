@@ -1,12 +1,15 @@
 from functools import reduce
 from operator import and_
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from hwt.hdl.statements import HdlStatement, isSameHVal, isSameStatementList,\
     statementsAreSame, HwtSyntaxError
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
+from hwt.hdl.sensitivityCtx import SensitivityCtx
 
 
 class SwitchContainer(HdlStatement):
@@ -17,6 +20,8 @@ class SwitchContainer(HdlStatement):
     :ivar cases: list of tuples (value, statements)
     :ivar default: list of statements (for branch "default")
     :ivar _case_value_index: dictionary {value:index} for every case in cases
+    :ivar _case_enclosed_for: list of sets of enclosed signal for each case branch
+    :ivar _default_enclosed_for: set of enclosed signals for branch default
     """
 
     def __init__(self, switchOn: RtlSignal,
@@ -26,7 +31,8 @@ class SwitchContainer(HdlStatement):
                  is_completly_event_dependent: bool=False):
 
         super(SwitchContainer, self).__init__(
-            parentStm, is_completly_event_dependent)
+            parentStm=parentStm,
+            is_completly_event_dependent=is_completly_event_dependent)
         self.switchOn = switchOn
         self.cases = cases
 
@@ -37,13 +43,48 @@ class SwitchContainer(HdlStatement):
             assert v not in self._case_value_index, v
             self._case_value_index[v] = i
 
-    def _discover_sensitivity_and_enclose(self, seen)->None:
+        self._case_enclosed_for = None
+        self._default_enclosed_for = None
+
+    def _clean_signal_meta(self):
+        self._case_enclosed_for = None
+        self._default_enclosed_for = None
+        HdlStatement._clean_signal_meta(self)
+
+    def _discover_enclosure(self) -> None:
+        assert self._enclosed_for is None
+        enclosure = self._enclosed_for = set()
+        case_enclosures = self._case_enclosed_for = []
+        outputs = self._outputs
+
+        for _, stms in self.cases:
+            c_e = self._discover_enclosure_for_statements(stms, outputs)
+            case_enclosures.append(c_e)
+
+        self._default_enclosed_for = self._discover_enclosure_for_statements(
+            self.default, outputs)
+
+        t = self.switchOn._dtype
+        if not self.default and len(self.cases) < t.domain_size():
+            # cases does not cover all branches
+            return
+
+        for s in outputs:
+            enclosed = True
+            for e in case_enclosures:
+                if s not in e:
+                    enclosed = False
+                    break
+
+            if enclosed and (not self.default or s in self._default_enclosed_for):
+                enclosure.add(s)
+
+    def _discover_sensitivity(self, seen) -> None:
         """
-        Discover sensitivity of this statement
+        Doc on parent class :meth:`HdlStatement._discover_sensitivity`
         """
-        ctx = self._sensitivity
-        if ctx:
-            ctx.clear()
+        assert self._sensitivity is None, self
+        ctx = self._sensitivity = SensitivityCtx()
 
         casual_sensitivity = set()
         self.switchOn._walk_sensitivity(casual_sensitivity, seen, ctx)
@@ -53,10 +94,37 @@ class SwitchContainer(HdlStatement):
         ctx.extend(casual_sensitivity)
 
         for stm in self._iter_stms():
-            stm._discover_sensitivity_and_enclose(seen)
+            stm._discover_sensitivity(seen)
             ctx.extend(stm._sensitivity)
 
+    def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, HdlStatement]) -> None:
+        """
+        :attention: enclosure has to be discoverd first use _discover_enclosure()  method
+        """
+        select = []
+        outputs = self._outputs
+        for e in enclosure.keys():
+            if e in outputs:
+                select.append(e)
+
+        for (_, stms), e in zip(self.cases, self._case_enclosed_for):
+            fill_stm_list_with_enclosure(self, e, stms, select, enclosure)
+            e.update(select)
+
+        t = self.switchOn._dtype
+        default_required = len(self.cases) < t.domain_size()
+
+        if self.default is not None or default_required:
+            self.default = fill_stm_list_with_enclosure(
+                self, self._default_enclosed_for, self.default, select, enclosure)
+            self._default_enclosed_for.update(select)
+
+        self._enclosed_for.update(select)
+
     def _iter_stms(self):
+        """
+        Doc on parent class :meth:`HdlStatement._iter_stms`
+        """
         for _, stms in self.cases:
             yield from stms
 
@@ -98,6 +166,9 @@ class SwitchContainer(HdlStatement):
         self._on_merge(other)
 
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
+        """
+        Doc on parent class :meth:`HdlStatement._try_reduce`
+        """
         io_change = False
 
         new_cases = []
@@ -141,7 +212,10 @@ class SwitchContainer(HdlStatement):
 
         return res, io_change
 
-    def _condHasEffect(self):
+    def _condHasEffect(self) -> bool:
+        """
+        :return: True if statements in branches has different effect
+        """
         if not self.cases:
             return False
 
@@ -162,7 +236,10 @@ class SwitchContainer(HdlStatement):
             return False
         return True
 
-    def isSame(self, other: HdlStatement):
+    def isSame(self, other: HdlStatement) -> bool:
+        """
+        Doc on parent class :meth:`HdlStatement.isSame`
+        """
         if self is other:
             return True
 
@@ -179,6 +256,3 @@ class SwitchContainer(HdlStatement):
                     return False
             return True
         return False
-
-    def seqEval(self):
-        raise NotImplementedError()

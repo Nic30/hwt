@@ -50,8 +50,14 @@ class VhdlSerializer_types():
 
             buff.extend(["%sTYPE " % getIndent(ctx.indent),
                          typ.name.upper(), ' IS ('])
-            # [TODO] check enum values names
-            buff.append(", ".join(typ._allValues))
+
+            e_names = []
+            for n in typ._allValues:
+                v = getattr(typ, n)
+                _n = ctx.scope.checkedName(n, v)
+                v.val = _n
+                e_names.append(_n)
+            buff.append(", ".join(e_names))
             buff.append(")")
             return "".join(buff)
         else:

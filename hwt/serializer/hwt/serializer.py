@@ -5,28 +5,28 @@ from hwt.hdl.architecture import Architecture
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.constants import SENSITIVITY, DIRECTION
 from hwt.hdl.entity import Entity
+from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.process import HWProcess
+from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
+from hwt.hdl.value import Value
+from hwt.pyUtils.andReducedList import AndReducedList
+from hwt.serializer.exceptions import SerializerException
+from hwt.serializer.generic.constCache import ConstCache
+from hwt.serializer.generic.context import SerializerCtx
+from hwt.serializer.generic.indent import getIndent
+from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.hwt.keywords import HWT_KEYWORDS
 from hwt.serializer.hwt.ops import HwtSerializer_ops
 from hwt.serializer.hwt.types import HwtSerializer_types
 from hwt.serializer.hwt.value import HwtSerializer_value
-from hwt.serializer.generic.constCache import ConstCache
-from hwt.serializer.generic.context import SerializerCtx
-from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.value import Value
-from hwt.serializer.exceptions import SerializerException
-from hwt.hdl.ifContainter import IfContainer
-from hwt.hdl.switchContainer import SwitchContainer
-from hwt.pyUtils.andReducedList import AndReducedList
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/hwt/templates'))
@@ -81,12 +81,12 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
             raise SerializerException("Not implemented for %r" % (obj))
 
     @classmethod
-    def stmAsHdl(cls, obj, ctx: SerializerCtx, enclosure=None):
+    def stmAsHdl(cls, obj, ctx: SerializerCtx):
         try:
             serFn = getattr(cls, obj.__class__.__name__)
         except AttributeError:
             raise NotImplementedError("Not implemented for %s" % (repr(obj)))
-        return serFn(obj, ctx, enclosure=enclosure)
+        return serFn(obj, ctx)
 
     @classmethod
     def Entity(cls, ent: Entity, ctx: SerializerCtx):
@@ -163,7 +163,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         )
 
     @classmethod
-    def Assignment(cls, a: Assignment, ctx: SerializerCtx, enclosure=None):
+    def Assignment(cls, a: Assignment, ctx: SerializerCtx):
         dst = a.dst
         indentStr = getIndent(ctx.indent)
         srcStr = "%s" % cls.Value(a.src, ctx)
@@ -183,7 +183,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         return "#" + coment.replace("\n", "\n#")
 
     @classmethod
-    def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx, enclosure=None):
+    def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx):
         cond = cls.condAsHdl(ifc.cond, ctx)
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
@@ -192,15 +192,9 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
             ifFalse = []
 
         childCtx = ctx.withIndent()
-        if enclosure is None:
-            _enclosure = None
-        else:
-            e_items = [getIndent(ctx.indent) + "# enclosure"]
-            e_items.extend(cls.stmAsHdl(e, childCtx) for e in enclosure)
-            _enclosure = "\n".join(e_items)
 
         def serialize_statements(statements):
-            return [cls.stmAsHdl(obj, childCtx, enclosure=enclosure)
+            return [cls.stmAsHdl(obj, childCtx)
                     for obj in statements]
 
         def serialize_elif(elifCase):
@@ -212,7 +206,6 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
             indent=getIndent(ctx.indent),
             indentNum=ctx.indent,
             cond=cond,
-            enclosure=_enclosure,
             ifTrue=serialize_statements(ifTrue),
             elIfs=[serialize_elif(elIf) for elIf in ifc.elIfs],
             ifFalse=serialize_statements(ifFalse)
@@ -220,7 +213,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
 
     @classmethod
     def SwitchContainer(cls, sw: SwitchContainer,
-                        ctx: SerializerCtx, enclosure=None):
+                        ctx: SerializerCtx):
         switchOn = sw.switchOn
         if not sw.cases:
             # this should be usually reduced, but can appear while debugging
@@ -245,7 +238,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
                             ifFalse,
                             elIfs)
 
-        return cls.IfContainer(topIf, ctx, enclosure=enclosure)
+        return cls.IfContainer(topIf, ctx)
 
     @classmethod
     def sensitivityListItem(cls, item):
@@ -270,13 +263,8 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         sensitivityList = sorted(
             map(cls.sensitivityListItem, proc.sensitivityList))
 
-        if len(body) == 1:
-            _body = cls.stmAsHdl(body[0], ctx)
-        else:
-            # first statement is taken as default
-            enclosure = [body[0], ]
-            _body = "\n".join([cls.stmAsHdl(stm, ctx, enclosure=enclosure)
-                               for stm in body[1:]])
+        _body = "\n".join([cls.stmAsHdl(stm, ctx)
+                           for stm in body])
 
         return processTmpl.render(
             indent=getIndent(ctx.indent),

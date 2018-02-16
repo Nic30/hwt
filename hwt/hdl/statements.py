@@ -1,5 +1,5 @@
-from itertools import chain, islice, zip_longest
-from typing import List, Tuple
+from itertools import chain, islice
+from typing import List, Tuple, Set, Dict, Union
 
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.sensitivityCtx import SensitivityCtx
@@ -93,16 +93,24 @@ class HdlStatement(HdlObject):
         self.parentStm = parentStm
         self._inputs = UniqList()
         self._outputs = UniqList()
-        self._enclosed_for = set()
+        self._enclosed_for = None
 
-        if not sensitivity:
-            sensitivity = UniqList()
-        self._sensitivity = SensitivityCtx()
+        self._sensitivity = sensitivity
         self.rank = 0
+
+    def _clean_signal_meta(self):
+        """
+        Clean informations about enclosure for outputs and sensitivity of this statement
+        """
+        self._enclosed_for = None
+        self._sensitivity = None
+        for stm in self._iter_stms():
+            stm._clean_signal_meta()
 
     def _collect_io(self) -> None:
         """
         Collect inputs/outputs from all child statements
+        to :py:attr:`~_input` / :py:attr:`_output` attribure on this object
         """
         in_add = self._inputs.extend
         out_add = self._outputs.extend
@@ -136,21 +144,60 @@ class HdlStatement(HdlObject):
 
         return all_cut_off
 
-    def _discover_sensitivity_and_enclose(self, seen: set) -> None:
+    def _discover_enclosure(self) -> None:
+        """
+        Discover all outputs for which is this steement enclosed _enclosed_for property
+        (has driver in all code branches)
+        """
+        raise NotImplementedError("This menthod shoud be implemented"
+                                  " on class of statement", self.__class__, self)
+
+    @staticmethod
+    def _discover_enclosure_for_statements(statements: List['HdlStatement'],
+                                           outputs: List['HdlStatement']):
+        """
+        Discover enclosure for list of statements
+
+        :param statements: list of statements in one code branch
+        :param outputs: list of outputs which should be driven from this statement list
+        :return: set of signals for which this statement list have always some driver
+            (is enclosed)
+        """
+        result = set()
+        if not statements:
+            return result
+
+        for stm in statements:
+            stm._discover_enclosure()
+
+        for o in outputs:
+            has_driver = False
+
+            for stm in statements:
+                if o in stm._outputs:
+                    assert not has_driver
+                    has_driver = False
+                    if o in stm._enclosed_for:
+                        result.add(o)
+                else:
+                    pass
+
+        return result
+
+    def _discover_sensitivity(self, seen: set) -> None:
         """
         discover all sensitivity signals and store them to _sensitivity property
         """
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__, self)
 
-    def _discover_sensitivity_and_enclose_seq(self,
-                                              signals: List[RtlSignalBase],
-                                              seen: set, ctx: SensitivityCtx)\
+    def _discover_sensitivity_seq(self,
+                                  signals: List[RtlSignalBase],
+                                  seen: set, ctx: SensitivityCtx)\
             -> None:
         """
         Discover sensitivity for list of signals
 
-        :return: enclosure for 
         """
         casualSensitivity = set()
         for s in signals:
@@ -230,7 +277,11 @@ class HdlStatement(HdlObject):
         """
         self._inputs.extend(other._inputs)
         self._outputs.extend(other._outputs)
-        self._sensitivity.extend(other._sensitivity)
+
+        if self._sensitivity is not None:
+            self._sensitivity.extend(other._sensitivity)
+        else:
+            assert other._sensitivity is None
 
         if other.parentStm is None:
             other._get_rtl_context().statements.remove(other)
@@ -247,7 +298,7 @@ class HdlStatement(HdlObject):
                                   " on class of statement", self.__class__, self)
 
     def _is_enclosed(self) -> bool:
-        return 
+        return len(self._outputs) == len(self._enclosed_for)
 
     def _is_mergable(self, other: "HdlStatement") -> bool:
         if self is other:
@@ -453,28 +504,3 @@ class HdlStatement(HdlObject):
         """
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__, self)
-
-
-class WhileContainer(HdlStatement):
-    """
-    Structural container of while statement for hdl rendering
-    """
-
-    def __init__(self, cond, body):
-        self.cond = cond
-        self.body = body
-
-    def seqEval(self):
-        while seqEvalCond(self.cond):
-            for s in self.body:
-                s.seqEval()
-
-
-class WaitStm(HdlStatement):
-    """
-    Structural container of wait statemnet for hdl rendering
-    """
-
-    def __init__(self, waitForWhat):
-        self.isTimeWait = isinstance(waitForWhat, int)
-        self.waitForWhat = waitForWhat

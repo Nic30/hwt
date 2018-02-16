@@ -73,7 +73,10 @@ class VhdlSerializer_Value(GenericSerializer_Value):
 
     @classmethod
     def HEnumValAsHdl(cls, dtype, val, ctx):
-        return '%s' % str(val.val)
+        try:
+            return getattr(dtype, val.val).val
+        except AttributeError:
+            return str(val.val)
 
     @classmethod
     def HArrayValAsHdl(cls, dtype, val, ctx):

@@ -1,8 +1,10 @@
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 from hwt.hdl.statements import isSameHVal, HdlStatement
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from copy import copy
+from hwt.hdl.sensitivityCtx import SensitivityCtx
 
 
 class Assignment(HdlStatement):
@@ -47,7 +49,6 @@ class Assignment(HdlStatement):
         self.dst = dst
         if not isinstance(dst, Value):
             self._outputs.append(dst)
-            self._enclosed_for.add(dst)
             if isReal:
                 dst.drivers.append(self)
 
@@ -74,10 +75,15 @@ class Assignment(HdlStatement):
         else:
             return None
 
-    def _discover_sensitivity_and_enclose(self, seen: set) -> None:
-        ctx = self._sensitivity
-        if ctx:
-            ctx.clear()
+    def _discover_enclosure(self) -> None:
+        assert self._enclosed_for is None
+        self._enclosed_for = set()
+        self._enclosed_for.update(self._outputs)
+
+    def _discover_sensitivity(self, seen: set) -> None:
+        assert self._sensitivity is None
+        ctx = self._sensitivity = SensitivityCtx()
+
         casualSensitivity = set()
         for inp in self._inputs:
             if inp not in seen:
@@ -85,11 +91,18 @@ class Assignment(HdlStatement):
                 inp._walk_sensitivity(casualSensitivity, seen, ctx)
         self._sensitivity.extend(casualSensitivity)
 
+    def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, HdlStatement]):
+        """
+        Enclosure is never requiered
+        """
+        pass
+
     def _iter_stms(self):
         """
         Iterate all statements in this statement
         """
-        raise TypeError("This statement does not have any children")
+        return
+        yield
 
     def _on_parent_event_dependent(self):
         """

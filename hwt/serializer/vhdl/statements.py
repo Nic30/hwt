@@ -4,11 +4,12 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.statements import WhileContainer, WaitStm
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
+from hwt.hdl.waitStm import WaitStm
+from hwt.hdl.whileContainer import WhileContainer
 from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
@@ -167,9 +168,7 @@ class VhdlSerializer_statements():
         )
 
     @classmethod
-    def IfContainer(cls, ifc, ctx, enclosure=None):
-        if enclosure:
-            raise NotImplementedError()
+    def IfContainer(cls, ifc, ctx):
         childCtx = ctx.withIndent()
 
         def asHdl(statements):

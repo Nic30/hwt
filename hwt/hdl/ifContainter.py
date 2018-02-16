@@ -1,23 +1,33 @@
+
+
 from functools import reduce
 from itertools import compress
-from typing import List, Tuple
+from operator import and_
+from typing import List, Tuple, Dict, Union
 
 from hwt.hdl.statements import HdlStatement, statementsAreSame,\
     isSameStatementList, seqEvalCond
 from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from operator import and_
+from hwt.hdl.value import Value
+from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
+from hwt.hdl.sensitivityCtx import SensitivityCtx
 
 
 class IfContainer(HdlStatement):
     """
     Structural container of if statement for hdl rendering
+
+    :ivar _ifTrue_enclosed_for: set of signals for which if ifTrue branch enclosed
+            (has not branch where signal is not assignment)
+    :ivar _elIfs_enclosed_for: list of sets of enclosed signals for each elif
+    :ivar _ifFalse_enclosed_for: set of enclosed signals for ifFalse branch
     """
 
     def __init__(self, cond, ifTrue=None, ifFalse=None, elIfs=None,
                  parentStm=None, is_completly_event_dependent=False):
         """
-        :param cond: list of conditions for this if
+        :param cond: AndReducedList of conditions for this if
         :param ifTrue: list of statements which should be active if cond.
             is met
         :param elIfs: list of tuples (list of conditions, list of statements)
@@ -28,7 +38,7 @@ class IfContainer(HdlStatement):
         self.cond = cond
         super(IfContainer, self).__init__(
             parentStm,
-            is_completly_event_dependent)
+            is_completly_event_dependent=is_completly_event_dependent)
 
         if ifTrue is None:
             self.ifTrue = []
@@ -41,15 +51,27 @@ class IfContainer(HdlStatement):
             self.elIfs = elIfs
 
         self.ifFalse = ifFalse
+        self._ifTrue_enclosed_for = None
+        self._elIfs_enclosed_for = None
+        self._ifFalse_enclosed_for = None
+
+    def _clean_signal_meta(self):
+        self._sensitivity = None
+        self._ifTrue_enclosed_for = None
+        self._elIfs_enclosed_for = None
+        self._ifFalse_enclosed_for = None
+        HdlStatement._clean_signal_meta(self)
 
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
-        Cut off statements which are driver of specified signal
+        Doc on parent class :meth:`HdlStatement._cut_off_drivers_of`
         """
         if len(self._outputs) == 1 and sig in self._outputs:
             self.parentStm = None
             return self
 
+        # try to cut off all statements which are drivers of specified signal
+        # in all branches
         child_keep_mask = []
 
         newIfTrue = []
@@ -120,24 +142,56 @@ class IfContainer(HdlStatement):
                 for outp in stm._outputs:
                     out_add(outp)
 
-            # update sensitivity if already discovered
+            if self._sensitivity is not None or self._enclosed_for is not None:
+                raise NotImplementedError(
+                    "Sensitivity and enclosure has to be cleaned first")
 
             return n
 
-    def _discover_sensitivity_and_enclose(self, seen: set)->None:
+    def _discover_enclosure(self):
         """
-        Discover sensitivity of this statement
+        Doc on parent class :meth:`HdlStatement._discover_enclosure`
         """
-        ctx = self._sensitivity
-        if ctx:
-            ctx.clear()
+        outputs = self._outputs
+        self._ifTrue_enclosed_for = self._discover_enclosure_for_statements(
+            self.ifTrue, outputs)
 
-        self._discover_sensitivity_and_enclose_seq(self.cond, seen, ctx)
+        elif_encls = self._elIfs_enclosed_for = []
+        for _, stms in self.elIfs:
+            e = self._discover_enclosure_for_statements(
+                stms, outputs)
+            elif_encls.append(e)
+
+        self._ifFalse_enclosed_for = self._discover_enclosure_for_statements(
+            self.ifFalse, outputs)
+
+        assert self._enclosed_for is None
+        encl = self._enclosed_for = set()
+
+        for s in self._ifTrue_enclosed_for:
+            enclosed = True
+
+            for elif_e in elif_encls:
+                if s not in elif_e:
+                    enclosed = False
+                    break
+
+            if enclosed and s in self._ifFalse_enclosed_for:
+                encl.add(s)
+
+    def _discover_sensitivity(self, seen: set) -> None:
+        """
+        Doc on parent class :meth:`HdlStatement._discover_sensitivity`
+        """
+        assert self._sensitivity is None, self
+        ctx = self._sensitivity = SensitivityCtx()
+
+        self._discover_sensitivity_seq(self.cond, seen, ctx)
         if ctx.contains_ev_dependency:
             return
 
         for stm in self.ifTrue:
-            stm._discover_sensitivity_and_enclose(seen)
+            stm._discover_sensitivity(seen)
             ctx.extend(stm._sensitivity)
 
         # elifs
@@ -145,7 +199,7 @@ class IfContainer(HdlStatement):
             if ctx.contains_ev_dependency:
                 break
 
-            self._discover_sensitivity_and_enclose_seq(cond, seen, ctx)
+            self._discover_sensitivity_seq(cond, seen, ctx)
             if ctx.contains_ev_dependency:
                 break
 
@@ -153,21 +207,41 @@ class IfContainer(HdlStatement):
                 if ctx.contains_ev_dependency:
                     break
 
-                stm._discover_sensitivity_and_enclose(seen)
+                stm._discover_sensitivity(seen)
                 ctx.extend(stm._sensitivity)
 
         if not ctx.contains_ev_dependency and self.ifFalse:
             # else
             for stm in self.ifFalse:
-                stm._discover_sensitivity_and_enclose(seen)
+                stm._discover_sensitivity(seen)
                 ctx.extend(stm._sensitivity)
 
         else:
             assert not self.ifFalse, "can not negate event"
 
+    def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, Union[Value, RtlSignalBase]]) -> None:
+        enc = []
+        outputs = self._outputs
+        for e in enclosure.keys():
+            if e in outputs and e not in self._enclosed_for:
+                enc.append(e)
+
+        if not enc:
+            return
+        fill_stm_list_with_enclosure(self, self._ifTrue_enclosed_for,
+                                     self.ifTrue, enc, enclosure)
+
+        for (_, stms), e in zip(self.elIfs, self._elIfs_enclosed_for):
+            fill_stm_list_with_enclosure(self, e, stms, enc, enclosure)
+
+        self.ifFalse = fill_stm_list_with_enclosure(self, self._ifFalse_enclosed_for,
+                                                    self.ifFalse, enc, enclosure)
+
+        self._enclosed_for.update(enc)
+
     def _iter_stms(self):
         """
-        Get iterator over all statements inside this statement
+        Doc on parent class :meth:`HdlStatement._iter_stms`
         """
         yield from self.ifTrue
         for _, stms in self.elIfs:
@@ -177,20 +251,20 @@ class IfContainer(HdlStatement):
 
     def _try_reduce(self) -> Tuple[bool, List[HdlStatement]]:
         """
-        Try reduce useless branches of statement
-
-        :return: tuple (statements, io_update_required flag)
+        Doc on parent class :meth:`HdlStatement._try_reduce`
         """
         # flag if IO of statement has changed
         io_change = False
 
-        self.ifTrue, rank_decrease, _io_change = self._try_reduce_list(self.ifTrue)
+        self.ifTrue, rank_decrease, _io_change = self._try_reduce_list(
+            self.ifTrue)
         self.rank -= rank_decrease
         io_change |= _io_change
 
         new_elifs = []
         for cond, statements in self.elIfs:
-            _statements, rank_decrease, _io_change = self._try_reduce_list(statements)
+            _statements, rank_decrease, _io_change = self._try_reduce_list(
+                statements)
             self.rank -= rank_decrease
             io_change |= _io_change
             new_elifs.append((cond, _statements))
@@ -252,11 +326,16 @@ class IfContainer(HdlStatement):
         return True
 
     def _merge_with_other_stm(self, other: "IfContainer") -> None:
+        """
+        :attention: statements has to be mergable (to check use _is_mergable method)
+        """
         merge = self._merge_statement_lists
         self.ifTrue = merge(self.ifTrue, other.ifTrue)
 
-        for i, ((_, elifA), (_, elifB)) in enumerate(zip(self.elIfs, other.elIfs)):
-            self.elIfs[i][1] = merge(elifA, elifB)
+        new_elifs = []
+        for ((c, elifA), (_, elifB)) in zip(self.elIfs, other.elIfs):
+            new_elifs.append((c,  merge(elifA, elifB)))
+        self.elIfs = new_elifs
 
         self.ifFalse = merge(self.ifFalse, other.ifFalse)
 

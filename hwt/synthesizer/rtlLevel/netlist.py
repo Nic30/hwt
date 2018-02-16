@@ -12,7 +12,7 @@ from hwt.hdl.process import HWProcess
 from hwt.hdl.statements import HdlStatement, HwtSyntaxError
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import Value
-from hwt.pyUtils.arrayQuery import distinctBy
+from hwt.pyUtils.arrayQuery import distinctBy, where
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -23,19 +23,7 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
     NoDriverErr
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
-
-
-def inject_nop_values(statements: List[HdlStatement])\
-        -> Generator[Assignment, None, None]:
-    """
-    Generate initialization assignments with default values to assignments
-    """
-    for stm in statements:
-        for sig in stm._outputs:
-            # inject nopVal if needed
-            if sig._useNopVal and not stm._is_enclosed():
-                n = sig._nopVal
-                yield Assignment(n, sig)
+from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 
 
 def name_for_process_and_mark_outputs(statements: List[HdlStatement])\
@@ -63,6 +51,7 @@ def cut_off_drivers_of(dstSignal, statements):
     separated = []
     stm_filter = []
     for stm in statements:
+        stm._clean_signal_meta()
         d = stm._cut_off_drivers_of(dstSignal)
         if d is not None:
             separated.append(d)
@@ -85,12 +74,28 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
     outputs = UniqList()
     _inputs = UniqList()
     sensitivity = UniqList()
+    enclosed_for = set()
     for _stm in proc_statements:
         seen = set()
-        _stm._discover_sensitivity_and_enclose(seen)
+        _stm._discover_sensitivity(seen)
+        _stm._discover_enclosure()
         outputs.extend(_stm._outputs)
         _inputs.extend(_stm._inputs)
         sensitivity.extend(_stm._sensitivity)
+        enclosed_for.update(_stm._enclosed_for)
+
+    enclosure_values = {}
+    for sig in outputs:
+        # inject nopVal if needed
+        if sig._useNopVal:
+            n = sig._nopVal
+            enclosure_values[sig] = n
+
+    if enclosure_values:
+        do_enclose_for = list(where(outputs,
+                                    lambda o: o in enclosure_values))
+        fill_stm_list_with_enclosure(None, enclosed_for, proc_statements,
+                                     do_enclose_for, enclosure_values)
 
     if proc_statements:
         for o in outputs:
@@ -145,16 +150,7 @@ def statements_to_HWProcesses(statements)\
     processes = []
     while statements:
         stm = statements.pop()
-        _statements = [stm, ]
-        proc_statements = []
-        for nop_initialier in inject_nop_values(_statements):
-            proc_statements.append(nop_initialier)
-
-        if proc_statements:
-            proc_statements.extend(_statements)
-        else:
-            proc_statements = _statements
-
+        proc_statements = [stm, ]
         ps = _statements_to_HWProcesses(proc_statements, True)
         processes.extend(ps)
 

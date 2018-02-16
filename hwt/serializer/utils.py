@@ -1,5 +1,5 @@
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements import WaitStm
+from hwt.hdl.waitStm import WaitStm
 
 
 def getMaxStmIdForStm(stm):
