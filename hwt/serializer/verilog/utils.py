@@ -21,7 +21,7 @@ def verilogTypeOfSig(signalItem):
     else:
         if driver_cnt == 1:
             d = signalItem.drivers[0]
-            if not isinstance(d, Assignment):
+            if not isinstance(d, (Assignment, PortItem)):
                 return SIGNAL_TYPE.REG
 
         return SIGNAL_TYPE.WIRE
