@@ -105,7 +105,7 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
         for i in _inputs:
             inputs.extend(i._walk_public_drivers(seen))
 
-        intersect = outputs.intersection_set(inputs)
+        intersect = outputs.intersection_set(sensitivity)
         if intersect:
             if not tryToSolveCombLoops:
                 raise HwtSyntaxError(
