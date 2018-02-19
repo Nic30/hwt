@@ -8,6 +8,7 @@ from hwt.serializer.resourceAnalyzer.resourceTypes import Unconnected, \
     ResourceFF, ResourceMUX, ResourceFFwithMux, ResourceLatch, ResourceRAM, \
     ResourceROM, ResourceLatchWithMux, ResourceAsyncRAM, ResourceAsyncROM
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.hdl.statements import HdlStatement
 
 
 # tables for resolving of resource type updates
@@ -184,18 +185,27 @@ RamOrRomResources = {ResourceAsyncRAM,
                      ResourceROM}
 
 
-def findAssingmentOf(sig: RtlSignal) -> Assignment:
+def _findAssingmentsOf(statement: HdlStatement, sig: RtlSignal) -> Assignment:
+    for stm in statement._iter_stms():
+        if isinstance(stm, Assignment):
+            yield stm
+        elif sig in stm._inputs:
+            yield from _findAssingmentsOf()
+
+
+def findAssingmentsOf(sig: RtlSignal) -> Assignment:
     """
     Walk endpoints to neares assignment
     (undirect/direct driver of this signal)
     """
     for ep in sig.endpoints:
         if isinstance(ep, Assignment):
-            return ep
+            if ep.src is sig:
+                yield ep
         elif isinstance(ep, Operator):
-            return findAssingmentOf(ep.result)
-        else:
-            raise NotImplementedError()
+            yield from findAssingmentsOf(ep.result)
+        elif sig in ep._inputs:
+            yield from _findAssingmentsOf(ep, sig)
 
 
 class ResourceContext():
@@ -213,7 +223,6 @@ class ResourceContext():
         self.unit = unit
         self.seen = set()
         self.resources = {}
-        self.discoveredRamSignals = set()
 
     def registerOperator(self, op: Operator):
         w = op.operands[0]._dtype.bit_length()
@@ -281,17 +290,13 @@ class ResourceContext():
             else:
                 ports[3] += 1
         # collect read ports
-        for e in mem.endpoints:
-            if isinstance(e, Assignment):
-                assert len(e.indexes) == 1
-                index = e.indexes
-                isEventDependent = e._now_is_event_dependent
-            elif isinstance(e, Operator) and e.operator == AllOps.INDEX:
-                index = e.operands[1]
-                a = findAssingmentOf(e.result)
-                isEventDependent = a._now_is_event_dependent
-            else:
-                raise NotImplementedError(e)
+        for a in findAssingmentsOf(mem):
+            assert not a.indexes
+            assert mem is not a.src
+            i = a.src.singleDriver()
+            assert i.operator == AllOps.INDEX
+            index = i.operands[1:]
+            isEventDependent = a._is_completly_event_dependent
 
             try:
                 ports = addressSignals[index]
@@ -343,18 +348,18 @@ class ResourceContext():
         cnt = self.resources.get(m, 0)
         self.resources[m] = cnt + 1
 
-        # if has sync reads merge FFs into this resource
-        FFsInRam = (rwSyncPorts + rSyncPorts) * width
-        if FFsInRam:
-            ffs = self.resources[ResourceFF]
-            if ffs == FFsInRam:
-                del self.resources[ResourceFF]
-            elif ffs > FFsInRam:
-                self.resources[ResourceFF] = ffs - FFsInRam
-            else:
-                raise Exception(
-                    "Incompatible ram description (read port did not found FFs"
-                    " as expected)")
+        ## if has sync reads merge FFs into this resource
+        #FFsInRam = (rwSyncPorts + rSyncPorts) * width
+        #if FFsInRam:
+        #    ffs = self.resources[ResourceFF]
+        #    if ffs == FFsInRam:
+        #        del self.resources[ResourceFF]
+        #    elif ffs > FFsInRam:
+        #        self.resources[ResourceFF] = ffs - FFsInRam
+        #    else:
+        #        raise Exception(
+        #            "Incompatible ram description (read port did not found FFs"
+        #            " as expected)")
 
     def register(self, sig: RtlSignal, resourceGues):
         """
