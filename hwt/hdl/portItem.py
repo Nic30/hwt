@@ -84,3 +84,6 @@ class PortItem(SignalItem):
 
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
         yield from []
+
+    def __repr__(self):
+        return "<PortItem src:%r, dst:%r>" % (self.src, self.dst)
