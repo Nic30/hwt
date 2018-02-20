@@ -19,15 +19,7 @@ class ResourceFF():
     pass
 
 
-class ResourceFFwithMux():
-    pass
-
-
 class ResourceLatch():
-    pass
-
-
-class ResourceLatchWithMux():
     pass
 
 
