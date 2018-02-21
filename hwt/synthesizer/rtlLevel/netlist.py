@@ -229,22 +229,6 @@ class RtlNetlist():
 
         return s
 
-    def mergeWith(self, other):
-        """
-        Merge other instances into this instance
-
-        :attention: "others" becomes invalid because all signals etc.
-            will be transferred into this
-        """
-        assert not other.synthesised
-        self.params.update(other.params)
-        self.signals.update(other.signals)
-        self.statements.update(other.statements)
-        self.subUnits.update(other.subUnits)
-
-        for s in other.signals:
-            s.ctx = self
-
     def synthesize(self, name, interfaces):
         """
         Build Entity and Architecture instance out of netlist representation

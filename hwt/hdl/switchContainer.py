@@ -2,14 +2,14 @@ from functools import reduce
 from operator import and_
 from typing import List, Tuple, Dict
 
+from hwt.hdl.sensitivityCtx import SensitivityCtx
+from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 from hwt.hdl.statements import HdlStatement, isSameHVal, isSameStatementList,\
     statementsAreSame, HwtSyntaxError
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import Value
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
-from hwt.hdl.sensitivityCtx import SensitivityCtx
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class SwitchContainer(HdlStatement):
@@ -50,6 +50,9 @@ class SwitchContainer(HdlStatement):
         self._case_enclosed_for = None
         self._default_enclosed_for = None
         HdlStatement._clean_signal_meta(self)
+
+    def _collect_io(self):
+        raise NotImplementedError()
 
     def _discover_enclosure(self) -> None:
         assert self._enclosed_for is None

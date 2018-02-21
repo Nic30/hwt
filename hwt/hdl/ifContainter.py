@@ -5,13 +5,13 @@ from itertools import compress
 from operator import and_
 from typing import List, Tuple, Dict, Union
 
+from hwt.hdl.sensitivityCtx import SensitivityCtx
+from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 from hwt.hdl.statements import HdlStatement, statementsAreSame,\
     isSameStatementList, seqEvalCond
+from hwt.hdl.value import Value
 from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.value import Value
-from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
-from hwt.hdl.sensitivityCtx import SensitivityCtx
 
 
 class IfContainer(HdlStatement):
@@ -54,6 +54,9 @@ class IfContainer(HdlStatement):
         self._ifTrue_enclosed_for = None
         self._elIfs_enclosed_for = None
         self._ifFalse_enclosed_for = None
+
+    def _collect_io(self):
+        raise NotImplementedError()
 
     def _clean_signal_meta(self):
         self._sensitivity = None
