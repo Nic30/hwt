@@ -2,9 +2,6 @@ from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
 from hwt.hdl.process import HWProcess
 from hwt.serializer.generic.serializer import GenericSerializer
-from hwt.serializer.resourceAnalyzer.resourceTypes import Unconnected, \
-    ResourceMUX, ResourceLatch, ResourceRAM,\
-    ResourceAsyncRAM, ResourceFF
 from hwt.serializer.resourceAnalyzer.utils import ResourceContext
 from hwt.hdl.types.array import HArray
 from hwt.hdl.statements import HdlStatement
@@ -13,6 +10,7 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.hdl.operator import Operator, isConst
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.value import Value
+from hwt.synthesizer.rtlLevel.netlist import walk_assignments
 
 
 def _count_mux_inputs_for_outputs(stm: HdlStatement, cnt):
@@ -51,12 +49,13 @@ class ResourceAnalyzer(GenericSerializer):
         self.context = ResourceContext(None)
 
     @classmethod
-    def HWProcess_operators(cls, sig: RtlSignal, ctx: ResourceContext):
+    def HWProcess_operators(cls, sig: RtlSignal, ctx: ResourceContext, synchronous):
         seen = ctx.seen
         for d in sig.drivers:
             if (not isinstance(d, Operator)
                     or d in seen):
                 continue
+
             skip_op = d.operator in IGNORED_OPERATORS
             if not skip_op:
                 if d.operator == AllOps.EQ:
@@ -68,11 +67,16 @@ class ResourceAnalyzer(GenericSerializer):
                         skip_op = True
                 elif d.operator == AllOps.INDEX:
                     o1 = d.operands[1]
+                    skip_op = True
                     if isConst(o1):
                         # constant signal silice
-                        skip_op = True
+                        pass
                     else:
-                        raise NotImplementedError("Mux or ram port")
+                        o0 = d.operands[0]
+                        if isinstance(o0._dtype, HArray):
+                            ctx.registerRAM_read_port(o0, o1, synchronous)
+                        else:
+                            ctx.registerMUX(d, sig, 2)
                 elif d.operator == AllOps.TERNARY:
                     o1 = d.operands[1]
                     o2 = d.operands[2]
@@ -93,7 +97,7 @@ class ResourceAnalyzer(GenericSerializer):
                         or not op.hidden
                         or op in seen):
                     continue
-                cls.HWProcess_operators(op, ctx)
+                cls.HWProcess_operators(op, ctx, synchronous)
 
     @classmethod
     def HWProcess(cls, proc: HWProcess, ctx: ResourceContext) -> None:
@@ -114,13 +118,11 @@ class ResourceAnalyzer(GenericSerializer):
 
                 i = out_mux_dim[o]
                 if isinstance(o._dtype, HArray):
-                    # write port
-                    raise NotImplementedError("Ram write port")
-
-                    if ev_dep:
-                        res = ResourceRAM()
-                    else:
-                        res = ResourceAsyncRAM()
+                    assert i == 1, "only one ram port per HWProcess"
+                    for a in walk_assignments(stm, o):
+                        assert len(a.indexes) == 1, "one address per RAM port"
+                        addr = a.indexes[0]
+                    ctx.registerRAM_write_port(o, addr, ev_dep)
                 elif ev_dep:
                     ctx.registerFF(o)
                     if i > 1:
@@ -141,7 +143,7 @@ class ResourceAnalyzer(GenericSerializer):
                 if not i.hidden or i in seen:
                     continue
 
-                cls.HWProcess_operators(i, ctx)
+                cls.HWProcess_operators(i, ctx, ev_dep)
 
     @classmethod
     def Entity(cls, ent: Entity, ctx: ResourceContext) -> None:

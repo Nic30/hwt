@@ -5,10 +5,6 @@ class ResourceError(Exception):
     """
 
 
-class Unconnected():
-    pass
-
-
 class ResourceMUX():
     def __init__(self, bitWidth, inputs):
         self.bitWidth = bitWidth
@@ -20,14 +16,6 @@ class ResourceFF():
 
 
 class ResourceLatch():
-    pass
-
-
-class ResourceAsyncRAM():
-    pass
-
-
-class ResourceAsyncROM():
     pass
 
 
@@ -74,7 +62,3 @@ class ResourceRAM():
             self.rwSyncPorts, self.rSyncPorts, self.wSyncPorts,
             self.rwAsyncPorts, self.rAsyncPorts, self.wAsyncPorts
         )
-
-
-class ResourceROM():
-    pass
