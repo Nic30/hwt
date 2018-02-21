@@ -9,7 +9,8 @@ from hwt.hdl.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
+    NoDriverErr
 
 
 def boolLogOp__val(self, other, op, getVldFn):
@@ -113,7 +114,7 @@ class HBoolVal(Value):
                 d = self.singleDriver()
                 if isinstance(d, Operator) and d.operator == AllOps.NOT:
                     return d.operands[0]
-            except MultipleDriversExc:
+            except (MultipleDriversErr, NoDriverErr):
                 pass
             return Operator.withRes(AllOps.NOT, [self], BOOL)
 

@@ -5,21 +5,14 @@
 if ifTrue|length > 0 %}{% 
     for stm in ifTrue %}
 {{stm}}{% 
-    endfor %}{% 
-else %}
-{{indent}}    #enclosure
-{{enclosure}}{%
-endif %}
+    endfor %}{%
+endif %}{% 
+if ifFalse|length > 0 %}
 {{indent}}#else:
-{{indent}}if not c_{{indentNum}} or not cVld_{{ indentNum }}:{% 
-if ifFalse|length > 0 %}{%
+{{indent}}if not c_{{indentNum}} or not cVld_{{ indentNum }}:{%
     for stm in ifFalse %}
 {{stm}}{%
-    endfor%}{% 
-else %}
-{{indent}}    #enclosure
-{{enclosure}}
-{% endif %}
+    endfor%}{% endif %}
 {#
 """ This template constructs if-else trees like this """ 
 if cond:

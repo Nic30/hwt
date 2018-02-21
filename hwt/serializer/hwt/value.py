@@ -1,6 +1,7 @@
 from hwt.hdl.variables import SignalItem
-from hwt.serializer.generic.value import GenericSerializer_Value
+from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.serializer.generic.indent import getIndent
+from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.synthesizer.param import Param, evalParam
 
 
@@ -67,5 +68,5 @@ class HwtSerializer_value(GenericSerializer_Value):
 
     @classmethod
     def condAsHdl(cls, cond, ctx):
-        cond = list(cond)
+        assert isinstance(cond, AndReducedList), cond
         return "%s" % (",".join(map(lambda x: cls.asHdl(x, ctx), cond)))

@@ -3,12 +3,11 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.sliceUtils import slice_to_SLICE
 from hwt.hdl.types.typeCast import toHVal
-from hwt.hdl.value import Value
 from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from typing import List
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
+    NoDriverErr
 
 
 def tv(signal):
@@ -31,18 +30,57 @@ class RtlSignalOps():
     def _reinterpret_cast(self, toT):
         return self._dtype.reinterpret_cast(self, toT)
 
-    def naryOp(self, operator, opCreateDelegate, *otherOps):
+    def naryOp(self, operator, opCreateDelegate, *otherOps) -> RtlSignalBase:
         """
         Try lookup operator with this parameters in _usedOps
         if not found create new one and soter it in _usedOps
+
+        :param operator: instance of OpDefinition
+        :param opCreateDelegate: function (*ops) to create operator
+        :param otherOps: other operands (ops = self + otherOps)
+
+        :return: RtlSignal which is result of newly created operator
         """
         k = (operator, *otherOps)
+        used = self._usedOps
         try:
-            return self._usedOps[k]
+            return used[k]
         except KeyError:
             pass
+
         o = opCreateDelegate(self, *otherOps)
-        self._usedOps[k] = o
+
+        # input operads may be type converted,
+        # search if this happend, and return always same result signal
+        try:
+            op_instanciated = (o.origin.operator == operator
+                               and o.origin.operands[0] == self)
+        except AttributeError:
+            op_instanciated = False
+
+        if op_instanciated:
+            k_real = (operator, *o.origin.operands[1:])
+            real_o = used.get(k_real, None)
+            if real_o is not None:
+                # destroy newly created operator and result, because it is same
+                # as
+                ctx = self.ctx
+                if ctx is not None:
+                    ctx.signals.remove(o)
+
+                op = o.origin
+                o.origin = None
+                o.drivers.clear()
+                for inp in op.operands:
+                    if isinstance(inp, RtlSignalBase):
+                        inp.endpoints.remove(op)
+
+                o = real_o
+            else:
+                used[k_real] = o
+
+        used[k] = o
+
         return o
 
     def __invert__(self):
@@ -82,7 +120,9 @@ class RtlSignalOps():
 
     # cmp
     def _eq(self, other):
-        """__eq__ is not overloaded because it will destroy hashability of object"""
+        """
+        __eq__ is not overloaded because it will destroy hashability of object
+        """
         return self.naryOp(AllOps.EQ, tv(self)._eq, other)
 
     def __ne__(self, other):
@@ -159,10 +199,10 @@ class RtlSignalOps():
                     raise Exception(
                         "can not drive static value %r" % indexedOn)
 
-        except MultipleDriversExc:
+        except (MultipleDriversErr, NoDriverErr):
             pass
 
-    def __call__(self, source) -> List[Assignment]:
+    def __call__(self, source) -> Assignment:
         """
         Create assignment to this signal
 
@@ -196,13 +236,7 @@ class RtlSignalOps():
             indexCascade = None
 
         # self = self._tryMyIndexToEndpoint()
-        a = Assignment(source, self, indexCascade)
-
-        self.drivers.append(a)
-        if not isinstance(source, Value):
-            source.endpoints.append(a)
-
-        return [a]
+        return Assignment(source, self, indexCascade)
 
     def __int__(self):
         if not self._const:

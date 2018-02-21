@@ -11,6 +11,8 @@ class HWProcess(HdlObject):
         are describing when should this process be revevaluated
     :ivar inputs: all input signals for this process
     :ivar outputs: all output signals for this process
+    :ivar count of branches in statements, used as hint for process complexity
+
     :note: HWProcess do not have to be process in target HDL, for example
         simple process which contains only unconditional assignment will
         be rendered just as assignment
@@ -22,3 +24,4 @@ class HWProcess(HdlObject):
         self.sensitivityList = sensitivityList
         self.inputs = inputs
         self.outputs = outputs
+        self.rank = sum(map(lambda s: s.rank, statements))

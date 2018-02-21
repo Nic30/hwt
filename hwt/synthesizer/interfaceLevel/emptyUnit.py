@@ -33,11 +33,11 @@ class EmptyUnit(Unit):
 
         self._loadMyImplementations()
         # construct params for entity (generics)
-        self._cntx.params = self._buildParams()
+        self._ctx.params = self._buildParams()
         externInterf = []
         # prepare connections
         for i in self._interfaces:
-            signals = i._signalsForInterface(self._cntx)
+            signals = i._signalsForInterface(self._ctx)
             if not i._isExtern:
                 raise IntfLvlConfErr(
                     "All interfaces in EmptyUnit has to be extern, %s: %s is not"

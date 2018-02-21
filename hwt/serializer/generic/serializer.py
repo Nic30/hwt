@@ -11,8 +11,8 @@ from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import NameScope
-from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.unit import Unit
 
 
 class GenericSerializer():
@@ -74,7 +74,7 @@ class GenericSerializer():
 
         for p in ent.ports:
             p.name = scope.checkedName(p.name, p)
-            p.getSigInside().name = p.name
+            p.getInternSig().name = p.name
             if serialize:
                 serializedPorts.append(cls.PortItem(p, ctx))
 
@@ -145,6 +145,10 @@ class GenericSerializer():
         return sFn(typ, ctx, declaration=declaration)
 
     @classmethod
+    def If(cls, *args, **kwargs):
+        return cls.IfContainer(*args, **kwargs)
+
+    @classmethod
     def IfContainer(cls, ifc, ctx):
         """
         Srialize IfContainer instance
@@ -168,6 +172,9 @@ class GenericSerializer():
         elIfs = []
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
+        if ifFalse is None:
+            ifFalse = []
+
         for c, statements in ifc.elIfs:
             try:
                 elIfs.append((cls.condAsHdl(c, True, ctx), asHdl(statements)))
@@ -185,6 +192,14 @@ class GenericSerializer():
             ifTrue=asHdl(ifTrue),
             elIfs=elIfs,
             ifFalse=asHdl(ifFalse))
+
+    @classmethod
+    def Switch(cls, *args, **kwargs):
+        return cls.SwitchContainer(*args, **kwargs)
+
+    @classmethod
+    def FsmBuilder(cls, *args, **kwargs):
+        return cls.SwitchContainer(*args, **kwargs)
 
     @classmethod
     def SwitchContainer(cls, sw, ctx):

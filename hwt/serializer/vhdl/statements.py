@@ -1,19 +1,23 @@
 from copy import copy
 
 from hwt.hdl.assignment import Assignment
+from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.statements import IfContainer, SwitchContainer, \
-    WhileContainer, WaitStm
+from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
+from hwt.hdl.waitStm import WaitStm
+from hwt.hdl.whileContainer import WhileContainer
+from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
-from hwt.hdl.types.bits import Bits
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
+    NoDriverErr
 
 
 class DoesNotContainsTernary(Exception):
@@ -34,16 +38,21 @@ def ternaryOpsToIf(statements):
                     raise DoesNotContainsTernary()
                 else:
                     ops = d.operands
-                    ifc = IfContainer(ops[0],
+                    ifc = IfContainer(AndReducedList([ops[0], ]),
                                       [Assignment(ops[1], st.dst)],
                                       [Assignment(ops[2], st.dst)]
                                       )
                     stms.append(ifc)
+                    continue
 
-            except (MultipleDriversExc, DoesNotContainsTernary):
-                stms.append(st)
-        else:
-            stms.append(st)
+            except (MultipleDriversErr, DoesNotContainsTernary):
+                pass
+            except NoDriverErr:
+                assert (hasattr(st.src, "_interface")
+                        and st.src._interface is not None)\
+                    or st.src.defaultVal.vldMask, st.src
+
+        stms.append(st)
     return stms
 
 
@@ -167,12 +176,15 @@ class VhdlSerializer_statements():
 
         cond = cls.condAsHdl(ifc.cond, True, childCtx)
         elIfs = []
-        if cls.VHDL_VER < VhdlVersion.v2008:
-            ifTrue = ternaryOpsToIf(ifc.ifTrue)
-            ifFalse = ternaryOpsToIf(ifc.ifFalse)
-        else:
-            ifTrue = ifc.ifTrue
+        if ifc.ifFalse is not None:
             ifFalse = ifc.ifFalse
+        else:
+            ifFalse = []
+        ifTrue = ifc.ifTrue
+
+        if cls.VHDL_VER < VhdlVersion.v2008:
+            ifTrue = ternaryOpsToIf(ifTrue)
+            ifFalse = ternaryOpsToIf(ifFalse)
 
         for c, statements in ifc.elIfs:
             if cls.VHDL_VER < VhdlVersion.v2008:

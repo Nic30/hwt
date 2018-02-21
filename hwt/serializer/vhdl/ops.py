@@ -3,13 +3,12 @@ from hwt.hdl.operatorDefs import AllOps
 
 
 def isResultOfTypeConversion(sig):
-    try:
-        sig.drivers[0]
-    except IndexError:
+    if not sig.drivers:
         return False
 
     if sig.hidden:
         return True
+
     return False
 
 

@@ -5,37 +5,21 @@ class ResourceError(Exception):
     """
 
 
-class Unconnected():
-    pass
-
-
 class ResourceMUX():
     def __init__(self, bitWidth, inputs):
         self.bitWidth = bitWidth
         self.inputs = inputs
+
+    def __repr__(self):
+        return "<ResourceMUX %d bits, %d inputs>" % (
+            self.bitWidth, self.inputs)
 
 
 class ResourceFF():
     pass
 
 
-class ResourceFFwithMux():
-    pass
-
-
 class ResourceLatch():
-    pass
-
-
-class ResourceLatchWithMux():
-    pass
-
-
-class ResourceAsyncRAM():
-    pass
-
-
-class ResourceAsyncROM():
     pass
 
 
@@ -45,44 +29,59 @@ class ResourceRAM():
     """
 
     def __init__(self, width, items,
-                 rwSyncPorts, rSyncPorts, wSyncPorts,
-                 rwAsyncPorts, rAsyncPorts, wAsyncPorts):
+                 rwSync: int, rSync: int, wSync: int, rSync_wAsync: int,
+                 rwAsync: int, rAsync: int, wAsync: int, rAsync_wSync: int):
+        """
+        :param width: widtho of word in RAM/ROM
+        :param items: number of words in RAM/ROM
+        :param rwSync: count of read + write sychronous ports
+        :param rSync: count of read only sychronous ports
+        :param wSync: count of write only sychronous ports
+        :param rSync_wAsync: count of synchronous read + asynchronous write ports
+        :param rwAsync: count of read + write asychronous ports
+        :param rAsync: count of read only asychronous ports
+        :param wAsync: count of write only asychronous ports
+        :param rAsync_wSync: count of asynchronous read + synchronous write ports
+        """
         self.width = width
         self.items = items
-        self.rwSyncPorts = rwSyncPorts
-        self.rSyncPorts = rSyncPorts
-        self.wSyncPorts = wSyncPorts
-        self.rwAsyncPorts = rwAsyncPorts
-        self.rAsyncPorts = rAsyncPorts
-        self.wAsyncPorts = wAsyncPorts
+        self.rwSync = rwSync
+        self.rSync = rSync
+        self.wSync = wSync
+        self.rSync_wAsync = rSync_wAsync
+        self.rwAsync = rwAsync
+        self.rAsync = rAsync
+        self.wAsync = wAsync
+        self.rAsync_wSync = rAsync_wSync
 
     def __hash__(self):
-        return hash((self.width, self.items,
-                     self.rwSyncPorts, self.rSyncPorts,
-                     self.wSyncPorts,
-                     self.rwAsyncPorts, self.rAsyncPorts,
-                     self.wAsyncPorts))
+        return hash((
+            self.width, self.items,
+            self.rwSync, self.rSync, self.wSync,
+            self.rSync_wAsync,
+            self.rwAsync, self.rAsync, self.wAsync,
+            self.rAsync_wSync))
 
     def __eq__(self, other):
-        return (
+        return isinstance(other, ResourceRAM) and (
             self.width == other.width and
             self.items == other.items and
-            self.rwSyncPorts == other.rwSyncPorts and
-            self.rSyncPorts == other.rSyncPorts and
-            self.wSyncPorts == other.wSyncPorts and
-            self.rwAsyncPorts == other.rwAsyncPorts and
-            self.rAsyncPorts == other.rAsyncPorts and
-            self.wAsyncPorts == other.wAsyncPorts
+            self.rwSync == other.rwSync and
+            self.rSync == other.rSync and
+            self.wSync == other.wSync and
+            self.rSync_wAsync == other.rSync_wAsync and
+            self.rwAsync == other.rwAsync and
+            self.rAsync == other.rAsync and
+            self.wAsync == other.wAsync and
+            self.rAsync_wSync == other.rAsync_wSync
         )
 
     def __repr__(self):
-        return ("<%s, %dbx%d, syncPorts: (rw:%d, r:%d, w:%d), asyncPorts:"
-                " (rw:%d, r:%d, w:%d)>") % (
+        return ("<%s, %dbit x %d, syncPorts: (rw:%d, r:%d, w:%d), asyncPorts:"
+                " (rw:%d, r:%d, w:%d), rSync_wAsyncPorts: %d,"
+                " rAsync_wSyncPorts: %d>") % (
             self.__class__.__name__, self.width, self.items,
-            self.rwSyncPorts, self.rSyncPorts, self.wSyncPorts,
-            self.rwAsyncPorts, self.rAsyncPorts, self.wAsyncPorts
+            self.rwSync, self.rSync, self.wSync,
+            self.rwAsync, self.rAsync, self.wAsync,
+            self.rSync_wAsync, self.rAsync_wSync
         )
-
-
-class ResourceROM():
-    pass

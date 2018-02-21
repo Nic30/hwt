@@ -52,10 +52,14 @@ class VhdlSerializer_Value(GenericSerializer_Value):
             s = "%s%s %s: %s" % (getIndent(ctx.indent),
                                  prefix, si.name, cls.HdlType(si._dtype, ctx))
             if isinstance(v, RtlSignalBase):
-                return s + " := %s" % cls.asHdl(v, ctx)
+                if v._const:
+                    return s + " := %s" % cls.asHdl(v, ctx)
+                else:
+                    # default value has to be set by reset because it is only signal
+                    return s
             elif isinstance(v, Value):
                 if si.defaultVal.vldMask:
-                    return s + " := %s" % cls.Value(si.defaultVal, ctx)
+                    return s + " := %s" % cls.Value(v, ctx)
                 else:
                     return s
             else:
@@ -69,7 +73,10 @@ class VhdlSerializer_Value(GenericSerializer_Value):
 
     @classmethod
     def HEnumValAsHdl(cls, dtype, val, ctx):
-        return '%s' % str(val.val)
+        try:
+            return getattr(dtype, val.val).val
+        except AttributeError:
+            return str(val.val)
 
     @classmethod
     def HArrayValAsHdl(cls, dtype, val, ctx):

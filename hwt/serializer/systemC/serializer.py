@@ -42,8 +42,8 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type,
     def PortItem(cls, p, ctx):
         d = cls.DIRECTION(p.direction)
         p.name = ctx.scope.checkedName(p.name, p)
-        p.getSigInside().name = p.name
-        if isinstance(p.getSigInside()._interface, Clk):
+        p.getInternSig().name = p.name
+        if isinstance(p.getInternSig()._interface, Clk):
             return "sc_%s_clk %s;" % (d, p.name)
 
         return "sc_%s<%s> %s;" % (d,

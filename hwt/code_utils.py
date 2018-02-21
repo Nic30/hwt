@@ -1,0 +1,58 @@
+from hwt.hdl.types.typeCast import toHVal
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.vectorUtils import fitTo
+
+
+def _intfToSig(obj):
+    if isinstance(obj, InterfaceBase):
+        return obj._sig
+    else:
+        return obj
+
+
+def _connect(src, dst, exclude, fit):
+    if isinstance(src, InterfaceBase):
+        if isinstance(dst, InterfaceBase):
+            return dst._connectTo(src, exclude=exclude, fit=fit)
+        src = src._sig
+
+    assert not exclude, "this intf. is just a signal"
+    if src is None:
+        src = dst._dtype.fromPy(None)
+    else:
+        src = toHVal(src)
+
+    if fit:
+        src = fitTo(src, dst)
+
+    src = src._auto_cast(dst._dtype)
+
+    return dst(src)
+
+
+def _mkOp(fn):
+    """
+    Function to create variadic operator function
+
+    :param fn: function to perform binary operation
+    """
+    def op(*operands, key=None) -> RtlSignalBase:
+        """
+        :param operands: variadic parameter of input uperands
+        :param key: optional function applied on every operand
+            before processing
+        """
+        assert operands, operands
+        top = None
+        if key is not None:
+            operands = map(key, operands)
+
+        for s in operands:
+            if top is None:
+                top = s
+            else:
+                top = fn(top, s)
+        return top
+
+    return op

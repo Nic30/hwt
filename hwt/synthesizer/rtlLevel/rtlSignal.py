@@ -1,11 +1,16 @@
+from typing import Generator, Union
+
+from hwt.hdl.sensitivityCtx import SensitivityCtx
+from hwt.hdl.statements import HdlStatement
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import Value
 from hwt.hdl.variables import SignalItem
+from hwt.pyUtils.uniqList import UniqList
 from hwt.simulator.exceptions import SimException
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversExc
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
+    NoDriverErr
 from hwt.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
-from hwt.synthesizer.uniqList import UniqList
 
 
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
@@ -86,18 +91,57 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                 self._val = self.defaultVal._val.staticEval()
             else:
                 if self._val.updateTime < 0:
+                    # _val is invalid initialization value
                     self._val = self.defaultVal.clone()
 
         if not isinstance(self._val, Value):
             raise SimException(
                 "Evaluation of signal returned not supported object (%r)"
                 % (self._val, ))
+
         return self._val
 
     def singleDriver(self):
         """
         Returns a first driver if signal has only one driver.
         """
-        if len(self.drivers) != 1:
-            raise MultipleDriversExc()
-        return list(self.drivers)[0]
+        # [TODO] no driver exception
+        drv_cnt = len(self.drivers)
+        if not drv_cnt:
+            raise NoDriverErr(self)
+        elif drv_cnt != 1:
+            raise MultipleDriversErr(self)
+
+        return self.drivers[0]
+
+    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx)\
+            -> Generator[Union["RtlSignal", "Operator"], None, None]:
+        seen.add(self)
+
+        if self._const:
+            return
+
+        if not self.hidden:
+            casualSensitivity.add(self)
+            return
+
+        try:
+            op = self.singleDriver()
+        except (MultipleDriversErr, NoDriverErr):
+            op = None
+
+        if op is None or isinstance(op, HdlStatement):
+            casualSensitivity.add(self)
+            return
+
+        op._walk_sensitivity(casualSensitivity, seen, ctx)
+
+    def _walk_public_drivers(self, seen: set) -> Generator["RtlSignal", None, None]:
+        seen.add(self)
+        if not self.hidden:
+            yield self
+            return
+
+        assert self.drivers, self
+        for d in self.drivers:
+            yield from d._walk_public_drivers(seen)

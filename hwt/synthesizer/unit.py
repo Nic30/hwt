@@ -26,13 +26,13 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     _serializeDecision = None
     _PROTECTED_NAMES = set(["_PROTECTED_NAMES", "_interfaces",
                             "_units", "_params", "_parent",
-                            "_lazyLoaded", "_cntx",
+                            "_lazyLoaded", "_ctx",
                             "_externInterf", "_targetPlatform"])
 
     def __init__(self):
         self._parent = None
         self._lazyLoaded = []
-        self._cntx = RtlNetlist(self)
+        self._ctx = RtlNetlist(self)
 
         self._loadConfig()
 
@@ -46,7 +46,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._targetPlatform = targetPlatform
         if not hasattr(self, "_name"):
             self._name = self._getDefaultName()
-        self._cntx.params = self._buildParams()
+        self._ctx.params = self._buildParams()
         self._externInterf = []
 
         # prepare subunits
@@ -55,11 +55,11 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         for u in self._units:
             subUnitName = u._name
-            u._signalsForMyEntity(self._cntx, "sig_" + subUnitName)
+            u._signalsForMyEntity(self._ctx, "sig_" + subUnitName)
 
         # prepare signals for interfaces
         for i in self._interfaces:
-            signals = i._signalsForInterface(self._cntx)
+            signals = i._signalsForInterface(self._ctx)
             if i._isExtern:
                 self._externInterf.extend(signals)
 
@@ -78,11 +78,11 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             intf._setDirLock(True)
 
     def _wasSynthetised(self):
-        return self._cntx.synthesised
+        return self._ctx.synthesised
 
     def _synthetiseContext(self, externInterf):
         # synthesize signal level context
-        s = self._cntx.synthesize(self._name, externInterf)
+        s = self._ctx.synthesize(self._name, externInterf)
         self._entity = s[0]
         self._entity.__doc__ = self.__doc__
         self._entity.origin = self
@@ -134,7 +134,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         self._registerInterface(iName, intf)
         self._loadInterface(intf, False)
-        intf._signalsForInterface(self._cntx)
+        intf._signalsForInterface(self._ctx)
 
     def _buildParams(self):
         # construct params for entity (generics)

@@ -69,7 +69,7 @@ class UnitImplHelpers(object):
 
             return container
 
-        return self._cntx.sig(name,
+        return self._ctx.sig(name,
                               dtype=dtype,
                               clk=clk._sig,
                               syncRst=rst,
@@ -90,7 +90,7 @@ class UnitImplHelpers(object):
 
             return container
 
-        return self._cntx.sig(name, dtype=dtype, defVal=defVal)
+        return self._ctx.sig(name, dtype=dtype, defVal=defVal)
 
     def _cleanAsSubunit(self):
         """Disconnect internal signals so unit can be reused by parent unit"""

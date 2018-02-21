@@ -1,12 +1,12 @@
 
-class AndReducedContainer(list):
+class AndReducedList(list):
     """
     Container of and terms usually used as container for condition
     """
 
-    def __init__(self):
-        super(AndReducedContainer, self).__init__()
-        self.__s = set()
+    def __init__(self, *args, **kwargs):
+        super(AndReducedList, self).__init__(*args, **kwargs)
+        self.__s = set(*args, **kwargs)
 
     def add(self, item):
         if item in self.__s:
@@ -17,7 +17,7 @@ class AndReducedContainer(list):
             return True
 
     def update(self, other):
-        assert isinstance(other, AndReducedContainer)
+        assert isinstance(other, AndReducedList)
         for i in other:
             self.add(i)
 

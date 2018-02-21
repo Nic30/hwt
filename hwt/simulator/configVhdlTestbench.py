@@ -5,18 +5,18 @@ from hwt.hdl.architecture import Architecture
 from hwt.hdl.constants import INTF_DIRECTION
 from hwt.hdl.entity import Entity
 from hwt.hdl.process import HWProcess
-from hwt.hdl.statements import WaitStm
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bool import HBool
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.enum import HEnum
+from hwt.hdl.waitStm import WaitStm
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.simulator.hdlSimConfig import HdlSimConfig
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import \
     walkPhysInterfaces
-from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.unit import Unit
 
 
 def makeTestbenchTemplate(unit: Unit, name: str=None):

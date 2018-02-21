@@ -30,6 +30,12 @@ class HEnum(HdlType):
     def bit_length(self):
         return len(self._allValues).bit_length()
 
+    def domain_size(self):
+        """
+        :return: how many values can have specified type
+        """
+        return int(2 ** self.bit_length())
+
     @classmethod
     def getValueCls(cls):
         try:

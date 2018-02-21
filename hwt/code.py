@@ -1,36 +1,31 @@
 import math
 from operator import and_, or_, xor, add
 
+from hwt.code_utils import _mkOp, _connect, _intfToSig
+from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
+from hwt.hdl.statements import HwtSyntaxError
+from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.typeShortcuts import hInt, vec
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
-from hwt.pyUtils.arrayQuery import arr_any, flatten
-from hwt.synthesizer.andReducedContainer import AndReducedContainer
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.hdl.value import Value
+from hwt.pyUtils.andReducedList import AndReducedList
+from hwt.pyUtils.arrayQuery import arr_any
+from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
-from hwt.synthesizer.vectorUtils import fitTo
 
 
-def _intfToSig(obj):
-    if isinstance(obj, InterfaceBase):
-        return obj._sig
-    else:
-        return obj
-
-
-class StmCntx(list):
-    "Base class of statement contexts"
-
-
-class If(StmCntx):
+class If(IfContainer):
     """
     If statement generator
 
-    :ivar nowIsEventDependent: flag if current scope of if is event dependent
+    :ivar _is_completly_event_dependent: flag wihich tells if all statement
+        in this statements are event dependent
+    :ivar _now_is_event_dependent: flag if current scope of if is event dependent
         (is used to mark statements as event dependent)
     """
 
@@ -40,104 +35,117 @@ class If(StmCntx):
         :param statements: list of statements which should be active
             if condition is met
         """
-        self.cond = _intfToSig(cond)
-        assert isinstance(self.cond, RtlSignalBase)
+        cond_sig = _intfToSig(cond)
+        if not isinstance(cond_sig, RtlSignalBase):
+            raise IntfLvlConfErr("Condition is not signal, it is not certain"
+                                 " if this an error or desire ", cond_sig)
 
-        self.nowIsEventDependent = arr_any(discoverEventDependency(cond),
-                                           lambda x: True)
-        self.elifConds = []
+        cond = AndReducedList([cond_sig, ])
+        super(If, self).__init__(cond)
+        self.rank = 1
+        self._inputs.append(cond_sig)
+        cond_sig.endpoints.append(self)
 
-        c = AndReducedContainer()
-        c.add(self.cond)
-        self._appendStatements(c, statements)
+        ev_dep = arr_any(discoverEventDependency(cond_sig), lambda x: True)
+        self._is_completly_event_dependent = ev_dep
+        self._now_is_event_dependent = ev_dep
 
-    def Else(self, *statements):
-        ncond = AndReducedContainer()
-
-        for ec in reversed(self.elifConds):
-            ncond.add(~ec)
-        ncond.add(~self.cond)
-
-        self._appendStatements(ncond, statements)
-
-        # convert self to StmCntx to prevent any other else/elif
-        stml = StmCntx()
-        stml.extend(self)
-        return stml
-
-    def _appendStatements(self, condSet, statements):
-        """
-        Append statements to this container under conditions specified
-        by condSet
-        """
-        for stm in flatten(statements):
-            stm.isEventDependent = (stm.isEventDependent
-                                    or self.nowIsEventDependent)
-            for c in condSet:
-                c.endpoints.append(stm)
-            stm.cond.update(condSet)
-            self.append(stm)
+        self._register_stements(statements, self.ifTrue)
+        self._get_rtl_context().statements.add(self)
 
     def Elif(self, cond, *statements):
-        cond = _intfToSig(cond)
-        self.nowIsEventDependent = (self.nowIsEventDependent or
-                                    arr_any(discoverEventDependency(cond),
-                                            lambda x: True))
-        thisCond = AndReducedContainer()
-        thisCond.add(cond)
-        for c in reversed(self.elifConds):
-            thisCond.add(~c)
+        assert self.parentStm is None
+        self.rank += 1
+        cond_sig = _intfToSig(cond)
 
-        thisCond.add(~self.cond)
-        self._appendStatements(thisCond, statements)
-        self.elifConds.append(cond)
+        self._now_is_event_dependent = arr_any(
+            discoverEventDependency(cond_sig), lambda x: True)
+
+        thisCond = AndReducedList([cond_sig, ])
+        cond_sig.endpoints.append(self)
+
+        case = []
+        self.elIfs.append((thisCond, case))
+        self._register_stements(statements, case)
 
         return self
 
+    def Else(self, *statements):
+        assert self.parentStm is None
+        if self.ifFalse is not None:
+            raise HwtSyntaxError(
+                "Else on this if-then-else statemen was aready used")
 
-class Switch(StmCntx):
+        self.rank += 1
+
+        self.ifFalse = []
+        self._register_stements(statements, self.ifFalse)
+        return self
+
+
+class Switch(SwitchContainer):
     """
     Switch statement generator
     """
 
     def __init__(self, switchOn):
-        self.switchOn = switchOn
-        self.cond = None
+        switchOn = _intfToSig(switchOn)
+        if not isinstance(switchOn, RtlSignalBase):
+            raise HwtSyntaxError("Select is not signal, it is not certain"
+                                 " if this an error or desire")
+        if arr_any(discoverEventDependency(switchOn), lambda x: True):
+            raise HwtSyntaxError("Can not switch on result of event operator")
 
-    _appendStatements = If._appendStatements
+        super(Switch, self).__init__(switchOn, [])
+        self._inputs.append(switchOn)
+        switchOn.endpoints.append(self)
+        self._get_rtl_context().statements.add(self)
 
-    def Case(self, caseVal, *statements):
-        "c-like case of switch statement"
-        cond = self.switchOn._eq(caseVal)
-        if self.cond is None:
-            If.__init__(self, cond, *statements)
-        else:
-            If.Elif(self, cond, *statements)
-
-        return self
+    def _cut_off_drivers_of(self, sig: RtlSignalBase):
+        raise NotImplementedError()
 
     def addCases(self, tupesValStmnts):
         """
-        Add multiple case statements from iterable of tuleles (caseVal, statements)
+        Add multiple case statements from iterable of tuleles
+        (caseVal, statements)
         """
         s = self
         for val, statements in tupesValStmnts:
-            s = s.Case(val, *statements)
+            s = s.Case(val, statements)
         return s
+
+    def Case(self, caseVal, *statements):
+        "c-like case of switch statement"
+        assert self.parentStm is None
+        caseVal = toHVal(caseVal, self.switchOn._dtype)
+
+        assert isinstance(caseVal, Value), caseVal
+        assert caseVal._isFullVld(), "Cmp with invalid value"
+        assert caseVal not in self._case_value_index, (
+            "Switch statement already has case for value ", caseVal)
+
+        self.rank += 1
+        case = []
+        self._case_value_index[caseVal] = len(self.cases)
+        self.cases.append((caseVal, case))
+
+        self._register_stements(statements, case)
+
+        return self
 
     def Default(self, *statements):
         """c-like default of switch statement
         """
-        if self.cond is None:
-            # no cases were used
-            return statements
-
-        return If.Else(self, *statements)
+        assert self.parentStm is None
+        self.rank += 1
+        self.default = []
+        self._register_stements(statements, self.default)
+        return self
 
 
 def SwitchLogic(cases, default=None):
     """
-    generate if tree for cases like
+    Generate if tree for cases like (syntax shugar for large elifs)
 
     ..code-block:: python
         if cond0:
@@ -220,7 +228,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
               ).Else(
                index(index + 1)
            )
-        )
+           )
 
         return Switch(index)\
             .addCases(
@@ -230,7 +238,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
         )
 
 
-class FsmBuilder(StmCntx):
+class FsmBuilder(Switch):
     """
     :ivar stateReg: register with state
     """
@@ -249,8 +257,6 @@ class FsmBuilder(StmCntx):
         self.stateReg = parent._reg(stateRegName, stateT, beginVal)
         Switch.__init__(self, self.stateReg)
 
-    _appendStatements = Switch._appendStatements
-
     def Trans(self, stateFrom, *condAndNextState):
         """
         :param stateFrom: apply when FSM is in this state
@@ -260,7 +266,7 @@ class FsmBuilder(StmCntx):
         :attention: transitions has priority, first has the biggest
         :attention: if stateFrom is None it is evaluated as default
         """
-        top = None
+        top = []
         last = True
 
         for cAndS in reversed(condAndNextState):
@@ -270,7 +276,7 @@ class FsmBuilder(StmCntx):
                 try:
                     condition, newvalue = cAndS
                 except TypeError:
-                    top = c(cAndS, self.stateReg)
+                    top = self.stateReg(cAndS)
                     continue
                 top = []
 
@@ -278,39 +284,21 @@ class FsmBuilder(StmCntx):
                 condition, newvalue = cAndS
 
             # building decision tree
-            top = If(condition,
-                     self.stateReg(newvalue)
-                     ).Else(
-                top
-            )
-
-        s = Switch.Case(self, stateFrom, *top)
-        return s
+            top = \
+                If(condition,
+                   self.stateReg(newvalue)
+                   ).Else(
+                    top
+                )
+        if stateFrom is None:
+            return Switch.Default(self, top)
+        else:
+            return Switch.Case(self, stateFrom, top)
 
     def Default(self, *condAndNextState):
         d = self.Trans(None, *condAndNextState)
         d.stateReg = self.stateReg
         return d
-
-
-def _connect(src, dst, exclude, fit):
-    if isinstance(src, InterfaceBase):
-        if isinstance(dst, InterfaceBase):
-            return dst._connectTo(src, exclude=exclude, fit=fit)
-        src = src._sig
-
-    assert not exclude, "this intf. is just a signal"
-    if src is None:
-        src = dst._dtype.fromPy(None)
-    else:
-        src = toHVal(src)
-
-    if fit:
-        src = fitTo(src, dst)
-
-    src = src._auto_cast(dst._dtype)
-
-    return dst(src)
 
 
 def connect(src, *destinations, exclude=set(), fit=False):
@@ -323,36 +311,9 @@ def connect(src, *destinations, exclude=set(), fit=False):
     """
     assignemnts = []
     for dst in destinations:
-        assignemnts.extend(_connect(src, dst, exclude, fit))
+        assignemnts.append(_connect(src, dst, exclude, fit))
 
     return assignemnts
-
-
-def _mkOp(fn):
-    """
-    Function to create variadic operator function
-
-    :param fn: function to perform binary operation
-    """
-    def op(*operands, key=None) -> RtlSignalBase:
-        """
-        :param operands: variadic parameter of input uperands
-        :param key: optional function applied on every operand
-            before processing
-        """
-        assert operands, operands
-        top = None
-        if key is not None:
-            operands = map(key, operands)
-
-        for s in operands:
-            if top is None:
-                top = s
-            else:
-                top = fn(top, s)
-        return top
-
-    return op
 
 
 # variadic operator functions

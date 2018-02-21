@@ -1,11 +1,16 @@
 from hwt.hdl.entity import Entity
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.process import HWProcess
+from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
+from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.mapExpr import MapExpr
 from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.generic.portMap import PortMap
+from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.utils import maxStmId
 from hwt.serializer.verilog.context import VerilogSerializerCtx
 from hwt.serializer.verilog.keywords import VERILOG_KEYWORDS
@@ -16,11 +21,6 @@ from hwt.serializer.verilog.types import VerilogSerializer_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
 from hwt.synthesizer.param import getParam
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.process import HWProcess
-from hwt.hdl.statements import SwitchContainer
-from hwt.hdl.types.typeCast import toHVal
 
 
 class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
@@ -70,7 +70,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
             romValSig.hidden = False
 
             # construct process which will represent content of the rom
-            cases = [(toHVal(i), romValSig(v))
+            cases = [(toHVal(i), [romValSig(v),])
                      for i, v in enumerate(rom.defaultVal.val)]
             statements = [SwitchContainer(index, cases), ]
 
@@ -199,7 +199,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
     @classmethod
     def PortItem(cls, pi, ctx):
         t = cls.HdlType(pi._dtype, ctx.forPort())
-        if verilogTypeOfSig(pi.getSigInside()) == SIGNAL_TYPE.REG:
+        if verilogTypeOfSig(pi.getInternSig()) == SIGNAL_TYPE.REG:
             if t:
                 f = "%s reg %s %s"
             else:

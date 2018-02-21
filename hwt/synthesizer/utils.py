@@ -9,7 +9,7 @@ from hwt.hdl.entity import Entity
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.vhdl.serializer import VhdlSerializer
-from hwt.synthesizer.uniqList import UniqList
+from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.unit import Unit
 
 
@@ -38,6 +38,7 @@ def toRtl(unitOrCls: Unit, name: str=None,
 
     u._loadDeclarations()
     if name is not None:
+        assert isinstance(name, str)
         u._name = name
 
     globScope = serializer.getBaseNameScope()

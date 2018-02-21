@@ -15,6 +15,12 @@ class Integer(HdlType):
     def all_mask(self):
         return 1
 
+    def domain_size(self):
+        """
+        :return: how many values can have specified type
+        """
+        return 1 << 32
+
     @classmethod
     def get_auto_cast_fn(cls):
         from hwt.hdl.types.integerCast import cast_integer
