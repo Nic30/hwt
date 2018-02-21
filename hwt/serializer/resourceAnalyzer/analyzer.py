@@ -14,11 +14,14 @@ from hwt.synthesizer.rtlLevel.netlist import walk_assignments
 
 
 def _count_mux_inputs_for_outputs(stm: HdlStatement, cnt):
-    for _stm in stm._iter_stms():
-        if isinstance(_stm, Assignment):
-            cnt[_stm.dst] += 1
-        else:
-            _count_mux_inputs_for_outputs(_stm, cnt)
+    if isinstance(stm, Assignment):
+        cnt[stm.dst] += 1
+    else:
+        for _stm in stm._iter_stms():
+            if isinstance(_stm, Assignment):
+                cnt[_stm.dst] += 1
+            else:
+                _count_mux_inputs_for_outputs(_stm, cnt)
 
 
 def count_mux_inputs_for_outputs(stm):
@@ -31,6 +34,7 @@ IGNORED_OPERATORS = {
     AllOps.BitsAsSigned,
     AllOps.BitsAsUnsigned,
     AllOps.BitsAsVec,
+    AllOps.BitsToInt,
     AllOps.RISING_EDGE,
     AllOps.FALLIGN_EDGE,
 }
@@ -118,7 +122,7 @@ class ResourceAnalyzer(GenericSerializer):
 
                 i = out_mux_dim[o]
                 if isinstance(o._dtype, HArray):
-                    assert i == 1, "only one ram port per HWProcess"
+                    assert i == 1, (o, i, " only one ram port per HWProcess")
                     for a in walk_assignments(stm, o):
                         assert len(a.indexes) == 1, "one address per RAM port"
                         addr = a.indexes[0]

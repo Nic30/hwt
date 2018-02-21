@@ -37,7 +37,8 @@ class ResourceContext():
 
         self.resource_for_object[op] = k
 
-    def registerMUX(self, stm: Union[HdlStatement, Operator], sig: RtlSignal, inputs_cnt: int):
+    def registerMUX(self, stm: Union[HdlStatement, Operator], sig: RtlSignal,
+                    inputs_cnt: int):
         """
         mux record is in format (self.MUX, n, m)
         where n is number of bits of this mux
@@ -67,11 +68,11 @@ class ResourceContext():
 
         self.resource_for_object[latch] = (ResourceLatch, w)
 
-    def registerRAM_write_port(self, mem: RtlSignal, addr: RtlSignal, synchronous: bool):
-        k = (mem, addr, synchronous, WRITE)
+    def registerRAM_write_port(self, mem: RtlSignal, addr: RtlSignal,
+                               synchronous: bool):
         res = self.memories
-        addresses = res.get(k, {})
-        res[k] = addresses
+        addresses = res.get(mem, {})
+        res[mem] = addresses
 
         # [rSycn, wSync, rAsync, wAsync]
         portCnts = addresses.get(addr, [0, 0, 0, 0])
@@ -81,11 +82,11 @@ class ResourceContext():
             portCnts[3] += 1
         addresses[addr] = portCnts
 
-    def registerRAM_read_port(self, mem: RtlSignal, addr: RtlSignal, synchronous: bool):
-        k = (mem, addr, synchronous, READ)
+    def registerRAM_read_port(self, mem: RtlSignal, addr: RtlSignal,
+                              synchronous: bool):
         res = self.memories
-        addresses = res.get(k, {})
-        res[k] = addresses
+        addresses = res.get(mem, {})
+        res[mem] = addresses
 
         # [rSycn, wSync, rAsync, wAsync]
         portCnts = addresses.get(addr, [0, 0, 0, 0])
@@ -99,10 +100,59 @@ class ResourceContext():
         """
         Resolve ports of discovered memories
         """
+        ff_to_remove = 0
+        res = self.resources
         for m, addrDict in self.memories.items():
-            rwSyncPorts, rSyncPorts, wSyncPorts = (0, 0, 0)
-            rwAsyncPorts, rAsyncPorts, wAsyncPorts = (0, 0, 0)
-            for _, (rSycn, wSync, rAsync, wAsync) in addrDict.items():
-                raise NotImplementedError()
+            rwSyncPorts, rSyncPorts, wSyncPorts = 0, 0, 0
+            rwAsyncPorts, rAsyncPorts, wAsyncPorts = 0, 0, 0
+            rSync_wAsyncPorts, rAsync_wSyncPorts = 0, 0
+
+            for _, (rSync, wSync, rAsync, wAsync) in addrDict.items():
+                if rSync:
+                    ff_to_remove += rSync * m._dtype.elmType.bit_length()
+
+                # resolve port count for this addr signal
+                rwSync = min(rSync, wSync)
+                rSync -= rwSync
+                wSync -= rwSync
+
+                rwAsync = min(rAsync, wAsync)
+                rAsync -= rwAsync
+                wAsync -= rwAsync
+
+                rSync_wAsync = min(rSync, wAsync)
+                rSync -= rSync_wAsync
+                wAsync -= rSync_wAsync
+
+                rAsync_wSync = min(rAsync, wSync)
+                rAsync -= rAsync_wSync
+                wSync -= rAsync_wSync
+
+                # update port counts for mem
+                rwSyncPorts += rwSync
+                rSyncPorts += rSync
+                wSyncPorts += wSync
+                rwAsyncPorts += rwAsync
+                rAsyncPorts += rAsync
+                wAsyncPorts += wAsync
+
+                rSync_wAsyncPorts += rSync_wAsync
+                rAsync_wSyncPorts += rAsync_wSync
+            k = ResourceRAM(m._dtype.elmType.bit_length(),
+                            int(m._dtype.size),
+                            rwSyncPorts, rSyncPorts, wSyncPorts,
+                            rSync_wAsyncPorts,
+                            rwAsyncPorts, rAsyncPorts, wAsyncPorts,
+                            rAsync_wSyncPorts)
+            res[k] = res.get(k, 0) + 1
 
         self.memories.clear()
+
+        # remove register on read ports which will be merged into ram
+        if ff_to_remove:
+            ff_cnt = res[ResourceFF]
+            ff_cnt -= ff_to_remove
+            if ff_cnt:
+                res[ResourceFF] = ff_cnt
+            else:
+                del res[ResourceFF]
