@@ -25,4 +25,4 @@ class {{ name }}(Unit):
         self.{{cname}} = Param({{cval}}){% endfor %}
 {% endif %}
     def _declr(self):{% for name, dtype in ports %}
-        self.{{name}} = Signal({{dtype}}){% endfor %}
+        self.{{name}} = Signal(dtype={{dtype}}){% endfor %}
