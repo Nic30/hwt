@@ -36,7 +36,7 @@ class DebugTmpVarStack():
     def _serializeItem(self, item):
         var, s = item
         # assignemt of value for this tmp variable
-        a = Assignment(s.defaultVal, s, virtualOnly=True)
+        a = Assignment(s.defVal, s, virtualOnly=True)
         return "%s\n%s" % (var, self.serializer.Assignment(a, self.ctx))
 
     def serialize(self, indent=0):

@@ -106,7 +106,7 @@ class VerilogSerializer_statements():
 
         extraVarsInit = []
         for s in extraVars:
-            a = Assignment(s.defaultVal, s, virtualOnly=True)
+            a = Assignment(s.defVal, s, virtualOnly=True)
             extraVarsInit.append(cls.Assignment(a, childCtx))
 
         return cls.processTmpl.render(

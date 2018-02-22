@@ -1,12 +1,16 @@
-from importlib import reload
-
-from hwt.interfaces.std import Signal
-from hwt.synthesizer.unit import Unit
-from hwt.hdl.types.enum import HEnum
 from hwt.code import power, If, Concat
+from hwt.hdl.types.array import HArray
+from hwt.hdl.types.arrayVal import HArrayVal
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.defs import INT, SLICE
+from hwt.hdl.types.enum import HEnum
+from hwt.hdl.types.integerVal import SliceVal
+from hwt.interfaces.std import Signal
 from hwt.synthesizer.param import Param
+from hwt.synthesizer.unit import Unit
 
-{% for c in componentInstances %}
+{% if componentInstances %}{%
+ for c in componentInstances %}
 if "{{c.name}}" not in locals(): # support for all models in single file
     import {{c.name}}
     reload({{c.name}})
@@ -14,7 +18,7 @@ if "{{c.name}}" not in locals(): # support for all models in single file
 {% for imp in imports %}
 {{imp}}
 {% endfor %}
-
+{% endif%}
 class {{ name }}(Unit):
 {% if config %}
     def _config(self):{% for cname, cval in config %}

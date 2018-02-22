@@ -3,6 +3,7 @@ from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.synthesizer.param import Param, evalParam
+from hwt.hdl.types.enum import HEnum
 
 
 class SimModelSerializer_value(GenericSerializer_Value):
@@ -30,6 +31,17 @@ class SimModelSerializer_value(GenericSerializer_Value):
                 return cls.asHdl(si.origin, ctx)
             else:
                 return "self.%s._oldVal" % si.name
+
+    @classmethod
+    def Value_try_extract_as_const(cls, val, ctx):
+        # try to extract value as constant
+        try:
+            consGetter = ctx.constCache.getConstName
+        except AttributeError:
+            consGetter = None
+
+        if consGetter and not isinstance(val._dtype, HEnum):
+            return "self." + consGetter(val)
 
     @classmethod
     def Integer_valAsHdl(cls, t, i, ctx):

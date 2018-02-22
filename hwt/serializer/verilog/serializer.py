@@ -71,7 +71,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
             # construct process which will represent content of the rom
             cases = [(toHVal(i), [romValSig(v),])
-                     for i, v in enumerate(rom.defaultVal.val)]
+                     for i, v in enumerate(rom.defVal.val)]
             statements = [SwitchContainer(index, cases), ]
 
             p = HWProcess(rom.name, statements, {index, },
@@ -99,7 +99,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         """
         t = v._dtype
         # if type requires extra definition
-        if isinstance(t, HArray) and v.defaultVal.vldMask:
+        if isinstance(t, HArray) and v.defVal.vldMask:
             if v.drivers:
                 raise SerializerException("Verilog does not support RAMs"
                                           " with initialized value")
@@ -190,11 +190,11 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
     @classmethod
     def GenericItem(cls, g, ctx):
         s = "%s %s" % (cls.HdlType(g._dtype, ctx.forPort()), g.name)
-        if g.defaultVal is None:
+        if g.defVal is None:
             return s
         else:
             return ("parameter %s = %s"
-                    % (s, cls.Value(getParam(g.defaultVal).staticEval(), ctx)))
+                    % (s, cls.Value(getParam(g.defVal).staticEval(), ctx)))
 
     @classmethod
     def PortItem(cls, pi, ctx):

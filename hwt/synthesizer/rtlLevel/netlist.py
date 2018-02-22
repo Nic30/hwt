@@ -223,7 +223,7 @@ class RtlNetlist():
             if syncRst:
                 raise SigLvlConfErr(
                     "Signal %s has reset but has no clk" % name)
-            s = RtlSignal(self, name, dtype, defaultVal=_defVal)
+            s = RtlSignal(self, name, dtype, defVal=_defVal)
 
         self.signals.add(s)
 
@@ -254,7 +254,7 @@ class RtlNetlist():
         for sig in self.signals:
             driver_cnt = len(sig.drivers)
             if not driver_cnt and sig not in _interfaces:
-                if not sig.defaultVal._isFullVld():
+                if not sig.defVal._isFullVld():
                     raise NoDriverErr(
                         sig, "Signal without any driver or value in ", name)
                 sig._const = True
@@ -291,7 +291,7 @@ class RtlNetlist():
 
         # add signals, variables etc. in architecture
         for s in self.signals:
-            if s.hidden and s.defaultVal.vldMask and not s.drivers:
+            if s.hidden and s.defVal.vldMask and not s.drivers:
                 # constant
                 s.hidden = False
 

@@ -33,13 +33,13 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
     __instCntr = 0
 
-    def __init__(self, ctx, name, dtype, defaultVal=None, nopVal=None,
+    def __init__(self, ctx, name, dtype, defVal=None, nopVal=None,
                  useNopVal=False):
         """
         :param ctx: context - RtlNetlist which is this signal part of
         :param name: name hint for this signal, if is None name
             is chosen automatically
-        :param defaultVal: value which is used for reset and as default value
+        :param defVal: value which is used for reset and as default value
             in hdl
         :param useNopVal: use nopVal or ignore it
         :param nopVal: value which is used to fill up statements when no other
@@ -53,7 +53,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             self.hasGenericName = False
 
         assert isinstance(dtype, HdlType)
-        super(RtlSignal, self).__init__(name, dtype, defaultVal)
+        super(RtlSignal, self).__init__(name, dtype, defVal)
         self.ctx = ctx
 
         if ctx:
@@ -87,12 +87,12 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             for d in self.drivers:
                 d.staticEval()
         else:
-            if isinstance(self.defaultVal, RtlSignal):
-                self._val = self.defaultVal._val.staticEval()
+            if isinstance(self.defVal, RtlSignal):
+                self._val = self.defVal._val.staticEval()
             else:
                 if self._val.updateTime < 0:
                     # _val is invalid initialization value
-                    self._val = self.defaultVal.clone()
+                    self._val = self.defVal.clone()
 
         if not isinstance(self._val, Value):
             raise SimException(

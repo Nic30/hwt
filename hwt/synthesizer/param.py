@@ -16,7 +16,7 @@ class Param(RtlSignal):
     def __init__(self, initval):
         initval = toHVal(initval)
         super(Param, self).__init__(None, None, initval._dtype,
-                                    defaultVal=initval)
+                                    defVal=initval)
         self._val = initval
         self.replacedWith = None
         self._parent = None
@@ -52,7 +52,7 @@ class Param(RtlSignal):
              "should not exists")
 
         val = toHVal(val)
-        self.defaultVal = val
+        self.defVal = val
         self._val = val.staticEval()
 
     def __repr__(self):

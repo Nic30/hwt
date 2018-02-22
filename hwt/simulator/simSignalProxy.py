@@ -15,11 +15,11 @@ class IndexSimSignalProxy(SimSignal):
             like sig[upperIndex] else range select like
             sig[upperIndex:lowerIndex]
         """
-        defaultVal = dtype.fromPy(None)
+        defVal = dtype.fromPy(None)
 
         self.name = name
         self._dtype = dtype
-        self.defaultVal = defaultVal
+        self.defVal = defVal
 
         self.hidden = False
         self._writeCallbacks = []
@@ -78,7 +78,7 @@ class IndexSimSignalProxy(SimSignal):
             self._signal.simUpdateVal(simulator, updateParent)
 
     def _setDefValue(self):
-        v = self.defaultVal
+        v = self.defVal
         if isinstance(v, RtlSignalBase):
             v = v.staticEval()
 

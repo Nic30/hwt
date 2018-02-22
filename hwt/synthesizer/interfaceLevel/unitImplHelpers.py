@@ -70,10 +70,10 @@ class UnitImplHelpers(object):
             return container
 
         return self._ctx.sig(name,
-                              dtype=dtype,
-                              clk=clk._sig,
-                              syncRst=rst,
-                              defVal=defVal)
+                             dtype=dtype,
+                             clk=clk._sig,
+                             syncRst=rst,
+                             defVal=defVal)
 
     def _sig(self, name, dtype=BIT, defVal=None):
         """

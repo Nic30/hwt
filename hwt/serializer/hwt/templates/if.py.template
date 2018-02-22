@@ -13,6 +13,6 @@ endif %}{% endfor %}
 {{ indent }}){% if ifFalse|length > 0 %}.Else({% 
 if ifFalse|length > 0 %}{%
     for stm in ifFalse %}
-{{stm}}{%
+{{stm}},{%
     endfor%}
 {{ indent }}){% endif %}{% endif %}

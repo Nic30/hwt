@@ -11,7 +11,7 @@ class SimSignal(SignalItem):
     __slots__ = ["name", "_val", "_oldVal", "_writeCallbacks",
                  "simSensProcs", "simRisingSensProcs", "simFallingSensProcs"]
 
-    def __init__(self, ctx, name, dtype, defaultVal=None):
+    def __init__(self, ctx, name, dtype, defVal=None):
         ctx.signals.add(self)
         self.hidden = False
         self._writeCallbacks = []
@@ -19,7 +19,7 @@ class SimSignal(SignalItem):
         self.simSensProcs = set()
         self.simRisingSensProcs = set()
         self.simFallingSensProcs = set()
-        super(SimSignal, self).__init__(name, dtype, defaultVal)
+        super(SimSignal, self).__init__(name, dtype, defVal)
 
     def registerWriteCallback(self, callback, getEnFn) -> int:
         """

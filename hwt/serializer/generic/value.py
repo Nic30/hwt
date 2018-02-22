@@ -6,6 +6,7 @@ from hwt.hdl.types.integer import Integer
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.string import String
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.serializer.exceptions import SerializerException
 
 
 class GenericSerializer_Value():
@@ -20,14 +21,9 @@ class GenericSerializer_Value():
         if isinstance(val, RtlSignalBase):
             return cls.SignalItem(val, ctx)
 
-        # try to extract value as constant
-        try:
-            consGetter = ctx.constCache.getConstName
-        except AttributeError:
-            consGetter = None
-
-        if consGetter and not isinstance(t, HEnum):
-            return "self." + consGetter(val)
+        c = cls.Value_try_extract_as_const(val, ctx)
+        if c:
+            return c
 
         if isinstance(t, Slice):
             return cls.Slice_valAsHdl(t, val, ctx)
@@ -44,8 +40,13 @@ class GenericSerializer_Value():
         elif isinstance(t, String):
             return cls.String_valAsHdl(t, val, ctx)
         else:
-            raise Exception("can not resolve value serialization for %r"
-                            % (val))
+            raise SerializerException(
+                "can not resolve value serialization for %r"
+                % (val))
+
+    @classmethod
+    def Value_try_extract_as_const(cls, val, ctx):
+        return None
 
     @classmethod
     def Integer_valAsHdl(cls, dtype, val, ctx):

@@ -48,9 +48,12 @@ class HwtSerializer_ops():
         AllOps.NEG: "-%s",
         AllOps.RISING_EDGE: "(%s)._onRisingEdge()",
         AllOps.FALLIGN_EDGE: "(%s)._onFallingEdge()",
-        AllOps.BitsAsSigned: "(%s)._convSign(True)",
-        AllOps.BitsAsUnsigned: "(%s)._convSign(False)",
-        AllOps.BitsAsVec: "(%s)._convSign(None)",
+    }
+    _castOps = {
+        AllOps.BitsAsSigned,
+        AllOps.BitsAsUnsigned,
+        AllOps.BitsAsVec,
+        AllOps.BitsToInt,
     }
 
     @classmethod
@@ -66,6 +69,10 @@ class HwtSerializer_ops():
         if op_str is not None:
             return op_str % (cls._operand(ops[0], o, ctx),
                              cls._operand(ops[1], o, ctx))
+
+        if o in cls._castOps:
+            return "(%s)._reinterpret_cast(%s)" % (cls.asHdl(ops[0], ctx),
+                                                   cls.HdlType(op.result._dtype, ctx))
 
         if o == AllOps.INDEX:
             assert len(ops) == 2

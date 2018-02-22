@@ -9,8 +9,15 @@ class HwtSerializer_types(SimModelSerializer_types):
     """
 
     @classmethod
+    def HdlType_int(cls, typ, ctx, declaration):
+        if declaration:
+            raise NotImplementedError()
+        return "INT"
+
+    @classmethod
     def HdlType_bits(cls, typ, ctx, declaration=False):
-        assert not declaration
+        if declaration:
+            raise NotImplementedError()
         w = typ.width
         if isinstance(w, int):
             pass

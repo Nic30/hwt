@@ -33,7 +33,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
     @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
         if declaration:
-            v = si.defaultVal
+            v = si.defVal
             if si.virtualOnly:
                 prefix = "VARIABLE"
             elif si.drivers:
@@ -58,7 +58,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
                     # default value has to be set by reset because it is only signal
                     return s
             elif isinstance(v, Value):
-                if si.defaultVal.vldMask:
+                if v.vldMask:
                     return s + " := %s" % cls.Value(v, ctx)
                 else:
                     return s

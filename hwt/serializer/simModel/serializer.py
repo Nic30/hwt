@@ -88,7 +88,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         childCtx.constCache = ConstCache(ctx.scope.checkedName)
 
         def serializeVar(v):
-            dv = evalParam(v.defaultVal)
+            dv = evalParam(v.defVal)
             if isinstance(dv, HEnumVal):
                 dv = "%s.%s" % (dv._dtype.name, dv.val)
             else:

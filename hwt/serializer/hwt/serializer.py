@@ -130,11 +130,11 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         childCtx.constCache = ConstCache(ctx.scope.checkedName)
 
         def serializeVar(v):
-            dv = evalParam(v.defaultVal)
+            dv = evalParam(v.defVal)
             if isinstance(dv, HEnumVal):
                 dv = "%s.%s" % (dv._dtype.name, dv.val)
             else:
-                dv = cls.Value(dv, ctx)
+                dv = cls.Value(dv, childCtx)
 
             return v.name, cls.HdlType(v._dtype, childCtx), dv
 
@@ -142,9 +142,11 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
             procs.append(cls.HWProcess(p, childCtx))
 
         constants = []
-        for c in sorted(childCtx.constCache._cache.items(), key=lambda x: x[1],
-                        reverse=True):
-            constants.append((c[1], cls.Value(c[0], ctx)))
+        const_cache = childCtx.constCache
+        childCtx.constCache = None
+        for cVal, cName in sorted(const_cache._cache.items(), key=lambda x: x[1],
+                                  reverse=True):
+            constants.append((cName, cls.Value(cVal, childCtx)))
 
         portNames = [p.name for p in arch.entity.ports]
         portToLocalsRow = "%s = %s" % (

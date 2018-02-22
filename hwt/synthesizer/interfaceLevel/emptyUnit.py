@@ -16,11 +16,11 @@ def setOut(*interfaces):
 class EmptyUnit(Unit):
     """
     Unit used for prototyping all output interfaces are connected
-    to _defaultValue and this is only think which architecture contains
+    to _defVal and this is only think which architecture contains
 
-    :cvar _defaultValue: this value is used to initialize all signals
+    :cvar _defVal: this value is used to initialize all signals
     """
-    _defaultValue = None
+    _defVal = None
 
     def _toRtl(self, targetPlatform):
         assert not self._wasSynthetised()
@@ -47,7 +47,7 @@ class EmptyUnit(Unit):
             # connect outputs to dummy value
             for s in signals:
                 if s._interface._direction == INTF_DIRECTION.SLAVE:
-                    s(s._dtype.fromPy(self._defaultValue))
+                    s(s._dtype.fromPy(self._defVal))
 
         if not externInterf:
             raise IntfLvlConfErr(

@@ -50,7 +50,7 @@ def ternaryOpsToIf(statements):
             except NoDriverErr:
                 assert (hasattr(st.src, "_interface")
                         and st.src._interface is not None)\
-                    or st.src.defaultVal.vldMask, st.src
+                    or st.src.defVal.vldMask, st.src
 
         stms.append(st)
     return stms
@@ -146,7 +146,7 @@ class VhdlSerializer_statements():
 
         extraVarsInit = []
         for s in extraVars:
-            a = Assignment(s.defaultVal, s, virtualOnly=True)
+            a = Assignment(s.defVal, s, virtualOnly=True)
             extraVarsInit.append(cls.Assignment(a, childCtx))
 
         _hasToBeVhdlProcess = hasToBeVhdlProcess

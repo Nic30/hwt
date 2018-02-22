@@ -25,7 +25,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
 
             ctx = ctx.forSignal(si)
 
-            v = si.defaultVal
+            v = si.defVal
             if si.virtualOnly:
                 raise NotImplementedError()
             elif si.drivers:
@@ -65,7 +65,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
                     # default value has to be set by reset because it is only signal
                     return s
             elif isinstance(v, Value):
-                if si.defaultVal.vldMask:
+                if si.defVal.vldMask:
                     return s + " = %s" % cls.Value(v, ctx)
                 else:
                     return s

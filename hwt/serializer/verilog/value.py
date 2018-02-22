@@ -96,7 +96,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
         if declaration:
             ctx = ctx.forSignal(si)
 
-            v = si.defaultVal
+            v = si.defVal
             if si.virtualOnly:
                 pass
             elif si.drivers:
@@ -136,7 +136,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
                     # default value has to be set by reset because it is only signal
                     return s
             elif isinstance(v, Value):
-                if si.defaultVal.vldMask:
+                if v.vldMask:
                     return s + " = %s" % cls.Value(v, ctx)
                 else:
                     return s

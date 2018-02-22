@@ -39,7 +39,7 @@ class Value():
         t = g._dtype
 
         def getVal():
-            v = evalParam(g.defaultVal)
+            v = evalParam(g.defVal)
             if v.vldMask:
                 return v.val
             else:
@@ -59,9 +59,9 @@ class Value():
             self.text = str(getVal())
         elif t == STR:
             self.format = "string"
-            self.text = g.defaultVal.staticEval().val
+            self.text = g.defVal.staticEval().val
         elif isinstance(t, Bits):
-            bitString(g.defaultVal._dtype.bit_length())
+            bitString(g.defVal._dtype.bit_length())
         else:
             raise NotImplementedError(
                 "Not implemented for datatype %s" % repr(t))

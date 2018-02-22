@@ -162,7 +162,7 @@ class HdlSimulator(Environment):
         * Instantiate IOs for every process
         """
         for s in unit._ctx.signals:
-            v = s.defaultVal.clone()
+            v = s.defVal.clone()
 
             # force update all signals to deafut values and propagate it
             s.simUpdateVal(self, mkUpdater(v, False))

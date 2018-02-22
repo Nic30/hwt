@@ -155,11 +155,11 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
     @classmethod
     def GenericItem(cls, g, ctx):
         s = "%s: %s" % (g.name, cls.HdlType(g._dtype, ctx))
-        if g.defaultVal is None:
+        if g.defVal is None:
             return s
         else:
             return "%s := %s" % (
-                s, cls.Value(getParam(g.defaultVal).staticEval(), ctx))
+                s, cls.Value(getParam(g.defVal).staticEval(), ctx))
 
     @classmethod
     def PortConnection(cls, pc, ctx):

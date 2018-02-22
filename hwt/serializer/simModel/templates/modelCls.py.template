@@ -37,7 +37,7 @@ class {{ name }}(SimModel):
     {{name}} = SimSignal(_ctx, "{{name}}", {{dtype}}){% endfor %}
     
     # internal signals{% for name, dtype, defVal in signals %}
-    {{name}} = SimSignal(_ctx, "{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}
+    {{name}} = SimSignal(_ctx, "{{name}}", {{dtype}}, defVal={{defVal}}){% endfor %}
     
 {% for proc in processes %}
 {{proc}}

@@ -3,9 +3,17 @@
 {% endif %}
     def _impl(self):
         {{ portToLocalsRow }}{% 
+        if constants %}
+        # constants {%
+        	for name, val in constants %}
+        {{name}} = {{val}}{% 
+        	endfor %}{%
+        endif %}{% 
 if signals %}
-        # internal signals{% for name, dtype, defVal in signals %}
-        {{name}} = self._sig("{{name}}", {{dtype}}, defaultVal={{defVal}}){% endfor %}{% 
+        # internal signals{%
+        for name, dtype, defVal in signals %}
+        {{name}} = self._sig("{{name}}", {{dtype}}, defVal={{defVal}}){% 
+        endfor %}{% 
 endif %}{% 
 if componentInstances %}{% 
     for c in componentInstances %}
