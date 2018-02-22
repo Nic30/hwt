@@ -111,7 +111,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         procs = []
         extraTypes = set()
         extraTypes_serialized = []
-        arch.variables.sort(key=lambda x: x.name)
+        arch.variables.sort(key=lambda x: (x.name, x._instId))
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         arch.componentInstances.sort(key=lambda x: x._name)
 
