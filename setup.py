@@ -11,11 +11,12 @@ setup(name='hwt',
       author='Michal Orsak',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
-        'simpy',  # discrete simulator
-        'jinja2',  # hdl templates renderer
+          'jinja2',  # templating engine
       ],
       license='MIT',
       packages=find_packages(),
-      package_data={'hwt': ['*.vhd', '*.v']},
+      package_data={'hwt': ['*.vhd', '*.v',
+                            '*.py.template',
+                            '*.cpp.template']},
       include_package_data=True,
       zip_safe=False)

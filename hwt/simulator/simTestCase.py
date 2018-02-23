@@ -43,7 +43,7 @@ class SimTestCase(unittest.TestCase):
     hdl simulation.
 
     :attention: self.model, self.procs has to be specified before running
-        doSim (you can use prepareUnit method)
+        runSim (you can use prepareUnit method)
     """
     _defaultSeed = 317
 
@@ -51,7 +51,7 @@ class SimTestCase(unittest.TestCase):
         className, testName = self.id().split(".")[-2:]
         return "%s_%s" % (className, testName)
 
-    def doSim(self, time, name=None, config=None):
+    def runSim(self, until: float, name=None, config=None):
         if name is None:
             outputFileName = "tmp/" + self.getTestName() + ".vcd"
         else:
@@ -70,10 +70,10 @@ class SimTestCase(unittest.TestCase):
 
             # run simulation, stimul processes are register after initial
             # initialization
-            sim.simUnit(self.model, time=time, extraProcesses=self.procs)
+            sim.simUnit(self.model, until=until, extraProcesses=self.procs)
             return sim
 
-    def __serializeTestbenchDump(self, time, file):
+    def __serializeTestbenchDump(self, until: float, file):
         sim = HdlSimulator()
 
         # configure simulator to log in vcd
@@ -81,7 +81,7 @@ class SimTestCase(unittest.TestCase):
 
         # run simulation, stimul processes are register after initial
         # initialization
-        sim.simUnit(self.model, time=time, extraProcesses=self.procs)
+        sim.simUnit(self.model, until=until, extraProcesses=self.procs)
 
         sim.config.dump(file)
 

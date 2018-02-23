@@ -368,6 +368,9 @@ def log2ceil(x):
 
 
 def isPow2(num) -> bool:
+    """
+    Check if number or constant is power of two
+    """
     if not isinstance(num, int):
         num = int(num)
     return num != 0 and ((num & (num - 1)) == 0)

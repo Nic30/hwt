@@ -2,6 +2,8 @@ import importlib
 import inspect
 import os
 import sys
+from types import ModuleType
+from typing import Optional
 
 from hwt.hdl.constants import Time
 from hwt.serializer.simModel.serializer import SimModelSerializer
@@ -16,8 +18,6 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
-from typing import Optional
-from types import ModuleType
 
 
 def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
@@ -181,7 +181,7 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls,
 
 
 def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout,
-               time=100 * Time.ns):
+               until=100 * Time.ns):
     """
     Syntax sugar
     If outputFile is string try to open it as file
@@ -196,16 +196,16 @@ def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout,
             os.makedirs(d, exist_ok=True)
         with open(outputFile, 'w') as f:
             return _simUnitVcd(simModel, stimulFunctions,
-                               outputFile=f, time=time)
+                               f, until)
     else:
         return _simUnitVcd(simModel, stimulFunctions,
-                           outputFile=outputFile, time=time)
+                           outputFile, until)
 
 
-def _simUnitVcd(simModel, stimulFunctions, outputFile, time):
+def _simUnitVcd(simModel, stimulFunctions, outputFile, until):
     """
     :param unit: interface level unit to simulate
-    :param stimulFunctions: iterable of function with single param env
+    :param stimulFunctions: iterable of function(env)
         (simpy environment) which are driving the simulation
     :param outputFile: file where vcd will be dumped
     :param time: endtime of simulation, time units are defined in HdlSimulator
@@ -218,7 +218,7 @@ def _simUnitVcd(simModel, stimulFunctions, outputFile, time):
 
     # run simulation, stimul processes are register after initial
     # initialization
-    sim.simUnit(simModel, time=time, extraProcesses=stimulFunctions)
+    sim.simUnit(simModel, until=until, extraProcesses=stimulFunctions)
     return sim
 
 

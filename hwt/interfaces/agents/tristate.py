@@ -120,13 +120,13 @@ class TristateClkAgent(TristateAgent):
             sim.write(high, o)
 
             if onHigh:
-                sim.process(onHigh(sim))
+                sim.add_process(onHigh(sim))
 
             yield sim.wait(halfPeriod)
             sim.write(low, o)
 
             if onLow:
-                sim.process(onLow(sim))
+                sim.add_process(onLow(sim))
 
     def monitor(self, sim):
         intf = self.intf
@@ -152,10 +152,10 @@ class TristateClkAgent(TristateAgent):
         sim.write(v, intf.i)
 
         if self.onRisingCallback and (not last.val or not last.vldMask) and v:
-            sim.process(self.onRisingCallback(sim))
+            sim.add_process(self.onRisingCallback(sim))
 
         if self.onFallingCallback and not v and (last.val or not last.vldMask):
-            sim.process(self.onFallingCallback(sim))
+            sim.add_process(self.onFallingCallback(sim))
 
     def getMonitors(self):
         return [self.onTWriteCallback__init]
