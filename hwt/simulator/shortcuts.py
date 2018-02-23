@@ -205,7 +205,7 @@ def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout,
 def _simUnitVcd(simModel, stimulFunctions, outputFile, time):
     """
     :param unit: interface level unit to simulate
-    :param stimulFunctions: iterable of function with single param env
+    :param stimulFunctions: iterable of function(env)
         (simpy environment) which are driving the simulation
     :param outputFile: file where vcd will be dumped
     :param time: endtime of simulation, time units are defined in HdlSimulator

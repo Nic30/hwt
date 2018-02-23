@@ -61,14 +61,19 @@ class StopSimumulation(BaseException):
     pass
 
 
+class Event():
+    def __init__(self, sim):
+        self.sim = sim
+        self.process_to_wake = []
+
+    def __iter__(self):
+        procs = iter(self.process_to_wake)
+        self.process_to_wake = None
+        return procs
+
+
 def raise_StopSimulation(sim):
     raise StopSimumulation()
-    return
-    yield
-
-
-def run_callback(sim, callbackFn):
-    callbackFn(sim)
     return
     yield
 
@@ -87,7 +92,6 @@ class SimCalendar():
         self._q = []
 
     def push(self, time: float, priority: int, value):
-        #print("add ", time, priority, value)
         item = CalendarItem(time, priority, value)
         heappush(self._q, item)
 
@@ -190,7 +194,6 @@ class HdlSimulator():
     def schedule(self, proc, priority=1):
         le = len(self._events._q)
         self._events.push(self.now, priority, proc)
-        assert le + 1 == len(self._events._q)
 
     def waitOnCombUpdate(self):
         """
@@ -200,10 +203,10 @@ class HdlSimulator():
         Sim process is then woken up when all combinational updates
         are done in this delta step
         """
-        cud = self.combUpdateDonePlaned
-        if not cud:
+        if not self.combUpdateDonePlaned:
             return self.scheduleCombUpdateDoneEv()
-        return cud
+        else:
+            return self.combUpdateDoneEv
 
     def addHwProcToRun(self, trigger, proc):
         # first process in time has to plan executing of apply values on the
@@ -247,36 +250,33 @@ class HdlSimulator():
 
             self.outputContainers[p] = SpecificIoContainer(outputs)
 
-    def __deleteCombUpdateDoneEv(self, sim):
+    def __deleteCombUpdateDoneEv(self):
         """
         Callback called on combUpdateDoneEv finished
         """
-        print("__deleteCombUpdateDone")
-        self.combUpdateDone = False
+        self.combUpdateDonePlaned = False
+        return
+        yield
 
     def scheduleCombUpdateDoneEv(self):
         """
         Scheduele combUpdateDoneEv event to let agents know that current
         delta step is ending and values from combinational logic are stable
         """
-        print("scheduleCombUpdateDoneEv")
         assert not self.combUpdateDonePlaned, self.now
-        cud = run_callback(
-            self, self.__deleteCombUpdateDoneEv)
-        self.schedule(cud,
-                      priority=self.PRIORITY_AGENTS_UPDATE_DONE)
+        cud = Event(self)
+        cud.process_to_wake.append(self.__deleteCombUpdateDoneEv())
+        self.schedule(cud, priority=self.PRIORITY_AGENTS_UPDATE_DONE)
         self.combUpdateDonePlaned = True
+        self.combUpdateDoneEv = cud
         return cud
 
     def scheduleApplyValues(self):
         """
         Apply stashed values to signals
         """
-        print("scheduleApplyValues")
         assert not self.applyValPlaned, self.now
-        applyVal = run_callback(self, self.applyValues)
-        self.schedule(applyVal,
-                      priority=self.PRIORITY_APPLY_COMB)
+        self.schedule(self.applyValues(), priority=self.PRIORITY_APPLY_COMB)
         self.applyValPlaned = True
 
         if self.runSeqProcessesPlaned:
@@ -284,9 +284,7 @@ class HdlSimulator():
             return
 
         assert not self.seqProcsToRun and not self.runSeqProcessesPlaned, self.now
-        runSeq = run_callback(
-            self, self.runSeqProcesses)
-        self.schedule(runSeq, priority=self.PRIORITY_APPLY_SEQ)
+        self.schedule(self.runSeqProcesses(), priority=self.PRIORITY_APPLY_SEQ)
         self.runSeqProcessesPlaned = True
 
     def conflictResolveStrategy(self, actionSet):
@@ -322,7 +320,6 @@ class HdlSimulator():
         """
         Delta step for combinational processes
         """
-        print("runCombProcesses")
         for proc in self.combProcsToRun:
             outContainer = self.outputContainers[proc]
             proc(self, outContainer)
@@ -338,11 +335,10 @@ class HdlSimulator():
 
         self.combProcsToRun = UniqList()
 
-    def runSeqProcesses(self, sim):
+    def runSeqProcesses(self):
         """
         Delta step for event dependent processes
         """
-        print("runSeqProcesses")
         updates = []
         for proc in self.seqProcsToRun:
             try:
@@ -366,12 +362,13 @@ class HdlSimulator():
                     updater, _ = v
                     actionSet.destination.simUpdateVal(self, updater)
                     actionSet.clear()
+        return
+        yield
 
-    def applyValues(self, sim):
+    def applyValues(self):
         """
         Perform delta step by writing stacked values to signals
         """
-        print("applyValues")
         va = self.valuesToApply
         self.applyValPlaned = False
 
@@ -399,6 +396,9 @@ class HdlSimulator():
         if self.valuesToApply and not self.applyValPlaned:
             self.scheduleApplyValues()
 
+        return
+        yield
+
     def read(self, sig):
         """
         Read value from signal or interface
@@ -414,7 +414,6 @@ class HdlSimulator():
         """
         Write value to signal or interface.
         """
-        print("write", sig, val)
         # get target RtlSignal
         try:
             simSensProcs = sig.simSensProcs
@@ -460,26 +459,31 @@ class HdlSimulator():
         try:
             while True:
                 nextTime, priority, process = events.pop()
-                assert isinstance(process, GeneratorType)
+                assert isinstance(process, (GeneratorType, Event))
                 self.now = nextTime
-                # process is generator, run it
-                print(self.now, priority, process)
+                # process is python generator or Event
+                #print(self.now, priority, process)
+                if isinstance(process, Event):
+                    process = iter(process)
+
                 while True:
                     try:
                         ev = next(process)
                     except StopIteration:
-                        print("exit")
                         break
+                    #print("ev: ", ev)
                     # if process requires waiting put it back in queue
                     if isinstance(ev, Wait):
-                        print("wait: ", ev)
                         schedule(nextTime + ev.time, priority, process)
+                        break
+                    elif isinstance(ev, Event):
+                        # process going to wait for event
+                        # if ev.process_to_wake is None event was already destroyed
+                        ev.process_to_wake.append(process)
                         break
                     else:
                         # else this process spoted new process
                         # and it has to be put in queue
-                        print("new proc: ", ev)
-                        assert isinstance(ev, GeneratorType)
                         schedule(nextTime, priority, ev)
         except StopSimumulation:
             return
