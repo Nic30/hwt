@@ -157,7 +157,7 @@ class HandshakedAgent(SyncAgentBase):
         if not self._enabled:
             # we can not check rd it in this function because we can not wait
             # because we can be reactivated in this same time
-            sim.process(self.checkIfRdWillBeValid(sim))
+            sim.add_process(self.checkIfRdWillBeValid(sim))
             return
 
         # wait of response of slave

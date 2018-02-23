@@ -69,7 +69,7 @@ class IndexSimSignalProxy(SimSignal):
             for c in self._writeCallbacks:
                 if c:
                     # simulation processes
-                    simulator.process(c(simulator))
+                    simulator.add_process(c(simulator))
 
             def updateParent(oldVal):
                 oldVal[self.__index] = newVal

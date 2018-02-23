@@ -54,14 +54,14 @@ class SimSignal(SignalItem):
         if log:
             log(simulator, self, self.simSensProcs)
         for p in self.simSensProcs:
-            simulator.addHwProcToRun(self, p)
+            simulator._addHdlProcToRun(self, p)
 
         # run write callbacks we have to create new list to allow
         # registering of new call backs in callbacks
         for c in self._writeCallbacks:
             if c:
                 # run simulation processes which are activated
-                simulator.process(c(simulator))
+                simulator.add_process(c(simulator))
 
         if self.simRisingSensProcs:
             if v.val or not v.vldMask:
@@ -69,14 +69,14 @@ class SimSignal(SignalItem):
                     log(simulator, self, self.simRisingSensProcs)
                 for p in self.simRisingSensProcs:
 
-                    simulator.addHwProcToRun(self, p)
+                    simulator._addHdlProcToRun(self, p)
 
         if self.simFallingSensProcs:
             if not v.val or not v.vldMask:
                 if log:
                     log(simulator, self, self.simFallingSensProcs)
                 for p in self.simFallingSensProcs:
-                    simulator.addHwProcToRun(self, p)
+                    simulator._addHdlProcToRun(self, p)
 
     def simUpdateVal(self, simulator, valUpdater):
         """
