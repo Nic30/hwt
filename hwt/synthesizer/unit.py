@@ -138,16 +138,16 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
     def _buildParams(self):
         # construct params for entity (generics)
-        globalNames = {}
+        params = {}
 
         def addP(n, p):
             p.name = n
-            if n in globalNames:
+            if n in params:
                 raise IntfLvlConfErr(
                     "Redefinition of generic '%s' while synthesis"
                     " old:%r, new:%r"
-                    % (n, globalNames[n], p))
-            globalNames[n] = p
+                    % (n, params[n], p))
+            params[n] = p
 
         def nameForNestedParam(p):
             n = ""
@@ -171,7 +171,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
                 n = nameForNestedParam(p)
                 addP(n, p)
 
-        return globalNames
+        return params
 
     def _getDefaultName(self):
         return self.__class__.__name__
