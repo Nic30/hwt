@@ -9,6 +9,7 @@ from hwt.hdl.entity import Entity
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import PortItem
 from hwt.hdl.process import HWProcess
+from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 from hwt.hdl.statements import HdlStatement, HwtSyntaxError
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import Value
@@ -23,7 +24,6 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
     NoDriverErr
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
-from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 
 
 def name_for_process_and_mark_outputs(statements: List[HdlStatement])\
@@ -36,7 +36,6 @@ def name_for_process_and_mark_outputs(statements: List[HdlStatement])\
         for sig in stm._outputs:
             if not sig.hasGenericName:
                 out_names.append(sig.name)
-            sig.hidden = False
 
     if out_names:
         return min(out_names)
@@ -170,9 +169,13 @@ class RtlNetlist():
     """
     Hierarchical container for signals
 
-    :ivar signals: dict of all signals in context
-    :ivar statements: is set of statements and nodes where datapaths starts
+    :ivar parentForDebug: optional parent for debug
+        (has to have ._name and can have ._parent attribute)
+    :ivar params: dictionary {name: Param instance}
+    :ivar signals: set of all signals in this context
+    :ivar statements: list of all statements which are connected to signals in this context
     :ivar subUnits: is set of all units in this context
+    :ivar synthesised: flag, True if synthesize method was called  
     """
 
     def __init__(self, parentForDebug=None):
@@ -185,11 +188,11 @@ class RtlNetlist():
 
     def sig(self, name, dtype=BIT, clk=None, syncRst=None, defVal=None):
         """
-        generate new signal in context
+        Create new signal in this context
 
         :param clk: clk signal, if specified signal is synthesized
             as SyncSignal
-        :param syncRst: reset
+        :param syncRst: synchronous reset signal
         """
         if isinstance(defVal, RtlSignal):
             assert defVal._const, \
@@ -253,12 +256,6 @@ class RtlNetlist():
         _interfaces = set(interfaces)
         for sig in self.signals:
             driver_cnt = len(sig.drivers)
-            if not driver_cnt and sig not in _interfaces:
-                if not sig.defVal._isFullVld():
-                    raise NoDriverErr(
-                        sig, "Signal without any driver or value in ", name)
-                sig._const = True
-
             has_comb_driver = False
             if driver_cnt > 1:
                 sig.hidden = False
@@ -280,10 +277,17 @@ class RtlNetlist():
                             "%s: Signal %s has multiple combinational drivers" %
                             (self.getDebugScopeName(), name))
 
-                    has_comb_driver = has_comb_driver or is_comb_driver
-            else:
-                if not sig.drivers or not isinstance(sig.drivers[0], Operator):
+                    has_comb_driver |= is_comb_driver
+            elif driver_cnt == 1:
+                if not isinstance(sig.drivers[0], Operator):
                     sig.hidden = False
+            else:
+                sig.hidden = False
+                if sig not in _interfaces:
+                    if not sig.defVal._isFullVld():
+                        raise NoDriverErr(
+                            sig, "Signal without any driver or valid value in ", name)
+                    sig._const = True
 
         arch = Architecture(ent)
         for p in statements_to_HWProcesses(self.statements):
@@ -291,10 +295,6 @@ class RtlNetlist():
 
         # add signals, variables etc. in architecture
         for s in self.signals:
-            if s.hidden and s.defVal.vldMask and not s.drivers:
-                # constant
-                s.hidden = False
-
             if s not in interfaces and not s.hidden:
                 arch.variables.append(s)
 
