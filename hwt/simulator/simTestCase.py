@@ -43,7 +43,7 @@ class SimTestCase(unittest.TestCase):
     hdl simulation.
 
     :attention: self.model, self.procs has to be specified before running
-        doSim (you can use prepareUnit method)
+        runSim (you can use prepareUnit method)
     """
     _defaultSeed = 317
 
@@ -51,7 +51,7 @@ class SimTestCase(unittest.TestCase):
         className, testName = self.id().split(".")[-2:]
         return "%s_%s" % (className, testName)
 
-    def doSim(self, until: float, name=None, config=None):
+    def runSim(self, until: float, name=None, config=None):
         if name is None:
             outputFileName = "tmp/" + self.getTestName() + ".vcd"
         else:
