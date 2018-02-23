@@ -208,20 +208,20 @@ class RtlNetlist():
         if clk is not None:
             s = RtlSyncSignal(self, name, dtype, _defVal)
             if syncRst is not None and defVal is None:
-                raise Exception(
+                raise SigLvlConfErr(
                     "Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
                        RtlSignal.__call__(s, _defVal)
-                       ).Else(
-                    RtlSignal.__call__(s, s.next)
-                )
+                    ).Else(
+                       RtlSignal.__call__(s, s.next)
+                    )
             else:
                 r = [RtlSignal.__call__(s, s.next)]
 
             If(clk._onRisingEdge(),
                r
-               )
+            )
         else:
             if syncRst:
                 raise SigLvlConfErr(
