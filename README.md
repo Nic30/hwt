@@ -1,17 +1,17 @@
 # HWToolkit (hwt),
 # the library for hardware developement in Python
-[![Build Status](https://travis-ci.org/Nic30/HWToolkit.svg?branch=master)](https://travis-ci.org/Nic30/HWToolkit)
-[![Coverage Status](https://coveralls.io/repos/github/Nic30/HWToolkit/badge.svg?branch=master)](https://coveralls.io/github/Nic30/HWToolkit?branch=master)
+[![Build Status](https://travis-ci.org/Nic30/hwt.svg?branch=master)](https://travis-ci.org/Nic30/hwt)
+[![Coverage Status](https://coveralls.io/repos/github/Nic30/hwt/badge.svg?branch=master)](https://coveralls.io/github/Nic30/hwt?branch=master)
 [![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt) 
 [![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest) 
-[![Join the chat at https://gitter.im/HWToolkit/Lobby](https://badges.gitter.im/HWToolkit/Lobby.svg)](https://gitter.im/HWToolkit/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/hwt/Lobby](https://badges.gitter.im/hwt/Lobby.svg)](https://gitter.im/hwt/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## hwt contains:
 
 * hardware description language (example [showcase0.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py) )
 * digital circuit simulator with UVM like verification environment (example usage [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
-* tools for static analysis (all design object are accessible to user any time, [resourceAnalyzer](https://github.com/Nic30/HWToolkit/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
-* serializers to export HWT designs into multiple target HDLs (multiple standards [hwt, verilog, VHDL, system-c](https://github.com/Nic30/HWToolkit/tree/master/hwt/serializer))
+* tools for static analysis (all design object are accessible to user any time, [resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
+* serializers to export HWT designs into multiple target HDLs (multiple standards [hwt, verilog, VHDL, system-c](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
 
 ## Ideology
 

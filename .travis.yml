@@ -18,7 +18,7 @@ install:
   - python3 setup.py develop
   - cd ..
   - git clone --depth=1 https://github.com/Nic30/hwtLib.git
-  - cd HWToolkit
+  - cd hwt
   - rm -rf $DIST_PACKAGES/hwt-*
   - ln -s hwt $DIST_PACKAGES/hwt
 

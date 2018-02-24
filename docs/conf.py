@@ -50,7 +50,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'HWToolkit'
+project = 'hwt'
 copyright = '2017, Michal Orsak'
 author = 'Michal Orsak'
 

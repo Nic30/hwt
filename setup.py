@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 setup(name='hwt',
       version='2.1',
       description='hdl synthesis toolkit',
-      url='https://github.com/Nic30/HWToolkit',
+      url='https://github.com/Nic30/hwt',
       author='Michal Orsak',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
