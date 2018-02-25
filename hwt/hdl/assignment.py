@@ -1,10 +1,9 @@
 from typing import Tuple, List, Dict
 
+from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements import isSameHVal, HdlStatement
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from copy import copy
-from hwt.hdl.sensitivityCtx import SensitivityCtx
 
 
 class Assignment(HdlStatement):

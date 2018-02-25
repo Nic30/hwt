@@ -70,7 +70,7 @@ class FifoReaderAgent(SyncAgentBase):
             # speculative en set
             yield sim.waitOnCombUpdate()
             wait = r(intf.wait)
-            assert wait.vldMask, (intf, sim.now)
+            assert wait.vldMask, (sim.now, intf, "wait signal in invalid state")
             rd = not wait.val
             sim.write(rd, intf.en)
 
@@ -120,9 +120,9 @@ class FifoReaderAgent(SyncAgentBase):
             # check if write can be performed and if it possible do real write
 
             en = sim.read(intf.en)
-            assert en.vldMask, (intf, sim.now)
+            assert en.vldMask, (sim.now, intf, "en signal in invalid state")
             if en.val:
-                assert self.data, ("underflow", intf, sim.now)
+                assert self.data, (sim.now, intf, "underflow")
                 self.lastData = self.data.popleft()
 
 
@@ -164,7 +164,7 @@ class FifoWriterAgent(SyncAgentBase):
         yield sim.waitOnCombUpdate()
 
         en = sim.read(intf.en)
-        assert en.vldMask
+        assert en.vldMask, (sim.now, intf, "en signal in invalid state")
         if en.val:
             yield sim.wait(DEFAULT_CLOCK / 10)
             self.data.append(sim.read(intf.data))
@@ -178,7 +178,7 @@ class FifoWriterAgent(SyncAgentBase):
             yield sim.waitOnCombUpdate()
 
             wait = sim.read(intf.wait)
-            assert wait.vldMask
+            assert wait.vldMask, (sim.now, intf, "wait signal in invalid state")
             if not wait.val:
                 d = self.data.popleft()
                 w(d, intf.data)

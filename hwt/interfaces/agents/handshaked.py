@@ -91,10 +91,8 @@ class HandshakedAgent(SyncAgentBase):
             # wait for response of master
             yield sim.waitOnCombUpdate()
             vld = self.isVld(r)
-            assert vld.vldMask, (
-                "valid signal for interface %r is in invalid state,"
-                " this would cause desynchronization, %d") % (
-                    self.intf, sim.now)
+            assert vld.vldMask, (sim.now, self.intf,
+                                 "vld signal is in invalid state")
 
             if vld.val:
                 # master responded with positive ack, do read data
@@ -121,10 +119,7 @@ class HandshakedAgent(SyncAgentBase):
     def checkIfRdWillBeValid(self, sim):
         yield sim.waitOnCombUpdate()
         rd = self.isRd(sim.read)
-        assert rd.vldMask, (
-            "ready signal for interface %r is in invalid state,"
-            " this would cause desynchronization, %d") % (
-                self.intf, sim.now)
+        assert rd.vldMask, (sim.now, self.intf, "rd signal in invalid state")
 
     def driver(self, sim):
         """
@@ -164,10 +159,8 @@ class HandshakedAgent(SyncAgentBase):
         yield sim.waitOnCombUpdate()
 
         rd = self.isRd(r)
-        assert rd.vldMask, (
-            "ready signal for interface %r is in invalid state,"
-            " this would cause desynchronization, %d") % (
-                self.intf, sim.now)
+        assert rd.vldMask, (sim.now, self.intf,
+                            "rd signal in invalid state")
         if not vld:
             return
 
