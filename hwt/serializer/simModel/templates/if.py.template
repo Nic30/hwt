@@ -1,33 +1,40 @@
-{{indent}}c_{{indentNum}}, cVld_{{ indentNum }} = simEvalCond(sim, {{ cond }})
+{{indent}}c, cVld = simEvalCond(sim, {{ cond }})
 {{indent}}#if ():
-{{indent}}if c_{{indentNum}} or not cVld_{{ indentNum }}: 
-{{indent}}    cVld_{{ indentNum }} = cVld_{{ indentNum-1 }} and cVld_{{ indentNum }}{%
-if ifTrue|length > 0 %}{% 
-    for stm in ifTrue %}
-{{stm}}{% 
-    endfor %}{%
+{{indent}}if not cVld:
+{{indent}}    # invalidate outputs{%
+    for stm in outputInvalidateStms %}
+{{      stm}}{%
+    endfor%}
+{{indent}}elif c:
+{{indent}}    # if True{%
+    if ifTrue|length > 0 %}{% 
+        for stm in ifTrue %}
+{{          stm}}{% 
+        endfor %}{% 
+    else %}
+{{indent}}pass{%
 endif %}{% 
 if ifFalse|length > 0 %}
-{{indent}}#else:
-{{indent}}if not c_{{indentNum}} or not cVld_{{ indentNum }}:{%
+{{indent}}else:{%
     for stm in ifFalse %}
-{{stm}}{%
-    endfor%}{% endif %}
+{{      stm}}{%
+    endfor%}{%
+endif %}
 {#
 """ This template constructs if-else trees like this """ 
+
 if cond:
     ...
 else:
     ...
+
+will become
     
-condDefined = True
-cond = cond.eval()
-# if cond:
-if cond or cond == UNKNOWN:
-    condDefined_0 = condDefined and cond != UNKNOWN  
+cond, condValid = cond.eval()
+if not condValid:
+    # ivalidate outputs
+elif cond:
     ...
-# else:
-if not cond or cond == UNKNOWN:
-    condDefined_0 = condDefined_0 or cond != UNKNOWN
+else:
     ...
 #}

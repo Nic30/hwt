@@ -21,17 +21,6 @@ def isEvDependentOn(sig, process) -> bool:
         or process in sig.simRisingSensProcs
 
 
-class UpdateSet(set):
-    """
-    Set of updates for signal
-
-    :ivar destination: signal which are updates for
-    """
-
-    def __init__(self, destination):
-        self.destination = destination
-
-
 class IoContainer():
     """
     Container for outputs of process
@@ -44,9 +33,8 @@ class IoContainer():
         """
         self._all_signals = []
         for name, s in dstSignalsTuples:
-            o = UpdateSet(s)
-            setattr(self, name, o)
-            self._all_signals.append(o)
+            setattr(self, name, None)
+            self._all_signals.append([name, s])
 
 
 class Wait(BaseException):
@@ -180,7 +168,7 @@ class HdlSimulator():
         update is planed, this event is triggered
         when there are not any combinational signal updates in this time
     :ivar _applyValPlaned: flag, True if there is planed event for write
-        stashed signal updates to signals 
+        stashed signal updates to signals
     :ivar _runSeqProcessesPlaned: flag, True if there is planed event for
         running sequential (rising/falling event) dependent processes to reevaluate
     :ivar _valuesToApply: is container of values
@@ -262,10 +250,9 @@ class HdlSimulator():
 
         * Instantiate IOs for every process
         """
+        # set initial value to all signals and propagate it
         for s in unit._ctx.signals:
             v = s.defVal.clone()
-
-            # force update all signals to deafut values and propagate it
             s.simUpdateVal(self, mkUpdater(v, False))
 
         for u in unit._units:
@@ -321,34 +308,23 @@ class HdlSimulator():
         self._add_process(self._runSeqProcesses(), PRIORITY_APPLY_SEQ)
         self._runSeqProcessesPlaned = True
 
-    def _conflictResolveStrategy(self, actionSet: set)\
+    def _conflictResolveStrategy(self, newValue: set)\
             -> Tuple[Callable[[Value], bool], bool]:
         """
         This functions resolves write conflicts for signal
 
         :param actionSet: set of actions made by process
         """
-        invalidate = False
-        asLen = len(actionSet)
-        # resolve if there is write collision
-        if asLen == 0:
-            return
-        elif asLen == 1:
-            res = actionSet.pop()
-        else:
-            # we are driving signal with two or more different values
-            # we have to invalidate result
-            res = actionSet.pop()
-            invalidate = True
 
-        resLen = len(res)
+        invalidate = False
+        resLen = len(newValue)
         if resLen == 3:
             # update for item in array
-            val, indexes, isEvDependent = res
+            val, indexes, isEvDependent = newValue
             return (mkArrayUpdater(val, indexes, invalidate), isEvDependent)
         else:
             # update for simple signal
-            val, isEvDependent = res
+            val, isEvDependent = newValue
             return (mkUpdater(val, invalidate), isEvDependent)
 
     def _runCombProcesses(self) -> None:
@@ -356,17 +332,18 @@ class HdlSimulator():
         Delta step for combinational processes
         """
         for proc in self._combProcsToRun:
-            outContainer = self._outputContainers[proc]
-            proc(self, outContainer)
-            for actionSet in outContainer._all_signals:
-                if actionSet:
-                    res = self._conflictResolveStrategy(actionSet)
+            cont = self._outputContainers[proc]
+            proc(self, cont)
+            for sigName, sig in cont._all_signals:
+                newVal = getattr(cont, sigName)
+                if newVal is not None:
+                    res = self._conflictResolveStrategy(newVal)
                     # prepare update
                     updater, isEvDependent = res
                     self._valuesToApply.append(
-                        (actionSet.destination, updater, isEvDependent, proc))
-                    actionSet.clear()
-                # else value is latched
+                        (sig, updater, isEvDependent, proc))
+                    setattr(cont, sigName, None)
+                    # else value is latched
 
         self._combProcsToRun = UniqList()
 
@@ -391,12 +368,13 @@ class HdlSimulator():
         self._runSeqProcessesPlaned = False
 
         for cont in updates:
-            for actionSet in cont._all_signals:
-                if actionSet:
-                    v = self._conflictResolveStrategy(actionSet)
+            for sigName, sig in cont._all_signals:
+                newVal = getattr(cont, sigName)
+                if newVal is not None:
+                    v = self._conflictResolveStrategy(newVal)
                     updater, _ = v
-                    actionSet.destination.simUpdateVal(self, updater)
-                    actionSet.clear()
+                    sig.simUpdateVal(self, updater)
+                    setattr(cont, sigName, None)
         return
         yield
 

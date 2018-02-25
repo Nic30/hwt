@@ -1,4 +1,3 @@
     # sensitivity: {{sensitivityList|join(", ")}}
-    def {{name}}(self, sim, io):{% if hasConditions %}
-        cVld_1 = True{% endif %}{% for stmLine in stmLines %}
+    def {{name}}(self, sim, io):{% for stmLine in stmLines %}
 {{ stmLine }}{% endfor %}

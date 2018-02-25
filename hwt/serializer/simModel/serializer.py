@@ -14,7 +14,8 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.typeCast import toHVal
-from hwt.pyUtils.arrayQuery import arr_any, where
+from hwt.pyUtils.andReducedList import AndReducedList
+from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.constCache import ConstCache
 from hwt.serializer.generic.context import SerializerCtx
@@ -27,7 +28,6 @@ from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
-from hwt.pyUtils.andReducedList import AndReducedList
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
@@ -127,7 +127,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
 
         srcStr = "%s" % cls.Value(a.src, ctx)
         if a.indexes is not None:
-            return "%sio.%s.add((%s, (%s,), %s))" % (
+            return "%sio.%s = (%s, (%s,), %s)" % (
                 indentStr, dst.name, srcStr,
                 ", ".join(map(lambda x: cls.asHdl(x, ctx),
                               a.indexes)),
@@ -143,10 +143,10 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                     if srcT.forceVector != dstT.forceVector:
                         _0 = cls.Value(toHVal(0), ctx)
                         if srcT.forceVector:
-                            return "%sio.%s.add(((%s)._getitem__val(%s), %s))"\
+                            return "%sio.%s = ((%s)._getitem__val(%s), %s)"\
                                 % (indentStr, dst.name, srcStr, _0, ev)
                         else:
-                            return "%sio.%s.add((%s, (%s,), %s))" % (
+                            return "%sio.%s = (%s, (%s,), %s)" % (
                                 indentStr, dst.name, srcStr, _0, ev)
 
                 raise SerializerException(
@@ -155,7 +155,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                     (cls.asHdl(dst, ctx), srcStr,
                      dst._dtype, a.src._dtype))
             else:
-                return "%sio.%s.add((%s, %s))" % (
+                return "%sio.%s = (%s, %s)" % (
                     indentStr, dst.name, srcStr, ev)
 
     @classmethod
@@ -199,11 +199,20 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                 ifFalse = []
 
             childCtx = ctx.withIndent()
+            outputInvalidateStms = []
+            for o in ifc._outputs:
+                # [TODO] look up indexes
+                indexes = None
+                oa = Assignment(o._dtype.fromPy(None), o, indexes,
+                                virtualOnly=True, parentStm=ifc,
+                                is_completly_event_dependent=ifc._is_completly_event_dependent)
+                outputInvalidateStms.append(cls.stmAsHdl(oa, childCtx))
 
             return ifTmpl.render(
                 indent=getIndent(ctx.indent),
                 indentNum=ctx.indent,
                 cond=cond,
+                outputInvalidateStms=outputInvalidateStms,
                 ifTrue=tuple(map(
                     lambda obj: cls.stmAsHdl(obj, childCtx),
                     ifTrue)),
