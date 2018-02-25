@@ -77,7 +77,7 @@ class Value():
     def __eq__(self, other):
         if areValues(self, other):
             return self._dtype == other._dtype and \
-                self._isFullVld() and other._isFullVld() and\
+                self.vldMask == other.vldMask and\
                 self.val == other.val
         else:
             return super().__eq__(other)
