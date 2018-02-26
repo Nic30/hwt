@@ -252,8 +252,9 @@ class HdlSimulator():
         """
         # set initial value to all signals and propagate it
         for s in unit._ctx.signals:
-            v = s.defVal.clone()
-            s.simUpdateVal(self, mkUpdater(v, False))
+            if s.defVal.vldMask:
+                v = s.defVal.clone()
+                s.simUpdateVal(self, mkUpdater(v, False))
 
         for u in unit._units:
             self._initUnitSignals(u)
