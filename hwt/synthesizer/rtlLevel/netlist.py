@@ -274,8 +274,8 @@ class RtlNetlist():
 
                     if has_comb_driver and is_comb_driver:
                         raise MultipleDriversErr(
-                            "%s: Signal %s has multiple combinational drivers" %
-                            (self.getDebugScopeName(), name))
+                            "%s: Signal %r has multiple combinational drivers" %
+                            (self.getDebugScopeName(), sig))
 
                     has_comb_driver |= is_comb_driver
             elif driver_cnt == 1:
