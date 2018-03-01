@@ -252,7 +252,7 @@ class RtlNetlist():
 
         removeUnconnectedSignals(self)
 
-        # check if all signals are driver by something
+        # check if all signals are driven by something
         _interfaces = set(interfaces)
         for sig in self.signals:
             driver_cnt = len(sig.drivers)
@@ -264,18 +264,20 @@ class RtlNetlist():
                         sig.hidden = False
 
                     is_comb_driver = False
+
                     if isinstance(d, PortItem):
                         is_comb_driver = True
                     elif not d._now_is_event_dependent:
                         for a in walk_assignments(d, sig):
-                            if not a.indexes and not a._is_completly_event_dependent:
+                            if not a.indexes\
+                                    and not a._is_completly_event_dependent:
                                 is_comb_driver = True
                                 break
 
                     if has_comb_driver and is_comb_driver:
                         raise MultipleDriversErr(
-                            "%s: Signal %s has multiple combinational drivers" %
-                            (self.getDebugScopeName(), name))
+                            "%s: Signal %r has multiple combinational drivers" %
+                            (self.getDebugScopeName(), sig))
 
                     has_comb_driver |= is_comb_driver
             elif driver_cnt == 1:

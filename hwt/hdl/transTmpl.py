@@ -101,8 +101,10 @@ class TransTmpl(object):
             ld = self._loadFromArray
         elif isinstance(dtype, HUnion):
             ld = self._loadFromUnion
-        else:
+        elif isinstance(dtype, Bits):
             ld = self._loadFromBits
+        else:
+            raise TypeError("expected instance of HdlType", dtype)
 
         self.bitAddrEnd = ld(dtype, bitAddr)
         self.childrenAreChoice = isinstance(dtype, HUnion)

@@ -1,7 +1,7 @@
-from hwt.hdl.variables import SignalItem
 from hwt.hdl.constants import DIRECTION
-from hwt.hdl.statements import HwtSyntaxError
 from hwt.hdl.sensitivityCtx import SensitivityCtx
+from hwt.hdl.statements import HwtSyntaxError
+from hwt.hdl.variables import SignalItem
 
 
 class PortItem(SignalItem):
@@ -21,15 +21,17 @@ class PortItem(SignalItem):
         """
         if self.direction == DIRECTION.IN:
             if self.src is not None:
-                raise HwtSyntaxError("Port %s is already associated with %r" % (
-                    self.name, self.src))
+                raise HwtSyntaxError(
+                    "Port %s is already associated with %r"
+                    % (self.name, self.src))
             self.src = signal
             signal.endpoints.append(self)
 
         elif self.direction == DIRECTION.OUT:
             if self.dst is not None:
-                raise HwtSyntaxError("Port %s is already associated with %r" % (
-                    self.name, self.dst))
+                raise HwtSyntaxError(
+                    "Port %s is already associated with %r"
+                    % (self.name, self.dst))
             self.dst = signal
             signal.drivers.append(self)
 
@@ -47,16 +49,20 @@ class PortItem(SignalItem):
         """
         if self.direction == DIRECTION.OUT:
             if self.src is not None:
-                raise HwtSyntaxError("Port %s is already associated with %s" % (
-                    self.name, str(self.src)))
+                raise HwtSyntaxError(
+                    "Port %s is already associated with %s"
+                    % (self.name, str(self.src)))
             self.src = signal
+
         elif self.direction == DIRECTION.IN:
             if self.dst is not None:
-                raise HwtSyntaxError("Port %s is already associated with %s" % (
-                    self.name, str(self.dst)))
+                raise HwtSyntaxError(
+                    "Port %s is already associated with %s"
+                    % (self.name, str(self.dst)))
             self.dst = signal
+
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(self.direction)
 
     def connectInternSig(self):
         """
