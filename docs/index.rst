@@ -20,7 +20,7 @@ Tutorial is in hwtLib.samples.*, every file in this module contains user-entry-l
 
  
 You can also download this doc in `PDF
-<https://media.readthedocs.org/pdf/hwt/latest/hwt.pdf>`_.
+<https://media.readthedocs.org/pdf/hwtoolkit/latest/hwtoolkit.pdf>`_.
 
 
 .. toctree::
