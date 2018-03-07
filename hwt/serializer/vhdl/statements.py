@@ -10,7 +10,6 @@ from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
 from hwt.hdl.waitStm import WaitStm
 from hwt.hdl.whileContainer import WhileContainer
-from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
@@ -38,7 +37,7 @@ def ternaryOpsToIf(statements):
                     raise DoesNotContainsTernary()
                 else:
                     ops = d.operands
-                    ifc = IfContainer(AndReducedList([ops[0], ]),
+                    ifc = IfContainer(ops[0],
                                       [Assignment(ops[1], st.dst)],
                                       [Assignment(ops[2], st.dst)]
                                       )

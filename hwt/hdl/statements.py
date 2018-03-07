@@ -1,5 +1,5 @@
 from itertools import chain, islice
-from typing import List, Tuple, Set, Dict, Union
+from typing import List, Tuple
 
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.sensitivityCtx import SensitivityCtx
@@ -20,11 +20,7 @@ class IncompatibleStructure(Exception):
 
 
 def seqEvalCond(cond):
-    _cond = True
-    for c in cond:
-        _cond = _cond and bool(c.staticEval().val)
-
-    return _cond
+    return bool(cond.staticEval().val)
 
 
 def isSameHVal(a, b):
@@ -191,6 +187,14 @@ class HdlStatement(HdlObject):
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__, self)
 
+    def _discover_sensitivity_sig(self, signal: RtlSignalBase,
+                                  seen: set, ctx: SensitivityCtx):
+        casualSensitivity = set()
+        signal._walk_sensitivity(casualSensitivity, seen, ctx)
+        if not ctx.contains_ev_dependency:
+            # if event dependent sensitivity found do not add other sensitivity
+            ctx.extend(casualSensitivity)
+
     def _discover_sensitivity_seq(self,
                                   signals: List[RtlSignalBase],
                                   seen: set, ctx: SensitivityCtx)\
@@ -227,7 +231,8 @@ class HdlStatement(HdlObject):
         :return: iterator over all children statements
         """
         raise NotImplementedError("This menthod shoud be implemented"
-                                  " on class of statement", self.__class__, self)
+                                  " on class of statement", self.__class__,
+                                  self)
 
     def _on_reduce(self, self_reduced: bool, io_changed: bool,
                    result_statements: List["HdlStatement"]) -> None:
@@ -295,7 +300,8 @@ class HdlStatement(HdlObject):
 
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         raise NotImplementedError("This menthod shoud be implemented"
-                                  " on class of statement", self.__class__, self)
+                                  " on class of statement", self.__class__,
+                                  self)
 
     def _is_enclosed(self) -> bool:
         return len(self._outputs) == len(self._enclosed_for)
@@ -305,7 +311,8 @@ class HdlStatement(HdlObject):
             raise ValueError("Can not merge statment with itself")
         else:
             raise NotImplementedError("This menthod shoud be implemented"
-                                      " on class of statement", self.__class__, self)
+                                      " on class of statement", self.__class__,
+                                      self)
 
     @classmethod
     def _is_mergable_statement_list(cls, stmsA, stmsB):

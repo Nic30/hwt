@@ -14,7 +14,6 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.typeCast import toHVal
-from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.constCache import ConstCache
@@ -176,7 +175,6 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             topIf._sensitivity = ifc._sensitivity
 
             for c, stms in ifc.elIfs:
-                assert isinstance(c, AndReducedList), c
                 _ifFalse = []
 
                 lastIf = IfContainer(c, stms, _ifFalse)
@@ -226,8 +224,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         switchOn = sw.switchOn
 
         def mkCond(c):
-            cond = AndReducedList([switchOn._eq(c), ])
-            return cond
+            return switchOn._eq(c)
         elIfs = []
 
         for key, statements in sw.cases[1:]:

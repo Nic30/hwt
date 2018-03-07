@@ -10,7 +10,6 @@ from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 from hwt.hdl.statements import HdlStatement, statementsAreSame,\
     isSameStatementList, seqEvalCond
 from hwt.hdl.value import Value
-from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -27,14 +26,14 @@ class IfContainer(HdlStatement):
     def __init__(self, cond, ifTrue=None, ifFalse=None, elIfs=None,
                  parentStm=None, is_completly_event_dependent=False):
         """
-        :param cond: AndReducedList of conditions for this if
+        :param cond: RtlSignal as conditions for this if
         :param ifTrue: list of statements which should be active if cond.
             is met
         :param elIfs: list of tuples (list of conditions, list of statements)
         :param ifFalse: list of statements which should be active if cond.
             and any other cond. in elIfs is met
         """
-        assert isinstance(cond, AndReducedList)
+        assert isinstance(cond, RtlSignalBase)
         self.cond = cond
         super(IfContainer, self).__init__(
             parentStm,
@@ -112,8 +111,7 @@ class IfContainer(HdlStatement):
         if newIfTrue or newIfFalse or anyElifHit or newIfFalse:
             # parts were cut off
             # generate new statement for them
-            assert len(self.cond) == 1
-            cond_sig = self.cond[0]
+            cond_sig = self.cond
             n = self.__class__(cond_sig, newIfTrue)
             for c, stms in newElifs:
                 assert len(c) == 1
@@ -128,11 +126,11 @@ class IfContainer(HdlStatement):
 
             # update io of this
             self._inputs.clear()
-            self._inputs.extend(self.cond)
+            self._inputs.append(cond_sig)
             for c, _ in self.elIfs:
                 self._inputs.extend(c)
 
-            self._inputs.extend(self.cond)
+            self._inputs.append(cond_sig)
             self._outputs.clear()
 
             out_add = self._outputs.append
@@ -189,7 +187,7 @@ class IfContainer(HdlStatement):
         assert self._sensitivity is None, self
         ctx = self._sensitivity = SensitivityCtx()
 
-        self._discover_sensitivity_seq(self.cond, seen, ctx)
+        self._discover_sensitivity_sig(self.cond, seen, ctx)
         if ctx.contains_ev_dependency:
             return
 
@@ -202,7 +200,7 @@ class IfContainer(HdlStatement):
             if ctx.contains_ev_dependency:
                 break
 
-            self._discover_sensitivity_seq(cond, seen, ctx)
+            self._discover_sensitivity_sig(cond, seen, ctx)
             if ctx.contains_ev_dependency:
                 break
 
@@ -301,9 +299,6 @@ class IfContainer(HdlStatement):
         Merge nested IfContarner form else branch to this IfContainer
         as elif and else branches
         """
-        if len(ifStm.cond) > 1:
-            raise NotImplementedError()
-
         self.elIfs.append((ifStm.cond, ifStm.ifTrue))
         self.elIfs.extend(ifStm.elIfs)
 
@@ -313,7 +308,7 @@ class IfContainer(HdlStatement):
         if not isinstance(other, IfContainer):
             return False
 
-        if (self.cond != other.cond
+        if (self.cond is not other.cond
                 or not self._is_mergable_statement_list(self.ifTrue, other.ifTrue)):
             return False
 
@@ -321,7 +316,7 @@ class IfContainer(HdlStatement):
             return False
 
         for (a_c, a_stm), (b_c, b_stm) in zip(self.elIfs, other.elIfs):
-            if a_c != b_c or self._is_mergable_statement_list(a_stm, b_stm):
+            if a_c is not b_c or self._is_mergable_statement_list(a_stm, b_stm):
                 return False
 
         if not self._is_mergable_statement_list(self.ifFalse, other.ifFalse):
@@ -374,7 +369,7 @@ class IfContainer(HdlStatement):
             return False
 
         if isinstance(other, IfContainer):
-            if self.cond == other.cond:
+            if self.cond is other.cond:
                 if len(self.ifTrue) == len(other.ifTrue) \
                         and len(self.ifFalse) == len(other.ifFalse) \
                         and len(self.elIfs) == len(other.elIfs):

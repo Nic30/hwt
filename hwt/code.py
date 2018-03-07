@@ -11,7 +11,6 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
-from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -40,8 +39,7 @@ class If(IfContainer):
             raise IntfLvlConfErr("Condition is not signal, it is not certain"
                                  " if this an error or desire ", cond_sig)
 
-        cond = AndReducedList([cond_sig, ])
-        super(If, self).__init__(cond)
+        super(If, self).__init__(cond_sig)
         self.rank = 1
         self._inputs.append(cond_sig)
         cond_sig.endpoints.append(self)
@@ -61,11 +59,10 @@ class If(IfContainer):
         self._now_is_event_dependent = arr_any(
             discoverEventDependency(cond_sig), lambda x: True)
 
-        thisCond = AndReducedList([cond_sig, ])
         cond_sig.endpoints.append(self)
 
         case = []
-        self.elIfs.append((thisCond, case))
+        self.elIfs.append((cond_sig, case))
         self._register_stements(statements, case)
 
         return self

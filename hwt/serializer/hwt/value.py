@@ -1,25 +1,29 @@
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.variables import SignalItem
-from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.synthesizer.param import Param, evalParam
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.types.enumVal import HEnumVal
+from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.types.arrayVal import HArrayVal
+from hwt.hdl.types.bitsVal import BitsVal
 
 
 class HwtSerializer_value(GenericSerializer_Value):
 
     @classmethod
-    def Bits_valAsHdl(cls, dtype, val, ctx):
+    def Bits_valAsHdl(cls, dtype, val: BitsVal, ctx):
         return "%s.fromPy(%d, vldMask=%d)" % (
             cls.HdlType_bits(dtype, ctx, declaration=False),
             val.val, val.vldMask)
 
     @classmethod
-    def RtlSignal(cls, s, ctx, declaration=False):
+    def RtlSignal(cls, s: RtlSignalBase, ctx, declaration=False):
         return cls.SignalItem(s, ctx, declaration=declaration)
 
     @classmethod
-    def SignalItem(cls, si, ctx, declaration=False):
+    def SignalItem(cls, si: SignalItem, ctx, declaration=False):
         if declaration:
             raise NotImplementedError()
         else:
@@ -61,24 +65,23 @@ class HwtSerializer_value(GenericSerializer_Value):
         return "{%s}" % sep.join(map(sItem, val.items()))
 
     @classmethod
-    def HArrayValAsHdl(cls, t, val, ctx):
+    def HArrayValAsHdl(cls, t, val: HArrayVal, ctx):
         return "HArrayVal(%s, %s, %d)" % (
             cls.Dict_valAsHdl(val.val, ctx),
             cls.HdlType(t, ctx),
             val.vldMask)
 
     @classmethod
-    def Slice_valAsHdl(cls, t, val, ctx):
+    def Slice_valAsHdl(cls, t, val: SliceVal, ctx):
         return "SliceVal((%d, %d), SLICE, %d)" % (
             evalParam(val.val[0]).val,
             evalParam(val.val[1]).val,
             val.vldMask)
 
     @classmethod
-    def HEnumValAsHdl(cls, t, val, ctx):
+    def HEnumValAsHdl(cls, t, val: HEnumVal, ctx):
         return "%s.%s" % (t.name, val.val)
 
     @classmethod
-    def condAsHdl(cls, cond, ctx):
-        assert isinstance(cond, AndReducedList), cond
-        return "%s" % (",".join(map(lambda x: cls.asHdl(x, ctx), cond)))
+    def condAsHdl(cls, cond: RtlSignalBase, ctx):
+        return cls.asHdl(cond, ctx)

@@ -13,7 +13,6 @@ from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.value import Value
-from hwt.pyUtils.andReducedList import AndReducedList
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.constCache import ConstCache
 from hwt.serializer.generic.context import SerializerCtx
@@ -144,7 +143,8 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         constants = []
         const_cache = childCtx.constCache
         childCtx.constCache = None
-        for cVal, cName in sorted(const_cache._cache.items(), key=lambda x: x[1],
+        for cVal, cName in sorted(const_cache._cache.items(),
+                                  key=lambda x: x[1],
                                   reverse=True):
             constants.append((cName, cls.Value(cVal, childCtx)))
 
@@ -222,11 +222,11 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
             if sw.default:
                 return "\n".join([cls.asHdl(obj, ctx) for obj in sw.default])
             else:
-                return cls.comment(" fully reduced switch on %s" % cls.asHdl(switchOn, ctx))
+                return cls.comment(" fully reduced switch on %s"
+                                   % cls.asHdl(switchOn, ctx))
 
         def mkCond(c):
-            cond = AndReducedList([switchOn._eq(c), ])
-            return cond
+            return switchOn._eq(c)
 
         elIfs = []
 
