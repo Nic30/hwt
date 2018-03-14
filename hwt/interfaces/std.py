@@ -46,7 +46,7 @@ class Signal(SignalOps, Interface):
         t = self._dtype
         factor = self._widthMultiplier
         if t == BIT:
-            newT = Bits(factor)
+            newT = Bits(factor, forceVector=True)
         elif isinstance(t, Bits):
             w = t.width
             if isinstance(w, int):
@@ -61,7 +61,7 @@ class Signal(SignalOps, Interface):
                 # both Value
                 newW = w.clone()
                 newW.val *= factor.val
-            newT = Bits(newW)
+            newT = Bits(newW, forceVector=True)
         else:
             raise TypeError("Can not multiply width of type %r" % (repr(t),))
 
