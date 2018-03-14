@@ -298,7 +298,7 @@ class FsmBuilder(Switch):
         return d
 
 
-def connect(src, *destinations, exclude=set(), fit=False):
+def connect(src, *destinations, exclude:set=None, fit=False):
     """
     Connect src (signals/interfaces/values) to all destinations
 
