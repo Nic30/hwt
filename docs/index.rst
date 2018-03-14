@@ -1,27 +1,22 @@
-Welcome to HWToolkit generated documentation!
+Welcome to HWToolkit (hwt) generated documentation!
 =============================================
 
-This documentation is automatically generated from source code on every push into master which pass testing.
+This documentation is automatically generated from actual source code.
 
-HWToolkit is:
+HWToolkit (hwt) 
 
-* collection of classes which are some form of information about hardware property like
-  RtlSignal, RtlNetlist, HdlType etc. and there low level objects are then used in more
-  abstract classes like Interface, Unit, AxiStream, Fifo etc.
-
-  * This creates clear hierarchy of objects which is the representation of hardware which 
-    can be then serialized to VHDL/Verilog and others. 
-
-* digital circuit simulator with UVM like verification environment
+* Is toolkit where you can create object based hardware description in natural way and convert it to Verilog/VHDL/System C and pack it as IP-core.
+* HWT also contains digital circuit simulator with UVM like verification environment.
+* HWT is build as abstraction layer over all HDL languages
+* HWT tries to be noob-user friendly (because hardware development is not an easy task...) but will not constrain you.
+* Most of parts of HWT ecosystem are independent and you can use it separately (for example: Xilinx Vivado/Intel Quartus driver in hwtBuildsystem.*, VHDL/Verilog code generator in hwt.serializer.*). 
 
 
-Also keep in mind that HWT itself is just a basic tool which is used to build more advanced tools.
-Take look at hwtLib where are many useful components. 
-There are may HLS like features like:
-* loop/FSM generators, function calls in hw (look at hwt.code)
-* stream/bus builders (search for Builder)
-* abstract structure manipulation and mapping to streams/memories/busses (search for Factory, Parser, StructEndpoint)
+Take look at hwtLib where are many useful components.
+There is hwtHls, High-Level Synthesis (HLS) framework (pre-alfa) build on top of hwt.
+There is hwtIde, web based IDE and visualizer for this framework (pre-pre-alfa). 
 
+Tutorial is in hwtLib.samples.*, every file in this module contains user-entry-level comments. 
 
  
 You can also download this doc in `PDF
