@@ -8,7 +8,7 @@ class HandshakedAgent(SyncAgentBase):
     """
     Simulation/verification agent for :class:`hwt.interfaces.std.Handshaked`
     interface there is onMonitorReady(simulator)
-    and onDriverWirteAck(simulator) unimplemented method
+    and onDriverWriteAck(simulator) unimplemented method
     which can be used for interfaces with bi-directional data streams
 
     :attention: requires clk and rst/rstn signal
@@ -28,6 +28,8 @@ class HandshakedAgent(SyncAgentBase):
         self._lastWritten = None
         self._lastRd = None
         self._lastVld = None
+        # callbacks
+        self._afterRead = None
 
     def setEnable_asDriver(self, en, sim):
         super(HandshakedAgent, self).setEnable_asDriver(en, sim)
@@ -100,8 +102,11 @@ class HandshakedAgent(SyncAgentBase):
                 if self._debugOutput is not None:
                     self._debugOutput.write(
                         "%s, read, %d: %r\n" % (
-                            self.intf._getFullName(), sim.now, d))
+                            self.intf._getFullName(),
+                            sim.now, d))
                 self.data.append(d)
+                if self._afterRead is not None:
+                    self._afterRead(sim)
         else:
             if self._lastRd is not 0:
                 # can not receive, say it to masters
@@ -178,13 +183,14 @@ class HandshakedAgent(SyncAgentBase):
             else:
                 self.actualData = NOP
 
-            # try to run onDriverWirteAck if there is any
-            try:
-                onDriverWriteAck = self.onDriverWirteAck
-            except AttributeError:
-                onDriverWriteAck = None
+            # try to run onDriverWriteAck if there is any
+            onDriverWriteAck = getattr(self, "onDriverWriteAck", None)
             if onDriverWriteAck is not None:
                 onDriverWriteAck(sim)
+
+            onDone = getattr(self.actualData, "onDone", None)
+            if onDone is not None:
+                onDone(sim)
 
 
 class HandshakeSyncAgent(HandshakedAgent):
@@ -202,3 +208,23 @@ class HandshakeSyncAgent(HandshakedAgent):
 
     def doRead(self, sim):
         return sim.now
+
+
+class HandshakedReadListener():
+    def __init__(self, hsAgent: HandshakedAgent):
+        self.original_afterRead = hsAgent._afterRead
+        hsAgent._afterRead = self._afterReadWrap
+        self.agent = hsAgent
+        self.callbacks = {}
+
+    def _afterReadWrap(self, sim):
+        if self.original_afterRead is not None:
+            self.original_afterRead(sim)
+        try:
+            cb = self.callbacks.pop(len(self.agent.data))
+        except KeyError:
+            return
+        cb(sim)
+
+    def register(self, transCnt, callback):
+        self.callbacks[transCnt] = callback
