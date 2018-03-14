@@ -175,8 +175,8 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
             for ifc in self._interfaces:
                 if exclude and ifc in exclude:
                     continue
-                mIfc = getattr(master, ifc._name)
 
+                mIfc = getattr(master, ifc._name)
                 if exclude and mIfc in exclude:
                     continue
 

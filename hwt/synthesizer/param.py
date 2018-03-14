@@ -55,6 +55,9 @@ class Param(RtlSignal):
         self.defVal = val
         self._val = val.staticEval()
 
+    def __call__(self, val):
+        raise ValueError("Use .set() to set value of parameter instances")
+
     def __repr__(self):
         val = "InvalidVal"
         try:

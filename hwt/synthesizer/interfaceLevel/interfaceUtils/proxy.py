@@ -94,7 +94,7 @@ class InterfaceProxy(InterfaceBase):
 
         if itemsCnt is not None:
             self._initArrayItems()
-        
+
     def __len__(self):
         """
         :return: number of items in this array proxy (they are proxy too)
