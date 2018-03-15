@@ -10,6 +10,8 @@ from hwt.serializer.ip_packager.otherXmlObjs import VendorExtensions,\
 from hwt.serializer.ip_packager.port import Port
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 import xml.etree.ElementTree as etree
+from os.path import basename
+from itertools import islice
 
 
 vhdl_syn_fileSetName = "xilinx_vhdlsynthesis_view_fileset"
@@ -17,9 +19,44 @@ vhdl_sim_fileSetName = "xilinx_vhdlbehavioralsimulation_view_fileset"
 tcl_fileSetName = "xilinx_xpgui_view_fileset"
 
 
+def tcl_comment(s):
+    return "# %s" % s
+
+
+def tcl_set_module_property(name: str, value, escapeStr=True):
+    if escapeStr and isinstance(value, str):
+        value = '"%s"' % value
+    elif isinstance(value, bool):
+        value = str(value).lower()
+    else:
+        value = "%r" % value
+
+    return "set_module_property %s %s" % (name, value)
+
+
+def tcl_add_fileset_file(filename: str):
+    """
+    :param filename: relative filename with .vhdl or .v
+
+    :return: add_fileset_file command string
+    """
+    if filename.endswith(".vhd"):
+        t = "VHDL"
+    elif filename.endswith(".v") or filename.endswith(".sv"):
+        t = "VERILOG"
+    else:
+        raise NotImplementedError(
+            "Can not resolve type of file by extension", filename)
+    name = basename(filename)
+
+    return "add_fileset_file %s %s PATH %s" % (name, t, filename)
+
+
 class Component():
     """
-    Xilinx xml is element position dependent
+    Containers of informations about IP core
+
+    :attention: Xilinx xml is element position dependent
     """
     _strValues = ["vendor", "library", "name", "version", "description"]
     # _iterableValues = ["fileSets", "parameters" ]
@@ -154,3 +191,49 @@ class Component():
         #        p.name = removeUndescores_witSep(p.name, ".")
         #        p.value.id = removeUndescores_witSep(p.value.id , ".")
         #        p.value.text = removeUndescores_witSep(p.value.text , ".")
+
+    def quartus_tcl(self, quartus_version="16.1"):
+        buff = [
+            tcl_comment("module properties"),
+            "package require -exact qsys %s" % quartus_version,
+            tcl_set_module_property("DESCRIPTION", self.description),
+            tcl_set_module_property("NAME", self.name),
+            tcl_set_module_property("VERSION", self.version),
+            tcl_set_module_property("INTERNAL", False),
+            tcl_set_module_property("OPAQUE_ADDRESS_MAP", True),
+            tcl_set_module_property("GROUP", self.library),
+            tcl_set_module_property("AUTHOR", self.vendor),
+            tcl_set_module_property("DISPLAY_NAME", self.name),
+            tcl_set_module_property("INSTANTIATE_IN_SYSTEM_MODULE", True),
+            tcl_set_module_property("EDITABLE", True),
+            tcl_set_module_property("REPORT_TO_TALKBACK", False),
+            tcl_set_module_property("ALLOW_GREYBOX_GENERATION", False),
+            tcl_set_module_property("REPORT_HIERARCHY", False),
+        ]
+
+        buff.extend([
+            'add_fileset QUARTUS_SYNTH QUARTUS_SYNTH "" ""',
+            'set_fileset_property QUARTUS_SYNTH TOP_LEVEL %s' % self.name,
+            "set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false"
+            "set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false"
+        ])
+        for f in self._files:
+            if not f.endswith(".tcl"):
+                s = tcl_add_fileset_file(f)
+                buff.append(s)
+
+        buff.append(tcl_comment("params"))
+        # first is name of this component
+        for p in islice(self.parameters, 1, None):
+            p.asQuartusTcl(buff, quartus_version)
+
+        buff.append(tcl_comment("interfaces"))
+        for intf in self.busInterfaces:
+            # for all interfaces which have bus interface class
+            if hasattr(intf, "_bi"):
+                bi = intf._bi
+                bi.busType.asQuartusTcl(buff, quartus_version,
+                                        self, self._topUnit,
+                                        self.busInterfaces, intf)
+                buff.append("")
+        return "\n".join(buff)

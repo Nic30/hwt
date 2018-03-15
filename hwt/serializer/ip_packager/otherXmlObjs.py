@@ -138,6 +138,29 @@ class Parameter():
         e.append(self.value.asElem())
         return e
 
+    def asQuartusTcl(self, buff, version):
+        name = self.name
+        f = self.value.format
+        if f == "long":
+            t = "INTEGER"
+            width = 32
+        elif f == "bool":
+            t = "BOOLEAN"
+            width = 1
+        else:
+            raise NotImplementedError(f)
+
+        val = self.value.text
+
+        buff.extend([
+            "add_parameter %s %s %d" % (name, t, width),
+            "set_parameter_property %s DEFAULT_VALUE %s" % (name, val),
+            "set_parameter_property %s DISPLAY_NAME %s" % (name, name),
+            "set_parameter_property %s TYPE %s" % (name, t),
+            "set_parameter_property %s UNITS None" % (name),
+            "set_parameter_property %s HDL_PARAMETER true" % (name),
+        ])
+
 
 class CoreExtensions():
     def __init__(self):

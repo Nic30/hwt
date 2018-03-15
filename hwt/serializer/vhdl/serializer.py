@@ -9,7 +9,7 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.mapExpr import MapExpr
 from hwt.serializer.generic.nameScope import LangueKeyword, NameScope
 from hwt.serializer.generic.portMap import PortMap
-from hwt.serializer.generic.serializer import GenericSerializer
+from hwt.serializer.generic.serializer import GenericSerializer, CurrentUnitSwap
 from hwt.serializer.utils import maxStmId
 from hwt.serializer.vhdl.keywords import VHLD_KEYWORDS
 from hwt.serializer.vhdl.ops import VhdlSerializer_ops
@@ -103,36 +103,38 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
     @classmethod
     def Component(cls, entity, ctx):
-        return cls.componentTmpl.render(
-            indent=getIndent(ctx.indent),
-            ports=[cls.PortItem(pi, ctx) for pi in entity.ports],
-            generics=[cls.GenericItem(g, ctx) for g in entity.generics],
-            entity=entity
-        )
+        with CurrentUnitSwap(ctx, entity.origin):
+            return cls.componentTmpl.render(
+                indent=getIndent(ctx.indent),
+                ports=[cls.PortItem(pi, ctx) for pi in entity.ports],
+                generics=[cls.GenericItem(g, ctx) for g in entity.generics],
+                entity=entity
+            )
 
     @classmethod
     def ComponentInstance(cls, entity, ctx):
-        portMaps = []
-        for pi in entity.ports:
-            pm = PortMap.fromPortItem(pi)
-            portMaps.append(pm)
+        with CurrentUnitSwap(ctx, entity.origin):
+            portMaps = []
+            for pi in entity.ports:
+                pm = PortMap.fromPortItem(pi)
+                portMaps.append(pm)
 
-        genericMaps = []
-        for g in entity.generics:
-            gm = MapExpr(g, g._val)
-            genericMaps.append(gm)
+            genericMaps = []
+            for g in entity.generics:
+                gm = MapExpr(g, g._val)
+                genericMaps.append(gm)
 
-        if len(portMaps) == 0:
-            raise SerializerException("Incomplete component instance")
+            if len(portMaps) == 0:
+                raise SerializerException("Incomplete component instance")
 
-        entity._name = ctx.scope.checkedName(entity._name, entity)
-        return cls.componentInstanceTmpl.render(
-            indent=getIndent(ctx.indent),
-            instanceName=entity._name,
-            entity=entity,
-            portMaps=[cls.PortConnection(x, ctx) for x in portMaps],
-            genericMaps=[cls.MapExpr(x, ctx) for x in genericMaps]
-        )
+            entity._name = ctx.scope.checkedName(entity._name, entity)
+            return cls.componentInstanceTmpl.render(
+                indent=getIndent(ctx.indent),
+                instanceName=entity._name,
+                entity=entity,
+                portMaps=[cls.PortConnection(x, ctx) for x in portMaps],
+                genericMaps=[cls.MapExpr(x, ctx) for x in genericMaps]
+            )
 
     @classmethod
     def Entity(cls, ent, ctx):

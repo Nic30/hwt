@@ -11,11 +11,13 @@ class SerializerCtx():
         this function will be called to create tmp variables
     :ivar constCache: constant cache to extract frequently used large constant
         values from code (visual improvement)
+    :ivar currentUnit: current Unit instance or None
     """
 
-    def __init__(self, scope, indent, createTmpVarFn, constCache=None):
+    def __init__(self,  scope, indent: int, createTmpVarFn, constCache=None):
         self.scope = scope
         self.indent = indent
+        self.currentUnit = None
 
         if createTmpVarFn is None:
             self.createTmpVarFn = self.defaultCreateTmpVarFn

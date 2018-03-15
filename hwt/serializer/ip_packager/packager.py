@@ -114,6 +114,11 @@ class Packager(object):
         with open(ip_dir + "component.xml", "w") as f:
             f.write(xml_str)
 
+        quartus_tcl_str = c.quartus_tcl()
+        with open(ip_dir + "component.tcl", "w") as f:
+            f.write(quartus_tcl_str)
+
+
 # def packageMultipleProjects(workspace, names, ipRepo):
 #    for folder, name in names.items():
 #        packageVivadoHLSProj(os.path.join(workspace, folder), "solution1", name + ".vhd", ipRepo)

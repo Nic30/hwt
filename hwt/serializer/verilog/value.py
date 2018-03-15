@@ -11,6 +11,7 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.param import Param
 
 
 class VerilogSerializer_Value(GenericSerializer_Value):
@@ -144,10 +145,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
                 raise NotImplementedError(v)
 
         else:
-            if si.hidden and hasattr(si, "origin"):
-                return cls.asHdl(si.origin, ctx)
-            else:
-                return si.name
+            return cls.get_signal_name(si, ctx)
 
     @classmethod
     def Slice_valAsHdl(cls, dtype, val, ctx):

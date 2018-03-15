@@ -51,9 +51,10 @@ class BusInterface():
                         try:
                             m = mapDict[i._name]
                         except KeyError:
-                            raise Exception("Interface %s has interface %s which is not defined in ipcore interface class"
-                                            % (intf._getFullName(), i._name)
-                                            )
+                            raise Exception(
+                                "Interface %s has interface %s which is not defined in ipcore interface class"
+                                % (intf._getFullName(), i._name)
+                            )
 
                         d.update(processIntf(m, i))
                 return d

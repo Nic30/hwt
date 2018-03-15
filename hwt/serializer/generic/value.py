@@ -7,6 +7,7 @@ from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.string import String
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.serializer.exceptions import SerializerException
+from hwt.synthesizer.param import Param
 
 
 class GenericSerializer_Value():
@@ -66,3 +67,18 @@ class GenericSerializer_Value():
         else:
             return cls.UnsignedBitString(val.val, w, dtype.forceVector,
                                          val.vldMask)
+
+    @classmethod
+    def get_signal_name(cls, si, ctx):
+        if si.hidden and hasattr(si, "origin"):
+            # hidden signal, render it's driver instead
+            return cls.asHdl(si.origin, ctx)
+        elif isinstance(si, Param) and ctx.currentUnit is not None:
+            try:
+                return si.getName(ctx.currentUnit)
+            except KeyError:
+                pass
+            # parameter was taken from other place and has not
+            # any name in this scope, use value only
+            return cls.asHdl(si.staticEval(), ctx)
+        return si.name
