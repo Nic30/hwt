@@ -30,6 +30,11 @@ class IP_Clk(IntfConfig):
             map(lambda intf: intf._name, intfs)))
         self.addSimpleParam(thisIf, "FREQ_HZ", str(DEFAULT_CLOCK))
 
+    def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
+        self.quartus_tcl_add_interface(buff, thisIf, "clock")
+        self.quartus_prop(buff, "clockRate", 0)
+        self.quartus_add_interface_port(buff, thisIf, "clock")
+
 
 class IP_Rst(IntfConfig):
     def __init__(self):
@@ -43,18 +48,23 @@ class IP_Rst(IntfConfig):
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_HIGH")
 
+    def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
+        self.quartus_tcl_add_interface(buff, thisIf, "reset")
+        #self.quartus_prop("associatedClock", clock)
+        self.quartus_prop(buff, "synchronousEdges", "DEASSERT")
+        self.quartus_add_interface_port(buff, thisIf, "reset")
 
-class IP_Rst_n(IntfConfig):
-    def __init__(self):
-        super().__init__()
-        self.name = "reset"
-        self.version = "1.0"
-        self.vendor = "xilinx.com"
-        self.library = "signal"
-        self.map = "rst"
 
+class IP_Rst_n(IP_Rst):
     def postProcess(self, component, entity, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_LOW")
+
+    def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
+        self.quartus_tcl_add_interface(buff, thisIf, "reset")
+        # [TODO]
+        # self.quartus_prop("associatedClock", clock)
+        self.quartus_prop(buff, "synchronousEdges", "DEASSERT")
+        self.quartus_add_interface_port(buff, thisIf, "reset_n")
 
 
 class IP_Handshake(IntfConfig):
