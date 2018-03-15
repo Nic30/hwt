@@ -1,9 +1,12 @@
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bool import HBool
 from hwt.hdl.types.enum import HEnum
+from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.integer import Integer
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
@@ -13,6 +16,19 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import NameScope
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.unit import Unit
+
+
+class CurrentUnitSwap():
+    def __init__(self, ctx, u):
+        self.ctx = ctx
+        self.u = u
+
+    def __enter__(self):
+        self.origUnit = self.ctx.currentUnit
+        self.ctx.currentUnit = self.u
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.ctx.currentUnit = self.origUnit
 
 
 class GenericSerializer():
@@ -38,7 +54,7 @@ class GenericSerializer():
         return SerializerCtx(cls.getBaseNameScope(), 0, None, None)
 
     @classmethod
-    def asHdl(cls, obj, ctx):
+    def asHdl(cls, obj, ctx: SerializerCtx):
         """
         Convert object to HDL string
 
@@ -57,7 +73,7 @@ class GenericSerializer():
             return serFn(obj, ctx)
 
     @classmethod
-    def Entity_prepare(cls, ent, ctx, serialize=True):
+    def Entity_prepare(cls, ent, ctx: SerializerCtx, serialize=True):
         if serialize:
             serializedGenerics = []
             serializedPorts = []
@@ -82,7 +98,7 @@ class GenericSerializer():
             return serializedGenerics, serializedPorts
 
     @classmethod
-    def Entity(cls, ent, ctx):
+    def Entity(cls, ent: Entity, ctx: SerializerCtx):
         """
         Entity is just forward declaration of Architecture, it is not used
         in most HDL languages as there is no recursion in hierarchy
@@ -123,7 +139,7 @@ class GenericSerializer():
             return seriazlize
 
     @classmethod
-    def HdlType(cls, typ, ctx, declaration=False):
+    def HdlType(cls, typ: HdlType, ctx: SerializerCtx, declaration=False):
         """
         Serialize HdlType instance
         """
@@ -149,7 +165,7 @@ class GenericSerializer():
         return cls.IfContainer(*args, **kwargs)
 
     @classmethod
-    def IfContainer(cls, ifc, ctx):
+    def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx):
         """
         Srialize IfContainer instance
         """
@@ -202,7 +218,7 @@ class GenericSerializer():
         return cls.SwitchContainer(*args, **kwargs)
 
     @classmethod
-    def SwitchContainer(cls, sw, ctx):
+    def SwitchContainer(cls, sw: SwitchContainer, ctx: SerializerCtx):
         childCtx = ctx.withIndent(1)
 
         def asHdl(statements):
@@ -225,7 +241,7 @@ class GenericSerializer():
             cases=cases)
 
     @classmethod
-    def _operand(cls, operand, operator, ctx):
+    def _operand(cls, operand, operator, ctx: SerializerCtx):
         s = cls.asHdl(operand, ctx)
         if isinstance(operand, RtlSignalBase):
             try:
@@ -238,5 +254,6 @@ class GenericSerializer():
         return s
 
     @classmethod
-    def _bin_op(cls, operator, op_str, ctx, ops):
+    def _bin_op(cls, operator, op_str, ctx: SerializerCtx, ops):
         return op_str.join(map(lambda operand: cls._operand(operand, operator, ctx), ops))
+    

@@ -10,7 +10,7 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.mapExpr import MapExpr
 from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.generic.portMap import PortMap
-from hwt.serializer.generic.serializer import GenericSerializer
+from hwt.serializer.generic.serializer import GenericSerializer, CurrentUnitSwap
 from hwt.serializer.utils import maxStmId
 from hwt.serializer.verilog.context import VerilogSerializerCtx
 from hwt.serializer.verilog.keywords import VERILOG_KEYWORDS
@@ -70,7 +70,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
             romValSig.hidden = False
 
             # construct process which will represent content of the rom
-            cases = [(toHVal(i), [romValSig(v),])
+            cases = [(toHVal(i), [romValSig(v), ])
                      for i, v in enumerate(rom.defVal.val)]
             statements = [SwitchContainer(index, cases), ]
 
@@ -160,28 +160,29 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         )
 
     @classmethod
-    def ComponentInstance(cls, entity, ctx):
-        portMaps = []
-        for pi in entity.ports:
-            pm = PortMap.fromPortItem(pi)
-            portMaps.append(pm)
+    def ComponentInstance(cls, entity, ctx: VerilogSerializerCtx):
+        with CurrentUnitSwap(ctx, entity.origin):
+            portMaps = []
+            for pi in entity.ports:
+                pm = PortMap.fromPortItem(pi)
+                portMaps.append(pm)
 
-        genericMaps = []
-        for g in entity.generics:
-            gm = MapExpr(g, g._val)
-            genericMaps.append(gm)
+            genericMaps = []
+            for g in entity.generics:
+                gm = MapExpr(g, g._val)
+                genericMaps.append(gm)
 
-        if len(portMaps) == 0:
-            raise SerializerException("Incomplete component instance")
+            if len(portMaps) == 0:
+                raise SerializerException("Incomplete component instance")
 
-        # [TODO] check component instance name
-        return cls.componentInstanceTmpl.render(
-            indent=getIndent(ctx.indent),
-            instanceName=entity._name,
-            entity=entity,
-            portMaps=[cls.PortConnection(x, ctx) for x in portMaps],
-            genericMaps=[cls.MapExpr(x, ctx) for x in genericMaps]
-        )
+            # [TODO] check component instance name
+            return cls.componentInstanceTmpl.render(
+                indent=getIndent(ctx.indent),
+                instanceName=entity._name,
+                entity=entity,
+                portMaps=[cls.PortConnection(x, ctx) for x in portMaps],
+                genericMaps=[cls.MapExpr(x, ctx) for x in genericMaps]
+            )
 
     @classmethod
     def comment(cls, comentStr):

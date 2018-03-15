@@ -7,6 +7,9 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.param import Param
+from hwt.hdl.variables import SignalItem
+from hwt.serializer.generic.context import SerializerCtx
 
 
 class VhdlSerializer_Value(GenericSerializer_Value):
@@ -31,7 +34,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
                                     cond))
 
     @classmethod
-    def SignalItem(cls, si, ctx, declaration=False):
+    def SignalItem(cls, si: SignalItem, ctx: SerializerCtx, declaration=False):
         if declaration:
             v = si.defVal
             if si.virtualOnly:
@@ -66,20 +69,17 @@ class VhdlSerializer_Value(GenericSerializer_Value):
                 raise NotImplementedError(v)
 
         else:
-            if si.hidden and hasattr(si, "origin"):
-                return cls.asHdl(si.origin, ctx)
-            else:
-                return si.name
+            return cls.get_signal_name(si, ctx)
 
     @classmethod
-    def HEnumValAsHdl(cls, dtype, val, ctx):
+    def HEnumValAsHdl(cls, dtype, val, ctx: SerializerCtx):
         try:
             return getattr(dtype, val.val).val
         except AttributeError:
             return str(val.val)
 
     @classmethod
-    def HArrayValAsHdl(cls, dtype, val, ctx):
+    def HArrayValAsHdl(cls, dtype, val, ctx: SerializerCtx):
         separator = ",\n" + getIndent(ctx.indent + 1)
         return "".join(["(",
                         separator.join([cls.Value(v, ctx) for v in val]),
@@ -118,7 +118,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
             return "'X'"
 
     @classmethod
-    def sensitivityListItem(cls, item, ctx):
+    def sensitivityListItem(cls, item, ctx: SerializerCtx):
         if isinstance(item, Operator):
             item = item.operands[0]
         return cls.asHdl(item, ctx)
@@ -148,11 +148,11 @@ class VhdlSerializer_Value(GenericSerializer_Value):
         return "TO_UNSIGNED(%s, %d)" % (v, width)
 
     @classmethod
-    def Bool_valAsHdl(cls, dtype, val, ctx):
+    def Bool_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
         return str(bool(val.val))
 
     @classmethod
-    def Slice_valAsHdl(cls, dtype, val, ctx):
+    def Slice_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
         upper = val.val[0]
         if isinstance(upper, Value):
             upper = upper - 1
@@ -163,5 +163,5 @@ class VhdlSerializer_Value(GenericSerializer_Value):
         return _format % (cls.Value(upper, ctx), cls.Value(val.val[1], ctx))
 
     @classmethod
-    def String_valAsHdl(cls, dtype, val, ctx):
+    def String_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
         return '"%s"' % str(val.val)

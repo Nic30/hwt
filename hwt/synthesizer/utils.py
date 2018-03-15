@@ -72,6 +72,7 @@ def toRtl(unitOrCls: Unit, name: str=None,
                 ctx = serializer.getBaseContext()
                 ctx.scope = s
                 mouduleScopes[obj] = ctx
+                ctx.currentUnit = obj.origin
 
                 sc = serializer.Entity(obj, ctx)
                 if createFiles:

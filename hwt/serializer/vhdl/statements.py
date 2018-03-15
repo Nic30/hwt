@@ -120,7 +120,7 @@ class VhdlSerializer_statements():
                                                            WaitStm)))
 
         sensitivityList = sorted(
-            map(lambda s: cls.sensitivityListItem(s, None),
+            map(lambda s: cls.sensitivityListItem(s, ctx),
                 proc.sensitivityList))
 
         if hasToBeVhdlProcess:

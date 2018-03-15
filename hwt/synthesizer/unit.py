@@ -161,15 +161,18 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
             return n
 
+        # collect params of this unit
         discoveredParams = set()
         for p in self._params:
             discoveredParams.add(p)
             addP(p.name, p)
 
+        # collect params from interfaces
         for intf in self._interfaces:
             for p in walkParams(intf, discoveredParams):
                 n = nameForNestedParam(p)
                 addP(n, p)
+                p._registerScope(n, self)
 
         return params
 
