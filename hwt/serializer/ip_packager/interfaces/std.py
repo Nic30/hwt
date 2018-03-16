@@ -1,6 +1,6 @@
-from hwt.serializer.ip_packager.interfaces.intfConfig import IntfConfig, DEFAULT_CLOCK
 from hwt.interfaces.std import Rst, Rst_n
 from hwt.pyUtils.arrayQuery import where
+from hwt.serializer.ip_packager.interfaces.intfConfig import IntfConfig, DEFAULT_CLOCK
 
 
 class IP_Clk(IntfConfig):
@@ -31,7 +31,7 @@ class IP_Clk(IntfConfig):
         self.addSimpleParam(thisIf, "FREQ_HZ", str(DEFAULT_CLOCK))
 
     def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
-        self.quartus_tcl_add_interface(buff, thisIf, "clock")
+        self.quartus_tcl_add_interface(buff, thisIf, thisIf._name)
         self.quartus_prop(buff, "clockRate", 0)
         self.quartus_add_interface_port(buff, thisIf, "clock")
 
@@ -49,7 +49,7 @@ class IP_Rst(IntfConfig):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_HIGH")
 
     def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
-        self.quartus_tcl_add_interface(buff, thisIf, "reset")
+        self.quartus_tcl_add_interface(buff, thisIf, thisIf._name)
         #self.quartus_prop("associatedClock", clock)
         self.quartus_prop(buff, "synchronousEdges", "DEASSERT")
         self.quartus_add_interface_port(buff, thisIf, "reset")
