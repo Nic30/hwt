@@ -143,8 +143,6 @@ class UnitImplHelpers(object):
             portItem.direction = DIRECTION.INOUT
 
         if portItem.direction != d:
-            # print(self._entity)
-            # print(self._architecture)
             raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
                                  (self._name, portItem.name, repr(interface), portItem.direction, d))
 
