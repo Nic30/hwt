@@ -1,6 +1,7 @@
 from hwt.interfaces.std import Rst, Rst_n
 from hwt.pyUtils.arrayQuery import where
 from hwt.serializer.ip_packager.interfaces.intfConfig import IntfConfig, DEFAULT_CLOCK
+from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
 
 
 class IP_Clk(IntfConfig):
@@ -31,9 +32,10 @@ class IP_Clk(IntfConfig):
         self.addSimpleParam(thisIf, "FREQ_HZ", str(DEFAULT_CLOCK))
 
     def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
-        self.quartus_tcl_add_interface(buff, thisIf, thisIf._name)
-        self.quartus_prop(buff, "clockRate", 0)
-        self.quartus_add_interface_port(buff, thisIf, "clock")
+        self.quartus_tcl_add_interface(buff, thisIf)
+        name = getSignalName(thisIf)
+        self.quartus_prop(buff, name, "clockRate", 0)
+        self.quartus_add_interface_port(buff, getSignalName(thisIf), thisIf, "clock")
 
 
 class IP_Rst(IntfConfig):
@@ -49,10 +51,11 @@ class IP_Rst(IntfConfig):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_HIGH")
 
     def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
-        self.quartus_tcl_add_interface(buff, thisIf, thisIf._name)
+        self.quartus_tcl_add_interface(buff, thisIf)
+        name = getSignalName(thisIf)
         #self.quartus_prop("associatedClock", clock)
-        self.quartus_prop(buff, "synchronousEdges", "DEASSERT")
-        self.quartus_add_interface_port(buff, thisIf, "reset")
+        self.quartus_prop(buff, name, "synchronousEdges", "DEASSERT")
+        self.quartus_add_interface_port(buff, getSignalName(thisIf), thisIf, "reset")
 
 
 class IP_Rst_n(IP_Rst):
@@ -60,11 +63,12 @@ class IP_Rst_n(IP_Rst):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_LOW")
 
     def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
-        self.quartus_tcl_add_interface(buff, thisIf, "reset")
+        self.quartus_tcl_add_interface(buff, thisIf)
+        name = getSignalName(thisIf)
         # [TODO]
         # self.quartus_prop("associatedClock", clock)
-        self.quartus_prop(buff, "synchronousEdges", "DEASSERT")
-        self.quartus_add_interface_port(buff, thisIf, "reset_n")
+        self.quartus_prop(buff, name, "synchronousEdges", "DEASSERT")
+        self.quartus_add_interface_port(buff, getSignalName(thisIf), thisIf, "reset_n")
 
 
 class IP_Handshake(IntfConfig):
