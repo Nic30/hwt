@@ -202,11 +202,21 @@ class IntfConfig(Type):
         :param allInterfaces: list of all interfaces of top unit
         :param thisIf: interface to add into Quartus TCL
         """
+        name = getSignalName(thisIf)
         self.quartus_tcl_add_interface(buff, thisIf)
+        clk = thisIf._getAssociatedClk()
+        if clk is not None:
+            self.quartus_prop(buff, name, "associatedClock",
+                              clk._sigInside.name, escapeStr=False)
+        rst = thisIf._getAssociatedRst()
+        if rst is not None:
+            self.quartus_prop(buff, name, "associatedReset",
+                              rst._sigInside.name, escapeStr=False)
+
         m = self.get_quartus_map()
         if m:
             intfMapOrName = m
         else:
             intfMapOrName = thisIf.name
-        self._asQuartusTcl(buff, version, getSignalName(thisIf), component,
+        self._asQuartusTcl(buff, version, name, component,
                            entity, allInterfaces, thisIf, intfMapOrName)
