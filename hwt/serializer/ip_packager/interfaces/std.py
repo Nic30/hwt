@@ -56,6 +56,10 @@ class IP_Rst(IntfConfig):
         #self.quartus_prop("associatedClock", clock)
         self.quartus_prop(buff, name, "synchronousEdges", "DEASSERT")
         self.quartus_add_interface_port(buff, getSignalName(thisIf), thisIf, "reset")
+        clk = thisIf._getAssociatedClk()
+        if clk is not None:
+            self.quartus_prop(buff, name, "associatedClock",
+                              clk._sigInside.name, escapeStr=False)
 
 
 class IP_Rst_n(IP_Rst):
@@ -69,6 +73,10 @@ class IP_Rst_n(IP_Rst):
         # self.quartus_prop("associatedClock", clock)
         self.quartus_prop(buff, name, "synchronousEdges", "DEASSERT")
         self.quartus_add_interface_port(buff, getSignalName(thisIf), thisIf, "reset_n")
+        clk = thisIf._getAssociatedClk()
+        if clk is not None:
+            self.quartus_prop(buff, name, "associatedClock",
+                              clk._sigInside.name, escapeStr=False)
 
 
 class IP_Handshake(IntfConfig):
