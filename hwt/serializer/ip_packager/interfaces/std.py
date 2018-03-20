@@ -35,7 +35,7 @@ class IP_Clk(IntfConfig):
         self.quartus_tcl_add_interface(buff, thisIf)
         name = getSignalName(thisIf)
         self.quartus_prop(buff, name, "clockRate", 0)
-        self.quartus_add_interface_port(buff, getSignalName(thisIf), thisIf, "clock")
+        self.quartus_add_interface_port(buff, getSignalName(thisIf), thisIf, "clk")
 
 
 class IP_Rst(IntfConfig):
