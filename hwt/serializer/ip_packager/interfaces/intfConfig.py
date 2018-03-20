@@ -93,7 +93,7 @@ class IntfConfig(Type):
 
         name = getSignalName(thisIntf)
         buff.extend(["add_interface %s %s %s" %
-                     (self.get_quartus_name(), name, dir_)])
+                     (name, self.get_quartus_name(), dir_)])
 
         self.quartus_prop(buff, name, "ENABLED", True)
         self.quartus_prop(buff, name, "EXPORT_OF", "")
@@ -101,7 +101,8 @@ class IntfConfig(Type):
         self.quartus_prop(buff, name, "CMSIS_SVD_VARIABLES", "")
         self.quartus_prop(buff, name, "SVD_ADDRESS_GROUP", "")
 
-    def quartus_prop(self, buff: List[str], intfName: str, name: str, value, escapeStr=True):
+    def quartus_prop(self, buff: List[str], intfName: str, name: str, value,
+                     escapeStr=True):
         """
         Set property on interface in Quartus TCL
 
