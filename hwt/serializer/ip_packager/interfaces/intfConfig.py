@@ -134,9 +134,9 @@ class IntfConfig(Type):
         """
         d = signal._direction
         if d == INTF_DIRECTION.MASTER:
-            dir_ = "Input"
-        elif d == INTF_DIRECTION.SLAVE:
             dir_ = "Output"
+        elif d == INTF_DIRECTION.SLAVE:
+            dir_ = "Input"
         else:
             raise ValueError(d)
 
