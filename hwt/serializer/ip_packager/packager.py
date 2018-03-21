@@ -115,7 +115,7 @@ class Packager(object):
             f.write(xml_str)
 
         quartus_tcl_str = c.quartus_tcl()
-        with open(ip_dir + "component.tcl", "w") as f:
+        with open(ip_dir + "component_hw.tcl", "w") as f:
             f.write(quartus_tcl_str)
 
 

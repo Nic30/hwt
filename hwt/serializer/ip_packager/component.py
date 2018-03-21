@@ -214,7 +214,7 @@ class Component():
         buff.extend([
             'add_fileset QUARTUS_SYNTH QUARTUS_SYNTH "" ""',
             'set_fileset_property QUARTUS_SYNTH TOP_LEVEL %s' % self.name,
-            "set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false"
+            "set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false",
             "set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false"
         ])
         for f in self._files:

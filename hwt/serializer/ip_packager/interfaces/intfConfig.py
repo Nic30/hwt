@@ -93,7 +93,7 @@ class IntfConfig(Type):
 
         name = getSignalName(thisIntf)
         buff.extend(["add_interface %s %s %s" %
-                     (self.get_quartus_name(), name, dir_)])
+                     (name, self.get_quartus_name(), dir_)])
 
         self.quartus_prop(buff, name, "ENABLED", True)
         self.quartus_prop(buff, name, "EXPORT_OF", "")
@@ -101,7 +101,8 @@ class IntfConfig(Type):
         self.quartus_prop(buff, name, "CMSIS_SVD_VARIABLES", "")
         self.quartus_prop(buff, name, "SVD_ADDRESS_GROUP", "")
 
-    def quartus_prop(self, buff: List[str], intfName: str, name: str, value, escapeStr=True):
+    def quartus_prop(self, buff: List[str], intfName: str, name: str, value,
+                     escapeStr=True):
         """
         Set property on interface in Quartus TCL
 
@@ -133,9 +134,9 @@ class IntfConfig(Type):
         """
         d = signal._direction
         if d == INTF_DIRECTION.MASTER:
-            dir_ = "Input"
-        elif d == INTF_DIRECTION.SLAVE:
             dir_ = "Output"
+        elif d == INTF_DIRECTION.SLAVE:
+            dir_ = "Input"
         else:
             raise ValueError(d)
 
@@ -201,11 +202,21 @@ class IntfConfig(Type):
         :param allInterfaces: list of all interfaces of top unit
         :param thisIf: interface to add into Quartus TCL
         """
+        name = getSignalName(thisIf)
         self.quartus_tcl_add_interface(buff, thisIf)
+        clk = thisIf._getAssociatedClk()
+        if clk is not None:
+            self.quartus_prop(buff, name, "associatedClock",
+                              clk._sigInside.name, escapeStr=False)
+        rst = thisIf._getAssociatedRst()
+        if rst is not None:
+            self.quartus_prop(buff, name, "associatedReset",
+                              rst._sigInside.name, escapeStr=False)
+
         m = self.get_quartus_map()
         if m:
             intfMapOrName = m
         else:
             intfMapOrName = thisIf.name
-        self._asQuartusTcl(buff, version, getSignalName(thisIf), component,
+        self._asQuartusTcl(buff, version, name, component,
                            entity, allInterfaces, thisIf, intfMapOrName)
