@@ -19,6 +19,7 @@ from hwt.serializer.vhdl.types import VhdlSerializer_types
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.serializer.vhdl.value import VhdlSerializer_Value
 from hwt.synthesizer.param import getParam
+from hwt.hdl.architecture import Architecture
 
 
 class VhdlNameScope(NameScope):
@@ -45,57 +46,58 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
         return s
 
     @classmethod
-    def Architecture(cls, arch, ctx):
-        variables = []
-        procs = []
-        extraTypes = set()
-        extraTypes_serialized = []
-        arch.variables.sort(key=lambda x: (x.name, x._instId))
-        arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
-        arch.components.sort(key=lambda x: x.name)
-        arch.componentInstances.sort(key=lambda x: x._name)
-
-        childCtx = ctx.withIndent()
-
-        for v in arch.variables:
-            t = v._dtype
-            # if type requires extra definition
-            if isinstance(t, (HEnum, HArray)) and t not in extraTypes:
-                extraTypes.add(v._dtype)
-                extraTypes_serialized.append(
-                    cls.HdlType(t, childCtx, declaration=True))
-
-            v.name = ctx.scope.checkedName(v.name, v)
-            serializedVar = cls.SignalItem(v, childCtx, declaration=True)
-            variables.append(serializedVar)
-
-        for p in arch.processes:
-            procs.append(cls.HWProcess(p, childCtx))
-
-        # architecture names can be same for different entities
-        # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
-
-        uniqComponents = list(map(lambda x: x[1][0],
-                                  groupedby(arch.components,
-                                            lambda c: c.name)))
-        uniqComponents.sort(key=lambda c: c.name)
-        components = list(map(lambda c: cls.Component(c, childCtx),
-                              uniqComponents))
-
-        componentInstances = list(
-            map(lambda c: cls.ComponentInstance(c, childCtx),
-                arch.componentInstances))
-
-        return cls.architectureTmpl.render(
-            indent=getIndent(ctx.indent),
-            entityName=arch.getEntityName(),
-            name=arch.name,
-            variables=variables,
-            extraTypes=extraTypes_serialized,
-            processes=procs,
-            components=components,
-            componentInstances=componentInstances
-        )
+    def Architecture(cls, arch: Architecture, ctx):
+        with CurrentUnitSwap(ctx, arch.entity.origin):
+            variables = []
+            procs = []
+            extraTypes = set()
+            extraTypes_serialized = []
+            arch.variables.sort(key=lambda x: (x.name, x._instId))
+            arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
+            arch.components.sort(key=lambda x: x.name)
+            arch.componentInstances.sort(key=lambda x: x._name)
+    
+            childCtx = ctx.withIndent()
+    
+            for v in arch.variables:
+                t = v._dtype
+                # if type requires extra definition
+                if isinstance(t, (HEnum, HArray)) and t not in extraTypes:
+                    extraTypes.add(v._dtype)
+                    extraTypes_serialized.append(
+                        cls.HdlType(t, childCtx, declaration=True))
+    
+                v.name = ctx.scope.checkedName(v.name, v)
+                serializedVar = cls.SignalItem(v, childCtx, declaration=True)
+                variables.append(serializedVar)
+    
+            for p in arch.processes:
+                procs.append(cls.HWProcess(p, childCtx))
+    
+            # architecture names can be same for different entities
+            # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
+    
+            uniqComponents = list(map(lambda x: x[1][0],
+                                      groupedby(arch.components,
+                                                lambda c: c.name)))
+            uniqComponents.sort(key=lambda c: c.name)
+            components = list(map(lambda c: cls.Component(c, childCtx),
+                                  uniqComponents))
+    
+            componentInstances = list(
+                map(lambda c: cls.ComponentInstance(c, childCtx),
+                    arch.componentInstances))
+    
+            return cls.architectureTmpl.render(
+                indent=getIndent(ctx.indent),
+                entityName=arch.getEntityName(),
+                name=arch.name,
+                variables=variables,
+                extraTypes=extraTypes_serialized,
+                processes=procs,
+                components=components,
+                componentInstances=componentInstances
+            )
 
     @classmethod
     def comment(cls, comentStr):
@@ -112,7 +114,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
             )
 
     @classmethod
-    def ComponentInstance(cls, entity, ctx):
+    def ComponentInstance(cls, entity: Entity, ctx):
         with CurrentUnitSwap(ctx, entity.origin):
             portMaps = []
             for pi in entity.ports:
@@ -137,22 +139,23 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
             )
 
     @classmethod
-    def Entity(cls, ent, ctx):
-        generics, ports = cls.Entity_prepare(ent, ctx)
+    def Entity(cls, entity: Entity, ctx):
+        with CurrentUnitSwap(ctx, entity.origin):
+            generics, ports = cls.Entity_prepare(entity, ctx)
 
-        entVhdl = cls.entityTmpl.render(
-            indent=getIndent(ctx.indent),
-            name=ent.name,
-            ports=ports,
-            generics=generics
-        )
+            entVhdl = cls.entityTmpl.render(
+                indent=getIndent(ctx.indent),
+                name=entity.name,
+                ports=ports,
+                generics=generics
+            )
 
-        doc = ent.__doc__
-        if doc and id(doc) != id(Entity.__doc__):
-            doc = cls.comment(doc) + "\n"
-            return doc + entVhdl
-        else:
-            return entVhdl
+            doc = entity.__doc__
+            if doc and id(doc) != id(Entity.__doc__):
+                doc = cls.comment(doc) + "\n"
+                return doc + entVhdl
+            else:
+                return entVhdl
 
     @classmethod
     def GenericItem(cls, g, ctx):
