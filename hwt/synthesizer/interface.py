@@ -283,7 +283,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         self._params[i] = newP
         del p._scopes[self]  # remove reference from old param
         newP._registerScope(pName, self)
-        setattr(self, pName, newP)
+        object.__setattr__(self, pName, newP)
 
     def _updateParamsFrom(self, otherObj, updater=_defaultUpdater,
                           exclude=None):
