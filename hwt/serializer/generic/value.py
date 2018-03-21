@@ -8,11 +8,12 @@ from hwt.hdl.types.string import String
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.serializer.exceptions import SerializerException
 from hwt.synthesizer.param import Param
+from hwt.serializer.generic.context import SerializerCtx
 
 
 class GenericSerializer_Value():
     @classmethod
-    def Value(cls, val, ctx):
+    def Value(cls, val, ctx: SerializerCtx):
         """
         :param dst: is signal connected with value
         :param val: value object, can be instance of Signal or Value
@@ -46,15 +47,15 @@ class GenericSerializer_Value():
                 % (val))
 
     @classmethod
-    def Value_try_extract_as_const(cls, val, ctx):
+    def Value_try_extract_as_const(cls, val, ctx: SerializerCtx):
         return None
 
     @classmethod
-    def Integer_valAsHdl(cls, dtype, val, ctx):
+    def Integer_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
         return str(int(val.val))
 
     @classmethod
-    def Bits_valAsHdl(cls, dtype, val, ctx):
+    def Bits_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
         w = dtype.bit_length()
         if dtype.signed is None:
             if dtype.forceVector or w > 1:
@@ -69,7 +70,7 @@ class GenericSerializer_Value():
                                          val.vldMask)
 
     @classmethod
-    def get_signal_name(cls, si, ctx):
+    def get_signal_name(cls, si, ctx: SerializerCtx):
         if si.hidden and hasattr(si, "origin"):
             # hidden signal, render it's driver instead
             return cls.asHdl(si.origin, ctx)

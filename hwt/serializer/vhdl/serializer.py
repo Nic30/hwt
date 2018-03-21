@@ -56,9 +56,9 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
             arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
             arch.components.sort(key=lambda x: x.name)
             arch.componentInstances.sort(key=lambda x: x._name)
-    
+
             childCtx = ctx.withIndent()
-    
+
             for v in arch.variables:
                 t = v._dtype
                 # if type requires extra definition
@@ -66,28 +66,28 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
                     extraTypes.add(v._dtype)
                     extraTypes_serialized.append(
                         cls.HdlType(t, childCtx, declaration=True))
-    
+
                 v.name = ctx.scope.checkedName(v.name, v)
                 serializedVar = cls.SignalItem(v, childCtx, declaration=True)
                 variables.append(serializedVar)
-    
+
             for p in arch.processes:
                 procs.append(cls.HWProcess(p, childCtx))
-    
+
             # architecture names can be same for different entities
             # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
-    
+
             uniqComponents = list(map(lambda x: x[1][0],
                                       groupedby(arch.components,
                                                 lambda c: c.name)))
             uniqComponents.sort(key=lambda c: c.name)
             components = list(map(lambda c: cls.Component(c, childCtx),
                                   uniqComponents))
-    
+
             componentInstances = list(
                 map(lambda c: cls.ComponentInstance(c, childCtx),
                     arch.componentInstances))
-    
+
             return cls.architectureTmpl.render(
                 indent=getIndent(ctx.indent),
                 entityName=arch.getEntityName(),

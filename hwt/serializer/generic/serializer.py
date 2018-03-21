@@ -1,6 +1,8 @@
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
 from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import OpDefinition
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
@@ -241,7 +243,7 @@ class GenericSerializer():
             cases=cases)
 
     @classmethod
-    def _operand(cls, operand, operator, ctx: SerializerCtx):
+    def _operand(cls, operand: Operator, operator: OpDefinition, ctx: SerializerCtx):
         s = cls.asHdl(operand, ctx)
         if isinstance(operand, RtlSignalBase):
             try:
@@ -256,4 +258,3 @@ class GenericSerializer():
     @classmethod
     def _bin_op(cls, operator, op_str, ctx: SerializerCtx, ops):
         return op_str.join(map(lambda operand: cls._operand(operand, operator, ctx), ops))
-    

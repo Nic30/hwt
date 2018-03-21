@@ -17,6 +17,7 @@ from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
     NoDriverErr
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class DoesNotContainsTernary(Exception):
@@ -129,8 +130,7 @@ class VhdlSerializer_statements():
             childCtx = copy(ctx)
 
         def createTmpVarFn(suggestedName, dtype):
-            # [TODO] it is better to use RtlSignal
-            s = SignalItem(None, dtype, virtualOnly=True)
+            s = RtlSignal(None, None, dtype, virtualOnly=True)
             s.name = ctx.scope.checkedName(suggestedName, s)
             s.hidden = False
             serializedS = cls.SignalItem(s, childCtx, declaration=True)
@@ -145,8 +145,13 @@ class VhdlSerializer_statements():
 
         extraVarsInit = []
         for s in extraVars:
-            a = Assignment(s.defVal, s, virtualOnly=True)
-            extraVarsInit.append(cls.Assignment(a, childCtx))
+            if isinstance(s.defVal, RtlSignalBase) or s.defVal.vldMask:
+                a = Assignment(s.defVal, s, virtualOnly=True)
+                extraVarsInit.append(cls.Assignment(a, childCtx))
+            else:
+                assert s.drivers, s
+            for d in s.drivers:
+                extraVarsInit.append(cls.asHdl(d, childCtx))
 
         _hasToBeVhdlProcess = hasToBeVhdlProcess
         hasToBeVhdlProcess = extraVars or hasToBeVhdlProcess

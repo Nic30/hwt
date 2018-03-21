@@ -34,7 +34,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     __instCntr = 0
 
     def __init__(self, ctx, name, dtype, defVal=None, nopVal=None,
-                 useNopVal=False):
+                 useNopVal=False, virtualOnly=False):
         """
         :param ctx: context - RtlNetlist which is this signal part of
         :param name: name hint for this signal, if is None name
@@ -53,7 +53,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             self.hasGenericName = False
 
         assert isinstance(dtype, HdlType)
-        super(RtlSignal, self).__init__(name, dtype, defVal)
+        super(RtlSignal, self).__init__(name, dtype, defVal, virtualOnly=virtualOnly)
         self.ctx = ctx
 
         if ctx:

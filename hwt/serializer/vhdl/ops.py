@@ -1,5 +1,9 @@
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps, OpDefinition
+from hwt.serializer.generic.context import SerializerCtx
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.operatorDefs import AllOps
+from hwt.code import If
+from hwt.hdl.assignment import Assignment
 
 
 def isResultOfTypeConversion(sig):
@@ -67,7 +71,40 @@ class VhdlSerializer_ops():
     }
 
     @classmethod
-    def Operator(cls, op, ctx):
+    def _operand(cls, operand, operator: OpDefinition, ctx: SerializerCtx):
+        try:
+            isTernaryOp = operand.hidden and operand.drivers[0].operator == AllOps.TERNARY
+        except (AttributeError, IndexError):
+            isTernaryOp = False
+
+        if isTernaryOp:
+            # rewrite ternary operator as if
+            o = ctx.createTmpVarFn("tmpTernary", operand._dtype)
+            cond, ifTrue, ifFalse = operand.drivers[0].operands
+            if_ = If(cond)
+            if_.ifTrue.append(Assignment(ifTrue, o, virtualOnly=True, parentStm=if_))
+            if_.ifFalse = []
+            if_.ifFalse.append(Assignment(ifFalse, o, virtualOnly=True, parentStm=if_))
+            if_._outputs.append(o)
+            for obj in (cond, ifTrue, ifFalse):
+                if isinstance(obj, RtlSignalBase):
+                    if_._inputs.append(obj)
+            o.drivers.append(if_)
+            operand = o
+
+        s = cls.asHdl(operand, ctx)
+        if isinstance(operand, RtlSignalBase):
+            try:
+                o = operand.singleDriver()
+                if o.operator != operator and\
+                        cls.opPrecedence[o.operator] <= cls.opPrecedence[operator]:
+                    return "(%s)" % s
+            except Exception:
+                pass
+        return s
+
+    @classmethod
+    def Operator(cls, op: Operator, ctx: SerializerCtx):
         # [TODO] no nested ternary in expressions like
         # ( '1'  WHEN r = f ELSE  '0' ) & "0"
         ops = op.operands
