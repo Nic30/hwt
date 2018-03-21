@@ -30,7 +30,7 @@ class IpCoreWrapper(Unit):
                 # create array of interfaces instead of array interface
                 for i in range(int(intf._asArraySize)):
                     myIntf = intf._clone()
-                    name = intf._name + "_%d" % i
+                    name = "%s_%d" % (intf._name, i)
 
                     self._registerInterface(name, myIntf)
                     object.__setattr__(self, name, myIntf)
