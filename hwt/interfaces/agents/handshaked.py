@@ -177,6 +177,7 @@ class HandshakedAgent(SyncAgentBase):
                     sim.now,
                     self.actualData))
 
+            a = self.actualData
             # pop new data, because actual was read by slave
             if self.data:
                 self.actualData = self.data.popleft()
@@ -188,7 +189,7 @@ class HandshakedAgent(SyncAgentBase):
             if onDriverWriteAck is not None:
                 onDriverWriteAck(sim)
 
-            onDone = getattr(self.actualData, "onDone", None)
+            onDone = getattr(a, "onDone", None)
             if onDone is not None:
                 onDone(sim)
 
