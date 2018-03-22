@@ -159,7 +159,8 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
     @classmethod
     def GenericItem(cls, g, ctx):
-        s = "%s: %s" % (g.name, cls.HdlType(g._dtype, ctx))
+        s = "%s: %s" % (cls.get_signal_name(g, ctx),
+                        cls.HdlType(g._dtype, ctx))
         if g.defVal is None:
             return s
         else:
@@ -187,4 +188,6 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
     @classmethod
     def MapExpr(cls, m, ctx):
-        return "%s => %s" % (m.compSig.name, cls.asHdl(m.value, ctx))
+        return "%s => %s" % (
+            cls.get_signal_name(m.compSig, ctx),
+            cls.asHdl(m.value, ctx))

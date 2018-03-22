@@ -190,7 +190,8 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
     @classmethod
     def GenericItem(cls, g, ctx):
-        s = "%s %s" % (cls.HdlType(g._dtype, ctx.forPort()), g.name)
+        s = "%s %s" % (cls.HdlType(g._dtype, ctx.forPort()),
+                       cls.get_signal_name(g, ctx))
         if g.defVal is None:
             return s
         else:
@@ -228,5 +229,6 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         return ".%s(%s)" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
 
     @classmethod
-    def MapExpr(cls, m, createTmpVar):
-        return ".%s(%s)" % (m.compSig.name, cls.asHdl(m.value, createTmpVar))
+    def MapExpr(cls, m, ctx):
+        return ".%s(%s)" % (cls.get_signal_name(m.compSig, ctx),
+                            cls.asHdl(m.value, ctx))
