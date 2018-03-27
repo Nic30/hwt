@@ -58,7 +58,8 @@ class If(IfContainer):
 
         self._now_is_event_dependent = arr_any(
             discoverEventDependency(cond_sig), lambda x: True)
-
+        
+        self._inputs.append(cond_sig)
         cond_sig.endpoints.append(self)
 
         case = []
