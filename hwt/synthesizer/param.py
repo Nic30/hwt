@@ -54,6 +54,7 @@ class Param(RtlSignal):
         val = toHVal(val)
         self.defVal = val
         self._val = val.staticEval()
+        self._dtype = self._val._dtype
 
     def __call__(self, val):
         raise ValueError("Use .set() to set value of parameter instances")

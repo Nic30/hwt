@@ -132,7 +132,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         Register interface in implementation phase
         """
-        self._registerInterface(iName, intf)
+        self._registerInterface(iName, intf, addToInterfaces=False)
         self._loadInterface(intf, False)
         intf._signalsForInterface(self._ctx)
 
