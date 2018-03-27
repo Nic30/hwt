@@ -197,7 +197,7 @@ class PropDeclrCollector(object):
         unit._name = uName
         self._units.append(unit)
 
-    def _registerInterface(self, iName, intf, addToInterfaces=True):
+    def _registerInterface(self, iName, intf, isPrivate=False):
         """
         Register interface object on interface level object
         """
@@ -207,8 +207,12 @@ class PropDeclrCollector(object):
         intf._name = iName
         intf._ctx = self._ctx
 
-        if addToInterfaces:
+        if isPrivate:
+            self._private_interfaces.append(intf)
+            intf._isExtern = False
+        else:
             self._interfaces.append(intf)
+            intf._isExtern = True
 
     def _declrCollector(self, name, prop):
         if name in ["_associatedClk", "_associatedRst"]:

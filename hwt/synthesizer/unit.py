@@ -13,7 +13,9 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
     :cvar _serializeDecision: function to decide if Hdl object derived from
         this unit should be serialized or not, if None all is always serialized
-    :ivar _interfaces: all interfaces
+    :ivar _interfaces: all public interfaces
+    :ivar _private_interfaces: all internal interfaces
+        which are not acessible from outside of unit
     :ivar _units: all units defined on this obj
     :ivar _params: all params defined on this obj
     :ivar _parent: parent object (Unit instance)
@@ -114,6 +116,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         if not hasattr(self, "_interfaces"):
             self._interfaces = []
+        if not hasattr(self, "_private_interfaces"):
+            self._private_interfaces = []
         if not hasattr(self, "_units"):
             self._units = []
         self._setAttrListener = self._declrCollector
@@ -132,7 +136,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         Register interface in implementation phase
         """
-        self._registerInterface(iName, intf, addToInterfaces=False)
+        self._registerInterface(iName, intf, isPrivate=True)
         self._loadInterface(intf, False)
         intf._signalsForInterface(self._ctx)
 

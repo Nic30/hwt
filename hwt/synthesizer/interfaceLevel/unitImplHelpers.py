@@ -1,4 +1,5 @@
 from copy import copy
+from itertools import chain
 
 from hwt.hdl.constants import INTF_DIRECTION, DIRECTION
 from hwt.hdl.types.bits import Bits
@@ -6,8 +7,8 @@ from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
+from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 
 
 def getClk(unit):
@@ -96,7 +97,7 @@ class UnitImplHelpers(object):
         """Disconnect internal signals so unit can be reused by parent unit"""
         for pi in self._entity.ports:
             pi.connectInternSig()
-        for i in self._interfaces:
+        for i in chain(self._interfaces, self._private_interfaces):
             i._clean()
 
     def _signalsForMyEntity(self, context, prefix):
@@ -135,7 +136,8 @@ class UnitImplHelpers(object):
             self._boundIntfSignalToEntity(s, inftToPortDict)
 
     def _boundIntfSignalToEntity(self, interface, inftToPortDict):
-        portItem = single(self._entity.ports, lambda x: x._interface == interface)
+        portItem = single(self._entity.ports,
+                          lambda x: x._interface == interface)
         interface._boundedEntityPort = portItem
         d = INTF_DIRECTION.asDirection(interface._direction)
 
@@ -143,7 +145,7 @@ class UnitImplHelpers(object):
             portItem.direction = DIRECTION.INOUT
 
         if portItem.direction != d:
-            raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" % 
+            raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" %
                                  (self._name, portItem.name, repr(interface), portItem.direction, d))
 
     def _shareParamsWithPrefix(self, obj, prefix, paramNames):
