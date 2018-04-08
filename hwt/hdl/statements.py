@@ -253,6 +253,7 @@ class HdlStatement(HdlObject):
             if was_top:
                 # disconnect self from signals
                 ctx = self._get_rtl_context()
+                ctx.statements.remove(self)
                 ctx.statements.update(result_statements)
 
                 for i in self._inputs:
