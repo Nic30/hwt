@@ -246,9 +246,9 @@ class HdlStatement(HdlObject):
             of reduce operation on this statement
         """
 
+        parentStm = self.parentStm
         if self_reduced:
-            was_top = self.parentStm is None
-
+            was_top = parentStm is None
             # update signal drivers/endpoints
             if was_top:
                 # disconnect self from signals
@@ -261,12 +261,13 @@ class HdlStatement(HdlObject):
                     o.drivers.remove(self)
 
             for stm in result_statements:
-                stm.parentStm = self.parentStm
-                # conect signals to child statements
-                for inp in stm._inputs:
-                    inp.endpoints.append(stm)
-                for outp in stm._outputs:
-                    outp.drivers.append(stm)
+                stm.parentStm = parentStm
+                if parentStm is None:
+                    # conect signals to child statements
+                    for inp in stm._inputs:
+                        inp.endpoints.append(stm)
+                    for outp in stm._outputs:
+                        outp.drivers.append(stm)
         else:
             # parent has to update it's inputs/outputs
             if io_changed:
@@ -288,7 +289,8 @@ class HdlStatement(HdlObject):
         else:
             assert other._sensitivity is None
 
-        if other.parentStm is None:
+        other_was_top = other.parentStm is None
+        if other_was_top:
             other._get_rtl_context().statements.remove(other)
             for s in other._inputs:
                 s.endpoints.discard(other)
@@ -472,26 +474,32 @@ class HdlStatement(HdlObject):
         """
         Assign parent statement and propagate dependency flags if necessary
         """
+        was_top = self.parentStm is None
         self.parentStm = parentStm
         if not self._now_is_event_dependent\
                 and parentStm._now_is_event_dependent:
             self._on_parent_event_dependent()
 
-        parent_out_add = parentStm._outputs.append
-        parent_in_add = parentStm._inputs.append
+        topStatement = parentStm
+        while topStatement.parentStm is not None:
+            topStatement = topStatement.parentStm
 
-        for inp in self._inputs:
-            inp.endpoints.discard(self)
-            inp.endpoints.append(parentStm)
-            parent_in_add(inp)
+        parent_out_add = topStatement._outputs.append
+        parent_in_add = topStatement._inputs.append
 
-        for outp in self._outputs:
-            outp.drivers.discard(self)
-            outp.drivers.append(parentStm)
-            parent_out_add(outp)
+        if was_top:
+            for inp in self._inputs:
+                inp.endpoints.discard(self)
+                inp.endpoints.append(topStatement)
+                parent_in_add(inp)
 
-        ctx = self._get_rtl_context()
-        ctx.statements.discard(self)
+            for outp in self._outputs:
+                outp.drivers.discard(self)
+                outp.drivers.append(topStatement)
+                parent_out_add(outp)
+
+            ctx = self._get_rtl_context()
+            ctx.statements.discard(self)
 
         parentStm.rank += self.rank
 
@@ -502,6 +510,7 @@ class HdlStatement(HdlObject):
         by condSet
         """
         for stm in flatten(statements):
+            assert stm.parentStm is None, stm
             stm._set_parent_stm(self)
             target.append(stm)
 
