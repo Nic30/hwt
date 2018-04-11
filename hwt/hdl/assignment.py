@@ -117,11 +117,10 @@ class Assignment(HdlStatement):
         return isinstance(other, self.__class__)
 
     def isSame(self, other):
-        # [TODO] indexes
         if isinstance(other, self.__class__):
             if isSameHVal(self.dst, other.dst)\
                     and isSameHVal(self.src, other.src)\
-                    and areSameHVals(self.src.indexs, self.dst.indexes):
+                    and areSameHVals(self.indexes, other.indexes):
                 return True
         return False
 
