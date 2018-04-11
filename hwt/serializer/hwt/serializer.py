@@ -15,7 +15,6 @@ from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.constCache import ConstCache
-from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import LangueKeyword
 from hwt.serializer.generic.serializer import GenericSerializer
@@ -26,6 +25,7 @@ from hwt.serializer.hwt.value import HwtSerializer_value
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.serializer.hwt.context import HwtSerializerCtx
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/hwt/templates'))
@@ -50,12 +50,16 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         return True
 
     @classmethod
-    def asHdl(cls, obj, ctx):
+    def getBaseContext(cls):
+        return HwtSerializerCtx(cls.getBaseNameScope(), 0, None, None)
+
+    @classmethod
+    def asHdl(cls, obj, ctx: HwtSerializerCtx):
         """
         Convert object to HDL string
 
         :param obj: object to serialize
-        :param ctx: SerializerCtx instance
+        :param ctx: HwtSerializerCtx instance
         """
         if isinstance(obj, RtlSignalBase):
             return cls.SignalItem(obj, ctx)
@@ -80,7 +84,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
             raise SerializerException("Not implemented for %r" % (obj))
 
     @classmethod
-    def stmAsHdl(cls, obj, ctx: SerializerCtx):
+    def stmAsHdl(cls, obj, ctx: HwtSerializerCtx):
         try:
             serFn = getattr(cls, obj.__class__.__name__)
         except AttributeError:
@@ -88,7 +92,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         return serFn(obj, ctx)
 
     @classmethod
-    def Entity(cls, ent: Entity, ctx: SerializerCtx):
+    def Entity(cls, ent: Entity, ctx: HwtSerializerCtx):
         """
         Entity is just forward declaration of Architecture, it is not used
         in most HDL languages as there is no recursion in hierarchy
@@ -105,7 +109,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         )
 
     @classmethod
-    def Architecture(cls, arch: Architecture, ctx: SerializerCtx):
+    def Architecture(cls, arch: Architecture, ctx: HwtSerializerCtx):
         variables = []
         procs = []
         extraTypes = set()
@@ -165,7 +169,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         )
 
     @classmethod
-    def Assignment(cls, a: Assignment, ctx: SerializerCtx):
+    def Assignment(cls, a: Assignment, ctx: HwtSerializerCtx):
         dst = a.dst
         indentStr = getIndent(ctx.indent)
         srcStr = "%s" % cls.Value(a.src, ctx)
@@ -185,7 +189,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         return "#" + coment.replace("\n", "\n#")
 
     @classmethod
-    def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx):
+    def IfContainer(cls, ifc: IfContainer, ctx: HwtSerializerCtx):
         cond = cls.condAsHdl(ifc.cond, ctx)
         ifTrue = ifc.ifTrue
         ifFalse = ifc.ifFalse
@@ -215,7 +219,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
 
     @classmethod
     def SwitchContainer(cls, sw: SwitchContainer,
-                        ctx: SerializerCtx):
+                        ctx: HwtSerializerCtx):
         switchOn = sw.switchOn
         if not sw.cases:
             # this should be usually reduced, but can appear while debugging
@@ -258,7 +262,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
             return item.name
 
     @classmethod
-    def HWProcess(cls, proc: HWProcess, ctx: SerializerCtx):
+    def HWProcess(cls, proc: HWProcess, ctx: HwtSerializerCtx):
         body = proc.statements
         assert body
         proc.name = ctx.scope.checkedName(proc.name, proc)

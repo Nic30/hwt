@@ -1,4 +1,5 @@
 from hwt.hdl.operatorDefs import AllOps
+from hwt.serializer.hwt.context import HwtSerializerCtx
 
 
 class HwtSerializer_ops():
@@ -57,41 +58,48 @@ class HwtSerializer_ops():
     }
 
     @classmethod
-    def Operator(cls, op, ctx):
+    def Operator(cls, op, ctx: HwtSerializerCtx):
         ops = op.operands
         o = op.operator
+        
+        asHdl = cls.asHdl
 
-        op_str = cls._unaryOps.get(o, None)
-        if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx))
-
-        op_str = cls._binOps.get(o, None)
-        if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx),
-                             cls._operand(ops[1], o, ctx))
-
-        if o in cls._castOps:
-            return "(%s)._reinterpret_cast(%s)" % (cls.asHdl(ops[0], ctx),
-                                                   cls.HdlType(op.result._dtype, ctx))
-
-        if o == AllOps.INDEX:
-            assert len(ops) == 2
-            return "(%s)[%s]" % (cls.asHdl(ops[0], ctx),
+        with ctx.valWidthReq(o == AllOps.CONCAT):
+            op_str = cls._unaryOps.get(o, None)
+            if op_str is not None:
+                    return op_str % (cls._operand(ops[0], o, ctx))
+    
+            op_str = cls._binOps.get(o, None)
+            if op_str is not None:
+                return op_str % (cls._operand(ops[0], o, ctx),
                                  cls._operand(ops[1], o, ctx))
-        elif o == AllOps.TERNARY:
-            return "(%s)._ternary(%s, %s)" %\
-                tuple(map(lambda x: cls.asHdl(x, ctx), ops))
-        elif o == AllOps.BitsToInt:
-            assert len(ops) == 1
-            op = ops[0]
-            return "%s.auto_cast(INT)" % (
-                cls.asHdl(op, ctx))
-        elif o == AllOps.IntToBits:
-            assert len(ops) == 1
-            resT = op.result._dtype
-            return "%s.auto_cast(%s)" % (
-                cls.asHdl(ops[0], ctx),
-                cls.HdlType_bits(resT, ctx))
-        else:
-            raise NotImplementedError(
-                "Do not know how to convert %s to simModel" % (o))
+    
+            if o in cls._castOps:
+                return "(%s)._reinterpret_cast(%s)" % (asHdl(ops[0], ctx),
+                                                       cls.HdlType(op.result._dtype, ctx))
+    
+            if o == AllOps.INDEX:
+                assert len(ops) == 2
+                return "(%s)[%s]" % (asHdl(ops[0], ctx),
+                                     cls._operand(ops[1], o, ctx))
+            elif o == AllOps.TERNARY:
+                res, op0, op1 = ops
+                resStr = asHdl(res, ctx)
+                with ctx.valWidthReq(True):
+                    op0Str = asHdl(op0, ctx)
+                    op1Str = asHdl(op1, ctx)
+                return "(%s)._ternary(%s, %s)" % (resStr, op0Str, op1Str)
+            elif o == AllOps.BitsToInt:
+                assert len(ops) == 1
+                op = ops[0]
+                return "%s.auto_cast(INT)" % (
+                    asHdl(op, ctx))
+            elif o == AllOps.IntToBits:
+                assert len(ops) == 1
+                resT = op.result._dtype
+                return "%s.auto_cast(%s)" % (
+                    asHdl(ops[0], ctx),
+                    cls.HdlType_bits(resT, ctx))
+            else:
+                raise NotImplementedError(
+                    "Do not know how to convert %s to simModel" % (o))

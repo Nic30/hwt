@@ -1,7 +1,7 @@
 from typing import Tuple, List, Dict
 
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statements import isSameHVal, HdlStatement
+from hwt.hdl.statements import isSameHVal, HdlStatement, areSameHVals
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
@@ -120,7 +120,8 @@ class Assignment(HdlStatement):
         # [TODO] indexes
         if isinstance(other, self.__class__):
             if isSameHVal(self.dst, other.dst)\
-                    and isSameHVal(self.src, other.src):
+                    and isSameHVal(self.src, other.src)\
+                    and areSameHVals(self.src.indexs, self.dst.indexes):
                 return True
         return False
 
