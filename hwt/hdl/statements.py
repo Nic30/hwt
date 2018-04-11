@@ -1,5 +1,5 @@
 from itertools import chain, islice
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.sensitivityCtx import SensitivityCtx
@@ -19,54 +19,6 @@ class IncompatibleStructure(Exception):
     """
 
 
-def seqEvalCond(cond):
-    return bool(cond.staticEval().val)
-
-
-def isSameHVal(a, b):
-    return a is b or (isinstance(a, Value)
-                      and isinstance(b, Value)
-                      and a.val == b.val
-                      and a.vldMask == b.vldMask)
-
-
-def isSameStatementList(stmListA, stmListB):
-    if stmListA is None and stmListB is None:
-        return True
-    if stmListA is None or stmListB is None:
-        return False
-
-    for a, b in zip(stmListA, stmListB):
-        if not a.isSame(b):
-            return False
-
-    return True
-
-
-def statementsAreSame(statements):
-    iterator = iter(statements)
-    try:
-        first = next(iterator)
-    except StopIteration:
-        return True
-    return all(first.isSame(rest) for rest in iterator)
-
-
-def _get_stm_with_branches(stm_it):
-    """
-    :return: first statement with rank > 0 or None if iterator empty
-    """
-    last = None
-    while last is None or last.rank == 0:
-        try:
-            last = next(stm_it)
-        except StopIteration:
-            last = None
-            break
-
-    return last
-
-
 class HdlStatement(HdlObject):
     """
     :ivar _is_completly_event_dependent: statement does not have
@@ -79,7 +31,8 @@ class HdlStatement(HdlObject):
         or (rising/falling) operator
     :ivar _enclosed_for: set of outputs for which this statement is enclosed
         (for which there is not any unused branch)
-    :ivar rank: number of used branches in statement, used as prefilter for statement comparing
+    :ivar rank: number of used branches in statement, used as prefilter
+        for statement comparing
     """
 
     def __init__(self, parentStm=None, sensitivity=None,
@@ -96,7 +49,8 @@ class HdlStatement(HdlObject):
 
     def _clean_signal_meta(self):
         """
-        Clean informations about enclosure for outputs and sensitivity of this statement
+        Clean informations about enclosure for outputs and sensitivity
+        of this statement
         """
         self._enclosed_for = None
         self._sensitivity = None
@@ -521,3 +475,85 @@ class HdlStatement(HdlObject):
         """
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__, self)
+
+
+def seqEvalCond(cond) -> bool:
+    """
+    Evaluate condition signal in sequential context
+    """
+    return bool(cond.staticEval().val)
+
+
+def isSameHVal(a: Value, b: Value) -> bool:
+    """
+    :return: True if two Value instances are same
+    (not just equal)
+    """
+    return a is b or (isinstance(a, Value)
+                      and isinstance(b, Value)
+                      and a.val == b.val
+                      and a.vldMask == b.vldMask)
+
+
+def areSameHVals(a: Union[None, List[Value]],
+                 b: Union[None, List[Value]]) -> bool:
+    """
+    :return: True if two vectors of Value instances are same
+    (not just equal)
+    """
+    if a is b:
+        return True
+    if a is None or b is None:
+        return False
+    if len(a) == len(b):
+        for a_, b_ in zip(a, b):
+            if not isSameHVal(a_, b_):
+                return False
+        return True
+    else:
+        return False
+
+
+def isSameStatementList(stmListA: List[HdlStatement],
+                        stmListB: List[HdlStatement]) -> bool:
+    """
+    :return: True if two lists of HdlStatement instances are same
+    """
+    if stmListA is stmListB:
+        return True
+    if stmListA is None or stmListB is None:
+        return False
+
+    for a, b in zip(stmListA, stmListB):
+        if not a.isSame(b):
+            return False
+
+    return True
+
+
+def statementsAreSame(statements: List[HdlStatement]) -> bool:
+    """
+    :return: True if all statements are same
+    """
+    iterator = iter(statements)
+    try:
+        first = next(iterator)
+    except StopIteration:
+        return True
+
+    return all(first.isSame(rest) for rest in iterator)
+
+
+def _get_stm_with_branches(stm_it):
+    """
+    :return: first statement with rank > 0 or None if iterator empty
+    """
+    last = None
+    while last is None or last.rank == 0:
+        try:
+            last = next(stm_it)
+        except StopIteration:
+            last = None
+            break
+
+    return last

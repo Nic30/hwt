@@ -2,13 +2,18 @@ from hwt.bitmask import mask
 from hwt.hdl.types.hdlType import HdlType
 from hwt.serializer.generic.indent import getIndent
 
+BITS_DEFAUTL_SIGNED = None
+BITS_DEFAUTL_FORCEVECTOR = False
+BITS_DEFAUTL_NEGATED = False
+
 
 class Bits(HdlType):
     """
     Elemental HDL type representing bits (vector or single bit)
     """
 
-    def __init__(self, width, signed=None, forceVector=False, negated=False):
+    def __init__(self, width, signed=BITS_DEFAUTL_SIGNED,
+                 forceVector=BITS_DEFAUTL_FORCEVECTOR, negated=BITS_DEFAUTL_NEGATED):
         """
         :param negated: if true the value is in negated form
         :param forceVector: use always hdl vector type
