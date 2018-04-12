@@ -38,7 +38,7 @@ class GenericSerializer():
     Base class for serializers
     """
     @staticmethod
-    def formater(s):
+    def formatter(s):
         return s
 
     @classmethod
