@@ -12,6 +12,7 @@ setup(name='hwt',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
           'jinja2',  # templating engine
+          'pyDigitalWaveTools', # simulator output dumping
       ],
       license='MIT',
       packages=find_packages(),
