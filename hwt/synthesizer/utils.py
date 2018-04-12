@@ -111,7 +111,7 @@ def toRtl(unitOrCls: Unit, name: str=None,
                             f.write("\n")
 
                         f.write(
-                            serializer.formater(sc)
+                            serializer.formatter(sc)
                         )
                 else:
                     codeBuff.append(sc)
@@ -128,7 +128,7 @@ def toRtl(unitOrCls: Unit, name: str=None,
     if createFiles:
         return files
     else:
-        return serializer.formater(
+        return serializer.formatter(
             "\n".join(codeBuff)
         )
 
