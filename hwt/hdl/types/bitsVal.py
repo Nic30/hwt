@@ -141,6 +141,9 @@ class BitsVal(EventCapableVal):
 
         return cls(val, typeObj, vld)
 
+    def toPy(self):
+        return int(self)
+
     def _concat__val(self, other):
         w = self._dtype.bit_length()
         other_w = other._dtype.bit_length()

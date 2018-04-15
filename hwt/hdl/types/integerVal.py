@@ -64,6 +64,9 @@ class IntegerVal(Value):
 
         return cls(val, typeObj, vld)
 
+    def toPy(self):
+        return int(self)
+
     # arithmetic
     def _neg__val(self):
         v = self.clone()

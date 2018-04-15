@@ -29,6 +29,11 @@ class StringVal(Value):
 
         return cls(val, typeObj, vld)
 
+    def toPy(self):
+        if not self._isFullVld():
+            raise ValueError("Value of %r is not fully defined" % self)
+        return self.val
+
     def _eq__val(self, other):
         eq = self.val == other.val
         vld = int(self.vldMask and other.vldMask)

@@ -88,6 +88,9 @@ class HBoolVal(Value):
 
         return cls(val, typeObj, vld)
 
+    def toPy(self):
+        return bool(self)
+
     def _eq__val(self, other):
         return boolCmpOp__val(self, other, AllOps.EQ, eq)
 

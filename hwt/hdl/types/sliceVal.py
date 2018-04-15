@@ -10,9 +10,15 @@ class SliceVal(HArrayVal):
     def _isFullVld(self):
         return self.val[0]._isFullVld() and self.val[1]._isFullVld()
 
+    def toPy(self):
+        """
+        Convert to python slice object 
+        """
+        return slice(int(self.val[0]), int(self.val[1]))
+
     def _size(self):
         """
         :return: how many bits is this slice selecting
         """
         assert isinstance(self, Value)
-        return self.val[0].val - self.val[1].val
+        return int(self.val[0]) - int(self.val[1])

@@ -53,6 +53,11 @@ class HArrayVal(Value):
 
         return cls(elements, typeObj, vldMask)
 
+    def toPy(self):
+        if not self._isFullVld():
+            raise ValueError("Value of %r is not fully defined" % self)
+        return [v.toPy() for _, v in sorted(self.val.items())]
+
     def __hash__(self):
         return hash((self._dtype, self.updateTime))
         # return hash((self._dtype, self.val, self.vldMask, self.updateTime))

@@ -58,6 +58,16 @@ class StructValBase(Value):
             val = None
         return cls(val, typeObj)
 
+    def toPy(self):
+        if not self._isFullVld():
+            raise ValueError("Value of %r is not fully defined" % self)
+        d = {}
+        for f in self._dtype.fields:
+            if f.name is not None:
+                val = getattr(self, f.name).toPy()
+                d[f.name] = val
+        return d
+
     def __eq__(self, other):
         if areValues(self, other):
             if self._dtype == other._dtype:
