@@ -479,7 +479,7 @@ class HdlStatement(HdlObject):
     def _destroy(self):
         """
         Disconnect this statement from signals and delete it from RtlNetlist context
-        
+
         :attention: signal endpoints/drivers will be altered
             that means they can not be used for iteration
         """
