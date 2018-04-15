@@ -476,6 +476,22 @@ class HdlStatement(HdlObject):
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__, self)
 
+    def _destroy(self):
+        """
+        Disconnect this statement from signals and delete it from RtlNetlist context
+        
+        :attention: signal endpoints/drivers will be altered
+            that means they can not be used for iteration
+        """
+        ctx = self._get_rtl_context()
+        for i in self._inputs:
+            i.endpoints.discard(self)
+
+        for o in self._outputs:
+            o.drivers.remove(self)
+
+        ctx.statements.remove(self)
+
 
 def seqEvalCond(cond) -> bool:
     """
