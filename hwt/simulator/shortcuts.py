@@ -18,10 +18,11 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
+from hwt.synthesizer.dummyPlatform import DummyPlatform
 
 
 def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
-               targetPlatform=None,
+               targetPlatform=DummyPlatform(),
                dumpModelIn: str=None, onAfterToRtl=None):
     """
     Create simulation model and connect it with interfaces of original unit
@@ -57,7 +58,7 @@ def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
     return unit, model, procs
 
 
-def toSimModel(unit, targetPlatform=None, dumpModelIn=None):
+def toSimModel(unit, targetPlatform=DummyPlatform(), dumpModelIn=None):
     """
     Create a simulation model for unit
 

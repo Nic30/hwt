@@ -1,3 +1,4 @@
+from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
@@ -13,9 +14,10 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
     :cvar _serializeDecision: function to decide if Hdl object derived from
         this unit should be serialized or not, if None all is always serialized
+    :cvar _PROTECTED_NAMES: set of names which can not be overridden 
     :ivar _interfaces: all public interfaces
     :ivar _private_interfaces: all internal interfaces
-        which are not acessible from outside of unit
+        which are not accessible from outside of unit
     :ivar _units: all units defined on this obj
     :ivar _params: all params defined on this obj
     :ivar _parent: parent object (Unit instance)
@@ -38,7 +40,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         self._loadConfig()
 
-    def _toRtl(self, targetPlatform):
+    def _toRtl(self, targetPlatform: DummyPlatform):
         """
         synthesize all subunits, make connections between them,
         build entity and component for this unit
@@ -48,6 +50,10 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._targetPlatform = targetPlatform
         if not hasattr(self, "_name"):
             self._name = self._getDefaultName()
+
+        for proc in targetPlatform.beforeToRtl:
+            proc(self)
+
         self._ctx.params = self._buildParams()
         self._externInterf = []
 
@@ -65,6 +71,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             if i._isExtern:
                 self._externInterf.extend(signals)
 
+        for proc in targetPlatform.beforeToRtlImpl:
+            proc(self)
         self._loadMyImplementations()
         yield from self._lazyLoaded
 
@@ -74,17 +82,24 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
                 "- unit without interfaces are not allowed"
                 % self._name)
 
+        for proc in targetPlatform.afterToRtlImpl:
+            proc(self)
+
         yield from self._synthetiseContext(self._externInterf)
         self._checkArchCompInstances()
         for intf in self._interfaces:
             intf._setDirLock(True)
+
+        for proc in targetPlatform.afterToRtl:
+            proc(self)
 
     def _wasSynthetised(self):
         return self._ctx.synthesised
 
     def _synthetiseContext(self, externInterf):
         # synthesize signal level context
-        s = self._ctx.synthesize(self._name, externInterf)
+        s = self._ctx.synthesize(
+            self._name, externInterf, self._targetPlatform)
         self._entity = s[0]
         self._entity.__doc__ = self.__doc__
         self._entity.origin = self

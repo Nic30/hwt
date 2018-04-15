@@ -1,6 +1,6 @@
 from copy import copy
 from itertools import compress
-from typing import List, Generator
+from typing import List, Generator, Callable
 
 from hwt.code import If
 from hwt.hdl.architecture import Architecture
@@ -130,7 +130,7 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
         pass
 
 
-def statements_to_HWProcesses(statements)\
+def statements_to_HWProcesses(statements: List[HdlStatement])\
         -> Generator[HWProcess, None, None]:
     """
     Pack statements into HWProcess instances,
@@ -156,13 +156,57 @@ def statements_to_HWProcesses(statements)\
     yield from reduceProcesses(processes)
 
 
-def walk_assignments(stm, dst) -> Generator[Assignment, None, None]:
+def walk_assignments(stm: HdlStatement, dst: RtlSignal) -> Generator[Assignment, None, None]:
     if isinstance(stm, Assignment):
         if dst is stm.dst:
             yield stm
     else:
         for _stm in stm._iter_stms():
             yield from walk_assignments(_stm, dst)
+
+
+def markVisibilityOfSignals(ctx, ctxName, signals, interfaceSignals):
+    """
+    * check if all signals are driven by something
+    * mark signals with hidden = False if they are connecting statements
+      or if they are external interface
+    """
+    for sig in signals:
+        driver_cnt = len(sig.drivers)
+        has_comb_driver = False
+        if driver_cnt > 1:
+            sig.hidden = False
+            for d in sig.drivers:
+                if not isinstance(d, Operator):
+                    sig.hidden = False
+
+                is_comb_driver = False
+
+                if isinstance(d, PortItem):
+                    is_comb_driver = True
+                elif not d._now_is_event_dependent:
+                    for a in walk_assignments(d, sig):
+                        if not a.indexes\
+                                and not a._is_completly_event_dependent:
+                            is_comb_driver = True
+                            break
+
+                if has_comb_driver and is_comb_driver:
+                    raise MultipleDriversErr(
+                        "%s: Signal %r has multiple combinational drivers" %
+                        (ctx.getDebugScopeName(), sig))
+
+                has_comb_driver |= is_comb_driver
+        elif driver_cnt == 1:
+            if not isinstance(sig.drivers[0], Operator):
+                sig.hidden = False
+        else:
+            sig.hidden = False
+            if sig not in interfaceSignals:
+                if not sig.defVal._isFullVld():
+                    raise NoDriverErr(
+                        sig, "Signal without any driver or valid value in ", ctxName)
+                sig._const = True
 
 
 class RtlNetlist():
@@ -213,15 +257,15 @@ class RtlNetlist():
             if syncRst is not None:
                 r = If(syncRst._isOn(),
                        RtlSignal.__call__(s, _defVal)
-                    ).Else(
-                       RtlSignal.__call__(s, s.next)
-                    )
+                       ).Else(
+                    RtlSignal.__call__(s, s.next)
+                )
             else:
                 r = [RtlSignal.__call__(s, s.next)]
 
             If(clk._onRisingEdge(),
                r
-            )
+               )
         else:
             if syncRst:
                 raise SigLvlConfErr(
@@ -232,7 +276,7 @@ class RtlNetlist():
 
         return s
 
-    def synthesize(self, name, interfaces):
+    def synthesize(self, name, interfaces, targetPlatform):
         """
         Build Entity and Architecture instance out of netlist representation
         """
@@ -243,6 +287,12 @@ class RtlNetlist():
         for _, v in self.params.items():
             ent.generics.append(v)
 
+        # interface set for faster lookup
+        if isinstance(interfaces, set):
+            intfSet = interfaces
+        else:
+            intfSet = set(interfaces)
+
         # create ports
         for s in interfaces:
             pi = portItemfromSignal(s, ent)
@@ -251,45 +301,10 @@ class RtlNetlist():
             s.hidden = False
 
         removeUnconnectedSignals(self)
+        markVisibilityOfSignals(self, name, self.signals, intfSet)
 
-        # check if all signals are driven by something
-        _interfaces = set(interfaces)
-        for sig in self.signals:
-            driver_cnt = len(sig.drivers)
-            has_comb_driver = False
-            if driver_cnt > 1:
-                sig.hidden = False
-                for d in sig.drivers:
-                    if not isinstance(d, Operator):
-                        sig.hidden = False
-
-                    is_comb_driver = False
-
-                    if isinstance(d, PortItem):
-                        is_comb_driver = True
-                    elif not d._now_is_event_dependent:
-                        for a in walk_assignments(d, sig):
-                            if not a.indexes\
-                                    and not a._is_completly_event_dependent:
-                                is_comb_driver = True
-                                break
-
-                    if has_comb_driver and is_comb_driver:
-                        raise MultipleDriversErr(
-                            "%s: Signal %r has multiple combinational drivers" %
-                            (self.getDebugScopeName(), sig))
-
-                    has_comb_driver |= is_comb_driver
-            elif driver_cnt == 1:
-                if not isinstance(sig.drivers[0], Operator):
-                    sig.hidden = False
-            else:
-                sig.hidden = False
-                if sig not in _interfaces:
-                    if not sig.defVal._isFullVld():
-                        raise NoDriverErr(
-                            sig, "Signal without any driver or valid value in ", name)
-                    sig._const = True
+        for proc in targetPlatform.beforeHdlArchGeneration:
+            proc(self)
 
         arch = Architecture(ent)
         for p in statements_to_HWProcesses(self.statements):
@@ -297,7 +312,7 @@ class RtlNetlist():
 
         # add signals, variables etc. in architecture
         for s in self.signals:
-            if s not in interfaces and not s.hidden:
+            if s not in intfSet and not s.hidden:
                 arch.variables.append(s)
 
         # instantiate subUnits in architecture

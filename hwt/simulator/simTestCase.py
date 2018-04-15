@@ -13,6 +13,7 @@ from hwt.simulator.hdlSimulator import HdlSimulator
 from hwt.simulator.shortcuts import simPrepare
 from hwt.simulator.simSignal import SimSignal
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
+from hwt.synthesizer.dummyPlatform import DummyPlatform
 
 
 def allValuesToInts(sequenceOrVal):
@@ -156,7 +157,7 @@ class SimTestCase(unittest.TestCase):
         self.procs.append(randomEnProc)
 
     def prepareUnit(self, unit, modelCls=None, dumpModelIn=None,
-                    onAfterToRtl=None, targetPlatform=None):
+                    onAfterToRtl=None, targetPlatform=DummyPlatform()):
         """
         Create simulation model and connect it with interfaces of original unit
         and decorate it with agents and collect all simulation processes

@@ -11,11 +11,12 @@ from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.unit import Unit
+from hwt.synthesizer.dummyPlatform import DummyPlatform
 
 
 def toRtl(unitOrCls: Unit, name: str=None,
           serializer: GenericSerializer=VhdlSerializer,
-          targetPlatform=None, saveTo: str=None):
+          targetPlatform=DummyPlatform(), saveTo: str=None):
     """
     Convert unit to RTL using specified serializer
 
