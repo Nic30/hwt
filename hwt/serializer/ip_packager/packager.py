@@ -72,8 +72,10 @@ class Packager(object):
                 handlers.append(fn)
 
         with open(self.guiFile, "w") as f:
-            s = gui.asTcl() + '\n\n'.join(map(lambda x: str(x), handlers))
-            f.write(s)
+            f.write(gui.asTcl())
+            for h in handlers:
+                f.write('\n\n')
+                f.write(str(h))
 
     def createPackage(self, repoDir, vendor="hwt", library="mylib",
                       description=None):
