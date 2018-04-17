@@ -1,5 +1,5 @@
 # HWToolkit (hwt),
-# the library for hardware developement in Python
+# the library for hardware development in Python
 [![Build Status](https://travis-ci.org/Nic30/hwt.svg?branch=master)](https://travis-ci.org/Nic30/hwt)
 [![Coverage Status](https://coveralls.io/repos/github/Nic30/hwt/badge.svg?branch=master)](https://coveralls.io/github/Nic30/hwt?branch=master)
 [![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt) 
@@ -19,8 +19,6 @@
 * HWT uses hierarchy of netlists for representation of target design.
 * Optimized netlists are generated from usual code statements, function calls etc.
 * HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
-* Netlist can be simulated directly but they are optimalized before simulation (converted to SimModel or SystemC)
-* HWT can run in parallel in default it runs in single thread and parallelization should be done on level of tests.
 
 
 
@@ -34,6 +32,7 @@ HWT itself is just API for code generating by more advanced tools, but it can al
 ## Example
 
 * AxiLiteEndpoint is derived from BusEndpoint class and implements slave decoder for AxiLite bus
+(AxiLiteEndpoint is component which takes c-like struct and generates address encoder)
 
 ```python
 from hwt.synthesizer.utils import toRtl
