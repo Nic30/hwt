@@ -34,6 +34,8 @@ def removeUnconnectedSignals(netlist):
                     # drivers of this signal are useless rm them
                     if isinstance(e, Operator):
                         inputs = e.operands
+                        if e.result is sig:
+                            e.result = None
                     else:
                         inputs = e._inputs
                         netlist.statements.discard(e)

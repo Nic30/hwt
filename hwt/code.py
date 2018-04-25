@@ -58,7 +58,7 @@ class If(IfContainer):
 
         self._now_is_event_dependent = arr_any(
             discoverEventDependency(cond_sig), lambda x: True)
-        
+
         self._inputs.append(cond_sig)
         cond_sig.endpoints.append(self)
 
@@ -95,9 +95,7 @@ class Switch(SwitchContainer):
             raise HwtSyntaxError("Can not switch on result of event operator")
 
         super(Switch, self).__init__(switchOn, [])
-        self._inputs.append(switchOn)
-        switchOn.endpoints.append(self)
-        self._get_rtl_context().statements.add(self)
+        switchOn.ctx.statements.add(self)
 
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         raise NotImplementedError()
@@ -126,6 +124,10 @@ class Switch(SwitchContainer):
         case = []
         self._case_value_index[caseVal] = len(self.cases)
         self.cases.append((caseVal, case))
+
+        cond = self.switchOn._eq(caseVal)
+        self._inputs.append(cond)
+        cond.endpoints.append(self)
 
         self._register_stements(statements, case)
 

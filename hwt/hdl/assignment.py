@@ -57,7 +57,7 @@ class Assignment(HdlStatement):
                 if not isinstance(i, Value):
                     self._inputs.append(i)
                     if isReal:
-                        src.endpoints.append(self)
+                        i.endpoints.append(self)
 
         self._instId = Assignment._nextInstId()
 

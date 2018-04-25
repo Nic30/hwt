@@ -11,6 +11,8 @@ from hwt.hdl.operator import Operator, isConst
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.netlist import walk_assignments
+from hwt.hdl.switchContainer import SwitchContainer
+from itertools import chain
 
 
 def _count_mux_inputs_for_outputs(stm: HdlStatement, cnt):
@@ -141,7 +143,13 @@ class ResourceAnalyzer(GenericSerializer):
                     # just a connection
                     continue
 
-            for i in stm._inputs:
+            if isinstance(stm, SwitchContainer):
+                caseEqs = set([ stm.switchOn._eq(c[0])  for c in stm.cases ])
+                inputs = chain([sig for sig in stm._inputs if sig not in caseEqs], [stm.switchOn])
+            else:
+                inputs = stm._inputs
+
+            for i in inputs:
                 # discover only internal signals in this statements for
                 # operators
                 if not i.hidden or i in seen:
