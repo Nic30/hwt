@@ -1,7 +1,7 @@
 # select = map, groupBy = itertools.groupby
-from types import GeneratorType
 from itertools import zip_longest
 from math import inf
+from types import GeneratorType
 
 
 class DuplicitValueExc(Exception):
