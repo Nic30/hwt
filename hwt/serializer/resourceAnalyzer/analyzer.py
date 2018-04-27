@@ -144,8 +144,9 @@ class ResourceAnalyzer(GenericSerializer):
                     continue
 
             if isinstance(stm, SwitchContainer):
-                caseEqs = set([ stm.switchOn._eq(c[0])  for c in stm.cases ])
-                inputs = chain([sig for sig in stm._inputs if sig not in caseEqs], [stm.switchOn])
+                caseEqs = set([stm.switchOn._eq(c[0]) for c in stm.cases])
+                inputs = chain(
+                    [sig for sig in stm._inputs if sig not in caseEqs], [stm.switchOn])
             else:
                 inputs = stm._inputs
 
