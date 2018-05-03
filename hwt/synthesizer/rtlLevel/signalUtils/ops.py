@@ -54,7 +54,7 @@ class RtlSignalOps():
         # search if this happend, and return always same result signal
         try:
             op_instanciated = (o.origin.operator == operator
-                               and o.origin.operands[0] == self)
+                               and o.origin.operands[0] is self)
         except AttributeError:
             op_instanciated = False
 
@@ -158,17 +158,9 @@ class RtlSignalOps():
         return self.naryOp(AllOps.DOWNTO, tv(self)._downto, to)
 
     def __getitem__(self, key):
-        operator = AllOps.INDEX
         if isinstance(key, slice):
             key = slice_to_SLICE(key, self._dtype.bit_length())
-
-        k = (operator, key)
-        try:
-            return self._usedOps[k]
-        except KeyError:
-            o = tv(self).__getitem__(self, key)
-            self._usedOps[k] = o
-            return o
+        return self.naryOp(AllOps.INDEX, tv(self).__getitem__, key)
 
     def _concat(self, *operands):
         return self.naryOp(AllOps.CONCAT, tv(self)._concat, *operands)
