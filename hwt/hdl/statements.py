@@ -244,6 +244,11 @@ class HdlStatement(HdlObject):
         else:
             assert other._sensitivity is None
 
+        if self._enclosed_for is not None:
+            self._enclosed_for.update(other._enclosed_for)
+        else:
+            assert other._enclosed_for is None
+
         other_was_top = other.parentStm is None
         if other_was_top:
             other._get_rtl_context().statements.remove(other)
