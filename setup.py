@@ -5,14 +5,14 @@ from setuptools import setup, find_packages
 
 
 setup(name='hwt',
-      version='2.1',
+      version='2.2',
       description='hdl synthesis toolkit',
       url='https://github.com/Nic30/hwt',
       author='Michal Orsak',
       author_email='michal.o.socials@gmail.com',
       install_requires=[
-          'jinja2',  # templating engine
-          'pyDigitalWaveTools', # simulator output dumping
+          'jinja2',  # template engine
+          'pyDigitalWaveTools',  # simulator output dumping
       ],
       license='MIT',
       packages=find_packages(),
