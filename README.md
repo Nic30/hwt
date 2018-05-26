@@ -10,29 +10,36 @@
 
 * hardware description language (example [showcase0.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py) )
 * digital circuit simulator with UVM like verification environment (example usage [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
-* tools for static analysis (all design object are accessible to user any time, [resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
-* serializers to export HWT designs into multiple target HDLs (multiple standards [hwt, verilog, VHDL, system-c](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
+* tools for static analysis ([resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
+* serializers to export HWT designs into multiple target HDLs (multiple standards [hwt, verilog, VHDL, system-c, IP-core packager](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
+
 
 ## Ideology
 
-* Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes etc. library is all pythonic.
-* HWT uses hierarchy of netlists for representation of target design.
+* Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes.
+* HWT uses netlists for representation of target design.
 * Optimized netlists are generated from usual code statements, function calls etc.
 * HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
 
 
 
 HWT itself is just API for code generating by more advanced tools, but it can also be used directly by user.
-* There is library full of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib) (for hwt is like stdlib for C).
+
+* There is library of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib).
+
 * (System) Verilog/VHDL compatibility layer at [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) which allows you to import objects from HDL (not maintained).
+
 * There is HDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
+
 * There is prototype (pre alfa) of IDE [hwtIde](https://github.com/Nic30/hwtIde)
 
 
 ## Example
 
+* hwtLib contains abstract class called BusEndpoint. Object from this class uses c-like-structure as description of memory space. The goal is create a memory space decoder for any interface just from c-like structure description. This allows for example to switch design from Avalon or Axi to PCI-e in just one line of code. And also c-structure-like description of memory space is very user friendly and greatly reduces the possible errors in design. 
+ 
 * AxiLiteEndpoint is derived from BusEndpoint class and implements slave decoder for AxiLite bus
-(AxiLiteEndpoint is component which takes c-like struct and generates address encoder)
+(AxiLiteEndpoint is component which takes c-like-struct and generates address encoder). It is also possible to specify meta in struct description to specify output interface explicitly.
 
 ```python
 from hwt.synthesizer.utils import toRtl
@@ -57,13 +64,6 @@ t = HStruct(
     ), "data4"),
 )
 
-# type flattening can be specified by shouldEnterFn parameter
-# target interface can be overriden by _mkFieldInterface function
-
-# There are other bus endpoints, for example:
-# IpifEndpoint, I2cEndpoint, AvalonMmEndpoint and others
-# decoded interfaces for data type will be same just bus interface
-# will difer
 u = AxiLiteEndpoint(t)
 
 # configuration
@@ -74,6 +74,8 @@ u.DATA_WIDTH.set(32)
 print(toRtl(u, serializer=VhdlSerializer))
 # print interfaces just for demonstration
 print(u.bus)
+
+# decoded interfaces for data type will have same structure as c-struct description (but it is interface)
 print(u.decoded.data3)
 print(u.decoded.data4)
 ```
