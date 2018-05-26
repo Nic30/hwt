@@ -234,7 +234,7 @@ class CallbackLoop(object):
             or normal function
         :ivar _callbackIndex: index of callback in write callbacks on sig,
             if is None callback was not registered yet
-        :ivar shouldBeEnabledFn; function() -> bool, which returns True if this
+        :ivar shouldBeEnabledFn: function() -> bool, which returns True if this
             callback loop should be enabled
         """
         assert not isinstance(fn, CallbackLoop)

@@ -508,7 +508,7 @@ def seqEvalCond(cond) -> bool:
 def isSameHVal(a: Value, b: Value) -> bool:
     """
     :return: True if two Value instances are same
-    (not just equal)
+    :note: not just equal
     """
     return a is b or (isinstance(a, Value)
                       and isinstance(b, Value)
@@ -520,7 +520,7 @@ def areSameHVals(a: Union[None, List[Value]],
                  b: Union[None, List[Value]]) -> bool:
     """
     :return: True if two vectors of Value instances are same
-    (not just equal)
+    :note: not just equal
     """
     if a is b:
         return True

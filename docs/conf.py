@@ -16,7 +16,7 @@
 #
 import os
 import re
-from sphinx.apidoc import main
+from sphinx.ext.apidoc import main as apidoc_main
 import sphinx_bootstrap_theme
 import sys
 
@@ -195,4 +195,5 @@ def setup(app):
 
 
 # update *.rst pages
-main([__name__, "--full", "-o", "../docs", "../hwt"])
+apidoc_main(["--module-first", "--full",
+             "--output-dir", "../docs", "../hwt"])
