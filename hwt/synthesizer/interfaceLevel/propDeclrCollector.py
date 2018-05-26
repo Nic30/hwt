@@ -84,7 +84,7 @@ class PropDeclrCollector(object):
         Configure object parameters
 
         * setup all parameters on this object,
-          use Param class instances to allow use of parametr inheritance
+          use Param class instances to allow use of parameter inheritance
         * called in __init__ of class
         """
         pass
@@ -94,7 +94,6 @@ class PropDeclrCollector(object):
         declarations
 
         * do all declarations of externally accessible objects there (Interfaces)
-        * is called after _config
         * _declr method is called after _config
         * if this object is Unit all interfaces are threaten as externally accessible interfaces
           if this object is Interface all subinterfaces are loaded
