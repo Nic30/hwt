@@ -282,7 +282,7 @@ class HdlStatement(HdlObject):
         Walk statements and compare if they can be merged into one statement list
         """
         if stmsA is None and stmsB is None:
-            return Tuple
+            return True
 
         elif stmsA is None or stmsB is None:
             return False
