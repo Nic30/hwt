@@ -4,26 +4,19 @@
 [![Coverage Status](https://coveralls.io/repos/github/Nic30/hwt/badge.svg?branch=master)](https://coveralls.io/github/Nic30/hwt?branch=master)
 [![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt) 
 [![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest) 
-[![Join the chat at https://gitter.im/hwt/Lobby](https://badges.gitter.im/hwt/Lobby.svg)](https://gitter.im/hwt/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-## hwt contains:
-
-* hardware description language (example [showcase0.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py) )
-* digital circuit simulator with UVM like verification environment (example usage [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
-* tools for static analysis ([resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
-* serializers to export HWT designs into multiple target HDLs (multiple standards [hwt, verilog, VHDL, system-c, IP-core packager](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
 
 
-## Ideology
+## Features:
+* Hardware Description Language (example [showcase0.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py) )
 
-* Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes.
-* HWT uses netlists for representation of target design.
-* Optimized netlists are generated from usual code statements, function calls etc.
-* HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
+* Digital circuit simulator with UVM like verification environment (example usage [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
 
+* Tools for static analysis ([resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
 
+* Serializers to export HWT designs into multiple target HDLs (multiple standards [hwt, verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
 
-HWT itself is just API for code generating by more advanced tools, but it can also be used directly by user.
+Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes. HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls etc. HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
+HWT itself is API for code generating by more advanced tools, but it is easy to use it directly.
 
 * There is library of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib).
 
