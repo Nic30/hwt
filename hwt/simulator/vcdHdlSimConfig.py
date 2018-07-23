@@ -13,8 +13,9 @@ from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.unit import Unit
 from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
-from pyDigitalWaveTools.vcd.writer import VcdWriter, VcdVarWritingInfo, VcdVarWritingScope,\
-    vcdBitsFormatter, vcdEnumFormatter
+from pyDigitalWaveTools.vcd.writer import VcdWriter, VcdVarWritingScope, \
+    vcdBitsFormatter, vcdEnumFormatter, VarAlreadyRegistered
+from hwt.simulator.simModel import SimModel
 
 
 def vcdTypeInfoForHType(t) -> Tuple[str, int, Callable[[RtlSignalBase, Value], str]]:
@@ -55,7 +56,7 @@ class VcdHdlSimConfig(HdlSimConfig):
                 for chIntf in obj._interfaces:
                     self.vcdRegisterInterfaces(chIntf, subScope)
 
-                if isinstance(obj, Unit):
+                if isinstance(obj, (Unit, SimModel)):
                     # register interfaces from all subunits
                     for u in obj._units:
                         self.vcdRegisterInterfaces(u, subScope)
@@ -65,7 +66,10 @@ class VcdHdlSimConfig(HdlSimConfig):
             t = obj._dtype
             if isinstance(t, self.supported_type_classes):
                 tName, width, formatter = vcdTypeInfoForHType(t)
-                parent.addVar(obj, getSignalName(obj), tName, width, formatter)
+                try:
+                    parent.addVar(obj, getSignalName(obj), tName, width, formatter)
+                except VarAlreadyRegistered:
+                    pass
 
     def vcdRegisterRemainingSignals(self, unit: Union[Interface, Unit]):
         unitScope = self._obj2scope[unit]
