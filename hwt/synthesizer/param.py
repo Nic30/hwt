@@ -24,6 +24,7 @@ class Param(RtlSignal):
         # unit: (ctx, name)
         self._scopes = {}
         self._const = True
+        self.hidden = False
 
     def _registerScope(self, name, unit):
         self._scopes[unit] = (unit._ctx, name)
