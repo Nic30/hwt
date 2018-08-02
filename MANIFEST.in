@@ -3,3 +3,4 @@ recursive-include hwt/serializer/verilog/templates *.v
 recursive-include hwt/serializer/simModel/templates *.py.template
 recursive-include hwt/serializer/hwt/templates *.py.template
 recursive-include hwt/serializer/systemC/templates *.cpp.template
+include README.md
