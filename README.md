@@ -119,3 +119,5 @@ https://github.com/enjoy-digital/litex
 https://github.com/cornell-brg/pymtl
 
 https://github.com/YosysHQ/yosys
+
+https://github.com/PyHDI/veriloggen
