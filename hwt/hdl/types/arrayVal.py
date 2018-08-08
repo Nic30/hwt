@@ -76,7 +76,7 @@ class HArrayVal(Value):
                 raise KeyError()
             else:
                 if kv >= self._dtype.size:
-                    raise IndexError()
+                    raise KeyError()
 
             return self.val[kv].clone()
         except KeyError:
@@ -131,6 +131,14 @@ class HArrayVal(Value):
                 value._dtype, self._dtype.elmType)
 
         return self._setitem__val(index, value)
+
+    def __iter__(self):
+        mySize = len(self)
+        def it():
+            for i in range(mySize):
+                yield self[i]
+        
+        return it()
 
     def __len__(self):
         return int(self._dtype.size)
