@@ -1,18 +1,18 @@
 {{indent}}c, cVld = simEvalCond(sim, {{ cond }})
 {{indent}}#if ():
 {{indent}}if not cVld:
-{{indent}}    # invalidate outputs{%
+{{indent}}{{indent}}# invalidate outputs{%
     for stm in outputInvalidateStms %}
 {{      stm}}{%
     endfor%}
 {{indent}}elif c:
-{{indent}}    # if True{%
+{{indent}}{{indent}}# if True{%
     if ifTrue|length > 0 %}{% 
         for stm in ifTrue %}
 {{          stm}}{% 
         endfor %}{% 
     else %}
-{{indent}}pass{%
+{{indent}}{{indent}}pass{%
 endif %}{% 
 if ifFalse|length > 0 %}
 {{indent}}else:{%
