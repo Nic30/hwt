@@ -65,3 +65,27 @@ def propagateClkRst(obj):
         _tryConnect(clk, u, 'clk')
         _tryConnect(~rst, u, 'rst_n')
         _tryConnect(rst, u, 'rst')
+
+
+def propagateRstn(obj):
+    """
+    Propagate negative reset "rst_n" signal
+    to all subcomponents
+    """
+    rst_n = obj.rst_n
+
+    for u in obj._units:
+        _tryConnect(rst_n, u, 'rst_n')
+        _tryConnect(~rst_n, u, 'rst')
+
+
+def propagateRst(obj):
+    """
+    Propagate reset "rst" signal
+    to all subcomponents
+    """
+    rst = obj.rst
+
+    for u in obj._units:
+        _tryConnect(~rst, u, 'rst_n')
+        _tryConnect(rst, u, 'rst')
