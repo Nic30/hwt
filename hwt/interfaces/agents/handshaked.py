@@ -15,8 +15,8 @@ class HandshakedAgent(SyncAgentBase):
         (if you do not have any create simulation wrapper with it)
     """
 
-    def __init__(self, intf):
-        super().__init__(intf)
+    def __init__(self, intf, allowNoReset=False):
+        super().__init__(intf, allowNoReset=allowNoReset)
         self.actualData = NOP
         self.data = deque()
         # these signals are extracted like this to make
