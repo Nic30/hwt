@@ -3,7 +3,7 @@
 class SignalOps(object):
     """
     Operands for Signal interface,
-    these operands are delegated on RtlSignal object for this interface
+    These operands are delegated on RtlSignal object for this interface
     """
 
     def _auto_cast(self, toT):

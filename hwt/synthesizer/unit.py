@@ -14,7 +14,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
     :cvar _serializeDecision: function to decide if Hdl object derived from
         this unit should be serialized or not, if None all is always serialized
-    :cvar _PROTECTED_NAMES: set of names which can not be overridden 
+    :cvar _PROTECTED_NAMES: set of names which can not be overridden
     :ivar _interfaces: all public interfaces
     :ivar _private_interfaces: all internal interfaces
         which are not accessible from outside of unit
