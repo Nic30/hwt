@@ -47,13 +47,15 @@ class UnitImplHelpers(object):
         """
         Create register in this unit
 
-        :param defVal: default value of this register, if this value is specified
-            reset of this component is used
+        :param defVal: default value of this register,
+            if this value is specified reset of this component is used
             (unit has to have single interface of class Rst or Rst_n)
-        :param clk: optional clok signal specification 
-        :param rst: optional reset signal specification 
-        :note: rst/rst_n resolution is done from signal type, if it is negated type it is rst_n
-        :note: if clk or rst is not specifid default signal from parent unit will be used
+        :param clk: optional clok signal specification
+        :param rst: optional reset signal specification
+        :note: rst/rst_n resolution is done from signal type,
+            if it is negated type it is rst_n
+        :note: if clk or rst is not specifid default signal
+            from parent unit will be used
         """
         if clk is None:
             clk = getClk(self)
@@ -150,8 +152,11 @@ class UnitImplHelpers(object):
             portItem.direction = DIRECTION.INOUT
 
         if portItem.direction != d:
-            raise IntfLvlConfErr("Unit %s: Port %s does not have direction defined by interface %s, is %s should be %s" %
-                                 (self._name, portItem.name, repr(interface), portItem.direction, d))
+            raise IntfLvlConfErr(
+                ("Unit %s: Port %s does not have direction "
+                 " defined by interface %s, is %s should be %s")
+                % (self._name, portItem.name,
+                   repr(interface), portItem.direction, d))
 
     def _shareParamsWithPrefix(self, obj, prefix, paramNames):
         for name in paramNames:
