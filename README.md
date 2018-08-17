@@ -26,6 +26,21 @@ HWT itself is API for code generating by more advanced tools, but it is easy to 
 
 * There is prototype (pre alfa) of IDE [hwtIde](https://github.com/Nic30/hwtIde)
 
+## Installation
+
+This library is regular python package. You can install it using:
+```
+# system-wide
+sudo pip3 install hwt
+
+# or for local use only
+pip3 install hwt -u
+```
+
+Then you are able to use functions and classes defined in hwt library from python console or script.
+Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended.
+
+
 
 ## Example
 
