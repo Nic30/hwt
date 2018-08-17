@@ -124,6 +124,8 @@ https://github.com/PyHDI/veriloggen
 
 https://github.com/StanfordAHA/garnet
 
+https://github.com/phanrahan/magmathon
+
 
 ## Board support libraries (Potential candidates for public integration):
 
