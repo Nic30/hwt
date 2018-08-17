@@ -11,6 +11,7 @@ from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
+from hwt.synthesizer.dummyPlatform import DummyPlatform
 
 
 # [TODO] memory maps https://forums.xilinx.com/t5/Embedded-Processor-System-Design/exporting-AXI-BASEADDR-to-xparameters-h-from-Vivado-IP/td-p/428650
@@ -22,10 +23,12 @@ class Packager(object):
     def __init__(self, topUnit: Unit, name: str=None,
                  extraVhdlFiles: List[str]=[],
                  extraVerilogFiles: List[str]=[],
-                 serializer=VhdlSerializer):
+                 serializer=VhdlSerializer,
+                 targetPlatform=DummyPlatform()):
         assert not topUnit._wasSynthetised()
         self.topUnit = topUnit
         self.serializer = serializer
+        self.targetPlatform = targetPlatform
         if name:
             self.name = name
         else:
@@ -52,7 +55,8 @@ class Packager(object):
         self.hdlFiles = toRtl(self.topUnit,
                               saveTo=path,
                               name=self.name,
-                              serializer=self.serializer)
+                              serializer=self.serializer,
+                              targetPlatform=self.targetPlatform)
 
         for srcF in files:
             dst = os.path.join(path,
