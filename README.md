@@ -22,7 +22,7 @@ HWT itself is API for code generating by more advanced tools, but it is easy to 
 
 * (System) Verilog/VHDL compatibility layer at [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) which allows you to import objects from HDL (not maintained).
 
-* There is HDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
+* There is (System) Verilog/VHDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
 
 * There is prototype (pre alfa) of IDE [hwtIde](https://github.com/Nic30/hwtIde)
 
