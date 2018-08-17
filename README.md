@@ -121,3 +121,13 @@ https://github.com/cornell-brg/pymtl
 https://github.com/YosysHQ/yosys
 
 https://github.com/PyHDI/veriloggen
+
+https://github.com/StanfordAHA/garnet
+
+https://github.com/phanrahan/magmathon
+
+
+## Board support libraries (Potential candidates for public integration):
+
+https://github.com/phanrahan/loam
+
