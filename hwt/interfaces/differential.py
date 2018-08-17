@@ -6,5 +6,5 @@ from hwt.synthesizer.interface import Interface
 class DifferentialSig(Interface):
 
     def _declr(self):
-        self.n = Signal(dtype=Bits(negated=1))
+        self.n = Signal(dtype=Bits(1, negated=1))
         self.p = Signal()
