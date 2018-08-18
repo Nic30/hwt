@@ -9,12 +9,11 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.implDependent import\
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
     PropDeclrCollector
-from hwt.synthesizer.param import Param
 from hwt.synthesizer.vectorUtils import fitTo
 
 
-def _defaultUpdater(self, onParentName, p):
-    self._replaceParam(onParentName, p)
+def _default_param_updater(self, myP, onParentName, parentP):
+    self._replaceParam(onParentName, parentP)
 
 
 class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
@@ -285,34 +284,12 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         newP._registerScope(pName, self)
         object.__setattr__(self, pName, newP)
 
-    def _updateParamsFrom(self, otherObj, updater=_defaultUpdater,
+    def _updateParamsFrom(self, otherObj, updater=_default_param_updater,
                           exclude=None):
         """
-        update all parameters which are defined on self from otherObj
-
-        :param exclude: iterable of parameter on other object
-            which should be excluded
+        :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
         """
-        excluded = set()
-        if exclude is not None:
-            exclude = set(exclude)
-
-        for parentP in otherObj._params:
-            if exclude and parentP in exclude:
-                excluded.add(parentP)
-                continue
-            _, onParentName = parentP._scopes[otherObj]
-            try:
-                myP = getattr(self, onParentName)
-                if not isinstance(myP, Param):
-                    continue
-            except AttributeError:
-                continue
-
-            updater(self, onParentName, parentP)
-
-        if exclude is not None:
-            assert excluded == exclude
+        PropDeclrCollector._updateParamsFrom(self, otherObj, updater, exclude)
 
     def _bit_length(self):
         """Sum of all width of interfaces in this interface"""

@@ -3,6 +3,7 @@ from types import MethodType
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
 from hwt.synthesizer.param import Param
+from hwt.synthesizer.hObjList import HObjList
 
 
 def nameAvailabilityCheck(obj, propName, prop):
@@ -10,7 +11,7 @@ def nameAvailabilityCheck(obj, propName, prop):
     Check if not redefining property on obj
     """
     if getattr(obj, propName, None) is not None:
-        raise IntfLvlConfErr("%r already has property %s old:%s new:%s" %
+        raise IntfLvlConfErr("%r already has property %s old:%s new:%s" % 
                              (obj, propName, repr(getattr(obj, propName)), prop))
 
 
@@ -19,6 +20,7 @@ class MakeParamsShared(object):
     All newly added interfaces and units will share all parametes with unit
     specified in constructor of this object.
     """
+
     def __init__(self, unit, exclude=None):
         self.unit = unit
         self.exclude = exclude
@@ -29,12 +31,13 @@ class MakeParamsShared(object):
         exclude = self.exclude
 
         def MakeParamsSharedWrap(self, iName, i):
-            if isinstance(i, (InterfaceBase, UnitBase)):
+            if isinstance(i, (InterfaceBase, UnitBase, HObjList)):
                 i._updateParamsFrom(self, exclude=exclude)
             return orig(iName, i)
 
         self.unit._setAttrListener = MethodType(MakeParamsSharedWrap,
                                                 self.unit)
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
@@ -46,6 +49,7 @@ class MakeClkRstAssociations(object):
     All newly added interfaces will be associated with clk, rst
     specified in constructor of this object.
     """
+
     def __init__(self, unit, clk=None, rst=None):
         self.unit = unit
         self.clk = clk
@@ -58,17 +62,13 @@ class MakeClkRstAssociations(object):
         rst = self.rst
 
         def MakeClkRstAssociationsWrap(self, iName, i):
-            if isinstance(i, InterfaceBase):
-                if clk is not None:
-                    assert i._associatedClk is None
-                    i._associatedClk = clk
-                if rst is not None:
-                    assert i._associatedRst is None
-                    i._associatedRst = rst
+            if isinstance(i, (InterfaceBase, HObjList)):
+                i._make_association(clk=clk, rst=rst)
             return orig(iName, i)
 
         self.unit._setAttrListener = MethodType(MakeClkRstAssociationsWrap,
                                                 self.unit)
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
@@ -79,7 +79,8 @@ class PropDeclrCollector(object):
     """
     Collect properties of this object to containers by specified listeners
     """
-    def _config(self):
+
+    def _config(self) -> None:
         """
         Configure object parameters
 
@@ -89,7 +90,7 @@ class PropDeclrCollector(object):
         """
         pass
 
-    def _declr(self):
+    def _declr(self) -> None:
         """
         declarations
 
@@ -100,7 +101,7 @@ class PropDeclrCollector(object):
         """
         pass
 
-    def _impl(self):
+    def _impl(self) -> None:
         """
         implementations
 
@@ -109,19 +110,20 @@ class PropDeclrCollector(object):
         """
         pass
 
-    def __setattr__(self, attr, value):
+    def __setattr__(self, attr, value) -> None:
         """setattr with listener injector"""
         try:
             saListerner = self._setAttrListener
         except AttributeError:
-            saListerner = None
+            super().__setattr__(attr, value)
+            return
 
         if saListerner:
             saListerner(attr, value)
         super().__setattr__(attr, value)
 
     # configuration phase
-    def _loadConfig(self):
+    def _loadConfig(self) -> None:
         if not hasattr(self, '_params'):
             self._params = []
 
@@ -129,7 +131,7 @@ class PropDeclrCollector(object):
         self._config()
         self._setAttrListener = None
 
-    def _registerParameter(self, pName, parameter):
+    def _registerParameter(self, pName, parameter) -> None:
         """
         Register Param object on interface level object
         """
@@ -152,7 +154,7 @@ class PropDeclrCollector(object):
 
         self._params.append(parameter)
 
-    def _paramsShared(self, exclude=None):
+    def _paramsShared(self, exclude=None) -> MakeParamsShared:
         """
         Auto-propagate params by name to child components and interfaces
         Usage:
@@ -166,7 +168,19 @@ class PropDeclrCollector(object):
         """
         return MakeParamsShared(self, exclude=exclude)
 
-    def _associated(self, clk=None, rst=None):
+    def _make_association(self, clk=None, rst=None) -> None:
+        """
+        Associate this object with specified clk/rst
+        """
+        if clk is not None:
+            assert self._associatedClk is None
+            self._associatedClk = clk
+
+        if rst is not None:
+            assert self._associatedRst is None
+            self._associatedRst = rst
+
+    def _associated(self, clk=None, rst=None) -> MakeClkRstAssociations:
         """
         associate newly added interfaces to "self" with selected clk, rst
         (if interface is not associated agents try to find clk/rst by _getAssociatedClk/_getAssociatedRst
@@ -184,6 +198,35 @@ class PropDeclrCollector(object):
         :param exclude: params which should not be shared
         """
         return MakeClkRstAssociations(self, clk, rst)
+
+    def _updateParamsFrom(self, otherObj, updater, exclude) -> None:
+        """
+        Update all parameters which are defined on self from otherObj
+
+        :param exclude: iterable of parameter on otherObj object which should be excluded
+        """
+        excluded = set()
+        if exclude is not None:
+            exclude = set(exclude)
+
+        for parentP in otherObj._params:
+            if exclude and parentP in exclude:
+                excluded.add(parentP)
+                continue
+
+            onParentName = parentP._scopes[otherObj][1]
+            try:
+                myP = getattr(self, onParentName)
+                if not isinstance(myP, Param):
+                    continue
+            except AttributeError:
+                continue
+
+            updater(self, myP, onParentName, parentP)
+
+        if exclude is not None:
+            # assert that what should be excluded really exists
+            assert excluded == exclude
 
     # declaration phase
     def _registerUnit(self, uName, unit):
@@ -222,6 +265,8 @@ class PropDeclrCollector(object):
             self._registerInterface(name, prop)
         elif isinstance(prop, UnitBase):
             self._registerUnit(name, prop)
+        elif isinstance(prop, HObjList):
+            self._registerArray(name, prop)
 
     def _registerArray(self, name, items):
         """
