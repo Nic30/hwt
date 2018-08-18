@@ -1,8 +1,8 @@
 import sys
 
 from hwt.serializer.generic.indent import getIndent
-from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.hObjList import HObjList
 
 
 def valueHasChanged(valA, valB):
@@ -23,22 +23,24 @@ def pprintInterface(intf, prefix="", indent=0, file=sys.stdout):
     file.write("".join([getIndent(indent), prefix, repr(intf._getFullName()),
                         s]))
     file.write("\n")
-
-    for i in intf._interfaces:
-        if isinstance(intf, InterfaceProxy):
-            assert isinstance(i, InterfaceProxy), (intf, i)
-        pprintInterface(i, indent=indent + 1, file=file)
-
-    if intf._arrayElemCache:
-        assert len(intf) == len(intf._arrayElemCache)
+    
+    if isinstance(intf, HObjList):
         for i, p in enumerate(intf):
-            pprintInterface(p, prefix="p%d:" % i, indent=indent + 1, file=file)
-
+            # interfaces have already name of this array and index in it's name
+            pprintInterface(p, prefix=prefix, indent=indent + 1, file=file)
+    else:
+        for i in intf._interfaces:
+            pprintInterface(i, indent=indent + 1, file=file)
 
 def pprintAgents(unitOrIntf, indent=0, prefix="", file=sys.stdout):
     if isinstance(unitOrIntf, InterfaceBase):
         ag = unitOrIntf._ag
         arrayElemCache = unitOrIntf._arrayElemCache
+    elif isinstance(unitOrIntf, HObjList):
+        for i, item in enumerate(unitOrIntf):
+            item_prefix = "%s_%d" % (prefix, i)
+            pprintAgents(item, indent=indent+1, prefix=item_prefix, file=file)
+        return
     else:
         ag = None
         arrayElemCache = None
