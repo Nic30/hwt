@@ -30,42 +30,11 @@ class Signal(SignalOps, Interface):
 
     def __init__(self,
                  masterDir=D.OUT,
-                 asArraySize=None,
                  dtype=BIT,
                  loadConfig=True):
         super().__init__(masterDir=masterDir,
-                         asArraySize=asArraySize,
                          loadConfig=loadConfig)
         self._dtype = dtype
-
-    def _injectMultiplerToDtype(self):
-        """
-        Make signal wider, used when there is an array of signals stored
-        in one wider signal
-        """
-        t = self._dtype
-        factor = self._widthMultiplier
-        if t == BIT:
-            newT = Bits(factor, forceVector=True)
-        elif isinstance(t, Bits):
-            w = t.width
-            if isinstance(w, int):
-                newW = factor * w
-            elif isinstance(w, RtlSignalBase):
-                # both Param or factor Value
-                newW = w * factor
-            elif isinstance(factor, RtlSignalBase):
-                # w is Value
-                newW = factor * w
-            else:
-                # both Value
-                newW = w.clone()
-                newW.val *= factor.val
-            newT = Bits(newW, forceVector=True)
-        else:
-            raise TypeError("Can not multiply width of type %r" % (repr(t),))
-
-        self._dtype = newT
 
     def _initSimAgent(self):
         self._ag = SignalAgent(self)
@@ -74,13 +43,11 @@ class Signal(SignalOps, Interface):
 def VectSignal(width,
                signed=None,
                masterDir=D.OUT,
-               asArraySize=None,
                loadConfig=True):
     """
     Create basic :class:`.Signal` interface where type is vector
     """
     return Signal(masterDir,
-                  asArraySize,
                   Bits(width, signed, forceVector=True),
                   loadConfig)
 
@@ -119,13 +86,11 @@ class Rst_n(Signal):
 
     def __init__(self,
                  masterDir=D.OUT,
-                 asArraySize=None,
                  dtype=BIT_N,
                  loadConfig=True):
-        super(Rst_n, self).__init__(masterDir=D.OUT,
-                                    asArraySize=asArraySize,
+        super(Rst_n, self).__init__(masterDir=masterDir,
                                     dtype=dtype,
-                                    loadConfig=dtype)
+                                    loadConfig=loadConfig)
 
     def _getIpCoreIntfClass(self):
         from hwt.serializer.ip_packager.interfaces.std import IP_Rst_n

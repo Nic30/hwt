@@ -22,11 +22,10 @@ class StructIntf(Interface):
     """
 
     def __init__(self, structT, instantiateFieldFn,
-                 masterDir=DIRECTION.OUT, asArraySize=None,
+                 masterDir=DIRECTION.OUT,
                  loadConfig=True):
         Interface.__init__(self,
                            masterDir=masterDir,
-                           asArraySize=asArraySize,
                            loadConfig=loadConfig)
         self._structT = structT
         self._instantiateFieldFn = instantiateFieldFn

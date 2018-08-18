@@ -26,31 +26,13 @@ class IpCoreWrapper(Unit):
         origToWrapInfMap = {}
 
         for intf in self.baseUnit._interfaces:
-            if intf._asArraySize is not None:
-                # create array of interfaces instead of array interface
-                for i in range(int(intf._asArraySize)):
-                    myIntf = intf._clone()
-                    name = "%s_%d" % (intf._name, i)
+            # clone interface
+            myIntf = intf._clone()
 
-                    self._registerInterface(name, myIntf)
-                    object.__setattr__(self, name, myIntf)
+            self._registerInterface(intf._name, myIntf)
+            object.__setattr__(self, intf._name, myIntf)
 
-                    try:
-                        ia = origToWrapInfMap[intf]
-                    except KeyError:
-                        ia = []
-                        origToWrapInfMap[intf] = ia
-
-                    ia.append(myIntf)
-
-            else:
-                # clone interface
-                myIntf = intf._clone()
-
-                self._registerInterface(intf._name, myIntf)
-                object.__setattr__(self, intf._name, myIntf)
-
-                origToWrapInfMap[intf] = myIntf
+            origToWrapInfMap[intf] = myIntf
 
         for i in self._interfaces:
             self._loadInterface(i, True)

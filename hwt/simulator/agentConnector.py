@@ -13,18 +13,9 @@ def autoAddAgents(unit):
         if not intf._isExtern:
             continue
 
-        if intf._isInterfaceArray():
-            agentCnt = int(intf._asArraySize)
-            agents = []
-            for i in range(agentCnt):
-                _intf = intf[i]
-                _intf._initSimAgent()
-                assert _intf._ag is not None, intf
-                agents.append(_intf._ag)
-        else:
-            intf._initSimAgent()
-            assert intf._ag is not None, intf
-            agents = [intf._ag, ]
+        intf._initSimAgent()
+        assert intf._ag is not None, intf
+        agents = [intf._ag, ]
 
         if intf._direction == INTF_DIRECTION.MASTER:
             agProcs = list(map(lambda a: a.getMonitors(), agents))

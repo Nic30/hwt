@@ -35,7 +35,6 @@ def pprintInterface(intf, prefix="", indent=0, file=sys.stdout):
 def pprintAgents(unitOrIntf, indent=0, prefix="", file=sys.stdout):
     if isinstance(unitOrIntf, InterfaceBase):
         ag = unitOrIntf._ag
-        arrayElemCache = unitOrIntf._arrayElemCache
     elif isinstance(unitOrIntf, HObjList):
         for i, item in enumerate(unitOrIntf):
             item_prefix = "%s_%d" % (prefix, i)
@@ -43,18 +42,9 @@ def pprintAgents(unitOrIntf, indent=0, prefix="", file=sys.stdout):
         return
     else:
         ag = None
-        arrayElemCache = None
 
     if ag is not None:
         file.write("%s%s%r\n" % (getIndent(indent), prefix, ag))
-    elif arrayElemCache:
-        file.write("%s%s\n" %
-                   (getIndent(indent), prefix + unitOrIntf._name + ":"))
 
     for i in unitOrIntf._interfaces:
         pprintAgents(i, indent + 1, file=file)
-
-    if arrayElemCache:
-        assert len(unitOrIntf) == len(arrayElemCache)
-        for i, p in enumerate(unitOrIntf):
-            pprintAgents(p, indent + 1, prefix="p%d:" % i, file=file)

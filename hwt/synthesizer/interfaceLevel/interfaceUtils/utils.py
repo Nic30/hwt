@@ -73,10 +73,6 @@ def walkFlatten(interface, shouldEnterIntfFn):
         for intf in interface._interfaces:
             yield from walkFlatten(intf, shouldEnterIntfFn)
     
-        if interface._isInterfaceArray():
-            for intf in interface:
-                yield from walkFlatten(intf, shouldEnterIntfFn)
-    
 
 def packIntf(intf, masterDirEqTo=DIRECTION.OUT, exclude=None):
     """

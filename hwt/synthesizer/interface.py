@@ -1,7 +1,6 @@
 from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.interfaceUtils.array import InterfaceArray
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import \
     InterfaceDirectionFns
 from hwt.synthesizer.interfaceLevel.interfaceUtils.implDependent import\
@@ -17,7 +16,7 @@ def _default_param_updater(self, myP, onParentName, parentP):
     self._replaceParam(onParentName, parentP)
 
 
-class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
+class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 PropDeclrCollector, InterfaceDirectionFns):
     """
     Base class for all interfaces in interface synthesizer
@@ -62,7 +61,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
 
     _NAME_SEPARATOR = "_"
 
-    def __init__(self, masterDir=DIRECTION.OUT, asArraySize=None,
+    def __init__(self, masterDir=DIRECTION.OUT,
                  loadConfig=True):
         """
         This constructor is called when constructing new interface,
@@ -81,15 +80,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         self._parent = None
 
         super().__init__()
-        if asArraySize is not None:
-            asArraySize = toHVal(asArraySize)
-            assert int(asArraySize) > 0
-            self._widthMultiplier = asArraySize
-        else:
-            self._widthMultiplier = None
-
-        self._asArraySize = asArraySize
-
         self._masterDir = masterDir
         self._direction = INTF_DIRECTION.UNKNOWN
 
@@ -122,24 +112,8 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         self._setAttrListener = None
 
         for i in self._interfaces:
-            # inherit _asArraySize and update dtype on physical interfaces
-            w = i._widthMultiplier
-            if self._widthMultiplier is not None:
-                if w is None:
-                    w = self._widthMultiplier
-                else:
-                    w = w * self._widthMultiplier
-
-            i._widthMultiplier = w
             i._isExtern = self._isExtern
             i._loadDeclarations()
-
-        # apply multiplier at dtype of signals
-        if not self._interfaces and self._widthMultiplier is not None:
-            self._injectMultiplerToDtype()
-
-        if self._isInterfaceArray():
-            self._initArrayItems()
 
         for p in self._params:
             p.setReadOnly()
@@ -161,11 +135,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         self._dirLocked = False
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
-
-        if self._isInterfaceArray():
-            for e in self._arrayElemCache:
-                e._clean(rmConnetions=rmConnetions,
-                         lockNonExternal=lockNonExternal)
 
     def _connectToIter(self, master, exclude=None, fit=False):
         if exclude and (self in exclude or master in exclude):
@@ -236,11 +205,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
                 if hasattr(self, '_boundedEntityPort'):
                     self._boundedEntityPort.connectSig(self._sig)
                 sigs = [s]
-
-        if self._asArraySize is not None:
-            for elemIntf in self._arrayElemCache:
-                elemIntf._signalsForInterface(context)
-                # they are not in sigs because they are not main signals
 
         return sigs
 
