@@ -272,8 +272,8 @@ class PropDeclrCollector(object):
         """
         Register array of items on interface level object
         """
-        for i, itm in enumerate(items):
-            setattr(self, name + str(i), itm)
+        for i, item in enumerate(items):
+            setattr(self, "%s_%d" % (name, i), item)
 
     # implementation phase
     def _loadMyImplementations(self):
