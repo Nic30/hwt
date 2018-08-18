@@ -10,6 +10,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
     PropDeclrCollector
 from hwt.synthesizer.vectorUtils import fitTo
+from hwt.synthesizer.hObjList import HObjList
 
 
 def _default_param_updater(self, myP, onParentName, parentP):
@@ -252,22 +253,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
 
     def _getFullName(self):
         """get all name hierarchy separated by '.' """
-        name = ""
-        tmp = self
-        while isinstance(tmp, InterfaceBase):
-            if hasattr(tmp, "_name"):
-                n = tmp._name
-            else:
-                n = ''
-            if name == '':
-                name = n
-            else:
-                name = n + '.' + name
-            if hasattr(tmp, "_parent"):
-                tmp = tmp._parent
-            else:
-                tmp = None
-        return name
+        return HObjList._getFullName(self)
 
     def _replaceParam(self, pName, newP):
         """

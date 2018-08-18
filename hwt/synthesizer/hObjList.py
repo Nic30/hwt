@@ -1,3 +1,4 @@
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 
 class HObjList(list):
@@ -10,6 +11,29 @@ class HObjList(list):
     :note: :class:`hwt.synthesizer.PropDeclrCollector.PropDeclrCollector` is used by
         :class:`hwt.synthesizer.interface.Interface` and :class:`hwt.synthesizer.unit.Unit`
     """
+    def __init__(self, *args, **kwargs):
+        list.__init__(self, *args, **kwargs)
+        self._name = None
+        self._parent = None
+
+    def _getFullName(self):
+        """get all name hierarchy separated by '.' """
+        name = ""
+        tmp = self
+        while isinstance(tmp, (InterfaceBase, HObjList)):
+            if hasattr(tmp, "_name"):
+                n = tmp._name
+            else:
+                n = ''
+            if name == '':
+                name = n
+            else:
+                name = n + '.' + name
+            if hasattr(tmp, "_parent"):
+                tmp = tmp._parent
+            else:
+                tmp = None
+        return name
     
     def _make_association(self, *args, **kwargs):
         """
