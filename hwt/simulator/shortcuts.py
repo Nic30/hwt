@@ -11,10 +11,7 @@ from hwt.simulator.agentConnector import autoAddAgents
 from hwt.simulator.hdlSimulator import HdlSimulator
 from hwt.simulator.simModel import SimModel
 from hwt.simulator.simSignal import SimSignal
-from hwt.simulator.simSignalProxy import IndexSimSignalProxy
-from hwt.simulator.types.simBits import simBitsT
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
 from hwt.synthesizer.dummyPlatform import DummyPlatform
