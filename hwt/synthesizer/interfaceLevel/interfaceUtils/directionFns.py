@@ -38,9 +38,6 @@ class InterfaceDirectionFns():
     def _resolveDirections(self, updateDir=True):
         allM, allS = self.__directionProbe()
 
-        if allM and allS and self._arrayElemCache:  # if direction is nod clear from this intf. and it has elems.
-            allM, allS = self._arrayElemCache[0].__directionProbe()
-
         if allM and allS:
             self._direction = INTF_DIRECTION.UNKNOWN
         elif allM:

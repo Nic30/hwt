@@ -13,6 +13,77 @@ def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
     return (bool(transTmpl.children), not bool(transTmpl.children))
 
 
+class _DummyIteratorCtx(object):
+    """
+    Dummy version of :class:`.ObjIteratorCtx`
+    """
+    def __call__(self, prop):
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
+class ObjIteratorCtx(object):
+    """
+    Object Iterator context
+    
+    Allows to walk object properties and keep track of it
+
+    :note: :class:`.TransTmpl` uses this object to walk other object together with structure type
+        this is useful when you need to walk generated interface together with type
+        from which it was generated from
+    
+    :ivar actual: actual selected object
+    :ivar parent: list of collected parent of this object
+    :ivar onParentNames: list, str for children which are properties,
+        int for children which are items of parent 
+    """
+
+    def __init__(self, obj):
+        self.actual = obj
+        self.parents = []
+        self.onParentNames = []
+        self.nextProp = None
+
+    def __call__(self, prop: Union[str, int]):
+        """
+        Prepare to enter child property or item in sequence
+            
+        :prop: str if entering a property, int if entering an item of sequence
+        """
+        self.nextProp = prop
+        return self
+    
+    def __enter__(self):
+        """
+        Enter child property or item in sequence
+        """
+        prop = self.nextProp
+        self.nextProp = None
+        a = self.actual
+        if isinstance(prop, int):
+            child = a[prop]
+        else:
+            child = getattr(a, prop)
+ 
+        self.parents.append(a)
+        self.onParentNames.append(prop)
+        self.actual = child
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Move back to parent
+        """
+        self.actual = self.parents.pop()
+        self.onParentNames.pop()
+
+
 class TransTmpl(object):
     """
     Container of informations about frames generated from any HType
@@ -126,7 +197,9 @@ class TransTmpl(object):
         return self.bitAddrEnd - self.bitAddr
 
     def walkFlatten(self, offset: int=0,
-                    shouldEnterFn=_default_shouldEnterFn) -> Generator[
+                    shouldEnterFn=_default_shouldEnterFn,
+                    otherObjItCtx:ObjIteratorCtx =_DummyIteratorCtx()
+                    ) -> Generator[
             Union[Tuple[Tuple[int, int], 'TransTmpl'], 'OneOfTransaction'],
             None, None]:
         """
@@ -157,14 +230,19 @@ class TransTmpl(object):
                 pass
             elif isinstance(t, HStruct):
                 for ch in self.children:
-                    yield from ch.walkFlatten(offset=offset,
-                                              shouldEnterFn=shouldEnterFn)
+                    with otherObjItCtx(ch.origin.name):
+                        yield from ch.walkFlatten(
+                            offset,
+                            shouldEnterFn,
+                            otherObjItCtx)
             elif isinstance(t, HArray):
                 itemSize = (self.bitAddrEnd - self.bitAddr) // self.itemCnt
                 for i in range(self.itemCnt):
-                    yield from self.children.walkFlatten(
-                        offset=base + i * itemSize,
-                        shouldEnterFn=shouldEnterFn)
+                    with otherObjItCtx(i):
+                        yield from self.children.walkFlatten(
+                            base + i * itemSize,
+                            shouldEnterFn,
+                            otherObjItCtx)
             elif isinstance(t, HUnion):
                 yield OneOfTransaction(self, offset, shouldEnterFn,
                                        self.children)

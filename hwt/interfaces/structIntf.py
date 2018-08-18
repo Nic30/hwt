@@ -22,11 +22,10 @@ class StructIntf(Interface):
     """
 
     def __init__(self, structT, instantiateFieldFn,
-                 masterDir=DIRECTION.OUT, asArraySize=None,
+                 masterDir=DIRECTION.OUT,
                  loadConfig=True):
         Interface.__init__(self,
                            masterDir=masterDir,
-                           asArraySize=asArraySize,
                            loadConfig=loadConfig)
         self._structT = structT
         self._instantiateFieldFn = instantiateFieldFn
@@ -46,6 +45,7 @@ class StructIntf(Interface):
             if field.name is not None:
                 # generate interface based on struct field
                 intf = self._instantiateFieldFn(self, field)
+                assert  field not in self._fieldsToInterfaces
                 self._fieldsToInterfaces[field] = intf
                 setattr(self, field.name, intf)
 
@@ -73,15 +73,14 @@ def _HTypeFromIntfMap(intf):
 
     return (dtype, name)
 
-
-def isIntfMap(intfMap):
-    if not isinstance(intfMap, tuple):
-        return False
-    elif len(intfMap) == 2 and (intfMap[1] is None
-                                or isinstance(intfMap, str)):
-        return False
-    else:
-        return True
+class IntfMap(list):
+    """
+    Container of interface map
+    
+    Items can be Interface/RtlSignal or (type/interface/None/IntfMap, name).
+    None is used for padding.
+    """
+    pass
 
 
 def HTypeFromIntfMapItem(interfaceMapItem):
@@ -98,7 +97,7 @@ def HTypeFromIntfMapItem(interfaceMapItem):
             reference = None
 
             for item in typeOrListOfInterfaces:
-                if isIntfMap(item):
+                if isinstance(item, IntfMap):
                     t = HTypeFromIntfMap(item)
                 else:
                     f = HTypeFromIntfMapItem(item)

@@ -3,7 +3,8 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
-from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers
+from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers, \
+    _default_param_updater
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 
 
@@ -213,3 +214,9 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             elif cInstances < units:
                 raise IntfLvlConfErr("_toRtl of %s: unit(s) %s were lost"
                                      % (self._name, str(inIntf - inRtl)))
+
+    def _updateParamsFrom(self, otherObj, updater=_default_param_updater, exclude=None):
+        """
+        :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
+        """
+        PropDeclrCollector._updateParamsFrom(self, otherObj, updater, exclude)

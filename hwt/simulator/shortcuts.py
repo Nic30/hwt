@@ -14,7 +14,6 @@ from hwt.simulator.simSignal import SimSignal
 from hwt.simulator.simSignalProxy import IndexSimSignalProxy
 from hwt.simulator.types.simBits import simBitsT
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
-from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
@@ -91,8 +90,7 @@ def toSimModel(unit, targetPlatform=DummyPlatform(), dumpModelIn=None):
     return simModule.__dict__[unit._name]
 
 
-def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls,
-                                destroyProxies=False):
+def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls):
     """
     Reconnect model signals to unit to run simulation with simulation model
     but use original unit interfaces for communication
@@ -101,84 +99,20 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls,
         replaced from signals from modelCls
     :param modelCls: simulation model form where signals
         for synthesisedUnitOrIntf should be taken
-    :param destroyProxies: destroy proxies, is true when this interface
-        is part of array and potentially proxies under this
-        interface would interfere with other proxies
     """
     obj = synthesisedUnitOrIntf
     subInterfaces = obj._interfaces
-    isProxy = isinstance(obj, InterfaceProxy)
-    hasProxies = isinstance(obj, InterfaceBase) and bool(obj._arrayElemCache)
 
-    if destroyProxies:
-        assert not isProxy, "Proxy should be already destroyed"
 
-    if not isProxy and subInterfaces:
+    if subInterfaces:
         for intf in subInterfaces:
             # proxies are destroyed on original interfaces and only proxies on
             # array items will remain
-            reconnectUnitSignalsToModel(
-                intf, modelCls, destroyProxies=destroyProxies or hasProxies)
-
-        if not destroyProxies and hasProxies:
-            # if this this interface has proxies for array items let them
-            # reconnect
-            for proxy in obj._arrayElemCache:
-                reconnectUnitSignalsToModel(proxy, modelCls)
+            reconnectUnitSignalsToModel(intf, modelCls)
     else:
-        if isProxy:
-            if hasProxies:
-                # this obj will become only container of elements for array
-                for subIntf in subInterfaces:
-                    # delete attributes because we can not use them
-                    # in simulation because they are managed by children
-                    delattr(obj, subIntf._name)
-                del obj._interfaces
-
-                # if this interface is array we have to replace signals in
-                # array items
-                for item in obj._arrayElemCache:
-                    reconnectUnitSignalsToModel(item, modelCls)
-            else:
-                if subInterfaces:
-                    # let children reconnect
-                    for intf in subInterfaces:
-                        reconnectUnitSignalsToModel(intf, modelCls)
-                else:
-                    assert obj._itemsInOne == 1, (
-                        obj, "Now there should be proxies only for leaves"
-                             "and proxies on partial arrays should be deleted")
-
-                    # setup proxy on signal from model
-                    p = obj._origIntf
-                    while isinstance(p, InterfaceProxy):
-                        assert p._itemsInOne == 1, (
-                            p,
-                            "Now there should be proxies only for leaves"
-                            "and proxies on partial arrays should be deleted")
-                        p = p._origIntf
-
-                    s = p._sigInside
-                    index = obj._getMySigSelector()
-
-                    try:
-                        upperIndex, lowerIndex = index
-                        width = upperIndex - lowerIndex
-                    except TypeError:
-                        lowerIndex = None
-                        upperIndex = index
-                        width = 1
-                    obj._sigInside = IndexSimSignalProxy(obj._origIntf._name,
-                                                         p._sigInside,
-                                                         simBitsT(
-                                                             width,
-                                                             s._dtype.signed),
-                                                         upperIndex,
-                                                         lowerIndex)
-        else:
-            # reconnect signal from model
-            s = synthesisedUnitOrIntf
-            s._sigInside = getattr(modelCls, s._sigInside.name)
+        # reconnect signal from model
+        s = synthesisedUnitOrIntf
+        s._sigInside = getattr(modelCls, s._sigInside.name)
 
 
 def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout,

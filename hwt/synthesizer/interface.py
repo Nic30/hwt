@@ -1,7 +1,6 @@
 from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.interfaceUtils.array import InterfaceArray
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import \
     InterfaceDirectionFns
 from hwt.synthesizer.interfaceLevel.interfaceUtils.implDependent import\
@@ -9,15 +8,15 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.implDependent import\
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
     PropDeclrCollector
-from hwt.synthesizer.param import Param
 from hwt.synthesizer.vectorUtils import fitTo
+from hwt.synthesizer.hObjList import HObjList
 
 
-def _defaultUpdater(self, onParentName, p):
-    self._replaceParam(onParentName, p)
+def _default_param_updater(self, myP, onParentName, parentP):
+    self._replaceParam(onParentName, parentP)
 
 
-class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
+class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 PropDeclrCollector, InterfaceDirectionFns):
     """
     Base class for all interfaces in interface synthesizer
@@ -62,7 +61,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
 
     _NAME_SEPARATOR = "_"
 
-    def __init__(self, masterDir=DIRECTION.OUT, asArraySize=None,
+    def __init__(self, masterDir=DIRECTION.OUT,
                  loadConfig=True):
         """
         This constructor is called when constructing new interface,
@@ -81,15 +80,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         self._parent = None
 
         super().__init__()
-        if asArraySize is not None:
-            asArraySize = toHVal(asArraySize)
-            assert int(asArraySize) > 0
-            self._widthMultiplier = asArraySize
-        else:
-            self._widthMultiplier = None
-
-        self._asArraySize = asArraySize
-
         self._masterDir = masterDir
         self._direction = INTF_DIRECTION.UNKNOWN
 
@@ -122,24 +112,8 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         self._setAttrListener = None
 
         for i in self._interfaces:
-            # inherit _asArraySize and update dtype on physical interfaces
-            w = i._widthMultiplier
-            if self._widthMultiplier is not None:
-                if w is None:
-                    w = self._widthMultiplier
-                else:
-                    w = w * self._widthMultiplier
-
-            i._widthMultiplier = w
             i._isExtern = self._isExtern
             i._loadDeclarations()
-
-        # apply multiplier at dtype of signals
-        if not self._interfaces and self._widthMultiplier is not None:
-            self._injectMultiplerToDtype()
-
-        if self._isInterfaceArray():
-            self._initArrayItems()
 
         for p in self._params:
             p.setReadOnly()
@@ -161,11 +135,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         self._dirLocked = False
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
-
-        if self._isInterfaceArray():
-            for e in self._arrayElemCache:
-                e._clean(rmConnetions=rmConnetions,
-                         lockNonExternal=lockNonExternal)
 
     def _connectToIter(self, master, exclude=None, fit=False):
         if exclude and (self in exclude or master in exclude):
@@ -237,11 +206,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
                     self._boundedEntityPort.connectSig(self._sig)
                 sigs = [s]
 
-        if self._asArraySize is not None:
-            for elemIntf in self._arrayElemCache:
-                elemIntf._signalsForInterface(context)
-                # they are not in sigs because they are not main signals
-
         return sigs
 
     def _getPhysicalName(self):
@@ -253,22 +217,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
 
     def _getFullName(self):
         """get all name hierarchy separated by '.' """
-        name = ""
-        tmp = self
-        while isinstance(tmp, InterfaceBase):
-            if hasattr(tmp, "_name"):
-                n = tmp._name
-            else:
-                n = ''
-            if name == '':
-                name = n
-            else:
-                name = n + '.' + name
-            if hasattr(tmp, "_parent"):
-                tmp = tmp._parent
-            else:
-                tmp = None
-        return name
+        return HObjList._getFullName(self)
 
     def _replaceParam(self, pName, newP):
         """
@@ -285,34 +234,12 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns, InterfaceArray,
         newP._registerScope(pName, self)
         object.__setattr__(self, pName, newP)
 
-    def _updateParamsFrom(self, otherObj, updater=_defaultUpdater,
+    def _updateParamsFrom(self, otherObj, updater=_default_param_updater,
                           exclude=None):
         """
-        update all parameters which are defined on self from otherObj
-
-        :param exclude: iterable of parameter on other object
-            which should be excluded
+        :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
         """
-        excluded = set()
-        if exclude is not None:
-            exclude = set(exclude)
-
-        for parentP in otherObj._params:
-            if exclude and parentP in exclude:
-                excluded.add(parentP)
-                continue
-            _, onParentName = parentP._scopes[otherObj]
-            try:
-                myP = getattr(self, onParentName)
-                if not isinstance(myP, Param):
-                    continue
-            except AttributeError:
-                continue
-
-            updater(self, onParentName, parentP)
-
-        if exclude is not None:
-            assert excluded == exclude
+        PropDeclrCollector._updateParamsFrom(self, otherObj, updater, exclude)
 
     def _bit_length(self):
         """Sum of all width of interfaces in this interface"""

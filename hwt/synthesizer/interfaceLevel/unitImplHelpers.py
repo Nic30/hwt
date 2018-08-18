@@ -7,7 +7,6 @@ from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.interfaceUtils.proxy import InterfaceProxy
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 
 
@@ -40,6 +39,10 @@ def getSignalName(sig):
     except AttributeError:
         pass
     return sig.name
+
+
+def _default_param_updater(self, myP, onParentName, parentP):
+    myP.set(parentP)
 
 
 class UnitImplHelpers(object):
@@ -163,30 +166,3 @@ class UnitImplHelpers(object):
             lp = getattr(obj, name)
             p = getattr(self, prefix + name)
             lp.set(p)
-
-    def _updateParamsFrom(self, parent, exclude=None):
-        """
-        update all parameters which are defined on self from otherObj
-
-        :param exclude: iterable of parameter on parent object which should be excluded
-        """
-        excluded = set()
-        if exclude is not None:
-            exclude = set(exclude)
-        if isinstance(parent, InterfaceProxy):
-            parent = parent._origIntf
-
-        for parentP in parent._params:
-            if exclude and parentP in exclude:
-                excluded.add(parentP)
-                continue
-
-            name = parentP._scopes[parent][1]
-            try:
-                p = getattr(self, name)
-            except AttributeError:
-                continue
-            p.set(parentP)
-
-        if exclude is not None:
-            assert excluded == exclude
