@@ -88,8 +88,6 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         yield from self._synthetiseContext(self._externInterf)
         self._checkArchCompInstances()
-        for intf in self._interfaces:
-            intf._setDirLock(True)
 
         for proc in targetPlatform.afterToRtl:
             proc(self)
@@ -109,7 +107,6 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         for intf in self._interfaces:
             if intf._isExtern:
-                intf._resolveDirections()
                 # reverse because other components
                 # looks at this one from outside
                 intf._reverseDirection()

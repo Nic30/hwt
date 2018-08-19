@@ -16,6 +16,11 @@ class HObjList(list):
         self._name = None
         self._parent = None
 
+    def _m(self):
+        for item in self:
+            item._m()
+        return self
+
     def _getFullName(self):
         """get all name hierarchy separated by '.' """
         name = ""

@@ -81,6 +81,8 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         super().__init__()
         self._masterDir = masterDir
+        # Interface is instanciated inside of Unit first,
+        # master direction actually means slave from outside view
         self._direction = INTF_DIRECTION.UNKNOWN
 
         self._ctx = None
@@ -91,8 +93,19 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         # flags for better design error detection
         self._isExtern = False
         self._isAccessible = True
-        self._dirLocked = False
         self._ag = None
+
+    def _m(self):
+        """
+        Note that this interface will be master
+
+        :return: self
+        """
+        assert not hasattr(self, "_interfaces") or not self._interfaces, \
+            "Too late to change direction of interface"
+        self._direction = DIRECTION.asIntfDirection(DIRECTION.opposite(self._masterDir))
+
+        return self
 
     def __call__(self, other):
         """
@@ -117,6 +130,12 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         for p in self._params:
             p.setReadOnly()
+        
+        if self._isExtern:
+            # direction from inside of unit (reverset compared to outside direction)
+            if self._direction == INTF_DIRECTION.UNKNOWN:
+                self._direction = INTF_DIRECTION.MASTER
+            self._setDirectionsLikeIn(self._direction)
 
     def _clean(self, rmConnetions=True, lockNonExternal=True):
         """
@@ -132,7 +151,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             self._sigInside = self._sig
             del self._sig
 
-        self._dirLocked = False
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
 
