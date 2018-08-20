@@ -7,6 +7,7 @@ from hwt.hdl.types.struct import HStruct, HStructField
 from hwt.hdl.types.union import HUnion
 from hwt.pyUtils.arrayQuery import iter_with_last
 from hwt.synthesizer.param import evalParam
+from hwt.hdl.types.stream import HStream
 
 
 def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
@@ -116,6 +117,7 @@ class TransTmpl(object):
     def _loadFromArray(self, dtype: HdlType, bitAddr: int) -> int:
         """
         Parse HArray type to this transaction template instance
+
         :return: address of it's end
         """
         self.itemCnt = evalParam(dtype.size).val
@@ -126,6 +128,7 @@ class TransTmpl(object):
     def _loadFromBits(self, dtype: HdlType, bitAddr: int):
         """
         Parse Bits type to this transaction template instance
+
         :return: address of it's end
         """
         return bitAddr + dtype.bit_length()
@@ -133,6 +136,7 @@ class TransTmpl(object):
     def _loadFromHStruct(self, dtype: HdlType, bitAddr: int):
         """
         Parse HStruct type to this transaction template instance
+
         :return: address of it's end
         """
         for f in dtype.fields:
@@ -153,6 +157,7 @@ class TransTmpl(object):
     def _loadFromUnion(self, dtype: HdlType, bitAddr: int) -> int:
         """
         Parse HUnion type to this transaction template instance
+
         :return: address of it's end
         """
         for field in dtype.fields.values():
@@ -160,25 +165,39 @@ class TransTmpl(object):
             self.children.append(ch)
         return bitAddr + dtype.bit_length()
 
+    def _loadFromHStream(self, dtype: HStream, bitAddr: int) -> int:
+        """
+        Parse HUnion type to this transaction template instance
+
+        :return: address of it's end
+        """
+        ch = TransTmpl(dtype.elmType, 0, parent=self, origin=self.origin)
+        self.children.append(ch)
+        return bitAddr + dtype.elmType.bit_length()
+
+
     def _loadFromHType(self, dtype: HdlType, bitAddr: int) -> None:
         """
         Parse any HDL type to this transaction template instance
         """
         self.bitAddr = bitAddr
-
-        if isinstance(dtype, HStruct):
+        childrenAreChoice = False
+        if isinstance(dtype, Bits):
+            ld = self._loadFromBits
+        elif isinstance(dtype, HStruct):
             ld = self._loadFromHStruct
         elif isinstance(dtype, HArray):
             ld = self._loadFromArray
+        elif isinstance(dtype, HStream):
+            ld = self._loadFromHStream
         elif isinstance(dtype, HUnion):
             ld = self._loadFromUnion
-        elif isinstance(dtype, Bits):
-            ld = self._loadFromBits
+            childrenAreChoice = True
         else:
             raise TypeError("expected instance of HdlType", dtype)
 
         self.bitAddrEnd = ld(dtype, bitAddr)
-        self.childrenAreChoice = isinstance(dtype, HUnion)
+        self.childrenAreChoice = childrenAreChoice
 
     def getItemWidth(self) -> int:
         """
@@ -246,6 +265,10 @@ class TransTmpl(object):
             elif isinstance(t, HUnion):
                 yield OneOfTransaction(self, offset, shouldEnterFn,
                                        self.children)
+            elif isinstance(t, HStream):
+                assert len(self.children) == 1
+                yield StreamTransaction(self, offset, shouldEnterFn,
+                                       self.children[0])
             else:
                 raise TypeError(t)
 
@@ -318,3 +341,23 @@ class OneOfTransaction(object):
         for p in self.possibleTransactions:
             yield p.walkFlatten(offset=self.offset,
                                 shouldEnterFn=self.shouldEnterFn)
+
+class StreamTransaction(object):
+    """
+    Container of informations about stream transaction which is described
+    by HStream HdlType
+    """
+    def __init__(self, parent: TransTmpl,
+                 offset: int,
+                 shouldEnterFn: Callable[[TransTmpl], Tuple[bool, bool]],
+                 child: TransTmpl):
+        self.parent = parent
+        self.offset = offset
+        self.shouldEnterFn = shouldEnterFn
+        self.child = child
+
+    def walkFlatten(self, *args, **kwargs):
+        """
+        :note: doc in :meth:`.TransTmpl.walkFlatten`
+        """
+        return self.child.walkFlatten(*args, **kwargs)

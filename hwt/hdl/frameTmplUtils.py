@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from hwt.hdl.transPart import TransPart
-from hwt.hdl.transTmpl import OneOfTransaction
+from hwt.hdl.transTmpl import OneOfTransaction, StreamTransaction
 
 
 def iterSort(iterators, cmpFn):
@@ -223,6 +223,13 @@ class TransTmplWordIterator():
                          for ch in tmp.possibleTransactions]
                 yield from groupIntoChoices(split, wordWidth, tmp)
                 end = addrOffset + tmp.possibleTransactions[0].bitAddrEnd
+            elif isinstance(tmp, StreamTransaction):
+                ch_len = tmp.child.bit_length()
+                if end % self.wordWidth != 0 or ch_len != self.wordWidth:  
+                    # assert start, end is aligned
+                    raise NotImplementedError(tmp)
+                else:
+                    raise NotImplementedError(tmp)
             else:
                 (base, end), tmpl = tmp
                 startOfPart = base
