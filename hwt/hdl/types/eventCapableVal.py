@@ -23,7 +23,7 @@ class EventCapableVal(Value):
         if isinstance(self, Value):
             return self._onFallingEdge__val(now)
         else:
-            return Operator.withRes(AllOps.FALLIGN_EDGE, [self], BOOL)
+            return Operator.withRes(AllOps.FALLING_EDGE, [self], BOOL)
 
     def _onRisingEdge__val(self, now):
         v = BoolVal(self.updateTime == now,

@@ -252,7 +252,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
             op = item.operator
             if op == AllOps.RISING_EDGE:
                 sens = SENSITIVITY.RISING
-            elif op == AllOps.FALLIGN_EDGE:
+            elif op == AllOps.FALLING_EDGE:
                 sens = SENSITIVITY.FALLING
             else:
                 raise TypeError("This is not an event sensitivity", op)

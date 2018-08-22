@@ -90,7 +90,7 @@ class RtlSignalOps():
         return self.naryOp(AllOps.RISING_EDGE, tv(self)._onRisingEdge, now)
 
     def _onFallingEdge(self, now=None):
-        return self.naryOp(AllOps.FALLIGN_EDGE, tv(self)._onFallingEdge, now)
+        return self.naryOp(AllOps.FALLING_EDGE, tv(self)._onFallingEdge, now)
 
     def _isOn(self):
         return self._auto_cast(BOOL)

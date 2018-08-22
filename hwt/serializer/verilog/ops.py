@@ -90,7 +90,7 @@ class VerilogSerializer_ops():
                 return "%s ? %s : %s" % (cls.condAsHdl([ops[0]], True, ctx),
                                          cls._operand(ops[1], o, ctx),
                                          cls._operand(ops[2], o, ctx))
-        elif o == AllOps.RISING_EDGE or o == AllOps.FALLIGN_EDGE:
+        elif o == AllOps.RISING_EDGE or o == AllOps.FALLING_EDGE:
             raise UnsupportedEventOpErr()
         elif o in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec]:
             op, = ops

@@ -46,7 +46,7 @@ class OpDefinition():
 
 
 def isEventDependentOp(operator):
-    return operator in (AllOps.RISING_EDGE, AllOps.FALLIGN_EDGE)
+    return operator in (AllOps.RISING_EDGE, AllOps.FALLING_EDGE)
 
 
 def onRisingEdgeFn(a, now):
@@ -118,7 +118,7 @@ class AllOps():
         they are not equal to verilog or vhdl operators
     """
     RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
-    FALLIGN_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary
+    FALLING_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary
 
     NEG = OpDefinition(neg)
     DIV = OpDefinition(floordiv)
@@ -170,7 +170,7 @@ def sensitivityByOp(op):
     """
     if op == AllOps.RISING_EDGE:
         return SENSITIVITY.RISING
-    elif op == AllOps.FALLIGN_EDGE:
+    elif op == AllOps.FALLING_EDGE:
         return SENSITIVITY.FALLING
     else:
         raise TypeError()
