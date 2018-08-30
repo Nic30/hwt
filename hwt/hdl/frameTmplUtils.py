@@ -263,6 +263,7 @@ class TransTmplWordIterator():
                 else:
                     s = StreamOfFramePars(end, tmp)
                     s.extend(self.splitOnWords(tmp.child, end))
+                    s.setIsLast(True)
                     s.resolveEnd()
                     yield s
                     end = addrOffset + tmp.child.bitAddrEnd
