@@ -268,7 +268,7 @@ class TransTmpl(object):
             elif isinstance(t, HStream):
                 assert len(self.children) == 1
                 yield StreamTransaction(self, offset, shouldEnterFn,
-                                       self.children[0])
+                                        self.children[0])
             else:
                 raise TypeError(t)
 

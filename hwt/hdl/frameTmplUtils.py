@@ -68,31 +68,10 @@ def iterSort(iterators, cmpFn):
             actual[minimumIndex] = minimum
 
 
-class ChoicesOfFrameParts(list):
+class TransPartGroup(list):
     """
-    List of ChoiceOfFrameParts
-    One of ChoiceOfFrameParts is used to represent the word, item depends
-    on context
-
-    :ivar origin: OneOfTransaction instance
-    :ivar startOfPart: bit addr of start of this group of frame parts
-    :ivar endOfPart: bit addr of end of this group of frame parts
-    :ivar _isLast: flag which means this is the last part of original union
+    Abstract parent class for groups of TransParts
     """
-
-    def __init__(self, startOfPart: int, origin: OneOfTransaction):
-        self.origin = origin
-        self.startOfPart = startOfPart
-        self.endOfPart = None
-        self._isLast = False
-
-    def resolveEnd(self):
-        end = self.startOfPart
-        for items in self:
-            if items:
-                end = max(end, max(itm.endOfPart for itm in items))
-        self.endOfPart = end
-
     def setIsLast(self, val: bool) -> None:
         self._isLast = val
 
@@ -114,7 +93,34 @@ class ChoicesOfFrameParts(list):
         return self.endOfPart - self.startOfPart
 
     def __repr__(self):
-        return "<ChoicesOfFrameParts %s>" % list.__repr__(self)
+        return "<%s %s>" % (self.__class__.__name__, list.__repr__(self))
+
+
+class ChoicesOfFrameParts(TransPartGroup):
+    """
+    List of ChoiceOfFrameParts
+    One of ChoiceOfFrameParts is used to represent the word, item depends
+    on context
+
+    :ivar origin: OneOfTransaction instance
+    :ivar startOfPart: bit addr of start of this group of frame parts
+    :ivar endOfPart: bit addr of end of this group of frame parts
+    :ivar _isLast: flag which means this is the last part of original union
+    """
+
+    def __init__(self, startOfPart: int, origin: OneOfTransaction):
+        self.origin = origin
+        self.startOfPart = startOfPart
+        self.endOfPart = None
+        self._isLast = False
+        super(ChoicesOfFrameParts, self).__init__()
+
+    def resolveEnd(self):
+        end = self.startOfPart
+        for items in self:
+            if items:
+                end = max(end, max(itm.endOfPart for itm in items))
+        self.endOfPart = end
 
 
 class ChoiceOfFrameParts(list):
@@ -129,6 +135,31 @@ class ChoiceOfFrameParts(list):
 
     def __repr__(self):
         return "<ChoiceOfFrameParts %s>" % list.__repr__(self)
+
+
+class StreamOfFramePars(TransPartGroup):
+    """
+    List of TransPart instances
+    One of TransPart is used to represent the word, on target bus,
+    All TransPart instances represents one logical word in stream
+
+    :ivar origin: StreamTransaction instance
+    :ivar startOfPart: bit addr of start of this group of frame parts
+    :ivar endOfPart: bit addr of end of this group of frame parts
+    :ivar _isLast: flag which means this is the last part of original union
+    """
+
+    def __init__(self, startOfPart: int, origin: StreamTransaction):
+        self.origin = origin
+        self.startOfPart = startOfPart
+        self.endOfPart = None
+        self._isLast = False
+        super(StreamOfFramePars, self).__init__()
+
+    def resolveEnd(self):
+        end = self.startOfPart
+        end += self[-1].endOfPart
+        self.endOfPart = end
 
 
 def groupIntoChoices(splitsOnWord, wordWidth: int, origin: OneOfTransaction):
@@ -146,6 +177,7 @@ def groupIntoChoices(splitsOnWord, wordWidth: int, origin: OneOfTransaction):
     for i, item in iterSort(splitsOnWord, cmpWordIndex):
         _actualW = item.startOfPart // wordWidth
         if actual is None:
+            # first pass
             actual = ChoicesOfFrameParts(item.startOfPart, origin)
             actual.extend(
                 ChoiceOfFrameParts(actual,
@@ -229,7 +261,11 @@ class TransTmplWordIterator():
                     # assert start, end is aligned
                     raise NotImplementedError(tmp)
                 else:
-                    raise NotImplementedError(tmp)
+                    s = StreamOfFramePars(end, tmp)
+                    s.extend(self.splitOnWords(tmp.child, end))
+                    s.resolveEnd()
+                    yield s
+                    end = addrOffset + tmp.child.bitAddrEnd
             else:
                 (base, end), tmpl = tmp
                 startOfPart = base
