@@ -31,17 +31,17 @@ class _DummyIteratorCtx(object):
 class ObjIteratorCtx(object):
     """
     Object Iterator context
-    
+
     Allows to walk object properties and keep track of it
 
     :note: :class:`.TransTmpl` uses this object to walk other object together with structure type
         this is useful when you need to walk generated interface together with type
         from which it was generated from
-    
+
     :ivar actual: actual selected object
     :ivar parent: list of collected parent of this object
     :ivar onParentNames: list, str for children which are properties,
-        int for children which are items of parent 
+        int for children which are items of parent
     """
 
     def __init__(self, obj):
@@ -53,12 +53,12 @@ class ObjIteratorCtx(object):
     def __call__(self, prop: Union[str, int]):
         """
         Prepare to enter child property or item in sequence
-            
+
         :prop: str if entering a property, int if entering an item of sequence
         """
         self.nextProp = prop
         return self
-    
+
     def __enter__(self):
         """
         Enter child property or item in sequence
@@ -70,7 +70,7 @@ class ObjIteratorCtx(object):
             child = a[prop]
         else:
             child = getattr(a, prop)
- 
+
         self.parents.append(a)
         self.onParentNames.append(prop)
         self.actual = child
@@ -175,7 +175,6 @@ class TransTmpl(object):
         self.children.append(ch)
         return bitAddr + dtype.elmType.bit_length()
 
-
     def _loadFromHType(self, dtype: HdlType, bitAddr: int) -> None:
         """
         Parse any HDL type to this transaction template instance
@@ -217,7 +216,7 @@ class TransTmpl(object):
 
     def walkFlatten(self, offset: int=0,
                     shouldEnterFn=_default_shouldEnterFn,
-                    otherObjItCtx:ObjIteratorCtx =_DummyIteratorCtx()
+                    otherObjItCtx: ObjIteratorCtx =_DummyIteratorCtx()
                     ) -> Generator[
             Union[Tuple[Tuple[int, int], 'TransTmpl'], 'OneOfTransaction'],
             None, None]:
@@ -341,6 +340,7 @@ class OneOfTransaction(object):
         for p in self.possibleTransactions:
             yield p.walkFlatten(offset=self.offset,
                                 shouldEnterFn=self.shouldEnterFn)
+
 
 class StreamTransaction(object):
     """
