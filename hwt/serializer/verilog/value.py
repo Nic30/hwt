@@ -165,7 +165,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             item = item.operands[0]
             if o is AllOps.RISING_EDGE:
                 prefix = "posedge "
-            elif o is AllOps.FALLIGN_EDGE:
+            elif o is AllOps.FALLING_EDGE:
                 prefix = "negedge "
             else:
                 raise NotImplementedError()

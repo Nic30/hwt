@@ -46,7 +46,7 @@ class SimModelSerializer_ops():
     _unaryOps = {
         AllOps.NOT: "(%s)._invert__val()",
         AllOps.RISING_EDGE: "(%s)._onRisingEdge__val(sim.now)",
-        AllOps.FALLIGN_EDGE: "(%s)._onFallingEdge__val(sim.now)",
+        AllOps.FALLING_EDGE: "(%s)._onFallingEdge__val(sim.now)",
         AllOps.BitsAsSigned: "(%s)._convSign__val(True)",
         AllOps.BitsAsUnsigned: "(%s)._convSign__val(False)",
         AllOps.BitsAsVec: "(%s)._convSign__val(None)",

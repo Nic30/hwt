@@ -48,7 +48,7 @@ class HwtSerializer_ops():
         AllOps.NOT: "~%s",
         AllOps.NEG: "-%s",
         AllOps.RISING_EDGE: "(%s)._onRisingEdge()",
-        AllOps.FALLIGN_EDGE: "(%s)._onFallingEdge()",
+        AllOps.FALLING_EDGE: "(%s)._onFallingEdge()",
     }
     _castOps = {
         AllOps.BitsAsSigned,

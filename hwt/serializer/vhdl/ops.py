@@ -64,7 +64,7 @@ class VhdlSerializer_ops():
         AllOps.NOT: "NOT %s",
         AllOps.NEG: "-(%s)",
         AllOps.RISING_EDGE: "RISING_EDGE(%s)",
-        AllOps.FALLIGN_EDGE: "FALLING_EDGE(%s)",
+        AllOps.FALLING_EDGE: "FALLING_EDGE(%s)",
         AllOps.BitsAsSigned: "SIGNED(%s)",
         AllOps.BitsAsUnsigned: "UNSIGNED(%s)",
         AllOps.BitsAsVec: "STD_LOGIC_VECTOR(%s)",
