@@ -157,9 +157,10 @@ class StreamOfFramePars(TransPartGroup):
         super(StreamOfFramePars, self).__init__()
 
     def resolveEnd(self):
-        end = self.startOfPart
-        end += self[-1].endOfPart
+        assert self.startOfPart == self[0].startOfPart
+        end = self[-1].endOfPart
         self.endOfPart = end
+        return end
 
 
 def groupIntoChoices(splitsOnWord, wordWidth: int, origin: OneOfTransaction):
