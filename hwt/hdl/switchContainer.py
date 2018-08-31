@@ -233,10 +233,11 @@ class SwitchContainer(HdlStatement):
                  for _, stm in self.cases],
                 True) and (self.default is None
                            or len(self.default) == stmCnt):
-            for stms in self._iter_stms():
-                if not statementsAreSame(stms):
-                    return True
-            return False
+            stms = list(self._iter_stms())
+            if statementsAreSame(stms):
+                return False
+            else:
+                return True
         return True
 
     def isSame(self, other: HdlStatement) -> bool:
