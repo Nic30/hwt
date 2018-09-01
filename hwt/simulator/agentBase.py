@@ -91,7 +91,7 @@ class SyncAgentBase(AgentWitReset):
     :attention: requires clk and rst/rstn signal
         (if you do not have any create simulation wrapper with it)
     """
-    SELECTE_EDGE_CALLBACK = OnRisingCallbackLoop
+    SELECTED_EDGE_CALLBACK = OnRisingCallbackLoop
 
     def __init__(self, intf, allowNoReset=False):
         super().__init__(intf, allowNoReset=allowNoReset)
@@ -100,7 +100,7 @@ class SyncAgentBase(AgentWitReset):
         self.clk = self.intf._getAssociatedClk()._sigInside
 
         # run monitor, driver only on rising edge of clk
-        c = self.SELECTE_EDGE_CALLBACK
+        c = self.SELECTED_EDGE_CALLBACK
         self.monitor = c(self.clk, self.monitor, self.getEnable)
         self.driver = c(self.clk, self.driver, self.getEnable)
 

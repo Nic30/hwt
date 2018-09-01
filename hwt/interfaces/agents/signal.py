@@ -36,7 +36,7 @@ class SignalAgent(SyncAgentBase):
         if self.clk is not None:
             if self.initDelay:
                 raise NotImplementedError("initDelay only without clock")
-            c = self.SELECTE_EDGE_CALLBACK
+            c = self.SELECTED_EDGE_CALLBACK
             self.monitor = c(self.clk, self.monitor, self.getEnable)
             self.driver = c(self.clk, self.driver, self.getEnable)
 
