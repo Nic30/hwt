@@ -40,14 +40,14 @@ class AgentBase():
         """
         return [self.monitor]
 
-    def driver(self, s):
+    def driver(self, sim):
         """
         Implement this method to drive your interface
         in simulation/verification
         """
         raise NotImplementedError()
 
-    def monitor(self, s):
+    def monitor(self, sim):
         """
         Implement this method to monitor your interface
         in simulation/verification
