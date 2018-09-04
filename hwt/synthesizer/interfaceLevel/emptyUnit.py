@@ -28,8 +28,6 @@ class EmptyUnit(Unit):
 
         if not hasattr(self, "_name"):
             self._name = self._getDefaultName()
-        for i in self._interfaces:
-            i._setDirectionsLikeIn(INTF_DIRECTION.MASTER)
 
         self._loadMyImplementations()
         # construct params for entity (generics)
