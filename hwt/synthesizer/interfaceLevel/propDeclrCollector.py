@@ -21,18 +21,20 @@ class MakeParamsShared(object):
     specified in constructor of this object.
     """
 
-    def __init__(self, unit, exclude=None):
+    def __init__(self, unit, exclude, prefix):
         self.unit = unit
         self.exclude = exclude
+        self.prefix = prefix
 
     def __enter__(self):
         orig = self.unit._setAttrListener
         self.orig = orig
         exclude = self.exclude
+        prefix = self.prefix
 
         def MakeParamsSharedWrap(self, iName, i):
             if isinstance(i, (InterfaceBase, UnitBase, HObjList)):
-                i._updateParamsFrom(self, exclude=exclude)
+                i._updateParamsFrom(self, exclude=exclude, prefix=prefix)
             return orig(iName, i)
 
         self.unit._setAttrListener = MethodType(MakeParamsSharedWrap,
@@ -154,7 +156,7 @@ class PropDeclrCollector(object):
 
         self._params.append(parameter)
 
-    def _paramsShared(self, exclude=None) -> MakeParamsShared:
+    def _paramsShared(self, exclude=None, prefix="") -> MakeParamsShared:
         """
         Auto-propagate params by name to child components and interfaces
         Usage:
@@ -165,8 +167,10 @@ class PropDeclrCollector(object):
                 # your interfaces and unit which should share all params with "self" there
 
         :param exclude: params which should not be shared
+        :param prefix: prefix which should be added to name of child parameters
+            before parameter name matching
         """
-        return MakeParamsShared(self, exclude=exclude)
+        return MakeParamsShared(self, exclude=exclude, prefix=prefix)
 
     def _make_association(self, clk=None, rst=None) -> None:
         """
@@ -199,31 +203,34 @@ class PropDeclrCollector(object):
         """
         return MakeClkRstAssociations(self, clk, rst)
 
-    def _updateParamsFrom(self, otherObj, updater, exclude) -> None:
+    def _updateParamsFrom(self, otherObj:"PropDeclrCollector", updater, exclude:set, prefix:str) -> None:
         """
         Update all parameters which are defined on self from otherObj
 
+        :param otherObj: other object which Param instances should be updated
+        :param updater: updater function(self, myParameter, onOtherParameterName, otherParameter)
         :param exclude: iterable of parameter on otherObj object which should be excluded
+        :param prefix: prefix which should be added to name of paramters of this object before matching
+            parameter name on parent
         """
         excluded = set()
         if exclude is not None:
             exclude = set(exclude)
 
-        for parentP in otherObj._params:
-            if exclude and parentP in exclude:
-                excluded.add(parentP)
-                continue
-
-            onParentName = parentP._scopes[otherObj][1]
+        for myP in self._params:
+            pPName = prefix + myP._scopes[self][1]
             try:
-                myP = getattr(self, onParentName)
-                if not isinstance(myP, Param):
+                otherP = getattr(otherObj, pPName)
+                if not isinstance(otherP, Param):
                     continue
             except AttributeError:
                 continue
 
-            updater(self, myP, onParentName, parentP)
-
+            if exclude and otherP in exclude:
+                excluded.add(otherP)
+                continue
+            updater(self, myP, otherP)
+        
         if exclude is not None:
             # assert that what should be excluded really exists
             assert excluded == exclude

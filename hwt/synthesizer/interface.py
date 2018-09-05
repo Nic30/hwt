@@ -12,8 +12,8 @@ from hwt.synthesizer.vectorUtils import fitTo
 from hwt.synthesizer.hObjList import HObjList
 
 
-def _default_param_updater(self, myP, onParentName, parentP):
-    self._replaceParam(onParentName, parentP)
+def _default_param_updater(self, myP, parentP):
+    self._replaceParam(myP, parentP)
 
 
 class Interface(InterfaceBase, InterfaceceImplDependentFns,
@@ -237,15 +237,15 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         """get all name hierarchy separated by '.' """
         return HObjList._getFullName(self)
 
-    def _replaceParam(self, pName, newP):
+    def _replaceParam(self, p, newP):
         """
         Replace parameter on this interface (in configuration stage)
 
         :ivar pName: actual name of param on me
         :ivar newP: new Param instance by which should be old replaced
         """
-        p = getattr(self, pName)
         i = self._params.index(p)
+        pName = p._scopes[self][1]
         assert i > -1
         self._params[i] = newP
         del p._scopes[self]  # remove reference from old param
@@ -253,11 +253,11 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         object.__setattr__(self, pName, newP)
 
     def _updateParamsFrom(self, otherObj, updater=_default_param_updater,
-                          exclude=None):
+                          exclude=None, prefix=""):
         """
         :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
         """
-        PropDeclrCollector._updateParamsFrom(self, otherObj, updater, exclude)
+        PropDeclrCollector._updateParamsFrom(self, otherObj, updater, exclude, prefix)
 
     def _bit_length(self):
         """Sum of all width of interfaces in this interface"""

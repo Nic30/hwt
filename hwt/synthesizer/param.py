@@ -11,6 +11,9 @@ from typing import Generator
 class Param(RtlSignal):
     """
     Class used in same way as generics in VHDL, it is wrapper around the value
+    
+    :ivar _val: actual value of paramter
+    :ivar _scopes: name scopes for resolving of parameter name in specified unit
     """
 
     def __init__(self, initval):
@@ -21,7 +24,7 @@ class Param(RtlSignal):
         self.replacedWith = None
         self._parent = None
         self.__isReadOnly = False
-        # unit: (ctx, name)
+        # {unit: (ctx, name)}
         self._scopes = {}
         self._const = True
         self.hidden = False

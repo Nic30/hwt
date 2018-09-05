@@ -212,8 +212,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
                 raise IntfLvlConfErr("_toRtl of %s: unit(s) %s were lost"
                                      % (self._name, str(inIntf - inRtl)))
 
-    def _updateParamsFrom(self, otherObj, updater=_default_param_updater, exclude=None):
+    def _updateParamsFrom(self, otherObj, updater=_default_param_updater, exclude=None, prefix=""):
         """
         :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
         """
-        PropDeclrCollector._updateParamsFrom(self, otherObj, updater, exclude)
+        PropDeclrCollector._updateParamsFrom(self, otherObj, updater, exclude, prefix)

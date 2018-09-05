@@ -41,8 +41,8 @@ def getSignalName(sig):
     return sig.name
 
 
-def _default_param_updater(self, myP, onParentName, parentP):
-    myP.set(parentP)
+def _default_param_updater(self, myP, otherP):
+    myP.set(otherP)
 
 
 class UnitImplHelpers(object):
@@ -160,9 +160,3 @@ class UnitImplHelpers(object):
                  " defined by interface %s, is %s should be %s")
                 % (self._name, portItem.name,
                    repr(interface), portItem.direction, d))
-
-    def _shareParamsWithPrefix(self, obj, prefix, paramNames):
-        for name in paramNames:
-            lp = getattr(obj, name)
-            p = getattr(self, prefix + name)
-            lp.set(p)
