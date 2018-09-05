@@ -108,7 +108,7 @@ def HTypeFromIntfMapItem(interfaceMapItem):
                     reference = t
                 else:
                     assert reference == t, (
-                        "all items in array has to have same type")
+                        "all items in array has to have same type", reference, t)
 
             dtype = reference[len(types)]
 
