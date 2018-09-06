@@ -121,7 +121,6 @@ def HTypeFromIntfMapItem(interfaceMapItem):
             isTerminal = True
         elif isinstance(typeOrListOfInterfaces, IntfMap):
             dtype = HTypeFromIntfMap(typeOrListOfInterfaces)
-            isTerminal = True
         else:
             # tuple (tuple of interfaces, prefix)
             assert isinstance(typeOrListOfInterfaces,

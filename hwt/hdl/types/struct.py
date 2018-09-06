@@ -4,6 +4,13 @@ from hwt.serializer.generic.indent import getIndent
 
 
 class HStructFieldMeta():
+    """
+    Meta for field in struct type
+    
+    :ivar split: flag which specifies if structured data type of this field
+        should be synchronized as a one interface
+        or each it's part should be synchronized separately 
+    """
     def __init__(self, split=False):
         self.split = split
 
