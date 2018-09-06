@@ -13,6 +13,7 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
@@ -301,7 +302,7 @@ class FsmBuilder(Switch):
         return d
 
 
-def connect(src, *destinations, exclude:set=None, fit=False):
+def connect(src, *destinations, exclude: set=None, fit=False):
     """
     Connect src (signals/interfaces/values) to all destinations
 
@@ -310,8 +311,17 @@ def connect(src, *destinations, exclude:set=None, fit=False):
     :param fit: auto fit source width to destination width
     """
     assignemnts = []
-    for dst in destinations:
-        assignemnts.append(_connect(src, dst, exclude, fit))
+
+    if isinstance(src, HObjList):
+        for dst in destinations:
+            assert len(src) == len(dst), (src, dst)
+        _destinations = [iter(d) for d in destinations]
+        for _src in src:
+            dsts = [next(d) for d in _destinations]
+            assignemnts.append(connect(_src, *dsts, exclude=exclude, fit=fit))
+    else:
+        for dst in destinations:
+            assignemnts.append(_connect(src, dst, exclude, fit))
 
     return assignemnts
 
