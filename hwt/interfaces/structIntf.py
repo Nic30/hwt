@@ -92,25 +92,35 @@ def HTypeFromIntfMapItem(interfaceMapItem):
         typeOrListOfInterfaces, nameOrPrefix = interfaceMapItem
 
         if isinstance(typeOrListOfInterfaces, list):
-            # tuple (list or items, name of this array)
-            types = []
+            # list of HType instances for array
+            # or list of HStructField for struct
+            parts = []
             reference = None
-
+            
+            # can be array if items are only IntfMap
+            # or struct if items are tuples (obj, name)
+            isArray = None
             for item in typeOrListOfInterfaces:
                 if isinstance(item, IntfMap):
+                    assert isArray is True or isArray is None
+                    isArray = True
                     t = HTypeFromIntfMap(item)
+                    if reference is None:
+                        reference = t
+                    else:
+                        assert reference == t, (
+                            "all items in array has to have same type", reference, t)
+                    parts.append(t)
                 else:
+                    assert isArray is False or isArray is None
+                    isArray = False
                     f = HTypeFromIntfMapItem(item)
-                    t = f.dtype
-
-                types.append(t)
-                if reference is None:
-                    reference = t
-                else:
-                    assert reference == t, (
-                        "all items in array has to have same type", reference, t)
-
-            dtype = reference[len(types)]
+                    parts.append(f)
+                    
+            if isArray:
+                dtype = reference[len(parts)]
+            else:
+                dtype = HStruct(*parts)
 
         elif isinstance(typeOrListOfInterfaces, HdlType):
             dtype = typeOrListOfInterfaces
