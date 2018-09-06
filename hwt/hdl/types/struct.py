@@ -8,6 +8,8 @@ class HStructFieldMeta():
         self.split = split
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return self.split == other.split
 
     def __hash__(self):
