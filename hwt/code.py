@@ -235,7 +235,8 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
             .addCases(
             enumerate(statementLists)
         ).Default(
-            bodyFn(items[0], 0)[0]
+            bodyFn(items[0], 0)[0],
+            ackSig(True)
         )
 
 
