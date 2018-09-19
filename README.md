@@ -15,34 +15,32 @@
 
 * Serializers to export HWT designs into multiple target HDLs (multiple standards [verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
 
-Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes. HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls etc. HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
+HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc. HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
 HWT itself is API for code generating by more advanced tools, but it is easy to use it directly.
 
-* There is library of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib).
+* There is library full of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib).
 
 * (System) Verilog/VHDL compatibility layer at [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) which allows you to import objects from HDL (not maintained).
 
-* There is (System) Verilog/VHDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
+* There is a (System) Verilog/VHDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
 
-* There is prototype (pre alfa) of IDE [hwtIde](https://github.com/Nic30/hwtIde)
+* There is a prototype (pre alfa) of IDE [hwtIde](https://github.com/Nic30/hwtIde)
+
+* There is a plugin for sphinx documentation generator [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) which adds shematic into html documentaion. 
 
 ## Installation
 
 This library is regular python package. You can install it using:
 ```
-# system-wide
+# system-wide, use -u for local use only
 sudo pip3 install hwt
-
-# or for local use only
-pip3 install hwt -u
 ```
 
 Then you are able to use functions and classes defined in hwt library from python console or script.
-Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended.
+Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it contains all interfaces agents etc...
 
 
-
-## Example
+## Example, Axi4Lite adress decoder generated from c-like struct description of address space.
 
 * hwtLib contains abstract class called BusEndpoint. Object from this class uses c-like-structure as description of memory space. The goal is create a memory space decoder for any interface just from c-like structure description. This allows for example to switch design from Avalon or Axi to PCI-e in just one line of code. And also c-structure-like description of memory space is very user friendly and greatly reduces the possible errors in design. 
  
