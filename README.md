@@ -15,8 +15,7 @@
 
 * Serializers to export HWT designs into multiple target HDLs (multiple standards [verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
 
-HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc. HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
-HWT itself is API for code generating by more advanced tools, but it is easy to use it directly.
+HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc. HWT performs no HLS planing or schedueling HWT itself is API for code generating by more advanced tools, but it is easy to use it directly.
 
 Other parts of hwt ecosystem:
 
@@ -25,6 +24,8 @@ Other parts of hwt ecosystem:
 * [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - plugin for sphinx documentation generator which adds shematic into html documentaion. 
 
 * [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
+
+* [hwtHls](https://github.com/Nic30/hwtHls) - High Level Synthetizer (alghorithmic description -> RTL)
 
 * [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) (not maintained)- (System) Verilog/VHDL compatibility layer at which allows you to import objects from HDL.
 
