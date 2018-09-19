@@ -21,7 +21,7 @@ Other parts of hwt ecosystem:
 
 * [hwtLib](https://github.com/Nic30/hwtLib) - Library full of examples and real designs.
 
-* [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - plugin for sphinx documentation generator which adds shematic into html documentaion. 
+* [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds shematic into html documentaion. 
 
 * [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
 
