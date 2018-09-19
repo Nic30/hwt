@@ -17,7 +17,7 @@
 
 HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc. HWT performs no HLS planing or schedueling HWT itself is API for code generating by more advanced tools, but it is easy to use it directly.
 
-Other parts of hwt ecosystem:
+## Other parts of hwt ecosystem:
 
 * [hwtLib](https://github.com/Nic30/hwtLib) - Library full of examples and real designs.
 
