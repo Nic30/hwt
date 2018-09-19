@@ -13,7 +13,7 @@
 
 * Tools for static analysis ([resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
 
-* Serializers to export HWT designs into multiple target HDLs (multiple standards [verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
+* Serializers to export HWT designs into multiple target HDLs ([verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
 
 HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc. HWT performs no HLS planing or schedueling HWT itself is API for code generating by more advanced tools, but it is easy to use it directly.
 
