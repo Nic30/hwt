@@ -123,26 +123,27 @@ ENTITY AxiLiteEndpoint IS
 
 ## Similar projects:
 
-https://chisel.eecs.berkeley.edu/
+[chisel](https://chisel.eecs.berkeley.edu/) - Hardware metalanguage integrated in Scala
 
-https://github.com/m-labs/migen
+[migen](https://github.com/m-labs/migen) - Hardwre metalanguage integrated in Python 
 
-https://github.com/myhdl/myhdl
+[myhdl](https://github.com/myhdl/myhdl) - Process based hardware description language in Python
 
-https://github.com/enjoy-digital/litex
+[pymtl](https://github.com/cornell-brg/pymtl) - Hardware metalanguage integrated in Python
 
-https://github.com/cornell-brg/pymtl
+[yosys](https://github.com/YosysHQ/yosys) - RTL synthesis framework
 
-https://github.com/YosysHQ/yosys
+[verilator](https://www.veripool.org/wiki/verilator) - Verilog -> C/C++ sim
 
-https://github.com/PyHDI/veriloggen
+[veriloggen](https://github.com/PyHDI/veriloggen) - Verilog centric Hardware metalanguage with HLS like features
 
-https://github.com/StanfordAHA/garnet
+[garnet](https://github.com/StanfordAHA/garnet) - Coarse-Grained Reconfigurable Architecture generator based on magma
 
-https://github.com/phanrahan/magmathon
+[magma](https://github.com/phanrahan/magma/) - Harware metalanguage integrated in Python
 
 
 ## Board support libraries (Potential candidates for public integration):
 
-https://github.com/phanrahan/loam
+[loam](https://github.com/phanrahan/loam) - Buildsystem for magma
 
+[litex](https://github.com/enjoy-digital/litex) - Buildsystem for migen
