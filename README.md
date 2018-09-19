@@ -18,15 +18,16 @@
 HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc. HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
 HWT itself is API for code generating by more advanced tools, but it is easy to use it directly.
 
-* There is library full of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib).
+Other parts of hwt ecosystem:
 
-* (System) Verilog/VHDL compatibility layer at [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) which allows you to import objects from HDL (not maintained).
+* [hwtLib](https://github.com/Nic30/hwtLib) - Library full of examples and real designs.
 
-* There is a (System) Verilog/VHDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
+* [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - plugin for sphinx documentation generator which adds shematic into html documentaion. 
 
-* There is a prototype (pre alfa) of IDE [hwtIde](https://github.com/Nic30/hwtIde)
+* [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
 
-* There is a plugin for sphinx documentation generator [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) which adds shematic into html documentaion. 
+* [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) (not maintained)- (System) Verilog/VHDL compatibility layer at which allows you to import objects from HDL.
+
 
 ## Installation
 
