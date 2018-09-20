@@ -3,16 +3,6 @@ from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 
 
-def setOut(*interfaces):
-    """
-    set interfaces as output interfaces
-
-    :attention: only for instances of EmptyUnit
-    """
-    for i in interfaces:
-        i._setDirectionsLikeIn(INTF_DIRECTION.SLAVE)
-
-
 class EmptyUnit(Unit):
     """
     Unit used for prototyping all output interfaces are connected
