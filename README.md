@@ -7,42 +7,35 @@
 [![Python version](https://img.shields.io/pypi/pyversions/hwt.svg)](https://img.shields.io/pypi/pyversions/hwt.svg)
 
 ## Features:
-* Hardware Description Language (example [showcase0.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py) )
-
+* Meta Hardware Description Language (example [showcase0.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py))
 * Digital circuit simulator with UVM like verification environment (example usage [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
-
 * Tools for static analysis ([resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
+* Serializers to export HWT designs into multiple target HDLs ([verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
 
-* Serializers to export HWT designs into multiple target HDLs (multiple standards [verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
+HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc. HWT performs no HLS planing or schedueling HWT itself is API for code generating by more advanced tools, but it is easy to use it directly.
 
-Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes. HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls etc. HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
-HWT itself is API for code generating by more advanced tools, but it is easy to use it directly.
+## Other parts of hwt ecosystem:
 
-* There is library of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib).
+* [hwtLib](https://github.com/Nic30/hwtLib) - Library full of examples and real designs.
+* [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds shematic into html documentaion. 
+* [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
+* [hwtHls](https://github.com/Nic30/hwtHls) - High Level Synthetizer (alghorithmic description -> RTL)
+* [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) (not maintained)- (System) Verilog/VHDL compatibility layer at which allows you to import objects from HDL.
 
-* (System) Verilog/VHDL compatibility layer at [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) which allows you to import objects from HDL (not maintained).
-
-* There is (System) Verilog/VHDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
-
-* There is prototype (pre alfa) of IDE [hwtIde](https://github.com/Nic30/hwtIde)
 
 ## Installation
 
 This library is regular python package. You can install it using:
 ```
-# system-wide
+# system-wide, use -u for local use only
 sudo pip3 install hwt
-
-# or for local use only
-pip3 install hwt -u
 ```
 
 Then you are able to use functions and classes defined in hwt library from python console or script.
-Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended.
+Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it contains all interfaces agents etc...
 
 
-
-## Example
+## Example, Axi4Lite adress decoder generated from c-like struct description of address space.
 
 * hwtLib contains abstract class called BusEndpoint. Object from this class uses c-like-structure as description of memory space. The goal is create a memory space decoder for any interface just from c-like structure description. This allows for example to switch design from Avalon or Axi to PCI-e in just one line of code. And also c-structure-like description of memory space is very user friendly and greatly reduces the possible errors in design. 
  
@@ -123,26 +116,22 @@ ENTITY AxiLiteEndpoint IS
 
 ## Similar projects:
 
-https://chisel.eecs.berkeley.edu/
+* [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, Hardware metalanguage integrated
+* [migen](https://github.com/m-labs/migen) - 2013-?, Python, Hardwre metalanguage integrated 
+* [myhdl](https://github.com/myhdl/myhdl) - 2011-?, Python, Process based hardware description language
+* [pymtl](https://github.com/cornell-brg/pymtl) - 2014-?, Hardware metalanguage integrated in Python
+* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric Hardware metalanguage with HLS like features
+* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, Harware metalanguage
+* [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
 
-https://github.com/m-labs/migen
+## Related open-source
 
-https://github.com/myhdl/myhdl
-
-https://github.com/enjoy-digital/litex
-
-https://github.com/cornell-brg/pymtl
-
-https://github.com/YosysHQ/yosys
-
-https://github.com/PyHDI/veriloggen
-
-https://github.com/StanfordAHA/garnet
-
-https://github.com/phanrahan/magmathon
+* [vtr-verilog-to-routing](https://github.com/verilog-to-routing/vtr-verilog-to-routing)
+* [verilator](https://www.veripool.org/wiki/verilator) - Verilog -> C/C++ sim
+* [yosys](https://github.com/YosysHQ/yosys) - RTL synthesis framework
 
 
 ## Board support libraries (Potential candidates for public integration):
 
-https://github.com/phanrahan/loam
-
+* [loam](https://github.com/phanrahan/loam) - Buildsystem for magma
+* [litex](https://github.com/enjoy-digital/litex) - Buildsystem for migen
