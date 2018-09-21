@@ -30,7 +30,7 @@ HWT designs are instances. No specific exceution is required, just use toRtl met
 * [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) (not maintained)- (System) Verilog/VHDL compatibility layer at which allows you to import objects from HDL.
 
 
-## Installation
+## Installation:
 
 This library is regular python package. You can install it using:
 ```
@@ -40,8 +40,6 @@ sudo pip3 install hwt
 
 Then you are able to use functions and classes defined in hwt library from python console or script.
 Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it contains all interfaces agents etc...
-
-
 
 
 ## Similar projects:
