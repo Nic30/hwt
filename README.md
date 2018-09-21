@@ -6,7 +6,13 @@
 [![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest) 
 [![Python version](https://img.shields.io/pypi/pyversions/hwt.svg)](https://img.shields.io/pypi/pyversions/hwt.svg)
 
-## Features:
+## The goal of HWT
+
+* Meta programing + HLS, standard code generators to prevent code duplications
+* Integration with community and commercial tools, flexible lightway user extensible architecture
+* simple verifications and testing
+
+## Features
 
 * Meta Hardware Description Language (example [simple](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/simple.py), [showcase](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py)). It is somewhere between HLS and HDL. It offers HLS style of coding but in same time it allows you to manipulate with HDL objects. It means it is little bit slower to write a prototype than you would in HLS, but you always know what, how and why is happening.
 * Digital circuit simulator with UVM like verification environment (example usage [CAM](https://github.com/Nic30/hwtLib/blob/master/hwtLib/mem/cam_test.py), [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
@@ -21,7 +27,7 @@ HWT performs no HLS planing or schedueling. HWT is also good as API for code gen
 HWT designs are instances. No specific exceution is required, just use toRtl metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
 
 
-## HWT ecosystem:
+## HWT ecosystem
 
 * [hwtLib](https://github.com/Nic30/hwtLib) - Library full of examples and real designs.
 * [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds shematic into html documentaion. 
@@ -30,7 +36,7 @@ HWT designs are instances. No specific exceution is required, just use toRtl met
 * [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) (not maintained)- (System) Verilog/VHDL compatibility layer at which allows you to import objects from HDL.
 
 
-## Installation:
+## Installation
 
 This library is regular python package. You can install it using:
 ```
@@ -42,7 +48,7 @@ Then you are able to use functions and classes defined in hwt library from pytho
 Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it contains all interfaces agents etc...
 
 
-## Similar projects:
+## Similar projects
 
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, Hardware metalanguage integrated
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, Hardwre metalanguage integrated 
@@ -59,7 +65,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [yosys](https://github.com/YosysHQ/yosys) - RTL synthesis framework
 
 
-## Board support libraries (Potential candidates for public integration):
+## Board support libraries (Potential candidates for public integration)
 
 * [loam](https://github.com/phanrahan/loam) - Buildsystem for magma
 * [litex](https://github.com/enjoy-digital/litex) - Buildsystem for migen
