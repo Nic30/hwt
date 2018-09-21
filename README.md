@@ -6,7 +6,7 @@
 [![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest) 
 [![Python version](https://img.shields.io/pypi/pyversions/hwt.svg)](https://img.shields.io/pypi/pyversions/hwt.svg)
 
-## The goal of HWT
+## The goals of HWT
 
 * Meta programing + HLS, standard code generators to prevent code duplications
 * Integration with community and commercial tools, flexible lightway user extensible architecture
