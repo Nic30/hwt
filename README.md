@@ -8,9 +8,9 @@
 
 ## The goals of HWT
 
-* Meta programing + HLS, standard code generators to prevent code duplications
-* Integration with community and commercial tools, flexible lightway user extensible architecture
-* simple verifications and testing
+* Meta programing + HLS, standard code generators to prevent code duplications.
+* Integration with community and commercial tools, flexible lightway user extensible architecture.
+* Simple verifications and testing.
 
 ## Features
 
