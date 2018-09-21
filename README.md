@@ -116,13 +116,13 @@ ENTITY AxiLiteEndpoint IS
 
 ## Similar projects:
 
-* [chisel](https://chisel.eecs.berkeley.edu/) - Hardware metalanguage integrated in Scala
-* [migen](https://github.com/m-labs/migen) - Hardwre metalanguage integrated in Python 
-* [myhdl](https://github.com/myhdl/myhdl) - Process based hardware description language in Python
-* [pymtl](https://github.com/cornell-brg/pymtl) - Hardware metalanguage integrated in Python
-* [veriloggen](https://github.com/PyHDI/veriloggen) - Verilog centric Hardware metalanguage with HLS like features
-* [garnet](https://github.com/StanfordAHA/garnet) - Coarse-Grained Reconfigurable Architecture generator based on magma
-* [magma](https://github.com/phanrahan/magma/) - Harware metalanguage integrated in Python
+* [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, Hardware metalanguage integrated
+* [migen](https://github.com/m-labs/migen) - 2013-?, Python, Hardwre metalanguage integrated 
+* [myhdl](https://github.com/myhdl/myhdl) - 2011-?, Python, Process based hardware description language
+* [pymtl](https://github.com/cornell-brg/pymtl) - 2014-?, Hardware metalanguage integrated in Python
+* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric Hardware metalanguage with HLS like features
+* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, Harware metalanguage
+* [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
 
 ## Related open-source
 
