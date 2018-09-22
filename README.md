@@ -51,7 +51,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 ## Similar projects
 
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, Hardware metalanguage
-* [migen](https://github.com/m-labs/migen) - 2013-?, Python, Hardwre metalanguage 
+* [migen](https://github.com/m-labs/migen) - 2013-?, Python, Hardware metalanguage 
 * [myhdl](https://github.com/myhdl/myhdl) - 2011-?, Python, Process based hardware description language
 * [pymtl](https://github.com/cornell-brg/pymtl) - 2014-?, Python, Hardware metalanguage
 * [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric Hardware metalanguage with HLS like features
