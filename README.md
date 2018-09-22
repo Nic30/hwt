@@ -55,7 +55,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [myhdl](https://github.com/myhdl/myhdl) - 2011-?, Python, Process based hardware description language
 * [pymtl](https://github.com/cornell-brg/pymtl) - 2014-?, Hardware metalanguage integrated in Python
 * [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric Hardware metalanguage with HLS like features
-* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, Harware metalanguage
+* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, Hardware metalanguage
 * [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
 
 ## Related open-source
