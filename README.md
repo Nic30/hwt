@@ -59,6 +59,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, Hardware metalanguage
 * [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, Hardware metalanguage
 * [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
+* [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
 
 ## Related open-source
 
