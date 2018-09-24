@@ -50,16 +50,18 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 
 ## Similar projects
 
-* [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, Hardware metalanguage
-* [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, Hardware metalanguage
-* [migen](https://github.com/m-labs/migen) - 2013-?, Python, Hardware metalanguage 
+* [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, meta HDL
+* [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, meta HDL
+* [migen](https://github.com/m-labs/migen) - 2013-?, Python, meta HDL 
 * [myhdl](https://github.com/myhdl/myhdl) - 2011-?, Python, Process based hardware description language
-* [pymtl](https://github.com/cornell-brg/pymtl) - 2014-?, Python, Hardware metalanguage
-* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric Hardware metalanguage with HLS like features
-* [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, Hardware metalanguage
-* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, Hardware metalanguage
+* [pymtl](https://github.com/cornell-brg/pymtl) - 2014-?, Python, meta HDL
+* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric meta HDL with HLS like features
+* [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, meta HDL
+* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, meta HDL
 * [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
 * [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
+* [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, meta HDL
+
 
 ## Related open-source
 
