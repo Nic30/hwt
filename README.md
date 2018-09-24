@@ -61,6 +61,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
 * [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
 * [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, meta HDL
+* [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
 
 
 ## Related open-source
