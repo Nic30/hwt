@@ -15,7 +15,7 @@ from hwt.synthesizer.dummyPlatform import DummyPlatform
 
 
 # [TODO] memory maps https://forums.xilinx.com/t5/Embedded-Processor-System-Design/exporting-AXI-BASEADDR-to-xparameters-h-from-Vivado-IP/td-p/428650
-class Packager(object):
+class IpPackager(object):
     """
     Ipcore packager
     """
@@ -134,7 +134,7 @@ class Packager(object):
 #    # rm others ip in project
 #    vhdlPath = os.path.join(projPath, solutionName, "syn/vhdl")
 #    e = entityFromFile(os.path.join(vhdlPath, mainVhdlFileName))
-#    p = Packager(e, [vhdlPath])
+#    p = IpPackager(e, [vhdlPath])
 #    p.createPackage(ipRepo)
 #
 # def packageBD(ipRepo, bdPath, repoPath):
@@ -147,5 +147,5 @@ class Packager(object):
 #    # ip folder
 #    vhldFolders += [os.path.join(bdPath, "../../ipshared")]
 #    e = entityFromFile(os.path.join(bdSourcesDir, bdName + ".vhd"))
-#    p = Packager(e, vhldFolders)
+#    p = IpPackager(e, vhldFolders)
 #    p.createPackage(ipRepo)

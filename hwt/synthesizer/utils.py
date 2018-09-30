@@ -137,8 +137,8 @@ def toRtl(unitOrCls: Unit, name: str=None,
 def serializeAsIpcore(unit, folderName=".", name=None,
                       serializer: GenericSerializer=VhdlSerializer,
                       targetPlatform=DummyPlatform()):
-    from hwt.serializer.ip_packager.packager import Packager
-    p = Packager(unit, name=name,
+    from hwt.serializer.ip_packager.packager import IpPackager
+    p = IpPackager(unit, name=name,
                  serializer=serializer,
                  targetPlatform=targetPlatform)
     p.createPackage(folderName)
