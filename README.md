@@ -6,11 +6,17 @@
 [![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest) 
 [![Python version](https://img.shields.io/pypi/pyversions/hwt.svg)](https://img.shields.io/pypi/pyversions/hwt.svg)
 
-## Features:
+## The goals of HWT
 
-* Meta Hardware Description Language (example [showcase0.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py)). It is somewhere between HLS and HDL. It offers HLS style of coding but in same time it allows you to manipulate with HDL objects. It means it is little bit slower to write a prototype than you would in HLS, but you always know what, how and why is happening.
-* Digital circuit simulator with UVM like verification environment (example usage [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
-* Tools for static analysis ([resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
+* Meta programing + HLS, standard code generators to prevent code duplications.
+* Integration with community and commercial tools, flexible lightway user extensible architecture.
+* Simple verifications and testing.
+
+## Features
+
+* Meta Hardware Description Language (example [simple](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py), [showcase](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/showcase0.py)). It is somewhere between HLS and HDL. It offers HLS style of coding but in same time it allows you to manipulate with HDL objects. It means it is little bit slower to write a prototype than you would in HLS, but you always know what, how and why is happening.
+* Digital circuit simulator with UVM like verification environment (example usage [CAM](https://github.com/Nic30/hwtLib/blob/master/hwtLib/mem/cam_test.py), [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
+* Tools for static analysis ([resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/arithmetic/cntr_test.py))
 * Serializers to export HWT designs into multiple target HDLs ([verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
 
 HWT uses hilevel-netlists for internal representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc (hw processes are automatically resolved). This netlist is easy to use and easy to modify or analyse by user if there is something missing in main library.
@@ -21,7 +27,7 @@ HWT performs no HLS planing or schedueling. HWT is also good as API for code gen
 HWT designs are instances. No specific exceution is required, just use toRtl metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
 
 
-## HWT ecosystem:
+## HWT ecosystem
 
 * [hwtLib](https://github.com/Nic30/hwtLib) - Library full of examples and real designs.
 * [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds shematic into html documentaion. 
@@ -42,17 +48,21 @@ Then you are able to use functions and classes defined in hwt library from pytho
 Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it contains all interfaces agents etc...
 
 
+## Similar projects
 
-
-## Similar projects:
-
-* [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, Hardware metalanguage integrated
-* [migen](https://github.com/m-labs/migen) - 2013-?, Python, Hardwre metalanguage integrated 
+* [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, meta HDL
+* [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, meta HDL
+* [migen](https://github.com/m-labs/migen) - 2013-?, Python, meta HDL 
 * [myhdl](https://github.com/myhdl/myhdl) - 2011-?, Python, Process based hardware description language
-* [pymtl](https://github.com/cornell-brg/pymtl) - 2014-?, Hardware metalanguage integrated in Python
-* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric Hardware metalanguage with HLS like features
-* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, Harware metalanguage
+* [pymtl](https://github.com/cornell-brg/pymtl) - 2014-?, Python, meta HDL
+* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric meta HDL with HLS like features
+* [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, meta HDL
+* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, meta HDL
 * [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
+* [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
+* [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, meta HDL
+* [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
+
 
 ## Related open-source
 
@@ -61,7 +71,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [yosys](https://github.com/YosysHQ/yosys) - RTL synthesis framework
 
 
-## Board support libraries (Potential candidates for public integration):
+## Board support libraries (Potential candidates for public integration)
 
 * [loam](https://github.com/phanrahan/loam) - Buildsystem for magma
 * [litex](https://github.com/enjoy-digital/litex) - Buildsystem for migen
