@@ -53,7 +53,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, meta HDL
 * [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, meta HDL
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, meta HDL 
-* [myhdl](https://github.com/myhdl/myhdl) - 2011-?, Python, Process based hardware description language
+* [myhdl](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based hardware description language
 * [pymtl](https://github.com/cornell-brg/pymtl) - 2014-?, Python, meta HDL
 * [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric meta HDL with HLS like features
 * [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, meta HDL
