@@ -1,23 +1,27 @@
 import os
 from os.path import relpath
 import shutil
-from typing import List
+from typing import List, Optional
 
+from hwt.pyUtils.uniqList import UniqList
 from hwt.serializer.ip_packager.component import Component
 from hwt.serializer.ip_packager.helpers import prettify
 from hwt.serializer.ip_packager.tclGuiBuilder import GuiBuilder,\
     paramManipulatorFns
 from hwt.serializer.vhdl.serializer import VhdlSerializer
-from hwt.pyUtils.uniqList import UniqList
+from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
-from hwt.synthesizer.dummyPlatform import DummyPlatform
 
 
 # [TODO] memory maps https://forums.xilinx.com/t5/Embedded-Processor-System-Design/exporting-AXI-BASEADDR-to-xparameters-h-from-Vivado-IP/td-p/428650
 class IpPackager(object):
     """
-    Ipcore packager
+    IP-core packager
+    
+    :summary: Packs HDL, constraint and other files to IP-Core package
+        for distribution and simple integration
+    
     """
 
     def __init__(self, topUnit: Unit, name: str=None,
@@ -25,6 +29,15 @@ class IpPackager(object):
                  extraVerilogFiles: List[str]=[],
                  serializer=VhdlSerializer,
                  targetPlatform=DummyPlatform()):
+        """
+        :param topUnit: Unit instance of top component
+        :param name: optional name of top
+        :param extraVhdlFiles: list of extra vhdl file names for files
+            which should be distributed in this IP-core
+        :param extraVerilogFiles: same as extraVhdlFiles just for Verilog
+        :param serializer: serializer which specifies target HDL language
+        :param targetPlatform: specifies properties of target platform, like available resources, vendor, etc.
+        """
         assert not topUnit._wasSynthetised()
         self.topUnit = topUnit
         self.serializer = serializer
@@ -43,6 +56,9 @@ class IpPackager(object):
             self.hdlFiles.append(f)
 
     def saveHdlFiles(self, srcDir):
+        """
+        :param srcDir: dir name where dir with HDL files should be stored
+        """
         path = os.path.join(srcDir, self.name)
         try:
             os.makedirs(path)
@@ -67,6 +83,9 @@ class IpPackager(object):
             self.hdlFiles.append(dst)
 
     def mkAutoGui(self):
+        """
+        :summary: automatically generate simple gui in TCL
+        """
         gui = GuiBuilder()
         p0 = gui.page("Main")
         handlers = []
@@ -81,13 +100,18 @@ class IpPackager(object):
                 f.write('\n\n')
                 f.write(str(h))
 
-    def createPackage(self, repoDir, vendor="hwt", library="mylib",
-                      description=None):
+    def createPackage(self, repoDir, vendor:str="hwt", library:str="mylib",
+                      description:Optional[str]=None):
         '''
-        synthetise hdl if needed
-        copy hdl files
-        create gui file
-        create component.xml
+        :param repoDir: directory where IP-Core should be stored
+        :param vendor: vendor name of IP-Core
+        :param library: library name of IP-Core
+        :param description: description of IP-Core
+        
+        :summary:  synthetise hdl if needed
+            copy hdl files
+            create gui file
+            create component.xml, component_hw.tcl
         '''
         ip_dir = os.path.join(repoDir, self.name + "/")
         if os.path.exists(ip_dir):
