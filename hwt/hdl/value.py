@@ -61,7 +61,7 @@ class Value():
     def __int__(self):
         if isinstance(self, Value) or self._const:
             if self._isFullVld():
-                return self.val
+                return int(self.val)
             else:
                 raise ValueError("Value of %r is not fully defined" % self)
 
