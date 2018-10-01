@@ -6,143 +6,73 @@
 [![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest) 
 [![Python version](https://img.shields.io/pypi/pyversions/hwt.svg)](https://img.shields.io/pypi/pyversions/hwt.svg)
 
-## Features:
-* Hardware Description Language (example [showcase0.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/showcase0.py) )
+## The goals of HWT
 
-* Digital circuit simulator with UVM like verification environment (example usage [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
+* Meta programing + HLS, standard code generators to prevent code duplications.
+* Integration with community and commercial tools, flexible lightway user extensible architecture.
+* Simple verifications and testing.
 
-* Tools for static analysis ([resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/samples/arithmetic/cntr_test.py))
+## Features
 
-* Serializers to export HWT designs into multiple target HDLs (multiple standards [verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
+* Meta Hardware Description Language (example [simple](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py), [showcase](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/showcase0.py)). It is somewhere between HLS and HDL. It offers HLS style of coding but in same time it allows you to manipulate with HDL objects. It means it is little bit slower to write a prototype than you would in HLS, but you always know what, how and why is happening.
+* Digital circuit simulator with UVM like verification environment (example usage [CAM](https://github.com/Nic30/hwtLib/blob/master/hwtLib/mem/cam_test.py), [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
+* Tools for static analysis ([resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/arithmetic/cntr_test.py))
+* Serializers to export HWT designs into multiple target HDLs ([verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
 
-Every part of HWT is optional and can be replaced or excluded by user, there are no magic classes. HWT uses netlists for representation of target design. Optimized netlists are generated from usual code statements, function calls etc. HWT performs no HLS planing or schedueling (can be done in [hwtHls](https://github.com/Nic30/hwtHls) )
-HWT itself is API for code generating by more advanced tools, but it is easy to use it directly.
+HWT uses hilevel-netlists for internal representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc (hw processes are automatically resolved). This netlist is easy to use and easy to modify or analyse by user if there is something missing in main library.
+Also [serialization modes](https://github.com/Nic30/hwt/blob/master/hwt/serializer/mode.py) allows to tweaks how component should behave durning serialization.
 
-* There is library of examples and real designs as well at [hwtLib](https://github.com/Nic30/hwtLib).
+HWT performs no HLS planing or schedueling. HWT is also good as API for code generating by more advanced tools. Hierarchy of components/interfaces/types is not limited. User specifed names are checked for collision with target language. 
 
-* (System) Verilog/VHDL compatibility layer at [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) which allows you to import objects from HDL (not maintained).
+HWT designs are instances. No specific exceution is required, just use toRtl metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
 
-* There is (System) Verilog/VHDL parser [hdlConvertor](https://github.com/Nic30/hdlConvertor)
 
-* There is prototype (pre alfa) of IDE [hwtIde](https://github.com/Nic30/hwtIde)
+## HWT ecosystem
+
+* [hwtLib](https://github.com/Nic30/hwtLib) - Library full of examples and real designs.
+* [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds shematic into html documentaion. 
+* [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
+* [hwtHls](https://github.com/Nic30/hwtHls) - High Level Synthetizer (alghorithmic description -> RTL)
+* [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) (not maintained)- (System) Verilog/VHDL compatibility layer at which allows you to import objects from HDL.
+
 
 ## Installation
 
 This library is regular python package. You can install it using:
 ```
-# system-wide
+# system-wide, use -u for local use only
 sudo pip3 install hwt
-
-# or for local use only
-pip3 install hwt -u
 ```
 
 Then you are able to use functions and classes defined in hwt library from python console or script.
-Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended.
+Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it contains all interfaces agents etc...
 
 
+## Similar projects
 
-## Example
-
-* hwtLib contains abstract class called BusEndpoint. Object from this class uses c-like-structure as description of memory space. The goal is create a memory space decoder for any interface just from c-like structure description. This allows for example to switch design from Avalon or Axi to PCI-e in just one line of code. And also c-structure-like description of memory space is very user friendly and greatly reduces the possible errors in design. 
- 
-* AxiLiteEndpoint is derived from BusEndpoint class and implements slave decoder for AxiLite bus
-(AxiLiteEndpoint is component which takes c-like-struct and generates address encoder). It is also possible to specify meta in struct description to specify output interface explicitly.
-
-```python
-from hwt.synthesizer.utils import toRtl
-from hwt.serializer.vhdl.serializer import VhdlSerializer
-from hwt.hdl.types.struct import HStruct
-from hwtLib.types.ctypes import uint32_t, uint16_t
-from hwtLib.amba.axiLite_comp.endpoint import AxiLiteEndpoint
-
-t = HStruct(
-    (uint32_t[4], "data0"),
-    # optimized address selection because data are aligned
-    (uint32_t[4], "data1"),
-    (uint32_t[2], "data2"),
-    (uint32_t, "data3"),
-    # padding
-    (uint32_t[32], None),
-    # type can be any type
-    (HStruct(
-        (uint16_t, "data4a"),
-        (uint16_t, "data4b"),
-        (uint32_t, "data4c")
-    ), "data4"),
-)
-
-u = AxiLiteEndpoint(t)
-
-# configuration
-u.ADDR_WIDTH.set(8)
-u.DATA_WIDTH.set(32)
-
-# convert unit instance to target HDL
-print(toRtl(u, serializer=VhdlSerializer))
-# print interfaces just for demonstration
-print(u.bus)
-
-# decoded interfaces for data type will have same structure as c-struct description (but it is interface)
-print(u.decoded.data3)
-print(u.decoded.data4)
-```
-
-Expected output (trimmed):
-```vhdl
---
---    Delegate request from AxiLite interface to fields of structure
---    write has higher priority
---    
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-
-ENTITY AxiLiteEndpoint IS
-    GENERIC (ADDR_WIDTH: INTEGER := 8;
-        DATA_WIDTH: INTEGER := 32;
-        decoded_data0_ADDR_WIDTH: INTEGER := 2;
-...
-    );
-    PORT (bus_ar_addr: IN STD_LOGIC_VECTOR(ADDR_WIDTH - 1 DOWNTO 0);
-        bus_ar_ready: OUT STD_LOGIC;
-        bus_ar_valid: IN STD_LOGIC;
-...
-        decoded_data0_addr: OUT STD_LOGIC_VECTOR(decoded_data0_ADDR_WIDTH - 1 DOWNTO 0);
-        decoded_data0_din: OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
-        decoded_data0_dout: IN STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
-        decoded_data0_en: OUT STD_LOGIC;
-        decoded_data0_we: OUT STD_LOGIC;
-...
-<AxiLite, name=bus, _masterDir=DIRECTION.OUT>
-<RegCntrl, name=decoded.data3, _masterDir=DIRECTION.OUT>
-<StructIntf, name=decoded.data4, _masterDir=DIRECTION.OUT>
-```
+* [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, meta HDL
+* [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, meta HDL
+* [migen](https://github.com/m-labs/migen) - 2013-?, Python, meta HDL 
+* [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
+* [PyMTL](https://github.com/cornell-brg/pymtl) - 2014-?, Python, Process based HDL
+* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric meta HDL with HLS like features
+* [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, meta HDL
+* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, meta HDL
+* [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
+* [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
+* [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, meta HDL
+* [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
+* [Kactus2](http://funbase.cs.tut.fi) - IP-core packager
 
 
+## Related open-source
 
-## Similar projects:
-
-https://chisel.eecs.berkeley.edu/
-
-https://github.com/m-labs/migen
-
-https://github.com/myhdl/myhdl
-
-https://github.com/enjoy-digital/litex
-
-https://github.com/cornell-brg/pymtl
-
-https://github.com/YosysHQ/yosys
-
-https://github.com/PyHDI/veriloggen
-
-https://github.com/StanfordAHA/garnet
-
-https://github.com/phanrahan/magmathon
+* [vtr-verilog-to-routing](https://github.com/verilog-to-routing/vtr-verilog-to-routing)
+* [verilator](https://www.veripool.org/wiki/verilator) - Verilog -> C/C++ sim
+* [yosys](https://github.com/YosysHQ/yosys) - RTL synthesis framework
 
 
-## Board support libraries (Potential candidates for public integration):
+## Board support libraries (Potential candidates for public integration)
 
-https://github.com/phanrahan/loam
-
+* [loam](https://github.com/phanrahan/loam) - Buildsystem for magma
+* [litex](https://github.com/enjoy-digital/litex) - Buildsystem for migen
