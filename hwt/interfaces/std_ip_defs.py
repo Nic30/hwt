@@ -1,9 +1,9 @@
 from hwt.interfaces.std import Rst, Rst_n
 from hwt.pyUtils.arrayQuery import where
-from hwt.serializer.ip_packager.interfaces.intfConfig import IntfConfig, DEFAULT_CLOCK
+from ipCorePackager.intfConfig import IntfConfig
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
 
-
+DEFAULT_CLOCK = int(100e6)
 class IP_Clk(IntfConfig):
     def __init__(self):
         super().__init__()
@@ -31,7 +31,7 @@ class IP_Clk(IntfConfig):
             map(lambda intf: intf._name, intfs)))
         self.addSimpleParam(thisIf, "FREQ_HZ", str(DEFAULT_CLOCK))
 
-    def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
+    def asQuartusTcl(self, buff, version, component, top, allInterfaces, thisIf):
         self.quartus_tcl_add_interface(buff, thisIf)
         name = getSignalName(thisIf)
         self.quartus_prop(buff, name, "clockRate", 0)
@@ -47,10 +47,10 @@ class IP_Rst(IntfConfig):
         self.library = "signal"
         self.map = "rst"
 
-    def postProcess(self, component, entity, allInterfaces, thisIf):
+    def postProcess(self, component, top, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_HIGH")
 
-    def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
+    def asQuartusTcl(self, buff, version, component, top, allInterfaces, thisIf):
         self.quartus_tcl_add_interface(buff, thisIf)
         name = getSignalName(thisIf)
         #self.quartus_prop("associatedClock", clock)
@@ -63,10 +63,10 @@ class IP_Rst(IntfConfig):
 
 
 class IP_Rst_n(IP_Rst):
-    def postProcess(self, component, entity, allInterfaces, thisIf):
+    def postProcess(self, component, top, allInterfaces, thisIf):
         self.addSimpleParam(thisIf, "POLARITY", "ACTIVE_LOW")
 
-    def asQuartusTcl(self, buff, version, component, entity, allInterfaces, thisIf):
+    def asQuartusTcl(self, buff, version, component, top, allInterfaces, thisIf):
         self.quartus_tcl_add_interface(buff, thisIf)
         name = getSignalName(thisIf)
         # [TODO]

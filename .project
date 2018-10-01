@@ -3,6 +3,7 @@
 	<name>hwt</name>
 	<comment></comment>
 	<projects>
+		<project>ipCorePackager</project>
 		<project>pyDigitalWaveTools</project>
 	</projects>
 	<buildSpec>
