@@ -116,11 +116,16 @@ class VhdlSerializer_ops():
 
         op_str = cls._binOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx), cls._operand(ops[1], o, ctx))
+            return op_str % (cls._operand(ops[0], o, ctx),
+                             cls._operand(ops[1], o, ctx))
 
         if o == AllOps.CALL:
-            return "%s(%s)" % (cls.FunctionContainer(ops[0]),
-                               ", ".join(map(lambda op: cls._operand(op, o, ctx), ops[1:])))
+            return "%s(%s)" % (
+                cls.FunctionContainer(ops[0]),
+                ", ".join(
+                    map(lambda op: cls._operand(op, o, ctx), ops[1:])
+                    )
+                )
         elif o == AllOps.INDEX:
             assert len(ops) == 2
             o1 = ops[0]
@@ -128,7 +133,8 @@ class VhdlSerializer_ops():
                 o1 = ctx.createTmpVarFn("tmpTypeConv", o1._dtype)
                 o1.defVal = ops[0]
 
-            return "%s(%s)" % (cls.asHdl(o1, ctx).strip(), cls._operand(ops[1], o, ctx))
+            return "%s(%s)" % (cls.asHdl(o1, ctx).strip(),
+                               cls._operand(ops[1], o, ctx))
         elif o == AllOps.TERNARY:
             return " ".join([cls._operand(ops[1], o, ctx), "WHEN",
                              cls.condAsHdl([ops[0]], True, ctx),
