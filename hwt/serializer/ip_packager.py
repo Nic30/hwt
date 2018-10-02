@@ -1,63 +1,34 @@
-import math
-from typing import List, Tuple, Union
-
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import BOOL, STR, BIT
-from hwt.hdl.types.integer import Integer
-from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
 from hwt.synthesizer.param import evalParam, Param
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
-from ipCorePackager.intfConfig import IntfConfigBase
-from ipCorePackager.otherXmlObjs import Value
-from hwt.hdl.types.hdlType import HdlType
-from hwt.synthesizer.interface import Interface
+import math
+from typing import List, Tuple, Union
+
 from hwt.hdl.typeShortcuts import hInt
+from hwt.hdl.types.defs import BOOL, STR, BIT
+from hwt.hdl.types.hdlType import HdlType
+from hwt.hdl.types.integer import Integer
+from hwt.serializer.vhdl.serializer import VhdlSerializer
+from hwt.synthesizer.interface import Interface
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
-
-class IntfConfig(IntfConfigBase):
-
-    def getInterfaceName(self, thisIntf):
-        return getSignalName(thisIntf)
-
-    def getPhysicalName(self, thisIntf):
-        return thisIntf._sigInside.name
-
-    def getDirection(self, thisIntf):
-        return thisIntf._direction
-
-    def getExprVal(self, val, do_eval=False):
-        ctx = VhdlSerializer.getBaseContext()
-
-        def createTmpVar(suggestedName, dtype):
-            raise NotImplementedError(
-                "Width value can not be converted do ipcore format (%r)",
-                val)
-        ctx.createTmpVarFn = createTmpVar
-        if do_eval:
-            val = val.staticEval()
-        val = VivadoTclExpressionSerializer.asHdl(val, ctx)
-
-    def getWidth(self, signal) -> Tuple[int, Union[int, "RtlSignal"], bool]:
-        width = signal._dtype.width
-        if isinstance(width, int):
-            width = str(width)
-        else:
-            width = self.getExprVal(width)
-
-        return width, str(width), False
+from ipCorePackager.otherXmlObjs import Value
+from ipCorePackager.packager import IpCorePackager
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class VivadoTclExpressionSerializer(VhdlSerializer):
+
     # disabled because this code is not reachable in current implemetation
     @staticmethod
     def SignalItem(si, declaration=False):
-        raise NotImplementedError()
+        raise NotImplementedError(si)
 
 
-class IpPackager(object):
+class IpPackager(IpCorePackager):
     """
     IP-core packager
 
@@ -81,8 +52,11 @@ class IpPackager(object):
         :param targetPlatform: specifies properties of target platform, like available resources, vendor, etc.
         """
         assert not topUnit._wasSynthetised()
+        if not name:
+            name = topUnit._getDefaultName()
+
         super(IpPackager, self).__init__(
-            topUnit, extraVhdlFiles, extraVerilogFiles)
+            topUnit, name, extraVhdlFiles, extraVerilogFiles)
         self.serializer = serializer
         self.targetPlatform = targetPlatform
 
@@ -135,20 +109,115 @@ class IpPackager(object):
             raise NotImplementedError(
                 "Not implemented for datatype %s" % repr(t))
         return val
-    
+
+    def getParamPhysicalName(self, p: Param):
+        return p.name
+
+    def getParamType(self, p: Param) -> HdlType:
+        return p._dtype
+
+    def iterParams(self, unit: Unit):
+        return unit._entity.generics
+
+    def iterInterfaces(self, top: Unit):
+        return top._interfaces
+
     def serializeType(self, hdlType: HdlType) -> str:
+        """
+        :see: doc of method on parent class
+        """
+
         def createTmpVar(suggestedName, dtype):
             raise NotImplementedError(
                 "Can not seraialize hdl type %r into"
                 "ipcore format" % (hdlType))
-        return VivadoTclExpressionSerializer.HdlType(hdlType, createTmpVar)
 
-    def getType(self, intf: Interface) -> HdlType:
-        return intf._dtype
+        return VhdlSerializer.HdlType(hdlType, VhdlSerializer.getBaseContext())
 
-    def getVectorFromType(self, dtype) -> Union[False, None, Tuple[int, int]]:
+    def getVectorFromType(self, dtype) -> Union[bool, None, Tuple[int, int]]:
+        """
+        :see: doc of method on parent class
+        """
         if dtype == BIT:
             return False
         elif isinstance(dtype, Bits):
             return [evalParam(dtype.width) - 1, hInt(0)]
 
+    def getInterfaceType(self, intf: Interface) -> HdlType:
+        """
+        :see: doc of method on parent class
+        """
+        return intf._dtype
+
+    def getInterfaceLogicalName(self, intf: Interface):
+        """
+        :see: doc of method on parent class
+        """
+        return getSignalName(intf)
+
+    def getInterfacePhysicalName(self, intf: Interface):
+        """
+        :see: doc of method on parent class
+        """
+        return intf._sigInside.name
+
+    def getInterfaceDirection(self, thisIntf):
+        """
+        :see: doc of method on parent class
+        """
+        return thisIntf._direction
+
+    def getExprVal(self, val, do_eval=False):
+        """
+        :see: doc of method on parent class
+        """
+        ctx = VhdlSerializer.getBaseContext()
+
+        def createTmpVar(suggestedName, dtype):
+            raise NotImplementedError(
+                "Width value can not be converted do ipcore format (%r)",
+                val)
+
+        ctx.createTmpVarFn = createTmpVar
+        if do_eval:
+            val = val.staticEval()
+        val = VivadoTclExpressionSerializer.asHdl(val, ctx)
+        return val
+
+    def getTypeWidth(self, dtype: HdlType, do_eval=False) -> Tuple[int, Union[int, RtlSignal], bool]:
+        """
+        :see: doc of method on parent class
+        """
+        width = dtype.width
+        if isinstance(width, int):
+            widthStr = str(width)
+        else:
+            widthStr = self.getExprVal(width, do_eval=do_eval)
+
+        return width, widthStr, False
+
+    def getObjDebugName(self, obj: Union[Interface, Unit, Param]) -> str:
+        """
+        :see: doc of method on parent class
+        """
+        return obj._getFullName()
+
+    def serialzeValueToTCL(self, val, do_eval=False) -> Tuple[str, str, bool]:
+        """
+        :see: doc of method on parent class
+        """
+        if isinstance(val, int):
+            val = hInt(val)
+        if do_eval:
+            val = val.staticEval()
+
+        if isinstance(val, RtlSignalBase):
+            ctx = VivadoTclExpressionSerializer.getBaseContext()
+            tclVal = VivadoTclExpressionSerializer.asHdl(val, ctx)
+            tclValVal = VivadoTclExpressionSerializer.asHdl(
+                        val.staticEval())
+            return tclVal, tclValVal, False
+        else:
+
+            tclVal = VivadoTclExpressionSerializer.asHdl(val, None)
+            return tclVal, tclVal, True
