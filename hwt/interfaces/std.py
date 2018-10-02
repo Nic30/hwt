@@ -55,9 +55,10 @@ class Clk(Signal):
     """
     Basic :class:`.Signal` interface which is interpreted as clock signal
     """
+    DEFAULT_FREQ = int(100e6)
 
     def _getIpCoreIntfClass(self):
-        from hwt.serializer.ip_packager.interfaces.std import IP_Clk
+        from hwt.interfaces.std_ip_defs import IP_Clk
         return IP_Clk
 
     def _initSimAgent(self):
@@ -70,7 +71,7 @@ class Rst(Signal):
     """
 
     def _getIpCoreIntfClass(self):
-        from hwt.serializer.ip_packager.interfaces.std import IP_Rst
+        from hwt.interfaces.std_ip_defs import IP_Rst
         return IP_Rst
 
     def _initSimAgent(self):
@@ -92,7 +93,7 @@ class Rst_n(Signal):
                                     loadConfig=loadConfig)
 
     def _getIpCoreIntfClass(self):
-        from hwt.serializer.ip_packager.interfaces.std import IP_Rst_n
+        from hwt.interfaces.std_ip_defs import IP_Rst_n
         return IP_Rst_n
 
     def _initSimAgent(self):
@@ -212,7 +213,7 @@ class BramPort_withoutClk(Interface):
         return int(self.DATA_WIDTH)
 
     def _getIpCoreIntfClass(self):
-        from hwt.serializer.ip_packager.interfaces.std import IP_BlockRamPort
+        from hwt.interfaces.std_ip_defs import IP_BlockRamPort
         return IP_BlockRamPort
 
     def _initSimAgent(self):
