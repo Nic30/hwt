@@ -1,4 +1,5 @@
 from hwt.hdl.types.hdlType import HdlType
+from hwt.doc_markers import internal
 
 
 class HEnum(HdlType):
@@ -30,12 +31,14 @@ class HEnum(HdlType):
     def bit_length(self):
         return len(self._allValues).bit_length()
 
+    @internal
     def domain_size(self):
         """
         :return: how many values can have specified type
         """
         return int(2 ** self.bit_length())
 
+    @internal
     @classmethod
     def getValueCls(cls):
         try:

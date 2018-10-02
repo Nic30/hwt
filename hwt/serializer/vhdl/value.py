@@ -7,7 +7,6 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.param import Param
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.context import SerializerCtx
 

@@ -4,6 +4,7 @@ from hwt.interfaces.agents.tristate import TristateClkAgent, TristateAgent
 from hwt.interfaces.std import Signal, Clk
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.param import Param
+from ipCorePackager.intfIpMeta import IntfIpMetaNotSpecified
 
 
 class TristateSig(Interface):
@@ -33,7 +34,7 @@ class TristateSig(Interface):
 
 class TristateClk(Clk, TristateSig):
     def _getIpCoreIntfClass(self):
-        raise NotImplementedError()
+        raise IntfIpMetaNotSpecified()
 
     def _initSimAgent(self):
         self._ag = TristateClkAgent(self)

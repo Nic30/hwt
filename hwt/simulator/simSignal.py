@@ -1,6 +1,8 @@
+from hwt.doc_markers import internal
 from hwt.hdl.variables import SignalItem
 
 
+@internal
 class SimSignal(SignalItem):
     """
     Class of signal simulation functions

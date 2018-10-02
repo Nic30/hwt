@@ -1,11 +1,13 @@
 from typing import Tuple
 
+from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION, SENSITIVITY
 from hwt.hdl.process import HWProcess
 from hwt.hdl.value import Value
 from hwt.simulator.utils import valueHasChanged
 
 
+@internal
 def sensitivity(proc: HWProcess, *sensitiveTo):
     """
     register sensitivity for process
@@ -25,6 +27,7 @@ def sensitivity(proc: HWProcess, *sensitiveTo):
             s.simSensProcs.add(proc)
 
 
+@internal
 def simEvalCond(simulator, *conds):
     """
     Evaluate list of values as condition
@@ -46,12 +49,14 @@ def simEvalCond(simulator, *conds):
     return _cond, _vld
 
 
+@internal
 class SimModel(object):
     """
     Base class for model in simulator
     """
 
 
+@internal
 def connectSimPort(simUnit, subSimUnit, srcName, dstName, direction):
     """
     Connect ports of simulation models by name
@@ -68,6 +73,7 @@ def connectSimPort(simUnit, subSimUnit, srcName, dstName, direction):
     subSimUnit._ctx.signals.remove(origPort)
 
 
+@internal
 def mkUpdater(nextVal: Value, invalidate: bool):
     """
     Create value updater for simulation
@@ -86,6 +92,7 @@ def mkUpdater(nextVal: Value, invalidate: bool):
     return updater
 
 
+@internal
 def mkArrayUpdater(nextItemVal: Value, indexes: Tuple[Value],
                    invalidate: bool):
     """

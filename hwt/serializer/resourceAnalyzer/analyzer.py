@@ -13,8 +13,10 @@ from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.netlist import walk_assignments
 from hwt.hdl.switchContainer import SwitchContainer
 from itertools import chain
+from hwt.doc_markers import internal
 
 
+@internal
 def _count_mux_inputs_for_outputs(stm: HdlStatement, cnt):
     if isinstance(stm, Assignment):
         cnt[stm.dst] += 1
@@ -26,6 +28,7 @@ def _count_mux_inputs_for_outputs(stm: HdlStatement, cnt):
                 _count_mux_inputs_for_outputs(_stm, cnt)
 
 
+@internal
 def count_mux_inputs_for_outputs(stm):
     cnt = {o: 0 for o in stm._outputs}
     _count_mux_inputs_for_outputs(stm, cnt)
@@ -54,6 +57,7 @@ class ResourceAnalyzer(GenericSerializer):
     def __init__(self):
         self.context = ResourceContext(None)
 
+    @internal
     @classmethod
     def HWProcess_operators(cls, sig: RtlSignal, ctx: ResourceContext, synchronous):
         seen = ctx.seen

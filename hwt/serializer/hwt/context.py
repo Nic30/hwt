@@ -2,6 +2,9 @@ from hwt.serializer.generic.context import SerializerCtx
 
 
 class ValueWidthRequirementScope():
+    """
+    Context manager which temporarily swaps the _valueWidthRequired on specified context 
+    """
     def __init__(self, ctx, val):
         self.ctx = ctx
         self.val = val

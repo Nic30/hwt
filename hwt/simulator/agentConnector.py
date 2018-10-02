@@ -1,6 +1,8 @@
+from hwt.doc_markers import internal
 from hwt.hdl.constants import INTF_DIRECTION
 
 
+@internal
 def autoAddAgents(unit):
     """
     Walk all interfaces on unit and instantiate agent for every interface.

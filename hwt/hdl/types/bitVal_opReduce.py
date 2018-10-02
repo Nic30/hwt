@@ -1,4 +1,6 @@
+from hwt.doc_markers import internal
 
+@internal
 def tryReduceAnd(sig, val):
     """
     Return sig and val reduced by & operator or None
@@ -13,6 +15,7 @@ def tryReduceAnd(sig, val):
             return val
 
 
+@internal
 def tryReduceOr(sig, val):
     """
     Return sig and val reduced by | operator or None
@@ -30,6 +33,7 @@ def tryReduceOr(sig, val):
             return sig
 
 
+@internal
 def tryReduceXor(sig, val):
     """
     Return sig and val reduced by ^ operator or None

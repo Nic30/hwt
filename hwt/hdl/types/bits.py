@@ -1,6 +1,7 @@
 from hwt.bitmask import mask
 from hwt.hdl.types.hdlType import HdlType
 from hwt.serializer.generic.indent import getIndent
+from hwt.doc_markers import internal
 
 BITS_DEFAUTL_SIGNED = None
 BITS_DEFAUTL_FORCEVECTOR = False
@@ -46,6 +47,7 @@ class Bits(HdlType):
                     and other._widthVal == self._widthVal
                     and self.signed == other.signed)
 
+    @internal
     def __hash__(self):
         return hash((self.signed, self._widthVal, self.forceVector))
 
@@ -61,22 +63,26 @@ class Bits(HdlType):
         """
         return self._widthVal
 
+    @internal
     def domain_size(self):
         """
         :return: how many values can have specified type
         """
         return int(2 ** self.bit_length())
 
+    @internal
     @classmethod
     def get_auto_cast_fn(cls):
         from hwt.hdl.types.bitsCast import convertBits
         return convertBits
 
+    @internal
     @classmethod
     def get_reinterpret_cast_fn(cls):
         from hwt.hdl.types.bitsCast import reinterpretBits
         return reinterpretBits
 
+    @internal
     @classmethod
     def getValueCls(cls):
         try:

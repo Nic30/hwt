@@ -1,12 +1,14 @@
 from hwt.synthesizer.exceptions import TypeConversionErr
+from hwt.doc_markers import internal
 
-
+@internal
 def default_reinterpret_cast_fn(typeFrom, sigOrVal, toType):
     raise TypeConversionErr(
         "Reinterpretation of %r of type \n%r to type %r is not implemented",
         (sigOrVal, typeFrom, toType))
 
 
+@internal
 def default_auto_cast_fn(typeFrom, sigOrVal, toType):
     raise TypeConversionErr(
         "Conversion of %r of type \n%r to type %r is not implemented",
@@ -68,6 +70,7 @@ class HdlType():
 
         return r(self, sigOrVal, toType)
 
+    @internal
     @classmethod
     def get_auto_cast_fn(cls):
         """
@@ -75,6 +78,7 @@ class HdlType():
         """
         return default_auto_cast_fn
 
+    @internal
     @classmethod
     def get_reinterpret_cast_fn(cls):
         """
@@ -82,6 +86,7 @@ class HdlType():
         """
         return default_reinterpret_cast_fn
 
+    @internal
     @classmethod
     def getValueCls(cls):
         """

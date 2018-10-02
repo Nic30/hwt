@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from typing import Generator
+
+from hwt.doc_markers import internal
+from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.hdl.sensitivityCtx import SensitivityCtx
-from typing import Generator
 
 
 class Param(RtlSignal):
@@ -29,6 +31,7 @@ class Param(RtlSignal):
         self._const = True
         self.hidden = False
 
+    @internal
     def _registerScope(self, name, unit):
         self._scopes[unit] = (unit._ctx, name)
 
@@ -87,11 +90,13 @@ class Param(RtlSignal):
         assert v._isFullVld()
         return int(v.val)
 
+    @internal
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx)\
             -> Generator["RtlSignal", None, None]:
         seen.add(self)
         yield from []
 
+    @internal
     def _walk_public_drivers(self, seen: set) -> Generator["RtlSignal", None, None]:
         seen.add(self)
         yield from []

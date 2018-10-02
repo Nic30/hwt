@@ -4,6 +4,7 @@ from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements import isSameHVal, HdlStatement, areSameHVals
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.doc_markers import internal
 
 
 class Assignment(HdlStatement):
@@ -64,6 +65,7 @@ class Assignment(HdlStatement):
         if not virtualOnly:
             dst.ctx.statements.add(self)
 
+    @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
         Cut off statements which are driver of specified signal
@@ -74,11 +76,13 @@ class Assignment(HdlStatement):
         else:
             return None
 
+    @internal
     def _discover_enclosure(self) -> None:
         assert self._enclosed_for is None
         self._enclosed_for = set()
         self._enclosed_for.update(self._outputs)
 
+    @internal
     def _discover_sensitivity(self, seen: set) -> None:
         assert self._sensitivity is None
         ctx = self._sensitivity = SensitivityCtx()
@@ -90,12 +94,14 @@ class Assignment(HdlStatement):
                 inp._walk_sensitivity(casualSensitivity, seen, ctx)
         self._sensitivity.extend(casualSensitivity)
 
+    @internal
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, HdlStatement]):
         """
         Enclosure is never requiered
         """
         pass
 
+    @internal
     def _iter_stms(self):
         """
         Iterate all statements in this statement
@@ -103,6 +109,7 @@ class Assignment(HdlStatement):
         return
         yield
 
+    @internal
     def _on_parent_event_dependent(self):
         """
         After parrent statement become event dependent
@@ -110,9 +117,11 @@ class Assignment(HdlStatement):
         if not self._is_completly_event_dependent:
             self._is_completly_event_dependent = True
 
+    @internal
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         return [self, ], False
 
+    @internal
     def _is_mergable(self, other: HdlStatement) -> bool:
         return isinstance(other, self.__class__)
 
@@ -124,6 +133,7 @@ class Assignment(HdlStatement):
                 return True
         return False
 
+    @internal
     @classmethod
     def _nextInstId(cls):
         """
@@ -133,6 +143,7 @@ class Assignment(HdlStatement):
         cls.__instCntr += 1
         return i
 
+    @internal
     def seqEval(self):
         """Sequentially evaluate this assignment"""
         self.dst._val = self.src.staticEval()

@@ -8,6 +8,7 @@ from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hwt.doc_markers import internal
 
 
 def getClk(unit):
@@ -41,6 +42,7 @@ def getSignalName(sig):
     return sig.name
 
 
+@internal
 def _default_param_updater(self, myP, otherP):
     myP.set(otherP)
 
@@ -103,6 +105,7 @@ class UnitImplHelpers(object):
 
         return self._ctx.sig(name, dtype=dtype, defVal=defVal)
 
+    @internal
     def _cleanAsSubunit(self):
         """Disconnect internal signals so unit can be reused by parent unit"""
         for pi in self._entity.ports:
@@ -110,6 +113,7 @@ class UnitImplHelpers(object):
         for i in chain(self._interfaces, self._private_interfaces):
             i._clean()
 
+    @internal
     def _signalsForMyEntity(self, context, prefix):
         # generate for all ports of subunit signals in this context
         def lockTypeWidth(t):
@@ -128,6 +132,7 @@ class UnitImplHelpers(object):
                 i._signalsForInterface(context, prefix + i._NAME_SEPARATOR,
                                        typeTransform=lockTypeWidth)
 
+    @internal
     def _boundInterfacesToEntity(self, interfaces):
         externSignals = []
         inftToPortDict = {}
@@ -145,6 +150,7 @@ class UnitImplHelpers(object):
         for s in externSignals:
             self._boundIntfSignalToEntity(s, inftToPortDict)
 
+    @internal
     def _boundIntfSignalToEntity(self, interface, inftToPortDict):
         portItem = single(self._entity.ports,
                           lambda x: x._interface == interface)

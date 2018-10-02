@@ -11,6 +11,7 @@ from hwt.hdl.statements import HdlStatement, statementsAreSame,\
     isSameStatementList, seqEvalCond
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.doc_markers import internal
 
 
 class IfContainer(HdlStatement):
@@ -54,9 +55,11 @@ class IfContainer(HdlStatement):
         self._elIfs_enclosed_for = None
         self._ifFalse_enclosed_for = None
 
+    @internal
     def _collect_io(self):
         raise NotImplementedError()
 
+    @internal
     def _clean_signal_meta(self):
         self._sensitivity = None
         self._ifTrue_enclosed_for = None
@@ -64,6 +67,7 @@ class IfContainer(HdlStatement):
         self._ifFalse_enclosed_for = None
         HdlStatement._clean_signal_meta(self)
 
+    @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
         Doc on parent class :meth:`HdlStatement._cut_off_drivers_of`
@@ -149,6 +153,7 @@ class IfContainer(HdlStatement):
 
             return n
 
+    @internal
     def _discover_enclosure(self):
         """
         Doc on parent class :meth:`HdlStatement._discover_enclosure`
@@ -180,6 +185,7 @@ class IfContainer(HdlStatement):
             if enclosed and s in self._ifFalse_enclosed_for:
                 encl.add(s)
 
+    @internal
     def _discover_sensitivity(self, seen: set) -> None:
         """
         Doc on parent class :meth:`HdlStatement._discover_sensitivity`
@@ -220,6 +226,7 @@ class IfContainer(HdlStatement):
         else:
             assert not self.ifFalse, "can not negate event"
 
+    @internal
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, Union[Value, RtlSignalBase]]) -> None:
         enc = []
         outputs = self._outputs
@@ -250,6 +257,7 @@ class IfContainer(HdlStatement):
         if self.ifFalse is not None:
             yield from self.ifFalse
 
+    @internal
     def _try_reduce(self) -> Tuple[bool, List[HdlStatement]]:
         """
         Doc on parent class :meth:`HdlStatement._try_reduce`
@@ -294,6 +302,7 @@ class IfContainer(HdlStatement):
 
         return res, io_change
 
+    @internal
     def _merge_nested_if_from_else(self, ifStm: "IfContainer"):
         """
         Merge nested IfContarner form else branch to this IfContainer
@@ -304,6 +313,7 @@ class IfContainer(HdlStatement):
 
         self.ifFalse = ifStm.ifFalse
 
+    @internal
     def _is_mergable(self, other: HdlStatement) -> bool:
         if not isinstance(other, IfContainer):
             return False
@@ -323,6 +333,7 @@ class IfContainer(HdlStatement):
             return False
         return True
 
+    @internal
     def _merge_with_other_stm(self, other: "IfContainer") -> None:
         """
         :attention: statements has to be mergable (to check use _is_mergable method)
@@ -343,6 +354,7 @@ class IfContainer(HdlStatement):
 
         self._on_merge(other)
 
+    @internal
     @staticmethod
     def condHasEffect(ifTrue, ifFalse, elIfs):
         stmCnt = len(ifTrue)
@@ -386,6 +398,7 @@ class IfContainer(HdlStatement):
                     return True
         return False
 
+    @internal
     def seqEval(self):
         if seqEvalCond(self.cond):
             for s in self.ifTrue:

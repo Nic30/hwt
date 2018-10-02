@@ -1,7 +1,9 @@
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.waitStm import WaitStm
+from hwt.doc_markers import internal
 
 
+@internal
 def getMaxStmIdForStm(stm):
     """
     Get maximum _instId from all assigments in statement
@@ -17,6 +19,7 @@ def getMaxStmIdForStm(stm):
         return maxId
 
 
+@internal
 def maxStmId(proc):
     """
     get max statement id,

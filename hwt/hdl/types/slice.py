@@ -1,5 +1,6 @@
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.integer import Integer
+from hwt.doc_markers import internal
 
 
 class Slice(HArray):
@@ -10,9 +11,11 @@ class Slice(HArray):
     def __init__(self):
         super().__init__(Integer(), 2)
 
+    @internal
     def __hash__(self):
         return hash(self.elmType)
 
+    @internal
     @classmethod
     def getValueCls(cls):
         try:

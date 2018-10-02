@@ -1,5 +1,6 @@
 from typing import Generator, Union
 
+from hwt.doc_markers import internal
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements import HdlStatement
 from hwt.hdl.types.hdlType import HdlType
@@ -72,6 +73,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         self._useNopVal = useNopVal
         self._const = False
 
+    @internal
     @classmethod
     def _nextInstId(cls):
         """
@@ -114,6 +116,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
 
         return self.drivers[0]
 
+    @internal
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx)\
             -> Generator[Union["RtlSignal", "Operator"], None, None]:
         seen.add(self)
@@ -136,6 +139,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
 
         op._walk_sensitivity(casualSensitivity, seen, ctx)
 
+    @internal
     def _walk_public_drivers(self, seen: set) -> Generator["RtlSignal", None, None]:
         seen.add(self)
         if not self.hidden:

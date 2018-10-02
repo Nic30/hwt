@@ -5,11 +5,13 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.types.integer import Integer
 from operator import pow, eq
+from hwt.doc_markers import internal
 
 BoolVal = BOOL.getValueCls()
 SliceVal = SLICE.getValueCls()
 
 
+@internal
 def intOp__val(self, other, resT, evalFn):
     v = evalFn(self.val, other.val)
     vldMask = int(self.vldMask and other.vldMask)
@@ -17,6 +19,7 @@ def intOp__val(self, other, resT, evalFn):
     return resT.getValueCls()(v, resT, vldMask, updateTime)
 
 
+@internal
 def intOp(self, other, op, resT, evalFn=None):
     if evalFn is None:
         evalFn = op._evalFn
@@ -28,10 +31,12 @@ def intOp(self, other, op, resT, evalFn=None):
         return Operator.withRes(op, [self, other], resT)
 
 
+@internal
 def intAritmeticOp(self, other, op):
     return intOp(self, other, op, INT)
 
 
+@internal
 def intCmpOp(self, other, op, evalFn=None):
     return intOp(self, other, op, BOOL, evalFn=evalFn)
 
@@ -68,6 +73,7 @@ class IntegerVal(Value):
         return int(self)
 
     # arithmetic
+    @internal
     def _neg__val(self):
         v = self.clone()
         v.val = -self.val

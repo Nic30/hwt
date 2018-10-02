@@ -2,8 +2,10 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.vectorUtils import fitTo
+from hwt.doc_markers import internal
 
 
+@internal
 def _intfToSig(obj):
     if isinstance(obj, InterfaceBase):
         return obj._sig
@@ -11,6 +13,7 @@ def _intfToSig(obj):
         return obj
 
 
+@internal
 def _connect(src, dst, exclude, fit):
     if isinstance(src, InterfaceBase):
         if isinstance(dst, InterfaceBase):
@@ -31,6 +34,7 @@ def _connect(src, dst, exclude, fit):
     return dst(src)
 
 
+@internal
 def _mkOp(fn):
     """
     Function to create variadic operator function

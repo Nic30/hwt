@@ -1,8 +1,10 @@
 from hwt.hdl.types.defs import INT
 from hwt.hdl.types.hdlType import default_auto_cast_fn
 from hwt.simulator.types.simInt import SIM_INT
+from hwt.doc_markers import internal
 
 
+@internal
 def convertSimBits__val(self, sigOrVal, toType):
     if toType == INT or toType == SIM_INT:
         if self.signed:

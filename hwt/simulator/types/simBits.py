@@ -2,11 +2,13 @@ from hwt.bitmask import mask
 from hwt.hdl.types.bits import Bits
 from hwt.simulator.types.simBitsConversions import convertSimBits__val
 from typing import Union
+from hwt.doc_markers import internal
 
 
 __simBitsTCache = {}
 
 
+@internal
 def simBitsT(width: int, signed: Union[bool, None]):
     """
     Construct SimBitsT with cache
@@ -20,6 +22,7 @@ def simBitsT(width: int, signed: Union[bool, None]):
         return t
 
 
+@internal
 class SimBitsT(Bits):
     """
     Simplified Bits type for simulation purposes

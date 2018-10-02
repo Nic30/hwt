@@ -58,6 +58,9 @@ def mkDriverProc(intf, tbCtx):
 
 
 class HdlSimConfigVhdlTestbench(HdlSimConfig):
+    """
+    Configuration for HDL simulator which logs the changes as HDL testbench
+    """
     supported_type_classes = (HBool, Bits, HEnum)
 
     def __init__(self, top):

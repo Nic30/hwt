@@ -1,8 +1,10 @@
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.portItem import PortItem
 from hwt.hdl.variables import SignalItem
+from hwt.doc_markers import internal
 
 
+@internal
 def portItemfromSignal(s: SignalItem, entity):
     if s.drivers:
         d = DIRECTION.OUT

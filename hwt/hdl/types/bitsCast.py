@@ -9,8 +9,9 @@ from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
 from hwt.hdl.value import Value
 from hwt.synthesizer.vectorUtils import iterBits, fitTo_t
+from hwt.doc_markers import internal
 
-
+@internal
 def convertBits__val(self, val, toType):
     if isinstance(toType, HBool):
         return val._eq(self.getValueCls().fromPy(1, self))
@@ -25,6 +26,7 @@ def convertBits__val(self, val, toType):
     return default_auto_cast_fn(self, val, toType)
 
 
+@internal
 def convertBits(self, sigOrVal, toType):
     """
     Cast signed-unsigned, to int or bool
@@ -44,6 +46,7 @@ def convertBits(self, sigOrVal, toType):
     return default_auto_cast_fn(self, sigOrVal, toType)
 
 
+@internal
 def reinterpret_bits_to_hstruct(sigOrVal, hStructT):
     """
     Reinterpret signal of type Bits to signal of type HStruct
@@ -63,6 +66,7 @@ def reinterpret_bits_to_hstruct(sigOrVal, hStructT):
     return container
 
 
+@internal
 def reinterpret_bits_to_harray(sigOrVal, hArrayT):
     elmT = hArrayT.elmType
     elmWidth = elmT.bit_length()
@@ -76,6 +80,7 @@ def reinterpret_bits_to_harray(sigOrVal, hArrayT):
     return a
 
 
+@internal
 def reinterpretBits__val(self, val, toType):
     if isinstance(toType, HStruct):
         return reinterpret_bits_to_hstruct(val, toType)
@@ -87,6 +92,7 @@ def reinterpretBits__val(self, val, toType):
     return default_auto_cast_fn(self, val, toType)
 
 
+@internal
 def reinterpretBits(self, sigOrVal, toType):
     """
     Cast object of same bit size between to other type

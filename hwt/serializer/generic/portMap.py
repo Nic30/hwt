@@ -1,4 +1,5 @@
 from hwt.hdl.constants import DIRECTION
+from hwt.doc_markers import internal
 
 
 class PortMap():
@@ -6,6 +7,7 @@ class PortMap():
         self.sig = signal
         self.portItem = portItem
 
+    @internal
     @classmethod
     def fromPortItem(cls, portItem):
         d = portItem.direction

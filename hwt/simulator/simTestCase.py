@@ -4,6 +4,7 @@ from inspect import isgenerator
 import os
 import unittest
 
+from hwt.doc_markers import internal
 from hwt.hdl.constants import Time
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.value import Value
@@ -74,6 +75,7 @@ class SimTestCase(unittest.TestCase):
             sim.simUnit(self.model, until=until, extraProcesses=self.procs)
             return sim
 
+    @internal
     def __serializeTestbenchDump(self, until: float, file):
         sim = HdlSimulator()
 

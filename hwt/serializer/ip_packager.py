@@ -1,23 +1,23 @@
-from hwt.hdl.types.bits import Bits
-from hwt.synthesizer.dummyPlatform import DummyPlatform
-from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
-from hwt.synthesizer.param import evalParam, Param
-from hwt.synthesizer.unit import Unit
-from hwt.synthesizer.utils import toRtl
 import math
 from typing import List, Tuple, Union
 
+from hwt.doc_markers import internal
 from hwt.hdl.typeShortcuts import hInt
+from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, STR, BIT
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.integer import Integer
 from hwt.serializer.vhdl.serializer import VhdlSerializer
+from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.interface import Interface
+from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
+from hwt.synthesizer.param import evalParam, Param
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-
+from hwt.synthesizer.unit import Unit
+from hwt.synthesizer.utils import toRtl
 from ipCorePackager.otherXmlObjs import Value
 from ipCorePackager.packager import IpCorePackager
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class VivadoTclExpressionSerializer(VhdlSerializer):
@@ -60,6 +60,7 @@ class IpPackager(IpCorePackager):
         self.serializer = serializer
         self.targetPlatform = targetPlatform
 
+    @internal
     def toHdlConversion(self, top, topName: str, saveTo: str) -> List[str]:
         """
         :param top: object which is represenation of design
@@ -75,6 +76,7 @@ class IpPackager(IpCorePackager):
                      serializer=self.serializer,
                      targetPlatform=self.targetPlatform)
 
+    @internal
     def paramToIpValue(self, idPrefix: str, g: Param, resolve) -> Value:
         val = Value()
         val.id = idPrefix + g.name
@@ -110,18 +112,23 @@ class IpPackager(IpCorePackager):
                 "Not implemented for datatype %s" % repr(t))
         return val
 
+    @internal
     def getParamPhysicalName(self, p: Param):
         return p.name
 
+    @internal
     def getParamType(self, p: Param) -> HdlType:
         return p._dtype
 
+    @internal
     def iterParams(self, unit: Unit):
         return unit._entity.generics
 
+    @internal
     def iterInterfaces(self, top: Unit):
         return top._interfaces
 
+    @internal
     def serializeType(self, hdlType: HdlType) -> str:
         """
         :see: doc of method on parent class
@@ -134,6 +141,7 @@ class IpPackager(IpCorePackager):
 
         return VhdlSerializer.HdlType(hdlType, VhdlSerializer.getBaseContext())
 
+    @internal
     def getVectorFromType(self, dtype) -> Union[bool, None, Tuple[int, int]]:
         """
         :see: doc of method on parent class
@@ -143,30 +151,35 @@ class IpPackager(IpCorePackager):
         elif isinstance(dtype, Bits):
             return [evalParam(dtype.width) - 1, hInt(0)]
 
+    @internal
     def getInterfaceType(self, intf: Interface) -> HdlType:
         """
         :see: doc of method on parent class
         """
         return intf._dtype
 
+    @internal
     def getInterfaceLogicalName(self, intf: Interface):
         """
         :see: doc of method on parent class
         """
         return getSignalName(intf)
 
+    @internal
     def getInterfacePhysicalName(self, intf: Interface):
         """
         :see: doc of method on parent class
         """
         return intf._sigInside.name
 
+    @internal
     def getInterfaceDirection(self, thisIntf):
         """
         :see: doc of method on parent class
         """
         return thisIntf._direction
 
+    @internal
     def getExprVal(self, val, do_eval=False):
         """
         :see: doc of method on parent class
@@ -184,6 +197,7 @@ class IpPackager(IpCorePackager):
         val = VivadoTclExpressionSerializer.asHdl(val, ctx)
         return val
 
+    @internal
     def getTypeWidth(self, dtype: HdlType, do_eval=False) -> Tuple[int, Union[int, RtlSignal], bool]:
         """
         :see: doc of method on parent class
@@ -196,12 +210,14 @@ class IpPackager(IpCorePackager):
 
         return width, widthStr, False
 
+    @internal
     def getObjDebugName(self, obj: Union[Interface, Unit, Param]) -> str:
         """
         :see: doc of method on parent class
         """
         return obj._getFullName()
 
+    @internal
     def serialzeValueToTCL(self, val, do_eval=False) -> Tuple[str, str, bool]:
         """
         :see: doc of method on parent class

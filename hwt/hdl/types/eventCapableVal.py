@@ -2,6 +2,7 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.value import Value
+from hwt.doc_markers import internal
 
 BoolVal = BOOL.getValueCls()
 
@@ -11,6 +12,7 @@ class EventCapableVal(Value):
     Base class for event capable values
     """
 
+    @internal
     def _onFallingEdge__val(self, now):
         v = BoolVal(self.updateTime == now,
                     BOOL,
@@ -25,6 +27,7 @@ class EventCapableVal(Value):
         else:
             return Operator.withRes(AllOps.FALLING_EDGE, [self], BOOL)
 
+    @internal
     def _onRisingEdge__val(self, now):
         v = BoolVal(self.updateTime == now,
                     BOOL,

@@ -10,6 +10,7 @@ from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.doc_markers import internal
 
 
 class SwitchContainer(HdlStatement):
@@ -46,14 +47,17 @@ class SwitchContainer(HdlStatement):
         self._case_enclosed_for = None
         self._default_enclosed_for = None
 
+    @internal
     def _clean_signal_meta(self):
         self._case_enclosed_for = None
         self._default_enclosed_for = None
         HdlStatement._clean_signal_meta(self)
 
+    @internal
     def _collect_io(self):
         raise NotImplementedError()
 
+    @internal
     def _discover_enclosure(self) -> None:
         assert self._enclosed_for is None
         enclosure = self._enclosed_for = set()
@@ -82,6 +86,7 @@ class SwitchContainer(HdlStatement):
             if enclosed and (not self.default or s in self._default_enclosed_for):
                 enclosure.add(s)
 
+    @internal
     def _discover_sensitivity(self, seen) -> None:
         """
         Doc on parent class :meth:`HdlStatement._discover_sensitivity`
@@ -100,6 +105,7 @@ class SwitchContainer(HdlStatement):
             stm._discover_sensitivity(seen)
             ctx.extend(stm._sensitivity)
 
+    @internal
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, HdlStatement]) -> None:
         """
         :attention: enclosure has to be discoverd first use _discover_enclosure()  method
@@ -134,6 +140,7 @@ class SwitchContainer(HdlStatement):
         if self.default is not None:
             yield from self.default
 
+    @internal
     def _is_mergable(self, other) -> bool:
         """
         :return: True if other can be merged into this statement else False
@@ -152,6 +159,7 @@ class SwitchContainer(HdlStatement):
 
         return True
 
+    @internal
     def _merge_with_other_stm(self, other: "IfContainer") -> None:
         """
         Merge other statement to this statement
@@ -168,6 +176,7 @@ class SwitchContainer(HdlStatement):
 
         self._on_merge(other)
 
+    @internal
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         """
         Doc on parent class :meth:`HdlStatement._try_reduce`
@@ -215,6 +224,7 @@ class SwitchContainer(HdlStatement):
 
         return res, io_change
 
+    @internal
     def _condHasEffect(self) -> bool:
         """
         :return: True if statements in branches has different effect

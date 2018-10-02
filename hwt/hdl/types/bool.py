@@ -1,4 +1,5 @@
 from hwt.hdl.types.hdlType import HdlType
+from hwt.doc_markers import internal
 
 
 class HBool(HdlType):
@@ -6,9 +7,11 @@ class HBool(HdlType):
     def __eq__(self, other):
         return type(self) is type(other)
 
+    @internal
     def __hash__(self):
         return hash(HBool)
 
+    @internal
     @classmethod
     def get_auto_cast_fn(cls):
         from hwt.hdl.types.boolCast import cast_hbool
@@ -20,6 +23,7 @@ class HBool(HdlType):
     def all_mask(self):
         return 1
 
+    @internal
     @classmethod
     def getValueCls(cls):
         try:

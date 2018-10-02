@@ -1,6 +1,7 @@
 from hwt.hdl.value import Value
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
+from hwt.doc_markers import internal
 
 
 class StringVal(Value):
@@ -34,6 +35,7 @@ class StringVal(Value):
             raise ValueError("Value of %r is not fully defined" % self)
         return self.val
 
+    @internal
     def _eq__val(self, other):
         eq = self.val == other.val
         vld = int(self.vldMask and other.vldMask)

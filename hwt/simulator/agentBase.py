@@ -1,3 +1,4 @@
+from hwt.doc_markers import internal
 from hwt.simulator.shortcuts import OnRisingCallbackLoop
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 
@@ -75,9 +76,11 @@ class AgentWitReset(AgentBase):
             else:
                 raise
 
+    @internal
     def _notReset_dummy(self, sim):
         return True
-
+    
+    @internal
     def _notReset(self, sim):
         rstVal = sim.read(self.rst).val
         return rstVal == self.rstOffIn

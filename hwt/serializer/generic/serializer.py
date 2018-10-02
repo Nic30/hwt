@@ -18,9 +18,14 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import NameScope
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.unit import Unit
+from hwt.doc_markers import internal
 
 
+@internal
 class CurrentUnitSwap():
+    """
+    Context manager which temporarilly swaps currentUnit property on specified context
+    """
     def __init__(self, ctx, u):
         self.ctx = ctx
         self.u = u

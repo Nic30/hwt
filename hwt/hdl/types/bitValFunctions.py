@@ -5,12 +5,16 @@ from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.integer import Integer
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
+from hwt.doc_markers import internal
 
-
+#internal
 BoolVal = BOOL.getValueCls()
 
-
+@internal
 def signFix(val, width):
+    """
+    Convert negative int to positive int which has same bits set
+    """
     if val > 0:
         msb = 1 << (width - 1)
         if val & msb:
@@ -18,6 +22,7 @@ def signFix(val, width):
     return val
 
 
+@internal
 def bitsCmp__val(self, other, op, evalFn):
     ot = other._dtype
 
@@ -32,6 +37,7 @@ def bitsCmp__val(self, other, op, evalFn):
     return BoolVal(res, BOOL, int(_vld), updateTime)
 
 
+@internal
 def bitsCmp(self, other, op, evalFn=None):
     """
     :attention: If other is Bool signal convert this to bool (not ideal,
@@ -73,6 +79,7 @@ def bitsCmp(self, other, op, evalFn=None):
         return Operator.withRes(op, [self, other], BOOL)
 
 
+@internal
 def bitsBitOp__val(self, other, op, getVldFn):
     w = self._dtype.bit_length()
     assert w == other._dtype.bit_length()
@@ -86,6 +93,7 @@ def bitsBitOp__val(self, other, op, getVldFn):
     return self.__class__(res, self._dtype, vld, updateTime)
 
 
+@internal
 def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
     """
     :attention: If other is Bool signal, convert this to bool
@@ -122,6 +130,7 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
         return Operator.withRes(op, [self, other], self._dtype)
 
 
+@internal
 def bitsArithOp__val(self, other, op):
     v = self.clone()
     self_vld = self._isFullVld()
@@ -152,6 +161,7 @@ def bitsArithOp__val(self, other, op):
     return v
 
 
+@internal
 def bitsArithOp(self, other, op):
     other = toHVal(other)
     assert isinstance(other._dtype, (Integer, Bits))

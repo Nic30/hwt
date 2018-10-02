@@ -3,13 +3,16 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import PortItem
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.generic.constants import SIGNAL_TYPE
+from hwt.doc_markers import internal
 
 
+@internal
 def _isEventDependentDriver(d):
     return not isinstance(d, (PortItem, Operator)) \
         and d._now_is_event_dependent
 
 
+@internal
 def verilogTypeOfSig(signalItem):
     """
     Check if is register or wire

@@ -1,7 +1,9 @@
+from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import isEventDependentOp
 
 
+@internal
 def discoverEventDependency(sig):
     """
     :return: generator of tuples (event operator, signal)

@@ -1,4 +1,5 @@
 from hwt.hdl.sensitivityCtx import SensitivityCtx
+from hwt.doc_markers import internal
 
 
 class Value():
@@ -41,6 +42,7 @@ class Value():
         return self.__class__(self.val, self._dtype, self.vldMask,
                               self.updateTime)
 
+    @internal
     def __hash__(self):
         return hash((self._dtype, self.val, self.vldMask, self.updateTime))
 
@@ -184,7 +186,10 @@ class Value():
 
 
 def areValues(*items):
-    res = True
+    """
+    :return: True if all arguments are instances of Value class else False
+    """
     for i in items:
-        res = res and isinstance(i, Value)
-    return res
+        if not isinstance(i, Value):
+            return False
+    return True

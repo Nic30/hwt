@@ -2,11 +2,13 @@ from hwt.hdl.value import Value, areValues
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
+from hwt.doc_markers import internal
 
 BoolVal = BOOL.getValueCls()
 
 
 class HEnumVal(Value):
+
     @classmethod
     def fromPy(cls, val, typeObj, vldMask=None):
         """
@@ -30,6 +32,7 @@ class HEnumVal(Value):
 
         return cls(val, typeObj, valid)
 
+    @internal
     def _eq__val(self, other):
         eq = self.val == other.val \
             and self.vldMask == other.vldMask == 1
@@ -46,6 +49,7 @@ class HEnumVal(Value):
         else:
             return Operator.withRes(AllOps.EQ, [self, other], BOOL)
 
+    @internal
     def _ne__val(self, other):
         neq = self.val != other.val \
             and self.vldMask == other.vldMask == 1

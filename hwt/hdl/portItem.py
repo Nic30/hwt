@@ -2,6 +2,7 @@ from hwt.hdl.constants import DIRECTION
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements import HwtSyntaxError
 from hwt.hdl.variables import SignalItem
+from hwt.doc_markers import internal
 
 
 class PortItem(SignalItem):
@@ -15,6 +16,7 @@ class PortItem(SignalItem):
         self.src = None
         self.dst = None
 
+    @internal
     def connectSig(self, signal):
         """
         Connect to port item on subunit
@@ -41,6 +43,7 @@ class PortItem(SignalItem):
         signal.hidden = False
         signal.ctx.subUnits.add(self.unit)
 
+    @internal
     def registerInternSig(self, signal):
         """
         Connect internal signal to port item,
@@ -64,6 +67,7 @@ class PortItem(SignalItem):
         else:
             raise NotImplementedError(self.direction)
 
+    @internal
     def connectInternSig(self):
         """
         connet signal from internal side of of this component to this port
@@ -76,6 +80,7 @@ class PortItem(SignalItem):
         else:
             raise NotImplementedError(d)
 
+    @internal
     def getInternSig(self):
         """
         return signal inside unit which has this port
@@ -88,6 +93,7 @@ class PortItem(SignalItem):
         else:
             raise NotImplementedError(d)
 
+    @internal
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
         yield from []
 

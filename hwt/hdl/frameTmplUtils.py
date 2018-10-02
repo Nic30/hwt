@@ -2,8 +2,10 @@ from typing import Tuple
 
 from hwt.hdl.transPart import TransPart
 from hwt.hdl.transTmpl import OneOfTransaction, StreamTransaction
+from hwt.doc_markers import internal
 
 
+@internal
 def iterSort(iterators, cmpFn):
     """
     Sort items from iterators(generators) by alwas selecting item
@@ -244,6 +246,7 @@ class TransTmplWordIterator():
         if partsInWord:
             yield (actualW, partsInWord)
 
+    @internal
     def splitOnWords(self, transaction, addrOffset=0):
         """
         :return: generator of TransPart instance

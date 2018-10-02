@@ -1,3 +1,4 @@
+from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BOOL
@@ -30,6 +31,7 @@ class RtlSignalOps():
     def _reinterpret_cast(self, toT):
         return self._dtype.reinterpret_cast(self, toT)
 
+    @internal
     def naryOp(self, operator, opCreateDelegate, *otherOps) -> RtlSignalBase:
         """
         Try lookup operator with this parameters in _usedOps
@@ -168,6 +170,7 @@ class RtlSignalOps():
     def _ternary(self, ifTrue, ifFalse):
         return self.naryOp(AllOps.TERNARY, tv(self)._ternary, ifTrue, ifFalse)
 
+    @internal
     def _getIndexCascade(self):
         """
         Find out if this signal is something indexed

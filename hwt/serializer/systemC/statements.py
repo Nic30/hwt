@@ -3,10 +3,12 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.constants import SIGNAL_TYPE
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.systemC.utils import systemCTypeOfSig
+from hwt.doc_markers import internal
 
 
 class SystemCSerializer_statements():
 
+    @internal
     @classmethod
     def _Assignment(cls, dst, typeOfDst, src, ctx):
         indent_str = getIndent(ctx.indent)

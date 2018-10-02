@@ -1,11 +1,13 @@
+from hwt.bitmask import selectBitRange, mask
+from hwt.code import Concat
+from hwt.doc_markers import internal
+from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import default_reinterpret_cast_fn
 from hwt.synthesizer.exceptions import TypeConversionErr
-from hwt.code import Concat
-from hwt.hdl.types.array import HArray
-from hwt.bitmask import selectBitRange, mask
 
 
+@internal
 def getBits_from_array(array, wordWidth, start, end,
                        reinterpretElmToType=None):
     """
@@ -46,7 +48,7 @@ def getBits_from_array(array, wordWidth, start, end,
 
     return value
 
-
+@internal
 def reinterptet_harray_to_bits(typeFrom, sigOrVal, bitsT):
     """
     Cast HArray signal or value to signal or value of type Bits
@@ -63,7 +65,7 @@ def reinterptet_harray_to_bits(typeFrom, sigOrVal, bitsT):
 
     return Concat(*reversed(parts))._reinterpret_cast(bitsT)
 
-
+@internal
 def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
     mySize = int(typeFrom.size)
     myWidthOfElm = typeFrom.elmType.bit_length()
@@ -89,7 +91,7 @@ def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
 
     return res
 
-
+@internal
 def reinterpret_cast_harray(typeFrom, sigOrVal, toType):
     if isinstance(toType, Bits):
         return reinterptet_harray_to_bits(typeFrom, sigOrVal, toType)

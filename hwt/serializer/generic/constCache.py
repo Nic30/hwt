@@ -12,6 +12,10 @@ class ConstCache(object):
         self._cache = {}
 
     def getConstName(self, val):
+        """
+        Get constant name for value
+        name of constant is reused if same value was used before
+        """
         try:
             return self._cache[val]
         except KeyError:

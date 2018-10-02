@@ -4,8 +4,10 @@ from hwt.serializer.generic.context import SerializerCtx
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.code import If
 from hwt.hdl.assignment import Assignment
+from hwt.doc_markers import internal
 
 
+@internal
 def isResultOfTypeConversion(sig):
     if not sig.drivers:
         return False
@@ -70,6 +72,7 @@ class VhdlSerializer_ops():
         AllOps.BitsAsVec: "STD_LOGIC_VECTOR(%s)",
     }
 
+    @internal
     @classmethod
     def _operand(cls, operand, operator: OpDefinition, ctx: SerializerCtx):
         try:

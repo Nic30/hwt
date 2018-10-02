@@ -1,4 +1,5 @@
 from hwt.hdl.types.hdlType import HdlType
+from hwt.doc_markers import internal
 
 
 class String(HdlType):
@@ -8,6 +9,7 @@ class String(HdlType):
     def all_mask(self):
         return 1
 
+    @internal
     @classmethod
     def getValueCls(cls):
         try:

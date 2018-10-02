@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 from hwt.synthesizer.param import evalParam
+from hwt.doc_markers import internal
 
 
 """
@@ -19,12 +20,14 @@ use serialize* methods to specify serialization mode for unit class
 """
 
 
+@internal
 def freeze_dict(data):
     keys = sorted(data.keys())
     frozen_type = namedtuple(''.join(keys), keys)
     return frozen_type(**data)
 
 
+@internal
 def paramsToValTuple(unit):
     d = {}
     for p in unit._params:
@@ -34,6 +37,7 @@ def paramsToValTuple(unit):
     return freeze_dict(d)
 
 
+@internal
 def prepareEntity(ent, name, templateUnit):
     ent.name = name
     ent.generics.sort(key=lambda x: x.name)
@@ -72,6 +76,7 @@ def serializeParamsUniq(cls):
     return cls
 
 
+@internal
 def _serializeExclude_eval(parentUnit, obj, isDeclaration, priv):
     """
     Always decide not to serialize obj
@@ -89,6 +94,7 @@ def _serializeExclude_eval(parentUnit, obj, isDeclaration, priv):
     return False, priv
 
 
+@internal
 def _serializeOnce_eval(parentUnit, obj, isDeclaration, priv):
     """
     Decide to serialize only first obj of it's class
@@ -116,6 +122,7 @@ def _serializeOnce_eval(parentUnit, obj, isDeclaration, priv):
     return serialize, priv
 
 
+@internal
 def _serializeParamsUniq_eval(parentUnit, obj, isDeclaration, priv):
     """
     Decide to serialize only objs with uniq parameters and class

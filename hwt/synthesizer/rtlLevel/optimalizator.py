@@ -7,8 +7,10 @@ from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import maxStmId
 from hwt.hdl.process import HWProcess
+from hwt.doc_markers import internal
 
 
+@internal
 def removeUnconnectedSignals(netlist):
     """
     If signal is not driving anything remove it
@@ -61,6 +63,7 @@ def removeUnconnectedSignals(netlist):
         toSearch = _toSearch
 
 
+@internal
 def checkIfIsTooSimple(proc):
     """check if process is just unconditional assignments
        and it is useless to merge them"""
@@ -73,6 +76,7 @@ def checkIfIsTooSimple(proc):
     return False
 
 
+@internal
 def tryToMerge(procA: HWProcess, procB: HWProcess):
     """
     Try merge procB into procA
@@ -98,6 +102,7 @@ def tryToMerge(procA: HWProcess, procB: HWProcess):
     return procA
 
 
+@internal
 def reduceProcesses(processes):
     """
     Try to merge processes as much is possible

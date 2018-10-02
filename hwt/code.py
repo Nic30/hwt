@@ -17,6 +17,7 @@ from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
+from hwt.doc_markers import internal
 
 
 class If(IfContainer):
@@ -98,6 +99,7 @@ class Switch(SwitchContainer):
         super(Switch, self).__init__(switchOn, [])
         switchOn.ctx.statements.add(self)
 
+    @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         raise NotImplementedError()
 

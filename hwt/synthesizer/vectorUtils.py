@@ -8,6 +8,7 @@ from hwt.hdl.types.structUtils import walkFlattenFields
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.hdl.types.hdlType import HdlType
+from hwt.doc_markers import internal
 
 
 class BitWidthErr(Exception):
@@ -86,6 +87,7 @@ class BitWalker():
         self.actual = None
         self.actualOffset = 0
 
+    @internal
     def _get(self, numberOfBits: int, doCollect: bool):
         """
         :param numberOfBits: number of bits to get from actual possition

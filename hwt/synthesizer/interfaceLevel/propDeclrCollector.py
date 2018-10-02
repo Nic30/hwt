@@ -4,8 +4,10 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.hObjList import HObjList
+from hwt.doc_markers import internal
 
 
+@internal
 def nameAvailabilityCheck(obj, propName, prop):
     """
     Check if not redefining property on obj
@@ -15,6 +17,7 @@ def nameAvailabilityCheck(obj, propName, prop):
                              (obj, propName, repr(getattr(obj, propName)), prop))
 
 
+@internal
 class MakeParamsShared(object):
     """
     All newly added interfaces and units will share all parametes with unit
@@ -46,6 +49,7 @@ class MakeParamsShared(object):
             self.unit._setAttrListener = self.orig
 
 
+@internal
 class MakeClkRstAssociations(object):
     """
     All newly added interfaces will be associated with clk, rst
@@ -112,6 +116,7 @@ class PropDeclrCollector(object):
         """
         pass
 
+    @internal
     def __setattr__(self, attr, value) -> None:
         """setattr with listener injector"""
         try:
@@ -125,6 +130,7 @@ class PropDeclrCollector(object):
         super().__setattr__(attr, value)
 
     # configuration phase
+    @internal
     def _loadConfig(self) -> None:
         if not hasattr(self, '_params'):
             self._params = []
@@ -133,6 +139,7 @@ class PropDeclrCollector(object):
         self._config()
         self._setAttrListener = None
 
+    @internal
     def _registerParameter(self, pName, parameter) -> None:
         """
         Register Param object on interface level object
@@ -236,6 +243,7 @@ class PropDeclrCollector(object):
             assert excluded == exclude
 
     # declaration phase
+    @internal
     def _registerUnit(self, uName, unit):
         """
         Register unit object on interface level object
@@ -246,6 +254,7 @@ class PropDeclrCollector(object):
         unit._name = uName
         self._units.append(unit)
 
+    @internal
     def _registerInterface(self, iName, intf, isPrivate=False):
         """
         Register interface object on interface level object
@@ -263,6 +272,7 @@ class PropDeclrCollector(object):
             self._interfaces.append(intf)
             intf._isExtern = True
 
+    @internal
     def _declrCollector(self, name, prop):
         if name in ["_associatedClk", "_associatedRst"]:
             object.__setattr__(self, name, prop)
@@ -275,6 +285,7 @@ class PropDeclrCollector(object):
         elif isinstance(prop, HObjList):
             self._registerArray(name, prop)
 
+    @internal
     def _registerArray(self, name, items):
         """
         Register array of items on interface level object
@@ -285,11 +296,13 @@ class PropDeclrCollector(object):
             setattr(self, "%s_%d" % (name, i), item)
 
     # implementation phase
+    @internal
     def _loadMyImplementations(self):
         self._setAttrListener = self._implCollector
         self._impl()
         self._setAttrListener = None
 
+    @internal
     def _registerUnitInImpl(self, uName, u):
         """
         :attention: unit has to be parametrized before it is registered
@@ -300,16 +313,19 @@ class PropDeclrCollector(object):
         self._lazyLoaded.extend(u._toRtl(self._targetPlatform))
         u._signalsForMyEntity(self._ctx, "sig_" + uName)
 
+    @internal
     def _registerIntfInImpl(self, iName, i):
         """
         Register interface in implementation phase
         """
         raise NotImplementedError()
 
+    @internal
     def _paramCollector(self, pName, prop):
         if isinstance(prop, Param):
             self._registerParameter(pName, prop)
 
+    @internal
     def _implCollector(self, name, prop):
         if isinstance(prop, InterfaceBase):
             self._registerIntfInImpl(name, prop)

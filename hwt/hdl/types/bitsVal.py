@@ -26,6 +26,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
     NoDriverErr
+from hwt.doc_markers import internal
 
 
 class BitsVal(EventCapableVal):
@@ -36,6 +37,7 @@ class BitsVal(EventCapableVal):
     def _isFullVld(self):
         return self.vldMask == self._dtype._allMask
 
+    @internal
     def _convSign__val(self, signed):
         t = self._dtype
         if t.signed == signed:
@@ -57,6 +59,7 @@ class BitsVal(EventCapableVal):
 
         return v
 
+    @internal
     def _convSign(self, signed):
         """
         Convert signum, no bit manipulation just data are represented
@@ -144,6 +147,7 @@ class BitsVal(EventCapableVal):
     def toPy(self):
         return int(self)
 
+    @internal
     def _concat__val(self, other):
         w = self._dtype.bit_length()
         other_w = other._dtype.bit_length()
@@ -196,7 +200,8 @@ class BitsVal(EventCapableVal):
             return Operator.withRes(AllOps.CONCAT, [self, other], resT)\
                            ._auto_cast(Bits(resWidth,
                                             signed=self._dtype.signed))
-
+    
+    @internal
     def _getitem__val_int(self, key):
         updateTime = max(self.updateTime, key.updateTime)
         keyVld = key._isFullVld()
@@ -210,6 +215,7 @@ class BitsVal(EventCapableVal):
 
         return self.__class__(val, BIT, vld, updateTime=updateTime)
 
+    @internal
     def _getitem__val_slice(self, key):
         updateTime = max(self.updateTime, key.updateTime)
         assert key._isFullVld()
@@ -222,6 +228,7 @@ class BitsVal(EventCapableVal):
         retT = self._dtype.__class__(size, signed=self._dtype.signed)
         return self.__class__(val, retT, vld, updateTime=updateTime)
 
+    @internal
     def _getitem__val(self, key):
         # using self.__class__ because in simulator this method is called
         # for SimBits and we do not want to work with Bits in sim
@@ -351,6 +358,7 @@ class BitsVal(EventCapableVal):
 
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
+    @internal
     def _setitem__val(self, index, value):
         if index._isFullVld():
             if index._dtype == SLICE:
@@ -417,6 +425,7 @@ class BitsVal(EventCapableVal):
         raise TypeError(
             "Only simulator can resolve []= for signals or invalid index")
 
+    @internal
     def _invert__val(self):
         v = self.clone()
         v.val = ~v.val
@@ -440,72 +449,84 @@ class BitsVal(EventCapableVal):
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
 
     # comparisons
+    @internal
     def _eq__val(self, other):
         return bitsCmp__val(self, other, AllOps.EQ, eq)
 
     def _eq(self, other):
         return bitsCmp(self, other, AllOps.EQ, eq)
 
+    @internal
     def _ne__val(self, other):
         return bitsCmp__val(self, other, AllOps.NEQ, ne)
 
     def __ne__(self, other):
         return bitsCmp(self, other, AllOps.NEQ)
 
+    @internal
     def _lt__val(self, other):
         return bitsCmp__val(self, other, AllOps.LT, lt)
 
     def __lt__(self, other):
         return bitsCmp(self, other, AllOps.LT)
 
+    @internal
     def _gt__val(self, other):
         return bitsCmp__val(self, other, AllOps.GT, gt)
 
     def __gt__(self, other):
         return bitsCmp(self, other, AllOps.GT)
 
+    @internal
     def _ge__val(self, other):
         return bitsCmp__val(self, other, AllOps.GE, ge)
 
     def __ge__(self, other):
         return bitsCmp(self, other, AllOps.GE)
 
+    @internal
     def _le__val(self, other):
         return bitsCmp__val(self, other, AllOps.LE, le)
 
     def __le__(self, other):
         return bitsCmp(self, other, AllOps.LE)
 
+    @internal
     def _xor__val(self, other):
         return bitsBitOp__val(self, other, AllOps.XOR, vldMaskForXor)
 
     def __xor__(self, other):
         return bitsBitOp(self, other, AllOps.XOR, vldMaskForXor, tryReduceXor)
 
+    @internal
     def _and__val(self, other):
         return bitsBitOp__val(self, other, AllOps.AND, vldMaskForAnd)
 
     def __and__(self, other):
         return bitsBitOp(self, other, AllOps.AND, vldMaskForAnd, tryReduceAnd)
 
+    @internal
     def _or__val(self, other):
         return bitsBitOp__val(self, other, AllOps.OR, vldMaskForOr)
 
     def __or__(self, other):
         return bitsBitOp(self, other, AllOps.OR, vldMaskForOr, tryReduceOr)
 
+    @internal
     def _sub__val(self, other):
         return bitsArithOp__val(self, other, AllOps.SUB)
 
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)
 
+    @internal
     def _add__val(self, other):
         return bitsArithOp__val(self, other, AllOps.ADD)
 
     def __add__(self, other):
         return bitsArithOp(self, other, AllOps.ADD)
 
+    @internal
     def _mul__val(self, other):
         # [TODO] resT should be wider
         resT = self._dtype

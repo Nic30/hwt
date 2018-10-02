@@ -1,10 +1,12 @@
 import sys
 
+from hwt.doc_markers import internal
 from hwt.serializer.generic.indent import getIndent
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.hObjList import HObjList
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 
+@internal
 def valueHasChanged(valA, valB):
     return valA.val is not valB.val or valA.vldMask != valB.vldMask
 
@@ -31,6 +33,7 @@ def pprintInterface(intf, prefix="", indent=0, file=sys.stdout):
     else:
         for i in intf._interfaces:
             pprintInterface(i, indent=indent + 1, file=file)
+
 
 def pprintAgents(unitOrIntf, indent=0, prefix="", file=sys.stdout):
     if isinstance(unitOrIntf, InterfaceBase):

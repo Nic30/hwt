@@ -1,3 +1,4 @@
+from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
@@ -22,6 +23,7 @@ class HArray(HdlType):
             self.elmType == other.elmType
         )
 
+    @internal
     def __hash__(self):
         return hash(id(self))
 
@@ -42,7 +44,8 @@ class HArray(HdlType):
         if isinstance(s, RtlSignalBase):
             s = int(s.staticEval())
         return s * itemSize()
-
+    
+    @internal
     @classmethod
     def getValueCls(cls):
         try:
@@ -52,6 +55,7 @@ class HArray(HdlType):
             cls._valCls = HArrayVal
             return cls._valCls
 
+    @internal
     @classmethod
     def get_reinterpret_cast_fn(cls):
         from hwt.hdl.types.arrayCast import reinterpret_cast_harray

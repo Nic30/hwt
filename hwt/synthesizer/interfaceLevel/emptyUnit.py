@@ -1,6 +1,7 @@
 from hwt.hdl.constants import INTF_DIRECTION
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.doc_markers import internal
 
 
 class EmptyUnit(Unit):
@@ -12,6 +13,7 @@ class EmptyUnit(Unit):
     """
     _defVal = None
 
+    @internal
     def _toRtl(self, targetPlatform):
         assert not self._wasSynthetised()
         self._targetPlatform = targetPlatform

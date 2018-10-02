@@ -7,6 +7,7 @@ from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import flatten, groupedby
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.doc_markers import internal
 
 
 class HwtSyntaxError(Exception):
@@ -47,6 +48,7 @@ class HdlStatement(HdlObject):
         self._sensitivity = sensitivity
         self.rank = 0
 
+    @internal
     def _clean_signal_meta(self):
         """
         Clean informations about enclosure for outputs and sensitivity
@@ -57,6 +59,7 @@ class HdlStatement(HdlObject):
         for stm in self._iter_stms():
             stm._clean_signal_meta()
 
+    @internal
     def _collect_io(self) -> None:
         """
         Collect inputs/outputs from all child statements
@@ -69,6 +72,7 @@ class HdlStatement(HdlObject):
             in_add(stm._inputs)
             out_add(stm._outputs)
 
+    @internal
     @staticmethod
     def _cut_off_drivers_of_list(sig: RtlSignalBase,
                                  statements: List["HdlStatement"],
@@ -94,6 +98,7 @@ class HdlStatement(HdlObject):
 
         return all_cut_off
 
+    @internal
     def _discover_enclosure(self) -> None:
         """
         Discover all outputs for which is this steement enclosed _enclosed_for property
@@ -102,6 +107,7 @@ class HdlStatement(HdlObject):
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__, self)
 
+    @internal
     @staticmethod
     def _discover_enclosure_for_statements(statements: List['HdlStatement'],
                                            outputs: List['HdlStatement']):
@@ -134,6 +140,7 @@ class HdlStatement(HdlObject):
 
         return result
 
+    @internal
     def _discover_sensitivity(self, seen: set) -> None:
         """
         discover all sensitivity signals and store them to _sensitivity property
@@ -141,6 +148,7 @@ class HdlStatement(HdlObject):
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__, self)
 
+    @internal
     def _discover_sensitivity_sig(self, signal: RtlSignalBase,
                                   seen: set, ctx: SensitivityCtx):
         casualSensitivity = set()
@@ -149,6 +157,7 @@ class HdlStatement(HdlObject):
             # if event dependent sensitivity found do not add other sensitivity
             ctx.extend(casualSensitivity)
 
+    @internal
     def _discover_sensitivity_seq(self,
                                   signals: List[RtlSignalBase],
                                   seen: set, ctx: SensitivityCtx)\
@@ -167,6 +176,7 @@ class HdlStatement(HdlObject):
         if not ctx.contains_ev_dependency:
             ctx.extend(casualSensitivity)
 
+    @internal
     def _get_rtl_context(self):
         """
         get RtlNetlist context from signals
@@ -188,6 +198,7 @@ class HdlStatement(HdlObject):
                                   " on class of statement", self.__class__,
                                   self)
 
+    @internal
     def _on_reduce(self, self_reduced: bool, io_changed: bool,
                    result_statements: List["HdlStatement"]) -> None:
         """
@@ -230,6 +241,7 @@ class HdlStatement(HdlObject):
                 self._outputs = UniqList()
                 self._collect_io()
 
+    @internal
     def _on_merge(self, other):
         """
         After merging statements update IO, sensitivity and context
@@ -260,14 +272,19 @@ class HdlStatement(HdlObject):
                 s.drivers.discard(other)
                 s.drivers.append(self)
 
+    @internal
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__,
                                   self)
 
     def _is_enclosed(self) -> bool:
+        """
+        :return: True if every branch in statement is covered for all signals else False
+        """
         return len(self._outputs) == len(self._enclosed_for)
 
+    @internal
     def _is_mergable(self, other: "HdlStatement") -> bool:
         if self is other:
             raise ValueError("Can not merge statment with itself")
@@ -276,6 +293,7 @@ class HdlStatement(HdlObject):
                                       " on class of statement", self.__class__,
                                       self)
 
+    @internal
     @classmethod
     def _is_mergable_statement_list(cls, stmsA, stmsB):
         """
@@ -302,6 +320,7 @@ class HdlStatement(HdlObject):
         # lists are empty
         return True
 
+    @internal
     @staticmethod
     def _merge_statements(statements: List["HdlStatement"])\
             -> Tuple[List["HdlStatement"], int]:
@@ -348,6 +367,7 @@ class HdlStatement(HdlObject):
         new_statements.sort(key=lambda stm: order[stm])
         return new_statements, rank_decrease
 
+    @internal
     @staticmethod
     def _merge_statement_lists(stmsA: List["HdlStatement"], stmsB: List["HdlStatement"])\
             -> List["HdlStatement"]:
@@ -402,6 +422,7 @@ class HdlStatement(HdlObject):
 
         return tmp
 
+    @internal
     @staticmethod
     def _try_reduce_list(statements: List["HdlStatement"]):
         """
@@ -420,6 +441,7 @@ class HdlStatement(HdlObject):
 
         return new_statements, rank_decrease, io_change
 
+    @internal
     def _on_parent_event_dependent(self):
         """
         After parrent statement become event dependent
@@ -430,6 +452,7 @@ class HdlStatement(HdlObject):
             for stm in self._iter_stms():
                 stm._on_parent_event_dependent()
 
+    @internal
     def _set_parent_stm(self, parentStm: "HdlStatement"):
         """
         Assign parent statement and propagate dependency flags if necessary
@@ -463,6 +486,7 @@ class HdlStatement(HdlObject):
 
         parentStm.rank += self.rank
 
+    @internal
     def _register_stements(self, statements: List["HdlStatement"],
                            target: List["HdlStatement"]):
         """
@@ -481,6 +505,7 @@ class HdlStatement(HdlObject):
         raise NotImplementedError("This menthod shoud be implemented"
                                   " on class of statement", self.__class__, self)
 
+    @internal
     def _destroy(self):
         """
         Disconnect this statement from signals and delete it from RtlNetlist context
@@ -498,6 +523,7 @@ class HdlStatement(HdlObject):
         ctx.statements.remove(self)
 
 
+@internal
 def seqEvalCond(cond) -> bool:
     """
     Evaluate condition signal in sequential context
@@ -565,6 +591,7 @@ def statementsAreSame(statements: List[HdlStatement]) -> bool:
     return all(first.isSame(rest) for rest in iterator)
 
 
+@internal
 def _get_stm_with_branches(stm_it):
     """
     :return: first statement with rank > 0 or None if iterator empty

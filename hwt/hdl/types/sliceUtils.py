@@ -2,8 +2,10 @@ from hwt.hdl.types.defs import INT, SLICE
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
+from hwt.doc_markers import internal
 
 
+@internal
 def slice_to_SLICE(sliceVals, width):
     """convert python slice to value of SLICE hdl type"""
     if sliceVals.step is not None:

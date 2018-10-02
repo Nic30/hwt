@@ -1,7 +1,9 @@
+from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 
 
+@internal
 def getBaseCond(c):
     """
     if is negated return original cond and negated flag

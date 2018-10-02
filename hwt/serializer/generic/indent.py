@@ -3,6 +3,9 @@ _indentCache = {}
 
 
 def getIndent(indentNum):
+    """
+    Cached indent getter function
+    """
     try:
         return _indentCache[indentNum]
     except KeyError:

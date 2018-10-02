@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Union
+from typing import Union
 
 from hwt.hdl.operator import Operator
 from hwt.serializer.resourceAnalyzer.resourceTypes import \
@@ -6,7 +6,6 @@ from hwt.serializer.resourceAnalyzer.resourceTypes import \
 from hwt.synthesizer.unit import Unit
 from hwt.hdl.statements import HdlStatement
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.hdl.constants import WRITE, READ
 
 
 class ResourceContext():

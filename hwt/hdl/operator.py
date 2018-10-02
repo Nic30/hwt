@@ -6,8 +6,10 @@ from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
+from hwt.doc_markers import internal
 
 
+@internal
 def getCtxFromOps(operands):
     for o in operands:
         if isinstance(o, RtlSignalBase):
@@ -17,6 +19,9 @@ def getCtxFromOps(operands):
 
 
 def isConst(item):
+    """
+    :return: True if expression is constant
+    """
     return isinstance(item, Value) or item._const
 
 
@@ -35,6 +40,7 @@ class Operator(HdlObject):
         self.operator = operator
         self.result = None
 
+    @internal
     def registerSignals(self, outputs=[]):
         """
         Register potential signals to drivers/endpoints
@@ -52,6 +58,7 @@ class Operator(HdlObject):
                     "Operator operands can be"
                     " only signal or values got:%r" % (o))
 
+    @internal
     def staticEval(self):
         """
         Recursively statistically evaluate result of this operator
@@ -59,13 +66,15 @@ class Operator(HdlObject):
         for o in self.operands:
             o.staticEval()
         self.result._val = self.evalFn()
-
+    
+    @internal
     def evalFn(self, simulator=None):
         """
         Syntax sugar
         """
         return self.operator.eval(self, simulator=simulator)
 
+    @internal
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx)\
         -> Generator[Union[RtlSignalBase, "Operator"],
                      None, None]:
@@ -82,11 +91,13 @@ class Operator(HdlObject):
                 if operand not in seen:
                     operand._walk_sensitivity(casualSensitivity, seen, ctx)
 
+    @internal
     def _walk_public_drivers(self, seen: set) -> Generator["RtlSignal", None, None]:
         for op in self.operands:
             if not isinstance(op, Value) and op not in seen:
                 yield from op._walk_public_drivers(seen)
 
+    @internal
     def __eq__(self, other):
         return self is other or (
             type(self) is type(other) and
@@ -94,6 +105,7 @@ class Operator(HdlObject):
             self.operands == other.operands
         )
 
+    @internal
     @staticmethod
     def withRes(opDef, operands, resT, outputs=[]):
         """
@@ -113,6 +125,7 @@ class Operator(HdlObject):
         if out._const:
             out.staticEval()
         return out
-
+    
+    @internal
     def __hash__(self):
         return hash((self.operator, self.operands))

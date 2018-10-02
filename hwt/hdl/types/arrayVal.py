@@ -6,6 +6,7 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
 from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.doc_markers import internal
 
 
 class HArrayVal(Value):
@@ -58,6 +59,7 @@ class HArrayVal(Value):
             raise ValueError("Value of %r is not fully defined" % self)
         return [v.toPy() for _, v in sorted(self.val.items())]
 
+    @internal
     def __hash__(self):
         return hash((self._dtype, self.updateTime))
         # return hash((self._dtype, self.val, self.vldMask, self.updateTime))
@@ -65,6 +67,7 @@ class HArrayVal(Value):
     def _isFullVld(self):
         return self.vldMask == 1
 
+    @internal
     def _getitem__val(self, key):
         """
         :atention: this will clone item from array, iterate over .val
@@ -102,6 +105,7 @@ class HArrayVal(Value):
 
         return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.elmType)
 
+    @internal
     def _setitem__val(self, index, value):
         self.updateTime = max(index.updateTime, value.updateTime)
         if index._isFullVld():
@@ -143,6 +147,7 @@ class HArrayVal(Value):
     def __len__(self):
         return int(self._dtype.size)
 
+    @internal
     def _eq__val(self, other):
         assert self._dtype.elmType == other._dtype.elmType
         assert self._dtype.size == other._dtype.size

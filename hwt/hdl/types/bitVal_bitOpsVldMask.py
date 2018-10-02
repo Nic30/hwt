@@ -1,4 +1,7 @@
+from hwt.doc_markers import internal
 
+
+@internal
 def vldMaskForAnd(a, b):
     # (val, vld)
     # (0, 0) & (0, 0) -> (0, 0)
@@ -12,6 +15,7 @@ def vldMaskForAnd(a, b):
     return vld
 
 
+@internal
 def vldMaskForOr(a, b):
     a_vld = (a.vldMask & a.val)
     b_vld = (b.vldMask & b.val)
@@ -19,5 +23,6 @@ def vldMaskForOr(a, b):
     return vld
 
 
+@internal
 def vldMaskForXor(a, b):
     return a.vldMask & b.vldMask

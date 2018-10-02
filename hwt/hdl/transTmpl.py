@@ -8,6 +8,7 @@ from hwt.hdl.types.union import HUnion
 from hwt.pyUtils.arrayQuery import iter_with_last
 from hwt.synthesizer.param import evalParam
 from hwt.hdl.types.stream import HStream
+from hwt.doc_markers import internal
 
 
 def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
@@ -114,6 +115,7 @@ class TransTmpl(object):
         self.children = []
         self._loadFromHType(dtype, bitAddr)
 
+    @internal
     def _loadFromArray(self, dtype: HdlType, bitAddr: int) -> int:
         """
         Parse HArray type to this transaction template instance
@@ -125,6 +127,7 @@ class TransTmpl(object):
             dtype.elmType, 0, parent=self, origin=self.origin)
         return bitAddr + self.itemCnt * self.children.bitAddrEnd
 
+    @internal
     def _loadFromBits(self, dtype: HdlType, bitAddr: int):
         """
         Parse Bits type to this transaction template instance
@@ -133,6 +136,7 @@ class TransTmpl(object):
         """
         return bitAddr + dtype.bit_length()
 
+    @internal
     def _loadFromHStruct(self, dtype: HdlType, bitAddr: int):
         """
         Parse HStruct type to this transaction template instance
@@ -154,6 +158,7 @@ class TransTmpl(object):
 
         return bitAddr
 
+    @internal
     def _loadFromUnion(self, dtype: HdlType, bitAddr: int) -> int:
         """
         Parse HUnion type to this transaction template instance
@@ -165,6 +170,7 @@ class TransTmpl(object):
             self.children.append(ch)
         return bitAddr + dtype.bit_length()
 
+    @internal
     def _loadFromHStream(self, dtype: HStream, bitAddr: int) -> int:
         """
         Parse HUnion type to this transaction template instance

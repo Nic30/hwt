@@ -5,6 +5,7 @@ import sys
 from types import ModuleType
 from typing import Optional
 
+from hwt.doc_markers import internal
 from hwt.hdl.constants import Time
 from hwt.serializer.simModel.serializer import SimModelSerializer
 from hwt.simulator.agentConnector import autoAddAgents
@@ -12,9 +13,9 @@ from hwt.simulator.hdlSimulator import HdlSimulator
 from hwt.simulator.simModel import SimModel
 from hwt.simulator.simSignal import SimSignal
 from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
+from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
-from hwt.synthesizer.dummyPlatform import DummyPlatform
 
 
 def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
@@ -87,6 +88,7 @@ def toSimModel(unit, targetPlatform=DummyPlatform(), dumpModelIn=None):
     return simModule.__dict__[unit._name]
 
 
+@internal
 def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls):
     """
     Reconnect model signals to unit to run simulation with simulation model
@@ -134,6 +136,7 @@ def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout,
                            outputFile, until)
 
 
+@internal
 def _simUnitVcd(simModel, stimulFunctions, outputFile, until):
     """
     :param unit: interface level unit to simulate

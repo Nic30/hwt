@@ -18,12 +18,15 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
     NoDriverErr
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.doc_markers import internal
 
 
+@internal
 class DoesNotContainsTernary(Exception):
     pass
 
 
+@internal
 def ternaryOpsToIf(statements):
     """Convert all ternary operators to IfContainers"""
     stms = []

@@ -12,6 +12,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import flatten
 from hwt.simulator.types.simBits import simBitsT
+from hwt.doc_markers import internal
 
 
 class FrameTmpl(object):
@@ -202,7 +203,8 @@ class FrameTmpl(object):
                             [])
 
             startOfThisFrame = endOfThisFrame
-
+    
+    @internal
     def _wordIndx(self, addr: int):
         """
         convert bit address to index of word where this address is
@@ -353,6 +355,7 @@ class FrameTmpl(object):
             yield typeOfWord.getValueCls()(actualVal, typeOfWord,
                                            actualVldMask, -1)
 
+    @internal
     def __repr__getName(self, transPart, fieldWidth):
         if transPart.isPadding:
             return "X" * fieldWidth
@@ -383,6 +386,7 @@ class FrameTmpl(object):
             # [HOTFIX] rm dots when indexing on array
             return self.__RE_RM_ARRAY_DOTS.sub("[", ".".join(reversed(names)))
 
+    @internal
     def __repr__word(self, index, width, padding, transParts):
         buff = ["{0: <{padding}}|".format(index, padding=padding)]
         DW = self.wordWidth

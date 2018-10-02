@@ -1,6 +1,8 @@
+from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import \
     InterfaceDirectionFns
 from hwt.synthesizer.interfaceLevel.interfaceUtils.implDependent import\
@@ -9,7 +11,6 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
     PropDeclrCollector
 from hwt.synthesizer.vectorUtils import fitTo
-from hwt.synthesizer.hObjList import HObjList
 
 
 def _default_param_updater(self, myP, parentP):
@@ -113,6 +114,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         """
         return self._connectTo(other)
 
+    @internal
     def _loadDeclarations(self):
         """
         load declaratoins from _declr method
@@ -137,6 +139,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 self._direction = INTF_DIRECTION.MASTER
             self._setDirectionsLikeIn(self._direction)
 
+    @internal
     def _clean(self, rmConnetions=True, lockNonExternal=True):
         """
         Remove all signals from this interface (used after unit is synthesized
@@ -154,6 +157,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
 
+    @internal
     def _connectToIter(self, master, exclude=None, fit=False):
         if exclude and (self in exclude or master in exclude):
             return
@@ -192,6 +196,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
             yield dstSig(srcSig)
 
+    @internal
     def _signalsForInterface(self, context, prefix='', typeTransform=None):
         """
         generate _sig for each interface which has no subinterface

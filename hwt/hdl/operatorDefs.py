@@ -4,6 +4,7 @@ from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
 from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.types.defs import INT
 from hwt.hdl.value import Value
+from hwt.doc_markers import internal
 
 
 class OpDefinition():
@@ -21,6 +22,7 @@ class OpDefinition():
     def __eq__(self, other):
         return type(self) == type(other) and self.id == other.id
 
+    @internal
     def __hash__(self):
         return hash(self.id)
 

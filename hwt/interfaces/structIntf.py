@@ -8,6 +8,7 @@ from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.doc_markers import internal
 
 
 class StructIntf(Interface):
@@ -66,6 +67,7 @@ class IntfMap(list):
     pass
 
 
+@internal
 def _HTypeFromIntfMap(intf):
     name = getSignalName(intf)
     if isinstance(intf, (RtlSignalBase, Signal)):
@@ -84,6 +86,7 @@ def _HTypeFromIntfMap(intf):
     return (dtype, name)
 
 
+@internal
 def HTypeFromIntfMapItem(interfaceMapItem):
     isTerminal = False
     if isinstance(interfaceMapItem, (InterfaceBase, RtlSignalBase)):

@@ -1,6 +1,7 @@
 from heapq import heappush, heappop
 from typing import Tuple, Generator, Callable
 
+from hwt.doc_markers import internal
 from hwt.hdl.value import Value
 from hwt.pyUtils.uniqList import UniqList
 from hwt.simulator.hdlSimConfig import HdlSimConfig
@@ -10,6 +11,7 @@ from hwt.simulator.utils import valueHasChanged
 from hwt.synthesizer.unit import Unit
 
 
+@internal
 def isEvDependentOn(sig, process) -> bool:
     """
     Check if hdl process has event depenency on signal
@@ -21,6 +23,7 @@ def isEvDependentOn(sig, process) -> bool:
         or process in sig.simRisingSensProcs
 
 
+@internal
 class IoContainer():
     """
     Container for outputs of process
@@ -37,6 +40,7 @@ class IoContainer():
             self._all_signals.append([name, s])
 
 
+@internal
 class Wait(BaseException):
     """
     Container for wait time of processes
@@ -58,6 +62,7 @@ class StopSimumulation(BaseException):
     pass
 
 
+@internal
 class Event():
     """
     Simulation event
@@ -75,6 +80,7 @@ class Event():
         return procs
 
 
+@internal
 def raise_StopSimulation(sim):
     """
     Simulation process used to stop simulation
@@ -84,6 +90,7 @@ def raise_StopSimulation(sim):
     yield
 
 
+@internal
 class CalendarItem():
     def __init__(self, time, priority, value):
         self.key = (time, priority)
@@ -93,6 +100,7 @@ class CalendarItem():
         return self.key < other.key
 
 
+@internal
 class SimCalendar():
     """
     Priority queue where key is time and priority
@@ -205,6 +213,7 @@ class HdlSimulator():
         self._outputContainers = {}
         self._events = SimCalendar()
 
+    @internal
     def _add_process(self, proc, priority) -> None:
         """
         Schedule process on actual time with specified priority
@@ -224,6 +233,7 @@ class HdlSimulator():
         else:
             return self.combUpdateDoneEv
 
+    @internal
     def _addHdlProcToRun(self, trigger: SimSignal, proc) -> None:
         """
         Add hdl process to execution queue
@@ -244,6 +254,7 @@ class HdlSimulator():
         else:
             self._combProcsToRun.append(proc)
 
+    @internal
     def _initUnitSignals(self, unit: Unit) -> None:
         """
         * Inject default values to simulation
@@ -272,6 +283,7 @@ class HdlSimulator():
 
             self._outputContainers[p] = SpecificIoContainer(outputs)
 
+    @internal
     def __deleteCombUpdateDoneEv(self) -> Generator[None, None, None]:
         """
         Callback called on combUpdateDoneEv finished
@@ -280,6 +292,7 @@ class HdlSimulator():
         return
         yield
 
+    @internal
     def _scheduleCombUpdateDoneEv(self) -> Event:
         """
         Schedule combUpdateDoneEv event to let agents know that current
@@ -293,6 +306,7 @@ class HdlSimulator():
         self.combUpdateDoneEv = cud
         return cud
 
+    @internal
     def _scheduleApplyValues(self) -> None:
         """
         Apply stashed values to signals
@@ -309,6 +323,7 @@ class HdlSimulator():
         self._add_process(self._runSeqProcesses(), PRIORITY_APPLY_SEQ)
         self._runSeqProcessesPlaned = True
 
+    @internal
     def _conflictResolveStrategy(self, newValue: set)\
             -> Tuple[Callable[[Value], bool], bool]:
         """
@@ -328,6 +343,7 @@ class HdlSimulator():
             val, isEvDependent = newValue
             return (mkUpdater(val, invalidate), isEvDependent)
 
+    @internal
     def _runCombProcesses(self) -> None:
         """
         Delta step for combinational processes
@@ -348,6 +364,7 @@ class HdlSimulator():
 
         self._combProcsToRun = UniqList()
 
+    @internal
     def _runSeqProcesses(self) -> Generator[None, None, None]:
         """
         Delta step for event dependent processes
@@ -379,6 +396,7 @@ class HdlSimulator():
         return
         yield
 
+    @internal
     def _applyValues(self) -> Generator[None, None, None]:
         """
         Perform delta step by writing stacked values to signals
@@ -517,7 +535,7 @@ class HdlSimulator():
         """
         self._events.push(self.now, PRIORITY_NORMAL, proc)
 
-    def simUnit(self, synthesisedUnit, until: float, extraProcesses=[]):
+    def simUnit(self, synthesisedUnit: Unit, until: float, extraProcesses=[]):
         """
         Run simulation for Unit instance
         """

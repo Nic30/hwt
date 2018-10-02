@@ -10,6 +10,7 @@ from hwt.serializer.generic.constants import SIGNAL_TYPE
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.doc_markers import internal
 
 
 class SystemCSerializer_value(GenericSerializer_Value):
@@ -135,6 +136,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
         buff.append('")')
         return ''.join(buff)
 
+    @internal
     @classmethod
     def _BitString(cls, typeName, v, width, forceVector, vldMask):
         if vldMask != mask(width):

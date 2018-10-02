@@ -1,6 +1,6 @@
 from copy import copy
 from itertools import compress
-from typing import List, Generator, Callable
+from typing import List, Generator
 
 from hwt.code import If
 from hwt.hdl.architecture import Architecture
@@ -24,8 +24,10 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
     NoDriverErr
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
+from hwt.doc_markers import internal
 
 
+@internal
 def name_for_process_and_mark_outputs(statements: List[HdlStatement])\
         -> str:
     """
@@ -43,6 +45,7 @@ def name_for_process_and_mark_outputs(statements: List[HdlStatement])\
         return ""
 
 
+@internal
 def cut_off_drivers_of(dstSignal, statements):
     """
     Cut off drivers from statements
@@ -61,6 +64,7 @@ def cut_off_drivers_of(dstSignal, statements):
     return list(compress(statements, stm_filter)), separated
 
 
+@internal
 def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
         -> Generator[HWProcess, None, None]:
     assert _statements
@@ -130,6 +134,7 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
         pass
 
 
+@internal
 def statements_to_HWProcesses(statements: List[HdlStatement])\
         -> Generator[HWProcess, None, None]:
     """
@@ -156,6 +161,7 @@ def statements_to_HWProcesses(statements: List[HdlStatement])\
     yield from reduceProcesses(processes)
 
 
+@internal
 def walk_assignments(stm: HdlStatement, dst: RtlSignal) -> Generator[Assignment, None, None]:
     if isinstance(stm, Assignment):
         if dst is stm.dst:
@@ -165,6 +171,7 @@ def walk_assignments(stm: HdlStatement, dst: RtlSignal) -> Generator[Assignment,
             yield from walk_assignments(_stm, dst)
 
 
+@internal
 def markVisibilityOfSignals(ctx, ctxName, signals, interfaceSignals):
     """
     * check if all signals are driven by something

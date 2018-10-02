@@ -2,22 +2,25 @@ from datetime import datetime
 import sys
 from typing import Union, Optional, Tuple, Callable
 
+from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
+from pyDigitalWaveTools.vcd.writer import VcdWriter, VcdVarWritingScope, \
+    vcdBitsFormatter, vcdEnumFormatter, VarAlreadyRegistered
+
+from hwt.doc_markers import internal
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bool import HBool
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import Value
 from hwt.simulator.hdlSimConfig import HdlSimConfig
+from hwt.simulator.simModel import SimModel
 from hwt.simulator.types.simBits import SimBitsT
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.unit import Unit
-from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
-from pyDigitalWaveTools.vcd.writer import VcdWriter, VcdVarWritingScope, \
-    vcdBitsFormatter, vcdEnumFormatter, VarAlreadyRegistered
-from hwt.simulator.simModel import SimModel
 
 
+@internal
 def vcdTypeInfoForHType(t) -> Tuple[str, int, Callable[[RtlSignalBase, Value], str]]:
     """
     :return: (vcd type name, vcd width)
@@ -67,7 +70,8 @@ class VcdHdlSimConfig(HdlSimConfig):
             if isinstance(t, self.supported_type_classes):
                 tName, width, formatter = vcdTypeInfoForHType(t)
                 try:
-                    parent.addVar(obj, getSignalName(obj), tName, width, formatter)
+                    parent.addVar(obj, getSignalName(obj),
+                                  tName, width, formatter)
                 except VarAlreadyRegistered:
                     pass
 

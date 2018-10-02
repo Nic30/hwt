@@ -1,6 +1,7 @@
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.structValBase import StructValBase
 from hwt.serializer.generic.indent import getIndent
+from hwt.doc_markers import internal
 
 
 class HStructFieldMeta():
@@ -19,6 +20,7 @@ class HStructFieldMeta():
             return False
         return self.split == other.split
 
+    @internal
     def __hash__(self):
         return hash(self.split)
 
@@ -100,14 +102,17 @@ class HStruct(HdlType):
         else:
             return self.__bit_length_val
 
+    @internal
     def getValueCls(self):
         return self.valueCls
 
+    @internal
     @classmethod
     def get_reinterpret_cast_fn(cls):
         from hwt.hdl.types.structCast import hstruct_reinterpret
         return hstruct_reinterpret
 
+    @internal
     def __fields__eq__(self, other):
         if len(self.fields) != len(other.fields):
             return False
@@ -124,6 +129,7 @@ class HStruct(HdlType):
             self.bit_length() == other.bit_length() and
             self.__fields__eq__(other))
 
+    @internal
     def __hash__(self):
         return hash(id(self))
 

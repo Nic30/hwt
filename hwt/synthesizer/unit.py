@@ -6,6 +6,7 @@ from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers, \
     _default_param_updater
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
+from hwt.doc_markers import internal
 
 
 class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
@@ -41,6 +42,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         self._loadConfig()
 
+    @internal
     def _toRtl(self, targetPlatform: DummyPlatform):
         """
         synthesize all subunits, make connections between them,
@@ -95,6 +97,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     def _wasSynthetised(self):
         return self._ctx.synthesised
 
+    @internal
     def _synthetiseContext(self, externInterf):
         # synthesize signal level context
         s = self._ctx.synthesize(
@@ -118,10 +121,12 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         # after synthesis clean up interface so unit can be used elsewhere
         self._cleanAsSubunit()
 
+    @internal
     def _loadInterface(self, i, isExtern):
         i._loadDeclarations()
         i._setAsExtern(isExtern)
 
+    @internal
     def _loadDeclarations(self):
         """
         Load all declarations from _decl() method, recursively
@@ -145,6 +150,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         for p in self._params:
             p.setReadOnly()
 
+    @internal
     def _registerIntfInImpl(self, iName, intf):
         """
         Register interface in implementation phase
@@ -153,6 +159,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._loadInterface(intf, False)
         intf._signalsForInterface(self._ctx)
 
+    @internal
     def _buildParams(self):
         # construct params for entity (generics)
         params = {}
@@ -196,6 +203,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     def _getDefaultName(self):
         return self.__class__.__name__
 
+    @internal
     def _checkArchCompInstances(self):
         cInstances = len(self._architecture.componentInstances)
         units = len(self._units)

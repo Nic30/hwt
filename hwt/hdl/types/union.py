@@ -4,6 +4,7 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
 from hwt.hdl.value import Value
 from hwt.serializer.generic.indent import getIndent
+from hwt.doc_markers import internal
 
 
 protectedNames = {"clone", "staticEval",
@@ -71,7 +72,11 @@ class UnionValBase(Value):
         return ("\n").join(buff)
 
 
+@internal
 class HUnionMemberHandler(object):
+    """
+    Object which manages the acces to HUnion field
+    """
 
     def __init__(self, field):
         self.field = field
@@ -168,9 +173,11 @@ class HUnion(HdlType):
         else:
             return self.__bit_length_val
 
+    @internal
     def getValueCls(self):
         return self.valueCls
 
+    @internal
     def __fields__eq__(self, other):
         if len(self.fields) != len(other.fields):
             return False
@@ -193,6 +200,7 @@ class HUnion(HdlType):
             self.bit_length() == other.bit_length() and
             self.__fields__eq__(other))
 
+    @internal
     def __hash__(self):
         return hash(id(self))
 

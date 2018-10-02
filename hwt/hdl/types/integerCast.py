@@ -5,8 +5,9 @@ from hwt.hdl.types.boolVal import HBoolVal
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.hdlType import default_auto_cast_fn
 from hwt.hdl.value import Value
+from hwt.doc_markers import internal
 
-
+@internal
 def cast_integer(self, sigOrVal, toType):
     isVal = isinstance(sigOrVal, Value)
     if toType == BOOL:

@@ -4,8 +4,9 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.statements import HdlStatement
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.doc_markers import internal
 
-
+@internal
 def fill_stm_list_with_enclosure(parentStm: Optional[HdlStatement],
                                  current_enclosure: Set[RtlSignalBase],
                                  statements: List["HdlStatement"],

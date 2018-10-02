@@ -1,5 +1,9 @@
+from hwt.doc_markers import internal
 
 class LangueKeyword(object):
+    """
+    Base class for keywords of target language
+    """
     pass
 
 
@@ -37,6 +41,7 @@ class NameScopeItem(dict):
         else:
             return parent[self.myLvl - 1]
 
+    @internal
     def __incrPrefixCntrsForChilds(self, prefix, currentVal, parent):
         # [TODO] check if new name is not defined in any direction
         currentVal += 1
@@ -53,6 +58,7 @@ class NameScopeItem(dict):
         usableName = prefix + str(currentVal)
         return usableName
 
+    @internal
     def __registerName(self, name, obj, parent):
         # search if name is already defined on me and parents
         actual = self
