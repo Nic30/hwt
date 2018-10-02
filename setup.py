@@ -33,7 +33,7 @@ setup(name="hwt",
       install_requires=[
           "jinja2",  # template engine
           "pyDigitalWaveTools>=0.3",  # simulator output dumping
-          "ipCorePackager"
+          "ipCorePackager>=0.1"
       ],
       license="MIT",
       packages=find_packages(),
