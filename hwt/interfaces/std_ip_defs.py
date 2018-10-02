@@ -6,10 +6,10 @@ from hwt.serializer.ip_packager import IpPackager
 from hwt.synthesizer.interface import Interface
 
 from ipCorePackager.component import Component
-from ipCorePackager.intfConfig import IntfConfig
+from ipCorePackager.intfIpMeta import IntfIpMeta
 
 
-class IP_Clk(IntfConfig):
+class IP_Clk(IntfIpMeta):
 
     def __init__(self):
         super().__init__()
@@ -47,7 +47,7 @@ class IP_Clk(IntfConfig):
         self.quartus_add_interface_port(buff, name, thisIf, "clk", packager)
 
 
-class IP_Rst(IntfConfig):
+class IP_Rst(IntfIpMeta):
 
     def __init__(self):
         super().__init__()
@@ -95,7 +95,7 @@ class IP_Rst_n(IP_Rst):
                               escapeStr=False)
 
 
-class IP_Handshake(IntfConfig):
+class IP_Handshake(IntfIpMeta):
 
     def __init__(self):
         super().__init__()
@@ -110,7 +110,7 @@ class IP_Handshake(IntfConfig):
         }
 
 
-class IP_BlockRamPort(IntfConfig):
+class IP_BlockRamPort(IntfIpMeta):
 
     def __init__(self):
         super().__init__()

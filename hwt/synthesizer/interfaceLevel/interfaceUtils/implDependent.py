@@ -1,7 +1,7 @@
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getRst, getClk
-from ipCorePackager.intfConfig import IpConfigNotSpecified
+from ipCorePackager.intfIpMeta import IntfIpMetaNotSpecified
 
 
 class InterfaceceImplDependentFns():
@@ -11,7 +11,7 @@ class InterfaceceImplDependentFns():
     """
 
     def _getIpCoreIntfClass(self):
-        raise IpConfigNotSpecified()
+        raise IntfIpMetaNotSpecified()
 
     def _initSimAgent(self):
         raise NotSpecified("Override this function in your interface"
