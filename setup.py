@@ -41,4 +41,5 @@ setup(name="hwt",
                             "*.py.template",
                             "*.cpp.template"]},
       include_package_data=True,
-      zip_safe=False)
+      zip_safe=False
+)
