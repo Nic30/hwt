@@ -1,12 +1,13 @@
 from hwt.bitmask import mask
+from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.integer import Integer
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
-from hwt.doc_markers import internal
-from hwt.hdl.operatorDefs import AllOps, OpDefinition
+
 
 #internal
 BoolVal = BOOL.getValueCls()
