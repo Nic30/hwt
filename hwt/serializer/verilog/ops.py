@@ -69,7 +69,9 @@ class VerilogSerializer_ops():
         s = super()._operand(operand, operator.operator, ctx)
         oper = operator.operator
         if oper not in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.IntToBits] and \
+                oper is not AllOps.INDEX and\
                 isinstance(operand._dtype, Integer) and\
+                operator.result is not None and\
                 not isinstance(operator.result._dtype, Integer):
             # has to lock width
             width = None
