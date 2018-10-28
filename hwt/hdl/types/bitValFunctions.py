@@ -6,6 +6,7 @@ from hwt.hdl.types.integer import Integer
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
 from hwt.doc_markers import internal
+from hwt.hdl.operatorDefs import AllOps, OpDefinition
 
 #internal
 BoolVal = BOOL.getValueCls()
@@ -36,6 +37,50 @@ def bitsCmp__val(self, other, op, evalFn):
 
     return BoolVal(res, BOOL, int(_vld), updateTime)
 
+# dictionary which hold information how to change operator after operads were swapped
+CMP_OP_REVERSE = {
+    AllOps.EQ: AllOps.EQ, # (a == b) == (b == a)
+    AllOps.GT: AllOps.LT, # (a > b)  == (b < a)
+    AllOps.LT: AllOps.GT, # (a < b)  == (b > a)
+    AllOps.GE: AllOps.LE, # (a >= b) == (b <= a)
+    AllOps.LE: AllOps.GE, # (a <= b) == (b >= a)
+}
+
+
+@internal
+def bitsCmp_detect_useless_cmp(op0, op1, op):
+    v = int(op1)
+    width = op1._dtype.bit_length()  
+    if op0._dtype.signed:
+        min_val = -1 if width == 1 else mask(width - 1) - 1
+        max_val = 0 if width == 1 else mask(width - 1)
+    else:
+        min_val = 0
+        max_val = mask(width)
+    
+    if v == min_val:
+        # value can not be lower than min_val
+        if op == AllOps.GE:
+            # -> always True
+            return BOOL.fromPy(1, 1)
+        elif op == AllOps.LT:
+            # -> always False
+            return BOOL.fromPy(0, 1)
+        elif op == AllOps.LE:
+            # convert <= to == to highlight the real function
+            return AllOps.EQ 
+    else:
+        if v == max_val:
+            # value can not be greater than max_val
+            if op == AllOps.GT:
+                # always False
+                return BOOL.fromPy(0, 1)
+            elif op == AllOps.LE:
+                # always True
+                return BOOL.fromPy(1, 1)
+            elif op == AllOps.GE:
+                # because value can not be greater than max
+                return AllOps.EQ
 
 @internal
 def bitsCmp(self, other, op, evalFn=None):
@@ -76,6 +121,21 @@ def bitsCmp(self, other, op, evalFn=None):
             raise TypeError("Values of types (%r, %r) are not comparable" % (
                 self._dtype, other._dtype))
 
+        # try to reduce useless cmp
+        res = None
+        if otherIsVal and other._isFullVld():
+            res = bitsCmp_detect_useless_cmp(self, other, op)
+        elif iamVal and self._isFullVld():
+            res = bitsCmp_detect_useless_cmp(other, self, CMP_OP_REVERSE[op])
+        
+        if res is None:
+            pass
+        elif isinstance(res, Value):
+            return res
+        else:
+            assert res == AllOps.EQ, res
+            op = res
+        
         return Operator.withRes(op, [self, other], BOOL)
 
 
