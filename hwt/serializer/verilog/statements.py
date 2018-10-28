@@ -6,7 +6,6 @@ from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.verilog.utils import verilogTypeOfSig, SIGNAL_TYPE
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.whileContainer import WhileContainer
@@ -15,21 +14,24 @@ from hwt.hdl.waitStm import WaitStm
 
 class VerilogSerializer_statements():
     @classmethod
-    def Assignment(cls, a, ctx):
+    def Assignment(cls, a: Assignment, ctx):
         dst = a.dst
         assert isinstance(dst, SignalItem)
 
         def valAsHdl(v):
             return cls.Value(v, ctx)
 
-        dstSignalType = verilogTypeOfSig(dst)
+        # dstSignalType = verilogTypeOfSig(dst)
 
         assert not dst.virtualOnly
-        if dstSignalType is SIGNAL_TYPE.REG:
+        if a._is_completly_event_dependent:
             prefix = ""
             symbol = "<="
         else:
-            prefix = "assign "
+            if a.parentStm is None:
+                prefix = "assign "
+            else:
+                prefix = ""
             symbol = "="
 
         if a.indexes is not None:
