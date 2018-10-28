@@ -1,6 +1,12 @@
-from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.operatorDefs import AllOps, OpDefinition
 from hwt.hdl.types.defs import BIT
 from hwt.serializer.exceptions import UnsupportedEventOpErr
+from hwt.hdl.value import Value
+from hwt.hdl.operator import Operator
+from hwt.serializer.generic.context import SerializerCtx
+from hwt.hdl.types.integer import Integer
+from typing import Union
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class VerilogSerializer_ops():
@@ -43,7 +49,7 @@ class VerilogSerializer_ops():
         AllOps.AND: '%s & %s',
         AllOps.OR: '%s | %s',
         AllOps.XOR: '%s ^ %s',
-        AllOps.CONCAT: "{%s, %s}",
+        #AllOps.CONCAT: "{%s, %s}",
         AllOps.DIV: '%s / %s',
         AllOps.DOWNTO: '%s:%s',
         AllOps.TO: '%s:%s',
@@ -58,29 +64,53 @@ class VerilogSerializer_ops():
         AllOps.ADD: '%s + %s',
         AllOps.POW: '%s ** %s',
     }
+    @classmethod
+    def _operand(cls, operand: Union[RtlSignal, Value], operator: Operator, ctx: SerializerCtx):
+        s = super()._operand(operand, operator.operator, ctx)
+        oper = operator.operator
+        if oper not in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.IntToBits] and \
+                isinstance(operand._dtype, Integer) and\
+                not isinstance(operator.result._dtype, Integer):
+            # has to lock width
+            width = None
+            for o in operator.operands:
+                try:
+                    bl = o._dtype.bit_length
+                except AttributeError:
+                    bl = None
+                if bl is not None:
+                    width = bl()
+                    break
+            assert width is not None, (operator, operand)
+            if s.startswith("("):
+                return "%d'%s" % (width, s)
+            else:
+                return "%d'(%s)" % (width, s)
+
+        return s
 
     @classmethod
-    def Operator(cls, op, ctx):
+    def Operator(cls, op: Operator, ctx):
         ops = op.operands
         o = op.operator
 
         op_str = cls._unaryOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx))
+            return op_str % (cls._operand(ops[0], op, ctx))
 
         op_str = cls._binOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx),
-                             cls._operand(ops[1], o, ctx))
+            return op_str % (cls._operand(ops[0], op, ctx),
+                             cls._operand(ops[1], op, ctx))
 
         if o == AllOps.CALL:
             return "%s(%s)" % (cls.FunctionContainer(ops[0]),
-                               ", ".join(map(lambda op: cls._operand(op, o, ctx), ops[1:])))
+                               ", ".join(map(lambda op: cls._operand(op, op, ctx), ops[1:])))
         elif o == AllOps.INDEX:
             assert len(ops) == 2
             o1 = ops[0]
             return "%s[%s]" % (cls.asHdl(o1, ctx).strip(),
-                               cls._operand(ops[1], o, ctx))
+                               cls._operand(ops[1], op, ctx))
         elif o == AllOps.TERNARY:
             zero, one = BIT.fromPy(0), BIT.fromPy(1)
             if ops[1] == one and ops[2] == zero:
@@ -88,14 +118,24 @@ class VerilogSerializer_ops():
                 return cls.condAsHdl([ops[0]], True, ctx)
             else:
                 return "%s ? %s : %s" % (cls.condAsHdl([ops[0]], True, ctx),
-                                         cls._operand(ops[1], o, ctx),
-                                         cls._operand(ops[2], o, ctx))
+                                         cls._operand(ops[1], op, ctx),
+                                         cls._operand(ops[2], op, ctx))
+        elif o == AllOps.CONCAT:
+            # specify width if required
+            _ops = []
+            for _o in ops:
+                _o_str = cls._operand(_o, op, ctx)
+                if not isinstance(_o, Value) and _o.hidden:
+                    w = _o._dtype.bit_length()
+                    _o_str = "%d'(%s)" % (w, _o_str)
+                _ops.append(_o_str)
+            return "{%s, %s}" % tuple(_ops)
         elif o == AllOps.RISING_EDGE or o == AllOps.FALLING_EDGE:
             raise UnsupportedEventOpErr()
         elif o in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec]:
-            op, = ops
-            op_str = cls._operand(op, o, ctx)
-            if bool(op._dtype.signed):
+            op0, = ops
+            op_str = cls._operand(op0, op, ctx)
+            if bool(op0._dtype.signed):
                 return "$unsigned(%s)" % op_str
             else:
                 return op_str

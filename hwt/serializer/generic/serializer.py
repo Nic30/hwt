@@ -19,6 +19,8 @@ from hwt.serializer.generic.nameScope import NameScope
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.unit import Unit
 from hwt.doc_markers import internal
+from typing import Union
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 @internal
@@ -248,7 +250,7 @@ class GenericSerializer():
             cases=cases)
 
     @classmethod
-    def _operand(cls, operand: Operator, operator: OpDefinition, ctx: SerializerCtx):
+    def _operand(cls, operand: Union[RtlSignal, Value], operator: OpDefinition, ctx: SerializerCtx):
         s = cls.asHdl(operand, ctx)
         if isinstance(operand, RtlSignalBase):
             try:

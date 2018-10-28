@@ -5,6 +5,9 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.code import If
 from hwt.hdl.assignment import Assignment
 from hwt.doc_markers import internal
+from typing import Union
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.hdl.value import Value
 
 
 @internal
@@ -74,7 +77,7 @@ class VhdlSerializer_ops():
 
     @internal
     @classmethod
-    def _operand(cls, operand, operator: OpDefinition, ctx: SerializerCtx):
+    def _operand(cls, operand: Union[RtlSignal, Value], operator: OpDefinition, ctx: SerializerCtx):
         try:
             isTernaryOp = operand.hidden and operand.drivers[0].operator == AllOps.TERNARY
         except (AttributeError, IndexError):
