@@ -74,6 +74,9 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
                      for i, v in enumerate(rom.defVal.val)]
             statements = [SwitchContainer(index, cases), ]
 
+            for (_, (stm, )) in cases:
+                stm.parentStm = statements[0] 
+
             p = HWProcess(rom.name, statements, {index, },
                           {index, }, {romValSig, })
             processes.append(p)

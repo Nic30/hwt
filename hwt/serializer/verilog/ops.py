@@ -49,7 +49,7 @@ class VerilogSerializer_ops():
         AllOps.AND: '%s & %s',
         AllOps.OR: '%s | %s',
         AllOps.XOR: '%s ^ %s',
-        #AllOps.CONCAT: "{%s, %s}",
+        AllOps.CONCAT: "{%s, %s}",
         AllOps.DIV: '%s / %s',
         AllOps.DOWNTO: '%s:%s',
         AllOps.TO: '%s:%s',
@@ -64,11 +64,12 @@ class VerilogSerializer_ops():
         AllOps.ADD: '%s + %s',
         AllOps.POW: '%s ** %s',
     }
+    
     @classmethod
     def _operand(cls, operand: Union[RtlSignal, Value], operator: Operator, ctx: SerializerCtx):
         s = super()._operand(operand, operator.operator, ctx)
         oper = operator.operator
-        if oper not in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.IntToBits] and \
+        if oper not in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.IntToBits, AllOps.BitsAsSigned] and \
                 oper is not AllOps.INDEX and\
                 isinstance(operand._dtype, Integer) and\
                 operator.result is not None and\
@@ -122,16 +123,6 @@ class VerilogSerializer_ops():
                 return "%s ? %s : %s" % (cls.condAsHdl([ops[0]], True, ctx),
                                          cls._operand(ops[1], op, ctx),
                                          cls._operand(ops[2], op, ctx))
-        elif o == AllOps.CONCAT:
-            # specify width if required
-            _ops = []
-            for _o in ops:
-                _o_str = cls._operand(_o, op, ctx)
-                if not isinstance(_o, Value) and _o.hidden:
-                    w = _o._dtype.bit_length()
-                    _o_str = "%d'(%s)" % (w, _o_str)
-                _ops.append(_o_str)
-            return "{%s, %s}" % tuple(_ops)
         elif o == AllOps.RISING_EDGE or o == AllOps.FALLING_EDGE:
             raise UnsupportedEventOpErr()
         elif o in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec]:
