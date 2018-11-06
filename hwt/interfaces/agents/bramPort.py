@@ -3,6 +3,7 @@ from collections import deque
 from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.simulator.shortcuts import oscilate
+from hwt.simulator.triggers import ReadOnly
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):
@@ -48,10 +49,9 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             raise NotImplementedError(rw)
 
         intf = self.intf
-        w = sim.write
-        w(rw, intf.we)
-        w(addr, intf.addr)
-        w(wdata, intf.din)
+        intf.we.write(rw)
+        intf.addr.write(addr)
+        intf.din.write(wdata)
 
     def onReadReq(self, sim, addr):
         """
@@ -68,18 +68,18 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     def monitor(self, sim):
         intf = self.intf
 
-        yield sim.waitOnCombUpdate()
+        yield ReadOnly()
         # now we are after clk edge
         if self.notReset(sim):
-            en = sim.read(intf.en)
+            en = intf.en.read()
             assert en.vldMask
             if en.val:
-                we = sim.read(intf.we)
+                we = intf.we.read()
                 assert we.vldMask
 
-                addr = sim.read(intf.addr)
+                addr = intf.addr.read()
                 if we.val:
-                    data = sim.read(intf.din)
+                    data = intf.din.read()
                     self.onWriteReq(sim, addr, data)
                 else:
                     self.onReadReq(sim, addr)
@@ -88,42 +88,40 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             req = self.requests.popleft()
             t = req[0]
             addr = req[1]
-            assert addr._isFullVld(), sim.now
             if t == READ:
-                sim.write(self.mem[addr.val], intf.dout)
+                intf.dout.write(self.mem[addr.val])
             else:
                 assert t == WRITE
-                sim.write(None, intf.dout)
+                intf.dout.write(0)
                 self.mem[addr.val] = req[2]
 
     def driver(self, sim):
         intf = self.intf
-        w = sim.write
         if self.requireInit:
-            w(0, intf.en)
-            w(0, intf.we)
+            intf.en.w(0)
+            intf.we.w(0)
             self.requireInit = False
 
-#        yield s.wait(2000)
+#        yield Timer(2000)
         readPending = self.readPending
         if self.requests and self.notReset(sim):
             req = self.requests.popleft()
             if req is NOP:
-                w(0, intf.en)
-                w(0, intf.we)
+                intf.en.write(0)
+                intf.we.write(0)
                 self.readPending = False
             else:
                 self.doReq(sim, req)
-                w(1, intf.en)
+                intf.en.write(1)
         else:
-            w(0, intf.en)
-            w(0, intf.we)
+            intf.en.write(0)
+            intf.we.write(0)
             self.readPending = False
 
         if readPending:
-            yield sim.waitOnCombUpdate()
+            yield ReadOnly()
             # now we are after clk edge
-            d = sim.read(intf.dout)
+            d = intf.dout.read()
             self.readed.append(d)
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, on %r read_data: %d\n" % (

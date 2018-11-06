@@ -102,7 +102,6 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls):
     obj = synthesisedUnitOrIntf
     subInterfaces = obj._interfaces
 
-
     if subInterfaces:
         for intf in subInterfaces:
             # proxies are destroyed on original interfaces and only proxies on
@@ -166,8 +165,6 @@ class CallbackLoop(object):
         :ivra fn: function/generator which is callback which should be executed
         :ivar isGenerator: flag if callback function is generator
             or normal function
-        :ivar _callbackIndex: index of callback in write callbacks on sig,
-            if is None callback was not registered yet
         :ivar shouldBeEnabledFn: function() -> bool, which returns True if this
             callback loop should be enabled
         """
@@ -176,6 +173,7 @@ class CallbackLoop(object):
         self.isGenerator = inspect.isgeneratorfunction(fn)
         self.shouldBeEnabledFn = shouldBeEnabledFn
         self._callbackIndex = None
+        self.__enable = True
 
         try:
             # if sig is interface we need internal signal
@@ -184,17 +182,10 @@ class CallbackLoop(object):
             self.sig = sig
 
     def setEnable(self, en, sim):
-        if self._callbackIndex is None:
-            return
-
-        if en:
-            c = self.onWriteCallback
-        else:
-            c = None
-        self.sig._writeCallbacks[self._callbackIndex] = c
+        self.__enable = en
 
     def onWriteCallback(self, sim):
-        if self.isGenerator:
+        if self.__enable and self.isGenerator:
             yield from self.fn(sim)
         else:
             self.fn(sim)
@@ -213,7 +204,7 @@ class CallbackLoop(object):
 class OnRisingCallbackLoop(CallbackLoop):
 
     def onWriteCallback(self, sim):
-        if bool(sim.read(self.sig)._onRisingEdge__val(sim.now)):
+        if self.__enable and self.sig._onRisingEdge():
             if self.isGenerator:
                 yield from self.fn(sim)
             else:
@@ -223,7 +214,7 @@ class OnRisingCallbackLoop(CallbackLoop):
 class OnFallingCallbackLoop(CallbackLoop):
 
     def onWriteCallback(self, sim):
-        if bool(sim.read(self.sig)._onFallingEdge__val(sim.now)):
+        if self.__enable and self.sig._onFallingEdge():
             if self.isGenerator:
                 yield from self.fn(sim)
             else:
