@@ -1,13 +1,10 @@
-import importlib
 import inspect
 import os
 import sys
-from types import ModuleType
 from typing import Optional
 
 from hwt.doc_markers import internal
 from hwt.hdl.constants import Time
-from hwt.serializer.simModel.serializer import SimModelSerializer
 from hwt.simulator.agentConnector import autoAddAgents
 from hwt.simulator.hdlSimulator import HdlSimulator
 from hwt.simulator.simModel import SimModel
@@ -16,9 +13,10 @@ from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
+from hwt.serializer.verilog.serializer import VerilogSerializer
 
 
-def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
+def simPrepare(unit: Unit, simulatorCls: Optional=None,
                targetPlatform=DummyPlatform(),
                dumpModelIn: str=None, onAfterToRtl=None):
     """
@@ -26,8 +24,8 @@ def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
     and decorate it with agents
 
     :param unit: interface level unit which you wont prepare for simulation
-    :param modelCls: class of rtl simulation model to run simulation on,
-        if is None rtl sim model will be generated from unit
+    :param simulatorCls: class of rtl simulation model to run simulation on,
+        if is None rtl sim model will be generated for unit
     :param targetPlatform: target platform for this synthes
     :param dumpModelIn: folder to where put sim model files
         (if is None sim model will be constructed only in memory)
@@ -39,7 +37,7 @@ def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
         simulation processes of agents
         )
     """
-    if modelCls is None:
+    if simulatorCls is None:
         modelCls = toSimModel(
             unit, targetPlatform=targetPlatform, dumpModelIn=dumpModelIn)
     else:
@@ -55,7 +53,7 @@ def simPrepare(unit: Unit, modelCls: Optional[SimModel]=None,
     return unit, model, procs
 
 
-def toSimModel(unit, targetPlatform=DummyPlatform(), dumpModelIn=None):
+def toVerilatorSimModel(unit, tmp_folder, targetPlatform=DummyPlatform()):
     """
     Create a simulation model for unit
 
@@ -66,24 +64,9 @@ def toSimModel(unit, targetPlatform=DummyPlatform(), dumpModelIn=None):
     """
     sim_code = toRtl(unit,
                      targetPlatform=targetPlatform,
-                     saveTo=dumpModelIn,
-                     serializer=SimModelSerializer)
-    if dumpModelIn is not None:
-        d = os.path.join(os.getcwd(), dumpModelIn)
-        dInPath = d in sys.path
-        if not dInPath:
-            sys.path.insert(0, d)
-        if unit._name in sys.modules:
-            del sys.modules[unit._name]
-        simModule = importlib.import_module(unit._name)
+                     saveTo=tmp_folder,
+                     serializer=VerilogSerializer)
 
-        if not dInPath:
-            sys.path.remove(d)
-    else:
-        simModule = ModuleType('simModule')
-        # python supports only ~100 opened brackets
-        # it exceded it throws MemoryError: s_push: parser stack overflow
-        exec(sim_code, simModule.__dict__)
 
     return simModule.__dict__[unit._name]
 
