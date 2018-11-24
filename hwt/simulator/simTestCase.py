@@ -8,12 +8,11 @@ from hwt.doc_markers import internal
 from hwt.hdl.constants import Time
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.value import Value
-from hwt.simulator.agentConnector import valToInt
-from hwt.simulator.configVhdlTestbench import HdlSimConfigVhdlTestbench
+from hwt.simulator.agentConnector import valToInt, autoAddAgents
 from hwt.simulator.hdlSimulator import HdlSimulator
-from hwt.simulator.shortcuts import simPrepare
+from hwt.simulator.shortcuts import toVerilatorSimModel, \
+    reconnectUnitSignalsToModel
 from hwt.simulator.simSignal import SimSignal
-from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 
 
@@ -48,6 +47,7 @@ class SimTestCase(unittest.TestCase):
         runSim (you can use prepareUnit method)
     """
     _defaultSeed = 317
+    _thread_pool = None
 
     def getTestName(self):
         className, testName = self.id().split(".")[-2:]
@@ -62,49 +62,14 @@ class SimTestCase(unittest.TestCase):
         d = os.path.dirname(outputFileName)
         if d:
             os.makedirs(d, exist_ok=True)
-        with open(outputFileName, 'w') as outputFile:
-            sim = HdlSimulator()
 
-            if config is None:
-                # configure simulator to log in vcd
-                config = VcdHdlSimConfig(outputFile)
-            sim.config = config
+        with open(outputFileName, 'w') as outputFile:
+            sim = HdlSimulator(self.rtl_simulator)
 
             # run simulation, stimul processes are register after initial
             # initialization
-            sim.simUnit(self.model, until=until, extraProcesses=self.procs)
+            sim.run(until=until, extraProcesses=self.procs)
             return sim
-
-    @internal
-    def __serializeTestbenchDump(self, until: float, file):
-        sim = HdlSimulator()
-
-        # configure simulator to log in vcd
-        sim.config = HdlSimConfigVhdlTestbench(self.u)
-
-        # run simulation, stimul processes are register after initial
-        # initialization
-        sim.simUnit(self.model, until=until, extraProcesses=self.procs)
-
-        sim.config.dump(file)
-
-        return sim
-
-    def dumpHdlTestbench(self, time, file=None):
-        if file is not None:
-            outputFileName = file
-        else:
-            outputFileName = "tmp/" + self.getTestName() + "_tb.vhd"
-
-        if isinstance(file, str):
-            d = os.path.dirname(outputFileName)
-            if d:
-                os.makedirs(d, exist_ok=True)
-            with open(outputFileName, 'w') as outputFile:
-                return self.__serializeTestbenchDump(time, outputFile)
-
-        else:
-            return self.__serializeTestbenchDump(time, file)
 
     def assertValEqual(self, first, second, msg=None):
         if isinstance(first, SimSignal):
@@ -149,6 +114,7 @@ class SimTestCase(unittest.TestCase):
                     agent.setEnable(en, sim)
                 delay = int(random.random() * 2) * timeQuantum
                 yield sim.wait(delay)
+
         return randomEnProc
 
     def randomize(self, intf):
@@ -158,26 +124,52 @@ class SimTestCase(unittest.TestCase):
         randomEnProc = self.simpleRandomizationProcess(intf._ag)
         self.procs.append(randomEnProc)
 
-    def prepareUnit(self, unit, modelCls=None, dumpModelIn=None,
-                    onAfterToRtl=None, targetPlatform=DummyPlatform()):
+    def prepareUnit(self, unit, build_dir:str=None, unique_name:str=None,
+                    onAfterToRtl=None, target_platform=DummyPlatform()):
         """
         Create simulation model and connect it with interfaces of original unit
-        and decorate it with agents and collect all simulation processes
-
+        and decorate it with agents
+    
         :param unit: interface level unit which you wont prepare for simulation
-        :param modelCls: class of rtl simulation model to run simulation on,
-            if is None rtl sim model will be generated from unit
-        :param dumpModelIn: folder to where put sim model files (if is None
-            sim model will be constructed only in memory)
-        :param onAfterToRtl: callback fn(unit) which will be called unit after
-            it will be synthesised to rtl
+        :param target_platform: target platform for this synthesis
+        :param build_dir: folder to where to put sim model files,
+            if None temporary folder is used and then deleted
+            (or simulator will be constructed in memory if possible)
+        :param unique_name: name which is used as name of the module for simulation
+            (if is None it is automatically generated)
+        :param onAfterToRtl: callback fn(unit, modelCls) which will be called
+            after unit will be synthesised to RTL
+            and before Unit instance to simulator connection
+    
+        :return: tuple (fully loaded unit with connected simulator,
+            connected simulator,
+            simulation processes
+            )
         """
-        self.u, self.model, self.procs = simPrepare(
+        if unique_name  is None:
+            unique_name = "%s_%s" % (unit.__class__.__name__, abs(hash(unit)))
+
+        if build_dir is None:
+            build_dir = "tmp/%s" % unique_name
+        
+        simulatorCls = toVerilatorSimModel(
             unit,
-            modelCls=modelCls,
-            targetPlatform=targetPlatform,
-            dumpModelIn=dumpModelIn,
-            onAfterToRtl=onAfterToRtl)
+            unique_name=unique_name,
+            build_dir=build_dir,
+            thread_pool=self._thread_pool,
+            target_platform=target_platform)
+
+        simInstance = simulatorCls()
+        if onAfterToRtl:
+            onAfterToRtl(unit, simInstance)
+    
+        reconnectUnitSignalsToModel(unit, simInstance)
+        simulator = simulatorCls()
+        procs = autoAddAgents(unit)
+
+        self.u, self.rtl_simulator, self.procs = unit, simulator, procs
+
+        return unit, simulator, procs
 
     def setUp(self):
         self._rand = Random(self._defaultSeed)

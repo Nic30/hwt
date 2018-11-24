@@ -6,140 +6,101 @@ from typing import Optional
 from hwt.doc_markers import internal
 from hwt.hdl.constants import Time
 from hwt.simulator.agentConnector import autoAddAgents
-from hwt.simulator.hdlSimulator import HdlSimulator
-from hwt.simulator.simModel import SimModel
+from hwt.simulator.hdlSimulator import HdlSimulator, Timer
 from hwt.simulator.simSignal import SimSignal
-from hwt.simulator.vcdHdlSimConfig import VcdHdlSimConfig
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
 from hwt.serializer.verilog.serializer import VerilogSerializer
+from hwt.hdl.types.bits import Bits
+from ipCorePackager.constants import DIRECTION
+from math import ceil
+from multiprocessing.pool import ThreadPool
+from importlib import machinery
+from pycocotb.verilator.simulator import verilatorCompile, \
+    generatePythonModuleWrapper, VERILATOR_INCLUDE_DIR
 
 
-def simPrepare(unit: Unit, simulatorCls: Optional=None,
-               targetPlatform=DummyPlatform(),
-               dumpModelIn: str=None, onAfterToRtl=None):
-    """
-    Create simulation model and connect it with interfaces of original unit
-    and decorate it with agents
-
-    :param unit: interface level unit which you wont prepare for simulation
-    :param simulatorCls: class of rtl simulation model to run simulation on,
-        if is None rtl sim model will be generated for unit
-    :param targetPlatform: target platform for this synthes
-    :param dumpModelIn: folder to where put sim model files
-        (if is None sim model will be constructed only in memory)
-    :param onAfterToRtl: callback fn(unit, modelCls) which will be called
-        after unit will be synthesised to rtl
-
-    :return: tuple (fully loaded unit with connected sim model,
-        connected simulation model,
-        simulation processes of agents
-        )
-    """
-    if simulatorCls is None:
-        modelCls = toSimModel(
-            unit, targetPlatform=targetPlatform, dumpModelIn=dumpModelIn)
-    else:
-        # to instantiate hierarchy of unit
-        toSimModel(unit)
-
-    if onAfterToRtl:
-        onAfterToRtl(unit, modelCls)
-
-    reconnectUnitSignalsToModel(unit, modelCls)
-    model = modelCls()
-    procs = autoAddAgents(unit)
-    return unit, model, procs
+def collect_signals(top):
+        accessible_signals = []
+        for p in top._entity.ports:
+            t = p._dtype
+            if isinstance(t, Bits):
+                is_read_only = p.direction == DIRECTION.OUT
+                size = ceil(t.bit_length() / 8)
+                accessible_signals.append(
+                    (p.name, is_read_only, int(bool(t.signed)), size)
+                )
+        return accessible_signals
 
 
-def toVerilatorSimModel(unit, tmp_folder, targetPlatform=DummyPlatform()):
+def toVerilatorSimModel(unit: Unit,
+                        unique_name: str,
+                        build_dir:str,
+                        thread_pool:ThreadPool=None,
+                        target_platform=DummyPlatform()):
     """
     Create a simulation model for unit
 
     :param unit: interface level unit which you wont prepare for simulation
-    :param targetPlatform: target platform for this synthes
-    :param dumpModelIn: folder to where put sim model files
-        (otherwise sim model will be constructed only in memory)
+    :param target_platform: target platform for this synthesis
+    :param build_dir: folder to where to put sim model files,
+        if None temporary folder is used and then deleted
     """
-    sim_code = toRtl(unit,
-                     targetPlatform=targetPlatform,
-                     saveTo=tmp_folder,
-                     serializer=VerilogSerializer)
-
-
-    return simModule.__dict__[unit._name]
+    
+    # with tempdir(suffix=unique_name) as build_dir:
+    sim_verilog = toRtl(unit,
+                        targetPlatform=target_platform,
+                        saveTo=build_dir,
+                        serializer=VerilogSerializer)
+    accessible_signals = collect_signals(unit)
+    
+    verilatorCompile(sim_verilog, build_dir)
+    sim_so = generatePythonModuleWrapper(unit._name, unique_name,
+        build_dir, VERILATOR_INCLUDE_DIR, accessible_signals, thread_pool)
+    
+    # load compiled library to python
+    importer = machinery.FileFinder(os.path.dirname(os.path.abspath(sim_so)),
+                                    (machinery.ExtensionFileLoader,
+                                     machinery.EXTENSION_SUFFIXES))
+    sim_module = importer.find_module(unique_name).load_module(unique_name)
+    sim_cls = getattr(sim_module, unique_name)
+    
+    return sim_cls
 
 
 @internal
-def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, modelCls):
+def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, rtl_simulator):
     """
     Reconnect model signals to unit to run simulation with simulation model
     but use original unit interfaces for communication
 
     :param synthesisedUnitOrIntf: interface where should be signals
         replaced from signals from modelCls
-    :param modelCls: simulation model form where signals
+    :param rtl_simulator: RTL simulator form where signals
         for synthesisedUnitOrIntf should be taken
     """
     obj = synthesisedUnitOrIntf
-    subInterfaces = obj._interfaces
 
-    if subInterfaces:
-        for intf in subInterfaces:
-            # proxies are destroyed on original interfaces and only proxies on
-            # array items will remain
-            reconnectUnitSignalsToModel(intf, modelCls)
-    else:
-        # reconnect signal from model
-        s = synthesisedUnitOrIntf
-        s._sigInside = getattr(modelCls, s._sigInside.name)
-
-
-def simUnitVcd(simModel, stimulFunctions, outputFile=sys.stdout,
-               until=100 * Time.ns):
-    """
-    Syntax sugar
-    If outputFile is string try to open it as file
-
-    :return: hdl simulator object
-    """
-    assert isinstance(simModel, SimModel), \
-        "Class of SimModel is required (got %r)" % (simModel)
-    if isinstance(outputFile, str):
-        d = os.path.dirname(outputFile)
-        if d:
-            os.makedirs(d, exist_ok=True)
-        with open(outputFile, 'w') as f:
-            return _simUnitVcd(simModel, stimulFunctions,
-                               f, until)
-    else:
-        return _simUnitVcd(simModel, stimulFunctions,
-                           outputFile, until)
-
-
-@internal
-def _simUnitVcd(simModel, stimulFunctions, outputFile, until):
-    """
-    :param unit: interface level unit to simulate
-    :param stimulFunctions: iterable of function(env)
-        (simpy environment) which are driving the simulation
-    :param outputFile: file where vcd will be dumped
-    :param time: endtime of simulation, time units are defined in HdlSimulator
-    :return: hdl simulator object
-    """
-    sim = HdlSimulator()
-
-    # configure simulator to log in vcd
-    sim.config = VcdHdlSimConfig(outputFile)
-
-    # run simulation, stimul processes are register after initial
-    # initialization
-    sim.simUnit(simModel, until=until, extraProcesses=stimulFunctions)
-    return sim
+    for intf in obj._interfaces:
+        # proxies are destroyed on original interfaces and only proxies on
+        # array items will remain
+        if intf._interfaces:
+            reconnectUnitSignalsToModel(intf, rtl_simulator)
+        else:
+            # reconnect signal from model
+            name = intf._sigInside.name
+            s = getattr(rtl_simulator, name)
+            s._dtype = intf._dtype
+            s._name = intf._name
+            s.name = name
+            intf.read = s.read
+            intf.write = s.write
+            intf._sigInside = s
 
 
 class CallbackLoop(object):
+
     def __init__(self, sig: SimSignal, fn, shouldBeEnabledFn):
         """
         :param sig: signal on which write callback should be used
@@ -209,15 +170,16 @@ def oscilate(sig, period=10 * Time.ns, initWait=0):
     Oscillative simulation driver for your signal
     (usually used as clk generator)
     """
+
     def oscillateStimul(s):
         s.write(False, sig)
         halfPeriod = period / 2
-        yield s.wait(initWait)
+        yield Timer(initWait)
 
         while True:
             yield s.wait(halfPeriod)
             s.write(True, sig)
-            yield s.wait(halfPeriod)
+            yield Timer(halfPeriod)
             s.write(False, sig)
 
     return oscillateStimul

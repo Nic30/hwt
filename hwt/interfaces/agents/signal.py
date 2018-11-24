@@ -3,6 +3,7 @@ from collections import deque
 from hwt.hdl.constants import Time
 from hwt.simulator.agentBase import AgentBase, SyncAgentBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.simulator.hdlSimulator import Timer
 
 
 # 100 MHz
@@ -59,16 +60,16 @@ class SignalAgent(SyncAgentBase):
         yield
 
     def doRead(self, s):
-        return s.read(self.intf)
+        return self.intf.read()
 
     def doWrite(self, s, data):
-        s.write(data, self.intf)
+        self.intf.write(data)
 
     def driver(self, sim):
         if self.clk is None:
             if self.initPending:
                 if self.initDelay:
-                    yield sim.wait(self.initDelay)
+                    yield Timer(self.initDelay)
                 self.initPending = False
             # if clock is specified this function is periodically called every
             # clk tick
@@ -76,7 +77,7 @@ class SignalAgent(SyncAgentBase):
                 if self._enabled and self.data and self.notReset(sim):
                     d = self.data.popleft()
                     self.doWrite(sim, d)
-                yield sim.wait(self.delay)
+                yield Timer(self.delay)
         else:
             # if clock is specified this function is periodically called every
             # clk tick, when agent is enabled
@@ -87,7 +88,7 @@ class SignalAgent(SyncAgentBase):
     def monitor(self, sim):
         if self.clk is None:
             if self.initPending and self.initDelay:
-                yield sim.wait(self.initDelay)
+                yield Timer(self.initDelay)
                 self.initPending = False
             # if there is no clk, we have to manage periodic call by our selfs
             while True:
@@ -95,7 +96,7 @@ class SignalAgent(SyncAgentBase):
                     yield sim.waitOnCombUpdate()
                     d = self.doRead(sim)
                     self.data.append(d)
-                    yield sim.wait(self.delay)
+                    yield Timer(self.delay)
         else:
             # if clock is specified this function is periodically called every
             # clk tick, when agent is enabled
