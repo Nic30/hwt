@@ -5,7 +5,6 @@ from hwt.simulator.agentBase import AgentBase, SyncAgentBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.simulator.hdlSimulator import Timer
 
-
 # 100 MHz
 DEFAULT_CLOCK = 10 * Time.ns
 
@@ -90,7 +89,7 @@ class SignalAgent(SyncAgentBase):
             if self.initPending and self.initDelay:
                 yield Timer(self.initDelay)
                 self.initPending = False
-            # if there is no clk, we have to manage periodic call by our selfs
+            # if there is no clk, we have to manage periodic call by our self
             while True:
                 if self._enabled and self.notReset(sim):
                     yield sim.waitOnCombUpdate()
