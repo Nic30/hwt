@@ -358,6 +358,7 @@ class HdlSimulator():
             while True:
                 nextTime, priority, process = next_event()
                 self.now = nextTime
+                self.rtl_simulator.time = nextTime
                 self.rtl_simulator.eval()
                 # process is Python generator or Event
                 if isinstance(process, Event):
