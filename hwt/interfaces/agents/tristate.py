@@ -1,10 +1,13 @@
-from hwt.simulator.agentBase import AgentWitReset
-from hwt.interfaces.agents.signal import DEFAULT_CLOCK
-from hwt.hdl.constants import NOP
 from collections import deque
+
+from hwt.hdl.constants import NOP
+from hwt.interfaces.agents.signal import DEFAULT_CLOCK
+from hwt.simulator.agentBase import AgentWitReset
+from hwt.simulator.hdlSimulator import Timer
 
 
 def toGenerator(fn):
+
     def asGen(sim):
         fn(sim)
         return
@@ -14,6 +17,7 @@ def toGenerator(fn):
 
 
 class TristateAgent(AgentWitReset):
+
     def __init__(self, intf, allowNoReset=True):
         super(TristateAgent, self).__init__(intf, allowNoReset=allowNoReset)
         self.data = deque()
@@ -25,23 +29,31 @@ class TristateAgent(AgentWitReset):
     def monitor(self, sim):
         intf = self.intf
         # read in pre-clock-edge
-        t = sim.read(intf.t)
-        o = sim.read(intf.o)
+        t = intf.t.read()
+        o = intf.o.read()
 
         if self.pullMode is not None and sim.now > 0:
-            assert t.vldMask, (
+            try:
+                t = int(t)
+            except ValueError:
+                raise AssertionError(
                 sim.now, intf, "This mode, this value => ioblock would burn")
-            assert o.vldMask, (
-                sim.now, intf, "This mode, this value => ioblock would burn")
-            assert self.pullMode != o.val, (
+            try:
+                o = int(o)
+            except ValueError:
+                raise AssertionError(
                 sim.now, intf, "This mode, this value => ioblock would burn")
 
-        if t.val:
+            if self.pullMode != o:
+                raise AssertionError(
+                sim.now, intf, "This mode, this value => ioblock would burn")
+
+        if t:
             v = o
         else:
             v = self.pullMode
 
-        sim.write(v, intf.i)
+        intf.i.write(v)
         if self.collectData and sim.now > 0 and self.notReset(sim):
             self.data.append(v)
 
@@ -55,18 +67,17 @@ class TristateAgent(AgentWitReset):
 
     def _write(self, val, sim):
         if val is NOP:
-            # controll now has slave
+            # control now has slave
             t = 0
             o = self.pullMode
         else:
-            # controll now has this agent
+            # control now has this agent
             t = 1
             o = val
 
         intf = self.intf
-        w = sim.write
-        w(t, intf.t)
-        w(o, intf.o)
+        intf.t.write(t)
+        intf.o.write(o)
 
     def onTWriteCallback__init(self, sim):
         """
@@ -87,13 +98,15 @@ class TristateAgent(AgentWitReset):
                 if b == self.START:
                     return
                 self.sda._write(b, sim)
+
             if self.selfSynchronization:
-                yield sim.wait(DEFAULT_CLOCK)
+                yield Timer(DEFAULT_CLOCK)
             else:
                 break
 
 
 class TristateClkAgent(TristateAgent):
+
     def __init__(self, intf, onRisingCallback=None, onFallingCallback=None):
         super(TristateClkAgent, self).__init__(intf)
         self.onRisingCallback = onRisingCallback
@@ -106,8 +119,8 @@ class TristateClkAgent(TristateAgent):
         low = not self.pullMode
         halfPeriod = self.period / 2
 
-        sim.write(low, o)
-        sim.write(1, self.intf.t)
+        o.write(low)
+        self.intf.t.write(1)
         if high:
             onHigh = self.onRisingCallback
             onLow = self.onFallingCallback
@@ -116,14 +129,14 @@ class TristateClkAgent(TristateAgent):
             onLow = self.onRisingCallback
 
         while True:
-            yield sim.wait(halfPeriod)
-            sim.write(high, o)
+            yield Timer(halfPeriod)
+            o.write(high)
 
             if onHigh:
                 sim.add_process(onHigh(sim))
 
-            yield sim.wait(halfPeriod)
-            sim.write(low, o)
+            yield Timer(halfPeriod)
+            o.write(low)
 
             if onLow:
                 sim.add_process(onLow(sim))
@@ -132,15 +145,22 @@ class TristateClkAgent(TristateAgent):
         intf = self.intf
         yield sim.waitOnCombUpdate()
         # read in pre-clock-edge
-        t = sim.read(intf.t)
-        o = sim.read(intf.o)
+        t = intf.t.read()
+        o = intf.o.read()
 
         if sim.now > 0 and self.pullMode is not None:
-            assert t.vldMask, (
+            try:
+                t = int(t)
+            except ValueError:
+                raise AssertionError(
                 sim.now, intf, "This mode, this value => ioblock would burn")
-            assert o.vldMask, (
+            try:
+                o = int(o)
+            except ValueError:
+                raise AssertionError(
                 sim.now, intf, "This mode, this value => ioblock would burn")
-            assert self.pullMode != o.val, (
+            if self.pullMode != o:
+                raise AssertionError(
                 sim.now, intf, "This mode, this value => ioblock would burn")
 
         if t.val:
@@ -148,8 +168,8 @@ class TristateClkAgent(TristateAgent):
         else:
             v = self.pullMode
 
-        last = sim.read(intf.i)
-        sim.write(v, intf.i)
+        last = intf.i.read()
+        intf.i.write(v)
 
         if self.onRisingCallback and (not last.val or not last.vldMask) and v:
             sim.add_process(self.onRisingCallback(sim))
