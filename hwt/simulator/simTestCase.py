@@ -14,6 +14,7 @@ from hwt.simulator.shortcuts import toVerilatorSimModel, \
     reconnectUnitSignalsToModel
 from hwt.simulator.simSignal import SimSignal
 from hwt.synthesizer.dummyPlatform import DummyPlatform
+from multiprocessing.pool import ThreadPool
 
 
 def allValuesToInts(sequenceOrVal):
@@ -47,7 +48,7 @@ class SimTestCase(unittest.TestCase):
         runSim (you can use prepareUnit method)
     """
     _defaultSeed = 317
-    _thread_pool = None
+    _thread_pool = ThreadPool()
 
     def getTestName(self):
         className, testName = self.id().split(".")[-2:]
