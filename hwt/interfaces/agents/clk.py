@@ -1,6 +1,7 @@
 from hwt.hdl.constants import Time
 from hwt.simulator.agentBase import AgentBase
 from hwt.simulator.shortcuts import CallbackLoop
+from hwt.simulator.hdlSimulator import Timer
 
 
 class OscilatorAgent(AgentBase):
@@ -25,15 +26,15 @@ class OscilatorAgent(AgentBase):
 
     def driver(self, sim):
         sig = self.intf
-        sim.write(0, sig)
+        sig.write(0)
         halfPeriod = self.period / 2
-        yield sim.wait(self.initWait)
+        yield Timer(self.initWait)
 
         while True:
-            yield sim.wait(halfPeriod)
-            sim.write(1, sig)
-            yield sim.wait(halfPeriod)
-            sim.write(0, sig)
+            yield Timer(halfPeriod)
+            sig.write(1)
+            yield Timer(halfPeriod)
+            sig.write(0)
 
     def getMonitors(self):
         self.last = (-1, None)
@@ -43,7 +44,7 @@ class OscilatorAgent(AgentBase):
 
     def monitor(self, sim):
         yield sim.waitOnCombUpdate()
-        v = sim.read(self.intf)
+        v = self.intf.read()
         if not v.vldMask:
             v = None
         else:
