@@ -3,6 +3,7 @@ from collections import deque
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.simulator.shortcuts import OnRisingCallbackLoop
 from hwt.interfaces.agents.signal import DEFAULT_CLOCK
+from hwt.simulator.hdlSimulator import Timer
 
 
 class FifoReaderAgent(SyncAgentBase):
@@ -23,32 +24,32 @@ class FifoReaderAgent(SyncAgentBase):
     def setEnable_asDriver(self, en, sim):
         self._enabled = en
         self.driver.setEnable(en, sim)
-        sim.write(not en, self.intf.wait)
+        self.intf.wait.write(not en)
         self.lastData_invalidate = not en
 
     def setEnable_asMonitor(self, en, sim):
         lastEn = self._enabled
         self._enabled = en
         self.monitor.setEnable(en, sim)
-        sim.write(en, self.intf.en)
+        self.intf.en.write(en)
         self.readPending_invalidate = not en
         if not lastEn:
             self.dataReader.setEnable(en, sim)
 
     def driver_init(self, sim):
-        sim.write(not self._enabled, self.intf.wait)
+        self.intf.wait.write(not self._enabled)
         return
         yield
 
     def monitor_init(self, sim):
-        sim.write(self._enabled, self.intf.en)
+        self.intf.en.write(self._enabled)
         return
         yield
 
     def dataReader(self, sim):
         if self.readPending:
             yield sim.waitOnCombUpdate()
-            d = sim.read(self.intf.data)
+            d = self.intf.data.read()
             self.data.append(d)
 
             if self.readPending_invalidate:
@@ -64,18 +65,17 @@ class FifoReaderAgent(SyncAgentBase):
 
     def monitor(self, sim):
         intf = self.intf
-        r = sim.read
 
         if self.notReset(sim):
             # speculative en set
             yield sim.waitOnCombUpdate()
-            wait = r(intf.wait)
+            wait = intf.wait.read()
             assert wait.vldMask, (sim.now, intf, "wait signal in invalid state")
             rd = not wait.val
-            sim.write(rd, intf.en)
+            intf.en.write(rd)
 
         else:
-            sim.write(0, intf.en)
+            intf.en.write(0)
             rd = False
 
         self.readPending = rd
@@ -92,8 +92,8 @@ class FifoReaderAgent(SyncAgentBase):
         # delay data litle bit to have nicer wave
         # otherwise wirte happens before next clk period
         # and it means in 0 time and we will not be able to see it in wave
-        yield sim.wait(DEFAULT_CLOCK / 10)
-        sim.write(self.lastData, self.intf.data)
+        yield Timer(DEFAULT_CLOCK / 10)
+        self.intf.data.write(self.lastData)
         if self.lastData_invalidate:
             self.lastData = None
 
@@ -103,7 +103,6 @@ class FifoReaderAgent(SyncAgentBase):
         # * set last data (done in separate process)
         # * if en == 1, pop next data for next clk
         intf = self.intf
-        w = sim.write
         rst_n = self.notReset(sim)
         # speculative write
         if rst_n and self.data:
@@ -111,7 +110,7 @@ class FifoReaderAgent(SyncAgentBase):
         else:
             wait = 1
 
-        w(wait, intf.wait)
+        intf.wait.write(wait)
 
         if rst_n:
             yield sim.waitOnCombUpdate()
@@ -119,9 +118,13 @@ class FifoReaderAgent(SyncAgentBase):
             yield sim.waitOnCombUpdate()
             # check if write can be performed and if it possible do real write
 
-            en = sim.read(intf.en)
-            assert en.vldMask, (sim.now, intf, "en signal in invalid state")
-            if en.val:
+            en = intf.en.read()
+            try:
+                en = int(en)
+            except ValueError:
+                raise AssertionError(sim.now, intf, "en signal in invalid state")
+
+            if en:
                 assert self.data, (sim.now, intf, "underflow")
                 self.lastData = self.data.popleft()
 
@@ -136,57 +139,60 @@ class FifoWriterAgent(SyncAgentBase):
         self.data = deque()
 
     def driver_init(self, sim):
-        sim.write(self._enabled, self.intf.en)
+        self.intf.en.write(self._enabled)
         return
         yield
 
     def monitor_init(self, sim):
-        sim.write(not self._enabled, self.intf.wait)
+        self.intf.wait.write(not self._enabled)
         return
         yield
 
     def setEnable_asDriver(self, en, sim):
         SyncAgentBase.setEnable_asDriver(self, en, sim)
-        sim.write(en, self.intf.en)
+        self.intf.en.write(en)
 
     def setEnable_asMonitor(self, en, sim):
         SyncAgentBase.setEnable_asMonitor(self, en, sim)
-        sim.write(not en, self.intf.wait)
+        self.intf.wait.write(not en)
 
     def monitor(self, sim):
         # set wait signal
         # if en == 1 take data
         intf = self.intf
-        sim.write(0, intf.wait)
+        intf.wait.write(0)
 
         yield sim.waitOnCombUpdate()
         # wait for potential update of en
         yield sim.waitOnCombUpdate()
 
-        en = sim.read(intf.en)
-        assert en.vldMask, (sim.now, intf, "en signal in invalid state")
-        if en.val:
-            yield sim.wait(DEFAULT_CLOCK / 10)
-            self.data.append(sim.read(intf.data))
+        en = intf.en.read()
+        try:
+            en = int(en)
+        except ValueError:
+            raise AssertionError(sim.now, intf, "en signal in invalid state")
+
+        if en:
+            yield Timer(DEFAULT_CLOCK / 10)
+            self.data.append(intf.data.read())
 
     def driver(self, sim):
         # if wait == 0 set en=1 and set data
         intf = self.intf
-        w = sim.write
 
         if self.notReset(sim) and self.data:
             yield sim.waitOnCombUpdate()
 
-            wait = sim.read(intf.wait)
+            wait = intf.wait.read()
             assert wait.vldMask, (sim.now, intf, "wait signal in invalid state")
             if not wait.val:
                 d = self.data.popleft()
-                w(d, intf.data)
-                w(1, intf.en)
+                intf.data.write(d)
+                intf.en.write(1)
                 return
 
-        w(None, intf.data)
-        w(0, intf.en)
+        intf.data.write(None)
+        intf.en.write(0)
 
     def getDrivers(self):
         return SyncAgentBase.getDrivers(self) + [self.driver_init]

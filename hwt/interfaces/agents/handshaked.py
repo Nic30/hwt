@@ -34,13 +34,13 @@ class HandshakedAgent(SyncAgentBase):
     def setEnable_asDriver(self, en, sim):
         super(HandshakedAgent, self).setEnable_asDriver(en, sim)
         if not en:
-            self.wrVld(sim.write, 0)
+            self.wrVld(0)
             self._lastVld = 0
 
     def setEnable_asMonitor(self, en, sim):
         super(HandshakedAgent, self).setEnable_asMonitor(en, sim)
         if not en:
-            self.wrRd(sim.write, 0)
+            self.wrRd(0)
             self._lastRd = 0
 
     def getRd(self):
@@ -74,11 +74,10 @@ class HandshakedAgent(SyncAgentBase):
         """
         Collect data from interface
         """
-        r = sim.read
         if self.notReset(sim):
             # update rd signal only if required
             if self._lastRd is not 1:
-                self.wrRd(sim.write, 1)
+                self.wrRd(1)
                 self._lastRd = 1
 
                 # try to run onMonitorReady if there is any
@@ -92,9 +91,13 @@ class HandshakedAgent(SyncAgentBase):
 
             # wait for response of master
             yield sim.waitOnCombUpdate()
-            vld = self.isVld(r)
-            assert vld.vldMask, (sim.now, self.intf,
-                                 "vld signal is in invalid state")
+            vld = self.isVld()
+            try:
+                vld = int(vld)
+            except ValueError:
+                raise AssertionError(
+                    sim.now, self.intf,
+                    "vld signal is in invalid state")
 
             if vld.val:
                 # master responded with positive ack, do read data
@@ -110,21 +113,24 @@ class HandshakedAgent(SyncAgentBase):
         else:
             if self._lastRd is not 0:
                 # can not receive, say it to masters
-                self.wrRd(sim.write, 0)
+                self.wrRd(0)
                 self._lastRd = 0
 
     def doRead(self, sim):
         """extract data from interface"""
-        return sim.read(self.intf.data)
+        return self.intf.data.read()
 
     def doWrite(self, sim, data):
         """write data to interface"""
-        sim.write(data, self.intf.data)
+        self.intf.data.write(data)
 
     def checkIfRdWillBeValid(self, sim):
         yield sim.waitOnCombUpdate()
-        rd = self.isRd(sim.read)
-        assert rd.vldMask, (sim.now, self.intf, "rd signal in invalid state")
+        rd = self.isRd()
+        try:
+            rd = int(rd)
+        except ValueError:
+            raise AssertionError(sim.now, self.intf, "rd signal in invalid state")
 
     def driver(self, sim):
         """
@@ -132,8 +138,6 @@ class HandshakedAgent(SyncAgentBase):
 
         set vld high and wait on rd in high then pass new data
         """
-        r = sim.read
-
         # pop new data if there are not any pending
         if self.actualData is NOP and self.data:
             self.actualData = self.data.popleft()
@@ -151,7 +155,7 @@ class HandshakedAgent(SyncAgentBase):
         en = self.notReset(sim)
         vld = int(en and doSend)
         if self._lastVld is not vld:
-            self.wrVld(sim.write, vld)
+            self.wrVld(vld)
             self._lastVld = vld
 
         if not self._enabled:
@@ -163,13 +167,18 @@ class HandshakedAgent(SyncAgentBase):
         # wait of response of slave
         yield sim.waitOnCombUpdate()
 
-        rd = self.isRd(r)
-        assert rd.vldMask, (sim.now, self.intf,
-                            "rd signal in invalid state")
+        rd = self.isRd()
+        try:
+            rd = int(rd)
+        except ValueError:
+            raise AssertionError(
+                sim.now, self.intf,
+                "rd signal in invalid state")
+
         if not vld:
             return
 
-        if rd.val:
+        if rd:
             # slave did read data, take new one
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, wrote, %d: %r\n" % (

@@ -17,16 +17,16 @@ class RdSyncedAgent(SyncAgentBase):
     def getRd(self, intf):
         return intf.rd
 
-    def isRd(self, readFn):
-        return readFn(self._rd)
+    def isRd(self):
+        return self._rd.read()
 
-    def wrRd(self, writeFn, val):
-        writeFn(val, self._rd)
+    def wrRd(self, val):
+        self._rd.write(val)
 
     def setEnable_asMonitor(self, en, sim):
         super(RdSyncedAgent, self).setEnable_asMonitor(en, sim)
         if not en:
-            self.wrRd(sim.write, 0)
+            self.wrRd(0)
 
     def monitor(self, sim):
         """Collect data from interface"""
@@ -42,15 +42,14 @@ class RdSyncedAgent(SyncAgentBase):
 
     def doRead(self, sim):
         """extract data from interface"""
-        return sim.read(self.intf.data)
+        return self.intf.data.read()
 
     def doWrite(self, sim, data):
         """write data to interface"""
-        sim.write(data, self.intf.data)
+        self.intf.data.write(data)
 
     def driver(self, sim):
         """Push data to interface"""
-        r = sim.read
         if self.actualData is NOP and self.data:
             self.actualData = self.data.popleft()
 
@@ -67,7 +66,7 @@ class RdSyncedAgent(SyncAgentBase):
 
         yield sim.waitOnCombUpdate()
 
-        rd = self.isRd(r)
+        rd = self.isRd()
         if en:
             assert rd.vldMask, (
                 ("%r: ready signal for interface %r is in invalid state,"
