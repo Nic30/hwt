@@ -53,7 +53,7 @@ class SimTestCase(unittest.TestCase):
         className, testName = self.id().split(".")[-2:]
         return "%s_%s" % (className, testName)
 
-    def runSim(self, until: float, name=None, config=None):
+    def runSim(self, until: float, name=None):
         if name is None:
             outputFileName = "tmp/" + self.getTestName() + ".vcd"
         else:
@@ -62,14 +62,15 @@ class SimTestCase(unittest.TestCase):
         d = os.path.dirname(outputFileName)
         if d:
             os.makedirs(d, exist_ok=True)
+        
+        self.rtl_simulator.set_trace_file(outputFileName, -1)
+        
+        sim = HdlSimulator(self.rtl_simulator)
 
-        with open(outputFileName, 'w') as outputFile:
-            sim = HdlSimulator(self.rtl_simulator)
-
-            # run simulation, stimul processes are register after initial
-            # initialization
-            sim.run(until=until, extraProcesses=self.procs)
-            return sim
+        # run simulation, stimul processes are register after initial
+        # initialization
+        sim.run(until=until, extraProcesses=self.procs)
+        return sim
 
     def assertValEqual(self, first, second, msg=None):
         if isinstance(first, SimSignal):
@@ -164,12 +165,11 @@ class SimTestCase(unittest.TestCase):
             onAfterToRtl(unit, simInstance)
     
         reconnectUnitSignalsToModel(unit, simInstance)
-        simulator = simulatorCls()
         procs = autoAddAgents(unit)
 
-        self.u, self.rtl_simulator, self.procs = unit, simulator, procs
+        self.u, self.rtl_simulator, self.procs = unit, simInstance, procs
 
-        return unit, simulator, procs
+        return unit, simInstance, procs
 
     def setUp(self):
         self._rand = Random(self._defaultSeed)
