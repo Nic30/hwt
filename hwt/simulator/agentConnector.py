@@ -48,9 +48,9 @@ def valuesToInts(values):
 
 
 def valToInt(v):
-    if v.vldMask == v._dtype.all_mask():
-        return v.val
-    else:
+    try:
+        return int(v)
+    except ValueError:
         return None
 
 
