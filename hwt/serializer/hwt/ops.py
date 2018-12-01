@@ -102,4 +102,4 @@ class HwtSerializer_ops():
                     cls.HdlType_bits(resT, ctx))
             else:
                 raise NotImplementedError(
-                    "Do not know how to convert %s to simModel" % (o))
+                    "Do not know how to convert %s to HWT" % (o))
