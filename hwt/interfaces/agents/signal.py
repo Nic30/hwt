@@ -1,12 +1,9 @@
 from collections import deque
 
-from hwt.hdl.constants import Time
+from hwt.interfaces.agents.clk import DEFAULT_CLOCK
 from hwt.simulator.agentBase import AgentBase, SyncAgentBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.simulator.hdlSimulator import Timer
-
-# 100 MHz
-DEFAULT_CLOCK = 10 * Time.ns
+from pycocotb.triggers import ReadOnly, WriteOnly, Timer
 
 
 class SignalAgent(SyncAgentBase):
@@ -17,7 +14,7 @@ class SignalAgent(SyncAgentBase):
     :attention: clock synchronization has higher priority
     """
 
-    def __init__(self, intf, delay=DEFAULT_CLOCK):
+    def __init__(self, intf, delay=None):
         AgentBase.__init__(self, intf)
         self.delay = delay
         self.initDelay = 0
@@ -33,12 +30,16 @@ class SignalAgent(SyncAgentBase):
 
         self.initPending = True
 
-        if self.clk is not None:
+        if self.clk is None:
+            if self.delay is None:
+                self.delay = DEFAULT_CLOCK
+            self.driver = self.driverWithTimer
+        else:
             if self.initDelay:
                 raise NotImplementedError("initDelay only without clock")
             c = self.SELECTED_EDGE_CALLBACK
             self.monitor = c(self.clk, self.monitor, self.getEnable)
-            self.driver = c(self.clk, self.driver, self.getEnable)
+            self.driver = c(self.clk, self.driverWithClk, self.getEnable)
 
     def getDrivers(self):
         d = SyncAgentBase.getDrivers(self)
@@ -64,42 +65,47 @@ class SignalAgent(SyncAgentBase):
     def doWrite(self, s, data):
         self.intf.write(data)
 
-    def driver(self, sim):
-        if self.clk is None:
-            if self.initPending:
-                if self.initDelay:
-                    yield Timer(self.initDelay)
-                self.initPending = False
-            # if clock is specified this function is periodically called every
-            # clk tick
-            while True:
-                if self._enabled and self.data and self.notReset(sim):
-                    d = self.data.popleft()
-                    self.doWrite(sim, d)
-                yield Timer(self.delay)
-        else:
-            # if clock is specified this function is periodically called every
-            # clk tick, when agent is enabled
-            if self.data and self.notReset(sim):
+    def driverWithClk(self, sim):
+        # if clock is specified this function is periodically called every
+        # clk tick, when agent is enabled
+        yield ReadOnly()
+        if self.data and self.notReset(sim):
+            yield WriteOnly()
+            d = self.data.popleft()
+            self.doWrite(sim, d)
+
+    def driverWithTimer(self, sim):
+        if self.initPending:
+            if self.initDelay:
+                yield Timer(self.initDelay)
+            self.initPending = False
+        # if clock is specified this function is periodically called every
+        # clk tick
+        while True:
+            yield ReadOnly()
+            if self._enabled and self.data and self.notReset(sim):
+                yield WriteOnly()
                 d = self.data.popleft()
                 self.doWrite(sim, d)
 
-    def monitor(self, sim):
-        if self.clk is None:
-            if self.initPending and self.initDelay:
-                yield Timer(self.initDelay)
-                self.initPending = False
-            # if there is no clk, we have to manage periodic call by our self
-            while True:
-                if self._enabled and self.notReset(sim):
-                    yield sim.waitOnCombUpdate()
-                    d = self.doRead(sim)
-                    self.data.append(d)
-                    yield Timer(self.delay)
-        else:
-            # if clock is specified this function is periodically called every
-            # clk tick, when agent is enabled
-            yield sim.waitOnCombUpdate()
-            if self.notReset(sim):
+            yield Timer(self.delay)
+
+    def monitorWithTimer(self, sim):
+        if self.initPending and self.initDelay:
+            yield Timer(self.initDelay)
+            self.initPending = False
+        # if there is no clk, we have to manage periodic call by our self
+        while True:
+            yield ReadOnly()
+            if self._enabled and self.notReset(sim):
                 d = self.doRead(sim)
                 self.data.append(d)
+                yield Timer(self.delay)
+
+    def monitorWithClk(self, sim):
+        # if clock is specified this function is periodically called every
+        # clk tick, when agent is enabled
+        yield ReadOnly()
+        if self.notReset(sim):
+            d = self.doRead(sim)
+            self.data.append(d)

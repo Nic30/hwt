@@ -4,17 +4,15 @@ from inspect import isgenerator
 import os
 import unittest
 
-from hwt.doc_markers import internal
 from hwt.hdl.constants import Time
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.value import Value
 from hwt.simulator.agentConnector import valToInt, autoAddAgents
-from hwt.simulator.hdlSimulator import HdlSimulator
 from hwt.simulator.shortcuts import toVerilatorSimModel, \
     reconnectUnitSignalsToModel
-from hwt.simulator.simSignal import SimSignal
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from multiprocessing.pool import ThreadPool
+from pycocotb.hdlSimulator import HdlSimulator
 
 
 def allValuesToInts(sequenceOrVal):
@@ -63,9 +61,8 @@ class SimTestCase(unittest.TestCase):
         d = os.path.dirname(outputFileName)
         if d:
             os.makedirs(d, exist_ok=True)
-        
+
         self.rtl_simulator.set_trace_file(outputFileName, -1)
-        
         sim = HdlSimulator(self.rtl_simulator)
 
         # run simulation, stimul processes are register after initial
@@ -74,8 +71,11 @@ class SimTestCase(unittest.TestCase):
         return sim
 
     def assertValEqual(self, first, second, msg=None):
-        if isinstance(first, SimSignal):
-            first = first._val
+        try:
+            first = first.read()
+        except AttributeError:
+            pass
+
         if not isinstance(first, int) and first is not None:
             first = valToInt(first)
 
@@ -125,8 +125,30 @@ class SimTestCase(unittest.TestCase):
         """
         randomEnProc = self.simpleRandomizationProcess(intf._ag)
         self.procs.append(randomEnProc)
+    
+    def restartSim(self):
+        """
+        Set simulator to initial state and connect it to 
+        
+        :return: tuple (fully loaded unit with connected simulator,
+            connected simulator,
+            simulation processes
+            )
+        """
+        simInstance = self.rtl_simulator_cls()
+        unit = self.u
+        if self._onAfterToRtl:
+            self._onAfterToRtl(unit, simInstance)
+    
+        reconnectUnitSignalsToModel(unit, simInstance)
+        procs = autoAddAgents(unit)
 
-    def prepareUnit(self, unit, build_dir:str=None, unique_name:str=None,
+        self.u, self.rtl_simulator, self.procs = unit, simInstance, procs
+
+        return unit, simInstance, procs
+
+    @classmethod
+    def prepareUnit(cls, unit, build_dir:str=None, unique_name:str=None,
                     onAfterToRtl=None, target_platform=DummyPlatform()):
         """
         Create simulation model and connect it with interfaces of original unit
@@ -143,10 +165,7 @@ class SimTestCase(unittest.TestCase):
             after unit will be synthesised to RTL
             and before Unit instance to simulator connection
     
-        :return: tuple (fully loaded unit with connected simulator,
-            connected simulator,
-            simulation processes
-            )
+
         """
         if unique_name  is None:
             unique_name = "%s_%s" % (unit.__class__.__name__, abs(hash(unit)))
@@ -154,23 +173,33 @@ class SimTestCase(unittest.TestCase):
         if build_dir is None:
             build_dir = "tmp/%s" % unique_name
         
-        simulatorCls = toVerilatorSimModel(
+        cls.rtl_simulator_cls = toVerilatorSimModel(
             unit,
             unique_name=unique_name,
             build_dir=build_dir,
-            thread_pool=self._thread_pool,
+            thread_pool=cls._thread_pool,
             target_platform=target_platform)
-
-        simInstance = simulatorCls()
-        if onAfterToRtl:
-            onAfterToRtl(unit, simInstance)
-    
-        reconnectUnitSignalsToModel(unit, simInstance)
-        procs = autoAddAgents(unit)
-
-        self.u, self.rtl_simulator, self.procs = unit, simInstance, procs
-
-        return unit, simInstance, procs
+        cls._onAfterToRtl = onAfterToRtl
+        cls.u = unit
 
     def setUp(self):
         self._rand = Random(self._defaultSeed)
+
+
+class SimpleSimTestCase(SimTestCase):
+    """
+    SimTestCase for simple test
+    Set UNIT_CLS in your class and in the test method there will be prepared simulation.
+    """
+    UNIT_CLS = None
+
+    @classmethod
+    def setUpClass(cls):
+        super(SimpleSimTestCase, cls).setUpClass()
+        u = cls.UNIT_CLS()
+        cls.prepareUnit(u)
+        
+    def setUp(self):
+        super(SimpleSimTestCase, self).setUp()
+        self.restartSim()
+

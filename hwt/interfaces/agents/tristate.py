@@ -3,7 +3,7 @@ from collections import deque
 from hwt.hdl.constants import NOP
 from hwt.interfaces.agents.signal import DEFAULT_CLOCK
 from hwt.simulator.agentBase import AgentWitReset
-from hwt.simulator.hdlSimulator import Timer
+from pycocotb.triggers import Timer
 
 
 def toGenerator(fn):

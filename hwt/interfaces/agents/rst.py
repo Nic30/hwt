@@ -1,6 +1,6 @@
 from hwt.hdl.constants import Time
 from hwt.simulator.agentBase import AgentBase
-from hwt.simulator.triggers import Timer
+from pycocotb.triggers import Timer
 
 
 def pullDownAfter(sig, initDelay=6 * Time.ns):

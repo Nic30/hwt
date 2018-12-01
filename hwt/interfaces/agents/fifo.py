@@ -1,9 +1,9 @@
 from collections import deque
 
 from hwt.simulator.agentBase import SyncAgentBase
-from hwt.simulator.shortcuts import OnRisingCallbackLoop
 from hwt.interfaces.agents.signal import DEFAULT_CLOCK
-from hwt.simulator.hdlSimulator import Timer
+from pycocotb.process_utils import OnRisingCallbackLoop
+from pycocotb.triggers import Timer
 
 
 class FifoReaderAgent(SyncAgentBase):

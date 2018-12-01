@@ -2,8 +2,8 @@ from collections import deque
 
 from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
-from hwt.simulator.shortcuts import oscilate
-from hwt.simulator.triggers import ReadOnly
+from pycocotb.triggers import ReadOnly
+from pycocotb.process_utils import oscilate
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):

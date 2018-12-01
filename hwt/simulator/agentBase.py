@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
-from hwt.simulator.shortcuts import OnRisingCallbackLoop
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from pycocotb.process_utils import OnRisingCallbackLoop
 
 
 class AgentBase():
@@ -79,10 +79,11 @@ class AgentWitReset(AgentBase):
     @internal
     def _notReset_dummy(self, sim):
         return True
-    
+
     @internal
     def _notReset(self, sim):
-        rstVal = sim.read(self.rst).val
+        rstVal = self.rst.read()
+        rstVal = int(rstVal)
         return rstVal == self.rstOffIn
 
 
@@ -100,7 +101,7 @@ class SyncAgentBase(AgentWitReset):
         super().__init__(intf, allowNoReset=allowNoReset)
 
         # resolve clk and rstn
-        self.clk = self.intf._getAssociatedClk()._sigInside
+        self.clk = self.intf._getAssociatedClk()
 
         # run monitor, driver only on rising edge of clk
         c = self.SELECTED_EDGE_CALLBACK

@@ -1,7 +1,9 @@
-from hwt.hdl.constants import Time
+from hwt.hdl.constants import CLK_PERIOD
 from hwt.simulator.agentBase import AgentBase
-from hwt.simulator.shortcuts import CallbackLoop
-from hwt.simulator.hdlSimulator import Timer
+from pycocotb.process_utils import CallbackLoop
+from pycocotb.triggers import WriteOnly, Timer, ReadOnly
+
+DEFAULT_CLOCK = CLK_PERIOD
 
 
 class OscilatorAgent(AgentBase):
@@ -17,7 +19,7 @@ class OscilatorAgent(AgentBase):
     :ivar initWait: time to wait before starting oscillation
     """
 
-    def __init__(self, intf, period=10 * Time.ns):
+    def __init__(self, intf, period=DEFAULT_CLOCK):
         super(OscilatorAgent, self).__init__(intf)
         self.period = period
         self.initWait = 0
@@ -26,14 +28,20 @@ class OscilatorAgent(AgentBase):
 
     def driver(self, sim):
         sig = self.intf
+        wRd = WriteOnly()
+
         sig.write(0)
         halfPeriod = self.period / 2
         yield Timer(self.initWait)
 
         while True:
+
             yield Timer(halfPeriod)
+            yield wRd
             sig.write(1)
+
             yield Timer(halfPeriod)
+            yield wRd
             sig.write(0)
 
     def getMonitors(self):
@@ -43,12 +51,13 @@ class OscilatorAgent(AgentBase):
         return [self.monitor]
 
     def monitor(self, sim):
-        yield sim.waitOnCombUpdate()
+        rdOnly = ReadOnly()
+        yield rdOnly
         v = self.intf.read()
-        if not v.vldMask:
+        try:
+            v = int(v)
+        except ValueError:
             v = None
-        else:
-            v = v.val
 
         now = sim.now
         last = self.last
