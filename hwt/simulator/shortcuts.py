@@ -1,13 +1,9 @@
 import inspect
 import os
-import sys
-from typing import Optional
 
 from hwt.doc_markers import internal
 from hwt.hdl.constants import Time
-from hwt.simulator.agentConnector import autoAddAgents
-from hwt.simulator.hdlSimulator import HdlSimulator, Timer
-from hwt.simulator.simSignal import SimSignal
+from hwt.simulator.hdlSimulator import Timer
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
@@ -101,7 +97,7 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, rtl_simulator):
 
 class CallbackLoop(object):
 
-    def __init__(self, sig: SimSignal, fn, shouldBeEnabledFn):
+    def __init__(self, sig: "SimSignal", fn, shouldBeEnabledFn):
         """
         :param sig: signal on which write callback should be used
         :attention: if condFn is None callback function is always executed

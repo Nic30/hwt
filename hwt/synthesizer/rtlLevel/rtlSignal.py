@@ -7,7 +7,6 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import Value
 from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.uniqList import UniqList
-from hwt.simulator.exceptions import SimException
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
     NoDriverErr
@@ -97,7 +96,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                     self._val = self.defVal.clone()
 
         if not isinstance(self._val, Value):
-            raise SimException(
+            raise ValueError(
                 "Evaluation of signal returned not supported object (%r)"
                 % (self._val, ))
 
