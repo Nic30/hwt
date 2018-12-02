@@ -42,7 +42,7 @@ class VerilogSerializer_ops():
         AllOps.NOT: "~%s",
         AllOps.BitsAsSigned: "$signed(%s)",
         AllOps.BitsToInt: "%s",
-        AllOps.IntToBits: "%s",
+        #AllOps.IntToBits: "%s",
     }
 
     _binOps = {
@@ -64,7 +64,7 @@ class VerilogSerializer_ops():
         AllOps.ADD: '%s + %s',
         AllOps.POW: '%s ** %s',
     }
-    
+
     @classmethod
     def _operand(cls, operand: Union[RtlSignal, Value], operator: Operator, ctx: SerializerCtx):
         s = super()._operand(operand, operator.operator, ctx)
@@ -132,6 +132,14 @@ class VerilogSerializer_ops():
                 return "$unsigned(%s)" % op_str
             else:
                 return op_str
+        elif o == AllOps.IntToBits:
+            op0, = ops
+            width = op.result._dtype.bit_length()
+            op_str = cls._operand(op0, op, ctx)
+            if op_str.startswith("(") and not isinstance(op, Value):
+                return "%d'%s" % (width, op_str)
+            else:
+                return "%d'(%s)" % (width, op_str)
         else:
             raise NotImplementedError(
                 "Do not know how to convert %s to vhdl" % (o))
