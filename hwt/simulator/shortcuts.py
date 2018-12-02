@@ -10,7 +10,7 @@ from ipCorePackager.constants import DIRECTION
 from math import ceil
 from multiprocessing.pool import ThreadPool
 from importlib import machinery
-from pycocotb.verilator.simulator import verilatorCompile, \
+from pycocotb.verilator.simulator_gen import verilatorCompile, \
     generatePythonModuleWrapper, VERILATOR_INCLUDE_DIR
 
 
