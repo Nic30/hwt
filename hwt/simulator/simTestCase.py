@@ -1,6 +1,7 @@
 from _random import Random
 from collections import deque
 from inspect import isgenerator
+from multiprocessing.pool import ThreadPool
 import os
 import unittest
 
@@ -11,7 +12,6 @@ from hwt.simulator.agentConnector import valToInt, autoAddAgents
 from hwt.simulator.shortcuts import toVerilatorSimModel, \
     reconnectUnitSignalsToModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
-from multiprocessing.pool import ThreadPool
 from pycocotb.hdlSimulator import HdlSimulator
 
 
@@ -125,11 +125,11 @@ class SimTestCase(unittest.TestCase):
         """
         randomEnProc = self.simpleRandomizationProcess(intf._ag)
         self.procs.append(randomEnProc)
-    
+
     def restartSim(self):
         """
         Set simulator to initial state and connect it to 
-        
+
         :return: tuple (fully loaded unit with connected simulator,
             connected simulator,
             simulation processes
@@ -139,7 +139,7 @@ class SimTestCase(unittest.TestCase):
         unit = self.u
         if self._onAfterToRtl:
             self._onAfterToRtl(unit, simInstance)
-    
+
         reconnectUnitSignalsToModel(unit, simInstance)
         procs = autoAddAgents(unit)
 
@@ -153,7 +153,7 @@ class SimTestCase(unittest.TestCase):
         """
         Create simulation model and connect it with interfaces of original unit
         and decorate it with agents
-    
+
         :param unit: interface level unit which you wont prepare for simulation
         :param target_platform: target platform for this synthesis
         :param build_dir: folder to where to put sim model files,
@@ -164,15 +164,13 @@ class SimTestCase(unittest.TestCase):
         :param onAfterToRtl: callback fn(unit, modelCls) which will be called
             after unit will be synthesised to RTL
             and before Unit instance to simulator connection
-    
-
         """
-        if unique_name  is None:
+        if unique_name is None:
             unique_name = "%s_%s" % (unit.__class__.__name__, abs(hash(unit)))
 
         if build_dir is None:
             build_dir = "tmp/%s" % unique_name
-        
+
         cls.rtl_simulator_cls = toVerilatorSimModel(
             unit,
             unique_name=unique_name,
@@ -198,8 +196,7 @@ class SimpleSimTestCase(SimTestCase):
         super(SimpleSimTestCase, cls).setUpClass()
         u = cls.UNIT_CLS()
         cls.prepareUnit(u)
-        
+
     def setUp(self):
         super(SimpleSimTestCase, self).setUp()
         self.restartSim()
-
