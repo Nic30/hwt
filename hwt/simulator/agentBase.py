@@ -98,7 +98,7 @@ class SyncAgentBase(AgentWitReset):
     SELECTED_EDGE_CALLBACK = OnRisingCallbackLoop
 
     def __init__(self, intf, allowNoReset=False):
-        super().__init__(intf, allowNoReset=allowNoReset)
+        super(SyncAgentBase, self).__init__(intf, allowNoReset=allowNoReset)
 
         # resolve clk and rstn
         self.clk = self.intf._getAssociatedClk()
