@@ -1,6 +1,6 @@
 from hwt.hdl.constants import Time
 from hwt.simulator.agentBase import AgentBase
-from pycocotb.triggers import Timer
+from pycocotb.triggers import Timer, WriteOnly
 
 
 def pullDownAfter(sig, initDelay=6 * Time.ns):
@@ -11,8 +11,11 @@ def pullDownAfter(sig, initDelay=6 * Time.ns):
     initDelay = Timer(initDelay)
 
     def _pullDownAfter(sim):
+        yield WriteOnly
         sig.write(1)
         yield initDelay
+
+        yield WriteOnly
         sig.write(0)
 
     return _pullDownAfter
@@ -41,8 +44,10 @@ class PullUpAgent(AgentBase):
 
     def driver(self, sim):
         sig = self.intf
+        yield WriteOnly
         sig.write(0)
         yield self.initDelay
+        yield WriteOnly
         sig.write(1)
 
 
@@ -54,6 +59,8 @@ class PullDownAgent(AgentBase):
 
     def driver(self, sim):
         sig = self.intf
+        yield WriteOnly
         sig.write(1)
         yield self.initDelay
+        yield WriteOnly
         sig.write(0)

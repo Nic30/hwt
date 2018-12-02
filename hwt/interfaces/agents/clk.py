@@ -1,7 +1,7 @@
 from hwt.hdl.constants import CLK_PERIOD
 from hwt.simulator.agentBase import AgentBase
 from pycocotb.process_utils import CallbackLoop
-from pycocotb.triggers import WriteOnly, Timer, ReadOnly
+from pycocotb.triggers import WriteOnly, Timer, ReadOnly, WriteClkOnly
 
 DEFAULT_CLOCK = CLK_PERIOD
 
@@ -28,20 +28,19 @@ class OscilatorAgent(AgentBase):
 
     def driver(self, sim):
         sig = self.intf
-        wRd = WriteOnly()
 
         sig.write(0)
-        halfPeriod = self.period / 2
+        halfPeriod = self.period // 2
         yield Timer(self.initWait)
 
         while True:
 
             yield Timer(halfPeriod)
-            yield wRd
+            yield WriteClkOnly
             sig.write(1)
 
             yield Timer(halfPeriod)
-            yield wRd
+            yield WriteClkOnly
             sig.write(0)
 
     def getMonitors(self):
@@ -51,8 +50,7 @@ class OscilatorAgent(AgentBase):
         return [self.monitor]
 
     def monitor(self, sim):
-        rdOnly = ReadOnly()
-        yield rdOnly
+        yield ReadOnly
         v = self.intf.read()
         try:
             v = int(v)

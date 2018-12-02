@@ -33,12 +33,13 @@ class SignalAgent(SyncAgentBase):
         if self.clk is None:
             if self.delay is None:
                 self.delay = DEFAULT_CLOCK
+            self.monitor = self.monitorWithTimer
             self.driver = self.driverWithTimer
         else:
             if self.initDelay:
                 raise NotImplementedError("initDelay only without clock")
             c = self.SELECTED_EDGE_CALLBACK
-            self.monitor = c(self.clk, self.monitor, self.getEnable)
+            self.monitor = c(self.clk, self.monitorWithClk, self.getEnable)
             self.driver = c(self.clk, self.driverWithClk, self.getEnable)
 
     def getDrivers(self):
@@ -68,7 +69,7 @@ class SignalAgent(SyncAgentBase):
     def driverWithClk(self, sim):
         # if clock is specified this function is periodically called every
         # clk tick, when agent is enabled
-        yield ReadOnly()
+        yield ReadOnly
         if self.data and self.notReset(sim):
             yield WriteOnly()
             d = self.data.popleft()
@@ -82,7 +83,7 @@ class SignalAgent(SyncAgentBase):
         # if clock is specified this function is periodically called every
         # clk tick
         while True:
-            yield ReadOnly()
+            yield ReadOnly
             if self._enabled and self.data and self.notReset(sim):
                 yield WriteOnly()
                 d = self.data.popleft()
@@ -96,7 +97,7 @@ class SignalAgent(SyncAgentBase):
             self.initPending = False
         # if there is no clk, we have to manage periodic call by our self
         while True:
-            yield ReadOnly()
+            yield ReadOnly
             if self._enabled and self.notReset(sim):
                 d = self.doRead(sim)
                 self.data.append(d)
@@ -105,7 +106,7 @@ class SignalAgent(SyncAgentBase):
     def monitorWithClk(self, sim):
         # if clock is specified this function is periodically called every
         # clk tick, when agent is enabled
-        yield ReadOnly()
+        yield ReadOnly
         if self.notReset(sim):
             d = self.doRead(sim)
             self.data.append(d)
