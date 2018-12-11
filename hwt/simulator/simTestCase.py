@@ -188,14 +188,16 @@ class SimpleSimTestCase(SimTestCase):
     """
     SimTestCase for simple test
     Set UNIT_CLS in your class and in the test method there will be prepared simulation.
+    Set UNIQ_NAME if you want to have tmp sim files with nice name
     """
     UNIT_CLS = None
+    UNIQ_NAME = None
 
     @classmethod
     def setUpClass(cls):
         super(SimpleSimTestCase, cls).setUpClass()
         u = cls.UNIT_CLS()
-        cls.prepareUnit(u)
+        cls.prepareUnit(u, unique_name=cls.UNIQ_NAME)
 
     def setUp(self):
         super(SimpleSimTestCase, self).setUp()
