@@ -38,7 +38,7 @@ def pullUpAfter(sig, initDelay=6 * Time.ns):
 
 class PullUpAgent(AgentBase):
     def __init__(self, intf, initDelay=6 * Time.ns):
-        self.initDelay = Timer(initDelay)
+        self.initDelay = initDelay
         self.intf = intf
         self.data = []
 
@@ -46,14 +46,14 @@ class PullUpAgent(AgentBase):
         sig = self.intf
         yield WriteOnly
         sig.write(0)
-        yield self.initDelay
+        yield Timer(self.initDelay)
         yield WriteOnly
         sig.write(1)
 
 
 class PullDownAgent(AgentBase):
     def __init__(self, intf, initDelay=6 * Time.ns):
-        self.initDelay = Timer(initDelay)
+        self.initDelay = initDelay
         self.intf = intf
         self.data = []
 
@@ -61,6 +61,6 @@ class PullDownAgent(AgentBase):
         sig = self.intf
         yield WriteOnly
         sig.write(1)
-        yield self.initDelay
+        yield Timer(self.initDelay)
         yield WriteOnly
         sig.write(0)
