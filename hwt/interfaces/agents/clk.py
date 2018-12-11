@@ -30,10 +30,10 @@ class OscilatorAgent(AgentBase):
         sig = self.intf
 
         sig.write(0)
-        halfPeriod = self.period // 2
         yield Timer(self.initWait)
 
         while True:
+            halfPeriod = self.period // 2
 
             yield Timer(halfPeriod)
             yield WriteClkOnly
