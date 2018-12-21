@@ -5,7 +5,6 @@ from multiprocessing.pool import ThreadPool
 import os
 import unittest
 
-from hwt.hdl.constants import Time
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.value import Value
 from hwt.simulator.agentConnector import valToInt, autoAddAgents
@@ -209,6 +208,7 @@ class SimpleSimTestCase(SimTestCase):
     """
     SimTestCase for simple test
     Set UNIT_CLS in your class and in the test method there will be prepared simulation.
+    Set UNIQ_NAME if you want to have tmp sim files with nice name
     """
     UNIT_CLS = None
 
@@ -217,3 +217,4 @@ class SimpleSimTestCase(SimTestCase):
         super(SimpleSimTestCase, cls).setUpClass()
         u = cls.UNIT_CLS()
         cls.prepareUnit(u)
+

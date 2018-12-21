@@ -98,7 +98,8 @@ class SignalAgent(SyncAgentBase):
             if self._enabled and self.notReset(sim):
                 d = self.doRead(sim)
                 self.data.append(d)
-                yield Timer(self.delay)
+
+            yield Timer(self.delay)
 
     def monitorWithClk(self, sim):
         # if clock is specified this function is periodically called every
