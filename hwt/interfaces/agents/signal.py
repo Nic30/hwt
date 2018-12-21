@@ -44,14 +44,11 @@ class SignalAgent(SyncAgentBase):
 
     def getDrivers(self):
         d = SyncAgentBase.getDrivers(self)
-        if self.clk is None:
-            return d
-        else:
-            return d + [self.driverInit_nonClk]
+        return [self.driverInit] + d
 
-    def driverInit_nonClk(self, sim):
+    def driverInit(self, sim):
         try:
-            d = self.data[0]
+            d = self.data.popleft()
         except IndexError:
             d = None
 
@@ -69,7 +66,7 @@ class SignalAgent(SyncAgentBase):
     def driverWithClk(self, sim):
         # if clock is specified this function is periodically called every
         # clk tick, when agent is enabled
-        yield ReadOnly
+        yield ReadOnly()
         if self.data and self.notReset(sim):
             yield WriteOnly()
             d = self.data.popleft()
@@ -83,7 +80,7 @@ class SignalAgent(SyncAgentBase):
         # if clock is specified this function is periodically called every
         # clk tick
         while True:
-            yield ReadOnly
+            yield ReadOnly()
             if self._enabled and self.data and self.notReset(sim):
                 yield WriteOnly()
                 d = self.data.popleft()

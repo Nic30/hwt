@@ -98,8 +98,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     def driver(self, sim):
         intf = self.intf
         if self.requireInit:
-            intf.en.w(0)
-            intf.we.w(0)
+            intf.en.write(0)
+            intf.we.write(0)
             self.requireInit = False
 
 #        yield Timer(2000)

@@ -13,6 +13,10 @@ from hwt.simulator.shortcuts import toVerilatorSimModel, \
     reconnectUnitSignalsToModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from pycocotb.hdlSimulator import HdlSimulator
+from pycocotb.constants import CLK_PERIOD
+from typing import Optional
+from hwt.synthesizer.unit import Unit
+from pycocotb.triggers import Timer
 
 
 def allValuesToInts(sequenceOrVal):
@@ -42,11 +46,20 @@ class SimTestCase(unittest.TestCase):
     This is TestCase class contains methods which are usually used during
     hdl simulation.
 
-    :attention: self.model, self.procs has to be specified before running
-        runSim (you can use prepareUnit method)
+    :attention: self.procs has to be specified before runSim()
+    :cvar _defaultSeed: default seed for ramdom generator
+    :cvar rtl_simulator_cls: class for rtl simulator to use (constructed in prepareUnit())
+    :ivar u: instance of current Unit for test, created in restartSim()
+    :ivar rtl_simulator: rtl simulatr used for simulation of unit, created in restartSim()
+    :ivar procs: list of simulation processes (python generator instances), created in restartSim()
     """
+    # value chosen because in this position bits are changing frequently
     _defaultSeed = 317
+    # thread pool for compilation
     _thread_pool = ThreadPool()
+    # while debugging only the simulation it may be useful to just
+    # disable the compilation of simulator as it saves time
+    RECOMPILE = True
 
     def getTestName(self):
         className, testName = self.id().split(".")[-2:]
@@ -62,7 +75,7 @@ class SimTestCase(unittest.TestCase):
         if d:
             os.makedirs(d, exist_ok=True)
 
-        self.rtl_simulator.set_trace_file(outputFileName, -1)
+        self.rtl_simulator._set_trace_file(outputFileName, -1)
         sim = HdlSimulator(self.rtl_simulator)
 
         # run simulation, stimul processes are register after initial
@@ -94,8 +107,8 @@ class SimTestCase(unittest.TestCase):
 
         :param seq1: can contain instance of values or nested list of them
         :param seq2: items are not converted
-        :param seq_type: The expected datatype of the sequences, or None if no
-            datatype should be enforced.
+        :param seq_type: The expected data type of the sequences, or None if no
+            data type should be enforced.
         :param msg: Optional message to use on failure instead of a list of
             differences.
         """
@@ -105,17 +118,17 @@ class SimTestCase(unittest.TestCase):
     def simpleRandomizationProcess(self, agent):
         seed = self._rand.getrandbits(64)
         random = Random(seed)
-        timeQuantum = 10 * Time.ns  # default clk period
+        timeQuantum = CLK_PERIOD
 
         def randomEnProc(sim):
             # small space at start to modify agents when they are inactive
-            yield sim.wait(timeQuantum / 4)
+            yield Timer(timeQuantum / 4)
             while True:
                 en = random.random() < 0.5
                 if agent.getEnable() != en:
                     agent.setEnable(en, sim)
                 delay = int(random.random() * 2) * timeQuantum
-                yield sim.wait(delay)
+                yield Timer(delay)
 
         return randomEnProc
 
@@ -148,8 +161,14 @@ class SimTestCase(unittest.TestCase):
         return unit, simInstance, procs
 
     @classmethod
-    def prepareUnit(cls, unit, build_dir:str=None, unique_name:str=None,
-                    onAfterToRtl=None, target_platform=DummyPlatform()):
+    def get_unique_name(cls, unit: Unit):
+        return "%s__%s" % (cls.__name__, unit.__class__.__name__)
+        # return "%s_%s" % (unit.__class__.__name__, abs(hash(unit)))
+
+    @classmethod
+    def prepareUnit(cls, unit, build_dir: Optional[str]=None,
+                    unique_name: Optional[str]=None, onAfterToRtl=None,
+                    target_platform=DummyPlatform()):
         """
         Create simulation model and connect it with interfaces of original unit
         and decorate it with agents
@@ -166,7 +185,7 @@ class SimTestCase(unittest.TestCase):
             and before Unit instance to simulator connection
         """
         if unique_name is None:
-            unique_name = "%s_%s" % (unit.__class__.__name__, abs(hash(unit)))
+            unique_name = cls.get_unique_name(unit)
 
         if build_dir is None:
             build_dir = "tmp/%s" % unique_name
@@ -176,12 +195,14 @@ class SimTestCase(unittest.TestCase):
             unique_name=unique_name,
             build_dir=build_dir,
             thread_pool=cls._thread_pool,
-            target_platform=target_platform)
+            target_platform=target_platform,
+            do_compile=cls.RECOMPILE)
         cls._onAfterToRtl = onAfterToRtl
         cls.u = unit
 
     def setUp(self):
         self._rand = Random(self._defaultSeed)
+        self.restartSim()
 
 
 class SimpleSimTestCase(SimTestCase):
@@ -196,7 +217,3 @@ class SimpleSimTestCase(SimTestCase):
         super(SimpleSimTestCase, cls).setUpClass()
         u = cls.UNIT_CLS()
         cls.prepareUnit(u)
-
-    def setUp(self):
-        super(SimpleSimTestCase, self).setUp()
-        self.restartSim()

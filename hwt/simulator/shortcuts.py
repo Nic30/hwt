@@ -12,6 +12,7 @@ from multiprocessing.pool import ThreadPool
 from importlib import machinery
 from pycocotb.verilator.simulator_gen import verilatorCompile, \
     generatePythonModuleWrapper, VERILATOR_INCLUDE_DIR
+from glob import iglob
 
 
 def collect_signals(top):
@@ -31,7 +32,8 @@ def toVerilatorSimModel(unit: Unit,
                         unique_name: str,
                         build_dir: str,
                         thread_pool: ThreadPool=None,
-                        target_platform=DummyPlatform()):
+                        target_platform=DummyPlatform(),
+                        do_compile=True):
     """
     Create a simulation model for unit
 
@@ -49,17 +51,24 @@ def toVerilatorSimModel(unit: Unit,
                         saveTo=build_dir,
                         serializer=VerilogSerializer)
     accessible_signals = collect_signals(unit)
+    if do_compile:
+        verilatorCompile(sim_verilog, build_dir)
 
-    verilatorCompile(sim_verilog, build_dir)
-    sim_so = generatePythonModuleWrapper(
-        unit._name,
-        unique_name,
-        build_dir,
-        VERILATOR_INCLUDE_DIR,
-        accessible_signals,
-        thread_pool)
+        sim_so = generatePythonModuleWrapper(
+            unit._name,
+            unique_name,
+            build_dir,
+            VERILATOR_INCLUDE_DIR,
+            accessible_signals,
+            thread_pool)
+    else:
+        sim_so = None
+        file_pattern = './**/{0}.*.so'.format(unique_name)
+        for filename in iglob(file_pattern, recursive=True):
+            assert sim_so is None, ("Can not resolve simulation library", sim_so, filename)
+            sim_so = filename
 
-    # load compiled library to python
+    # load compiled library into python
     importer = machinery.FileFinder(os.path.dirname(os.path.abspath(sim_so)),
                                     (machinery.ExtensionFileLoader,
                                      machinery.EXTENSION_SUFFIXES))

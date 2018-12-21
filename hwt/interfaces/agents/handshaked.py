@@ -53,8 +53,8 @@ class HandshakedAgent(SyncAgentBase):
         """
         return readFn(self._rd)
 
-    def wrRd(self, wrFn, val):
-        wrFn(val, self._rd)
+    def wrRd(self, val):
+        self._rd.write(val)
 
     def getVld(self):
         """get "valid" signal"""
@@ -67,8 +67,8 @@ class HandshakedAgent(SyncAgentBase):
         """
         return readFn(self._vld)
 
-    def wrVld(self, wrFn, val):
-        wrFn(val, self._vld)
+    def wrVld(self, val):
+        self._vld.write(val)
 
     def monitor(self, sim):
         """
@@ -164,7 +164,7 @@ class HandshakedAgent(SyncAgentBase):
             sim.add_process(self.checkIfRdWillBeValid(sim))
             return
 
-        # wait of response of slave
+        # wait for response of slave
         yield sim.waitOnCombUpdate()
 
         rd = self.isRd()

@@ -11,7 +11,6 @@ from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import flatten
-from hwt.simulator.types.simBits import simBitsT
 from hwt.doc_markers import internal
 
 
@@ -323,7 +322,7 @@ class FrameTmpl(object):
 
         :return: list of BitsVal which are representing values of words
         """
-        typeOfWord = simBitsT(self.wordWidth, None)
+        typeOfWord = Bits(self.wordWidth, None)
         fieldToVal = self._fieldToTPart
         if fieldToVal is None:
             fieldToVal = self._fieldToTPart = self.fieldToDataDict(
