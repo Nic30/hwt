@@ -105,13 +105,21 @@ class SimTestCase(unittest.TestCase):
         Args:
 
         :param seq1: can contain instance of values or nested list of them
-        :param seq2: items are not converted
+        :param seq2: items are not converted, if item is None it is not checked
         :param seq_type: The expected data type of the sequences, or None if no
             data type should be enforced.
         :param msg: Optional message to use on failure instead of a list of
             differences.
         """
         seq1 = allValuesToInts(seq1)
+        if len(seq1) == len(seq2):
+            _seq2 = []
+            # replace None in seq2 with values from seq1
+            for v1, v2 in zip(seq1, seq2):
+                if v2 is None:
+                    v2 = v1
+                _seq2.append(v2)
+            seq2 = _seq2
         self.assertSequenceEqual(seq1, seq2, msg, seq_type)
 
     def simpleRandomizationProcess(self, agent):
@@ -210,11 +218,14 @@ class SimpleSimTestCase(SimTestCase):
     Set UNIT_CLS in your class and in the test method there will be prepared simulation.
     Set UNIQ_NAME if you want to have tmp sim files with nice name
     """
-    UNIT_CLS = None
+
+    @classmethod
+    def getUnit(cls) -> Unit:
+        raise NotImplementedError("Implement this function in your testcase")
 
     @classmethod
     def setUpClass(cls):
         super(SimpleSimTestCase, cls).setUpClass()
-        u = cls.UNIT_CLS()
+        u = cls.getUnit()
         cls.prepareUnit(u)
 
