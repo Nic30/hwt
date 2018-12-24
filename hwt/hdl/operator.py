@@ -1,12 +1,13 @@
-from typing import Generator, Union
-
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.operatorDefs import isEventDependentOp
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
+from typing import Generator, Union
+
 from hwt.doc_markers import internal
+from hwt.hdl.operatorUtils import replace_input_in_expr
 
 
 @internal
@@ -59,6 +60,16 @@ class Operator(HdlObject):
                     " only signal or values got:%r" % (o))
 
     @internal
+    def _replace_input(self, toReplace: RtlSignalBase, replacement: RtlSignalBase):
+        new_operands = []
+        for o in self.operands:
+            if replace_input_in_expr(self, o, toReplace, replacement, True):
+                new_operands.append(replacement)
+            else:
+                new_operands.append(o)
+        self.operands = tuple(new_operands)
+
+    @internal
     def staticEval(self):
         """
         Recursively statistically evaluate result of this operator
@@ -66,7 +77,7 @@ class Operator(HdlObject):
         for o in self.operands:
             o.staticEval()
         self.result._val = self.evalFn()
-    
+
     @internal
     def evalFn(self, simulator=None):
         """
@@ -125,7 +136,7 @@ class Operator(HdlObject):
         if out._const:
             out.staticEval()
         return out
-    
+
     @internal
     def __hash__(self):
         return hash((self.operator, self.operands))

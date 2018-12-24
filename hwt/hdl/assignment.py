@@ -5,6 +5,7 @@ from hwt.hdl.statements import isSameHVal, HdlStatement, areSameHVals
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.doc_markers import internal
+from hwt.hdl.operatorUtils import replace_input_in_expr
 
 
 class Assignment(HdlStatement):
@@ -142,6 +143,25 @@ class Assignment(HdlStatement):
         i = cls.__instCntr
         cls.__instCntr += 1
         return i
+
+    @internal
+    def _replace_input(self, toReplace: RtlSignalBase,
+                       replacement: RtlSignalBase) -> None:
+        isTopStatement = self.parentStm is None
+
+        if self.indexes:
+            indexes_to_replace = []
+            for i, ind in enumerate(self.indexes):
+                if replace_input_in_expr(self, ind, toReplace, replacement, isTopStatement):
+                    indexes_to_replace.append((i, replacement))
+
+            for i, newInd in indexes_to_replace:
+                self.indexes[i] = newInd
+
+        if replace_input_in_expr(self, self.src, toReplace, replacement, isTopStatement):
+            self.src = replacement
+
+        self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
 
     @internal
     def seqEval(self):

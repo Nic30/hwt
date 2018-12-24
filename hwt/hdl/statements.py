@@ -76,8 +76,18 @@ class HdlStatement(HdlObject):
     @staticmethod
     def _cut_off_drivers_of_list(sig: RtlSignalBase,
                                  statements: List["HdlStatement"],
-                                 keep_mask: List["HdlStatement"],
-                                 new_statements: List["HdlStatement"],):
+                                 keep_mask: List[bool],
+                                 new_statements: List["HdlStatement"]):
+        """
+        Cut all logic from statemts which drives signal sig.
+
+        :param sig: signal which drivers should be removed
+        :param statements: list of statemetns to filter
+        :param keep_mask: list of flags if True statemnt was driver only of sig
+        :param new_statements: output list of filtered statements
+
+        :return: True if all input statements were reduced
+        """
         all_cut_off = True
         for stm in statements:
             newStm = stm._cut_off_drivers_of(sig)
@@ -521,6 +531,30 @@ class HdlStatement(HdlObject):
             o.drivers.remove(self)
 
         ctx.statements.remove(self)
+
+    @internal
+    def _replace_input(self, toReplace: RtlSignalBase,
+                       replacement: RtlSignalBase) -> None:
+        """
+        Replace input signal with another
+
+        :note: sensitivity/endoints are actualized
+        """
+        raise NotImplementedError()
+
+    @internal
+    def _replace_input_update_sensitivity_and_enclosure(
+            self,
+            toReplace: RtlSignalBase,
+            replacement: RtlSignalBase):
+        if self._sensitivity is not None:
+            if self._sensitivity.discard(toReplace):
+                self._sensitivity.append(replacement)
+
+        if self._enclosed_for is not None:
+            if self._enclosed_for.discard(toReplace):
+                self._enclosed_for.append(replacement)
+
 
 
 @internal

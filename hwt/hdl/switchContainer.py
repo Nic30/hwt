@@ -11,6 +11,7 @@ from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.doc_markers import internal
+from hwt.hdl.operatorUtils import replace_input_in_expr
 
 
 class SwitchContainer(HdlStatement):
@@ -36,7 +37,6 @@ class SwitchContainer(HdlStatement):
             is_completly_event_dependent=is_completly_event_dependent)
         self.switchOn = switchOn
         self.cases = cases
-
         self.default = default
 
         self._case_value_index = {}
@@ -249,6 +249,24 @@ class SwitchContainer(HdlStatement):
             else:
                 return True
         return True
+
+    @internal
+    def _replace_input(self, toReplace: RtlSignalBase,
+                       replacement: RtlSignalBase) -> None:
+        isTopStatement = self.parentStm is None
+        if replace_input_in_expr(self, self.switchOn, toReplace, 
+                                 replacement, isTopStatement):
+            self.switchOn = replacement
+
+        for (_, stms) in self.cases:
+            for stm in stms:
+                stm._replace_input(toReplace, replacement)
+
+        if self.default is not None:
+            for stm in self.default:
+                stm._replace_input(toReplace, replacement)
+
+        self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
 
     def isSame(self, other: HdlStatement) -> bool:
         """

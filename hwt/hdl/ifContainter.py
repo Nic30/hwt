@@ -12,6 +12,7 @@ from hwt.hdl.statements import HdlStatement, statementsAreSame,\
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.doc_markers import internal
+from hwt.hdl.operatorUtils import replace_input_in_expr
 
 
 class IfContainer(HdlStatement):
@@ -397,6 +398,33 @@ class IfContainer(HdlStatement):
                             return False
                     return True
         return False
+
+    @internal
+    def _replace_input(self, toReplace: RtlSignalBase, replacement: RtlSignalBase):
+        isTopStm = self.parentStm is None
+        if isTopStm:
+            if replace_input_in_expr(self, self.cond, toReplace,
+                                     replacement, isTopStm):
+                self.cond = replacement
+
+        for stm in self.ifTrue:
+            stm._replace_input(toReplace, replacement)
+
+        cond_to_replace = []
+        for i, (cond, stms) in enumerate(self.elIfs):
+            if replace_input_in_expr(self, cond, toReplace, replacement, isTopStm):
+                cond_to_replace.append((i, replacement))
+            for stm in stms:
+                stm._replace_input(toReplace, replacement)
+        for i, newCond in cond_to_replace:
+            stm = self.elIfs[i][1]
+            self.elIfs[i] = (newCond, stm)
+
+        if self.ifFalse is not None:
+            for stm in self.ifFalse:
+                stm._replace_input(toReplace, replacement)
+
+        self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
 
     @internal
     def seqEval(self):
