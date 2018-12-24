@@ -21,6 +21,7 @@ from hwt.serializer.verilog.types import VerilogSerializer_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
 from hwt.synthesizer.param import getParam
+from hwt.hdl.assignment import Assignment
 
 
 class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
@@ -88,9 +89,17 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
                     return romValSig
                 else:
                     return x
+
             for _e in e.result.endpoints:
-                _e.operands = tuple(map(replaceOrigRomIndexExpr, _e.operands))
-                e.result = romValSig
+                if isinstance(_e, Operator):
+                    _e.operands = tuple(map(replaceOrigRomIndexExpr, _e.operands))
+                    e.result = romValSig
+                elif isinstance(_e, Assignment):
+                    if _e.indexes is not None:
+                        _e.indexes = tuple(map(replaceOrigRomIndexExpr, _e.indexes))
+                    _e.src = replaceOrigRomIndexExpr(_e.src)
+                else:
+                    raise NotImplementedError(_e)
 
         return processes, signals
 
