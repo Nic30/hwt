@@ -6,10 +6,6 @@ from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
-from hwt.hdl.ifContainter import IfContainer
-from hwt.hdl.switchContainer import SwitchContainer
-from hwt.hdl.whileContainer import WhileContainer
-from hwt.hdl.waitStm import WaitStm
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.serializer.verilog.utils import verilogTypeOfSig
 from hwt.serializer.generic.constants import SIGNAL_TYPE
