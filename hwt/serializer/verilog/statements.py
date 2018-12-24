@@ -81,8 +81,6 @@ class VerilogSerializer_statements():
                                                   anyIsEventDependnt),
                 proc.sensitivityList))
 
-        if proc.outputs[0].name == "word0":
-            print("")
         hasToBeProcess = arr_any(proc.outputs, lambda x: verilogTypeOfSig(x) == SIGNAL_TYPE.REG)
 
         if hasToBeProcess:
@@ -103,8 +101,6 @@ class VerilogSerializer_statements():
         statemets = [cls.asHdl(s, childCtx) for s in body]
 
         if hasToBeProcess:
-            if extraVars:
-                print("")
             proc.name = ctx.scope.checkedName(proc.name, proc)
 
         extraVarsInit = []

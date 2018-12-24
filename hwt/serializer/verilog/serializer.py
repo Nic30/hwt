@@ -22,6 +22,8 @@ from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
 from hwt.synthesizer.param import getParam
 from hwt.hdl.assignment import Assignment
+from hwt.hdl.portItem import PortItem
+from hwt.hdl.constants import DIRECTION
 
 
 class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
@@ -211,9 +213,14 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
                     % (s, cls.Value(getParam(g.defVal).staticEval(), ctx)))
 
     @classmethod
-    def PortItem(cls, pi, ctx):
+    def PortItem(cls, pi: PortItem, ctx):
         t = cls.HdlType(pi._dtype, ctx.forPort())
-        if verilogTypeOfSig(pi.getInternSig()) == SIGNAL_TYPE.REG:
+        if pi.direction == DIRECTION.IN or pi.direction == DIRECTION.INOUT:
+            verilog_t = SIGNAL_TYPE.WIRE
+        else:
+            verilog_t = verilogTypeOfSig(pi.getInternSig())
+
+        if verilog_t == SIGNAL_TYPE.REG:
             if t:
                 f = "%s reg %s %s"
             else:
