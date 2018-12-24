@@ -21,7 +21,6 @@ from hwt.serializer.verilog.types import VerilogSerializer_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
 from hwt.synthesizer.param import getParam
-from hwt.hdl.assignment import Assignment
 from hwt.hdl.portItem import PortItem
 from hwt.hdl.constants import DIRECTION
 
@@ -69,39 +68,25 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
             # construct output of the rom
             romValSig = rom.ctx.sig(rom.name, dtype=e.result._dtype)
-            signals.append(romValSig)
             romValSig.hidden = False
+            signals.append(romValSig)
 
             # construct process which will represent content of the rom
             cases = [(toHVal(i), [romValSig(v), ])
                      for i, v in enumerate(rom.defVal.val)]
-            statements = [SwitchContainer(index, cases), ]
+            romSwitchStm = SwitchContainer(index, cases)
 
             for (_, (stm, )) in cases:
-                stm.parentStm = statements[0] 
+                stm.parentStm = romSwitchStm
 
-            p = HWProcess(rom.name, statements, {index, },
-                          {index, }, {romValSig, })
+            p = HWProcess(rom.name, [romSwitchStm, ],
+                          {index, }, {index, }, {romValSig, })
             processes.append(p)
 
             # override usage of original index operator on rom
             # to use signal generated from this process
-            def replaceOrigRomIndexExpr(x):
-                if x is e.result:
-                    return romValSig
-                else:
-                    return x
-
             for _e in e.result.endpoints:
-                if isinstance(_e, Operator):
-                    _e.operands = tuple(map(replaceOrigRomIndexExpr, _e.operands))
-                    e.result = romValSig
-                elif isinstance(_e, Assignment):
-                    if _e.indexes is not None:
-                        _e.indexes = tuple(map(replaceOrigRomIndexExpr, _e.indexes))
-                    _e.src = replaceOrigRomIndexExpr(_e.src)
-                else:
-                    raise NotImplementedError(_e)
+                _e._replace_input(e.result, romValSig)
 
         return processes, signals
 
