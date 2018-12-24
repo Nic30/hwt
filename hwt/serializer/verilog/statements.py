@@ -36,7 +36,13 @@ class VerilogSerializer_statements():
 
         ver_sig_t = verilogTypeOfSig(_dst)
         if ver_sig_t == SIGNAL_TYPE.REG:
-            if _dst.virtualOnly:
+            evDep = False
+            for driver in _dst.drivers:
+                if driver._now_is_event_dependent:
+                    evDep = True
+                    break
+
+            if not evDep or _dst.virtualOnly:
                 prefix = ""
                 symbol = "="
             else:
