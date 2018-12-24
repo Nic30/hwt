@@ -36,9 +36,10 @@ class VerilogSerializer_statements():
 
         ver_sig_t = verilogTypeOfSig(_dst)
         if ver_sig_t == SIGNAL_TYPE.REG:
-            prefix = ""
-            symbol = "="
-            if a._is_completly_event_dependent:
+            if _dst.virtualOnly:
+                prefix = ""
+                symbol = "="
+            else:
                 prefix = ""
                 symbol = "<="
         elif ver_sig_t == SIGNAL_TYPE.WIRE:
