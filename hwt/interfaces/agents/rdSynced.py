@@ -30,15 +30,17 @@ class RdSyncedAgent(SyncAgentBase):
 
     def monitor(self, sim):
         """Collect data from interface"""
+        yield sim.waitReadOnly()
         if self.notReset(sim) and self._enabled:
-            self.wrRd(sim.write, 1)
+            yield sim.waitWriteOnly()
+            self.wrRd(1)
 
-            yield sim.waitOnCombUpdate()
-
+            yield sim.waitReadOnly()
             d = self.doRead(sim)
             self.data.append(d)
         else:
-            self.wrRd(sim.write, 0)
+            yield sim.waitWriteOnly()
+            self.wrRd(0)
 
     def doRead(self, sim):
         """extract data from interface"""
@@ -50,6 +52,7 @@ class RdSyncedAgent(SyncAgentBase):
 
     def driver(self, sim):
         """Push data to interface"""
+        yield sim.waitWriteOnly()
         if self.actualData is NOP and self.data:
             self.actualData = self.data.popleft()
 
@@ -60,24 +63,26 @@ class RdSyncedAgent(SyncAgentBase):
         else:
             self.doWrite(sim, None)
 
+        yield sim.waitReadOnly()
         en = self.notReset(sim) and self._enabled
         if not (en and do):
             return
 
-        yield sim.waitOnCombUpdate()
-
         rd = self.isRd()
         if en:
-            assert rd.vldMask, (
-                ("%r: ready signal for interface %r is in invalid state,"
-                 " this would cause desynchronization") %
-                (sim.now, self.intf))
-        if rd.val:
-            if self._debugOutput is not None:
-                self._debugOutput.write("%s, wrote, %d: %r\n" % (
-                                           self.intf._getFullName(),
-                                           sim.now, self.actualData))
-            if self.data:
-                self.actualData = self.data.popleft()
-            else:
-                self.actualData = NOP
+            try:
+                rd = int(rd)
+            except ValueError:
+                raise AssertionError(
+                    ("%r: ready signal for interface %r is in invalid state,"
+                     " this would cause desynchronization") %
+                    (sim.now, self.intf))
+            if rd:
+                if self._debugOutput is not None:
+                    self._debugOutput.write("%s, wrote, %d: %r\n" % (
+                                               self.intf._getFullName(),
+                                               sim.now, self.actualData))
+                if self.data:
+                    self.actualData = self.data.popleft()
+                else:
+                    self.actualData = NOP
