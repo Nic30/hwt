@@ -47,6 +47,7 @@ class SignalAgent(SyncAgentBase):
         return [self.driverInit] + d
 
     def driverInit(self, sim):
+        yield sim.waitWriteOnly()
         try:
             d = self.data.popleft()
         except IndexError:

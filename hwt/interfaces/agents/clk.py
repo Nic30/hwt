@@ -28,7 +28,7 @@ class OscilatorAgent(AgentBase):
 
     def driver(self, sim):
         sig = self.intf
-
+        yield sim.waitWriteOnly()
         sig.write(0)
         yield Timer(self.initWait)
 

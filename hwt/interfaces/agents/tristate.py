@@ -29,6 +29,7 @@ class TristateAgent(AgentWitReset):
     def monitor(self, sim):
         intf = self.intf
         # read in pre-clock-edge
+        yield sim.waitReadOnly()
         t = intf.t.read()
         o = intf.o.read()
 
@@ -52,10 +53,12 @@ class TristateAgent(AgentWitReset):
             v = o
         else:
             v = self.pullMode
-
+        yield sim.waitWriteOnly()
         intf.i.write(v)
-        if self.collectData and sim.now > 0 and self.notReset(sim):
-            self.data.append(v)
+        if self.collectData and sim.now > 0:
+            yield sim.waitReadOnly()
+            if self.notReset(sim):
+                self.data.append(v)
 
     def getMonitors(self):
         return [self.onTWriteCallback__init]
@@ -93,6 +96,7 @@ class TristateAgent(AgentWitReset):
 
     def driver(self, sim):
         while True:
+            yield sim.waitWriteOnly()
             if self.data:
                 b = self.data.popleft()
                 if b == self.START:
@@ -119,6 +123,7 @@ class TristateClkAgent(TristateAgent):
         low = not self.pullMode
         halfPeriod = self.period / 2
 
+        yield sim.waitWriteOnly()
         o.write(low)
         self.intf.t.write(1)
         if high:
@@ -130,12 +135,14 @@ class TristateClkAgent(TristateAgent):
 
         while True:
             yield Timer(halfPeriod)
+            yield sim.waitWriteOnly()
             o.write(high)
 
             if onHigh:
                 sim.add_process(onHigh(sim))
 
             yield Timer(halfPeriod)
+            yield sim.waitWriteOnly()
             o.write(low)
 
             if onLow:
@@ -143,7 +150,7 @@ class TristateClkAgent(TristateAgent):
 
     def monitor(self, sim):
         intf = self.intf
-        yield sim.waitOnCombUpdate()
+        yield sim.waitReadOnly()
         # read in pre-clock-edge
         t = intf.t.read()
         o = intf.o.read()
@@ -169,6 +176,7 @@ class TristateClkAgent(TristateAgent):
             v = self.pullMode
 
         last = intf.i.read()
+        yield sim.waitWriteOnly()
         intf.i.write(v)
 
         if self.onRisingCallback and (not last.val or not last.vldMask) and v:
