@@ -47,10 +47,13 @@ class SimTestCase(unittest.TestCase):
 
     :attention: self.procs has to be specified before runSim()
     :cvar _defaultSeed: default seed for ramdom generator
-    :cvar rtl_simulator_cls: class for rtl simulator to use (constructed in prepareUnit())
+    :cvar rtl_simulator_cls: class for rtl simulator to use
+        (constructed in prepareUnit())
     :ivar u: instance of current Unit for test, created in restartSim()
-    :ivar rtl_simulator: rtl simulatr used for simulation of unit, created in restartSim()
-    :ivar procs: list of simulation processes (python generator instances), created in restartSim()
+    :ivar rtl_simulator: rtl simulatr used for simulation of unit,
+        created in restartSim()
+    :ivar procs: list of simulation processes (python generator instances),
+        created in restartSim()
     """
     # value chosen because in this position bits are changing frequently
     _defaultSeed = 317
@@ -157,8 +160,6 @@ class SimTestCase(unittest.TestCase):
         """
         simInstance = self.rtl_simulator_cls()
         unit = self.u
-        if self._onAfterToRtl:
-            self._onAfterToRtl(unit, simInstance)
 
         reconnectUnitSignalsToModel(unit, simInstance)
         procs = autoAddAgents(unit)
@@ -187,7 +188,7 @@ class SimTestCase(unittest.TestCase):
             (or simulator will be constructed in memory if possible)
         :param unique_name: name which is used as name of the module for simulation
             (if is None it is automatically generated)
-        :param onAfterToRtl: callback fn(unit, modelCls) which will be called
+        :param onAfterToRtl: callback fn(unit) which will be called
             after unit will be synthesised to RTL
             and before Unit instance to simulator connection
         """
@@ -204,6 +205,8 @@ class SimTestCase(unittest.TestCase):
             thread_pool=cls._thread_pool,
             target_platform=target_platform,
             do_compile=cls.RECOMPILE)
+        if onAfterToRtl:
+            onAfterToRtl(unit)
         cls._onAfterToRtl = onAfterToRtl
         cls.u = unit
 
