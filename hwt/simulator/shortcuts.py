@@ -13,6 +13,9 @@ from importlib import machinery
 from pycocotb.verilator.simulator_gen import verilatorCompile, \
     generatePythonModuleWrapper, VERILATOR_INCLUDE_DIR
 from glob import iglob
+from hwt.serializer.mode import serializeExclude, _serializeExclude_eval
+from hwt.hdl.architecture import Architecture
+from hwt.hdl.entity import Entity
 
 
 def collect_signals(top):
@@ -26,6 +29,28 @@ def collect_signals(top):
                     (p.name, is_read_only, int(bool(t.signed)), size)
                 )
         return accessible_signals
+
+
+class VerilogForVerilatorSerializer(VerilogSerializer):
+    """
+    """
+    @classmethod
+    def serializationDecision(cls, obj, serializedClasses,
+                              serializedConfiguredUnits):
+        isDeclaration = isinstance(obj, Entity)
+        isDefinition = isinstance(obj, Architecture)
+        if isDeclaration:
+            unit = obj.origin
+        elif isDefinition:
+            unit = obj.entity.origin
+        else:
+            return True
+
+        assert isinstance(unit, Unit)
+        if unit._serializeDecision is _serializeExclude_eval:
+            unit._serializeDecision = None
+        return VerilogSerializer.serializationDecision(
+            obj, serializedClasses, serializedConfiguredUnits)
 
 
 def toVerilatorSimModel(unit: Unit,
@@ -49,7 +74,7 @@ def toVerilatorSimModel(unit: Unit,
     sim_verilog = toRtl(unit,
                         targetPlatform=target_platform,
                         saveTo=build_dir,
-                        serializer=VerilogSerializer)
+                        serializer=VerilogForVerilatorSerializer)
     accessible_signals = collect_signals(unit)
     if do_compile:
         verilatorCompile(sim_verilog, build_dir)
