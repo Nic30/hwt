@@ -11,9 +11,9 @@ from math import ceil
 from multiprocessing.pool import ThreadPool
 from importlib import machinery
 from pycocotb.verilator.simulator_gen import verilatorCompile, \
-    generatePythonModuleWrapper, VERILATOR_INCLUDE_DIR
+    generatePythonModuleWrapper
 from glob import iglob
-from hwt.serializer.mode import serializeExclude, _serializeExclude_eval
+from hwt.serializer.mode import _serializeExclude_eval
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
 
@@ -83,7 +83,6 @@ def toVerilatorSimModel(unit: Unit,
             unit._name,
             unique_name,
             build_dir,
-            VERILATOR_INCLUDE_DIR,
             accessible_signals,
             thread_pool)
     else:
