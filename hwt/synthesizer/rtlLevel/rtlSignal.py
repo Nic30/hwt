@@ -23,6 +23,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         for which this signal is driver.
     :ivar drivers: UniqList of operators and statements
         which can drive this signal.
+        If driver is statemet tree only top statement is present.
     :ivar hiden: means that this signal is part of expression
         and should not be rendered
     :ivar processCrossing: means that this signal is crossing process boundary

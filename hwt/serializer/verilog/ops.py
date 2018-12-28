@@ -1,4 +1,4 @@
-from hwt.hdl.operatorDefs import AllOps, OpDefinition
+from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.hdl.value import Value
@@ -7,6 +7,7 @@ from hwt.serializer.generic.context import SerializerCtx
 from hwt.hdl.types.integer import Integer
 from typing import Union
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.hdl.assignment import Assignment
 
 
 class VerilogSerializer_ops():
@@ -66,10 +67,30 @@ class VerilogSerializer_ops():
     }
 
     @classmethod
-    def _operand(cls, operand: Union[RtlSignal, Value], operator: Operator, ctx: SerializerCtx):
+    def _operandIsAnotherOperand(cls, operand):
+        if isinstance(operand, RtlSignal) and operand.hidden\
+                and isinstance(operand.origin, Operator):
+            return True
+
+    @classmethod
+    def _operand(cls, operand: Union[RtlSignal, Value],
+                 operator: Operator, ctx: SerializerCtx):
+
+        # [TODO] if operand is concatenation and parent operator
+        #        is not concatenation operand should be extracted
+        #        as tmp variable
+        #        * maybe flattern the concatenations
+        if operator.operator != AllOps.CONCAT and cls._operandIsAnotherOperand(operand)\
+                and operand.origin.operator == AllOps.CONCAT:
+            tmpVar = ctx.createTmpVarFn("tmp_concat_", operand._dtype)
+            tmpVar.defVal = operand
+            # Assignment(tmpVar, operand, virtualOnly=True)
+            operand = tmpVar
+
         s = super()._operand(operand, operator.operator, ctx)
         oper = operator.operator
-        if oper not in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.IntToBits, AllOps.BitsAsSigned] and \
+        if oper not in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec,
+                        AllOps.IntToBits, AllOps.BitsAsSigned] and \
                 oper is not AllOps.INDEX and\
                 isinstance(operand._dtype, Integer) and\
                 operator.result is not None and\
@@ -84,6 +105,7 @@ class VerilogSerializer_ops():
                 if bl is not None:
                     width = bl()
                     break
+
             assert width is not None, (operator, operand)
             if s.startswith("("):
                 return "%d'%s" % (width, s)
@@ -112,7 +134,7 @@ class VerilogSerializer_ops():
         elif o == AllOps.INDEX:
             assert len(ops) == 2
             o1 = ops[0]
-            return "%s[%s]" % (cls.asHdl(o1, ctx).strip(),
+            return "%s[%s]" % (cls._operand(o1, op, ctx),
                                cls._operand(ops[1], op, ctx))
         elif o == AllOps.TERNARY:
             zero, one = BIT.fromPy(0), BIT.fromPy(1)

@@ -21,6 +21,8 @@ from hwt.serializer.verilog.types import VerilogSerializer_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
 from hwt.synthesizer.param import getParam
+from hwt.hdl.portItem import PortItem
+from hwt.hdl.constants import DIRECTION
 
 
 class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
@@ -66,31 +68,25 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
             # construct output of the rom
             romValSig = rom.ctx.sig(rom.name, dtype=e.result._dtype)
-            signals.append(romValSig)
             romValSig.hidden = False
+            signals.append(romValSig)
 
             # construct process which will represent content of the rom
             cases = [(toHVal(i), [romValSig(v), ])
                      for i, v in enumerate(rom.defVal.val)]
-            statements = [SwitchContainer(index, cases), ]
+            romSwitchStm = SwitchContainer(index, cases)
 
             for (_, (stm, )) in cases:
-                stm.parentStm = statements[0] 
+                stm.parentStm = romSwitchStm
 
-            p = HWProcess(rom.name, statements, {index, },
-                          {index, }, {romValSig, })
+            p = HWProcess(rom.name, [romSwitchStm, ],
+                          {index, }, {index, }, {romValSig, })
             processes.append(p)
 
             # override usage of original index operator on rom
             # to use signal generated from this process
-            def replaceOrigRomIndexExpr(x):
-                if x is e.result:
-                    return romValSig
-                else:
-                    return x
             for _e in e.result.endpoints:
-                _e.operands = tuple(map(replaceOrigRomIndexExpr, _e.operands))
-                e.result = romValSig
+                _e._replace_input(e.result, romValSig)
 
         return processes, signals
 
@@ -202,9 +198,14 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
                     % (s, cls.Value(getParam(g.defVal).staticEval(), ctx)))
 
     @classmethod
-    def PortItem(cls, pi, ctx):
+    def PortItem(cls, pi: PortItem, ctx):
         t = cls.HdlType(pi._dtype, ctx.forPort())
-        if verilogTypeOfSig(pi.getInternSig()) == SIGNAL_TYPE.REG:
+        if pi.direction == DIRECTION.IN or pi.direction == DIRECTION.INOUT:
+            verilog_t = SIGNAL_TYPE.WIRE
+        else:
+            verilog_t = verilogTypeOfSig(pi.getInternSig())
+
+        if verilog_t == SIGNAL_TYPE.REG:
             if t:
                 f = "%s reg %s %s"
             else:

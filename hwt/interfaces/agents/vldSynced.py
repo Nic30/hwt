@@ -31,16 +31,13 @@ class VldSyncedAgent(SyncAgentBase):
             self._lastVld = 0
 
     def monitor(self, sim):
-        yield sim.waitOnCombUpdate()
+        yield sim.waitReadOnly()
         if self.notReset(sim):
             intf = self.intf
             vld = self.doReadVld()
-            assert vld.vldMask, (
-                ("valid signal for interface %r is in invalid state,"
-                 " this would cause desynchronization in %d") % 
-                (intf, sim.now))
-            if vld.val:
-                d = self.doRead()
+            vld = int(vld)
+            if vld:
+                d = self.doRead(sim)
 
                 if self._debugOutput is not None:
                     self._debugOutput.write("%s, read, %d: %r\n" % (
@@ -49,7 +46,9 @@ class VldSyncedAgent(SyncAgentBase):
                 self.data.append(d)
 
     def driver(self, sim):
+        yield sim.waitReadOnly()
         if self.data and self.notReset(sim):
+            yield sim.waitWriteOnly()
             d = self.data.popleft()
             if d is NOP:
                 self.doWrite(sim, None)

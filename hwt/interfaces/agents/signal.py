@@ -3,7 +3,7 @@ from collections import deque
 from hwt.interfaces.agents.clk import DEFAULT_CLOCK
 from hwt.simulator.agentBase import AgentBase, SyncAgentBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from pycocotb.triggers import ReadOnly, WriteOnly, Timer
+from pycocotb.triggers import Timer
 
 
 class SignalAgent(SyncAgentBase):
@@ -47,6 +47,7 @@ class SignalAgent(SyncAgentBase):
         return [self.driverInit] + d
 
     def driverInit(self, sim):
+        yield sim.waitWriteOnly()
         try:
             d = self.data.popleft()
         except IndexError:
@@ -66,9 +67,9 @@ class SignalAgent(SyncAgentBase):
     def driverWithClk(self, sim):
         # if clock is specified this function is periodically called every
         # clk tick, when agent is enabled
-        yield ReadOnly()
+        yield sim.waitReadOnly()
         if self.data and self.notReset(sim):
-            yield WriteOnly()
+            yield sim.waitWriteOnly()
             d = self.data.popleft()
             self.doWrite(sim, d)
 
@@ -80,9 +81,9 @@ class SignalAgent(SyncAgentBase):
         # if clock is specified this function is periodically called every
         # clk tick
         while True:
-            yield ReadOnly()
+            yield sim.waitReadOnly()
             if self._enabled and self.data and self.notReset(sim):
-                yield WriteOnly()
+                yield sim.waitWriteOnly()
                 d = self.data.popleft()
                 self.doWrite(sim, d)
 
@@ -94,7 +95,7 @@ class SignalAgent(SyncAgentBase):
             self.initPending = False
         # if there is no clk, we have to manage periodic call by our self
         while True:
-            yield ReadOnly
+            yield sim.waitReadOnly()
             if self._enabled and self.notReset(sim):
                 d = self.doRead(sim)
                 self.data.append(d)
@@ -104,7 +105,7 @@ class SignalAgent(SyncAgentBase):
     def monitorWithClk(self, sim):
         # if clock is specified this function is periodically called every
         # clk tick, when agent is enabled
-        yield ReadOnly
+        yield sim.waitReadOnly()
         if self.notReset(sim):
             d = self.doRead(sim)
             self.data.append(d)

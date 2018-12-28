@@ -47,11 +47,11 @@ class HandshakedAgent(SyncAgentBase):
         """get "ready" signal"""
         return self.intf.rd._sigInside
 
-    def isRd(self, readFn):
+    def isRd(self):
         """
         get value of "ready" signal
         """
-        return readFn(self._rd)
+        return self._rd.read()
 
     def wrRd(self, val):
         self._rd.write(val)
@@ -60,12 +60,12 @@ class HandshakedAgent(SyncAgentBase):
         """get "valid" signal"""
         return self.intf.vld._sigInside
 
-    def isVld(self, readFn):
+    def isVld(self):
         """
         get value of "valid" signal, override f.e. when you
         need to use signal with reversed polarity
         """
-        return readFn(self._vld)
+        return self._vld.read()
 
     def wrVld(self, val):
         self._vld.write(val)
@@ -74,7 +74,9 @@ class HandshakedAgent(SyncAgentBase):
         """
         Collect data from interface
         """
+        yield sim.waitReadOnly()
         if self.notReset(sim):
+            yield sim.waitWriteOnly()
             # update rd signal only if required
             if self._lastRd is not 1:
                 self.wrRd(1)
@@ -90,7 +92,7 @@ class HandshakedAgent(SyncAgentBase):
                     onMonitorReady(sim)
 
             # wait for response of master
-            yield sim.waitOnCombUpdate()
+            yield sim.waitCombStable()
             vld = self.isVld()
             try:
                 vld = int(vld)
@@ -99,7 +101,7 @@ class HandshakedAgent(SyncAgentBase):
                     sim.now, self.intf,
                     "vld signal is in invalid state")
 
-            if vld.val:
+            if vld:
                 # master responded with positive ack, do read data
                 d = self.doRead(sim)
                 if self._debugOutput is not None:
@@ -112,6 +114,7 @@ class HandshakedAgent(SyncAgentBase):
                     self._afterRead(sim)
         else:
             if self._lastRd is not 0:
+                yield sim.waitWriteOnly()
                 # can not receive, say it to masters
                 self.wrRd(0)
                 self._lastRd = 0
@@ -125,7 +128,7 @@ class HandshakedAgent(SyncAgentBase):
         self.intf.data.write(data)
 
     def checkIfRdWillBeValid(self, sim):
-        yield sim.waitOnCombUpdate()
+        yield sim.waitCombStable()
         rd = self.isRd()
         try:
             rd = int(rd)
@@ -138,6 +141,7 @@ class HandshakedAgent(SyncAgentBase):
 
         set vld high and wait on rd in high then pass new data
         """
+        yield sim.waitWriteOnly()
         # pop new data if there are not any pending
         if self.actualData is NOP and self.data:
             self.actualData = self.data.popleft()
@@ -147,14 +151,17 @@ class HandshakedAgent(SyncAgentBase):
         # update data on signals if is required
         if self.actualData is not self._lastWritten:
             if doSend:
-                self.doWrite(sim, self.actualData)
+                data = self.actualData
             else:
-                self.doWrite(sim, None)
+                data = None
+            self.doWrite(sim, data)
             self._lastWritten = self.actualData
 
+        yield sim.waitReadOnly()
         en = self.notReset(sim)
         vld = int(en and doSend)
         if self._lastVld is not vld:
+            yield sim.waitWriteOnly()
             self.wrVld(vld)
             self._lastVld = vld
 
@@ -165,7 +172,7 @@ class HandshakedAgent(SyncAgentBase):
             return
 
         # wait for response of slave
-        yield sim.waitOnCombUpdate()
+        yield sim.waitReadOnly()
 
         rd = self.isRd()
         try:

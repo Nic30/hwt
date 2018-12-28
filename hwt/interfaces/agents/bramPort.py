@@ -2,7 +2,6 @@ from collections import deque
 
 from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
-from pycocotb.triggers import ReadOnly
 from pycocotb.process_utils import oscilate
 
 
@@ -68,17 +67,17 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     def monitor(self, sim):
         intf = self.intf
 
-        yield ReadOnly()
+        yield sim.waitReadOnly()
         # now we are after clk edge
         if self.notReset(sim):
             en = intf.en.read()
-            assert en.vldMask
-            if en.val:
+            en = int(en)
+            if en:
                 we = intf.we.read()
-                assert we.vldMask
+                we = int(we)
 
                 addr = intf.addr.read()
-                if we.val:
+                if we:
                     data = intf.din.read()
                     self.onWriteReq(sim, addr, data)
                 else:
@@ -88,6 +87,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             req = self.requests.popleft()
             t = req[0]
             addr = req[1]
+            yield sim.waitWriteOnly()
             if t == READ:
                 intf.dout.write(self.mem[addr.val])
             else:
@@ -98,13 +98,15 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     def driver(self, sim):
         intf = self.intf
         if self.requireInit:
+            yield sim.waitWriteOnly()
             intf.en.write(0)
             intf.we.write(0)
             self.requireInit = False
 
-#        yield Timer(2000)
         readPending = self.readPending
+        yield sim.waitReadOnly()
         if self.requests and self.notReset(sim):
+            yield sim.waitWriteOnly()
             req = self.requests.popleft()
             if req is NOP:
                 intf.en.write(0)
@@ -119,7 +121,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             self.readPending = False
 
         if readPending:
-            yield ReadOnly()
+            yield sim.waitReadOnly()
             # now we are after clk edge
             d = intf.dout.read()
             self.readed.append(d)
