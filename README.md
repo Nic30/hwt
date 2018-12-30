@@ -10,7 +10,7 @@
 
 * Meta programing + HLS, standard code generators to prevent code duplications.
 * Integration with community and commercial tools, flexible lightway user extensible architecture.
-* Simple verifications and testing.
+* Simple and effective verifications and testing.
 
 ## Features
 
@@ -34,6 +34,7 @@ HWT designs are instances. No specific exceution is required, just use toRtl met
 * [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
 * [hwtHls](https://github.com/Nic30/hwtHls) - High Level Synthetizer (alghorithmic description -> RTL)
 * [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) (not maintained)- (System) Verilog/VHDL compatibility layer at which allows you to import objects from HDL.
+* [ipCorePackager](https://github.com/Nic30/ipCorePackager) - IPCore generator (Vivado, Quartus support etc.) automatic specification of interfaces by metaclass description, register map, clk domains etc.
 
 
 ## Installation
@@ -62,7 +63,6 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
 * [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, meta HDL
 * [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
-* [Kactus2](http://funbase.cs.tut.fi) - IP-core packager
 
 
 ## Related open-source
