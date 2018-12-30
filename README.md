@@ -67,6 +67,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, meta HDL
 * [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
 * [Kactus2](http://funbase.cs.tut.fi) - IP-core packager
+* [edalize](https://github.com/olofk/edalize) - 2018-?, python, abstraction layer for eda tools
 
 
 ## Related open-source
