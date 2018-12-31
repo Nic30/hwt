@@ -55,6 +55,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, meta HDL
 * [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, meta HDL
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, meta HDL
+* [nmigen](https://github.com/m-labs/nmigen) - 
 * [jhdl](https://github.com/larsjoost/jhdl) - ?-2017, C++ Verilog/VHDL -> systemC, prototype
 * [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
 * [PyMTL](https://github.com/cornell-brg/pymtl) - 2014-?, Python, Process based HDL
@@ -67,7 +68,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, meta HDL
 * [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
 * [Kactus2](http://funbase.cs.tut.fi) - IP-core packager
-* [edalize](https://github.com/olofk/edalize) - 2018-?, python, abstraction layer for eda tools
+* [edalize](https://github.com/olofk/edalize) - 2018-?, Python, abstraction layer for eda tools
 
 
 ## Related open-source
