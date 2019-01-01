@@ -49,7 +49,7 @@ class SignalAgent(SyncAgentBase):
     def driverInit(self, sim):
         yield sim.waitWriteOnly()
         try:
-            d = self.data.popleft()
+            d = self.data[0]
         except IndexError:
             d = None
 
@@ -66,7 +66,7 @@ class SignalAgent(SyncAgentBase):
 
     def driverWithClk(self, sim):
         # if clock is specified this function is periodically called every
-        # clk tick, when agent is enabled
+        # clk tick, if agent is enabled
         yield sim.waitReadOnly()
         if self.data and self.notReset(sim):
             yield sim.waitWriteOnly()
