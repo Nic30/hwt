@@ -1,5 +1,3 @@
-import os
-
 from hwt.doc_markers import internal
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
@@ -8,10 +6,8 @@ from hwt.serializer.verilog.serializer import VerilogSerializer
 from hwt.hdl.types.bits import Bits
 from ipCorePackager.constants import DIRECTION
 from math import ceil
-from multiprocessing.pool import ThreadPool
-from importlib import machinery
 from pycocotb.verilator.simulator_gen import verilatorCompile, \
-    generatePythonModuleWrapper
+    generatePythonModuleWrapper, loadPythonCExtensionFromFile
 from glob import iglob
 from hwt.serializer.mode import _serializeExclude_eval
 from hwt.hdl.architecture import Architecture
@@ -24,7 +20,7 @@ def collect_signals(top):
             t = p._dtype
             if isinstance(t, Bits):
                 is_read_only = p.direction == DIRECTION.OUT
-                size = ceil(t.bit_length() / 8)
+                size = ceil(t.bit_length())
                 accessible_signals.append(
                     (p.name, is_read_only, int(bool(t.signed)), size)
                 )
@@ -56,7 +52,6 @@ class VerilogForVerilatorSerializer(VerilogSerializer):
 def toVerilatorSimModel(unit: Unit,
                         unique_name: str,
                         build_dir: str,
-                        thread_pool: ThreadPool=None,
                         target_platform=DummyPlatform(),
                         do_compile=True):
     """
@@ -83,8 +78,7 @@ def toVerilatorSimModel(unit: Unit,
             unit._name,
             unique_name,
             build_dir,
-            accessible_signals,
-            thread_pool)
+            accessible_signals)
     else:
         sim_so = None
         file_pattern = './**/{0}.*.so'.format(unique_name)
@@ -93,10 +87,7 @@ def toVerilatorSimModel(unit: Unit,
             sim_so = filename
 
     # load compiled library into python
-    importer = machinery.FileFinder(os.path.dirname(os.path.abspath(sim_so)),
-                                    (machinery.ExtensionFileLoader,
-                                     machinery.EXTENSION_SUFFIXES))
-    sim_module = importer.find_module(unique_name).load_module(unique_name)
+    sim_module = loadPythonCExtensionFromFile(sim_so, unique_name)
     sim_cls = getattr(sim_module, unique_name)
 
     return sim_cls
