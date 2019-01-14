@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from pycocotb.agentBase import AgentBase
+from pycocotb.agents.base import AgentBase
 from pycocotb.process_utils import OnRisingCallbackLoop
 
 
