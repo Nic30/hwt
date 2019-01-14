@@ -1,8 +1,8 @@
 from _random import Random
 from collections import deque
 from inspect import isgenerator
-from multiprocessing.pool import ThreadPool
 import os
+from typing import Optional
 import unittest
 
 from hwt.hdl.types.arrayVal import HArrayVal
@@ -11,10 +11,9 @@ from hwt.simulator.agentConnector import valToInt, autoAddAgents
 from hwt.simulator.shortcuts import toVerilatorSimModel, \
     reconnectUnitSignalsToModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
-from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.constants import CLK_PERIOD
-from typing import Optional
 from hwt.synthesizer.unit import Unit
+from pycocotb.constants import CLK_PERIOD
+from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer
 
 
@@ -75,7 +74,7 @@ class SimTestCase(unittest.TestCase):
         if d:
             os.makedirs(d, exist_ok=True)
 
-        self.rtl_simulator._set_trace_file(outputFileName, -1)
+        self.rtl_simulator.set_trace_file(outputFileName, -1)
         sim = HdlSimulator(self.rtl_simulator)
 
         # run simulation, stimul processes are register after initial
