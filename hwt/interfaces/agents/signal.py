@@ -1,8 +1,9 @@
 from collections import deque
 
-from hwt.interfaces.agents.clk import DEFAULT_CLOCK
-from hwt.simulator.agentBase import AgentBase, SyncAgentBase
+from hwt.simulator.agentBase import SyncAgentBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from pycocotb.agents.base import AgentBase
+from pycocotb.agents.clk import DEFAULT_CLOCK
 from pycocotb.triggers import Timer
 
 

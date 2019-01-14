@@ -1,4 +1,4 @@
-from hwt.simulator.agentBase import AgentBase
+from pycocotb.agents.base import AgentBase
 
 
 class StructIntfAgent(AgentBase):

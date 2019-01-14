@@ -2,8 +2,7 @@ from collections import deque
 
 from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
-from pycocotb.process_utils import oscilate
-from hwt.interfaces.agents.clk import ClockAgent
+from pycocotb.agents.clk import ClockAgent
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):

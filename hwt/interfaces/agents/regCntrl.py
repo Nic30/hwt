@@ -1,6 +1,7 @@
 from hwt.interfaces.agents.signal import SignalAgent
 from hwt.interfaces.agents.vldSynced import VldSyncedAgent
-from hwt.simulator.agentBase import SyncAgentBase, AgentBase
+from hwt.simulator.agentBase import SyncAgentBase
+from pycocotb.agents.base import AgentBase
 
 
 class RegCntrlAgent(SyncAgentBase):
