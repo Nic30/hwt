@@ -3,7 +3,7 @@ from collections import deque
 from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.process_utils import oscilate
-from hwt.interfaces.agents.clk import OscilatorAgent
+from hwt.interfaces.agents.clk import ClockAgent
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):
@@ -137,6 +137,6 @@ class BramPortAgent(BramPort_withoutClkAgent):
 
     def getDrivers(self):
         drivers = super(BramPortAgent, self).getDrivers()
-        self.clk_ag = OscilatorAgent(self.intf.clk)
+        self.clk_ag = ClockAgent(self.intf.clk)
         drivers.extend(self.clk_ag.getDrivers())
         return drivers

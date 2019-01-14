@@ -6,7 +6,7 @@ from pycocotb.triggers import Timer
 DEFAULT_CLOCK = CLK_PERIOD
 
 
-class OscilatorAgent(AgentBase):
+class ClockAgent(AgentBase):
     """
     Simulation agent for :class:`hwt.interfaces.std.Clk` interface
 
@@ -20,7 +20,7 @@ class OscilatorAgent(AgentBase):
     """
 
     def __init__(self, intf, period=DEFAULT_CLOCK):
-        super(OscilatorAgent, self).__init__(intf)
+        super(ClockAgent, self).__init__(intf)
         self.period = period
         self.initWait = 0
         self.intf = self.intf._sigInside
