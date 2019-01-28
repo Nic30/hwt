@@ -10,7 +10,7 @@
 
 ## The goals of HWT
 
-* Meta programing (Hardware Construction Language HCL) + HLS, standard code generators to prevent code duplications.
+* Meta programing (Hardware Construction Language HCL) + HLS, standard code generators to prevent code duplications, graph database for framework independent optimizations.
 * Integration with community and commercial tools, flexible lightway user extensible architecture.
 * Simple verifications and testing.
 
