@@ -10,13 +10,13 @@
 
 ## The goals of HWT
 
-* Meta programing + HLS, standard code generators to prevent code duplications.
+* Meta programing (Hardware Construction Language HCL) + HLS, standard code generators to prevent code duplications.
 * Integration with community and commercial tools, flexible lightway user extensible architecture.
 * Simple verifications and testing.
 
 ## Features
 
-* Meta Hardware Description Language (example [simple](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py), [showcase](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/showcase0.py)). It is somewhere between HLS and HDL. It offers HLS style of coding but at the same time it allows you to manipulate HDL objects. This means it is a little bit slower to write a prototype than you would in HLS, but you always know what, how and why is happening.
+* Hardware Construction Language (HCL) (example [simple](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py), [showcase](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/showcase0.py)). It is somewhere between HLS and HDL. It offers HLS style of coding but at the same time it allows you to manipulate HDL objects. This means it is a little bit slower to write a prototype than you would in HLS, but you always know what, how and why is happening.
 * Digital circuit simulator with UVM like verification environment (example usage [CAM](https://github.com/Nic30/hwtLib/blob/master/hwtLib/mem/cam_test.py), [structWriter_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/structManipulators/structWriter_test.py))
 * Tools for static analysis ([resourceAnalyzer](https://github.com/Nic30/hwt/blob/master/hwt/serializer/resourceAnalyzer/analyzer.py), example usage [cntr_test.py](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/arithmetic/cntr_test.py))
 * Serializers to export HWT designs into multiple target HDLs ([verilog, VHDL, system-c, IP-core packager, hwt itself...](https://github.com/Nic30/hwt/tree/master/hwt/serializer))
@@ -52,20 +52,20 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 
 ## Similar projects
 
-* [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, meta HDL
-* [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, meta HDL
-* [migen](https://github.com/m-labs/migen) - 2013-?, Python, meta HDL
+* [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, HCL
+* [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, HCL
+* [migen](https://github.com/m-labs/migen) - 2013-?, Python, HCL
 * [nmigen](https://github.com/m-labs/nmigen) - 
 * [jhdl](https://github.com/larsjoost/jhdl) - ?-2017, C++ Verilog/VHDL -> systemC, prototype
 * [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
 * [PyMTL](https://github.com/cornell-brg/pymtl) - 2014-?, Python, Process based HDL
-* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric meta HDL with HLS like features
+* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric HCL with HLS like features
 * [hammer](https://github.com/ucb-bar/hammer) - 2017-?, Python, Highly Agile Masks Made Effortlessly from RTL
-* [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, meta HDL
-* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, meta HDL
+* [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, HCL
+* [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, HCL
 * [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
 * [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
-* [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, meta HDL
+* [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, HCL
 * [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
 * [Kactus2](http://funbase.cs.tut.fi) - IP-core packager
 * [edalize](https://github.com/olofk/edalize) - 2018-?, Python, abstraction layer for eda tools
