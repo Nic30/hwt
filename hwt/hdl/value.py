@@ -98,7 +98,6 @@ class Value():
 
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
         seen.add(self)
-        yield from []
 
     # def __pos__(self):
     #     raise TypeError()

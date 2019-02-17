@@ -86,9 +86,7 @@ class Operator(HdlObject):
         return self.operator.eval(self, simulator=simulator)
 
     @internal
-    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx)\
-        -> Generator[Union[RtlSignalBase, "Operator"],
-                     None, None]:
+    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
         seen.add(self)
 
         if isEventDependentOp(self.operator):

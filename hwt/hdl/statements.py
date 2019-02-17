@@ -23,9 +23,9 @@ class IncompatibleStructure(Exception):
 class HdlStatement(HdlObject):
     """
     :ivar _is_completly_event_dependent: statement does not have
-         any cobinational statement
+         any combinational statement
     :ivar _now_is_event_dependent: statement is event (clk) dependent
-    :ivar parentStm: parent isnstance of HdlStatement or None
+    :ivar parentStm: parent instance of HdlStatement or None
     :ivar _inputs: UniqList of input signals for this statement
     :ivar _outputs: UniqList of output signals for this statement
     :ivar _sensitivity: UniqList of input signals
@@ -111,16 +111,16 @@ class HdlStatement(HdlObject):
     @internal
     def _discover_enclosure(self) -> None:
         """
-        Discover all outputs for which is this steement enclosed _enclosed_for property
+        Discover all outputs for which is this statement enclosed _enclosed_for property
         (has driver in all code branches)
         """
-        raise NotImplementedError("This menthod shoud be implemented"
+        raise NotImplementedError("This method should be implemented"
                                   " on class of statement", self.__class__, self)
 
     @internal
     @staticmethod
     def _discover_enclosure_for_statements(statements: List['HdlStatement'],
-                                           outputs: List['HdlStatement']):
+                                           outputs: List['RtlSignalBase']):
         """
         Discover enclosure for list of statements
 
@@ -155,7 +155,7 @@ class HdlStatement(HdlObject):
         """
         discover all sensitivity signals and store them to _sensitivity property
         """
-        raise NotImplementedError("This menthod shoud be implemented"
+        raise NotImplementedError("This method should be implemented"
                                   " on class of statement", self.__class__, self)
 
     @internal
@@ -204,7 +204,7 @@ class HdlStatement(HdlObject):
         """
         :return: iterator over all children statements
         """
-        raise NotImplementedError("This menthod shoud be implemented"
+        raise NotImplementedError("This method should be implemented"
                                   " on class of statement", self.__class__,
                                   self)
 
@@ -212,7 +212,7 @@ class HdlStatement(HdlObject):
     def _on_reduce(self, self_reduced: bool, io_changed: bool,
                    result_statements: List["HdlStatement"]) -> None:
         """
-        Update signal IO after reuce atempt
+        Update signal IO after reduce attempt
 
         :param self_reduced: if True this object was reduced
         :param io_changed: if True IO of this object may changed
@@ -239,7 +239,7 @@ class HdlStatement(HdlObject):
             for stm in result_statements:
                 stm.parentStm = parentStm
                 if parentStm is None:
-                    # conect signals to child statements
+                    # connect signals to child statements
                     for inp in stm._inputs:
                         inp.endpoints.append(stm)
                     for outp in stm._outputs:
@@ -284,7 +284,7 @@ class HdlStatement(HdlObject):
 
     @internal
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
-        raise NotImplementedError("This menthod shoud be implemented"
+        raise NotImplementedError("This method should be implemented"
                                   " on class of statement", self.__class__,
                                   self)
 
@@ -297,9 +297,9 @@ class HdlStatement(HdlObject):
     @internal
     def _is_mergable(self, other: "HdlStatement") -> bool:
         if self is other:
-            raise ValueError("Can not merge statment with itself")
+            raise ValueError("Can not merge statement with itself")
         else:
-            raise NotImplementedError("This menthod shoud be implemented"
+            raise NotImplementedError("This method should be implemented"
                                       " on class of statement", self.__class__,
                                       self)
 
@@ -454,7 +454,7 @@ class HdlStatement(HdlObject):
     @internal
     def _on_parent_event_dependent(self):
         """
-        After parrent statement become event dependent
+        After parent statement become event dependent
         propagate event dependency flag to child statements
         """
         if not self._is_completly_event_dependent:
@@ -512,7 +512,7 @@ class HdlStatement(HdlObject):
         """
         :return: True if other has same meaning as self
         """
-        raise NotImplementedError("This menthod shoud be implemented"
+        raise NotImplementedError("This method should be implemented"
                                   " on class of statement", self.__class__, self)
 
     @internal
@@ -556,7 +556,6 @@ class HdlStatement(HdlObject):
                 self._enclosed_for.append(replacement)
 
 
-
 @internal
 def seqEvalCond(cond) -> bool:
     """
@@ -579,7 +578,7 @@ def isSameHVal(a: Value, b: Value) -> bool:
 def areSameHVals(a: Union[None, List[Value]],
                  b: Union[None, List[Value]]) -> bool:
     """
-    :return: True if two vectors of Value instances are same
+    :return: True if two vectors of Value/RtlSignal instances are same
     :note: not just equal
     """
     if a is b:

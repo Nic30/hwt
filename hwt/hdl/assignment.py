@@ -98,7 +98,7 @@ class Assignment(HdlStatement):
     @internal
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, HdlStatement]):
         """
-        Enclosure is never requiered
+        The assignment does not have any uncovered code branches
         """
         pass
 
