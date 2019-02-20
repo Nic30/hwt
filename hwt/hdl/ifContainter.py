@@ -7,7 +7,7 @@ from typing import List, Tuple, Dict, Union
 
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
-from hwt.hdl.statements import HdlStatement, statementsAreSame,\
+from hwt.hdl.statements import HdlStatement, statementsAreSame, \
     isSameStatementList, seqEvalCond
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -218,14 +218,12 @@ class IfContainer(HdlStatement):
                 stm._discover_sensitivity(seen)
                 ctx.extend(stm._sensitivity)
 
-        if not ctx.contains_ev_dependency and self.ifFalse:
+        if self.ifFalse:
+            assert ctx.contains_ev_dependency, "can not negate event"
             # else
             for stm in self.ifFalse:
                 stm._discover_sensitivity(seen)
                 ctx.extend(stm._sensitivity)
-
-        else:
-            assert not self.ifFalse, "can not negate event"
 
     @internal
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, Union[Value, RtlSignalBase]]) -> None:
@@ -278,6 +276,7 @@ class IfContainer(HdlStatement):
             self.rank -= rank_decrease
             io_change |= _io_change
             new_elifs.append((cond, _statements))
+        self.elIfs = new_elifs
 
         if self.ifFalse is not None:
             self.ifFalse, rank_decrease, _io_update_required = self._try_reduce_list(
@@ -327,7 +326,7 @@ class IfContainer(HdlStatement):
             return False
 
         for (a_c, a_stm), (b_c, b_stm) in zip(self.elIfs, other.elIfs):
-            if a_c is not b_c or self._is_mergable_statement_list(a_stm, b_stm):
+            if a_c is not b_c or not self._is_mergable_statement_list(a_stm, b_stm):
                 return False
 
         if not self._is_mergable_statement_list(self.ifFalse, other.ifFalse):
@@ -344,7 +343,7 @@ class IfContainer(HdlStatement):
 
         new_elifs = []
         for ((c, elifA), (_, elifB)) in zip(self.elIfs, other.elIfs):
-            new_elifs.append((c,  merge(elifA, elifB)))
+            new_elifs.append((c, merge(elifA, elifB)))
         self.elIfs = new_elifs
 
         self.ifFalse = merge(self.ifFalse, other.ifFalse)
@@ -359,6 +358,7 @@ class IfContainer(HdlStatement):
     @staticmethod
     def condHasEffect(ifTrue, ifFalse, elIfs):
         stmCnt = len(ifTrue)
+        # [TODO] condition in empty if stm
         if ifFalse is not None \
                 and stmCnt == len(ifFalse) \
                 and reduce(and_,
