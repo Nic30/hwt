@@ -63,7 +63,7 @@ class HdlStatement(HdlObject):
     def _collect_io(self) -> None:
         """
         Collect inputs/outputs from all child statements
-        to :py:attr:`~_input` / :py:attr:`_output` attribure on this object
+        to :py:attr:`~_input` / :py:attr:`_output` attribute on this object
         """
         in_add = self._inputs.extend
         out_add = self._outputs.extend
@@ -79,11 +79,11 @@ class HdlStatement(HdlObject):
                                  keep_mask: List[bool],
                                  new_statements: List["HdlStatement"]):
         """
-        Cut all logic from statemts which drives signal sig.
+        Cut all logic from statements which drives signal sig.
 
         :param sig: signal which drivers should be removed
-        :param statements: list of statemetns to filter
-        :param keep_mask: list of flags if True statemnt was driver only of sig
+        :param statements: list of statements to filter
+        :param keep_mask: list of flags if True statements was driver only of sig
         :param new_statements: output list of filtered statements
 
         :return: True if all input statements were reduced
@@ -425,7 +425,13 @@ class HdlStatement(HdlObject):
                     break
 
             if a is not None or b is not None:
-                a._merge_with_other_stm(b)
+                if b is None:
+                    a = b
+                    b = None
+
+                if a is not None and b is not None:
+                    a._merge_with_other_stm(b)
+
                 tmp.append(a)
                 a = None
                 b = None
