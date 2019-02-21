@@ -77,6 +77,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [vtr-verilog-to-routing](https://github.com/verilog-to-routing/vtr-verilog-to-routing)
 * [verilator](https://www.veripool.org/wiki/verilator) - Verilog -> C/C++ sim
 * [yosys](https://github.com/YosysHQ/yosys) - RTL synthesis framework
+* [OpenSTA](https://github.com/abk-openroad/OpenSTA) - a gate level static timing verifier 
 
 
 ## Board support libraries (Potential candidates for public integration)
