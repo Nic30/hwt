@@ -79,7 +79,7 @@ class VerilogSerializer_ops():
         # [TODO] if operand is concatenation and parent operator
         #        is not concatenation operand should be extracted
         #        as tmp variable
-        #        * maybe flattern the concatenations
+        #        * maybe flatten the concatenations
         if operator.operator != AllOps.CONCAT and cls._operandIsAnotherOperand(operand)\
                 and operand.origin.operator == AllOps.CONCAT:
             tmpVar = ctx.createTmpVarFn("tmp_concat_", operand._dtype)
