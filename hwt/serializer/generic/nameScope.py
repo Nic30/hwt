@@ -1,4 +1,6 @@
 from hwt.doc_markers import internal
+from typing import Optional
+
 
 class LangueKeyword(object):
     """
@@ -27,14 +29,13 @@ class NameScopeItem(dict):
         # this happens for most of generated objects
         self.cntrsForPrefixNames = {}
 
-    def getChild(self, parent):
+    def getChild(self, parent)-> Optional["NameScope"]:
         try:
             return parent[self.myLvl + 1]
         except IndexError:
             return None
 
-    def getParent(self, parent):
-
+    def getParent(self, parent: "NameScope"):
         i = self.myLvl - 1
         if i < 0:
             return None
@@ -42,7 +43,9 @@ class NameScopeItem(dict):
             return parent[self.myLvl - 1]
 
     @internal
-    def __incrPrefixCntrsForChilds(self, prefix, currentVal, parent):
+    def __incrPrefixCntrsForChilds(self, prefix,
+                                   currentVal,
+                                   parent: "NameScope") -> str:
         # [TODO] check if new name is not defined in any direction
         currentVal += 1
         self.cntrsForPrefixNames[prefix] = currentVal
@@ -59,7 +62,7 @@ class NameScopeItem(dict):
         return usableName
 
     @internal
-    def __registerName(self, name, obj, parent):
+    def __registerName(self, name, obj, parent: "NameScope"):
         # search if name is already defined on me and parents
         actual = self
         o = None
@@ -83,7 +86,7 @@ class NameScopeItem(dict):
         else:
             raise NameOccupiedErr(o)
 
-    def getUsableName(self, suggestedName, obj, parent):
+    def getUsableName(self, suggestedName, obj, parent: "NameScope") -> str:
         if not suggestedName.endswith("_"):
             try:
                 self.__registerName(suggestedName, obj, parent)
@@ -130,7 +133,7 @@ class NameScope(list):
             else:
                 self.append(NameScopeItem(len(self)))
 
-    def checkedName(self, actualName, actualObj, isGlobal=False):
+    def checkedName(self, actualName, actualObj, isGlobal=False) -> str:
         if isGlobal:
             return self[0].getUsableName(actualName, actualObj, self)
         else:

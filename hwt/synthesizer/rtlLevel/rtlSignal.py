@@ -117,8 +117,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         return self.drivers[0]
 
     @internal
-    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx)\
-            -> Generator[Union["RtlSignal", "Operator"], None, None]:
+    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
         seen.add(self)
 
         if self._const:

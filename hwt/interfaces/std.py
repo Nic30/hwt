@@ -3,7 +3,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BIT, BIT_N
 from hwt.interfaces.agents.bramPort import BramPortAgent
 from hwt.interfaces.agents.bramPort import BramPort_withoutClkAgent
-from hwt.interfaces.agents.clk import OscilatorAgent
+from hwt.interfaces.agents.clk import ClockAgent
 from hwt.interfaces.agents.fifo import FifoReaderAgent
 from hwt.interfaces.agents.fifo import FifoWriterAgent
 from hwt.interfaces.agents.handshaked import HandshakeSyncAgent
@@ -62,7 +62,7 @@ class Clk(Signal):
         return IP_Clk
 
     def _initSimAgent(self):
-        self._ag = OscilatorAgent(self)
+        self._ag = ClockAgent(self)
 
 
 class Rst(Signal):

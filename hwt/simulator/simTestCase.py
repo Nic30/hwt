@@ -1,8 +1,8 @@
 from _random import Random
 from collections import deque
 from inspect import isgenerator
-from multiprocessing.pool import ThreadPool
 import os
+from typing import Optional
 import unittest
 
 from hwt.hdl.types.arrayVal import HArrayVal
@@ -11,10 +11,9 @@ from hwt.simulator.agentConnector import valToInt, autoAddAgents
 from hwt.simulator.shortcuts import toVerilatorSimModel, \
     reconnectUnitSignalsToModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
-from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.constants import CLK_PERIOD
-from typing import Optional
 from hwt.synthesizer.unit import Unit
+from pycocotb.constants import CLK_PERIOD
+from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer
 
 
@@ -57,8 +56,6 @@ class SimTestCase(unittest.TestCase):
     """
     # value chosen because in this position bits are changing frequently
     _defaultSeed = 317
-    # thread pool for compilation
-    _thread_pool = ThreadPool()
     # while debugging only the simulation it may be useful to just
     # disable the compilation of simulator as it saves time
     RECOMPILE = True
@@ -77,7 +74,7 @@ class SimTestCase(unittest.TestCase):
         if d:
             os.makedirs(d, exist_ok=True)
 
-        self.rtl_simulator._set_trace_file(outputFileName, -1)
+        self.rtl_simulator.set_trace_file(outputFileName, -1)
         sim = HdlSimulator(self.rtl_simulator)
 
         # run simulation, stimul processes are register after initial
@@ -125,10 +122,9 @@ class SimTestCase(unittest.TestCase):
             seq2 = _seq2
         self.assertSequenceEqual(seq1, seq2, msg, seq_type)
 
-    def simpleRandomizationProcess(self, agent):
+    def simpleRandomizationProcess(self, agent, timeQuantum=CLK_PERIOD):
         seed = self._rand.getrandbits(64)
         random = Random(seed)
-        timeQuantum = CLK_PERIOD
 
         def randomEnProc(sim):
             # small space at start to modify agents when they are inactive
@@ -202,7 +198,6 @@ class SimTestCase(unittest.TestCase):
             unit,
             unique_name=unique_name,
             build_dir=build_dir,
-            thread_pool=cls._thread_pool,
             target_platform=target_platform,
             do_compile=cls.RECOMPILE)
         if onAfterToRtl:

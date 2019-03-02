@@ -91,10 +91,8 @@ class Param(RtlSignal):
         return int(v.val)
 
     @internal
-    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx)\
-            -> Generator["RtlSignal", None, None]:
+    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
         seen.add(self)
-        yield from []
 
     @internal
     def _walk_public_drivers(self, seen: set) -> Generator["RtlSignal", None, None]:

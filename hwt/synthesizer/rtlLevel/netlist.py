@@ -28,16 +28,14 @@ from hwt.doc_markers import internal
 
 
 @internal
-def name_for_process_and_mark_outputs(statements: List[HdlStatement])\
-        -> str:
+def name_for_process(outputs: List[RtlSignal]) -> str:
     """
-    Resolve name for process and mark outputs of statemens as not hidden
+    Resolve name for process
     """
     out_names = []
-    for stm in statements:
-        for sig in stm._outputs:
-            if not sig.hasGenericName:
-                out_names.append(sig.name)
+    for sig in outputs:
+        if not sig.hasGenericName:
+            out_names.append(sig.name)
 
     if out_names:
         return min(out_names)
@@ -124,13 +122,13 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
             if proc_statements:
                 yield from _statements_to_HWProcesses(proc_statements, False)
         else:
-            name = name_for_process_and_mark_outputs(proc_statements)
+            name = name_for_process(outputs)
             yield HWProcess("assig_process_" + name,
                             proc_statements, sensitivity,
                             inputs, outputs)
     else:
         assert not outputs
-        # this can happend f.e. when If does not contains any Assignment
+        # this can happen e.g. when If does not contains any Assignment
         pass
 
 
@@ -142,7 +140,7 @@ def statements_to_HWProcesses(statements: List[HdlStatement])\
     * for each out signal resolve it's drivers and collect them
     * split statements if there is and combinational loop
     * merge statements if it is possible
-    * resolve sensitivitilists
+    * resolve sensitivity lists
     * wrap into HWProcess instance
     * for every IO of process generate name if signal has not any
     """
