@@ -164,4 +164,4 @@ class VerilogSerializer_ops():
                 return "%d'(%s)" % (width, op_str)
         else:
             raise NotImplementedError(
-                "Do not know how to convert %s to vhdl" % (o))
+                "Do not know how to convert expression with operator %s to verilog" % (o))
