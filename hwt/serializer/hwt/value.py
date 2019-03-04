@@ -22,12 +22,12 @@ class HwtSerializer_value(GenericSerializer_Value):
                 return "0x%x" % val.val
             elif val.vldMask == 0:
                 return "None"
-        
+
         if isFullVld:
             vldMaskStr = ""
         else:
             vldMaskStr = ", vldMask=0x%x" % (val.vldMask)
-        
+
         return "%s.fromPy(0x%x%s)" % (
             cls.HdlType_bits(dtype, ctx, declaration=False),
             val.val, vldMaskStr)
