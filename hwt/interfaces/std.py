@@ -3,20 +3,20 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BIT, BIT_N
 from hwt.interfaces.agents.bramPort import BramPortAgent
 from hwt.interfaces.agents.bramPort import BramPort_withoutClkAgent
-from hwt.interfaces.agents.clk import ClockAgent
 from hwt.interfaces.agents.fifo import FifoReaderAgent
 from hwt.interfaces.agents.fifo import FifoWriterAgent
 from hwt.interfaces.agents.handshaked import HandshakeSyncAgent
 from hwt.interfaces.agents.handshaked import HandshakedAgent
 from hwt.interfaces.agents.rdSynced import RdSyncedAgent
 from hwt.interfaces.agents.regCntrl import RegCntrlAgent
-from hwt.interfaces.agents.rst import PullDownAgent
-from hwt.interfaces.agents.rst import PullUpAgent
 from hwt.interfaces.agents.signal import SignalAgent
 from hwt.interfaces.agents.vldSynced import VldSyncedAgent
 from hwt.interfaces.signalOps import SignalOps
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.param import Param
+from pycocotb.agents.clk import ClockAgent
+from pycocotb.agents.rst import PullDownAgent
+from pycocotb.agents.rst import PullUpAgent
 
 
 D = DIRECTION
