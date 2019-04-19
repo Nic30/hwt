@@ -16,6 +16,8 @@ class NameOccupiedErr(Exception):
 
 class NameScopeItem(dict):
     """
+    {name: obj}
+
     if name is discovered in scope it is converted to name_id
     where id is sequential number for prefix name\_
     """
@@ -36,8 +38,7 @@ class NameScopeItem(dict):
             return None
 
     def getParent(self, parent: "NameScope"):
-        i = self.myLvl - 1
-        if i < 0:
+        if self.myLvl < 1:
             return None
         else:
             return parent[self.myLvl - 1]
