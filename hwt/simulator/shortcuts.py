@@ -113,7 +113,7 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, rtl_simulator):
             # reconnect signal from model
             name = intf._sigInside.name
             # update name and dtype
-            s = getattr(rtl_simulator, name)
+            s = getattr(rtl_simulator.io, name)
             s._dtype = intf._dtype
             s._name = intf._name
             s.name = name
