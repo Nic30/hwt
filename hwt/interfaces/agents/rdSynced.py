@@ -68,8 +68,8 @@ class RdSyncedAgent(SyncAgentBase):
         if not (en and do):
             return
 
-        rd = self.isRd()
         if en:
+            rd = self.isRd()
             try:
                 rd = int(rd)
             except ValueError:
