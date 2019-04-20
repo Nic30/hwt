@@ -56,6 +56,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, HCL
 * [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, HCL
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, HCL
+* [Pyverilog](https://github.com/PyHDI/Pyverilog) - 2013-? Python-based Hardware Design Processing Toolkit for Verilog HDL
 * [nmigen](https://github.com/m-labs/nmigen) - 
 * [jhdl](https://github.com/larsjoost/jhdl) - ?-2017, C++ Verilog/VHDL -> systemC, prototype
 * [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
