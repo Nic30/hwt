@@ -80,6 +80,7 @@ class SimTestCase(unittest.TestCase):
         # run simulation, stimul processes are register after initial
         # initialization
         sim.run(until=until, extraProcesses=self.procs)
+        self.rtl_simulator.finalize()
         return sim
 
     def assertValEqual(self, first, second, msg=None):
