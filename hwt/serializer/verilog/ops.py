@@ -23,8 +23,8 @@ class VerilogSerializer_ops():
         AllOps.EQ: 10,
         AllOps.NEQ: 10,
         AllOps.AND: 11,
-        AllOps.XOR: 12,
-        AllOps.OR: 13,
+        AllOps.XOR: 11,
+        AllOps.OR: 11,
         AllOps.DOWNTO: 2,
         AllOps.GT: 9,
         AllOps.LT: 9,
@@ -130,7 +130,7 @@ class VerilogSerializer_ops():
 
         if o == AllOps.CALL:
             return "%s(%s)" % (cls.FunctionContainer(ops[0]),
-                               ", ".join(map(lambda op: cls._operand(op, op, ctx), ops[1:])))
+                               ", ".join(map(lambda _op: cls._operand(_op, op, ctx), ops[1:])))
         elif o == AllOps.INDEX:
             assert len(ops) == 2
             o1 = ops[0]
