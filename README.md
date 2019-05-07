@@ -71,7 +71,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
 * [Kactus2](http://funbase.cs.tut.fi) - IP-core packager
 * [edalize](https://github.com/olofk/edalize) - 2018-?, Python, abstraction layer for eda tools
-* [sail](https://github.com/rems-project/sail) 2018-?, (OCaml, Standard ML, Isabelle)- Sail architecture definition language 
+* [sail](https://github.com/rems-project/sail) 2018-?, (OCaml, Standard ML, Isabelle) - architecture definition language 
 
 
 ## Related open-source
