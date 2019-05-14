@@ -72,7 +72,8 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [Kactus2](http://funbase.cs.tut.fi) - IP-core packager
 * [edalize](https://github.com/olofk/edalize) - 2018-?, Python, abstraction layer for eda tools
 * [sail](https://github.com/rems-project/sail) 2018-?, (OCaml, Standard ML, Isabelle) - architecture definition language 
-
+* [mockturtle](https://github.com/lsils/mockturtle) - logic network library
+* [percy](https://github.com/whaaswijk/percy) - Collection of different synthesizers and exact synthesis methods for use in applications such as circuit resynthesis and design exploration.
 
 ## Related open-source
 
