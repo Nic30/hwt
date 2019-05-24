@@ -32,11 +32,13 @@ HWT designs are instances. No specific exceution is required, just use toRtl met
 
 ## HWT ecosystem
 
-* [hwtLib](https://github.com/Nic30/hwtLib) - Library full of examples and real designs.
-* [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds shematic into html documentaion. 
+* [netlistDB](https://github.com/HardwareIR/netlistDB) - High performance circuit database, C++
+* [hwtLib](https://github.com/Nic30/hwtLib) - Library with examples and real designs.
+* [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds interactive shematic into html documentaion. 
 * [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
 * [hwtHls](https://github.com/Nic30/hwtHls) - High Level Synthetizer (alghorithmic description -> RTL)
 * [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) (not maintained)- (System) Verilog/VHDL compatibility layer at which allows you to import objects from HDL.
+* [cocopy](https://github.com/potentialventures/cocotb) - Verilator simulator - Python binding
 
 
 ## Installation
