@@ -9,11 +9,18 @@
 [![Python version](https://img.shields.io/pypi/pyversions/hwt.svg)](https://img.shields.io/pypi/pyversions/hwt.svg)
 [ROADMAP](https://drive.google.com/file/d/1zyegLIf7VaBRyb-ED5vgOMmHzW4SRZLp/view?usp=sharing)
 
-## The goals of HWT
+## Keywords
 
-* Meta programing (Hardware Construction Language HCL) + HLS, standard code generators to prevent code duplications, graph database for framework independent optimizations.
-* Integration with community and commercial tools, flexible lightway user extensible architecture.
-* Simple verifications and testing.
+* Metaprogramming (Hardware Construction Language HCL, templatization) + HLS.
+* Simulator API, UVM
+* Buildtool, IP core generator
+
+## How HWT can help you?
+* The lower layer (IR, HDL serializers) is a shield against a problems related to VHDL/Verilog it is checking for correctness and synthetisability and removing specific of HDLs.
+* Simulator API - UVM simulation environment as a normal python object, easy to use while not sacrificing performance. Python driven.
+* C inspired type system is most important part of HWT as it allows all components use same description and thanks to stream-memory and other component generators significantly simplifies the developement of components which are using complex data structures. The typesystem contains not just struct/union, but also frame templates which can describe spartial data and the creation of the frames from data.
+* KISS (Keep it stupid and simple), each functionality separated as independent, but compatible, library so you do not have to care about it if you are not using it. Learning curve optimisation. 
+   
 
 ## Features
 
@@ -51,6 +58,18 @@ sudo pip3 install hwt
 
 Then you are able to use functions and classes defined in the hwt library from a python console or script.
 Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it contains all interfaces agents etc...
+
+## FAQ
+
+* Where is the entry point of the compiler?
+  * This is not a compiler, it is library of the objects which can be converted to Verilog/VHDL and back.
+* How do I get Verilog/VHDL?
+  * Use `toRtl` method [example](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py) 
+* How do I define my interface type, protocol and simulation agent?
+  * Derive from any Interface class and update `_initSimAgent` to create simulation agent of your type.
+* I do have c structure of UDP header, how do I send/recieve UDP packet over AXI-stream interface?
+  * Define HStruct type composed of eth_header_t, IPv4_header_t and HStream(uint8_t) and use [AxisFrameGen](https://github.com/Nic30/hwtLib/blob/master/hwtLib/amba/axis_comp/frameGen.py). There is and example of [ping responder](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/builders/pingResponder.py) 
+
 
 
 ## Similar projects
