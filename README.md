@@ -98,6 +98,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 
 ## Related open-source
 
+* [fusesoc](https://github.com/olofk/fusesoc) - package manager and a set of build tools for FPGA/ASIC development 
 * [vtr-verilog-to-routing](https://github.com/verilog-to-routing/vtr-verilog-to-routing)
 * [verilator](https://www.veripool.org/wiki/verilator) - Verilog -> C/C++ sim
 * [yosys](https://github.com/YosysHQ/yosys) - RTL synthesis framework
