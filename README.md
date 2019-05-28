@@ -95,6 +95,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [sail](https://github.com/rems-project/sail) 2018-?, (OCaml, Standard ML, Isabelle) - architecture definition language 
 * [mockturtle](https://github.com/lsils/mockturtle) - logic network library
 * [percy](https://github.com/whaaswijk/percy) - Collection of different synthesizers and exact synthesis methods for use in applications such as circuit resynthesis and design exploration.
+* [ILAng](https://github.com/Bo-Yuan-Huang/ILAng) - modeling and verification platform for SoCs where Instruction-Level Abstraction (ILA) is used as the formal model for hardware components.
 
 ## Related open-source
 
