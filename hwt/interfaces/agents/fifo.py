@@ -4,6 +4,7 @@ from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.process_utils import OnRisingCallbackLoop
 from pycocotb.triggers import Timer
 from pycocotb.agents.clk import DEFAULT_CLOCK
+from pycocotb.hdlSimulator import HdlSimulator
 
 
 class FifoReaderAgent(SyncAgentBase):
@@ -21,13 +22,13 @@ class FifoReaderAgent(SyncAgentBase):
         self.lastData_invalidate = False
         self.readPending_invalidate = False
 
-    def setEnable_asDriver(self, en, sim):
+    def setEnable_asDriver(self, en, sim: HdlSimulator):
         self._enabled = en
         self.driver.setEnable(en, sim)
         self.intf.wait.write(not en)
         self.lastData_invalidate = not en
 
-    def setEnable_asMonitor(self, en, sim):
+    def setEnable_asMonitor(self, en, sim: HdlSimulator):
         lastEn = self._enabled
         self._enabled = en
         self.monitor.setEnable(en, sim)
@@ -36,19 +37,17 @@ class FifoReaderAgent(SyncAgentBase):
         if not lastEn:
             self.dataReader.setEnable(en, sim)
 
-    def driver_init(self, sim):
+    def driver_init(self, sim: HdlSimulator):
+        yield sim.waitWriteOnly()
         self.intf.wait.write(not self._enabled)
-        return
-        yield
 
-    def monitor_init(self, sim):
+    def monitor_init(self, sim: HdlSimulator):
+        yield sim.waitWriteOnly()
         self.intf.en.write(self._enabled)
-        return
-        yield
 
-    def dataReader(self, sim):
+    def dataReader(self, sim: HdlSimulator):
         if self.readPending:
-            yield sim.waitOnCombUpdate()
+            yield sim.waitReadOnly()
             d = self.intf.data.read()
             self.data.append(d)
 
@@ -63,20 +62,23 @@ class FifoReaderAgent(SyncAgentBase):
                 super(FifoReaderAgent, self).getMonitors() +
                 [self.dataReader])
 
-    def monitor(self, sim):
+    def monitor(self, sim: HdlSimulator):
         intf = self.intf
-
+        yield sim.waitReadOnly()
         if self.notReset(sim):
             # speculative en set
-            yield sim.waitOnCombUpdate()
             wait = intf.wait.read()
-            assert wait.vldMask, (sim.now, intf, "wait signal in invalid state")
-            rd = not wait.val
-            intf.en.write(rd)
+            try:
+                wait = int(wait)
+            except ValueError:
+                raise AssertionError(sim.now, intf, "wait signal in invalid state")
 
+            rd = not wait
         else:
-            intf.en.write(0)
             rd = False
+
+        yield sim.waitWriteOnly()
+        intf.en.write(rd)
 
         self.readPending = rd
 
@@ -88,21 +90,23 @@ class FifoReaderAgent(SyncAgentBase):
                 super(FifoReaderAgent, self).getDrivers() +
                 [self.dataWriter])
 
-    def dataWriter(self, sim):
+    def dataWriter(self, sim: HdlSimulator):
         # delay data litle bit to have nicer wave
         # otherwise wirte happens before next clk period
         # and it means in 0 time and we will not be able to see it in wave
         yield Timer(DEFAULT_CLOCK / 10)
+        yield sim.waitWriteOnly()
         self.intf.data.write(self.lastData)
         if self.lastData_invalidate:
             self.lastData = None
 
-    def driver(self, sim):
+    def driver(self, sim: HdlSimulator):
         # now we are before clock event
         # * set wait signal
         # * set last data (done in separate process)
         # * if en == 1, pop next data for next clk
         intf = self.intf
+        yield sim.waitReadOnly()
         rst_n = self.notReset(sim)
         # speculative write
         if rst_n and self.data:
@@ -110,13 +114,13 @@ class FifoReaderAgent(SyncAgentBase):
         else:
             wait = 1
 
+        yield sim.waitWriteOnly()
         intf.wait.write(wait)
 
         if rst_n:
-            yield sim.waitOnCombUpdate()
             # wait for potential update of en
-            yield sim.waitOnCombUpdate()
             # check if write can be performed and if it possible do real write
+            yield sim.waitCombStable()
 
             en = intf.en.read()
             try:
@@ -138,33 +142,31 @@ class FifoWriterAgent(SyncAgentBase):
         super(FifoWriterAgent, self).__init__(intf, allowNoReset=allowNoReset)
         self.data = deque()
 
-    def driver_init(self, sim):
+    def driver_init(self, sim: HdlSimulator):
+        yield sim.waitWriteOnly()
         self.intf.en.write(self._enabled)
-        return
-        yield
 
-    def monitor_init(self, sim):
+    def monitor_init(self, sim: HdlSimulator):
+        yield sim.waitWriteOnly()
         self.intf.wait.write(not self._enabled)
-        return
-        yield
 
-    def setEnable_asDriver(self, en, sim):
+    def setEnable_asDriver(self, en, sim: HdlSimulator):
         SyncAgentBase.setEnable_asDriver(self, en, sim)
         self.intf.en.write(en)
 
-    def setEnable_asMonitor(self, en, sim):
+    def setEnable_asMonitor(self, en, sim: HdlSimulator):
         SyncAgentBase.setEnable_asMonitor(self, en, sim)
         self.intf.wait.write(not en)
 
-    def monitor(self, sim):
+    def monitor(self, sim: HdlSimulator):
         # set wait signal
         # if en == 1 take data
         intf = self.intf
+        yield sim.waitWriteOnly()
         intf.wait.write(0)
 
-        yield sim.waitOnCombUpdate()
+        yield sim.waitCombStable()
         # wait for potential update of en
-        yield sim.waitOnCombUpdate()
 
         en = intf.en.read()
         try:
@@ -174,25 +176,31 @@ class FifoWriterAgent(SyncAgentBase):
 
         if en:
             yield Timer(DEFAULT_CLOCK / 10)
+            yield sim.waitReadOnly()
             self.data.append(intf.data.read())
 
-    def driver(self, sim):
+    def driver(self, sim: HdlSimulator):
         # if wait == 0 set en=1 and set data
         intf = self.intf
 
+        d = None
+        v = 0
+        yield sim.waitReadOnly()
         if self.notReset(sim) and self.data:
-            yield sim.waitOnCombUpdate()
+            yield sim.waitReadOnly()
 
             wait = intf.wait.read()
-            assert wait.vldMask, (sim.now, intf, "wait signal in invalid state")
-            if not wait.val:
+            try:
+                wait = int(wait)
+            except ValueError:
+                raise AssertionError(sim.now, intf, "wait signal in invalid state")
+            if not wait:
                 d = self.data.popleft()
-                intf.data.write(d)
-                intf.en.write(1)
-                return
+                v = 1
 
-        intf.data.write(None)
-        intf.en.write(0)
+        yield sim.waitWriteOnly()
+        intf.data.write(d)
+        intf.en.write(v)
 
     def getDrivers(self):
         return SyncAgentBase.getDrivers(self) + [self.driver_init]
