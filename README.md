@@ -99,6 +99,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [mockturtle](https://github.com/lsils/mockturtle) - logic network library
 * [percy](https://github.com/whaaswijk/percy) - Collection of different synthesizers and exact synthesis methods for use in applications such as circuit resynthesis and design exploration.
 * [ILAng](https://github.com/Bo-Yuan-Huang/ILAng) - modeling and verification platform for SoCs where Instruction-Level Abstraction (ILA) is used as the formal model for hardware components.
+* [DUH](https://github.com/sifive/duh) - JS, simple convertor between verilog/scala/ipxact
 
 ## Related open-source
 
