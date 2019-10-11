@@ -2,6 +2,7 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.doc_markers import internal
 
 
+# [TODO] represent with 1b Bits and only emulate boolean type for HDL
 class HBool(HdlType):
 
     def __eq__(self, other):

@@ -2,6 +2,7 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.doc_markers import internal
 
 
+# [TODO] use python enum and only emulate HDL enum for HDL
 class HEnum(HdlType):
     """
     Hdl enum type

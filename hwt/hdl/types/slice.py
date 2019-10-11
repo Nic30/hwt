@@ -3,6 +3,7 @@ from hwt.hdl.types.integer import Integer
 from hwt.doc_markers import internal
 
 
+# [TODO] inherit from python slice and make it hashable
 class Slice(HArray):
     """
     Slice type, used for selecting items from arrays or vectors
