@@ -219,7 +219,7 @@ class IfContainer(HdlStatement):
                 ctx.extend(stm._sensitivity)
 
         if self.ifFalse:
-            assert ctx.contains_ev_dependency, "can not negate event"
+            assert not ctx.contains_ev_dependency, "can not negate event"
             # else
             for stm in self.ifFalse:
                 stm._discover_sensitivity(seen)

@@ -12,7 +12,9 @@ class HandshakedAgent(SyncAgentBase):
     which can be used for interfaces with bi-directional data streams
 
     :attention: requires clk and rst/rstn signal
-        (if you do not have any create simulation wrapper with it)
+        (If you do not have any create simulation wrapper with it.
+         Without it you can very easily end up with a combinational loop.
+        )
     """
 
     def __init__(self, intf, allowNoReset=False):

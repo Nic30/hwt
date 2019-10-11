@@ -2,8 +2,8 @@
 # the library for hardware development in Python
 [![Build Status](https://travis-ci.org/Nic30/hwt.svg?branch=master)](https://travis-ci.org/Nic30/hwt)
 [![Coverage Status](https://coveralls.io/repos/github/Nic30/hwt/badge.svg?branch=master)](https://coveralls.io/github/Nic30/hwt?branch=master)
-[![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt) 
-[![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest) 
+[![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt)
+[![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest)
 [![Python version](https://img.shields.io/pypi/pyversions/hwt.svg)](https://img.shields.io/pypi/pyversions/hwt.svg)
 
 ## The goals of HWT
@@ -22,7 +22,7 @@
 HWT uses hilevel-netlists for internal representation of target design. Optimized netlists are generated from usual code statements, function calls, statements etc (hw processes are automatically resolved). This netlist is easy to use and easy to modify or analyse by user if there is something missing in main library.
 Also [serialization modes](https://github.com/Nic30/hwt/blob/master/hwt/serializer/mode.py) allows to tweaks how component should behave durning serialization.
 
-HWT performs no HLS planing or schedueling. HWT is also good as API for code generating by more advanced tools. Hierarchy of components/interfaces/types is not limited. User specifed names are checked for collision with target language. 
+HWT performs no HLS planing or schedueling. HWT is also good as API for code generating by more advanced tools. Hierarchy of components/interfaces/types is not limited. User specifed names are checked for collision with target language.
 
 HWT designs are instances. No specific exceution is required, just use toRtl metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
 
@@ -30,7 +30,7 @@ HWT designs are instances. No specific exceution is required, just use toRtl met
 ## HWT ecosystem
 
 * [hwtLib](https://github.com/Nic30/hwtLib) - Library full of examples and real designs.
-* [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds shematic into html documentaion. 
+* [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds shematic into html documentaion.
 * [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
 * [hwtHls](https://github.com/Nic30/hwtHls) - High Level Synthetizer (alghorithmic description -> RTL)
 * [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) (not maintained)- (System) Verilog/VHDL compatibility layer at which allows you to import objects from HDL.
@@ -51,28 +51,30 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 
 ## Similar projects
 
+* [autofpga](https://github.com/ZipCPU/autofpga) - C++, A utility for Composing FPGA designs from Peripherals
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, meta HDL
-* [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, meta HDL
-* [migen](https://github.com/m-labs/migen) - 2013-?, Python, meta HDL 
-* [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
-* [PyMTL](https://github.com/cornell-brg/pymtl) - 2014-?, Python, Process based HDL
-* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric meta HDL with HLS like features
+* [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
+* [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
 * [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, meta HDL
 * [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, meta HDL
-* [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
-* [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
+* [migen](https://github.com/m-labs/migen) - 2013-?, Python, meta HDL
+* [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
+* [PyMTL](https://github.com/cornell-brg/pymtl) - 2014-?, Python, Process based HDL
 * [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, meta HDL
+* [spatial](https://github.com/stanford-ppl/spatial) - Scala, an Argon DSL like, high level abstraction
+* [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, meta HDL
 * [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
+* [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric meta HDL with HLS like features
 
 
 ## Related open-source
 
-* [vtr-verilog-to-routing](https://github.com/verilog-to-routing/vtr-verilog-to-routing)
 * [verilator](https://www.veripool.org/wiki/verilator) - Verilog -> C/C++ sim
+* [vtr-verilog-to-routing](https://github.com/verilog-to-routing/vtr-verilog-to-routing)
 * [yosys](https://github.com/YosysHQ/yosys) - RTL synthesis framework
 
 
 ## Board support libraries (Potential candidates for public integration)
 
-* [loam](https://github.com/phanrahan/loam) - Buildsystem for magma
 * [litex](https://github.com/enjoy-digital/litex) - Buildsystem for migen
+* [loam](https://github.com/phanrahan/loam) - Buildsystem for magma
