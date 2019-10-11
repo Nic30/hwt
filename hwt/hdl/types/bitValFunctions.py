@@ -1,4 +1,3 @@
-from hwt.bitmask import mask
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
@@ -7,37 +6,12 @@ from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.integer import Integer
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
+from pyMathBitPrecise.bits import bitsArithOp__val, bitsBitOp__val, bitsCmp__val
+from pyMathBitPrecise.bitmask import mask
 
 
 # internal
 BoolVal = BOOL.getValueCls()
-
-
-@internal
-def signFix(val, width):
-    """
-    Convert negative int to positive int which has same bits set
-    """
-    if val > 0:
-        msb = 1 << (width - 1)
-        if val & msb:
-            val -= mask(width) + 1
-    return val
-
-
-@internal
-def bitsCmp__val(self, other, op, evalFn):
-    ot = other._dtype
-
-    w = self._dtype._widthVal
-    assert w == ot._widthVal, "%d, %d" % (w, ot._widthVal)
-
-    vld = self.vldMask & other.vldMask
-    _vld = vld == mask(w)
-    res = evalFn(self.val, other.val) and _vld
-    updateTime = max(self.updateTime, other.updateTime)
-
-    return BoolVal(res, BOOL, int(_vld), updateTime)
 
 
 # dictionary which hold information how to change operator after
@@ -114,7 +88,7 @@ def bitsCmp(self, other, op, evalFn=None):
             raise TypeError("Values of types (%r, %r) are not comparable" % (
                 self._dtype, other._dtype))
 
-        return bitsCmp__val(self, other, op, evalFn)
+        return bitsCmp__val(self, other, evalFn)
     else:
         if ot == BOOL:
             self = self._auto_cast(BOOL)
@@ -145,20 +119,6 @@ def bitsCmp(self, other, op, evalFn=None):
 
 
 @internal
-def bitsBitOp__val(self, other, op, getVldFn):
-    w = self._dtype.bit_length()
-    assert w == other._dtype.bit_length()
-
-    vld = getVldFn(self, other)
-    res = op._evalFn(self.val, other.val) & vld
-    updateTime = max(self.updateTime, other.updateTime)
-    if self._dtype.signed:
-        res = signFix(res, w)
-
-    return self.__class__(res, self._dtype, vld, updateTime)
-
-
-@internal
 def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
     """
     :attention: If other is Bool signal, convert this to bool
@@ -171,7 +131,7 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
 
     if iamVal and otherIsVal:
         other = other._auto_cast(self._dtype)
-        return bitsBitOp__val(self, other, op, getVldFn)
+        return bitsBitOp__val(self, other, op._evalFn, getVldFn)
     else:
         if other._dtype == BOOL:
             self = self._auto_cast(BOOL)
@@ -196,42 +156,11 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
 
 
 @internal
-def bitsArithOp__val(self, other, op):
-    v = self.clone()
-    self_vld = self._isFullVld()
-    other_vld = other._isFullVld()
-
-    v.val = op._evalFn(self.val, other.val)
-
-    w = v._dtype.bit_length()
-    if self._dtype.signed:
-        _v = v.val
-        _max = mask(w - 1)
-        _min = -_max - 1
-        if _v > _max:
-            _v = _min + (_v - _max - 1)
-        elif _v < _min:
-            _v = _max - (_v - _min + 1)
-
-        v.val = _v
-    else:
-        v.val &= mask(w)
-
-    if self_vld and other_vld:
-        v.vldMask = mask(w)
-    else:
-        v.vldMask = 0
-
-    v.updateTime = max(self.updateTime, other.updateTime)
-    return v
-
-
-@internal
 def bitsArithOp(self, other, op):
     other = toHVal(other)
     assert isinstance(other._dtype, (Integer, Bits))
     if areValues(self, other):
-        return bitsArithOp__val(self, other, op)
+        return bitsArithOp__val(self, other, op._evalFn)
     else:
         resT = self._dtype
         if self._dtype.signed is None:

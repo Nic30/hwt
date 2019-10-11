@@ -61,24 +61,25 @@ class HwtSerializer_ops():
     def Operator(cls, op, ctx: HwtSerializerCtx):
         ops = op.operands
         o = op.operator
-        
+
         asHdl = cls.asHdl
 
         with ctx.valWidthReq(o == AllOps.CONCAT):
             op_str = cls._unaryOps.get(o, None)
             if op_str is not None:
-                    return op_str % (cls._operand(ops[0], o, ctx))
-    
+                return op_str % (cls._operand(ops[0], o, ctx))
+
             op_str = cls._binOps.get(o, None)
             if op_str is not None:
                 return op_str % (cls._operand(ops[0], o, ctx),
                                  cls._operand(ops[1], o, ctx))
-    
+
             if o in cls._castOps:
-                return "(%s)._reinterpret_cast(%s)" % (asHdl(ops[0], ctx),
-                                                       cls.HdlType(op.result._dtype, ctx))
-    
-            if o == AllOps.INDEX:
+                return "(%s)._reinterpret_cast(%s)" % (
+                    asHdl(ops[0], ctx),
+                    cls.HdlType(op.result._dtype, ctx)
+                )
+            elif o == AllOps.INDEX:
                 assert len(ops) == 2
                 return "(%s)[%s]" % (asHdl(ops[0], ctx),
                                      cls._operand(ops[1], o, ctx))
