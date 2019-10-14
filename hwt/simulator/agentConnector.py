@@ -40,10 +40,7 @@ def valuesToInts(values):
     res = []
     append = res.append
     for d in values:
-        if isinstance(d, int):
-            append(d)
-        else:
-            append(valToInt(d))
+        append(valToInt(d))
     return res
 
 
@@ -52,5 +49,3 @@ def valToInt(v):
         return int(v)
     except ValueError:
         return None
-
-
