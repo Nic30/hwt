@@ -37,11 +37,7 @@ def valuesToInts(values):
     """
     Iterable of values to ints (nonvalid = None)
     """
-    res = []
-    append = res.append
-    for d in values:
-        append(valToInt(d))
-    return res
+    return [valToInt(d) for d in values]
 
 
 def valToInt(v):
