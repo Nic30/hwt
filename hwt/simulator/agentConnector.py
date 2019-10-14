@@ -54,9 +54,3 @@ def valToInt(v):
         return None
 
 
-def agInts(interface):
-    """
-    Convert all values which has agent collected in time >=0 to integer array.
-    Invalid value will be None.
-    """
-    return valuesToInts(interface._ag.data)
