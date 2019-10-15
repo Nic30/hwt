@@ -2,6 +2,7 @@ from collections import deque
 
 from hwt.hdl.constants import NOP
 from hwt.simulator.agentBase import SyncAgentBase
+from pycocotb.triggers import WaitCombRead, WaitWriteOnly
 
 
 class RdSyncedAgent(SyncAgentBase):
@@ -23,12 +24,12 @@ class RdSyncedAgent(SyncAgentBase):
     def wrRd(self, val):
         self._rd.write(val)
 
-    def setEnable_asMonitor(self, en, sim):
-        super(RdSyncedAgent, self).setEnable_asMonitor(en, sim)
+    def setEnable_asMonitor(self, en):
+        super(RdSyncedAgent, self).setEnable_asMonitor(en)
         if not en:
             self.wrRd(0)
 
-    def monitor(self, sim):
+    def monitor(self):
         """Collect data from interface"""
         yield WaitCombRead()
         if self.notReset() and self._enabled:
@@ -42,15 +43,15 @@ class RdSyncedAgent(SyncAgentBase):
             yield WaitWriteOnly()
             self.wrRd(0)
 
-    def doRead(self, sim):
+    def doRead(self):
         """extract data from interface"""
         return self.intf.data.read()
 
-    def doWrite(self, sim, data):
+    def doWrite(self, data):
         """write data to interface"""
         self.intf.data.write(data)
 
-    def driver(self, sim):
+    def driver(self):
         """Push data to interface"""
         yield WaitWriteOnly()
         if self.actualData is NOP and self.data:
@@ -59,9 +60,9 @@ class RdSyncedAgent(SyncAgentBase):
         do = self.actualData is not NOP
 
         if do:
-            self.doWrite(sim, self.actualData)
+            self.doWrite(self.actualData)
         else:
-            self.doWrite(sim, None)
+            self.doWrite(None)
 
         yield WaitCombRead()
         en = self.notReset() and self._enabled
@@ -76,12 +77,12 @@ class RdSyncedAgent(SyncAgentBase):
                 raise AssertionError(
                     ("%r: ready signal for interface %r is in invalid state,"
                      " this would cause desynchronization") %
-                    (sim.now, self.intf))
+                    (self.sim.now, self.intf))
             if rd:
                 if self._debugOutput is not None:
                     self._debugOutput.write("%s, wrote, %d: %r\n" % (
                                                self.intf._getFullName(),
-                                               sim.now, self.actualData))
+                                               self.sim.now, self.actualData))
                 if self.data:
                     self.actualData = self.data.popleft()
                 else:

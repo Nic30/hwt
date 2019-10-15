@@ -102,13 +102,13 @@ class HwtSerializer_value(GenericSerializer_Value):
     @classmethod
     def Slice_valAsHdl(cls, t, val: SliceVal, ctx: HwtSerializerCtx):
         if val._is_full_valid():
-            return "%d:%d" % (int(val.start),
-                              int(val.stop))
+            return "%d:%d" % (int(val.val.start),
+                              int(val.val.stop))
         else:
             return "SliceVal(slice(%s, %s, %s), SLICE, %d)" % (
-                cls.Value(val.start),
-                cls.Value(val.stop),
-                cls.Value(val.step),
+                cls.Value(val.val.start),
+                cls.Value(val.val.stop),
+                cls.Value(val.val.step),
                 val.vld_mask)
 
     @classmethod

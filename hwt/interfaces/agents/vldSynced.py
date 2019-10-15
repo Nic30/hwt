@@ -2,20 +2,22 @@ from collections import deque
 
 from hwt.hdl.constants import NOP
 from hwt.simulator.agentBase import SyncAgentBase
+from pycocotb.hdlSimulator import HdlSimulator
+from pycocotb.triggers import WaitCombRead, WaitWriteOnly
 
 
 class VldSyncedAgent(SyncAgentBase):
 
-    def __init__(self, intf, allowNoReset=False):
+    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
         super(VldSyncedAgent, self).__init__(
             intf,
             allowNoReset=allowNoReset)
         self.data = deque()
 
-    def doRead(self, sim):
+    def doRead(self):
         return self.intf.data.read()
 
-    def doWrite(self, sim, data):
+    def doWrite(self, data):
         self.intf.data.write(data)
 
     def doReadVld(self):
@@ -24,13 +26,13 @@ class VldSyncedAgent(SyncAgentBase):
     def doWriteVld(self, val):
         return self.intf.vld.write(val)
 
-    def setEnable_asDriver(self, en, sim):
-        super(VldSyncedAgent, self).setEnable_asDriver(en, sim)
+    def setEnable_asDriver(self, en):
+        super(VldSyncedAgent, self).setEnable_asDriver(en)
         if not en:
             self.wrVld(0)
             self._lastVld = 0
 
-    def monitor(self, sim):
+    def monitor(self):
         yield WaitCombRead()
         if self.notReset():
             intf = self.intf
@@ -42,25 +44,25 @@ class VldSyncedAgent(SyncAgentBase):
                 if self._debugOutput is not None:
                     self._debugOutput.write("%s, read, %d: %r\n" % (
                         intf._getFullName(),
-                        sim.now, d))
+                        self.sim.now, d))
                 self.data.append(d)
 
-    def driver(self, sim):
+    def driver(self):
         yield WaitCombRead()
         if self.data and self.notReset():
             yield WaitWriteOnly()
             d = self.data.popleft()
             if d is NOP:
-                self.doWrite(sim, None)
+                self.doWrite(None)
                 self.doWriteVld(0)
             else:
-                self.doWrite(sim, d)
+                self.doWrite(d)
                 self.doWriteVld(1)
                 if self._debugOutput is not None:
                     self._debugOutput.write("%s, wrote, %d: %r\n" % (
                         self.intf._getFullName(),
-                        sim.now, self.actualData))
+                        self.sim.now, self.actualData))
 
         else:
-            self.doWrite(sim, None)
+            self.doWrite(None)
             self.doWriteVld(0)

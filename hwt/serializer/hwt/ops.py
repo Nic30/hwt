@@ -42,7 +42,7 @@ class HwtSerializer_ops():
         AllOps.MUL: '%s * %s',
         AllOps.NEQ: '%s != %s',
         AllOps.ADD: '%s + %s',
-        AllOps.POW: "power(%s, %s)",
+        AllOps.POW: "%s ** %s",
     }
     _unaryOps = {
         AllOps.NOT: "~%s",

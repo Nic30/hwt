@@ -172,7 +172,7 @@ class HArrayVal(Value):
             eq = False
             vld = 0
 
-        return BOOL.getValueCls()(eq, BOOL, vld)
+        return BOOL.getValueCls()(BOOL, eq, vld)
 
     def _eq(self, other):
         assert isinstance(other, HArrayVal)

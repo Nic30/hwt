@@ -96,7 +96,7 @@ class HandshakedAgent(SyncAgentBase):
                     onMonitorReady(sim)
 
             # wait for response of master
-            yield sim.waitCombStable()
+            yield WaitCombStable()
             vld = self.isVld()
             try:
                 vld = int(vld)
@@ -133,7 +133,7 @@ class HandshakedAgent(SyncAgentBase):
 
     def checkIfRdWillBeValid(self):
         sim = self.sim
-        yield sim.waitCombStable()
+        yield WaitCombStable()
         rd = self.isRd()
         try:
             rd = int(rd)

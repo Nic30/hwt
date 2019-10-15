@@ -16,7 +16,6 @@ class StructValBase(Value):
         :param skipCheck: flag to skip field name consystency in val
         """
         self._dtype = typeObj
-        self.updateTime = -1
         if not skipCheck and val is not None:
             assert set(self.__slots__).issuperset(set(val.keys())), \
                 set(val.keys()).difference(set(self.__slots__))

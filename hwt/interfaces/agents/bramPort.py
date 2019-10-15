@@ -3,6 +3,7 @@ from collections import deque
 from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.agents.clk import ClockAgent
+from pycocotb.triggers import WaitCombRead, WaitWriteOnly
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):
@@ -65,7 +66,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         """
         self.requests.append((WRITE, addr, data))
 
-    def monitor(self, sim):
+    def monitor(self):
         intf = self.intf
 
         yield WaitCombRead()
@@ -80,9 +81,9 @@ class BramPort_withoutClkAgent(SyncAgentBase):
                 addr = intf.addr.read()
                 if we:
                     data = intf.din.read()
-                    self.onWriteReq(sim, addr, data)
+                    self.onWriteReq(addr, data)
                 else:
-                    self.onReadReq(sim, addr)
+                    self.onReadReq(addr)
 
         if self.requests:
             req = self.requests.popleft()
@@ -96,7 +97,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
                 intf.dout.write(0)
                 self.mem[addr.val] = req[2]
 
-    def driver(self, sim):
+    def driver(self):
         intf = self.intf
         if self.requireInit:
             yield WaitWriteOnly()
@@ -114,7 +115,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
                 intf.we.write(0)
                 self.readPending = False
             else:
-                self.doReq(sim, req)
+                self.doReq(req)
                 intf.en.write(1)
         else:
             intf.en.write(0)
@@ -129,7 +130,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, on %r read_data: %d\n" % (
                                         self.intf._getFullName(),
-                                        sim.now, d.val))
+                                        self.sim.now, d.val))
 
 
 class BramPortAgent(BramPort_withoutClkAgent):

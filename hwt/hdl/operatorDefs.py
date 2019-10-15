@@ -77,7 +77,7 @@ def concatFn(a, b):
 
 
 def power(base, exp):
-    return base._pow(exp)
+    return base ** exp
 
 
 def eqFn(a, b):
