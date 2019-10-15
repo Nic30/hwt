@@ -3,6 +3,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from copy import copy
 
 
 def slice_member_to_hval(v):
@@ -67,6 +68,10 @@ class SliceVal(Value):
 
     def _eq(self, other):
         return self._eq__val(other)
+
+    def __copy__(self):
+        v = Value.__copy__(self)
+        v.val = copy(v.val)
 
     def staticEval(self):
         v = self.val
