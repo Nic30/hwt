@@ -40,7 +40,7 @@ class StringVal(Value):
         eq = self.val == other.val
         vld = int(self.vld_mask and other.vld_mask)
 
-        return BOOL.getValueCls()(eq, BOOL, vld)
+        return BOOL.getValueCls()(BOOL, eq, vld)
 
     def _eq(self, other):
         other = toHVal(other)
