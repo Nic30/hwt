@@ -1,5 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.synthesizer.exceptions import TypeConversionErr
+from enum import Enum
 
 
 @internal
@@ -31,6 +32,8 @@ class HdlType():
         Construct value of this type.
         Delegated on value class for this type
         """
+        if isinstance(v, Enum):
+            v = v.value
         return self.getValueCls().from_py(self, v, vld_mask=vld_mask)
 
     def auto_cast(self, sigOrVal, toType):
