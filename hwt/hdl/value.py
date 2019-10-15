@@ -36,7 +36,7 @@ class Value():
         return self.__copy__()
 
     def __copy__(self):
-        return self.__class__(self.val, self._dtype, self.vld_mask)
+        return self.__class__(self._dtype, self.val, self.vld_mask)
 
     @internal
     def __hash__(self):

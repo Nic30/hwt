@@ -164,7 +164,7 @@ class HArrayVal(Value):
                 a = self.val[k]
                 b = other.val[k]
 
-                eq = eq and a == b
+                eq = eq and bool(a) == bool(b)
                 if not eq:
                     break
                 vld = vld & a.vld_mask & b.vld_mask

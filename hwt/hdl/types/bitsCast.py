@@ -14,7 +14,7 @@ from hwt.synthesizer.vectorUtils import iterBits, fitTo_t
 @internal
 def convertBits__val(self, val, toType):
     if toType == BOOL:
-        return val._eq(self.getValueCls().from_py(self, 1))
+        return val != self.getValueCls().from_py(self, 0)
     elif isinstance(toType, Bits):
         return val._convSign__val(toType.signed)
     elif toType == INT:

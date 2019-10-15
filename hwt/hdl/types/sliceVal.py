@@ -68,6 +68,15 @@ class SliceVal(Value):
     def _eq(self, other):
         return self._eq__val(other)
 
+    def staticEval(self):
+        v = self.val
+        new_v = slice(
+            v.start.staticEval(),
+            v.stop.staticEval(),
+            v.step.staticEval(),
+        )
+        return self.__class__.from_py(self._dtype, new_v)
+
     @internal
     def __hash__(self):
         v = self.val
