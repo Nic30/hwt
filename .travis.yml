@@ -25,7 +25,11 @@ install:
   - cd ipCorePackager
   - python3 setup.py install
   - cd ..
-  - git clone --depth=1 https://github.com/Nic30/hwtLib.git
+  - git clone --depth=1 https://github.com/Nic30/pyMathBitPrecise.git
+  - cd pyMathBitPrecise
+  - python3 setup.py install
+  - cd ..
+  - git clone --depth=1 https://github.com/Nic30/hwtLib.git -b verilator_sim
   - cd hwt
   - rm -rf $DIST_PACKAGES/hwt-*
   - ln -s hwt $DIST_PACKAGES/hwt
