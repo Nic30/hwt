@@ -189,13 +189,8 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
     @classmethod
     def GenericItem(cls, g: Param, ctx):
-        s = "%s %s" % (cls.HdlType(g._dtype, ctx.forPort()),
-                       cls.get_signal_name(g, ctx))
-        if g.defVal is None:
-            return s
-        else:
-            return ("parameter %s = %s"
-                    % (s, cls.Value(g.defVal, ctx)))
+        return ("parameter %s = %s"
+                % (g.hdl_name, str(g.get_value())))
 
     @classmethod
     def PortItem(cls, pi: PortItem, ctx):
