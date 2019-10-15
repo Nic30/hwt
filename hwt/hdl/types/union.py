@@ -22,7 +22,7 @@ class UnionValBase(Value):
     """
     __slots__ = ["_dtype", "_val", "_usedField"]
 
-    def __init__(self, val, typeObj):
+    def __init__(self, typeObj, val):
         """
         :param val: None or tuple (member name, member value)
         :param typeObj: instance of HUnion HdlType for this value
