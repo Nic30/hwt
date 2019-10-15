@@ -128,13 +128,13 @@ class SimTestCase(unittest.TestCase):
         seed = self._rand.getrandbits(64)
         random = Random(seed)
 
-        def randomEnProc(sim):
+        def randomEnProc():
             # small space at start to modify agents when they are inactive
             yield Timer(timeQuantum / 4)
             while True:
                 en = random.random() < 0.5
                 if agent.getEnable() != en:
-                    agent.setEnable(en, sim)
+                    agent.setEnable(en)
                 delay = int(random.random() * 2) * timeQuantum
                 yield Timer(delay)
 
@@ -145,7 +145,7 @@ class SimTestCase(unittest.TestCase):
         Randomly disable and enable interface for testing purposes
         """
         randomEnProc = self.simpleRandomizationProcess(intf._ag)
-        self.procs.append(randomEnProc)
+        self.procs.append(randomEnProc())
 
     def restartSim(self):
         """

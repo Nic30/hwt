@@ -57,8 +57,8 @@ class SyncAgentBase(AgentWitReset):
 
         # run monitor, driver only on rising edge of clk
         c = self.SELECTED_EDGE_CALLBACK
-        self.monitor = c(self.clk, self.monitor, self.getEnable)
-        self.driver = c(self.clk, self.driver, self.getEnable)
+        self.monitor = c(sim, self.clk, self.monitor, self.getEnable)
+        self.driver = c(sim, self.clk, self.driver, self.getEnable)
 
     def setEnable_asDriver(self, en):
         self._enabled = en

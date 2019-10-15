@@ -3,6 +3,7 @@ from collections import deque
 from hwt.hdl.constants import NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.hdlSimulator import HdlSimulator
+from pycocotb.triggers import WaitWriteOnly, WaitCombRead, WaitCombStable
 
 
 class HandshakedAgent(SyncAgentBase):
@@ -147,7 +148,6 @@ class HandshakedAgent(SyncAgentBase):
 
         set vld high and wait on rd in high then pass new data
         """
-        sim = self.sim
         yield WaitWriteOnly()
         # pop new data if there are not any pending
         if self.actualData is NOP and self.data:
@@ -161,7 +161,7 @@ class HandshakedAgent(SyncAgentBase):
                 data = self.actualData
             else:
                 data = None
-            self.doWrite(sim, data)
+            self.doWrite(data)
             self._lastWritten = self.actualData
 
         yield WaitCombRead()
@@ -172,10 +172,11 @@ class HandshakedAgent(SyncAgentBase):
             self.wrVld(vld)
             self._lastVld = vld
 
+        sim = self.sim
         if not self._enabled:
             # we can not check rd it in this function because we can not wait
             # because we can be reactivated in this same time
-            sim.add_process(self.checkIfRdWillBeValid(sim))
+            sim.add_process(self.checkIfRdWillBeValid())
             return
 
         # wait for response of slave
@@ -210,11 +211,11 @@ class HandshakedAgent(SyncAgentBase):
             # try to run onDriverWriteAck if there is any
             onDriverWriteAck = getattr(self, "onDriverWriteAck", None)
             if onDriverWriteAck is not None:
-                onDriverWriteAck(sim)
+                onDriverWriteAck()
 
             onDone = getattr(a, "onDone", None)
             if onDone is not None:
-                onDone(sim)
+                onDone()
 
 
 class HandshakeSyncAgent(HandshakedAgent):
