@@ -204,7 +204,7 @@ class FifoWriterAgent(SyncAgentBase):
         intf.en.write(v)
 
     def getDrivers(self):
-        return SyncAgentBase.getDrivers(self) + [self.driver_init]
+        return SyncAgentBase.getDrivers(self) + [self.driver_init()]
 
     def getMonitors(self):
-        return SyncAgentBase.getMonitors(self) + [self.monitor_init]
+        return SyncAgentBase.getMonitors(self) + [self.monitor_init()]
