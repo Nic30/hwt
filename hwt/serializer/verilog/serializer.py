@@ -23,6 +23,7 @@ from hwt.serializer.verilog.value import VerilogSerializer_Value
 from hwt.hdl.portItem import PortItem
 from hwt.hdl.constants import DIRECTION
 from hwt.synthesizer.param import Param
+from hwt.hdl.architecture import Architecture
 
 
 class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
@@ -87,7 +88,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
             # to use signal generated from this process
             for _e in e.result.endpoints:
                 _e._replace_input(e.result, romValSig)
-
+        rom.hidden = True
         return processes, signals
 
     @classmethod
@@ -117,7 +118,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         return []
 
     @classmethod
-    def Architecture(cls, arch, ctx):
+    def Architecture(cls, arch: Architecture, ctx):
         serializerVars = []
         procs = []
         extraTypes = set()
