@@ -113,7 +113,7 @@ class IpPackager(IpCorePackager):
 
     @internal
     def getParamPhysicalName(self, p: Param):
-        return p.name
+        return p.hdl_name
 
     @internal
     def getParamType(self, p: Param) -> HdlType:
