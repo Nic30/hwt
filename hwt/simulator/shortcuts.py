@@ -19,15 +19,19 @@ from hwt.hdl.types.array import HArray
 def collect_signals(top: Unit):
     """
     collect list of all signals in the component
-    format (name:Tuple[str], phy_name:str, is_read_only:int, is_signed:int, size:Tuple[int])
+    format (name:Tuple[str], phy_name:str, is_read_only:int,
+            is_signed: int, size: Tuple[int])
     """
     accessible_signals = []
     _collect_signals(top, accessible_signals, None, [], True)
     return accessible_signals
 
 
-def _collect_signals(top: Unit, accessible_signals:List, top_name: Optional[str],
-                     name_prefix: List[str], is_top:bool):
+def _collect_signals(top: Unit,
+                     accessible_signals: List,
+                     top_name: Optional[str],
+                     name_prefix: List[str],
+                     is_top: bool):
     VERILATOR_NAME_SEPARATOR = "__DOT__"
     # {sig: is output}
     io_signals = {}
@@ -39,7 +43,6 @@ def _collect_signals(top: Unit, accessible_signals:List, top_name: Optional[str]
             else:
                 s = p.src
             io_signals[s] = is_read_only
-
 
     if top_name is None:
         top_name = top._name
@@ -69,7 +72,6 @@ def _collect_signals(top: Unit, accessible_signals:List, top_name: Optional[str]
         accessible_signals.append(
             (name, phy_name, is_read_only, is_signed, size)
         )
-
 
     is_top = False
     for u in top._units:
@@ -123,6 +125,9 @@ def toVerilatorSimModel(unit: Unit,
                         saveTo=build_dir,
                         serializer=VerilogForVerilatorSerializer)
     accessible_signals = collect_signals(unit)
+    used_names = {x[0] for x in accessible_signals}
+    assert len(used_names) == len(accessible_signals),\
+        "All signal has to have unique names"
     if do_compile:
         verilatorCompile(sim_verilog, build_dir)
 
@@ -135,7 +140,8 @@ def toVerilatorSimModel(unit: Unit,
         sim_so = None
         file_pattern = './**/{0}.*.so'.format(unique_name)
         for filename in iglob(file_pattern, recursive=True):
-            assert sim_so is None, ("Can not resolve simulation library", sim_so, filename)
+            assert sim_so is None, ("Can not resolve simulation library",
+                                    sim_so, filename)
             sim_so = filename
 
     # load compiled library into python

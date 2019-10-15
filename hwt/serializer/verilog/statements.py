@@ -1,15 +1,15 @@
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
+from hwt.hdl.process import HWProcess
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.indent import getIndent
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.serializer.verilog.utils import verilogTypeOfSig
 from hwt.serializer.generic.constants import SIGNAL_TYPE
-from hwt.hdl.process import HWProcess
+from hwt.serializer.generic.indent import getIndent
+from hwt.serializer.verilog.utils import verilogTypeOfSig
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class VerilogSerializer_statements():
@@ -31,7 +31,6 @@ class VerilogSerializer_statements():
                     i.val = (i.val[0], i.val[1])
                 dst = dst[i]
         dstStr = cls.asHdl(dst, ctx)
-
         srcStr = valAsHdl(a.src)
 
         ver_sig_t = verilogTypeOfSig(_dst)
@@ -88,7 +87,10 @@ class VerilogSerializer_statements():
                                                   anyIsEventDependnt),
                 proc.sensitivityList))
 
-        hasToBeProcess = arr_any(proc.outputs, lambda x: verilogTypeOfSig(x) == SIGNAL_TYPE.REG)
+        hasToBeProcess = arr_any(
+            proc.outputs,
+            lambda x: verilogTypeOfSig(x) == SIGNAL_TYPE.REG
+        )
 
         if hasToBeProcess:
             childCtx = ctx.withIndent()
