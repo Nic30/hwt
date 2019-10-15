@@ -5,6 +5,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.hObjList import HObjList
 from hwt.doc_markers import internal
+from typing import Tuple, Set, Optional
 
 
 @internal
@@ -126,7 +127,7 @@ class PropDeclrCollector(object):
             return
 
         if saListerner:
-            saListerner(attr, value)
+            value = saListerner(attr, value)
         super().__setattr__(attr, value)
 
     # configuration phase
@@ -140,30 +141,24 @@ class PropDeclrCollector(object):
         self._setAttrListener = None
 
     @internal
-    def _registerParameter(self, pName, parameter) -> None:
+    def _registerParameter(self, pName, parameter: Param) -> None:
         """
         Register Param object on interface level object
         """
         nameAvailabilityCheck(self, pName, parameter)
         # resolve name in this scope
-        try:
-            hasName = parameter._name is not None
-        except AttributeError:
-            hasName = False
-        if not hasName:
-            parameter._name = pName
+        assert parameter._name is None, (
+            "Param object is already assigned to %r.%s"
+            % (parameter.unit, parameter._name))
         # add name in this scope
-        parameter._registerScope(pName, self)
-
-        if parameter.hasGenericName:
-            parameter.name = pName
-
-        if parameter._parent is None:
-            parameter._parent = self
+        parameter._name = pName
+        parameter._parent = self
 
         self._params.append(parameter)
 
-    def _paramsShared(self, exclude=None, prefix="") -> MakeParamsShared:
+    def _paramsShared(self,
+                      exclude: Optional[Tuple[Set[str], Set[str]]]=None,
+                      prefix="") -> MakeParamsShared:
         """
         Auto-propagate params by name to child components and interfaces
         Usage:
@@ -173,7 +168,7 @@ class PropDeclrCollector(object):
             with self._paramsShared():
                 # your interfaces and unit which should share all params with "self" there
 
-        :param exclude: params which should not be shared
+        :param exclude: tuple (src param names to exclude, dst param names to exclude)
         :param prefix: prefix which should be added to name of child parameters
             before parameter name matching
         """
@@ -210,37 +205,49 @@ class PropDeclrCollector(object):
         """
         return MakeClkRstAssociations(self, clk, rst)
 
-    def _updateParamsFrom(self, otherObj:"PropDeclrCollector", updater, exclude:set, prefix:str) -> None:
+    def _updateParamsFrom(self,
+                          otherObj: "PropDeclrCollector",
+                          updater,
+                          exclude: Tuple[Set[str], Set[str]],
+                          prefix: str) -> None:
         """
         Update all parameters which are defined on self from otherObj
 
         :param otherObj: other object which Param instances should be updated
-        :param updater: updater function(self, myParameter, onOtherParameterName, otherParameter)
-        :param exclude: iterable of parameter on otherObj object which should be excluded
-        :param prefix: prefix which should be added to name of paramters of this object before matching
-            parameter name on parent
+        :param updater: updater function(self, myParameter,
+                                         onOtherParameterName, otherParameter)
+        :param exclude: tuple of set of param names for src and dst which
+                        which should be excluded
+        :param prefix: prefix which should be added to name of paramters
+                       of this object before matching parameter name on parent
         """
-        excluded = set()
+        excluded_src = set()
+        excluded_dst = set()
         if exclude is not None:
-            exclude = set(exclude)
+            exclude_src = set(exclude[0])
+            exclude_dst = set(exclude[1])
 
         for myP in self._params:
-            pPName = prefix + myP._scopes[self][1]
+            if exclude is not None and myP._name in exclude_dst:
+                excluded_dst.add(myP._name)
+                continue
+            pPName = prefix + myP._name
             try:
                 otherP = getattr(otherObj, pPName)
-                if not isinstance(otherP, Param):
-                    continue
+                # if not isinstance(otherP, Param):
+                #     continue
             except AttributeError:
                 continue
 
-            if exclude and otherP in exclude:
-                excluded.add(otherP)
+            if exclude is not None and pPName in exclude_src:
+                excluded_src.add(pPName)
                 continue
             updater(self, myP, otherP)
-        
+
         if exclude is not None:
             # assert that what should be excluded really exists
-            assert excluded == exclude
+            assert exclude_src == excluded_src, (exclude_src, excluded_src)
+            assert exclude_dst == excluded_dst, (exclude_dst == excluded_dst)
 
     # declaration phase
     @internal
@@ -276,7 +283,7 @@ class PropDeclrCollector(object):
     def _declrCollector(self, name, prop):
         if name in ["_associatedClk", "_associatedRst"]:
             object.__setattr__(self, name, prop)
-            return
+            return prop
 
         if isinstance(prop, InterfaceBase):
             self._registerInterface(name, prop)
@@ -284,6 +291,7 @@ class PropDeclrCollector(object):
             self._registerUnit(name, prop)
         elif isinstance(prop, HObjList):
             self._registerArray(name, prop)
+        return prop
 
     @internal
     def _registerArray(self, name, items):
@@ -324,6 +332,9 @@ class PropDeclrCollector(object):
     def _paramCollector(self, pName, prop):
         if isinstance(prop, Param):
             self._registerParameter(pName, prop)
+            return prop._initval
+        else:
+            return prop
 
     @internal
     def _implCollector(self, name, prop):
@@ -331,3 +342,4 @@ class PropDeclrCollector(object):
             self._registerIntfInImpl(name, prop)
         elif isinstance(prop, UnitBase):
             self._registerUnitInImpl(name, prop)
+        return prop

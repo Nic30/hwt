@@ -44,7 +44,7 @@ class HArray(HdlType):
         if isinstance(s, RtlSignalBase):
             s = int(s.staticEval())
         return s * itemSize()
-    
+
     @internal
     @classmethod
     def getValueCls(cls):

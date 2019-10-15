@@ -37,7 +37,7 @@ class EmptyUnit(Unit):
             # connect outputs to dummy value
             for s in signals:
                 if s._interface._direction == INTF_DIRECTION.SLAVE:
-                    s(s._dtype.fromPy(self._defVal))
+                    s(s._dtype.from_py(self._defVal))
 
         if not externInterf:
             raise IntfLvlConfErr(

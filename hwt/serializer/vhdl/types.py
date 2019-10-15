@@ -3,6 +3,7 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.typeShortcuts import hInt
 from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.generic.indent import getIndent
+from hwt.hdl.types.bits import Bits
 
 
 class VhdlSerializer_types():
@@ -13,11 +14,11 @@ class VhdlSerializer_types():
         return "BOOLEAN"
 
     @classmethod
-    def HdlType_bits(cls, typ, ctx, declaration=False):
+    def HdlType_bits(cls, typ: Bits, ctx, declaration=False):
         disableRange = False
         bitLength = typ.bit_length()
-        w = typ.width
-        isVector = typ.forceVector or bitLength > 1
+        w = typ.bit_length()
+        isVector = typ.force_vector or bitLength > 1
 
         if typ.signed is None:
             if isVector:
@@ -31,11 +32,9 @@ class VhdlSerializer_types():
 
         if disableRange:
             constr = ""
-        elif isinstance(w, int):
-            constr = "(%d DOWNTO 0)" % (w - 1)
         else:
-            o = Operator(AllOps.SUB, (w, hInt(1)))
-            constr = "(%s DOWNTO 0)" % cls.Operator(o, ctx)
+            constr = "(%d -1 DOWNTO 0)" % (w)
+
         return name + constr
 
     @classmethod

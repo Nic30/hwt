@@ -2,7 +2,7 @@ from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
     xor, gt, ge, lt, le, getitem, neg
 
 from hwt.hdl.constants import SENSITIVITY
-from hwt.hdl.types.defs import INT
+from hwt.hdl.types.defs import INT, SLICE
 from hwt.hdl.value import Value
 from hwt.doc_markers import internal
 
@@ -65,11 +65,11 @@ def dotOpFn(a, name):
 
 # [TODO] downto / to are relict of vhdl and should be replaced with slice
 def downtoFn(a, b):
-    return a._downto(b)
+    return SLICE.from_py(slice(a, b, -1))
 
 
 def toFn(a, b):
-    return a._to(b)
+    return SLICE.from_py(slice(a, b, 1))
 
 
 def concatFn(a, b):

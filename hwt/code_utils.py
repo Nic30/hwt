@@ -22,7 +22,7 @@ def _connect(src, dst, exclude, fit):
 
     assert not exclude, "this intf. is just a signal"
     if src is None:
-        src = dst._dtype.fromPy(None)
+        src = dst._dtype.from_py(None)
     else:
         src = toHVal(src)
 

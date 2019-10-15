@@ -38,16 +38,16 @@ class FifoReaderAgent(SyncAgentBase):
             self.dataReader.setEnable(en, sim)
 
     def driver_init(self, sim: HdlSimulator):
-        yield sim.waitWriteOnly()
+        yield WaitWriteOnly()
         self.intf.wait.write(not self._enabled)
 
     def monitor_init(self, sim: HdlSimulator):
-        yield sim.waitWriteOnly()
+        yield WaitWriteOnly()
         self.intf.en.write(self._enabled)
 
     def dataReader(self, sim: HdlSimulator):
         if self.readPending:
-            yield sim.waitReadOnly()
+            yield WaitCombRead()
             d = self.intf.data.read()
             self.data.append(d)
 
@@ -64,8 +64,8 @@ class FifoReaderAgent(SyncAgentBase):
 
     def monitor(self, sim: HdlSimulator):
         intf = self.intf
-        yield sim.waitReadOnly()
-        if self.notReset(sim):
+        yield WaitCombRead()
+        if self.notReset():
             # speculative en set
             wait = intf.wait.read()
             try:
@@ -77,7 +77,7 @@ class FifoReaderAgent(SyncAgentBase):
         else:
             rd = False
 
-        yield sim.waitWriteOnly()
+        yield WaitWriteOnly()
         intf.en.write(rd)
 
         self.readPending = rd
@@ -95,7 +95,7 @@ class FifoReaderAgent(SyncAgentBase):
         # otherwise wirte happens before next clk period
         # and it means in 0 time and we will not be able to see it in wave
         yield Timer(DEFAULT_CLOCK / 10)
-        yield sim.waitWriteOnly()
+        yield WaitWriteOnly()
         self.intf.data.write(self.lastData)
         if self.lastData_invalidate:
             self.lastData = None
@@ -106,15 +106,15 @@ class FifoReaderAgent(SyncAgentBase):
         # * set last data (done in separate process)
         # * if en == 1, pop next data for next clk
         intf = self.intf
-        yield sim.waitReadOnly()
-        rst_n = self.notReset(sim)
+        yield WaitCombRead()
+        rst_n = self.notReset()
         # speculative write
         if rst_n and self.data:
             wait = 0
         else:
             wait = 1
 
-        yield sim.waitWriteOnly()
+        yield WaitWriteOnly()
         intf.wait.write(wait)
 
         if rst_n:
@@ -143,11 +143,11 @@ class FifoWriterAgent(SyncAgentBase):
         self.data = deque()
 
     def driver_init(self, sim: HdlSimulator):
-        yield sim.waitWriteOnly()
+        yield WaitWriteOnly()
         self.intf.en.write(self._enabled)
 
     def monitor_init(self, sim: HdlSimulator):
-        yield sim.waitWriteOnly()
+        yield WaitWriteOnly()
         self.intf.wait.write(not self._enabled)
 
     def setEnable_asDriver(self, en, sim: HdlSimulator):
@@ -162,7 +162,7 @@ class FifoWriterAgent(SyncAgentBase):
         # set wait signal
         # if en == 1 take data
         intf = self.intf
-        yield sim.waitWriteOnly()
+        yield WaitWriteOnly()
         intf.wait.write(0)
 
         yield sim.waitCombStable()
@@ -176,7 +176,7 @@ class FifoWriterAgent(SyncAgentBase):
 
         if en:
             yield Timer(DEFAULT_CLOCK / 10)
-            yield sim.waitReadOnly()
+            yield WaitCombRead()
             self.data.append(intf.data.read())
 
     def driver(self, sim: HdlSimulator):
@@ -185,9 +185,9 @@ class FifoWriterAgent(SyncAgentBase):
 
         d = None
         v = 0
-        yield sim.waitReadOnly()
-        if self.notReset(sim) and self.data:
-            yield sim.waitReadOnly()
+        yield WaitCombRead()
+        if self.notReset() and self.data:
+            yield WaitCombRead()
 
             wait = intf.wait.read()
             try:
@@ -198,7 +198,7 @@ class FifoWriterAgent(SyncAgentBase):
                 d = self.data.popleft()
                 v = 1
 
-        yield sim.waitWriteOnly()
+        yield WaitWriteOnly()
         intf.data.write(d)
         intf.en.write(v)
 

@@ -4,14 +4,13 @@ from typing import List, Tuple, Union
 from hwt.doc_markers import internal
 from hwt.hdl.typeShortcuts import hInt
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import BOOL, STR, BIT
+from hwt.hdl.types.defs import BOOL, STR, BIT, INT
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.types.integer import Integer
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
-from hwt.synthesizer.param import evalParam, Param
+from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
@@ -84,8 +83,8 @@ class IpPackager(IpCorePackager):
         t = g._dtype
 
         def getVal():
-            v = evalParam(g.defVal)
-            if v.vldMask:
+            v = g.defVal
+            if v.vld_mask:
                 return v.val
             else:
                 return 0
@@ -99,7 +98,7 @@ class IpPackager(IpCorePackager):
         if t == BOOL:
             val.format = "bool"
             val.text = str(bool(getVal())).lower()
-        elif isinstance(t, Integer):
+        elif t == INT:
             val.format = "long"
             val.text = str(getVal())
         elif t == STR:
@@ -149,7 +148,7 @@ class IpPackager(IpCorePackager):
         if dtype == BIT:
             return False
         elif isinstance(dtype, Bits):
-            return [evalParam(dtype.width) - 1, hInt(0)]
+            return [dtype.bit_length() - 1, hInt(0)]
 
     @internal
     def getInterfaceType(self, intf: Interface) -> HdlType:
@@ -202,12 +201,8 @@ class IpPackager(IpCorePackager):
         """
         :see: doc of method on parent class
         """
-        width = dtype.width
-        if isinstance(width, int):
-            widthStr = str(width)
-        else:
-            widthStr = self.getExprVal(width, do_eval=do_eval)
-
+        width = dtype.bit_length()
+        widthStr = str(width)
         return width, widthStr, False
 
     @internal

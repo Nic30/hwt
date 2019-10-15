@@ -92,9 +92,8 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             if isinstance(self.defVal, RtlSignal):
                 self._val = self.defVal._val.staticEval()
             else:
-                if self._val.updateTime < 0:
-                    # _val is invalid initialization value
-                    self._val = self.defVal.clone()
+                # _val is invalid initialization value
+                self._val = self.defVal.__copy__()
 
         if not isinstance(self._val, Value):
             raise ValueError(
@@ -145,6 +144,9 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             yield self
             return
 
-        assert self.drivers, self
+        try:
+            assert self.drivers, self
+        except Exception:
+            raise
         for d in self.drivers:
             yield from d._walk_public_drivers(seen)

@@ -1,13 +1,14 @@
 from hwt.doc_markers import internal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from pycocotb.agents.base import AgentBase
+from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.process_utils import OnRisingCallbackLoop
 
 
 class AgentWitReset(AgentBase):
 
-    def __init__(self, intf, allowNoReset=False):
-        super().__init__(intf)
+    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
+        super().__init__(sim, intf)
         self._discoverReset(allowNoReset)
 
     def _discoverReset(self, allowNoReset):
@@ -26,11 +27,11 @@ class AgentWitReset(AgentBase):
                 raise
 
     @internal
-    def _notReset_dummy(self, sim):
+    def _notReset_dummy(self):
         return True
 
     @internal
-    def _notReset(self, sim):
+    def _notReset(self):
         rstVal = self.rst.read()
         rstVal = int(rstVal)
         return rstVal == self.rstOffIn
@@ -46,8 +47,10 @@ class SyncAgentBase(AgentWitReset):
     """
     SELECTED_EDGE_CALLBACK = OnRisingCallbackLoop
 
-    def __init__(self, intf, allowNoReset=False):
-        super(SyncAgentBase, self).__init__(intf, allowNoReset=allowNoReset)
+    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
+        super(SyncAgentBase, self).__init__(
+            sim, intf,
+            allowNoReset=allowNoReset)
 
         # resolve clk and rstn
         self.clk = self.intf._getAssociatedClk()
@@ -57,13 +60,13 @@ class SyncAgentBase(AgentWitReset):
         self.monitor = c(self.clk, self.monitor, self.getEnable)
         self.driver = c(self.clk, self.driver, self.getEnable)
 
-    def setEnable_asDriver(self, en, sim):
+    def setEnable_asDriver(self, en):
         self._enabled = en
-        self.driver.setEnable(en, sim)
+        self.driver.setEnable(en)
 
-    def setEnable_asMonitor(self, en, sim):
+    def setEnable_asMonitor(self, en):
         self._enabled = en
-        self.monitor.setEnable(en, sim)
+        self.monitor.setEnable(en)
 
     def getDrivers(self):
         self.setEnable = self.setEnable_asDriver

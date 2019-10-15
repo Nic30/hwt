@@ -27,7 +27,7 @@ class VerilogSerializer_statements():
         if a.indexes is not None:
             for i in a.indexes:
                 if isinstance(i, SliceVal):
-                    i = i.clone()
+                    i = i.__copy__()
                     i.val = (i.val[0], i.val[1])
                 dst = dst[i]
         dstStr = cls.asHdl(dst, ctx)

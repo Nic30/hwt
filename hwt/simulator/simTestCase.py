@@ -51,6 +51,8 @@ class SimTestCase(unittest.TestCase):
     :ivar u: instance of current Unit for test, created in restartSim()
     :ivar rtl_simulator: rtl simulatr used for simulation of unit,
         created in restartSim()
+    :ivar hdl_simulator: the simulator which manages the communication
+        between python code and rtl_simulator instance
     :ivar procs: list of simulation processes (python generator instances),
         created in restartSim()
     """
@@ -75,13 +77,12 @@ class SimTestCase(unittest.TestCase):
             os.makedirs(d, exist_ok=True)
 
         self.rtl_simulator.set_trace_file(outputFileName, -1)
-        sim = HdlSimulator(self.rtl_simulator)
 
         # run simulation, stimul processes are register after initial
         # initialization
-        sim.run(until=until, extraProcesses=self.procs)
+        self.hdl_simulator.run(until=until, extraProcesses=self.procs)
         self.rtl_simulator.finalize()
-        return sim
+        return self.hdl_simulator
 
     def assertValEqual(self, first, second, msg=None):
         try:
@@ -148,22 +149,25 @@ class SimTestCase(unittest.TestCase):
 
     def restartSim(self):
         """
-        Set simulator to initial state and connect it to 
+        Set simulator to initial state and connect it to
 
         :return: tuple (fully loaded unit with connected simulator,
             connected simulator,
             simulation processes
             )
         """
-        simInstance = self.rtl_simulator_cls()
+        rtl_simulator = self.rtl_simulator_cls()
+        hdl_simulator = HdlSimulator(rtl_simulator)
+
         unit = self.u
 
-        reconnectUnitSignalsToModel(unit, simInstance)
-        procs = autoAddAgents(unit)
+        reconnectUnitSignalsToModel(unit, rtl_simulator)
+        procs = autoAddAgents(unit, hdl_simulator)
 
-        self.u, self.rtl_simulator, self.procs = unit, simInstance, procs
+        self.u, self.rtl_simulator, self.hdl_simulator, self.procs =\
+            unit, rtl_simulator, hdl_simulator, procs
 
-        return unit, simInstance, procs
+        return unit, rtl_simulator, procs
 
     @classmethod
     def get_unique_name(cls, unit: Unit):

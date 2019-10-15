@@ -68,9 +68,9 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     def monitor(self, sim):
         intf = self.intf
 
-        yield sim.waitReadOnly()
+        yield WaitCombRead()
         # now we are after clk edge
-        if self.notReset(sim):
+        if self.notReset():
             en = intf.en.read()
             en = int(en)
             if en:
@@ -88,7 +88,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             req = self.requests.popleft()
             t = req[0]
             addr = req[1]
-            yield sim.waitWriteOnly()
+            yield WaitWriteOnly()
             if t == READ:
                 intf.dout.write(self.mem[addr.val])
             else:
@@ -99,15 +99,15 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     def driver(self, sim):
         intf = self.intf
         if self.requireInit:
-            yield sim.waitWriteOnly()
+            yield WaitWriteOnly()
             intf.en.write(0)
             intf.we.write(0)
             self.requireInit = False
 
         readPending = self.readPending
-        yield sim.waitReadOnly()
-        if self.requests and self.notReset(sim):
-            yield sim.waitWriteOnly()
+        yield WaitCombRead()
+        if self.requests and self.notReset():
+            yield WaitWriteOnly()
             req = self.requests.popleft()
             if req is NOP:
                 intf.en.write(0)
@@ -122,7 +122,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             self.readPending = False
 
         if readPending:
-            yield sim.waitReadOnly()
+            yield WaitCombRead()
             # now we are after clk edge
             d = intf.dout.read()
             self.readed.append(d)

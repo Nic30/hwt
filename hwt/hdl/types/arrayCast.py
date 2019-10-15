@@ -1,10 +1,10 @@
-from hwt.bitmask import selectBitRange, mask
 from hwt.code import Concat
 from hwt.doc_markers import internal
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import default_reinterpret_cast_fn
 from hwt.synthesizer.exceptions import TypeConversionErr
+from pyMathBitPrecise.bit_utils import selectBitRange, mask
 
 
 @internal
@@ -19,7 +19,7 @@ def getBits_from_array(array, wordWidth, start, end,
         copy of selected bits
     """
     inPartOffset = 0
-    value = Bits(end - start, None).fromPy(None)
+    value = Bits(end - start, None).from_py(None)
 
     while start != end:
         assert start < end, (start, end)
@@ -35,18 +35,17 @@ def getBits_from_array(array, wordWidth, start, end,
         offset = start % wordWidth
 
         val = selectBitRange(v.val, offset, width)
-        vldMask = selectBitRange(v.vldMask, offset, width)
-        updateTime = v.updateTime
+        vld_mask = selectBitRange(v.vld_mask, offset, width)
 
         m = mask(width)
         value.val |= (val & m) << inPartOffset
-        value.vldMask |= (vldMask & m) << inPartOffset
-        value.updateMask = max(value.updateTime, updateTime)
+        value.vld_mask |= (vld_mask & m) << inPartOffset
 
         inPartOffset += width
         start += width
 
     return value
+
 
 @internal
 def reinterptet_harray_to_bits(typeFrom, sigOrVal, bitsT):
@@ -65,6 +64,7 @@ def reinterptet_harray_to_bits(typeFrom, sigOrVal, bitsT):
 
     return Concat(*reversed(parts))._reinterpret_cast(bitsT)
 
+
 @internal
 def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
     mySize = int(typeFrom.size)
@@ -81,7 +81,7 @@ def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
     else:
         reinterpretElmToType = Bits(myWidthOfElm)
 
-    res = arrayT.fromPy(None)
+    res = arrayT.from_py(None)
     for i in range(size):
         start = i * widthOfElm
         end = (i + 1) * widthOfElm
@@ -90,6 +90,7 @@ def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
         res[i] = item._reinterpret_cast(arrayT.elmType)
 
     return res
+
 
 @internal
 def reinterpret_cast_harray(typeFrom, sigOrVal, toType):

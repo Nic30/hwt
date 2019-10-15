@@ -1,3 +1,4 @@
+from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
@@ -8,7 +9,7 @@ from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.doc_markers import internal
+from pycocotb.hdlSimulator import HdlSimulator
 
 
 class StructIntf(Interface):
@@ -46,21 +47,21 @@ class StructIntf(Interface):
             if field.name is not None:
                 # generate interface based on struct field
                 intf = self._instantiateFieldFn(self, field)
-                assert  field not in self._fieldsToInterfaces
+                assert field not in self._fieldsToInterfaces
                 self._fieldsToInterfaces[field] = intf
                 setattr(self, field.name, intf)
 
                 if isinstance(intf, StructIntf):
                     intf._fieldsToInterfaces = self._fieldsToInterfaces
 
-    def _initSimAgent(self):
-        self._ag = StructIntfAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = StructIntfAgent(sim, self)
 
 
 class IntfMap(list):
     """
     Container of interface map
-    
+
     Items can be Interface/RtlSignal or (type/interface/None/IntfMap, name).
     None is used for padding.
     """

@@ -1,4 +1,3 @@
-from hwt.bitmask import mask
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, BIT
@@ -11,6 +10,7 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.doc_markers import internal
+from pyMathBitPrecise.bit_utils import mask
 
 
 class SystemCSerializer_value(GenericSerializer_Value):
@@ -32,7 +32,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
             elif si.drivers:
                 pass
             elif si.endpoints or si.simSensProcs:
-                if not v.vldMask:
+                if not v.vld_mask:
                     raise SerializerException(
                         "Signal %s is constant and has undefined value"
                         % si.name)
@@ -63,10 +63,11 @@ class SystemCSerializer_value(GenericSerializer_Value):
                 if v._const:
                     return s + " = %s" % cls.asHdl(v, ctx)
                 else:
-                    # default value has to be set by reset because it is only signal
+                    # default value has to be set by reset
+                    # because it is only signal
                     return s
             elif isinstance(v, Value):
-                if si.defVal.vldMask:
+                if si.defVal.vld_mask:
                     return s + " = %s" % cls.Value(v, ctx)
                 else:
                     return s
@@ -103,32 +104,32 @@ class SystemCSerializer_value(GenericSerializer_Value):
                                    cond))
 
     @classmethod
-    def BitString(cls, v, width, vldMask=None):
-        if vldMask is None:
-            vldMask = mask(width)
+    def BitString(cls, v, width, vld_mask=None):
+        if vld_mask is None:
+            vld_mask = mask(width)
         # if can be in hex
-        if width % 4 == 0 and vldMask == (1 << width) - 1:
+        if width % 4 == 0 and vld_mask == (1 << width) - 1:
             t = cls.HdlType_bits(Bits(width), None)
             return ('%s("0x%0' + str(width // 4) + 'x")') % (t, v)
         else:  # else in binary
-            return cls.BitString_binary(v, width, vldMask)
+            return cls.BitString_binary(v, width, vld_mask)
 
     @classmethod
-    def BitLiteral(cls, v, vldMask):
-        if vldMask:
+    def BitLiteral(cls, v, vld_mask):
+        if vld_mask:
             return "'%d'" % int(bool(v))
         else:
             return "'X'"
 
     @classmethod
-    def BitString_binary(cls, v, width, vldMask=None):
+    def BitString_binary(cls, v, width, vld_mask=None):
         t = cls.HdlType_bits(Bits(width), None)
         buff = [t, '("']
         for i in range(width - 1, -1, -1):
             mask = (1 << i)
             b = v & mask
 
-            if vldMask & mask:
+            if vld_mask & mask:
                 s = "1" if b else "0"
             else:
                 s = "X"
@@ -138,12 +139,12 @@ class SystemCSerializer_value(GenericSerializer_Value):
 
     @internal
     @classmethod
-    def _BitString(cls, typeName, v, width, forceVector, vldMask):
-        if vldMask != mask(width):
-            if forceVector or width > 1:
-                v = cls.BitString(v, width, vldMask)
+    def _BitString(cls, typeName, v, width, force_vector, vld_mask):
+        if vld_mask != mask(width):
+            if force_vector or width > 1:
+                v = cls.BitString(v, width, vld_mask)
             else:
-                v = cls.BitLiteral(v, width, vldMask)
+                v = cls.BitLiteral(v, width, vld_mask)
         else:
             v = str(v)
         # [TODO] parametrized width
@@ -156,12 +157,12 @@ class SystemCSerializer_value(GenericSerializer_Value):
         return '%d' % i
 
     @classmethod
-    def SignedBitString(cls, v, width, forceVector, vldMask):
-        return cls._BitString("sc_biguint", v, width, forceVector, vldMask)
+    def SignedBitString(cls, v, width, force_vector, vld_mask):
+        return cls._BitString("sc_biguint", v, width, force_vector, vld_mask)
 
     @classmethod
-    def UnsignedBitString(cls, v, width, forceVector, vldMask):
-        return cls._BitString("sc_biguint", v, width, forceVector, vldMask)
+    def UnsignedBitString(cls, v, width, force_vector, vld_mask):
+        return cls._BitString("sc_biguint", v, width, force_vector, vld_mask)
 
     @classmethod
     def HArrayValAsHdl(cls, dtype, val, ctx):

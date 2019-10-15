@@ -7,7 +7,7 @@ def tryReduceAnd(sig, val):
     if it is not possible to statically reduce expression
     """
     m = sig._dtype.all_mask()
-    if val._isFullVld():
+    if val._is_full_valid():
         v = val.val
         if v == m:
             return sig
@@ -22,10 +22,10 @@ def tryReduceOr(sig, val):
     if it is not possible to statically reduce expression
     """
     m = sig._dtype.all_mask()
-    if not val.vldMask:
+    if not val.vld_mask:
         return val
 
-    if val._isFullVld():
+    if val._is_full_valid():
         v = val.val
         if v == m:
             return val
@@ -40,10 +40,10 @@ def tryReduceXor(sig, val):
     if it is not possible to statically reduce expression
     """
     m = sig._dtype.all_mask()
-    if not val.vldMask:
+    if not val.vld_mask:
         return val
 
-    if val._isFullVld():
+    if val._is_full_valid():
         v = val.val
         if v == m:
             return ~sig

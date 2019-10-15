@@ -578,7 +578,7 @@ def isSameHVal(a: Value, b: Value) -> bool:
     return a is b or (isinstance(a, Value)
                       and isinstance(b, Value)
                       and a.val == b.val
-                      and a.vldMask == b.vldMask)
+                      and a.vld_mask == b.vld_mask)
 
 
 def areSameHVals(a: Union[None, List[Value]],

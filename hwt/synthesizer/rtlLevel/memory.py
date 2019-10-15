@@ -34,7 +34,7 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
             source = source._sig
 
         if source is None:
-            source = self._dtype.fromPy(None)
+            source = self._dtype.from_py(None)
         else:
             source = toHVal(source)
             source = source._auto_cast(self._dtype)

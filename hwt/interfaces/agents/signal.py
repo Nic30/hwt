@@ -4,7 +4,8 @@ from hwt.simulator.agentBase import SyncAgentBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from pycocotb.agents.base import AgentBase
 from pycocotb.agents.clk import DEFAULT_CLOCK
-from pycocotb.triggers import Timer
+from pycocotb.hdlSimulator import HdlSimulator
+from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead
 
 
 class SignalAgent(SyncAgentBase):
@@ -15,8 +16,8 @@ class SignalAgent(SyncAgentBase):
     :attention: clock synchronization has higher priority
     """
 
-    def __init__(self, intf, delay=None):
-        AgentBase.__init__(self, intf)
+    def __init__(self, sim: HdlSimulator, intf: "Signal", delay=None):
+        AgentBase.__init__(self, sim, intf)
         self.delay = delay
         self.initDelay = 0
 
@@ -40,41 +41,41 @@ class SignalAgent(SyncAgentBase):
             if self.initDelay:
                 raise NotImplementedError("initDelay only without clock")
             c = self.SELECTED_EDGE_CALLBACK
-            self.monitor = c(self.clk, self.monitorWithClk, self.getEnable)
-            self.driver = c(self.clk, self.driverWithClk, self.getEnable)
+            self.monitor = c(sim, self.clk, self.monitorWithClk, self.getEnable)
+            self.driver = c(sim, self.clk, self.driverWithClk, self.getEnable)
 
     def getDrivers(self):
         d = SyncAgentBase.getDrivers(self)
-        return [self.driverInit] + d
+        return [self.driverInit()] + d
 
-    def driverInit(self, sim):
-        yield sim.waitWriteOnly()
+    def driverInit(self):
+        yield WaitWriteOnly()
         try:
             d = self.data[0]
         except IndexError:
             d = None
 
-        self.doWrite(sim, d)
+        self.doWrite(d)
 
         return
         yield
 
-    def doRead(self, s):
+    def doRead(self):
         return self.intf.read()
 
-    def doWrite(self, s, data):
+    def doWrite(self, data):
         self.intf.write(data)
 
-    def driverWithClk(self, sim):
+    def driverWithClk(self):
         # if clock is specified this function is periodically called every
         # clk tick, if agent is enabled
-        yield sim.waitReadOnly()
-        if self.data and self.notReset(sim):
-            yield sim.waitWriteOnly()
+        yield WaitCombRead()
+        if self.data and self.notReset():
+            yield WaitWriteOnly()
             d = self.data.popleft()
-            self.doWrite(sim, d)
+            self.doWrite(d)
 
-    def driverWithTimer(self, sim):
+    def driverWithTimer(self):
         if self.initPending:
             if self.initDelay:
                 yield Timer(self.initDelay)
@@ -82,31 +83,31 @@ class SignalAgent(SyncAgentBase):
         # if clock is specified this function is periodically called every
         # clk tick
         while True:
-            yield sim.waitReadOnly()
-            if self._enabled and self.data and self.notReset(sim):
-                yield sim.waitWriteOnly()
+            yield WaitCombRead()
+            if self._enabled and self.data and self.notReset():
+                yield WaitWriteOnly()
                 d = self.data.popleft()
-                self.doWrite(sim, d)
+                self.doWrite(d)
 
             yield Timer(self.delay)
 
-    def monitorWithTimer(self, sim):
+    def monitorWithTimer(self):
         if self.initPending and self.initDelay:
             yield Timer(self.initDelay)
             self.initPending = False
         # if there is no clk, we have to manage periodic call by our self
         while True:
-            yield sim.waitReadOnly()
-            if self._enabled and self.notReset(sim):
-                d = self.doRead(sim)
+            yield WaitCombRead()
+            if self._enabled and self.notReset():
+                d = self.doRead()
                 self.data.append(d)
 
             yield Timer(self.delay)
 
-    def monitorWithClk(self, sim):
+    def monitorWithClk(self):
         # if clock is specified this function is periodically called every
         # clk tick, when agent is enabled
-        yield sim.waitReadOnly()
-        if self.notReset(sim):
-            d = self.doRead(sim)
+        yield WaitCombRead()
+        if self.notReset():
+            d = self.doRead()
             self.data.append(d)

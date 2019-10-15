@@ -6,7 +6,6 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct, HStructField
 from hwt.hdl.types.union import HUnion
 from hwt.pyUtils.arrayQuery import iter_with_last
-from hwt.synthesizer.param import evalParam
 from hwt.hdl.types.stream import HStream
 from hwt.doc_markers import internal
 
@@ -122,7 +121,7 @@ class TransTmpl(object):
 
         :return: address of it's end
         """
-        self.itemCnt = evalParam(dtype.size).val
+        self.itemCnt = int(dtype.size)
         self.children = TransTmpl(
             dtype.elmType, 0, parent=self, origin=self.origin)
         return bitAddr + self.itemCnt * self.children.bitAddrEnd

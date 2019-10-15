@@ -7,7 +7,7 @@ from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.value import GenericSerializer_Value
-from hwt.synthesizer.param import Param, evalParam
+from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.serializer.hwt.context import HwtSerializerCtx
 
@@ -16,21 +16,21 @@ class HwtSerializer_value(GenericSerializer_Value):
 
     @classmethod
     def Bits_valAsHdl(cls, dtype, val: BitsVal, ctx: HwtSerializerCtx):
-        isFullVld = val._isFullVld()
+        isFullVld = val._is_full_valid()
         if not ctx._valueWidthRequired:
             if isFullVld:
                 return "0x%x" % val.val
-            elif val.vldMask == 0:
+            elif val.vld_mask == 0:
                 return "None"
 
         if isFullVld:
-            vldMaskStr = ""
+            vld_maskStr = ""
         else:
-            vldMaskStr = ", vldMask=0x%x" % (val.vldMask)
+            vld_maskStr = ", vld_mask=0x%x" % (val.vld_mask)
 
-        return "%s.fromPy(0x%x%s)" % (
+        return "%s.from_py(0x%x%s)" % (
             cls.HdlType_bits(dtype, ctx, declaration=False),
-            val.val, vldMaskStr)
+            val.val, vld_maskStr)
 
     @classmethod
     def RtlSignal(cls, s: RtlSignalBase, ctx, declaration=False):
@@ -41,11 +41,9 @@ class HwtSerializer_value(GenericSerializer_Value):
         if declaration:
             raise NotImplementedError()
         else:
-            if isinstance(si, Param):
-                return cls.Value(evalParam(si), ctx)
             # elif isinstance(si, SignalItem) and si._const:
             #    return cls.Value(si._val, ctx)
-            elif si.hidden and hasattr(si, "origin"):
+            if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin, ctx)
             else:
                 return "%s" % si.name
@@ -58,12 +56,12 @@ class HwtSerializer_value(GenericSerializer_Value):
         except AttributeError:
             consGetter = None
 
-        if consGetter and not val._isFullVld() and not isinstance(val._dtype, HEnum):
+        if consGetter and not val._is_full_valid() and not isinstance(val._dtype, HEnum):
             return consGetter(val)
 
     @classmethod
     def Integer_valAsHdl(cls, t, i, ctx: HwtSerializerCtx):
-        if i.vldMask:
+        if i.vld_mask:
             return "%d" % i.val
         else:
             return "None"
@@ -80,7 +78,7 @@ class HwtSerializer_value(GenericSerializer_Value):
 
     @classmethod
     def HArrayValAsHdl(cls, t, val: HArrayVal, ctx: HwtSerializerCtx):
-        if not val.vldMask:
+        if not val.vld_mask:
             return "None"
         else:
             if len(val.val) == val._dtype.size:
@@ -103,14 +101,15 @@ class HwtSerializer_value(GenericSerializer_Value):
 
     @classmethod
     def Slice_valAsHdl(cls, t, val: SliceVal, ctx: HwtSerializerCtx):
-        if val._isFullVld():
-            return "%d:%d" % (evalParam(val.val[0]).val,
-                              evalParam(val.val[1]).val)
+        if val._is_full_valid():
+            return "%d:%d" % (int(val.start),
+                              int(val.stop))
         else:
-            return "SliceVal((%d, %d), SLICE, %d)" % (
-                evalParam(val.val[0]).val,
-                evalParam(val.val[1]).val,
-                val.vldMask)
+            return "SliceVal(slice(%s, %s, %s), SLICE, %d)" % (
+                cls.Value(val.start),
+                cls.Value(val.stop),
+                cls.Value(val.step),
+                val.vld_mask)
 
     @classmethod
     def HEnumValAsHdl(cls, t, val: HEnumVal, ctx: HwtSerializerCtx):

@@ -132,7 +132,7 @@ class BitWalker():
                 t = self.actual._dtype
                 fillupW = numberOfBits - self.actuallyHave
                 padding_t = Bits(fillupW, signed=t.signed, negated=t.negated)
-                padding = padding_t.fromPy(None)
+                padding = padding_t.from_py(None)
                 actual = padding._concat(actual)
             self.actuallyHave = 0
 

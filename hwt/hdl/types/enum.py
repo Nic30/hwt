@@ -22,7 +22,7 @@ class HEnum(HdlType):
         self.name = name
         self._allValues = tuple(valueNames)
         for name in valueNames:
-            v = self.fromPy(name)
+            v = self.from_py(name)
             assert not hasattr(self, name)
             setattr(self, name, v)
 

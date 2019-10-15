@@ -1,6 +1,5 @@
 from collections import namedtuple
 
-from hwt.synthesizer.param import evalParam
 from hwt.doc_markers import internal
 
 
@@ -29,11 +28,11 @@ def freeze_dict(data):
 
 @internal
 def paramsToValTuple(unit):
+    # [TODO] check sub params
     d = {}
     for p in unit._params:
-        name = p.getName(unit)
-        v = evalParam(p)
-        d[name] = v
+        v = p.get_value()
+        d[p._name] = v
     return freeze_dict(d)
 
 

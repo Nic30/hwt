@@ -1,9 +1,10 @@
 from hwt.doc_markers import internal
 from hwt.hdl.constants import INTF_DIRECTION
+from pycocotb.hdlSimulator import HdlSimulator
 
 
 @internal
-def autoAddAgents(unit):
+def autoAddAgents(unit, sim: HdlSimulator):
     """
     Walk all interfaces on unit and instantiate agent for every interface.
 
@@ -15,7 +16,7 @@ def autoAddAgents(unit):
         if not intf._isExtern:
             continue
 
-        intf._initSimAgent()
+        intf._initSimAgent(sim)
         assert intf._ag is not None, intf
         agents = [intf._ag, ]
 

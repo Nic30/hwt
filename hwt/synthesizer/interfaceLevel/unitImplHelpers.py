@@ -43,8 +43,8 @@ def getSignalName(sig):
 
 
 @internal
-def _default_param_updater(self, myP, otherP):
-    myP.set(otherP)
+def _default_param_updater(self, myP, otherP_val):
+    myP.set_value(otherP_val)
 
 
 class UnitImplHelpers(object):
@@ -74,7 +74,7 @@ class UnitImplHelpers(object):
         if isinstance(dtype, HStruct):
             if defVal is not None:
                 raise NotImplementedError()
-            container = dtype.fromPy(None)
+            container = dtype.from_py(None)
             for f in dtype.fields:
                 if f.name is not None:
                     r = self._reg("%s_%s" % (name, f.name), f.dtype)
@@ -95,7 +95,7 @@ class UnitImplHelpers(object):
         if isinstance(dtype, HStruct):
             if defVal is not None:
                 raise NotImplementedError()
-            container = dtype.fromPy(None)
+            container = dtype.from_py(None)
             for f in dtype.fields:
                 if f.name is not None:
                     r = self._sig("%s_%s" % (name, f.name), f.dtype)
@@ -122,7 +122,7 @@ class UnitImplHelpers(object):
             # (because this signals are for parent unit)
             if isinstance(t, Bits):
                 t = copy(t)
-                t.width = t.bit_length()
+                t._bit_length = t.bit_length()
                 return t
             else:
                 return t

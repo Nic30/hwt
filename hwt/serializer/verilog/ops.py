@@ -1,13 +1,13 @@
-from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.types.defs import BIT
-from hwt.serializer.exceptions import UnsupportedEventOpErr
-from hwt.hdl.value import Value
-from hwt.hdl.operator import Operator
-from hwt.serializer.generic.context import SerializerCtx
-from hwt.hdl.types.integer import Integer
 from typing import Union
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+
 from hwt.hdl.assignment import Assignment
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.types.defs import BIT, INT
+from hwt.hdl.value import Value
+from hwt.serializer.exceptions import UnsupportedEventOpErr
+from hwt.serializer.generic.context import SerializerCtx
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class VerilogSerializer_ops():
@@ -92,9 +92,9 @@ class VerilogSerializer_ops():
         if oper not in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec,
                         AllOps.IntToBits, AllOps.BitsAsSigned] and \
                 oper is not AllOps.INDEX and\
-                isinstance(operand._dtype, Integer) and\
+                operand._dtype == INT and\
                 operator.result is not None and\
-                not isinstance(operator.result._dtype, Integer):
+                not operator.result._dtype == INT:
             # has to lock width
             width = None
             for o in operator.operands:
@@ -137,7 +137,7 @@ class VerilogSerializer_ops():
             return "%s[%s]" % (cls._operand(o1, op, ctx),
                                cls._operand(ops[1], op, ctx))
         elif o == AllOps.TERNARY:
-            zero, one = BIT.fromPy(0), BIT.fromPy(1)
+            zero, one = BIT.from_py(0), BIT.from_py(1)
             if ops[1] == one and ops[2] == zero:
                 # ignore redundant x ? 1 : 0
                 return cls.condAsHdl([ops[0]], True, ctx)

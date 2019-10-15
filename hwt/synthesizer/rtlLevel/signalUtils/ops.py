@@ -7,7 +7,7 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, \
     NoDriverErr
 
 
@@ -63,9 +63,10 @@ class RtlSignalOps():
         if op_instanciated:
             k_real = (operator, *o.origin.operands[1:])
             real_o = used.get(k_real, None)
-            if real_o is not None:
+            if real_o is not None and real_o is not o:
                 # destroy newly created operator and result, because it is same
-                # as
+                # as the signal for some existing operator with equvavelnt value
+                # (and maybe possibly slightly different type)
                 ctx = self.ctx
                 if ctx is not None:
                     ctx.signals.remove(o)
@@ -155,10 +156,6 @@ class RtlSignalOps():
     def __floordiv__(self, divider):
         return self.naryOp(AllOps.DIV, tv(self).__floordiv__, divider)
 
-    # selections
-    def _downto(self, to):
-        return self.naryOp(AllOps.DOWNTO, tv(self)._downto, to)
-
     def __getitem__(self, key):
         if isinstance(key, slice):
             key = slice_to_SLICE(key, self._dtype.bit_length())
@@ -209,7 +206,7 @@ class RtlSignalOps():
             source = source._sig
 
         if source is None:
-            source = self._dtype.fromPy(None)
+            source = self._dtype.from_py(None)
         else:
             source = toHVal(source, suggestedType=self._dtype)
             err = False
@@ -247,5 +244,5 @@ class RtlSignalOps():
         else:
             return bool(self._val)
 
-    def _isFullVld(self):
-        return self._const and self._val._isFullVld()
+    def _is_full_valid(self):
+        return self._const and self._val._is_full_valid()

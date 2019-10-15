@@ -1,15 +1,16 @@
+from typing import Union
+
+from hwt.doc_markers import internal
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
 from hwt.hdl.ifContainter import IfContainer
-from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import OpDefinition
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.bool import HBool
+from hwt.hdl.types.defs import INT, BOOL
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.types.integer import Integer
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
@@ -17,10 +18,8 @@ from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import NameScope
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.unit import Unit
-from hwt.doc_markers import internal
-from typing import Union
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.unit import Unit
 
 
 @internal
@@ -88,12 +87,12 @@ class GenericSerializer():
             serializedPorts = []
 
         scope = ctx.scope
-        ent.generics.sort(key=lambda x: x.name)
+        ent.generics.sort(key=lambda x: x.hdl_name)
         ent.ports.sort(key=lambda x: x.name)
 
         ent.name = scope.checkedName(ent.name, ent, isGlobal=True)
         for g in ent.generics:
-            g.name = scope.checkedName(g.name, g)
+            g.hdl_name = scope.checkedName(g.hdl_name, g)
             if serialize:
                 serializedGenerics.append(cls.GenericItem(g, ctx))
 
@@ -152,16 +151,16 @@ class GenericSerializer():
         """
         Serialize HdlType instance
         """
-        if isinstance(typ, Bits):
+        if typ == INT:
+            sFn = cls.HdlType_int
+        elif typ == BOOL:
+            sFn = cls.HdlType_bool
+        elif isinstance(typ, Bits):
             sFn = cls.HdlType_bits
         elif isinstance(typ, HEnum):
             sFn = cls.HdlType_enum
         elif isinstance(typ, HArray):
             sFn = cls.HdlType_array
-        elif isinstance(typ, Integer):
-            sFn = cls.HdlType_int
-        elif isinstance(typ, HBool):
-            sFn = cls.HdlType_bool
         else:
             raise NotImplementedError("type declaration is not implemented"
                                       " for type %s"
@@ -250,7 +249,9 @@ class GenericSerializer():
             cases=cases)
 
     @classmethod
-    def _operand(cls, operand: Union[RtlSignal, Value], operator: OpDefinition, ctx: SerializerCtx):
+    def _operand(cls,
+                 operand: Union[RtlSignal, Value],
+                 operator: OpDefinition, ctx: SerializerCtx):
         s = cls.asHdl(operand, ctx)
         if isinstance(operand, RtlSignalBase):
             try:

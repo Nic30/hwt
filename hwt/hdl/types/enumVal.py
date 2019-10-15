@@ -10,36 +10,35 @@ BoolVal = BOOL.getValueCls()
 class HEnumVal(Value):
 
     @classmethod
-    def fromPy(cls, val, typeObj, vldMask=None):
+    def from_py(cls, typeObj, val, vld_mask=None):
         """
         :param val: value of python type bool or None
         :param typeObj: instance of HEnum
-        :param vldMask: if is None validity is resolved from val
+        :param vld_mask: if is None validity is resolved from val
             if is 0 value is invalidated
             if is 1 value has to be valid
         """
         if val is None:
-            assert vldMask is None or vldMask == 0
+            assert vld_mask is None or vld_mask == 0
             valid = False
             val = typeObj._allValues[0]
         else:
-            if vldMask is None or vldMask == 1:
+            if vld_mask is None or vld_mask == 1:
                 assert isinstance(val, str)
                 valid = True
             else:
                 valid = False
                 val = None
 
-        return cls(val, typeObj, valid)
+        return cls(typeObj, val, valid)
 
     @internal
     def _eq__val(self, other):
         eq = self.val == other.val \
-            and self.vldMask == other.vldMask == 1
+            and self.vld_mask == other.vld_mask == 1
 
-        vldMask = int(self.vldMask == other.vldMask == 1)
-        updateTime = max(self.updateTime, other.updateTime)
-        return BoolVal(eq, BOOL, vldMask, updateTime)
+        vld_mask = int(self.vld_mask == other.vld_mask == 1)
+        return BoolVal(eq, BOOL, vld_mask)
 
     def _eq(self, other):
         assert self._dtype is other._dtype
@@ -52,11 +51,10 @@ class HEnumVal(Value):
     @internal
     def _ne__val(self, other):
         neq = self.val != other.val \
-            and self.vldMask == other.vldMask == 1
+            and self.vld_mask == other.vld_mask == 1
 
-        vldMask = int(self.vldMask == other.vldMask == 1)
-        updateTime = max(self.updateTime, other.updateTime)
-        return BoolVal(neq, BOOL, vldMask, updateTime)
+        vld_mask = int(self.vld_mask == other.vld_mask == 1)
+        return BoolVal(neq, BOOL, vld_mask)
 
     def __ne__(self, other):
         assert self._dtype is other._dtype

@@ -23,7 +23,6 @@ from hwt.serializer.hwt.ops import HwtSerializer_ops
 from hwt.serializer.hwt.types import HwtSerializer_types
 from hwt.serializer.hwt.value import HwtSerializer_value
 from hwt.serializer.utils import maxStmId
-from hwt.synthesizer.param import evalParam
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.serializer.hwt.context import HwtSerializerCtx
 
@@ -133,7 +132,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         childCtx.constCache = ConstCache(ctx.scope.checkedName)
 
         def serializeVar(v):
-            dv = evalParam(v.defVal)
+            dv = v.defVal
             if isinstance(dv, HEnumVal):
                 dv = "%s.%s" % (dv._dtype.name, dv.val)
             else:

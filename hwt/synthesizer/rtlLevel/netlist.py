@@ -160,7 +160,8 @@ def statements_to_HWProcesses(statements: List[HdlStatement])\
 
 
 @internal
-def walk_assignments(stm: HdlStatement, dst: RtlSignal) -> Generator[Assignment, None, None]:
+def walk_assignments(stm: HdlStatement, dst: RtlSignal)\
+        -> Generator[Assignment, None, None]:
     if isinstance(stm, Assignment):
         if dst is stm.dst:
             yield stm
@@ -208,7 +209,7 @@ def markVisibilityOfSignals(ctx, ctxName, signals, interfaceSignals):
         else:
             sig.hidden = False
             if sig not in interfaceSignals:
-                if not sig.defVal._isFullVld():
+                if not sig.defVal._is_full_valid():
                     raise NoDriverErr(
                         sig, "Signal without any driver or valid value in ", ctxName)
                 sig._const = True
@@ -252,7 +253,7 @@ class RtlNetlist():
         elif isinstance(defVal, InterfaceBase):
             _defVal = defVal._sig
         else:
-            _defVal = dtype.fromPy(defVal)
+            _defVal = dtype.from_py(defVal)
 
         if clk is not None:
             s = RtlSyncSignal(self, name, dtype, _defVal)

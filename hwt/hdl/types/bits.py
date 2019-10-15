@@ -1,66 +1,34 @@
+from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.serializer.generic.indent import getIndent
-from hwt.doc_markers import internal
+from pyMathBitPrecise.bits3t import Bits3t
+
 
 BITS_DEFAUTL_SIGNED = None
 BITS_DEFAUTL_FORCEVECTOR = False
 BITS_DEFAUTL_NEGATED = False
 
 
-class Bits(HdlType):
+class Bits(HdlType, Bits3t):
     """
     Elemental HDL type representing bits (vector or single bit)
     """
 
-    def __init__(self, width, signed=BITS_DEFAUTL_SIGNED,
-                 forceVector=BITS_DEFAUTL_FORCEVECTOR, negated=BITS_DEFAUTL_NEGATED):
+    def __init__(self, bit_length, signed=BITS_DEFAUTL_SIGNED,
+                 force_vector=BITS_DEFAUTL_FORCEVECTOR,
+                 negated=BITS_DEFAUTL_NEGATED,
+                 name=None,
+                 strict_sign=True, strict_width=True):
         """
         :param negated: if true the value is in negated form
-        :param forceVector: use always hdl vector type
-            (for example std_logic_vector(0 downto 0)
-             instead of std_logic in VHDL)
         """
-        self.forceVector = forceVector
         self.negated = negated
 
-        w = int(width)
-        assert isinstance(w, int) and w > 0
-        self._widthVal = w
-
-        self.signed = signed
-        self.width = width
-
-        self._allMask = mask(self._widthVal)
-
-    def __eq__(self, other):
-        if self is other:
-            return True
-
-        if self._widthVal == 1:
-            return (isinstance(other, Bits)
-                    and other._widthVal == 1
-                    and self.signed == other.signed
-                    and self.forceVector == other.forceVector)
-        else:
-            return (isinstance(other, Bits)
-                    and other._widthVal == self._widthVal
-                    and self.signed == other.signed)
-
-    @internal
-    def __hash__(self):
-        return hash((self.signed, self._widthVal, self.forceVector))
-
-    def all_mask(self):
-        """
-        :return: mask for bites of this type ( 0b111 for Bits(3) )
-        """
-        return self._allMask
-
-    def bit_length(self):
-        """
-        :return: bit width for this type
-        """
-        return self._widthVal
+        bit_length = int(bit_length)
+        assert bit_length > 0
+        Bits3t.__init__(self, bit_length, signed, name=name,
+                        force_vector=force_vector,
+                        strict_sign=strict_sign, strict_width=strict_width)
 
     @internal
     def domain_size(self):
@@ -99,20 +67,22 @@ class Bits(HdlType):
             (used only by HStruct)
         :param expandStructs: expand HStructTypes (used by HStruct and HArray)
         """
-        c = self.width
-        if isinstance(c, int):
-            constr = "%dbits" % c
-        else:
-            from hwt.serializer.vhdl.serializer import VhdlSerializer
-            ctx = VhdlSerializer.getBaseContext()
-            constr = VhdlSerializer.asHdl(self.width, ctx)
-            constr = "%s, %dbits" % (constr, self.bit_length())
-
+        constr = []
+        if self.name is not None:
+            constr.append('"%s"' % self.name)
+        c = self.bit_length()
+        constr.append("%dbits" % c)
+        if self.force_vector:
+            constr.append("force_vector")
         if self.signed:
-            constr += ", signed"
+            constr.append("signed")
         elif self.signed is False:
-            constr += ", unsigned"
+            constr.append("unsigned")
+        if not self.strict_sign:
+            constr.append("strict_sign=False")
+        if not self.strict_width:
+            constr.append("strict_width=False")
 
         return "%s<%s, %s>" % (getIndent(indent),
                                self.__class__.__name__,
-                               constr)
+                               ", ".join(constr))

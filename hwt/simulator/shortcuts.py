@@ -171,5 +171,6 @@ def reconnectUnitSignalsToModel(synthesisedUnitOrIntf, rtl_simulator):
             s.name = name
             intf.read = s.read
             intf.write = s.write
+            intf.wait = s.wait
             intf._sigInside = s
 

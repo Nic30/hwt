@@ -1,20 +1,11 @@
-from hwt.hdl.types.array import HArray
-from hwt.hdl.types.integer import Integer
 from hwt.doc_markers import internal
+from hwt.hdl.types.hdlType import HdlType
 
 
-# [TODO] inherit from python slice and make it hashable
-class Slice(HArray):
+class Slice(HdlType):
     """
     Slice type, used for selecting items from arrays or vectors
     """
-
-    def __init__(self):
-        super().__init__(Integer(), 2)
-
-    @internal
-    def __hash__(self):
-        return hash(self.elmType)
 
     @internal
     @classmethod

@@ -1,14 +1,15 @@
-from hwt.bitmask import mask
 from hwt.hdl.operator import Operator
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.value import Value
-from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.value import GenericSerializer_Value
-from hwt.serializer.generic.indent import getIndent
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdl.variables import SignalItem
+from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.context import SerializerCtx
+from hwt.serializer.generic.indent import getIndent
+from hwt.serializer.generic.value import GenericSerializer_Value
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from pyMathBitPrecise.bit_utils import mask
+from hwt.hdl.types.sliceVal import SliceVal
 
 
 class VhdlSerializer_Value(GenericSerializer_Value):
@@ -42,7 +43,7 @@ class VhdlSerializer_Value(GenericSerializer_Value):
                 prefix = "SIGNAL"
             elif si.endpoints or si.simSensProcs:
                 prefix = "CONSTANT"
-                if not v.vldMask:
+                if not v.vld_mask:
                     raise SerializerException(
                         "Signal %s is constant and has undefined value"
                         % si.name)
@@ -57,10 +58,11 @@ class VhdlSerializer_Value(GenericSerializer_Value):
                 if v._const:
                     return s + " := %s" % cls.asHdl(v, ctx)
                 else:
-                    # default value has to be set by reset because it is only signal
+                    # default value has to be set by reset
+                    # because it is only signal
                     return s
             elif isinstance(v, Value):
-                if v.vldMask:
+                if v.vld_mask:
                     return s + " := %s" % cls.Value(v, ctx)
                 else:
                     return s
@@ -85,13 +87,13 @@ class VhdlSerializer_Value(GenericSerializer_Value):
                         ")"])
 
     @staticmethod
-    def BitString_binary(v, width, vldMask=None):
+    def BitString_binary(v, width, vld_mask=None):
         buff = ['"']
         for i in range(width - 1, -1, -1):
             mask = (1 << i)
             b = v & mask
 
-            if vldMask & mask:
+            if vld_mask & mask:
                 s = "1" if b else "0"
             else:
                 s = "X"
@@ -100,18 +102,18 @@ class VhdlSerializer_Value(GenericSerializer_Value):
         return ''.join(buff)
 
     @classmethod
-    def BitString(cls, v, width, vldMask=None):
-        if vldMask is None:
-            vldMask = mask(width)
+    def BitString(cls, v, width, vld_mask=None):
+        if vld_mask is None:
+            vld_mask = mask(width)
         # if can be in hex
-        if width % 4 == 0 and vldMask == (1 << width) - 1:
+        if width % 4 == 0 and vld_mask == (1 << width) - 1:
             return ('X"%0' + str(width // 4) + 'x"') % (v)
         else:  # else in binary
-            return cls.BitString_binary(v, width, vldMask)
+            return cls.BitString_binary(v, width, vld_mask)
 
     @classmethod
-    def BitLiteral(cls, v, vldMask):
-        if vldMask:
+    def BitLiteral(cls, v, vld_mask):
+        if vld_mask:
             return "'%d'" % int(bool(v))
         else:
             return "'X'"
@@ -123,24 +125,24 @@ class VhdlSerializer_Value(GenericSerializer_Value):
         return cls.asHdl(item, ctx)
 
     @classmethod
-    def SignedBitString(cls, v, width, forceVector, vldMask):
-        if vldMask != mask(width):
-            if forceVector or width > 1:
-                v = cls.BitString(v, width, vldMask)
+    def SignedBitString(cls, v, width, force_vector, vld_mask):
+        if vld_mask != mask(width):
+            if force_vector or width > 1:
+                v = cls.BitString(v, width, vld_mask)
             else:
-                v = cls.BitLiteral(v, width, vldMask)
+                v = cls.BitLiteral(v, width, vld_mask)
         else:
             v = str(v)
         # [TODO] parametrized width
         return "TO_SIGNED(%s, %d)" % (v, width)
 
     @classmethod
-    def UnsignedBitString(cls, v, width, forceVector, vldMask):
-        if vldMask != mask(width):
-            if forceVector or width > 1:
-                v = cls.BitString(v, width, vldMask)
+    def UnsignedBitString(cls, v, width, force_vector, vld_mask):
+        if vld_mask != mask(width):
+            if force_vector or width > 1:
+                v = cls.BitString(v, width, vld_mask)
             else:
-                v = cls.BitLiteral(v, width, vldMask)
+                v = cls.BitLiteral(v, width, vld_mask)
         else:
             v = str(v)
         # [TODO] parametrized width
@@ -151,15 +153,18 @@ class VhdlSerializer_Value(GenericSerializer_Value):
         return str(bool(val.val))
 
     @classmethod
-    def Slice_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
-        upper = val.val[0]
-        if isinstance(upper, Value):
-            upper = upper - 1
-            _format = "%s DOWNTO %s"
+    def Slice_valAsHdl(cls, dtype, val: SliceVal, ctx: SerializerCtx):
+        upper = val.val.start
+        if val.val.step == -1:
+            if isinstance(upper, Value):
+                upper = upper - 1
+                _format = "%s DOWNTO %s"
+            else:
+                _format = "%s-1 DOWNTO %s"
         else:
-            _format = "%s-1 DOWNTO %s"
+            raise NotImplementedError()
 
-        return _format % (cls.Value(upper, ctx), cls.Value(val.val[1], ctx))
+        return _format % (cls.Value(upper, ctx), cls.Value(val.val.stop, ctx))
 
     @classmethod
     def String_valAsHdl(cls, dtype, val, ctx: SerializerCtx):

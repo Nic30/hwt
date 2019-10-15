@@ -31,13 +31,13 @@ class VldSyncedAgent(SyncAgentBase):
             self._lastVld = 0
 
     def monitor(self, sim):
-        yield sim.waitReadOnly()
-        if self.notReset(sim):
+        yield WaitCombRead()
+        if self.notReset():
             intf = self.intf
             vld = self.doReadVld()
             vld = int(vld)
             if vld:
-                d = self.doRead(sim)
+                d = self.doRead()
 
                 if self._debugOutput is not None:
                     self._debugOutput.write("%s, read, %d: %r\n" % (
@@ -46,9 +46,9 @@ class VldSyncedAgent(SyncAgentBase):
                 self.data.append(d)
 
     def driver(self, sim):
-        yield sim.waitReadOnly()
-        if self.data and self.notReset(sim):
-            yield sim.waitWriteOnly()
+        yield WaitCombRead()
+        if self.data and self.notReset():
+            yield WaitWriteOnly()
             d = self.data.popleft()
             if d is NOP:
                 self.doWrite(sim, None)

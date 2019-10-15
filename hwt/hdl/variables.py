@@ -22,7 +22,7 @@ class SignalItem(HdlObject):
         self._dtype = dtype
         self.virtualOnly = virtualOnly
         if defVal is None:
-            defVal = dtype.fromPy(None)
+            defVal = dtype.from_py(None)
         self.defVal = defVal
         self._setDefValue()
 
@@ -32,6 +32,6 @@ class SignalItem(HdlObject):
         if isinstance(v, RtlSignalBase):
             v = v.staticEval()
 
-        self._val = v.clone()
-        self._oldVal = self._val.clone()
-        self._oldVal.vldMask = 0
+        self._val = v.__copy__()
+        self._oldVal = self._val.__copy__()
+        self._oldVal.vld_mask = 0

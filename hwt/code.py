@@ -119,7 +119,7 @@ class Switch(SwitchContainer):
         caseVal = toHVal(caseVal, self.switchOn._dtype)
 
         assert isinstance(caseVal, Value), caseVal
-        assert caseVal._isFullVld(), "Cmp with invalid value"
+        assert caseVal._is_full_valid(), "Cmp with invalid value"
         assert caseVal not in self._case_value_index, (
             "Switch statement already has case for value ", caseVal)
 
@@ -254,7 +254,7 @@ class FsmBuilder(Switch):
         :param stateRegName: name of register where sate is stored
         """
         if isinstance(stateT, HEnum):
-            beginVal = stateT.fromPy(stateT._allValues[0])
+            beginVal = stateT.from_py(stateT._allValues[0])
         else:
             beginVal = 0
 
@@ -338,7 +338,7 @@ Concat = _mkOp(concatFn)
 
 
 def power(base, exp) -> RtlSignalBase:
-    return toHVal(base)._pow(exp)
+    return toHVal(base) ** exp
 
 
 def ror(sig, howMany) -> RtlSignalBase:

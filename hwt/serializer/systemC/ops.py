@@ -81,7 +81,7 @@ class SystemCSerializer_ops():
                 return "%s[%s]" % (o0_str, cls._operand(o1, o, ctx))
 
         elif o == AllOps.TERNARY:
-            zero, one = BIT.fromPy(0), BIT.fromPy(1)
+            zero, one = BIT.from_py(0), BIT.from_py(1)
             if ops[1] == one and ops[2] == zero:
                 # ignore redundant x ? 1 : 0
                 return cls.condAsHdl([ops[0]], True, ctx)

@@ -1,5 +1,6 @@
 from copy import copy
 
+from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
@@ -15,10 +16,11 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
-    NoDriverErr
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.doc_markers import internal
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, \
+    NoDriverErr
+from hwt.hdl.types.defs import BOOL, INT
+from hwt.hdl.value import Value
 
 
 @internal
@@ -53,7 +55,7 @@ def ternaryOpsToIf(statements):
             except NoDriverErr:
                 assert (hasattr(st.src, "_interface")
                         and st.src._interface is not None)\
-                    or st.src.defVal.vldMask, st.src
+                    or st.src.defVal.vld_mask, st.src
 
         stms.append(st)
     return stms
@@ -77,7 +79,7 @@ class VhdlSerializer_statements():
         if a.indexes is not None:
             for i in a.indexes:
                 if isinstance(i, SliceVal):
-                    i = i.clone()
+                    i = i.__copy__()
                     i.val = (i.val[0], i.val[1])
                 dst = dst[i]
 
@@ -89,19 +91,45 @@ class VhdlSerializer_statements():
         if dst_t == src_t:
             return "%s%s %s %s" % (indent_str, dstStr, symbol, valAsHdl(a.src))
         else:
+            correct = False
+            src = a.src
             if (isinstance(dst_t, Bits)
                     and isinstance(src_t, Bits)
                     and dst_t.bit_length() == src_t.bit_length() == 1):
-                if dst_t.forceVector and not src_t.forceVector:
-                    return "%s%s(0) %s %s" % (indent_str, dstStr, symbol,
-                                              valAsHdl(a.src))
-                if not dst_t.forceVector and src_t.forceVector:
-                    return "%s%s %s %s(0)" % (indent_str, dstStr, symbol,
-                                              valAsHdl(a.src))
+                if dst_t.force_vector and not src_t.force_vector:
+                    dstStr = "%s(0)" % (dstStr)
+                    srcStr = valAsHdl(a.src)
+                    correct = True
+                elif not dst_t.force_vector and src_t.force_vector:
+                    srcStr = "%s(0)" % valAsHdl(src)
+                    correct = True
+                elif src_t == BOOL:
+                    srcStr = "'1' when %s else '0'" % valAsHdl(src)
+                    correct = True
+            elif src_t == INT:
+                if isinstance(src, Value):
+                    if src._is_full_valid():
+                        if a.indexes:
+                            raise NotImplementedError()
+                        else:
+                            w = dst._dtype.bit_length()
+                            if dst_t.signed:
+                                srcStr = "std_logic_vector(to_signed(%d, %d))" % (
+                                    int(src), w)
+                            else:
+                                srcStr = "std_logic_vector(to_unsigned(%d, %d))" % (
+                                    int(src), w)
+                            correct = True
+                else:
+                    raise NotImplementedError()
+                    pass
+
+            if correct:
+                return "%s%s %s %s" % (indent_str, dstStr, symbol, srcStr)
 
             raise SerializerException(
                 "%s%s %s %s  is not valid assignment\n"
-                " because types are different (%r; %r) " %
+                " because types are different (%r; %r) " % 
                 (indent_str, dstStr, symbol, valAsHdl(a.src),
                  dst._dtype, a.src._dtype))
 
@@ -148,7 +176,7 @@ class VhdlSerializer_statements():
 
         extraVarsInit = []
         for s in extraVars:
-            if isinstance(s.defVal, RtlSignalBase) or s.defVal.vldMask:
+            if isinstance(s.defVal, RtlSignalBase) or s.defVal.vld_mask:
                 a = Assignment(s.defVal, s, virtualOnly=True)
                 extraVarsInit.append(cls.Assignment(a, childCtx))
             else:

@@ -1,27 +1,26 @@
+from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.bool import HBool
-from hwt.hdl.types.defs import INT
+from hwt.hdl.types.defs import INT, BOOL
 from hwt.hdl.types.hdlType import default_auto_cast_fn
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
 from hwt.hdl.value import Value
 from hwt.synthesizer.vectorUtils import iterBits, fitTo_t
-from hwt.doc_markers import internal
+
 
 @internal
 def convertBits__val(self, val, toType):
-    if isinstance(toType, HBool):
-        return val._eq(self.getValueCls().fromPy(1, self))
+    if toType == BOOL:
+        return val._eq(self.getValueCls().from_py(self, 1))
     elif isinstance(toType, Bits):
         return val._convSign__val(toType.signed)
     elif toType == INT:
         return INT.getValueCls()(val.val,
                                  INT,
-                                 int(val._isFullVld()),
-                                 val.updateTime)
+                                 int(val._is_full_valid()))
 
     return default_auto_cast_fn(self, val, toType)
 
@@ -33,10 +32,10 @@ def convertBits(self, sigOrVal, toType):
     """
     if isinstance(sigOrVal, Value):
         return convertBits__val(self, sigOrVal, toType)
-    elif isinstance(toType, HBool):
+    elif toType == BOOL:
         if self.bit_length() == 1:
             v = 0 if sigOrVal._dtype.negated else 1
-            return sigOrVal._eq(self.getValueCls().fromPy(v, self))
+            return sigOrVal._eq(self.getValueCls().from_py(self, v))
     elif isinstance(toType, Bits):
         if self.bit_length() == toType.bit_length():
             return sigOrVal._convSign(toType.signed)
@@ -51,7 +50,7 @@ def reinterpret_bits_to_hstruct(sigOrVal, hStructT):
     """
     Reinterpret signal of type Bits to signal of type HStruct
     """
-    container = hStructT.fromPy(None)
+    container = hStructT.from_py(None)
     offset = 0
     for f in hStructT.fields:
         t = f.dtype
@@ -70,7 +69,7 @@ def reinterpret_bits_to_hstruct(sigOrVal, hStructT):
 def reinterpret_bits_to_harray(sigOrVal, hArrayT):
     elmT = hArrayT.elmType
     elmWidth = elmT.bit_length()
-    a = hArrayT.fromPy(None)
+    a = hArrayT.from_py(None)
     for i, item in enumerate(iterBits(sigOrVal,
                                       bitsInOne=elmWidth,
                                       skipPadding=False)):

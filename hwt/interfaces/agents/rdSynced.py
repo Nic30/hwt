@@ -30,16 +30,16 @@ class RdSyncedAgent(SyncAgentBase):
 
     def monitor(self, sim):
         """Collect data from interface"""
-        yield sim.waitReadOnly()
-        if self.notReset(sim) and self._enabled:
-            yield sim.waitWriteOnly()
+        yield WaitCombRead()
+        if self.notReset() and self._enabled:
+            yield WaitWriteOnly()
             self.wrRd(1)
 
-            yield sim.waitReadOnly()
-            d = self.doRead(sim)
+            yield WaitCombRead()
+            d = self.doRead()
             self.data.append(d)
         else:
-            yield sim.waitWriteOnly()
+            yield WaitWriteOnly()
             self.wrRd(0)
 
     def doRead(self, sim):
@@ -52,7 +52,7 @@ class RdSyncedAgent(SyncAgentBase):
 
     def driver(self, sim):
         """Push data to interface"""
-        yield sim.waitWriteOnly()
+        yield WaitWriteOnly()
         if self.actualData is NOP and self.data:
             self.actualData = self.data.popleft()
 
@@ -63,8 +63,8 @@ class RdSyncedAgent(SyncAgentBase):
         else:
             self.doWrite(sim, None)
 
-        yield sim.waitReadOnly()
-        en = self.notReset(sim) and self._enabled
+        yield WaitCombRead()
+        en = self.notReset() and self._enabled
         if not (en and do):
             return
 

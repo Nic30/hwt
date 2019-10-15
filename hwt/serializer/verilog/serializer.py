@@ -20,9 +20,9 @@ from hwt.serializer.verilog.tmplContainer import VerilogTmplContainer
 from hwt.serializer.verilog.types import VerilogSerializer_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
-from hwt.synthesizer.param import getParam
 from hwt.hdl.portItem import PortItem
 from hwt.hdl.constants import DIRECTION
+from hwt.synthesizer.param import Param
 
 
 class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
@@ -98,7 +98,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         """
         t = v._dtype
         # if type requires extra definition
-        if isinstance(t, HArray) and v.defVal.vldMask:
+        if isinstance(t, HArray) and v.defVal.vld_mask:
             if v.drivers:
                 raise SerializerException("Verilog does not support RAMs"
                                           " with initialized value")
@@ -188,14 +188,14 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         return "\n".join(["/*", comentStr, "*/"])
 
     @classmethod
-    def GenericItem(cls, g, ctx):
+    def GenericItem(cls, g: Param, ctx):
         s = "%s %s" % (cls.HdlType(g._dtype, ctx.forPort()),
                        cls.get_signal_name(g, ctx))
         if g.defVal is None:
             return s
         else:
             return ("parameter %s = %s"
-                    % (s, cls.Value(getParam(g.defVal).staticEval(), ctx)))
+                    % (s, cls.Value(g.defVal, ctx)))
 
     @classmethod
     def PortItem(cls, pi: PortItem, ctx):
@@ -233,6 +233,6 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         return ".%s(%s)" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
 
     @classmethod
-    def MapExpr(cls, m, ctx):
+    def MapExpr(cls, m: MapExpr, ctx):
         return ".%s(%s)" % (cls.get_signal_name(m.compSig, ctx),
                             cls.asHdl(m.value, ctx))
