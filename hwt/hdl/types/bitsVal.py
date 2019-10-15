@@ -124,17 +124,6 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                            ._auto_cast(Bits(resWidth,
                                             signed=self._dtype.signed))
 
-    @internal
-    def _getitem__val(self, key):
-        # using self.__class__ because in simulator this method is called
-        # for SimBits and we do not want to work with Bits in sim
-        if key._dtype == INT:
-            return self._getitem__val_int(key)
-        elif key._dtype == SLICE:
-            return self._getitem__val_slice(key)
-        else:
-            raise TypeError(key)
-
     def __getitem__(self, key):
         """
         [] operator
@@ -219,7 +208,9 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 raise IndexError(_start, _stop)
 
             if iamVal:
-                return self._getitem__val(key)
+                if isinstance(key, SLICE.getValueCls()):
+                    key = key.val
+                return Bits3val.__getitem__(self, key)
             else:
                 key = SLICE.from_py(slice(start, stop, -1))
                 _resWidth = start - stop
@@ -234,7 +225,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
 
             resT = BIT
             if iamVal:
-                return self._getitem__val(key)
+                return Bits3val.__getitem__(self, key)
 
         elif isinstance(key, RtlSignalBase):
             t = key._dtype
