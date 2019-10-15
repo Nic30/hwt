@@ -169,7 +169,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
             genericMaps = []
             for g in entity.generics:
-                gm = MapExpr(g, g._val)
+                gm = MapExpr(g, g.get_value())
                 genericMaps.append(gm)
 
             if len(portMaps) == 0:

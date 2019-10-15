@@ -39,7 +39,7 @@ def paramsToValTuple(unit):
 @internal
 def prepareEntity(ent, name, templateUnit):
     ent.name = name
-    ent.generics.sort(key=lambda x: x.name)
+    ent.generics.sort(key=lambda x: x.hdl_name)
     ent.ports.sort(key=lambda x: x.name)
     # copy names
     if templateUnit is not None:
