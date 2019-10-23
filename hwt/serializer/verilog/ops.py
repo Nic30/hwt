@@ -42,8 +42,8 @@ class VerilogSerializer_ops():
     _unaryOps = {
         AllOps.NOT: "~%s",
         AllOps.BitsAsSigned: "$signed(%s)",
-        AllOps.BitsToInt: "%s",
-        #AllOps.IntToBits: "%s",
+        AllOps.BitsAsUnsigned: "$unsigned(%s)",
+        AllOps.BitsAsVec: "%s",
     }
 
     _binOps = {
@@ -80,7 +80,8 @@ class VerilogSerializer_ops():
         #        is not concatenation operand should be extracted
         #        as tmp variable
         #        * maybe flatten the concatenations
-        if operator.operator != AllOps.CONCAT and cls._operandIsAnotherOperand(operand)\
+        if operator.operator != AllOps.CONCAT\
+                and cls._operandIsAnotherOperand(operand)\
                 and operand.origin.operator == AllOps.CONCAT:
             tmpVar = ctx.createTmpVarFn("tmp_concat_", operand._dtype)
             tmpVar.defVal = operand
@@ -90,7 +91,7 @@ class VerilogSerializer_ops():
         s = super()._operand(operand, operator.operator, ctx)
         oper = operator.operator
         if oper not in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec,
-                        AllOps.IntToBits, AllOps.BitsAsSigned] and \
+                        AllOps.BitsAsSigned] and\
                 oper is not AllOps.INDEX and\
                 operand._dtype == INT and\
                 operator.result is not None and\
@@ -154,14 +155,6 @@ class VerilogSerializer_ops():
                 return "$unsigned(%s)" % op_str
             else:
                 return op_str
-        elif o == AllOps.IntToBits:
-            op0, = ops
-            width = op.result._dtype.bit_length()
-            op_str = cls._operand(op0, op, ctx)
-            if op_str.startswith("(") and not isinstance(op, Value):
-                return "%d'%s" % (width, op_str)
-            else:
-                return "%d'(%s)" % (width, op_str)
         else:
             raise NotImplementedError(
                 "Do not know how to convert expression with operator %s to verilog" % (o))

@@ -54,7 +54,6 @@ class HwtSerializer_ops():
         AllOps.BitsAsSigned,
         AllOps.BitsAsUnsigned,
         AllOps.BitsAsVec,
-        AllOps.BitsToInt,
     }
 
     @classmethod
@@ -90,17 +89,6 @@ class HwtSerializer_ops():
                     op0Str = asHdl(op0, ctx)
                     op1Str = asHdl(op1, ctx)
                 return "(%s)._ternary(%s, %s)" % (resStr, op0Str, op1Str)
-            elif o == AllOps.BitsToInt:
-                assert len(ops) == 1
-                op = ops[0]
-                return "%s.auto_cast(INT)" % (
-                    asHdl(op, ctx))
-            elif o == AllOps.IntToBits:
-                assert len(ops) == 1
-                resT = op.result._dtype
-                return "%s.auto_cast(%s)" % (
-                    asHdl(ops[0], ctx),
-                    cls.HdlType_bits(resT, ctx))
             else:
                 raise NotImplementedError(
                     "Do not know how to convert %s to HWT" % (o))

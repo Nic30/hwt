@@ -78,37 +78,37 @@ class IpPackager(IpCorePackager):
     @internal
     def paramToIpValue(self, idPrefix: str, g: Param, resolve) -> Value:
         val = Value()
-        val.id = idPrefix + g.name
+        val.id = idPrefix + g.hdl_name
         val.resolve = resolve
-        t = g._dtype
+        # t = g._dtype
 
-        def getVal():
-            v = g.defVal
-            if v.vld_mask:
-                return v.val
-            else:
-                return 0
+        # def getVal():
+        #     v = g.defVal
+        #     if v.vld_mask:
+        #         return v.val
+        #     else:
+        #         return 0
+        #
+        # def bitString(w):
+        #     val.format = "bitString"
+        #     digits = math.ceil(w / 4)
+        #     val.text = ('0x%0' + str(digits) + 'X') % getVal()
+        #     val.bitStringLength = str(w)
 
-        def bitString(w):
-            val.format = "bitString"
-            digits = math.ceil(w / 4)
-            val.text = ('0x%0' + str(digits) + 'X') % getVal()
-            val.bitStringLength = str(w)
-
-        if t == BOOL:
-            val.format = "bool"
-            val.text = str(bool(getVal())).lower()
-        elif t == INT:
-            val.format = "long"
-            val.text = str(getVal())
-        elif t == STR:
-            val.format = "string"
-            val.text = g.defVal.staticEval().val
-        elif isinstance(t, Bits):
-            bitString(g.defVal._dtype.bit_length())
-        else:
-            raise NotImplementedError(
-                "Not implemented for datatype %s" % repr(t))
+        # if t == BOOL:
+        #     val.format = "bool"
+        #     val.text = str(bool(getVal())).lower()
+        # elif t == INT:
+        #     val.format = "long"
+        #     val.text = str(getVal())
+        # elif t == STR:
+        val.format = "string"
+        val.text = str(g.get_value())
+        # elif isinstance(t, Bits):
+        #     bitString(g.defVal._dtype.bit_length())
+        # else:
+        #     raise NotImplementedError(
+        #         "Not implemented for datatype %s" % repr(t))
         return val
 
     @internal
@@ -117,7 +117,7 @@ class IpPackager(IpCorePackager):
 
     @internal
     def getParamType(self, p: Param) -> HdlType:
-        return p._dtype
+        return STR  # p._dtype
 
     @internal
     def iterParams(self, unit: Unit):
@@ -197,7 +197,8 @@ class IpPackager(IpCorePackager):
         return val
 
     @internal
-    def getTypeWidth(self, dtype: HdlType, do_eval=False) -> Tuple[int, Union[int, RtlSignal], bool]:
+    def getTypeWidth(self, dtype: HdlType, do_eval=False)\
+            ->Tuple[int, Union[int, RtlSignal], bool]:
         """
         :see: doc of method on parent class
         """

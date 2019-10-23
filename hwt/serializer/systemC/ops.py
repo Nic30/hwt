@@ -33,7 +33,6 @@ class SystemCSerializer_ops():
 
     _unaryOps = {
         AllOps.NOT: "~%s",
-        AllOps.BitsToInt: "%s",
     }
 
     _binOps = {
@@ -75,8 +74,8 @@ class SystemCSerializer_ops():
             o0_str = cls.asHdl(o0, ctx)
             if ops[1]._dtype == SLICE:
                 return "%s.range(%s, %s)" % (o0_str,
-                                             cls._operand(o1.val[0], o, ctx),
-                                             cls._operand(o1.val[1], o, ctx))
+                                             cls._operand(o1.val.start, o, ctx),
+                                             cls._operand(o1.val.stop, o, ctx))
             else:
                 return "%s[%s]" % (o0_str, cls._operand(o1, o, ctx))
 
@@ -99,7 +98,7 @@ class SystemCSerializer_ops():
             else:
                 raise UnsupportedEventOpErr()
         elif o in [AllOps.BitsAsSigned, AllOps.BitsAsUnsigned,
-                   AllOps.BitsAsVec, AllOps.IntToBits]:
+                   AllOps.BitsAsVec]:
             assert len(ops) == 1
             return "static_cast<%s>(%s)" % (cls.HdlType(op.result._dtype, ctx),
                                             cls._operand(ops[0], o, ctx))

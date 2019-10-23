@@ -1,12 +1,14 @@
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.typeShortcuts import hInt
+from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.generic.indent import getIndent
-from hwt.hdl.types.bits import Bits
 
 
 class VhdlSerializer_types():
+
+    @classmethod
+    def HdlType_str(cls, typ, ctx, declaration=False):
+        assert not declaration
+        return "STRING"
 
     @classmethod
     def HdlType_bool(cls, typ, ctx, declaration=False):
@@ -33,7 +35,7 @@ class VhdlSerializer_types():
         if disableRange:
             constr = ""
         else:
-            constr = "(%d -1 DOWNTO 0)" % (w)
+            constr = "(%d DOWNTO 0)" % (w - 1)
 
         return name + constr
 

@@ -8,7 +8,7 @@ from hwt.hdl.operatorDefs import OpDefinition
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import INT, BOOL
+from hwt.hdl.types.defs import INT, BOOL, STR
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import Value
@@ -155,6 +155,8 @@ class GenericSerializer():
             sFn = cls.HdlType_int
         elif typ == BOOL:
             sFn = cls.HdlType_bool
+        elif typ == STR:
+            sFn = cls.HdlType_str
         elif isinstance(typ, Bits):
             sFn = cls.HdlType_bits
         elif isinstance(typ, HEnum):

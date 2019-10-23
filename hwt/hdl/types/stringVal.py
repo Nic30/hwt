@@ -40,10 +40,10 @@ class StringVal(Value):
         eq = self.val == other.val
         vld = int(self.vld_mask and other.vld_mask)
 
-        return BOOL.getValueCls()(BOOL, eq, vld)
+        return BOOL.getValueCls()(BOOL, int(eq), vld)
 
     def _eq(self, other):
-        other = toHVal(other)
+        other = toHVal(other, self._dtype)
         if isinstance(other, Value):
             return self._eq__val(other)
         else:

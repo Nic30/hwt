@@ -377,7 +377,7 @@ def log2ceil(x):
     else:
         res = math.ceil(math.log2(x))
 
-    return hInt(res)
+    return res
 
 
 def isPow2(num) -> bool:

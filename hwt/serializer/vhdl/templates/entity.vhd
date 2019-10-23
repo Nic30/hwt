@@ -7,5 +7,5 @@ use IEEE.numeric_std.all;
 {{indent}}    );
 {% endif %}{% if ports|length >0 %}{{indent}}    PORT ({{ports|join(';\n        ')}}
 {{indent}}    );{% endif %}
-{{indent}}END {{ name }};
+{{indent}}END ENTITY;
 

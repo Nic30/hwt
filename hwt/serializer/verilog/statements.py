@@ -13,14 +13,11 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class VerilogSerializer_statements():
+
     @classmethod
     def Assignment(cls, a: Assignment, ctx):
         dst = a.dst
         assert isinstance(dst, SignalItem)
-
-        def valAsHdl(v):
-            return cls.Value(v, ctx)
-
         # dstSignalType = verilogTypeOfSig(dst)
         indent_str = getIndent(ctx.indent)
         _dst = dst
@@ -28,10 +25,8 @@ class VerilogSerializer_statements():
             for i in a.indexes:
                 if isinstance(i, SliceVal):
                     i = i.__copy__()
-                    i.val = (i.val[0], i.val[1])
                 dst = dst[i]
         dstStr = cls.asHdl(dst, ctx)
-        srcStr = valAsHdl(a.src)
 
         ver_sig_t = verilogTypeOfSig(_dst)
         if ver_sig_t == SIGNAL_TYPE.REG:
@@ -59,6 +54,8 @@ class VerilogSerializer_statements():
         firstPartOfStr = "%s%s%s" % (indent_str, prefix, dstStr)
         src_t = a.src._dtype
         dst_t = dst._dtype
+
+        srcStr = cls.Value(a.src, ctx)
 
         if dst_t == src_t \
             or (isinstance(src_t, Bits)

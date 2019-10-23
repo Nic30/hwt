@@ -12,6 +12,8 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
+from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.types.slice import Slice
 
 
 class VerilogSerializer_Value(GenericSerializer_Value):
@@ -148,15 +150,15 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             return cls.get_signal_name(si, ctx)
 
     @classmethod
-    def Slice_valAsHdl(cls, dtype, val, ctx):
-        upper = val.val[0]
+    def Slice_valAsHdl(cls, dtype: Slice, val: SliceVal, ctx):
+        upper = val.val.start
         if isinstance(upper, Value):
             upper = upper - 1
             _format = "%s:%s"
         else:
             _format = "%s-1:%s"
 
-        return _format % (cls.Value(upper, ctx), cls.Value(val.val[1], ctx))
+        return _format % (cls.Value(upper, ctx), cls.Value(val.val.stop, ctx))
 
     @classmethod
     def sensitivityListItem(cls, item, ctx, anyIsEventDependent):

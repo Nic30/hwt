@@ -1,13 +1,16 @@
+from typing import Union
+
+from hwt.code import If
+from hwt.doc_markers import internal
+from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps, OpDefinition
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.defs import BOOL, INT
+from hwt.hdl.value import Value
 from hwt.serializer.generic.context import SerializerCtx
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.code import If
-from hwt.hdl.assignment import Assignment
-from hwt.doc_markers import internal
-from typing import Union
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.hdl.value import Value
 
 
 @internal
@@ -77,26 +80,58 @@ class VhdlSerializer_ops():
 
     @internal
     @classmethod
-    def _operand(cls, operand: Union[RtlSignal, Value], operator: OpDefinition, ctx: SerializerCtx):
+    def _tmp_var_for_ternary(cls, val: RtlSignal, ctx: SerializerCtx):
+        """
+        Optionaly convert boolean to std_logic_vector
+        """
+        o = ctx.createTmpVarFn("tmpTernary", val._dtype)
+        cond, ifTrue, ifFalse = val.drivers[0].operands
+        if_ = If(cond)
+        if_.ifTrue.append(Assignment(ifTrue, o,
+                                     virtualOnly=True,
+                                     parentStm=if_))
+        if_.ifFalse = []
+        if_.ifFalse.append(Assignment(ifFalse, o,
+                                      virtualOnly=True,
+                                      parentStm=if_))
+        if_._outputs.append(o)
+        for obj in (cond, ifTrue, ifFalse):
+            if isinstance(obj, RtlSignalBase):
+                if_._inputs.append(obj)
+        o.drivers.append(if_)
+        return o
+
+    @classmethod
+    def _as_Bits(cls, val: Union[RtlSignal, Value], ctx: SerializerCtx):
+        if val._dtype == BOOL:
+            bit1_t = Bits(1)
+            o = ctx.createTmpVarFn("tmpBool2std_logic", bit1_t)
+            ifTrue, ifFalse = bit1_t.from_py(1), bit1_t.from_py(0)
+            if_ = If(val)
+            if_.ifTrue.append(Assignment(ifTrue, o, virtualOnly=True, parentStm=if_))
+            if_.ifFalse = []
+            if_.ifFalse.append(Assignment(ifFalse, o, virtualOnly=True, parentStm=if_))
+            if_._outputs.append(o)
+            o.drivers.append(if_)
+            return o
+        else:
+            assert isinstance(val._dtype, Bits), val._dtype
+            return val
+
+    @internal
+    @classmethod
+    def _operand(cls, operand: Union[RtlSignal, Value],
+                 operator: OpDefinition,
+                 ctx: SerializerCtx):
         try:
-            isTernaryOp = operand.hidden and operand.drivers[0].operator == AllOps.TERNARY
+            isTernaryOp = operand.hidden\
+                and operand.drivers[0].operator == AllOps.TERNARY
         except (AttributeError, IndexError):
             isTernaryOp = False
 
         if isTernaryOp:
             # rewrite ternary operator as if
-            o = ctx.createTmpVarFn("tmpTernary", operand._dtype)
-            cond, ifTrue, ifFalse = operand.drivers[0].operands
-            if_ = If(cond)
-            if_.ifTrue.append(Assignment(ifTrue, o, virtualOnly=True, parentStm=if_))
-            if_.ifFalse = []
-            if_.ifFalse.append(Assignment(ifFalse, o, virtualOnly=True, parentStm=if_))
-            if_._outputs.append(o)
-            for obj in (cond, ifTrue, ifFalse):
-                if isinstance(obj, RtlSignalBase):
-                    if_._inputs.append(obj)
-            o.drivers.append(if_)
-            operand = o
+            operand = cls._tmp_var_for_ternary(operand, ctx)
 
         s = cls.asHdl(operand, ctx)
         if isinstance(operand, RtlSignalBase):
@@ -122,8 +157,14 @@ class VhdlSerializer_ops():
 
         op_str = cls._binOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx),
-                             cls._operand(ops[1], o, ctx))
+            res_t = op.result._dtype
+            op0, op1 = ops
+            if isinstance(res_t, Bits) and res_t != BOOL:
+                op0 = cls._as_Bits(op0, ctx)
+                op1 = cls._as_Bits(op1, ctx)
+
+            return op_str % (cls._operand(op0, o, ctx),
+                             cls._operand(op1, o, ctx))
 
         if o == AllOps.CALL:
             return "%s(%s)" % (
@@ -133,37 +174,25 @@ class VhdlSerializer_ops():
                     )
                 )
         elif o == AllOps.INDEX:
-            assert len(ops) == 2
-            o1 = ops[0]
-            if isinstance(o1, RtlSignalBase) and isResultOfTypeConversion(o1):
-                o1 = ctx.createTmpVarFn("tmpTypeConv", o1._dtype)
-                o1.defVal = ops[0]
+            op0, op1 = ops
+            if isinstance(op0, RtlSignalBase) and isResultOfTypeConversion(op0):
+                op0 = ctx.createTmpVarFn("tmpTypeConv", op0._dtype)
+                op0.defVal = ops[0]
 
-            return "%s(%s)" % (cls.asHdl(o1, ctx).strip(),
-                               cls._operand(ops[1], o, ctx))
+            op0_str = cls.asHdl(op0, ctx).strip()
+            op1_str = cls._operand(ops[1], o, ctx)
+            if isinstance(op1._dtype, Bits) and op1._dtype != INT:
+                sig = op1._dtype.signed
+                if sig is None:
+                    op1_str = "UNSIGNED(%s)" % op1_str
+                op1_str = "TO_INTEGER(%s)" % op1_str
+
+            return "%s(%s)" % (op0_str, op1_str)
         elif o == AllOps.TERNARY:
             return " ".join([cls._operand(ops[1], o, ctx), "WHEN",
                              cls.condAsHdl([ops[0]], True, ctx),
                              "ELSE",
                              cls._operand(ops[2], o, ctx)])
-        elif o == AllOps.BitsToInt:
-            assert len(ops) == 1
-            op = cls.asHdl(ops[0], ctx)
-            if ops[0]._dtype.signed is None:
-                op = "UNSIGNED(%s)" % op
-            return "TO_INTEGER(%s)" % op
-        elif o == AllOps.IntToBits:
-            assert len(ops) == 1
-            resT = op.result._dtype
-            op_str = cls.asHdl(ops[0], ctx)
-            w = resT.bit_length()
-
-            if resT.signed is None:
-                return "STD_LOGIC_VECTOR(TO_UNSIGNED(%s, %d))" % (op_str, w)
-            elif resT.signed:
-                return "TO_UNSIGNED(%s, %d)" % (op_str, w)
-            else:
-                return "TO_UNSIGNED(%s, %d)" % (op_str, w)
         else:
             raise NotImplementedError(
                 "Do not know how to convert %s to vhdl" % (o))

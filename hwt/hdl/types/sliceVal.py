@@ -72,6 +72,7 @@ class SliceVal(Value):
     def __copy__(self):
         v = Value.__copy__(self)
         v.val = copy(v.val)
+        return v
 
     def staticEval(self):
         v = self.val

@@ -1,10 +1,10 @@
 from collections import OrderedDict
 
+from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
 from hwt.hdl.value import Value
 from hwt.serializer.generic.indent import getIndent
-from hwt.doc_markers import internal
 
 
 protectedNames = {"clone", "staticEval",

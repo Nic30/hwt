@@ -1,11 +1,11 @@
 from types import MethodType
+from typing import Tuple, Set, Optional
 
+from hwt.doc_markers import internal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
 from hwt.synthesizer.param import Param
-from hwt.synthesizer.hObjList import HObjList
-from hwt.doc_markers import internal
-from typing import Tuple, Set, Optional
 
 
 @internal

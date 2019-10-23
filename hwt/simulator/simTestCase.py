@@ -47,7 +47,7 @@ class SimTestCase(unittest.TestCase):
     :attention: self.procs has to be specified before runSim()
     :cvar _defaultSeed: default seed for ramdom generator
     :cvar rtl_simulator_cls: class for rtl simulator to use
-        (constructed in prepareUnit())
+        (constructed in compileSim())
     :ivar u: instance of current Unit for test, created in restartSim()
     :ivar rtl_simulator: rtl simulatr used for simulation of unit,
         created in restartSim()
@@ -61,28 +61,8 @@ class SimTestCase(unittest.TestCase):
     # while debugging only the simulation it may be useful to just
     # disable the compilation of simulator as it saves time
     RECOMPILE = True
-
-    def getTestName(self):
-        className, testName = self.id().split(".")[-2:]
-        return "%s_%s" % (className, testName)
-
-    def runSim(self, until: float, name=None):
-        if name is None:
-            outputFileName = "tmp/" + self.getTestName() + ".vcd"
-        else:
-            outputFileName = name
-
-        d = os.path.dirname(outputFileName)
-        if d:
-            os.makedirs(d, exist_ok=True)
-
-        self.rtl_simulator.set_trace_file(outputFileName, -1)
-
-        # run simulation, stimul processes are register after initial
-        # initialization
-        self.hdl_simulator.run(until=until, extraProcesses=self.procs)
-        self.rtl_simulator.finalize()
-        return self.hdl_simulator
+    rtl_simulator_cls = None
+    hdl_simulator = None
 
     def assertValEqual(self, first, second, msg=None):
         try:
@@ -124,6 +104,28 @@ class SimTestCase(unittest.TestCase):
             seq2 = _seq2
         self.assertSequenceEqual(seq1, seq2, msg, seq_type)
 
+    def getTestName(self):
+        className, testName = self.id().split(".")[-2:]
+        return "%s_%s" % (className, testName)
+
+    def runSim(self, until: float, name=None):
+        if name is None:
+            outputFileName = "tmp/" + self.getTestName() + ".vcd"
+        else:
+            outputFileName = name
+
+        d = os.path.dirname(outputFileName)
+        if d:
+            os.makedirs(d, exist_ok=True)
+
+        self.rtl_simulator.set_trace_file(outputFileName, -1)
+
+        # run simulation, stimul processes are register after initial
+        # initialization
+        self.hdl_simulator.run(until=until, extraProcesses=self.procs)
+        self.rtl_simulator.finalize()
+        return self.hdl_simulator
+
     def simpleRandomizationProcess(self, agent, timeQuantum=CLK_PERIOD):
         seed = self._rand.getrandbits(64)
         random = Random(seed)
@@ -164,7 +166,7 @@ class SimTestCase(unittest.TestCase):
         reconnectUnitSignalsToModel(unit, rtl_simulator)
         procs = autoAddAgents(unit, hdl_simulator)
 
-        self.u, self.rtl_simulator, self.hdl_simulator, self.procs =\
+        self.u, self.rtl_simulator, self.hdl_simulator, self.procs = \
             unit, rtl_simulator, hdl_simulator, procs
 
         return unit, rtl_simulator, procs
@@ -175,7 +177,7 @@ class SimTestCase(unittest.TestCase):
         # return "%s_%s" % (unit.__class__.__name__, abs(hash(unit)))
 
     @classmethod
-    def prepareUnit(cls, unit, build_dir: Optional[str]=None,
+    def compileSim(cls, unit, build_dir: Optional[str]=None,
                     unique_name: Optional[str]=None, onAfterToRtl=None,
                     target_platform=DummyPlatform()):
         """
@@ -210,16 +212,32 @@ class SimTestCase(unittest.TestCase):
         cls._onAfterToRtl = onAfterToRtl
         cls.u = unit
 
+    def compileSimAndStart(
+            self,
+            unit: Unit,
+            build_dir: Optional[str]=None,
+            unique_name: Optional[str]=None,
+            onAfterToRtl=None,
+            target_platform=DummyPlatform()):
+        """
+        Use this method if you did not used compileSim()
+        or SingleUnitSimTestCase to setup the simulator and DUT
+        """
+        self.compileSim(unit, build_dir, unique_name, onAfterToRtl, target_platform)
+        SimTestCase.setUp(self)
+
     def setUp(self):
         self._rand = Random(self._defaultSeed)
-        self.restartSim()
+        if self.rtl_simulator_cls is not None:
+            # if the simulator is not compiled it is expected
+            # that it will be compiled in the test and this functio
+            # will be called later
+            self.restartSim()
 
 
-class SimpleSimTestCase(SimTestCase):
+class SingleUnitSimTestCase(SimTestCase):
     """
-    SimTestCase for simple test
-    Set UNIT_CLS in your class and in the test method there will be prepared simulation.
-    Set UNIQ_NAME if you want to have tmp sim files with nice name
+    SimTestCase for simple tests with a single component
     """
 
     @classmethod
@@ -228,7 +246,6 @@ class SimpleSimTestCase(SimTestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(SimpleSimTestCase, cls).setUpClass()
+        super(SingleUnitSimTestCase, cls).setUpClass()
         u = cls.getUnit()
-        cls.prepareUnit(u)
-
+        cls.compileSim(u)

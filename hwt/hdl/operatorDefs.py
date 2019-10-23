@@ -38,8 +38,6 @@ class OpDefinition():
 
         if isEventDependentOp(operator.operator):
             operands.append(simulator.now)
-        elif operator.operator == AllOps.IntToBits:
-            operands.append(operator.result._dtype)
 
         return self._evalFn(*operands)
 
@@ -151,9 +149,6 @@ class AllOps():
     INDEX = OpDefinition(getitem)
     TERNARY = OpDefinition(ternaryFn)
     CALL = OpDefinition(callFn)
-
-    BitsToInt = OpDefinition(bitsToIntFn)
-    IntToBits = OpDefinition(intToBitsFn)
 
     BitsAsSigned = OpDefinition(bitsAsSignedFn)
     BitsAsUnsigned = OpDefinition(bitsAsUnsignedFn)

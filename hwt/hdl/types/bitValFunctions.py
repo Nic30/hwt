@@ -62,35 +62,38 @@ def bitsCmp(self, other, op, evalFn=None):
     :attention: If other is Bool signal convert this to bool (not ideal,
         due VHDL event operator)
     """
-    other = toHVal(other)
     t = self._dtype
+    other = toHVal(other, t)
     ot = other._dtype
-
-    iamVal = isinstance(self, Value)
-    otherIsVal = isinstance(other, Value)
 
     if evalFn is None:
         evalFn = op._evalFn
 
+    iamVal = isinstance(self, Value)
+    otherIsVal = isinstance(other, Value)
+    type_compatible = False
+    if ot == BOOL:
+        self = self._auto_cast(BOOL)
+        type_compatible = True
+    elif t == ot:
+        type_compatible = True
+    # lock type widht/signed to other type with
+    elif not ot.strict_width or not ot.strict_sign:
+        type_compatible = True
+        other = other._auto_cast(t)
+    elif not t.strict_width or not t.strict_sign:
+        type_compatible = True
+        other = other._auto_cast(ot)
+
     if iamVal and otherIsVal:
-        if ot == BOOL:
-            self = self._auto_cast(BOOL)
-        elif t == ot:
-            pass
-        elif ot == INT:
-            other = other._auto_cast(t)
-        else:
+        if not type_compatible:
             raise TypeError("Values of types (%r, %r) are not comparable" % (
                 self._dtype, other._dtype))
 
         return bitsCmp__val(self, other, evalFn)
     else:
-        if ot == BOOL:
-            self = self._auto_cast(BOOL)
-        elif t == ot:
+        if type_compatible:
             pass
-        elif ot == INT:
-            other = other._auto_cast(self._dtype)
         elif t.signed != ot.signed:
             if t.signed is None:
                 self = self._convSign(ot.signed)
@@ -129,7 +132,7 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
     :attention: If other is Bool signal, convert this to bool
         (not ideal, due VHDL event operator)
     """
-    other = toHVal(other)
+    other = toHVal(other, self._dtype)
 
     iamVal = isinstance(self, Value)
     otherIsVal = isinstance(other, Value)
@@ -165,7 +168,7 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
 
 @internal
 def bitsArithOp(self, other, op):
-    other = toHVal(other)
+    other = toHVal(other, self._dtype)
     assert isinstance(other._dtype, Bits), other._dtype
     if areValues(self, other):
         return bitsArithOp__val(self, other, op._evalFn)
@@ -180,14 +183,19 @@ def bitsArithOp(self, other, op):
             if t0.bit_length() != t1.bit_length():
                 if not t1.strict_width:
                     # resize to type of this
+                    other = other._auto_cast(t1)
+                    t1 = other._dtype
                     pass
                 elif not t0.strict_width:
                     # resize self to type of result
+                    self = self._auto_cast(t0)
+                    t0 = self._dtype
                     pass
                 else:
                     raise TypeError("%r %r %r" % (self, op, other))
+
             if t1.signed != resT.signed:
-                other = other._convSign(self._dtype.signed)
+                other = other._convSign(t0.signed)
         else:
             raise TypeError("%r %r %r" % (self, op, other))
 

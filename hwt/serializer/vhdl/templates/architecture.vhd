@@ -7,4 +7,4 @@
 {{c}}
 {% endfor %}{% for p in processes %}
 {{p}}{% endfor %}
-{{indent}}END ARCHITECTURE {{ name }};
+{{indent}}END ARCHITECTURE;
