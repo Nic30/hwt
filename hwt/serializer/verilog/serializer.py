@@ -191,7 +191,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
     @classmethod
     def GenericItem(cls, g: Param, ctx):
-        return ('"parameter %s = "%s"'
+        return ('parameter %s = "%s"'
                 % (g.hdl_name, str(g.get_value())))
 
     @classmethod
