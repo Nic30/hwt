@@ -178,8 +178,8 @@ class SimTestCase(unittest.TestCase):
 
     @classmethod
     def compileSim(cls, unit, build_dir: Optional[str]=None,
-                    unique_name: Optional[str]=None, onAfterToRtl=None,
-                    target_platform=DummyPlatform()):
+                   unique_name: Optional[str]=None, onAfterToRtl=None,
+                   target_platform=DummyPlatform()):
         """
         Create simulation model and connect it with interfaces of original unit
         and decorate it with agents
