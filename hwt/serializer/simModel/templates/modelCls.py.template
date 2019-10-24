@@ -47,6 +47,7 @@ class {{name}}(BasicRtlSimModel):{% for t in extraTypes %}
              "{{p.dst.name}}", {{p.direction == DIRECTION.OUT}})
 {% endfor %}
 {% endfor %}
+
         self._units = ({% for c in componentInstances %}
              self.{{c._name}},{% endfor %}
         )
