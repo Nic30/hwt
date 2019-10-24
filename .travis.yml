@@ -35,7 +35,6 @@ install:
   - pushd hwtLib
   - python3 setup.py install
   - popd
-  - cd hwt
   - python3 setup.py develop
   - rm -rf $DIST_PACKAGES/hwt-*
   - ln -s hwt $DIST_PACKAGES/hwt
