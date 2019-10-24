@@ -13,7 +13,7 @@ class SimModelSerializer_types():
             if not (typ.force_vector or typ.bit_length() > 1):
                 return 'BIT'
 
-        w = typ.width
+        w = typ.bit_length()
         if isinstance(w, int):
             pass
         else:
