@@ -8,13 +8,13 @@ import unittest
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.value import Value
 from hwt.simulator.agentConnector import valToInt, autoAddAgents
-from hwt.simulator.shortcuts import toVerilatorSimModel, \
-    reconnectUnitSignalsToModel
+from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from pycocotb.constants import CLK_PERIOD
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer
+from hwt.simulator.simCompilerBasicHdlSimulator import toBasicSimulatorSimModel
 
 
 def allValuesToInts(sequenceOrVal):
@@ -126,27 +126,11 @@ class SimTestCase(unittest.TestCase):
         self.rtl_simulator.finalize()
         return self.hdl_simulator
 
-    def simpleRandomizationProcess(self, agent, timeQuantum=CLK_PERIOD):
-        seed = self._rand.getrandbits(64)
-        random = Random(seed)
-
-        def randomEnProc():
-            # small space at start to modify agents when they are inactive
-            yield Timer(timeQuantum / 4)
-            while True:
-                en = random.random() < 0.5
-                if agent.getEnable() != en:
-                    agent.setEnable(en)
-                delay = int(random.random() * 2) * timeQuantum
-                yield Timer(delay)
-
-        return randomEnProc
-
     def randomize(self, intf):
         """
         Randomly disable and enable interface for testing purposes
         """
-        randomEnProc = self.simpleRandomizationProcess(intf._ag)
+        randomEnProc = simpleRandomizationProcess(self, intf._ag)
         self.procs.append(randomEnProc())
 
     def restartSim(self):
@@ -174,7 +158,6 @@ class SimTestCase(unittest.TestCase):
     @classmethod
     def get_unique_name(cls, unit: Unit):
         return "%s__%s" % (cls.__name__, unit.__class__.__name__)
-        # return "%s_%s" % (unit.__class__.__name__, abs(hash(unit)))
 
     @classmethod
     def compileSim(cls, unit, build_dir: Optional[str]=None,
@@ -198,17 +181,16 @@ class SimTestCase(unittest.TestCase):
         if unique_name is None:
             unique_name = cls.get_unique_name(unit)
 
-        if build_dir is None:
-            build_dir = "tmp/%s" % unique_name
-
-        cls.rtl_simulator_cls = toVerilatorSimModel(
+        cls.rtl_simulator_cls = toBasicSimulatorSimModel(  # toVerilatorSimModel(
             unit,
             unique_name=unique_name,
             build_dir=build_dir,
             target_platform=target_platform,
             do_compile=cls.RECOMPILE)
+
         if onAfterToRtl:
             onAfterToRtl(unit)
+
         cls._onAfterToRtl = onAfterToRtl
         cls.u = unit
 
@@ -233,6 +215,23 @@ class SimTestCase(unittest.TestCase):
             # that it will be compiled in the test and this functio
             # will be called later
             self.restartSim()
+
+
+def simpleRandomizationProcess(tc: SimTestCase, agent, timeQuantum=CLK_PERIOD):
+    seed = tc._rand.getrandbits(64)
+    random = Random(seed)
+
+    def randomEnProc():
+        # small space at start to modify agents when they are inactive
+        yield Timer(timeQuantum / 4)
+        while True:
+            en = random.random() < 0.5
+            if agent.getEnable() != en:
+                agent.setEnable(en)
+            delay = int(random.random() * 2) * timeQuantum
+            yield Timer(delay)
+
+    return randomEnProc
 
 
 class SingleUnitSimTestCase(SimTestCase):

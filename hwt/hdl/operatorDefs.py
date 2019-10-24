@@ -1,7 +1,6 @@
 from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
     xor, gt, ge, lt, le, getitem, neg
 
-from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.types.defs import INT, SLICE
 from hwt.hdl.value import Value
 from hwt.doc_markers import internal
@@ -160,14 +159,3 @@ for a in dir(AllOps):
     if isinstance(o, OpDefinition):
         o.id = a
 
-
-def sensitivityByOp(op):
-    """
-    get sensitivity type for operator
-    """
-    if op == AllOps.RISING_EDGE:
-        return SENSITIVITY.RISING
-    elif op == AllOps.FALLING_EDGE:
-        return SENSITIVITY.FALLING
-    else:
-        raise TypeError()

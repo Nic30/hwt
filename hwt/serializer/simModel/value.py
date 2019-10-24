@@ -1,7 +1,6 @@
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.value import GenericSerializer_Value
-from hwt.synthesizer.param import Param, evalParam
 from hwt.hdl.types.enum import HEnum
 
 
@@ -22,14 +21,12 @@ class SimModelSerializer_value(GenericSerializer_Value):
         if declaration:
             raise NotImplementedError()
         else:
-            if isinstance(si, Param):
-                return cls.Value(evalParam(si), ctx)
             if isinstance(si, SignalItem) and si._const:
                 return cls.Value(si._val, ctx)
             if si.hidden and hasattr(si, "origin"):
                 return cls.asHdl(si.origin, ctx)
             else:
-                return "self.%s._oldVal" % si.name
+                return "self.io.%s.val" % si.name
 
     @classmethod
     def Value_try_extract_as_const(cls, val, ctx):
@@ -41,13 +38,6 @@ class SimModelSerializer_value(GenericSerializer_Value):
 
         if consGetter and not isinstance(val._dtype, HEnum):
             return "self." + consGetter(val)
-
-    @classmethod
-    def Integer_valAsHdl(cls, t, i, ctx):
-        if i.vldMask:
-            return "simHInt(%d)" % i.val
-        else:
-            return "simHInt(None)"
 
     @classmethod
     def Dict_valAsHdl(cls, val, ctx):
@@ -64,14 +54,14 @@ class SimModelSerializer_value(GenericSerializer_Value):
         return "HArrayVal(%s, %s, %d)" % (
             cls.Dict_valAsHdl(val.val, ctx),
             cls.HdlType(t, ctx),
-            val.vldMask)
+            val.vld_mask)
 
     @classmethod
     def Slice_valAsHdl(cls, t, val, ctx):
         return "SliceVal((simHInt(%d), simHInt(%d)), SLICE, %d)" % (
-            evalParam(val.val[0]).val,
-            evalParam(val.val[1]).val,
-            val.vldMask)
+            val.val.start,
+            val.val.stop,
+            val.vld_mask)
 
     @classmethod
     def HEnumValAsHdl(cls, t, val, ctx):

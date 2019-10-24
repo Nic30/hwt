@@ -83,7 +83,7 @@ class SignalAgent(SyncAgentBase):
         # if clock is specified this function is periodically called every
         # clk tick
         while True:
-            yield WaitCombRead()
+            yield WaitWriteOnly()
             if self._enabled and self.data and self.notReset():
                 yield WaitWriteOnly()
                 d = self.data.popleft()

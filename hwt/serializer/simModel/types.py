@@ -1,5 +1,4 @@
-from hwt.hdl.types.integerVal import IntegerVal
-from hwt.synthesizer.param import evalParam
+from hwt.hdl.types.bits import Bits
 
 
 class SimModelSerializer_types():
@@ -8,22 +7,19 @@ class SimModelSerializer_types():
     """
 
     @classmethod
-    def HdlType_bits(cls, typ, ctx, declaration=False):
+    def HdlType_bits(cls, typ: Bits, ctx, declaration=False):
         assert not declaration
         if typ.signed is None:
-            if not (typ.forceVector or typ.bit_length() > 1):
-                return 'SIM_BIT'
+            if not (typ.force_vector or typ.bit_length() > 1):
+                return 'BIT'
 
         w = typ.width
         if isinstance(w, int):
             pass
         else:
-            w = evalParam(w)
-            assert isinstance(w, IntegerVal)
-            assert w._isFullVld()
-            w = w.val
+            w = int(w)
 
-        return "simBitsT(%d, %r)" % (w, typ.signed)
+        return "Bits(%d, %r)" % (w, typ.signed)
 
     @classmethod
     def HdlType_bool(cls, typ, ctx, declaration=False):
@@ -35,7 +31,7 @@ class SimModelSerializer_types():
         if declaration:
             typ.name = ctx.scope.checkedName(typ.name, typ)
 
-            return '%s = HEnum( "%s", [%s])' % (
+            return '%s = HEnum("%s", [%s])' % (
                 typ.name,
                 typ.name,
                 ", ".join(map(lambda x: '"%s"' % x,
@@ -46,6 +42,6 @@ class SimModelSerializer_types():
     @classmethod
     def HdlType_array(cls, typ, ctx, declaration=False):
         assert not declaration
-        return "HArray(%s, %d)" % (cls.HdlType(typ.elmType, ctx,
-                                               declaration=declaration),
-                                   evalParam(typ.size).val)
+        return "%s[%d]" % (cls.HdlType(typ.elmType, ctx,
+                                       declaration=declaration),
+                           int(typ.size))

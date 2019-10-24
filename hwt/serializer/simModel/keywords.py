@@ -3,7 +3,6 @@ import keyword
 
 SIMMODEL_KEYWORDS = keyword.kwlist + [
     # names defined in SimModel constructor
-    '_ctx',
     '_interfaces',
     '_processes',
     '_units',
@@ -18,21 +17,13 @@ SIMMODEL_KEYWORDS = keyword.kwlist + [
     'BitsVal',
     'SLICE',
     'HEnum'
-    'DIRECTION',
-    'SENSITIVITY',
-    'convertSimInteger__val',
-    'simHInt',
-    'SIM_INT',
-    'simBitsT',
-    'SIM_BIT',
-    'convertSimBits__val',
-    'SimModel',
+    'BIT',
+    'BasicRtlSimModel',
+    'BasicRtlSimProxy',
     'sensitivity',
     'connectSimPort',
     'simEvalCond',
     'mkUpdater',
-    'mkArrayUpdater'
-    'power'
-    'RtlNetlist'
-    'SimSignal'
+    'mkArrayUpdater',
+    'slice',
     'SliceVal']
