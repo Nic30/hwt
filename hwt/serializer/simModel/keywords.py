@@ -22,7 +22,7 @@ SIMMODEL_KEYWORDS = keyword.kwlist + [
     'BasicRtlSimProxy',
     'sensitivity',
     'connectSimPort',
-    'simEvalCond',
+    'sim_eval_cond',
     'mkUpdater',
     'mkArrayUpdater',
     'slice',

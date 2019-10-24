@@ -32,9 +32,9 @@ class {{name}}(BasicRtlSimModel):{% for t in extraTypes %}
     def __init__(self, sim: "BasicRtlSimulator", name="{{name}}"):
         BasicRtlSimModel.__init__(self, name=name)
         # ports{% for name, dtype in ports %}
-        self.io.{{name}} = BasicRtlSimProxy(sim, self, "{{name}}", {{dtype}}){% endfor %}
+        self.io.{{name}} = BasicRtlSimProxy(sim, self, "{{name}}", {{dtype}}, None){% endfor %}
         # internal signals{% for name, dtype, defVal in signals %}
-        self.io.{{name}} = BasicRtlSimProxy(sim, "{{name}}", {{dtype}}, def_val={{defVal}}){% endfor %}
+        self.io.{{name}} = BasicRtlSimProxy(sim, self, "{{name}}", {{dtype}}, {{defVal}}){% endfor %}
         self._interfaces = ({% for name, _ in ports   %}
             "{{name}}",{% endfor %}{% for name, _, _ in signals %}
             "{{name}}",{% endfor %})
@@ -48,7 +48,8 @@ class {{name}}(BasicRtlSimModel):{% for t in extraTypes %}
         self._units = ({% for c in componentInstances %}
              self.{{c._name}},{% endfor %}
         )
-        {% for proc in processObjects %}sensitivity(self.{{proc.name}}, {% 
+{% for proc in processObjects %}
+        sensitivity(self.{{proc.name}}, {% 
             for s in proc.sensitivityList %}{% 
                 if isOp(s) %}({{ sensitivityByOp(s.operator) }}, self.io.{{s.operands[0].name}}){% 
                 else %}self.io.{{s.name}}{%

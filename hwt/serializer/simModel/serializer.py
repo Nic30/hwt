@@ -146,17 +146,20 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                 srcT = a.src._dtype
                 dstT = dst._dtype
                 if (isinstance(srcT, Bits) and
-                        isinstance(dstT, Bits) and
-                        srcT.bit_length() == dstT.bit_length() == 1):
-
-                    if srcT.forceVector != dstT.forceVector:
-                        _0 = cls.Value(toHVal(0), ctx)
-                        if srcT.forceVector:
-                            return "%sself.io.%s.val_next = ((%s)[%s], %s)"\
-                                % (indentStr, dst.name, srcStr, _0, ev)
-                        else:
-                            return "%sself.io.%s.val_next = (%s, (%s,), %s)" % (
-                                indentStr, dst.name, srcStr, _0, ev)
+                        isinstance(dstT, Bits)):
+                    bl0 = srcT.bit_length()
+                    if bl0 == dstT.bit_length():
+                        if bl0 == 1 and srcT.force_vector != dstT.force_vector:
+                            _0 = cls.Value(toHVal(0), ctx)
+                            if srcT.force_vector:
+                                return "%sself.io.%s.val_next = ((%s)[%s], %s)"\
+                                    % (indentStr, dst.name, srcStr, _0, ev)
+                            else:
+                                return "%sself.io.%s.val_next = (%s, (%s,), %s)" % (
+                                    indentStr, dst.name, srcStr, _0, ev)
+                        elif srcT.signed == dstT.signed:
+                            return "%sself.io.%s.val_next = (%s, %s)" % (
+                                    indentStr, dst.name, srcStr, ev)
 
                 raise SerializerException(
                     ("%s <= %s  is not valid assignment\n"
@@ -211,7 +214,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             for o in ifc._outputs:
                 # [TODO] look up indexes
                 indexes = None
-                oa = Assignment(o._dtype.fromPy(None), o, indexes,
+                oa = Assignment(o._dtype.from_py(None), o, indexes,
                                 virtualOnly=True, parentStm=ifc,
                                 is_completly_event_dependent=ifc._is_completly_event_dependent)
                 outputInvalidateStms.append(cls.stmAsHdl(oa, childCtx))

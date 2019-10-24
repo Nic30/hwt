@@ -303,6 +303,17 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 pass
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
 
+    # object.__eq__ to make object hashable
+    # == operator is ._eq()
+    def __eq__(self, other):
+        return object.__eq__(self, other)
+
+    def __hash__(self):
+        if isinstance(self, Value):
+            return Bits3val.__hash__(self)
+        else:
+            return hash(id(self))
+
     # comparisons
     def _eq(self, other):
         return bitsCmp(self, other, AllOps.EQ, eq)

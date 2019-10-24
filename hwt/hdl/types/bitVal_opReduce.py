@@ -1,5 +1,6 @@
 from hwt.doc_markers import internal
 
+
 @internal
 def tryReduceAnd(sig, val):
     """

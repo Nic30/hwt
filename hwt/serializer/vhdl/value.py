@@ -155,14 +155,14 @@ class VhdlSerializer_Value(GenericSerializer_Value):
     @classmethod
     def Slice_valAsHdl(cls, dtype, val: SliceVal, ctx: SerializerCtx):
         upper = val.val.start
-        if val.val.step == -1:
+        if int(val.val.step) == -1:
             if isinstance(upper, Value):
                 upper = upper - 1
                 _format = "%s DOWNTO %s"
             else:
                 _format = "%s-1 DOWNTO %s"
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(val.val.step)
 
         return _format % (cls.Value(upper, ctx), cls.Value(val.val.stop, ctx))
 

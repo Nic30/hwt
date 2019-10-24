@@ -44,7 +44,7 @@ class SimModelSerializer_ops():
         AllOps.POW: "%s ** %s",
     }
     _unaryOps = {
-        AllOps.NOT: "(%s).__neg__()",
+        AllOps.NOT: "(%s).__invert__()",
         AllOps.NEG: "(%s).__neg__()",
         AllOps.RISING_EDGE: "sim._onRisingEdge(%s)",
         AllOps.FALLING_EDGE: "sim._onFallingEdge(%s)",

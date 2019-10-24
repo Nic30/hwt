@@ -8,13 +8,13 @@ class SimModelSerializer_value(GenericSerializer_Value):
 
     @classmethod
     def Bits_valAsHdl(cls, dtype, val, ctx):
-        return "BitsVal(%d, simBitsT(%d, %r), %d)" % (
-            val.val, dtype.bit_length(), dtype.signed, val.vldMask)
+        return "BitsVal(Bits(%d, %r), %d, %d)" % (
+             dtype.bit_length(), val.val, bool(dtype.signed), val.vld_mask)
 
     @classmethod
     def Bool_valAsHdl(cls, dtype, val, ctx):
-        return "HBoolVal(%r, BOOL, %d)" % (
-            val.val, val.vldMask)
+        return "HBoolVal(BOOL, %d, %d)" % (
+            val.val, val.vld_mask)
 
     @classmethod
     def SignalItem(cls, si, ctx, declaration=False):
@@ -52,15 +52,16 @@ class SimModelSerializer_value(GenericSerializer_Value):
     @classmethod
     def HArrayValAsHdl(cls, t, val, ctx):
         return "HArrayVal(%s, %s, %d)" % (
-            cls.Dict_valAsHdl(val.val, ctx),
             cls.HdlType(t, ctx),
+            cls.Dict_valAsHdl(val.val, ctx),
             val.vld_mask)
 
     @classmethod
     def Slice_valAsHdl(cls, t, val, ctx):
-        return "SliceVal((simHInt(%d), simHInt(%d)), SLICE, %d)" % (
+        return "SliceVal(SLICE, slice(%d, %d, %d), %d)" % (
             val.val.start,
             val.val.stop,
+            val.val.step,
             val.vld_mask)
 
     @classmethod
