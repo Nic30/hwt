@@ -15,25 +15,26 @@ install:
   - export PYTHON_VERSION_SHORT=$(python -c "import sys;v = sys.version_info;print('%d.%d' % (v[0], v[1]))")
   - DIST_PACKAGES=/home/travis/virtualenv/python$PYTHON_VERSION/lib/python$PYTHON_VERSION_SHORT/site-packages
   - pip3 install coveralls
-  - cd ..
   - git clone --depth=1 https://github.com/Nic30/pyDigitalWaveTools.git
-  - cd pyDigitalWaveTools
+  - pushd pyDigitalWaveTools
   - python3 setup.py install
-  - cd ..
+  - popd
   - git clone --depth=1 https://github.com/Nic30/ipCorePackager.git
-  - cd ipCorePackager
+  - pushd ipCorePackager
   - python3 setup.py install
-  - cd ..
+  - popd
   - git clone --depth=1 https://github.com/Nic30/pyMathBitPrecise.git
-  - cd pyMathBitPrecise
+  - pushd pyMathBitPrecise
   - python3 setup.py install
-  - cd ..
+  - popd
   - git clone --depth=1 https://github.com/Nic30/pycocotb.git
-  - cd pycocotb
+  - pushd pycocotb
   - python3 setup.py install
-  - cd ..
+  - popd
   - git clone --depth=1 https://github.com/Nic30/hwtLib.git -b verilator_sim
-  - cd ..
+  - pushd hwtLib
+  - python3 setup.py install
+  - popd
   - cd hwt
   - python3 setup.py develop
   - rm -rf $DIST_PACKAGES/hwt-*
