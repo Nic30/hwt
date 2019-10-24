@@ -13,8 +13,8 @@ from hwt.synthesizer.unit import Unit
 from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
 from pyDigitalWaveTools.vcd.writer import VcdWriter, VcdVarWritingScope, \
     vcdBitsFormatter, vcdEnumFormatter, VarAlreadyRegistered
-from pycocotb.basic_hdl_simulator.simConfig import BasicRtlSimConfig
-from pycocotb.basic_hdl_simulator.simModel import BasicSimModel
+from pycocotb.basic_hdl_simulator.config import BasicRtlSimConfig
+from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
 
 
 @internal
@@ -56,7 +56,7 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
                 for chIntf in obj._interfaces:
                     self.vcdRegisterInterfaces(chIntf, subScope)
 
-                if isinstance(obj, (Unit, BasicSimModel)):
+                if isinstance(obj, (Unit, BasicRtlSimModel)):
                     # register interfaces from all subunits
                     for u in obj._units:
                         self.vcdRegisterInterfaces(u, subScope)
@@ -72,7 +72,7 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
                 except VarAlreadyRegistered:
                     pass
 
-    def vcdRegisterRemainingSignals(self, unit: Union[Interface, Unit], model: BasicSimModel):
+    def vcdRegisterRemainingSignals(self, unit: Union[Interface, Unit], model: BasicRtlSimModel):
         unitScope = self._obj2scope[unit]
         #for s in unit._ctx.signals:
         #    if not s.hidden and s not in self.vcdWriter._idScope:
