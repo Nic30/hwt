@@ -10,6 +10,7 @@ class VldSyncedAgent(SyncAgentBase):
 
     def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
         super(VldSyncedAgent, self).__init__(
+            sim,
             intf,
             allowNoReset=allowNoReset)
         self.data = deque()

@@ -25,6 +25,7 @@ from hwt.serializer.simModel.ops import SimModelSerializer_ops
 from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
+from ipCorePackager.constants import DIRECTION
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
@@ -114,6 +115,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             constants.append((c[1], cls.Value(c[0], ctx)))
 
         return unitTmpl.render(
+            DIRECTION=DIRECTION,
             name=arch.getEntityName(),
             constants=constants,
             ports=ports,

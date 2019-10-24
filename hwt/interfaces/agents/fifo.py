@@ -55,7 +55,7 @@ class FifoReaderAgent(SyncAgentBase):
                 self.readPending = False
 
     def getMonitors(self):
-        self.dataReader = OnRisingCallbackLoop(self.clk,
+        self.dataReader = OnRisingCallbackLoop(self.sim, self.clk,
                                                self.dataReader,
                                                self.getEnable)
         return ([self.monitor_init] +
@@ -83,7 +83,7 @@ class FifoReaderAgent(SyncAgentBase):
         self.readPending = rd
 
     def getDrivers(self):
-        self.dataWriter = OnRisingCallbackLoop(self.clk,
+        self.dataWriter = OnRisingCallbackLoop(self.sim, self.clk,
                                                self.dataWriter,
                                                self.getEnable)
         return ([self.driver_init] +

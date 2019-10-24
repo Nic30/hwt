@@ -41,10 +41,12 @@ class {{name}}(BasicRtlSimModel):{% for t in extraTypes %}
         self._processes = ({% for procName in processesNames %}
             self.{{procName}},{% endfor %}
         )
-{%      for c in componentInstances %}        self.{{c.name}} = {{c.name}}(sim, "{{c.name}}")
+{%      for c in componentInstances %}
+        self.{{c.name}} = {{c.name}}(sim, "{{c.name}}")
         {% for p in c.ports %}connectSimPort(self, self.{{c.name}}, "{{p.src.name}}", 
-             "{{p.dst.name}}", {{p.direction == DIRECTION.OUT}}){% endfor %}
-        self.{{c._name}} = {{c.name}}(){% endfor %}
+             "{{p.dst.name}}", {{p.direction == DIRECTION.OUT}})
+{% endfor %}
+{% endfor %}
         self._units = ({% for c in componentInstances %}
              self.{{c._name}},{% endfor %}
         )
