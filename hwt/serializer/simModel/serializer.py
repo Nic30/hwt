@@ -100,7 +100,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         def serializeVar(v):
             dv = v.defVal
             if isinstance(dv, HEnumVal):
-                dv = "%s.%s" % (dv._dtype.name, dv.val)
+                dv = "self.%s.%s" % (dv._dtype.name, dv.val)
             else:
                 dv = cls.Value(dv, ctx)
 

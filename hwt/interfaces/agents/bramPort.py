@@ -4,6 +4,7 @@ from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.agents.clk import ClockAgent
 from pycocotb.triggers import WaitCombRead, WaitWriteOnly
+from pycocotb.hdlSimulator import HdlSimulator
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):
@@ -15,8 +16,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         are performed on mem object
     """
 
-    def __init__(self, intf):
-        super().__init__(intf, allowNoReset=True)
+    def __init__(self, sim: HdlSimulator, intf):
+        super().__init__(sim, intf, allowNoReset=True)
 
         self.requests = deque()
         self.readPending = False

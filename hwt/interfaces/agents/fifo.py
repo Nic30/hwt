@@ -12,8 +12,8 @@ class FifoReaderAgent(SyncAgentBase):
     Simulation agent for FifoReader interface
     """
 
-    def __init__(self, intf, allowNoReset=False):
-        super(FifoReaderAgent, self).__init__(intf, allowNoReset)
+    def __init__(self, sim, intf, allowNoReset=False):
+        super(FifoReaderAgent, self).__init__(sim, intf, allowNoReset)
         self.data = deque()
         self.readPending = False
         self.lastData = None
@@ -58,9 +58,9 @@ class FifoReaderAgent(SyncAgentBase):
         self.dataReader = OnRisingCallbackLoop(self.sim, self.clk,
                                                self.dataReader,
                                                self.getEnable)
-        return ([self.monitor_init] +
+        return ([self.monitor_init()] +
                 super(FifoReaderAgent, self).getMonitors() +
-                [self.dataReader])
+                [self.dataReader()])
 
     def monitor(self, sim: HdlSimulator):
         intf = self.intf
@@ -86,9 +86,9 @@ class FifoReaderAgent(SyncAgentBase):
         self.dataWriter = OnRisingCallbackLoop(self.sim, self.clk,
                                                self.dataWriter,
                                                self.getEnable)
-        return ([self.driver_init] +
+        return ([self.driver_init()] +
                 super(FifoReaderAgent, self).getDrivers() +
-                [self.dataWriter])
+                [self.dataWriter()])
 
     def dataWriter(self, sim: HdlSimulator):
         # delay data litle bit to have nicer wave

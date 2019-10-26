@@ -9,35 +9,31 @@ class SimModelSerializer_types():
     @classmethod
     def HdlType_bits(cls, typ: Bits, ctx, declaration=False):
         assert not declaration
-        if typ.signed is None:
-            if not (typ.force_vector or typ.bit_length() > 1):
-                return 'BIT'
-
         w = typ.bit_length()
         if isinstance(w, int):
             pass
         else:
             w = int(w)
 
-        return "Bits(%d, %r)" % (w, typ.signed)
+        return "Bits3t(%d, %r)" % (w, bool(typ.signed))
 
     @classmethod
     def HdlType_bool(cls, typ, ctx, declaration=False):
         assert not declaration
-        return "BOOL"
+        return "Bits3t(1, False)"
 
     @classmethod
     def HdlType_enum(cls, typ, ctx, declaration=False):
         if declaration:
             typ.name = ctx.scope.checkedName(typ.name, typ)
 
-            return '%s = HEnum("%s", [%s])' % (
+            return '%s = define_Enum3t("%s", [%s])' % (
                 typ.name,
                 typ.name,
                 ", ".join(map(lambda x: '"%s"' % x,
                               typ._allValues)))
         else:
-            return typ.name
+            return "self.%s" % typ.name
 
     @classmethod
     def HdlType_array(cls, typ, ctx, declaration=False):

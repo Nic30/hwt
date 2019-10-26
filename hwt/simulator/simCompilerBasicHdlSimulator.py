@@ -76,7 +76,7 @@ def toBasicSimulatorSimModel(
         simModule = importlib.import_module(unique_name)
 
         if not dInPath:
-            sys.path.remove(d)
+            sys.path.pop(0)
     else:
         simModule = ModuleType('simModule_' + unique_name)
         # python supports only ~100 opened brackets

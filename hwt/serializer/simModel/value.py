@@ -1,19 +1,19 @@
+from hwt.hdl.types.enum import HEnum
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.value import GenericSerializer_Value
-from hwt.hdl.types.enum import HEnum
 
 
 class SimModelSerializer_value(GenericSerializer_Value):
 
     @classmethod
     def Bits_valAsHdl(cls, dtype, val, ctx):
-        return "BitsVal(Bits(%d, %r), %d, %d)" % (
-             dtype.bit_length(), val.val, bool(dtype.signed), val.vld_mask)
+        return "Bits3val(Bits3t(%d, %r), %d, %d)" % (
+             dtype.bit_length(), bool(dtype.signed), val.val, val.vld_mask)
 
     @classmethod
     def Bool_valAsHdl(cls, dtype, val, ctx):
-        return "HBoolVal(BOOL, %d, %d)" % (
+        return "Bits3val(Bits3t(1), %d, %d)" % (
             val.val, val.vld_mask)
 
     @classmethod
@@ -58,11 +58,10 @@ class SimModelSerializer_value(GenericSerializer_Value):
 
     @classmethod
     def Slice_valAsHdl(cls, t, val, ctx):
-        return "SliceVal(SLICE, slice(%d, %d, %d), %d)" % (
+        return "slice(%d, %d, %d)" % (
             val.val.start,
             val.val.stop,
-            val.val.step,
-            val.vld_mask)
+            val.val.step)
 
     @classmethod
     def HEnumValAsHdl(cls, t, val, ctx):

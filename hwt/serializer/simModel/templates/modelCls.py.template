@@ -2,13 +2,9 @@ from importlib import reload
 
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.arrayVal import HArrayVal
-from hwt.hdl.types.bitsCast import convertBits__val
-from hwt.hdl.types.bitsVal import BitsVal
-from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import SLICE, BOOL, BIT
-from hwt.hdl.types.enum import HEnum
-from hwt.hdl.types.sliceVal import SliceVal
-from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
+
+from pyMathBitPrecise.bits3t import Bits3t, Bits3val
+from pyMathBitPrecise.enum3t import define_Enum3t
 
 from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
 from pycocotb.basic_hdl_simulator.model_utils import sensitivity, connectSimPort
@@ -42,10 +38,10 @@ class {{name}}(BasicRtlSimModel):{% for t in extraTypes %}
             self.{{procName}},{% endfor %}
         )
 {%      for c in componentInstances %}
-        self.{{c.name}} = {{c.name}}(sim, "{{c.name}}")
-        {% for p in c.ports %}connectSimPort(self, self.{{c.name}}, "{{p.src.name}}", 
-             "{{p.dst.name}}", {{p.direction == DIRECTION.OUT}})
-{% endfor %}
+        self.{{c._name}} = {{c.name}}(sim, "{{c.name}}")
+        {% for p in c.ports %}
+        connectSimPort(self, self.{{c._name}}, "{{p.src.name}}", 
+             "{{p.dst.name}}", {{p.direction == DIRECTION.OUT}}){% endfor %}
 {% endfor %}
 
         self._units = ({% for c in componentInstances %}

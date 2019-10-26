@@ -1,4 +1,5 @@
 from hwt.hdl.operatorDefs import AllOps
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class SimModelSerializer_ops():
@@ -31,7 +32,7 @@ class SimModelSerializer_ops():
         AllOps.XOR: '(%s) ^ (%s)',
         AllOps.CONCAT: "(%s)._concat(%s)",
         AllOps.DIV: '(%s) // (%s)',
-        AllOps.DOWNTO: "SliceVal(slice(%s, %s), SLICE, True)",
+        AllOps.DOWNTO: "slice(%s, %s)",
         AllOps.EQ: '(%s)._eq(%s)',
         AllOps.GT: '(%s) > (%s)',
         AllOps.GE: '(%s) >= (%s)',
@@ -41,16 +42,19 @@ class SimModelSerializer_ops():
         AllOps.MUL: '(%s) * (%s)',
         AllOps.NEQ: '(%s) != (%s)',
         AllOps.ADD: '(%s) + (%s)',
-        AllOps.POW: "%s ** %s",
+        AllOps.POW: "(%s) ** (%s)",
+    }
+    _unaryEventOps = {
+        AllOps.RISING_EDGE: "%s._onRisingEdge()",
+        AllOps.FALLING_EDGE: "%s._onFallingEdge()",
     }
     _unaryOps = {
         AllOps.NOT: "(%s).__invert__()",
         AllOps.NEG: "(%s).__neg__()",
-        AllOps.RISING_EDGE: "sim._onRisingEdge(%s)",
-        AllOps.FALLING_EDGE: "sim._onFallingEdge(%s)",
-        AllOps.BitsAsSigned: "(%s)._convSign(True)",
-        AllOps.BitsAsUnsigned: "(%s)._convSign(False)",
-        AllOps.BitsAsVec: "(%s)._convSign(None)",
+
+        AllOps.BitsAsSigned: "%s.cast_sign(True)",
+        AllOps.BitsAsUnsigned: "(%s).cast_sign(False)",
+        AllOps.BitsAsVec: "(%s).cast_sign(False)",
     }
 
     @classmethod
@@ -61,6 +65,11 @@ class SimModelSerializer_ops():
         op_str = cls._unaryOps.get(o, None)
         if op_str is not None:
             return op_str % (cls._operand(ops[0], o, ctx))
+        op_str = cls._unaryEventOps.get(o, None)
+        if op_str is not None:
+            op0 = ops[0]
+            assert isinstance(op0, RtlSignal) and not op0.hidden, op0
+            return op_str % ("self.io.%s" % op0.name)
 
         op_str = cls._binOps.get(o, None)
         if op_str is not None:

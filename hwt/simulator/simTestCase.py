@@ -160,7 +160,7 @@ class SimTestCase(unittest.TestCase):
         return "%s__%s" % (cls.__name__, unit.__class__.__name__)
 
     @classmethod
-    def compileSim(cls, unit, build_dir: Optional[str]=None,
+    def compileSim(cls, unit, build_dir: Optional[str]="tmp/",
                    unique_name: Optional[str]=None, onAfterToRtl=None,
                    target_platform=DummyPlatform()):
         """
@@ -197,7 +197,7 @@ class SimTestCase(unittest.TestCase):
     def compileSimAndStart(
             self,
             unit: Unit,
-            build_dir: Optional[str]=None,
+            build_dir: Optional[str]="tmp/",
             unique_name: Optional[str]=None,
             onAfterToRtl=None,
             target_platform=DummyPlatform()):
@@ -206,6 +206,7 @@ class SimTestCase(unittest.TestCase):
         or SingleUnitSimTestCase to setup the simulator and DUT
         """
         self.compileSim(unit, build_dir, unique_name, onAfterToRtl, target_platform)
+        self.u = unit
         SimTestCase.setUp(self)
 
     def setUp(self):
