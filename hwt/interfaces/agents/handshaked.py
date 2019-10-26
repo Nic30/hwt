@@ -104,7 +104,7 @@ class HandshakedAgent(SyncAgentBase):
             except ValueError:
                 raise AssertionError(
                     sim.now, self.intf,
-                    "vld signal is in invalid state")
+                    "vld signal is in invalid state") from None
 
             if vld:
                 # master responded with positive ack, do read data
@@ -140,7 +140,7 @@ class HandshakedAgent(SyncAgentBase):
             rd = int(rd)
         except ValueError:
             raise AssertionError(sim.now, self.intf,
-                                 "rd signal in invalid state")
+                                 "rd signal in invalid state") from None
 
     def driver(self):
         """
@@ -188,7 +188,7 @@ class HandshakedAgent(SyncAgentBase):
         except ValueError:
             raise AssertionError(
                 sim.now, self.intf,
-                "rd signal in invalid state")
+                "rd signal in invalid state") from None
 
         if not vld:
             return
