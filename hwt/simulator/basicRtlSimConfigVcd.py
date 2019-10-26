@@ -74,7 +74,7 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
 
     def vcdRegisterRemainingSignals(self, unit: Union[Interface, Unit], model: BasicRtlSimModel):
         unitScope = self._obj2scope[unit]
-        #for s in unit._ctx.signals:
+        # for s in unit._ctx.signals:
         #    if not s.hidden and s not in self.vcdWriter._idScope:
         #        t = s._dtype
         #        if isinstance(t, self.supported_type_classes):
@@ -91,7 +91,8 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
                     unitScope.addVar(s, s_name, tName, width, formatter)
 
         for u in unit._units:
-            self.vcdRegisterRemainingSignals(u)
+            m = getattr(model, u._name + "_inst")
+            self.vcdRegisterRemainingSignals(u, m)
 
     def initUnitSignalsForInterfaces(self, unit, model):
         self._scope = self.registerInterfaces(unit)
