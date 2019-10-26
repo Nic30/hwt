@@ -9,6 +9,7 @@ from hwt.hdl.types.bitValFunctions import bitsCmp, \
     bitsBitOp, bitsArithOp 
 from hwt.hdl.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
     tryReduceXor
+from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT, BIT, SLICE
 from hwt.hdl.types.eventCapableVal import EventCapableVal
 from hwt.hdl.types.slice import Slice
@@ -22,7 +23,6 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, 
 from pyMathBitPrecise.bits3t import Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
-from hwt.hdl.types.bits import Bits
 
 
 class BitsVal(Bits3val, EventCapableVal, Value):
@@ -303,16 +303,11 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 pass
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
 
-    # object.__eq__ to make object hashable
-    # == operator is ._eq()
-    def __eq__(self, other):
-        return object.__eq__(self, other)
-
     def __hash__(self):
-        if isinstance(self, Value):
-            return Bits3val.__hash__(self)
-        else:
+        if isinstance(self, RtlSignalBase):
             return hash(id(self))
+        else:
+            return Bits3val.__hash__(self)
 
     # comparisons
     def _eq(self, other):
