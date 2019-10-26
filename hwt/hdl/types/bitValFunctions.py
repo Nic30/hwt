@@ -2,7 +2,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import BOOL, INT
+from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
 from pyMathBitPrecise.bit_utils import mask
@@ -141,14 +141,14 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
         other = other._auto_cast(self._dtype)
         return bitsBitOp__val(self, other, op._evalFn, getVldFn)
     else:
-        if other._dtype == BOOL and self._dtype != BOOL:
+        if self._dtype == other._dtype:
+            pass
+        elif other._dtype == BOOL and self._dtype != BOOL:
             self = self._auto_cast(BOOL)
             return op._evalFn(self, other)
         elif other._dtype != BOOL and self._dtype == BOOL:
             other = other._auto_cast(BOOL)
             return op._evalFn(self, other)
-        elif self._dtype == other._dtype:
-            pass
         else:
             raise TypeError("Can not apply operator %r (%r, %r)" %
                             (op, self._dtype, other._dtype))
