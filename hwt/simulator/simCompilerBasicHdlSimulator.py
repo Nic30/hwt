@@ -37,6 +37,7 @@ class BasicSimConstructor():
     def __call__(self):
         sim = BasicRtlSimulatorWithVCD(self.synthesised_unit)
         model = self.model_cls(sim)
+        model._init_body()
         sim.bound_model(model)
         return sim
 

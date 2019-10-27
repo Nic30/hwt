@@ -88,11 +88,11 @@ class VhdlSerializer_ops():
         cond, ifTrue, ifFalse = val.drivers[0].operands
         if_ = If(cond)
         if_.ifTrue.append(Assignment(ifTrue, o,
-                                     virtualOnly=True,
+                                     virtual_only=True,
                                      parentStm=if_))
         if_.ifFalse = []
         if_.ifFalse.append(Assignment(ifFalse, o,
-                                      virtualOnly=True,
+                                      virtual_only=True,
                                       parentStm=if_))
         if_._outputs.append(o)
         for obj in (cond, ifTrue, ifFalse):
@@ -108,9 +108,9 @@ class VhdlSerializer_ops():
             o = ctx.createTmpVarFn("tmpBool2std_logic", bit1_t)
             ifTrue, ifFalse = bit1_t.from_py(1), bit1_t.from_py(0)
             if_ = If(val)
-            if_.ifTrue.append(Assignment(ifTrue, o, virtualOnly=True, parentStm=if_))
+            if_.ifTrue.append(Assignment(ifTrue, o, virtual_only=True, parentStm=if_))
             if_.ifFalse = []
-            if_.ifFalse.append(Assignment(ifFalse, o, virtualOnly=True, parentStm=if_))
+            if_.ifFalse.append(Assignment(ifFalse, o, virtual_only=True, parentStm=if_))
             if_._outputs.append(o)
             o.drivers.append(if_)
             return o
@@ -177,7 +177,7 @@ class VhdlSerializer_ops():
             op0, op1 = ops
             if isinstance(op0, RtlSignalBase) and isResultOfTypeConversion(op0):
                 op0 = ctx.createTmpVarFn("tmpTypeConv", op0._dtype)
-                op0.defVal = ops[0]
+                op0.def_val = ops[0]
 
             op0_str = cls.asHdl(op0, ctx).strip()
             op1_str = cls._operand(ops[1], o, ctx)

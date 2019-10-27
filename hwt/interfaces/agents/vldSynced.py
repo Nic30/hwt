@@ -65,5 +65,6 @@ class VldSyncedAgent(SyncAgentBase):
                         self.sim.now, self.actualData))
 
         else:
+            yield WaitWriteOnly()
             self.doWrite(None)
             self.doWriteVld(0)

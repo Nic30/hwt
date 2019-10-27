@@ -27,7 +27,7 @@ class SystemCSerializer_statements():
     def Assignment(cls, a, ctx):
         dst = a.dst
         assert isinstance(dst, SignalItem)
-        assert not dst.virtualOnly, "should not be required"
+        assert not dst.virtual_only, "should not be required"
 
         typeOfDst = systemCTypeOfSig(dst)
         if a.indexes is not None:

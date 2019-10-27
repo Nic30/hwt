@@ -26,8 +26,8 @@ class SystemCSerializer_value(GenericSerializer_Value):
 
             ctx = ctx.forSignal(si)
 
-            v = si.defVal
-            if si.virtualOnly:
+            v = si.def_val
+            if si.virtual_only:
                 raise NotImplementedError()
             elif si.drivers:
                 pass
@@ -67,7 +67,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
                     # because it is only signal
                     return s
             elif isinstance(v, Value):
-                if si.defVal.vld_mask:
+                if si.def_val.vld_mask:
                     return s + " = %s" % cls.Value(v, ctx)
                 else:
                     return s

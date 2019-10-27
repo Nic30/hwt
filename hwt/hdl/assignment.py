@@ -22,7 +22,7 @@ class Assignment(HdlStatement):
     """
     __instCntr = 0
 
-    def __init__(self, src, dst, indexes=None, virtualOnly=False,
+    def __init__(self, src, dst, indexes=None, virtual_only=False,
                  parentStm=None,
                  sensitivity=None,
                  is_completly_event_dependent=False):
@@ -31,7 +31,7 @@ class Assignment(HdlStatement):
         :param src: source which is assigned from
         :param indexes: description of index selector on dst
             (list of Index/Slice objects) (f.e. [[0], [1]] means  dst[0][1])
-        :param virtualOnly: flag indicates that this assignments
+        :param virtual_only: flag indicates that this assignments
             is only virtual and should not be added into
             netlist, because it is only for internal notation
         """
@@ -40,7 +40,7 @@ class Assignment(HdlStatement):
             sensitivity,
             is_completly_event_dependent)
         self.src = src
-        isReal = not virtualOnly
+        isReal = not virtual_only
 
         if not isinstance(src, Value):
             self._inputs.append(src)
@@ -63,7 +63,7 @@ class Assignment(HdlStatement):
 
         self._instId = Assignment._nextInstId()
 
-        if not virtualOnly:
+        if not virtual_only:
             dst.ctx.statements.add(self)
 
     @internal

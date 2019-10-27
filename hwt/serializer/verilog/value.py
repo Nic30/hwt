@@ -99,8 +99,8 @@ class VerilogSerializer_Value(GenericSerializer_Value):
         if declaration:
             ctx = ctx.forSignal(si)
 
-            v = si.defVal
-            if si.virtualOnly:
+            v = si.def_val
+            if si.virtual_only:
                 pass
             elif si.drivers:
                 pass

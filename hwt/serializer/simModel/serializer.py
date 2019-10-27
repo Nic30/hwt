@@ -98,7 +98,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         childCtx.constCache = ConstCache(ctx.scope.checkedName)
 
         def serializeVar(v):
-            dv = v.defVal
+            dv = v.def_val
             if isinstance(dv, HEnumVal):
                 dv = "self.%s.%s" % (dv._dtype.name, dv.val)
             else:
@@ -217,7 +217,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                 # [TODO] look up indexes
                 indexes = None
                 oa = Assignment(o._dtype.from_py(None), o, indexes,
-                                virtualOnly=True, parentStm=ifc,
+                                virtual_only=True, parentStm=ifc,
                                 is_completly_event_dependent=ifc._is_completly_event_dependent)
                 outputInvalidateStms.append(cls.stmAsHdl(oa, childCtx))
 

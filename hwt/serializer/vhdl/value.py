@@ -36,8 +36,8 @@ class VhdlSerializer_Value(GenericSerializer_Value):
     @classmethod
     def SignalItem(cls, si: SignalItem, ctx: SerializerCtx, declaration=False):
         if declaration:
-            v = si.defVal
-            if si.virtualOnly:
+            v = si.def_val
+            if si.virtual_only:
                 prefix = "VARIABLE"
             elif si.drivers:
                 prefix = "SIGNAL"

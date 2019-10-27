@@ -55,7 +55,7 @@ def ternaryOpsToIf(statements):
             except NoDriverErr:
                 assert (hasattr(st.src, "_interface")
                         and st.src._interface is not None)\
-                    or st.src.defVal.vld_mask, st.src
+                    or st.src.def_val.vld_mask, st.src
 
         stms.append(st)
     return stms
@@ -71,7 +71,7 @@ class VhdlSerializer_statements():
         def valAsHdl(v):
             return cls.Value(v, ctx)
 
-        if dst.virtualOnly:
+        if dst.virtual_only:
             symbol = ":="
         else:
             symbol = "<="
@@ -155,7 +155,7 @@ class VhdlSerializer_statements():
             childCtx = copy(ctx)
 
         def createTmpVarFn(suggestedName, dtype):
-            s = RtlSignal(None, None, dtype, virtualOnly=True)
+            s = RtlSignal(None, None, dtype, virtual_only=True)
             s.name = ctx.scope.checkedName(suggestedName, s)
             s.hidden = False
             serializedS = cls.SignalItem(s, childCtx, declaration=True)
@@ -170,8 +170,8 @@ class VhdlSerializer_statements():
 
         extraVarsInit = []
         for s in extraVars:
-            if isinstance(s.defVal, RtlSignalBase) or s.defVal.vld_mask:
-                a = Assignment(s.defVal, s, virtualOnly=True)
+            if isinstance(s.def_val, RtlSignalBase) or s.def_val.vld_mask:
+                a = Assignment(s.def_val, s, virtual_only=True)
                 extraVarsInit.append(cls.Assignment(a, childCtx))
             else:
                 assert s.drivers, s

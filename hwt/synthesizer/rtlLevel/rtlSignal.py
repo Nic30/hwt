@@ -34,13 +34,13 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
     __instCntr = 0
 
-    def __init__(self, ctx, name, dtype, defVal=None, nopVal=None,
-                 useNopVal=False, virtualOnly=False):
+    def __init__(self, ctx, name, dtype, def_val=None, nopVal=None,
+                 useNopVal=False, virtual_only=False):
         """
         :param ctx: context - RtlNetlist which is this signal part of
         :param name: name hint for this signal, if is None name
             is chosen automatically
-        :param defVal: value which is used for reset and as default value
+        :param def_val: value which is used for reset and as default value
             in hdl
         :param useNopVal: use nopVal or ignore it
         :param nopVal: value which is used to fill up statements when no other
@@ -54,7 +54,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             self.hasGenericName = False
 
         assert isinstance(dtype, HdlType)
-        super(RtlSignal, self).__init__(name, dtype, defVal, virtualOnly=virtualOnly)
+        super(RtlSignal, self).__init__(name, dtype, def_val, virtual_only=virtual_only)
         self.ctx = ctx
 
         if ctx:
@@ -89,11 +89,11 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             for d in self.drivers:
                 d.staticEval()
         else:
-            if isinstance(self.defVal, RtlSignal):
-                self._val = self.defVal._val.staticEval()
+            if isinstance(self.def_val, RtlSignal):
+                self._val = self.def_val._val.staticEval()
             else:
                 # _val is invalid initialization value
-                self._val = self.defVal.__copy__()
+                self._val = self.def_val.__copy__()
 
         if not isinstance(self._val, Value):
             raise ValueError(

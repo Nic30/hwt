@@ -1,13 +1,13 @@
 from importlib import reload
 
+from pyMathBitPrecise.array3t import Array3t, Array3val
 from pyMathBitPrecise.bits3t import Bits3t, Bits3val
 from pyMathBitPrecise.enum3t import define_Enum3t
-from pyMathBitPrecise.array3t import Array3t, Array3val
 
 from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
 from pycocotb.basic_hdl_simulator.model_utils import sensitivity, connectSimPort
-from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond, mkUpdater, mkArrayUpdater
 from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
+from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond, mkUpdater, mkArrayUpdater
 
 {% for c in componentInstances %}
 if "{{c.name}}" not in locals(): # support for all models in single file
@@ -24,26 +24,30 @@ class {{name}}(BasicRtlSimModel):{% for t in extraTypes %}
 {{proc}}
 {% endfor %}
     def __init__(self, sim: "BasicRtlSimulator", name="{{name}}"):
-        BasicRtlSimModel.__init__(self, name=name)
+        BasicRtlSimModel.__init__(self, sim, name=name)
         # ports{% for name, dtype in ports %}
-        self.io.{{name}} = BasicRtlSimProxy(sim, self, "{{name}}", {{dtype}}, None){% endfor %}
-        # internal signals{% for name, dtype, defVal in signals %}
-        self.io.{{name}} = BasicRtlSimProxy(sim, self, "{{name}}", {{dtype}}, {{defVal}}){% endfor %}
+        self.io.{{name}} = BasicRtlSimProxy(
+            sim, self, "{{name}}",
+            {{dtype}}, None){% endfor %}
+        # internal signals{% for name, dtype, def_val in signals %}
+        self.io.{{name}} = BasicRtlSimProxy(
+            sim, self, "{{name}}",
+            {{dtype}}, {{def_val}}){% endfor %}
+{%      for c in componentInstances %}
+        self.{{c._name}} = {{c.name}}(sim, "{{c.name}}"){% endfor %}
+
+    def _init_body(self):{%      for c in componentInstances %}{% for p in c.ports %}
+        connectSimPort(self, self.{{c._name}}, "{{p.src.name}}",
+                       "{{p.dst.name}}", {{p.direction == DIRECTION.IN}}){% endfor %}{% endfor %}
+
         self._interfaces = ({% for name, _ in ports   %}
-            "{{name}}",{% endfor %}{% for name, _, _ in signals %}
-            "{{name}}",{% endfor %})
+            self.io.{{name}},{% endfor %}{% for name, _, _ in signals %}
+            self.io.{{name}},{% endfor %})
         self._processes = ({% for procName in processesNames %}
             self.{{procName}},{% endfor %}
         )
-{%      for c in componentInstances %}
-        self.{{c._name}} = {{c.name}}(sim, "{{c.name}}")
-        {% for p in c.ports %}
-        connectSimPort(self, self.{{c._name}}, "{{p.src.name}}", 
-             "{{p.dst.name}}", {{p.direction == DIRECTION.OUT}}){% endfor %}
-{% endfor %}
-
         self._units = ({% for c in componentInstances %}
-             self.{{c._name}},{% endfor %}
+            self.{{c._name}},{% endfor %}
         )
 {% for proc in processObjects %}
         sensitivity(self.{{proc.name}}, {% 
@@ -55,5 +59,7 @@ class {{name}}(BasicRtlSimModel):{% for t in extraTypes %}
                 endif %}{% 
             endfor %})
         self._outputs[self.{{proc.name}}] = ({% for outp in proc.outputs %}
-                "{{outp.name}}",{% endfor %}){% 
+                self.io.{{outp.name}},{% endfor %}){% 
         endfor %}
+        for u in self._units:
+            u._init_body()

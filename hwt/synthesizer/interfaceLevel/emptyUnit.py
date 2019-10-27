@@ -7,11 +7,11 @@ from hwt.doc_markers import internal
 class EmptyUnit(Unit):
     """
     Unit used for prototyping all output interfaces are connected
-    to _defVal and this is only think which architecture contains
+    to _def_val and this is only think which architecture contains
 
-    :cvar _defVal: this value is used to initialize all signals
+    :cvar _def_val: this value is used to initialize all signals
     """
-    _defVal = None
+    _def_val = None
 
     @internal
     def _toRtl(self, targetPlatform):
@@ -37,7 +37,7 @@ class EmptyUnit(Unit):
             # connect outputs to dummy value
             for s in signals:
                 if s._interface._direction == INTF_DIRECTION.SLAVE:
-                    s(s._dtype.from_py(self._defVal))
+                    s(s._dtype.from_py(self._def_val))
 
         if not externInterf:
             raise IntfLvlConfErr(

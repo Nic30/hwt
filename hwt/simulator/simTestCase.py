@@ -9,13 +9,13 @@ from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.value import Value
 from hwt.simulator.agentConnector import valToInt, autoAddAgents
 from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
+from hwt.simulator.simCompilerBasicHdlSimulator import toBasicSimulatorSimModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
+from pyMathBitPrecise.bits3t import Bits3val
 from pycocotb.constants import CLK_PERIOD
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer
-from hwt.simulator.simCompilerBasicHdlSimulator import toBasicSimulatorSimModel
-from pyMathBitPrecise.bits3t import Bits3val
 
 
 def allValuesToInts(sequenceOrVal):

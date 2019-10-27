@@ -217,7 +217,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
         # if there is multiple items we have to generate counter logic
         index = parentUnit._reg(name + "for_index",
                                 Bits(log2ceil(itemsCnt + 1), signed=False),
-                                defVal=0)
+                                def_val=0)
         ackSig = parentUnit._sig(name + "for_ack")
 
         statementLists = []

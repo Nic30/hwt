@@ -3,8 +3,8 @@ from collections import deque
 from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.agents.clk import ClockAgent
-from pycocotb.triggers import WaitCombRead, WaitWriteOnly
 from pycocotb.hdlSimulator import HdlSimulator
+from pycocotb.triggers import WaitCombRead, WaitWriteOnly
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):
@@ -119,6 +119,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
                 self.doReq(req)
                 intf.en.write(1)
         else:
+            yield WaitWriteOnly()
             intf.en.write(0)
             intf.we.write(0)
             self.readPending = False

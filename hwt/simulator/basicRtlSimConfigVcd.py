@@ -15,9 +15,9 @@ from pyDigitalWaveTools.vcd.writer import VcdWriter, VcdVarWritingScope, \
     vcdBitsFormatter, vcdEnumFormatter, VarAlreadyRegistered
 from pycocotb.basic_hdl_simulator.config import BasicRtlSimConfig
 from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
+from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
 from pycocotb.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
 from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
 
 
 @internal
@@ -87,13 +87,12 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
         #            unitScope.addVar(s, getSignalName(
         #                s), tName, width, formatter)
         #
-        for s_name in model._interfaces:
-            s = getattr(model.io, s_name)
+        for s in model._interfaces:
             if s not in self.vcdWriter._idScope:
                 t = s._dtype
                 if isinstance(t, self.supported_type_classes):
                     tName, width, formatter = vcdTypeInfoForHType(t)
-                    unitScope.addVar(s, s_name, tName, width, formatter)
+                    unitScope.addVar(s, s._name, tName, width, formatter)
 
         for u in unit._units:
             m = getattr(model, u._name + "_inst")

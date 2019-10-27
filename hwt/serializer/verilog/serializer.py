@@ -74,7 +74,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
             # construct process which will represent content of the rom
             cases = [(toHVal(i), [romValSig(v), ])
-                     for i, v in enumerate(rom.defVal.val)]
+                     for i, v in enumerate(rom.def_val.val)]
             romSwitchStm = SwitchContainer(index, cases)
 
             for (_, (stm, )) in cases:
@@ -99,7 +99,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         """
         t = v._dtype
         # if type requires extra definition
-        if isinstance(t, HArray) and v.defVal.vld_mask:
+        if isinstance(t, HArray) and v.def_val.vld_mask:
             if v.drivers:
                 raise SerializerException("Verilog does not support RAMs"
                                           " with initialized value")

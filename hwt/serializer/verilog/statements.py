@@ -36,7 +36,7 @@ class VerilogSerializer_statements():
                     evDep = True
                     break
 
-            if not evDep or _dst.virtualOnly:
+            if not evDep or _dst.virtual_only:
                 prefix = ""
                 symbol = "="
             else:
@@ -95,7 +95,7 @@ class VerilogSerializer_statements():
             childCtx = ctx
 
         def createTmpVarFn(suggestedName, dtype):
-            s = RtlSignal(None, None, dtype, virtualOnly=True)
+            s = RtlSignal(None, None, dtype, virtual_only=True)
             s.name = childCtx.scope.checkedName(suggestedName, s)
             s.hidden = False
             serializedS = cls.SignalItem(s, childCtx, declaration=True)
@@ -111,7 +111,7 @@ class VerilogSerializer_statements():
 
         extraVarsInit = []
         for s in extraVars:
-            a = Assignment(s.defVal, s, virtualOnly=True)
+            a = Assignment(s.def_val, s, virtual_only=True)
             extraVarsInit.append(cls.Assignment(a, childCtx))
 
         return cls.processTmpl.render(

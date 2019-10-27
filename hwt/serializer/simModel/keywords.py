@@ -2,22 +2,26 @@ import keyword
 
 
 SIMMODEL_KEYWORDS = keyword.kwlist + [
-    # names defined in SimModel constructor
+    # BasicRtlSimModel properties
+    'sim',
     '_interfaces',
     '_processes',
     '_units',
     '_outputs',
+    '_init_body',
+    '__init__',
+    '__new__',
+    '__getattr__',
+    '__getattribute__',
+    '__setattr__',
+    '__setattribute__',
     # imports
     'hwt',
     'importlib',
     'reload',
-    'HArray',
-    'HArrayVal',
-    'convertBits__val',
-    'BitsVal',
-    'SLICE',
-    'HEnum'
-    'BIT',
+    'Array3t',
+    'Array3val',
+    'Enum3t'
     'BasicRtlSimModel',
     'BasicRtlSimProxy',
     'sensitivity',
@@ -26,4 +30,4 @@ SIMMODEL_KEYWORDS = keyword.kwlist + [
     'mkUpdater',
     'mkArrayUpdater',
     'slice',
-    'SliceVal']
+]

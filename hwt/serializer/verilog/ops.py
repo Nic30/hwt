@@ -84,8 +84,8 @@ class VerilogSerializer_ops():
                 and cls._operandIsAnotherOperand(operand)\
                 and operand.origin.operator == AllOps.CONCAT:
             tmpVar = ctx.createTmpVarFn("tmp_concat_", operand._dtype)
-            tmpVar.defVal = operand
-            # Assignment(tmpVar, operand, virtualOnly=True)
+            tmpVar.def_val = operand
+            # Assignment(tmpVar, operand, virtual_only=True)
             operand = tmpVar
 
         s = super()._operand(operand, operator.operator, ctx)

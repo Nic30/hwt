@@ -83,7 +83,7 @@ class IpPackager(IpCorePackager):
         # t = g._dtype
 
         # def getVal():
-        #     v = g.defVal
+        #     v = g.def_val
         #     if v.vld_mask:
         #         return v.val
         #     else:
@@ -105,7 +105,7 @@ class IpPackager(IpCorePackager):
         val.format = "string"
         val.text = str(g.get_value())
         # elif isinstance(t, Bits):
-        #     bitString(g.defVal._dtype.bit_length())
+        #     bitString(g.def_val._dtype.bit_length())
         # else:
         #     raise NotImplementedError(
         #         "Not implemented for datatype %s" % repr(t))
