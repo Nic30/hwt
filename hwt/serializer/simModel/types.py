@@ -33,7 +33,7 @@ class SimModelSerializer_types():
                 ", ".join(map(lambda x: '"%s"' % x,
                               typ._allValues)))
         else:
-            return "self.%s" % typ.name
+            return "self.%s()" % typ.name
 
     @classmethod
     def HdlType_array(cls, typ, ctx, declaration=False):
