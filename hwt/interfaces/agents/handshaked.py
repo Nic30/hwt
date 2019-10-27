@@ -243,14 +243,14 @@ class HandshakedReadListener():
         self.agent = hsAgent
         self.callbacks = {}
 
-    def _afterReadWrap(self, sim):
+    def _afterReadWrap(self):
         if self.original_afterRead is not None:
-            self.original_afterRead(sim)
+            self.original_afterRead()
         try:
             cb = self.callbacks.pop(len(self.agent.data))
         except KeyError:
             return
-        cb(sim)
+        cb()
 
     def register(self, transCnt, callback):
         self.callbacks[transCnt] = callback

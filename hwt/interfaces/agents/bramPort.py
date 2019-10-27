@@ -27,7 +27,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         self.requireInit = True
         self.clk_ag = None
 
-    def doReq(self, sim, req):
+    def doReq(self, req):
         rw = req[0]
         addr = req[1]
 
@@ -38,13 +38,13 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, after %r read_req: %d\n" % (
                                         self.intf._getFullName(),
-                                        sim.now, addr))
+                                        self.sim.now, addr))
         elif rw == WRITE:
             wdata = req[2]
             rw = 1
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, after %r write: %d:%d\n" % (
-                                        self.intf._getFullName(), sim.now,
+                                        self.intf._getFullName(), self.sim.now,
                                         addr, wdata))
 
         else:
@@ -55,13 +55,13 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         intf.addr.write(addr)
         intf.din.write(wdata)
 
-    def onReadReq(self, sim, addr):
+    def onReadReq(self, addr):
         """
         on readReqRecieved in monitor mode
         """
         self.requests.append((READ, addr))
 
-    def onWriteReq(self, sim, addr, data):
+    def onWriteReq(self, addr, data):
         """
         on writeReqRecieved in monitor mode
         """

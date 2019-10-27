@@ -22,30 +22,30 @@ class FifoReaderAgent(SyncAgentBase):
         self.lastData_invalidate = False
         self.readPending_invalidate = False
 
-    def setEnable_asDriver(self, en, sim: HdlSimulator):
+    def setEnable_asDriver(self, en):
         self._enabled = en
-        self.driver.setEnable(en, sim)
+        self.driver.setEnable(en)
         self.intf.wait.write(not en)
         self.lastData_invalidate = not en
 
-    def setEnable_asMonitor(self, en, sim: HdlSimulator):
+    def setEnable_asMonitor(self, en):
         lastEn = self._enabled
         self._enabled = en
-        self.monitor.setEnable(en, sim)
+        self.monitor.setEnable(en)
         self.intf.en.write(en)
         self.readPending_invalidate = not en
         if not lastEn:
-            self.dataReader.setEnable(en, sim)
+            self.dataReader.setEnable(en)
 
-    def driver_init(self, sim: HdlSimulator):
+    def driver_init(self):
         yield WaitWriteOnly()
         self.intf.wait.write(not self._enabled)
 
-    def monitor_init(self, sim: HdlSimulator):
+    def monitor_init(self):
         yield WaitWriteOnly()
         self.intf.en.write(self._enabled)
 
-    def dataReader(self, sim: HdlSimulator):
+    def dataReader(self):
         if self.readPending:
             yield WaitCombRead()
             d = self.intf.data.read()
@@ -62,7 +62,7 @@ class FifoReaderAgent(SyncAgentBase):
                 super(FifoReaderAgent, self).getMonitors() +
                 [self.dataReader()])
 
-    def monitor(self, sim: HdlSimulator):
+    def monitor(self):
         intf = self.intf
         yield WaitCombRead()
         if self.notReset():
@@ -90,7 +90,7 @@ class FifoReaderAgent(SyncAgentBase):
                 super(FifoReaderAgent, self).getDrivers() +
                 [self.dataWriter()])
 
-    def dataWriter(self, sim: HdlSimulator):
+    def dataWriter(self):
         # delay data litle bit to have nicer wave
         # otherwise wirte happens before next clk period
         # and it means in 0 time and we will not be able to see it in wave
