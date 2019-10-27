@@ -51,7 +51,7 @@ class SimModelSerializer_value(GenericSerializer_Value):
 
     @classmethod
     def HArrayValAsHdl(cls, t, val, ctx):
-        return "HArrayVal(%s, %s, %d)" % (
+        return "Array3val(%s, %s, %d)" % (
             cls.HdlType(t, ctx),
             cls.Dict_valAsHdl(val.val, ctx),
             val.vld_mask)

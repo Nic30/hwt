@@ -15,10 +15,14 @@ from pyDigitalWaveTools.vcd.writer import VcdWriter, VcdVarWritingScope, \
     vcdBitsFormatter, vcdEnumFormatter, VarAlreadyRegistered
 from pycocotb.basic_hdl_simulator.config import BasicRtlSimConfig
 from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
+from pycocotb.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
+from pycocotb.hdlSimulator import HdlSimulator
+from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
 
 
 @internal
-def vcdTypeInfoForHType(t) -> Tuple[str, int, Callable[[RtlSignalBase, Value], str]]:
+def vcdTypeInfoForHType(t)\
+        -> Tuple[str, int, Callable[[RtlSignalBase, Value], str]]:
     """
     :return: (vcd type name, vcd width)
     """
@@ -72,7 +76,8 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
                 except VarAlreadyRegistered:
                     pass
 
-    def vcdRegisterRemainingSignals(self, unit: Union[Interface, Unit], model: BasicRtlSimModel):
+    def vcdRegisterRemainingSignals(self, unit: Union[Interface, Unit],
+                                    model: BasicRtlSimModel):
         unitScope = self._obj2scope[unit]
         # for s in unit._ctx.signals:
         #    if not s.hidden and s not in self.vcdWriter._idScope:
@@ -94,7 +99,7 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
             m = getattr(model, u._name + "_inst")
             self.vcdRegisterRemainingSignals(u, m)
 
-    def initUnitSignalsForInterfaces(self, unit, model):
+    def initUnitSignalsForInterfaces(self, unit: Unit, model: BasicRtlSimModel):
         self._scope = self.registerInterfaces(unit)
         for s in unit._ctx.signals:
             if s not in self.vcdWriter._idScope:
@@ -103,7 +108,8 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
         for u in unit._units:
             self.initUnitSignals(u)
 
-    def beforeSim(self, simulator, synthesisedUnit, model):
+    def beforeSim(self, simulator: HdlSimulator,
+                  synthesisedUnit: Unit, model: BasicRtlSimModel):
         """
         This method is called before first step of simulation.
         """
@@ -116,7 +122,7 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
 
         vcd.enddefinitions()
 
-    def logChange(self, nowTime, sig, nextVal):
+    def logChange(self, nowTime: int, sig: BasicRtlSimProxy, nextVal):
         """
         This method is called for every value change of any signal.
         """
