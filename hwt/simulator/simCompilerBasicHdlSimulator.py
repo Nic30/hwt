@@ -58,14 +58,17 @@ def toBasicSimulatorSimModel(
     :param build_dir: directory to store sim model build files,
         if None sim model will be constructed only in memory
     """
+    if unique_name is None:
+        unique_name = unit._getDefaultName()
+
+    if build_dir is not None:
+        build_dir = os.path.join(os.getcwd(), build_dir, unique_name)
+
     sim_code = toRtl(unit,
                      name=unique_name,
                      targetPlatform=target_platform,
                      saveTo=build_dir,
                      serializer=SimModelSerializer)
-
-    if unique_name is None:
-        unique_name = unit._name
 
     if build_dir is not None:
         d = os.path.join(os.getcwd(), build_dir)
