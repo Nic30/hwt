@@ -2,6 +2,7 @@ from collections import deque
 
 from hwt.hdl.constants import NOP
 from hwt.simulator.agentBase import SyncAgentBase
+from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import WaitCombRead, WaitWriteOnly
 
 
@@ -9,8 +10,8 @@ class RdSyncedAgent(SyncAgentBase):
     """
     Simulation/verification agent for RdSynced interface
     """
-    def __init__(self, intf, allowNoReset=True):
-        super().__init__(intf, allowNoReset=allowNoReset)
+    def __init__(self, sim: HdlSimulator, intf, allowNoReset=True):
+        super().__init__(sim, intf, allowNoReset=allowNoReset)
         self.actualData = NOP
         self.data = deque()
         self._rd = self.getRd(intf)
