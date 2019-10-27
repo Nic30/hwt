@@ -16,7 +16,6 @@ from pyDigitalWaveTools.vcd.writer import VcdWriter, VcdVarWritingScope, \
 from pycocotb.basic_hdl_simulator.config import BasicRtlSimConfig
 from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
 from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
-from pycocotb.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
 from pycocotb.hdlSimulator import HdlSimulator
 
 
@@ -42,6 +41,7 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
         self.logPropagation = False
         self.logApplyingValues = False
         self._obj2scope = {}
+        self._traced_signals = set()
 
     def vcdRegisterInterfaces(self, obj: Union[Interface, Unit],
                               parent: Optional[VcdVarWritingScope]):
@@ -92,8 +92,10 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
                 t = s._dtype
                 if isinstance(t, self.supported_type_classes):
                     tName, width, formatter = vcdTypeInfoForHType(t)
-                    unitScope.addVar(s, s._name, tName, width, formatter)
-
+                    try:
+                        unitScope.addVar(s, s._name, tName, width, formatter)
+                    except VarAlreadyRegistered:
+                        pass
         for u in unit._units:
             m = getattr(model, u._name + "_inst")
             self.vcdRegisterRemainingSignals(u, m)
