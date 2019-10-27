@@ -138,6 +138,6 @@ class BramPortAgent(BramPort_withoutClkAgent):
 
     def getDrivers(self):
         drivers = super(BramPortAgent, self).getDrivers()
-        self.clk_ag = ClockAgent(self.intf.clk)
+        self.clk_ag = ClockAgent(self.sim, self.intf.clk)
         drivers.extend(self.clk_ag.getDrivers())
         return drivers
