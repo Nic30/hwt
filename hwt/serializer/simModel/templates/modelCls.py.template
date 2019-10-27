@@ -7,7 +7,7 @@ from pyMathBitPrecise.enum3t import define_Enum3t
 from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
 from pycocotb.basic_hdl_simulator.model_utils import sensitivity, connectSimPort
 from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
-from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond, mkUpdater, mkArrayUpdater
+from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond
 
 {% for c in componentInstances %}
 if "{{c.name}}" not in locals(): # support for all models in single file

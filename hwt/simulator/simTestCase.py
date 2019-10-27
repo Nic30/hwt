@@ -177,7 +177,8 @@ class SimTestCase(unittest.TestCase):
             (if is None it is automatically generated)
         :param onAfterToRtl: callback fn(unit) which will be called
             after unit will be synthesised to RTL
-            and before Unit instance to simulator connection
+            and before Unit instance signals are replaced
+            with simulator specific ones
         """
         if unique_name is None:
             unique_name = cls.get_unique_name(unit)
@@ -192,7 +193,6 @@ class SimTestCase(unittest.TestCase):
         if onAfterToRtl:
             onAfterToRtl(unit)
 
-        cls._onAfterToRtl = onAfterToRtl
         cls.u = unit
 
     def compileSimAndStart(
@@ -209,6 +209,7 @@ class SimTestCase(unittest.TestCase):
         self.compileSim(unit, build_dir, unique_name, onAfterToRtl, target_platform)
         self.u = unit
         SimTestCase.setUp(self)
+        return self.u
 
     def setUp(self):
         self._rand = Random(self._defaultSeed)
