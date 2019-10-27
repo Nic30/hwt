@@ -119,7 +119,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             while isinstance(t, HArray):
                 # collect array dimensions
                 dimensions.append(t.size)
-                t = t.elmType
+                t = t.element_t
 
             s = "%s%s %s" % (getIndent(ctx.indent),
                              cls.HdlType(t, ctx),

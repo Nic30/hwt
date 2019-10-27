@@ -78,7 +78,7 @@ class VhdlSerializer_types():
                 (getIndent(ctx.indent),
                  typ.name,
                  cls.asHdl(toHVal(typ.size) - 1, ctx),
-                 cls.HdlType(typ.elmType, ctx, declaration=declaration))
+                 cls.HdlType(typ.element_t, ctx, declaration=declaration))
         else:
             try:
                 return typ.name

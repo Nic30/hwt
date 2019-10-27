@@ -38,6 +38,6 @@ class SimModelSerializer_types():
     @classmethod
     def HdlType_array(cls, typ, ctx, declaration=False):
         assert not declaration
-        return "%s[%d]" % (cls.HdlType(typ.elmType, ctx,
+        return "%s[%d]" % (cls.HdlType(typ.element_t, ctx,
                                        declaration=declaration),
                            int(typ.size))

@@ -53,7 +53,7 @@ def reinterptet_harray_to_bits(typeFrom, sigOrVal, bitsT):
     Cast HArray signal or value to signal or value of type Bits
     """
     size = int(typeFrom.size)
-    widthOfElm = typeFrom.elmType.bit_length()
+    widthOfElm = typeFrom.element_t.bit_length()
     w = bitsT.bit_length()
     if size * widthOfElm != w:
         raise TypeConversionErr(
@@ -68,15 +68,15 @@ def reinterptet_harray_to_bits(typeFrom, sigOrVal, bitsT):
 @internal
 def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
     mySize = int(typeFrom.size)
-    myWidthOfElm = typeFrom.elmType.bit_length()
+    myWidthOfElm = typeFrom.element_t.bit_length()
     size = int(arrayT.size)
-    widthOfElm = arrayT.elmType.bit_length()
+    widthOfElm = arrayT.element_t.bit_length()
 
     if size * widthOfElm != mySize * myWidthOfElm:
         raise TypeConversionErr("Size of types is different",
                                 size * widthOfElm, mySize * myWidthOfElm)
 
-    if isinstance(typeFrom.elmType, Bits):
+    if isinstance(typeFrom.element_t, Bits):
         reinterpretElmToType = None
     else:
         reinterpretElmToType = Bits(myWidthOfElm)
@@ -87,7 +87,7 @@ def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
         end = (i + 1) * widthOfElm
         item = getBits_from_array(
             sigOrVal, myWidthOfElm, start, end, reinterpretElmToType)
-        res[i] = item._reinterpret_cast(arrayT.elmType)
+        res[i] = item._reinterpret_cast(arrayT.element_t)
 
     return res
 

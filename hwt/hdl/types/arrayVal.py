@@ -36,14 +36,14 @@ class HArrayVal(Value):
             for k, v in val.items():
                 if not isinstance(k, int):
                     k = int(k)
-                elements[k] = typeObj.elmType.from_py(v)
+                elements[k] = typeObj.element_t.from_py(v)
         else:
             for k, v in enumerate(val):
                 if isinstance(v, RtlSignalBase):  # is signal
-                    assert v._dtype == typeObj.elmType
+                    assert v._dtype == typeObj.element_t
                     e = v
                 else:
-                    e = typeObj.elmType.from_py(v)
+                    e = typeObj.element_t.from_py(v)
                 elements[k] = e
 
         _mask = int(bool(val))
@@ -83,7 +83,7 @@ class HArrayVal(Value):
 
             return self.val[kv].__copy__()
         except KeyError:
-            return self._dtype.elmType.from_py(None)
+            return self._dtype.element_t.from_py(None)
 
     def __getitem__(self, key):
         iamVal = isinstance(self, Value)
@@ -101,7 +101,7 @@ class HArrayVal(Value):
         if iamVal and isinstance(key, Value):
             return self._getitem__val(key)
 
-        return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.elmType)
+        return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.element_t)
 
     @internal
     def _setitem__val(self, index, value):
@@ -126,10 +126,10 @@ class HArrayVal(Value):
             assert isinstance(index._dtype, Bits), index._dtype
 
         if not isinstance(value, Value):
-            value = self._dtype.elmType.from_py(value)
+            value = self._dtype.element_t.from_py(value)
         else:
-            assert value._dtype == self._dtype.elmType, (
-                value._dtype, self._dtype.elmType)
+            assert value._dtype == self._dtype.element_t, (
+                value._dtype, self._dtype.element_t)
 
         return self._setitem__val(index, value)
 
@@ -147,7 +147,7 @@ class HArrayVal(Value):
 
     @internal
     def _eq__val(self, other):
-        assert self._dtype.elmType == other._dtype.elmType
+        assert self._dtype.element_t == other._dtype.element_t
         assert self._dtype.size == other._dtype.size
 
         eq = True

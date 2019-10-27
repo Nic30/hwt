@@ -78,7 +78,7 @@ def reinterpret_bits_to_hstruct(sigOrVal, hStructT):
 
 @internal
 def reinterpret_bits_to_harray(sigOrVal, hArrayT):
-    elmT = hArrayT.elmType
+    elmT = hArrayT.element_t
     elmWidth = elmT.bit_length()
     a = hArrayT.from_py(None)
     for i, item in enumerate(iterBits(sigOrVal,

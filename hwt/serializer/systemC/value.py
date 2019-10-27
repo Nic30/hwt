@@ -46,7 +46,7 @@ class SystemCSerializer_value(GenericSerializer_Value):
             while isinstance(t, HArray):
                 # collect array dimensions
                 dimensions.append(t.size)
-                t = t.elmType
+                t = t.element_t
 
             s = fmt % (getIndent(ctx.indent),
                        cls.HdlType(t, ctx),

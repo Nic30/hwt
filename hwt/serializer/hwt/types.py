@@ -28,7 +28,7 @@ class HwtSerializer_types():
     @classmethod
     def HdlType_array(cls, typ, ctx, declaration=False):
         assert not declaration
-        return "HArray(%s, %d)" % (cls.HdlType(typ.elmType, ctx,
+        return "HArray(%s, %d)" % (cls.HdlType(typ.element_t, ctx,
                                                declaration=declaration),
                                    int(typ.size))
 

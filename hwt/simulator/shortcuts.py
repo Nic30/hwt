@@ -46,7 +46,7 @@ def _collect_signals(top: Unit,
         size = []
         while isinstance(t, HArray):
             size.append(int(t.size))
-            t = t.elmType
+            t = t.element_t
 
         if isinstance(t, Bits):
             size.append(t.bit_length())
