@@ -15,13 +15,14 @@ from pycocotb.constants import CLK_PERIOD
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer
 from hwt.simulator.simCompilerBasicHdlSimulator import toBasicSimulatorSimModel
+from pyMathBitPrecise.bits3t import Bits3val
 
 
 def allValuesToInts(sequenceOrVal):
     if isinstance(sequenceOrVal, HArrayVal):
         sequenceOrVal = sequenceOrVal.val
 
-    if isinstance(sequenceOrVal, Value):
+    if isinstance(sequenceOrVal, (Value, Bits3val)):
         return valToInt(sequenceOrVal)
     elif not sequenceOrVal:
         return sequenceOrVal
