@@ -18,7 +18,7 @@ def convertBits__val(self: Bits, val: "BitVal", toType: HdlType):
         return val != self.getValueCls().from_py(self, 0)
     elif isinstance(toType, Bits):
         if self.signed != toType.signed:
-            if self.strict_sign:
+            if self.strict_sign and bool(self.signed) != bool(toType.signed):
                 raise TypeConversionErr(self, toType)
             val = val._convSign__val(toType.signed)
 
