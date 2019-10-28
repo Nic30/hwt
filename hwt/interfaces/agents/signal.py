@@ -5,7 +5,7 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from pycocotb.agents.base import AgentBase
 from pycocotb.agents.clk import DEFAULT_CLOCK
 from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead
+from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable
 
 
 class SignalAgent(SyncAgentBase):
@@ -107,7 +107,7 @@ class SignalAgent(SyncAgentBase):
     def monitorWithClk(self):
         # if clock is specified this function is periodically called every
         # clk tick, when agent is enabled
-        yield WaitCombRead()
+        yield WaitCombStable()
         if self.notReset():
             d = self.doRead()
             self.data.append(d)
