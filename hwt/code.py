@@ -6,7 +6,7 @@ from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
 from hwt.hdl.statements import HwtSyntaxError
 from hwt.hdl.switchContainer import SwitchContainer
-from hwt.hdl.typeShortcuts import hInt, vec
+from hwt.hdl.typeShortcuts import vec
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
