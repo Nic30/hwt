@@ -94,7 +94,7 @@ class HandshakedAgent(SyncAgentBase):
                     onMonitorReady = None
 
                 if onMonitorReady is not None:
-                    onMonitorReady(sim)
+                    onMonitorReady()
 
             # wait for response of master
             yield WaitCombStable()
@@ -116,7 +116,7 @@ class HandshakedAgent(SyncAgentBase):
                             sim.now, d))
                 self.data.append(d)
                 if self._afterRead is not None:
-                    self._afterRead(sim)
+                    self._afterRead()
         else:
             if self._lastRd is not 0:
                 yield WaitWriteOnly()
