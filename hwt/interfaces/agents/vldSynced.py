@@ -3,7 +3,7 @@ from collections import deque
 from hwt.hdl.constants import NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.triggers import WaitCombRead, WaitWriteOnly
+from pycocotb.triggers import WaitCombRead, WaitWriteOnly, WaitCombStable
 
 
 class VldSyncedAgent(SyncAgentBase):
@@ -25,23 +25,24 @@ class VldSyncedAgent(SyncAgentBase):
         return self.intf.vld.read()
 
     def doWriteVld(self, val):
+        self._lastVld = val
         return self.intf.vld.write(val)
 
     def setEnable_asDriver(self, en):
         super(VldSyncedAgent, self).setEnable_asDriver(en)
         if not en:
             self.wrVld(0)
-            self._lastVld = 0
+        else:
+            self.wrVld(self._lastVld)
 
     def monitor(self):
-        yield WaitCombRead()
+        yield WaitCombStable()
         if self.notReset():
             intf = self.intf
             vld = self.doReadVld()
             vld = int(vld)
             if vld:
                 d = self.doRead()
-
                 if self._debugOutput is not None:
                     self._debugOutput.write("%s, read, %d: %r\n" % (
                         intf._getFullName(),
@@ -51,20 +52,18 @@ class VldSyncedAgent(SyncAgentBase):
     def driver(self):
         yield WaitCombRead()
         if self.data and self.notReset():
-            yield WaitWriteOnly()
             d = self.data.popleft()
-            if d is NOP:
-                self.doWrite(None)
-                self.doWriteVld(0)
-            else:
-                self.doWrite(d)
-                self.doWriteVld(1)
-                if self._debugOutput is not None:
-                    self._debugOutput.write("%s, wrote, %d: %r\n" % (
-                        self.intf._getFullName(),
-                        self.sim.now, self.actualData))
-
         else:
-            yield WaitWriteOnly()
+            d = NOP
+
+        yield WaitWriteOnly()
+        if d is NOP:
             self.doWrite(None)
             self.doWriteVld(0)
+        else:
+            self.doWrite(d)
+            self.doWriteVld(1)
+            if self._debugOutput is not None:
+                self._debugOutput.write("%s, wrote, %d: %r\n" % (
+                    self.intf._getFullName(),
+                    self.sim.now, self.actualData))
