@@ -1,5 +1,3 @@
-from importlib import reload
-
 from pyMathBitPrecise.array3t import Array3t, Array3val
 from pyMathBitPrecise.bits3t import Bits3t, Bits3val
 from pyMathBitPrecise.enum3t import define_Enum3t
@@ -11,9 +9,7 @@ from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond
 
 {% for c in componentInstances %}
 if "{{c.name}}" not in locals(): # support for all models in single file
-    import {{c.name}}
-    reload({{c.name}})
-    from {{c.name}} import {{c.name}}{% endfor %}
+    from .{{c.name}} import {{c.name}}{% endfor %}
 {% for imp in imports %}
 {{imp}}{% endfor %}
 

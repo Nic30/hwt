@@ -1,6 +1,5 @@
 import keyword
 
-
 SIMMODEL_KEYWORDS = keyword.kwlist + [
     # BasicRtlSimModel properties
     'sim',
@@ -16,18 +15,17 @@ SIMMODEL_KEYWORDS = keyword.kwlist + [
     '__setattr__',
     '__setattribute__',
     # imports
-    'hwt',
-    'importlib',
-    'reload',
+    'pyMathBitPrecise',
+    'pycocotb',
     'Array3t',
     'Array3val',
-    'Enum3t'
+    'Bits3t',
+    'Bits3val',
+    'define_Enum3t',
     'BasicRtlSimModel',
     'BasicRtlSimProxy',
     'sensitivity',
     'connectSimPort',
     'sim_eval_cond',
-    'mkUpdater',
-    'mkArrayUpdater',
     'slice',
 ]

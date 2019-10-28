@@ -4,7 +4,7 @@ from hwt.code import If
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps, OpDefinition
+from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT
 from hwt.hdl.value import Value
@@ -27,27 +27,42 @@ def isResultOfTypeConversion(sig):
 class VhdlSerializer_ops():
     # keep in mind that there is no such a thing in vhdl itself
     opPrecedence = {
-        AllOps.NOT: 2,
-        AllOps.RISING_EDGE: 1,
-        AllOps.NEG: 2,
+        AllOps.DOWNTO: 8,
+        AllOps.TO: 8,
+        AllOps.TERNARY: 8,
+
+        AllOps.XOR: 7,
+        AllOps.AND: 7,
+        AllOps.OR: 7,
+
+        AllOps.EQ: 6,
+        AllOps.NEQ: 6,
+        AllOps.GT: 6,
+        AllOps.LT: 6,
+        AllOps.GE: 6,
+        AllOps.LE: 6,
+
+
+        AllOps.CONCAT: 5,
+        AllOps.ADD: 5,
+        AllOps.SUB: 5,
+
+        AllOps.NEG: 4,
+
         AllOps.DIV: 3,
-        AllOps.ADD: 3,
-        AllOps.SUB: 3,
         AllOps.MUL: 3,
-        AllOps.XOR: 2,
-        AllOps.EQ: 2,
-        AllOps.NEQ: 2,
-        AllOps.AND: 2,
-        AllOps.OR: 2,
-        AllOps.DOWNTO: 2,
-        AllOps.GT: 2,
-        AllOps.LT: 2,
-        AllOps.GE: 2,
-        AllOps.LE: 2,
-        AllOps.CONCAT: 2,
+        AllOps.MOD: 3,
+
+        AllOps.NOT: 2,
+        AllOps.POW: 2,
+
+        AllOps.RISING_EDGE: 1,
+        AllOps.FALLING_EDGE: 1,
         AllOps.INDEX: 1,
-        AllOps.TERNARY: 1,
         AllOps.CALL: 1,
+        AllOps.BitsAsSigned: 1,
+        AllOps.BitsAsUnsigned: 1,
+        AllOps.BitsAsVec: 1,
     }
     _binOps = {
         AllOps.AND: '%s AND %s',
@@ -120,9 +135,13 @@ class VhdlSerializer_ops():
 
     @internal
     @classmethod
-    def _operand(cls, operand: Union[RtlSignal, Value],
-                 operator: OpDefinition,
+    def _operand(cls, operand: Union[RtlSignal, Value], i: int,
+                 oper: Operator,
+                 expr_requires_parenthesis: bool,
+                 cancel_parenthesis: bool,
                  ctx: SerializerCtx):
+        # no nested ternary in expressions like
+        # ( '1'  WHEN r = f ELSE  '0' ) & "0"
         try:
             isTernaryOp = operand.hidden\
                 and operand.drivers[0].operator == AllOps.TERNARY
@@ -133,44 +152,39 @@ class VhdlSerializer_ops():
             # rewrite ternary operator as if
             operand = cls._tmp_var_for_ternary(operand, ctx)
 
-        s = cls.asHdl(operand, ctx)
-        if isinstance(operand, RtlSignalBase):
-            try:
-                o = operand.singleDriver()
-                if o.operator != operator and\
-                        cls.opPrecedence[o.operator] <= cls.opPrecedence[operator]:
-                    return "(%s)" % s
-            except Exception:
-                pass
-        return s
+        return super(VhdlSerializer_ops, cls)._operand(
+                operand,
+                i,
+                oper,
+                not isTernaryOp and expr_requires_parenthesis,
+                isTernaryOp or cancel_parenthesis,
+                ctx)
 
     @classmethod
     def Operator(cls, op: Operator, ctx: SerializerCtx):
-        # [TODO] no nested ternary in expressions like
-        # ( '1'  WHEN r = f ELSE  '0' ) & "0"
         ops = op.operands
         o = op.operator
 
         op_str = cls._unaryOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx))
+            cancel_parenthesis = op_str[-1] == ")"
+            return op_str % (cls._operand(ops[0], 0, op, False, cancel_parenthesis, ctx))
 
         op_str = cls._binOps.get(o, None)
         if op_str is not None:
             res_t = op.result._dtype
-            op0, op1 = ops
             if isinstance(res_t, Bits) and res_t != BOOL:
-                op0 = cls._as_Bits(op0, ctx)
-                op1 = cls._as_Bits(op1, ctx)
-
-            return op_str % (cls._operand(op0, o, ctx),
-                             cls._operand(op1, o, ctx))
+                op0 = cls._as_Bits(ops[0], ctx)
+                op1 = cls._as_Bits(ops[1], ctx)
+                op = op.operator._evalFn(op0, op1).drivers[0]
+            return cls._bin_op(op, op_str, ctx)
 
         if o == AllOps.CALL:
             return "%s(%s)" % (
                 cls.FunctionContainer(ops[0]),
                 ", ".join(
-                    map(lambda op: cls._operand(op, o, ctx), ops[1:])
+                    # operand i does not matter as thy are all in ()
+                    map(lambda op: cls._operand(op, 1, o, False, True, ctx), ops[1:])
                     )
                 )
         elif o == AllOps.INDEX:
@@ -179,8 +193,9 @@ class VhdlSerializer_ops():
                 op0 = ctx.createTmpVarFn("tmpTypeConv", op0._dtype)
                 op0.def_val = ops[0]
 
-            op0_str = cls.asHdl(op0, ctx).strip()
-            op1_str = cls._operand(ops[1], o, ctx)
+            op0_str = cls._operand(op0, 0, op, True, False, ctx)
+            op1_str = cls._operand(ops[1], 1, op, False, True, ctx)
+
             if isinstance(op1._dtype, Bits) and op1._dtype != INT:
                 sig = op1._dtype.signed
                 if sig is None:
@@ -189,10 +204,10 @@ class VhdlSerializer_ops():
 
             return "%s(%s)" % (op0_str, op1_str)
         elif o == AllOps.TERNARY:
-            return " ".join([cls._operand(ops[1], o, ctx), "WHEN",
-                             cls.condAsHdl([ops[0]], True, ctx),
-                             "ELSE",
-                             cls._operand(ops[2], o, ctx)])
+            op0 = cls.condAsHdl([ops[0]], True, ctx)
+            op1 = cls._operand(ops[1], 1, op, False, False, ctx)
+            op2 = cls._operand(ops[2], 2, op, False, False, ctx)
+            return "%s WHEN %s ELSE %s" % (op0, op1, op2)
         else:
             raise NotImplementedError(
                 "Do not know how to convert %s to vhdl" % (o))

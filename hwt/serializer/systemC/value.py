@@ -1,15 +1,15 @@
+from hwt.doc_markers import internal
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.generic.constants import SIGNAL_TYPE
 from hwt.serializer.generic.indent import getIndent
+from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.doc_markers import internal
 from pyMathBitPrecise.bit_utils import mask
 
 
@@ -117,9 +117,10 @@ class SystemCSerializer_value(GenericSerializer_Value):
     @classmethod
     def BitLiteral(cls, v, vld_mask):
         if vld_mask:
-            return "'%d'" % int(bool(v))
+            return "%d" % int(bool(v))
         else:
-            return "'X'"
+            t = cls.HdlType_bits(Bits(1), None)
+            return '%s("0xX")' % (t)
 
     @classmethod
     def BitString_binary(cls, v, width, vld_mask=None):

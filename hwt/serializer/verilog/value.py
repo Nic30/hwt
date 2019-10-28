@@ -65,28 +65,16 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             raise NotImplementedError(d)
 
     @classmethod
-    def condAsHdl(cls, cond, forceBool, createTmpVarFn):
-        if isinstance(cond, RtlSignalBase):
-            cond = [cond]
+    def condAsHdl(cls, c, forceBool, createTmpVarFn):
+        assert isinstance(c, (RtlSignalBase, Value))
+        if not forceBool or c._dtype == BOOL:
+            return cls.asHdl(c, createTmpVarFn)
+        elif c._dtype == BIT:
+            return cls.asHdl(c, createTmpVarFn)
+        elif isinstance(c._dtype, Bits):
+            return cls.asHdl(c != 0, createTmpVarFn)
         else:
-            cond = list(cond)
-        if len(cond) == 1:
-            c = cond[0]
-            if not forceBool or c._dtype == BOOL:
-                return cls.asHdl(c, createTmpVarFn)
-            elif c._dtype == BIT:
-                return "(%s)==%s" % (cls.asHdl(c, createTmpVarFn),
-                                     cls.BitLiteral(1, 1))
-            elif isinstance(c._dtype, Bits):
-                width = c._dtype.bit_length()
-                return "(%s)!=%s" % (cls.asHdl(c, createTmpVarFn),
-                                     cls.BitString(0, width))
-            else:
-                raise NotImplementedError()
-        else:
-            return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool,
-                                                           createTmpVarFn),
-                                   cond))
+            raise NotImplementedError()
 
     @classmethod
     def HEnumValAsHdl(cls, dtype, val, ctx):

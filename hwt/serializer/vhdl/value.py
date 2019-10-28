@@ -14,24 +14,16 @@ from hwt.hdl.types.sliceVal import SliceVal
 
 class VhdlSerializer_Value(GenericSerializer_Value):
     @classmethod
-    def condAsHdl(cls, cond, forceBool, ctx):
-        if isinstance(cond, RtlSignalBase):
-            cond = [cond]
+    def condAsHdl(cls, c, forceBool, ctx):
+        assert isinstance(c, (RtlSignalBase, Value)), c
+        if not forceBool or c._dtype == BOOL:
+            return cls.asHdl(c, ctx)
+        elif c._dtype == BIT:
+            return cls.asHdl(c._eq(1), ctx)
+        elif isinstance(c._dtype, Bits):
+            return cls.asHdl(c != 0, ctx)
         else:
-            cond = list(cond)
-        if len(cond) == 1:
-            c = cond[0]
-            if not forceBool or c._dtype == BOOL:
-                return cls.asHdl(c, ctx)
-            elif c._dtype == BIT:
-                return cls.asHdl(c._eq(1), ctx)
-            elif isinstance(c._dtype, Bits):
-                return cls.asHdl(c != 0, ctx)
-            else:
-                raise NotImplementedError()
-        else:
-            return " AND ".join(map(lambda x: cls.condAsHdl(x, forceBool, ctx),
-                                    cond))
+            raise NotImplementedError()
 
     @classmethod
     def SignalItem(cls, si: SignalItem, ctx: SerializerCtx, declaration=False):

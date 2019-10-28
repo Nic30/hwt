@@ -7,6 +7,7 @@ class SimModelSerializer_ops():
         AllOps.NOT: 4,
         AllOps.NEG: 4,
         AllOps.RISING_EDGE: 1,
+        AllOps.FALLING_EDGE: 1,
         AllOps.DIV: 4,
         AllOps.ADD: 5,
         AllOps.SUB: 5,
@@ -25,36 +26,39 @@ class SimModelSerializer_ops():
         AllOps.INDEX: 1,
         AllOps.TERNARY: 1,
         AllOps.CALL: 1,
+        AllOps.BitsAsSigned: 1,
+        AllOps.BitsAsUnsigned: 1,
+        AllOps.BitsAsVec: 1,
     }
     _binOps = {
-        AllOps.AND: '(%s) & (%s)',
-        AllOps.OR: '(%s) | (%s)',
-        AllOps.XOR: '(%s) ^ (%s)',
-        AllOps.CONCAT: "(%s)._concat(%s)",
-        AllOps.DIV: '(%s) // (%s)',
+        AllOps.AND: '%s & %s',
+        AllOps.OR: '%s | %s',
+        AllOps.XOR: '%s ^ %s',
+        AllOps.CONCAT: "%s._concat(%s)",
+        AllOps.DIV: '%s // %s',
         AllOps.DOWNTO: "slice(%s, %s)",
-        AllOps.EQ: '(%s)._eq(%s)',
-        AllOps.GT: '(%s) > (%s)',
-        AllOps.GE: '(%s) >= (%s)',
-        AllOps.LE: '(%s) <= (%s)',
-        AllOps.LT: '(%s) < (%s)',
-        AllOps.SUB: '(%s) - (%s)',
-        AllOps.MUL: '(%s) * (%s)',
-        AllOps.NEQ: '(%s) != (%s)',
-        AllOps.ADD: '(%s) + (%s)',
-        AllOps.POW: "(%s) ** (%s)",
+        AllOps.EQ: '%s._eq(%s)',
+        AllOps.GT: '%s > %s',
+        AllOps.GE: '%s >= %s',
+        AllOps.LE: '%s <= %s',
+        AllOps.LT: '%s < %s',
+        AllOps.SUB: '%s - %s',
+        AllOps.MUL: '%s * %s',
+        AllOps.NEQ: '%s != %s',
+        AllOps.ADD: '%s + %s',
+        AllOps.POW: "%s ** %s",
     }
     _unaryEventOps = {
         AllOps.RISING_EDGE: "%s._onRisingEdge()",
         AllOps.FALLING_EDGE: "%s._onFallingEdge()",
     }
     _unaryOps = {
-        AllOps.NOT: "(%s).__invert__()",
-        AllOps.NEG: "(%s).__neg__()",
+        AllOps.NOT: "~%s",
+        AllOps.NEG: "-%s",
 
         AllOps.BitsAsSigned: "%s.cast_sign(True)",
-        AllOps.BitsAsUnsigned: "(%s).cast_sign(False)",
-        AllOps.BitsAsVec: "(%s).cast_sign(False)",
+        AllOps.BitsAsUnsigned: "%s.cast_sign(False)",
+        AllOps.BitsAsVec: "%s.cast_sign(False)",
     }
 
     @classmethod
@@ -64,7 +68,9 @@ class SimModelSerializer_ops():
 
         op_str = cls._unaryOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx))
+            requires_braces = op_str[2] == "."
+            op0 = cls._operand(ops[0], 0, op, requires_braces, False, ctx)
+            return op_str % (op0)
         op_str = cls._unaryEventOps.get(o, None)
         if op_str is not None:
             op0 = ops[0]
@@ -73,16 +79,15 @@ class SimModelSerializer_ops():
 
         op_str = cls._binOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx),
-                             cls._operand(ops[1], o, ctx))
+            return cls._bin_op(op, op_str, ctx)
 
         if o == AllOps.INDEX:
-            assert len(ops) == 2
-            return "(%s)[%s]" % (cls.asHdl(ops[0], ctx),
-                                 cls._operand(ops[1], o, ctx))
+            return cls._operator_index(op, ctx)
         elif o == AllOps.TERNARY:
-            return "(%s)._ternary__val(%s, %s)" %\
-                tuple(map(lambda x: cls.asHdl(x, ctx), ops))
+            op0 = cls._operand(ops[0], 0, op, True, False, ctx)
+            op1 = cls._operand(ops[1], 1, op, False, True, ctx)
+            op2 = cls._operand(ops[2], 2, op, False, True, ctx)
+            return "%s._ternary__val(%s, %s)" % (op0, op1, op2)
         else:
             raise NotImplementedError(
                 "Do not know how to convert %s to simModel" % (o))
