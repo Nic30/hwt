@@ -197,7 +197,7 @@ class VhdlSerializer_statements():
         )
 
     @classmethod
-    def IfContainer(cls, ifc, ctx):
+    def IfContainer(cls, ifc: IfContainer, ctx):
         childCtx = ctx.withIndent()
 
         def asHdl(statements):

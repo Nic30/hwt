@@ -1,10 +1,10 @@
 from hwt.hdl.hdlObject import HdlObject
-from hwt.hdl.operatorDefs import isEventDependentOp
+from hwt.hdl.operatorDefs import isEventDependentOp, OpDefinition
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
-from typing import Generator, Union
+from typing import Generator, Union, Tuple
 
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
@@ -36,10 +36,11 @@ class Operator(HdlObject):
     :ivar result: result signal of this operator
     """
 
-    def __init__(self, operator, operands):
+    def __init__(self, operator: OpDefinition,
+                 operands: Tuple[Union[RtlSignalBase, Value]]):
         self.operands = tuple(operands)
         self.operator = operator
-        self.result = None
+        self.result: RtlSignal = None
 
     @internal
     def registerSignals(self, outputs=[]):
