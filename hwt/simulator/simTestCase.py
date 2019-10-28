@@ -7,7 +7,8 @@ import unittest
 
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.value import Value
-from hwt.simulator.agentConnector import valToInt, autoAddAgents
+from hwt.simulator.agentConnector import valToInt, autoAddAgents,\
+    collect_processes_from_sim_agents
 from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
 from hwt.simulator.simCompilerBasicHdlSimulator import toBasicSimulatorSimModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
@@ -120,10 +121,10 @@ class SimTestCase(unittest.TestCase):
             os.makedirs(d, exist_ok=True)
 
         self.rtl_simulator.set_trace_file(outputFileName, -1)
-
+        procs = collect_processes_from_sim_agents(self.u)
         # run simulation, stimul processes are register after initial
         # initialization
-        self.hdl_simulator.run(until=until, extraProcesses=self.procs)
+        self.hdl_simulator.run(until=until, extraProcesses=self.procs + procs)
         self.rtl_simulator.finalize()
         return self.hdl_simulator
 
@@ -147,14 +148,13 @@ class SimTestCase(unittest.TestCase):
         hdl_simulator = HdlSimulator(rtl_simulator)
 
         unit = self.u
-
         reconnectUnitSignalsToModel(unit, rtl_simulator)
-        procs = autoAddAgents(unit, hdl_simulator)
+        autoAddAgents(unit, hdl_simulator)
+        self.procs = []
+        self.u, self.rtl_simulator, self.hdl_simulator =\
+            unit, rtl_simulator, hdl_simulator
 
-        self.u, self.rtl_simulator, self.hdl_simulator, self.procs = \
-            unit, rtl_simulator, hdl_simulator, procs
-
-        return unit, rtl_simulator, procs
+        return unit, rtl_simulator, self.procs
 
     @classmethod
     def get_unique_name(cls, unit: Unit):
