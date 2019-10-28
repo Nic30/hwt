@@ -158,7 +158,7 @@ class SimTestCase(unittest.TestCase):
 
     @classmethod
     def get_unique_name(cls, unit: Unit):
-        return "%s__%s" % (cls.__name__, unit.__class__.__name__)
+        return "%s__%s" % (cls.__name__, unit._getDefaultName())
 
     @classmethod
     def compileSim(cls, unit, build_dir: Optional[str]="tmp/",
@@ -206,7 +206,11 @@ class SimTestCase(unittest.TestCase):
         Use this method if you did not used compileSim()
         or SingleUnitSimTestCase to setup the simulator and DUT
         """
-        self.compileSim(unit, build_dir, unique_name, onAfterToRtl, target_platform)
+        if unique_name is None:
+            unique_name = "%s__%s" % (self.getTestName(),
+                                      unit._getDefaultName())
+        self.compileSim(unit, build_dir, unique_name,
+                        onAfterToRtl, target_platform)
         self.u = unit
         SimTestCase.setUp(self)
         return self.u

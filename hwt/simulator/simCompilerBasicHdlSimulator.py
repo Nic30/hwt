@@ -22,7 +22,7 @@ class BasicRtlSimulatorWithVCD(BasicRtlSimulator):
         self.config = BasicRtlSimConfigVcd(open(file_name, "w"))
         beforeSim = self.config.beforeSim
         if beforeSim is not None:
-            beforeSim(self, self.synthesised_unit,  self.model)
+            beforeSim(self, self.synthesised_unit, self.model)
 
     def finalize(self):
         self.config.vcdWriter._oFile.close()
@@ -62,12 +62,14 @@ def toBasicSimulatorSimModel(
         unique_name = unit._getDefaultName()
 
     if build_dir is not None:
-        build_dir = os.path.join(os.getcwd(), build_dir, unique_name)
+        build_private_dir = os.path.join(os.getcwd(), build_dir, unique_name)
+    else:
+        build_private_dir = None
 
     sim_code = toRtl(unit,
                      name=unique_name,
                      targetPlatform=target_platform,
-                     saveTo=build_dir,
+                     saveTo=build_private_dir,
                      serializer=SimModelSerializer)
 
     if build_dir is not None:
@@ -77,7 +79,9 @@ def toBasicSimulatorSimModel(
             sys.path.insert(0, d)
         if unique_name in sys.modules:
             del sys.modules[unique_name]
-        simModule = importlib.import_module(unique_name)
+        simModule = importlib.import_module(
+            unique_name + "." + unique_name,
+            package='simModule_' + unique_name)
 
         if not dInPath:
             sys.path.pop(0)
