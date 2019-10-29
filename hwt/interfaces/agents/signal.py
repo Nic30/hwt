@@ -55,15 +55,15 @@ class SignalAgent(SyncAgentBase):
         except IndexError:
             d = None
 
-        self.doWrite(d)
+        self.set_data(d)
 
         return
         yield
 
-    def doRead(self):
+    def get_data(self):
         return self.intf.read()
 
-    def doWrite(self, data):
+    def set_data(self, data):
         self.intf.write(data)
 
     def driverWithClk(self):
@@ -73,7 +73,7 @@ class SignalAgent(SyncAgentBase):
         if self.data and self.notReset():
             yield WaitWriteOnly()
             d = self.data.popleft()
-            self.doWrite(d)
+            self.set_data(d)
 
     def driverWithTimer(self):
         if self.initPending:
@@ -87,7 +87,7 @@ class SignalAgent(SyncAgentBase):
             if self._enabled and self.data and self.notReset():
                 yield WaitWriteOnly()
                 d = self.data.popleft()
-                self.doWrite(d)
+                self.set_data(d)
 
             yield Timer(self.delay)
 
@@ -99,7 +99,7 @@ class SignalAgent(SyncAgentBase):
         while True:
             yield WaitCombRead()
             if self._enabled and self.notReset():
-                d = self.doRead()
+                d = self.get_data()
                 self.data.append(d)
 
             yield Timer(self.delay)
@@ -109,5 +109,5 @@ class SignalAgent(SyncAgentBase):
         # clk tick, when agent is enabled
         yield WaitCombStable()
         if self.notReset():
-            d = self.doRead()
+            d = self.get_data()
             self.data.append(d)

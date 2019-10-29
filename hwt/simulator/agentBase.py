@@ -8,7 +8,7 @@ from pycocotb.process_utils import OnRisingCallbackLoop
 class AgentWitReset(AgentBase):
 
     def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
-        super().__init__(sim, intf)
+        AgentBase.__init__(self, sim, intf)
         self._discoverReset(allowNoReset)
 
     def _discoverReset(self, allowNoReset):
@@ -47,7 +47,7 @@ class SyncAgentBase(AgentWitReset):
     """
     SELECTED_EDGE_CALLBACK = OnRisingCallbackLoop
 
-    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
+    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False, wrap_monitor_and_driver_in_edge_callback=True):
         super(SyncAgentBase, self).__init__(
             sim, intf,
             allowNoReset=allowNoReset)
@@ -55,10 +55,11 @@ class SyncAgentBase(AgentWitReset):
         # resolve clk and rstn
         self.clk = self.intf._getAssociatedClk()
 
-        # run monitor, driver only on rising edge of clk
-        c = self.SELECTED_EDGE_CALLBACK
-        self.monitor = c(sim, self.clk, self.monitor, self.getEnable)
-        self.driver = c(sim, self.clk, self.driver, self.getEnable)
+        if wrap_monitor_and_driver_in_edge_callback:
+            # run monitor, driver only on rising edge of clk
+            c = self.SELECTED_EDGE_CALLBACK
+            self.monitor = c(sim, self.clk, self.monitor, self.getEnable)
+            self.driver = c(sim, self.clk, self.driver, self.getEnable)
 
     def setEnable_asDriver(self, en):
         self._enabled = en

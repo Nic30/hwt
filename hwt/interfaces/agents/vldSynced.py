@@ -14,35 +14,39 @@ class VldSyncedAgent(SyncAgentBase):
             intf,
             allowNoReset=allowNoReset)
         self.data = deque()
+        self._vld = self.get_valid_signal(intf)
 
-    def doRead(self):
+    def get_data(self):
         return self.intf.data.read()
 
-    def doWrite(self, data):
+    def set_data(self, data):
         self.intf.data.write(data)
 
-    def doReadVld(self):
-        return self.intf.vld.read()
+    def get_valid_signal(self, intf):
+        return intf.vld
 
-    def doWriteVld(self, val):
+    def get_valid(self):
+        return self._vld.read()
+
+    def set_valid(self, val):
         self._lastVld = val
-        return self.intf.vld.write(val)
+        return self._vld.write(val)
 
     def setEnable_asDriver(self, en):
         super(VldSyncedAgent, self).setEnable_asDriver(en)
         if not en:
-            self.wrVld(0)
+            self.set_valid(0)
         else:
-            self.wrVld(self._lastVld)
+            self.set_valid(self._lastVld)
 
     def monitor(self):
         yield WaitCombStable()
         if self.notReset():
             intf = self.intf
-            vld = self.doReadVld()
+            vld = self.get_valid()
             vld = int(vld)
             if vld:
-                d = self.doRead()
+                d = self.get_data()
                 if self._debugOutput is not None:
                     self._debugOutput.write("%s, read, %d: %r\n" % (
                         intf._getFullName(),
@@ -58,11 +62,11 @@ class VldSyncedAgent(SyncAgentBase):
 
         yield WaitWriteOnly()
         if d is NOP:
-            self.doWrite(None)
-            self.doWriteVld(0)
+            self.set_data(None)
+            self.set_valid(0)
         else:
-            self.doWrite(d)
-            self.doWriteVld(1)
+            self.set_data(d)
+            self.set_valid(1)
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, wrote, %d: %r\n" % (
                     self.intf._getFullName(),
