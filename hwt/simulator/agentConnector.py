@@ -24,21 +24,19 @@ def autoAddAgents(unit: Unit, sim: HdlSimulator):
 def collect_processes_from_sim_agents(unit: Unit):
     proc = []
     for intf in unit._interfaces:
-        if not intf._isExtern:
+        a = intf._ag
+        if not intf._isExtern or a is None:
             continue
 
-        agents = [intf._ag, ]
-
         if intf._direction == INTF_DIRECTION.MASTER:
-            agProcs = list(map(lambda a: a.getMonitors(), agents))
+            agProcs = a.getMonitors()
         elif intf._direction == INTF_DIRECTION.SLAVE:
-            agProcs = list(map(lambda a: a.getDrivers(), agents))
+            agProcs = a.getDrivers()
         else:
             raise NotImplementedError("intf._direction %r for %r" % (
                 intf._direction, intf))
 
-        for p in agProcs:
-            proc.extend(p)
+        proc.extend(agProcs)
 
     return proc
 
