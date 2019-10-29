@@ -26,8 +26,7 @@ class SignalAgent(SyncAgentBase):
             self.clk = self.intf._getAssociatedClk()
         except IntfLvlConfErr:
             self.clk = None
-
-        self._discoverReset(True)
+        self.rst, self.rstOffIn = self._discoverReset(intf, True)
         self.data = deque()
 
         self.initPending = True
@@ -40,6 +39,8 @@ class SignalAgent(SyncAgentBase):
         else:
             if self.initDelay:
                 raise NotImplementedError("initDelay only without clock")
+            if self.delay:
+                raise ValueError("clock and delay synchronization at once")
             c = self.SELECTED_EDGE_CALLBACK
             self.monitor = c(sim, self.clk, self.monitorWithClk, self.getEnable)
             self.driver = c(sim, self.clk, self.driverWithClk, self.getEnable)
@@ -50,15 +51,14 @@ class SignalAgent(SyncAgentBase):
 
     def driverInit(self):
         yield WaitWriteOnly()
+        if not self._enabled:
+            return
         try:
             d = self.data[0]
         except IndexError:
             d = None
 
         self.set_data(d)
-
-        return
-        yield
 
     def get_data(self):
         return self.intf.read()
@@ -70,8 +70,12 @@ class SignalAgent(SyncAgentBase):
         # if clock is specified this function is periodically called every
         # clk tick, if agent is enabled
         yield WaitCombRead()
+        if not self._enabled:
+            return
         if self.data and self.notReset():
             yield WaitWriteOnly()
+            if not self._enabled:
+                return
             d = self.data.popleft()
             self.set_data(d)
 
@@ -86,8 +90,9 @@ class SignalAgent(SyncAgentBase):
             yield WaitWriteOnly()
             if self._enabled and self.data and self.notReset():
                 yield WaitWriteOnly()
-                d = self.data.popleft()
-                self.set_data(d)
+                if self._enabled:
+                    d = self.data.popleft()
+                    self.set_data(d)
 
             yield Timer(self.delay)
 
@@ -108,6 +113,6 @@ class SignalAgent(SyncAgentBase):
         # if clock is specified this function is periodically called every
         # clk tick, when agent is enabled
         yield WaitCombStable()
-        if self.notReset():
+        if self._enabled and self.notReset():
             d = self.get_data()
             self.data.append(d)
