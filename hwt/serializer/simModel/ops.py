@@ -4,26 +4,35 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 class SimModelSerializer_ops():
     opPrecedence = {
-        AllOps.NOT: 4,
-        AllOps.NEG: 4,
         AllOps.RISING_EDGE: 1,
         AllOps.FALLING_EDGE: 1,
-        AllOps.DIV: 4,
-        AllOps.ADD: 5,
-        AllOps.SUB: 5,
-        AllOps.MUL: 4,
-        AllOps.XOR: 9,
-        AllOps.EQ: 10,
-        AllOps.NEQ: 10,
-        AllOps.AND: 10,
-        AllOps.OR: 10,
         AllOps.DOWNTO: 1,
-        AllOps.GT: 10,
-        AllOps.LT: 10,
-        AllOps.GE: 10,
-        AllOps.LE: 10,
+        AllOps.TO: 1,
+        
+        AllOps.EQ: 11,
+        AllOps.NEQ: 11,
+        AllOps.GT: 11,
+        AllOps.LT: 11,
+        AllOps.GE: 11,
+        AllOps.LE: 11,
+
+        AllOps.OR: 10,
+        AllOps.XOR: 9,
+        AllOps.AND: 8,
+        
+        AllOps.ADD: 6,
+        AllOps.SUB: 6,
+        
+        AllOps.DIV: 5,
+        AllOps.MUL: 5,
+        AllOps.MOD: 5,
+
+        AllOps.NOT: 4,
+        AllOps.NEG: 4,
+        AllOps.POW: 3,
+        AllOps.INDEX: 2,
+        
         AllOps.CONCAT: 1,
-        AllOps.INDEX: 1,
         AllOps.TERNARY: 1,
         AllOps.CALL: 1,
         AllOps.BitsAsSigned: 1,
