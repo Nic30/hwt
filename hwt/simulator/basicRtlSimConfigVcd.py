@@ -17,6 +17,8 @@ from pycocotb.basic_hdl_simulator.config import BasicRtlSimConfig
 from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
 from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
 from pycocotb.hdlSimulator import HdlSimulator
+from pyMathBitPrecise.bits3t import Bits3t
+from pyMathBitPrecise.enum3t import Enum3t
 
 
 @internal
@@ -25,16 +27,16 @@ def vcdTypeInfoForHType(t)\
     """
     :return: (vcd type name, vcd width)
     """
-    if isinstance(t, Bits):
+    if isinstance(t, (Bits3t, Bits)):
         return (VCD_SIG_TYPE.WIRE, t.bit_length(), vcdBitsFormatter)
-    elif isinstance(t, HEnum):
+    elif isinstance(t, (Enum3t, HEnum)):
         return (VCD_SIG_TYPE.REAL, 1, vcdEnumFormatter)
     else:
         raise ValueError(t)
 
 
 class BasicRtlSimConfigVcd(BasicRtlSimConfig):
-    supported_type_classes = (Bits, HEnum)
+    supported_type_classes = (Bits, HEnum, Bits3t, Enum3t)
 
     def __init__(self, dumpFile=sys.stdout):
         self.vcdWriter = VcdWriter(dumpFile)
