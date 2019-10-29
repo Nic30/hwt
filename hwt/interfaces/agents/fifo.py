@@ -71,7 +71,7 @@ class FifoReaderAgent(SyncAgentBase):
             try:
                 wait = int(wait)
             except ValueError:
-                raise AssertionError(sim.now, intf, "wait signal in invalid state")
+                raise AssertionError(self.sim.now, intf, "wait signal in invalid state")
 
             rd = not wait
         else:
