@@ -16,7 +16,8 @@ class RdSyncedAgent(SyncAgentBase):
         self.data = deque()
         self._rd = self.get_ready_signal(intf)
 
-    def get_ready_signal(self, intf):
+    @classmethod
+    def get_ready_signal(cls, intf):
         return intf.rd
 
     def get_ready(self):

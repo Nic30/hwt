@@ -22,7 +22,8 @@ class VldSyncedAgent(SyncAgentBase):
     def set_data(self, data):
         self.intf.data.write(data)
 
-    def get_valid_signal(self, intf):
+    @classmethod
+    def get_valid_signal(cls, intf):
         return intf.vld
 
     def get_valid(self):

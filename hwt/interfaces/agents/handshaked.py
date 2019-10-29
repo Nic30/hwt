@@ -17,12 +17,14 @@ class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
     """
 
     def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
-        SyncAgentBase.__init__(self, sim, intf, allowNoReset=allowNoReset, wrap_monitor_and_driver_in_edge_callback=False)
-        pcHandshakedAgent.__init__(self, sim, intf, self.clk, (self.rst, self.rstOffIn))
+        rst = self._discoverReset(intf, allowNoReset)
+        clk = intf._getAssociatedClk()
+        pcHandshakedAgent.__init__(self, sim, intf, clk, rst)
         self._vld = self.get_valid_signal(intf)
         self._rd = self.get_ready_signal(intf)
     
-    def get_ready_signal(self, intf):
+    @classmethod
+    def get_ready_signal(cls, intf):
         return intf.rd._sigInside
     
     def get_ready(self):
@@ -31,7 +33,8 @@ class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
     def set_ready(self, val):
         self._rd.write(val)
 
-    def get_valid_signal(self, intf):
+    @classmethod
+    def get_valid_signal(cls, intf):
         return intf.vld._sigInside
 
     def get_valid(self):
