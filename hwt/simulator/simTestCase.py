@@ -65,7 +65,8 @@ class SimTestCase(unittest.TestCase):
     RECOMPILE = True
     rtl_simulator_cls = None
     hdl_simulator = None
-    DEFAULT_BUILD_DIR = "tmp"
+    DEFAULT_BUILD_DIR = None  # "tmp"
+    DEFAULT_LOG_DIR = "tmp"
 
     def assertValEqual(self, first, second, msg=None):
         try:
@@ -113,16 +114,20 @@ class SimTestCase(unittest.TestCase):
 
     def runSim(self, until: float, name=None):
         if name is None:
-            outputFileName = os.path.join(self.DEFAULT_BUILD_DIR,
-                                          self.getTestName() + ".vcd")
+            if self.DEFAULT_LOG_DIR is None:
+                outputFileName = None
+            else:
+                outputFileName = os.path.join(self.DEFAULT_LOG_DIR,
+                                              self.getTestName() + ".vcd")
         else:
             outputFileName = name
 
-        d = os.path.dirname(outputFileName)
-        if d:
-            os.makedirs(d, exist_ok=True)
+        if outputFileName is not None:
+            d = os.path.dirname(outputFileName)
+            if d:
+                os.makedirs(d, exist_ok=True)
 
-        self.rtl_simulator.set_trace_file(outputFileName, -1)
+            self.rtl_simulator.set_trace_file(outputFileName, -1)
         procs = collect_processes_from_sim_agents(self.u)
         # run simulation, stimul processes are register after initial
         # initialization
