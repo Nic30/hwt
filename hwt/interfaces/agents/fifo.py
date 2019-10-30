@@ -2,7 +2,8 @@ from collections import deque
 
 from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.process_utils import OnRisingCallbackLoop
-from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable
+from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable,\
+    WaitTimeslotEnd
 from pycocotb.agents.clk import DEFAULT_CLOCK
 from pycocotb.hdlSimulator import HdlSimulator
 
@@ -23,9 +24,12 @@ class FifoReaderAgent(SyncAgentBase):
         self.readPending_invalidate = False
 
     def setEnable_asDriver(self, en):
+        lastEn = self._enabled
         super(FifoReaderAgent, self).setEnable_asDriver(en)
         self.intf.wait.write(not en)
         self.lastData_invalidate = not en
+        if not lastEn:
+            self.dataWriter.setEnable(en)
 
     def setEnable_asMonitor(self, en):
         lastEn = self._enabled
@@ -34,6 +38,7 @@ class FifoReaderAgent(SyncAgentBase):
         self.readPending_invalidate = not en
         if not lastEn:
             self.dataReader.setEnable(en)
+        # else dataReader will disable itself
 
     def driver_init(self):
         yield WaitWriteOnly()
@@ -44,6 +49,7 @@ class FifoReaderAgent(SyncAgentBase):
         self.intf.en.write(self._enabled)
 
     def dataReader(self):
+        yield Timer(1)
         if self.readPending:
             yield WaitCombRead()
             d = self.intf.data.read()
@@ -51,6 +57,8 @@ class FifoReaderAgent(SyncAgentBase):
 
             if self.readPending_invalidate:
                 self.readPending = False
+        if not self.readPending and not self._enabled:
+            self.dataWriter.setEnable(False)
 
     def getMonitors(self):
         self.dataReader = OnRisingCallbackLoop(self.sim, self.clk,
@@ -76,11 +84,13 @@ class FifoReaderAgent(SyncAgentBase):
                     wait = int(wait)
                 except ValueError:
                     raise AssertionError(self.sim.now, intf, "wait signal in invalid state")
+
                 if wait is wait_last:
                     break
                 else:
                     wait_last = wait
                     yield WaitWriteOnly()
+
             rd = not wait
         else:
             rd = False
@@ -102,11 +112,14 @@ class FifoReaderAgent(SyncAgentBase):
         # delay data litle bit to have nicer wave
         # otherwise wirte happens before next clk period
         # and it means in 0 time and we will not be able to see it in wave
-        yield Timer(DEFAULT_CLOCK / 10)
+        yield Timer(1)
         yield WaitWriteOnly()
         self.intf.data.write(self.lastData)
         if self.lastData_invalidate:
             self.lastData = None
+
+        if not self._enabled:
+            self.dataWriter.setEnable(False)
 
     def driver(self):
         # now we are before clock event
@@ -128,7 +141,7 @@ class FifoReaderAgent(SyncAgentBase):
         if rst_n:
             # wait for potential update of en
             # check if write can be performed and if it possible do real write
-            yield WaitCombStable()
+            yield WaitTimeslotEnd()
             en = intf.en.read()
             try:
                 en = int(en)
