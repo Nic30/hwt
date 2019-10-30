@@ -23,15 +23,13 @@ class FifoReaderAgent(SyncAgentBase):
         self.readPending_invalidate = False
 
     def setEnable_asDriver(self, en):
-        self._enabled = en
-        self.driver.setEnable(en)
+        super(FifoReaderAgent, self).setEnable_asDriver(en)
         self.intf.wait.write(not en)
         self.lastData_invalidate = not en
 
     def setEnable_asMonitor(self, en):
         lastEn = self._enabled
-        self._enabled = en
-        self.monitor.setEnable(en)
+        super(FifoReaderAgent, self).setEnable_asMonitor(en)
         self.intf.en.write(en)
         self.readPending_invalidate = not en
         if not lastEn:
@@ -63,16 +61,26 @@ class FifoReaderAgent(SyncAgentBase):
                 [self.dataReader()])
 
     def monitor(self):
+        """
+        Initialize data reading if wait is 0
+        """
         intf = self.intf
         yield WaitCombRead()
         if self.notReset():
-            # speculative en set
-            wait = intf.wait.read()
-            try:
-                wait = int(wait)
-            except ValueError:
-                raise AssertionError(self.sim.now, intf, "wait signal in invalid state")
-
+            # wait until wait signal is stable
+            wait_last = None
+            while True:
+                yield WaitCombRead()
+                wait = intf.wait.read()
+                try:
+                    wait = int(wait)
+                except ValueError:
+                    raise AssertionError(self.sim.now, intf, "wait signal in invalid state")
+                if wait is wait_last:
+                    break
+                else:
+                    wait_last = wait
+                    yield WaitWriteOnly()
             rd = not wait
         else:
             rd = False
