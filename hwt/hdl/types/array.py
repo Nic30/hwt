@@ -7,20 +7,20 @@ class HArray(HdlType):
     """
     HDL array type
 
-    :ivar elmType: type of elements
+    :ivar element_t: type of elements
     :ivar size: number of items
     """
 
-    def __init__(self, elmType, size):
+    def __init__(self, element_t, size):
         super(HArray, self).__init__()
-        self.elmType = elmType
+        self.element_t = element_t
         self.size = size
 
     def __eq__(self, other):
         return self is other or (
             type(self) is type(other) and
             self.size == other.size and
-            self.elmType == other.elmType
+            self.element_t == other.element_t
         )
 
     @internal
@@ -32,7 +32,7 @@ class HArray(HdlType):
         :return: bit width for this type
         """
         try:
-            itemSize = self.elmType.bit_length
+            itemSize = self.element_t.bit_length
         except AttributeError:
             itemSize = None
         if itemSize is None:
@@ -69,7 +69,7 @@ class HArray(HdlType):
             (used only by HStruct)
         :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
-        return "%s[%r]" % (self.elmType.__repr__(indent=indent,
+        return "%s[%r]" % (self.element_t.__repr__(indent=indent,
                                                  withAddr=withAddr,
                                                  expandStructs=expandStructs),
                            self.size)

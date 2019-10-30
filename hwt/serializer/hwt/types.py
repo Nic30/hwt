@@ -28,7 +28,7 @@ class HwtSerializer_types():
     @classmethod
     def HdlType_array(cls, typ, ctx, declaration=False):
         assert not declaration
-        return "HArray(%s, %d)" % (cls.HdlType(typ.elmType, ctx,
+        return "HArray(%s, %d)" % (cls.HdlType(typ.element_t, ctx,
                                                declaration=declaration),
                                    int(typ.size))
 
@@ -48,7 +48,7 @@ class HwtSerializer_types():
         iItems = ["%d" % w]
         if typ.signed is not BITS_DEFAUTL_SIGNED:
             iItems.append("signed=%r" % typ.signed)
-        if typ.force_vector is not BITS_DEFAUTL_FORCEVECTOR:
+        if typ.force_vector is not BITS_DEFAUTL_FORCEVECTOR and w <= 1:
             iItems.append("force_vector=%r" % typ.force_vector)
         if typ.negated is not BITS_DEFAUTL_NEGATED:
             iItems.append("negated=%r" % typ.negated)

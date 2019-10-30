@@ -1,43 +1,37 @@
-from hwt.doc_markers import internal
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from pycocotb.agents.base import AgentBase
+from pycocotb.agents.base import AgentBase, SyncAgentBase as pcSyncAgentBase,\
+    AgentWitReset as pcAgentWitReset
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.process_utils import OnRisingCallbackLoop
 
-
-class AgentWitReset(AgentBase):
+class AgentWitReset(pcAgentWitReset):
 
     def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
-        super().__init__(sim, intf)
-        self._discoverReset(allowNoReset)
+        pcAgentWitReset.__init__(self, sim, intf, (None, False))
+        self.rst, self.rstOffIn = self._discoverReset(intf, allowNoReset)
 
-    def _discoverReset(self, allowNoReset):
+    @classmethod
+    def _discoverReset(cls, intf, allowNoReset):
         try:
-            rst = self.intf._getAssociatedRst()
-            self.rst = rst._sigInside
-            self.rstOffIn = int(rst._dtype.negated)
-            self.notReset = self._notReset
+            rst = intf._getAssociatedRst()
+            rstOffIn = int(rst._dtype.negated)
+            rst = rst._sigInside
         except IntfLvlConfErr:
-            self.rst = None
-            self.notReset = self._notReset_dummy
-
-            if allowNoReset:
-                pass
-            else:
+            rst = None
+            rstOffIn = True
+            if not allowNoReset:
                 raise
+        return (rst, rstOffIn)
 
-    @internal
-    def _notReset_dummy(self):
-        return True
-
-    @internal
-    def _notReset(self):
-        rstVal = self.rst.read()
-        rstVal = int(rstVal)
-        return rstVal == self.rstOffIn
-
-
-class SyncAgentBase(AgentWitReset):
+    def notReset(self):
+        if self.rst is None:
+            return True
+        else:
+            rstVal = self.rst.read()
+            rstVal = int(rstVal)
+            return rstVal == self.rstOffIn
+    
+class SyncAgentBase(AgentWitReset, pcSyncAgentBase):
     """
     Agent which discovers clk, rst signal and runs only
     at specified edge of clk
@@ -47,31 +41,12 @@ class SyncAgentBase(AgentWitReset):
     """
     SELECTED_EDGE_CALLBACK = OnRisingCallbackLoop
 
-    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
-        super(SyncAgentBase, self).__init__(
-            sim, intf,
-            allowNoReset=allowNoReset)
+    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False,
+                 wrap_monitor_and_driver_in_edge_callback=True):
+        self.intf = intf
+        clk = self.intf._getAssociatedClk()
+        rst = self._discoverReset(intf, allowNoReset)
+        pcSyncAgentBase.__init__(
+            self, sim, intf, clk, rst, 
+            wrap_monitor_and_driver_in_edge_callback=wrap_monitor_and_driver_in_edge_callback)
 
-        # resolve clk and rstn
-        self.clk = self.intf._getAssociatedClk()
-
-        # run monitor, driver only on rising edge of clk
-        c = self.SELECTED_EDGE_CALLBACK
-        self.monitor = c(sim, self.clk, self.monitor, self.getEnable)
-        self.driver = c(sim, self.clk, self.driver, self.getEnable)
-
-    def setEnable_asDriver(self, en):
-        self._enabled = en
-        self.driver.setEnable(en)
-
-    def setEnable_asMonitor(self, en):
-        self._enabled = en
-        self.monitor.setEnable(en)
-
-    def getDrivers(self):
-        self.setEnable = self.setEnable_asDriver
-        return AgentBase.getDrivers(self)
-
-    def getMonitors(self):
-        self.setEnable = self.setEnable_asMonitor
-        return AgentBase.getMonitors(self)

@@ -4,11 +4,12 @@ from hwt.doc_markers import internal
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
 from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import OpDefinition
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import INT, BOOL
+from hwt.hdl.types.defs import INT, BOOL, STR
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import Value
@@ -19,6 +20,8 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import NameScope
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import NoDriverErr, \
+    MultipleDriversErr
 from hwt.synthesizer.unit import Unit
 
 
@@ -155,6 +158,8 @@ class GenericSerializer():
             sFn = cls.HdlType_int
         elif typ == BOOL:
             sFn = cls.HdlType_bool
+        elif typ == STR:
+            sFn = cls.HdlType_str
         elif isinstance(typ, Bits):
             sFn = cls.HdlType_bits
         elif isinstance(typ, HEnum):
@@ -249,20 +254,89 @@ class GenericSerializer():
             cases=cases)
 
     @classmethod
-    def _operand(cls,
-                 operand: Union[RtlSignal, Value],
-                 operator: OpDefinition, ctx: SerializerCtx):
-        s = cls.asHdl(operand, ctx)
-        if isinstance(operand, RtlSignalBase):
-            try:
-                o = operand.singleDriver()
-                if o.operator != operator and\
-                        cls.opPrecedence[o.operator] <= cls.opPrecedence[operator]:
-                    return "(%s)" % s
-            except Exception:
-                pass
-        return s
+    def _precedence_of_expr(cls, n):
+        # not id or value
+        if not isinstance(n, RtlSignalBase) or not n.hidden:
+            return -1
+        try:
+            o = n.singleDriver()
+        except (NoDriverErr, MultipleDriversErr):
+            return -1
+
+        if not isinstance(o, Operator):
+            # the signal will not stay hidden
+            return -1
+        return cls.opPrecedence[o.operator]
 
     @classmethod
-    def _bin_op(cls, operator, op_str, ctx: SerializerCtx, ops):
-        return op_str.join(map(lambda operand: cls._operand(operand, operator, ctx), ops))
+    def _operand(cls, operand: Union[RtlSignal, Value], i: int,
+                 oper: Operator,
+                 expr_requires_parenthesis: bool,
+                 cancel_parenthesis: bool,
+                 ctx: SerializerCtx):
+        use_parenthesis = False
+        if not cancel_parenthesis:
+            # resolve if the parenthesis are required
+            precedence_my = cls._precedence_of_expr(operand)
+            if precedence_my >= 0:  # if this is expression
+                if expr_requires_parenthesis:
+                    use_parenthesis = True
+                else:
+                    precedence_parent = cls.opPrecedence[oper.operator]
+                    right = None
+                    left = None
+                    argc = len(oper.operands)
+                    if argc == 1:
+                        pass
+                    elif argc == 2:
+                        if i == 0:
+                            right = oper.operands[1]
+                        else:
+                            left = oper.operands[0]
+                    else:
+                        raise NotImplementedError(oper)
+
+                    if left is not None:  # "operand" is right
+                        # same precedence -> parenthesis on right if it is expression
+                        # a + (b + c)
+                        # a + b + c = (a + b) + c
+                        # right with lower precedence -> parenthesis for right not required
+                        # a + b * c = a + (b * c)
+                        # right with higher precedence -> parenthesis for right
+                        # a * (b + c)
+                        if precedence_my >= precedence_parent:
+                            use_parenthesis = True
+                    else:
+                        # "operand" is left
+                        if precedence_my == precedence_parent:
+                            if cls._precedence_of_expr(right) == precedence_my:
+                                # right and left with same precedence -> parenthesis on both sides
+                                # (a + b) + (c + d)
+                                use_parenthesis = True
+                        elif precedence_my > precedence_parent:
+                            # left with higher precedence -> parenthesis for left
+                            # (a + b) * c
+                            # a + b + c + d = (a + b) + c + d = ((a + b) + c) + d
+                            use_parenthesis = True
+        s = cls.asHdl(operand, ctx)
+        if use_parenthesis:
+            return "(%s)" % s
+        else:
+            return s
+
+    @classmethod
+    def _bin_op(cls, operator: Operator, op_form_str: str, ctx: SerializerCtx,
+                expr_requires_parenthesis=False, cancel_parenthesis=False):
+        op0, op1 = operator.operands
+        op0 = cls._operand(op0, 0, operator, expr_requires_parenthesis,
+                           cancel_parenthesis, ctx)
+        op1 = cls._operand(op1, 1, operator, expr_requires_parenthesis,
+                           cancel_parenthesis, ctx)
+        return op_form_str % (op0, op1)
+
+    @classmethod
+    def _operator_index(cls, operator: Operator, ctx: SerializerCtx):
+        op0, op1 = operator.operands
+        op0 = cls._operand(op0, 0, operator, True, False, ctx)
+        op1 = cls._operand(op1, 1, operator, False, True, ctx)
+        return "%s[%s]" % (op0, op1)

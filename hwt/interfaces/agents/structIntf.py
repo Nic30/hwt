@@ -10,7 +10,7 @@ class StructIntfAgent(AgentBase):
     """
 
     def __init__(self, sim: HdlSimulator, intf):
-        AgentBase.__init__(self, intf)
+        AgentBase.__init__(self, sim, intf)
         for intf in intf._interfaces:
             intf._initSimAgent(sim)
 

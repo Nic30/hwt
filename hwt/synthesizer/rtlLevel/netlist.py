@@ -209,7 +209,7 @@ def markVisibilityOfSignals(ctx, ctxName, signals, interfaceSignals):
         else:
             sig.hidden = False
             if sig not in interfaceSignals:
-                if not sig.defVal._is_full_valid():
+                if not sig.def_val._is_full_valid():
                     raise NoDriverErr(
                         sig, "Signal without any driver or valid value in ", ctxName)
                 sig._const = True
@@ -236,7 +236,7 @@ class RtlNetlist():
         self.subUnits = set()
         self.synthesised = False
 
-    def sig(self, name, dtype=BIT, clk=None, syncRst=None, defVal=None):
+    def sig(self, name, dtype=BIT, clk=None, syncRst=None, def_val=None):
         """
         Create new signal in this context
 
@@ -244,25 +244,25 @@ class RtlNetlist():
             as SyncSignal
         :param syncRst: synchronous reset signal
         """
-        if isinstance(defVal, RtlSignal):
-            assert defVal._const, \
+        if isinstance(def_val, RtlSignal):
+            assert def_val._const, \
                 "Initial value of register has to be constant"
-            _defVal = defVal._auto_cast(dtype)
-        elif isinstance(defVal, Value):
-            _defVal = defVal._auto_cast(dtype)
-        elif isinstance(defVal, InterfaceBase):
-            _defVal = defVal._sig
+            _def_val = def_val._auto_cast(dtype)
+        elif isinstance(def_val, Value):
+            _def_val = def_val._auto_cast(dtype)
+        elif isinstance(def_val, InterfaceBase):
+            _def_val = def_val._sig
         else:
-            _defVal = dtype.from_py(defVal)
+            _def_val = dtype.from_py(def_val)
 
         if clk is not None:
-            s = RtlSyncSignal(self, name, dtype, _defVal)
-            if syncRst is not None and defVal is None:
+            s = RtlSyncSignal(self, name, dtype, _def_val)
+            if syncRst is not None and def_val is None:
                 raise SigLvlConfErr(
                     "Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                       RtlSignal.__call__(s, _defVal)
+                       RtlSignal.__call__(s, _def_val)
                        ).Else(
                     RtlSignal.__call__(s, s.next)
                 )
@@ -276,7 +276,7 @@ class RtlNetlist():
             if syncRst:
                 raise SigLvlConfErr(
                     "Signal %s has reset but has no clk" % name)
-            s = RtlSignal(self, name, dtype, defVal=_defVal)
+            s = RtlSignal(self, name, dtype, def_val=_def_val)
 
         self.signals.add(s)
 

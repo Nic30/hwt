@@ -108,7 +108,7 @@ class ResourceContext():
 
             for _, (rSync, wSync, rAsync, wAsync) in addrDict.items():
                 if rSync:
-                    ff_to_remove += rSync * m._dtype.elmType.bit_length()
+                    ff_to_remove += rSync * m._dtype.element_t.bit_length()
 
                 # resolve port count for this addr signal
                 rwSync = min(rSync, wSync)
@@ -137,7 +137,7 @@ class ResourceContext():
 
                 rSync_wAsyncPorts += rSync_wAsync
                 rAsync_wSyncPorts += rAsync_wSync
-            k = ResourceRAM(m._dtype.elmType.bit_length(),
+            k = ResourceRAM(m._dtype.element_t.bit_length(),
                             int(m._dtype.size),
                             rwSyncPorts, rSyncPorts, wSyncPorts,
                             rSync_wAsyncPorts,

@@ -351,8 +351,8 @@ class FrameTmpl(object):
                 actualVal = setBitRange(actualVal, low, high - low, newBits)
                 actualVldMask = setBitRange(actualVal, low, high - low, vld)
 
-            yield typeOfWord.getValueCls()(actualVal, typeOfWord,
-                                           actualVldMask, -1)
+            yield typeOfWord.getValueCls()(typeOfWord, actualVal,
+                                           actualVldMask)
 
     @internal
     def __repr__getName(self, transPart, fieldWidth):

@@ -1,0 +1,3 @@
+    # sensitivity: {{sensitivityList|join(", ")}}
+    def {{name}}(self):{% for stmLine in stmLines %}
+{{ stmLine }}{% endfor %}

@@ -92,7 +92,10 @@ def toRtl(unitOrCls: Unit, name: str=None,
                 sc = serializer.Architecture(obj, ctx)
                 if createFiles:
                     fName = obj.getEntityName() + serializer.fileExtension
-                    fileMode = 'a'
+                    if fName in files:
+                        fileMode = 'a'
+                    else:
+                        fileMode = 'w'
             else:
                 if hasattr(obj, "_hdlSources"):
                     for fn in obj._hdlSources:

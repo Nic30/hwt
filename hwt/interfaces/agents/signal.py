@@ -5,7 +5,7 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from pycocotb.agents.base import AgentBase
 from pycocotb.agents.clk import DEFAULT_CLOCK
 from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead
+from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable
 
 
 class SignalAgent(SyncAgentBase):
@@ -26,8 +26,7 @@ class SignalAgent(SyncAgentBase):
             self.clk = self.intf._getAssociatedClk()
         except IntfLvlConfErr:
             self.clk = None
-
-        self._discoverReset(True)
+        self.rst, self.rstOffIn = self._discoverReset(intf, True)
         self.data = deque()
 
         self.initPending = True
@@ -40,6 +39,8 @@ class SignalAgent(SyncAgentBase):
         else:
             if self.initDelay:
                 raise NotImplementedError("initDelay only without clock")
+            if self.delay:
+                raise ValueError("clock and delay synchronization at once")
             c = self.SELECTED_EDGE_CALLBACK
             self.monitor = c(sim, self.clk, self.monitorWithClk, self.getEnable)
             self.driver = c(sim, self.clk, self.driverWithClk, self.getEnable)
@@ -50,30 +51,33 @@ class SignalAgent(SyncAgentBase):
 
     def driverInit(self):
         yield WaitWriteOnly()
+        if not self._enabled:
+            return
         try:
             d = self.data[0]
         except IndexError:
             d = None
 
-        self.doWrite(d)
+        self.set_data(d)
 
-        return
-        yield
-
-    def doRead(self):
+    def get_data(self):
         return self.intf.read()
 
-    def doWrite(self, data):
+    def set_data(self, data):
         self.intf.write(data)
 
     def driverWithClk(self):
         # if clock is specified this function is periodically called every
         # clk tick, if agent is enabled
         yield WaitCombRead()
+        if not self._enabled:
+            return
         if self.data and self.notReset():
             yield WaitWriteOnly()
+            if not self._enabled:
+                return
             d = self.data.popleft()
-            self.doWrite(d)
+            self.set_data(d)
 
     def driverWithTimer(self):
         if self.initPending:
@@ -83,11 +87,12 @@ class SignalAgent(SyncAgentBase):
         # if clock is specified this function is periodically called every
         # clk tick
         while True:
-            yield WaitCombRead()
+            yield WaitWriteOnly()
             if self._enabled and self.data and self.notReset():
                 yield WaitWriteOnly()
-                d = self.data.popleft()
-                self.doWrite(d)
+                if self._enabled:
+                    d = self.data.popleft()
+                    self.set_data(d)
 
             yield Timer(self.delay)
 
@@ -99,7 +104,7 @@ class SignalAgent(SyncAgentBase):
         while True:
             yield WaitCombRead()
             if self._enabled and self.notReset():
-                d = self.doRead()
+                d = self.get_data()
                 self.data.append(d)
 
             yield Timer(self.delay)
@@ -107,7 +112,7 @@ class SignalAgent(SyncAgentBase):
     def monitorWithClk(self):
         # if clock is specified this function is periodically called every
         # clk tick, when agent is enabled
-        yield WaitCombRead()
-        if self.notReset():
-            d = self.doRead()
+        yield WaitCombStable()
+        if self._enabled and self.notReset():
+            d = self.get_data()
             self.data.append(d)

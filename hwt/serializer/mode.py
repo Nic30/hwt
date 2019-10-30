@@ -46,7 +46,7 @@ def prepareEntity(ent, name, templateUnit):
         # sort in python is stable, ports and generic were added in same order
         # templateUnit should have generic and ports sorted
         for gp, gch in zip(templateUnit._entity.generics, ent.generics):
-            gch.name = gp.name
+            gch.hdl_name = gp.hdl_name
         for pp, pch in zip(templateUnit._entity.ports, ent.ports):
             pch.name = pp.name
 

@@ -74,7 +74,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
             # construct process which will represent content of the rom
             cases = [(toHVal(i), [romValSig(v), ])
-                     for i, v in enumerate(rom.defVal.val)]
+                     for i, v in enumerate(rom.def_val.val)]
             romSwitchStm = SwitchContainer(index, cases)
 
             for (_, (stm, )) in cases:
@@ -99,7 +99,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         """
         t = v._dtype
         # if type requires extra definition
-        if isinstance(t, HArray) and v.defVal.vld_mask:
+        if isinstance(t, HArray) and v.def_val.vld_mask:
             if v.drivers:
                 raise SerializerException("Verilog does not support RAMs"
                                           " with initialized value")
@@ -141,7 +141,8 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         arch.processes.extend(extraProcesses)
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         for p in arch.processes:
-            procs.append(cls.HWProcess(p, childCtx))
+            p_str = cls.HWProcess(p, childCtx)
+            procs.append(p_str)
 
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
@@ -190,7 +191,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
     @classmethod
     def GenericItem(cls, g: Param, ctx):
-        return ("parameter %s = %s"
+        return ('parameter %s = "%s"'
                 % (g.hdl_name, str(g.get_value())))
 
     @classmethod
@@ -230,5 +231,11 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
     @classmethod
     def MapExpr(cls, m: MapExpr, ctx):
-        return ".%s(%s)" % (cls.get_signal_name(m.compSig, ctx),
-                            cls.asHdl(m.value, ctx))
+        k = m.compSig
+        if isinstance(k, Param):
+            name = k.hdl_name
+            v = '"%s"' % str(k.get_value())
+        else:
+            name = cls.get_signal_name(k, ctx)
+            v = cls.asHdl(m.value, ctx)
+        return ".%s(%s)" % (name, v)

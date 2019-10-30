@@ -7,11 +7,13 @@ import unittest
 
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.value import Value
-from hwt.simulator.agentConnector import valToInt, autoAddAgents
-from hwt.simulator.shortcuts import toVerilatorSimModel, \
-    reconnectUnitSignalsToModel
+from hwt.simulator.agentConnector import valToInt, autoAddAgents,\
+    collect_processes_from_sim_agents
+from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
+from hwt.simulator.simCompilerBasicHdlSimulator import toBasicSimulatorSimModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
+from pyMathBitPrecise.bits3t import Bits3val
 from pycocotb.constants import CLK_PERIOD
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer
@@ -21,7 +23,7 @@ def allValuesToInts(sequenceOrVal):
     if isinstance(sequenceOrVal, HArrayVal):
         sequenceOrVal = sequenceOrVal.val
 
-    if isinstance(sequenceOrVal, Value):
+    if isinstance(sequenceOrVal, (Value, Bits3val)):
         return valToInt(sequenceOrVal)
     elif not sequenceOrVal:
         return sequenceOrVal
@@ -47,7 +49,7 @@ class SimTestCase(unittest.TestCase):
     :attention: self.procs has to be specified before runSim()
     :cvar _defaultSeed: default seed for ramdom generator
     :cvar rtl_simulator_cls: class for rtl simulator to use
-        (constructed in prepareUnit())
+        (constructed in compileSim())
     :ivar u: instance of current Unit for test, created in restartSim()
     :ivar rtl_simulator: rtl simulatr used for simulation of unit,
         created in restartSim()
@@ -61,28 +63,8 @@ class SimTestCase(unittest.TestCase):
     # while debugging only the simulation it may be useful to just
     # disable the compilation of simulator as it saves time
     RECOMPILE = True
-
-    def getTestName(self):
-        className, testName = self.id().split(".")[-2:]
-        return "%s_%s" % (className, testName)
-
-    def runSim(self, until: float, name=None):
-        if name is None:
-            outputFileName = "tmp/" + self.getTestName() + ".vcd"
-        else:
-            outputFileName = name
-
-        d = os.path.dirname(outputFileName)
-        if d:
-            os.makedirs(d, exist_ok=True)
-
-        self.rtl_simulator.set_trace_file(outputFileName, -1)
-
-        # run simulation, stimul processes are register after initial
-        # initialization
-        self.hdl_simulator.run(until=until, extraProcesses=self.procs)
-        self.rtl_simulator.finalize()
-        return self.hdl_simulator
+    rtl_simulator_cls = None
+    hdl_simulator = None
 
     def assertValEqual(self, first, second, msg=None):
         try:
@@ -124,27 +106,33 @@ class SimTestCase(unittest.TestCase):
             seq2 = _seq2
         self.assertSequenceEqual(seq1, seq2, msg, seq_type)
 
-    def simpleRandomizationProcess(self, agent, timeQuantum=CLK_PERIOD):
-        seed = self._rand.getrandbits(64)
-        random = Random(seed)
+    def getTestName(self):
+        className, testName = self.id().split(".")[-2:]
+        return "%s_%s" % (className, testName)
 
-        def randomEnProc():
-            # small space at start to modify agents when they are inactive
-            yield Timer(timeQuantum / 4)
-            while True:
-                en = random.random() < 0.5
-                if agent.getEnable() != en:
-                    agent.setEnable(en)
-                delay = int(random.random() * 2) * timeQuantum
-                yield Timer(delay)
+    def runSim(self, until: float, name=None):
+        if name is None:
+            outputFileName = "tmp/" + self.getTestName() + ".vcd"
+        else:
+            outputFileName = name
 
-        return randomEnProc
+        d = os.path.dirname(outputFileName)
+        if d:
+            os.makedirs(d, exist_ok=True)
+
+        self.rtl_simulator.set_trace_file(outputFileName, -1)
+        procs = collect_processes_from_sim_agents(self.u)
+        # run simulation, stimul processes are register after initial
+        # initialization
+        self.hdl_simulator.run(until=until, extraProcesses=self.procs + procs)
+        self.rtl_simulator.finalize()
+        return self.hdl_simulator
 
     def randomize(self, intf):
         """
         Randomly disable and enable interface for testing purposes
         """
-        randomEnProc = self.simpleRandomizationProcess(intf._ag)
+        randomEnProc = simpleRandomizationProcess(self, intf._ag)
         self.procs.append(randomEnProc())
 
     def restartSim(self):
@@ -160,24 +148,22 @@ class SimTestCase(unittest.TestCase):
         hdl_simulator = HdlSimulator(rtl_simulator)
 
         unit = self.u
-
         reconnectUnitSignalsToModel(unit, rtl_simulator)
-        procs = autoAddAgents(unit, hdl_simulator)
+        autoAddAgents(unit, hdl_simulator)
+        self.procs = []
+        self.u, self.rtl_simulator, self.hdl_simulator =\
+            unit, rtl_simulator, hdl_simulator
 
-        self.u, self.rtl_simulator, self.hdl_simulator, self.procs =\
-            unit, rtl_simulator, hdl_simulator, procs
-
-        return unit, rtl_simulator, procs
+        return unit, rtl_simulator, self.procs
 
     @classmethod
     def get_unique_name(cls, unit: Unit):
-        return "%s__%s" % (cls.__name__, unit.__class__.__name__)
-        # return "%s_%s" % (unit.__class__.__name__, abs(hash(unit)))
+        return "%s__%s" % (cls.__name__, unit._getDefaultName())
 
     @classmethod
-    def prepareUnit(cls, unit, build_dir: Optional[str]=None,
-                    unique_name: Optional[str]=None, onAfterToRtl=None,
-                    target_platform=DummyPlatform()):
+    def compileSim(cls, unit, build_dir: Optional[str]="tmp/",
+                   unique_name: Optional[str]=None, onAfterToRtl=None,
+                   target_platform=DummyPlatform()):
         """
         Create simulation model and connect it with interfaces of original unit
         and decorate it with agents
@@ -191,35 +177,73 @@ class SimTestCase(unittest.TestCase):
             (if is None it is automatically generated)
         :param onAfterToRtl: callback fn(unit) which will be called
             after unit will be synthesised to RTL
-            and before Unit instance to simulator connection
+            and before Unit instance signals are replaced
+            with simulator specific ones
         """
         if unique_name is None:
             unique_name = cls.get_unique_name(unit)
 
-        if build_dir is None:
-            build_dir = "tmp/%s" % unique_name
-
-        cls.rtl_simulator_cls = toVerilatorSimModel(
+        cls.rtl_simulator_cls = toBasicSimulatorSimModel(  # toVerilatorSimModel(
             unit,
             unique_name=unique_name,
             build_dir=build_dir,
             target_platform=target_platform,
             do_compile=cls.RECOMPILE)
+
         if onAfterToRtl:
             onAfterToRtl(unit)
-        cls._onAfterToRtl = onAfterToRtl
+
         cls.u = unit
+
+    def compileSimAndStart(
+            self,
+            unit: Unit,
+            build_dir: Optional[str]="tmp/",
+            unique_name: Optional[str]=None,
+            onAfterToRtl=None,
+            target_platform=DummyPlatform()):
+        """
+        Use this method if you did not used compileSim()
+        or SingleUnitSimTestCase to setup the simulator and DUT
+        """
+        if unique_name is None:
+            unique_name = "%s__%s" % (self.getTestName(),
+                                      unit._getDefaultName())
+        self.compileSim(unit, build_dir, unique_name,
+                        onAfterToRtl, target_platform)
+        self.u = unit
+        SimTestCase.setUp(self)
+        return self.u
 
     def setUp(self):
         self._rand = Random(self._defaultSeed)
-        self.restartSim()
+        if self.rtl_simulator_cls is not None:
+            # if the simulator is not compiled it is expected
+            # that it will be compiled in the test and this functio
+            # will be called later
+            self.restartSim()
 
 
-class SimpleSimTestCase(SimTestCase):
+def simpleRandomizationProcess(tc: SimTestCase, agent, timeQuantum=CLK_PERIOD):
+    seed = tc._rand.getrandbits(64)
+    random = Random(seed)
+
+    def randomEnProc():
+        # small space at start to modify agents when they are inactive
+        yield Timer(timeQuantum / 4)
+        while True:
+            en = random.random() < 0.5
+            if agent.getEnable() != en:
+                agent.setEnable(en)
+            delay = int(random.random() * 2) * timeQuantum
+            yield Timer(delay)
+
+    return randomEnProc
+
+
+class SingleUnitSimTestCase(SimTestCase):
     """
-    SimTestCase for simple test
-    Set UNIT_CLS in your class and in the test method there will be prepared simulation.
-    Set UNIQ_NAME if you want to have tmp sim files with nice name
+    SimTestCase for simple tests with a single component
     """
 
     @classmethod
@@ -228,7 +252,6 @@ class SimpleSimTestCase(SimTestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(SimpleSimTestCase, cls).setUpClass()
+        super(SingleUnitSimTestCase, cls).setUpClass()
         u = cls.getUnit()
-        cls.prepareUnit(u)
-
+        cls.compileSim(u)

@@ -12,6 +12,8 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
+from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.types.slice import Slice
 
 
 class VerilogSerializer_Value(GenericSerializer_Value):
@@ -63,28 +65,16 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             raise NotImplementedError(d)
 
     @classmethod
-    def condAsHdl(cls, cond, forceBool, createTmpVarFn):
-        if isinstance(cond, RtlSignalBase):
-            cond = [cond]
+    def condAsHdl(cls, c, forceBool, createTmpVarFn):
+        assert isinstance(c, (RtlSignalBase, Value))
+        if not forceBool or c._dtype == BOOL:
+            return cls.asHdl(c, createTmpVarFn)
+        elif c._dtype == BIT:
+            return cls.asHdl(c, createTmpVarFn)
+        elif isinstance(c._dtype, Bits):
+            return cls.asHdl(c != 0, createTmpVarFn)
         else:
-            cond = list(cond)
-        if len(cond) == 1:
-            c = cond[0]
-            if not forceBool or c._dtype == BOOL:
-                return cls.asHdl(c, createTmpVarFn)
-            elif c._dtype == BIT:
-                return "(%s)==%s" % (cls.asHdl(c, createTmpVarFn),
-                                     cls.BitLiteral(1, 1))
-            elif isinstance(c._dtype, Bits):
-                width = c._dtype.bit_length()
-                return "(%s)!=%s" % (cls.asHdl(c, createTmpVarFn),
-                                     cls.BitString(0, width))
-            else:
-                raise NotImplementedError()
-        else:
-            return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool,
-                                                           createTmpVarFn),
-                                   cond))
+            raise NotImplementedError()
 
     @classmethod
     def HEnumValAsHdl(cls, dtype, val, ctx):
@@ -97,8 +87,8 @@ class VerilogSerializer_Value(GenericSerializer_Value):
         if declaration:
             ctx = ctx.forSignal(si)
 
-            v = si.defVal
-            if si.virtualOnly:
+            v = si.def_val
+            if si.virtual_only:
                 pass
             elif si.drivers:
                 pass
@@ -117,7 +107,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             while isinstance(t, HArray):
                 # collect array dimensions
                 dimensions.append(t.size)
-                t = t.elmType
+                t = t.element_t
 
             s = "%s%s %s" % (getIndent(ctx.indent),
                              cls.HdlType(t, ctx),
@@ -148,15 +138,15 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             return cls.get_signal_name(si, ctx)
 
     @classmethod
-    def Slice_valAsHdl(cls, dtype, val, ctx):
-        upper = val.val[0]
+    def Slice_valAsHdl(cls, dtype: Slice, val: SliceVal, ctx):
+        upper = val.val.start
         if isinstance(upper, Value):
             upper = upper - 1
             _format = "%s:%s"
         else:
             _format = "%s-1:%s"
 
-        return _format % (cls.Value(upper, ctx), cls.Value(val.val[1], ctx))
+        return _format % (cls.Value(upper, ctx), cls.Value(val.val.stop, ctx))
 
     @classmethod
     def sensitivityListItem(cls, item, ctx, anyIsEventDependent):

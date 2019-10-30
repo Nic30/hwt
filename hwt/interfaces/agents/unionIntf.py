@@ -2,6 +2,7 @@ from hwt.interfaces.agents.structIntf import StructIntfAgent
 
 
 class UnionSourceAgent(StructIntfAgent):
+
     def getMonitors(self):
         sel = self.intf._select
         for intf in self.intf._interfaces:

@@ -9,6 +9,7 @@ from hwt.hdl.types.bitValFunctions import bitsCmp, \
     bitsBitOp, bitsArithOp 
 from hwt.hdl.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
     tryReduceXor
+from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT, BIT, SLICE
 from hwt.hdl.types.eventCapableVal import EventCapableVal
 from hwt.hdl.types.slice import Slice
@@ -28,17 +29,11 @@ class BitsVal(Bits3val, EventCapableVal, Value):
     """
     :attention: operator on signals are using value operator functions as well
     """
+    _BOOL = Bits(1, name="bool")
 
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):
-        if val is None:
-            val = 0
-            assert vld_mask is None or vld_mask == 0, vld_mask
-            vld_mask = 0
-        else:
-            if vld_mask is None:
-                vld_mask = typeObj.all_mask()
-
+        val, vld_mask = typeObj._normalize_val_and_mask(val, vld_mask)
         return cls(typeObj, val, vld_mask=vld_mask)
 
     @internal
@@ -91,13 +86,9 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         """
         w = self._dtype.bit_length()
         try:
-            other_bit_length = other._dtype.bit_length
+            other._dtype.bit_length
         except AttributeError:
-            raise TypeError("Can not concat bits and", other._dtype)
-        Bits = self._dtype.__class__
-        other_w = other_bit_length()
-        resWidth = w + other_w
-        resT = Bits(resWidth)
+            raise TypeError("Can not concat Bits and", other._dtype)
 
         if areValues(self, other):
             return self._concat__val(other)
@@ -105,7 +96,8 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             w = self._dtype.bit_length()
             other_w = other._dtype.bit_length()
             resWidth = w + other_w
-            resT = Bits(resWidth, signed=self._dtype)
+            Bits = self._dtype.__class__
+            resT = Bits(resWidth, signed=self._dtype.signed)
             # is instance of signal
             if isinstance(other, InterfaceBase):
                 other = other._sig
@@ -146,8 +138,6 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         | a[:], a[-1], a[-2:], a[:-2] | raises NotImplementedError   (not implemented due to complicated support in hdl) |
         +-----------+----------------------------------------------------------------------------------------------------+
         """
-        Bits = self._dtype.__class__
-        iamVal = isinstance(self, Value)
         st = self._dtype
         length = st.bit_length()
         if length == 1 and not st.force_vector:
@@ -170,13 +160,16 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             stopIsVal = isinstance(stop, Value)
             indexesAreValues = startIsVal and stopIsVal
         else:
-            key = toHVal(key)
+            key = toHVal(key, INT)
 
+        iamVal = isinstance(self, Value)
         iAmResultOfIndexing = (not iamVal and
                                hasattr(self, "origin") and
                                len(self.drivers) == 1 and
                                isinstance(self.origin, Operator) and
                                self.origin.operator == AllOps.INDEX)
+
+        Bits = self._dtype.__class__
         if isSLICE:
             if indexesAreValues and start.val == length and stop.val == 0:
                 # selecting all bits no conversion needed
@@ -217,11 +210,12 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 resT = Bits(bit_length=_resWidth, force_vector=True,
                             signed=st.signed)
 
-        elif isinstance(key, INT.getValueCls()):
-            # check index range
-            _v = int(key)
-            if _v < 0 or _v > length - 1:
-                raise IndexError(_v)
+        elif isinstance(key, Bits.getValueCls()):
+            if key._is_full_valid():
+                # check index range
+                _v = int(key)
+                if _v < 0 or _v > length - 1:
+                    raise IndexError(_v)
 
             resT = BIT
             if iamVal:
@@ -229,14 +223,11 @@ class BitsVal(Bits3val, EventCapableVal, Value):
 
         elif isinstance(key, RtlSignalBase):
             t = key._dtype
-            if t == INT:
-                resT = BIT
-            elif isinstance(t, Slice):
+            if isinstance(t, Slice):
                 resT = Bits(bit_length=key.staticEval()._size(),
                             force_vector=st.force_vector, signed=st.signed)
             elif isinstance(t, Bits):
                 resT = BIT
-                key = key._auto_cast(INT)
             else:
                 raise TypeError(
                     "Index operation not implemented"
@@ -247,10 +238,6 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 "Index operation not implemented for index %r" % (key))
 
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
-
-    @internal
-    def _setitem__val(self, index, value):
-        return Bits3val.__setitem__(index, value)
 
     def __setitem__(self, index, value):
         """
@@ -298,18 +285,14 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 value = value._auto_cast(itemT)
 
         if indexConst and valueConst and isinstance(self, Value):
-            return self._setitem__val(index, value)
+            return Bits3val.__setitem__(self, index, value)
 
         raise TypeError(
             "Only simulator can resolve []= for signals or invalid index")
 
-    @internal
-    def _invert__val(self):
-        return Bits3val.__invert__(self)
-
     def __invert__(self):
         if isinstance(self, Value):
-            return self._invert__val()
+            return Bits3val.__invert__(self)
         else:
             try:
                 # double negation
@@ -320,83 +303,45 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 pass
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
 
-    # comparisons
-    @internal
-    def _eq__val(self, other):
-        return Bits3val.__eq__(self, other)
+    def __hash__(self):
+        if isinstance(self, RtlSignalBase):
+            return hash(id(self))
+        else:
+            return Bits3val.__hash__(self)
 
+    # comparisons
     def _eq(self, other):
         return bitsCmp(self, other, AllOps.EQ, eq)
-
-    @internal
-    def _ne__val(self, other):
-        return Bits3val.__ne__(self, other)
 
     def __ne__(self, other):
         return bitsCmp(self, other, AllOps.NEQ)
 
-    @internal
-    def _lt__val(self, other):
-        return Bits3val.__lt__(self, other)
-
     def __lt__(self, other):
         return bitsCmp(self, other, AllOps.LT)
-
-    @internal
-    def _gt__val(self, other):
-        return Bits3val.__gt__(self, other)
 
     def __gt__(self, other):
         return bitsCmp(self, other, AllOps.GT)
 
-    @internal
-    def _ge__val(self, other):
-        return Bits3val.__ge__(self, other)
-
     def __ge__(self, other):
         return bitsCmp(self, other, AllOps.GE)
 
-    @internal
-    def _le__val(self, other):
-        return Bits3val.__le__(self, other)
-
     def __le__(self, other):
         return bitsCmp(self, other, AllOps.LE)
-
-    @internal
-    def _xor__val(self, other):
-        return Bits3val.__xor__(self, other)
 
     def __xor__(self, other):
         return bitsBitOp(self, other, AllOps.XOR,
                          vld_mask_for_xor, tryReduceXor)
 
-    @internal
-    def _and__val(self, other):
-        return Bits3val.__and__(self, other)
-
     def __and__(self, other):
         return bitsBitOp(self, other, AllOps.AND,
                          vld_mask_for_and, tryReduceAnd)
-
-    @internal
-    def _or__val(self, other):
-        return Bits3val.__or__(self, other)
 
     def __or__(self, other):
         return bitsBitOp(self, other, AllOps.OR,
                          vld_mask_for_or, tryReduceOr)
 
-    @internal
-    def _sub__val(self, other):
-        return Bits3val.__sub__(self, other)
-
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)
-
-    @internal
-    def _add__val(self, other):
-        return Bits3val.__add__(self, other)
 
     def __add__(self, other):
         return bitsArithOp(self, other, AllOps.ADD)
@@ -404,19 +349,11 @@ class BitsVal(Bits3val, EventCapableVal, Value):
     def __floordiv__(self, other) -> "Bits3val":
         other = toHVal(other)
         if isinstance(self, Value) and isinstance(other, Value):
-            return self._floordiv___val(other)
+            return Bits3val.__floordiv__(self, other)
         else:
             return Operator.withRes(AllOps.MUL,
                                     [self, other],
                                     self._dtype.__copy__())
-
-    @internal
-    def _floordiv___val(self, other):
-        return Bits3val.__floordiv__(self, other)
-
-    @internal
-    def _mul__val(self, other):
-        return Bits3val.__mul__(self, other)
 
     def __mul__(self, other):
         Bits = self._dtype.__class__

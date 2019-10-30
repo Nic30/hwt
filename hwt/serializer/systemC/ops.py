@@ -29,11 +29,13 @@ class SystemCSerializer_ops():
         AllOps.CALL: 2,
         # AllOps.SHIFTL:8,
         # AllOps.SHIFTR:8,
+        AllOps.BitsAsSigned: 2,
+        AllOps.BitsAsUnsigned: 2,
+        AllOps.BitsAsVec: 2,
     }
 
     _unaryOps = {
         AllOps.NOT: "~%s",
-        AllOps.BitsToInt: "%s",
     }
 
     _binOps = {
@@ -62,23 +64,24 @@ class SystemCSerializer_ops():
 
         op_str = cls._unaryOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx))
+            return op_str % (cls._operand(ops[0], 0, op, False, False, ctx))
 
         op_str = cls._binOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx),
-                             cls._operand(ops[1], o, ctx))
+            return op_str % (cls._operand(ops[0], 0, op, False, False, ctx),
+                             cls._operand(ops[1], 1, op, False, False, ctx))
 
         if o == AllOps.INDEX:
             assert len(ops) == 2
             o0, o1 = ops
-            o0_str = cls.asHdl(o0, ctx)
+            o0_str = cls._operand(o0, 0, op, True, False, ctx)
             if ops[1]._dtype == SLICE:
                 return "%s.range(%s, %s)" % (o0_str,
-                                             cls._operand(o1.val[0], o, ctx),
-                                             cls._operand(o1.val[1], o, ctx))
+                                             # not operator i does not matter as they are all in ()
+                                             cls._operand(o1.val.start, 1, op, False, True, ctx),
+                                             cls._operand(o1.val.stop, 1, op, False, True, ctx))
             else:
-                return "%s[%s]" % (o0_str, cls._operand(o1, o, ctx))
+                return "%s[%s]" % (o0_str, cls._operand(o1, 1, op, False, True, ctx))
 
         elif o == AllOps.TERNARY:
             zero, one = BIT.from_py(0), BIT.from_py(1)
@@ -87,29 +90,30 @@ class SystemCSerializer_ops():
                 return cls.condAsHdl([ops[0]], True, ctx)
             else:
                 return "%s ? %s : %s" % (cls.condAsHdl([ops[0]], True, ctx),
-                                         cls._operand(ops[1], o, ctx),
-                                         cls._operand(ops[2], o, ctx))
+                                         cls._operand(ops[1], 1, op, False, False, ctx),
+                                         cls._operand(ops[2], 2, op, False, False, ctx))
         elif o == AllOps.RISING_EDGE or o == AllOps.FALLING_EDGE:
             if ctx.isSensitivityList:
                 if o == AllOps.RISING_EDGE:
                     _o = ".pos()"
                 else:
                     _o = ".neg()"
-                return cls._operand(ops[0], o, ctx) + _o
+                return cls._operand(ops[0], 0, op, True, False, ctx) + _o
             else:
                 raise UnsupportedEventOpErr()
         elif o in [AllOps.BitsAsSigned, AllOps.BitsAsUnsigned,
-                   AllOps.BitsAsVec, AllOps.IntToBits]:
+                   AllOps.BitsAsVec]:
             assert len(ops) == 1
             return "static_cast<%s>(%s)" % (cls.HdlType(op.result._dtype, ctx),
-                                            cls._operand(ops[0], o, ctx))
+                                            cls._operand(ops[0], 0, op, False, True, ctx))
         elif o == AllOps.POW:
             assert len(ops) == 2
             raise NotImplementedError()
             # return _bin('**')
         elif o == AllOps.CALL:
-            return "%s(%s)" % (cls.FunctionContainer(ops[0]),
-                               ", ".join(map(lambda op: cls._operand(op, o, ctx), ops[1:])))
+            return "%s(%s)" % (
+                cls.FunctionContainer(ops[0]),
+                ", ".join(map(lambda op: cls._operand(op, 1, op, False, True, ctx), ops[1:])))
         else:
             raise NotImplementedError(
                 "Do not know how to convert %s to vhdl" % (o))

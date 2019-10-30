@@ -38,7 +38,7 @@ class HEnumVal(Value):
             and self.vld_mask == other.vld_mask == 1
 
         vld_mask = int(self.vld_mask == other.vld_mask == 1)
-        return BoolVal(eq, BOOL, vld_mask)
+        return BoolVal(BOOL, int(eq), vld_mask)
 
     def _eq(self, other):
         assert self._dtype is other._dtype
@@ -54,7 +54,7 @@ class HEnumVal(Value):
             and self.vld_mask == other.vld_mask == 1
 
         vld_mask = int(self.vld_mask == other.vld_mask == 1)
-        return BoolVal(neq, BOOL, vld_mask)
+        return BoolVal(BOOL, int(neq), vld_mask)
 
     def __ne__(self, other):
         assert self._dtype is other._dtype

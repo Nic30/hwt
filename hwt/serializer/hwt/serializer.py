@@ -132,7 +132,7 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         childCtx.constCache = ConstCache(ctx.scope.checkedName)
 
         def serializeVar(v):
-            dv = v.defVal
+            dv = v.def_val
             if isinstance(dv, HEnumVal):
                 dv = "%s.%s" % (dv._dtype.name, dv.val)
             else:

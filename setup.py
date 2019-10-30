@@ -35,6 +35,7 @@ setup(name="hwt",
           "pyDigitalWaveTools>=0.3",  # simulator output dumping
           "pyMathBitPrecise>=0.1",  # math with specific bit precision
           "ipCorePackager>=0.2",  # generator of IPcore packages (IP-xact, ...)
+          "pycocotb",
       ],
       license="MIT",
       packages=find_packages(),

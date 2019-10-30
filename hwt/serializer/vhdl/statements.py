@@ -7,7 +7,9 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.defs import BOOL, INT
 from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.value import Value
 from hwt.hdl.variables import SignalItem
 from hwt.hdl.waitStm import WaitStm
 from hwt.hdl.whileContainer import WhileContainer
@@ -19,8 +21,6 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, \
     NoDriverErr
-from hwt.hdl.types.defs import BOOL, INT
-from hwt.hdl.value import Value
 
 
 @internal
@@ -55,7 +55,7 @@ def ternaryOpsToIf(statements):
             except NoDriverErr:
                 assert (hasattr(st.src, "_interface")
                         and st.src._interface is not None)\
-                    or st.src.defVal.vld_mask, st.src
+                    or st.src.def_val.vld_mask, st.src
 
         stms.append(st)
     return stms
@@ -71,7 +71,7 @@ class VhdlSerializer_statements():
         def valAsHdl(v):
             return cls.Value(v, ctx)
 
-        if dst.virtualOnly:
+        if dst.virtual_only:
             symbol = ":="
         else:
             symbol = "<="
@@ -93,35 +93,30 @@ class VhdlSerializer_statements():
             correct = False
             src = a.src
             if (isinstance(dst_t, Bits)
-                    and isinstance(src_t, Bits)
-                    and dst_t.bit_length() == src_t.bit_length() == 1):
-                if dst_t.force_vector and not src_t.force_vector:
-                    dstStr = "%s(0)" % (dstStr)
-                    srcStr = valAsHdl(a.src)
-                    correct = True
-                elif not dst_t.force_vector and src_t.force_vector:
-                    srcStr = "%s(0)" % valAsHdl(src)
-                    correct = True
-                elif src_t == BOOL:
-                    srcStr = "'1' when %s else '0'" % valAsHdl(src)
-                    correct = True
-            elif src_t == INT:
-                if isinstance(src, Value):
-                    if src._is_full_valid():
+                    and isinstance(src_t, Bits)):
+                if dst_t.bit_length() == src_t.bit_length() == 1:
+                    if dst_t.force_vector and not src_t.force_vector:
+                        dstStr = "%s(0)" % (dstStr)
+                        srcStr = valAsHdl(a.src)
+                        correct = True
+                    elif not dst_t.force_vector and src_t.force_vector:
+                        srcStr = "%s(0)" % valAsHdl(src)
+                        correct = True
+                    elif src_t == BOOL:
+                        srcStr = "'1' WHEN %s ELSE '0'" % valAsHdl(src)
+                        correct = True
+                elif not src_t.strict_width:
+                    if isinstance(src, Value):
+                        _src = copy(src)
                         if a.indexes:
                             raise NotImplementedError()
-                        else:
-                            w = dst._dtype.bit_length()
-                            if dst_t.signed:
-                                srcStr = "std_logic_vector(to_signed(%d, %d))" % (
-                                    int(src), w)
-                            else:
-                                srcStr = "std_logic_vector(to_unsigned(%d, %d))" % (
-                                    int(src), w)
-                            correct = True
-                else:
-                    raise NotImplementedError()
-                    pass
+
+                        _src._dtype = dst_t
+                        srcStr = cls.Value(_src, ctx)
+                        correct = True
+                    else:
+                        raise NotImplementedError()
+                        pass
 
             if correct:
                 return "%s%s %s %s" % (indent_str, dstStr, symbol, srcStr)
@@ -160,7 +155,7 @@ class VhdlSerializer_statements():
             childCtx = copy(ctx)
 
         def createTmpVarFn(suggestedName, dtype):
-            s = RtlSignal(None, None, dtype, virtualOnly=True)
+            s = RtlSignal(None, None, dtype, virtual_only=True)
             s.name = ctx.scope.checkedName(suggestedName, s)
             s.hidden = False
             serializedS = cls.SignalItem(s, childCtx, declaration=True)
@@ -175,8 +170,8 @@ class VhdlSerializer_statements():
 
         extraVarsInit = []
         for s in extraVars:
-            if isinstance(s.defVal, RtlSignalBase) or s.defVal.vld_mask:
-                a = Assignment(s.defVal, s, virtualOnly=True)
+            if isinstance(s.def_val, RtlSignalBase) or s.def_val.vld_mask:
+                a = Assignment(s.def_val, s, virtual_only=True)
                 extraVarsInit.append(cls.Assignment(a, childCtx))
             else:
                 assert s.drivers, s
@@ -202,7 +197,7 @@ class VhdlSerializer_statements():
         )
 
     @classmethod
-    def IfContainer(cls, ifc, ctx):
+    def IfContainer(cls, ifc: IfContainer, ctx):
         childCtx = ctx.withIndent()
 
         def asHdl(statements):

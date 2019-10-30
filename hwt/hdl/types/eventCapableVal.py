@@ -9,10 +9,10 @@ class EventCapableVal():
     Base class for event capable values
     """
 
-    def _onFallingEdge(self, now):
+    def _onFallingEdge(self):
         assert not isinstance(self, Value), self
         return Operator.withRes(AllOps.FALLING_EDGE, [self], BOOL)
 
-    def _onRisingEdge(self, now):
+    def _onRisingEdge(self):
         assert not isinstance(self, Value), self
         return Operator.withRes(AllOps.RISING_EDGE, [self], BOOL)

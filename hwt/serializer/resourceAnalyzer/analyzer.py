@@ -39,7 +39,6 @@ IGNORED_OPERATORS = {
     AllOps.BitsAsSigned,
     AllOps.BitsAsUnsigned,
     AllOps.BitsAsVec,
-    AllOps.BitsToInt,
     AllOps.RISING_EDGE,
     AllOps.FALLING_EDGE,
 }

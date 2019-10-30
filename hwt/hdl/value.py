@@ -43,8 +43,12 @@ class Value():
         return hash((self._dtype, self.val, self.vld_mask))
 
     def __repr__(self):
-        return "<{0:s} {1:s}, mask {2:x}>".format(
-            self.__class__.__name__, repr(self.val), self.vld_mask)
+        if self._is_full_valid():
+            vld_mask = ""
+        else:
+            vld_mask = ", mask {0:x}".format(self.vld_mask)
+        return "<{0:s} {1:s}{2:s}>".format(
+            self.__class__.__name__, repr(self.val), vld_mask)
 
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):

@@ -123,7 +123,7 @@ class TransTmpl(object):
         """
         self.itemCnt = int(dtype.size)
         self.children = TransTmpl(
-            dtype.elmType, 0, parent=self, origin=self.origin)
+            dtype.element_t, 0, parent=self, origin=self.origin)
         return bitAddr + self.itemCnt * self.children.bitAddrEnd
 
     @internal
@@ -176,9 +176,9 @@ class TransTmpl(object):
 
         :return: address of it's end
         """
-        ch = TransTmpl(dtype.elmType, 0, parent=self, origin=self.origin)
+        ch = TransTmpl(dtype.element_t, 0, parent=self, origin=self.origin)
         self.children.append(ch)
-        return bitAddr + dtype.elmType.bit_length()
+        return bitAddr + dtype.element_t.bit_length()
 
     def _loadFromHType(self, dtype: HdlType, bitAddr: int) -> None:
         """

@@ -1,4 +1,4 @@
-{{indent}}if({{ cond }}){%
+{{indent}}if ({{ cond }}){%
 if ifTrue|length >0 %} begin
 {%    for s in ifTrue %}{{s}}
 {%
@@ -6,7 +6,7 @@ if ifTrue|length >0 %} begin
 endif %}{% 
 if elIfs|length >0 %}{% 
     for c, stms in elIfs 
-       %} else if({{c}}) begin
+       %} else if ({{c}}) begin
 {%     for s in stms %}{{s}}
 {%     endfor%}{{indent}}end{%
     endfor%}{% 

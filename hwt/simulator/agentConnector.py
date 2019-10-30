@@ -1,35 +1,42 @@
 from hwt.doc_markers import internal
 from hwt.hdl.constants import INTF_DIRECTION
 from pycocotb.hdlSimulator import HdlSimulator
+from hwt.synthesizer.unit import Unit
 
 
 @internal
-def autoAddAgents(unit, sim: HdlSimulator):
+def autoAddAgents(unit: Unit, sim: HdlSimulator):
     """
     Walk all interfaces on unit and instantiate agent for every interface.
 
     :return: all monitor/driver functions which should be added to simulation
          as processes
     """
-    proc = []
     for intf in unit._interfaces:
         if not intf._isExtern:
             continue
 
         intf._initSimAgent(sim)
         assert intf._ag is not None, intf
-        agents = [intf._ag, ]
+
+
+@internal
+def collect_processes_from_sim_agents(unit: Unit):
+    proc = []
+    for intf in unit._interfaces:
+        a = intf._ag
+        if not intf._isExtern or a is None:
+            continue
 
         if intf._direction == INTF_DIRECTION.MASTER:
-            agProcs = list(map(lambda a: a.getMonitors(), agents))
+            agProcs = a.getMonitors()
         elif intf._direction == INTF_DIRECTION.SLAVE:
-            agProcs = list(map(lambda a: a.getDrivers(), agents))
+            agProcs = a.getDrivers()
         else:
             raise NotImplementedError("intf._direction %r for %r" % (
                 intf._direction, intf))
 
-        for p in agProcs:
-            proc.extend(p)
+        proc.extend(agProcs)
 
     return proc
 

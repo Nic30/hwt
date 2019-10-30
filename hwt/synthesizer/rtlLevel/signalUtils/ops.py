@@ -89,11 +89,11 @@ class RtlSignalOps():
     def __invert__(self):
         return self.naryOp(AllOps.NOT, tv(self).__invert__)
 
-    def _onRisingEdge(self, now=None):
-        return self.naryOp(AllOps.RISING_EDGE, tv(self)._onRisingEdge, now)
+    def _onRisingEdge(self):
+        return self.naryOp(AllOps.RISING_EDGE, tv(self)._onRisingEdge)
 
-    def _onFallingEdge(self, now=None):
-        return self.naryOp(AllOps.FALLING_EDGE, tv(self)._onFallingEdge, now)
+    def _onFallingEdge(self):
+        return self.naryOp(AllOps.FALLING_EDGE, tv(self)._onFallingEdge)
 
     def _isOn(self):
         return self._auto_cast(BOOL)
