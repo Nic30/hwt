@@ -4,6 +4,7 @@ from pycocotb.agents.base import AgentBase, SyncAgentBase as pcSyncAgentBase,\
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.process_utils import OnRisingCallbackLoop
 
+
 class AgentWitReset(pcAgentWitReset):
 
     def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
@@ -30,7 +31,8 @@ class AgentWitReset(pcAgentWitReset):
             rstVal = self.rst.read()
             rstVal = int(rstVal)
             return rstVal == self.rstOffIn
-    
+
+
 class SyncAgentBase(AgentWitReset, pcSyncAgentBase):
     """
     Agent which discovers clk, rst signal and runs only
