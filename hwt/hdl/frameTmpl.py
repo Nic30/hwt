@@ -331,6 +331,7 @@ class FrameTmpl(object):
                 {})
 
         for _, transParts in self.walkWords(showPadding=True):
+            # build a single data word
             actualVldMask = 0
             actualVal = 0
             for tPart in transParts:
@@ -346,13 +347,14 @@ class FrameTmpl(object):
                     vld = 0
                 else:
                     newBits = selectBitRange(val, flow, fhigh - flow)
-                    vld = mask(high - low) << low
+                    vld = mask(high - low)
 
                 actualVal = setBitRange(actualVal, low, high - low, newBits)
-                actualVldMask = setBitRange(actualVal, low, high - low, vld)
+                actualVldMask = setBitRange(actualVldMask, low, high - low, vld)
 
-            yield typeOfWord.getValueCls()(typeOfWord, actualVal,
-                                           actualVldMask)
+            v = typeOfWord.getValueCls()(typeOfWord, actualVal,
+                                         actualVldMask)
+            yield v
 
     @internal
     def __repr__getName(self, transPart, fieldWidth):
