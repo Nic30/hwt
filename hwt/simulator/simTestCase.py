@@ -7,7 +7,7 @@ import unittest
 
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.value import Value
-from hwt.simulator.agentConnector import valToInt, autoAddAgents,\
+from hwt.simulator.agentConnector import valToInt, autoAddAgents, \
     collect_processes_from_sim_agents
 from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
 from hwt.simulator.simCompilerBasicHdlSimulator import toBasicSimulatorSimModel
@@ -65,6 +65,7 @@ class SimTestCase(unittest.TestCase):
     RECOMPILE = True
     rtl_simulator_cls = None
     hdl_simulator = None
+    DEFAULT_BUILD_DIR = "tmp"
 
     def assertValEqual(self, first, second, msg=None):
         try:
@@ -112,7 +113,8 @@ class SimTestCase(unittest.TestCase):
 
     def runSim(self, until: float, name=None):
         if name is None:
-            outputFileName = "tmp/" + self.getTestName() + ".vcd"
+            outputFileName = os.path.join(self.DEFAULT_BUILD_DIR,
+                                          self.getTestName() + ".vcd")
         else:
             outputFileName = name
 
@@ -151,7 +153,7 @@ class SimTestCase(unittest.TestCase):
         reconnectUnitSignalsToModel(unit, rtl_simulator)
         autoAddAgents(unit, hdl_simulator)
         self.procs = []
-        self.u, self.rtl_simulator, self.hdl_simulator =\
+        self.u, self.rtl_simulator, self.hdl_simulator = \
             unit, rtl_simulator, hdl_simulator
 
         return unit, rtl_simulator, self.procs
@@ -161,7 +163,7 @@ class SimTestCase(unittest.TestCase):
         return "%s__%s" % (cls.__name__, unit._getDefaultName())
 
     @classmethod
-    def compileSim(cls, unit, build_dir: Optional[str]="tmp/",
+    def compileSim(cls, unit, build_dir: Optional[str]=DEFAULT_BUILD_DIR,
                    unique_name: Optional[str]=None, onAfterToRtl=None,
                    target_platform=DummyPlatform()):
         """
@@ -183,7 +185,7 @@ class SimTestCase(unittest.TestCase):
         if unique_name is None:
             unique_name = cls.get_unique_name(unit)
 
-        cls.rtl_simulator_cls = toBasicSimulatorSimModel(  # toVerilatorSimModel(
+        cls.rtl_simulator_cls = toBasicSimulatorSimModel(# toVerilatorSimModel(
             unit,
             unique_name=unique_name,
             build_dir=build_dir,
@@ -198,7 +200,7 @@ class SimTestCase(unittest.TestCase):
     def compileSimAndStart(
             self,
             unit: Unit,
-            build_dir: Optional[str]="tmp/",
+            build_dir: Optional[str]=DEFAULT_BUILD_DIR,
             unique_name: Optional[str]=None,
             onAfterToRtl=None,
             target_platform=DummyPlatform()):
