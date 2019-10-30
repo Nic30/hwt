@@ -4,7 +4,7 @@ from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.agents.clk import ClockAgent
 from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.triggers import WaitCombRead, WaitWriteOnly
+from pycocotb.triggers import WaitCombRead, WaitWriteOnly, WaitCombStable, Timer
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):
@@ -68,10 +68,16 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         self.requests.append((WRITE, addr, data))
 
     def monitor(self):
+        """
+        Handle read/write request on this interfaces
+        
+        This method is executed on clock edge.
+        This means that the read data should be put on dout after clock edge.
+        """
         intf = self.intf
 
-        yield WaitCombRead()
-        # now we are after clk edge
+        
+        yield WaitCombStable()
         if self.notReset():
             en = intf.en.read()
             en = int(en)
@@ -90,12 +96,18 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             req = self.requests.popleft()
             t = req[0]
             addr = req[1]
-            yield WaitWriteOnly()
             if t == READ:
-                intf.dout.write(self.mem[addr.val])
+                v = self.mem.get(addr.val, None)
+                yield Timer(1)
+                yield WaitWriteOnly()
+                intf.dout.write(v)
             else:
                 assert t == WRITE
-                intf.dout.write(0)
+                # yield WaitWriteOnly()
+                # intf.dout.write(None)
+                yield Timer(1)
+                # after clock edge
+                yield WaitWriteOnly()
                 self.mem[addr.val] = req[2]
 
     def driver(self):
@@ -125,7 +137,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             self.readPending = False
 
         if readPending:
-            yield WaitCombRead()
+            # in previous clock the read request was dispatched, now we are collecting the data
+            yield WaitCombStable()
             # now we are after clk edge
             d = intf.dout.read()
             self.readed.append(d)
