@@ -25,7 +25,10 @@ class BasicRtlSimulatorWithVCD(BasicRtlSimulator):
             beforeSim(self, self.synthesised_unit, self.model)
 
     def finalize(self):
-        self.config.vcdWriter._oFile.close()
+        # because set_trace_file() may not be called
+        # and it this case the vcd config is not set
+        if isinstance(self.config, BasicRtlSimConfigVcd):
+            self.config.vcdWriter._oFile.close()
 
 
 class BasicSimConstructor():
