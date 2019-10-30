@@ -37,8 +37,6 @@ class VldSyncedAgent(SyncAgentBase):
         super(VldSyncedAgent, self).setEnable_asDriver(en)
         if not en:
             self.set_valid(0)
-        else:
-            self.set_valid(self._lastVld)
 
     def monitor(self):
         yield WaitCombStable()
