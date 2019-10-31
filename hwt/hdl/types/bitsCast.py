@@ -31,8 +31,7 @@ def convertBits__val(self: Bits, val: "BitVal", toType: HdlType):
             val = toType.from_py(val.val, val.vld_mask)
         return val
     elif toType == INT:
-        return INT.getValueCls()(val.val,
-                                 INT,
+        return INT.getValueCls()(INT, val.val,
                                  int(val._is_full_valid()))
 
     return default_auto_cast_fn(self, val, toType)
