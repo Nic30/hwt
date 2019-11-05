@@ -200,7 +200,7 @@ def markVisibilityOfSignals(ctx, ctxName, signals, interfaceSignals):
                 if has_comb_driver and is_comb_driver:
                     raise MultipleDriversErr(
                         "%s: Signal %r has multiple combinational drivers" %
-                        (ctx.getDebugScopeName(), sig))
+                        (ctx.getDebugScopeName(), sig), sig.drivers)
 
                 has_comb_driver |= is_comb_driver
         elif driver_cnt == 1:
