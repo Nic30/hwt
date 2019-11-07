@@ -81,7 +81,7 @@ def walkFlattenFields(sigOrVal, skipPadding=True):
 
 def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
     """
-    opposite of packAxiSFrame
+    Parse raw Bits array to a  
     """
     if getDataFn is None:
         assert dataWidth is not None
