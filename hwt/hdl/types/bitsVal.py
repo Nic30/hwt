@@ -67,6 +67,9 @@ class BitsVal(Bits3val, EventCapableVal, Value):
 
             return Operator.withRes(cnv, [self], t)
 
+    def _auto_cast(self, dtype):
+        return Value._auto_cast(self, dtype)
+
     def _signed(self):
         return self._convSign(True)
 
