@@ -369,10 +369,8 @@ class HdlStatement(HdlObject):
                             rank_decrease += stmB.rank
                             stmA._merge_with_other_stm(stmB)
                             stms[iA + 1 + iB] = None
-                            new_statements.append(stmA)
-                        else:
-                            new_statements.append(stmA)
-                            new_statements.append(stmB)
+
+                    new_statements.append(stmA)
 
         new_statements.sort(key=lambda stm: order[stm])
         return new_statements, rank_decrease
