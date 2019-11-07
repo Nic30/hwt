@@ -2,45 +2,48 @@ from datetime import datetime
 import sys
 from typing import Union, Optional, Tuple, Callable
 
-from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
-from pyDigitalWaveTools.vcd.writer import VcdWriter, VcdVarWritingScope, \
-    vcdBitsFormatter, vcdEnumFormatter, VarAlreadyRegistered
-
 from hwt.doc_markers import internal
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.bool import HBool
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import Value
-from hwt.simulator.hdlSimConfig import HdlSimConfig
-from hwt.simulator.simModel import SimModel
-from hwt.simulator.types.simBits import SimBitsT
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.unit import Unit
+from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
+from pyDigitalWaveTools.vcd.writer import VcdWriter, VcdVarWritingScope, \
+    vcdBitsFormatter, vcdEnumFormatter, VarAlreadyRegistered
+from pycocotb.basic_hdl_simulator.config import BasicRtlSimConfig
+from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
+from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
+from pycocotb.hdlSimulator import HdlSimulator
+from pyMathBitPrecise.bits3t import Bits3t
+from pyMathBitPrecise.enum3t import Enum3t
 
 
 @internal
-def vcdTypeInfoForHType(t) -> Tuple[str, int, Callable[[RtlSignalBase, Value], str]]:
+def vcdTypeInfoForHType(t)\
+        -> Tuple[str, int, Callable[[RtlSignalBase, Value], str]]:
     """
     :return: (vcd type name, vcd width)
     """
-    if isinstance(t, (SimBitsT, Bits, HBool)):
+    if isinstance(t, (Bits3t, Bits)):
         return (VCD_SIG_TYPE.WIRE, t.bit_length(), vcdBitsFormatter)
-    elif isinstance(t, HEnum):
+    elif isinstance(t, (Enum3t, HEnum)):
         return (VCD_SIG_TYPE.REAL, 1, vcdEnumFormatter)
     else:
         raise ValueError(t)
 
 
-class VcdHdlSimConfig(HdlSimConfig):
-    supported_type_classes = (HBool, Bits, HEnum)
+class BasicRtlSimConfigVcd(BasicRtlSimConfig):
+    supported_type_classes = (Bits, HEnum, Bits3t, Enum3t)
 
     def __init__(self, dumpFile=sys.stdout):
         self.vcdWriter = VcdWriter(dumpFile)
         self.logPropagation = False
         self.logApplyingValues = False
         self._obj2scope = {}
+        self._traced_signals = set()
 
     def vcdRegisterInterfaces(self, obj: Union[Interface, Unit],
                               parent: Optional[VcdVarWritingScope]):
@@ -59,7 +62,7 @@ class VcdHdlSimConfig(HdlSimConfig):
                 for chIntf in obj._interfaces:
                     self.vcdRegisterInterfaces(chIntf, subScope)
 
-                if isinstance(obj, (Unit, SimModel)):
+                if isinstance(obj, (Unit, BasicRtlSimModel)):
                     # register interfaces from all subunits
                     for u in obj._units:
                         self.vcdRegisterInterfaces(u, subScope)
@@ -70,25 +73,36 @@ class VcdHdlSimConfig(HdlSimConfig):
             if isinstance(t, self.supported_type_classes):
                 tName, width, formatter = vcdTypeInfoForHType(t)
                 try:
-                    parent.addVar(obj, getSignalName(obj),
+                    parent.addVar(obj._sigInside, getSignalName(obj),
                                   tName, width, formatter)
                 except VarAlreadyRegistered:
                     pass
 
-    def vcdRegisterRemainingSignals(self, unit: Union[Interface, Unit]):
+    def vcdRegisterRemainingSignals(self, unit: Union[Interface, Unit],
+                                    model: BasicRtlSimModel):
         unitScope = self._obj2scope[unit]
-        for s in unit._ctx.signals:
+        # for s in unit._ctx.signals:
+        #    if not s.hidden and s not in self.vcdWriter._idScope:
+        #        t = s._dtype
+        #        if isinstance(t, self.supported_type_classes):
+        #            tName, width, formatter = vcdTypeInfoForHType(t)
+        #            unitScope.addVar(s, getSignalName(
+        #                s), tName, width, formatter)
+        #
+        for s in model._interfaces:
             if s not in self.vcdWriter._idScope:
                 t = s._dtype
                 if isinstance(t, self.supported_type_classes):
                     tName, width, formatter = vcdTypeInfoForHType(t)
-                    unitScope.addVar(s, getSignalName(
-                        s), tName, width, formatter)
-
+                    try:
+                        unitScope.addVar(s, s._name, tName, width, formatter)
+                    except VarAlreadyRegistered:
+                        pass
         for u in unit._units:
-            self.vcdRegisterRemainingSignals(u)
+            m = getattr(model, u._name + "_inst")
+            self.vcdRegisterRemainingSignals(u, m)
 
-    def initUnitSignalsForInterfaces(self, unit):
+    def initUnitSignalsForInterfaces(self, unit: Unit, model: BasicRtlSimModel):
         self._scope = self.registerInterfaces(unit)
         for s in unit._ctx.signals:
             if s not in self.vcdWriter._idScope:
@@ -97,7 +111,8 @@ class VcdHdlSimConfig(HdlSimConfig):
         for u in unit._units:
             self.initUnitSignals(u)
 
-    def beforeSim(self, simulator, synthesisedUnit):
+    def beforeSim(self, simulator: HdlSimulator,
+                  synthesisedUnit: Unit, model: BasicRtlSimModel):
         """
         This method is called before first step of simulation.
         """
@@ -106,11 +121,11 @@ class VcdHdlSimConfig(HdlSimConfig):
         vcd.timescale(1)
 
         self.vcdRegisterInterfaces(synthesisedUnit, None)
-        self.vcdRegisterRemainingSignals(synthesisedUnit)
+        self.vcdRegisterRemainingSignals(synthesisedUnit, model)
 
         vcd.enddefinitions()
 
-    def logChange(self, nowTime, sig, nextVal):
+    def logChange(self, nowTime: int, sig: BasicRtlSimProxy, nextVal):
         """
         This method is called for every value change of any signal.
         """
@@ -118,4 +133,5 @@ class VcdHdlSimConfig(HdlSimConfig):
             self.vcdWriter.logChange(nowTime, sig, nextVal)
         except KeyError:
             # not every signal has to be registered
+            # (if it is not registered it means it is ignored)
             pass

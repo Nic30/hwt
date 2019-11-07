@@ -5,6 +5,7 @@ from hwt.hdl.statements import isSameHVal, HdlStatement, areSameHVals
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.doc_markers import internal
+from hwt.hdl.operatorUtils import replace_input_in_expr
 
 
 class Assignment(HdlStatement):
@@ -21,7 +22,7 @@ class Assignment(HdlStatement):
     """
     __instCntr = 0
 
-    def __init__(self, src, dst, indexes=None, virtualOnly=False,
+    def __init__(self, src, dst, indexes=None, virtual_only=False,
                  parentStm=None,
                  sensitivity=None,
                  is_completly_event_dependent=False):
@@ -30,7 +31,7 @@ class Assignment(HdlStatement):
         :param src: source which is assigned from
         :param indexes: description of index selector on dst
             (list of Index/Slice objects) (f.e. [[0], [1]] means  dst[0][1])
-        :param virtualOnly: flag indicates that this assignments
+        :param virtual_only: flag indicates that this assignments
             is only virtual and should not be added into
             netlist, because it is only for internal notation
         """
@@ -39,7 +40,7 @@ class Assignment(HdlStatement):
             sensitivity,
             is_completly_event_dependent)
         self.src = src
-        isReal = not virtualOnly
+        isReal = not virtual_only
 
         if not isinstance(src, Value):
             self._inputs.append(src)
@@ -62,7 +63,7 @@ class Assignment(HdlStatement):
 
         self._instId = Assignment._nextInstId()
 
-        if not virtualOnly:
+        if not virtual_only:
             dst.ctx.statements.add(self)
 
     @internal
@@ -97,7 +98,7 @@ class Assignment(HdlStatement):
     @internal
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, HdlStatement]):
         """
-        Enclosure is never requiered
+        The assignment does not have any uncovered code branches
         """
         pass
 
@@ -142,6 +143,25 @@ class Assignment(HdlStatement):
         i = cls.__instCntr
         cls.__instCntr += 1
         return i
+
+    @internal
+    def _replace_input(self, toReplace: RtlSignalBase,
+                       replacement: RtlSignalBase) -> None:
+        isTopStatement = self.parentStm is None
+
+        if self.indexes:
+            indexes_to_replace = []
+            for i, ind in enumerate(self.indexes):
+                if replace_input_in_expr(self, ind, toReplace, replacement, isTopStatement):
+                    indexes_to_replace.append((i, replacement))
+
+            for i, newInd in indexes_to_replace:
+                self.indexes[i] = newInd
+
+        if replace_input_in_expr(self, self.src, toReplace, replacement, isTopStatement):
+            self.src = replacement
+
+        self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
 
     @internal
     def seqEval(self):

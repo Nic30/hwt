@@ -1,5 +1,5 @@
-from hwt.hdl.types.hdlType import HdlType
 from hwt.doc_markers import internal
+from hwt.hdl.types.hdlType import HdlType
 
 
 class String(HdlType):

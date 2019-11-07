@@ -1,56 +1,73 @@
 from hwt.hdl.operatorDefs import AllOps
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class SimModelSerializer_ops():
     opPrecedence = {
+        AllOps.RISING_EDGE: 1,
+        AllOps.FALLING_EDGE: 1,
+        AllOps.DOWNTO: 1,
+        AllOps.TO: 1,
+        
+        AllOps.EQ: 11,
+        AllOps.NEQ: 11,
+        AllOps.GT: 11,
+        AllOps.LT: 11,
+        AllOps.GE: 11,
+        AllOps.LE: 11,
+
+        AllOps.OR: 10,
+        AllOps.XOR: 9,
+        AllOps.AND: 8,
+        
+        AllOps.ADD: 6,
+        AllOps.SUB: 6,
+        
+        AllOps.DIV: 5,
+        AllOps.MUL: 5,
+        AllOps.MOD: 5,
+
         AllOps.NOT: 4,
         AllOps.NEG: 4,
-        AllOps.RISING_EDGE: 1,
-        AllOps.DIV: 4,
-        AllOps.ADD: 5,
-        AllOps.SUB: 5,
-        AllOps.MUL: 4,
-        AllOps.XOR: 9,
-        AllOps.EQ: 10,
-        AllOps.NEQ: 10,
-        AllOps.AND: 10,
-        AllOps.OR: 10,
-        AllOps.DOWNTO: 1,
-        AllOps.GT: 10,
-        AllOps.LT: 10,
-        AllOps.GE: 10,
-        AllOps.LE: 10,
+        AllOps.POW: 3,
+        AllOps.INDEX: 2,
+        
         AllOps.CONCAT: 1,
-        AllOps.INDEX: 1,
         AllOps.TERNARY: 1,
         AllOps.CALL: 1,
+        AllOps.BitsAsSigned: 1,
+        AllOps.BitsAsUnsigned: 1,
+        AllOps.BitsAsVec: 1,
     }
     _binOps = {
-        AllOps.AND: '%s._and__val(%s)',
-        AllOps.OR: '%s._or__val(%s)',
-        AllOps.XOR: '%s._xor__val(%s)',
-        AllOps.CONCAT: "%s._concat__val(%s)",
-        AllOps.DIV: '%s._floordiv__val(%s)',
-        AllOps.DOWNTO: "SliceVal((%s, %s), SLICE, True)",
-        AllOps.EQ: '%s._eq__val(%s)',
-        AllOps.GT: '%s._gt__val(%s)',
-        AllOps.GE: '%s._ge__val(%s)',
-        AllOps.LE: '%s._le__val(%s)',
-        AllOps.LT: '%s._lt__val(%s)',
-        AllOps.SUB: '%s._sub__val(%s)',
-        AllOps.MUL: '%s._mul__val(%s)',
-        AllOps.NEQ: '%s._ne__val(%s)',
-        AllOps.ADD: '%s._add__val(%s)',
-        AllOps.POW: "power(%s, %s)",
+        AllOps.AND: '%s & %s',
+        AllOps.OR: '%s | %s',
+        AllOps.XOR: '%s ^ %s',
+        AllOps.CONCAT: "%s._concat(%s)",
+        AllOps.DIV: '%s // %s',
+        AllOps.DOWNTO: "slice(%s, %s)",
+        AllOps.EQ: '%s._eq(%s)',
+        AllOps.GT: '%s > %s',
+        AllOps.GE: '%s >= %s',
+        AllOps.LE: '%s <= %s',
+        AllOps.LT: '%s < %s',
+        AllOps.SUB: '%s - %s',
+        AllOps.MUL: '%s * %s',
+        AllOps.NEQ: '%s != %s',
+        AllOps.ADD: '%s + %s',
+        AllOps.POW: "%s ** %s",
+    }
+    _unaryEventOps = {
+        AllOps.RISING_EDGE: "%s._onRisingEdge()",
+        AllOps.FALLING_EDGE: "%s._onFallingEdge()",
     }
     _unaryOps = {
-        AllOps.NOT: "(%s)._invert__val()",
-        AllOps.RISING_EDGE: "(%s)._onRisingEdge__val(sim.now)",
-        AllOps.FALLING_EDGE: "(%s)._onFallingEdge__val(sim.now)",
-        AllOps.BitsAsSigned: "(%s)._convSign__val(True)",
-        AllOps.BitsAsUnsigned: "(%s)._convSign__val(False)",
-        AllOps.BitsAsVec: "(%s)._convSign__val(None)",
-        AllOps.NEG: "(%s)._neg__val()",
+        AllOps.NOT: "~%s",
+        AllOps.NEG: "-%s",
+
+        AllOps.BitsAsSigned: "%s.cast_sign(True)",
+        AllOps.BitsAsUnsigned: "%s.cast_sign(False)",
+        AllOps.BitsAsVec: "%s.cast_sign(False)",
     }
 
     @classmethod
@@ -60,34 +77,26 @@ class SimModelSerializer_ops():
 
         op_str = cls._unaryOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx))
+            requires_braces = op_str[2] == "."
+            op0 = cls._operand(ops[0], 0, op, requires_braces, False, ctx)
+            return op_str % (op0)
+        op_str = cls._unaryEventOps.get(o, None)
+        if op_str is not None:
+            op0 = ops[0]
+            assert isinstance(op0, RtlSignal) and not op0.hidden, op0
+            return op_str % ("self.io.%s" % op0.name)
 
         op_str = cls._binOps.get(o, None)
         if op_str is not None:
-            return op_str % (cls._operand(ops[0], o, ctx),
-                             cls._operand(ops[1], o, ctx))
+            return cls._bin_op(op, op_str, ctx)
 
         if o == AllOps.INDEX:
-            assert len(ops) == 2
-            return "(%s)._getitem__val(%s)" % (cls.asHdl(ops[0], ctx),
-                                               cls._operand(ops[1], o, ctx))
+            return cls._operator_index(op, ctx)
         elif o == AllOps.TERNARY:
-            return "(%s)._ternary__val(%s, %s)" %\
-                tuple(map(lambda x: cls.asHdl(x, ctx), ops))
-        elif o == AllOps.BitsToInt:
-            assert len(ops) == 1
-            op = ops[0]
-            return "convertSimBits__val(%s, %s, SIM_INT)" % (
-                cls.HdlType_bits(op._dtype, ctx),
-                cls.asHdl(op, ctx))
-        elif o == AllOps.IntToBits:
-            assert len(ops) == 1
-            resT = op.result._dtype
-            return "convertSimInteger__val(%s, %s, %s)" % (
-                cls.HdlType(ops[0]._dtype, ctx),
-                cls.asHdl(
-                    ops[0], ctx),
-                cls.HdlType_bits(resT, ctx))
+            op0 = cls._operand(ops[0], 0, op, True, False, ctx)
+            op1 = cls._operand(ops[1], 1, op, False, True, ctx)
+            op2 = cls._operand(ops[2], 2, op, False, True, ctx)
+            return "%s._ternary__val(%s, %s)" % (op0, op1, op2)
         else:
             raise NotImplementedError(
                 "Do not know how to convert %s to simModel" % (o))

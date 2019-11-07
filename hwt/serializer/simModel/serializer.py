@@ -4,10 +4,9 @@ from jinja2.loaders import PackageLoader
 
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps, sensitivityByOp
+from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.process import HWProcess
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
@@ -26,13 +25,25 @@ from hwt.serializer.simModel.ops import SimModelSerializer_ops
 from hwt.serializer.simModel.types import SimModelSerializer_types
 from hwt.serializer.simModel.value import SimModelSerializer_value
 from hwt.serializer.utils import maxStmId
-from hwt.synthesizer.param import evalParam
+from ipCorePackager.constants import DIRECTION
 
 
 env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
 unitTmpl = env.get_template('modelCls.py.template')
 processTmpl = env.get_template('process.py.template')
 ifTmpl = env.get_template("if.py.template")
+
+
+def sensitivityByOp(op):
+    """
+    get sensitivity type for operator
+    """
+    if op == AllOps.RISING_EDGE:
+        return (True, False)
+    elif op == AllOps.FALLING_EDGE:
+        return (False, True)
+    else:
+        raise TypeError()
 
 
 class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
@@ -87,9 +98,9 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         childCtx.constCache = ConstCache(ctx.scope.checkedName)
 
         def serializeVar(v):
-            dv = evalParam(v.defVal)
+            dv = v.def_val
             if isinstance(dv, HEnumVal):
-                dv = "%s.%s" % (dv._dtype.name, dv.val)
+                dv = "self.%s.%s" % (dv._dtype.name, dv.val)
             else:
                 dv = cls.Value(dv, ctx)
 
@@ -104,6 +115,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             constants.append((c[1], cls.Value(c[0], ctx)))
 
         return unitTmpl.render(
+            DIRECTION=DIRECTION,
             name=arch.getEntityName(),
             constants=constants,
             ports=ports,
@@ -126,7 +138,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
 
         srcStr = "%s" % cls.Value(a.src, ctx)
         if a.indexes is not None:
-            return "%sio.%s = (%s, (%s,), %s)" % (
+            return "%sself.io.%s.val_next = (%s, (%s,), %s)" % (
                 indentStr, dst.name, srcStr,
                 ", ".join(map(lambda x: cls.asHdl(x, ctx),
                               a.indexes)),
@@ -136,17 +148,20 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                 srcT = a.src._dtype
                 dstT = dst._dtype
                 if (isinstance(srcT, Bits) and
-                        isinstance(dstT, Bits) and
-                        srcT.bit_length() == dstT.bit_length() == 1):
-
-                    if srcT.forceVector != dstT.forceVector:
-                        _0 = cls.Value(toHVal(0), ctx)
-                        if srcT.forceVector:
-                            return "%sio.%s = ((%s)._getitem__val(%s), %s)"\
-                                % (indentStr, dst.name, srcStr, _0, ev)
-                        else:
-                            return "%sio.%s = (%s, (%s,), %s)" % (
-                                indentStr, dst.name, srcStr, _0, ev)
+                        isinstance(dstT, Bits)):
+                    bl0 = srcT.bit_length()
+                    if bl0 == dstT.bit_length():
+                        if bl0 == 1 and srcT.force_vector != dstT.force_vector:
+                            _0 = cls.Value(toHVal(0), ctx)
+                            if srcT.force_vector:
+                                return "%sself.io.%s.val_next = ((%s)[%s], %s)"\
+                                    % (indentStr, dst.name, srcStr, _0, ev)
+                            else:
+                                return "%sself.io.%s.val_next = (%s, (%s,), %s)" % (
+                                    indentStr, dst.name, srcStr, _0, ev)
+                        elif srcT.signed == dstT.signed:
+                            return "%sself.io.%s.val_next = (%s, %s)" % (
+                                    indentStr, dst.name, srcStr, ev)
 
                 raise SerializerException(
                     ("%s <= %s  is not valid assignment\n"
@@ -154,7 +169,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
                     (cls.asHdl(dst, ctx), srcStr,
                      dst._dtype, a.src._dtype))
             else:
-                return "%sio.%s = (%s, %s)" % (
+                return "%sself.io.%s.val_next = (%s, %s)" % (
                     indentStr, dst.name, srcStr, ev)
 
     @classmethod
@@ -201,8 +216,8 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
             for o in ifc._outputs:
                 # [TODO] look up indexes
                 indexes = None
-                oa = Assignment(o._dtype.fromPy(None), o, indexes,
-                                virtualOnly=True, parentStm=ifc,
+                oa = Assignment(o._dtype.from_py(None), o, indexes,
+                                virtual_only=True, parentStm=ifc,
                                 is_completly_event_dependent=ifc._is_completly_event_dependent)
                 outputInvalidateStms.append(cls.stmAsHdl(oa, childCtx))
 
@@ -225,6 +240,7 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
 
         def mkCond(c):
             return switchOn._eq(c)
+
         elIfs = []
 
         for key, statements in sw.cases[1:]:
@@ -248,9 +264,9 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         if isinstance(item, Operator):
             op = item.operator
             if op == AllOps.RISING_EDGE:
-                sens = SENSITIVITY.RISING
+                sens = (True, False)
             elif op == AllOps.FALLING_EDGE:
-                sens = SENSITIVITY.FALLING
+                sens = (False, True)
             else:
                 raise TypeError("This is not an event sensitivity", op)
 

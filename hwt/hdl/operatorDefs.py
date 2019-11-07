@@ -1,8 +1,7 @@
 from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
     xor, gt, ge, lt, le, getitem, neg
 
-from hwt.hdl.constants import SENSITIVITY
-from hwt.hdl.types.defs import INT
+from hwt.hdl.types.defs import INT, SLICE
 from hwt.hdl.value import Value
 from hwt.doc_markers import internal
 
@@ -38,8 +37,6 @@ class OpDefinition():
 
         if isEventDependentOp(operator.operator):
             operands.append(simulator.now)
-        elif operator.operator == AllOps.IntToBits:
-            operands.append(operator.result._dtype)
 
         return self._evalFn(*operands)
 
@@ -65,11 +62,11 @@ def dotOpFn(a, name):
 
 # [TODO] downto / to are relict of vhdl and should be replaced with slice
 def downtoFn(a, b):
-    return a._downto(b)
+    return SLICE.from_py(slice(a, b, -1))
 
 
 def toFn(a, b):
-    return a._to(b)
+    return SLICE.from_py(slice(a, b, 1))
 
 
 def concatFn(a, b):
@@ -77,7 +74,7 @@ def concatFn(a, b):
 
 
 def power(base, exp):
-    return base._pow(exp)
+    return base ** exp
 
 
 def eqFn(a, b):
@@ -152,9 +149,6 @@ class AllOps():
     TERNARY = OpDefinition(ternaryFn)
     CALL = OpDefinition(callFn)
 
-    BitsToInt = OpDefinition(bitsToIntFn)
-    IntToBits = OpDefinition(intToBitsFn)
-
     BitsAsSigned = OpDefinition(bitsAsSignedFn)
     BitsAsUnsigned = OpDefinition(bitsAsUnsignedFn)
     BitsAsVec = OpDefinition(bitsAsVec)
@@ -165,14 +159,3 @@ for a in dir(AllOps):
     if isinstance(o, OpDefinition):
         o.id = a
 
-
-def sensitivityByOp(op):
-    """
-    get sensitivity type for operator
-    """
-    if op == AllOps.RISING_EDGE:
-        return SENSITIVITY.RISING
-    elif op == AllOps.FALLING_EDGE:
-        return SENSITIVITY.FALLING
-    else:
-        raise TypeError()

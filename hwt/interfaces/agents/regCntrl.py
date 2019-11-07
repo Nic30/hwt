@@ -1,6 +1,7 @@
 from hwt.interfaces.agents.signal import SignalAgent
 from hwt.interfaces.agents.vldSynced import VldSyncedAgent
-from hwt.simulator.agentBase import SyncAgentBase, AgentBase
+from hwt.simulator.agentBase import SyncAgentBase
+from pycocotb.agents.base import AgentBase
 
 
 class RegCntrlAgent(SyncAgentBase):
@@ -8,12 +9,21 @@ class RegCntrlAgent(SyncAgentBase):
     Simulation/verification agent for RegCntrl interface
     """
 
-    def __init__(self, intf):
-        AgentBase.__init__(self, intf)
-        super().__init__(intf)
+    def __init__(self, sim, intf):
+        super().__init__(sim, intf)
 
-        self._din = SignalAgent(intf.din)
-        self._dout = VldSyncedAgent(intf.dout, allowNoReset=True)
+        self._din = SignalAgent(sim, intf.din)
+        self._dout = VldSyncedAgent(sim, intf.dout, allowNoReset=True)
+
+    def setEnable_asDriver(self, en: bool):
+        AgentBase.setEnable(self, en)
+        self._din.setEnable(en)
+        self._dout.setEnable(en)
+
+    def setEnable_asMonitor(self, en: bool):
+        AgentBase.setEnable(self, en)
+        self._din.setEnable(en)
+        self._dout.setEnable(en)
 
     def din_getter(self):
         return self._din.data

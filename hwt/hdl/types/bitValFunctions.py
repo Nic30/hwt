@@ -1,43 +1,13 @@
-from hwt.bitmask import mask
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
-from hwt.hdl.types.integer import Integer
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
-
-
-# internal
-BoolVal = BOOL.getValueCls()
-
-
-@internal
-def signFix(val, width):
-    """
-    Convert negative int to positive int which has same bits set
-    """
-    if val > 0:
-        msb = 1 << (width - 1)
-        if val & msb:
-            val -= mask(width) + 1
-    return val
-
-
-@internal
-def bitsCmp__val(self, other, op, evalFn):
-    ot = other._dtype
-
-    w = self._dtype._widthVal
-    assert w == ot._widthVal, "%d, %d" % (w, ot._widthVal)
-
-    vld = self.vldMask & other.vldMask
-    _vld = vld == mask(w)
-    res = evalFn(self.val, other.val) and _vld
-    updateTime = max(self.updateTime, other.updateTime)
-
-    return BoolVal(res, BOOL, int(_vld), updateTime)
+from pyMathBitPrecise.bit_utils import mask
+from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
+    bitsArithOp__val
 
 
 # dictionary which hold information how to change operator after
@@ -66,25 +36,24 @@ def bitsCmp_detect_useless_cmp(op0, op1, op):
         # value can not be lower than min_val
         if op == AllOps.GE:
             # -> always True
-            return BOOL.fromPy(1, 1)
+            return BOOL.from_py(1, 1)
         elif op == AllOps.LT:
             # -> always False
-            return BOOL.fromPy(0, 1)
+            return BOOL.from_py(0, 1)
         elif op == AllOps.LE:
             # convert <= to == to highlight the real function
             return AllOps.EQ
-    else:
-        if v == max_val:
-            # value can not be greater than max_val
-            if op == AllOps.GT:
-                # always False
-                return BOOL.fromPy(0, 1)
-            elif op == AllOps.LE:
-                # always True
-                return BOOL.fromPy(1, 1)
-            elif op == AllOps.GE:
-                # because value can not be greater than max
-                return AllOps.EQ
+    elif v == max_val:
+        # value can not be greater than max_val
+        if op == AllOps.GT:
+            # always False
+            return BOOL.from_py(0, 1)
+        elif op == AllOps.LE:
+            # always True
+            return BOOL.from_py(1, 1)
+        elif op == AllOps.GE:
+            # because value can not be greater than max
+            return AllOps.EQ
 
 
 @internal
@@ -93,44 +62,57 @@ def bitsCmp(self, other, op, evalFn=None):
     :attention: If other is Bool signal convert this to bool (not ideal,
         due VHDL event operator)
     """
-    other = toHVal(other)
     t = self._dtype
+    other = toHVal(other, t)
     ot = other._dtype
-
-    iamVal = isinstance(self, Value)
-    otherIsVal = isinstance(other, Value)
 
     if evalFn is None:
         evalFn = op._evalFn
 
+    iamVal = isinstance(self, Value)
+    otherIsVal = isinstance(other, Value)
+    type_compatible = False
+    if ot == BOOL:
+        self = self._auto_cast(BOOL)
+        type_compatible = True
+    elif t == ot:
+        type_compatible = True
+    # lock type widht/signed to other type with
+    elif not ot.strict_width or not ot.strict_sign:
+        type_compatible = True
+        other = other._auto_cast(t)
+    elif not t.strict_width or not t.strict_sign:
+        type_compatible = True
+        other = other._auto_cast(ot)
+
     if iamVal and otherIsVal:
-        if ot == BOOL:
-            self = self._auto_cast(BOOL)
-        elif t == ot:
-            pass
-        elif isinstance(ot, Integer):
-            other = other._auto_cast(t)
-        else:
+        if not type_compatible:
             raise TypeError("Values of types (%r, %r) are not comparable" % (
                 self._dtype, other._dtype))
 
-        return bitsCmp__val(self, other, op, evalFn)
+        return bitsCmp__val(self, other, evalFn)
     else:
-        if ot == BOOL:
-            self = self._auto_cast(BOOL)
-        elif t == ot:
+        if type_compatible:
             pass
-        elif isinstance(ot, Integer):
-            other = other._auto_cast(self._dtype)
+        elif t.signed != ot.signed:
+            if t.signed is None:
+                self = self._convSign(ot.signed)
+                return bitsCmp(self, other, op, evalFn)
+            elif ot.signed is None:
+                other = other._convSign(t.signed)
+                return bitsCmp(self, other, op, evalFn)
+            else:
+                raise TypeError("Values of types (%r, %r) are not comparable" % (
+                    self._dtype, other._dtype))
         else:
             raise TypeError("Values of types (%r, %r) are not comparable" % (
                 self._dtype, other._dtype))
 
         # try to reduce useless cmp
         res = None
-        if otherIsVal and other._isFullVld():
+        if otherIsVal and other._is_full_valid():
             res = bitsCmp_detect_useless_cmp(self, other, op)
-        elif iamVal and self._isFullVld():
+        elif iamVal and self._is_full_valid():
             res = bitsCmp_detect_useless_cmp(other, self, CMP_OP_REVERSE[op])
 
         if res is None:
@@ -145,39 +127,28 @@ def bitsCmp(self, other, op, evalFn=None):
 
 
 @internal
-def bitsBitOp__val(self, other, op, getVldFn):
-    w = self._dtype.bit_length()
-    assert w == other._dtype.bit_length()
-
-    vld = getVldFn(self, other)
-    res = op._evalFn(self.val, other.val) & vld
-    updateTime = max(self.updateTime, other.updateTime)
-    if self._dtype.signed:
-        res = signFix(res, w)
-
-    return self.__class__(res, self._dtype, vld, updateTime)
-
-
-@internal
 def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
     """
     :attention: If other is Bool signal, convert this to bool
         (not ideal, due VHDL event operator)
     """
-    other = toHVal(other)
+    other = toHVal(other, self._dtype)
 
     iamVal = isinstance(self, Value)
     otherIsVal = isinstance(other, Value)
 
     if iamVal and otherIsVal:
         other = other._auto_cast(self._dtype)
-        return bitsBitOp__val(self, other, op, getVldFn)
+        return bitsBitOp__val(self, other, op._evalFn, getVldFn)
     else:
-        if other._dtype == BOOL:
+        if self._dtype == other._dtype:
+            pass
+        elif other._dtype == BOOL and self._dtype != BOOL:
             self = self._auto_cast(BOOL)
             return op._evalFn(self, other)
-        elif self._dtype == other._dtype:
-            pass
+        elif other._dtype != BOOL and self._dtype == BOOL:
+            other = other._auto_cast(BOOL)
+            return op._evalFn(self, other)
         else:
             raise TypeError("Can not apply operator %r (%r, %r)" %
                             (op, self._dtype, other._dtype))
@@ -196,53 +167,35 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
 
 
 @internal
-def bitsArithOp__val(self, other, op):
-    v = self.clone()
-    self_vld = self._isFullVld()
-    other_vld = other._isFullVld()
-
-    v.val = op._evalFn(self.val, other.val)
-
-    w = v._dtype.bit_length()
-    if self._dtype.signed:
-        _v = v.val
-        _max = mask(w - 1)
-        _min = -_max - 1
-        if _v > _max:
-            _v = _min + (_v - _max - 1)
-        elif _v < _min:
-            _v = _max - (_v - _min + 1)
-
-        v.val = _v
-    else:
-        v.val &= mask(w)
-
-    if self_vld and other_vld:
-        v.vldMask = mask(w)
-    else:
-        v.vldMask = 0
-
-    v.updateTime = max(self.updateTime, other.updateTime)
-    return v
-
-
-@internal
 def bitsArithOp(self, other, op):
-    other = toHVal(other)
-    assert isinstance(other._dtype, (Integer, Bits))
+    other = toHVal(other, self._dtype)
+    assert isinstance(other._dtype, Bits), other._dtype
     if areValues(self, other):
-        return bitsArithOp__val(self, other, op)
+        return bitsArithOp__val(self, other, op._evalFn)
     else:
-        resT = self._dtype
         if self._dtype.signed is None:
             self = self._unsigned()
 
+        resT = self._dtype
         if isinstance(other._dtype, Bits):
-            assert other._dtype.bit_length() == resT.bit_length(
-            ), (op, other._dtype.bit_length(), resT.bit_length())
-            other = other._convSign(self._dtype.signed)
-        elif isinstance(other._dtype, Integer):
-            pass
+            t0 = self._dtype
+            t1 = other._dtype
+            if t0.bit_length() != t1.bit_length():
+                if not t1.strict_width:
+                    # resize to type of this
+                    other = other._auto_cast(t1)
+                    t1 = other._dtype
+                    pass
+                elif not t0.strict_width:
+                    # resize self to type of result
+                    self = self._auto_cast(t0)
+                    t0 = self._dtype
+                    pass
+                else:
+                    raise TypeError("%r %r %r" % (self, op, other))
+
+            if t1.signed != resT.signed:
+                other = other._convSign(t0.signed)
         else:
             raise TypeError("%r %r %r" % (self, op, other))
 

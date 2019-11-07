@@ -10,41 +10,40 @@ class StringVal(Value):
     """
 
     @classmethod
-    def fromPy(cls, val, typeObj, vldMask=None):
+    def from_py(cls, typeObj, val, vld_mask=None):
         """
         :param val: python string or None
         :param typeObj: instance of String HdlType
-        :param vldMask: if is None validity is resolved from val
+        :param vld_mask: if is None validity is resolved from val
             if is 0 value is invalidated
             if is 1 value has to be valid
         """
         assert isinstance(val, str) or val is None
         vld = 0 if val is None else 1
         if not vld:
-            assert vldMask is None or vldMask == 0
+            assert vld_mask is None or vld_mask == 0
             val = ""
         else:
-            if vldMask == 0:
+            if vld_mask == 0:
                 val = ""
                 vld = 0
 
-        return cls(val, typeObj, vld)
+        return cls(typeObj, val, vld)
 
-    def toPy(self):
-        if not self._isFullVld():
+    def to_py(self):
+        if not self._is_full_valid():
             raise ValueError("Value of %r is not fully defined" % self)
         return self.val
 
     @internal
     def _eq__val(self, other):
         eq = self.val == other.val
-        vld = int(self.vldMask and other.vldMask)
-        updateTime = max(self.updateTime, other.updateTime)
+        vld = int(self.vld_mask and other.vld_mask)
 
-        return BOOL.getValueCls()(eq, BOOL, vld, updateTime)
+        return BOOL.getValueCls()(BOOL, int(eq), vld)
 
     def _eq(self, other):
-        other = toHVal(other)
+        other = toHVal(other, self._dtype)
         if isinstance(other, Value):
             return self._eq__val(other)
         else:

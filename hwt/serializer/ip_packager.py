@@ -4,14 +4,13 @@ from typing import List, Tuple, Union
 from hwt.doc_markers import internal
 from hwt.hdl.typeShortcuts import hInt
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import BOOL, STR, BIT
+from hwt.hdl.types.defs import BOOL, STR, BIT, INT
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.types.integer import Integer
 from hwt.serializer.vhdl.serializer import VhdlSerializer
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
-from hwt.synthesizer.param import evalParam, Param
+from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
@@ -79,46 +78,46 @@ class IpPackager(IpCorePackager):
     @internal
     def paramToIpValue(self, idPrefix: str, g: Param, resolve) -> Value:
         val = Value()
-        val.id = idPrefix + g.name
+        val.id = idPrefix + g.hdl_name
         val.resolve = resolve
-        t = g._dtype
+        # t = g._dtype
 
-        def getVal():
-            v = evalParam(g.defVal)
-            if v.vldMask:
-                return v.val
-            else:
-                return 0
+        # def getVal():
+        #     v = g.def_val
+        #     if v.vld_mask:
+        #         return v.val
+        #     else:
+        #         return 0
+        #
+        # def bitString(w):
+        #     val.format = "bitString"
+        #     digits = math.ceil(w / 4)
+        #     val.text = ('0x%0' + str(digits) + 'X') % getVal()
+        #     val.bitStringLength = str(w)
 
-        def bitString(w):
-            val.format = "bitString"
-            digits = math.ceil(w / 4)
-            val.text = ('0x%0' + str(digits) + 'X') % getVal()
-            val.bitStringLength = str(w)
-
-        if t == BOOL:
-            val.format = "bool"
-            val.text = str(bool(getVal())).lower()
-        elif isinstance(t, Integer):
-            val.format = "long"
-            val.text = str(getVal())
-        elif t == STR:
-            val.format = "string"
-            val.text = g.defVal.staticEval().val
-        elif isinstance(t, Bits):
-            bitString(g.defVal._dtype.bit_length())
-        else:
-            raise NotImplementedError(
-                "Not implemented for datatype %s" % repr(t))
+        # if t == BOOL:
+        #     val.format = "bool"
+        #     val.text = str(bool(getVal())).lower()
+        # elif t == INT:
+        #     val.format = "long"
+        #     val.text = str(getVal())
+        # elif t == STR:
+        val.format = "string"
+        val.text = str(g.get_value())
+        # elif isinstance(t, Bits):
+        #     bitString(g.def_val._dtype.bit_length())
+        # else:
+        #     raise NotImplementedError(
+        #         "Not implemented for datatype %s" % repr(t))
         return val
 
     @internal
     def getParamPhysicalName(self, p: Param):
-        return p.name
+        return p.hdl_name
 
     @internal
     def getParamType(self, p: Param) -> HdlType:
-        return p._dtype
+        return STR  # p._dtype
 
     @internal
     def iterParams(self, unit: Unit):
@@ -149,7 +148,7 @@ class IpPackager(IpCorePackager):
         if dtype == BIT:
             return False
         elif isinstance(dtype, Bits):
-            return [evalParam(dtype.width) - 1, hInt(0)]
+            return [dtype.bit_length() - 1, hInt(0)]
 
     @internal
     def getInterfaceType(self, intf: Interface) -> HdlType:
@@ -198,16 +197,13 @@ class IpPackager(IpCorePackager):
         return val
 
     @internal
-    def getTypeWidth(self, dtype: HdlType, do_eval=False) -> Tuple[int, Union[int, RtlSignal], bool]:
+    def getTypeWidth(self, dtype: HdlType, do_eval=False)\
+            ->Tuple[int, Union[int, RtlSignal], bool]:
         """
         :see: doc of method on parent class
         """
-        width = dtype.width
-        if isinstance(width, int):
-            widthStr = str(width)
-        else:
-            widthStr = self.getExprVal(width, do_eval=do_eval)
-
+        width = dtype.bit_length()
+        widthStr = str(width)
         return width, widthStr, False
 
     @internal

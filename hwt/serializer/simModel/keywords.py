@@ -1,38 +1,31 @@
 import keyword
 
-
 SIMMODEL_KEYWORDS = keyword.kwlist + [
-    # names defined in SimModel constructor
-    '_ctx',
+    # BasicRtlSimModel properties
+    'sim',
     '_interfaces',
     '_processes',
     '_units',
     '_outputs',
+    '_init_body',
+    '__init__',
+    '__new__',
+    '__getattr__',
+    '__getattribute__',
+    '__setattr__',
+    '__setattribute__',
     # imports
-    'hwt',
-    'importlib',
-    'reload',
-    'HArray',
-    'HArrayVal',
-    'convertBits__val',
-    'BitsVal',
-    'SLICE',
-    'HEnum'
-    'DIRECTION',
-    'SENSITIVITY',
-    'convertSimInteger__val',
-    'simHInt',
-    'SIM_INT',
-    'simBitsT',
-    'SIM_BIT',
-    'convertSimBits__val',
-    'SimModel',
+    'pyMathBitPrecise',
+    'pycocotb',
+    'Array3t',
+    'Array3val',
+    'Bits3t',
+    'Bits3val',
+    'define_Enum3t',
+    'BasicRtlSimModel',
+    'BasicRtlSimProxy',
     'sensitivity',
     'connectSimPort',
-    'simEvalCond',
-    'mkUpdater',
-    'mkArrayUpdater'
-    'power'
-    'RtlNetlist'
-    'SimSignal'
-    'SliceVal']
+    'sim_eval_cond',
+    'slice',
+]

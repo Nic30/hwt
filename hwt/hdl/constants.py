@@ -1,20 +1,12 @@
 from enum import Enum
+
+# import constants from other packages to have them on one place
 from ipCorePackager.constants import INTF_DIRECTION, DIRECTION
+from pycocotb.constants import Time, CLK_PERIOD
 
 READ = "READ"
 WRITE = "WRITE"
 NOP = "NOP"
-
-
-class Time():
-    """
-    Time units used mainly by simulator
-    """
-    ps = 1
-    ns = 1000
-    us = ns * 1000
-    ms = us * 1000
-    s = ms * 1000
 
 
 class SENSITIVITY(Enum):

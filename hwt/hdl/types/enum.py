@@ -2,6 +2,7 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.doc_markers import internal
 
 
+# [TODO] use python enum and only emulate HDL enum for HDL
 class HEnum(HdlType):
     """
     Hdl enum type
@@ -21,7 +22,7 @@ class HEnum(HdlType):
         self.name = name
         self._allValues = tuple(valueNames)
         for name in valueNames:
-            v = self.fromPy(name)
+            v = self.from_py(name)
             assert not hasattr(self, name)
             setattr(self, name, v)
 

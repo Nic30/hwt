@@ -9,23 +9,20 @@ class Value():
 
     operators are overloaded in every type separately
     """
-    __slots__ = ["val", "_dtype", "vldMask", "updateTime"]
+    __slots__ = ["_dtype", "val", "vld_mask"]
 
-    def __init__(self, val, dtype, vldMask, updateTime=-1):
+    def __init__(self, dtype, val, vld_mask):
         """
         :param val: pythonic value representing this value
         :param dtype: data type object from which this value was derived from
-        :param vldMask: validity mask for value
-        :param updateTime: simulation time when this value vas created
+        :param vld_mask: validity mask for value
         """
-
-        self.val = val
         self._dtype = dtype
-        self.vldMask = vldMask
-        self.updateTime = updateTime
+        self.val = val
+        self.vld_mask = vld_mask
 
-    def _isFullVld(self):
-        return self.vldMask == self._dtype.all_mask()
+    def _is_full_valid(self):
+        return self.vld_mask == self._dtype.all_mask()
 
     def _auto_cast(self, toT):
         "type cast to compatible type"
@@ -36,33 +33,31 @@ class Value():
         return self._dtype.reinterpret_cast(self, toT)
 
     def staticEval(self):
-        return self.clone()
+        return self.__copy__()
 
-    def clone(self):
-        return self.__class__(self.val, self._dtype, self.vldMask,
-                              self.updateTime)
+    def __copy__(self):
+        return self.__class__(self._dtype, self.val, self.vld_mask)
 
     @internal
     def __hash__(self):
-        return hash((self._dtype, self.val, self.vldMask, self.updateTime))
+        return hash((self._dtype, self.val, self.vld_mask))
 
     def __repr__(self):
-        if self.updateTime >= 0:
-            return "<{0:s} {1:s}, mask {2:x}, time {3:.2f}>".format(
-                self.__class__.__name__, str(self.val), self.vldMask,
-                self.updateTime)
+        if self._is_full_valid():
+            vld_mask = ""
         else:
-            return "<{0:s} {1:s}, mask {2:x}>".format(
-                self.__class__.__name__, str(self.val), self.vldMask)
+            vld_mask = ", mask {0:x}".format(self.vld_mask)
+        return "<{0:s} {1:s}{2:s}>".format(
+            self.__class__.__name__, repr(self.val), vld_mask)
 
     @classmethod
-    def fromPy(cls, val, typeObj, vldMask=None):
+    def from_py(cls, typeObj, val, vld_mask=None):
         raise NotImplementedError(
-            "fromPy fn is not implemented for %r" % (cls))
+            "from_py fn is not implemented for %r" % (cls))
 
     def __int__(self):
         if isinstance(self, Value) or self._const:
-            if self._isFullVld():
+            if self._is_full_valid():
                 return int(self.val)
             else:
                 raise ValueError("Value of %r is not fully defined" % self)
@@ -72,7 +67,7 @@ class Value():
 
     def __bool__(self):
         if isinstance(self, Value) or self._const:
-            if self._isFullVld():
+            if self._is_full_valid():
                 return bool(self.val)
             else:
                 raise ValueError("Value of %r is not fully defined" % self)
@@ -83,7 +78,7 @@ class Value():
     def __eq__(self, other):
         if areValues(self, other):
             return self._dtype == other._dtype and \
-                self.vldMask == other.vldMask and\
+                self.vld_mask == other.vld_mask and\
                 self.val == other.val
         else:
             return super().__eq__(other)
@@ -98,7 +93,6 @@ class Value():
 
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
         seen.add(self)
-        yield from []
 
     # def __pos__(self):
     #     raise TypeError()

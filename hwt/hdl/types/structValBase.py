@@ -9,14 +9,13 @@ class StructValBase(Value):
     """
     __slots__ = []
 
-    def __init__(self, val, typeObj, skipCheck=False):
+    def __init__(self, typeObj, val, skipCheck=False):
         """
         :param val: None or dict {field name: field value}
         :param typeObj: instance of String HdlType
         :param skipCheck: flag to skip field name consystency in val
         """
         self._dtype = typeObj
-        self.updateTime = -1
         if not skipCheck and val is not None:
             assert set(self.__slots__).issuperset(set(val.keys())), \
                 set(val.keys()).difference(set(self.__slots__))
@@ -30,41 +29,41 @@ class StructValBase(Value):
                 v = val.get(f.name, None)
 
             if not isinstance(v, Value):
-                v = f.dtype.fromPy(v)
+                v = f.dtype.from_py(v)
 
             setattr(self, f.name, v)
 
-    def clone(self):
+    def __copy__(self):
         d = {}
         for f in self._dtype.fields:
             if f.name is None:
                 continue
 
-            v = getattr(self, f.name).clone()
+            v = getattr(self, f.name).__copy__()
             d[f.name] = v
 
-        return self.__class__(d, self._dtype, skipCheck=True)
+        return self.__class__(self._dtype, d, skipCheck=True)
 
     @classmethod
-    def fromPy(cls, val, typeObj, vldMask=None):
+    def from_py(cls, typeObj, val, vld_mask=None):
         """
         :param val: None or dict {field name: field value}
         :param typeObj: instance of String HdlType
-        :param vldMask: if is None validity is resolved from val
+        :param vld_mask: if is None validity is resolved from val
             if is 0 value is invalidated
             if is 1 value has to be valid
         """
-        if vldMask == 0:
+        if vld_mask == 0:
             val = None
-        return cls(val, typeObj)
+        return cls(typeObj, val)
 
-    def toPy(self):
-        if not self._isFullVld():
+    def to_py(self):
+        if not self._is_full_valid():
             raise ValueError("Value of %r is not fully defined" % self)
         d = {}
         for f in self._dtype.fields:
             if f.name is not None:
-                val = getattr(self, f.name).toPy()
+                val = getattr(self, f.name).to_py()
                 d[f.name] = val
         return d
 

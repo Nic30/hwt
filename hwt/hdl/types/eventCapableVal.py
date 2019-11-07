@@ -2,42 +2,17 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.value import Value
-from hwt.doc_markers import internal
-
-BoolVal = BOOL.getValueCls()
 
 
-class EventCapableVal(Value):
+class EventCapableVal():
     """
     Base class for event capable values
     """
 
-    @internal
-    def _onFallingEdge__val(self, now):
-        v = BoolVal(self.updateTime == now,
-                    BOOL,
-                    self.vldMask,
-                    now)
-        v.val = v.val and not self.val
-        return v
+    def _onFallingEdge(self):
+        assert not isinstance(self, Value), self
+        return Operator.withRes(AllOps.FALLING_EDGE, [self], BOOL)
 
-    def _onFallingEdge(self, now):
-        if isinstance(self, Value):
-            return self._onFallingEdge__val(now)
-        else:
-            return Operator.withRes(AllOps.FALLING_EDGE, [self], BOOL)
-
-    @internal
-    def _onRisingEdge__val(self, now):
-        v = BoolVal(self.updateTime == now,
-                    BOOL,
-                    self.vldMask,
-                    now)
-        v.val = v.val and self.val
-        return v
-
-    def _onRisingEdge(self, now):
-        if isinstance(self, Value):
-            return self._onRisingEdge__val(now)
-        else:
-            return Operator.withRes(AllOps.RISING_EDGE, [self], BOOL)
+    def _onRisingEdge(self):
+        assert not isinstance(self, Value), self
+        return Operator.withRes(AllOps.RISING_EDGE, [self], BOOL)

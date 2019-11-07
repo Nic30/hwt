@@ -1,92 +1,39 @@
-from hwt.doc_markers import internal
-from hwt.simulator.shortcuts import OnRisingCallbackLoop
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from pycocotb.agents.base import AgentBase, SyncAgentBase as pcSyncAgentBase,\
+    AgentWitReset as pcAgentWitReset
+from pycocotb.hdlSimulator import HdlSimulator
+from pycocotb.process_utils import OnRisingCallbackLoop
 
 
-class AgentBase():
-    """
-    Base class of agent of interface like in UVM
-    driver is used for slave interfaces
-    monitor is used for master interfaces
+class AgentWitReset(pcAgentWitReset):
 
-    :ivar intf: interface assigned to this agent
-    :ivar enable: flag to enable/disable this agent
-    """
+    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
+        pcAgentWitReset.__init__(self, sim, intf, (None, False))
+        self.rst, self.rstOffIn = self._discoverReset(intf, allowNoReset)
 
-    def __init__(self, intf):
-        self.intf = intf
-        self._enabled = True
-        self._debugOutput = None
-
-    def setEnable(self, en, sim):
-        self._enabled = en
-
-    def getEnable(self):
-        return self._enabled
-
-    def _debug(self, out):
-        self._debugOutput = out
-
-    def getDrivers(self):
-        """
-        Called before simulation to collect all drivers of interfaces
-        from this agent
-        """
-        return [self.driver]
-
-    def getMonitors(self):
-        """
-        Called before simulation to collect all monitors of interfaces
-        from this agent
-        """
-        return [self.monitor]
-
-    def driver(self, sim):
-        """
-        Implement this method to drive your interface
-        in simulation/verification
-        """
-        raise NotImplementedError()
-
-    def monitor(self, sim):
-        """
-        Implement this method to monitor your interface
-        in simulation/verification
-        """
-        raise NotImplementedError()
-
-
-class AgentWitReset(AgentBase):
-    def __init__(self, intf, allowNoReset=False):
-        super().__init__(intf)
-        self._discoverReset(allowNoReset)
-
-    def _discoverReset(self, allowNoReset):
+    @classmethod
+    def _discoverReset(cls, intf, allowNoReset):
         try:
-            rst = self.intf._getAssociatedRst()
-            self.rst = rst._sigInside
-            self.rstOffIn = int(rst._dtype.negated)
-            self.notReset = self._notReset
+            rst = intf._getAssociatedRst()
+            rstOffIn = int(rst._dtype.negated)
+            rst = rst._sigInside
         except IntfLvlConfErr:
-            self.rst = None
-            self.notReset = self._notReset_dummy
-
-            if allowNoReset:
-                pass
-            else:
+            rst = None
+            rstOffIn = True
+            if not allowNoReset:
                 raise
+        return (rst, rstOffIn)
 
-    @internal
-    def _notReset_dummy(self, sim):
-        return True
-    
-    @internal
-    def _notReset(self, sim):
-        rstVal = sim.read(self.rst).val
-        return rstVal == self.rstOffIn
+    def notReset(self):
+        if self.rst is None:
+            return True
+        else:
+            rstVal = self.rst.read()
+            rstVal = int(rstVal)
+            return rstVal == self.rstOffIn
 
 
-class SyncAgentBase(AgentWitReset):
+class SyncAgentBase(AgentWitReset, pcSyncAgentBase):
     """
     Agent which discovers clk, rst signal and runs only
     at specified edge of clk
@@ -96,29 +43,12 @@ class SyncAgentBase(AgentWitReset):
     """
     SELECTED_EDGE_CALLBACK = OnRisingCallbackLoop
 
-    def __init__(self, intf, allowNoReset=False):
-        super().__init__(intf, allowNoReset=allowNoReset)
+    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False,
+                 wrap_monitor_and_driver_in_edge_callback=True):
+        self.intf = intf
+        clk = self.intf._getAssociatedClk()
+        rst = self._discoverReset(intf, allowNoReset)
+        pcSyncAgentBase.__init__(
+            self, sim, intf, clk, rst, 
+            wrap_monitor_and_driver_in_edge_callback=wrap_monitor_and_driver_in_edge_callback)
 
-        # resolve clk and rstn
-        self.clk = self.intf._getAssociatedClk()._sigInside
-
-        # run monitor, driver only on rising edge of clk
-        c = self.SELECTED_EDGE_CALLBACK
-        self.monitor = c(self.clk, self.monitor, self.getEnable)
-        self.driver = c(self.clk, self.driver, self.getEnable)
-
-    def setEnable_asDriver(self, en, sim):
-        self._enabled = en
-        self.driver.setEnable(en, sim)
-
-    def setEnable_asMonitor(self, en, sim):
-        self._enabled = en
-        self.monitor.setEnable(en, sim)
-
-    def getDrivers(self):
-        self.setEnable = self.setEnable_asDriver
-        return AgentBase.getDrivers(self)
-
-    def getMonitors(self):
-        self.setEnable = self.setEnable_asMonitor
-        return AgentBase.getMonitors(self)

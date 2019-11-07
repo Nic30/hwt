@@ -7,10 +7,10 @@ from hwt.doc_markers import internal
 class HStructFieldMeta():
     """
     Meta for field in struct type
-    
+
     :ivar split: flag which specifies if structured data type of this field
         should be synchronized as a one interface
-        or each it's part should be synchronized separately 
+        or each it's part should be synchronized separately
     """
     def __init__(self, split=False):
         self.split = split
@@ -37,7 +37,7 @@ class HStructField(object):
         return "<HStructField %r, %s>" % (self.dtype, self.name)
 
 
-protectedNames = {"clone", "staticEval", "fromPy", "_dtype"}
+protectedNames = {"clone", "staticEval", "from_py", "_dtype"}
 
 
 class HStruct(HdlType):
@@ -65,7 +65,8 @@ class HStruct(HdlType):
             except TypeError:
                 field = f
             if not isinstance(field, HStructField):
-                raise TypeError("Template for struct field %s is not in valid format" % repr(f))
+                raise TypeError("Template for struct field %s is"
+                                " not in valid format" % repr(f))
 
             fields.append(field)
             if field.name is not None:

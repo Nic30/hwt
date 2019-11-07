@@ -11,7 +11,7 @@ class HWProcess(HdlObject):
     :ivar name: name used as id in target HDL
     :ivar statements: list of statements in body of process
     :ivar sensitivityList: set of RtlSignals or event operators which
-        are describing when should this process be revevaluated
+        are describing when should this process be re-evaluated
 
     :ivar inputs: all input signals for this process
     :ivar outputs: all output signals for this process

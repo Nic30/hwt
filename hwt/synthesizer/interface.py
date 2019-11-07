@@ -13,8 +13,8 @@ from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
 from hwt.synthesizer.vectorUtils import fitTo
 
 
-def _default_param_updater(self, myP, parentP):
-    self._replaceParam(myP, parentP)
+def _default_param_updater(self, myP, parentPval):
+    myP.set_value(parentPval)
 
 
 class Interface(InterfaceBase, InterfaceceImplDependentFns,
@@ -130,9 +130,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             i._isExtern = self._isExtern
             i._loadDeclarations()
 
-        for p in self._params:
-            p.setReadOnly()
-        
         if self._isExtern:
             # direction from inside of unit (reverset compared to outside direction)
             if self._direction == INTF_DIRECTION.UNKNOWN:
@@ -242,27 +239,13 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         """get all name hierarchy separated by '.' """
         return HObjList._getFullName(self)
 
-    def _replaceParam(self, p, newP):
-        """
-        Replace parameter on this interface (in configuration stage)
-
-        :ivar pName: actual name of param on me
-        :ivar newP: new Param instance by which should be old replaced
-        """
-        i = self._params.index(p)
-        pName = p._scopes[self][1]
-        assert i > -1
-        self._params[i] = newP
-        del p._scopes[self]  # remove reference from old param
-        newP._registerScope(pName, self)
-        object.__setattr__(self, pName, newP)
-
     def _updateParamsFrom(self, otherObj, updater=_default_param_updater,
                           exclude=None, prefix=""):
         """
         :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
         """
-        PropDeclrCollector._updateParamsFrom(self, otherObj, updater, exclude, prefix)
+        PropDeclrCollector._updateParamsFrom(
+            self, otherObj, updater, exclude, prefix)
 
     def _bit_length(self):
         """Sum of all width of interfaces in this interface"""
@@ -273,7 +256,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         if interfaces is None:
             # not loaded interface
-            _intf = self._clone()
+            _intf = self.__copy__()
             _intf._loadDeclarations()
             interfaces = _intf._interfaces
 

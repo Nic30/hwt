@@ -1,6 +1,5 @@
 from collections import namedtuple
 
-from hwt.synthesizer.param import evalParam
 from hwt.doc_markers import internal
 
 
@@ -29,25 +28,25 @@ def freeze_dict(data):
 
 @internal
 def paramsToValTuple(unit):
+    # [TODO] check sub params
     d = {}
     for p in unit._params:
-        name = p.getName(unit)
-        v = evalParam(p)
-        d[name] = v
+        v = p.get_value()
+        d[p._name] = v
     return freeze_dict(d)
 
 
 @internal
 def prepareEntity(ent, name, templateUnit):
     ent.name = name
-    ent.generics.sort(key=lambda x: x.name)
+    ent.generics.sort(key=lambda x: x.hdl_name)
     ent.ports.sort(key=lambda x: x.name)
     # copy names
     if templateUnit is not None:
         # sort in python is stable, ports and generic were added in same order
         # templateUnit should have generic and ports sorted
         for gp, gch in zip(templateUnit._entity.generics, ent.generics):
-            gch.name = gp.name
+            gch.hdl_name = gp.hdl_name
         for pp, pch in zip(templateUnit._entity.ports, ent.ports):
             pch.name = pp.name
 

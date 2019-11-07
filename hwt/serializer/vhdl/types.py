@@ -1,6 +1,4 @@
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.typeShortcuts import hInt
+from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.generic.indent import getIndent
 
@@ -8,16 +6,21 @@ from hwt.serializer.generic.indent import getIndent
 class VhdlSerializer_types():
 
     @classmethod
+    def HdlType_str(cls, typ, ctx, declaration=False):
+        assert not declaration
+        return "STRING"
+
+    @classmethod
     def HdlType_bool(cls, typ, ctx, declaration=False):
         assert not declaration
         return "BOOLEAN"
 
     @classmethod
-    def HdlType_bits(cls, typ, ctx, declaration=False):
+    def HdlType_bits(cls, typ: Bits, ctx, declaration=False):
         disableRange = False
         bitLength = typ.bit_length()
-        w = typ.width
-        isVector = typ.forceVector or bitLength > 1
+        w = typ.bit_length()
+        isVector = typ.force_vector or bitLength > 1
 
         if typ.signed is None:
             if isVector:
@@ -31,11 +34,9 @@ class VhdlSerializer_types():
 
         if disableRange:
             constr = ""
-        elif isinstance(w, int):
-            constr = "(%d DOWNTO 0)" % (w - 1)
         else:
-            o = Operator(AllOps.SUB, (w, hInt(1)))
-            constr = "(%s DOWNTO 0)" % cls.Operator(o, ctx)
+            constr = "(%d DOWNTO 0)" % (w - 1)
+
         return name + constr
 
     @classmethod
@@ -77,7 +78,7 @@ class VhdlSerializer_types():
                 (getIndent(ctx.indent),
                  typ.name,
                  cls.asHdl(toHVal(typ.size) - 1, ctx),
-                 cls.HdlType(typ.elmType, ctx, declaration=declaration))
+                 cls.HdlType(typ.element_t, ctx, declaration=declaration))
         else:
             try:
                 return typ.name

@@ -2,13 +2,13 @@ from functools import reduce
 from math import ceil
 from typing import Union
 
+from hwt.doc_markers import internal
 from hwt.hdl.typeShortcuts import vec
 from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.structUtils import walkFlattenFields
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.hdl.types.hdlType import HdlType
-from hwt.doc_markers import internal
 
 
 class BitWidthErr(Exception):
@@ -26,6 +26,9 @@ def fitTo_t(what: Union[RtlSignal, Value], where_t: HdlType,
     "what" to same width as "where"
 
     little-endian impl.
+
+    :param extend: allow increasing of the signal width
+    :param shrink: allow shrinking of the signal width
     """
 
     whatWidth = what._dtype.bit_length()
@@ -132,7 +135,7 @@ class BitWalker():
                 t = self.actual._dtype
                 fillupW = numberOfBits - self.actuallyHave
                 padding_t = Bits(fillupW, signed=t.signed, negated=t.negated)
-                padding = padding_t.fromPy(None)
+                padding = padding_t.from_py(None)
                 actual = padding._concat(actual)
             self.actuallyHave = 0
 

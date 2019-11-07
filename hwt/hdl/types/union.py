@@ -1,14 +1,14 @@
 from collections import OrderedDict
 
+from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
 from hwt.hdl.value import Value
 from hwt.serializer.generic.indent import getIndent
-from hwt.doc_markers import internal
 
 
 protectedNames = {"clone", "staticEval",
-                  "fromPy", "_dtype", "_usedField", "_val"}
+                  "from_py", "_dtype", "_usedField", "_val"}
 
 
 class UnionValBase(Value):
@@ -22,7 +22,7 @@ class UnionValBase(Value):
     """
     __slots__ = ["_dtype", "_val", "_usedField"]
 
-    def __init__(self, val, typeObj):
+    def __init__(self, typeObj, val):
         """
         :param val: None or tuple (member name, member value)
         :param typeObj: instance of HUnion HdlType for this value
@@ -36,24 +36,24 @@ class UnionValBase(Value):
 
         f = self._dtype.fields[memberName]
         if not isinstance(v, Value):
-            v = f.dtype.fromPy(v)
+            v = f.dtype.from_py(v)
         else:
             v._auto_cast(f.dtype)
         self._val = v
         self._usedField = f
 
     @classmethod
-    def fromPy(cls, val, typeObj, vldMask=None):
+    def from_py(cls, typeObj, val, vld_mask=None):
         """
         :param val: None or tuple (member name, member value)
         :param typeObj: instance of HUnion HdlType for this value
-        :param vldMask: if is None validity is resolved from val
+        :param vld_mask: if is None validity is resolved from val
             if is 0 value is invalidated
             if is 1 value has to be valid
         """
-        if vldMask == 0:
+        if vld_mask == 0:
             val = None
-        return cls(val, typeObj)
+        return cls(typeObj, val)
 
     def __repr__(self, indent=0):
         buff = ["{"]
@@ -84,7 +84,7 @@ class HUnionMemberHandler(object):
     def set(self, parent, v):
         f = parent._dtype.fields[self.field.name]
         if not isinstance(v, Value):
-            v = f.dtype.fromPy(v)
+            v = f.dtype.from_py(v)
         else:
             v._auto_cast(f.dtype)
 

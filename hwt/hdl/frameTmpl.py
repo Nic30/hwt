@@ -3,7 +3,7 @@ from math import ceil, floor, inf
 import re
 from typing import Union, Generator
 
-from hwt.bitmask import mask, selectBitRange, setBitRange
+from hwt.doc_markers import internal
 from hwt.hdl.frameTmplUtils import TransTmplWordIterator, \
     ChoicesOfFrameParts
 from hwt.hdl.transPart import TransPart
@@ -11,8 +11,7 @@ from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import flatten
-from hwt.simulator.types.simBits import simBitsT
-from hwt.doc_markers import internal
+from pyMathBitPrecise.bit_utils import mask, selectBitRange, setBitRange
 
 
 class FrameTmpl(object):
@@ -203,7 +202,7 @@ class FrameTmpl(object):
                             [])
 
             startOfThisFrame = endOfThisFrame
-    
+
     @internal
     def _wordIndx(self, addr: int):
         """
@@ -323,7 +322,7 @@ class FrameTmpl(object):
 
         :return: list of BitsVal which are representing values of words
         """
-        typeOfWord = simBitsT(self.wordWidth, None)
+        typeOfWord = Bits(self.wordWidth, None)
         fieldToVal = self._fieldToTPart
         if fieldToVal is None:
             fieldToVal = self._fieldToTPart = self.fieldToDataDict(
@@ -332,6 +331,7 @@ class FrameTmpl(object):
                 {})
 
         for _, transParts in self.walkWords(showPadding=True):
+            # build a single data word
             actualVldMask = 0
             actualVal = 0
             for tPart in transParts:
@@ -347,13 +347,14 @@ class FrameTmpl(object):
                     vld = 0
                 else:
                     newBits = selectBitRange(val, flow, fhigh - flow)
-                    vld = mask(high - low) << low
+                    vld = mask(high - low)
 
                 actualVal = setBitRange(actualVal, low, high - low, newBits)
-                actualVldMask = setBitRange(actualVal, low, high - low, vld)
+                actualVldMask = setBitRange(actualVldMask, low, high - low, vld)
 
-            yield typeOfWord.getValueCls()(actualVal, typeOfWord,
-                                           actualVldMask, -1)
+            v = typeOfWord.getValueCls()(typeOfWord, actualVal,
+                                         actualVldMask)
+            yield v
 
     @internal
     def __repr__getName(self, transPart, fieldWidth):

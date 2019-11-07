@@ -43,16 +43,16 @@ def getSignalName(sig):
 
 
 @internal
-def _default_param_updater(self, myP, otherP):
-    myP.set(otherP)
+def _default_param_updater(self, myP, otherP_val):
+    myP.set_value(otherP_val)
 
 
 class UnitImplHelpers(object):
-    def _reg(self, name, dtype=BIT, defVal=None, clk=None, rst=None):
+    def _reg(self, name, dtype=BIT, def_val=None, clk=None, rst=None):
         """
         Create register in this unit
 
-        :param defVal: default value of this register,
+        :param def_val: default value of this register,
             if this value is specified reset of this component is used
             (unit has to have single interface of class Rst or Rst_n)
         :param clk: optional clok signal specification
@@ -65,16 +65,16 @@ class UnitImplHelpers(object):
         if clk is None:
             clk = getClk(self)
 
-        if defVal is None:
+        if def_val is None:
             # if no value is specified reset is not required
             rst = None
         else:
             rst = getRst(self)._sig
 
         if isinstance(dtype, HStruct):
-            if defVal is not None:
+            if def_val is not None:
                 raise NotImplementedError()
-            container = dtype.fromPy(None)
+            container = dtype.from_py(None)
             for f in dtype.fields:
                 if f.name is not None:
                     r = self._reg("%s_%s" % (name, f.name), f.dtype)
@@ -86,16 +86,16 @@ class UnitImplHelpers(object):
                              dtype=dtype,
                              clk=clk._sig,
                              syncRst=rst,
-                             defVal=defVal)
+                             def_val=def_val)
 
-    def _sig(self, name, dtype=BIT, defVal=None):
+    def _sig(self, name, dtype=BIT, def_val=None):
         """
         Create signal in this unit
         """
         if isinstance(dtype, HStruct):
-            if defVal is not None:
+            if def_val is not None:
                 raise NotImplementedError()
-            container = dtype.fromPy(None)
+            container = dtype.from_py(None)
             for f in dtype.fields:
                 if f.name is not None:
                     r = self._sig("%s_%s" % (name, f.name), f.dtype)
@@ -103,7 +103,7 @@ class UnitImplHelpers(object):
 
             return container
 
-        return self._ctx.sig(name, dtype=dtype, defVal=defVal)
+        return self._ctx.sig(name, dtype=dtype, def_val=def_val)
 
     @internal
     def _cleanAsSubunit(self):
@@ -122,7 +122,7 @@ class UnitImplHelpers(object):
             # (because this signals are for parent unit)
             if isinstance(t, Bits):
                 t = copy(t)
-                t.width = t.bit_length()
+                t._bit_length = t.bit_length()
                 return t
             else:
                 return t
