@@ -33,7 +33,7 @@ setup(name="hwt",
       install_requires=[
           "jinja2",  # template engine
           "ipCorePackager>=0.3",  # generator of IPcore packages (IP-xact, ...)
-          "pycocotb>=0.2",
+          "pycocotb>=0.3",
           "pyDigitalWaveTools>=0.4",  # simulator output dumping
           "pyMathBitPrecise>=0.2",  # math with specific bit precision
       ],
