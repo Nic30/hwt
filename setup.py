@@ -9,7 +9,7 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(name="hwt",
-      version="2.8",
+      version="2.9",
       description="hdl synthesis toolkit",
       long_description=long_description,
       long_description_content_type="text/markdown",
