@@ -15,11 +15,12 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 @internal
 def isResultOfTypeConversion(sig):
-    if not sig.drivers:
+    if len(sig.drivers) != 1:
         return False
 
     if sig.hidden:
-        return True
+        d = sig.singleDriver()
+        return d.operator != AllOps.INDEX
 
     return False
 
@@ -193,7 +194,9 @@ class VhdlSerializer_ops():
                 op0 = ctx.createTmpVarFn("tmpTypeConv", op0._dtype)
                 op0.def_val = ops[0]
 
-            op0_str = cls._operand(op0, 0, op, True, False, ctx)
+            # if the op0 is not signal or other index index operator it is extracted
+            # as tmp variable
+            op0_str = cls._operand(op0, 0, op, False, False, ctx)
             op1_str = cls._operand(ops[1], 1, op, False, True, ctx)
 
             if isinstance(op1._dtype, Bits) and op1._dtype != INT:
