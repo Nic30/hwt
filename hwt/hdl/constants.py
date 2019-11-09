@@ -6,6 +6,7 @@ from pycocotb.constants import Time, CLK_PERIOD
 
 READ = "READ"
 WRITE = "WRITE"
+READ_WRITE = "RW"
 NOP = "NOP"
 
 
