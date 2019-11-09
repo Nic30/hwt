@@ -69,6 +69,10 @@ class GenericSerializer_Value():
                                          val.vld_mask)
 
     @classmethod
+    def String_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
+        return '"%s"' % val.val
+
+    @classmethod
     def get_signal_name(cls, si, ctx: SerializerCtx):
         if si.hidden and hasattr(si, "origin"):
             # hidden signal, render it's driver instead

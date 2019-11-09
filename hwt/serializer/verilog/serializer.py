@@ -1,9 +1,13 @@
+from hwt.hdl.architecture import Architecture
+from hwt.hdl.constants import DIRECTION
 from hwt.hdl.entity import Entity
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.portItem import PortItem
 from hwt.hdl.process import HWProcess
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
+from hwt.hdl.types.defs import STR, INT, BOOL
 from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
@@ -20,10 +24,7 @@ from hwt.serializer.verilog.tmplContainer import VerilogTmplContainer
 from hwt.serializer.verilog.types import VerilogSerializer_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
-from hwt.hdl.portItem import PortItem
-from hwt.hdl.constants import DIRECTION
 from hwt.synthesizer.param import Param
-from hwt.hdl.architecture import Architecture
 
 
 class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
@@ -77,7 +78,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
                      for i, v in enumerate(rom.def_val.val)]
             romSwitchStm = SwitchContainer(index, cases)
 
-            for (_, (stm, )) in cases:
+            for (_, (stm,)) in cases:
                 stm.parentStm = romSwitchStm
 
             p = HWProcess(rom.name, [romSwitchStm, ],
@@ -191,8 +192,14 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
     @classmethod
     def GenericItem(cls, g: Param, ctx):
-        return ('parameter %s = "%s"'
-                % (g.hdl_name, str(g.get_value())))
+        v = g.get_hdl_value()
+        if v._dtype == STR or v._dtype == INT or v._dtype == BOOL:
+            t_str = ""
+        else:
+            t_str = cls.HdlType(v._dtype, ctx.forPort()) + " "
+        v_str = cls.Value(v, ctx)
+        return 'parameter %s %s= %s' % (
+                g.hdl_name, t_str, v_str)
 
     @classmethod
     def PortItem(cls, pi: PortItem, ctx):
@@ -234,7 +241,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         k = m.compSig
         if isinstance(k, Param):
             name = k.hdl_name
-            v = '"%s"' % str(k.get_value())
+            v = cls.Value(k.get_hdl_value(), ctx)
         else:
             name = cls.get_signal_name(k, ctx)
             v = cls.asHdl(m.value, ctx)

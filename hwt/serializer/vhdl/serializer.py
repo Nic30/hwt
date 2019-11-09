@@ -160,9 +160,11 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
     @classmethod
     def GenericItem(cls, g: Param, ctx):
-        v = g.get_value()
-        return '%s: %s := "%s"' % (
-            g.hdl_name, "string", str(v))
+        v = g.get_hdl_value()
+        t_str = cls.HdlType(v._dtype, ctx)
+        v_str = cls.Value(v, ctx)
+        return '%s: %s := %s' % (
+                g.hdl_name, t_str, v_str)
 
     @classmethod
     def PortConnection(cls, pc, ctx):
@@ -188,7 +190,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
         k = m.compSig
         if isinstance(k, Param):
             name = k.hdl_name
-            v = '"%s"' % str(k.get_value())
+            v = cls.Value(k.get_hdl_value(), ctx)
         else:
             name = cls.get_signal_name(k, ctx)
             v = cls.asHdl(m.value, ctx)

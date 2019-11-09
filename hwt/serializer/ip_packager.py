@@ -80,35 +80,35 @@ class IpPackager(IpCorePackager):
         val = Value()
         val.id = idPrefix + g.hdl_name
         val.resolve = resolve
-        # t = g._dtype
+        v = g.get_hdl_value()
+        t = v._dtype
 
-        # def getVal():
-        #     v = g.def_val
-        #     if v.vld_mask:
-        #         return v.val
-        #     else:
-        #         return 0
-        #
-        # def bitString(w):
-        #     val.format = "bitString"
-        #     digits = math.ceil(w / 4)
-        #     val.text = ('0x%0' + str(digits) + 'X') % getVal()
-        #     val.bitStringLength = str(w)
+        def getVal():
+            if v.vld_mask:
+                return v.val
+            else:
+                return 0
 
-        # if t == BOOL:
-        #     val.format = "bool"
-        #     val.text = str(bool(getVal())).lower()
-        # elif t == INT:
-        #     val.format = "long"
-        #     val.text = str(getVal())
-        # elif t == STR:
-        val.format = "string"
-        val.text = str(g.get_value())
-        # elif isinstance(t, Bits):
-        #     bitString(g.def_val._dtype.bit_length())
-        # else:
-        #     raise NotImplementedError(
-        #         "Not implemented for datatype %s" % repr(t))
+        def bitString(w):
+            val.format = "bitString"
+            digits = math.ceil(w / 4)
+            val.text = ('0x%0' + str(digits) + 'X') % getVal()
+            val.bitStringLength = str(w)
+
+        if t == BOOL:
+            val.format = "bool"
+            val.text = str(bool(getVal())).lower()
+        elif t == INT:
+            val.format = "long"
+            val.text = str(getVal())
+        elif t == STR:
+            val.format = "string"
+            val.text = str(g.get_value())
+        elif isinstance(t, Bits):
+            bitString(v._dtype.bit_length())
+        else:
+            raise NotImplementedError(
+                "Not implemented for datatype %s" % repr(t))
         return val
 
     @internal

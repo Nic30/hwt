@@ -160,4 +160,5 @@ class VhdlSerializer_Value(GenericSerializer_Value):
 
     @classmethod
     def String_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
-        return '"%s"' % str(val.val)
+        # [todo] process escapes
+        return '"%s"' % val.val

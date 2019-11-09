@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from hwt.hdl.types.defs import INT, STR, BOOL
+from hwt.hdl.value import Value
 
 
 class Param():
@@ -22,6 +24,33 @@ class Param():
         self._name = None
         self.hdl_name = None
         self._parent = None
+
+    def get_hdl_type(self):
+        v = self.get_value()
+        INT32_MAX = 2 ** (32 - 1) - 1
+        INT32_MIN = -2 ** (32 - 1)
+
+        if isinstance(v, Value):
+            return v._dtype
+        elif isinstance(v, bool):
+            return BOOL
+        elif isinstance(v, str):
+            return STR
+        elif isinstance(v, int) and v >= INT32_MIN and v <= INT32_MAX:
+            return INT
+        else:
+            return None
+
+    def get_hdl_value(self):
+        t = self.get_hdl_type()
+        v = self.get_value()
+        if t is None:
+            t = STR
+            v = t.from_py(str(v))
+        else:
+            if not isinstance(v, Value):
+                v = t.from_py(v)
+        return v
 
     def get_value(self):
         return getattr(self._parent, self._name)
