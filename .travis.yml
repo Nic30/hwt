@@ -32,7 +32,7 @@ install:
   - pushd pycocotb
   - python3 setup.py install
   - popd
-  - git clone --depth=1 https://github.com/Nic30/hwtLib.git -b verilator_sim
+  - git clone --depth=1 https://github.com/Nic30/hwtLib.git
   - pushd hwtLib
   - python3 setup.py install
   - popd
