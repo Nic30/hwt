@@ -1,9 +1,26 @@
 from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.typeCast import toHVal
+from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.generic.indent import getIndent
 
 
 class VhdlSerializer_types():
+
+    @classmethod
+    def HdlType(cls, typ: HdlType, ctx: SerializerCtx, declaration=False):
+        """
+        Serialize HdlType instance
+        """
+        try:
+            to_vhdl = typ._to_vhdl
+        except AttributeError:
+            to_vhdl = None
+            pass
+        if to_vhdl is not None:
+            return to_vhdl(cls, typ, ctx, declaration=declaration)
+        else:
+            return super(VhdlSerializer_types, cls).HdlType(typ, ctx, declaration)
 
     @classmethod
     def HdlType_str(cls, typ, ctx, declaration=False):
