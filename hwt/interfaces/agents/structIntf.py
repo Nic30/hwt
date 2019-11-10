@@ -1,4 +1,5 @@
-from hwt.simulator.agentBase import AgentBase
+from pycocotb.agents.base import AgentBase
+from pycocotb.hdlSimulator import HdlSimulator
 
 
 class StructIntfAgent(AgentBase):
@@ -8,10 +9,10 @@ class StructIntfAgent(AgentBase):
     :summary: only purpose is to instantiate agents for child interfaces
     """
 
-    def __init__(self, intf):
-        AgentBase.__init__(self, intf)
+    def __init__(self, sim: HdlSimulator, intf):
+        AgentBase.__init__(self, sim, intf)
         for intf in intf._interfaces:
-            intf._initSimAgent()
+            intf._initSimAgent(sim)
 
     def getMonitors(self):
         for intf in self.intf._interfaces:

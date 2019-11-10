@@ -2,6 +2,7 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getRst, getClk
 from ipCorePackager.intfIpMeta import IntfIpMetaNotSpecified
+from pycocotb.hdlSimulator import HdlSimulator
 
 
 class InterfaceceImplDependentFns():
@@ -13,7 +14,7 @@ class InterfaceceImplDependentFns():
     def _getIpCoreIntfClass(self):
         raise IntfIpMetaNotSpecified()
 
-    def _initSimAgent(self):
+    def _initSimAgent(self, sim: HdlSimulator):
         raise NotSpecified("Override this function in your interface"
                            " implementation to have simultion agent"
                            " specified (%r)" % self)
@@ -54,7 +55,7 @@ class InterfaceceImplDependentFns():
         else:
             return p._getAssociatedClk()
 
-    def _clone(self):
+    def __copy__(self):
         """
         Create new instance of interface of same type and configuration
         """

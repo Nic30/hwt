@@ -9,8 +9,8 @@ class VerilogSerializer_types():
         return ""
 
     @classmethod
-    def HdlType_bits(cls, typ, ctx, declaration=False):
-        isVector = typ.forceVector or typ.bit_length() > 1
+    def HdlType_bits(cls, typ: Bits, ctx, declaration=False):
+        isVector = typ.force_vector or typ.bit_length() > 1
         nameBuff = []
         sigType = ctx.signalType
         if sigType is SIGNAL_TYPE.PORT:
@@ -25,7 +25,7 @@ class VerilogSerializer_types():
         if typ.signed:
             nameBuff.append("signed")
 
-        w = typ.width
+        w = typ.bit_length()
         if not isVector:
             pass
         elif isinstance(w, int):

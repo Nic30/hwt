@@ -3,20 +3,21 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BIT, BIT_N
 from hwt.interfaces.agents.bramPort import BramPortAgent
 from hwt.interfaces.agents.bramPort import BramPort_withoutClkAgent
-from hwt.interfaces.agents.clk import OscilatorAgent
 from hwt.interfaces.agents.fifo import FifoReaderAgent
 from hwt.interfaces.agents.fifo import FifoWriterAgent
 from hwt.interfaces.agents.handshaked import HandshakeSyncAgent
 from hwt.interfaces.agents.handshaked import HandshakedAgent
 from hwt.interfaces.agents.rdSynced import RdSyncedAgent
 from hwt.interfaces.agents.regCntrl import RegCntrlAgent
-from hwt.interfaces.agents.rst import PullDownAgent
-from hwt.interfaces.agents.rst import PullUpAgent
 from hwt.interfaces.agents.signal import SignalAgent
 from hwt.interfaces.agents.vldSynced import VldSyncedAgent
 from hwt.interfaces.signalOps import SignalOps
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.param import Param
+from pycocotb.agents.clk import ClockAgent
+from pycocotb.agents.rst import PullDownAgent
+from pycocotb.agents.rst import PullUpAgent
+from pycocotb.hdlSimulator import HdlSimulator
 
 
 D = DIRECTION
@@ -35,8 +36,8 @@ class Signal(SignalOps, Interface):
                          loadConfig=loadConfig)
         self._dtype = dtype
 
-    def _initSimAgent(self):
-        self._ag = SignalAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = SignalAgent(sim, self)
 
 
 def VectSignal(width,
@@ -47,7 +48,7 @@ def VectSignal(width,
     Create basic :class:`.Signal` interface where type is vector
     """
     return Signal(masterDir,
-                  Bits(width, signed, forceVector=True),
+                  Bits(width, signed, force_vector=True),
                   loadConfig)
 
 
@@ -61,8 +62,8 @@ class Clk(Signal):
         from hwt.interfaces.std_ip_defs import IP_Clk
         return IP_Clk
 
-    def _initSimAgent(self):
-        self._ag = OscilatorAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = ClockAgent(sim, self)
 
 
 class Rst(Signal):
@@ -74,8 +75,8 @@ class Rst(Signal):
         from hwt.interfaces.std_ip_defs import IP_Rst
         return IP_Rst
 
-    def _initSimAgent(self):
-        self._ag = PullDownAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = PullDownAgent(sim, self)
 
 
 class Rst_n(Signal):
@@ -96,8 +97,8 @@ class Rst_n(Signal):
         from hwt.interfaces.std_ip_defs import IP_Rst_n
         return IP_Rst_n
 
-    def _initSimAgent(self):
-        self._ag = PullUpAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = PullUpAgent(sim, self)
 
 
 class VldSynced(Interface):
@@ -113,8 +114,8 @@ class VldSynced(Interface):
         self.data = VectSignal(self.DATA_WIDTH)
         self.vld = s()
 
-    def _initSimAgent(self):
-        self._ag = VldSyncedAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = VldSyncedAgent(sim, self)
 
 
 class RdSynced(Interface):
@@ -130,8 +131,8 @@ class RdSynced(Interface):
         self.data = VectSignal(self.DATA_WIDTH)
         self.rd = s(masterDir=D.IN)
 
-    def _initSimAgent(self):
-        self._ag = RdSyncedAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = RdSyncedAgent(sim, self)
 
 
 class Handshaked(VldSynced):
@@ -148,8 +149,8 @@ class Handshaked(VldSynced):
         super()._declr()
         self.rd = s(masterDir=D.IN)
 
-    def _initSimAgent(self):
-        self._ag = HandshakedAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = HandshakedAgent(sim, self)
 
 
 class HandshakeSync(Interface):
@@ -168,8 +169,8 @@ class HandshakeSync(Interface):
         self.vld = s()
         self.rd = s(masterDir=D.IN)
 
-    def _initSimAgent(self):
-        self._ag = HandshakeSyncAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = HandshakeSyncAgent(sim, self)
 
 
 class ReqDoneSync(Interface):
@@ -216,8 +217,8 @@ class BramPort_withoutClk(Interface):
         from hwt.interfaces.std_ip_defs import IP_BlockRamPort
         return IP_BlockRamPort
 
-    def _initSimAgent(self):
-        self._ag = BramPort_withoutClkAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = BramPort_withoutClkAgent(sim, self)
 
 
 class BramPort(BramPort_withoutClk):
@@ -232,8 +233,8 @@ class BramPort(BramPort_withoutClk):
 
         self._associatedClk = self.clk
 
-    def _initSimAgent(self):
-        self._ag = BramPortAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = BramPortAgent(sim, self)
 
 
 class FifoWriter(Interface):
@@ -245,8 +246,8 @@ class FifoWriter(Interface):
         self.wait = s(masterDir=D.IN)
         self.data = VectSignal(self.DATA_WIDTH)
 
-    def _initSimAgent(self):
-        self._ag = FifoWriterAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = FifoWriterAgent(sim, self)
 
 
 class FifoReader(FifoWriter):
@@ -255,8 +256,8 @@ class FifoReader(FifoWriter):
         self.en._masterDir = D.IN
         self.wait._masterDir = D.OUT
 
-    def _initSimAgent(self):
-        self._ag = FifoReaderAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = FifoReaderAgent(sim, self)
 
 
 class RegCntrl(Interface):
@@ -273,8 +274,8 @@ class RegCntrl(Interface):
         with self._paramsShared():
             self.dout = VldSynced()
 
-    def _initSimAgent(self):
-        self._ag = RegCntrlAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = RegCntrlAgent(sim, self)
 
 
 s = Signal

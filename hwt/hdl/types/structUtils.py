@@ -66,7 +66,7 @@ def walkFlattenFields(sigOrVal, skipPadding=True):
             isPadding = f.name is None
             if not isPadding or not skipPadding:
                 if isPadding:
-                    v = f.dtype.fromPy(None)
+                    v = f.dtype.from_py(None)
                 else:
                     v = getattr(sigOrVal, f.name)
 
@@ -81,7 +81,7 @@ def walkFlattenFields(sigOrVal, skipPadding=True):
 
 def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
     """
-    opposite of packAxiSFrame
+    Parse raw Bits array to a  
     """
     if getDataFn is None:
         assert dataWidth is not None
@@ -91,7 +91,7 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
 
         getDataFn = _getDataFn
 
-    val = structT.fromPy(None)
+    val = structT.from_py(None)
 
     fData = iter(data)
 
@@ -133,8 +133,7 @@ def HStruct_unpack(structT, data, getDataFn=None, dataWidth=None):
             _v = actual[(required + actualOffset):actualOffset]
             _v = _v._auto_cast(v._dtype)
             v.val = _v.val
-            v.vldMask = _v.vldMask
-            v.updateTime = _v.updateTime
+            v.vld_mask = _v.vld_mask
 
             # update slice out what was taken
             actuallyHave -= required

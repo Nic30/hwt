@@ -2,7 +2,9 @@ from collections import deque
 
 from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
-from hwt.simulator.shortcuts import oscilate
+from pycocotb.agents.clk import ClockAgent
+from pycocotb.hdlSimulator import HdlSimulator
+from pycocotb.triggers import WaitCombRead, WaitWriteOnly, WaitCombStable, Timer
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):
@@ -14,8 +16,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         are performed on mem object
     """
 
-    def __init__(self, intf):
-        super().__init__(intf, allowNoReset=True)
+    def __init__(self, sim: HdlSimulator, intf):
+        super().__init__(sim, intf, allowNoReset=True)
 
         self.requests = deque()
         self.readPending = False
@@ -23,8 +25,9 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
         self.mem = {}
         self.requireInit = True
+        self.clk_ag = None
 
-    def doReq(self, sim, req):
+    def doReq(self, req):
         rw = req[0]
         addr = req[1]
 
@@ -35,105 +38,120 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, after %r read_req: %d\n" % (
                                         self.intf._getFullName(),
-                                        sim.now, addr))
+                                        self.sim.now, addr))
         elif rw == WRITE:
             wdata = req[2]
             rw = 1
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, after %r write: %d:%d\n" % (
-                                        self.intf._getFullName(), sim.now,
+                                        self.intf._getFullName(), self.sim.now,
                                         addr, wdata))
 
         else:
             raise NotImplementedError(rw)
 
         intf = self.intf
-        w = sim.write
-        w(rw, intf.we)
-        w(addr, intf.addr)
-        w(wdata, intf.din)
+        intf.we.write(rw)
+        intf.addr.write(addr)
+        intf.din.write(wdata)
 
-    def onReadReq(self, sim, addr):
+    def onReadReq(self, addr):
         """
         on readReqRecieved in monitor mode
         """
         self.requests.append((READ, addr))
 
-    def onWriteReq(self, sim, addr, data):
+    def onWriteReq(self, addr, data):
         """
         on writeReqRecieved in monitor mode
         """
         self.requests.append((WRITE, addr, data))
 
-    def monitor(self, sim):
+    def monitor(self):
+        """
+        Handle read/write request on this interfaces
+        
+        This method is executed on clock edge.
+        This means that the read data should be put on dout after clock edge.
+        """
         intf = self.intf
 
-        yield sim.waitOnCombUpdate()
-        # now we are after clk edge
-        if self.notReset(sim):
-            en = sim.read(intf.en)
-            assert en.vldMask
-            if en.val:
-                we = sim.read(intf.we)
-                assert we.vldMask
+        
+        yield WaitCombStable()
+        if self.notReset():
+            en = intf.en.read()
+            en = int(en)
+            if en:
+                we = intf.we.read()
+                we = int(we)
 
-                addr = sim.read(intf.addr)
-                if we.val:
-                    data = sim.read(intf.din)
-                    self.onWriteReq(sim, addr, data)
+                addr = intf.addr.read()
+                if we:
+                    data = intf.din.read()
+                    self.onWriteReq(addr, data)
                 else:
-                    self.onReadReq(sim, addr)
+                    self.onReadReq(addr)
 
         if self.requests:
             req = self.requests.popleft()
             t = req[0]
             addr = req[1]
-            assert addr._isFullVld(), sim.now
             if t == READ:
-                sim.write(self.mem[addr.val], intf.dout)
+                v = self.mem.get(addr.val, None)
+                yield Timer(1)
+                yield WaitWriteOnly()
+                intf.dout.write(v)
             else:
                 assert t == WRITE
-                sim.write(None, intf.dout)
+                # yield WaitWriteOnly()
+                # intf.dout.write(None)
+                yield Timer(1)
+                # after clock edge
+                yield WaitWriteOnly()
                 self.mem[addr.val] = req[2]
 
-    def driver(self, sim):
+    def driver(self):
         intf = self.intf
-        w = sim.write
         if self.requireInit:
-            w(0, intf.en)
-            w(0, intf.we)
+            yield WaitWriteOnly()
+            intf.en.write(0)
+            intf.we.write(0)
             self.requireInit = False
 
-#        yield s.wait(2000)
         readPending = self.readPending
-        if self.requests and self.notReset(sim):
+        yield WaitCombRead()
+        if self.requests and self.notReset():
+            yield WaitWriteOnly()
             req = self.requests.popleft()
             if req is NOP:
-                w(0, intf.en)
-                w(0, intf.we)
+                intf.en.write(0)
+                intf.we.write(0)
                 self.readPending = False
             else:
-                self.doReq(sim, req)
-                w(1, intf.en)
+                self.doReq(req)
+                intf.en.write(1)
         else:
-            w(0, intf.en)
-            w(0, intf.we)
+            yield WaitWriteOnly()
+            intf.en.write(0)
+            intf.we.write(0)
             self.readPending = False
 
         if readPending:
-            yield sim.waitOnCombUpdate()
+            # in previous clock the read request was dispatched, now we are collecting the data
+            yield WaitCombStable()
             # now we are after clk edge
-            d = sim.read(intf.dout)
+            d = intf.dout.read()
             self.readed.append(d)
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, on %r read_data: %d\n" % (
                                         self.intf._getFullName(),
-                                        sim.now, d.val))
+                                        self.sim.now, d.val))
 
 
 class BramPortAgent(BramPort_withoutClkAgent):
 
     def getDrivers(self):
         drivers = super(BramPortAgent, self).getDrivers()
-        drivers.append(oscilate(self.intf.clk))
+        self.clk_ag = ClockAgent(self.sim, self.intf.clk)
+        drivers.extend(self.clk_ag.getDrivers())
         return drivers

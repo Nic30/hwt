@@ -1,4 +1,4 @@
-{{indent}}c, cVld = simEvalCond(sim, {{ cond }})
+{{indent}}c, cVld = sim_eval_cond({{ cond }})
 {{indent}}#if ():
 {{indent}}if not cVld:
 {{indent}}{{indent}}# invalidate outputs{%

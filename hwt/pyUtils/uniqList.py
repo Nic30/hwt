@@ -36,7 +36,10 @@ class UniqList(list):
 
     def discard(self, item):
         if item in self.__s:
-            return self.remove(item)
+            self.remove(item)
+            return True
+        else:
+            return False
 
     def remove(self, item):
         self.__s.remove(item)

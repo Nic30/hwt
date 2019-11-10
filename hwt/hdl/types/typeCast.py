@@ -22,7 +22,7 @@ def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
     else:
         if isinstance(op, int):
             if suggestedType is not None:
-                return suggestedType.fromPy(op)
+                return suggestedType.from_py(op)
 
             if op >= 1 << 31:
                 raise TypeError(
@@ -40,4 +40,4 @@ def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
         if hType is None:
             raise TypeError("Unknown hardware type for %s" % (op.__class__))
 
-        return hType.fromPy(op)
+        return hType.from_py(op)

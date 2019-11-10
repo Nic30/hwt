@@ -1,11 +1,31 @@
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.typeShortcuts import hInt
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.typeCast import toHVal
+from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.generic.indent import getIndent
 
 
 class VhdlSerializer_types():
+
+    @classmethod
+    def HdlType(cls, typ: HdlType, ctx: SerializerCtx, declaration=False):
+        """
+        Serialize HdlType instance
+        """
+        try:
+            to_vhdl = typ._to_vhdl
+        except AttributeError:
+            to_vhdl = None
+            pass
+        if to_vhdl is not None:
+            return to_vhdl(cls, typ, ctx, declaration=declaration)
+        else:
+            return super(VhdlSerializer_types, cls).HdlType(typ, ctx, declaration)
+
+    @classmethod
+    def HdlType_str(cls, typ, ctx, declaration=False):
+        assert not declaration
+        return "STRING"
 
     @classmethod
     def HdlType_bool(cls, typ, ctx, declaration=False):
@@ -13,11 +33,11 @@ class VhdlSerializer_types():
         return "BOOLEAN"
 
     @classmethod
-    def HdlType_bits(cls, typ, ctx, declaration=False):
+    def HdlType_bits(cls, typ: Bits, ctx, declaration=False):
         disableRange = False
         bitLength = typ.bit_length()
-        w = typ.width
-        isVector = typ.forceVector or bitLength > 1
+        w = typ.bit_length()
+        isVector = typ.force_vector or bitLength > 1
 
         if typ.signed is None:
             if isVector:
@@ -31,11 +51,9 @@ class VhdlSerializer_types():
 
         if disableRange:
             constr = ""
-        elif isinstance(w, int):
-            constr = "(%d DOWNTO 0)" % (w - 1)
         else:
-            o = Operator(AllOps.SUB, (w, hInt(1)))
-            constr = "(%s DOWNTO 0)" % cls.Operator(o, ctx)
+            constr = "(%d DOWNTO 0)" % (w - 1)
+
         return name + constr
 
     @classmethod
@@ -77,7 +95,7 @@ class VhdlSerializer_types():
                 (getIndent(ctx.indent),
                  typ.name,
                  cls.asHdl(toHVal(typ.size) - 1, ctx),
-                 cls.HdlType(typ.elmType, ctx, declaration=declaration))
+                 cls.HdlType(typ.element_t, ctx, declaration=declaration))
         else:
             try:
                 return typ.name

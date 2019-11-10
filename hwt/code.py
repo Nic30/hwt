@@ -6,7 +6,7 @@ from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
 from hwt.hdl.statements import HwtSyntaxError
 from hwt.hdl.switchContainer import SwitchContainer
-from hwt.hdl.typeShortcuts import hInt, vec
+from hwt.hdl.typeShortcuts import vec
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
@@ -119,7 +119,7 @@ class Switch(SwitchContainer):
         caseVal = toHVal(caseVal, self.switchOn._dtype)
 
         assert isinstance(caseVal, Value), caseVal
-        assert caseVal._isFullVld(), "Cmp with invalid value"
+        assert caseVal._is_full_valid(), "Cmp with invalid value"
         assert caseVal not in self._case_value_index, (
             "Switch statement already has case for value ", caseVal)
 
@@ -217,7 +217,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
         # if there is multiple items we have to generate counter logic
         index = parentUnit._reg(name + "for_index",
                                 Bits(log2ceil(itemsCnt + 1), signed=False),
-                                defVal=0)
+                                def_val=0)
         ackSig = parentUnit._sig(name + "for_ack")
 
         statementLists = []
@@ -254,7 +254,7 @@ class FsmBuilder(Switch):
         :param stateRegName: name of register where sate is stored
         """
         if isinstance(stateT, HEnum):
-            beginVal = stateT.fromPy(stateT._allValues[0])
+            beginVal = stateT.from_py(stateT._allValues[0])
         else:
             beginVal = 0
 
@@ -338,7 +338,7 @@ Concat = _mkOp(concatFn)
 
 
 def power(base, exp) -> RtlSignalBase:
-    return toHVal(base)._pow(exp)
+    return toHVal(base) ** exp
 
 
 def ror(sig, howMany) -> RtlSignalBase:
@@ -377,7 +377,7 @@ def log2ceil(x):
     else:
         res = math.ceil(math.log2(x))
 
-    return hInt(res)
+    return res
 
 
 def isPow2(num) -> bool:

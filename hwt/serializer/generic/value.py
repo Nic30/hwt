@@ -1,14 +1,13 @@
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.bool import HBool
+from hwt.hdl.types.defs import INT, BOOL
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.types.integer import Integer
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.string import String
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.serializer.exceptions import SerializerException
-from hwt.synthesizer.param import Param
 from hwt.serializer.generic.context import SerializerCtx
+from hwt.synthesizer.param import Param
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class GenericSerializer_Value():
@@ -27,18 +26,18 @@ class GenericSerializer_Value():
         if c:
             return c
 
-        if isinstance(t, Slice):
+        if t == INT:
+            return cls.Integer_valAsHdl(t, val, ctx)
+        elif t == BOOL:
+            return cls.Bool_valAsHdl(t, val, ctx)
+        elif isinstance(t, Slice):
             return cls.Slice_valAsHdl(t, val, ctx)
         elif isinstance(t, HArray):
             return cls.HArrayValAsHdl(t, val, ctx)
         elif isinstance(t, Bits):
             return cls.Bits_valAsHdl(t, val, ctx)
-        elif isinstance(t, HBool):
-            return cls.Bool_valAsHdl(t, val, ctx)
         elif isinstance(t, HEnum):
             return cls.HEnumValAsHdl(t, val, ctx)
-        elif isinstance(t, Integer):
-            return cls.Integer_valAsHdl(t, val, ctx)
         elif isinstance(t, String):
             return cls.String_valAsHdl(t, val, ctx)
         else:
@@ -58,16 +57,20 @@ class GenericSerializer_Value():
     def Bits_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
         w = dtype.bit_length()
         if dtype.signed is None:
-            if dtype.forceVector or w > 1:
-                return cls.BitString(val.val, w, val.vldMask)
+            if dtype.force_vector or w > 1:
+                return cls.BitString(val.val, w, val.vld_mask)
             else:
-                return cls.BitLiteral(val.val, val.vldMask)
+                return cls.BitLiteral(val.val, val.vld_mask)
         elif dtype.signed:
-            return cls.SignedBitString(val.val, w, dtype.forceVector,
-                                       val.vldMask)
+            return cls.SignedBitString(val.val, w, dtype.force_vector,
+                                       val.vld_mask)
         else:
-            return cls.UnsignedBitString(val.val, w, dtype.forceVector,
-                                         val.vldMask)
+            return cls.UnsignedBitString(val.val, w, dtype.force_vector,
+                                         val.vld_mask)
+
+    @classmethod
+    def String_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
+        return '"%s"' % val.val
 
     @classmethod
     def get_signal_name(cls, si, ctx: SerializerCtx):

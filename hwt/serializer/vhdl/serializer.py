@@ -18,8 +18,9 @@ from hwt.serializer.vhdl.tmplContainer import VhdlTmplContainer
 from hwt.serializer.vhdl.types import VhdlSerializer_types
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.serializer.vhdl.value import VhdlSerializer_Value
-from hwt.synthesizer.param import getParam
 from hwt.hdl.architecture import Architecture
+from hwt.synthesizer.param import Param
+from hwt.hdl.portItem import PortItem
 
 
 class VhdlNameScope(NameScope):
@@ -123,7 +124,7 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
 
             genericMaps = []
             for g in entity.generics:
-                gm = MapExpr(g, g._val)
+                gm = MapExpr(g, g.get_value())
                 genericMaps.append(gm)
 
             if len(portMaps) == 0:
@@ -158,14 +159,12 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
                 return entVhdl
 
     @classmethod
-    def GenericItem(cls, g, ctx):
-        s = "%s: %s" % (cls.get_signal_name(g, ctx),
-                        cls.HdlType(g._dtype, ctx))
-        if g.defVal is None:
-            return s
-        else:
-            return "%s := %s" % (
-                s, cls.Value(getParam(g.defVal).staticEval(), ctx))
+    def GenericItem(cls, g: Param, ctx):
+        v = g.get_hdl_value()
+        t_str = cls.HdlType(v._dtype, ctx)
+        v_str = cls.Value(v, ctx)
+        return '%s: %s := %s' % (
+                g.hdl_name, t_str, v_str)
 
     @classmethod
     def PortConnection(cls, pc, ctx):
@@ -182,12 +181,17 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
         return d.name
 
     @classmethod
-    def PortItem(cls, pi, ctx):
+    def PortItem(cls, pi: PortItem, ctx):
         return "%s: %s %s" % (pi.name, cls.DIRECTION(pi.direction),
                               cls.HdlType(pi._dtype, ctx))
 
     @classmethod
-    def MapExpr(cls, m, ctx):
-        return "%s => %s" % (
-            cls.get_signal_name(m.compSig, ctx),
-            cls.asHdl(m.value, ctx))
+    def MapExpr(cls, m: MapExpr, ctx):
+        k = m.compSig
+        if isinstance(k, Param):
+            name = k.hdl_name
+            v = cls.Value(k.get_hdl_value(), ctx)
+        else:
+            name = cls.get_signal_name(k, ctx)
+            v = cls.asHdl(m.value, ctx)
+        return "%s => %s" % (name, v)

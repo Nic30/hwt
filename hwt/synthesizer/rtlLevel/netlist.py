@@ -28,16 +28,14 @@ from hwt.doc_markers import internal
 
 
 @internal
-def name_for_process_and_mark_outputs(statements: List[HdlStatement])\
-        -> str:
+def name_for_process(outputs: List[RtlSignal]) -> str:
     """
-    Resolve name for process and mark outputs of statemens as not hidden
+    Resolve name for process
     """
     out_names = []
-    for stm in statements:
-        for sig in stm._outputs:
-            if not sig.hasGenericName:
-                out_names.append(sig.name)
+    for sig in outputs:
+        if not sig.hasGenericName:
+            out_names.append(sig.name)
 
     if out_names:
         return min(out_names)
@@ -124,13 +122,13 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
             if proc_statements:
                 yield from _statements_to_HWProcesses(proc_statements, False)
         else:
-            name = name_for_process_and_mark_outputs(proc_statements)
+            name = name_for_process(outputs)
             yield HWProcess("assig_process_" + name,
                             proc_statements, sensitivity,
                             inputs, outputs)
     else:
         assert not outputs
-        # this can happend f.e. when If does not contains any Assignment
+        # this can happen e.g. when If does not contains any Assignment
         pass
 
 
@@ -142,7 +140,7 @@ def statements_to_HWProcesses(statements: List[HdlStatement])\
     * for each out signal resolve it's drivers and collect them
     * split statements if there is and combinational loop
     * merge statements if it is possible
-    * resolve sensitivitilists
+    * resolve sensitivity lists
     * wrap into HWProcess instance
     * for every IO of process generate name if signal has not any
     """
@@ -162,7 +160,8 @@ def statements_to_HWProcesses(statements: List[HdlStatement])\
 
 
 @internal
-def walk_assignments(stm: HdlStatement, dst: RtlSignal) -> Generator[Assignment, None, None]:
+def walk_assignments(stm: HdlStatement, dst: RtlSignal)\
+        -> Generator[Assignment, None, None]:
     if isinstance(stm, Assignment):
         if dst is stm.dst:
             yield stm
@@ -201,7 +200,7 @@ def markVisibilityOfSignals(ctx, ctxName, signals, interfaceSignals):
                 if has_comb_driver and is_comb_driver:
                     raise MultipleDriversErr(
                         "%s: Signal %r has multiple combinational drivers" %
-                        (ctx.getDebugScopeName(), sig))
+                        (ctx.getDebugScopeName(), sig), sig.drivers)
 
                 has_comb_driver |= is_comb_driver
         elif driver_cnt == 1:
@@ -210,7 +209,7 @@ def markVisibilityOfSignals(ctx, ctxName, signals, interfaceSignals):
         else:
             sig.hidden = False
             if sig not in interfaceSignals:
-                if not sig.defVal._isFullVld():
+                if not sig.def_val._is_full_valid():
                     raise NoDriverErr(
                         sig, "Signal without any driver or valid value in ", ctxName)
                 sig._const = True
@@ -237,7 +236,7 @@ class RtlNetlist():
         self.subUnits = set()
         self.synthesised = False
 
-    def sig(self, name, dtype=BIT, clk=None, syncRst=None, defVal=None):
+    def sig(self, name, dtype=BIT, clk=None, syncRst=None, def_val=None):
         """
         Create new signal in this context
 
@@ -245,25 +244,25 @@ class RtlNetlist():
             as SyncSignal
         :param syncRst: synchronous reset signal
         """
-        if isinstance(defVal, RtlSignal):
-            assert defVal._const, \
+        if isinstance(def_val, RtlSignal):
+            assert def_val._const, \
                 "Initial value of register has to be constant"
-            _defVal = defVal._auto_cast(dtype)
-        elif isinstance(defVal, Value):
-            _defVal = defVal._auto_cast(dtype)
-        elif isinstance(defVal, InterfaceBase):
-            _defVal = defVal._sig
+            _def_val = def_val._auto_cast(dtype)
+        elif isinstance(def_val, Value):
+            _def_val = def_val._auto_cast(dtype)
+        elif isinstance(def_val, InterfaceBase):
+            _def_val = def_val._sig
         else:
-            _defVal = dtype.fromPy(defVal)
+            _def_val = dtype.from_py(def_val)
 
         if clk is not None:
-            s = RtlSyncSignal(self, name, dtype, _defVal)
-            if syncRst is not None and defVal is None:
+            s = RtlSyncSignal(self, name, dtype, _def_val)
+            if syncRst is not None and def_val is None:
                 raise SigLvlConfErr(
                     "Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                       RtlSignal.__call__(s, _defVal)
+                       RtlSignal.__call__(s, _def_val)
                        ).Else(
                     RtlSignal.__call__(s, s.next)
                 )
@@ -277,7 +276,7 @@ class RtlNetlist():
             if syncRst:
                 raise SigLvlConfErr(
                     "Signal %s has reset but has no clk" % name)
-            s = RtlSignal(self, name, dtype, defVal=_defVal)
+            s = RtlSignal(self, name, dtype, def_val=_def_val)
 
         self.signals.add(s)
 

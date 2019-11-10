@@ -3,6 +3,7 @@ from hwt.hdl.constants import DIRECTION
 from hwt.interfaces.agents.unionIntf import UnionSourceAgent
 from hwt.interfaces.std import Handshaked
 from hwt.interfaces.structIntf import StructIntf
+from pycocotb.hdlSimulator import HdlSimulator
 
 
 class UnionSink(StructIntf):
@@ -15,7 +16,7 @@ class UnionSink(StructIntf):
     def _declr(self):
         StructIntf._declr(self)
         self._select = Handshaked()
-        self._select.DATA_WIDTH.set(log2ceil(len(self._structT.fields)))
+        self._select.DATA_WIDTH = log2ceil(len(self._structT.fields))
 
 
 class UnionSource(UnionSink):
@@ -27,7 +28,7 @@ class UnionSource(UnionSink):
     def _declr(self):
         StructIntf._declr(self)
         self._select = Handshaked(masterDir=DIRECTION.IN)
-        self._select.DATA_WIDTH.set(log2ceil(len(self._structT.fields)))
+        self._select.DATA_WIDTH = log2ceil(len(self._structT.fields))
 
-    def _initSimAgent(self):
-        self._ag = UnionSourceAgent(self)
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = UnionSourceAgent(sim, self)

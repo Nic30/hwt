@@ -7,6 +7,7 @@ from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers, \
     _default_param_updater
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.doc_markers import internal
+from hwt.synthesizer.param import Param
 
 
 class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
@@ -147,8 +148,6 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         # if I am a unit load subunits
         for u in self._units:
             u._loadDeclarations()
-        for p in self._params:
-            p.setReadOnly()
 
     @internal
     def _registerIntfInImpl(self, iName, intf):
@@ -164,13 +163,13 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         # construct params for entity (generics)
         params = {}
 
-        def addP(n, p):
-            p.name = n
+        def addP(n: str, p: Param):
             if n in params:
                 raise IntfLvlConfErr(
-                    "Redefinition of generic '%s' while synthesis"
+                    "Redefinition of generic/param '%s' while synthesis"
                     " old:%r, new:%r"
                     % (n, params[n], p))
+            p.hdl_name = n
             params[n] = p
 
         def nameForNestedParam(p):
@@ -189,14 +188,13 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         discoveredParams = set()
         for p in self._params:
             discoveredParams.add(p)
-            addP(p.name, p)
+            addP(p._name, p)
 
         # collect params from interfaces
         for intf in self._interfaces:
             for p in walkParams(intf, discoveredParams):
                 n = nameForNestedParam(p)
                 addP(n, p)
-                p._registerScope(n, self)
 
         return params
 
@@ -220,8 +218,13 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
                 raise IntfLvlConfErr("_toRtl of %s: unit(s) %s were lost"
                                      % (self._name, str(inIntf - inRtl)))
 
-    def _updateParamsFrom(self, otherObj, updater=_default_param_updater, exclude=None, prefix=""):
+    def _updateParamsFrom(self, otherObj,
+                          updater=_default_param_updater,
+                          exclude=None,
+                          prefix=""):
         """
-        :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
+        :note: doc in
+              :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
         """
-        PropDeclrCollector._updateParamsFrom(self, otherObj, updater, exclude, prefix)
+        PropDeclrCollector._updateParamsFrom(self, otherObj,
+                                             updater, exclude, prefix)

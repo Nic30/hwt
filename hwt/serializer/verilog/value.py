@@ -1,4 +1,4 @@
-from hwt.bitmask import mask
+from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
@@ -8,39 +8,41 @@ from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.serializer.generic.indent import getIndent
+from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.doc_markers import internal
+from pyMathBitPrecise.bit_utils import mask
+from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.types.slice import Slice
 
 
 class VerilogSerializer_Value(GenericSerializer_Value):
 
     @classmethod
-    def BitLiteral(cls, v, vldMask):
-        if vldMask:
+    def BitLiteral(cls, v, vld_mask):
+        if vld_mask:
             return "1'b%d" % int(bool(v))
         else:
             return "1'bx"
 
     @classmethod
-    def BitString(cls, v, width, vldMask=None):
-        if vldMask is None:
-            vldMask = mask(width)
+    def BitString(cls, v, width, vld_mask=None):
+        if vld_mask is None:
+            vld_mask = mask(width)
         # if can be in hex
-        if width % 4 == 0 and vldMask == (1 << width) - 1:
+        if width % 4 == 0 and vld_mask == (1 << width) - 1:
             return ("%d'h%0" + str(width // 4) + 'x') % (width, v)
         else:  # else in binary
-            return cls.BitString_binary(v, width, vldMask)
+            return cls.BitString_binary(v, width, vld_mask)
 
     @staticmethod
-    def BitString_binary(v, width, vldMask=None):
+    def BitString_binary(v, width, vld_mask=None):
         buff = ["%d'b" % width]
         for i in range(width - 1, -1, -1):
             mask = (1 << i)
             b = v & mask
 
-            if vldMask & mask:
+            if vld_mask & mask:
                 s = "1" if b else "0"
             else:
                 s = "x"
@@ -63,28 +65,16 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             raise NotImplementedError(d)
 
     @classmethod
-    def condAsHdl(cls, cond, forceBool, createTmpVarFn):
-        if isinstance(cond, RtlSignalBase):
-            cond = [cond]
+    def condAsHdl(cls, c, forceBool, createTmpVarFn):
+        assert isinstance(c, (RtlSignalBase, Value))
+        if not forceBool or c._dtype == BOOL:
+            return cls.asHdl(c, createTmpVarFn)
+        elif c._dtype == BIT:
+            return cls.asHdl(c, createTmpVarFn)
+        elif isinstance(c._dtype, Bits):
+            return cls.asHdl(c != 0, createTmpVarFn)
         else:
-            cond = list(cond)
-        if len(cond) == 1:
-            c = cond[0]
-            if not forceBool or c._dtype == BOOL:
-                return cls.asHdl(c, createTmpVarFn)
-            elif c._dtype == BIT:
-                return "(%s)==%s" % (cls.asHdl(c, createTmpVarFn),
-                                     cls.BitLiteral(1, 1))
-            elif isinstance(c._dtype, Bits):
-                width = c._dtype.bit_length()
-                return "(%s)!=%s" % (cls.asHdl(c, createTmpVarFn),
-                                     cls.BitString(0, width))
-            else:
-                raise NotImplementedError()
-        else:
-            return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool,
-                                                           createTmpVarFn),
-                                   cond))
+            raise NotImplementedError()
 
     @classmethod
     def HEnumValAsHdl(cls, dtype, val, ctx):
@@ -97,13 +87,13 @@ class VerilogSerializer_Value(GenericSerializer_Value):
         if declaration:
             ctx = ctx.forSignal(si)
 
-            v = si.defVal
-            if si.virtualOnly:
+            v = si.def_val
+            if si.virtual_only:
                 pass
             elif si.drivers:
                 pass
             elif si.endpoints or si.simSensProcs:
-                if not v.vldMask:
+                if not v.vld_mask:
                     raise SerializerException(
                         "Signal %s is constant and has undefined value"
                         % si.name)
@@ -117,7 +107,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             while isinstance(t, HArray):
                 # collect array dimensions
                 dimensions.append(t.size)
-                t = t.elmType
+                t = t.element_t
 
             s = "%s%s %s" % (getIndent(ctx.indent),
                              cls.HdlType(t, ctx),
@@ -137,7 +127,7 @@ class VerilogSerializer_Value(GenericSerializer_Value):
                     # default value has to be set by reset because it is only signal
                     return s
             elif isinstance(v, Value):
-                if v.vldMask:
+                if v.vld_mask:
                     return s + " = %s" % cls.Value(v, ctx)
                 else:
                     return s
@@ -148,15 +138,15 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             return cls.get_signal_name(si, ctx)
 
     @classmethod
-    def Slice_valAsHdl(cls, dtype, val, ctx):
-        upper = val.val[0]
+    def Slice_valAsHdl(cls, dtype: Slice, val: SliceVal, ctx):
+        upper = val.val.start
         if isinstance(upper, Value):
             upper = upper - 1
             _format = "%s:%s"
         else:
             _format = "%s-1:%s"
 
-        return _format % (cls.Value(upper, ctx), cls.Value(val.val[1], ctx))
+        return _format % (cls.Value(upper, ctx), cls.Value(val.val.stop, ctx))
 
     @classmethod
     def sensitivityListItem(cls, item, ctx, anyIsEventDependent):
@@ -182,12 +172,12 @@ class VerilogSerializer_Value(GenericSerializer_Value):
 
     @internal
     @classmethod
-    def _BitString(cls, typeName, v, width, forceVector, vldMask):
-        if vldMask != mask(width):
-            if forceVector or width > 1:
-                v = cls.BitString(v, width, vldMask)
+    def _BitString(cls, typeName, v, width, force_vector, vld_mask):
+        if vld_mask != mask(width):
+            if force_vector or width > 1:
+                v = cls.BitString(v, width, vld_mask)
             else:
-                v = cls.BitLiteral(v, width, vldMask)
+                v = cls.BitLiteral(v, width, vld_mask)
         else:
             v = str(v)
         # [TODO] parametrized width
@@ -197,9 +187,9 @@ class VerilogSerializer_Value(GenericSerializer_Value):
             return v
 
     @classmethod
-    def SignedBitString(cls, v, width, forceVector, vldMask):
-        return cls._BitString("$signed", v, width, forceVector, vldMask)
+    def SignedBitString(cls, v, width, force_vector, vld_mask):
+        return cls._BitString("$signed", v, width, force_vector, vld_mask)
 
     @classmethod
-    def UnsignedBitString(cls, v, width, forceVector, vldMask):
-        return cls._BitString("", v, width, forceVector, vldMask)
+    def UnsignedBitString(cls, v, width, force_vector, vld_mask):
+        return cls._BitString("", v, width, force_vector, vld_mask)

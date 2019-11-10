@@ -1,9 +1,13 @@
+from hwt.hdl.architecture import Architecture
+from hwt.hdl.constants import DIRECTION
 from hwt.hdl.entity import Entity
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.portItem import PortItem
 from hwt.hdl.process import HWProcess
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
+from hwt.hdl.types.defs import STR, INT, BOOL
 from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
@@ -20,7 +24,7 @@ from hwt.serializer.verilog.tmplContainer import VerilogTmplContainer
 from hwt.serializer.verilog.types import VerilogSerializer_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import VerilogSerializer_Value
-from hwt.synthesizer.param import getParam
+from hwt.synthesizer.param import Param
 
 
 class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
@@ -66,32 +70,26 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
             # construct output of the rom
             romValSig = rom.ctx.sig(rom.name, dtype=e.result._dtype)
-            signals.append(romValSig)
             romValSig.hidden = False
+            signals.append(romValSig)
 
             # construct process which will represent content of the rom
             cases = [(toHVal(i), [romValSig(v), ])
-                     for i, v in enumerate(rom.defVal.val)]
-            statements = [SwitchContainer(index, cases), ]
+                     for i, v in enumerate(rom.def_val.val)]
+            romSwitchStm = SwitchContainer(index, cases)
 
-            for (_, (stm, )) in cases:
-                stm.parentStm = statements[0] 
+            for (_, (stm,)) in cases:
+                stm.parentStm = romSwitchStm
 
-            p = HWProcess(rom.name, statements, {index, },
-                          {index, }, {romValSig, })
+            p = HWProcess(rom.name, [romSwitchStm, ],
+                          {index, }, {index, }, {romValSig, })
             processes.append(p)
 
             # override usage of original index operator on rom
             # to use signal generated from this process
-            def replaceOrigRomIndexExpr(x):
-                if x is e.result:
-                    return romValSig
-                else:
-                    return x
             for _e in e.result.endpoints:
-                _e.operands = tuple(map(replaceOrigRomIndexExpr, _e.operands))
-                e.result = romValSig
-
+                _e._replace_input(e.result, romValSig)
+        rom.hidden = True
         return processes, signals
 
     @classmethod
@@ -102,7 +100,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         """
         t = v._dtype
         # if type requires extra definition
-        if isinstance(t, HArray) and v.defVal.vldMask:
+        if isinstance(t, HArray) and v.def_val.vld_mask:
             if v.drivers:
                 raise SerializerException("Verilog does not support RAMs"
                                           " with initialized value")
@@ -121,7 +119,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         return []
 
     @classmethod
-    def Architecture(cls, arch, ctx):
+    def Architecture(cls, arch: Architecture, ctx):
         serializerVars = []
         procs = []
         extraTypes = set()
@@ -144,7 +142,8 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         arch.processes.extend(extraProcesses)
         arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
         for p in arch.processes:
-            procs.append(cls.HWProcess(p, childCtx))
+            p_str = cls.HWProcess(p, childCtx)
+            procs.append(p_str)
 
         # architecture names can be same for different entities
         # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
@@ -172,7 +171,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
 
             genericMaps = []
             for g in entity.generics:
-                gm = MapExpr(g, g._val)
+                gm = MapExpr(g, g.get_value())
                 genericMaps.append(gm)
 
             if len(portMaps) == 0:
@@ -192,19 +191,25 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         return "\n".join(["/*", comentStr, "*/"])
 
     @classmethod
-    def GenericItem(cls, g, ctx):
-        s = "%s %s" % (cls.HdlType(g._dtype, ctx.forPort()),
-                       cls.get_signal_name(g, ctx))
-        if g.defVal is None:
-            return s
+    def GenericItem(cls, g: Param, ctx):
+        v = g.get_hdl_value()
+        if v._dtype == STR or v._dtype == INT or v._dtype == BOOL:
+            t_str = ""
         else:
-            return ("parameter %s = %s"
-                    % (s, cls.Value(getParam(g.defVal).staticEval(), ctx)))
+            t_str = cls.HdlType(v._dtype, ctx.forPort()) + " "
+        v_str = cls.Value(v, ctx)
+        return 'parameter %s %s= %s' % (
+                g.hdl_name, t_str, v_str)
 
     @classmethod
-    def PortItem(cls, pi, ctx):
+    def PortItem(cls, pi: PortItem, ctx):
         t = cls.HdlType(pi._dtype, ctx.forPort())
-        if verilogTypeOfSig(pi.getInternSig()) == SIGNAL_TYPE.REG:
+        if pi.direction == DIRECTION.IN or pi.direction == DIRECTION.INOUT:
+            verilog_t = SIGNAL_TYPE.WIRE
+        else:
+            verilog_t = verilogTypeOfSig(pi.getInternSig())
+
+        if verilog_t == SIGNAL_TYPE.REG:
             if t:
                 f = "%s reg %s %s"
             else:
@@ -232,6 +237,12 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         return ".%s(%s)" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
 
     @classmethod
-    def MapExpr(cls, m, ctx):
-        return ".%s(%s)" % (cls.get_signal_name(m.compSig, ctx),
-                            cls.asHdl(m.value, ctx))
+    def MapExpr(cls, m: MapExpr, ctx):
+        k = m.compSig
+        if isinstance(k, Param):
+            name = k.hdl_name
+            v = cls.Value(k.get_hdl_value(), ctx)
+        else:
+            name = cls.get_signal_name(k, ctx)
+            v = cls.asHdl(m.value, ctx)
+        return ".%s(%s)" % (name, v)

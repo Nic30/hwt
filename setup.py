@@ -9,7 +9,7 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(name="hwt",
-      version="2.7",
+      version="3.0",
       description="hdl synthesis toolkit",
       long_description=long_description,
       long_description_content_type="text/markdown",
@@ -32,8 +32,10 @@ setup(name="hwt",
         "Topic :: Utilities"],
       install_requires=[
           "jinja2",  # template engine
-          "pyDigitalWaveTools>=0.3",  # simulator output dumping
-          "ipCorePackager>=0.2"
+          "ipCorePackager>=0.3",  # generator of IPcore packages (IP-xact, ...)
+          "pycocotb>=0.4",
+          "pyDigitalWaveTools>=0.4",  # simulator output dumping
+          "pyMathBitPrecise>=0.2",  # math with specific bit precision
       ],
       license="MIT",
       packages=find_packages(),

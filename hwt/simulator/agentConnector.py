@@ -1,34 +1,42 @@
 from hwt.doc_markers import internal
 from hwt.hdl.constants import INTF_DIRECTION
+from pycocotb.hdlSimulator import HdlSimulator
+from hwt.synthesizer.unit import Unit
 
 
 @internal
-def autoAddAgents(unit):
+def autoAddAgents(unit: Unit, sim: HdlSimulator):
     """
     Walk all interfaces on unit and instantiate agent for every interface.
 
     :return: all monitor/driver functions which should be added to simulation
          as processes
     """
-    proc = []
     for intf in unit._interfaces:
         if not intf._isExtern:
             continue
 
-        intf._initSimAgent()
+        intf._initSimAgent(sim)
         assert intf._ag is not None, intf
-        agents = [intf._ag, ]
+
+
+@internal
+def collect_processes_from_sim_agents(unit: Unit):
+    proc = []
+    for intf in unit._interfaces:
+        a = intf._ag
+        if not intf._isExtern or a is None:
+            continue
 
         if intf._direction == INTF_DIRECTION.MASTER:
-            agProcs = list(map(lambda a: a.getMonitors(), agents))
+            agProcs = a.getMonitors()
         elif intf._direction == INTF_DIRECTION.SLAVE:
-            agProcs = list(map(lambda a: a.getDrivers(), agents))
+            agProcs = a.getDrivers()
         else:
             raise NotImplementedError("intf._direction %r for %r" % (
                 intf._direction, intf))
 
-        for p in agProcs:
-            proc.extend(p)
+        proc.extend(agProcs)
 
     return proc
 
@@ -37,26 +45,11 @@ def valuesToInts(values):
     """
     Iterable of values to ints (nonvalid = None)
     """
-    res = []
-    append = res.append
-    for d in values:
-        if isinstance(d, int):
-            append(d)
-        else:
-            append(valToInt(d))
-    return res
+    return [valToInt(d) for d in values]
 
 
 def valToInt(v):
-    if v.vldMask == v._dtype.all_mask():
-        return v.val
-    else:
+    try:
+        return int(v)
+    except ValueError:
         return None
-
-
-def agInts(interface):
-    """
-    Convert all values which has agent collected in time >=0 to integer array.
-    Invalid value will be None.
-    """
-    return valuesToInts(interface._ag.data)

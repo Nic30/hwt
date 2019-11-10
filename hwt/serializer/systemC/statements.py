@@ -4,6 +4,8 @@ from hwt.serializer.generic.constants import SIGNAL_TYPE
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.doc_markers import internal
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.defs import BOOL
 
 
 class SystemCSerializer_statements():
@@ -25,14 +27,15 @@ class SystemCSerializer_statements():
     def Assignment(cls, a, ctx):
         dst = a.dst
         assert isinstance(dst, SignalItem)
-        assert not dst.virtualOnly, "should not be required"
+        assert not dst.virtual_only, "should not be required"
 
         typeOfDst = systemCTypeOfSig(dst)
         if a.indexes is not None:
             for i in a.indexes:
                 dst = dst[i]
 
-        if dst._dtype == a.src._dtype:
+        if dst._dtype == a.src._dtype or (
+                isinstance(dst._dtype, Bits) and a.src._dtype == BOOL):
             return cls._Assignment(dst, typeOfDst, a.src, ctx)
         else:
             raise SerializerException("%r <= %r  is not valid assignment\n"

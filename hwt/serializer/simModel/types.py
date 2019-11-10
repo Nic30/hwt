@@ -1,5 +1,4 @@
-from hwt.hdl.types.integerVal import IntegerVal
-from hwt.synthesizer.param import evalParam
+from hwt.hdl.types.bits import Bits
 
 
 class SimModelSerializer_types():
@@ -8,44 +7,37 @@ class SimModelSerializer_types():
     """
 
     @classmethod
-    def HdlType_bits(cls, typ, ctx, declaration=False):
+    def HdlType_bits(cls, typ: Bits, ctx, declaration=False):
         assert not declaration
-        if typ.signed is None:
-            if not (typ.forceVector or typ.bit_length() > 1):
-                return 'SIM_BIT'
-
-        w = typ.width
+        w = typ.bit_length()
         if isinstance(w, int):
             pass
         else:
-            w = evalParam(w)
-            assert isinstance(w, IntegerVal)
-            assert w._isFullVld()
-            w = w.val
+            w = int(w)
 
-        return "simBitsT(%d, %r)" % (w, typ.signed)
+        return "Bits3t(%d, %r)" % (w, bool(typ.signed))
 
     @classmethod
     def HdlType_bool(cls, typ, ctx, declaration=False):
         assert not declaration
-        return "BOOL"
+        return "Bits3t(1, False)"
 
     @classmethod
     def HdlType_enum(cls, typ, ctx, declaration=False):
         if declaration:
             typ.name = ctx.scope.checkedName(typ.name, typ)
 
-            return '%s = HEnum( "%s", [%s])' % (
+            return '%s = define_Enum3t("%s", [%s])' % (
                 typ.name,
                 typ.name,
                 ", ".join(map(lambda x: '"%s"' % x,
                               typ._allValues)))
         else:
-            return typ.name
+            return "self.%s()" % typ.name
 
     @classmethod
     def HdlType_array(cls, typ, ctx, declaration=False):
         assert not declaration
-        return "HArray(%s, %d)" % (cls.HdlType(typ.elmType, ctx,
-                                               declaration=declaration),
-                                   evalParam(typ.size).val)
+        return "%s[%d]" % (cls.HdlType(typ.element_t, ctx,
+                                       declaration=declaration),
+                           int(typ.size))

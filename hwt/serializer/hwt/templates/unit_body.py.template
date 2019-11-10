@@ -11,8 +11,8 @@
         endif %}{% 
 if signals %}
         # internal signals{%
-        for name, dtype, defVal in signals %}
-        {{name}} = self._sig("{{name}}", {{dtype}}, defVal={{defVal}}){% 
+        for name, dtype, def_val in signals %}
+        {{name}} = self._sig("{{name}}", {{dtype}}, def_val={{def_val}}){% 
         endfor %}{% 
 endif %}{% 
 if componentInstances %}{% 

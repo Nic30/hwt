@@ -1,14 +1,8 @@
 import sys
 
-from hwt.doc_markers import internal
 from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
-
-
-@internal
-def valueHasChanged(valA, valB):
-    return valA.val is not valB.val or valA.vldMask != valB.vldMask
 
 
 def pprintInterface(intf, prefix="", indent=0, file=sys.stdout):
@@ -25,7 +19,7 @@ def pprintInterface(intf, prefix="", indent=0, file=sys.stdout):
     file.write("".join([getIndent(indent), prefix, repr(intf._getFullName()),
                         s]))
     file.write("\n")
-    
+
     if isinstance(intf, HObjList):
         for i, p in enumerate(intf):
             # interfaces have already name of this array and index in it's name

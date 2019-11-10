@@ -1,5 +1,7 @@
-from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.doc_markers import internal
+from hwt.synthesizer.exceptions import TypeConversionErr
+from enum import Enum
+
 
 @internal
 def default_reinterpret_cast_fn(typeFrom, sigOrVal, toType):
@@ -25,12 +27,14 @@ class HdlType():
         on first convert function call)
     """
 
-    def fromPy(self, v, vldMask=None):
+    def from_py(self, v, vld_mask=None):
         """
         Construct value of this type.
         Delegated on value class for this type
         """
-        return self.getValueCls().fromPy(v, self, vldMask=vldMask)
+        if isinstance(v, Enum):
+            v = v.value
+        return self.getValueCls().from_py(self, v, vld_mask=vld_mask)
 
     def auto_cast(self, sigOrVal, toType):
         """

@@ -1,63 +1,44 @@
 from copy import copy
-import enum
-from operator import eq, ne, lt, gt, ge, le
+from operator import eq
 
-from hwt.bitmask import mask, selectBit, selectBitRange, bitSetTo, \
-    setBitRange
+from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.typeShortcuts import hInt
-from hwt.hdl.types.bitValFunctions import bitsCmp__val, bitsCmp, \
-    bitsBitOp__val, bitsBitOp, bitsArithOp__val, bitsArithOp, signFix
-from hwt.hdl.types.bitVal_bitOpsVldMask import vldMaskForXor, \
-    vldMaskForAnd, vldMaskForOr
+from hwt.hdl.types.bitValFunctions import bitsCmp, \
+    bitsBitOp, bitsArithOp 
 from hwt.hdl.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
     tryReduceXor
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT, BIT, SLICE
 from hwt.hdl.types.eventCapableVal import EventCapableVal
-from hwt.hdl.types.integer import Integer
-from hwt.hdl.types.integerVal import IntegerVal
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.sliceUtils import slice_to_SLICE
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, \
     NoDriverErr
-from hwt.doc_markers import internal
+from pyMathBitPrecise.bits3t import Bits3val
+from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
+    vld_mask_for_or
 
 
-class BitsVal(EventCapableVal):
+class BitsVal(Bits3val, EventCapableVal, Value):
     """
     :attention: operator on signals are using value operator functions as well
     """
+    _BOOL = Bits(1, name="bool")
 
-    def _isFullVld(self):
-        return self.vldMask == self._dtype._allMask
+    @classmethod
+    def from_py(cls, typeObj, val, vld_mask=None):
+        val, vld_mask = typeObj._normalize_val_and_mask(val, vld_mask)
+        return cls(typeObj, val, vld_mask=vld_mask)
 
     @internal
     def _convSign__val(self, signed):
-        t = self._dtype
-        if t.signed == signed:
-            return self
-        selfSign = t.signed
-        v = self.clone()
-        w = t._widthVal
-        m = t._allMask
-        _v = v.val
-
-        if selfSign and not signed:
-            if _v < 0:
-                v.val = m + _v + 1
-        elif not selfSign and signed:
-            msbMask = 1 << (w - 1)
-            if _v >= msbMask:
-                v.val = -_v + msbMask + (m >> 1) - 1
-        v._dtype = v._dtype.__class__(w, signed=signed)
-
-        return v
+        return Bits3val.cast_sign(self, signed)
 
     @internal
     def _convSign(self, signed):
@@ -76,6 +57,7 @@ class BitsVal(EventCapableVal):
                 return self
             t = copy(self._dtype)
             t.signed = signed
+
             if signed is None:
                 cnv = AllOps.BitsAsVec
             elif signed:
@@ -84,6 +66,9 @@ class BitsVal(EventCapableVal):
                 cnv = AllOps.BitsAsUnsigned
 
             return Operator.withRes(cnv, [self], t)
+
+    def _auto_cast(self, dtype):
+        return Value._auto_cast(self, dtype)
 
     def _signed(self):
         return self._convSign(True)
@@ -94,73 +79,9 @@ class BitsVal(EventCapableVal):
     def _vec(self):
         return self._convSign(None)
 
-    @classmethod
-    def fromPy(cls, val, typeObj, vldMask=None):
-        """
-        Construct value from pythonic value (int, bytes, enum.Enum member)
-        """
-        assert not isinstance(val, Value)
-        if val is None:
-            vld = 0
-            val = 0
-            assert vldMask is None or vldMask == 0
-        else:
-            allMask = typeObj.all_mask()
-            w = typeObj.bit_length()
-            if isinstance(val, bytes):
-                val = int.from_bytes(
-                    val, byteorder="little", signed=bool(typeObj.signed))
-            else:
-                try:
-                    val = int(val)
-                except TypeError as e:
-                    if isinstance(val, enum.Enum):
-                        val = int(val.value)
-                    else:
-                        raise e
-
-            if vldMask is None:
-                vld = allMask
-            else:
-                assert vldMask <= allMask and vldMask >= 0
-                vld = vldMask
-
-            if val < 0:
-                assert typeObj.signed
-                assert signFix(val & allMask, w) == val, (
-                    val, signFix(val & allMask, w))
-                val = signFix(val & vld, w)
-            else:
-                if typeObj.signed:
-                    msb = 1 << (w - 1)
-                    if msb & val:
-                        assert val < 0, val
-
-                if val & allMask != val:
-                    raise ValueError(
-                        "Not enought bits to represent value",
-                        val, val & allMask)
-                val = val & vld
-
-        return cls(val, typeObj, vld)
-
-    def toPy(self):
-        return int(self)
-
     @internal
     def _concat__val(self, other):
-        w = self._dtype.bit_length()
-        other_w = other._dtype.bit_length()
-        resWidth = w + other_w
-        resT = Bits(resWidth)
-
-        v = self.clone()
-        v.val = (v.val << other_w) | other.val
-        v.vldMask = (v.vldMask << other_w) | other.vldMask
-        v.updateTime = max(self.updateTime, other.updateTime)
-        v._dtype = resT
-
-        return v
+        return Bits3val._concat(self, other)
 
     def _concat(self, other):
         """
@@ -168,13 +89,9 @@ class BitsVal(EventCapableVal):
         """
         w = self._dtype.bit_length()
         try:
-            other_bit_length = other._dtype.bit_length
+            other._dtype.bit_length
         except AttributeError:
-            raise TypeError("Can not concat bits and", other._dtype)
-
-        other_w = other_bit_length()
-        resWidth = w + other_w
-        resT = Bits(resWidth)
+            raise TypeError("Can not concat Bits and", other._dtype)
 
         if areValues(self, other):
             return self._concat__val(other)
@@ -182,7 +99,8 @@ class BitsVal(EventCapableVal):
             w = self._dtype.bit_length()
             other_w = other._dtype.bit_length()
             resWidth = w + other_w
-            resT = Bits(resWidth)
+            Bits = self._dtype.__class__
+            resT = Bits(resWidth, signed=self._dtype.signed)
             # is instance of signal
             if isinstance(other, InterfaceBase):
                 other = other._sig
@@ -200,44 +118,6 @@ class BitsVal(EventCapableVal):
             return Operator.withRes(AllOps.CONCAT, [self, other], resT)\
                            ._auto_cast(Bits(resWidth,
                                             signed=self._dtype.signed))
-    
-    @internal
-    def _getitem__val_int(self, key):
-        updateTime = max(self.updateTime, key.updateTime)
-        keyVld = key._isFullVld()
-
-        if keyVld:
-            val = selectBit(self.val, key.val)
-            vld = selectBit(self.vldMask, key.val)
-        else:
-            val = 0
-            vld = 0
-
-        return self.__class__(val, BIT, vld, updateTime=updateTime)
-
-    @internal
-    def _getitem__val_slice(self, key):
-        updateTime = max(self.updateTime, key.updateTime)
-        assert key._isFullVld()
-        size = key._size()
-
-        firstBitNo = key.val[1].val
-        val = selectBitRange(self.val, firstBitNo, size)
-        vld = selectBitRange(self.vldMask, firstBitNo, size)
-
-        retT = self._dtype.__class__(size, signed=self._dtype.signed)
-        return self.__class__(val, retT, vld, updateTime=updateTime)
-
-    @internal
-    def _getitem__val(self, key):
-        # using self.__class__ because in simulator this method is called
-        # for SimBits and we do not want to work with Bits in sim
-        if isinstance(key._dtype, Integer):
-            return self._getitem__val_int(key)
-        elif key._dtype == SLICE:
-            return self._getitem__val_slice(key)
-        else:
-            raise TypeError(key)
 
     def __getitem__(self, key):
         """
@@ -261,10 +141,9 @@ class BitsVal(EventCapableVal):
         | a[:], a[-1], a[-2:], a[:-2] | raises NotImplementedError   (not implemented due to complicated support in hdl) |
         +-----------+----------------------------------------------------------------------------------------------------+
         """
-        iamVal = isinstance(self, Value)
         st = self._dtype
         length = st.bit_length()
-        if length == 1 and not st.forceVector:
+        if length == 1 and not st.force_vector:
             # assert not indexing on single bit
             raise TypeError("indexing on single bit")
 
@@ -276,19 +155,24 @@ class BitsVal(EventCapableVal):
 
         if isSLICE:
             # :note: downto notation
-            start = key.val[0]
-            stop = key.val[1]
+            start = key.val.start
+            stop = key.val.stop
+            if key.val.step != -1:
+                raise NotImplementedError()
             startIsVal = isinstance(start, Value)
             stopIsVal = isinstance(stop, Value)
             indexesAreValues = startIsVal and stopIsVal
         else:
-            key = toHVal(key)
+            key = toHVal(key, INT)
 
+        iamVal = isinstance(self, Value)
         iAmResultOfIndexing = (not iamVal and
                                hasattr(self, "origin") and
                                len(self.drivers) == 1 and
                                isinstance(self.origin, Operator) and
                                self.origin.operator == AllOps.INDEX)
+
+        Bits = self._dtype.__class__
         if isSLICE:
             if indexesAreValues and start.val == length and stop.val == 0:
                 # selecting all bits no conversion needed
@@ -298,7 +182,7 @@ class BitsVal(EventCapableVal):
                 # try reduce self and parent slice to one
                 original, parentIndex = self.origin.operands
                 if isinstance(parentIndex._dtype, Slice):
-                    parentLower = parentIndex.val[1]
+                    parentLower = parentIndex.val.stop
                     start = start + parentLower
                     stop = stop + parentLower
                     return original[start:stop]
@@ -320,33 +204,33 @@ class BitsVal(EventCapableVal):
                 raise IndexError(_start, _stop)
 
             if iamVal:
-                return self._getitem__val(key)
+                if isinstance(key, SLICE.getValueCls()):
+                    key = key.val
+                return Bits3val.__getitem__(self, key)
             else:
-                key = start._downto(stop)
+                key = SLICE.from_py(slice(start, stop, -1))
                 _resWidth = start - stop
-                resT = Bits(width=_resWidth, forceVector=True,
+                resT = Bits(bit_length=_resWidth, force_vector=True,
                             signed=st.signed)
 
-        elif isinstance(key, IntegerVal):
-            # check index range
-            _v = int(key)
-            if _v < 0 or _v > length - 1:
-                raise IndexError(_v)
+        elif isinstance(key, Bits.getValueCls()):
+            if key._is_full_valid():
+                # check index range
+                _v = int(key)
+                if _v < 0 or _v > length - 1:
+                    raise IndexError(_v)
 
             resT = BIT
             if iamVal:
-                return self._getitem__val(key)
+                return Bits3val.__getitem__(self, key)
 
         elif isinstance(key, RtlSignalBase):
             t = key._dtype
-            if isinstance(t, Integer):
-                resT = BIT
-            elif isinstance(t, Slice):
-                resT = Bits(width=key.staticEval()._size(),
-                            forceVector=st.forceVector, signed=st.signed)
+            if isinstance(t, Slice):
+                resT = Bits(bit_length=key.staticEval()._size(),
+                            force_vector=st.force_vector, signed=st.signed)
             elif isinstance(t, Bits):
                 resT = BIT
-                key = key._auto_cast(INT)
             else:
                 raise TypeError(
                     "Index operation not implemented"
@@ -358,26 +242,9 @@ class BitsVal(EventCapableVal):
 
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
-    @internal
-    def _setitem__val(self, index, value):
-        if index._isFullVld():
-            if index._dtype == SLICE:
-                size = index._size()
-                noOfFirstBit = index.val[1].val
-                self.val = setBitRange(self.val, noOfFirstBit, size, value.val)
-                self.vldMask = setBitRange(
-                    self.vldMask, noOfFirstBit, size, value.vldMask)
-            elif isinstance(index._dtype, Integer):
-                self.val = bitSetTo(self.val, index.val, value.val)
-                self.vldMask = bitSetTo(self.vldMask, index.val, value.vldMask)
-            else:
-                raise TypeError("Not implemented for index %r" % (index))
-            self.updateTime = max(index.updateTime, value.updateTime)
-        else:
-            self.vldMask = 0
-
     def __setitem__(self, index, value):
-        """this can not be called in desing description on non static values,
+        """
+        this can not be called in desing description on non static values,
         only simulator can resolve this (in design use self[index] ** value
         instead of self[index] = value)
         """
@@ -395,12 +262,13 @@ class BitsVal(EventCapableVal):
                 index = slice_to_SLICE(index, length)
             else:
                 index = hInt(index)
-        if indexConst and not index._isFullVld():
+        if indexConst and not index._is_full_valid():
             indexConst = False
 
         # convert value to bits of length specified by index
         if indexConst:
             if index._dtype == SLICE:
+                Bits = self._dtype.__class__
                 itemT = Bits(index._size())
             else:
                 itemT = BIT
@@ -413,31 +281,21 @@ class BitsVal(EventCapableVal):
                     else:
                         valueConst = False
                 else:
-                    value = itemT.fromPy(value)
+                    value = itemT.from_py(value)
                     valueConst = True
             else:
                 valueConst = True
                 value = value._auto_cast(itemT)
 
         if indexConst and valueConst and isinstance(self, Value):
-            return self._setitem__val(index, value)
+            return Bits3val.__setitem__(self, index, value)
 
         raise TypeError(
             "Only simulator can resolve []= for signals or invalid index")
 
-    @internal
-    def _invert__val(self):
-        v = self.clone()
-        v.val = ~v.val
-        w = v._dtype.bit_length()
-        v.val &= mask(w)
-        if self._dtype.signed:
-            v.val = signFix(v.val, w)
-        return v
-
     def __invert__(self):
         if isinstance(self, Value):
-            return self._invert__val()
+            return Bits3val.__invert__(self)
         else:
             try:
                 # double negation
@@ -448,102 +306,62 @@ class BitsVal(EventCapableVal):
                 pass
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
 
-    # comparisons
-    @internal
-    def _eq__val(self, other):
-        return bitsCmp__val(self, other, AllOps.EQ, eq)
+    def __hash__(self):
+        if isinstance(self, RtlSignalBase):
+            return hash(id(self))
+        else:
+            return Bits3val.__hash__(self)
 
+    # comparisons
     def _eq(self, other):
         return bitsCmp(self, other, AllOps.EQ, eq)
-
-    @internal
-    def _ne__val(self, other):
-        return bitsCmp__val(self, other, AllOps.NEQ, ne)
 
     def __ne__(self, other):
         return bitsCmp(self, other, AllOps.NEQ)
 
-    @internal
-    def _lt__val(self, other):
-        return bitsCmp__val(self, other, AllOps.LT, lt)
-
     def __lt__(self, other):
         return bitsCmp(self, other, AllOps.LT)
-
-    @internal
-    def _gt__val(self, other):
-        return bitsCmp__val(self, other, AllOps.GT, gt)
 
     def __gt__(self, other):
         return bitsCmp(self, other, AllOps.GT)
 
-    @internal
-    def _ge__val(self, other):
-        return bitsCmp__val(self, other, AllOps.GE, ge)
-
     def __ge__(self, other):
         return bitsCmp(self, other, AllOps.GE)
-
-    @internal
-    def _le__val(self, other):
-        return bitsCmp__val(self, other, AllOps.LE, le)
 
     def __le__(self, other):
         return bitsCmp(self, other, AllOps.LE)
 
-    @internal
-    def _xor__val(self, other):
-        return bitsBitOp__val(self, other, AllOps.XOR, vldMaskForXor)
-
     def __xor__(self, other):
-        return bitsBitOp(self, other, AllOps.XOR, vldMaskForXor, tryReduceXor)
-
-    @internal
-    def _and__val(self, other):
-        return bitsBitOp__val(self, other, AllOps.AND, vldMaskForAnd)
+        return bitsBitOp(self, other, AllOps.XOR,
+                         vld_mask_for_xor, tryReduceXor)
 
     def __and__(self, other):
-        return bitsBitOp(self, other, AllOps.AND, vldMaskForAnd, tryReduceAnd)
-
-    @internal
-    def _or__val(self, other):
-        return bitsBitOp__val(self, other, AllOps.OR, vldMaskForOr)
+        return bitsBitOp(self, other, AllOps.AND,
+                         vld_mask_for_and, tryReduceAnd)
 
     def __or__(self, other):
-        return bitsBitOp(self, other, AllOps.OR, vldMaskForOr, tryReduceOr)
-
-    @internal
-    def _sub__val(self, other):
-        return bitsArithOp__val(self, other, AllOps.SUB)
+        return bitsBitOp(self, other, AllOps.OR,
+                         vld_mask_for_or, tryReduceOr)
 
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)
 
-    @internal
-    def _add__val(self, other):
-        return bitsArithOp__val(self, other, AllOps.ADD)
-
     def __add__(self, other):
         return bitsArithOp(self, other, AllOps.ADD)
 
-    @internal
-    def _mul__val(self, other):
-        # [TODO] resT should be wider
-        resT = self._dtype
-        v = self.val * other.val
-        v &= resT.all_mask()
-        if resT.signed:
-            v = signFix(v, resT.bit_length())
-
-        result = resT.fromPy(v)
-        if not self._isFullVld() or not other._isFullVld():
-            result.vldMask = 0
-        result.updateTime = max(self.updateTime, other.updateTime)
-        return result
+    def __floordiv__(self, other) -> "Bits3val":
+        other = toHVal(other)
+        if isinstance(self, Value) and isinstance(other, Value):
+            return Bits3val.__floordiv__(self, other)
+        else:
+            return Operator.withRes(AllOps.MUL,
+                                    [self, other],
+                                    self._dtype.__copy__())
 
     def __mul__(self, other):
+        Bits = self._dtype.__class__
         other = toHVal(other)
-        if not isinstance(other._dtype, (Integer, Bits)):
+        if not isinstance(other._dtype, Bits):
             raise TypeError(other)
 
         if areValues(self, other):
@@ -557,13 +375,10 @@ class BitsVal(EventCapableVal):
                 s = other._dtype.signed
                 if s is None:
                     other = other._unsigned()
-
-            elif isinstance(other._dtype, Integer):
-                pass
             else:
                 raise TypeError("%r %r %r" % (self, AllOps.MUL, other))
 
-            if isinstance(other._dtype, Integer):
+            if other._dtype == INT:
                 res_w = myT.bit_length() * 2
                 res_sign = self._dtype.signed
             else:
