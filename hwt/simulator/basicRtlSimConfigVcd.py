@@ -23,7 +23,7 @@ from pyMathBitPrecise.enum3t import Enum3t
 
 @internal
 def vcdTypeInfoForHType(t)\
-        -> Tuple[str, int, Callable[[RtlSignalBase, Value], str]]:
+        ->Tuple[str, int, Callable[[RtlSignalBase, Value], str]]:
     """
     :return: (vcd type name, vcd width)
     """
@@ -45,8 +45,10 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
         self._obj2scope = {}
         self._traced_signals = set()
 
-    def vcdRegisterInterfaces(self, obj: Union[Interface, Unit],
-                              parent: Optional[VcdVarWritingScope]):
+    def vcdRegisterInterfaces(self,
+            obj: Union[Interface, Unit],
+            model: BasicRtlSimModel,
+            parent: Optional[VcdVarWritingScope]):
         """
         Register signals from interfaces for Interface or Unit instances
         """
@@ -60,20 +62,23 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
             with subScope:
                 # register all subinterfaces
                 for chIntf in obj._interfaces:
-                    self.vcdRegisterInterfaces(chIntf, subScope)
+                    self.vcdRegisterInterfaces(chIntf, model, subScope)
 
-                if isinstance(obj, (Unit, BasicRtlSimModel)):
+                if isinstance(obj, Unit):
                     # register interfaces from all subunits
                     for u in obj._units:
-                        self.vcdRegisterInterfaces(u, subScope)
+                        m = getattr(model, u._name + "_inst")
+                        self.vcdRegisterInterfaces(u, m, subScope)
 
             return subScope
         else:
             t = obj._dtype
             if isinstance(t, self.supported_type_classes):
                 tName, width, formatter = vcdTypeInfoForHType(t)
+                sig_name = obj._sigInside.name
+                s = getattr(model.io, sig_name)
                 try:
-                    parent.addVar(obj._sigInside, getSignalName(obj),
+                    parent.addVar(s, sig_name,
                                   tName, width, formatter)
                 except VarAlreadyRegistered:
                     pass
@@ -102,15 +107,6 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
             m = getattr(model, u._name + "_inst")
             self.vcdRegisterRemainingSignals(u, m)
 
-    def initUnitSignalsForInterfaces(self, unit: Unit, model: BasicRtlSimModel):
-        self._scope = self.registerInterfaces(unit)
-        for s in unit._ctx.signals:
-            if s not in self.vcdWriter._idScope:
-                self.registerSignal(s)
-
-        for u in unit._units:
-            self.initUnitSignals(u)
-
     def beforeSim(self, simulator: HdlSimulator,
                   synthesisedUnit: Unit, model: BasicRtlSimModel):
         """
@@ -120,7 +116,7 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
         vcd.date(datetime.now())
         vcd.timescale(1)
 
-        self.vcdRegisterInterfaces(synthesisedUnit, None)
+        self.vcdRegisterInterfaces(synthesisedUnit, model, None)
         self.vcdRegisterRemainingSignals(synthesisedUnit, model)
 
         vcd.enddefinitions()
