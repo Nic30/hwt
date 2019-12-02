@@ -53,9 +53,8 @@ class SystemCSerializer_value(GenericSerializer_Value):
                        si.name)
             if dimensions:
                 # to make a space between name and dimensoins
-                dimensions = list(map(lambda x: "[%s]" % cls.asHdl(toHVal(x),
-                                                                   ctx),
-                                      dimensions))
+                dimensions = ["[%s]" % cls.asHdl(toHVal(x), ctx)
+                              for x in dimensions]
                 dimensions.append("")
                 s += " ".join(reversed(dimensions))
 

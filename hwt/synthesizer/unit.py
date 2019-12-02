@@ -1,3 +1,4 @@
+from hwt.doc_markers import internal
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
@@ -5,9 +6,8 @@ from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers, \
     _default_param_updater
-from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
-from hwt.doc_markers import internal
 from hwt.synthesizer.param import Param
+from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 
 
 class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):

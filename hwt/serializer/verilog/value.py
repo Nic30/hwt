@@ -5,6 +5,8 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, BIT
+from hwt.hdl.types.slice import Slice
+from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
@@ -12,8 +14,6 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.value import GenericSerializer_Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
-from hwt.hdl.types.sliceVal import SliceVal
-from hwt.hdl.types.slice import Slice
 
 
 class VerilogSerializer_Value(GenericSerializer_Value):
@@ -114,9 +114,8 @@ class VerilogSerializer_Value(GenericSerializer_Value):
                              si.name)
             if dimensions:
                 # to make a space between name and dimensoins
-                dimensions = list(map(lambda x: "[%s-1:0]"
-                                                % cls.asHdl(toHVal(x), ctx),
-                                      dimensions))
+                dimensions = ["[%s-1:0]" % cls.asHdl(toHVal(x), ctx)
+                              for x in  dimensions]
                 dimensions.append("")
                 s += " ".join(reversed(dimensions))
 

@@ -7,7 +7,7 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import BOOL, INT
+from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.value import Value
 from hwt.hdl.variables import SignalItem
@@ -185,7 +185,7 @@ class VhdlSerializer_statements():
             # add indent because we did not added it before because we did not
             # know t
             oneIndent = getIndent(1)
-            statemets = list(map(lambda x: oneIndent + x, statemets))
+            statemets = [oneIndent + x for x in statemets]
 
         return cls.processTmpl.render(
             indent=getIndent(ctx.indent),
