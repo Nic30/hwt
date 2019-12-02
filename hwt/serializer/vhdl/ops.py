@@ -178,7 +178,7 @@ class VhdlSerializer_ops():
                 op0 = cls._as_Bits(ops[0], ctx)
                 op1 = cls._as_Bits(ops[1], ctx)
                 op = op.operator._evalFn(op0, op1).drivers[0]
-            return cls._bin_op(op, op_str, ctx)
+            return cls._bin_op(op, op_str, ctx, expr_requires_parenthesis=True)
 
         if o == AllOps.CALL:
             return "%s(%s)" % (
