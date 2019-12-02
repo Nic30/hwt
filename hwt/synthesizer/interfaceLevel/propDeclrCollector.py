@@ -342,4 +342,6 @@ class PropDeclrCollector(object):
             self._registerIntfInImpl(name, prop)
         elif isinstance(prop, UnitBase):
             self._registerUnitInImpl(name, prop)
+        elif isinstance(prop, HObjList):
+            self._registerArray(name, prop)
         return prop
