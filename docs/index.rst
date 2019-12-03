@@ -3,22 +3,38 @@ Welcome to HWToolkit (hwt) generated documentation!
 
 This documentation is automatically generated from actual source code.
 
-HWToolkit (hwt) 
+What is HWToolkit (hwt) 
+-----------------------
 
-* Is toolkit where you can create object based hardware description in natural way and convert it to Verilog/VHDL/System C and pack it as IP-core.
-* HWT also contains digital circuit simulator with UVM like verification environment.
-* HWT is build as abstraction layer over all HDL languages
-* HWT tries to be noob-user friendly (because hardware development is not an easy task...) but will not constrain you.
-* Most of parts of HWT ecosystem are independent and you can use it separately (for example: Xilinx Vivado/Intel Quartus driver in hwtBuildsystem.*, VHDL/Verilog code generator in hwt.serializer.*). 
+* Is a Hardware Construction Framework. It is similar to a HCLs like Chisel3 but it is rather set of object with a normal
+  behavior rather than a new language. The objects represents signals and other RTL components and can be serialized to Verilog/VHDL/SystemC/...
+  (That means the hwt is not transpiler or compiler and there is also no entry point.)
+
+* HWT is build as abstraction layer over all HDL languages to shield users from tricky features of such a languages.
+  However nothings is sacrificed and everything can be overriden.
+
+* HWT uses UVM like verification environment implemented in pycocotb. Pycocotb can use verilator or python based simulator
+  to achieve high-speed simulation or nearly-zero simulator spin-up.
+
+* Most of parts of HWT ecosystem are independent and you can use it separately.
+
+Other usefull libraries
+-----------------------
+
+* hwtLib - Library of common components, utils etc.
+* sphinx-hwt - Plugin for sphinx documentation generator which adds interactive shematic into html documentation.
+* hwtHls, High-Level Synthesis (HLS) framework (pre-alfa) build on top of hwt.
 
 
-Take look at hwtLib where are many useful components.
-There is hwtHls, High-Level Synthesis (HLS) framework (pre-alfa) build on top of hwt.
-There is hwtIde, web based IDE and visualizer for this framework (pre-pre-alfa). 
+Where to start
+--------------
 
-Tutorial is in hwtLib.samples.*, every file in this module contains user-entry-level comments. 
+Tutorial is in hwtLib.examples.*, every file in this module contains user-entry-level comments.
+E.g. hwtLib.examples.simple.SimpleUnit is a good starting point.
 
- 
+Component in HWT is a class which inherits from Unit class.
+Object of such a class can be converted to a vhdl/Verilog by from hwt.synthesizer.utils.toRtl function.
+
 You can also download this doc in `PDF
 <https://media.readthedocs.org/pdf/hwtoolkit/latest/hwtoolkit.pdf>`_.
 
