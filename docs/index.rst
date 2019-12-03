@@ -12,12 +12,18 @@ What is HWToolkit (hwt)
 
 * HWT internal representation is graph database of statements and signals.
   Hwt type system is made of several elemental datatypes templates which can be used for a type of signal:
+
   * Bits - represents bit vector
+
   * HStruct - structure/record datatype
+
   * HUnion - union datatype
+
   * HArray - array datatype
+
   * and a metatype TransTmpl - transactional template which describes how data can be partitioned to memores, buses, streams etc..
   	Think of it like a object which tells how to build frames from potentially sparse data structure in memory.
+
   * The type itself drives it's hw representation, that means the typesystem is user extensible.
 
 * HWT is build as abstraction layer over all HDL languages to shield users from tricky features of such a languages.
