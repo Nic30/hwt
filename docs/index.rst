@@ -10,20 +10,30 @@ What is HWToolkit (hwt)
   behavior rather than a new language. The objects represents signals and other RTL components and can be serialized to Verilog/VHDL/SystemC/...
   (That means the hwt is not transpiler or compiler and there is also no entry point.)
 
+* HWT internal representation is graph database of statements and signals.
+  Hwt type system is made of several elemental datatypes templates which can be used for a type of signal:
+  * Bits - represents bit vector
+  * HStruct - structure/record datatype
+  * HUnion - union datatype
+  * HArray - array datatype
+  * and a metatype TransTmpl - transactional template which describes how data can be partitioned to memores, buses, streams etc..
+  	Think of it like a object which tells how to build frames from potentially sparse data structure in memory.
+  * The type itself drives it's hw representation, that means the typesystem is user extensible.
+
 * HWT is build as abstraction layer over all HDL languages to shield users from tricky features of such a languages.
   However nothings is sacrificed and everything can be overriden.
 
 * HWT uses UVM like verification environment implemented in pycocotb. Pycocotb can use verilator or python based simulator
   to achieve high-speed simulation or nearly-zero simulator spin-up.
 
-* Most of parts of HWT ecosystem are independent and you can use it separately.
+* Most of parts of HWT ecosystem are independent and you can use them separately.
 
 Other usefull libraries
 -----------------------
 
 * hwtLib - Library of common components, utils etc.
 * sphinx-hwt - Plugin for sphinx documentation generator which adds interactive shematic into html documentation.
-* hwtHls, High-Level Synthesis (HLS) framework (pre-alfa) build on top of hwt.
+* hwtHls - High-Level Synthesis (HLS) framework (pre-alfa) build on top of hwt.
 
 
 Where to start
