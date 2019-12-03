@@ -93,6 +93,20 @@ class VhdlSerializer_ops():
         AllOps.BitsAsUnsigned: "UNSIGNED(%s)",
         AllOps.BitsAsVec: "STD_LOGIC_VECTOR(%s)",
     }
+    OPERANDS_WITH_PARENTHESIS = {
+        AllOps.RISING_EDGE,
+        AllOps.FALLING_EDGE,
+        AllOps.BitsAsSigned,
+        AllOps.BitsAsUnsigned,
+        AllOps.BitsAsVec,
+        AllOps.RISING_EDGE,
+        AllOps.FALLING_EDGE,
+        AllOps.INDEX,
+        AllOps.CALL,
+        AllOps.BitsAsSigned,
+        AllOps.BitsAsUnsigned,
+        AllOps.BitsAsVec,
+    }
 
     @internal
     @classmethod
@@ -152,12 +166,19 @@ class VhdlSerializer_ops():
         if isTernaryOp:
             # rewrite ternary operator as if
             operand = cls._tmp_var_for_ternary(operand, ctx)
+        else:
+            try:
+                already_have_parenthesis = operand.hidden\
+                    and operand.drivers[0].operator in cls.OPERANDS_WITH_PARENTHESIS
+            except (AttributeError, IndexError):
+                already_have_parenthesis = False
 
         return super(VhdlSerializer_ops, cls)._operand(
                 operand,
                 i,
                 oper,
-                not isTernaryOp and expr_requires_parenthesis,
+                not isTernaryOp and not already_have_parenthesis\
+                    and expr_requires_parenthesis,
                 isTernaryOp or cancel_parenthesis,
                 ctx)
 
@@ -178,7 +199,7 @@ class VhdlSerializer_ops():
                 op0 = cls._as_Bits(ops[0], ctx)
                 op1 = cls._as_Bits(ops[1], ctx)
                 op = op.operator._evalFn(op0, op1).drivers[0]
-            return cls._bin_op(op, op_str, ctx, expr_requires_parenthesis=True)
+            return cls._bin_op(op, op_str, ctx, expr_requires_parenthesis=op.operator != AllOps.CONCAT)
 
         if o == AllOps.CALL:
             return "%s(%s)" % (
