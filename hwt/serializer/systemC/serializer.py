@@ -4,8 +4,8 @@ from jinja2.loaders import PackageLoader
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.entity import Entity
 from hwt.interfaces.std import Clk
-from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.generic.nameScope import LangueKeyword
+from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.systemC.context import SystemCCtx
 from hwt.serializer.systemC.keywords import SYSTEMC_KEYWORDS
 from hwt.serializer.systemC.ops import SystemCSerializer_ops
@@ -88,8 +88,8 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type,
         arch.componentInstances.sort(key=lambda x: x._name)
 
         childCtx = ctx.withIndent()
-        ports = list(map(lambda pi: cls.PortItem(
-            pi, childCtx), arch.entity.ports))
+        ports = [cls.PortItem(pi, childCtx)
+                 for pi in arch.entity.ports]
 
         extraProcesses = []
         for v in arch.variables:
@@ -110,8 +110,8 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type,
         processesSensitivity = []
         sensitivityCtx = ctx.forSensitivityList()
         for p in arch.processes:
-            sens = list(map(lambda s: cls.asHdl(
-                s, sensitivityCtx), p.sensitivityList))
+            sens = [cls.asHdl(s, sensitivityCtx)
+                    for s in p.sensitivityList]
             processesSensitivity.append((p.name, sens))
 
         return cls.moduleTmpl.render(

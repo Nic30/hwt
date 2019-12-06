@@ -1,6 +1,8 @@
 import re
 
+from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
+from hwt.hdl.portItem import PortItem
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.enum import HEnum
 from hwt.pyUtils.arrayQuery import groupedby
@@ -18,9 +20,7 @@ from hwt.serializer.vhdl.tmplContainer import VhdlTmplContainer
 from hwt.serializer.vhdl.types import VhdlSerializer_types
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.serializer.vhdl.value import VhdlSerializer_Value
-from hwt.hdl.architecture import Architecture
 from hwt.synthesizer.param import Param
-from hwt.hdl.portItem import PortItem
 
 
 class VhdlNameScope(NameScope):
@@ -78,12 +78,13 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
             # architecture names can be same for different entities
             # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
 
-            uniqComponents = list(map(lambda x: x[1][0],
-                                      groupedby(arch.components,
-                                                lambda c: c.name)))
+            uniqComponents = [
+                x[1][0] for x in 
+                groupedby(arch.components, lambda c: c.name)
+            ]
             uniqComponents.sort(key=lambda c: c.name)
-            components = list(map(lambda c: cls.Component(c, childCtx),
-                                  uniqComponents))
+            components = [cls.Component(c, childCtx)
+                          for c in uniqComponents]
 
             componentInstances = list(
                 map(lambda c: cls.ComponentInstance(c, childCtx),

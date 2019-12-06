@@ -33,7 +33,7 @@ class OpDefinition():
 
             return v
 
-        operands = list(map(getVal, operator.operands))
+        operands = [getVal(o) for o in operator.operands]
 
         if isEventDependentOp(operator.operator):
             operands.append(simulator.now)

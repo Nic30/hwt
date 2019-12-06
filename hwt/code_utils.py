@@ -20,7 +20,7 @@ def _connect(src, dst, exclude, fit):
             return dst._connectTo(src, exclude=exclude, fit=fit)
         src = src._sig
 
-    assert not exclude, "this intf. is just a signal"
+    assert not exclude, "this intf. is just a signal, excluded should be already processed in this state"
     if src is None:
         src = dst._dtype.from_py(None)
     else:
