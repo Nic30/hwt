@@ -112,14 +112,14 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         for intf in self._interfaces:
             if intf._isExtern:
                 # reverse because other components
-                # looks at this one from outside
+                # looks at this interface from outside
                 intf._reverseDirection()
 
         # connect results of synthesized context to interfaces of this unit
         self._boundInterfacesToEntity(self._interfaces)
         yield from s
 
-        # after synthesis clean up interface so unit can be used elsewhere
+        # after synthesis clean up interface so this Unit object can be used elsewhere
         self._cleanAsSubunit()
 
     @internal

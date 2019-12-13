@@ -18,15 +18,19 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     RtlSignal signal is container of connection
     between statements and operators
 
-    :ivar _usedOps: dictionary of used operators which can be reused
     :ivar endpoints: UniqList of operators and statements
         for which this signal is driver.
     :ivar drivers: UniqList of operators and statements
         which can drive this signal.
         If driver is statemet tree only top statement is present.
+    :ivar _usedOps: dictionary of used operators which can be reused
     :ivar hiden: means that this signal is part of expression
         and should not be rendered
-    :ivar processCrossing: means that this signal is crossing process boundary
+    :param _useNopVal: use nopVal or ignore it
+    :param _nopVal: value which is used to fill up statements when no other
+            value is assigned
+    :ivar _const: flag which tell that this signal can not have any other driver
+        than a default value
 
     :cvar __instCntr: counter used for generating instance ids
     :ivar _instId: internally used only for intuitive sorting of statements
@@ -35,7 +39,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     __instCntr = 0
 
     def __init__(self, ctx, name, dtype, def_val=None, nopVal=None,
-                 useNopVal=False, virtual_only=False):
+                 useNopVal=False, virtual_only=False, is_const=False):
         """
         :param ctx: context - RtlNetlist which is this signal part of
         :param name: name hint for this signal, if is None name
@@ -45,6 +49,8 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         :param useNopVal: use nopVal or ignore it
         :param nopVal: value which is used to fill up statements when no other
             value is assigned
+        :param is_const: flag which tell that this signal can not have any other driver
+            than a default value
         """
 
         if name is None:
@@ -71,7 +77,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
 
         self._nopVal = nopVal
         self._useNopVal = useNopVal
-        self._const = False
+        self._const = is_const
 
     @internal
     @classmethod

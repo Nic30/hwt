@@ -1,26 +1,30 @@
-from copy import copy
 from itertools import chain
 
+from hwt.doc_markers import internal
 from hwt.hdl.constants import INTF_DIRECTION, DIRECTION
-from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
-from hwt.doc_markers import internal
 
 
 def getClk(unit):
+    """
+    Get clock signal from unit instance
+    """
     try:
         return unit.clk
     except AttributeError:
         pass
 
-    raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
+    raise IntfLvlConfErr("Can not find clock signal on unit %r" % (unit,))
 
 
 def getRst(unit):
+    """
+    Get reset signal from unit instance
+    """
     try:
         return unit.rst
     except AttributeError:
@@ -31,10 +35,13 @@ def getRst(unit):
     except AttributeError:
         pass
 
-    raise IntfLvlConfErr("Can not find clock on unit %r" % (unit,))
+    raise IntfLvlConfErr("Can not find reset signal on unit %r" % (unit,))
 
 
 def getSignalName(sig):
+    """
+    Name getter which works for RtlSignal and Interface instances as well
+    """
     try:
         return sig._name
     except AttributeError:
@@ -50,11 +57,11 @@ def _default_param_updater(self, myP, otherP_val):
 class UnitImplHelpers(object):
     def _reg(self, name, dtype=BIT, def_val=None, clk=None, rst=None):
         """
-        Create register in this unit
+        Create RTL register in this unit
 
         :param def_val: default value of this register,
-            if this value is specified reset of this component is used
-            (unit has to have single interface of class Rst or Rst_n)
+            if this value is specified reset signal of this component is used
+            to generate a reset logic
         :param clk: optional clok signal specification
         :param rst: optional reset signal specification
         :note: rst/rst_n resolution is done from signal type,
@@ -107,7 +114,9 @@ class UnitImplHelpers(object):
 
     @internal
     def _cleanAsSubunit(self):
-        """Disconnect internal signals so unit can be reused by parent unit"""
+        """
+        Disconnect internal signals so unit can be reused by parent unit
+        """
         for pi in self._entity.ports:
             pi.connectInternSig()
         for i in chain(self._interfaces, self._private_interfaces):
@@ -115,22 +124,12 @@ class UnitImplHelpers(object):
 
     @internal
     def _signalsForMyEntity(self, context, prefix):
-        # generate for all ports of subunit signals in this context
-        def lockTypeWidth(t):
-            # [TODO] only read parameter instead of full evaluation
-            # problem is that parametes should be theyr's values
-            # (because this signals are for parent unit)
-            if isinstance(t, Bits):
-                t = copy(t)
-                t._bit_length = t.bit_length()
-                return t
-            else:
-                return t
-
+        """
+        generate for all ports of subunit signals in this context
+        """
         for i in self._interfaces:
             if i._isExtern:
-                i._signalsForInterface(context, prefix + i._NAME_SEPARATOR,
-                                       typeTransform=lockTypeWidth)
+                i._signalsForInterface(context, prefix + i._NAME_SEPARATOR)
 
     @internal
     def _boundInterfacesToEntity(self, interfaces):

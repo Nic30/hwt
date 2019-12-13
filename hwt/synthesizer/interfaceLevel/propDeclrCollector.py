@@ -179,11 +179,11 @@ class PropDeclrCollector(object):
         Associate this object with specified clk/rst
         """
         if clk is not None:
-            assert self._associatedClk is None
+            assert self._associatedClk is None, ("Already associated with clock", self._associatedClk)
             self._associatedClk = clk
 
         if rst is not None:
-            assert self._associatedRst is None
+            assert self._associatedRst is None, ("Already associated with reset", self._associatedRst)
             self._associatedRst = rst
 
     def _associated(self, clk=None, rst=None) -> MakeClkRstAssociations:
@@ -338,6 +338,9 @@ class PropDeclrCollector(object):
 
     @internal
     def _implCollector(self, name, prop):
+        """
+        Hangle property definitions in _impl phase
+        """
         if isinstance(prop, InterfaceBase):
             self._registerIntfInImpl(name, prop)
         elif isinstance(prop, UnitBase):
