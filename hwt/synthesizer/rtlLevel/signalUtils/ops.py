@@ -172,27 +172,34 @@ class RtlSignalOps():
         """
         Find out if this signal is something indexed
         """
-        try:
-            # now I am result of the index  xxx[xx] <= source
-            # get index op
-            d = self.singleDriver()
+        intf = self
+        indexes = []
+        while True:
             try:
-                op = d.operator
-            except AttributeError:
-                return
+                # now I am result of the index  xxx[xx] <= source
+                # get index op
+                d = intf.singleDriver()
+                try:
+                    op = d.operator
+                except AttributeError:
+                    break
 
-            if op == AllOps.INDEX:
-                # get signal on which is index applied
-                indexedOn = d.operands[0]
-                if isinstance(indexedOn, RtlSignalBase):
-                    # [TODO] multidimensional indexing
-                    return indexedOn, [d.operands[1]]
-                else:
-                    raise Exception(
-                        "can not drive static value %r" % indexedOn)
+                if op == AllOps.INDEX:
+                    # get signal on which is index applied
+                    indexedOn = d.operands[0]
+                    if isinstance(indexedOn, RtlSignalBase):
+                        intf = indexedOn
+                        indexes.append(d.operands[1])
+                    else:
+                        raise Exception(
+                            "can not drive static value %r" % indexedOn)
+            except (MultipleDriversErr, NoDriverErr):
+                break
 
-        except (MultipleDriversErr, NoDriverErr):
-            pass
+        if not indexes:
+            indexes = None
+
+        return intf, indexes
 
     def __call__(self, source) -> Assignment:
         """
@@ -201,6 +208,7 @@ class RtlSignalOps():
         :attention: it is not call of function it is operator of assignment
         :return: list of assignments
         """
+        assert not self._const, self
         if isinstance(source, InterfaceBase):
             assert source._isAccessible
             source = source._sig
@@ -220,15 +228,8 @@ class RtlSignalOps():
                      "(of type %r) due type incompatibility")
                     % (source, source._dtype, self, self._dtype))
 
-        tmp = self._getIndexCascade()
-        if tmp:
-            mainSig, indexCascade = tmp
-            self = mainSig
-        else:
-            indexCascade = None
-
-        # self = self._tryMyIndexToEndpoint()
-        return Assignment(source, self, indexCascade)
+        mainSig, indexCascade = self._getIndexCascade()
+        return Assignment(source, mainSig, indexCascade)
 
     def __int__(self):
         if not self._const:
