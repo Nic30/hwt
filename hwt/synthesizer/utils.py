@@ -92,7 +92,8 @@ def toRtl(unitOrCls: Unit, name: str=None,
                 sc = serializer.Architecture(obj, ctx)
                 if createFiles:
                     fName = obj.getEntityName() + serializer.fileExtension
-                    if fName in files:
+                    real_fName = os.path.join(saveTo, fName)
+                    if real_fName in files:
                         fileMode = 'a'
                     else:
                         fileMode = 'w'
