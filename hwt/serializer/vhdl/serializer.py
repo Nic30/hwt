@@ -65,8 +65,9 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
                 # if type requires extra definition
                 if isinstance(t, (HEnum, HArray)) and t not in extraTypes:
                     extraTypes.add(v._dtype)
-                    extraTypes_serialized.append(
-                        cls.HdlType(t, childCtx, declaration=True))
+                    t_str = cls.HdlType(t, childCtx, declaration=True)
+                    if t_str:
+                        extraTypes_serialized.append(t_str)
 
                 v.name = ctx.scope.checkedName(v.name, v)
                 serializedVar = cls.SignalItem(v, childCtx, declaration=True)
