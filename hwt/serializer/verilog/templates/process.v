@@ -2,8 +2,7 @@
    %}{{indent}}{% 
     if sensitivityList|length>0 
          %}always @({{ sensitivityList}}){% 
-    else %}always @(*)
-{%  endif%} begin: {{ name }}{% 
+    else %}always @(*){%  endif%} begin: {{ name }}{% 
     if extraVars %}{%
         for ev in extraVars%}
 {{           indent}}{{ev}};{%      endfor%}{% 
