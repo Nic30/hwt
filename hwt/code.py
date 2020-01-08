@@ -291,7 +291,7 @@ class FsmBuilder(Switch):
             top = \
                 If(condition,
                    self.stateReg(newvalue)
-                   ).Else(
+                ).Else(
                     top
                 )
         if stateFrom is None:
