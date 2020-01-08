@@ -9,6 +9,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, \
     NoDriverErr
+from copy import copy
 
 
 def tv(signal):
@@ -26,10 +27,20 @@ class RtlSignalOps():
     """
 
     def _auto_cast(self, toT):
-        return self._dtype.auto_cast(self, toT)
+        try:
+            return self._dtype.auto_cast(self, toT)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _reinterpret_cast(self, toT):
-        return self._dtype.reinterpret_cast(self, toT)
+        try:
+            return self._dtype.reinterpret_cast(self, toT)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     @internal
     def naryOp(self, operator, opCreateDelegate, *otherOps) -> RtlSignalBase:
@@ -87,85 +98,205 @@ class RtlSignalOps():
         return o
 
     def __invert__(self):
-        return self.naryOp(AllOps.NOT, tv(self).__invert__)
+        try:
+            return self.naryOp(AllOps.NOT, tv(self).__invert__)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _onRisingEdge(self):
-        return self.naryOp(AllOps.RISING_EDGE, tv(self)._onRisingEdge)
+        try:
+            return self.naryOp(AllOps.RISING_EDGE, tv(self)._onRisingEdge)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _onFallingEdge(self):
-        return self.naryOp(AllOps.FALLING_EDGE, tv(self)._onFallingEdge)
+        try:
+            return self.naryOp(AllOps.FALLING_EDGE, tv(self)._onFallingEdge)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _isOn(self):
-        return self._auto_cast(BOOL)
+        try:
+            return self._auto_cast(BOOL)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     # conversions
     def _convSign(self, signed):
-        return tv(self)._convSign(self, signed)
+        try:
+            return tv(self)._convSign(self, signed)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _signed(self):
-        return tv(self)._signed(self)
+        try:
+            return tv(self)._signed(self)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _unsigned(self):
-        return tv(self)._unsigned(self)
+        try:
+            return tv(self)._unsigned(self)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _vec(self):
-        return tv(self)._vec(self)
+        try:
+            return tv(self)._vec(self)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     # logic
     def __and__(self, other):
-        return self.naryOp(AllOps.AND, tv(self).__and__, other)
+        try:
+            return self.naryOp(AllOps.AND, tv(self).__and__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __xor__(self, other):
-        return self.naryOp(AllOps.XOR, tv(self).__xor__, other)
+        try:
+            return self.naryOp(AllOps.XOR, tv(self).__xor__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __or__(self, other):
-        return self.naryOp(AllOps.OR, tv(self).__or__, other)
+        try:
+            return self.naryOp(AllOps.OR, tv(self).__or__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     # cmp
     def _eq(self, other):
         """
         __eq__ is not overloaded because it will destroy hashability of object
         """
-        return self.naryOp(AllOps.EQ, tv(self)._eq, other)
+        try:
+            return self.naryOp(AllOps.EQ, tv(self)._eq, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __ne__(self, other):
-        return self.naryOp(AllOps.NEQ, tv(self).__ne__, other)
+        try:
+            return self.naryOp(AllOps.NEQ, tv(self).__ne__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __ge__(self, other):
-        return self.naryOp(AllOps.GE, tv(self).__ge__, other)
+        try:
+            return self.naryOp(AllOps.GE, tv(self).__ge__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __gt__(self, other):
-        return self.naryOp(AllOps.GT, tv(self).__gt__, other)
+        try:
+            return self.naryOp(AllOps.GT, tv(self).__gt__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __lt__(self, other):
-        return self.naryOp(AllOps.LT, tv(self).__lt__, other)
+        try:
+            return self.naryOp(AllOps.LT, tv(self).__lt__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __le__(self, other):
-        return self.naryOp(AllOps.LE, tv(self).__le__, other)
+        try:
+            return self.naryOp(AllOps.LE, tv(self).__le__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     # arithmetic
     def __add__(self, other):
-        return self.naryOp(AllOps.ADD, tv(self).__add__, other)
+        try:
+            return self.naryOp(AllOps.ADD, tv(self).__add__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __sub__(self, other):
-        return self.naryOp(AllOps.SUB, tv(self).__sub__, other)
+        try:
+            return self.naryOp(AllOps.SUB, tv(self).__sub__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __mul__(self, other):
-        return self.naryOp(AllOps.MUL, tv(self).__mul__, other)
+        try:
+            return self.naryOp(AllOps.MUL, tv(self).__mul__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __floordiv__(self, divider):
-        return self.naryOp(AllOps.DIV, tv(self).__floordiv__, divider)
+        try:
+            return self.naryOp(AllOps.DIV, tv(self).__floordiv__, divider)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def __getitem__(self, key):
-        if isinstance(key, slice):
-            key = slice_to_SLICE(key, self._dtype.bit_length())
-        return self.naryOp(AllOps.INDEX, tv(self).__getitem__, key)
+        try:
+            if isinstance(key, slice):
+                key = slice_to_SLICE(key, self._dtype.bit_length())
+            return self.naryOp(AllOps.INDEX, tv(self).__getitem__, key)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _concat(self, *operands):
-        return self.naryOp(AllOps.CONCAT, tv(self)._concat, *operands)
+        try:
+            return self.naryOp(AllOps.CONCAT, tv(self)._concat, *operands)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     def _ternary(self, ifTrue, ifFalse):
-        return self.naryOp(AllOps.TERNARY, tv(self)._ternary, ifTrue, ifFalse)
+        try:
+            return self.naryOp(AllOps.TERNARY, tv(self)._ternary, ifTrue, ifFalse)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     @internal
     def _getIndexCascade(self):
@@ -212,11 +343,20 @@ class RtlSignalOps():
         if isinstance(source, InterfaceBase):
             assert source._isAccessible
             source = source._sig
-
-        if source is None:
-            source = self._dtype.from_py(None)
-        else:
-            source = toHVal(source, suggestedType=self._dtype)
+        
+        try:
+            requires_type_check = False
+            if source is None:
+                source = self._dtype.from_py(None)
+            else:
+                requires_type_check = True
+                source = toHVal(source, suggestedType=self._dtype)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
+        
+        if requires_type_check:
             err = False
             try:
                 source = source._auto_cast(self._dtype)
@@ -227,10 +367,14 @@ class RtlSignalOps():
                     ("Can not connect %r (of type %r) to %r "
                      "(of type %r) due type incompatibility")
                     % (source, source._dtype, self, self._dtype))
-
-        mainSig, indexCascade = self._getIndexCascade()
-        return Assignment(source, mainSig, indexCascade)
-
+        try:
+            mainSig, indexCascade = self._getIndexCascade()
+            return Assignment(source, mainSig, indexCascade)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
+        
     def __int__(self):
         if not self._const:
             raise TypeError("Int value of signal can be evaluated"
