@@ -93,6 +93,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [mockturtle](https://github.com/lsils/mockturtle) - logic network library
 * [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
 * [nmigen](https://github.com/m-labs/nmigen) -
+* [OpenTimer](https://github.com/OpenTimer/OpenTimer) - , C++,  A High-Performance Timing Analysis Tool for VLSI Systems
 * [percy](https://github.com/whaaswijk/percy) - Collection of different synthesizers and exact synthesis methods for use in applications such as circuit resynthesis and design exploration.
 * [pygears](https://github.com/bogdanvuk/pygears) - , Python, function style HDL generator
 * [PyMTL3](https://github.com/cornell-brg/pymtl3) 2018-?
