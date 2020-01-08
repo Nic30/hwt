@@ -112,6 +112,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         """
         :attention: it is not call of function it is operator of assignment
         """
+        assert self._direction != INTF_DIRECTION.MASTER
         return self._connectTo(other)
 
     @internal
