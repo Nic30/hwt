@@ -77,7 +77,7 @@ class VhdlSerializer_statements():
             symbol = "<="
 
         if a.indexes is not None:
-            for i in a.indexes:
+            for i in reversed(a.indexes):
                 if isinstance(i, SliceVal):
                     i = i.__copy__()
                 dst = dst[i]

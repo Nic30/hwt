@@ -31,7 +31,7 @@ class SystemCSerializer_statements():
 
         typeOfDst = systemCTypeOfSig(dst)
         if a.indexes is not None:
-            for i in a.indexes:
+            for i in reversed(a.indexes):
                 dst = dst[i]
 
         if dst._dtype == a.src._dtype or (
