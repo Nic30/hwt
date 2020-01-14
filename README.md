@@ -115,9 +115,11 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [verilator](https://www.veripool.org/wiki/verilator) - Verilog -> C/C++ simulator
 * [vtr-verilog-to-routing](https://github.com/verilog-to-routing/vtr-verilog-to-routing)
 * [yosys](https://github.com/YosysHQ/yosys) - RTL synthesis framework
+* [UHDM](https://github.com/alainmarcel/UHDM) - SV -> C++
 
 
 ## Board support libraries (Potential candidates for public integration)
 
 * [litex](https://github.com/enjoy-digital/litex) - Buildsystem for migen
 * [loam](https://github.com/phanrahan/loam) - Buildsystem for magma
+* [vivado-boards](https://github.com/Digilent/vivado-boards) - Vivado XML/TCL files with board description 

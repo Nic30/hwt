@@ -98,6 +98,7 @@ class SignalOps(object):
         """
         reverse bitorder
         """
+        # https://stackoverflow.com/questions/27638960/python-reverse-magic-method
         return self._sig._reversed()
 
     def _concat(self, *others):
