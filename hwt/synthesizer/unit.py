@@ -172,17 +172,17 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             p.hdl_name = n
             params[n] = p
 
-        def nameForNestedParam(p):
-            n = ""
-            node = p
-            while node is not self:
-                if n == "":
-                    n = node._name
-                else:
-                    n = node._name + "_" + n
-                node = node._parent
-
-            return n
+        #def nameForNestedParam(p):
+        #    n = ""
+        #    node = p
+        #    while node is not self:
+        #        if n == "":
+        #            n = node._name
+        #        else:
+        #            n = node._name + "_" + n
+        #        node = node._parent
+        #
+        #    return n
 
         # collect params of this unit
         discoveredParams = set()
@@ -191,10 +191,10 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             addP(p._name, p)
 
         # collect params from interfaces
-        for intf in self._interfaces:
-            for p in walkParams(intf, discoveredParams):
-                n = nameForNestedParam(p)
-                addP(n, p)
+        #for intf in self._interfaces:
+        #    for p in walkParams(intf, discoveredParams):
+        #        n = nameForNestedParam(p)
+        #        addP(n, p)
 
         return params
 
