@@ -234,11 +234,16 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         if hasattr(self, "_boundedEntityPort"):
             return self._boundedEntityPort.name
         else:
-            return self._getFullName().replace('.', self._NAME_SEPARATOR)
+            def separator_getter(o):
+                if isinstance(o, Interface):
+                    return o._NAME_SEPARATOR
+                else:
+                    return "_"
+            return self._getFullName(separator_getter)
 
-    def _getFullName(self):
+    def _getFullName(self, separator_getter=lambda x: "."):
         """get all name hierarchy separated by '.' """
-        return HObjList._getFullName(self)
+        return HObjList._getFullName(self, separator_getter=separator_getter)
 
     def _updateParamsFrom(self, otherObj, updater=_default_param_updater,
                           exclude=None, prefix=""):

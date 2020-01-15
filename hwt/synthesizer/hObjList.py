@@ -22,7 +22,7 @@ class HObjList(list):
             item._m()
         return self
 
-    def _getFullName(self):
+    def _getFullName(self, separator_getter=lambda x: "."):
         """get all name hierarchy separated by '.' """
         name = ""
         tmp = self
@@ -34,7 +34,7 @@ class HObjList(list):
             if name == '':
                 name = n
             else:
-                name = n + '.' + name
+                name = n + separator_getter(tmp) + name
             if hasattr(tmp, "_parent"):
                 tmp = tmp._parent
             else:
