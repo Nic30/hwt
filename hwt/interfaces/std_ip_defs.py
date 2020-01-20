@@ -37,7 +37,7 @@ class IP_Clk(IntfIpMeta):
                       lambda intf: intf is not rst and intf is not self)
         self.addSimpleParam(logicName(thisIf), "ASSOCIATED_BUSIF", ":".join(
             map(logicName, intfs)))
-        self.addSimpleParam(logicName(thisIf), "FREQ_HZ", str(Clk.DEFAULT_FREQ))
+        self.addSimpleParam(logicName(thisIf), "FREQ_HZ", str(thisIf.DEFAULT_FREQ))
 
     def asQuartusTcl(self, buff: List[str], version: str, component: Component,
                      packager: IpPackager, thisIf: Interface):
