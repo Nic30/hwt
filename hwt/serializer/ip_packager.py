@@ -117,6 +117,9 @@ class IpPackager(IpCorePackager):
 
     @internal
     def getParamType(self, p: Param) -> HdlType:
+        v = p.get_value()
+        if isinstance(v, int):
+            return INT
         return STR  # p._dtype
 
     @internal
