@@ -7,6 +7,8 @@ from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 def getClk(unit):
@@ -55,7 +57,8 @@ def _default_param_updater(self, myP, otherP_val):
 
 
 class UnitImplHelpers(object):
-    def _reg(self, name, dtype=BIT, def_val=None, clk=None, rst=None):
+
+    def _reg(self, name, dtype=BIT, def_val=None, clk=None, rst=None) -> RtlSyncSignal:
         """
         Create RTL register in this unit
 
@@ -75,7 +78,7 @@ class UnitImplHelpers(object):
         if def_val is None:
             # if no value is specified reset is not required
             rst = None
-        else:
+        elif rst is None:
             rst = getRst(self)._sig
 
         if isinstance(dtype, HStruct):
@@ -95,7 +98,7 @@ class UnitImplHelpers(object):
                              syncRst=rst,
                              def_val=def_val)
 
-    def _sig(self, name, dtype=BIT, def_val=None):
+    def _sig(self, name, dtype=BIT, def_val=None) -> RtlSignal:
         """
         Create signal in this unit
         """
