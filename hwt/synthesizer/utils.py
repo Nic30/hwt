@@ -70,7 +70,7 @@ def toRtl(unitOrCls: Unit, name: str=None,
         files = UniqList()
     else:
         codeBuff = []
-    
+
     # serialize all unit instances to HDL code
     for obj in u._toRtl(targetPlatform):
         doSerialize = serializer.serializationDecision(
