@@ -1,6 +1,6 @@
 from copy import copy
 from itertools import compress
-from typing import List, Generator
+from typing import List, Generator, Optional, Union
 
 from hwt.code import If
 from hwt.hdl.architecture import Architecture
@@ -219,8 +219,7 @@ class RtlNetlist():
     """
     Hierarchical container for signals
 
-    :ivar parentForDebug: optional parent for debug
-        (has to have ._name and can have ._parent attribute)
+    :ivar parent: optional parent for debug and late component inspection
     :ivar params: dictionary {name: Param instance}
     :ivar signals: set of all signals in this context
     :ivar statements: list of all statements which are connected to signals in this context
@@ -228,15 +227,16 @@ class RtlNetlist():
     :ivar synthesised: flag, True if synthesize method was called
     """
 
-    def __init__(self, parentForDebug=None):
-        self.parentForDebug = parentForDebug
+    def __init__(self, parent: Optional["Unit"]=None):
+        self.parent = parent
         self.params = {}
         self.signals = set()
         self.statements = set()
         self.subUnits = set()
         self.synthesised = False
 
-    def sig(self, name, dtype=BIT, clk=None, syncRst=None, def_val=None):
+    def sig(self, name, dtype=BIT, clk=None, syncRst=None,
+            def_val=None) -> Union[RtlSignal, RtlSyncSignal]:
         """
         Create new signal in this context
 
@@ -335,7 +335,7 @@ class RtlNetlist():
 
     def getDebugScopeName(self):
         scope = []
-        p = self.parentForDebug
+        p = self.parent
         while p is not None:
             scope.append(p._name)
             try:
