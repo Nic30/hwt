@@ -6,7 +6,7 @@ from hwt.serializer.ip_packager import IpPackager
 from hwt.synthesizer.interface import Interface
 
 from ipCorePackager.component import Component
-from ipCorePackager.intfIpMeta import IntfIpMeta
+from ipCorePackager.intfIpMeta import IntfIpMeta, VALUE_RESOLVE
 
 
 class IP_Clk(IntfIpMeta):
@@ -21,23 +21,38 @@ class IP_Clk(IntfIpMeta):
 
     def postProcess(self, component: Component,
                     packager: IpPackager, thisIf: Clk):
-        rst = where(component.busInterfaces,
-                    lambda intf: (isinstance(intf, Rst_n) or
-                                  isinstance(intf, Rst)))
+        rst = where(
+            component.busInterfaces,
+            lambda intf: (isinstance(intf, (Rst_n, Rst))
+                          and intf._getAssociatedClk() is thisIf))
         logicName = packager.getInterfaceLogicalName
         rst = list(rst)
-        if len(rst) > 0:
+        if rst:
+            if len(rst) > 1:
+                rst = [intf for intf in rst if intf._getAssociatedClk() is thisIf]
+                if len(rst) > 0:
+                    raise AssertionError(
+                        "Multiple associated resets for this interface",
+                        thisIf)
+                elif not rst:
+                    raise AssertionError("Multiple reset signals"
+                                         " but none of them is associated",
+                                         thisIf)
             rst = rst[0]
             self.addSimpleParam(logicName(thisIf), "ASSOCIATED_RESET",
-                                logicName(rst))  # getResetPortName
-
-        elif len(rst) > 1:
-            raise Exception("Don't know how to work with multiple resets")
-        intfs = where(component.busInterfaces,
-                      lambda intf: intf is not rst and intf is not self)
+                                logicName(rst), resolve=VALUE_RESOLVE.NONE)
+        else:
+            rst = None
+        associated_intfs = where(
+            component.busInterfaces,
+            lambda intf: (intf is not rst
+                          and intf is not self
+                          and not isinstance(intf, Clk)
+                          and intf._getAssociatedClk() is thisIf))
         self.addSimpleParam(logicName(thisIf), "ASSOCIATED_BUSIF", ":".join(
-            map(logicName, intfs)))
-        self.addSimpleParam(logicName(thisIf), "FREQ_HZ", str(thisIf.DEFAULT_FREQ))
+            map(logicName, associated_intfs)), resolve=VALUE_RESOLVE.NONE)
+        self.addSimpleParam(logicName(thisIf), "FREQ_HZ", str(thisIf.DEFAULT_FREQ),
+                            resolve=VALUE_RESOLVE.USER)
 
     def asQuartusTcl(self, buff: List[str], version: str, component: Component,
                      packager: IpPackager, thisIf: Interface):
