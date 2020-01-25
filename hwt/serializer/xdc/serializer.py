@@ -12,6 +12,7 @@ class XdcSerializer():
     Convert constrains containers to a XDC format
     """
     DEFAULT_FILE_NAME = "constraints.xdc"
+
     def __init__(self, out):
         self.out = out
 
@@ -74,7 +75,7 @@ class XdcSerializer():
         w("set_property ASYNC_REG TRUE [")
         self._get(o.sig)
         w("]\n")
-    
+
     def set_false_path(self, o: set_false_path):
         w = self.out.write
         w("set_false_path")
@@ -86,6 +87,7 @@ class XdcSerializer():
             w(" -to [")
             self._get(o.end)
             w("]")
+        w("\n")
 
     def set_max_delay(self, o: set_max_delay):
         w = self.out.write
