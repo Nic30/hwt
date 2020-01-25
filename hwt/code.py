@@ -352,17 +352,6 @@ def rol(sig, howMany) -> RtlSignalBase:
     return sig[(width - howMany):]._concat(sig[:(width - howMany)])
 
 
-def sll(sig, howMany) -> RtlSignalBase:
-    "Logical shift left"
-    width = sig._dtype.bit_length()
-    return sig[(width - howMany):]._concat(vec(0, howMany))
-
-
-def srl(sig, howMany) -> RtlSignalBase:
-    "Logical shift right"
-    return vec(0, howMany)._concat(sig[:howMany])
-
-
 def log2ceil(x):
     """
     Returns no of bits required to store x-1
@@ -387,13 +376,6 @@ def isPow2(num) -> bool:
     if not isinstance(num, int):
         num = int(num)
     return num != 0 and ((num & (num - 1)) == 0)
-
-
-def binToGray(sigOrVal) -> RtlSignalBase:
-    width = sigOrVal._dtype.bit_length()
-    return Concat(sigOrVal[width - 1],
-                  sigOrVal[width - 1:0] ^ sigOrVal[width:1])
-
 
 def sizeof(_type) -> int:
     "get size of type in bytes"

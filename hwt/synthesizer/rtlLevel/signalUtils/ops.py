@@ -10,6 +10,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, \
     NoDriverErr
 from copy import copy
+from operator import lshift, rshift
 
 
 def tv(signal):
@@ -182,6 +183,22 @@ class RtlSignalOps():
     def __or__(self, other):
         try:
             return self.naryOp(AllOps.OR, tv(self).__or__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
+
+    def __lshift__(self, other):
+        try:
+            return self.naryOp(lshift, tv(self).__lshift__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
+
+    def __rshift__(self, other):
+        try:
+            return self.naryOp(rshift, tv(self).__rshift__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)

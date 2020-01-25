@@ -4,7 +4,7 @@ from operator import eq
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.typeShortcuts import hInt
+from hwt.hdl.typeShortcuts import hInt, vec
 from hwt.hdl.types.bitValFunctions import bitsCmp, \
     bitsBitOp, bitsArithOp 
 from hwt.hdl.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
@@ -342,6 +342,30 @@ class BitsVal(Bits3val, EventCapableVal, Value):
     def __or__(self, other):
         return bitsBitOp(self, other, AllOps.OR,
                          vld_mask_for_or, tryReduceOr)
+
+    def __lshift__(self, other):
+        """
+        shift left
+        
+        :note: arithmetic sift if type is signed else logical shift  
+        """
+        width = self._dtype.bit_length()
+        if self._dtype.signed:
+            raise NotImplementedError()
+
+        return self[(width - int(other)):]._concat(vec(0, int(other)))
+
+    def __rshift__(self, other):
+        """
+        shift right
+
+        :note: arithmetic sift if type is signed else logical shift  
+        """
+        if self._dtype.signed:
+            raise NotImplementedError()
+
+        return vec(0, int(other))._concat(self[:other])
+        
 
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)
