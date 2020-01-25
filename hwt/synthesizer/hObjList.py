@@ -1,4 +1,5 @@
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.hdl.statements import HdlStatement
 
 
 class HObjList(list):
@@ -66,6 +67,10 @@ class HObjList(list):
 
         statements = []
         for a, b in zip(self, other):
-            statements += a(b)
+            stms = a(b)
+            if isinstance(stms, HdlStatement):
+                statements.append(stms)
+            else:
+                statements += stms
 
         return statements
