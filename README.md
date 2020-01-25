@@ -87,6 +87,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [ILAng](https://github.com/Bo-Yuan-Huang/ILAng) - modeling and verification platform for SoCs where Instruction-Level Abstraction (ILA) is used as the formal model for hardware components.
 * [jhdl](https://github.com/larsjoost/jhdl) - ?-2017, C++ Verilog/VHDL -> systemC, prototype
 * [Kactus2](http://funbase.cs.tut.fi) - IP-core packager
+* [kratos](https://github.com/Kuree/kratos) - C++/Python, hardware generator/simulator
 * [lgraph](https://github.com/masc-ucsc/lgraph) -
 * [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, HCL
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, HCL
