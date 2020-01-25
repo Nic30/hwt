@@ -58,6 +58,9 @@ class Clk(Signal):
     """
     DEFAULT_FREQ = int(100e6)
 
+    def _config(self):
+        self.FREQ = Param(self.DEFAULT_FREQ)
+
     def _getIpCoreIntfClass(self):
         from hwt.interfaces.std_ip_defs import IP_Clk
         return IP_Clk
