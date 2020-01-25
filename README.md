@@ -17,10 +17,12 @@
 
 ## How HWT can help you?
 
-* The lower layer (IR, HDL serializers) is a shield against a problems related to VHDL/Verilog it is checking for correctness and synthetisability and removing specific of HDLs.
-* Simulator API - UVM simulation environment as a normal python object, easy to use while not sacrificing performance. Python driven.
-* C inspired type system is most important part of HWT as it allows all components use same description and thanks to stream-memory and other component generators significantly simplifies the developement of components which are using complex data structures. The typesystem contains not just struct/union, but also frame templates which can describe spartial data and the creation of the frames from data.
-* KISS (Keep it stupid and simple), each functionality separated as independent, but compatible, library so you do not have to care about it if you are not using it. Learning curve optimisation.
+* The lower layer (IR, HDL serializers) is a shield against a problems related to VHDL/Verilog. It is checking for correctness and synthetisability and removing specific of HDLs.
+* The system level and HLS layer allows you to quickly build desing generators with advance optimisation techniques of your choice. 
+* Simulator API and it's UVM simulation environment is just python object with C++ binding. This makes it easy to use while not sacrificing performance.
+* Rich type system can describe also data locality and packet features. This significantly simplifies configuration of component which are working with packets or any data over remote bus.
+* HWT is not compiler nor transpiler but it is actually a core library. It contains only necessary stuff and you can can modify/extend any part any time.
+  Because the word of HW developement is always full of unexpected situations. 
 
 
 ## Features
@@ -68,10 +70,9 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * How do I get Verilog/VHDL?
   * Use `toRtl` method [example](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py)
 * How do I define my interface type, protocol and simulation agent?
-  * Derive from any Interface class.
+  * Derive from any Interface class. [example](https://github.com/Nic30/hwt/blob/master/hwt/interfaces/std.py#L107) 
 * I do have c structure of UDP header, how do I send/recieve UDP packet over AXI-stream interface?
   * Define HStruct type composed of eth_header_t, IPv4_header_t and HStream(uint8_t) and use [AxisFrameGen](https://github.com/Nic30/hwtLib/blob/master/hwtLib/amba/axis_comp/frameGen.py). There is and example of [ping responder](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/builders/pingResponder.py)
-
 
 
 ## Similar projects
