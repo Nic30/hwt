@@ -12,3 +12,6 @@ class DummyPlatform():
 
         self.beforeHdlArchGeneration = []
         self.afterToRtl = []
+
+        from hwt.serializer.xdc.serializer import XdcSerializer
+        self.constraint_serializer = [XdcSerializer, ]
