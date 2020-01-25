@@ -1,7 +1,7 @@
 from hwt.doc_markers import internal
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
+# from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers, \
@@ -19,11 +19,17 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         this unit should be serialized or not, if None all is always serialized
     :cvar _PROTECTED_NAMES: set of names which can not be overridden
     :ivar _interfaces: all public interfaces
+    :type _interfaces: List[Interface]
     :ivar _private_interfaces: all internal interfaces
         which are not accessible from outside of unit
+    :type _private_interfaces: List[Interface]
     :ivar _units: all units defined on this obj
+    :type _units: List[Unit] 
     :ivar _params: all params defined on this obj
-    :ivar _parent: parent object (Unit instance)
+    :type _params: List[Param]
+    :ivar _constraints: additional HW specifications
+    :ivar _parent: parent object
+    :type _parent: Optional[Unit]
     :ivar _lazyLoaded: container of rtl object which were lazy loaded
         in implementation phase (this object has to be returned
         from _toRtl of parent before it it's own objects)
@@ -31,8 +37,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     """
 
     _serializeDecision = None
-    _PROTECTED_NAMES = set(["_PROTECTED_NAMES", "_interfaces",
-                            "_units", "_params", "_parent",
+    _PROTECTED_NAMES = set(["_PROTECTED_NAMES", "_interfaces", "_private_interfaces",
+                            "_units", "_params", "_parent", "_constraints",
                             "_lazyLoaded", "_ctx",
                             "_externInterf", "_targetPlatform"])
 
@@ -40,7 +46,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._parent = None
         self._lazyLoaded = []
         self._ctx = RtlNetlist(self)
-
+        self._constraints = []
         self._loadConfig()
 
     @internal

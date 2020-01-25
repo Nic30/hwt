@@ -1,17 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from io import StringIO
 import os
 import shutil
 
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
+from hwt.pyUtils.uniqList import UniqList
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.vhdl.serializer import VhdlSerializer
-from hwt.pyUtils.uniqList import UniqList
-from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.dummyPlatform import DummyPlatform
+from hwt.synthesizer.unit import Unit
+
+
+def collect_constraints(u: Unit):
+    """
+    DFS walk Unit instances and collect constraints
+    """
+    for _u in u._units:
+        yield from collect_constraints(_u)
+    yield from u._constraints
 
 
 def toRtl(unitOrCls: Unit, name: str=None,
@@ -60,13 +70,15 @@ def toRtl(unitOrCls: Unit, name: str=None,
         files = UniqList()
     else:
         codeBuff = []
-
+    
+    # serialize all unit instances to HDL code
     for obj in u._toRtl(targetPlatform):
         doSerialize = serializer.serializationDecision(
             obj,
             serializedClasses,
             serializedConfiguredUnits)
         if doSerialize:
+            # check what is the object which we are currently serializing
             if isinstance(obj, Entity):
                 s = globScope.fork(1)
                 s.setLevel(2)
@@ -93,10 +105,8 @@ def toRtl(unitOrCls: Unit, name: str=None,
                 if createFiles:
                     fName = obj.getEntityName() + serializer.fileExtension
                     real_fName = os.path.join(saveTo, fName)
-                    if real_fName in files:
-                        fileMode = 'a'
-                    else:
-                        fileMode = 'w'
+                    assert real_fName in files
+                    fileMode = 'a'
             else:
                 if hasattr(obj, "_hdlSources"):
                     for fn in obj._hdlSources:
@@ -107,6 +117,7 @@ def toRtl(unitOrCls: Unit, name: str=None,
                 else:
                     sc = serializer.asHdl(obj)
 
+            # if any code produced store it as required
             if sc:
                 if createFiles:
                     fp = os.path.join(saveTo, fName)
@@ -130,6 +141,24 @@ def toRtl(unitOrCls: Unit, name: str=None,
                 "Object of class %s, %s was not serialized as specified" % (
                     obj.__class__.__name__, name)))
 
+    # collect and serialize all constraints in design
+    constraints = list(collect_constraints(u))
+    if constraints:
+        for cs_cls in targetPlatform.constraint_serializer:
+            if createFiles:
+                f_name = os.path.join(saveTo, cs_cls.DEFAULT_FILE_NAME)
+                with open(f_name, "w") as f:
+                    cs = cs_cls(f)
+                    for c in constraints:
+                        cs.any(c)
+                files.append(f_name)
+            else:
+                s = StringIO()
+                cs = cs_cls(s)
+                for c in constraints:
+                    cs.any(c)
+                codeBuff.append(s.getvalue())
+
     if createFiles:
         return files
     else:
@@ -141,6 +170,9 @@ def toRtl(unitOrCls: Unit, name: str=None,
 def serializeAsIpcore(unit, folderName=".", name=None,
                       serializer: GenericSerializer=VhdlSerializer,
                       targetPlatform=DummyPlatform()):
+    """
+    Create an IPCore package
+    """
     from hwt.serializer.ip_packager import IpPackager
     p = IpPackager(unit, name=name,
                    serializer=serializer,
