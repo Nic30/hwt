@@ -41,6 +41,16 @@ def allValuesToInts(sequenceOrVal):
         return sequenceOrVal
 
 
+class DummySimPlatform(DummyPlatform):
+    """
+    DummyPlatform which ignores the constraints
+    """
+
+    def __init__(self):
+        super(DummySimPlatform, self).__init__()
+        self.constraint_serializer.clear()
+
+
 class SimTestCase(unittest.TestCase):
     """
     This is TestCase class contains methods which are usually used during
@@ -170,7 +180,7 @@ class SimTestCase(unittest.TestCase):
     @classmethod
     def compileSim(cls, unit, build_dir: Optional[str]=DEFAULT_BUILD_DIR,
                    unique_name: Optional[str]=None, onAfterToRtl=None,
-                   target_platform=DummyPlatform()):
+                   target_platform=DummySimPlatform()):
         """
         Create simulation model and connect it with interfaces of original unit
         and decorate it with agents
@@ -190,7 +200,7 @@ class SimTestCase(unittest.TestCase):
         if unique_name is None:
             unique_name = cls.get_unique_name(unit)
 
-        cls.rtl_simulator_cls = toBasicSimulatorSimModel(# toVerilatorSimModel(
+        cls.rtl_simulator_cls = toBasicSimulatorSimModel(  # toVerilatorSimModel(
             unit,
             unique_name=unique_name,
             build_dir=build_dir,
@@ -208,7 +218,7 @@ class SimTestCase(unittest.TestCase):
             build_dir: Optional[str]=DEFAULT_BUILD_DIR,
             unique_name: Optional[str]=None,
             onAfterToRtl=None,
-            target_platform=DummyPlatform()):
+            target_platform=DummySimPlatform()):
         """
         Use this method if you did not used compileSim()
         or SingleUnitSimTestCase to setup the simulator and DUT
