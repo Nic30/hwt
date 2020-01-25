@@ -115,7 +115,7 @@ class VldSynced(Interface):
 
     def _declr(self):
         self.data = VectSignal(self.DATA_WIDTH)
-        self.vld = s()
+        self.vld = Signal()
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = VldSyncedAgent(sim, self)
@@ -132,7 +132,7 @@ class RdSynced(Interface):
 
     def _declr(self):
         self.data = VectSignal(self.DATA_WIDTH)
-        self.rd = s(masterDir=D.IN)
+        self.rd = Signal(masterDir=D.IN)
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = RdSyncedAgent(sim, self)
@@ -150,7 +150,7 @@ class Handshaked(VldSynced):
 
     def _declr(self):
         super()._declr()
-        self.rd = s(masterDir=D.IN)
+        self.rd = Signal(masterDir=D.IN)
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HandshakedAgent(sim, self)
@@ -169,8 +169,8 @@ class HandshakeSync(Interface):
     """
 
     def _declr(self):
-        self.vld = s()
-        self.rd = s(masterDir=D.IN)
+        self.vld = Signal()
+        self.rd = Signal(masterDir=D.IN)
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HandshakeSyncAgent(sim, self)
@@ -183,8 +183,8 @@ class ReqDoneSync(Interface):
     """
 
     def _declr(self):
-        self.req = s()
-        self.done = s(masterDir=D.IN)
+        self.req = Signal()
+        self.done = Signal(masterDir=D.IN)
 
 
 class BramPort_withoutClk(Interface):
@@ -200,8 +200,8 @@ class BramPort_withoutClk(Interface):
         self.addr = VectSignal(self.ADDR_WIDTH)
         self.din = VectSignal(self.DATA_WIDTH)
         self.dout = VectSignal(self.DATA_WIDTH, masterDir=D.IN)
-        self.en = s()
-        self.we = s()
+        self.en = Signal()
+        self.we = Signal()
 
     def _getWordAddrStep(self):
         """
@@ -230,7 +230,7 @@ class BramPort(BramPort_withoutClk):
     """
 
     def _declr(self):
-        self.clk = s(masterDir=D.OUT)
+        self.clk = Signal(masterDir=D.OUT)
         with self._associated(clk=self.clk):
             super()._declr()
 
@@ -245,8 +245,8 @@ class FifoWriter(Interface):
         self.DATA_WIDTH = Param(8)
 
     def _declr(self):
-        self.en = s()
-        self.wait = s(masterDir=D.IN)
+        self.en = Signal()
+        self.wait = Signal(masterDir=D.IN)
         self.data = VectSignal(self.DATA_WIDTH)
 
     def _initSimAgent(self, sim: HdlSimulator):
@@ -279,6 +279,3 @@ class RegCntrl(Interface):
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = RegCntrlAgent(sim, self)
-
-
-s = Signal
