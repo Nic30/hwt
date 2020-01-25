@@ -1,5 +1,5 @@
 Welcome to HWToolkit (hwt) generated documentation!
-=============================================
+===================================================
 
 This documentation is automatically generated from actual source code.
 

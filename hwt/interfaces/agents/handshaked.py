@@ -10,10 +10,9 @@ class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
     and onDriverWriteAck(simulator) unimplemented method
     which can be used for interfaces with bi-directional data streams
 
-    :attention: requires clk and rst/rstn signal
-        (If you do not have any create simulation wrapper with it.
-         Without it you can very easily end up with a combinational loop.
-        )
+    :attention: requires clk and rst/rstn signal (
+        If you do not have any create simulation wrapper with it.
+        Without it you can very easily end up with a combinational loop.)
     """
 
     def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
@@ -22,7 +21,7 @@ class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
         pcHandshakedAgent.__init__(self, sim, intf, clk, rst)
         self._vld = self.get_valid_signal(intf)
         self._rd = self.get_ready_signal(intf)
-    
+
     @classmethod
     def get_ready_signal(cls, intf):
         return intf.rd._sigInside

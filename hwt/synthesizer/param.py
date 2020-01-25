@@ -6,11 +6,11 @@ from hwt.hdl.value import Value
 
 class Param():
     """
-    Class used to mark object as a configuration of HDL module.
-    (The parameter instance will not appear on Unit instance,
-     instead the value will appear.
-     The parameter instance will be stored
-     in ._params property of Unit/Interface object)
+    Class used to mark object as a configuration of HDL module. (
+    The parameter instance will not appear on Unit instance,
+    instead the value will appear.
+    The parameter instance will be stored
+    in ._params property of Unit/Interface object)
 
     :ivar _initval: value of the parameter which should be used for intialization
     :attention: the actual value is then store on parent object instance

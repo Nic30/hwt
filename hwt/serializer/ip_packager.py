@@ -46,7 +46,7 @@ class IpPackager(IpCorePackager):
         :param name: optional name of top
         :param extra_files: list of extra HDL/constrain file names for files
             which should be distributed in this IP-core
-            (*.v - verilog, *.sv,*.svh -system verilog, *.vhd - vhdl, *.xdc - XDC)
+            (\*.v - verilog, \*.sv,\*.svh -system verilog, \*.vhd - vhdl, \*.xdc - XDC)
         :param serializer: serializer which specifies target HDL language
         :param targetPlatform: specifies properties of target platform, like available resources, vendor, etc.
         """
