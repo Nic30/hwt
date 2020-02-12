@@ -391,7 +391,7 @@ class RtlSignalOps():
             # simplification of previous exception traceback
             e_simplified = copy(e)
             raise e_simplified
-        
+
     def __int__(self):
         if not self._const:
             raise TypeError("Int value of signal can be evaluated"
