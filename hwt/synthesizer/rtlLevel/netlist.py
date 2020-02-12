@@ -25,6 +25,7 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
     NoDriverErr
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 from hwt.doc_markers import internal
+from hwt.hdl.operatorDefs import AllOps
 
 
 @internal
@@ -269,7 +270,18 @@ class RtlNetlist():
             else:
                 r = [RtlSignal.__call__(s, s.next)]
 
-            If(clk._onRisingEdge(),
+            if isinstance(clk, (InterfaceBase, RtlSignal)):
+                clk_trigger = clk._onRisingEdge()
+            else:
+                clk, clk_edge = clk # has to be tuple of (clk_sig, AllOps.RISING/FALLING_EDGE)
+                if clk_edge is AllOps.RISING_EDGE:
+                    clk_trigger = clk._onRisingEdge()
+                elif clk_edge is AllOps.FALLING_EDGE:
+                    clk_trigger = clk._onRisingEdge()
+                else:
+                    raise ValueError("Invalid clock edge specification", clk_edge)
+
+            If(clk_trigger,
                r
             )
         else:
