@@ -234,13 +234,16 @@ class BramPort(BramPort_withoutClk):
         with self._associated(clk=self.clk):
             super()._declr()
 
-        self._associatedClk = self.clk
+        self._make_association(clk=self.clk)
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = BramPortAgent(sim, self)
 
 
 class FifoWriter(Interface):
+    """
+    FIFO write port interface
+    """
     def _config(self):
         self.DATA_WIDTH = Param(8)
 
@@ -252,8 +255,15 @@ class FifoWriter(Interface):
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = FifoWriterAgent(sim, self)
 
+    def _getIpCoreIntfClass(self):
+        from hwt.interfaces.std_ip_defs import IP_FifoWriter
+        return IP_FifoWriter
+
 
 class FifoReader(FifoWriter):
+    """
+    FIFO read port interface
+    """
     def _declr(self):
         super()._declr()
         self.en._masterDir = D.IN
@@ -261,6 +271,10 @@ class FifoReader(FifoWriter):
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = FifoReaderAgent(sim, self)
+
+    def _getIpCoreIntfClass(self):
+        from hwt.interfaces.std_ip_defs import IP_FifoReader
+        return IP_FifoReader
 
 
 class RegCntrl(Interface):

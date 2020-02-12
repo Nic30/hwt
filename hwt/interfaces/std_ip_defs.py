@@ -141,3 +141,33 @@ class IP_BlockRamPort(IntfIpMeta):
             'en': "EN",
             'we': "WE",
         }
+
+
+class IP_FifoReader(IntfIpMeta):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "fifo_read"
+        self.version = "1.0"
+        self.vendor = "xilinx.com"
+        self.library = "interface"
+        self.map = {
+            'data': "RD_DATA",
+            "en": 'RD_EN',
+            'wait': "EMPTY",
+        }
+
+
+class IP_FifoWriter(IntfIpMeta):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "fifo_write"
+        self.version = "1.0"
+        self.vendor = "xilinx.com"
+        self.library = "interface"
+        self.map = {
+            'data': "WR_DATA",
+            "en": 'WR_EN',
+            'wait': "FULL",
+        }
