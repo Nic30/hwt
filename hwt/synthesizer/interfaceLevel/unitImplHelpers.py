@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Union
 
 from hwt.doc_markers import internal
 from hwt.hdl.constants import INTF_DIRECTION, DIRECTION
@@ -65,7 +66,8 @@ class UnitImplHelpers(object):
         :param def_val: default value of this register,
             if this value is specified reset signal of this component is used
             to generate a reset logic
-        :param clk: optional clok signal specification
+        :param clk: optional clok signal specification, (signal or tuple(signal, edge type))
+        :type clk: Union[RtlSignal, Interface, Tuple[Union[RtlSignal, Interface], AllOps.RISING/FALLING_EDGE]]
         :param rst: optional reset signal specification
         :note: rst/rst_n resolution is done from signal type,
             if it is negated type it is rst_n
@@ -79,22 +81,25 @@ class UnitImplHelpers(object):
             # if no value is specified reset is not required
             rst = None
         elif rst is None:
-            rst = getRst(self)._sig
+            rst = getRst(self)
 
         if isinstance(dtype, HStruct):
-            if def_val is not None:
-                raise NotImplementedError()
             container = dtype.from_py(None)
             for f in dtype.fields:
                 if f.name is not None:
-                    r = self._reg("%s_%s" % (name, f.name), f.dtype)
+                    if def_val is None:
+                        _def_val = None
+                    else:
+                        _def_val = def_val.get(f.name, None)
+                    r = self._reg("%s_%s" % (name, f.name), f.dtype,
+                                  def_val=_def_val)
                     setattr(container, f.name, r)
 
             return container
 
         return self._ctx.sig(name,
                              dtype=dtype,
-                             clk=clk._sig,
+                             clk=clk,
                              syncRst=rst,
                              def_val=def_val)
 
