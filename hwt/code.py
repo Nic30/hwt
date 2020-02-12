@@ -39,7 +39,7 @@ class If(IfContainer):
         cond_sig = _intfToSig(cond)
         if not isinstance(cond_sig, RtlSignalBase):
             raise IntfLvlConfErr("Condition is not signal, it is not certain"
-                                 " if this an error or desire ", cond_sig)
+                                 " if this is an error or desire ", cond_sig)
 
         super(If, self).__init__(cond_sig)
         self.rank = 1
