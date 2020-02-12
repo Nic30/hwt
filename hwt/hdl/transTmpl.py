@@ -366,3 +366,8 @@ class StreamTransaction(object):
         :note: doc in :meth:`.TransTmpl.walkFlatten`
         """
         return self.child.walkFlatten(*args, **kwargs)
+
+    def __repr__(self):
+        return "<%s 0x%x, offset=%r, child=%r>" % (
+            self.__class__.__name__, id(self),
+            self.offset, self.child)
