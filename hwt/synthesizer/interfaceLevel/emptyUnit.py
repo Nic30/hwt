@@ -33,7 +33,7 @@ class EmptyUnit(Unit):
                     "All interfaces in EmptyUnit has to be extern, %s: %s is not"
                     % (self.__class__.__name__, i._getFullName()))
         # connect outputs to dummy value
-        for s, d in externInterf:
+        for s, d in externInterf.items():
             if d == DIRECTION.OUT:
                 s(s._dtype.from_py(self._def_val))
 
