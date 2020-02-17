@@ -139,14 +139,14 @@ class UnitImplHelpers(object):
                 i._signalsForInterface(context, None, prefix + i._NAME_SEPARATOR)
 
     @internal
-    def _boundInterfacesToEntity(self, interfaces):
+    def _boundInterfacesToEntity(self, interfaces, ports):
         externSignals = []
         inftToPortDict = {}
 
-        for p in self._entity.ports:
+        for p in ports:
             inftToPortDict[p._interface] = p
 
-        for intf in self._interfaces:
+        for intf in interfaces:
             if intf._isExtern:
                 for s in walkPhysInterfaces(intf):
                     externSignals.append(s)
@@ -160,14 +160,3 @@ class UnitImplHelpers(object):
     def _boundIntfSignalToEntity(self, interface, inftToPortDict):
         portItem = inftToPortDict[interface]
         interface._boundedEntityPort = portItem
-        d = INTF_DIRECTION.asDirection(interface._direction)
-
-        if d == DIRECTION.INOUT:
-            portItem.direction = DIRECTION.INOUT
-
-        if portItem.direction != d:
-            raise IntfLvlConfErr(
-                ("Unit %s: Port %s does not have direction "
-                 " defined by interface %s, is %s should be %s")
-                % (self._name, portItem.name,
-                   repr(interface), portItem.direction, d))
