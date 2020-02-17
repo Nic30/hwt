@@ -27,7 +27,7 @@ class EmptyUnit(Unit):
         externInterf = {}
         # prepare connections
         for i in self._interfaces:
-            i._signalsForInterface(self._ctx, externInterf)
+            i._signalsForInterface(self._ctx, externInterf, reverse_dir=True)
             if not i._isExtern:
                 raise IntfLvlConfErr(
                     "All interfaces in EmptyUnit has to be extern, %s: %s is not"
