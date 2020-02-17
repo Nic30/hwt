@@ -78,6 +78,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 ## Similar projects
 
 * [autofpga](https://github.com/ZipCPU/autofpga) - C++, A utility for Composing FPGA designs from Peripherals
+* [BinPy](https://github.com/BinPy/BinPy) - Python, An electronic simulation library
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, HCL
 * [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
 * [DUH](https://github.com/sifive/duh) - JS, simple convertor between verilog/scala/ipxact
@@ -94,7 +95,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, HCL
 * [mockturtle](https://github.com/lsils/mockturtle) - logic network library
 * [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
-* [nmigen](https://github.com/m-labs/nmigen) -
+* [nmigen](https://github.com/m-labs/nmigen) -, Python, A refreshed Python toolbox for building complex digital hardware
 * [OpenTimer](https://github.com/OpenTimer/OpenTimer) - , C++,  A High-Performance Timing Analysis Tool for VLSI Systems
 * [percy](https://github.com/whaaswijk/percy) - Collection of different synthesizers and exact synthesis methods for use in applications such as circuit resynthesis and design exploration.
 * [pygears](https://github.com/bogdanvuk/pygears) - , Python, function style HDL generator
