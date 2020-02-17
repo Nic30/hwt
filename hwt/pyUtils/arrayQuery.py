@@ -105,7 +105,10 @@ def iter_with_last(iterable):
     """
     # Ensure it's an iterator and get the first field
     iterable = iter(iterable)
-    prev = next(iterable)
+    try:
+        prev = next(iterable)
+    except StopIteration:
+        return
     for item in iterable:
         # Lag by one item so I know I'm not at the end
         yield False, prev
