@@ -11,6 +11,9 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
     PropDeclrCollector
 from hwt.synthesizer.vectorUtils import fitTo
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from typing import Dict, Optional
+from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 
 
 def _default_param_updater(self, myP, parentPval):
@@ -128,8 +131,8 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         self._setAttrListener = None
 
         for i in self._interfaces:
-            i._isExtern = self._isExtern
             i._loadDeclarations()
+            i._setAsExtern(self._isExtern)
 
         if self._isExtern:
             # direction from inside of unit (reverset compared to outside direction)
@@ -150,7 +153,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                          lockNonExternal=lockNonExternal)
         else:
             self._sigInside = self._sig
-            del self._sig
+            self._sig = None
 
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False  # [TODO] mv to signal lock
@@ -195,26 +198,29 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             yield dstSig(srcSig)
 
     @internal
-    def _signalsForInterface(self, context, prefix='', typeTransform=None):
+    def _signalsForInterface(self,
+                             context: RtlNetlist,
+                             res: Optional[Dict[RtlSignal, DIRECTION]],
+                             prefix='', typeTransform=None,
+                             reverse_dir=False):
         """
         generate _sig for each interface which has no subinterface
         if already has _sig return it instead
 
         :param context: instance of RtlNetlist where signals should be created
+        :param res: output dictionary where result should be stored
         :param prefix: name prefix for created signals
         :param typeTransform: optional function (type) returns modified type
             for signal
         """
-        sigs = []
         if self._interfaces:
             for intf in self._interfaces:
-                sigs.extend(
-                    intf._signalsForInterface(context, prefix,
-                                              typeTransform=typeTransform))
+                intf._signalsForInterface(context, res, prefix,
+                                          typeTransform=typeTransform,
+                                          reverse_dir=reverse_dir)
         else:
-            if hasattr(self, '_sig'):
-                sigs = [self._sig]
-            else:
+            s = self._sig
+            if s is None:
                 t = self._dtype
                 if typeTransform is not None:
                     t = typeTransform(t)
@@ -225,9 +231,11 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
                 if hasattr(self, '_boundedEntityPort'):
                     self._boundedEntityPort.connectSig(self._sig)
-                sigs = [s]
-
-        return sigs
+            if res is not None:
+                d = INTF_DIRECTION.asDirection(self._direction)
+                if reverse_dir:
+                    d = DIRECTION.opposite(d)
+                res[s] = d
 
     def _getPhysicalName(self):
         """Get name in HDL """

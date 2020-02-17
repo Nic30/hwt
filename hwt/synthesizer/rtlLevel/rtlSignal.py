@@ -8,8 +8,8 @@ from hwt.hdl.value import Value
 from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
-    NoDriverErr
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr,\
+    SignalDriverErrType
 from hwt.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
 
 
@@ -112,12 +112,11 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         """
         Returns a first driver if signal has only one driver.
         """
-        # [TODO] no driver exception
-        drv_cnt = len(self.drivers)
-        if not drv_cnt:
-            raise NoDriverErr(self)
-        elif drv_cnt != 1:
-            raise MultipleDriversErr(self)
+        d_cnt = len(self.drivers)
+        if d_cnt == 0:
+            raise SignalDriverErr([(SignalDriverErrType.MISSING_DRIVER, self), ])
+        elif d_cnt > 1:
+            raise SignalDriverErr([(SignalDriverErrType.MULTIPLE_COMB_DRIVERS, self), ])
 
         return self.drivers[0]
 
@@ -134,7 +133,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
 
         try:
             op = self.singleDriver()
-        except (MultipleDriversErr, NoDriverErr):
+        except SignalDriverErr:
             op = None
 
         if op is None or isinstance(op, HdlStatement):

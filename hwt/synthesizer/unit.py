@@ -1,15 +1,19 @@
+from typing import Dict
+
 from hwt.doc_markers import internal
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-# from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers, \
     _default_param_updater
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from ipCorePackager.constants import DIRECTION
 
 
+# from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
 class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     """
     Container of the netlist with interfaces
@@ -65,7 +69,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             proc(self)
 
         self._ctx.params = self._buildParams()
-        self._externInterf = []
+        self._externInterf = {}
 
         # prepare subunits
         for u in self._units:
@@ -77,19 +81,22 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         # prepare signals for interfaces
         for i in self._interfaces:
-            signals = i._signalsForInterface(self._ctx)
             if i._isExtern:
-                self._externInterf.extend(signals)
+                ei = self._externInterf
+            else:
+                ei = None
+            i._signalsForInterface(self._ctx, ei, reverse_dir=True)
 
         for proc in targetPlatform.beforeToRtlImpl:
             proc(self)
+
         self._loadMyImplementations()
         yield from self._lazyLoaded
 
         if not self._externInterf:
             raise IntfLvlConfErr(
                 "Can not find any external interface for unit %s"
-                "- unit without interfaces are not allowed"
+                "- unit without interfaces are not synthetisable"
                 % self._name)
 
         for proc in targetPlatform.afterToRtlImpl:
@@ -105,7 +112,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         return self._ctx.synthesised
 
     @internal
-    def _synthetiseContext(self, externInterf):
+    def _synthetiseContext(self, externInterf: Dict[RtlSignal, DIRECTION]):
         # synthesize signal level context
         s = self._ctx.synthesize(
             self._name, externInterf, self._targetPlatform)
@@ -162,7 +169,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         self._registerInterface(iName, intf, isPrivate=True)
         self._loadInterface(intf, False)
-        intf._signalsForInterface(self._ctx)
+        intf._signalsForInterface(self._ctx, None)
 
     @internal
     def _buildParams(self):

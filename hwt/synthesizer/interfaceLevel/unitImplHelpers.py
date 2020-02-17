@@ -5,7 +5,6 @@ from hwt.doc_markers import internal
 from hwt.hdl.constants import INTF_DIRECTION, DIRECTION
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.struct import HStruct
-from hwt.pyUtils.arrayQuery import single
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
@@ -137,7 +136,7 @@ class UnitImplHelpers(object):
         """
         for i in self._interfaces:
             if i._isExtern:
-                i._signalsForInterface(context, prefix + i._NAME_SEPARATOR)
+                i._signalsForInterface(context, None, prefix + i._NAME_SEPARATOR)
 
     @internal
     def _boundInterfacesToEntity(self, interfaces):
@@ -159,8 +158,7 @@ class UnitImplHelpers(object):
 
     @internal
     def _boundIntfSignalToEntity(self, interface, inftToPortDict):
-        portItem = single(self._entity.ports,
-                          lambda x: x._interface == interface)
+        portItem = inftToPortDict[interface]
         interface._boundedEntityPort = portItem
         d = INTF_DIRECTION.asDirection(interface._direction)
 

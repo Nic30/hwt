@@ -19,8 +19,8 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.vhdl.utils import VhdlVersion
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, \
-    NoDriverErr
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr,\
+    SignalDriverErrType
 
 
 @internal
@@ -50,12 +50,15 @@ def ternaryOpsToIf(statements):
                     stms.append(ifc)
                     continue
 
-            except (MultipleDriversErr, DoesNotContainsTernary):
+            except DoesNotContainsTernary:
                 pass
-            except NoDriverErr:
-                assert (hasattr(st.src, "_interface")
-                        and st.src._interface is not None)\
-                    or st.src.def_val.vld_mask, st.src
+            except SignalDriverErr as e:
+                if e.args[0][0][0] == SignalDriverErrType.MISSING_DRIVER:
+                    assert (hasattr(st.src, "_interface")
+                            and st.src._interface is not None)\
+                        or st.src.def_val.vld_mask, st.src
+                else:
+                    raise
 
         stms.append(st)
     return stms

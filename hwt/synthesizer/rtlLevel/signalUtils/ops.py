@@ -1,3 +1,6 @@
+from copy import copy
+from operator import lshift, rshift
+
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operatorDefs import AllOps
@@ -7,10 +10,7 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, \
-    NoDriverErr
-from copy import copy
-from operator import lshift, rshift
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 
 
 def tv(signal):
@@ -341,7 +341,7 @@ class RtlSignalOps():
                     else:
                         raise Exception(
                             "can not drive static value %r" % indexedOn)
-            except (MultipleDriversErr, NoDriverErr):
+            except SignalDriverErr:
                 break
 
         if not indexes:
@@ -372,7 +372,7 @@ class RtlSignalOps():
             # simplification of previous exception traceback
             e_simplified = copy(e)
             raise e_simplified
-        
+
         if requires_type_check:
             err = False
             try:

@@ -1,6 +1,6 @@
 from copy import copy
 from itertools import compress
-from typing import List, Generator, Optional, Union
+from typing import List, Generator, Optional, Union, Dict, Set
 
 from hwt.code import If
 from hwt.hdl.architecture import Architecture
@@ -21,11 +21,13 @@ from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals, \
     reduceProcesses
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr,\
-    NoDriverErr
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr,\
+    SignalDriverErrType
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 from hwt.doc_markers import internal
 from hwt.hdl.operatorDefs import AllOps
+from ipCorePackager.constants import DIRECTION
+from hwt.synthesizer.dummyPlatform import DummyPlatform
 
 
 @internal
@@ -172,12 +174,15 @@ def walk_assignments(stm: HdlStatement, dst: RtlSignal)\
 
 
 @internal
-def markVisibilityOfSignals(ctx, ctxName, signals, interfaceSignals):
+def markVisibilityOfSignalsAndCheckDrivers(
+        signals: Set[RtlSignal],
+        interfaceSignals: Dict[RtlSignal, DIRECTION]):
     """
     * check if all signals are driven by something
     * mark signals with hidden = False if they are connecting statements
       or if they are external interface
     """
+    signals_with_driver_issue = []
     for sig in signals:
         driver_cnt = len(sig.drivers)
         has_comb_driver = False
@@ -199,9 +204,8 @@ def markVisibilityOfSignals(ctx, ctxName, signals, interfaceSignals):
                             break
 
                 if has_comb_driver and is_comb_driver:
-                    raise MultipleDriversErr(
-                        "%s: Signal %r has multiple combinational drivers" %
-                        (ctx.getDebugScopeName(), sig), sig.drivers)
+                    signals_with_driver_issue.append(
+                        (SignalDriverErrType.MULTIPLE_COMB_DRIVERS, sig))
 
                 has_comb_driver |= is_comb_driver
         elif driver_cnt == 1:
@@ -209,11 +213,27 @@ def markVisibilityOfSignals(ctx, ctxName, signals, interfaceSignals):
                 sig.hidden = False
         else:
             sig.hidden = False
-            if sig not in interfaceSignals:
+            if sig not in interfaceSignals.keys():
                 if not sig.def_val._is_full_valid():
-                    raise NoDriverErr(
-                        sig, "Signal without any driver or valid value in ", ctxName)
+                    signals_with_driver_issue.append(
+                        (SignalDriverErrType.MISSING_DRIVER, sig))
                 sig._const = True
+
+        # chec interface direction if required
+        d = interfaceSignals.get(sig, None)
+        if d is None:
+            pass
+        elif d is DIRECTION.IN:
+            if sig.drivers:
+                signals_with_driver_issue.append(
+                    (SignalDriverErrType.INPUT_WITH_DRIVER, sig))
+        elif d is DIRECTION.OUT:
+            if not sig.drivers:
+                signals_with_driver_issue.append(
+                    (SignalDriverErrType.OUTPUT_WITHOUT_DRIVER, sig))
+
+    if signals_with_driver_issue:
+        raise SignalDriverErr(signals_with_driver_issue)
 
 
 class RtlNetlist():
@@ -273,7 +293,7 @@ class RtlNetlist():
             if isinstance(clk, (InterfaceBase, RtlSignal)):
                 clk_trigger = clk._onRisingEdge()
             else:
-                clk, clk_edge = clk # has to be tuple of (clk_sig, AllOps.RISING/FALLING_EDGE)
+                clk, clk_edge = clk  # has to be tuple of (clk_sig, AllOps.RISING/FALLING_EDGE)
                 if clk_edge is AllOps.RISING_EDGE:
                     clk_trigger = clk._onRisingEdge()
                 elif clk_edge is AllOps.FALLING_EDGE:
@@ -294,7 +314,9 @@ class RtlNetlist():
 
         return s
 
-    def synthesize(self, name, interfaces, targetPlatform):
+    def synthesize(self, name: str,
+                   interfaces: Dict[RtlSignal, DIRECTION],
+                   targetPlatform: DummyPlatform):
         """
         Build Entity and Architecture instance out of netlist representation
         """
@@ -305,21 +327,15 @@ class RtlNetlist():
         for _, v in self.params.items():
             ent.generics.append(v)
 
-        # interface set for faster lookup
-        if isinstance(interfaces, set):
-            intfSet = interfaces
-        else:
-            intfSet = set(interfaces)
-
         # create ports
-        for s in interfaces:
-            pi = portItemfromSignal(s, ent)
+        for s, d in interfaces.items():
+            pi = portItemfromSignal(s, ent, d)
             pi.registerInternSig(s)
             ent.ports.append(pi)
             s.hidden = False
 
         removeUnconnectedSignals(self)
-        markVisibilityOfSignals(self, name, self.signals, intfSet)
+        markVisibilityOfSignalsAndCheckDrivers(self.signals, interfaces)
 
         for proc in targetPlatform.beforeHdlArchGeneration:
             proc(self)
@@ -330,7 +346,7 @@ class RtlNetlist():
 
         # add signals, variables etc. in architecture
         for s in self.signals:
-            if s not in intfSet and not s.hidden:
+            if s not in interfaces.keys() and not s.hidden:
                 arch.variables.append(s)
 
         # instantiate subUnits in architecture

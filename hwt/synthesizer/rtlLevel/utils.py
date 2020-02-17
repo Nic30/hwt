@@ -5,11 +5,7 @@ from hwt.doc_markers import internal
 
 
 @internal
-def portItemfromSignal(s: SignalItem, entity):
-    if s.drivers:
-        d = DIRECTION.OUT
-    else:
-        d = DIRECTION.IN
+def portItemfromSignal(s: SignalItem, entity, d: DIRECTION):
     pi = PortItem(s.name, d, s._dtype, entity)
     if not hasattr(s, '_interface'):
         from hwt.interfaces.std import Signal

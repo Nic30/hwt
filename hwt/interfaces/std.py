@@ -26,12 +26,16 @@ D = DIRECTION
 class Signal(SignalOps, Interface):
     """
     Basic wire interface
+
+    :ivar _dtype: type of signal
+    :ivar _sig: RtlSignal instance (physical representation of this logical signal)
     """
 
     def __init__(self,
                  masterDir=D.OUT,
                  dtype=BIT,
                  loadConfig=True):
+        self._sig = None
         super().__init__(masterDir=masterDir,
                          loadConfig=loadConfig)
         self._dtype = dtype

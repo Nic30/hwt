@@ -18,8 +18,7 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, \
-    NoDriverErr
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 from pyMathBitPrecise.bits3t import Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
@@ -305,7 +304,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 d = self.singleDriver()
                 if isinstance(d, Operator) and d.operator == AllOps.NOT:
                     return d.operands[0]
-            except (MultipleDriversErr, NoDriverErr):
+            except SignalDriverErr:
                 pass
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
 
