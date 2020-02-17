@@ -272,6 +272,7 @@ class PropDeclrCollector(object):
         intf._name = iName
         intf._ctx = self._ctx
 
+        # _setAsExtern() not used because _interfaces are not intitialized yet
         if isPrivate:
             self._private_interfaces.append(intf)
             intf._isExtern = False

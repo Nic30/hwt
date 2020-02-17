@@ -53,14 +53,14 @@ class PortItem(SignalItem):
         if self.direction == DIRECTION.OUT:
             if self.src is not None:
                 raise HwtSyntaxError(
-                    "Port %s is already associated with %s"
+                    "Port %s is already associated with signal %s"
                     % (self.name, str(self.src)))
             self.src = signal
 
         elif self.direction == DIRECTION.IN:
             if self.dst is not None:
                 raise HwtSyntaxError(
-                    "Port %s is already associated with %s"
+                    "Port %s is already associated with signal %s"
                     % (self.name, str(self.dst)))
             self.dst = signal
 
