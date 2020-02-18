@@ -377,6 +377,7 @@ def isPow2(num) -> bool:
         num = int(num)
     return num != 0 and ((num & (num - 1)) == 0)
 
+
 def sizeof(_type) -> int:
     "get size of type in bytes"
     s = _type.bit_length()
