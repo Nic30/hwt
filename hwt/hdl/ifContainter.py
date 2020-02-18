@@ -118,9 +118,7 @@ class IfContainer(HdlStatement):
             # generate new statement for them
             cond_sig = self.cond
             n = self.__class__(cond_sig, newIfTrue)
-            for c, stms in newElifs:
-                assert len(c) == 1
-                c_sig = c[0]
+            for c_sig, stms in newElifs:
                 n.Elif(c_sig, stms)
             if newIfFalse is not None:
                 n.Else(newIfFalse)
@@ -132,8 +130,8 @@ class IfContainer(HdlStatement):
             # update io of this
             self._inputs.clear()
             self._inputs.append(cond_sig)
-            for c, _ in self.elIfs:
-                self._inputs.extend(c)
+            for c_sig, _ in self.elIfs:
+                self._inputs.append(c_sig)
 
             self._inputs.append(cond_sig)
             self._outputs.clear()
