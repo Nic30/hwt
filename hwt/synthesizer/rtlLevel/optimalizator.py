@@ -39,8 +39,12 @@ def removeUnconnectedSignals(netlist):
                         if e.result is sig:
                             e.result = None
                     else:
-                        inputs = e._inputs
-                        netlist.statements.discard(e)
+                        if len(e._outputs) > 1:
+                            inputs = []
+                            e._cut_off_drivers_of(sig)
+                        else:
+                            inputs = e._inputs
+                            netlist.statements.discard(e)
 
                     for op in inputs:
                         if not isinstance(op, Value):
@@ -51,7 +55,6 @@ def removeUnconnectedSignals(netlist):
                                 continue
 
                             _toSearch.add(op)
-
                 toDelete.add(sig)
 
         if toDelete:
