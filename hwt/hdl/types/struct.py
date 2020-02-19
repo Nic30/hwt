@@ -98,7 +98,7 @@ class HStruct(HdlType):
     def bit_length(self):
         bl = self.__bit_length_val
         if bl is None:
-            raise TypeError("Can not request bit_lenght on size"
+            raise TypeError("Can not request bit_lenght on type"
                             " which has not fixed size")
         else:
             return self.__bit_length_val
