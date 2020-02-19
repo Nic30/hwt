@@ -48,6 +48,10 @@ class SwitchContainer(HdlStatement):
         self._default_enclosed_for = None
 
     @internal
+    def _cut_off_drivers_of(self, sig: RtlSignalBase):
+        raise NotImplementedError()
+
+    @internal
     def _clean_signal_meta(self):
         self._case_enclosed_for = None
         self._default_enclosed_for = None
