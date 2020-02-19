@@ -1,3 +1,4 @@
+from hwt.doc_markers import internal
 
 
 class SignalOps(object):
@@ -8,6 +9,19 @@ class SignalOps(object):
 
     def _auto_cast(self, toT):
         return self._sig._auto_cast(toT)
+
+    @internal
+    def _convSign(self, signed):
+        return self._sig._convSign(signed)
+
+    def _signed(self):
+        return self._convSign(True)
+
+    def _unsigned(self):
+        return self._convSign(False)
+
+    def _vec(self):
+        return self._convSign(None)
 
     def _reinterpret_cast(self, toT):
         return self._sig._reinterpret_cast(toT)
