@@ -96,7 +96,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, HCL
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, HCL
 * [mockturtle](https://github.com/lsils/mockturtle) - logic network library
-* [moore](https://github.com/fabianschuiki/moore) - HDL -> model compiler
+* [moore](https://github.com/fabianschuiki/moore) - Rust, HDL -> model compiler
 * [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
 * [nmigen](https://github.com/m-labs/nmigen) -, Python, A refreshed Python toolbox for building complex digital hardware
 * [OpenTimer](https://github.com/OpenTimer/OpenTimer) - , C++,  A High-Performance Timing Analysis Tool for VLSI Systems
