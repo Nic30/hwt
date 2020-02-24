@@ -3,9 +3,9 @@ from collections import deque
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from pycocotb.agents.base import AgentBase
-from pycocotb.agents.clk import DEFAULT_CLOCK
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable
+from pycocotb.constants import CLK_PERIOD
 
 
 class SignalAgent(SyncAgentBase):
@@ -33,7 +33,7 @@ class SignalAgent(SyncAgentBase):
 
         if self.clk is None:
             if self.delay is None:
-                self.delay = DEFAULT_CLOCK
+                self.delay = CLK_PERIOD
             self.monitor = self.monitorWithTimer
             self.driver = self.driverWithTimer
         else:

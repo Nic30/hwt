@@ -4,8 +4,8 @@ from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.process_utils import OnRisingCallbackLoop
 from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable,\
     WaitTimeslotEnd
-from pycocotb.agents.clk import DEFAULT_CLOCK
 from pycocotb.hdlSimulator import HdlSimulator
+from pycocotb.constants import CLK_PERIOD
 
 
 class FifoReaderAgent(SyncAgentBase):
@@ -196,7 +196,7 @@ class FifoWriterAgent(SyncAgentBase):
                                  "en signal in invalid state")
 
         if en:
-            yield Timer(DEFAULT_CLOCK / 10)
+            yield Timer(CLK_PERIOD / 10)
             yield WaitCombRead()
             self.data.append(intf.data.read())
 
