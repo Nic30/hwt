@@ -14,7 +14,7 @@ from hwt.interfaces.agents.vldSynced import VldSyncedAgent
 from hwt.interfaces.signalOps import SignalOps
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.param import Param
-from pycocotb.agents.clk import ClockAgent
+from pycocotb.agents.clk import ClockAgent, freq_to_period
 from pycocotb.agents.rst import PullDownAgent
 from pycocotb.agents.rst import PullUpAgent
 from pycocotb.hdlSimulator import HdlSimulator
@@ -70,7 +70,7 @@ class Clk(Signal):
         return IP_Clk
 
     def _initSimAgent(self, sim: HdlSimulator):
-        self._ag = ClockAgent(sim, self)
+        self._ag = ClockAgent(sim, self, period=freq_to_period(self.FREQ))
 
 
 class Rst(Signal):
@@ -83,7 +83,9 @@ class Rst(Signal):
         return IP_Rst
 
     def _initSimAgent(self, sim: HdlSimulator):
-        self._ag = PullDownAgent(sim, self)
+        clk = self._getAssociatedClk()
+        self._ag = PullDownAgent(sim, self,
+                                 initDelay=0.6 * freq_to_period(clk.FREQ))
 
 
 class Rst_n(Signal):
@@ -105,7 +107,9 @@ class Rst_n(Signal):
         return IP_Rst_n
 
     def _initSimAgent(self, sim: HdlSimulator):
-        self._ag = PullUpAgent(sim, self)
+        clk = self._getAssociatedClk()
+        self._ag = PullUpAgent(sim, self,
+                               initDelay=0.6 * freq_to_period(clk.FREQ))
 
 
 class VldSynced(Interface):
