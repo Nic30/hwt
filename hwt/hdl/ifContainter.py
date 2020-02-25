@@ -133,7 +133,6 @@ class IfContainer(HdlStatement):
             for c_sig, _ in self.elIfs:
                 self._inputs.append(c_sig)
 
-            self._inputs.append(cond_sig)
             self._outputs.clear()
 
             out_add = self._outputs.append
