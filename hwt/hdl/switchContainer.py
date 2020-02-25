@@ -1,7 +1,10 @@
 from functools import reduce
+from itertools import compress
 from operator import and_
 from typing import List, Tuple, Dict
 
+from hwt.doc_markers import internal
+from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 from hwt.hdl.statements import HdlStatement, isSameHVal, isSameStatementList,\
@@ -10,8 +13,6 @@ from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.doc_markers import internal
-from hwt.hdl.operatorUtils import replace_input_in_expr
 
 
 class SwitchContainer(HdlStatement):
@@ -49,7 +50,77 @@ class SwitchContainer(HdlStatement):
 
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
-        raise NotImplementedError()
+        """
+        Doc on parent class :meth:`HdlStatement._cut_off_drivers_of`
+        """
+        if len(self._outputs) == 1 and sig in self._outputs:
+            self.parentStm = None
+            return self
+
+        # try to cut off all statements which are drivers of specified signal
+        # in all branches
+        child_keep_mask = []
+
+        all_cut_off = True
+        new_cases = []
+        any_case_hit = False
+        for val, stms in self.cases:
+            new_case = []
+            child_keep_mask.clear()
+            all_cut_off &= self._cut_off_drivers_of_list(
+                sig, stms, child_keep_mask, new_case)
+
+            _stms = list(compress(stms, child_keep_mask))
+            stms.clear()
+            stms.extend(_stms)
+
+            if new_case:
+                any_case_hit = True
+            new_cases.append((val, new_case))
+
+        new_default = None
+        if self.default:
+            new_default = []
+            child_keep_mask.clear()
+            all_cut_off &= self._cut_off_drivers_of_list(
+                sig, self.default, child_keep_mask, new_default)
+            self.default = list(compress(self.default, child_keep_mask))
+
+        assert not all_cut_off, "everything was cut of but this should be already known at start"
+
+        if any_case_hit or new_default:
+            # parts were cut off
+            # generate new statement for them
+            sel_sig = self.switchOn
+            n = self.__class__(sel_sig)
+            n.cases = new_cases
+            if new_default:
+                n.Default(*new_default)
+
+            if self.parentStm is None:
+                ctx = n._get_rtl_context()
+                ctx.statements.add(n)
+
+            # update io of this
+            self._inputs.clear()
+            self._inputs.append(sel_sig)
+            self._outputs.clear()
+
+            out_add = self._outputs.append
+            in_add = self._inputs.append
+
+            for stm in self._iter_stms():
+                for inp in stm._inputs:
+                    in_add(inp)
+
+                for outp in stm._outputs:
+                    out_add(outp)
+
+            if self._sensitivity is not None or self._enclosed_for is not None:
+                raise NotImplementedError(
+                    "Sensitivity and enclosure has to be cleaned first")
+
+            return n
 
     @internal
     def _clean_signal_meta(self):
