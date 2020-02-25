@@ -93,7 +93,7 @@ class SwitchContainer(HdlStatement):
             # generate new statement for them
             sel_sig = self.switchOn
             n = self.__class__(sel_sig)
-            n.cases = new_cases
+            n.addCases(new_cases)
             if new_default:
                 n.Default(*new_default)
 
