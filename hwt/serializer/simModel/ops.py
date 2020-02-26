@@ -8,7 +8,7 @@ class SimModelSerializer_ops():
         AllOps.FALLING_EDGE: 1,
         AllOps.DOWNTO: 1,
         AllOps.TO: 1,
-        
+
         AllOps.EQ: 11,
         AllOps.NEQ: 11,
         AllOps.GT: 11,
@@ -19,10 +19,10 @@ class SimModelSerializer_ops():
         AllOps.OR: 10,
         AllOps.XOR: 9,
         AllOps.AND: 8,
-        
+
         AllOps.ADD: 6,
         AllOps.SUB: 6,
-        
+
         AllOps.DIV: 5,
         AllOps.MUL: 5,
         AllOps.MOD: 5,
@@ -31,7 +31,7 @@ class SimModelSerializer_ops():
         AllOps.NEG: 4,
         AllOps.POW: 3,
         AllOps.INDEX: 2,
-        
+
         AllOps.CONCAT: 1,
         AllOps.TERNARY: 1,
         AllOps.CALL: 1,
