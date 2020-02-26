@@ -105,8 +105,11 @@ def toRtl(unitOrCls: Unit, name: str=None,
                 if createFiles:
                     fName = obj.getEntityName() + serializer.fileExtension
                     real_fName = os.path.join(saveTo, fName)
-                    assert real_fName in files
-                    fileMode = 'a'
+                    if real_fName in files:
+                        # assert real_fName in files, (real_fName, files)
+                        fileMode = 'a'
+                    else:
+                        fileMode = 'w'
             else:
                 if hasattr(obj, "_hdlSources"):
                     for fn in obj._hdlSources:
