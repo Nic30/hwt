@@ -146,7 +146,8 @@ class FifoReaderAgent(SyncAgentBase):
             try:
                 en = int(en)
             except ValueError:
-                raise AssertionError(self.sim.now, intf, "en signal in invalid state")
+                raise AssertionError(self.sim.now, intf,
+                                     "en signal in invalid state")
 
             if en:
                 assert self.data, (self.sim.now, intf, "underflow")
@@ -159,7 +160,8 @@ class FifoWriterAgent(SyncAgentBase):
     """
 
     def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
-        super(FifoWriterAgent, self).__init__(sim, intf, allowNoReset=allowNoReset)
+        super(FifoWriterAgent, self).__init__(
+            sim, intf, allowNoReset=allowNoReset)
         self.data = deque()
 
     def driver_init(self):
@@ -177,6 +179,12 @@ class FifoWriterAgent(SyncAgentBase):
     def setEnable_asMonitor(self, en):
         SyncAgentBase.setEnable_asMonitor(self, en)
         self.intf.wait.write(not en)
+
+    def get_data(self):
+        return self.intf.data.read()
+
+    def set_data(self, d):
+        self.intf.data.write(d)
 
     def monitor(self):
         # set wait signal
@@ -198,7 +206,7 @@ class FifoWriterAgent(SyncAgentBase):
         if en:
             yield Timer(CLK_PERIOD / 10)
             yield WaitCombRead()
-            self.data.append(intf.data.read())
+            self.data.append(self.get_data())
 
     def driver(self):
         # if wait == 0 set en=1 and set data
@@ -221,7 +229,7 @@ class FifoWriterAgent(SyncAgentBase):
                 v = 1
 
         yield WaitWriteOnly()
-        intf.data.write(d)
+        self.set_data(d)
         intf.en.write(v)
 
     def getDrivers(self):
