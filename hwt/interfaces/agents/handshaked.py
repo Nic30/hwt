@@ -25,7 +25,7 @@ class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
     @classmethod
     def get_ready_signal(cls, intf):
         return intf.rd._sigInside
-    
+
     def get_ready(self):
         return self._rd.read()
 
@@ -50,7 +50,6 @@ class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
     def set_data(self, data):
         """write data to interface"""
         self.intf.data.write(data)
-
 
 
 class HandshakeSyncAgent(HandshakedAgent):
