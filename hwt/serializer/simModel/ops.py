@@ -9,7 +9,9 @@ class SimModelSerializer_ops():
         AllOps.DOWNTO: 1,
         AllOps.TO: 1,
 
-        AllOps.EQ: 11,
+        # EQ is not == but ._eq() function
+        AllOps.EQ: 1,
+        # AllOps.EQ: 11,
         AllOps.NEQ: 11,
         AllOps.GT: 11,
         AllOps.LT: 11,
