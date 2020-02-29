@@ -38,3 +38,13 @@ class HStream(HdlType):
         else:
             # len_min == len_max
             raise self.len_min * self.element_t.bit_length()
+
+    def __repr__(self, indent=0, withAddr=None, expandStructs=False):
+        return "<%s %s, len:%s, align:%r>" % (
+            self.__class__.__name__,
+            self.element_t.__repr__(indent=indent,
+                                    withAddr=withAddr,
+                                    expandStructs=expandStructs),
+            (self.len_min, self.len_max),
+            self.start_offsets
+        )
