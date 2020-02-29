@@ -70,7 +70,7 @@ class GenericSerializer_Value():
 
     @classmethod
     def String_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
-        return '"%s"' % val.val
+        return '"%s"' % val.val.replace("\n", "\\n")
 
     @classmethod
     def get_signal_name(cls, si, ctx: SerializerCtx):
