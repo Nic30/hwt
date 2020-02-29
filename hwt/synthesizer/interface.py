@@ -160,6 +160,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
     @internal
     def _connectToIter(self, master, exclude=None, fit=False):
+        # [todo] implementatino for RtlSignals of HStruct type
         if exclude and (self in exclude or master in exclude):
             return
 
