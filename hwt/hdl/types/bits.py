@@ -25,7 +25,7 @@ class Bits(HdlType, Bits3t):
         self.negated = negated
 
         bit_length = int(bit_length)
-        assert bit_length > 0
+        assert bit_length > 0, bit_length
         Bits3t.__init__(self, bit_length, signed, name=name,
                         force_vector=force_vector,
                         strict_sign=strict_sign, strict_width=strict_width)
