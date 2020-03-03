@@ -2,6 +2,7 @@ from math import inf, isinf
 from typing import List, Optional
 
 from hwt.hdl.types.hdlType import HdlType
+from hwt.serializer.generic.indent import getIndent
 
 
 class HStream(HdlType):
@@ -24,7 +25,7 @@ class HStream(HdlType):
         super(HStream, self).__init__()
         self.element_t = element_t
         if isinstance(frame_len, float) and isinf(frame_len):
-            frame_len = (0, inf)
+            frame_len = (1, inf)
         elif isinstance(frame_len, int):
             frame_len = (frame_len, frame_len)
         self.len_min, self.len_max = frame_len
@@ -39,12 +40,23 @@ class HStream(HdlType):
             # len_min == len_max
             raise self.len_min * self.element_t.bit_length()
 
+    def __eq__(self, other: HdlType):
+        if self is other:
+            return True
+        if (type(self) is type(other)):
+            if self.start_offsets == other.start_offsets \
+                    and self.len_min == other.len_min \
+                    and self.len_max == other.len_max:
+                return self.element_t == other.element_t
+        return False
+
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
-        return "<%s %s, len:%s, align:%r>" % (
+        return "%s<%s len:%s, align:%r\n%s>" % (
+            getIndent(indent),
             self.__class__.__name__,
-            self.element_t.__repr__(indent=indent,
+            (self.len_min, self.len_max),
+            self.start_offsets,
+            self.element_t.__repr__(indent=indent+1,
                                     withAddr=withAddr,
                                     expandStructs=expandStructs),
-            (self.len_min, self.len_max),
-            self.start_offsets
         )
