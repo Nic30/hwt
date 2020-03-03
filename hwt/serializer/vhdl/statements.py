@@ -57,8 +57,6 @@ def ternaryOpsToIf(statements):
                     assert (hasattr(st.src, "_interface")
                             and st.src._interface is not None)\
                         or st.src.def_val.vld_mask, st.src
-                else:
-                    raise
 
         stms.append(st)
     return stms
