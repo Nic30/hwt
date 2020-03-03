@@ -125,10 +125,20 @@ class HStruct(HdlType):
         return True
 
     def __eq__(self, other):
-        return self is other or (
-            type(self) is type(other) and
-            self.bit_length() == other.bit_length() and
-            self.__fields__eq__(other))
+        if self is other:
+            return True
+        if (type(self) is type(other)):
+            try:
+                self_l = self.bit_length()
+            except TypeError:
+                self_l = -1
+            try:
+                other_l = other.bit_length()
+            except TypeError:
+                other_l = -1
+
+            return self_l == other_l and self.__fields__eq__(other)
+        return False
 
     @internal
     def __hash__(self):
