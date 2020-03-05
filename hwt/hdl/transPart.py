@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
@@ -18,7 +18,7 @@ class TransPart(object):
     """
 
     def __init__(self, parent: 'FrameTmpl',
-                 tmpl: Union[HStructField, HdlType],
+                 tmpl: Optional[Union[HStructField, HdlType]],
                  startOfPart: int,
                  endOfPart: int,
                  inFieldOffset: int):

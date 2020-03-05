@@ -139,7 +139,7 @@ class ChoiceOfFrameParts(list):
         return "<ChoiceOfFrameParts %s>" % list.__repr__(self)
 
 
-class StreamOfFramePars(TransPartGroup):
+class StreamOfFrameParts(TransPartGroup):
     """
     List of TransPart instances
     One of TransPart is used to represent the word, on target bus,
@@ -156,7 +156,7 @@ class StreamOfFramePars(TransPartGroup):
         self.startOfPart = startOfPart
         self.endOfPart = None
         self._isLast = False
-        super(StreamOfFramePars, self).__init__()
+        super(StreamOfFrameParts, self).__init__()
 
     def resolveEnd(self):
         assert self.startOfPart == self[0].startOfPart
@@ -265,7 +265,7 @@ class TransTmplWordIterator():
                     # assert start, end is aligned
                     raise NotImplementedError(tmp)
                 else:
-                    s = StreamOfFramePars(end, tmp)
+                    s = StreamOfFrameParts(end, tmp)
                     s.extend(self.splitOnWords(tmp.child, end))
                     s.setIsLast(True)
                     s.resolveEnd()

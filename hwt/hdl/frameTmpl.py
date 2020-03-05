@@ -5,7 +5,7 @@ from typing import Union, Generator
 
 from hwt.doc_markers import internal
 from hwt.hdl.frameTmplUtils import TransTmplWordIterator, \
-    ChoicesOfFrameParts
+    ChoicesOfFrameParts, StreamOfFrameParts
 from hwt.hdl.transPart import TransPart
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
@@ -358,7 +358,13 @@ class FrameTmpl(object):
 
     @internal
     def __repr__getName(self, transPart, fieldWidth):
-        if transPart.isPadding:
+        if isinstance(transPart, StreamOfFrameParts):
+            name = transPart.origin.parent.origin.name
+            if name is None:
+                return "X" * fieldWidth
+            else:
+                return name
+        elif transPart.isPadding:
             return "X" * fieldWidth
         else:
             names = []
