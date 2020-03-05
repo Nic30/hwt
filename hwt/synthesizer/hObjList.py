@@ -1,4 +1,4 @@
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
 from hwt.hdl.statements import HdlStatement
 
 
@@ -56,7 +56,8 @@ class HObjList(list):
         :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
         """
         for o in self:
-            o._updateParamsFrom(*args, **kwargs)
+            if isinstance(o, (InterfaceBase, UnitBase, HObjList)):
+                o._updateParamsFrom(*args, **kwargs)
 
     def __call__(self, other):
         if not isinstance(other, list):
