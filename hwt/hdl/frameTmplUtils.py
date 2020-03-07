@@ -279,6 +279,6 @@ class TransTmplWordIterator():
                     endOfWord = (wordIndex + 1) * wordWidth
                     endOfPart = min(endOfWord, end)
                     inFieldOffset = startOfPart - base
-                    yield TransPart(self, tmpl, startOfPart, endOfPart,
+                    yield TransPart(self, tmpl, False, startOfPart, endOfPart,
                                     inFieldOffset)
                     startOfPart = endOfPart

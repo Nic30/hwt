@@ -238,7 +238,7 @@ class FrameTmpl(object):
                     endOfWord = ceil(
                         (lastEnd + 1) / self.wordWidth) * self.wordWidth
                     endOfPadding = min(endOfWord, end)
-                    _p = TransPart(self, None, lastEnd, endOfPadding, 0)
+                    _p = TransPart(self, None, False, lastEnd, endOfPadding, 0)
                     parts.append(_p)
 
                     if endOfPadding >= endOfWord:
@@ -268,11 +268,18 @@ class FrameTmpl(object):
                             or lastEnd % self.wordWidth != 0):
             # align end to end of last word
             end = ceil(self.endBitAddr / self.wordWidth) * self.wordWidth
+            endOfNonRemovablePadding = self.origin.bitAddrEnd
             while end != lastEnd:
                 assert end >= lastEnd, (end, lastEnd)
                 endOfWord = ((lastEnd // self.wordWidth) + 1) * self.wordWidth
                 endOfPadding = min(endOfWord, end)
-                _p = TransPart(self, None, lastEnd, endOfPadding, 0)
+                if lastEnd < endOfNonRemovablePadding:
+                    endOfPadding = min(endOfPadding, endOfNonRemovablePadding)
+                    can_be_removed = False
+                else:
+                    can_be_removed = True
+                _p = TransPart(self, None, can_be_removed,
+                               lastEnd, endOfPadding, 0)
                 _p.parent = self
                 parts.append(_p)
 

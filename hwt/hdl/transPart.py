@@ -11,7 +11,10 @@ class TransPart(object):
     :ivar parent: instance of FrameTmpl
     :ivar tmpl: origin template which is this representation of
         (StructField/HdlType instance)
-    :ivar isPadding: flag which specifies if this TransaPart is just a padding
+    :ivar canBeRemoved: True if it is padding to assert data alignment and is not
+        actually part of data and can be removed
+    :ivar isPadding: True if this TransaPart is just a padding
+        and contains non valid data
     :ivar startOfPart: bit addr of start of this part
     :ivar endOfPart: bit addr of end of this part
     :ivar inFieldOffset: bit offset of this part in parent field
@@ -19,12 +22,14 @@ class TransPart(object):
 
     def __init__(self, parent: 'FrameTmpl',
                  tmpl: Optional[Union[HStructField, HdlType]],
+                 canBeRemoved: bool,
                  startOfPart: int,
                  endOfPart: int,
                  inFieldOffset: int):
         self.parent = parent
         self.tmpl = tmpl
         self.isPadding = tmpl is None
+        self.canBeRemoved = canBeRemoved
         self.startOfPart = startOfPart
         self.endOfPart = endOfPart
         self.inFieldOffset = inFieldOffset
