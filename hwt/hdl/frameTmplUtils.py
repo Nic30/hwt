@@ -261,7 +261,7 @@ class TransTmplWordIterator():
                 end = addrOffset + tmp.possibleTransactions[0].bitAddrEnd
             elif isinstance(tmp, StreamTransaction):
                 ch_len = tmp.child.bit_length()
-                if end % self.wordWidth != 0 or ch_len != self.wordWidth:
+                if end % self.wordWidth != 0 or ch_len % self.wordWidth != 0:
                     # assert start, end is aligned
                     raise NotImplementedError(tmp)
                 else:
