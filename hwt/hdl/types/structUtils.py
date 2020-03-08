@@ -3,6 +3,8 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.struct import HStructField, HStruct
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.types.union import HUnion
+from hwt.hdl.types.stream import HStream
+from hwt.hdl.value import Value
 
 
 def HStruct_selectFields(structT, fieldsToUse):
@@ -75,6 +77,10 @@ def walkFlattenFields(sigOrVal, skipPadding=True):
     elif isinstance(t, HArray):
         for item in sigOrVal:
             yield from walkFlattenFields(item)
+    elif isinstance(t, HStream):
+        assert isinstance(sigOrVal, Value), sigOrVal
+        for v in sigOrVal:
+            yield from walkFlattenFields(v)
     else:
         raise NotImplementedError(t)
 

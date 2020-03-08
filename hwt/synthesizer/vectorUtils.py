@@ -189,7 +189,18 @@ def iterBits(sigOrVal: Union[RtlSignal, Value], bitsInOne: int=1,
     :param skipPadding: if true padding is skipped in dense types
     """
     bw = BitWalker(sigOrVal, skipPadding, fillup)
-    for _ in range(ceil(sigOrVal._dtype.bit_length() / bitsInOne)):
-        yield bw.get(bitsInOne)
+    try:
+        bit_len = sigOrVal._dtype.bit_length()
+    except TypeError:
+        bit_len = None
+    if bit_len is None:
+        try:
+            while True:
+                yield bw.get(bitsInOne)
+        except NotEnoughtBitsErr:
+            return
+    else:
+        for _ in range(ceil(bit_len / bitsInOne)):
+            yield bw.get(bitsInOne)
 
-    bw.assertIsOnEnd()
+        bw.assertIsOnEnd()

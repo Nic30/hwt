@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from hwt.hdl.types.hdlType import HdlType
 from hwt.serializer.generic.indent import getIndent
+from hwt.doc_markers import internal
 
 
 class HStream(HdlType):
@@ -49,6 +50,16 @@ class HStream(HdlType):
                     and self.len_max == other.len_max:
                 return self.element_t == other.element_t
         return False
+
+    @internal
+    @classmethod
+    def getValueCls(cls):
+        try:
+            return cls._valCls
+        except AttributeError:
+            from hwt.hdl.types.streamVal import HStreamVal
+            cls._valCls = HStreamVal
+            return cls._valCls
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         return "%s<%s len:%s, align:%r\n%s>" % (
