@@ -1,12 +1,12 @@
+from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.doc_markers import internal
-from hwt.hdl.types.bits import Bits
 
 
 class HArrayVal(Value):
