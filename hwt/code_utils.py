@@ -15,6 +15,7 @@ def _intfToSig(obj):
 
 @internal
 def _connect(src, dst, exclude, fit):
+    # [TODO]: support for RtlSignals of struct type + interface with same signal structure
     if isinstance(src, InterfaceBase):
         if isinstance(dst, InterfaceBase):
             return dst._connectTo(src, exclude=exclude, fit=fit)

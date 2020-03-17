@@ -50,5 +50,5 @@ class TestMatrix():
                     for k in test_matrix.kwargs_keys:
                         msg_buff.append("%s=%r" % (k, kwargs[k]))
                     raise Exception(
-                        "Test failed %s" % (", ".join(msg_buff))) from e
+                        "Test failed %s" % (", ".join(msg_buff)), ) from e
         return test_wrap
