@@ -75,6 +75,10 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
         stms, _ = _stm._try_reduce()
         proc_statements.extend(stms)
 
+    if not proc_statements:
+        # this can happen e.g. when If does not contains any Assignment
+        return
+
     outputs = UniqList()
     _inputs = UniqList()
     sensitivity = UniqList()
@@ -88,51 +92,61 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
         sensitivity.extend(_stm._sensitivity)
         enclosed_for.update(_stm._enclosed_for)
 
+    sensitivity_recompute = False
     enclosure_values = {}
     for sig in outputs:
         # inject nopVal if needed
         if sig._useNopVal:
-            n = sig._nopVal
-            enclosure_values[sig] = n
+            if sig not in enclosed_for:
+                n = sig._nopVal
+                enclosure_values[sig] = n
+                if not isinstance(n, Value):
+                    _inputs.append(n)
+                    sensitivity_recompute = True
 
     if enclosure_values:
         do_enclose_for = list(where(outputs,
                                     lambda o: o in enclosure_values))
         fill_stm_list_with_enclosure(None, enclosed_for, proc_statements,
                                      do_enclose_for, enclosure_values)
+        for p in proc_statements:
+            p._clean_signal_meta()
 
-    if proc_statements:
-        for o in outputs:
-            assert not o.hidden, o
-        seen = set()
-        inputs = UniqList()
-        for i in _inputs:
-            inputs.extend(i._walk_public_drivers(seen))
+    for o in outputs:
+        assert not o.hidden, o
 
-        intersect = outputs.intersection_set(sensitivity)
-        if intersect:
-            if not tryToSolveCombLoops:
-                raise HwtSyntaxError(
-                    "Combinational loop on signal(s)", intersect)
+    seen = set()
+    inputs = UniqList()
+    for i in _inputs:
+        inputs.extend(i._walk_public_drivers(seen))
 
-            # try to solve combinational loops by separating drivers of signals
-            # from statements
-            for sig in intersect:
-                proc_statements, proc_stms_select = cut_off_drivers_of(
-                    sig, proc_statements)
-                yield from _statements_to_HWProcesses(proc_stms_select, False)
+    intersect = outputs.intersection_set(sensitivity)
+    if intersect:
+        if not tryToSolveCombLoops:
+            raise HwtSyntaxError(
+                "Combinational loop on signal(s)", intersect)
 
-            if proc_statements:
-                yield from _statements_to_HWProcesses(proc_statements, False)
-        else:
-            name = name_for_process(outputs)
-            yield HWProcess("assig_process_" + name,
-                            proc_statements, sensitivity,
-                            inputs, outputs)
+        # try to solve combinational loops by separating drivers of signals
+        # from statements
+        for sig in intersect:
+            proc_statements, proc_stms_select = cut_off_drivers_of(
+                sig, proc_statements)
+            yield from _statements_to_HWProcesses(proc_stms_select, False)
+
+        if proc_statements:
+            yield from _statements_to_HWProcesses(proc_statements, False)
     else:
-        assert not outputs
-        # this can happen e.g. when If does not contains any Assignment
-        pass
+        if sensitivity_recompute:
+            sensitivity = UniqList()
+            for _stm in proc_statements:
+                seen = set()
+                _stm._discover_sensitivity(seen)
+                sensitivity.extend(_stm._sensitivity)
+
+        name = name_for_process(outputs)
+        yield HWProcess("assig_process_" + name,
+                        proc_statements, sensitivity,
+                        inputs, outputs)
 
 
 @internal
