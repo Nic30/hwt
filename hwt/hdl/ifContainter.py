@@ -381,7 +381,8 @@ class IfContainer(HdlStatement):
         if isinstance(other, IfContainer):
             if self.cond is other.cond:
                 if len(self.ifTrue) == len(other.ifTrue) \
-                        and len(self.ifFalse) == len(other.ifFalse) \
+                        and ((self.ifFalse is None and other.ifFalse is None) or
+                             len(self.ifFalse) == len(other.ifFalse)) \
                         and len(self.elIfs) == len(other.elIfs):
                     if not isSameStatementList(self.ifTrue,
                                                other.ifTrue) \
