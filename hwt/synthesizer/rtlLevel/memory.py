@@ -2,7 +2,7 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlMemoryBase
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 
 
 class RtlSyncSignal(RtlMemoryBase, RtlSignal):
@@ -12,7 +12,7 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
     to main signal on every clock rising edge
     """
 
-    def __init__(self, ctx, name, var_type, def_val=None):
+    def __init__(self, ctx, name, var_type, def_val=None, nop_val=NO_NOPVAL):
         """
         :param ctx: context in which is sig. created (instance of RtlNetlist)
         :param name: suggested name
@@ -21,8 +21,10 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
             (used as def. val in hdl and for reset)
         """
         super().__init__(ctx, name, var_type, def_val)
+        if nop_val is NO_NOPVAL:
+            nop_val = self
         self.next = RtlSignal(ctx, name + "_next", var_type,
-                              nopVal=self, useNopVal=True)
+                              nop_val=nop_val)
 
     def __call__(self, source):
         """

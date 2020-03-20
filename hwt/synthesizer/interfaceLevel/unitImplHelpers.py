@@ -8,7 +8,7 @@ from hwt.hdl.types.struct import HStruct
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 
 
 def getClk(unit):
@@ -102,12 +102,14 @@ class UnitImplHelpers(object):
                              syncRst=rst,
                              def_val=def_val)
 
-    def _sig(self, name, dtype=BIT, def_val=None) -> RtlSignal:
+    def _sig(self, name, dtype=BIT, def_val=None, nop_val=NO_NOPVAL) -> RtlSignal:
         """
         Create signal in this unit
         """
         if isinstance(dtype, HStruct):
             if def_val is not None:
+                raise NotImplementedError()
+            if nop_val is not NO_NOPVAL:
                 raise NotImplementedError()
             container = dtype.from_py(None)
             for f in dtype.fields:
@@ -117,7 +119,7 @@ class UnitImplHelpers(object):
 
             return container
 
-        return self._ctx.sig(name, dtype=dtype, def_val=def_val)
+        return self._ctx.sig(name, dtype=dtype, def_val=def_val, nop_val=nop_val)
 
     @internal
     def _cleanAsSubunit(self):

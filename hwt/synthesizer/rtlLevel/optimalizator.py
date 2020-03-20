@@ -1,29 +1,37 @@
 from itertools import islice
 
+from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
+from hwt.hdl.process import HWProcess
 from hwt.hdl.statements import IncompatibleStructure, HdlStatement
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import maxStmId
-from hwt.hdl.process import HWProcess
-from hwt.doc_markers import internal
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 @internal
 def removeUnconnectedSignals(netlist):
     """
-    If signal is not driving anything remove it
+    If signal is not driving anything, remove it
     """
 
     toDelete = set()
     toSearch = netlist.signals
+    non_removable = set()
+    for s in netlist.signals:
+        if isinstance(s._nop_val, (RtlSignalBase, InterfaceBase)):
+            non_removable.add(s._nop_val)
 
     while toSearch:
         _toSearch = set()
-
         for sig in toSearch:
             if not sig.endpoints:
+                if sig in non_removable:
+                    continue
+
                 try:
                     if sig._interface is not None:
                         # skip interfaces before we want to check them,

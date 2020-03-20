@@ -3,10 +3,12 @@ from itertools import compress
 from typing import List, Generator, Optional, Union, Dict, Set
 
 from hwt.code import If
+from hwt.doc_markers import internal
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.entity import Entity
 from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.portItem import PortItem
 from hwt.hdl.process import HWProcess
 from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
@@ -15,19 +17,17 @@ from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import distinctBy, where
 from hwt.pyUtils.uniqList import UniqList
+from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals, \
     reduceProcesses
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr,\
     SignalDriverErrType
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
-from hwt.doc_markers import internal
-from hwt.hdl.operatorDefs import AllOps
 from ipCorePackager.constants import DIRECTION
-from hwt.synthesizer.dummyPlatform import DummyPlatform
 
 
 @internal
@@ -95,14 +95,13 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
     sensitivity_recompute = False
     enclosure_values = {}
     for sig in outputs:
-        # inject nopVal if needed
-        if sig._useNopVal:
-            if sig not in enclosed_for:
-                n = sig._nopVal
-                enclosure_values[sig] = n
-                if not isinstance(n, Value):
-                    _inputs.append(n)
-                    sensitivity_recompute = True
+        # inject nop_val if needed
+        if sig._nop_val is not NO_NOPVAL and sig not in enclosed_for:
+            n = sig._nop_val
+            enclosure_values[sig] = n
+            if not isinstance(n, Value):
+                _inputs.append(n)
+                sensitivity_recompute = True
 
     if enclosure_values:
         do_enclose_for = list(where(outputs,
@@ -198,6 +197,9 @@ def markVisibilityOfSignalsAndCheckDrivers(
     """
     signals_with_driver_issue = []
     for sig in signals:
+        if isinstance(sig._nop_val, (RtlSignal, InterfaceBase)):
+            sig._nop_val.hidden = False
+
         driver_cnt = len(sig.drivers)
         has_comb_driver = False
         if driver_cnt > 1:
@@ -270,28 +272,37 @@ class RtlNetlist():
         self.subUnits = set()
         self.synthesised = False
 
+    def _try_cast_any_to_HdlType(self, v, dtype):
+        if isinstance(v, RtlSignal):
+            assert v._const, \
+                "Initial value of register has to be constant"
+            return v._auto_cast(dtype)
+        elif isinstance(v, Value):
+            return v._auto_cast(dtype)
+        elif isinstance(v, InterfaceBase):
+            return v._sig
+        else:
+            return dtype.from_py(v)
+
+        return None
+
     def sig(self, name, dtype=BIT, clk=None, syncRst=None,
-            def_val=None) -> Union[RtlSignal, RtlSyncSignal]:
+            def_val=None, nop_val=NO_NOPVAL) -> Union[RtlSignal, RtlSyncSignal]:
         """
         Create new signal in this context
 
         :param clk: clk signal, if specified signal is synthesized
             as SyncSignal
         :param syncRst: synchronous reset signal
+        :param def_val: default value used for reset and intialization
+        :param nop_val: value used a a driver if signal is not driven by any driver
         """
-        if isinstance(def_val, RtlSignal):
-            assert def_val._const, \
-                "Initial value of register has to be constant"
-            _def_val = def_val._auto_cast(dtype)
-        elif isinstance(def_val, Value):
-            _def_val = def_val._auto_cast(dtype)
-        elif isinstance(def_val, InterfaceBase):
-            _def_val = def_val._sig
-        else:
-            _def_val = dtype.from_py(def_val)
+        _def_val = self._try_cast_any_to_HdlType(def_val, dtype)
+        if nop_val is not NO_NOPVAL:
+            nop_val = self._try_cast_any_to_HdlType(nop_val, dtype)
 
         if clk is not None:
-            s = RtlSyncSignal(self, name, dtype, _def_val)
+            s = RtlSyncSignal(self, name, dtype, _def_val, nop_val)
             if syncRst is not None and def_val is None:
                 raise SigLvlConfErr(
                     "Probably forgotten default value on sync signal %s", name)
@@ -322,9 +333,7 @@ class RtlNetlist():
             if syncRst:
                 raise SigLvlConfErr(
                     "Signal %s has reset but has no clk" % name)
-            s = RtlSignal(self, name, dtype, def_val=_def_val)
-
-        self.signals.add(s)
+            s = RtlSignal(self, name, dtype, def_val=_def_val, nop_val=nop_val)
 
         return s
 

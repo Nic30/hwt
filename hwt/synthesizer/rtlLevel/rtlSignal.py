@@ -12,6 +12,8 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr,\
     SignalDriverErrType
 from hwt.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
 
+NO_NOPVAL = object()
+
 
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
@@ -26,9 +28,8 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     :ivar _usedOps: dictionary of used operators which can be reused
     :ivar hiden: means that this signal is part of expression
         and should not be rendered
-    :param _useNopVal: use nopVal or ignore it
-    :param _nopVal: value which is used to fill up statements when no other
-            value is assigned
+    :ivar _nop_val: value which is used to fill up statements when no other
+            value is assigned, use NO_NOPVAL to dissable
     :ivar _const: flag which tell that this signal can not have any other driver
         than a default value
 
@@ -38,17 +39,16 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
     __instCntr = 0
 
-    def __init__(self, ctx, name, dtype, def_val=None, nopVal=None,
-                 useNopVal=False, virtual_only=False, is_const=False):
+    def __init__(self, ctx, name, dtype, def_val=None, nop_val=NO_NOPVAL,
+                 virtual_only=False, is_const=False):
         """
         :param ctx: context - RtlNetlist which is this signal part of
         :param name: name hint for this signal, if is None name
             is chosen automatically
         :param def_val: value which is used for reset and as default value
             in hdl
-        :param useNopVal: use nopVal or ignore it
-        :param nopVal: value which is used to fill up statements when no other
-            value is assigned
+        :param nop_val: value which is used to fill up statements when no other
+            value is assigned, use NO_NOPVAL to dissable
         :param is_const: flag which tell that this signal can not have any other driver
             than a default value
         """
@@ -75,8 +75,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         self.hidden = True
         self._instId = RtlSignal._nextInstId()
 
-        self._nopVal = nopVal
-        self._useNopVal = useNopVal
+        self._nop_val = nop_val
         self._const = is_const
 
     @internal
@@ -144,6 +143,9 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
 
     @internal
     def _walk_public_drivers(self, seen: set) -> Generator["RtlSignal", None, None]:
+        """
+        Walk all non hiden signals in an expression
+        """
         seen.add(self)
         if not self.hidden:
             yield self
@@ -154,4 +156,9 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         except Exception:
             raise
         for d in self.drivers:
+            # d has to be operator otherwise this signal would be public itself
+            try:
+                assert not isinstance(d, HdlStatement)
+            except:
+                raise
             yield from d._walk_public_drivers(seen)
