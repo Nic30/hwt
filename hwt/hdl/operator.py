@@ -103,8 +103,12 @@ class Operator(HdlObject):
 
     @internal
     def _walk_public_drivers(self, seen: set) -> Generator["RtlSignal", None, None]:
+        """
+        Walk all non hiden signals in an expression
+        """
         for op in self.operands:
             if not isinstance(op, Value) and op not in seen:
+                seen.add(op)
                 yield from op._walk_public_drivers(seen)
 
     @internal
