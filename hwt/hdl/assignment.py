@@ -1,4 +1,4 @@
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Union, Optional
 
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements import isSameHVal, HdlStatement, areSameHVals
@@ -22,9 +22,10 @@ class Assignment(HdlStatement):
     """
     __instCntr = 0
 
-    def __init__(self, src, dst, indexes=None, virtual_only=False,
-                 parentStm=None,
-                 sensitivity=None,
+    def __init__(self, src: Union[RtlSignalBase, Value], dst: Union[RtlSignalBase, Value],
+                 indexes: Optional[List[Union[RtlSignalBase, Value]]]=None, virtual_only=False,
+                 parentStm: Optional[HdlStatement]=None,
+                 sensitivity: Optional[RtlSignalBase]=None,
                  is_completly_event_dependent=False):
         """
         :param dst: destination to assign to
