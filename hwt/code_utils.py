@@ -1,8 +1,31 @@
+from typing import Union
+
+from hwt.doc_markers import internal
+from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.vectorUtils import fitTo
-from hwt.doc_markers import internal
+
+
+def rename_signal(unit_instance: "Unit",
+                  sig: Union[RtlSignalBase, int, bool],
+                  name: str):
+    """
+    Wrap signal or value in signal of specified name
+
+    :attention: output signal is driven by new signal of a specified name
+        this means that the assigning to a new signal does not drive a original signal
+    """
+
+    if isinstance(sig, (int, bool)):
+        t = BIT
+    else:
+        t = sig._dtype
+
+    s = unit_instance._sig(name, t)
+    s(sig)
+    return s
 
 
 @internal
