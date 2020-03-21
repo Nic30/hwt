@@ -72,44 +72,69 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
     # try to simplify statements
     proc_statements = []
     for _stm in _statements:
+        _stm._clean_signal_meta()
         stms, _ = _stm._try_reduce()
         proc_statements.extend(stms)
 
     if not proc_statements:
-        # this can happen e.g. when If does not contains any Assignment
         return
 
     outputs = UniqList()
     _inputs = UniqList()
     sensitivity = UniqList()
     enclosed_for = set()
+    _proc_statements = []
     for _stm in proc_statements:
         seen = set()
         _stm._discover_sensitivity(seen)
         _stm._discover_enclosure()
-        outputs.extend(_stm._outputs)
-        _inputs.extend(_stm._inputs)
-        sensitivity.extend(_stm._sensitivity)
-        enclosed_for.update(_stm._enclosed_for)
+        if _stm._outputs:
+            # remove a statement entirely if it has no ouput
+            # (empty if statment or something similar)
+            # simulation only processes should not be processed by this function
+            # and process should always drive something, unless it is useless
+            outputs.extend(_stm._outputs)
+            _inputs.extend(_stm._inputs)
+            sensitivity.extend(_stm._sensitivity)
+            enclosed_for.update(_stm._enclosed_for)
+            _proc_statements.append(_stm)
 
+    proc_statements = _proc_statements
+    if not proc_statements:
+        # this can happen e.g. when If does not contains any Assignment
+        return
     sensitivity_recompute = False
+    enclosure_recompute = False
     enclosure_values = {}
     for sig in outputs:
         # inject nop_val if needed
         if sig._nop_val is not NO_NOPVAL and sig not in enclosed_for:
+            enclosure_recompute = True
             n = sig._nop_val
             enclosure_values[sig] = n
             if not isinstance(n, Value):
                 _inputs.append(n)
                 sensitivity_recompute = True
 
-    if enclosure_values:
+    if enclosure_recompute:
+        # we have some enclosure values, try fill missing code branches with
+        # this values
         do_enclose_for = list(where(outputs,
                                     lambda o: o in enclosure_values))
         fill_stm_list_with_enclosure(None, enclosed_for, proc_statements,
                                      do_enclose_for, enclosure_values)
-        for p in proc_statements:
-            p._clean_signal_meta()
+
+    if enclosure_recompute or sensitivity_recompute:
+        for _stm in proc_statements:
+            _stm._clean_signal_meta()
+            seen = set()
+            _stm._discover_sensitivity(seen)
+            _stm._discover_enclosure()
+
+    if sensitivity_recompute:
+        sensitivity = UniqList()
+        for _stm in proc_statements:
+            sensitivity.extend(_stm._sensitivity)
 
     for o in outputs:
         assert not o.hidden, o
@@ -121,6 +146,8 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
 
     intersect = outputs.intersection_set(sensitivity)
     if intersect:
+        # there is a combinational loop inside a single process which
+        # can not be solved by separation of statments in process
         if not tryToSolveCombLoops:
             raise HwtSyntaxError(
                 "Combinational loop on signal(s)", intersect)
@@ -135,13 +162,7 @@ def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
         if proc_statements:
             yield from _statements_to_HWProcesses(proc_statements, False)
     else:
-        if sensitivity_recompute:
-            sensitivity = UniqList()
-            for _stm in proc_statements:
-                seen = set()
-                _stm._discover_sensitivity(seen)
-                sensitivity.extend(_stm._sensitivity)
-
+        # no combinational loops, wrap current statemetns to a process instance
         name = name_for_process(outputs)
         yield HWProcess("assig_process_" + name,
                         proc_statements, sensitivity,
