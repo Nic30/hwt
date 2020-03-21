@@ -60,7 +60,7 @@ def removeUnconnectedSignals(netlist):
                             _toSearch.add(op)
 
                 toDelete.add(sig)
-                if isinstance(sig._nop_val, RtlSignalBase):
+                if sig._nop_val in netlist.signals:
                     _toSearch.add(sig._nop_val)
 
         if toDelete:
