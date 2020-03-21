@@ -8,30 +8,30 @@ from hwt.hdl.statements import IncompatibleStructure, HdlStatement
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import maxStmId
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.rtlLevel.rtlSignal import NO_NOPVAL
 
 
 @internal
 def removeUnconnectedSignals(netlist):
     """
-    If signal is not driving anything, remove it
+    Remove signal if does not affect output
+
+    :attention: does not remove signals in cycles which does not affect outputs
     """
 
     toDelete = set()
     toSearch = netlist.signals
-    non_removable = set()
-    for s in netlist.signals:
-        if isinstance(s._nop_val, (RtlSignalBase, InterfaceBase)):
-            non_removable.add(s._nop_val)
+    # nop value to it's target signals
+    nop_values = {}
+    for sig in netlist.signals:
+        if isinstance(sig._nop_val, RtlSignalBase):
+            nop_values.setdefault(sig._nop_val, set()).add(sig)
 
     while toSearch:
         _toSearch = set()
         for sig in toSearch:
             if not sig.endpoints:
-                if sig in non_removable:
-                    continue
-
                 try:
                     if sig._interface is not None:
                         # skip interfaces before we want to check them,
@@ -56,14 +56,12 @@ def removeUnconnectedSignals(netlist):
 
                     for op in inputs:
                         if not isinstance(op, Value):
-                            try:
-                                op.endpoints.remove(e)
-                            except KeyError:
-                                # this operator has 2x+ same operand
-                                continue
-
+                            op.endpoints.discard(e)
                             _toSearch.add(op)
+
                 toDelete.add(sig)
+                if isinstance(sig._nop_val, RtlSignalBase):
+                    _toSearch.add(sig._nop_val)
 
         if toDelete:
             for sig in toDelete:
@@ -72,6 +70,11 @@ def removeUnconnectedSignals(netlist):
                 _toSearch.discard(sig)
             toDelete = set()
         toSearch = _toSearch
+
+    for sig, dst_sigs in nop_values.items():
+        if sig not in netlist.signals:
+            for dst in dst_sigs:
+                dst._nop_val = NO_NOPVAL
 
 
 @internal
