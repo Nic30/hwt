@@ -95,7 +95,7 @@ class BitWalker():
         """
         :param numberOfBits: number of bits to get from actual possition
         :param doCollect: if False output is not collected just iterator moves
-            in structure
+            in data structure
         """
         if not isinstance(numberOfBits, int):
             numberOfBits = int(numberOfBits)
@@ -138,10 +138,12 @@ class BitWalker():
                 padding = padding_t.from_py(None)
                 actual = padding._concat(actual)
             self.actuallyHave = 0
+            self.actualOffset = 0
+        else:
+            # update about what was taken
+            self.actuallyHave -= numberOfBits
+            self.actualOffset += numberOfBits
 
-        # update about what was taken
-        self.actuallyHave -= numberOfBits
-        self.actualOffset += numberOfBits
         if self.actuallyHave == 0:
             self.actual = None
             self.actualOffset = 0
