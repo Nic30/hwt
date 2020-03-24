@@ -360,7 +360,7 @@ class RtlSignalOps():
         if isinstance(source, InterfaceBase):
             assert source._isAccessible
             source = source._sig
-        
+
         try:
             requires_type_check = False
             if source is None:
