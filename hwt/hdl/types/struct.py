@@ -1,7 +1,7 @@
+from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.structValBase import StructValBase
 from hwt.serializer.generic.indent import getIndent
-from hwt.doc_markers import internal
 
 
 class HStructFieldMeta():

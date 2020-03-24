@@ -6,7 +6,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.typeShortcuts import vec
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.types.structUtils import walkFlattenFields
+from hwt.hdl.types.utils import walkFlattenFields
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
