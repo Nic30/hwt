@@ -4,9 +4,8 @@ from operator import and_, or_, xor, add
 from hwt.code_utils import _mkOp, _connect, _intfToSig
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
-from hwt.hdl.statements import HwtSyntaxError
+from hwt.hdl.statements import HwtSyntaxError, HdlStatement
 from hwt.hdl.switchContainer import SwitchContainer
-from hwt.hdl.typeShortcuts import vec
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
@@ -17,7 +16,6 @@ from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
-from hwt.doc_markers import internal
 
 
 class If(IfContainer):
@@ -317,10 +315,14 @@ def connect(src, *destinations, exclude: set=None, fit=False):
         _destinations = [iter(d) for d in destinations]
         for _src in src:
             dsts = [next(d) for d in _destinations]
-            assignemnts.append(connect(_src, *dsts, exclude=exclude, fit=fit))
+            assignemnts.extend(connect(_src, *dsts, exclude=exclude, fit=fit))
     else:
         for dst in destinations:
-            assignemnts.append(_connect(src, dst, exclude, fit))
+            r = _connect(src, dst, exclude=exclude, fit=fit)
+            if isinstance(r, HdlStatement):
+                assignemnts.append(r)
+            else:
+                assignemnts.extend(r)
 
     return assignemnts
 
@@ -378,7 +380,3 @@ def sizeof(_type) -> int:
     "get size of type in bytes"
     s = _type.bit_length()
     return math.ceil(s / 8)
-
-
-# shortcuts
-c = connect
