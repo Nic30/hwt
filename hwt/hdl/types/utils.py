@@ -116,7 +116,7 @@ def HdlValue_unpack(t: HdlType,
 
 
 def is_only_padding(t: HdlType):
-    if isinstance(t, (HStruct, HUnion)):
+    if isinstance(t, HStruct):
         for f in t.fields:
             if f.name is not None and not is_only_padding(f.dtype):
                 return False
