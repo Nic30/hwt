@@ -113,3 +113,14 @@ def HdlValue_unpack(t: HdlType,
             "It should be just a padding at the end of frame"
         )
     return val
+
+
+def is_only_padding(t: HdlType):
+    if isinstance(t, (HStruct, HUnion)):
+        for f in t.fields:
+            if f.name is not None and not is_only_padding(f.dtype):
+                return False
+        return True
+    elif isinstance(t, (HArray, HStream)):
+        return is_only_padding(t.element_t)
+    return False
