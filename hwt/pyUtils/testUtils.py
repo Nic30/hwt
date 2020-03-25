@@ -46,7 +46,7 @@ class TestMatrix():
                     # traceback.print_exc()
                     msg_buff = []
                     for a in args:
-                        msg_buff.append("%r" % a)
+                        msg_buff.append("%r" % (a,))
                     for k in test_matrix.kwargs_keys:
                         msg_buff.append("%s=%r" % (k, kwargs[k]))
                     raise Exception(
