@@ -38,6 +38,10 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
     VHDL_VER = VhdlVersion.v2002
     _keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
     fileExtension = '.vhd'
+    DEFAULT_IMPORTS = """library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+"""
 
     @classmethod
     def getBaseNameScope(cls):
@@ -65,8 +69,9 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
                 # if type requires extra definition
                 if isinstance(t, (HEnum, HArray)) and t not in extraTypes:
                     extraTypes.add(v._dtype)
-                    extraTypes_serialized.append(
-                        cls.HdlType(t, childCtx, declaration=True))
+                    t_str = cls.HdlType(t, childCtx, declaration=True)
+                    if t_str:
+                        extraTypes_serialized.append(t_str)
 
                 v.name = ctx.scope.checkedName(v.name, v)
                 serializedVar = cls.SignalItem(v, childCtx, declaration=True)
@@ -144,20 +149,20 @@ class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
     def Entity(cls, entity: Entity, ctx):
         with CurrentUnitSwap(ctx, entity.origin):
             generics, ports = cls.Entity_prepare(entity, ctx)
-
+            
             entVhdl = cls.entityTmpl.render(
                 indent=getIndent(ctx.indent),
                 name=entity.name,
                 ports=ports,
                 generics=generics
             )
-
+            
             doc = entity.__doc__
-            if doc and id(doc) != id(Entity.__doc__):
-                doc = cls.comment(doc) + "\n"
-                return doc + entVhdl
+            if doc and doc is not Entity.__doc__:
+                doc = cls.comment(doc)
+                return "%s\n%s\n%s" % (doc, cls.DEFAULT_IMPORTS, entVhdl)
             else:
-                return entVhdl
+                return "%s\n%s" % (cls.DEFAULT_IMPORTS, entVhdl)
 
     @classmethod
     def GenericItem(cls, g: Param, ctx):

@@ -20,8 +20,7 @@ from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.nameScope import NameScope
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import NoDriverErr, \
-    MultipleDriversErr
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 from hwt.synthesizer.unit import Unit
 
 
@@ -260,7 +259,7 @@ class GenericSerializer():
             return -1
         try:
             o = n.singleDriver()
-        except (NoDriverErr, MultipleDriversErr):
+        except SignalDriverErr:
             return -1
 
         if not isinstance(o, Operator):

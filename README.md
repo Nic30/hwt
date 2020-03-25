@@ -2,6 +2,7 @@
 # the library for hardware development in Python
 [![Build Status](https://travis-ci.org/Nic30/hwt.svg?branch=master)](https://travis-ci.org/Nic30/hwt)
 [![Coverage Status](https://coveralls.io/repos/github/Nic30/hwt/badge.svg?branch=master)](https://coveralls.io/github/Nic30/hwt?branch=master)
+[![codecov](https://codecov.io/gh/Nic30/hwt/branch/master/graph/badge.svg)](https://codecov.io/gh/Nic30/hwt)
 [![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt)
 [![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest)
 [![Google group](https://img.shields.io/badge/google%20group-online-green.svg)](https://groups.google.com/forum/#!forum/hwt-community)
@@ -17,10 +18,12 @@
 
 ## How HWT can help you?
 
-* The lower layer (IR, HDL serializers) is a shield against a problems related to VHDL/Verilog it is checking for correctness and synthetisability and removing specific of HDLs.
-* Simulator API - UVM simulation environment as a normal python object, easy to use while not sacrificing performance. Python driven.
-* C inspired type system is most important part of HWT as it allows all components use same description and thanks to stream-memory and other component generators significantly simplifies the developement of components which are using complex data structures. The typesystem contains not just struct/union, but also frame templates which can describe spartial data and the creation of the frames from data.
-* KISS (Keep it stupid and simple), each functionality separated as independent, but compatible, library so you do not have to care about it if you are not using it. Learning curve optimisation.
+* The lower layer (IR, HDL serializers) is a shield against a problems related to VHDL/Verilog. It is checking for correctness and synthetisability and removing specific of HDLs.
+* The system level and HLS layer allows you to quickly build desing generators with advance optimisation techniques of your choice. 
+* Simulator API and it's UVM simulation environment is just python object with C++ binding. This makes it easy to use while not sacrificing performance.
+* Rich type system can describe also data locality and packet features. This significantly simplifies configuration of component which are working with packets or any data over remote bus.
+* HWT is not compiler nor transpiler but it is actually a core library. It contains only necessary stuff and you can can modify/extend any part any time.
+  Because the word of HW developement is always full of unexpected situations. 
 
 
 ## Features
@@ -68,16 +71,18 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * How do I get Verilog/VHDL?
   * Use `toRtl` method [example](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py)
 * How do I define my interface type, protocol and simulation agent?
-  * Derive from any Interface class.
+  * Derive from any Interface class. [example](https://github.com/Nic30/hwt/blob/master/hwt/interfaces/std.py#L107) 
 * I do have c structure of UDP header, how do I send/recieve UDP packet over AXI-stream interface?
   * Define HStruct type composed of eth_header_t, IPv4_header_t and HStream(uint8_t) and use [AxisFrameGen](https://github.com/Nic30/hwtLib/blob/master/hwtLib/amba/axis_comp/frameGen.py). There is and example of [ping responder](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/builders/pingResponder.py)
-
 
 
 ## Similar projects
 
 * [autofpga](https://github.com/ZipCPU/autofpga) - C++, A utility for Composing FPGA designs from Peripherals
+* [BinPy](https://github.com/BinPy/BinPy) - Python, An electronic simulation library
+* [bsc](https://github.com/B-Lang-org/bsc) - Haskell, C++, BSV - Bluespec Compiler 
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, HCL
+* [Chips-2.0](https://github.com/dawsonjon/Chips-2.0) - , , FPGA Design Suite based on C to Verilog design flow
 * [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
 * [DUH](https://github.com/sifive/duh) - JS, simple convertor between verilog/scala/ipxact
 * [edalize](https://github.com/olofk/edalize) - 2018-?, Python, abstraction layer for eda tools
@@ -87,12 +92,16 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [ILAng](https://github.com/Bo-Yuan-Huang/ILAng) - modeling and verification platform for SoCs where Instruction-Level Abstraction (ILA) is used as the formal model for hardware components.
 * [jhdl](https://github.com/larsjoost/jhdl) - ?-2017, C++ Verilog/VHDL -> systemC, prototype
 * [Kactus2](http://funbase.cs.tut.fi) - IP-core packager
-* [lgraph](https://github.com/masc-ucsc/lgraph) -
+* [kratos](https://github.com/Kuree/kratos) - C++/Python, hardware generator/simulator
+* [lgraph](https://github.com/masc-ucsc/lgraph) - C, generic graph library
+* [llhd](https://github.com/fabianschuiki/llhd) - Rust, HCL
 * [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, HCL
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, HCL
 * [mockturtle](https://github.com/lsils/mockturtle) - logic network library
+* [moore](https://github.com/fabianschuiki/moore) - Rust, HDL -> model compiler
 * [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
-* [nmigen](https://github.com/m-labs/nmigen) -
+* [nmigen](https://github.com/m-labs/nmigen) -, Python, A refreshed Python toolbox for building complex digital hardware
+* [OpenTimer](https://github.com/OpenTimer/OpenTimer) - , C++,  A High-Performance Timing Analysis Tool for VLSI Systems
 * [percy](https://github.com/whaaswijk/percy) - Collection of different synthesizers and exact synthesis methods for use in applications such as circuit resynthesis and design exploration.
 * [pygears](https://github.com/bogdanvuk/pygears) - , Python, function style HDL generator
 * [PyMTL3](https://github.com/cornell-brg/pymtl3) 2018-?
@@ -100,8 +109,10 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, HCL
 * [Pyverilog](https://github.com/PyHDI/Pyverilog) - 2013-? Python-based Hardware Design Processing Toolkit for Verilog HDL
 * [sail](https://github.com/rems-project/sail) 2018-?, (OCaml, Standard ML, Isabelle) - architecture definition language
+* [rogue](https://github.com/slaclab/rogue) , C++/Python - Hardware Abstraction & Data Acquisition System
 * [spatial](https://github.com/stanford-ppl/spatial) - Scala, an Argon DSL like, high level abstraction
 * [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, HCL
+* [UHDM](https://github.com/alainmarcel/UHDM) - C++ SystemVerilog -> C++ model
 * [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
 * [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric HCL with HLS like features
 
@@ -114,9 +125,11 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [verilator](https://www.veripool.org/wiki/verilator) - Verilog -> C/C++ simulator
 * [vtr-verilog-to-routing](https://github.com/verilog-to-routing/vtr-verilog-to-routing)
 * [yosys](https://github.com/YosysHQ/yosys) - RTL synthesis framework
+* [UHDM](https://github.com/alainmarcel/UHDM) - SV -> C++
 
 
 ## Board support libraries (Potential candidates for public integration)
 
 * [litex](https://github.com/enjoy-digital/litex) - Buildsystem for migen
 * [loam](https://github.com/phanrahan/loam) - Buildsystem for magma
+* [vivado-boards](https://github.com/Digilent/vivado-boards) - Vivado XML/TCL files with board description 

@@ -1,4 +1,4 @@
-dist: trusty
+dist: bionic
 language: python
 
 git:
@@ -8,13 +8,13 @@ cache:
   apt: true
 
 python:
-- '3.6'
+- '3.7'
 
 install:
   - export PYTHON_VERSION=$(python -c "import sys;v = sys.version_info;print('%d.%d.%d' % (v[0], v[1], v[2]))")
   - export PYTHON_VERSION_SHORT=$(python -c "import sys;v = sys.version_info;print('%d.%d' % (v[0], v[1]))")
   - DIST_PACKAGES=/home/travis/virtualenv/python$PYTHON_VERSION/lib/python$PYTHON_VERSION_SHORT/site-packages
-  - pip3 install coveralls
+  - pip3 install coveralls codecov
   - cd ..
   - git clone --depth=1 https://github.com/Nic30/pyDigitalWaveTools.git
   - pushd pyDigitalWaveTools
@@ -55,3 +55,4 @@ deploy:
 
 after_success:
 - coveralls
+- codecov

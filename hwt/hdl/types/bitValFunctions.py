@@ -141,14 +141,23 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
         other = other._auto_cast(self._dtype)
         return bitsBitOp__val(self, other, op._evalFn, getVldFn)
     else:
-        if self._dtype == other._dtype:
+        s_t = self._dtype
+        o_t = other._dtype
+        if s_t == o_t:
             pass
-        elif other._dtype == BOOL and self._dtype != BOOL:
+        elif o_t == BOOL and s_t != BOOL:
             self = self._auto_cast(BOOL)
             return op._evalFn(self, other)
-        elif other._dtype != BOOL and self._dtype == BOOL:
+        elif o_t != BOOL and s_t == BOOL:
             other = other._auto_cast(BOOL)
             return op._evalFn(self, other)
+        elif s_t.bit_length() == 1 and o_t.bit_length() == 1\
+                and s_t.signed is o_t.signed \
+                and s_t.force_vector != o_t.force_vector:
+            if s_t.force_vector:
+                self = self[0]
+            else:
+                other = other[0]
         else:
             raise TypeError("Can not apply operator %r (%r, %r)" %
                             (op, self._dtype, other._dtype))

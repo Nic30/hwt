@@ -30,7 +30,7 @@ else:
 
 will become
     
-cond, condValid = cond.eval()
+cond, condValid = sim_eval_cond(cond)
 if not condValid:
     # ivalidate outputs
 elif cond:

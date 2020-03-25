@@ -160,5 +160,23 @@ class VhdlSerializer_Value(GenericSerializer_Value):
 
     @classmethod
     def String_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
-        # [todo] process escapes
-        return '"%s"' % val.val
+        buff = []
+        cur_str = []
+        for c in val.val:
+            if c == '\n':
+                c = 'LF\n'
+            elif c == "\c":
+                c = 'CR'
+            else:
+                cur_str.append(c)
+                continue
+
+            if cur_str:
+                buff.append('"%s"' % "".join(cur_str))
+                cur_str.clear()
+            buff.append(c)
+
+        if not buff or cur_str:
+            buff.append('"%s"' % "".join(cur_str))
+
+        return " & ".join(buff)

@@ -508,7 +508,8 @@ class HdlStatement(HdlObject):
         by condSet
         """
         for stm in flatten(statements):
-            assert stm.parentStm is None, stm
+            assert stm.parentStm is None, (
+                "statement instance has to have only single parent", stm)
             stm._set_parent_stm(self)
             target.append(stm)
 

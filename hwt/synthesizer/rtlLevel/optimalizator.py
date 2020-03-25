@@ -1,27 +1,35 @@
 from itertools import islice
 
+from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
+from hwt.hdl.process import HWProcess
 from hwt.hdl.statements import IncompatibleStructure, HdlStatement
 from hwt.hdl.value import Value
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import maxStmId
-from hwt.hdl.process import HWProcess
-from hwt.doc_markers import internal
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.rtlLevel.rtlSignal import NO_NOPVAL
 
 
 @internal
 def removeUnconnectedSignals(netlist):
     """
-    If signal is not driving anything remove it
+    Remove signal if does not affect output
+
+    :attention: does not remove signals in cycles which does not affect outputs
     """
 
     toDelete = set()
     toSearch = netlist.signals
+    # nop value to it's target signals
+    nop_values = {}
+    for sig in netlist.signals:
+        if isinstance(sig._nop_val, RtlSignalBase):
+            nop_values.setdefault(sig._nop_val, set()).add(sig)
 
     while toSearch:
         _toSearch = set()
-
         for sig in toSearch:
             if not sig.endpoints:
                 try:
@@ -39,20 +47,21 @@ def removeUnconnectedSignals(netlist):
                         if e.result is sig:
                             e.result = None
                     else:
-                        inputs = e._inputs
-                        netlist.statements.discard(e)
+                        if len(e._outputs) > 1:
+                            inputs = []
+                            e._cut_off_drivers_of(sig)
+                        else:
+                            inputs = e._inputs
+                            netlist.statements.discard(e)
 
                     for op in inputs:
                         if not isinstance(op, Value):
-                            try:
-                                op.endpoints.remove(e)
-                            except KeyError:
-                                # this operator has 2x+ same operand
-                                continue
-
+                            op.endpoints.discard(e)
                             _toSearch.add(op)
 
                 toDelete.add(sig)
+                if sig._nop_val in netlist.signals:
+                    _toSearch.add(sig._nop_val)
 
         if toDelete:
             for sig in toDelete:
@@ -61,6 +70,11 @@ def removeUnconnectedSignals(netlist):
                 _toSearch.discard(sig)
             toDelete = set()
         toSearch = _toSearch
+
+    for sig, dst_sigs in nop_values.items():
+        if sig not in netlist.signals:
+            for dst in dst_sigs:
+                dst._nop_val = NO_NOPVAL
 
 
 @internal

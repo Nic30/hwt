@@ -17,6 +17,7 @@ from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
 from ipCorePackager.otherXmlObjs import Value
 from ipCorePackager.packager import IpCorePackager
+from ipCorePackager.intfIpMeta import VALUE_RESOLVE
 
 
 class VivadoTclExpressionSerializer(VhdlSerializer):
@@ -37,16 +38,15 @@ class IpPackager(IpCorePackager):
     """
 
     def __init__(self, topUnit: Unit, name: str=None,
-                 extraVhdlFiles: List[str]=[],
-                 extraVerilogFiles: List[str]=[],
+                 extra_files: List[str]=[],
                  serializer=VhdlSerializer,
                  targetPlatform=DummyPlatform()):
         """
         :param topObj: Unit instance of top component
         :param name: optional name of top
-        :param extraVhdlFiles: list of extra vhdl file names for files
+        :param extra_files: list of extra HDL/constrain file names for files
             which should be distributed in this IP-core
-        :param extraVerilogFiles: same as extraVhdlFiles just for Verilog
+            (\*.v - verilog, \*.sv,\*.svh -system verilog, \*.vhd - vhdl, \*.xdc - XDC)
         :param serializer: serializer which specifies target HDL language
         :param targetPlatform: specifies properties of target platform, like available resources, vendor, etc.
         """
@@ -55,7 +55,7 @@ class IpPackager(IpCorePackager):
             name = topUnit._getDefaultName()
 
         super(IpPackager, self).__init__(
-            topUnit, name, extraVhdlFiles, extraVerilogFiles)
+            topUnit, name, extra_files)
         self.serializer = serializer
         self.targetPlatform = targetPlatform
 
@@ -79,7 +79,8 @@ class IpPackager(IpCorePackager):
     def paramToIpValue(self, idPrefix: str, g: Param, resolve) -> Value:
         val = Value()
         val.id = idPrefix + g.hdl_name
-        val.resolve = resolve
+        if resolve is not VALUE_RESOLVE.NONE:
+            val.resolve = resolve
         v = g.get_hdl_value()
         t = v._dtype
 
@@ -117,7 +118,13 @@ class IpPackager(IpCorePackager):
 
     @internal
     def getParamType(self, p: Param) -> HdlType:
-        return STR  # p._dtype
+        v = p.get_value()
+        if isinstance(v, bool):
+            return BOOL
+        elif isinstance(v, int):
+            return INT
+        else:
+            return STR
 
     @internal
     def iterParams(self, unit: Unit):

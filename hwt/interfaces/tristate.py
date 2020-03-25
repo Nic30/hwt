@@ -11,16 +11,17 @@ from pycocotb.hdlSimulator import HdlSimulator
 class TristateSig(Interface):
     """
     Tristate interface
-    in order to make this a vector[0] instead of single bit
-    use force_vector=True
+
+    :ivar force_vector: in order to make this a vector[0] instead of single bit
+        use FORCE_VECTOR=True
     """
 
     def _config(self):
         self.DATA_WIDTH = Param(1)
-        self.force_vector = False
+        self.FORCE_VECTOR = False
 
     def _declr(self):
-        t = Bits(self.DATA_WIDTH, self.force_vector)
+        t = Bits(self.DATA_WIDTH, force_vector=self.FORCE_VECTOR)
 
         # connect
         self.t = Signal(dtype=t)
@@ -30,14 +31,17 @@ class TristateSig(Interface):
         self.o = Signal(dtype=t)
 
     def _initSimAgent(self, sim: HdlSimulator):
-        # [todo] missing mapping of signals
-        self._ag = TristateAgent(self)
+        rst = self._getAssociatedRst()
+        self._ag = TristateAgent(sim, self, (rst, rst._dtype.negated))
 
 
 class TristateClk(Clk, TristateSig):
+    def _config(self):
+        Clk._config(self)
+        TristateSig._config(self)
+
     def _getIpCoreIntfClass(self):
         raise IntfIpMetaNotSpecified()
 
     def _initSimAgent(self, sim: HdlSimulator):
-        # [todo] missing mapping of signals
         self._ag = TristateClkAgent(sim, self)

@@ -12,8 +12,10 @@ def pprintInterface(intf, prefix="", indent=0, file=sys.stdout):
     try:
         s = intf._sig
     except AttributeError:
+        s = None
+    if s is None:
         s = ""
-    if s is not "":
+    else:
         s = " " + repr(s)
 
     file.write("".join([getIndent(indent), prefix, repr(intf._getFullName()),

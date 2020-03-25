@@ -1,15 +1,19 @@
+from typing import Dict
+
 from hwt.doc_markers import internal
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers, \
     _default_param_updater
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from ipCorePackager.constants import DIRECTION
 
 
+# from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
 class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     """
     Container of the netlist with interfaces
@@ -19,11 +23,17 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         this unit should be serialized or not, if None all is always serialized
     :cvar _PROTECTED_NAMES: set of names which can not be overridden
     :ivar _interfaces: all public interfaces
+    :type _interfaces: List[Interface]
     :ivar _private_interfaces: all internal interfaces
         which are not accessible from outside of unit
+    :type _private_interfaces: List[Interface]
     :ivar _units: all units defined on this obj
+    :type _units: List[Unit] 
     :ivar _params: all params defined on this obj
-    :ivar _parent: parent object (Unit instance)
+    :type _params: List[Param]
+    :ivar _constraints: additional HW specifications
+    :ivar _parent: parent object
+    :type _parent: Optional[Unit]
     :ivar _lazyLoaded: container of rtl object which were lazy loaded
         in implementation phase (this object has to be returned
         from _toRtl of parent before it it's own objects)
@@ -31,8 +41,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     """
 
     _serializeDecision = None
-    _PROTECTED_NAMES = set(["_PROTECTED_NAMES", "_interfaces",
-                            "_units", "_params", "_parent",
+    _PROTECTED_NAMES = set(["_PROTECTED_NAMES", "_interfaces", "_private_interfaces",
+                            "_units", "_params", "_parent", "_constraints",
                             "_lazyLoaded", "_ctx",
                             "_externInterf", "_targetPlatform"])
 
@@ -40,7 +50,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._parent = None
         self._lazyLoaded = []
         self._ctx = RtlNetlist(self)
-
+        self._constraints = []
         self._loadConfig()
 
     @internal
@@ -59,7 +69,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             proc(self)
 
         self._ctx.params = self._buildParams()
-        self._externInterf = []
+        self._externInterf = {}
 
         # prepare subunits
         for u in self._units:
@@ -71,19 +81,22 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
 
         # prepare signals for interfaces
         for i in self._interfaces:
-            signals = i._signalsForInterface(self._ctx)
             if i._isExtern:
-                self._externInterf.extend(signals)
+                ei = self._externInterf
+            else:
+                ei = None
+            i._signalsForInterface(self._ctx, ei, reverse_dir=True)
 
         for proc in targetPlatform.beforeToRtlImpl:
             proc(self)
+
         self._loadMyImplementations()
         yield from self._lazyLoaded
 
         if not self._externInterf:
             raise IntfLvlConfErr(
                 "Can not find any external interface for unit %s"
-                "- unit without interfaces are not allowed"
+                "- unit without interfaces are not synthetisable"
                 % self._name)
 
         for proc in targetPlatform.afterToRtlImpl:
@@ -99,7 +112,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         return self._ctx.synthesised
 
     @internal
-    def _synthetiseContext(self, externInterf):
+    def _synthetiseContext(self, externInterf: Dict[RtlSignal, DIRECTION]):
         # synthesize signal level context
         s = self._ctx.synthesize(
             self._name, externInterf, self._targetPlatform)
@@ -112,14 +125,15 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         for intf in self._interfaces:
             if intf._isExtern:
                 # reverse because other components
-                # looks at this one from outside
+                # looks at this interface from outside
                 intf._reverseDirection()
 
         # connect results of synthesized context to interfaces of this unit
-        self._boundInterfacesToEntity(self._interfaces)
+        self._boundInterfacesToEntity(self._interfaces, self._entity.ports)
+
         yield from s
 
-        # after synthesis clean up interface so unit can be used elsewhere
+        # after synthesis clean up interface so this Unit object can be used elsewhere
         self._cleanAsSubunit()
 
     @internal
@@ -156,7 +170,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         self._registerInterface(iName, intf, isPrivate=True)
         self._loadInterface(intf, False)
-        intf._signalsForInterface(self._ctx)
+        intf._signalsForInterface(self._ctx, None)
 
     @internal
     def _buildParams(self):
@@ -172,17 +186,17 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             p.hdl_name = n
             params[n] = p
 
-        def nameForNestedParam(p):
-            n = ""
-            node = p
-            while node is not self:
-                if n == "":
-                    n = node._name
-                else:
-                    n = node._name + "_" + n
-                node = node._parent
-
-            return n
+        #def nameForNestedParam(p):
+        #    n = ""
+        #    node = p
+        #    while node is not self:
+        #        if n == "":
+        #            n = node._name
+        #        else:
+        #            n = node._name + "_" + n
+        #        node = node._parent
+        #
+        #    return n
 
         # collect params of this unit
         discoveredParams = set()
@@ -191,10 +205,10 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             addP(p._name, p)
 
         # collect params from interfaces
-        for intf in self._interfaces:
-            for p in walkParams(intf, discoveredParams):
-                n = nameForNestedParam(p)
-                addP(n, p)
+        #for intf in self._interfaces:
+        #    for p in walkParams(intf, discoveredParams):
+        #        n = nameForNestedParam(p)
+        #        addP(n, p)
 
         return params
 

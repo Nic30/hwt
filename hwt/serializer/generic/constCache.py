@@ -20,7 +20,10 @@ class ConstCache(object):
             return self._cache[val]
         except KeyError:
             if isinstance(val.val, int):
-                name = "const_%d_" % val.val
+                if val.val < 0:
+                    name = "const_m%d_" % -val.val
+                else:
+                    name = "const_%d_" % val.val
             else:
                 name = "const_"
 

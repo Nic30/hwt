@@ -22,7 +22,10 @@ use serialize* methods to specify serialization mode for unit class
 @internal
 def freeze_dict(data):
     keys = sorted(data.keys())
-    frozen_type = namedtuple(''.join(keys), keys)
+    if keys:
+        frozen_type = namedtuple(''.join(keys), keys)
+    else:
+        return tuple()
     return frozen_type(**data)
 
 

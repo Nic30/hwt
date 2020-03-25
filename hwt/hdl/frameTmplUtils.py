@@ -1,8 +1,8 @@
 from typing import Tuple
 
-from hwt.hdl.transPart import TransPart
-from hwt.hdl.transTmpl import OneOfTransaction, StreamTransaction
 from hwt.doc_markers import internal
+from hwt.hdl.transPart import TransPart
+from hwt.hdl.transTmpl import OneOfTransaction
 
 
 @internal
@@ -139,32 +139,6 @@ class ChoiceOfFrameParts(list):
         return "<ChoiceOfFrameParts %s>" % list.__repr__(self)
 
 
-class StreamOfFramePars(TransPartGroup):
-    """
-    List of TransPart instances
-    One of TransPart is used to represent the word, on target bus,
-    All TransPart instances represents one logical word in stream
-
-    :ivar origin: StreamTransaction instance
-    :ivar startOfPart: bit addr of start of this group of frame parts
-    :ivar endOfPart: bit addr of end of this group of frame parts
-    :ivar _isLast: flag which means this is the last part of original union
-    """
-
-    def __init__(self, startOfPart: int, origin: StreamTransaction):
-        self.origin = origin
-        self.startOfPart = startOfPart
-        self.endOfPart = None
-        self._isLast = False
-        super(StreamOfFramePars, self).__init__()
-
-    def resolveEnd(self):
-        assert self.startOfPart == self[0].startOfPart
-        end = self[-1].endOfPart
-        self.endOfPart = end
-        return end
-
-
 def groupIntoChoices(splitsOnWord, wordWidth: int, origin: OneOfTransaction):
     """
     :param splitsOnWord: list of lists of parts (fields splited on word
@@ -255,23 +229,13 @@ class TransTmplWordIterator():
         end = addrOffset
         for tmp in transaction.walkFlatten(offset=addrOffset):
             if isinstance(tmp, OneOfTransaction):
+                # unions
                 split = [self.splitOnWords(ch, end)
                          for ch in tmp.possibleTransactions]
                 yield from groupIntoChoices(split, wordWidth, tmp)
                 end = addrOffset + tmp.possibleTransactions[0].bitAddrEnd
-            elif isinstance(tmp, StreamTransaction):
-                ch_len = tmp.child.bit_length()
-                if end % self.wordWidth != 0 or ch_len != self.wordWidth:  
-                    # assert start, end is aligned
-                    raise NotImplementedError(tmp)
-                else:
-                    s = StreamOfFramePars(end, tmp)
-                    s.extend(self.splitOnWords(tmp.child, end))
-                    s.setIsLast(True)
-                    s.resolveEnd()
-                    yield s
-                    end = addrOffset + tmp.child.bitAddrEnd
             else:
+                # constant size types
                 (base, end), tmpl = tmp
                 startOfPart = base
                 while startOfPart != end:
@@ -279,6 +243,6 @@ class TransTmplWordIterator():
                     endOfWord = (wordIndex + 1) * wordWidth
                     endOfPart = min(endOfWord, end)
                     inFieldOffset = startOfPart - base
-                    yield TransPart(self, tmpl, startOfPart, endOfPart,
+                    yield TransPart(self, tmpl, False, startOfPart, endOfPart,
                                     inFieldOffset)
                     startOfPart = endOfPart

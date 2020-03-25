@@ -6,7 +6,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.typeShortcuts import vec
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.types.structUtils import walkFlattenFields
+from hwt.hdl.types.utils import walkFlattenFields
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
@@ -95,7 +95,7 @@ class BitWalker():
         """
         :param numberOfBits: number of bits to get from actual possition
         :param doCollect: if False output is not collected just iterator moves
-            in structure
+            in data structure
         """
         if not isinstance(numberOfBits, int):
             numberOfBits = int(numberOfBits)
@@ -138,10 +138,12 @@ class BitWalker():
                 padding = padding_t.from_py(None)
                 actual = padding._concat(actual)
             self.actuallyHave = 0
+            self.actualOffset = 0
+        else:
+            # update about what was taken
+            self.actuallyHave -= numberOfBits
+            self.actualOffset += numberOfBits
 
-        # update about what was taken
-        self.actuallyHave -= numberOfBits
-        self.actualOffset += numberOfBits
         if self.actuallyHave == 0:
             self.actual = None
             self.actualOffset = 0
@@ -189,7 +191,18 @@ def iterBits(sigOrVal: Union[RtlSignal, Value], bitsInOne: int=1,
     :param skipPadding: if true padding is skipped in dense types
     """
     bw = BitWalker(sigOrVal, skipPadding, fillup)
-    for _ in range(ceil(sigOrVal._dtype.bit_length() / bitsInOne)):
-        yield bw.get(bitsInOne)
+    try:
+        bit_len = sigOrVal._dtype.bit_length()
+    except TypeError:
+        bit_len = None
+    if bit_len is None:
+        try:
+            while True:
+                yield bw.get(bitsInOne)
+        except NotEnoughtBitsErr:
+            return
+    else:
+        for _ in range(ceil(bit_len / bitsInOne)):
+            yield bw.get(bitsInOne)
 
-    bw.assertIsOnEnd()
+        bw.assertIsOnEnd()

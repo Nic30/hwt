@@ -1,7 +1,7 @@
-from hwt.hdl.constants import INTF_DIRECTION
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.doc_markers import internal
+from ipCorePackager.constants import DIRECTION
 
 
 class EmptyUnit(Unit):
@@ -24,20 +24,18 @@ class EmptyUnit(Unit):
         self._loadMyImplementations()
         # construct params for entity (generics)
         self._ctx.params = self._buildParams()
-        externInterf = []
+        externInterf = {}
         # prepare connections
         for i in self._interfaces:
-            signals = i._signalsForInterface(self._ctx)
+            i._signalsForInterface(self._ctx, externInterf, reverse_dir=True)
             if not i._isExtern:
                 raise IntfLvlConfErr(
                     "All interfaces in EmptyUnit has to be extern, %s: %s is not"
                     % (self.__class__.__name__, i._getFullName()))
-            externInterf.extend(signals)
-            # i._resolveDirections()
-            # connect outputs to dummy value
-            for s in signals:
-                if s._interface._direction == INTF_DIRECTION.SLAVE:
-                    s(s._dtype.from_py(self._def_val))
+        # connect outputs to dummy value
+        for s, d in externInterf.items():
+            if d == DIRECTION.OUT:
+                s(s._dtype.from_py(self._def_val))
 
         if not externInterf:
             raise IntfLvlConfErr(

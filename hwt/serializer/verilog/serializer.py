@@ -101,6 +101,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         t = v._dtype
         # if type requires extra definition
         if isinstance(t, HArray) and v.def_val.vld_mask:
+            # [TODO] use init process instead
             if v.drivers:
                 raise SerializerException("Verilog does not support RAMs"
                                           " with initialized value")

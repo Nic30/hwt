@@ -87,17 +87,22 @@ class ObjIteratorCtx(object):
 
 class TransTmpl(object):
     """
+    Transaction template for types of constant size
+
     Container of informations about frames generated from any HType
     (HStruct etc.)
-
     * contains precalculated address range for all members of type
+
+    :note: Array/Stream items are are storead as a single instance
+        so the memory consumption of this object is entirely independent
+        on size of arrays which it describes.
 
     :ivar dtype: type of this item
     :ivar bitAddr: offset of start of this item in bits
     :ivar parent: object which generated this item, optional TransTmpl
     :ivar origin: object which was template for generating of this item
-    :ivar itemCnt: if this transaction template is for arry this is
-        item count for array
+    :ivar itemCnt: if this transaction template is for array or stream this is
+        item count for such an array or stream
     :ivar childrenAreChoice: flag which tells if childrens are sequence
         or only one of them can be used in same time
     """
@@ -113,18 +118,6 @@ class TransTmpl(object):
         self.dtype = dtype
         self.children = []
         self._loadFromHType(dtype, bitAddr)
-
-    @internal
-    def _loadFromArray(self, dtype: HdlType, bitAddr: int) -> int:
-        """
-        Parse HArray type to this transaction template instance
-
-        :return: address of it's end
-        """
-        self.itemCnt = int(dtype.size)
-        self.children = TransTmpl(
-            dtype.element_t, 0, parent=self, origin=self.origin)
-        return bitAddr + self.itemCnt * self.children.bitAddrEnd
 
     @internal
     def _loadFromBits(self, dtype: HdlType, bitAddr: int):
@@ -170,15 +163,32 @@ class TransTmpl(object):
         return bitAddr + dtype.bit_length()
 
     @internal
-    def _loadFromHStream(self, dtype: HStream, bitAddr: int) -> int:
+    def _loadFromArray(self, dtype: HdlType, bitAddr: int) -> int:
         """
-        Parse HUnion type to this transaction template instance
+        Parse HArray type to this transaction template instance
 
         :return: address of it's end
         """
-        ch = TransTmpl(dtype.element_t, 0, parent=self, origin=self.origin)
-        self.children.append(ch)
-        return bitAddr + dtype.element_t.bit_length()
+        self.itemCnt = int(dtype.size)
+        self.children = TransTmpl(
+            dtype.element_t, 0, parent=self, origin=self.origin)
+        return bitAddr + self.itemCnt * self.children.bitAddrEnd
+
+    @internal
+    def _loadFromHStream(self, dtype: HStream, bitAddr: int) -> int:
+        """
+        Parse HStream type to this transaction template instance
+
+        :return: address of it's end
+        """
+        self.children = TransTmpl(
+            dtype.element_t, 0, parent=self, origin=self.origin)
+        if not isinstance(dtype.len_min, int) or dtype.len_min != dtype.len_max:
+            raise ValueError("This template is ment only"
+                             " for types of constant and finite size")
+
+        self.itemCnt = dtype.len_min
+        return bitAddr + dtype.element_t.bit_length() * self.itemCnt
 
     def _loadFromHType(self, dtype: HdlType, bitAddr: int) -> None:
         """
@@ -258,7 +268,7 @@ class TransTmpl(object):
                             offset,
                             shouldEnterFn,
                             otherObjItCtx)
-            elif isinstance(t, HArray):
+            elif isinstance(t, (HArray, HStream)):
                 itemSize = (self.bitAddrEnd - self.bitAddr) // self.itemCnt
                 for i in range(self.itemCnt):
                     with otherObjItCtx(i):
@@ -269,10 +279,6 @@ class TransTmpl(object):
             elif isinstance(t, HUnion):
                 yield OneOfTransaction(self, offset, shouldEnterFn,
                                        self.children)
-            elif isinstance(t, HStream):
-                assert len(self.children) == 1
-                yield StreamTransaction(self, offset, shouldEnterFn,
-                                        self.children[0])
             else:
                 raise TypeError(t)
 
@@ -291,7 +297,7 @@ class TransTmpl(object):
 
         s = "%s<TransTmpl%s start:%d, end:%d" % (offsetStr, name,
                                                  self.bitAddr, self.bitAddrEnd)
-        if isinstance(self.dtype, HArray):
+        if isinstance(self.dtype, (HArray, HStream)):
             s += ", itemCnt:%d" % (self.itemCnt) + "\n"
             s += self.children.__repr__(offset=offset + 1) + "\n"
             s += offsetStr + ">"
@@ -345,24 +351,3 @@ class OneOfTransaction(object):
         for p in self.possibleTransactions:
             yield p.walkFlatten(offset=self.offset,
                                 shouldEnterFn=self.shouldEnterFn)
-
-
-class StreamTransaction(object):
-    """
-    Container of informations about stream transaction which is described
-    by HStream HdlType
-    """
-    def __init__(self, parent: TransTmpl,
-                 offset: int,
-                 shouldEnterFn: Callable[[TransTmpl], Tuple[bool, bool]],
-                 child: TransTmpl):
-        self.parent = parent
-        self.offset = offset
-        self.shouldEnterFn = shouldEnterFn
-        self.child = child
-
-    def walkFlatten(self, *args, **kwargs):
-        """
-        :note: doc in :meth:`.TransTmpl.walkFlatten`
-        """
-        return self.child.walkFlatten(*args, **kwargs)

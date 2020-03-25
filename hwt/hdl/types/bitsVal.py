@@ -4,13 +4,13 @@ from operator import eq
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.typeShortcuts import hInt
+from hwt.hdl.typeShortcuts import hInt, vec
 from hwt.hdl.types.bitValFunctions import bitsCmp, \
     bitsBitOp, bitsArithOp 
 from hwt.hdl.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
     tryReduceXor
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import BOOL, INT, BIT, SLICE
+from hwt.hdl.types.defs import BOOL, INT, BIT, SLICE, BIT_N
 from hwt.hdl.types.eventCapableVal import EventCapableVal
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.sliceUtils import slice_to_SLICE
@@ -18,8 +18,7 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value, areValues
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import MultipleDriversErr, \
-    NoDriverErr
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 from pyMathBitPrecise.bits3t import Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
@@ -211,7 +210,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 key = SLICE.from_py(slice(start, stop, -1))
                 _resWidth = start - stop
                 resT = Bits(bit_length=_resWidth, force_vector=True,
-                            signed=st.signed)
+                            signed=st.signed, negated=st.negated)
 
         elif isinstance(key, Bits.getValueCls()):
             if key._is_full_valid():
@@ -220,15 +219,17 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 if _v < 0 or _v > length - 1:
                     raise IndexError(_v)
 
-            resT = BIT
             if iamVal:
                 return Bits3val.__getitem__(self, key)
 
+            resT = BIT
         elif isinstance(key, RtlSignalBase):
             t = key._dtype
             if isinstance(t, Slice):
                 resT = Bits(bit_length=key.staticEval()._size(),
-                            force_vector=st.force_vector, signed=st.signed)
+                            force_vector=st.force_vector,
+                            signed=st.signed,
+                            negated=st.negated)
             elif isinstance(t, Bits):
                 resT = BIT
             else:
@@ -239,7 +240,8 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         else:
             raise TypeError(
                 "Index operation not implemented for index %r" % (key))
-
+        if st.negated and resT is BIT:
+            resT = BIT_N
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
     def __setitem__(self, index, value):
@@ -302,7 +304,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 d = self.singleDriver()
                 if isinstance(d, Operator) and d.operator == AllOps.NOT:
                     return d.operands[0]
-            except (MultipleDriversErr, NoDriverErr):
+            except SignalDriverErr:
                 pass
             return Operator.withRes(AllOps.NOT, [self], self._dtype)
 
@@ -342,6 +344,29 @@ class BitsVal(Bits3val, EventCapableVal, Value):
     def __or__(self, other):
         return bitsBitOp(self, other, AllOps.OR,
                          vld_mask_for_or, tryReduceOr)
+
+    def __lshift__(self, other):
+        """
+        shift left
+
+        :note: arithmetic sift if type is signed else logical shift  
+        """
+        width = self._dtype.bit_length()
+        if self._dtype.signed:
+            raise NotImplementedError()
+
+        return self[(width - int(other)):]._concat(vec(0, int(other)))
+
+    def __rshift__(self, other):
+        """
+        shift right
+
+        :note: arithmetic sift if type is signed else logical shift  
+        """
+        if self._dtype.signed:
+            raise NotImplementedError()
+
+        return vec(0, int(other))._concat(self[:other])
 
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)

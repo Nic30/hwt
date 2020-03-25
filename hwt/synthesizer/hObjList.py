@@ -1,4 +1,5 @@
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
+from hwt.hdl.statements import HdlStatement
 
 
 class HObjList(list):
@@ -22,7 +23,7 @@ class HObjList(list):
             item._m()
         return self
 
-    def _getFullName(self):
+    def _getFullName(self, separator_getter=lambda x: "."):
         """get all name hierarchy separated by '.' """
         name = ""
         tmp = self
@@ -34,7 +35,7 @@ class HObjList(list):
             if name == '':
                 name = n
             else:
-                name = n + '.' + name
+                name = n + separator_getter(tmp) + name
             if hasattr(tmp, "_parent"):
                 tmp = tmp._parent
             else:
@@ -55,7 +56,8 @@ class HObjList(list):
         :note: doc in :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
         """
         for o in self:
-            o._updateParamsFrom(*args, **kwargs)
+            if isinstance(o, (InterfaceBase, UnitBase, HObjList)):
+                o._updateParamsFrom(*args, **kwargs)
 
     def __call__(self, other):
         if not isinstance(other, list):
@@ -66,6 +68,10 @@ class HObjList(list):
 
         statements = []
         for a, b in zip(self, other):
-            statements += a(b)
+            stms = a(b)
+            if isinstance(stms, HdlStatement):
+                statements.append(stms)
+            else:
+                statements += stms
 
         return statements

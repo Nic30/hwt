@@ -9,43 +9,38 @@ from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-class HArrayVal(Value):
+class HStreamVal(Value):
     """
-    Class for values of array HDL type
+    Class for values of HStream HDL type
     """
 
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):
         """
-        :param val: None or dictionary {index:value} or iterrable of values
+        :param typeObj: HStream instance
+        :param val: None or iterrable of values
         :param vld_mask: if is None validity is resolved from val
             if is 0 value is invalidated
             if is 1 value has to be valid
         """
-        size = typeObj.size
-        if isinstance(size, Value):
-            size = int(size)
+        min_len = typeObj.len_min
 
-        elements = {}
         if vld_mask == 0:
             val = None
-
+        element_t = typeObj.element_t
         if val is None:
-            pass
-        elif isinstance(val, dict):
-            for k, v in val.items():
-                if not isinstance(k, int):
-                    k = int(k)
-                elements[k] = typeObj.element_t.from_py(v)
+            elements = [element_t.from_py(None) for _ in range(min_len)]
         else:
-            for k, v in enumerate(val):
+            elements = []
+            for v in val:
                 if isinstance(v, RtlSignalBase):  # is signal
                     assert v._dtype == typeObj.element_t
                     e = v
                 else:
                     e = typeObj.element_t.from_py(v)
-                elements[k] = e
-
+                elements.append(e)
+            cur_len = len(elements)
+            assert cur_len >= min_len and cur_len <= typeObj.len_max
         _mask = int(bool(val))
         if vld_mask is None:
             vld_mask = _mask
@@ -57,12 +52,11 @@ class HArrayVal(Value):
     def to_py(self):
         if not self._is_full_valid():
             raise ValueError("Value of %r is not fully defined" % self)
-        return [v.to_py() for _, v in sorted(self.val.items())]
+        return [v.to_py() for v in self.val]
 
     @internal
     def __hash__(self):
-        return hash(self._dtype)
-        # return hash((self._dtype, self.val, self.vld_mask))
+        return hash((self._dtype, self.val, self.vld_mask))
 
     def _is_full_valid(self):
         return self.vld_mask == 1
@@ -73,17 +67,11 @@ class HArrayVal(Value):
         :atention: this will clone item from array, iterate over .val
             if you need to modify items
         """
-        try:
-            kv = key.val
-            if not key._is_full_valid():
-                raise KeyError()
-            else:
-                if kv >= self._dtype.size:
-                    raise KeyError()
+        kv = key.val
+        if not key._is_full_valid():
+            raise KeyError()
 
-            return self.val[kv].__copy__()
-        except KeyError:
-            return self._dtype.element_t.from_py(None)
+        return self.val[kv].__copy__()
 
     def __getitem__(self, key):
         iamVal = isinstance(self, Value)
@@ -134,36 +122,20 @@ class HArrayVal(Value):
         return self._setitem__val(index, value)
 
     def __iter__(self):
-        mySize = len(self)
-
-        def it():
-            for i in range(mySize):
-                yield self[i]
-
-        return it()
+        return iter(self.val)
 
     def __len__(self):
-        return int(self._dtype.size)
+        return len(self.val)
 
     @internal
     def _eq__val(self, other):
         assert self._dtype.element_t == other._dtype.element_t
-        assert self._dtype.size == other._dtype.size
 
         eq = True
         vld = 1
-        keysA = set(self.val)
-        keysB = set(other.val)
-        sharedKeys = keysA.union(keysB)
 
-        lsh = len(sharedKeys)
-        if (lsh == int(self._dtype.size)
-                and len(keysA) == lsh
-                and len(keysB) == lsh):
-            for k in sharedKeys:
-                a = self.val[k]
-                b = other.val[k]
-
+        if (len(self.val) == len(other.val)):
+            for a, b in zip(self.val, other.val):
                 eq = eq and bool(a) == bool(b)
                 if not eq:
                     break
@@ -175,5 +147,5 @@ class HArrayVal(Value):
         return BOOL.getValueCls()(BOOL, int(eq), vld)
 
     def _eq(self, other):
-        assert isinstance(other, HArrayVal)
+        assert isinstance(other, HStreamVal)
         return self._eq__val(other)

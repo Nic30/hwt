@@ -10,8 +10,9 @@ from ipCorePackager.constants import DIRECTION
 def collect_signals(top: Unit):
     """
     collect list of all signals in the component
-    format (name:Tuple[str], phy_name:str, is_read_only:int,
-            is_signed: int, size: Tuple[int])
+    format (
+    name: Tuple[str], phy_name:str, is_read_only: int,
+    is_signed: int, size: Tuple[int])
     """
     accessible_signals = []
     _collect_signals(top, accessible_signals, None, [], True)

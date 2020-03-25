@@ -1,7 +1,7 @@
+from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.structValBase import StructValBase
 from hwt.serializer.generic.indent import getIndent
-from hwt.doc_markers import internal
 
 
 class HStructFieldMeta():
@@ -98,7 +98,7 @@ class HStruct(HdlType):
     def bit_length(self):
         bl = self.__bit_length_val
         if bl is None:
-            raise TypeError("Can not request bit_lenght on size"
+            raise TypeError("Can not request bit_lenght on type"
                             " which has not fixed size")
         else:
             return self.__bit_length_val
@@ -125,10 +125,20 @@ class HStruct(HdlType):
         return True
 
     def __eq__(self, other):
-        return self is other or (
-            type(self) is type(other) and
-            self.bit_length() == other.bit_length() and
-            self.__fields__eq__(other))
+        if self is other:
+            return True
+        if (type(self) is type(other)):
+            try:
+                self_l = self.bit_length()
+            except TypeError:
+                self_l = -1
+            try:
+                other_l = other.bit_length()
+            except TypeError:
+                other_l = -1
+
+            return self_l == other_l and self.__fields__eq__(other)
+        return False
 
     @internal
     def __hash__(self):

@@ -4,9 +4,8 @@ from operator import and_, or_, xor, add
 from hwt.code_utils import _mkOp, _connect, _intfToSig
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
-from hwt.hdl.statements import HwtSyntaxError
+from hwt.hdl.statements import HwtSyntaxError, HdlStatement
 from hwt.hdl.switchContainer import SwitchContainer
-from hwt.hdl.typeShortcuts import vec
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
@@ -17,7 +16,6 @@ from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
-from hwt.doc_markers import internal
 
 
 class If(IfContainer):
@@ -39,7 +37,7 @@ class If(IfContainer):
         cond_sig = _intfToSig(cond)
         if not isinstance(cond_sig, RtlSignalBase):
             raise IntfLvlConfErr("Condition is not signal, it is not certain"
-                                 " if this an error or desire ", cond_sig)
+                                 " if this is an error or desire ", cond_sig)
 
         super(If, self).__init__(cond_sig)
         self.rank = 1
@@ -98,10 +96,6 @@ class Switch(SwitchContainer):
 
         super(Switch, self).__init__(switchOn, [])
         switchOn.ctx.statements.add(self)
-
-    @internal
-    def _cut_off_drivers_of(self, sig: RtlSignalBase):
-        raise NotImplementedError()
 
     def addCases(self, tupesValStmnts):
         """
@@ -291,7 +285,7 @@ class FsmBuilder(Switch):
             top = \
                 If(condition,
                    self.stateReg(newvalue)
-                   ).Else(
+                ).Else(
                     top
                 )
         if stateFrom is None:
@@ -321,10 +315,14 @@ def connect(src, *destinations, exclude: set=None, fit=False):
         _destinations = [iter(d) for d in destinations]
         for _src in src:
             dsts = [next(d) for d in _destinations]
-            assignemnts.append(connect(_src, *dsts, exclude=exclude, fit=fit))
+            assignemnts.extend(connect(_src, *dsts, exclude=exclude, fit=fit))
     else:
         for dst in destinations:
-            assignemnts.append(_connect(src, dst, exclude, fit))
+            r = _connect(src, dst, exclude=exclude, fit=fit)
+            if isinstance(r, HdlStatement):
+                assignemnts.append(r)
+            else:
+                assignemnts.extend(r)
 
     return assignemnts
 
@@ -350,17 +348,6 @@ def rol(sig, howMany) -> RtlSignalBase:
     "Rotate left"
     width = sig._dtype.bit_length()
     return sig[(width - howMany):]._concat(sig[:(width - howMany)])
-
-
-def sll(sig, howMany) -> RtlSignalBase:
-    "Logical shift left"
-    width = sig._dtype.bit_length()
-    return sig[(width - howMany):]._concat(vec(0, howMany))
-
-
-def srl(sig, howMany) -> RtlSignalBase:
-    "Logical shift right"
-    return vec(0, howMany)._concat(sig[:howMany])
 
 
 def log2ceil(x):
@@ -389,17 +376,7 @@ def isPow2(num) -> bool:
     return num != 0 and ((num & (num - 1)) == 0)
 
 
-def binToGray(sigOrVal) -> RtlSignalBase:
-    width = sigOrVal._dtype.bit_length()
-    return Concat(sigOrVal[width - 1],
-                  sigOrVal[width - 1:0] ^ sigOrVal[width:1])
-
-
 def sizeof(_type) -> int:
     "get size of type in bytes"
     s = _type.bit_length()
     return math.ceil(s / 8)
-
-
-# shortcuts
-c = connect
