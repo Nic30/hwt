@@ -12,7 +12,7 @@ class TristateSig(Interface):
     """
     Tristate interface
 
-    :ivar force_vector: in order to make this a vector[0] instead of single bit
+    :ivar ~.force_vector: in order to make this a vector[0] instead of single bit
         use FORCE_VECTOR=True
     """
 

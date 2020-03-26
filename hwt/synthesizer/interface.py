@@ -1,3 +1,5 @@
+from typing import Dict, Optional
+
 from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdl.types.typeCast import toHVal
@@ -10,10 +12,9 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.implDependent import\
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
     PropDeclrCollector
-from hwt.synthesizer.vectorUtils import fitTo
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from typing import Dict, Optional
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.vectorUtils import fitTo
 
 
 def _default_param_updater(self, myP, parentPval):
@@ -26,40 +27,40 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
     Base class for all interfaces in interface synthesizer
 
     :cvar _NAME_SEPARATOR: separator for nested interface names
-    :ivar _params: [] of parameter
-    :ivar _interfaces: [] sub interfaces
-    :ivar _name: name assigned during synthesis
-    :ivar _parent: parent object (Unit or Interface instance)
-    :ivar _isExtern: If true synthesizer sets it as external port of unit
-    :ivar _associatedClk: clock Signal (interface) associated with
+    :ivar ~._params: [] of parameter
+    :ivar ~._interfaces: [] sub interfaces
+    :ivar ~._name: name assigned during synthesis
+    :ivar ~._parent: parent object (Unit or Interface instance)
+    :ivar ~._isExtern: If true synthesizer sets it as external port of unit
+    :ivar ~._associatedClk: clock Signal (interface) associated with
         this interface if is none simulation agent try to search it on parent
-    :ivar _associatedRst: rst(_n) Signal (interface) associated
+    :ivar ~._associatedRst: rst(_n) Signal (interface) associated
         with this interface if is none simulation agent try to search
         it on parent
 
     :note: only interfaces without _interfaces have
 
-    :ivar _sig: rtl level signal instance
-    :ivar _sigInside: _sig after toRtl conversion is made
+    :ivar ~._sig: rtl level signal instance
+    :ivar ~._sigInside: _sig after toRtl conversion is made
         (after toRtl conversion _sig is signal for parent unit
         and _sigInside is signal in original unit, this separates process
         of translating units)
-    :ivar _boundedEntityPort: entityPort for which was this interface created
-    :ivar _boundedSigLvlUnit: RTL unit for which was this interface created
+    :ivar ~._boundedEntityPort: entityPort for which was this interface created
+    :ivar ~._boundedSigLvlUnit: RTL unit for which was this interface created
 
 
     Agenda of direction
 
-    :ivar _masterDir: specifies which direction has this interface at master
-    :ivar _direction: means actual direction of this interface resolved
+    :ivar ~._masterDir: specifies which direction has this interface at master
+    :ivar ~._direction: means actual direction of this interface resolved
         by its drivers
-    :ivar _ctx: rtl netlist context of all signals and params
+    :ivar ~._ctx: rtl netlist context of all signals and params
         on this interface after interface is registered on parent _ctx
         is merged
 
     Agenda of simulations
 
-    :ivar _ag: agent object connected to this interface
+    :ivar ~._ag: agent object connected to this interface
         (initialized only before simultion)
     """
 

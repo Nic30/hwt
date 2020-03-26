@@ -30,7 +30,7 @@ class FrameTmpl(object):
 
     4. Use parts in words to assembly frames
 
-    :ivar _fieldToTPart: dictionary {HStructField: TransPart} to resolve
+    :ivar ~._fieldToTPart: dictionary {HStructField: TransPart} to resolve
         this association, None by default, builded when packData
         is called and is not builded
     :note: others ivars described in __init__

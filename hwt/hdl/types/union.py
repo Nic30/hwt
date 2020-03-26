@@ -16,9 +16,9 @@ class UnionValBase(Value):
     Base class for values for union types.
     Every union type has it's own value class derived from this.
 
-    :ivar _dtype: union type of this value
-    :ivar __usedField: member which is actually used to represent value
-    :ivar __val: value for __usedField
+    :ivar ~._dtype: union type of this value
+    :ivar ~.__usedField: member which is actually used to represent value
+    :ivar ~.__val: value for __usedField
     """
     __slots__ = ["_dtype", "_val", "_usedField"]
 
@@ -108,10 +108,10 @@ class HUnion(HdlType):
     """
     HDL union type (same data multiple representations)
 
-    :ivar fields: read only OrderedDict {key:StructField} for each
+    :ivar ~.fields: read only OrderedDict {key:StructField} for each
         member in this union
-    :ivar name: name of this type
-    :ivar __bit_length_val: precalculated bit_length of this type
+    :ivar ~.name: name of this type
+    :ivar ~.__bit_length_val: precalculated bit_length of this type
     """
 
     def __init__(self, *template, name=None):

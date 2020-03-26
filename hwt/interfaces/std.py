@@ -28,8 +28,8 @@ class Signal(SignalOps, Interface):
     """
     Basic wire interface
 
-    :ivar _dtype: type of signal
-    :ivar _sig: RtlSignal instance (physical representation of this logical signal)
+    :ivar ~._dtype: type of signal
+    :ivar ~._sig: RtlSignal instance (physical representation of this logical signal)
     """
 
     def __init__(self,
@@ -170,8 +170,8 @@ class HandshakeSync(Interface):
     Only synchronization interface, like vld+rd signal with meaning
     like in :class:`.Handshaked` interface
 
-    :ivar rd: when high slave is ready to receive data
-    :ivar vld: when high master is sending data to slave
+    :ivar ~.rd: when high slave is ready to receive data
+    :ivar ~.vld: when high master is sending data to slave
 
     transaction happens when both ready and valid are high
 

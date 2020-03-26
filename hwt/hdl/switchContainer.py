@@ -19,12 +19,12 @@ class SwitchContainer(HdlStatement):
     """
     Structural container for switch statement for hdl rendering
 
-    :ivar switchOn: select signal of switch
-    :ivar cases: list of tuples (value, statements)
-    :ivar default: list of statements (for branch "default")
-    :ivar _case_value_index: dictionary {value:index} for every case in cases
-    :ivar _case_enclosed_for: list of sets of enclosed signal for each case branch
-    :ivar _default_enclosed_for: set of enclosed signals for branch default
+    :ivar ~.switchOn: select signal of switch
+    :ivar ~.cases: list of tuples (value, statements)
+    :ivar ~.default: list of statements (for branch "default")
+    :ivar ~._case_value_index: dictionary {value:index} for every case in cases
+    :ivar ~._case_enclosed_for: list of sets of enclosed signal for each case branch
+    :ivar ~._default_enclosed_for: set of enclosed signals for branch default
     """
 
     def __init__(self, switchOn: RtlSignal,

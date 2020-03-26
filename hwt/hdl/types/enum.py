@@ -7,8 +7,8 @@ class HEnum(HdlType):
     """
     Hdl enum type
 
-    :ivar name: name of this type
-    :ivar _allValues: tuple of all values for this enum
+    :ivar ~.name: name of this type
+    :ivar ~._allValues: tuple of all values for this enum
     :note: for each value there is a property on this type object
     """
 

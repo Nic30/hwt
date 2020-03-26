@@ -60,12 +60,12 @@ class SimTestCase(unittest.TestCase):
     :cvar _defaultSeed: default seed for ramdom generator
     :cvar rtl_simulator_cls: class for rtl simulator to use
         (constructed in compileSim())
-    :ivar u: instance of current Unit for test, created in restartSim()
-    :ivar rtl_simulator: rtl simulatr used for simulation of unit,
+    :ivar ~.u: instance of current Unit for test, created in restartSim()
+    :ivar ~.rtl_simulator: rtl simulatr used for simulation of unit,
         created in restartSim()
-    :ivar hdl_simulator: the simulator which manages the communication
+    :ivar ~.hdl_simulator: the simulator which manages the communication
         between python code and rtl_simulator instance
-    :ivar procs: list of simulation processes (python generator instances),
+    :ivar ~.procs: list of simulation processes (python generator instances),
         created in restartSim()
     """
     # value chosen because in this position bits are changing frequently

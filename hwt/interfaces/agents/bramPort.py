@@ -9,10 +9,10 @@ from pycocotb.triggers import WaitCombRead, WaitWriteOnly, WaitCombStable, Timer
 
 class BramPort_withoutClkAgent(SyncAgentBase):
     """
-    :ivar requests: list of tuples (request type, address, [write data])
+    :ivar ~.requests: list of tuples (request type, address, [write data])
         - used for driver
-    :ivar data: list of data in memory, used for monitor
-    :ivar mem: if agent is in monitor mode (= is slave) all reads and writes
+    :ivar ~.data: list of data in memory, used for monitor
+    :ivar ~.mem: if agent is in monitor mode (= is slave) all reads and writes
         are performed on mem object
     """
 

@@ -73,8 +73,8 @@ class BitWalker():
     """
     Walker which can walk chunks of bits on signals/values of all types
 
-    :ivar sigOrVal: signal or value to iterate over
-    :ivar fillup: flag that means that if there is not enought bits
+    :ivar ~.sigOrVal: signal or value to iterate over
+    :ivar ~.fillup: flag that means that if there is not enought bits
         for last iterm fill it up with invalid bits (otherwise raise)
     """
 

@@ -8,7 +8,7 @@ class HStructFieldMeta():
     """
     Meta for field in struct type
 
-    :ivar split: flag which specifies if structured data type of this field
+    :ivar ~.split: flag which specifies if structured data type of this field
         should be synchronized as a one interface
         or each it's part should be synchronized separately
     """
@@ -33,6 +33,14 @@ class HStructField(object):
         self.dtype = typ
         self.meta = meta
 
+    def __eq__(self, other):
+        return self.name == other.name and\
+               self.dtype == other.dtype and\
+               self.meta == other.meta
+
+    def __hash__(self):
+        return hash((self.name, self.dtype, self.meta))
+
     def __repr__(self):
         return "<HStructField %r, %s>" % (self.dtype, self.name)
 
@@ -44,9 +52,9 @@ class HStruct(HdlType):
     """
     HDL structure type
 
-    :ivar fields: tuple of HStructField instances in this struct
-    :ivar name: name of this HStruct type
-    :ivar valueCls: Class of value for this type as usual
+    :ivar ~.fields: tuple of HStructField instances in this struct
+    :ivar ~.name: name of this HStruct type
+    :ivar ~.valueCls: Class of value for this type as usual
         in HdlType implementations
     """
     def __init__(self, *template, name=None):
@@ -81,6 +89,7 @@ class HStruct(HdlType):
                     bit_length = None
 
         self.fields = tuple(fields)
+        self.__hash = hash((self.name, self.fields))
         self.__bit_length_val = bit_length
 
         usedNames = set(fieldNames)
@@ -128,6 +137,8 @@ class HStruct(HdlType):
         if self is other:
             return True
         if (type(self) is type(other)):
+            if self.name != other.name:
+                raise False
             try:
                 self_l = self.bit_length()
             except TypeError:
@@ -142,7 +153,7 @@ class HStruct(HdlType):
 
     @internal
     def __hash__(self):
-        return hash(id(self))
+        return self.__hash
 
     def __add__(self, other):
         """

@@ -10,8 +10,8 @@ class OpDefinition():
     """
     Operator definition
 
-    :ivar id: name of operator
-    :ivar _evalFn: function which evaluates operands
+    :ivar ~.id: name of operator
+    :ivar ~._evalFn: function which evaluates operands
     """
 
     def __init__(self, evalFn):

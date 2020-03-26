@@ -19,10 +19,10 @@ class IfContainer(HdlStatement):
     """
     Structural container of if statement for hdl rendering
 
-    :ivar _ifTrue_enclosed_for: set of signals for which if ifTrue branch enclosed
+    :ivar ~._ifTrue_enclosed_for: set of signals for which if ifTrue branch enclosed
             (has not branch where signal is not assignment)
-    :ivar _elIfs_enclosed_for: list of sets of enclosed signals for each elif
-    :ivar _ifFalse_enclosed_for: set of enclosed signals for ifFalse branch
+    :ivar ~._elIfs_enclosed_for: list of sets of enclosed signals for each elif
+    :ivar ~._ifFalse_enclosed_for: set of enclosed signals for ifFalse branch
     """
 
     def __init__(self, cond, ifTrue=None, ifFalse=None, elIfs=None,

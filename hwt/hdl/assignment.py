@@ -12,13 +12,13 @@ class Assignment(HdlStatement):
     """
     Assignment container
 
-    :ivar src: source
-    :ivar dst: destination signal
-    :ivar indexes: description of index selector on dst
+    :ivar ~.src: source
+    :ivar ~.dst: destination signal
+    :ivar ~.indexes: description of index selector on dst
         (list of Index/Slice objects) (f.e. [[0], [1]] means  dst[0][1])
 
     :cvar __instCntr: counter used for generating instance ids
-    :ivar _instId: internaly used only for intuitive sorting of statements
+    :ivar ~._instId: internaly used only for intuitive sorting of statements
     """
     __instCntr = 0
 

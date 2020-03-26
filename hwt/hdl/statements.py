@@ -22,17 +22,17 @@ class IncompatibleStructure(Exception):
 
 class HdlStatement(HdlObject):
     """
-    :ivar _is_completly_event_dependent: statement does not have
+    :ivar ~._is_completly_event_dependent: statement does not have
          any combinational statement
-    :ivar _now_is_event_dependent: statement is event (clk) dependent
-    :ivar parentStm: parent instance of HdlStatement or None
-    :ivar _inputs: UniqList of input signals for this statement
-    :ivar _outputs: UniqList of output signals for this statement
-    :ivar _sensitivity: UniqList of input signals
+    :ivar ~._now_is_event_dependent: statement is event (clk) dependent
+    :ivar ~.parentStm: parent instance of HdlStatement or None
+    :ivar ~._inputs: UniqList of input signals for this statement
+    :ivar ~._outputs: UniqList of output signals for this statement
+    :ivar ~._sensitivity: UniqList of input signals
         or (rising/falling) operator
-    :ivar _enclosed_for: set of outputs for which this statement is enclosed
+    :ivar ~._enclosed_for: set of outputs for which this statement is enclosed
         (for which there is not any unused branch)
-    :ivar rank: number of used branches in statement, used as prefilter
+    :ivar ~.rank: number of used branches in statement, used as prefilter
         for statement comparing
     """
 

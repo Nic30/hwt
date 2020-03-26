@@ -30,10 +30,10 @@ class Operator(HdlObject):
     """
     Class of operator in expression tree
 
-    :ivar operands: list of operands
-    :ivar evalFn: function to evaluate this operator
-    :ivar operator: OpDefinition instance
-    :ivar result: result signal of this operator
+    :ivar ~.operands: list of operands
+    :ivar ~.evalFn: function to evaluate this operator
+    :ivar ~.operator: OpDefinition instance
+    :ivar ~.result: result signal of this operator
     """
 
     def __init__(self, operator: OpDefinition,
@@ -125,8 +125,8 @@ class Operator(HdlObject):
         """
         Create operator with result signal
 
-        :ivar resT: data type of result signal
-        :ivar outputs: iterable of singnals which are outputs
+        :ivar ~.resT: data type of result signal
+        :ivar ~.outputs: iterable of singnals which are outputs
             from this operator
         """
         op = Operator(opDef, operands)

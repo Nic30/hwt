@@ -6,7 +6,7 @@ from hwt.serializer.verilog.utils import verilogTypeOfSig, SIGNAL_TYPE
 
 class VerilogSerializerCtx(SerializerCtx):
     """
-    :ivar signalType: member of SIGNAL_TYPE
+    :ivar ~.signalType: member of SIGNAL_TYPE
     """
 
     def forPort(self):

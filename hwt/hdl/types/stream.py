@@ -1,20 +1,20 @@
 from math import inf, isinf
 from typing import List, Optional
 
+from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.serializer.generic.indent import getIndent
-from hwt.doc_markers import internal
 
 
 class HStream(HdlType):
     """
     Stream is an abstract type. It is an array with unspecified size.
 
-    :ivar element_t: type of smalest chunk of data
+    :ivar ~.element_t: type of smalest chunk of data
         which can be send over this stream
-    :ivar len_min: minimum repetitions of element_t (inclusive interval)
-    :ivar len_max: maximum repetitions of element_t (inclusive interval)
-    :ivar start_offsets: list of numbers which represents the number of invalid bytes
+    :ivar ~.len_min: minimum repetitions of element_t (inclusive interval)
+    :ivar ~.len_max: maximum repetitions of element_t (inclusive interval)
+    :ivar ~.start_offsets: list of numbers which represents the number of invalid bytes
         before valid data on stream (invalid bytes means the bytes
         which does not have bit validity set, e.g. Axi4Stream keep=0b10 -> offset=1 
         )
@@ -31,8 +31,8 @@ class HStream(HdlType):
             frame_len = (frame_len, frame_len)
         self.len_min, self.len_max = frame_len
         if start_offsets is None:
-            start_offsets = [0, ]
-        self.start_offsets = start_offsets
+            start_offsets = (0, )
+        self.start_offsets = tuple(start_offsets)
 
     def bit_length(self):
         if self.len_min != self.len_max or isinf(self.len_max):
@@ -50,6 +50,9 @@ class HStream(HdlType):
                     and self.len_max == other.len_max:
                 return self.element_t == other.element_t
         return False
+
+    def __hash__(self):
+        return hash((self.start_offsets, self.len_min, self.len_max, self.element_t))
 
     @internal
     @classmethod

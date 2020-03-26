@@ -22,22 +22,22 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     :cvar _serializeDecision: function to decide if Hdl object derived from
         this unit should be serialized or not, if None all is always serialized
     :cvar _PROTECTED_NAMES: set of names which can not be overridden
-    :ivar _interfaces: all public interfaces
+    :ivar ~._interfaces: all public interfaces
     :type _interfaces: List[Interface]
-    :ivar _private_interfaces: all internal interfaces
+    :ivar ~._private_interfaces: all internal interfaces
         which are not accessible from outside of unit
     :type _private_interfaces: List[Interface]
-    :ivar _units: all units defined on this obj
+    :ivar ~._units: all units defined on this obj
     :type _units: List[Unit] 
-    :ivar _params: all params defined on this obj
+    :ivar ~._params: all params defined on this obj
     :type _params: List[Param]
-    :ivar _constraints: additional HW specifications
-    :ivar _parent: parent object
+    :ivar ~._constraints: additional HW specifications
+    :ivar ~._parent: parent object
     :type _parent: Optional[Unit]
-    :ivar _lazyLoaded: container of rtl object which were lazy loaded
+    :ivar ~._lazyLoaded: container of rtl object which were lazy loaded
         in implementation phase (this object has to be returned
         from _toRtl of parent before it it's own objects)
-    :ivar _targetPlatform: metainformations about target platform
+    :ivar ~._targetPlatform: metainformations about target platform
     """
 
     _serializeDecision = None
