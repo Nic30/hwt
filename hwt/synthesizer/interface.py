@@ -1,3 +1,5 @@
+from typing import Dict, Optional
+
 from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdl.types.typeCast import toHVal
@@ -10,10 +12,9 @@ from hwt.synthesizer.interfaceLevel.interfaceUtils.implDependent import\
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
     PropDeclrCollector
-from hwt.synthesizer.vectorUtils import fitTo
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from typing import Dict, Optional
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.vectorUtils import fitTo
 
 
 def _default_param_updater(self, myP, parentPval):

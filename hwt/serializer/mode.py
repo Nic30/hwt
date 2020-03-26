@@ -1,8 +1,3 @@
-from collections import namedtuple
-
-from hwt.doc_markers import internal
-
-
 """
 Serializer mode specifies if hdl objects derived from parent unit
 should be serialized to target HDL or not
@@ -17,6 +12,10 @@ use serialize* methods to specify serialization mode for unit class
         pass
 
 """
+
+from collections import namedtuple
+
+from hwt.doc_markers import internal
 
 
 @internal

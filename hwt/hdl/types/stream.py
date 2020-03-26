@@ -1,9 +1,9 @@
 from math import inf, isinf
 from typing import List, Optional
 
+from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.serializer.generic.indent import getIndent
-from hwt.doc_markers import internal
 
 
 class HStream(HdlType):
