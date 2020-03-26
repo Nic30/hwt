@@ -8,16 +8,16 @@ class TransPart(object):
     """
     Container for informations about parts of TransTmpl split on databus words
 
-    :ivar parent: instance of FrameTmpl
-    :ivar tmpl: origin template which is this representation of
+    :ivar ~.parent: instance of FrameTmpl
+    :ivar ~.tmpl: origin template which is this representation of
         (StructField/HdlType instance)
-    :ivar canBeRemoved: True if it is padding to assert data alignment and is not
+    :ivar ~.canBeRemoved: True if it is padding to assert data alignment and is not
         actually part of data and can be removed
-    :ivar isPadding: True if this TransaPart is just a padding
+    :ivar ~.isPadding: True if this TransaPart is just a padding
         and contains non valid data
-    :ivar startOfPart: bit addr of start of this part
-    :ivar endOfPart: bit addr of end of this part
-    :ivar inFieldOffset: bit offset of this part in parent field
+    :ivar ~.startOfPart: bit addr of start of this part
+    :ivar ~.endOfPart: bit addr of end of this part
+    :ivar ~.inFieldOffset: bit offset of this part in parent field
     """
 
     def __init__(self, parent: 'FrameTmpl',

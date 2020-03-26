@@ -22,9 +22,9 @@ class If(IfContainer):
     """
     If statement generator
 
-    :ivar _is_completly_event_dependent: flag wihich tells if all statement
+    :ivar ~._is_completly_event_dependent: flag wihich tells if all statement
         in this statements are event dependent
-    :ivar _now_is_event_dependent: flag if current scope of if is event dependent
+    :ivar ~._now_is_event_dependent: flag if current scope of if is event dependent
         (is used to mark statements as event dependent)
     """
 
@@ -238,7 +238,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
 
 class FsmBuilder(Switch):
     """
-    :ivar stateReg: register with state
+    :ivar ~.stateReg: register with state
     """
 
     def __init__(self, parent, stateT, stateRegName="st"):

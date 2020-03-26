@@ -16,9 +16,9 @@ class StructIntf(Interface):
     """
     Create dynamic interface based on HStruct or HUnion description
 
-    :ivar _fieldsToInterfaces: dictionary {field from HStruct template:
+    :ivar ~._fieldsToInterfaces: dictionary {field from HStruct template:
         sub interface for it}
-    :ivar _structT: HStruct instance used as template for this interface
+    :ivar ~._structT: HStruct instance used as template for this interface
     :param _instantiateFieldFn: function(FieldTemplateItem instance)
         return interface instance
     """

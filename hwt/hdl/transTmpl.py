@@ -38,9 +38,9 @@ class ObjIteratorCtx(object):
         this is useful when you need to walk generated interface together with type
         from which it was generated from
 
-    :ivar actual: actual selected object
-    :ivar parent: list of collected parent of this object
-    :ivar onParentNames: list, str for children which are properties,
+    :ivar ~.actual: actual selected object
+    :ivar ~.parent: list of collected parent of this object
+    :ivar ~.onParentNames: list, str for children which are properties,
         int for children which are items of parent
     """
 
@@ -97,13 +97,13 @@ class TransTmpl(object):
         so the memory consumption of this object is entirely independent
         on size of arrays which it describes.
 
-    :ivar dtype: type of this item
-    :ivar bitAddr: offset of start of this item in bits
-    :ivar parent: object which generated this item, optional TransTmpl
-    :ivar origin: object which was template for generating of this item
-    :ivar itemCnt: if this transaction template is for array or stream this is
+    :ivar ~.dtype: type of this item
+    :ivar ~.bitAddr: offset of start of this item in bits
+    :ivar ~.parent: object which generated this item, optional TransTmpl
+    :ivar ~.origin: object which was template for generating of this item
+    :ivar ~.itemCnt: if this transaction template is for array or stream this is
         item count for such an array or stream
-    :ivar childrenAreChoice: flag which tells if childrens are sequence
+    :ivar ~.childrenAreChoice: flag which tells if childrens are sequence
         or only one of them can be used in same time
     """
 
@@ -320,14 +320,14 @@ class OneOfTransaction(object):
     Container of possible transactions for transactions deriverd
     from HUnion type
 
-    :ivar parent: parent TransTmpl instance
-    :ivar offset: bit addr offset in parent type structure
-    :ivar shouldEnterFn: function(transTmpl) which should
+    :ivar ~.parent: parent TransTmpl instance
+    :ivar ~.offset: bit addr offset in parent type structure
+    :ivar ~.shouldEnterFn: function(transTmpl) which should
         return (shouldEnter, shouldUse)
         where shouldEnter is flag that means iterator should look
         inside of this actual object and shouldUse flag means that this field
         should be used (=generator should yield it)
-    :ivar possibleTransactions: tuple of TransTmpl instances
+    :ivar ~.possibleTransactions: tuple of TransTmpl instances
         from which only one can be used in same time
     """
 

@@ -31,9 +31,9 @@ class set_max_delay(ConstrainBase):
 
     * usually used to set propagation time between two clock domains etc.
 
-    :ivar start: start of the signal path
-    :ivar end: end of the signal path
-    :ivar time_ns: max delay of the specified path in ns
+    :ivar ~.start: start of the signal path
+    :ivar ~.end: end of the signal path
+    :ivar ~.time_ns: max delay of the specified path in ns
     """
 
     def __init__(self,

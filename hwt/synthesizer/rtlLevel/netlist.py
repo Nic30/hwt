@@ -277,12 +277,12 @@ class RtlNetlist():
     """
     Hierarchical container for signals
 
-    :ivar parent: optional parent for debug and late component inspection
-    :ivar params: dictionary {name: Param instance}
-    :ivar signals: set of all signals in this context
-    :ivar statements: list of all statements which are connected to signals in this context
-    :ivar subUnits: is set of all units in this context
-    :ivar synthesised: flag, True if synthesize method was called
+    :ivar ~.parent: optional parent for debug and late component inspection
+    :ivar ~.params: dictionary {name: Param instance}
+    :ivar ~.signals: set of all signals in this context
+    :ivar ~.statements: list of all statements which are connected to signals in this context
+    :ivar ~.subUnits: is set of all units in this context
+    :ivar ~.synthesised: flag, True if synthesize method was called
     """
 
     def __init__(self, parent: Optional["Unit"]=None):

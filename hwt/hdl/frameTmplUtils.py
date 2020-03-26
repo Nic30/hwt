@@ -104,10 +104,10 @@ class ChoicesOfFrameParts(TransPartGroup):
     One of ChoiceOfFrameParts is used to represent the word, item depends
     on context
 
-    :ivar origin: OneOfTransaction instance
-    :ivar startOfPart: bit addr of start of this group of frame parts
-    :ivar endOfPart: bit addr of end of this group of frame parts
-    :ivar _isLast: flag which means this is the last part of original union
+    :ivar ~.origin: OneOfTransaction instance
+    :ivar ~.startOfPart: bit addr of start of this group of frame parts
+    :ivar ~.endOfPart: bit addr of end of this group of frame parts
+    :ivar ~._isLast: flag which means this is the last part of original union
     """
 
     def __init__(self, startOfPart: int, origin: OneOfTransaction):
@@ -127,8 +127,8 @@ class ChoicesOfFrameParts(TransPartGroup):
 
 class ChoiceOfFrameParts(list):
     """
-    :ivar origin: ChoicesOfFrameParts instance
-    :ivar tmpl: TransTmpl which was item generated from
+    :ivar ~.origin: ChoicesOfFrameParts instance
+    :ivar ~.tmpl: TransTmpl which was item generated from
     """
 
     def __init__(self, origin, tmpl):

@@ -24,7 +24,7 @@ class RtlSignalOps():
     """
     Definitions of operators and other operator functions for RtlSignal
 
-    :ivar _usedOps: cache for expressions with this signal
+    :ivar ~._usedOps: cache for expressions with this signal
     """
 
     def _auto_cast(self, toT):

@@ -6,7 +6,7 @@ class SensitivityCtx(UniqList):
     """
     Sensitivity list used for resolution of sensitivity for statements and HWProcess instances
 
-    :ivar contains_ev_dependency: True if this contains event dependent
+    :ivar ~.contains_ev_dependency: True if this contains event dependent
         sensitivity
     """
 

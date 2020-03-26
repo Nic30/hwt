@@ -10,11 +10,11 @@ class HStream(HdlType):
     """
     Stream is an abstract type. It is an array with unspecified size.
 
-    :ivar element_t: type of smalest chunk of data
+    :ivar ~.element_t: type of smalest chunk of data
         which can be send over this stream
-    :ivar len_min: minimum repetitions of element_t (inclusive interval)
-    :ivar len_max: maximum repetitions of element_t (inclusive interval)
-    :ivar start_offsets: list of numbers which represents the number of invalid bytes
+    :ivar ~.len_min: minimum repetitions of element_t (inclusive interval)
+    :ivar ~.len_max: maximum repetitions of element_t (inclusive interval)
+    :ivar ~.start_offsets: list of numbers which represents the number of invalid bytes
         before valid data on stream (invalid bytes means the bytes
         which does not have bit validity set, e.g. Axi4Stream keep=0b10 -> offset=1 
         )

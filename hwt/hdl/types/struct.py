@@ -8,7 +8,7 @@ class HStructFieldMeta():
     """
     Meta for field in struct type
 
-    :ivar split: flag which specifies if structured data type of this field
+    :ivar ~.split: flag which specifies if structured data type of this field
         should be synchronized as a one interface
         or each it's part should be synchronized separately
     """
@@ -44,9 +44,9 @@ class HStruct(HdlType):
     """
     HDL structure type
 
-    :ivar fields: tuple of HStructField instances in this struct
-    :ivar name: name of this HStruct type
-    :ivar valueCls: Class of value for this type as usual
+    :ivar ~.fields: tuple of HStructField instances in this struct
+    :ivar ~.name: name of this HStruct type
+    :ivar ~.valueCls: Class of value for this type as usual
         in HdlType implementations
     """
     def __init__(self, *template, name=None):

@@ -21,9 +21,9 @@ class HdlType():
     """
     Base class for all hardware related types.
 
-    :ivar _auto_cast_fn: convert function (attribute set on first convert
+    :ivar ~._auto_cast_fn: convert function (attribute set on first convert
         function call)
-    :ivar _reinterpret_cast_fn: reinterpret function (attribute set
+    :ivar ~._reinterpret_cast_fn: reinterpret function (attribute set
         on first convert function call)
     """
 

@@ -12,10 +12,10 @@ class ResourceContext():
     """
     Container of informations about resources used in architecture
 
-    :ivar unit: optional unit for which is this context build
-    :ivar seen: set of seen objects
-    :ivar resources: dictionary {type of resource: cnt}
-    :ivar discoveredRamSignals: set of signals which seems to be some kind
+    :ivar ~.unit: optional unit for which is this context build
+    :ivar ~.seen: set of seen objects
+    :ivar ~.resources: dictionary {type of resource: cnt}
+    :ivar ~.discoveredRamSignals: set of signals which seems to be some kind
         of RAM/ROM memory
     """
 

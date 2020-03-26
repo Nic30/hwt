@@ -7,9 +7,9 @@ class SystemCCtx(VerilogSerializerCtx):
     """
     Context of SystemC serializer
 
-    :ivar isTarget: specifies if current expression is part of target
+    :ivar ~.isTarget: specifies if current expression is part of target
         (= do not add .read())
-    :ivar isSensitivityList: flag that specifies if serializer is
+    :ivar ~.isSensitivityList: flag that specifies if serializer is
         in sensitivity list scope and signals are allowed
         to use event operators
     """

@@ -20,21 +20,21 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     RtlSignal signal is container of connection
     between statements and operators
 
-    :ivar endpoints: UniqList of operators and statements
+    :ivar ~.endpoints: UniqList of operators and statements
         for which this signal is driver.
-    :ivar drivers: UniqList of operators and statements
+    :ivar ~.drivers: UniqList of operators and statements
         which can drive this signal.
         If driver is statemet tree only top statement is present.
-    :ivar _usedOps: dictionary of used operators which can be reused
-    :ivar hiden: means that this signal is part of expression
+    :ivar ~._usedOps: dictionary of used operators which can be reused
+    :ivar ~.hiden: means that this signal is part of expression
         and should not be rendered
-    :ivar _nop_val: value which is used to fill up statements when no other
+    :ivar ~._nop_val: value which is used to fill up statements when no other
             value is assigned, use NO_NOPVAL to dissable
-    :ivar _const: flag which tell that this signal can not have any other driver
+    :ivar ~._const: flag which tell that this signal can not have any other driver
         than a default value
 
     :cvar __instCntr: counter used for generating instance ids
-    :ivar _instId: internally used only for intuitive sorting of statements
+    :ivar ~._instId: internally used only for intuitive sorting of statements
         in serialized code
     """
     __instCntr = 0

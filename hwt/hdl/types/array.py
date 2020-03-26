@@ -7,8 +7,8 @@ class HArray(HdlType):
     """
     HDL array type
 
-    :ivar element_t: type of elements
-    :ivar size: number of items
+    :ivar ~.element_t: type of elements
+    :ivar ~.size: number of items
     """
 
     def __init__(self, element_t, size):
