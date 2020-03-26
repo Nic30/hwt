@@ -31,8 +31,8 @@ class HStream(HdlType):
             frame_len = (frame_len, frame_len)
         self.len_min, self.len_max = frame_len
         if start_offsets is None:
-            start_offsets = [0, ]
-        self.start_offsets = start_offsets
+            start_offsets = (0, )
+        self.start_offsets = tuple(start_offsets)
 
     def bit_length(self):
         if self.len_min != self.len_max or isinf(self.len_max):
@@ -50,6 +50,9 @@ class HStream(HdlType):
                     and self.len_max == other.len_max:
                 return self.element_t == other.element_t
         return False
+
+    def __hash__(self):
+        return hash((self.start_offsets, self.len_min, self.len_max, self.element_t))
 
     @internal
     @classmethod
