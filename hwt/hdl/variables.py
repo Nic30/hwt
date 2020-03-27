@@ -1,6 +1,6 @@
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.hdlObject import HdlObject
 from hwt.doc_markers import internal
+from hwt.hdl.hdlObject import HdlObject
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class SignalItem(HdlObject):
@@ -24,14 +24,12 @@ class SignalItem(HdlObject):
         if def_val is None:
             def_val = dtype.from_py(None)
         self.def_val = def_val
-        self._setDefValue()
+        self._set_def_value()
 
     @internal
-    def _setDefValue(self):
+    def _set_def_val(self):
         v = self.def_val
         if isinstance(v, RtlSignalBase):
             v = v.staticEval()
 
         self._val = v.__copy__()
-        self._oldVal = self._val.__copy__()
-        self._oldVal.vld_mask = 0
