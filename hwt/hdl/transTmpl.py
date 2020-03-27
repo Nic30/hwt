@@ -8,6 +8,7 @@ from hwt.hdl.types.union import HUnion
 from hwt.pyUtils.arrayQuery import iter_with_last
 from hwt.hdl.types.stream import HStream
 from hwt.doc_markers import internal
+from builtins import isinstance
 
 
 def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
@@ -111,9 +112,12 @@ class TransTmpl(object):
                  parent: Optional['TransTmpl']=None,
                  origin: Optional[HStructField]=None):
         self.parent = parent
+        assert isinstance(dtype, HdlType), dtype
+        assert parent is None or isinstance(parent, TransTmpl), parent
         if origin is None:
-            origin = dtype
-
+            origin = (dtype, )
+        else:
+            assert isinstance(origin, tuple), origin
         self.origin = origin
         self.dtype = dtype
         self.children = []
@@ -135,9 +139,11 @@ class TransTmpl(object):
 
         :return: address of it's end
         """
+
         for f in dtype.fields:
             t = f.dtype
-            origin = f
+            origin = (*self.origin, f)
+
             isPadding = f.name is None
 
             if isPadding:
@@ -158,7 +164,7 @@ class TransTmpl(object):
         :return: address of it's end
         """
         for field in dtype.fields.values():
-            ch = TransTmpl(field.dtype, 0, parent=self, origin=field)
+            ch = TransTmpl(field.dtype, 0, parent=self, origin=(*self.origin, field))
             self.children.append(ch)
         return bitAddr + dtype.bit_length()
 
@@ -171,7 +177,7 @@ class TransTmpl(object):
         """
         self.itemCnt = int(dtype.size)
         self.children = TransTmpl(
-            dtype.element_t, 0, parent=self, origin=self.origin)
+            dtype.element_t, 0, parent=self, origin=(*self.origin, 0))
         return bitAddr + self.itemCnt * self.children.bitAddrEnd
 
     @internal
@@ -262,9 +268,9 @@ class TransTmpl(object):
             if isinstance(t, Bits):
                 pass
             elif isinstance(t, HStruct):
-                for ch in self.children:
-                    with otherObjItCtx(ch.origin.name):
-                        yield from ch.walkFlatten(
+                for c in self.children:
+                    with otherObjItCtx(c.origin[-1].name):
+                        yield from c.walkFlatten(
                             offset,
                             shouldEnterFn,
                             otherObjItCtx)
@@ -286,8 +292,8 @@ class TransTmpl(object):
         offsetStr = "".join(["    " for _ in range(offset)])
 
         try:
-            name = self.origin.name
-        except AttributeError:
+            name = self.origin[-1].name
+        except (AttributeError, IndexError):
             name = None
 
         if name:

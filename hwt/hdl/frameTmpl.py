@@ -303,6 +303,10 @@ class FrameTmpl(object):
 
     @staticmethod
     def fieldToDataDict(dtype, data, res):
+        return FrameTmpl._fieldToDataDict(dtype, (dtype, ), data, res)
+
+    @staticmethod
+    def _fieldToDataDict(dtype, path, data, res):
         """
         Construct dictionary {StructField:value} for faster lookup of values
         for fields
@@ -314,17 +318,18 @@ class FrameTmpl(object):
             except KeyError:
                 fVal = None
 
+            new_path = (*path, f)
             if isinstance(f.dtype, Bits):
                 if fVal is not None:
                     assert isinstance(fVal, int)
-                    res[f] = fVal
+                    res[new_path] = fVal
             elif isinstance(f.dtype, HStruct):
                 if fVal:
-                    FrameTmpl.fieldToDataDict(f.dtype, fVal, res)
+                    FrameTmpl._fieldToDataDict(f.dtype, new_path, fVal, res)
             elif isinstance(f.dtype, HArray):
                 if fVal:
                     # assert isinstance(fVal, class_or_tuple)
-                    res[f] = fVal
+                    res[new_path] = fVal
 
         return res
 
@@ -391,7 +396,7 @@ class FrameTmpl(object):
                     indx = (s - arrS) // itemW
                     names.append("[%d]" % indx)
                 else:
-                    o = tp.origin
+                    o = tp.origin[-1]
                     if o is None:
                         break
                     if not isinstance(o, HdlType) and o.name is not None:

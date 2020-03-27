@@ -1,3 +1,5 @@
+from typing import Tuple, Union, Optional, List
+
 from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.types.bits import Bits
@@ -16,19 +18,24 @@ class StructIntf(Interface):
     """
     Create dynamic interface based on HStruct or HUnion description
 
-    :ivar ~._fieldsToInterfaces: dictionary {field from HStruct template:
-        sub interface for it}
+    :ivar ~._fieldsToInterfaces: dictionary {field_path: sub interface for it}
+        field path is a tuple of HStructFields which leads to this interface
     :ivar ~._structT: HStruct instance used as template for this interface
     :param _instantiateFieldFn: function(FieldTemplateItem instance)
         return interface instance
     """
 
-    def __init__(self, structT, instantiateFieldFn,
+    def __init__(self, structT: HStruct,
+                 field_path: Tuple[Union[HStructField, int], ...],
+                 instantiateFieldFn,
                  masterDir=DIRECTION.OUT,
                  loadConfig=True):
         Interface.__init__(self,
                            masterDir=masterDir,
                            loadConfig=loadConfig)
+        if not field_path:
+            field_path = (structT, )
+        self._field_path = field_path
         self._structT = structT
         self._instantiateFieldFn = instantiateFieldFn
         self._fieldsToInterfaces = {}
@@ -40,15 +47,15 @@ class StructIntf(Interface):
         else:
             fields = _t.fields.values()
 
-        self._fieldsToInterfaces[self._structT] = self
+        self._fieldsToInterfaces[self._field_path] = self
 
         for field in fields:
             # skip padding
             if field.name is not None:
                 # generate interface based on struct field
                 intf = self._instantiateFieldFn(self, field)
-                assert field not in self._fieldsToInterfaces
-                self._fieldsToInterfaces[field] = intf
+                assert field not in self._fieldsToInterfaces, field
+                self._fieldsToInterfaces[(*self._field_path, field)] = intf
                 setattr(self, field.name, intf)
 
                 if isinstance(intf, StructIntf):
@@ -88,7 +95,11 @@ def _HTypeFromIntfMap(intf):
 
 
 @internal
-def HTypeFromIntfMapItem(interfaceMapItem):
+def HTypeFromIntfMapItem(
+        interfaceMapItem: Union[Tuple[HdlType, Optional[str]],
+                                Tuple[Union[Interface, RtlSignalBase], str],
+                                Tuple[List[Union[Interface, RtlSignalBase]], str],
+                                Union[Interface, RtlSignalBase]]):
     isTerminal = False
     if isinstance(interfaceMapItem, (InterfaceBase, RtlSignalBase)):
         dtype, nameOrPrefix = _HTypeFromIntfMap(interfaceMapItem)
@@ -96,11 +107,12 @@ def HTypeFromIntfMapItem(interfaceMapItem):
     else:
         typeOrListOfInterfaces, nameOrPrefix = interfaceMapItem
 
-        if isinstance(typeOrListOfInterfaces, list) and not isinstance(typeOrListOfInterfaces, IntfMap):
+        if isinstance(typeOrListOfInterfaces, list) and \
+                not isinstance(typeOrListOfInterfaces, IntfMap):
             # list of HType instances for array
             parts = []
             arrayItem_t = None
-            
+
             for item in typeOrListOfInterfaces:
                 if isinstance(item, IntfMap):
                     t = HTypeFromIntfMap(item)
@@ -112,7 +124,7 @@ def HTypeFromIntfMapItem(interfaceMapItem):
                     assert arrayItem_t == t, (
                         "all items in array has to have same type", arrayItem_t, t)
                 parts.append(t)
-                    
+
             dtype = arrayItem_t[len(parts)]
 
         elif isinstance(typeOrListOfInterfaces, HdlType):
@@ -141,15 +153,15 @@ def HTypeFromIntfMapItem(interfaceMapItem):
     return f
 
 
-def HTypeFromIntfMap(interfaceMap):
+def HTypeFromIntfMap(interfaceMap: IntfMap) -> HStruct:
     """
     Generate flattened register map for HStruct
 
     :param interfaceMap: sequence of
-        tuple (type, name) or (will create standard struct field member)
-        interface or (will create a struct field from interface)
-        instance of hdl type (is used as padding)
-        tuple (list of interface, name)
+        a tuple (HdlType, name) (will create HStructField) or
+        a tuple (HdlType, None) (will create HStructField as padding) or
+        a tuple (list of Interface instances, name) (will create HStructField of HStruct type) or
+        an Interface instance (will create a HStructField for an interface, with a name of interface)
     :param DATA_WIDTH: width of word
     :param terminalNodes: None or set whre are placed StructField instances
         which are derived directly from interface
