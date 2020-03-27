@@ -24,7 +24,7 @@ class SignalItem(HdlObject):
         if def_val is None:
             def_val = dtype.from_py(None)
         self.def_val = def_val
-        self._set_def_value()
+        self._set_def_val()
 
     @internal
     def _set_def_val(self):
