@@ -136,7 +136,7 @@ class ChoiceOfFrameParts(list):
         self.tmpl = tmpl
 
     def __repr__(self):
-        return "<ChoiceOfFrameParts %s>" % list.__repr__(self)
+        return "<%s %s>" % (self.__class__.__name__, list.__repr__(self))
 
 
 def groupIntoChoices(splitsOnWord, wordWidth: int, origin: OneOfTransaction):
