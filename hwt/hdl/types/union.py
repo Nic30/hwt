@@ -153,8 +153,8 @@ class HUnion(HdlType):
             p = property(fget=memberHandler.get, fset=memberHandler.set)
             setattr(UnionVal, field.name, p)
 
-        self.fields = self.fields
         self.__bit_length_val = bit_length
+        self.__hash = hash((self.name, tuple(self.fields.items())))
 
         usedNames = set(self.fields.keys())
         assert not protectedNames.intersection(
@@ -202,7 +202,7 @@ class HUnion(HdlType):
 
     @internal
     def __hash__(self):
-        return hash(id(self))
+        return self.__hash
 
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
