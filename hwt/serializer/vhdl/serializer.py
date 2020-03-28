@@ -5,7 +5,7 @@ from hwt.hdl.entity import Entity
 from hwt.hdl.portItem import PortItem
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.enum import HEnum
-from hwt.pyUtils.arrayQuery import groupedby
+from hwt.pyUtils.arrayQuery import groupedby, distinctBy
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.mapExpr import MapExpr
@@ -59,7 +59,6 @@ use IEEE.numeric_std.all;
             extraTypes_serialized = []
             arch.variables.sort(key=lambda x: (x.name, x._instId))
             arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
-            arch.components.sort(key=lambda x: x.name)
             arch.componentInstances.sort(key=lambda x: x._name)
 
             childCtx = ctx.withIndent()
@@ -83,13 +82,13 @@ use IEEE.numeric_std.all;
             # architecture names can be same for different entities
             # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
 
-            uniqComponents = [
+            components = [
                 x[1][0] for x in 
-                groupedby(arch.components, lambda c: c.name)
+                groupedby(arch.componentInstances, lambda c: c.name)
             ]
-            uniqComponents.sort(key=lambda c: c.name)
+            components.sort(key=lambda c: c.name)
             components = [cls.Component(c, childCtx)
-                          for c in uniqComponents]
+                          for c in components]
 
             componentInstances = list(
                 map(lambda c: cls.ComponentInstance(c, childCtx),

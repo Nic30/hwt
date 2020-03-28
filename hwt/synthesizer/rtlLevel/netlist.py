@@ -397,10 +397,6 @@ class RtlNetlist():
         for u in self.subUnits:
             arch.componentInstances.append(u)
 
-        # add components in architecture
-        for su in distinctBy(self.subUnits, lambda x: x.name):
-            arch.components.append(su)
-
         self.synthesised = True
 
         return [ent, arch]

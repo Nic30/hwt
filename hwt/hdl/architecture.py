@@ -11,7 +11,6 @@ class Architecture(HdlObject):
         self.name = "rtl"
         self.variables = []
         self.processes = []
-        self.components = []
         self.componentInstances = []
 
     def getEntityName(self):
