@@ -1,11 +1,11 @@
 from typing import Union
 
+from hdlConvertor.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
 from hwt.hdl.architecture import Architecture
 from hwt.hdl.entity import Entity
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import OpDefinition
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
@@ -17,7 +17,6 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.generic.nameScope import NameScope
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
@@ -54,9 +53,8 @@ class GenericSerializer():
         """
         Get root of name space
         """
-        s = NameScope(False)
-        s.setLevel(1)
-        s[0].update(cls._keywords_dict)
+        s = NameScope.make_top(False)
+        s.update(cls._keywords_dict)
         return s
 
     @classmethod
@@ -83,16 +81,25 @@ class GenericSerializer():
             return serFn(obj, ctx)
 
     @classmethod
+    def get_doc(cls, obj):
+        if not isinstance(obj, Entity):
+            raise NotImplementedError()
+        doc = obj.__doc__
+        if doc and id(doc) != id(Entity.__doc__):
+            return cls.comment(doc) + "\n"
+        return ""
+
+    @classmethod
     def Entity_prepare(cls, ent, ctx: SerializerCtx, serialize=True):
         if serialize:
             serializedGenerics = []
             serializedPorts = []
 
+        GenericSerializer.Entity(ent, ctx)
         scope = ctx.scope
+
         ent.generics.sort(key=lambda x: x.hdl_name)
         ent.ports.sort(key=lambda x: x.name)
-
-        ent.name = scope.checkedName(ent.name, ent, isGlobal=True)
         for g in ent.generics:
             g.hdl_name = scope.checkedName(g.hdl_name, g)
             if serialize:
@@ -113,8 +120,11 @@ class GenericSerializer():
         Entity is just forward declaration of Architecture, it is not used
         in most HDL languages as there is no recursion in hierarchy
         """
+        ent.name = ctx.scope.checkedName(ent.name, ent)
+        ctx.scope = ctx.scope.level_push(ent.name)
+        ctx.scope.serializer_ctx = ctx
+        ctx.currentUnit = ent.origin
 
-        ent.name = ctx.scope.checkedName(ent.name, ent, isGlobal=True)
         return ""
 
     @classmethod

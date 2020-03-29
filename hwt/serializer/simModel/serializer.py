@@ -18,7 +18,7 @@ from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.constCache import ConstCache
 from hwt.serializer.generic.context import SerializerCtx
 from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.generic.nameScope import LangueKeyword
+from hdlConvertor.translate.common.name_scope import LangueKeyword
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.simModel.keywords import SIMMODEL_KEYWORDS
 from hwt.serializer.simModel.ops import SimModelSerializer_ops

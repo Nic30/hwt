@@ -165,8 +165,9 @@ class ResourceAnalyzer(GenericSerializer):
     def Entity(cls, ent: Entity, ctx: ResourceContext) -> None:
         """
         Entity is just header, we do not need to inspect it for resources
+        but we need to perform namechecking in order to avoid name collisions
         """
-        return
+        GenericSerializer.Entity(ent, ctx)
 
     def getBaseContext(self) -> ResourceContext:
         """

@@ -9,7 +9,7 @@ from hwt.pyUtils.arrayQuery import groupedby, distinctBy
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.mapExpr import MapExpr
-from hwt.serializer.generic.nameScope import LangueKeyword, NameScope
+from hdlConvertor.translate.common.name_scope import LangueKeyword, NameScope
 from hwt.serializer.generic.portMap import PortMap
 from hwt.serializer.generic.serializer import GenericSerializer, CurrentUnitSwap
 from hwt.serializer.utils import maxStmId
@@ -26,10 +26,9 @@ from hwt.synthesizer.param import Param
 class VhdlNameScope(NameScope):
     RE_MANY_UNDERSCORES = re.compile(r"(_{2,})")
 
-    def checkedName(self, actualName, actualObj, isGlobal=False):
+    def checkedName(self, actualName, actualObj):
         actualName = self.RE_MANY_UNDERSCORES.sub(r"_", actualName)
-        return NameScope.checkedName(self, actualName, actualObj,
-                                     isGlobal=isGlobal)
+        return NameScope.checkedName(self, actualName, actualObj)
 
 
 class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
@@ -45,9 +44,8 @@ use IEEE.numeric_std.all;
 
     @classmethod
     def getBaseNameScope(cls):
-        s = VhdlNameScope(True)
-        s.setLevel(1)
-        s[0].update(cls._keywords_dict)
+        s = VhdlNameScope.make_top(True)
+        s.update(cls._keywords_dict)
         return s
 
     @classmethod
@@ -79,11 +77,8 @@ use IEEE.numeric_std.all;
             for p in arch.processes:
                 procs.append(cls.HWProcess(p, childCtx))
 
-            # architecture names can be same for different entities
-            # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
-
             components = [
-                x[1][0] for x in 
+                x[1][0] for x in
                 groupedby(arch.componentInstances, lambda c: c.name)
             ]
             components.sort(key=lambda c: c.name)
@@ -148,18 +143,17 @@ use IEEE.numeric_std.all;
     def Entity(cls, entity: Entity, ctx):
         with CurrentUnitSwap(ctx, entity.origin):
             generics, ports = cls.Entity_prepare(entity, ctx)
-            
+
             entVhdl = cls.entityTmpl.render(
                 indent=getIndent(ctx.indent),
                 name=entity.name,
                 ports=ports,
                 generics=generics
             )
-            
-            doc = entity.__doc__
-            if doc and doc is not Entity.__doc__:
-                doc = cls.comment(doc)
-                return "%s\n%s\n%s" % (doc, cls.DEFAULT_IMPORTS, entVhdl)
+
+            doc = cls.get_doc(entity)
+            if doc:
+                return "%s%s\n%s" % (doc, cls.DEFAULT_IMPORTS, entVhdl)
             else:
                 return "%s\n%s" % (cls.DEFAULT_IMPORTS, entVhdl)
 

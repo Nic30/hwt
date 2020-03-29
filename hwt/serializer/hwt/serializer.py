@@ -16,7 +16,7 @@ from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.constCache import ConstCache
 from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.generic.nameScope import LangueKeyword
+from hdlConvertor.translate.common.name_scope import LangueKeyword
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.hwt.keywords import HWT_KEYWORDS
 from hwt.serializer.hwt.ops import HwtSerializer_ops
@@ -98,7 +98,6 @@ class HwtSerializer(HwtSerializer_value, HwtSerializer_ops,
         """
 
         cls.Entity_prepare(ent, ctx, serialize=False)
-        ent.name = ctx.scope.checkedName(ent.name, ent, isGlobal=True)
         ports = list(
             map(lambda p: (p.name, cls.HdlType(p._dtype, ctx)),
                 ent.ports))

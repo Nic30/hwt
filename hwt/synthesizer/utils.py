@@ -52,8 +52,7 @@ def toRtl(unitOrCls: Unit, name: str=None,
         assert isinstance(name, str)
         u._name = name
 
-    globScope = serializer.getBaseNameScope()
-    mouduleScopes = {}
+    global_scope = serializer.getBaseNameScope()
 
     # unitCls : unitobj
     serializedClasses = {}
@@ -80,13 +79,8 @@ def toRtl(unitOrCls: Unit, name: str=None,
         if doSerialize:
             # check what is the object which we are currently serializing
             if isinstance(obj, Entity):
-                s = globScope.fork(1)
-                s.setLevel(2)
                 ctx = serializer.getBaseContext()
-                ctx.scope = s
-                mouduleScopes[obj] = ctx
-                ctx.currentUnit = obj.origin
-
+                ctx.scope = global_scope
                 sc = serializer.Entity(obj, ctx)
                 if createFiles:
                     fName = obj.name + serializer.fileExtension
@@ -94,8 +88,10 @@ def toRtl(unitOrCls: Unit, name: str=None,
 
             elif isinstance(obj, Architecture):
                 try:
-                    ctx = mouduleScopes[obj.entity]
-                except KeyError:
+                    ctx = global_scope.get_children(obj.entity.name)
+                    # 0 for globals, 1 fo the HdlModule
+                    ctx = ctx.serializer_ctx
+                except (KeyError, IndexError):
                     raise SerializerException(
                         "Entity should be serialized"
                         " before architecture of %s"

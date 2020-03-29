@@ -12,7 +12,7 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.mapExpr import MapExpr
-from hwt.serializer.generic.nameScope import LangueKeyword
+from hdlConvertor.translate.common.name_scope import LangueKeyword
 from hwt.serializer.generic.portMap import PortMap
 from hwt.serializer.generic.serializer import GenericSerializer, CurrentUnitSwap
 from hwt.serializer.utils import maxStmId
@@ -48,12 +48,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
             generics=generics
         )
 
-        doc = ent.__doc__
-        if doc and id(doc) != id(Entity.__doc__):
-            doc = cls.comment(doc) + "\n"
-            return doc + entVerilog
-        else:
-            return entVerilog
+        return cls.get_doc(ent) + entVerilog
 
     @classmethod
     def hardcodeRomIntoProcess(cls, rom):
@@ -146,8 +141,6 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
             p_str = cls.HWProcess(p, childCtx)
             procs.append(p_str)
 
-        # architecture names can be same for different entities
-        # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
         componentInstances = list(
             map(lambda c: cls.ComponentInstance(c, childCtx),
                 arch.componentInstances))

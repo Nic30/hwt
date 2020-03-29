@@ -4,7 +4,7 @@ from jinja2.loaders import PackageLoader
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.entity import Entity
 from hwt.interfaces.std import Clk
-from hwt.serializer.generic.nameScope import LangueKeyword
+from hdlConvertor.translate.common.name_scope import LangueKeyword
 from hwt.serializer.generic.serializer import GenericSerializer
 from hwt.serializer.systemC.context import SystemCCtx
 from hwt.serializer.systemC.keywords import SYSTEMC_KEYWORDS
@@ -58,10 +58,7 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type,
     def Entity(cls, ent, ctx):
         cls.Entity_prepare(ent, ctx)
         # [TODO] separate declarations from definitions
-        doc = ent.__doc__
-        if doc and id(doc) != id(Entity.__doc__):
-            return cls.comment(doc) + "\n"
-        return ""
+        return cls.get_doc(ent)
 
     @classmethod
     def GenericItem(cls, g, ctx):
@@ -105,8 +102,6 @@ class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type,
         for p in arch.processes:
             procs.append(cls.HWProcess(p, childCtx))
 
-        # architecture names can be same for different entities
-        # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
         processesSensitivity = []
         sensitivityCtx = ctx.forSensitivityList()
         for p in arch.processes:
