@@ -11,7 +11,7 @@ from hwt.synthesizer.unit import Unit
 
 {% if componentInstances %}{%
  for c in componentInstances %}
-if "{{c.name}}" not in locals(): # support for all models in single file
+if "{{c.name}}" not in locals(): # support for all components in single file
     import {{c.name}}
     reload({{c.name}})
     from {{c.name}} import {{c.name}}{% endfor %}
