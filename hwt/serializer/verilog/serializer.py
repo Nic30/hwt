@@ -38,7 +38,7 @@ class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
         return VerilogSerializerCtx(cls.getBaseNameScope(), 0, None, None)
 
     @classmethod
-    def Entity(cls, ent, ctx):
+    def Entity(cls, ent: Entity, ctx):
         generics, ports = cls.Entity_prepare(ent, ctx)
 
         entVerilog = cls.moduleHeadTmpl.render(
