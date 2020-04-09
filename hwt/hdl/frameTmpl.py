@@ -377,37 +377,32 @@ class FrameTmpl(object):
             yield v
 
     @internal
-    def __repr__getName(self, transPart, fieldWidth):
+    def __repr__getName(self, transPart: TransPart, fieldWidth: int):
+        """
+        Get name string for a field
+        """
         if transPart.isPadding:
             return "X" * fieldWidth
         else:
+            path = transPart.getFieldPath()
             names = []
-            tp = transPart.tmpl
-            while tp is not None:
-                try:
-                    isArrayElm = isinstance(tp.parent.dtype, HArray)
-                except AttributeError:
-                    isArrayElm = False
-
-                if isArrayElm:
-                    arr = transPart.tmpl.parent
-                    arrS = arr.bitAddr
-                    itemW = (arr.bitAddrEnd - arrS) // arr.itemCnt
-                    s = transPart.startOfPart
-                    indx = (s - arrS) // itemW
-                    names.append("[%d]" % indx)
+            for p in path:
+                if isinstance(p, int):
+                    names.append("[%d]" % p)
                 else:
-                    o = tp.origin[-1]
-                    if o is None:
-                        break
-                    if not isinstance(o, HdlType) and o.name is not None:
-                        names.append(o.name)
-                tp = tp.parent
+                    if names:
+                        names.append(".%s" % p.name)
+                    else:
+                        names.append(p.name)
 
             return "".join(names)
 
     @internal
-    def __repr__word(self, index, width, padding, transParts):
+    def __repr__word(self,
+                     index: int,
+                     width: int,
+                     padding: int,
+                     transParts: List[TransPart]):
         buff = ["{0: <{padding}}|".format(index, padding=padding)]
         DW = self.wordWidth
         partsWithChoice = []
