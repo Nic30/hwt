@@ -1,15 +1,15 @@
+from builtins import isinstance
+from copy import deepcopy
 from typing import Callable, Tuple, Generator, Union, Optional
 
+from hwt.doc_markers import internal
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
+from hwt.hdl.types.stream import HStream
 from hwt.hdl.types.struct import HStruct, HStructField
 from hwt.hdl.types.union import HUnion
 from hwt.pyUtils.arrayQuery import iter_with_last
-from hwt.hdl.types.stream import HStream
-from hwt.doc_markers import internal
-from builtins import isinstance
-from copy import deepcopy
 
 
 def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
