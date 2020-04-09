@@ -1,7 +1,6 @@
 from itertools import zip_longest
 from math import ceil, floor, inf
-import re
-from typing import Union, Generator
+from typing import Union, Generator, List
 
 from hwt.doc_markers import internal
 from hwt.hdl.frameTmplUtils import TransTmplWordIterator, \
@@ -35,10 +34,12 @@ class FrameTmpl(object):
         is called and is not builded
     :note: others ivars described in __init__
     """
-    __RE_RM_ARRAY_DOTS = re.compile("(\.\[)")
 
-    def __init__(self, origin, wordWidth, startBitAddr, endBitAddr,
-                 transParts):
+    def __init__(self, origin: HdlType,
+                 wordWidth: int,
+                 startBitAddr: int,
+                 endBitAddr: int,
+                 transParts: List[TransPart]):
         """
         :param origin: instance of HType (usually HStruct)
             from which this FrameTmpl was generated from
@@ -148,9 +149,9 @@ class FrameTmpl(object):
                 isFirstInFrame = True
                 partsPending = False
                 # start on new word
-                startOfThisFrame = _endOfThisFrame
-                endOfThisFrame = startOfThisFrame + maxFrameLen
                 lastWordI = wordI - 1
+                startOfThisFrame = lastWordI * wordWidth
+                endOfThisFrame = startOfThisFrame + maxFrameLen
 
             if isFirstInFrame:
                 partsPending = True
@@ -297,9 +298,9 @@ class FrameTmpl(object):
 
                 lastEnd = endOfPadding
 
-            if parts:
-                # in the case end of frame is not aligned to end of word
-                yield (wIndex, parts)
+        if parts:
+            # in the case end of frame is not aligned to end of word
+            yield (wIndex, parts)
 
     @staticmethod
     def fieldToDataDict(dtype, data, res):
@@ -403,8 +404,7 @@ class FrameTmpl(object):
                         names.append(o.name)
                 tp = tp.parent
 
-            # [HOTFIX] rm dots when indexing on array
-            return self.__RE_RM_ARRAY_DOTS.sub("[", ".".join(reversed(names)))
+            return "".join(names)
 
     @internal
     def __repr__word(self, index, width, padding, transParts):
