@@ -2,6 +2,7 @@ from typing import Union, Tuple, Optional
 
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
+from hwt.hdl.transTmpl import TransTmpl
 
 
 class TransPart(object):
@@ -21,13 +22,14 @@ class TransPart(object):
     """
 
     def __init__(self, parent: 'FrameTmpl',
-                 tmpl: Optional[Union[HStructField, HdlType]],
+                 tmpl: Optional[TransTmpl],
                  canBeRemoved: bool,
                  startOfPart: int,
                  endOfPart: int,
                  inFieldOffset: int):
         self.parent = parent
         self.tmpl = tmpl
+#        assert tmpl is None or isinstance(tmpl, TransTmpl), tmpl
         self.isPadding = tmpl is None
         self.canBeRemoved = canBeRemoved
         self.startOfPart = startOfPart

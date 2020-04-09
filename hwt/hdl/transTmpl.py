@@ -9,6 +9,7 @@ from hwt.pyUtils.arrayQuery import iter_with_last
 from hwt.hdl.types.stream import HStream
 from hwt.doc_markers import internal
 from builtins import isinstance
+from copy import copy, deepcopy
 
 
 def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
@@ -100,17 +101,20 @@ class TransTmpl(object):
 
     :ivar ~.dtype: type of this item
     :ivar ~.bitAddr: offset of start of this item in bits
+    :ivar ~.bitAddrEnd: end of this item in bits
     :ivar ~.parent: object which generated this item, optional TransTmpl
     :ivar ~.origin: object which was template for generating of this item
     :ivar ~.itemCnt: if this transaction template is for array or stream this is
         item count for such an array or stream
     :ivar ~.childrenAreChoice: flag which tells if childrens are sequence
         or only one of them can be used in same time
+    :ivar rel_field_path: path in original datatype relative to parent
     """
 
     def __init__(self, dtype: HdlType, bitAddr: int=0,
                  parent: Optional['TransTmpl']=None,
-                 origin: Optional[HStructField]=None):
+                 origin: Optional[HStructField]=None,
+                 rel_field_path: Tuple[Union[HStructField, HdlType, int], ...]=tuple()):
         self.parent = parent
         assert isinstance(dtype, HdlType), dtype
         assert parent is None or isinstance(parent, TransTmpl), parent
@@ -121,6 +125,8 @@ class TransTmpl(object):
         self.origin = origin
         self.dtype = dtype
         self.children = []
+        self.itemCnt = None
+        self.rel_field_path = rel_field_path
         self._loadFromHType(dtype, bitAddr)
 
     @internal
@@ -142,7 +148,6 @@ class TransTmpl(object):
 
         for f in dtype.fields:
             t = f.dtype
-            origin = (*self.origin, f)
 
             isPadding = f.name is None
 
@@ -150,7 +155,12 @@ class TransTmpl(object):
                 width = t.bit_length()
                 bitAddr += width
             else:
-                fi = TransTmpl(t, bitAddr, parent=self, origin=origin)
+                origin = (*self.origin, f)
+                fi = TransTmpl(t, bitAddr,
+                               parent=self,
+                               origin=origin,
+                               rel_field_path=(f,),
+                )
                 self.children.append(fi)
                 bitAddr = fi.bitAddrEnd
 
@@ -163,8 +173,11 @@ class TransTmpl(object):
 
         :return: address of it's end
         """
-        for field in dtype.fields.values():
-            ch = TransTmpl(field.dtype, 0, parent=self, origin=(*self.origin, field))
+        for f in dtype.fields.values():
+            ch = TransTmpl(f.dtype, 0, parent=self,
+                           origin=(*self.origin, f),
+                           rel_field_path=(f,),
+                           )
             self.children.append(ch)
         return bitAddr + dtype.bit_length()
 
@@ -177,7 +190,10 @@ class TransTmpl(object):
         """
         self.itemCnt = int(dtype.size)
         self.children = TransTmpl(
-            dtype.element_t, 0, parent=self, origin=(*self.origin, 0))
+            dtype.element_t, 0, parent=self,
+            origin=(*self.origin, 0),
+            rel_field_path=(0,)
+        )
         return bitAddr + self.itemCnt * self.children.bitAddrEnd
 
     @internal
@@ -188,7 +204,9 @@ class TransTmpl(object):
         :return: address of it's end
         """
         self.children = TransTmpl(
-            dtype.element_t, 0, parent=self, origin=self.origin)
+            dtype.element_t, 0, parent=self, origin=self.origin,
+            rel_field_path=(0,))
+
         if not isinstance(dtype.len_min, int) or dtype.len_min != dtype.len_max:
             raise ValueError("This template is ment only"
                              " for types of constant and finite size")
@@ -278,7 +296,15 @@ class TransTmpl(object):
                 itemSize = (self.bitAddrEnd - self.bitAddr) // self.itemCnt
                 for i in range(self.itemCnt):
                     with otherObjItCtx(i):
-                        yield from self.children.walkFlatten(
+                        if i == 0:
+                            c = self.children
+                        else:
+                            c = deepcopy(self.children)
+                            assert c.rel_field_path == (0, ), (c.rel_field_path)
+                            # replace the index
+                            c.rel_field_path = (i, )
+                            
+                        yield from c.walkFlatten(
                             base + i * itemSize,
                             shouldEnterFn,
                             otherObjItCtx)
@@ -287,6 +313,32 @@ class TransTmpl(object):
                                        self.children)
             else:
                 raise TypeError(t)
+
+    def getFieldPath(self):
+        """
+        Get field path which specifies the location in original HdlType data type
+        """
+        path = []
+        tmpl = self
+        while tmpl is not None:
+            path.extend(reversed(tmpl.rel_field_path))
+            tmpl = tmpl.parent
+        return reversed(path)
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        c = self.children
+        if isinstance(c, TransTmpl):
+            c.parent = self
+        else:
+            for _c in c:
+                _c.parent = self
+
+        return result
 
     def __repr__(self, offset: int=0):
         offsetStr = "".join(["    " for _ in range(offset)])

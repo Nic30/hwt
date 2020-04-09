@@ -384,7 +384,7 @@ class FrameTmpl(object):
         if transPart.isPadding:
             return "X" * fieldWidth
         else:
-            path = transPart.getFieldPath()
+            path = transPart.tmpl.getFieldPath()
             names = []
             for p in path:
                 if isinstance(p, int):
