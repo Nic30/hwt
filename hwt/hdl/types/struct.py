@@ -57,12 +57,13 @@ class HStruct(HdlType):
     :ivar ~.valueCls: Class of value for this type as usual
         in HdlType implementations
     """
-    def __init__(self, *template, name=None):
+    def __init__(self, *template, name=None, const=False):
         """
         :param template: list of tuples (type, name) or HStructField objects
             name can be None (= padding)
         :param name: optional name used for debugging purposes
         """
+        super(HStruct, self).__init__(const=const)
         fields = []
         self.name = name
         fieldNames = []
@@ -89,7 +90,7 @@ class HStruct(HdlType):
                     bit_length = None
 
         self.fields = tuple(fields)
-        self.__hash = hash((self.name, self.fields))
+        self.__hash = hash((self.name, self.const, self.fields))
         self.__bit_length_val = bit_length
 
         usedNames = set(fieldNames)
@@ -137,7 +138,7 @@ class HStruct(HdlType):
         if self is other:
             return True
         if (type(self) is type(other)):
-            if self.name != other.name:
+            if self.name != other.name or self.const != other.const:
                 raise False
             try:
                 self_l = self.bit_length()

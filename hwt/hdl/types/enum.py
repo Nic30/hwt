@@ -12,13 +12,13 @@ class HEnum(HdlType):
     :note: for each value there is a property on this type object
     """
 
-    def __init__(self, name, valueNames):
+    def __init__(self, name, valueNames, const=False):
         """
         :param name: name for this type
         :param valueNames: sequence of string which will be used as names
             for enum members
         """
-        super(HEnum, self).__init__()
+        super(HEnum, self).__init__(const=const)
         self.name = name
         self._allValues = tuple(valueNames)
         for name in valueNames:

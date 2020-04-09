@@ -114,12 +114,13 @@ class HUnion(HdlType):
     :ivar ~.__bit_length_val: precalculated bit_length of this type
     """
 
-    def __init__(self, *template, name=None):
+    def __init__(self, *template, name=None, const=False):
         """
         :param template: list of tuples (type, name) or HStructField objects
             name can be None (= padding)
         :param name: optional name used for debugging purposes
         """
+        super(HUnion, self).__init__(const=const)
         self.fields = OrderedDict()
         self.name = name
         bit_length = None

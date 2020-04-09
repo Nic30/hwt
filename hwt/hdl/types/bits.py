@@ -18,12 +18,13 @@ class Bits(HdlType, Bits3t):
                  force_vector=BITS_DEFAUTL_FORCEVECTOR,
                  negated=BITS_DEFAUTL_NEGATED,
                  name=None,
+                 const=False,
                  strict_sign=True, strict_width=True):
         """
         :param negated: if true the value is in negated form
         """
         self.negated = negated
-
+        HdlType.__init__(self, const=const)
         bit_length = int(bit_length)
         assert bit_length > 0, bit_length
         Bits3t.__init__(self, bit_length, signed, name=name,

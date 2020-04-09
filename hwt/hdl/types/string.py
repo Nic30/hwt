@@ -3,8 +3,6 @@ from hwt.hdl.types.hdlType import HdlType
 
 
 class String(HdlType):
-    def __init__(self):
-        super().__init__()
 
     def all_mask(self):
         return 1

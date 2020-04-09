@@ -11,8 +11,8 @@ class HArray(HdlType):
     :ivar ~.size: number of items
     """
 
-    def __init__(self, element_t, size):
-        super(HArray, self).__init__()
+    def __init__(self, element_t, size, const=False):
+        super(HArray, self).__init__(const=const)
         self.element_t = element_t
         self.size = size
 
@@ -25,7 +25,7 @@ class HArray(HdlType):
 
     @internal
     def __hash__(self):
-        return hash(id(self))
+        return hash((self.const, self.element_t, self.size))
 
     def bit_length(self):
         """
