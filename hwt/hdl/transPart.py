@@ -1,7 +1,5 @@
-from typing import Union, Tuple, Optional
+from typing import Tuple, Optional
 
-from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.types.struct import HStructField
 from hwt.hdl.transTmpl import TransTmpl
 
 
@@ -29,7 +27,7 @@ class TransPart(object):
                  inFieldOffset: int):
         self.parent = parent
         self.tmpl = tmpl
-#        assert tmpl is None or isinstance(tmpl, TransTmpl), tmpl
+        # assert tmpl is None or isinstance(tmpl, TransTmpl), tmpl
         self.isPadding = tmpl is None
         self.canBeRemoved = canBeRemoved
         self.startOfPart = startOfPart

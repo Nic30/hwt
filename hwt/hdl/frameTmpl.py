@@ -181,7 +181,7 @@ class FrameTmpl(object):
                 if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
                     endOfThisFrame -= paddingWords * wordWidth
                     # align end of frame to word
-            endOfThisFrame = min(startOfThisFrame +
+            endOfThisFrame = min(startOfThisFrame + 
                                  maxFrameLen, endOfThisFrame)
 
             yield FrameTmpl(transaction,
@@ -194,7 +194,7 @@ class FrameTmpl(object):
 
         # final padding on the end
         while withPadding and startOfThisFrame < transaction.bitAddrEnd:
-            endOfThisFrame = min(startOfThisFrame +
+            endOfThisFrame = min(startOfThisFrame + 
                                  maxFrameLen, transaction.bitAddrEnd)
 
             yield FrameTmpl(transaction,
@@ -304,7 +304,7 @@ class FrameTmpl(object):
 
     @staticmethod
     def fieldToDataDict(dtype, data, res):
-        return FrameTmpl._fieldToDataDict(dtype, (dtype, ), data, res)
+        return FrameTmpl._fieldToDataDict(dtype, (dtype,), data, res)
 
     @staticmethod
     def _fieldToDataDict(dtype, path, data, res):

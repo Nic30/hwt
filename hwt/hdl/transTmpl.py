@@ -9,7 +9,7 @@ from hwt.pyUtils.arrayQuery import iter_with_last
 from hwt.hdl.types.stream import HStream
 from hwt.doc_markers import internal
 from builtins import isinstance
-from copy import copy, deepcopy
+from copy import deepcopy
 
 
 def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
@@ -20,6 +20,7 @@ class _DummyIteratorCtx(object):
     """
     Dummy version of :class:`.ObjIteratorCtx`
     """
+
     def __call__(self, prop):
         return self
 
@@ -119,7 +120,7 @@ class TransTmpl(object):
         assert isinstance(dtype, HdlType), dtype
         assert parent is None or isinstance(parent, TransTmpl), parent
         if origin is None:
-            origin = (dtype, )
+            origin = (dtype,)
         else:
             assert isinstance(origin, tuple), origin
         self.origin = origin
@@ -255,7 +256,7 @@ class TransTmpl(object):
 
     def walkFlatten(self, offset: int=0,
                     shouldEnterFn=_default_shouldEnterFn,
-                    otherObjItCtx: ObjIteratorCtx =_DummyIteratorCtx()
+                    otherObjItCtx: ObjIteratorCtx=_DummyIteratorCtx()
                     ) -> Generator[
             Union[Tuple[Tuple[int, int], 'TransTmpl'], 'OneOfTransaction'],
             None, None]:
@@ -300,9 +301,9 @@ class TransTmpl(object):
                             c = self.children
                         else:
                             c = deepcopy(self.children)
-                            assert c.rel_field_path == (0, ), (c.rel_field_path)
+                            assert c.rel_field_path == (0,), (c.rel_field_path)
                             # replace the index
-                            c.rel_field_path = (i, )
+                            c.rel_field_path = (i,)
                             
                         yield from c.walkFlatten(
                             base + i * itemSize,
