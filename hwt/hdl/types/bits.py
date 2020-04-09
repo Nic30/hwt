@@ -60,6 +60,12 @@ class Bits(HdlType, Bits3t):
             cls._valCls = BitsVal
             return cls._valCls
 
+    def __hash__(self):
+        return hash((Bits3t.__hash__(self), self.const))
+
+    def __eq__(self, other):
+        return  Bits3t.__eq__(self, other) and self.const == other.const
+
     def __repr__(self, indent=0, withAddr=None, expandStructs=False):
         """
         :param indent: number of indentation
@@ -77,6 +83,8 @@ class Bits(HdlType, Bits3t):
             constr.append("force_vector")
         if self.signed:
             constr.append("signed")
+        if self.const:
+            constr.append("const")
         elif self.signed is False:
             constr.append("unsigned")
         if not self.strict_sign:
