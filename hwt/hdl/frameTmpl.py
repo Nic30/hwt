@@ -391,9 +391,9 @@ class FrameTmpl(object):
                     names.append("[%d]" % p)
                 else:
                     if names:
-                        names.append(".%s" % p.name)
+                        names.append(".%s" % p)
                     else:
-                        names.append(p.name)
+                        names.append(p)
 
             return "".join(names)
 
