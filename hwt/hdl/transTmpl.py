@@ -16,78 +16,6 @@ def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
     return (bool(transTmpl.children), not bool(transTmpl.children))
 
 
-class _DummyIteratorCtx(object):
-    """
-    Dummy version of :class:`.ObjIteratorCtx`
-    """
-
-    def __call__(self, prop):
-        return self
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-
-class ObjIteratorCtx(object):
-    """
-    Object Iterator context
-
-    Allows to walk object properties and keep track of it
-
-    :note: :class:`.TransTmpl` uses this object to walk other object together with structure type
-        this is useful when you need to walk generated interface together with type
-        from which it was generated from
-
-    :ivar ~.actual: actual selected object
-    :ivar ~.parent: list of collected parent of this object
-    :ivar ~.onParentNames: list, str for children which are properties,
-        int for children which are items of parent
-    """
-
-    def __init__(self, obj):
-        self.actual = obj
-        self.parents = []
-        self.onParentNames = []
-        self.nextProp = None
-
-    def __call__(self, prop: Union[str, int]):
-        """
-        Prepare to enter child property or item in sequence
-
-        :prop: str if entering a property, int if entering an item of sequence
-        """
-        self.nextProp = prop
-        return self
-
-    def __enter__(self):
-        """
-        Enter child property or item in sequence
-        """
-        prop = self.nextProp
-        self.nextProp = None
-        a = self.actual
-        if isinstance(prop, int):
-            child = a[prop]
-        else:
-            child = getattr(a, prop)
-
-        self.parents.append(a)
-        self.onParentNames.append(prop)
-        self.actual = child
-
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Move back to parent
-        """
-        self.actual = self.parents.pop()
-        self.onParentNames.pop()
-
-
 class TransTmpl(object):
     """
     Transaction template for types of constant size
@@ -115,7 +43,7 @@ class TransTmpl(object):
     def __init__(self, dtype: HdlType, bitAddr: int=0,
                  parent: Optional['TransTmpl']=None,
                  origin: Optional[HStructField]=None,
-                 rel_field_path: Tuple[Union[HStructField, HdlType, int], ...]=tuple()):
+                 rel_field_path: Tuple[Union[str, int], ...]=tuple()):
         self.parent = parent
         assert isinstance(dtype, HdlType), dtype
         assert parent is None or isinstance(parent, TransTmpl), parent
@@ -160,7 +88,7 @@ class TransTmpl(object):
                 fi = TransTmpl(t, bitAddr,
                                parent=self,
                                origin=origin,
-                               rel_field_path=(f,),
+                               rel_field_path=(f.name,),
                 )
                 self.children.append(fi)
                 bitAddr = fi.bitAddrEnd
@@ -177,7 +105,7 @@ class TransTmpl(object):
         for f in dtype.fields.values():
             ch = TransTmpl(f.dtype, 0, parent=self,
                            origin=(*self.origin, f),
-                           rel_field_path=(f,),
+                           rel_field_path=(f.name,),
                            )
             self.children.append(ch)
         return bitAddr + dtype.bit_length()
@@ -255,8 +183,7 @@ class TransTmpl(object):
         return self.bitAddrEnd - self.bitAddr
 
     def walkFlatten(self, offset: int=0,
-                    shouldEnterFn=_default_shouldEnterFn,
-                    otherObjItCtx: ObjIteratorCtx=_DummyIteratorCtx()
+                    shouldEnterFn=_default_shouldEnterFn
                     ) -> Generator[
             Union[Tuple[Tuple[int, int], 'TransTmpl'], 'OneOfTransaction'],
             None, None]:
@@ -288,27 +215,25 @@ class TransTmpl(object):
                 pass
             elif isinstance(t, HStruct):
                 for c in self.children:
-                    with otherObjItCtx(c.origin[-1].name):
-                        yield from c.walkFlatten(
-                            offset,
-                            shouldEnterFn,
-                            otherObjItCtx)
+                    yield from c.walkFlatten(
+                        offset,
+                        shouldEnterFn)
             elif isinstance(t, (HArray, HStream)):
                 itemSize = (self.bitAddrEnd - self.bitAddr) // self.itemCnt
                 for i in range(self.itemCnt):
-                    with otherObjItCtx(i):
-                        if i == 0:
-                            c = self.children
-                        else:
-                            c = deepcopy(self.children)
-                            assert c.rel_field_path == (0,), (c.rel_field_path)
-                            # replace the index
-                            c.rel_field_path = (i,)
-                            
-                        yield from c.walkFlatten(
-                            base + i * itemSize,
-                            shouldEnterFn,
-                            otherObjItCtx)
+                    if i == 0:
+                        c = self.children
+                    else:
+                        # spot a new array item
+                        c = deepcopy(self.children)
+                        assert c.rel_field_path == (0,), (c.rel_field_path)
+                        # replace the index
+                        c.rel_field_path = (i,)
+                        
+                    yield from c.walkFlatten(
+                        base + i * itemSize,
+                        shouldEnterFn)
+
             elif isinstance(t, HUnion):
                 yield OneOfTransaction(self, offset, shouldEnterFn,
                                        self.children)
@@ -324,7 +249,7 @@ class TransTmpl(object):
         while tmpl is not None:
             path.extend(reversed(tmpl.rel_field_path))
             tmpl = tmpl.parent
-        return reversed(path)
+        return tuple(reversed(path))
 
     def __deepcopy__(self, memo):
         cls = self.__class__
