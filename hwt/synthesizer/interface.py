@@ -177,7 +177,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 if mIfc._masterDir == DIRECTION.OUT:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr(
-                            "Invalid connection %r <= %r" % (ifc, mIfc))
+                            "Invalid connection", ifc, "<=", mIfc)
 
                     yield from ifc._connectTo(mIfc,
                                               exclude=exclude,
@@ -185,7 +185,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 else:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr(
-                            "Invalid connection %r <= %r" % (mIfc, ifc))
+                            "Invalid connection", mIfc, "<=", ifc)
 
                     yield from mIfc._connectTo(ifc,
                                                exclude=exclude,
