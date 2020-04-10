@@ -64,9 +64,10 @@ class HStruct(HdlType):
         :param name: optional name used for debugging purposes
         """
         super(HStruct, self).__init__(const=const)
+
         fields = []
+        field_by_name = {}
         self.name = name
-        fieldNames = []
         bit_length = 0
         for f in template:
             try:
@@ -79,7 +80,8 @@ class HStruct(HdlType):
 
             fields.append(field)
             if field.name is not None:
-                fieldNames.append(field.name)
+                assert field.name not in field_by_name, field.name
+                field_by_name[field.name] = field
 
             t = field.dtype
             if bit_length is not None:
@@ -90,15 +92,16 @@ class HStruct(HdlType):
                     bit_length = None
 
         self.fields = tuple(fields)
+        self.field_by_name = field_by_name
         self.__hash = hash((self.name, self.const, self.fields))
         self.__bit_length_val = bit_length
 
-        usedNames = set(fieldNames)
+        usedNames = set(field_by_name.keys())
         assert not protectedNames.intersection(usedNames),\
             protectedNames.intersection(usedNames)
 
         class StructVal(StructValBase):
-            __slots__ = fieldNames
+            __slots__ = list(usedNames)
 
         if name is not None:
             StructVal.__name__ = name + "Val"

@@ -122,6 +122,7 @@ class HUnion(HdlType):
         """
         super(HUnion, self).__init__(const=const)
         self.fields = OrderedDict()
+        self.field_by_name = self.fields
         self.name = name
         bit_length = None
 
