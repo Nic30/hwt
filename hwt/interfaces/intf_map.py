@@ -91,6 +91,7 @@ def HTypeFromIntfMapItem(
             dtype = HTypeFromIntfMap(typeOrListOfInterfaces)
 
     assert isinstance(nameOrPrefix, str) or nameOrPrefix is None, nameOrPrefix
+    assert isinstance(dtype, HdlType)
 
     f = HStructField(dtype, nameOrPrefix)
 
