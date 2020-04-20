@@ -60,10 +60,10 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
             res.add(s)
 
     def vcdRegisterSignals(self,
-                              obj: Union[Interface, Unit],
-                              model: BasicRtlSimModel,
-                              parent: Optional[VcdVarWritingScope],
-                              interface_signals: Set[BasicRtlSimProxy]):
+                           obj: Union[Interface, Unit],
+                           model: BasicRtlSimModel,
+                           parent: Optional[VcdVarWritingScope],
+                           interface_signals: Set[BasicRtlSimProxy]):
         """
         Register signals from interfaces for Interface or Unit instances
         """

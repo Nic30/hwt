@@ -116,4 +116,4 @@ class HdlType():
             (used only by HStruct)
         :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
-        return "<%s>" % (self.__class__.__name__)
+        return "<%s %s>" % (self.__class__.__name__, self.name)

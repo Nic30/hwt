@@ -1,3 +1,6 @@
+"""
+Commonly used constants during HW devel.
+"""
 from enum import Enum
 
 # import constants from other packages to have them on one place
