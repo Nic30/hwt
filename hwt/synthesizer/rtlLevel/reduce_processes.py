@@ -2,79 +2,10 @@ from itertools import islice
 
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.operator import Operator
-from hwt.hdl.process import HWProcess
-from hwt.hdl.statements import IncompatibleStructure, HdlStatement
-from hwt.hdl.value import Value
+from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statement import IncompatibleStructure, HdlStatement
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import maxStmId
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.rtlSignal import NO_NOPVAL
-
-
-@internal
-def removeUnconnectedSignals(netlist):
-    """
-    Remove signal if does not affect output
-
-    :attention: does not remove signals in cycles which does not affect outputs
-    """
-
-    toDelete = set()
-    toSearch = netlist.signals
-    # nop value to it's target signals
-    nop_values = {}
-    for sig in netlist.signals:
-        if isinstance(sig._nop_val, RtlSignalBase):
-            nop_values.setdefault(sig._nop_val, set()).add(sig)
-
-    while toSearch:
-        _toSearch = set()
-        for sig in toSearch:
-            if not sig.endpoints:
-                try:
-                    if sig._interface is not None:
-                        # skip interfaces before we want to check them,
-                        # they should not be optimized out from design
-                        continue
-                except AttributeError:
-                    pass
-
-                for e in sig.drivers:
-                    # drivers of this signal are useless rm them
-                    if isinstance(e, Operator):
-                        inputs = e.operands
-                        if e.result is sig:
-                            e.result = None
-                    else:
-                        if len(e._outputs) > 1:
-                            inputs = []
-                            e._cut_off_drivers_of(sig)
-                        else:
-                            inputs = e._inputs
-                            netlist.statements.discard(e)
-
-                    for op in inputs:
-                        if not isinstance(op, Value):
-                            op.endpoints.discard(e)
-                            _toSearch.add(op)
-
-                toDelete.add(sig)
-                if sig._nop_val in netlist.signals:
-                    _toSearch.add(sig._nop_val)
-
-        if toDelete:
-            for sig in toDelete:
-                if sig.ctx == netlist:
-                    netlist.signals.remove(sig)
-                _toSearch.discard(sig)
-            toDelete = set()
-        toSearch = _toSearch
-
-    for sig, dst_sigs in nop_values.items():
-        if sig not in netlist.signals:
-            for dst in dst_sigs:
-                dst._nop_val = NO_NOPVAL
 
 
 @internal
@@ -91,7 +22,7 @@ def checkIfIsTooSimple(proc):
 
 
 @internal
-def tryToMerge(procA: HWProcess, procB: HWProcess):
+def tryToMerge(procA: HdlStatementBlock, procB: HdlStatementBlock):
     """
     Try merge procB into procA
 
@@ -101,17 +32,17 @@ def tryToMerge(procA: HWProcess, procB: HWProcess):
     """
     if (checkIfIsTooSimple(procA) or
             checkIfIsTooSimple(procB) or
-            areSetsIntersets(procA.outputs, procB.sensitivityList) or
-            areSetsIntersets(procB.outputs, procA.sensitivityList) or
+            areSetsIntersets(procA._outputs, procB._sensitivity) or
+            areSetsIntersets(procB._outputs, procA._sensitivity) or
             not HdlStatement._is_mergable_statement_list(procA.statements, procB.statements)):
         raise IncompatibleStructure()
 
     procA.statements = HdlStatement._merge_statement_lists(
         procA.statements, procB.statements)
 
-    procA.outputs.extend(procB.outputs)
-    procA.inputs.extend(procB.inputs)
-    procA.sensitivityList.extend(procB.sensitivityList)
+    procA._outputs.extend(procB._outputs)
+    procA._inputs.extend(procB._inputs)
+    procA._sensitivity.extend(procB._sensitivity)
 
     return procA
 

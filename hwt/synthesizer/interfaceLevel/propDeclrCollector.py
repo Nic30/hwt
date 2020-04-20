@@ -306,7 +306,7 @@ class PropDeclrCollector(object):
 
     # implementation phase
     @internal
-    def _loadMyImplementations(self):
+    def _loadImpl(self):
         self._setAttrListener = self._implCollector
         self._impl()
         self._setAttrListener = None
@@ -319,8 +319,8 @@ class PropDeclrCollector(object):
         """
         self._registerUnit(uName, u)
         u._loadDeclarations()
-        self._lazyLoaded.extend(u._toRtl(self._targetPlatform))
-        u._signalsForMyEntity(self._ctx, "sig_" + uName)
+        self._lazyLoaded.extend(u._toRtl(self._target_platform, self._store_manager))
+        u._signalsForSubUnitEntity(self._ctx, "sig_" + uName)
 
     @internal
     def _registerIntfInImpl(self, iName, i):
