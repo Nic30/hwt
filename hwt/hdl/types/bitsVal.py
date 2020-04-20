@@ -19,7 +19,7 @@ from hwt.hdl.value import Value, areValues
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
-from pyMathBitPrecise.bits3t import Bits3val
+from pyMathBitPrecise.bits3t import Bits3val, bits_neg__val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
 
@@ -56,6 +56,8 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 return self
             t = copy(self._dtype)
             t.signed = signed
+            if t.signed is not None:
+                t.force_vector = True
 
             if signed is None:
                 cnv = AllOps.BitsAsVec
@@ -99,7 +101,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             other_w = other._dtype.bit_length()
             resWidth = w + other_w
             Bits = self._dtype.__class__
-            resT = Bits(resWidth, signed=self._dtype.signed)
+            resT = Bits(resWidth, signed=self._dtype.signed, force_vector=True)
             # is instance of signal
             if isinstance(other, InterfaceBase):
                 other = other._sig
@@ -227,7 +229,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             t = key._dtype
             if isinstance(t, Slice):
                 resT = Bits(bit_length=key.staticEval()._size(),
-                            force_vector=st.force_vector,
+                            force_vector=True,
                             signed=st.signed,
                             negated=st.negated)
             elif isinstance(t, Bits):
@@ -368,6 +370,18 @@ class BitsVal(Bits3val, EventCapableVal, Value):
 
         return vec(0, int(other))._concat(self[:other])
 
+    def __neg__(self):
+        if isinstance(self, Value):
+            return bits_neg__val(self)
+        else:
+            if not self._dtype.signed:
+                self = self._signed()
+
+            resT = self._dtype
+
+            o = Operator.withRes(AllOps.MINUS_UNARY, [self], self._dtype)
+            return o._auto_cast(resT)
+
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)
 
@@ -379,9 +393,23 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         if isinstance(self, Value) and isinstance(other, Value):
             return Bits3val.__floordiv__(self, other)
         else:
-            return Operator.withRes(AllOps.MUL,
+            return Operator.withRes(AllOps.DIV,
                                     [self, other],
                                     self._dtype.__copy__())
+
+    def _ternary(self, a, b):
+        if isinstance(self, Value):
+            if self:
+                return a
+            else:
+                return b
+        else:
+            a = toHVal(a)
+            b = toHVal(b)
+            return Operator.withRes(
+                AllOps.TERNARY,
+                [self, a, b],
+                a._dtype.__copy__())
 
     def __mul__(self, other):
         Bits = self._dtype.__class__
