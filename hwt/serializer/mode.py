@@ -38,21 +38,6 @@ def paramsToValTuple(unit):
     return freeze_dict(d)
 
 
-@internal
-def prepareEntity(ent, name, templateUnit):
-    ent.name = name
-    ent.generics.sort(key=lambda x: x.hdl_name)
-    ent.ports.sort(key=lambda x: x.name)
-    # copy names
-    if templateUnit is not None:
-        # sort in python is stable, ports and generic were added in same order
-        # templateUnit should have generic and ports sorted
-        for gp, gch in zip(templateUnit._entity.generics, ent.generics):
-            gch.hdl_name = gp.hdl_name
-        for pp, pch in zip(templateUnit._entity.ports, ent.ports):
-            pch.name = pp.name
-
-
 def serializeExclude(cls):
     """
     Never serialize HDL objects from this class
@@ -78,25 +63,25 @@ def serializeParamsUniq(cls):
 
 
 @internal
-def _serializeExclude_eval(parentUnit, obj, isDeclaration, priv):
+def _serializeExclude_eval(parentUnit, priv):
     """
     Always decide not to serialize obj
 
     :param priv: private data for this function first unit of this class
     :return: tuple (do serialize this object, next priv)
     """
-    if isDeclaration:
-        # prepare entity which will not be serialized
-        prepareEntity(obj, parentUnit.__class__.__name__, priv)
 
     if priv is None:
         priv = parentUnit
 
-    return False, priv
+    # do not use this Unit instance and do not use any prelacement
+    # (usefull when the Unit instance is a placeholder for something
+    #  which already exists in hdl word)
+    return False, priv, None
 
 
 @internal
-def _serializeOnce_eval(parentUnit, obj, isDeclaration, priv):
+def _serializeOnce_eval(parentUnit, priv):
     """
     Decide to serialize only first obj of it's class
 
@@ -107,24 +92,21 @@ def _serializeOnce_eval(parentUnit, obj, isDeclaration, priv):
         where priv is private data for this function
         (first object with class == obj.__class__)
     """
-    clsName = parentUnit.__class__.__name__
-
-    if isDeclaration:
-        obj.name = clsName
-
     if priv is None:
         priv = parentUnit
-    elif isDeclaration:
-        # prepare entity which will not be serialized
-        prepareEntity(obj, clsName, parentUnit)
+        serialize = True
+        replacement = None
+        # use this Unit instance and store it for later use
+    else:
+        # use existing Unit instance
+        serialize = False
+        replacement = priv
 
-    serialize = priv is parentUnit
-
-    return serialize, priv
+    return serialize, priv, replacement
 
 
 @internal
-def _serializeParamsUniq_eval(parentUnit, obj, isDeclaration, priv):
+def _serializeParamsUniq_eval(parentUnit, priv):
     """
     Decide to serialize only objs with uniq parameters and class
 
@@ -139,14 +121,12 @@ def _serializeParamsUniq_eval(parentUnit, obj, isDeclaration, priv):
     if priv is None:
         priv = {}
 
-    if isDeclaration:
-        try:
-            prevUnit = priv[params]
-        except KeyError:
-            priv[params] = parentUnit
-            return True, priv
+    try:
+        prevUnit = priv[params]
+    except KeyError:
+        priv[params] = parentUnit
+        # serialize new
+        return True, priv, None
 
-        prepareEntity(obj, prevUnit._entity.name, prevUnit)
-        return False, priv
-
-    return priv[params] is parentUnit, priv
+    # use previous Unit instance with same config
+    return False, priv, prevUnit
