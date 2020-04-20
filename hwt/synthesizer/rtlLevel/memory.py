@@ -44,8 +44,3 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         a = Assignment(source, self.next)
 
         return [a]
-
-    def __repr__(self):
-        from hwt.serializer.hwt.serializer import HwtSerializer
-        ctx = HwtSerializer.getBaseContext()
-        return HwtSerializer.SignalItem(self, ctx)
