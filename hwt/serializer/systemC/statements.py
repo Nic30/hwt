@@ -1,30 +1,26 @@
-from hwt.hdl.variables import SignalItem
-from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.constants import SIGNAL_TYPE
-from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.systemC.utils import systemCTypeOfSig
+from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
 from hwt.doc_markers import internal
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
+from hwt.hdl.variables import SignalItem
+from hwt.serializer.exceptions import SerializerException
+from hwt.serializer.systemC.utils import systemCTypeOfSig
 
 
-class SystemCSerializer_statements():
+class ToHdlAstSystemC_statements():
 
     @internal
-    @classmethod
-    def _Assignment(cls, dst, typeOfDst, src, ctx):
-        indent_str = getIndent(ctx.indent)
+    def _as_hdl_Assignment(self, dst, typeOfDst, src):
 
-        dstStr = cls.asHdl(dst, ctx.forTarget())
+        dstStr = self.as_hdl(dst.forTarget())
         if typeOfDst == SIGNAL_TYPE.REG:
             fmt = "%s%s = %s;"
         else:
             fmt = "%s%s.write(%s);"
 
-        return fmt % (indent_str, dstStr, cls.Value(src, ctx))
+        return fmt % (dstStr, self.Value(src))
 
-    @classmethod
-    def Assignment(cls, a, ctx):
+    def as_hdl_Assignment(self, a):
         dst = a.dst
         assert isinstance(dst, SignalItem)
         assert not dst.virtual_only, "should not be required"
@@ -36,26 +32,8 @@ class SystemCSerializer_statements():
 
         if dst._dtype == a.src._dtype or (
                 isinstance(dst._dtype, Bits) and a.src._dtype == BOOL):
-            return cls._Assignment(dst, typeOfDst, a.src, ctx)
+            return self._as_hdl_Assignment(dst, typeOfDst, a.src)
         else:
             raise SerializerException("%r <= %r  is not valid assignment\n"
                                       " because types are different (%r; %r) "
                                       % (dst, a.src, dst._dtype, a.src._dtype))
-
-    @classmethod
-    def HWProcess(cls, proc, ctx):
-        """
-        Serialize HWProcess instance
-
-        :param scope: name scope to prevent name collisions
-        """
-        body = proc.statements
-        childCtx = ctx.withIndent()
-        statemets = [cls.asHdl(s, childCtx) for s in body]
-        proc.name = ctx.scope.checkedName(proc.name, proc)
-
-        return cls.methodTmpl.render(
-            indent=getIndent(ctx.indent),
-            name=proc.name,
-            statements=statemets
-        )

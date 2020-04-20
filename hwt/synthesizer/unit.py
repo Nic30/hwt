@@ -1,15 +1,15 @@
-from typing import Dict
-
 from hwt.doc_markers import internal
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
+from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers, \
     _default_param_updater
-from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hdlConvertor.hdlAst._structural import HdlComponentInst
+from typing import Optional, List
+from copy import copy
+from hwt.hdl.portItem import HdlPortItem
 from ipCorePackager.constants import DIRECTION
 
 
@@ -19,122 +19,49 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     Container of the netlist with interfaces
     and internal hierarchical structure
 
-    :cvar _serializeDecision: function to decide if Hdl object derived from
+    :cvar ~._serializeDecision: function to decide if Hdl object derived from
         this unit should be serialized or not, if None all is always serialized
-    :cvar _PROTECTED_NAMES: set of names which can not be overridden
+    :cvar ~._PROTECTED_NAMES: set of names which can not be overridden
     :ivar ~._interfaces: all public interfaces
-    :type _interfaces: List[Interface]
+    :type ~._interfaces: List[Interface]
     :ivar ~._private_interfaces: all internal interfaces
         which are not accessible from outside of unit
     :type _private_interfaces: List[Interface]
     :ivar ~._units: all units defined on this obj
-    :type _units: List[Unit] 
+    :type ~._units: List[Unit] 
     :ivar ~._params: all params defined on this obj
-    :type _params: List[Param]
+    :type ~._params: List[Param]
     :ivar ~._constraints: additional HW specifications
     :ivar ~._parent: parent object
-    :type _parent: Optional[Unit]
+    :type ~._parent: Optional[Unit]
     :ivar ~._lazyLoaded: container of rtl object which were lazy loaded
         in implementation phase (this object has to be returned
         from _toRtl of parent before it it's own objects)
-    :ivar ~._targetPlatform: metainformations about target platform
+    :ivar ~._target_platform: metainformations about target platform
+    :ivar ~._name: a name of this component
+    :ivar ~._hdl_module_name: a name of hdl module for this compoennt
+        (vhdl entity name, verilog module name)
     """
 
     _serializeDecision = None
-    _PROTECTED_NAMES = set(["_PROTECTED_NAMES", "_interfaces", "_private_interfaces",
-                            "_units", "_params", "_parent", "_constraints",
-                            "_lazyLoaded", "_ctx",
-                            "_externInterf", "_targetPlatform"])
+    # properties which are used internally by this library
+    _PROTECTED_NAMES = set([
+        "_PROTECTED_NAMES",
+        "_name", "_hdl_module_name",
+        "_interfaces", "_private_interfaces",
+        "_units", "_params", "_parent", "_constraints",
+        "_lazyLoaded", "_ctx",
+        "_target_platform", "_store_manager",
+    ])
 
     def __init__(self):
         self._parent = None
+        self._name = None
+        self._hdl_module_name = self.__class__.__name__
         self._lazyLoaded = []
         self._ctx = RtlNetlist(self)
         self._constraints = []
         self._loadConfig()
-
-    @internal
-    def _toRtl(self, targetPlatform: DummyPlatform):
-        """
-        synthesize all subunits, make connections between them,
-        build entity and component for this unit
-        """
-        assert not self._wasSynthetised()
-
-        self._targetPlatform = targetPlatform
-        if not hasattr(self, "_name"):
-            self._name = self._getDefaultName()
-
-        for proc in targetPlatform.beforeToRtl:
-            proc(self)
-
-        self._ctx.params = self._buildParams()
-        self._externInterf = {}
-
-        # prepare subunits
-        for u in self._units:
-            yield from u._toRtl(targetPlatform)
-
-        for u in self._units:
-            subUnitName = u._name
-            u._signalsForMyEntity(self._ctx, "sig_" + subUnitName)
-
-        # prepare signals for interfaces
-        for i in self._interfaces:
-            if i._isExtern:
-                ei = self._externInterf
-            else:
-                ei = None
-            i._signalsForInterface(self._ctx, ei, reverse_dir=True)
-
-        for proc in targetPlatform.beforeToRtlImpl:
-            proc(self)
-
-        self._loadMyImplementations()
-        yield from self._lazyLoaded
-
-        if not self._externInterf:
-            raise IntfLvlConfErr(
-                "Can not find any external interface for unit %s"
-                "- unit without interfaces are not synthetisable"
-                % self._name)
-
-        for proc in targetPlatform.afterToRtlImpl:
-            proc(self)
-
-        yield from self._synthetiseContext(self._externInterf)
-        self._checkArchCompInstances()
-
-        for proc in targetPlatform.afterToRtl:
-            proc(self)
-
-    def _wasSynthetised(self):
-        return self._ctx.synthesised
-
-    @internal
-    def _synthetiseContext(self, externInterf: Dict[RtlSignal, DIRECTION]):
-        # synthesize signal level context
-        s = self._ctx.synthesize(
-            self._name, externInterf, self._targetPlatform)
-        self._entity = s[0]
-        self._entity.__doc__ = self.__doc__
-        self._entity.origin = self
-
-        self._architecture = s[1]
-
-        for intf in self._interfaces:
-            if intf._isExtern:
-                # reverse because other components
-                # looks at this interface from outside
-                intf._reverseDirection()
-
-        # connect results of synthesized context to interfaces of this unit
-        self._boundInterfacesToEntity(self._interfaces, self._entity.ports)
-
-        yield from s
-
-        # after synthesis clean up interface so this Unit object can be used elsewhere
-        self._cleanAsSubunit()
 
     @internal
     def _loadInterface(self, i, isExtern):
@@ -170,67 +97,124 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         self._registerInterface(iName, intf, isPrivate=True)
         self._loadInterface(intf, False)
-        intf._signalsForInterface(self._ctx, None)
+        intf._signalsForInterface(self._ctx, None, self._store_manager.name_scope)
+
+    def _getDefaultName(self) -> str:
+        return self.__class__.__name__
+
+    def _get_hdl_doc(self) -> Optional[str]:
+        if self.__doc__ is not Unit.__doc__:
+            return self.__doc__
 
     @internal
-    def _buildParams(self):
-        # construct params for entity (generics)
-        params = {}
+    def _toRtl(self, target_platform: DummyPlatform,
+               store_manager: "StoreManager"):
+        """
+        synthesize all subunits, make connections between them,
+        build entity and component for this unit
+        """
+        self._target_platform = target_platform
+        self._store_manager = store_manager
+        do_serialize_this, replacement = store_manager.filter.do_serialize(self)
+        if replacement is not None:
+            assert not do_serialize_this
+            assert len(self._interfaces) == len(replacement._interfaces), "No lazy loaded interfaes declared in _impl()"
+            copy_HdlModuleDec(replacement, self)
+            yield False, self
+            self._cleanAsSubunit()
+            return
 
-        def addP(n: str, p: Param):
-            if n in params:
+        if self._name is None:
+            self._name = self._getDefaultName()
+        for proc in target_platform.beforeToRtl:
+            proc(self)
+
+        mdec = self._ctx.create_HdlModuleDec(
+            self._hdl_module_name, store_manager, self._params)
+        mdec.origin = self
+        mdec.doc = self._get_hdl_doc()
+
+        # prepare signals for interfaces
+        for i in self._interfaces:
+            if i._isExtern:
+                ei = self._ctx.interfaces
+            else:
+                ei = None
+            # we are reversing direction because we are looking
+            # at the interface from inside of component
+            i._signalsForInterface(
+                self._ctx, ei,
+                store_manager.name_scope, reverse_dir=True)
+        store_manager.hierarchy_pop(mdec)
+
+        if do_serialize_this:
+            # prepare subunits
+            for u in self._units:
+                yield from u._toRtl(target_platform, store_manager)
+
+            # now every sub unit has a HdlModuleDec prepared
+            for u in self._units:
+                subUnitName = u._name
+                u._signalsForSubUnitEntity(self._ctx, "sig_" + subUnitName)
+
+            for proc in target_platform.beforeToRtlImpl:
+                proc(self)
+
+        store_manager.hierarchy_push(mdec)
+        if do_serialize_this:
+            self._loadImpl()
+            yield from self._lazyLoaded
+
+            if not self._ctx.interfaces:
                 raise IntfLvlConfErr(
-                    "Redefinition of generic/param '%s' while synthesis"
-                    " old:%r, new:%r"
-                    % (n, params[n], p))
-            p.hdl_name = n
-            params[n] = p
+                    "Can not find any external interface for unit %s"
+                    "- unit without interfaces are not synthetisable"
+                    % self._name)
 
-        #def nameForNestedParam(p):
-        #    n = ""
-        #    node = p
-        #    while node is not self:
-        #        if n == "":
-        #            n = node._name
-        #        else:
-        #            n = node._name + "_" + n
-        #        node = node._parent
-        #
-        #    return n
+        for proc in target_platform.afterToRtlImpl:
+            proc(self)
 
-        # collect params of this unit
-        discoveredParams = set()
-        for p in self._params:
-            discoveredParams.add(p)
-            addP(p._name, p)
+        if do_serialize_this:
+            # synthesize signal level context
+            mdef = self._ctx.create_HdlModuleDef(target_platform, store_manager)
+            mdef.origin = self
+            for intf in self._interfaces:
+                if intf._isExtern:
+                    # reverse because other components
+                    # looks at this interface from the outside
+                    intf._reverseDirection()
+            store_manager.write(mdef)
+        yield True, self
 
-        # collect params from interfaces
-        #for intf in self._interfaces:
-        #    for p in walkParams(intf, discoveredParams):
-        #        n = nameForNestedParam(p)
-        #        addP(n, p)
+        # after synthesis clean up interface so this Unit object can be used elsewhere
+        self._cleanAsSubunit()
+        if do_serialize_this:
+            self._checkArchCompInstances()
 
-        return params
-
-    def _getDefaultName(self):
-        return self.__class__.__name__
+        for proc in target_platform.afterToRtl:
+            proc(self)
+        store_manager.hierarchy_pop(mdec)
 
     @internal
     def _checkArchCompInstances(self):
-        cInstances = len(self._architecture.componentInstances)
-        units = len(self._units)
-        if cInstances != units:
-            inRtl = set(
-                map(lambda x: x.name, self._architecture.componentInstances))
-            inIntf = set(map(lambda x: x._name + "_inst", self._units))
-            if cInstances > units:
+        cInstances = [o for o in self._ctx.arch.objs
+                      if isinstance(o, HdlComponentInst)]
+        cInst_cnt = len(cInstances)
+        unit_cnt = len(self._units)
+        if cInst_cnt != unit_cnt:
+            inRtl = set(map(lambda x: x.name, cInstances))
+            inIntf = set(map(lambda x: x._name, self._units))
+            if cInst_cnt > unit_cnt:
                 raise IntfLvlConfErr(
-                    "_toRtl unit(s) %s were found in rtl but were"
-                    " not registered at %s"
-                    % (str(inRtl - inIntf), self._name))
-            elif cInstances < units:
-                raise IntfLvlConfErr("_toRtl of %s: unit(s) %s were lost"
-                                     % (self._name, str(inIntf - inRtl)))
+                    "%s, %s: unit(s) were found in HDL but were"
+                    " not registered %s" % (
+                       self.__class__.__name__, self._name,
+                       self._getstr(inRtl - inIntf)))
+            elif cInst_cnt < unit_cnt:
+                raise IntfLvlConfErr(
+                    "%s, %s: _toRtl: unit(s) are missing in produced HDL %s" % (
+                        self._name, self.__class__.__name__,
+                        str(inIntf - inRtl)))
 
     def _updateParamsFrom(self, otherObj,
                           updater=_default_param_updater,
@@ -238,7 +222,52 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
                           prefix=""):
         """
         :note: doc in
-              :func:`~hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
+            :func:`hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
         """
         PropDeclrCollector._updateParamsFrom(self, otherObj,
                                              updater, exclude, prefix)
+
+
+def copy_HdlModuleDec_interface(orig_i: InterfaceBase, new_i: InterfaceBase,
+                                ports: List[HdlPortItem], new_u: Unit):
+    new_i._direction = orig_i._direction
+    if orig_i._hdl_port is not None:
+        s = orig_i._sigInside
+        pi = copy(orig_i._hdl_port)
+        pi.unit = new_u
+        ports.append(pi)
+        d = pi.direction
+        if d == DIRECTION.OUT:
+            pi.dst = None
+        elif d == DIRECTION.IN:
+            pi.src = None
+        else:
+            raise NotImplementedError(d)
+        new_i._hdl_port = pi
+        new_i._sigInside = s
+    else:
+        for i in orig_i._interfaces:
+            n_i = getattr(new_i, i._name)
+            copy_HdlModuleDec_interface(i, n_i, ports, new_u)
+
+
+def copy_HdlModuleDec(orig_u: Unit, new_u: Unit):
+    assert not new_u._ctx.statements
+    assert not new_u._ctx.interfaces
+    assert not new_u._ctx.signals
+    assert new_u._ctx.ent is None
+    e = new_u._ctx.ent = copy(orig_u._ctx.ent)
+    new_u._hdl_module_name = orig_u._hdl_module_name
+    params = []
+    param_by_name = {p._name: p for p in new_u._params}
+    for p in e.params:
+        new_p = copy(p)
+        param = new_p.origin = param_by_name[p.origin._name]
+        param.hdl_name = p.origin.hdl_name
+        new_p.value = param.get_hdl_value()
+        params.append(new_p)
+    e.params = params
+    e.ports = []
+    for oi, ni in zip(orig_u._interfaces, new_u._interfaces):
+        if oi._isExtern:
+            copy_HdlModuleDec_interface(oi, ni, e.ports, new_u)

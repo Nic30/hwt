@@ -1,88 +1,130 @@
+from typing import Union
+
+from hdlConvertor.hdlAst._defs import HdlVariableDef
+from hdlConvertor.hdlAst._expr import HdlName, HdlIntValue, HdlDirection
+from hdlConvertor.to.hdlUtils import bit_string
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT, BOOL
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.string import String
+from hwt.hdl.value import Value
+from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.context import SerializerCtx
-from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from copy import copy
 
 
-class GenericSerializer_Value():
-    @classmethod
-    def Value(cls, val, ctx: SerializerCtx):
+class ToHdlAst_Value():
+
+    def as_hdl_Value(self, val):
         """
         :param dst: is signal connected with value
         :param val: value object, can be instance of Signal or Value
         """
         t = val._dtype
-
         if isinstance(val, RtlSignalBase):
-            return cls.SignalItem(val, ctx)
+            return self.as_hdl_SignalItem(val)
 
-        c = cls.Value_try_extract_as_const(val, ctx)
-        if c:
+        c = self.Value_try_extract_as_const(val)
+        if c is not None:
             return c
 
-        if t == INT:
-            return cls.Integer_valAsHdl(t, val, ctx)
-        elif t == BOOL:
-            return cls.Bool_valAsHdl(t, val, ctx)
-        elif isinstance(t, Slice):
-            return cls.Slice_valAsHdl(t, val, ctx)
+        if isinstance(t, Slice):
+            return self.as_hdl_SliceVal(val)
         elif isinstance(t, HArray):
-            return cls.HArrayValAsHdl(t, val, ctx)
+            return self.as_hdl_HArrayVal(val)
         elif isinstance(t, Bits):
-            return cls.Bits_valAsHdl(t, val, ctx)
+            return self.as_hdl_BitsVal(val)
         elif isinstance(t, HEnum):
-            return cls.HEnumValAsHdl(t, val, ctx)
+            return self.as_hdl_HEnumVal(val)
         elif isinstance(t, String):
-            return cls.String_valAsHdl(t, val, ctx)
+            return self.as_hdl_StringVal(val)
         else:
             raise SerializerException(
                 "can not resolve value serialization for %r"
                 % (val))
 
-    @classmethod
-    def Value_try_extract_as_const(cls, val, ctx: SerializerCtx):
+    def as_hdl_int(self, val: int):
+        assert isinstance(val, int), val
+        return HdlIntValue(val, None, None)
+
+    def Value_try_extract_as_const(self, val):
         return None
 
-    @classmethod
-    def Integer_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
-        return str(int(val.val))
+    def as_hdl_IntegerVal(self, val):
+        return self.as_hdl_int(int(val.val))
 
-    @classmethod
-    def Bits_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
-        w = dtype.bit_length()
-        if dtype.signed is None:
-            if dtype.force_vector or w > 1:
-                return cls.BitString(val.val, w, val.vld_mask)
-            else:
-                return cls.BitLiteral(val.val, val.vld_mask)
-        elif dtype.signed:
-            return cls.SignedBitString(val.val, w, dtype.force_vector,
-                                       val.vld_mask)
+    def as_hdl_BitsVal(self, val):
+        t = val._dtype
+        if t == INT:
+            return self.as_hdl_IntegerVal(val)
+        elif t == BOOL:
+            return self.as_hdl_BoolVal(val)
+        w = t.bit_length()
+        if t.signed is None:
+            return bit_string(val.val, w, val.vld_mask)
+        elif t.signed:
+            return self.SignedBitString(val.val, w, t.force_vector,
+                                        val.vld_mask)
         else:
-            return cls.UnsignedBitString(val.val, w, dtype.force_vector,
-                                         val.vld_mask)
+            return self.UnsignedBitString(val.val, w, t.force_vector,
+                                          val.vld_mask)
 
-    @classmethod
-    def String_valAsHdl(cls, dtype, val, ctx: SerializerCtx):
-        return '"%s"' % val.val.replace("\n", "\\n")
+    def as_hdl_StringVal(self, val):
+        return val.val
 
-    @classmethod
-    def get_signal_name(cls, si, ctx: SerializerCtx):
-        if si.hidden and hasattr(si, "origin"):
-            # hidden signal, render it's driver instead
-            return cls.asHdl(si.origin, ctx)
-        elif isinstance(si, Param) and ctx.currentUnit is not None:
-            try:
-                return si.getName(ctx.currentUnit)
-            except KeyError:
+    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlVariableDef],
+                          declaration=False):
+        if declaration:
+            if isinstance(si, HdlVariableDef):
+                var = copy(si)
+                si = si.origin
+            else:
+                var = HdlVariableDef()
+                var.name = si.name
+                var.origin = si
+                var.value = si._val
+                var.type = si._dtype
+            v = var.value
+            if isinstance(si, RtlSignalBase):
+                if si.virtual_only:
+                    var.is_latched = True
+                elif si.drivers or var.direction != HdlDirection.UNKNOWN:
+                    # has drivers or is port/param
+                    pass
+                elif si.endpoints:
+                    if not v.vld_mask:
+                        raise SerializerException(
+                            "Signal %s is constant and has undefined value"
+                            % si.name)
+                    var.is_const = True
+                else:
+                    raise SerializerException(
+                        "Signal %s should be declared but it is not used"
+                        % si.name)
+
+            if v is None:
                 pass
-            # parameter was taken from other place and has not
-            # any name in this scope, use value only
-            return cls.asHdl(si.staticEval(), ctx)
-        return si.name
+            elif isinstance(v, RtlSignalBase):
+                if v._const:
+                    var.value = self.as_hdl(v)
+                else:
+                    # default value has to be set by reset
+                    var.value = None
+                    pass
+            elif isinstance(v, Value):
+                if v.vld_mask:
+                    var.value = self.as_hdl_Value(v)
+                else:
+                    var.value = None
+            else:
+                raise NotImplementedError(v)
+            var.type = self.as_hdl_HdlType(var.type)
+            return var
+        else:
+            if si.hidden and hasattr(si, "origin"):
+                # hidden signal, render it's driver instead
+                return self.as_hdl(si.origin)
+            return HdlName(si.name, obj=si)

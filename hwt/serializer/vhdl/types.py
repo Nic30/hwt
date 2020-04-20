@@ -1,14 +1,26 @@
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.typeCast import toHVal
-from hwt.serializer.generic.context import SerializerCtx
-from hwt.serializer.generic.indent import getIndent
+from hdlConvertor.hdlAst._expr import HdlName, HdlCall, HdlBuiltinFn,\
+    HdlTypeType
+from hdlConvertor.translate.common.name_scope import LanguageKeyword
+from hwt.hdl.types.defs import BOOL, INT
+from hdlConvertor.hdlAst._defs import HdlVariableDef
+from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index,\
+    hdl_downto
+from hwt.hdl.types.array import HArray
 
 
-class VhdlSerializer_types():
+class ToHdlAstVhdl2008_types():
+    BOOLEAN = HdlName("BOOLEAN", obj=LanguageKeyword())
+    INTEGER = HdlName("INTEGER", obj=LanguageKeyword())
+    STRING = HdlName("STRING", obj=LanguageKeyword())
+    STD_LOGIC_VECTOR = HdlName("STD_LOGIC_VECTOR", obj=LanguageKeyword())
+    STD_LOGIC = HdlName("STD_LOGIC", obj=LanguageKeyword())
+    SIGNED = HdlName("SIGNED", obj=LanguageKeyword())
+    UNSIGNED = HdlName("UNSIGNED", obj=LanguageKeyword())
 
-    @classmethod
-    def HdlType(cls, typ: HdlType, ctx: SerializerCtx, declaration=False):
+    def as_hdl_HdlType(self, typ: HdlType, declaration=False):
         """
         Serialize HdlType instance
         """
@@ -18,94 +30,60 @@ class VhdlSerializer_types():
             to_vhdl = None
             pass
         if to_vhdl is not None:
-            return to_vhdl(cls, typ, ctx, declaration=declaration)
+            return to_vhdl(self, typ, declaration=declaration)
         else:
-            return super(VhdlSerializer_types, cls).HdlType(typ, ctx, declaration)
+            return super(ToHdlAstVhdl2008_types, self).as_hdl_HdlType(typ, declaration)
 
-    @classmethod
-    def HdlType_str(cls, typ, ctx, declaration=False):
+    def as_hdl_HdlType_str(self, typ, declaration=False):
         assert not declaration
-        return "STRING"
+        return self.STRING
 
-    @classmethod
-    def HdlType_bool(cls, typ, ctx, declaration=False):
-        assert not declaration
-        return "BOOLEAN"
+    def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):
+        if declaration:
+            raise NotImplementedError()
+        if typ == BOOL:
+            return self.BOOLEAN
+        if typ == INT:
+            return self.INTEGER
 
-    @classmethod
-    def HdlType_bits(cls, typ: Bits, ctx, declaration=False):
-        disableRange = False
         bitLength = typ.bit_length()
         w = typ.bit_length()
         isVector = typ.force_vector or bitLength > 1
 
         if typ.signed is None:
             if isVector:
-                name = 'STD_LOGIC_VECTOR'
+                name = self.STD_LOGIC_VECTOR
             else:
-                return 'STD_LOGIC'
+                return self.STD_LOGIC
         elif typ.signed:
-            name = "SIGNED"
+            name = self.SIGNED
         else:
-            name = 'UNSIGNED'
+            name = self.UNSIGNED
 
-        if disableRange:
-            constr = ""
-        else:
-            constr = "(%d DOWNTO 0)" % (w - 1)
+        return HdlCall(HdlBuiltinFn.CALL, [
+            name,
+            HdlCall(HdlBuiltinFn.DOWNTO, [
+                self.as_hdl_int(w - 1),
+                self.as_hdl_int(0)
+            ])])
 
-        return name + constr
-
-    @classmethod
-    def HdlType_enum(cls, typ, ctx, declaration=False):
-        buff = []
+    def as_hdl_HdlType_array(self, typ: HArray, declaration=False):
         if declaration:
-            try:
-                name = typ.name
-            except AttributeError:
-                name = "enumT_"
-            typ.name = ctx.scope.checkedName(name, typ)
-
-            buff.extend(["%sTYPE " % getIndent(ctx.indent),
-                         typ.name.upper(), ' IS ('])
-
-            e_names = []
-            for n in typ._allValues:
-                v = getattr(typ, n)
-                _n = ctx.scope.checkedName(n, v)
-                v.val = _n
-                e_names.append(_n)
-            buff.append(", ".join(e_names))
-            buff.append(")")
-            return "".join(buff)
+            v = HdlVariableDef()
+            name = getattr(typ, "name", None)
+            if name is None:
+                name = "arr_t_"
+            typ.name = v.name = self.name_scope.checkedName(name, typ)
+            v.type = HdlTypeType
+            v.origin = typ
+            size = hdl_downto(
+                 self.as_hdl(toHVal(typ.size) - 1),
+                 self.as_hdl_int(0))
+            if self.does_type_requires_extra_def(typ.element_t, ()):
+                raise NotImplementedError(typ.element_t)
+            e_t = self.as_hdl_HdlType(typ.element_t, declaration=False)
+            v.value = hdl_index(e_t, size)
+            return v
         else:
-            return typ.name
+            return super(ToHdlAstVhdl2008_types, self).as_hdl_HdlType_array(typ, declaration)
 
-    @classmethod
-    def HdlType_array(cls, typ, ctx, declaration=False):
-        if declaration:
-            try:
-                name = typ.name
-            except AttributeError:
-                name = "arrT_"
-
-            typ.name = ctx.scope.checkedName(name, typ)
-
-            return "%sTYPE %s IS ARRAY ((%s) DOWNTO 0) OF %s" % \
-                (getIndent(ctx.indent),
-                 typ.name,
-                 cls.asHdl(toHVal(typ.size) - 1, ctx),
-                 cls.HdlType(typ.element_t, ctx, declaration=declaration))
-        else:
-            try:
-                return typ.name
-            except AttributeError:
-                # [TODO]
-                # sometimes we need to debug expression and we need temporary
-                # type name this may be risk and this should be done
-                # by extra debug serializer
-                return "arrT_%d" % id(typ)
-
-    @classmethod
-    def HdlType_int(cls, typ, ctx, declaration=False):
-        return "INTEGER"

@@ -1,53 +1,65 @@
+from hdlConvertor.hdlAst._expr import HdlTypeAuto, HdlName, HdlCall,\
+    HdlBuiltinFn
+from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index,\
+    hdl_downto
+from hdlConvertor.translate.common.name_scope import LanguageKeyword
+from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.defs import INT
 from hwt.serializer.verilog.utils import SIGNAL_TYPE
 
 
-class VerilogSerializer_types():
-    @classmethod
-    def HdlType_bool(cls, typ, ctx, declaration=False):
-        assert not declaration
-        return ""
+class ToHdlAstVerilog_types():
+    NULL = HdlName("null")
 
-    @classmethod
-    def HdlType_bits(cls, typ: Bits, ctx, declaration=False):
+    def does_type_requires_extra_def(self, t, other_types):
+        return False
+
+    def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):
         isVector = typ.force_vector or typ.bit_length() > 1
-        nameBuff = []
-        sigType = ctx.signalType
-        if sigType is SIGNAL_TYPE.PORT:
-            pass
-        elif sigType is SIGNAL_TYPE.REG:
-            nameBuff.append("reg")
+        sigType = self.signalType
+
+        if typ == INT:
+            t = HdlName("int", obj=int)
+        elif sigType is SIGNAL_TYPE.PORT_WIRE:
+            t = HdlTypeAuto
+        elif sigType is SIGNAL_TYPE.REG or sigType is SIGNAL_TYPE.PORT_REG:
+            t = HdlName("reg", obj=LanguageKeyword())
         elif sigType is SIGNAL_TYPE.WIRE:
-            nameBuff.append("wire")
+            t = HdlName("wire", obj=LanguageKeyword())
         else:
-            raise NotImplementedError()
+            raise ValueError(sigType)
 
-        if typ.signed:
-            nameBuff.append("signed")
-
-        w = typ.bit_length()
-        if not isVector:
-            pass
-        elif isinstance(w, int):
-            nameBuff.append("[%d:0]" % (w - 1))
+        if typ.signed is None:
+            is_signed = self.NULL
         else:
-            nameBuff.append("[%s- 1:0]" % cls.Value(w, ctx))
+            is_signed = self.as_hdl_int(int(typ.signed))
 
-        return " ".join(nameBuff)
+        if isVector:
+            w = typ.bit_length()
+            assert isinstance(w, int), w
+            w = hdl_downto(self.as_hdl_int(w - 1),
+                           self.as_hdl_int(0))
+        else:
+            w = self.NULL
 
-    @classmethod
-    def HdlType_enum(cls, typ, ctx, declaration=False):
+        return HdlCall(HdlBuiltinFn.PARAMETRIZATION, [t, w, is_signed])
+
+    def as_hdl_HdlType_array(self, typ: HArray, declaration=False):
+        if declaration:
+            return super(ToHdlAstVerilog_types, self).as_hdl_HdlType_array()
+        else:
+            _int = self.as_hdl_int
+            size = HdlCall(HdlBuiltinFn.DOWNTO, [_int(0),
+                                                 _int(int(typ.size))])
+            return hdl_index(self.as_hdl_HdlType(typ.element_t), size)
+
+    def as_hdl_HdlType_enum(self, typ, declaration=False):
         if declaration:
             raise TypeError(
-                "Verilog does not have enum types, hwt uses Bits instead")
+                "Verilog does not have enum types, hwt uses Bits instead"
+                " (this should not be required because it should have been filtered before)")
         else:
             valueCnt = len(typ._allValues)
-            return cls.HdlType_bits(Bits(valueCnt.bit_length()), ctx,
-                                    declaration=declaration)
-
-    @classmethod
-    def HdlType_int(cls, typ, ctx, declaration=False):
-        if ctx.signalType is SIGNAL_TYPE.PORT:
-            return ""
-        else:
-            return "int"
+            return self.as_hdl_HdlType_bits(Bits(valueCnt.bit_length()),
+                                            declaration=declaration)

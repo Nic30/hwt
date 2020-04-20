@@ -1,6 +1,6 @@
-from hwt.hdl.statements import HdlStatement
+from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
+from hwt.hdl.statement import HdlStatement
 from hwt.pyUtils.arrayQuery import arr_any
-from hwt.serializer.generic.constants import SIGNAL_TYPE
 
 
 def systemCTypeOfSig(signalItem):

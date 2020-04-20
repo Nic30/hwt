@@ -1,9 +1,11 @@
+from hdlConvertor.hdlAst._expr import HdlCall, HdlBuiltinFn, HdlName
+from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.bits import Bits
 
 
-class SystemCSerializer_type():
-    @classmethod
-    def HdlType_bits(cls, typ, ctx, declaration=False):
+class ToHdlAstSystemC_type():
+
+    def HdlType_bits(self, typ, declaration=False):
         if declaration:
             raise NotImplementedError()
 
@@ -20,14 +22,14 @@ class SystemCSerializer_type():
             else:
                 typeBaseName = "biguint"
 
-        return "sc_%s<%d>" % (typeBaseName, w)
+        return HdlCall(HdlBuiltinFn.PARAMETRIZATION, [HdlName("sc_%s" % typeBaseName, obj=LanguageKeyword()),
+                                                      self.as_hdl_int(w)])
 
-    @classmethod
-    def HdlType_enum(cls, typ, ctx, declaration=False):
+    def HdlType_enum(self, typ, declaration=False):
         if declaration:
             raise TypeError(
                 "There is problem with tracing of c enums, use Bits instead")
         else:
             valueCnt = len(typ._allValues)
-            return cls.HdlType_bits(Bits(valueCnt.bit_length()), ctx,
-                                    declaration=declaration)
+            return self.as_hdl_HdlType_bits(Bits(valueCnt.bit_length()),
+                                            declaration=declaration)

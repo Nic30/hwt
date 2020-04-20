@@ -2,7 +2,7 @@ from typing import Generator, Union
 
 from hwt.doc_markers import internal
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statements import HdlStatement
+from hwt.hdl.statement import HdlStatement
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import Value
 from hwt.hdl.variables import SignalItem
@@ -11,6 +11,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr,\
     SignalDriverErrType
 from hwt.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
+from hwt.hdl.portItem import HdlPortItem
 
 NO_NOPVAL = object()
 
@@ -90,10 +91,16 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
 
     def staticEval(self):
         # operator writes in self._val new value
+        driven_by_def_val = True
         if self.drivers:
             for d in self.drivers:
+                if isinstance(d, HdlPortItem):
+                    assert d.getInternSig() is self, (d, self)
+                    continue
                 d.staticEval()
-        else:
+                driven_by_def_val = False
+
+        if driven_by_def_val:
             if isinstance(self.def_val, RtlSignal):
                 self._val = self.def_val._val.staticEval()
             else:

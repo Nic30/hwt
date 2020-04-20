@@ -4,7 +4,7 @@ from hwt.hdl.operator import Operator
 from hwt.serializer.resourceAnalyzer.resourceTypes import \
     ResourceFF, ResourceMUX, ResourceLatch, ResourceRAM
 from hwt.synthesizer.unit import Unit
-from hwt.hdl.statements import HdlStatement
+from hwt.hdl.statement import HdlStatement
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 

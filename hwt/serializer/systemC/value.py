@@ -1,22 +1,23 @@
+from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
 from hwt.doc_markers import internal
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
+from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.constants import SIGNAL_TYPE
-from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.generic.value import GenericSerializer_Value
+from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.systemC.utils import systemCTypeOfSig
+from hwt.serializer.verilog.context import SignalTypeSwap
+from hwt.serializer.verilog.utils import verilogTypeOfSig
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
 
 
-class SystemCSerializer_value(GenericSerializer_Value):
+class ToHdlAstSystemC_value(ToHdlAst_Value):
 
-    @classmethod
-    def SignalItem(cls, si, ctx, declaration=False):
+    def as_hdl_SignalItem(self, si: SignalItem, declaration=False):
         sigType = systemCTypeOfSig(si)
         if declaration:
             if sigType is SIGNAL_TYPE.REG:
@@ -24,148 +25,117 @@ class SystemCSerializer_value(GenericSerializer_Value):
             else:
                 fmt = "%ssc_signal<%s> %s"
 
-            ctx = ctx.forSignal(si)
-
-            v = si.def_val
-            if si.virtual_only:
-                raise NotImplementedError()
-            elif si.drivers:
-                pass
-            elif si.endpoints or si.simSensProcs:
-                if not v.vld_mask:
+            raise NotImplementedError()
+            with SignalTypeSwap(si, verilogTypeOfSig(si)):
+                v = si.def_val
+                if si.virtual_only:
+                    raise NotImplementedError()
+                elif si.drivers:
+                    pass
+                elif si.endpoints:
+                    if not v.vld_mask:
+                        raise SerializerException(
+                            "Signal %s is constant and has undefined value"
+                            % si.name)
+                else:
                     raise SerializerException(
-                        "Signal %s is constant and has undefined value"
+                        "Signal %s should be declared but it is not used"
                         % si.name)
-            else:
-                raise SerializerException(
-                    "Signal %s should be declared but it is not used"
-                    % si.name)
 
-            t = si._dtype
-            dimensions = []
-            while isinstance(t, HArray):
-                # collect array dimensions
-                dimensions.append(t.size)
-                t = t.element_t
+                t = si._dtype
+                dimensions = []
+                while isinstance(t, HArray):
+                    # collect array dimensions
+                    dimensions.append(t.size)
+                    t = t.element_t
 
-            s = fmt % (getIndent(ctx.indent),
-                       cls.HdlType(t, ctx),
-                       si.name)
-            if dimensions:
-                # to make a space between name and dimensoins
-                dimensions = ["[%s]" % cls.asHdl(toHVal(x), ctx)
-                              for x in dimensions]
-                dimensions.append("")
-                s += " ".join(reversed(dimensions))
+                s = fmt % (
+                           self.as_hdl_HdlType(t),
+                           si.name)
+                if dimensions:
+                    # to make a space between name and dimensoins
+                    dimensions = ["[%s]" % self.as_hdl(toHVal(x))
+                                  for x in dimensions]
+                    dimensions.append("")
+                    s += " ".join(reversed(dimensions))
 
-            if isinstance(v, RtlSignalBase):
-                if v._const:
-                    return s + " = %s" % cls.asHdl(v, ctx)
+                if isinstance(v, RtlSignalBase):
+                    if v._const:
+                        return s + " = %s" % self.as_hdl(v)
+                    else:
+                        # default value has to be set by reset
+                        # because it is only signal
+                        return s
+                elif isinstance(v, Value):
+                    if si.def_val.vld_mask:
+                        return s + " = %s" % self.as_hdl_Value(v)
+                    else:
+                        return s
                 else:
-                    # default value has to be set by reset
-                    # because it is only signal
-                    return s
-            elif isinstance(v, Value):
-                if si.def_val.vld_mask:
-                    return s + " = %s" % cls.Value(v, ctx)
-                else:
-                    return s
-            else:
-                raise NotImplementedError(v)
+                    raise NotImplementedError(v)
 
         else:
             if si.hidden and hasattr(si, "origin"):
-                return cls.asHdl(si.origin, ctx)
+                return self.as_hdl(si.origin)
             else:
-                if ctx.isTarget or sigType is SIGNAL_TYPE.REG:
+                if self.isTarget or sigType is SIGNAL_TYPE.REG:
                     return si.name
                 else:
                     return "%s.read()" % si.name
 
-    @classmethod
-    def condAsHdl(cls, cond, forceBool, ctx):
-        if isinstance(cond, RtlSignalBase):
-            cond = [cond]
+    def as_hdl_cond(self, c, forceBool):
+        if not forceBool or c._dtype == BOOL:
+            return self.as_hdl(c)
+        elif c._dtype == BIT:
+            return self.as_hdl(c._eq(1))
+        elif isinstance(c._dtype, Bits):
+            return self.as_hdl(c != 0)
         else:
-            cond = list(cond)
-        if len(cond) == 1:
-            c = cond[0]
-            if not forceBool or c._dtype == BOOL:
-                return cls.asHdl(c, ctx)
-            elif c._dtype == BIT:
-                return cls.asHdl(c._eq(1), ctx)
-            elif isinstance(c._dtype, Bits):
-                return cls.asHdl(c != 0, ctx)
-            else:
-                raise NotImplementedError()
-        else:
-            return " && ".join(map(lambda x: cls.condAsHdl(x, forceBool, ctx),
-                                   cond))
+            raise NotImplementedError()
 
-    @classmethod
-    def BitString(cls, v, width, vld_mask=None):
+    def as_hdl_BitString(self, v, width, vld_mask=None):
         if vld_mask is None:
             vld_mask = mask(width)
         # if can be in hex
         if width % 4 == 0 and vld_mask == (1 << width) - 1:
-            t = cls.HdlType_bits(Bits(width), None)
+            t = self.as_hdl_HdlType_bits(Bits(width), None)
             return ('%s("0x%0' + str(width // 4) + 'x")') % (t, v)
         else:  # else in binary
-            return cls.BitString_binary(v, width, vld_mask)
+            return self.BitString_binary(v, width, vld_mask)
 
-    @classmethod
-    def BitLiteral(cls, v, vld_mask):
+    def as_hdl_BitLiteral(self, v, vld_mask):
+        raise NotImplementedError()
         if vld_mask:
             return "%d" % int(bool(v))
         else:
-            t = cls.HdlType_bits(Bits(1), None)
+            t = self.as_hdl_HdlType_bits(Bits(1), None)
             return '%s("0xX")' % (t)
 
-    @classmethod
-    def BitString_binary(cls, v, width, vld_mask=None):
-        t = cls.HdlType_bits(Bits(width), None)
-        buff = [t, '("']
-        for i in range(width - 1, -1, -1):
-            mask = (1 << i)
-            b = v & mask
-
-            if vld_mask & mask:
-                s = "1" if b else "0"
-            else:
-                s = "X"
-            buff.append(s)
-        buff.append('")')
-        return ''.join(buff)
-
     @internal
-    @classmethod
-    def _BitString(cls, typeName, v, width, force_vector, vld_mask):
+    def _BitString(self, typeName, v, width, force_vector, vld_mask):
         if vld_mask != mask(width):
             if force_vector or width > 1:
-                v = cls.BitString(v, width, vld_mask)
+                v = self.BitString(v, width, vld_mask)
             else:
-                v = cls.BitLiteral(v, width, vld_mask)
+                v = self.BitLiteral(v, width, vld_mask)
         else:
             v = str(v)
         # [TODO] parametrized width
         return "%s<%d>(%s)" % (typeName, width, v)
 
-    @classmethod
-    def HEnumValAsHdl(cls, dtype, val, ctx):
+    def as_hdl_HEnumVal(self, val):
         i = dtype._allValues.index(val.val)
         assert i >= 0
-        return '%d' % i
+        return self.as_hdl_int(i)
 
-    @classmethod
-    def SignedBitString(cls, v, width, force_vector, vld_mask):
-        return cls._BitString("sc_biguint", v, width, force_vector, vld_mask)
+    def as_hdl_SignedBitString(self, v, width, force_vector, vld_mask):
+        return self._BitString("sc_biguint", v, width, force_vector, vld_mask)
 
-    @classmethod
-    def UnsignedBitString(cls, v, width, force_vector, vld_mask):
-        return cls._BitString("sc_biguint", v, width, force_vector, vld_mask)
+    def as_hdl_UnsignedBitString(self, v, width, force_vector, vld_mask):
+        return self._BitString("sc_biguint", v, width, force_vector, vld_mask)
 
-    @classmethod
-    def HArrayValAsHdl(cls, dtype, val, ctx):
-        separator = ",\n" + getIndent(ctx.indent + 1)
-        return "".join(["{", separator.join([cls.Value(v, ctx) for v in val]),
+    def as_hdl_HArrayVal(self, val):
+        raise NotImplementedError()
+        separator = ",\n"
+        return "".join(["{", separator.join([self.as_hdl_Value(v) for v in val]),
                         "}"])

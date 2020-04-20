@@ -1,20 +1,19 @@
-from copy import copy
-
-from hwt.serializer.generic.context import SerializerCtx
-from hwt.serializer.verilog.utils import verilogTypeOfSig, SIGNAL_TYPE
+from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
 
 
-class VerilogSerializerCtx(SerializerCtx):
+class SignalTypeSwap():
     """
-    :ivar ~.signalType: member of SIGNAL_TYPE
+    An object which is used as a context manager for signalType
+    inside of :class:`hwt.serializer.verilog.serializer.ToHdlAstVerilog`
     """
 
-    def forPort(self):
-        ctx = copy(self)
-        ctx.signalType = SIGNAL_TYPE.PORT
-        return ctx
+    def __init__(self, ctx, signalType: SIGNAL_TYPE):
+        self.ctx = ctx
+        self.signalType = signalType
 
-    def forSignal(self, signalItem):
-        ctx = copy(self)
-        ctx.signalType = verilogTypeOfSig(signalItem)
-        return ctx
+    def __enter__(self):
+        self.orig = self.ctx.createTmpVarFn
+        self.ctx.signalType = self.signalType
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.ctx.signalType = self.orig

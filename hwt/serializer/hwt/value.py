@@ -1,84 +1,77 @@
-from hwt.hdl.statements import isSameHVal
+from hdlConvertor.hdlAst._expr import HdlIntValue, HdlCall, HdlBuiltinFn,\
+    HdlName, HdlDirection
+from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
+    hdl_call
+from hwt.hdl.statement import isSameHVal
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.types.bitsVal import BitsVal
+from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.generic.value import GenericSerializer_Value
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.serializer.hwt.context import HwtSerializerCtx
+from hwt.serializer.generic.value import ToHdlAst_Value
+from hdlConvertor.hdlAst._defs import HdlVariableDef
+from typing import Union
+from hwt.serializer.simModel.serializer import ToHdlAstSimModel
+from hwt.serializer.simModel.value import ToHdlAstSimModel_value
 
 
-class HwtSerializer_value(GenericSerializer_Value):
+class ToHdlAstHwt_value(ToHdlAst_Value):
+    NONE = HdlName("None")
+    SLICE = HdlName("SLICE", obj=SLICE)
 
-    @classmethod
-    def Bits_valAsHdl(cls, dtype, val: BitsVal, ctx: HwtSerializerCtx):
+    def as_hdl_BitsVal(self, val: BitsVal):
         isFullVld = val._is_full_valid()
-        if not ctx._valueWidthRequired:
+        if not self._valueWidthRequired:
             if isFullVld:
-                return "0x%x" % val.val
+                return HdlIntValue(val.val, None, 16)
             elif val.vld_mask == 0:
-                return "None"
+                return self.NONE
 
-        if isFullVld:
-            vld_maskStr = ""
-        else:
-            vld_maskStr = ", vld_mask=0x%x" % (val.vld_mask)
+        t = self.as_hdl_HdlType_bits(val._dtype, declaration=False)
+        c = hdl_getattr(t, "from_py")
+        args = [HdlIntValue(val.val, None, 16), ]
+        if not isFullVld:
+            args.append(HdlIntValue(val.vld_mask, None, 16))
 
-        return "%s.from_py(0x%x%s)" % (
-            cls.HdlType_bits(dtype, ctx, declaration=False),
-            val.val, vld_maskStr)
+        return hdl_call(c, args)
 
-    @classmethod
-    def RtlSignal(cls, s: RtlSignalBase, ctx, declaration=False):
-        return cls.SignalItem(s, ctx, declaration=declaration)
-
-    @classmethod
-    def SignalItem(cls, si: SignalItem, ctx: HwtSerializerCtx, declaration=False):
+    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlVariableDef], declaration=False):
         if declaration:
-            raise NotImplementedError()
-        else:
-            # elif isinstance(si, SignalItem) and si._const:
-            #    return cls.Value(si._val, ctx)
-            if si.hidden and hasattr(si, "origin"):
-                return cls.asHdl(si.origin, ctx)
+            if isinstance(si, HdlVariableDef):
+                si.type = self.as_hdl_HdlType(si.type)
+                if si.value is not None:
+                    si.value = self.as_hdl_Value(si.value)
+                return si
             else:
-                return "%s" % si.name
+                raise NotImplementedError()
+        else:
+            if isinstance(si, SignalItem) and si._const:
+                # to allow const cache to extract constants
+                return self.as_hdl_Value(si._val)
+            elif si.hidden and hasattr(si, "origin"):
+                return self.as_hdl(si.origin)
+            else:
+                return HdlName(si.name, obj=si)
 
-    @classmethod
-    def Value_try_extract_as_const(cls, val, ctx: HwtSerializerCtx):
+    def Value_try_extract_as_const(self, val):
         # try to extract value as constant
         try:
-            consGetter = ctx.constCache.getConstName
+            consGetter = self.constCache.getConstName
         except AttributeError:
             consGetter = None
 
         if consGetter and not val._is_full_valid() and not isinstance(val._dtype, HEnum):
             return consGetter(val)
 
-    @classmethod
-    def Integer_valAsHdl(cls, t, i, ctx: HwtSerializerCtx):
-        if i.vld_mask:
-            return "%d" % i.val
-        else:
-            return "None"
+    def as_hdl_DictVal(self, val):
+        return ToHdlAstSimModel_value.as_hdl_DictVal(self, val)
 
-    @classmethod
-    def Dict_valAsHdl(cls, val, ctx: HwtSerializerCtx):
-        sep = (",\n" + getIndent(ctx.indent + 1))
-
-        def sItem(i):
-            k, v = i
-            return "%d: %s" % (k, cls.Value(v, ctx))
-
-        return "{%s}" % sep.join(map(sItem, val.items()))
-
-    @classmethod
-    def HArrayValAsHdl(cls, t, val: HArrayVal, ctx: HwtSerializerCtx):
+    def as_hdl_HArrayVal(self, val: HArrayVal):
         if not val.vld_mask:
-            return "None"
+            return self.NONE
         else:
             if len(val.val) == val._dtype.size:
                 allValuesSame = True
@@ -92,28 +85,27 @@ class HwtSerializer_value(GenericSerializer_Value):
                 if allValuesSame:
                     # all values of items in array are same, use generator
                     # exression
-                    return "[%s for _ in range(%d)]" % (cls.Value(reference, ctx))
+                    raise NotImplementedError()
+                    return "[%s for _ in range(%d)]" % (self.Value(reference))
 
         # if value can not be simplified it is required to serialize it item
         # by item
-        return cls.Dict_valAsHdl(val.val, ctx)
+        return self.as_hdl_DictVal(val.val)
 
-    @classmethod
-    def Slice_valAsHdl(cls, t, val: SliceVal, ctx: HwtSerializerCtx):
+    def as_hdl_SliceVal(self, val: SliceVal):
         if val._is_full_valid():
-            return "%d:%d" % (int(val.val.start),
-                              int(val.val.stop))
+            return HdlCall(
+                HdlBuiltinFn.DOWNTO, [
+                    HdlIntValue(int(val.val.start), None, None),
+                    HdlIntValue(int(val.val.stop), None, None)
+                ])
         else:
+            raise NotImplementedError()
             return "SliceVal(slice(%s, %s, %s), SLICE, %d)" % (
-                cls.Value(val.val.start),
-                cls.Value(val.val.stop),
-                cls.Value(val.val.step),
+                self.as_hdl_Value(val.val.start),
+                self.as_hdl_Value(val.val.stop),
+                self.as_hdl_Value(val.val.step),
                 val.vld_mask)
 
-    @classmethod
-    def HEnumValAsHdl(cls, t, val: HEnumVal, ctx: HwtSerializerCtx):
-        return "%s.%s" % (t.name, val.val)
-
-    @classmethod
-    def condAsHdl(cls, cond: RtlSignalBase, ctx: HwtSerializerCtx):
-        return cls.asHdl(cond, ctx)
+    def as_hdl_HEnumVal(self, t, val: HEnumVal):
+        return hdl_getattr(HdlName(t.name, obj=t), val.val)

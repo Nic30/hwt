@@ -1,122 +1,37 @@
-from jinja2.environment import Environment
-from jinja2.loaders import PackageLoader
-
-from hwt.hdl.constants import DIRECTION
-from hwt.hdl.entity import Entity
+from hdlConvertor.to.systemc.keywords import SYSTEMC_KEYWORDS
+from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.interfaces.std import Clk
-from hdlConvertor.translate.common.name_scope import LangueKeyword
-from hwt.serializer.generic.serializer import GenericSerializer
+from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.systemC.context import SystemCCtx
-from hwt.serializer.systemC.keywords import SYSTEMC_KEYWORDS
-from hwt.serializer.systemC.ops import SystemCSerializer_ops
-from hwt.serializer.systemC.statements import SystemCSerializer_statements
-from hwt.serializer.systemC.type import SystemCSerializer_type
-from hwt.serializer.systemC.value import SystemCSerializer_value
-from hwt.serializer.utils import maxStmId
+from hwt.serializer.systemC.ops import ToHdlAstSystemC_ops
+from hwt.serializer.systemC.statements import ToHdlAstSystemC_statements
+from hwt.serializer.systemC.type import ToHdlAstSystemC_type
+from hwt.serializer.systemC.value import ToHdlAstSystemC_value
 
 
-class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type,
-                        SystemCSerializer_statements, SystemCSerializer_ops,
-                        GenericSerializer):
+class ToHdlAstSystemC(ToHdlAstSystemC_value, ToHdlAstSystemC_type,
+                      ToHdlAstSystemC_statements, ToHdlAstSystemC_ops,
+                      ToHdlAst):
     """
     Serialized used to convert HWT design to SystemC code
     """
-    fileExtension = '.cpp'
-    _keywords_dict = {kw: LangueKeyword() for kw in SYSTEMC_KEYWORDS}
-    env = Environment(loader=PackageLoader('hwt',
-                                           'serializer/systemC/templates'))
-    moduleTmpl = env.get_template('module.cpp.template')
-    methodTmpl = env.get_template("method.cpp.template")
-    ifTmpl = env.get_template("if.cpp.template")
-    switchTmpl = env.get_template("switch.cpp.template")
+    _keywords_dict = {kw: LanguageKeyword() for kw in SYSTEMC_KEYWORDS}
 
     @classmethod
     def getBaseContext(cls):
         return SystemCCtx(cls.getBaseNameScope(), 0, None, None)
 
-    @classmethod
-    def comment(cls, comentStr):
-        return "\n".join(["/*", comentStr, "*/"])
-
-    @classmethod
-    def PortItem(cls, p, ctx):
-        d = cls.DIRECTION(p.direction)
-        p.name = ctx.scope.checkedName(p.name, p)
+    def as_hdl_HdlPortItem(self, p):
+        raise NotImplementedError()
         p.getInternSig().name = p.name
         if isinstance(p.getInternSig()._interface, Clk):
             return "sc_%s_clk %s;" % (d, p.name)
 
         return "sc_%s<%s> %s;" % (d,
-                                  cls.HdlType(p._dtype, ctx),
+                                  self.as_hdl_HdlType(p._dtype),
                                   p.name)
 
-    @classmethod
-    def DIRECTION(cls, d):
-        return d.name.lower()
 
-    @classmethod
-    def Entity(cls, ent, ctx):
-        cls.Entity_prepare(ent, ctx)
-        # [TODO] separate declarations from definitions
-        return cls.get_doc(ent)
-
-    @classmethod
-    def GenericItem(cls, g, ctx):
-        # [TODO] params currently serialized evaluated
-        return ""
-
-    @classmethod
-    def Architecture_var(cls, v, serializerVars, extraTypes,
-                         extraTypes_serialized, ctx, childCtx):
-        """
-        :return: list of extra discovered processes
-        """
-        v.name = ctx.scope.checkedName(v.name, v)
-        serializedVar = cls.SignalItem(v, childCtx, declaration=True)
-        serializerVars.append(serializedVar)
-
-    @classmethod
-    def Architecture(cls, arch, ctx):
-        serializerVars = []
-        procs = []
-        extraTypes = set()
-        extraTypes_serialized = []
-        arch.variables.sort(key=lambda x: (x.name, x._instId))
-        arch.componentInstances.sort(key=lambda x: x._name)
-
-        childCtx = ctx.withIndent()
-        ports = [cls.PortItem(pi, childCtx)
-                 for pi in arch.entity.ports]
-
-        extraProcesses = []
-        for v in arch.variables:
-            cls.Architecture_var(v,
-                                 serializerVars,
-                                 extraTypes,
-                                 extraTypes_serialized,
-                                 ctx,
-                                 childCtx)
-
-        arch.processes.extend(extraProcesses)
-        arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
-        for p in arch.processes:
-            procs.append(cls.HWProcess(p, childCtx))
-
-        processesSensitivity = []
-        sensitivityCtx = ctx.forSensitivityList()
-        for p in arch.processes:
-            sens = [cls.asHdl(s, sensitivityCtx)
-                    for s in p.sensitivityList]
-            processesSensitivity.append((p.name, sens))
-
-        return cls.moduleTmpl.render(
-            processesSensitivity=processesSensitivity,
-            name=arch.getEntityName(),
-            ports=ports,
-            signals=serializerVars,
-            extraTypes=extraTypes_serialized,
-            processes=procs,
-            processObjects=arch.processes,
-            componentInstances=arch.componentInstances,
-            DIRECTION=DIRECTION,
-        )
+class SystemCSerializer():
+    fileExtension = '.cpp'
+    TO_HDL_AST = ToHdlAstSystemC

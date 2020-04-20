@@ -1,5 +1,4 @@
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.waitStm import WaitStm
 from hwt.doc_markers import internal
 
 
@@ -11,8 +10,6 @@ def getMaxStmIdForStm(stm):
     maxId = 0
     if isinstance(stm, Assignment):
         return stm._instId
-    elif isinstance(stm, WaitStm):
-        return maxId
     else:
         for _stm in stm._iter_stms():
             maxId = max(maxId, getMaxStmIdForStm(_stm))

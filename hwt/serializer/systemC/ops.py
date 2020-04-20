@@ -3,10 +3,10 @@ from hwt.hdl.types.defs import BIT, SLICE
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 
 
-class SystemCSerializer_ops():
+class ToHdlAstSystemC_ops():
     opPrecedence = {
         AllOps.NOT: 3,
-        AllOps.NEG: 5,
+        AllOps.MINUS_UNARY: 5,
         AllOps.RISING_EDGE: 0,
         AllOps.DIV: 6,
         AllOps.ADD: 7,
@@ -87,9 +87,9 @@ class SystemCSerializer_ops():
             zero, one = BIT.from_py(0), BIT.from_py(1)
             if ops[1] == one and ops[2] == zero:
                 # ignore redundant x ? 1 : 0
-                return cls.condAsHdl([ops[0]], True, ctx)
+                return cls.as_hdl_cond([ops[0]], True, ctx)
             else:
-                return "%s ? %s : %s" % (cls.condAsHdl([ops[0]], True, ctx),
+                return "%s ? %s : %s" % (cls.as_hdl_cond([ops[0]], True, ctx),
                                          cls._operand(ops[1], 1, op, False, False, ctx),
                                          cls._operand(ops[2], 2, op, False, False, ctx))
         elif o == AllOps.RISING_EDGE or o == AllOps.FALLING_EDGE:

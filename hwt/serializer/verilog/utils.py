@@ -1,20 +1,35 @@
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.portItem import PortItem
+from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.value import Value
-from hwt.serializer.generic.constants import SIGNAL_TYPE
 
 from hwt.doc_markers import internal
+from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
+from hwt.hdl.variables import SignalItem
+from typing import Union
+from ipCorePackager.constants import DIRECTION
 
 
 @internal
-def verilogTypeOfSig(signalItem):
+def verilogTypeOfSig(s: Union[SignalItem, HdlPortItem]):
     """
     Check if is register or wire
     """
-    driver_cnt = len(signalItem.drivers)
+    if isinstance(s, HdlPortItem):
+        if s.direction == DIRECTION.IN or s.direction == DIRECTION.INOUT:
+            return SIGNAL_TYPE.PORT_WIRE
+
+        t = verilogTypeOfSig(s.getInternSig())
+        if t == SIGNAL_TYPE.WIRE:
+            return SIGNAL_TYPE.PORT_WIRE
+        elif t == SIGNAL_TYPE.REG:
+            return SIGNAL_TYPE.PORT_REG
+        else:
+            raise ValueError(t)
+
+    driver_cnt = len(s.drivers)
     if driver_cnt == 1:
-        d = signalItem.drivers[0]
-        if isinstance(d, PortItem):
+        d = s.drivers[0]
+        if isinstance(d, HdlPortItem):
             # input port
             return SIGNAL_TYPE.WIRE
         elif isinstance(d, Assignment)\

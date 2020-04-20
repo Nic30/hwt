@@ -1,9 +1,7 @@
 from copy import copy
 
-from hwt.serializer.verilog.context import VerilogSerializerCtx
 
-
-class SystemCCtx(VerilogSerializerCtx):
+class SystemCCtx(): # VerilogSerializerCtx
     """
     Context of SystemC serializer
 

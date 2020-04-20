@@ -1,13 +1,20 @@
+from hdlConvertor.hdlAst import HdlVariableDef,  HdlName, HdlIntValue,\
+    HdlTypeType, HdlEnumDef
+from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
+    hdl_getattr
+from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.bits import Bits
+from pyMathBitPrecise.bits3t import Bits3t
 
 
-class SimModelSerializer_types():
+class ToHdlAstSimModel_types():
     """
-    part of SimModelSerializer responsible for type serialization
+    part of ToHdlAstSimModel responsible for type serialization
     """
+    SELF = HdlName("self", obj=LanguageKeyword())
+    BITS3T = HdlName("Bits3t", obj=Bits3t)
 
-    @classmethod
-    def HdlType_bits(cls, typ: Bits, ctx, declaration=False):
+    def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):
         assert not declaration
         w = typ.bit_length()
         if isinstance(w, int):
@@ -15,29 +22,28 @@ class SimModelSerializer_types():
         else:
             w = int(w)
 
-        return "Bits3t(%d, %r)" % (w, bool(typ.signed))
+        return hdl_call(self.BITS3T, [HdlIntValue(w, None, None),
+                                      HdlIntValue(int(bool(typ.signed)), None, None)])
 
-    @classmethod
-    def HdlType_bool(cls, typ, ctx, declaration=False):
-        assert not declaration
-        return "Bits3t(1, False)"
-
-    @classmethod
-    def HdlType_enum(cls, typ, ctx, declaration=False):
+    def as_hdl_HdlType_array(self, typ, declaration=False):
         if declaration:
-            typ.name = ctx.scope.checkedName(typ.name, typ)
-
-            return '%s = define_Enum3t("%s", [%s])' % (
-                typ.name,
-                typ.name,
-                ", ".join(map(lambda x: '"%s"' % x,
-                              typ._allValues)))
+            return super(ToHdlAstSimModel_types, self).as_hdl_HdlType_array(typ, declaration=declaration)
         else:
-            return "self.%s()" % typ.name
+            return hdl_getattr(self.SELF, typ.name)
 
-    @classmethod
-    def HdlType_array(cls, typ, ctx, declaration=False):
-        assert not declaration
-        return "%s[%d]" % (cls.HdlType(typ.element_t, ctx,
-                                       declaration=declaration),
-                           int(typ.size))
+    def as_hdl_HdlType_enum(self, typ, declaration=False):
+        if declaration:
+            ns = self.name_scope
+
+            typedef = HdlVariableDef()
+            typedef.type = HdlTypeType
+            typedef.origin = typ
+
+            _t = typedef.value = HdlEnumDef()
+            typedef.name = _t.name = ns.checkedName(typ.name, typ)
+
+            _t.values = [ns.checkedName(v, getattr(typ, v)) for v in typ._allValues]
+
+            return typedef
+        else:
+            return hdl_getattr(self.SELF, typ.name)

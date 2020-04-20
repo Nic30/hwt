@@ -1,23 +1,28 @@
+from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statements import HwtSyntaxError
-from hwt.hdl.variables import SignalItem
-from hwt.doc_markers import internal
+from hwt.hdl.statement import HwtSyntaxError
 
 
-class PortItem(SignalItem):
-    """basic hdl entity port item"""
+class HdlPortItem():
+    """
+    HDL entity/module/component port item
+    Used to split signal paths on compomponent boundary.
+
+    :note: src/dst are named based on input output signal direction
+        bouth dst and src can be parent/component signal, it depends on direction
+    """
 
     def __init__(self, name, direction, dtype, unit):
         self.name = name
         self.unit = unit
-        self.direction = direction
         self._dtype = dtype
+        self.direction = direction
         self.src = None
         self.dst = None
 
     @internal
-    def connectSig(self, signal):
+    def connectOuterSig(self, signal):
         """
         Connect to port item on subunit
         """
@@ -44,11 +49,9 @@ class PortItem(SignalItem):
         signal.ctx.subUnits.add(self.unit)
 
     @internal
-    def registerInternSig(self, signal):
+    def connectInternSig(self, signal):
         """
-        Connect internal signal to port item,
-        this connection is used by simulator and only output port items
-        will be connected
+        Connet signal from internal side of of this component to this port.
         """
         if self.direction == DIRECTION.OUT:
             if self.src is not None:
@@ -56,6 +59,7 @@ class PortItem(SignalItem):
                     "Port %s is already associated with signal %s"
                     % (self.name, str(self.src)))
             self.src = signal
+            self.src.endpoints.append(self)
 
         elif self.direction == DIRECTION.IN:
             if self.dst is not None:
@@ -63,22 +67,9 @@ class PortItem(SignalItem):
                     "Port %s is already associated with signal %s"
                     % (self.name, str(self.dst)))
             self.dst = signal
-
-        else:
-            raise NotImplementedError(self.direction)
-
-    @internal
-    def connectInternSig(self):
-        """
-        connet signal from internal side of of this component to this port
-        """
-        d = self.direction
-        if d == DIRECTION.OUT:
-            self.src.endpoints.append(self)
-        elif d == DIRECTION.IN or d == DIRECTION.INOUT:
             self.dst.drivers.append(self)
         else:
-            raise NotImplementedError(d)
+            raise NotImplementedError(self.direction)
 
     @internal
     def getInternSig(self):
@@ -94,8 +85,21 @@ class PortItem(SignalItem):
             raise NotImplementedError(d)
 
     @internal
+    def getOuterSig(self):
+        """
+        return signal inside unit which has this port
+        """
+        d = self.direction
+        if d == DIRECTION.OUT:
+            return self.dst
+        elif d == DIRECTION.IN:
+            return self.src
+        else:
+            raise NotImplementedError(d)
+
+    @internal
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
         yield from []
 
     def __repr__(self):
-        return "<PortItem src:%r, dst:%r>" % (self.src, self.dst)
+        return "<%s src:%r, dst:%r>" % (self.__class__.__name__, self.src, self.dst)

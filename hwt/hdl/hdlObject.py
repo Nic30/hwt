@@ -1,3 +1,5 @@
+from io import StringIO
+from hdlConvertor.translate.common.name_scope import NameScope
 
 
 class HdlObject():
@@ -8,5 +10,12 @@ class HdlObject():
 
     def __repr__(self):
         from hwt.serializer.hwt.serializer import HwtSerializer
-        ctx = HwtSerializer.getBaseContext()
-        return getattr(HwtSerializer, self.__class__.__name__)(self, ctx)
+        name_scope = NameScope(None, "debug", False)
+        to_hdl = HwtSerializer.TO_HDL_AST(name_scope)
+        hdl = to_hdl.as_hdl(self)
+        buff = StringIO()
+        # import sys
+        # buff = sys.stdout
+        ser = HwtSerializer.TO_HDL(buff)
+        ser.visit_iHdlObj(hdl)
+        return buff.getvalue()

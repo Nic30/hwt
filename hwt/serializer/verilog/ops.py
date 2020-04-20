@@ -1,107 +1,55 @@
 from typing import Union
 
+from hdlConvertor.hdlAst._expr import HdlName, HdlBuiltinFn, HdlCall
+from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call
+from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT, INT
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import UnsupportedEventOpErr
-from hwt.serializer.generic.context import SerializerCtx
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 
 
-class VerilogSerializer_ops():
-    # http://www.asicguru.com/verilog/tutorial/operators/57/
-    opPrecedence = {
-        AllOps.RISING_EDGE: 17,
-        AllOps.FALLING_EDGE: 17,
-        AllOps.TERNARY: 16,
-        AllOps.AND: 11,
-        AllOps.XOR: 11,
-        AllOps.OR: 11,
-        AllOps.EQ: 10,
-        AllOps.NEQ: 10,
-        AllOps.GT: 9,
-        AllOps.LT: 9,
-        AllOps.GE: 9,
-        AllOps.LE: 9,
-        AllOps.CONCAT: 5,
-        AllOps.ADD: 7,
-        AllOps.SUB: 7,
-        AllOps.DIV: 6,
-        AllOps.NEG: 5,
-        AllOps.MUL: 3,
-        AllOps.NOT: 3,
-        AllOps.DOWNTO: 2,
-        AllOps.TO: 2,
-        AllOps.CALL: 2,
-        AllOps.INDEX: 1,
-        # AllOps.SHIFTL:8,
-        # AllOps.SHIFTR:8,
-        AllOps.BitsAsSigned: 1,
-        AllOps.BitsAsUnsigned: 1,
-        AllOps.BitsAsVec: 1,
-    }
-    _unaryOps = {
-        AllOps.NOT: "~%s",
-        AllOps.BitsAsSigned: "$signed(%s)",
-        AllOps.BitsAsUnsigned: "$unsigned(%s)",
-        AllOps.BitsAsVec: "%s",
+class ToHdlAstVerilog_ops():
+    SIGNED = HdlName("$signed", obj=LanguageKeyword())
+    UNSIGNED = HdlName("$unsigned", obj=LanguageKeyword())
+    op_transl_dict = {
+        **HWT_TO_HDLCONVEROTR_OPS,
+        AllOps.INDEX: HdlBuiltinFn.INDEX,
     }
 
-    _binOps = {
-        AllOps.AND: '%s & %s',
-        AllOps.OR: '%s | %s',
-        AllOps.XOR: '%s ^ %s',
-        AllOps.CONCAT: "{%s, %s}",
-        AllOps.DIV: '%s / %s',
-        AllOps.DOWNTO: '%s:%s',
-        AllOps.TO: '%s:%s',
-        AllOps.EQ: '%s == %s',
-        AllOps.GT: '%s > %s',
-        AllOps.GE: '%s >= %s',
-        AllOps.LE: '%s <= %s',
-        AllOps.LT: '%s < %s',
-        AllOps.SUB: '%s - %s',
-        AllOps.MUL: '%s * %s',
-        AllOps.NEQ: '%s != %s',
-        AllOps.ADD: '%s + %s',
-        AllOps.POW: '%s ** %s',
-    }
-
-    @classmethod
-    def _operandIsAnotherOperand(cls, operand):
+    def _operandIsAnotherOperand(self, operand):
         if isinstance(operand, RtlSignal) and operand.hidden\
                 and isinstance(operand.origin, Operator):
             return True
 
-    @classmethod
-    def _operand(cls, operand: Union[RtlSignal, Value], i: int,
-                 operator: Operator,
-                 expr_requires_parenthesis: bool,
-                 cancel_parenthesis: bool,
-                 ctx: SerializerCtx):
+    def as_hdl_operand(self, operand: Union[RtlSignal, Value], i: int,
+                       operator: Operator):
 
         # [TODO] if operand is concatenation and parent operator
         #        is not concatenation operand should be extracted
         #        as tmp variable
         #        * maybe flatten the concatenations
         if operator.operator != AllOps.CONCAT\
-                and cls._operandIsAnotherOperand(operand)\
+                and self._operandIsAnotherOperand(operand)\
                 and operand.origin.operator == AllOps.CONCAT:
-            tmpVar = ctx.createTmpVarFn("tmp_concat_", operand._dtype)
+            tmpVar = self.createTmpVarFn("tmp_concat_", operand._dtype)
             tmpVar.def_val = operand
             # Assignment(tmpVar, operand, virtual_only=True)
             operand = tmpVar
 
         oper = operator.operator
         width = None
-        if oper not in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec,
-                        AllOps.BitsAsSigned] and\
-                oper is not AllOps.INDEX and\
-                operand._dtype == INT and\
+        if operand._dtype == INT and\
+           oper not in [AllOps.BitsAsUnsigned,
+                        AllOps.BitsAsVec,
+                        AllOps.BitsAsSigned,
+                        AllOps.INDEX] and\
                 operator.result is not None and\
                 not operator.result._dtype == INT:
-            # has to lock width
+            # have to lock the width
             for o in operator.operands:
                 try:
                     bl = o._dtype.bit_length
@@ -112,55 +60,42 @@ class VerilogSerializer_ops():
                     break
 
             assert width is not None, (operator, operand)
-
-        s = super()._operand(operand, i, operator,
-                             width is not None or expr_requires_parenthesis,
-                             width is None and cancel_parenthesis, ctx)
+        hdl_op = self.as_hdl_Value(operand)
         if width is not None:
-            return "%d'%s" % (width, s)
+            return HdlCall(HdlBuiltinFn.APOSTROPHE, [self.as_hdl_int(width), hdl_op])
         else:
-            return s
+            return hdl_op
 
-    @classmethod
-    def Operator(cls, op: Operator, ctx):
+    def as_hdl_Operator(self, op: Operator):
         ops = op.operands
         o = op.operator
 
-        op_str = cls._unaryOps.get(o, None)
-        if op_str is not None:
-            cancel_parenthesis = op_str.endswith(")")
-            return op_str % (cls._operand(ops[0], 0, op, False, cancel_parenthesis, ctx))
-
-        op_str = cls._binOps.get(o, None)
-        if op_str is not None:
-            return cls._bin_op(op, op_str, ctx, cancel_parenthesis=o == AllOps.CONCAT)
-        if o == AllOps.CALL:
-            return "%s(%s)" % (
-                cls.FunctionContainer(ops[0]),
-                # operand i does not matter as they are all in ()
-                ", ".join(map(lambda _op: cls._operand(_op, 1, op, False, True, ctx), ops[1:])))
-        elif o == AllOps.INDEX:
-            return cls._operator_index(op, ctx)
-        elif o == AllOps.TERNARY:
+        if o == AllOps.TERNARY:
             zero, one = BIT.from_py(0), BIT.from_py(1)
             if ops[1] == one and ops[2] == zero:
                 # ignore redundant x ? 1 : 0
-                return cls.condAsHdl([ops[0]], True, ctx)
+                return self.as_hdl_cond([ops[0]], True)
             else:
-                op0 = cls.condAsHdl([ops[0]], True, ctx)
-                op1 = cls._operand(ops[1], op, False, False, ctx)
-                op2 = cls._operand(ops[2], op, False, False, ctx)
-                return "%s ? %s : %s" % (op0, op1, op2)
+                op0 = self.as_hdl_cond([ops[0]], True)
+                op1 = self.as_hdl_operand(ops[1], 1, op)
+                op2 = self.as_hdl_operand(ops[2], 2, op)
+                return HdlCall(HdlBuiltinFn.TERNARY, [op0, op1, op2])
         elif o == AllOps.RISING_EDGE or o == AllOps.FALLING_EDGE:
             raise UnsupportedEventOpErr()
-        elif o in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec]:
+        elif o in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.BitsAsSigned]:
             op0, = ops
-            do_cast = bool(op0._dtype.signed)
-            op_str = cls._operand(op0, op, False, do_cast, ctx)
+            do_cast = bool(op0._dtype.signed) != bool(op.result._dtype.signed)
+
+            op_hdl = self.as_hdl_operand(op0, 0, op)
             if do_cast:
-                return "$unsigned(%s)" % op_str
+                if bool(op0._dtype.signed):
+                    cast = self.SIGNED
+                else:
+                    cast = self.UNSIGNED
+                return hdl_call(cast, [op_hdl, ])
             else:
-                return op_str
+                return op_hdl
         else:
-            raise NotImplementedError(
-                "Do not know how to convert expression with operator %s to verilog" % (o))
+            _o = self.op_transl_dict[o]
+            return HdlCall(_o, [self.as_hdl_operand(o2, i, op)
+                                for i, o2 in enumerate(ops)])
