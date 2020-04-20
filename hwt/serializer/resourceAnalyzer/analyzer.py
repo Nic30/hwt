@@ -1,19 +1,18 @@
-from hwt.hdl.architecture import Architecture
-from hwt.hdl.entity import Entity
-from hwt.hdl.process import HWProcess
-from hwt.serializer.generic.serializer import GenericSerializer
-from hwt.serializer.resourceAnalyzer.utils import ResourceContext
-from hwt.hdl.types.array import HArray
-from hwt.hdl.statements import HdlStatement
+from itertools import chain
+
+from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.operator import Operator, isConst
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.value import Value
-from hwt.synthesizer.rtlLevel.netlist import walk_assignments
+from hwt.hdl.statement import HdlStatement
 from hwt.hdl.switchContainer import SwitchContainer
-from itertools import chain
-from hwt.doc_markers import internal
+from hwt.hdl.types.array import HArray
+from hwt.hdl.value import Value
+from hwt.serializer.generic.to_hdl_ast import ToHdlAst
+from hwt.serializer.resourceAnalyzer.utils import ResourceContext
+from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import walk_assignments
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 @internal
@@ -35,6 +34,7 @@ def count_mux_inputs_for_outputs(stm):
     return cnt
 
 
+# operators which do not consume a hw resorce directly
 IGNORED_OPERATORS = {
     AllOps.BitsAsSigned,
     AllOps.BitsAsUnsigned,
@@ -44,7 +44,7 @@ IGNORED_OPERATORS = {
 }
 
 
-class ResourceAnalyzer(GenericSerializer):
+class ResourceAnalyzer(ToHdlAst):
     """
     Serializer which does not products any output just collect informations
     about used resources
@@ -58,7 +58,7 @@ class ResourceAnalyzer(GenericSerializer):
 
     @internal
     @classmethod
-    def HWProcess_operators(cls, sig: RtlSignal, ctx: ResourceContext, synchronous):
+    def HdlStatementBlock_operators(cls, sig: RtlSignal, ctx: ResourceContext, synchronous):
         seen = ctx.seen
         for d in sig.drivers:
             if (not isinstance(d, Operator)
@@ -106,12 +106,12 @@ class ResourceAnalyzer(GenericSerializer):
                         or not op.hidden
                         or op in seen):
                     continue
-                cls.HWProcess_operators(op, ctx, synchronous)
+                cls.HdlStatementBlock_operators(op, ctx, synchronous)
 
     @classmethod
-    def HWProcess(cls, proc: HWProcess, ctx: ResourceContext) -> None:
+    def HdlStatementBlock(cls, proc: HdlStatementBlock, ctx: ResourceContext) -> None:
         """
-        Gues resource usage by HWProcess
+        Gues resource usage by HdlStatementBlock
         """
         seen = ctx.seen
         for stm in proc.statements:
@@ -127,7 +127,7 @@ class ResourceAnalyzer(GenericSerializer):
 
                 i = out_mux_dim[o]
                 if isinstance(o._dtype, HArray):
-                    assert i == 1, (o, i, " only one ram port per HWProcess")
+                    assert i == 1, (o, i, " only one ram port per HdlStatementBlock")
                     for a in walk_assignments(stm, o):
                         assert len(a.indexes) == 1, "one address per RAM port"
                         addr = a.indexes[0]
@@ -159,15 +159,7 @@ class ResourceAnalyzer(GenericSerializer):
                 if not i.hidden or i in seen:
                     continue
 
-                cls.HWProcess_operators(i, ctx, ev_dep)
-
-    @classmethod
-    def Entity(cls, ent: Entity, ctx: ResourceContext) -> None:
-        """
-        Entity is just header, we do not need to inspect it for resources
-        but we need to perform namechecking in order to avoid name collisions
-        """
-        GenericSerializer.Entity(ent, ctx)
+                cls.HdlStatementBlock_operators(i, ctx, ev_dep)
 
     def getBaseContext(self) -> ResourceContext:
         """
@@ -177,12 +169,12 @@ class ResourceAnalyzer(GenericSerializer):
         return self.context
 
     @classmethod
-    def Architecture(cls, arch: Architecture, ctx: ResourceContext) -> None:
+    def Architecture(cls, arch, ctx: ResourceContext) -> None:
         for c in arch.componentInstances:
             raise NotImplementedError()
 
         for proc in arch.processes:
-            cls.HWProcess(proc, ctx)
+            cls.HdlStatementBlock(proc, ctx)
 
         # [TODO] constant to ROMs
 

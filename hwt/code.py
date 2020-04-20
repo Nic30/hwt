@@ -4,7 +4,7 @@ from operator import and_, or_, xor, add
 from hwt.code_utils import _mkOp, _connect, _intfToSig
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
-from hwt.hdl.statements import HwtSyntaxError, HdlStatement
+from hwt.hdl.statement import HwtSyntaxError, HdlStatement
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
