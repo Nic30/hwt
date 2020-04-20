@@ -6,7 +6,8 @@ from hwt.hdl.typeShortcuts import hInt
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, STR, BIT, INT
 from hwt.hdl.types.hdlType import HdlType
-from hwt.serializer.vhdl.serializer import VhdlSerializer
+from hwt.serializer.vhdl.serializer import Vhdl2008Serializer, _to_Vhdl2008_str,\
+    ToHdlAstVhdl2008
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
@@ -18,13 +19,16 @@ from hwt.synthesizer.utils import toRtl
 from ipCorePackager.otherXmlObjs import Value
 from ipCorePackager.packager import IpCorePackager
 from ipCorePackager.intfIpMeta import VALUE_RESOLVE
+from io import StringIO
+from hwt.serializer.store_manager import SaveToFilesFlat
+from hdlConvertor.to.vhdl.vhdl2008 import ToVhdl2008
 
 
-class VivadoTclExpressionSerializer(VhdlSerializer):
+class VivadoTclExpressionSerializer(Vhdl2008Serializer):
 
     # disabled because this code is not reachable in current implemetation
     @staticmethod
-    def SignalItem(si, declaration=False):
+    def as_hdl_SignalItem(si, declaration=False):
         raise NotImplementedError(si)
 
 
@@ -39,8 +43,8 @@ class IpPackager(IpCorePackager):
 
     def __init__(self, topUnit: Unit, name: str=None,
                  extra_files: List[str]=[],
-                 serializer=VhdlSerializer,
-                 targetPlatform=DummyPlatform()):
+                 serializer_cls=Vhdl2008Serializer,
+                 target_platform=DummyPlatform()):
         """
         :param topObj: Unit instance of top component
         :param name: optional name of top
@@ -48,7 +52,7 @@ class IpPackager(IpCorePackager):
             which should be distributed in this IP-core
             (\*.v - verilog, \*.sv,\*.svh -system verilog, \*.vhd - vhdl, \*.xdc - XDC)
         :param serializer: serializer which specifies target HDL language
-        :param targetPlatform: specifies properties of target platform, like available resources, vendor, etc.
+        :param target_platform: specifies properties of target platform, like available resources, vendor, etc.
         """
         assert not topUnit._wasSynthetised()
         if not name:
@@ -56,8 +60,8 @@ class IpPackager(IpCorePackager):
 
         super(IpPackager, self).__init__(
             topUnit, name, extra_files)
-        self.serializer = serializer
-        self.targetPlatform = targetPlatform
+        self.serializer = serializer_cls
+        self.target_platform = target_platform
 
     @internal
     def toHdlConversion(self, top, topName: str, saveTo: str) -> List[str]:
@@ -68,12 +72,12 @@ class IpPackager(IpCorePackager):
 
         :return: list of file namens in correct compile order
         """
-
-        return toRtl(top,
-                     saveTo=saveTo,
-                     name=topName,
-                     serializer=self.serializer,
-                     targetPlatform=self.targetPlatform)
+        ser = self.serializer
+        name_scope = ser.getBaseNameScope()
+        store = SaveToFilesFlat(ser, saveTo, name_scope=name_scope)
+        toRtl(top, name=topName, store_manager=store,
+              target_platform=self.target_platform)
+        return store.files
 
     @internal
     def paramToIpValue(self, idPrefix: str, g: Param, resolve) -> Value:
@@ -145,7 +149,7 @@ class IpPackager(IpCorePackager):
                 "Can not seraialize hdl type %r into"
                 "ipcore format" % (hdlType))
 
-        return VhdlSerializer.HdlType(hdlType, VhdlSerializer.getBaseContext())
+        return _to_Vhdl2008_str(hdlType)
 
     @internal
     def getVectorFromType(self, dtype) -> Union[bool, None, Tuple[int, int]]:
@@ -190,22 +194,25 @@ class IpPackager(IpCorePackager):
         """
         :see: doc of method on parent class
         """
-        ctx = VhdlSerializer.getBaseContext()
 
         def createTmpVar(suggestedName, dtype):
             raise NotImplementedError(
                 "Width value can not be converted do ipcore format (%r)",
                 val)
 
-        ctx.createTmpVarFn = createTmpVar
         if do_eval:
             val = val.staticEval()
-        val = VivadoTclExpressionSerializer.asHdl(val, ctx)
-        return val
+        to_hdl = ToHdlAstVhdl2008()
+        to_hdl.createTmpVarFn = createTmpVar
+        hdl = to_hdl.as_hdl(val)
+        buff = StringIO()
+        ser = ToVhdl2008(buff)
+        ser.visit_iHdlObj(hdl)
+        return buff.getvalue()
 
     @internal
     def getTypeWidth(self, dtype: HdlType, do_eval=False)\
-            ->Tuple[int, Union[int, RtlSignal], bool]:
+            -> Tuple[int, Union[int, RtlSignal], bool]:
         """
         :see: doc of method on parent class
         """
@@ -230,13 +237,18 @@ class IpPackager(IpCorePackager):
         if do_eval:
             val = val.staticEval()
 
+        buff = StringIO()
+        ns = VivadoTclExpressionSerializer.getBaseNameScope()
+        ser = VivadoTclExpressionSerializer(buff, ns)
+        hdl = ser.as_hdl(val)
+        ser.visit_iHdlObj(hdl)
+        tclVal = buff.getvalue()
         if isinstance(val, RtlSignalBase):
-            ctx = VivadoTclExpressionSerializer.getBaseContext()
-            tclVal = VivadoTclExpressionSerializer.asHdl(val, ctx)
-            tclValVal = VivadoTclExpressionSerializer.asHdl(
-                        val.staticEval())
+            ser = VivadoTclExpressionSerializer(buff, ns)
+            hdl = ser.as_hdl(val.staticEval())
+            ser.visit_iHdlObj(hdl)
+            tclValVal = buff.getvalue()
+
             return tclVal, tclValVal, False
         else:
-
-            tclVal = VivadoTclExpressionSerializer.asHdl(val, None)
             return tclVal, tclVal, True
