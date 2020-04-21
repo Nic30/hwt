@@ -189,32 +189,11 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         # after synthesis clean up interface so this Unit object can be used elsewhere
         self._cleanAsSubunit()
         if do_serialize_this:
-            self._checkArchCompInstances()
+            Unit_checkCompInstances(self)
 
         for proc in target_platform.afterToRtl:
             proc(self)
         store_manager.hierarchy_pop(mdec)
-
-    @internal
-    def _checkArchCompInstances(self):
-        cInstances = [o for o in self._ctx.arch.objs
-                      if isinstance(o, HdlComponentInst)]
-        cInst_cnt = len(cInstances)
-        unit_cnt = len(self._units)
-        if cInst_cnt != unit_cnt:
-            inRtl = set(map(lambda x: x.name, cInstances))
-            inIntf = set(map(lambda x: x._name, self._units))
-            if cInst_cnt > unit_cnt:
-                raise IntfLvlConfErr(
-                    "%s, %s: unit(s) were found in HDL but were"
-                    " not registered %s" % (
-                       self.__class__.__name__, self._name,
-                       self._getstr(inRtl - inIntf)))
-            elif cInst_cnt < unit_cnt:
-                raise IntfLvlConfErr(
-                    "%s, %s: _toRtl: unit(s) are missing in produced HDL %s" % (
-                        self._name, self.__class__.__name__,
-                        str(inIntf - inRtl)))
 
     def _updateParamsFrom(self, otherObj,
                           updater=_default_param_updater,
@@ -226,6 +205,28 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         PropDeclrCollector._updateParamsFrom(self, otherObj,
                                              updater, exclude, prefix)
+
+
+@internal
+def Unit_checkCompInstances(u: Unit):
+    cInstances = [o for o in u._ctx.arch.objs
+                  if isinstance(o, HdlComponentInst)]
+    cInst_cnt = len(cInstances)
+    unit_cnt = len(u._units)
+    if cInst_cnt != unit_cnt:
+        inRtl = set(x.name for x in cInstances)
+        inIntf = set(x._name for x in u._units)
+        if cInst_cnt > unit_cnt:
+            raise IntfLvlConfErr(
+                "%s, %s: unit(s) were found in HDL but were"
+                " not registered %s" % (
+                   u.__class__.__name__, u._name,
+                   u._getstr(inRtl - inIntf)))
+        elif cInst_cnt < unit_cnt:
+            raise IntfLvlConfErr(
+                "%s, %s: _toRtl: unit(s) are missing in produced HDL %s" % (
+                    u._name, u.__class__.__name__,
+                    str(inIntf - inRtl)))
 
 
 def copy_HdlModuleDec_interface(orig_i: InterfaceBase, new_i: InterfaceBase,
