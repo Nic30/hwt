@@ -4,7 +4,7 @@ import re
 from hdlConvertor.hdlAst._expr import HdlName, HdlAll
 from hdlConvertor.hdlAst._statements import HdlImport
 from hdlConvertor.hdlAst._structural import HdlLibrary, HdlModuleDef,\
-    HdlComponentInst
+    HdlComponentInst, HdlContext
 from hdlConvertor.to.vhdl.keywords import VHLD2008_KEYWORDS
 from hdlConvertor.to.vhdl.vhdl2008 import ToVhdl2008
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
@@ -76,7 +76,11 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
                       for c in components]
         if components:
             _o.objs += components
-        return _o
+
+        res = HdlContext()
+        res.objs.extend(self.DEFAULT_IMPORTS)
+        res.objs.append(_o)
+        return res
 
 
 class Vhdl2008Serializer():
