@@ -11,15 +11,15 @@ from hwt.serializer.serializer_filter import SerializerFilter
 class StoreManager(object):
     """
     A base class for an objects which manage
-    how the output of the serialization is stored by serializerCls
+    how the output of the serialization is stored by serializer_cls
     """
 
     def __init__(self,
-                 serializerCls,
+                 serializer_cls,
                  _filter: Type["SerializerFilter"] = None,
                  name_scope: Optional[NameScope]= None):
-        self.serializerCls = serializerCls
-        self.as_hdl_ast = serializerCls.TO_HDL_AST(name_scope=name_scope)
+        self.serializer_cls = serializer_cls
+        self.as_hdl_ast = serializer_cls.TO_HDL_AST(name_scope=name_scope)
         self.name_scope = self.as_hdl_ast.name_scope
         if _filter is None:
             _filter = SerializerFilter()
@@ -46,17 +46,17 @@ class SaveToStream(StoreManager):
     """
 
     def __init__(self,
-                 serializerCls,
+                 serializer_cls,
                  stream: StringIO,
                  _filter: "SerializerFilter" = None,
                  name_scope: Optional[NameScope]=None):
         super(SaveToStream, self).__init__(
-            serializerCls, _filter=_filter, name_scope=name_scope)
+            serializer_cls, _filter=_filter, name_scope=name_scope)
         self.stream = stream
 
     def write(self, obj: iHdlObj):
         hdl = self.as_hdl_ast.as_hdl(obj)
-        ser = self.serializerCls.TO_HDL(self.stream)
+        ser = self.serializer_cls.TO_HDL(self.stream)
         if hasattr(ser, "stm_outputs"):
             ser.stm_outputs = self.as_hdl_ast.stm_outputs
 
@@ -69,20 +69,20 @@ class SaveToFilesFlat(StoreManager):
     """
 
     def __init__(self,
-                 serializerCls,
+                 serializer_cls,
                  root: str,
                  _filter: "SerializerFilter"=None,
                  name_scope: Optional[NameScope]=None):
         super(SaveToFilesFlat, self).__init__(
-            serializerCls, _filter=_filter, name_scope=name_scope)
+            serializer_cls, _filter=_filter, name_scope=name_scope)
         self.root = root
         self.files = UniqList()
         os.makedirs(root, exist_ok=True)
 
     def write(self, obj: iHdlObj):
-        fName = obj.name + self.serializerCls.fileExtension
+        fName = obj.name + self.serializer_cls.fileExtension
         fp = os.path.join(self.root, fName)
         self.files.append(fp)
         with open(fp, "w") as f:
-            s = SaveToStream(self.serializerCls, self.name_scope, f)
+            s = SaveToStream(self.serializer_cls, self.name_scope, f)
             s.write(self, obj)
