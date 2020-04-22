@@ -1,3 +1,7 @@
+from hdlConvertor.hdlAst._bases import iHdlStatement
+from hdlConvertor.hdlAst._expr import HdlAll
+from hdlConvertor.hdlAst._statements import HdlStmProcess, HdlStmWait,\
+    HdlStmBlock
 from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
@@ -39,4 +43,23 @@ class ToHdlAstVerilog_statements():
         for o in proc._outputs:
             if verilogTypeOfSig(o) in (SIGNAL_TYPE.REG, SIGNAL_TYPE.PORT_REG):
                 return True
+
         return False
+
+    def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> iHdlStatement:
+        p = super(ToHdlAstVerilog_statements,
+                  self).as_hdl_HdlStatementBlock(proc)
+        if isinstance(p, HdlStmProcess):
+            no_wait = True
+            if isinstance(p.body, HdlStmWait):
+                no_wait = False
+            elif isinstance(p.body, HdlStmBlock):
+                for _o in p.body.body:
+                    if isinstance(_o, HdlStmWait):
+                        no_wait = False
+                        break
+            if no_wait and not p.sensitivity:
+                # all input are constant and that is why this process does not have
+                # any sensitivity
+                p.sensitivity = [HdlAll, ]
+        return p
