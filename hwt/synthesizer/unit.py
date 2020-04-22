@@ -37,6 +37,11 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
     :ivar ~._lazyLoaded: container of rtl object which were lazy loaded
         in implementation phase (this object has to be returned
         from _toRtl of parent before it it's own objects)
+    :ivar ~._shared_component_with: the other Unit instance which produces
+        an exactly same component in HDL
+    :attention if _shared_component_with is not None the body of this instance
+        is not generated at all
+        and the _shared_component_with is used instead
     :ivar ~._target_platform: metainformations about target platform
     :ivar ~._name: a name of this component
     :ivar ~._hdl_module_name: a name of hdl module for this compoennt
@@ -50,13 +55,14 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         "_name", "_hdl_module_name",
         "_interfaces", "_private_interfaces",
         "_units", "_params", "_parent", "_constraints",
-        "_lazyLoaded", "_ctx",
+        "_lazyLoaded", "_ctx", "_shared_component_with",
         "_target_platform", "_store_manager",
     ])
 
     def __init__(self):
         self._parent = None
         self._name = None
+        self._shared_component_with = None
         self._hdl_module_name = self.__class__.__name__
         self._lazyLoaded = []
         self._ctx = RtlNetlist(self)
@@ -123,6 +129,9 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             copy_HdlModuleDec(replacement, self)
             yield False, self
             self._cleanAsSubunit()
+            self._units = None
+            self._private_interfaces = None
+            self._shared_component_with = replacement
             return
 
         if self._name is None:
