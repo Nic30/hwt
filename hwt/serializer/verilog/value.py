@@ -1,39 +1,33 @@
+from hdlConvertor.hdlAst._expr import HdlIntValue, HdlBuiltinFn,\
+    HdlCall
+from hdlConvertor.to.hdlUtils import bit_string
+from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_downto,\
+    hdl_call
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import BOOL, BIT
-from hwt.hdl.types.slice import Slice
+from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import SerializerException
+from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from pyMathBitPrecise.bit_utils import mask
-from hdlConvertor.translate.common.name_scope import LanguageKeyword
-from hdlConvertor.hdlAst._expr import HdlName, HdlIntValue, HdlBuiltinFn,\
-    HdlCall
-from hwt.hdl.types.bitsVal import BitsVal
-from hwt.hdl.types.enumVal import HEnumVal
 from hwt.serializer.verilog.context import SignalTypeSwap
 from hwt.serializer.verilog.utils import verilogTypeOfSig
-from hdlConvertor.to.hdlUtils import bit_string
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_downto,\
-    hdl_call
-from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class ToHdlAstVerilog_Value(ToHdlAst_Value):
 
-    TRUE = HdlName("true", obj=LanguageKeyword())
-    FALSE = HdlName("false", obj=LanguageKeyword())
+    # TRUE = HdlName("true", obj=LanguageKeyword())
+    # FALSE = HdlName("false", obj=LanguageKeyword())
 
-    def as_hdl_Bool_val(self, val: BitsVal):
-        if val.val:
-            return self.TRUE
-        else:
-            return self.FALSE
+    def as_hdl_BoolVal(self, val: BitsVal):
+        return self.as_hdl_int(val.val)
 
     def as_hdl_cond(self, c, forceBool):
         assert isinstance(c, (RtlSignalBase, Value))
