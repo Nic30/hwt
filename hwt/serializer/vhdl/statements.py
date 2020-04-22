@@ -30,7 +30,6 @@ class ToHdlAstVhdl2008_statements():
         dst_t = dst._dtype
         correct = False
         src = a.src
-        dst = a.dst
         if dst_t == src_t:
             correct = True
         else:
