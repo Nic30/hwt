@@ -48,10 +48,10 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
             else:
                 raise NotImplementedError()
         else:
-            if isinstance(si, SignalItem) and si._const:
-                # to allow const cache to extract constants
-                return self.as_hdl_Value(si._val)
-            elif si.hidden and hasattr(si, "origin"):
+            #if isinstance(si, SignalItem) and si._const:
+            #    # to allow const cache to extract constants
+            #    return self.as_hdl_Value(si._val)
+            if si.hidden and hasattr(si, "origin"):
                 return self.as_hdl(si.origin)
             else:
                 return HdlName(si.name, obj=si)
@@ -72,21 +72,21 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
     def as_hdl_HArrayVal(self, val: HArrayVal):
         if not val.vld_mask:
             return self.NONE
-        else:
-            if len(val.val) == val._dtype.size:
-                allValuesSame = True
-                values = iter(val.val.values())
-                reference = next(values)
-                for v in values:
-                    if allValuesSame:
-                        allValuesSame = isSameHVal(reference, v)
-                    else:
-                        break
-                if allValuesSame:
-                    # all values of items in array are same, use generator
-                    # exression
-                    raise NotImplementedError()
-                    return "[%s for _ in range(%d)]" % (self.Value(reference))
+        #else:
+        #    if len(val.val) == val._dtype.size:
+        #        allValuesSame = True
+        #        values = iter(val.val.values())
+        #        reference = next(values)
+        #         for v in values:
+        #             if allValuesSame:
+        #                 allValuesSame = isSameHVal(reference, v)
+        #             else:
+        #                 break
+        #        if allValuesSame:
+        #            # all values of items in array are same, use generator
+        #            # exression
+        #            raise NotImplementedError()
+        #            return "[%s for _ in range(%d)]" % (self.Value(reference))
 
         # if value can not be simplified it is required to serialize it item
         # by item
