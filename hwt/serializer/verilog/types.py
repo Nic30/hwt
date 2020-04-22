@@ -10,7 +10,6 @@ from hwt.serializer.verilog.utils import SIGNAL_TYPE
 
 
 class ToHdlAstVerilog_types():
-    NULL = HdlName("null")
 
     def does_type_requires_extra_def(self, t, other_types):
         return False
@@ -31,7 +30,7 @@ class ToHdlAstVerilog_types():
             raise ValueError(sigType)
 
         if typ.signed is None:
-            is_signed = self.NULL
+            is_signed = None
         else:
             is_signed = self.as_hdl_int(int(typ.signed))
 
@@ -41,7 +40,7 @@ class ToHdlAstVerilog_types():
             w = hdl_downto(self.as_hdl_int(w - 1),
                            self.as_hdl_int(0))
         else:
-            w = self.NULL
+            w = None
 
         return HdlCall(HdlBuiltinFn.PARAMETRIZATION, [t, w, is_signed])
 
