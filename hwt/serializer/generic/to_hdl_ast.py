@@ -352,7 +352,7 @@ class ToHdlAst():
             component_insts + processes
         return new_m
 
-    def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> HdlStmProcess:
+    def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> iHdlStatement:
         """
         Serialize HdlStatementBlock objects as process if top statement
         """
@@ -367,6 +367,7 @@ class ToHdlAst():
         ns = self.name_scope
 
         def createTmpVarInCurrentBlock(suggestedName, dtype):
+            # create a new tmp variable in current process
             s = RtlSignal(None, None, dtype, virtual_only=True)
             s.name = ns.checkedName(suggestedName, s)
             s.hidden = False
@@ -378,6 +379,9 @@ class ToHdlAst():
         with CreateTmpVarFnSwap(self, createTmpVarInCurrentBlock):
             statements = [self.as_hdl(s) for s in body]
 
+            # create a initializer for tmp variables
+            # :note: we need to do this here because now it is sure that
+            #     the drivers of tmp variable will not be modified
             extraVarsInit = []
             for s in extraVars:
                 if isinstance(s.def_val, RtlSignalBase) or s.def_val.vld_mask:
