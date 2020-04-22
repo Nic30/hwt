@@ -118,7 +118,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         do_serialize_this, replacement = store_manager.filter.do_serialize(self)
         if replacement is not None:
             assert not do_serialize_this
-            assert len(self._interfaces) == len(replacement._interfaces), "No lazy loaded interfaes declared in _impl()"
+            assert len(self._interfaces) == len(replacement._interfaces), \
+                "No lazy loaded interfaces declared in _impl()"
             copy_HdlModuleDec(replacement, self)
             yield False, self
             self._cleanAsSubunit()
@@ -174,6 +175,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         for proc in target_platform.afterToRtlImpl:
             proc(self)
 
+        mdec.params.sort(key=lambda x: x.name)
+        mdec.ports.sort(key=lambda x: x.name)
         if do_serialize_this:
             # synthesize signal level context
             mdef = self._ctx.create_HdlModuleDef(target_platform, store_manager)
@@ -272,3 +275,6 @@ def copy_HdlModuleDec(orig_u: Unit, new_u: Unit):
     for oi, ni in zip(orig_u._interfaces, new_u._interfaces):
         if oi._isExtern:
             copy_HdlModuleDec_interface(oi, ni, e.ports, new_u)
+
+    e.params.sort(key=lambda x: x.name)
+    e.ports.sort(key=lambda x: x.name)
