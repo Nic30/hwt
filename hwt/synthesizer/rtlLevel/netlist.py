@@ -179,13 +179,16 @@ class RtlNetlist():
         processes = list(statements_to_HdlStatementBlocks(self.statements))
 
         # add signals, variables etc. in architecture
-        for s in self.signals:
-            if s not in self.interfaces.keys() and not s.hidden:
+        for s in sorted((s for s in self.signals
+                        if not s.hidden and
+                        s not in self.interfaces.keys()),
+                        key=lambda x: (x.name, x._instId)):
                 v = HdlVariableDef()
                 v.origin = s
                 s.name = v.name = ns.checkedName(s.name, s)
                 v.type = s._dtype
                 v.value = s.def_val
+                v.is_const = s._const
                 mdef.objs.append(v)
 
         for p in processes:
