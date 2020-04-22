@@ -4,7 +4,7 @@ import re
 from hdlConvertor.hdlAst._expr import HdlName, HdlAll
 from hdlConvertor.hdlAst._statements import HdlImport
 from hdlConvertor.hdlAst._structural import HdlLibrary, HdlModuleDef,\
-    HdlComponentInst, HdlContext
+    HdlComponentInst, HdlContext, HdlModuleDec
 from hdlConvertor.to.vhdl.keywords import VHLD2008_KEYWORDS
 from hdlConvertor.to.vhdl.vhdl2008 import ToVhdl2008
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
@@ -61,26 +61,29 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         """
         _o = super(ToHdlAstVhdl2008, self).as_hdl_HdlModuleDef(o)
         component_insts = []
-        for c in o.objs:
-            if not isinstance(c, HdlComponentInst):
-                break
-            else:
+        for c in _o.objs:
+            if isinstance(c, HdlComponentInst):
                 component_insts.append(c)
 
+        # select comonent instances whith an unique module_name
         components = [
             x[1][0] for x in
             groupedby(component_insts, lambda c: c.module_name)
         ]
         components.sort(key=lambda c: c.module_name)
-        components = [self.as_hdl_Component(c)
+        components = [self.as_hdl_HldComponent(c)
                       for c in components]
         if components:
-            _o.objs += components
+            _o.objs = components + _o.objs
 
         res = HdlContext()
         res.objs.extend(self.DEFAULT_IMPORTS)
         res.objs.append(_o)
         return res
+
+    def as_hdl_HldComponent(self, o: HdlComponentInst):
+        c = self.as_hdl_HdlModuleDec(o.origin._ctx.ent)
+        return c
 
 
 class Vhdl2008Serializer():
