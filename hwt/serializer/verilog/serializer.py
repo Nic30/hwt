@@ -61,6 +61,8 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
                     w.val = []  # initial process
                     body.append(w)
                     processes.append(p)
+                # because we would not be able to initialize const/localparam variable later
+                new_v.is_const = False
                 new_v.value = None
             elif new_v.value is not None:
                 new_v.value = self.as_hdl_Value(new_v.value)
