@@ -20,6 +20,7 @@ from hwt.synthesizer.rtlLevel.statements_to_HdlStatementBlocks import\
     statements_to_HdlStatementBlocks
 from hdlConvertor.hdlAst._expr import HdlName
 from hwt.doc_markers import internal
+from hwt.serializer.utils import maxStmId
 
 
 @internal
@@ -176,7 +177,9 @@ class RtlNetlist():
         mdef.module_name = HdlName(self.ent.name, obj=self.ent)
         mdef.name = "rtl"
 
-        processes = list(statements_to_HdlStatementBlocks(self.statements))
+        processes = sorted(
+            statements_to_HdlStatementBlocks(self.statements),
+            key=lambda x:  (x.name, maxStmId(x)))
 
         # add signals, variables etc. in architecture
         for s in sorted((s for s in self.signals
