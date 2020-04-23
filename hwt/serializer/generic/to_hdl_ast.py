@@ -301,7 +301,7 @@ class ToHdlAst():
         var.name = s.name
         var.origin = o
         var.type = o._dtype
-        return self.as_hdl_HdlModuleDef_variable(var, None, None, None, None, None)
+        return self.as_hdl_HdlModuleDef_variable(var, (), None, None, None, None)
 
     def as_hdl_HdlModuleDec(self, o: HdlModuleDec):
         # convert types, exprs
@@ -332,9 +332,11 @@ class ToHdlAst():
 
         hdl_types, hdl_variables, processes, component_insts = \
             ToBasicHdlSimModel.split_HdlModuleDefObjs(self, o.objs)
+        # [TODO] sorting not required as it should be done in _to_rtl()
         hdl_variables.sort(key=lambda x: (x.name, x.origin._instId))
         processes.sort(key=lambda x: (x.name, maxStmId(x)))
         component_insts.sort(key=lambda x: x.name.val)
+
         types = set()
 
         _hdl_variables = []
