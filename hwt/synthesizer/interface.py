@@ -252,7 +252,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                     res[s] = d
 
                 if reverse_dir:
-                    pi = self._hdl_port = portItemfromSignal(s, u, d)
+                    pi = portItemfromSignal(s, u, d)
                     # port of current top component
                     s.name = name_scope.checkedName(s.name, s)
                     pi.connectInternSig(s)
