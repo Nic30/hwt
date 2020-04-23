@@ -37,7 +37,11 @@ class BitsVal(Bits3val, EventCapableVal, Value):
 
     @internal
     def _convSign__val(self, signed):
-        return Bits3val.cast_sign(self, signed)
+        v = Bits3val.cast_sign(self, signed)
+        if signed is not None:
+            assert v._dtype is not self._dtype, "can modify shared type instance"
+            v._dtype.force_vector = True
+        return v
 
     @internal
     def _convSign(self, signed):
@@ -207,7 +211,11 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             if iamVal:
                 if isinstance(key, SLICE.getValueCls()):
                     key = key.val
-                return Bits3val.__getitem__(self, key)
+                v = Bits3val.__getitem__(self, key)
+                if v._dtype.bit_length() == 1 and not v._dtype.force_vector:
+                    assert v._dtype is not self._dtype
+                    v._dtype.force_vector = True
+                return v
             else:
                 key = SLICE.from_py(slice(start, stop, -1))
                 _resWidth = start - stop
