@@ -354,6 +354,14 @@ class ToHdlAst():
             component_insts + processes
         return new_m
 
+    def has_to_be_process(self, proc: iHdlStatement):
+        raise NotImplementedError(
+            "This method should be overloaded in child class")
+
+    def can_pop_process_wrap(self, statements, hasToBeVhdlProcess):
+        raise NotImplementedError(
+            "This method should be overloaded in child class")
+
     def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> iHdlStatement:
         """
         Serialize HdlStatementBlock objects as process if top statement

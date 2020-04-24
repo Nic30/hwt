@@ -1,26 +1,52 @@
+from hdlConvertor.hdlAst._bases import iHdlStatement
+from hdlConvertor.hdlAst._statements import HdlStmAssign
 from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
+from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
+    hdl_call
 from hwt.doc_markers import internal
+from hwt.hdl.assignment import Assignment
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.systemC.utils import systemCTypeOfSig
+from hwt.serializer.verilog.value import ToHdlAstVerilog_Value
 
 
 class ToHdlAstSystemC_statements():
 
+    def has_to_be_process(self, proc: iHdlStatement):
+        return True
+
+    def can_pop_process_wrap(self, statements, hasToBeVhdlProcess):
+        return False
+
+    def sensitivityListItem(self, item, anyIsEventDependent):
+        orig_in_sensitivity_list = self._in_sensitivity_list
+        try:
+            self._in_sensitivity_list = True
+            return ToHdlAstVerilog_Value.sensitivityListItem(
+                self, item, anyIsEventDependent)
+        finally:
+            self._in_sensitivity_list = orig_in_sensitivity_list
+
     @internal
     def _as_hdl_Assignment(self, dst, typeOfDst, src):
 
-        dstStr = self.as_hdl(dst.forTarget())
+        orig_is_target = self._is_target
+        try:
+            self._is_target = True
+            dst_hdl = self.as_hdl(dst)
+        finally:
+            self._is_target = orig_is_target
+
+        src_hdl = self.as_hdl_Value(src)
         if typeOfDst == SIGNAL_TYPE.REG:
-            fmt = "%s%s = %s;"
+            return HdlStmAssign(src_hdl, dst_hdl)
         else:
-            fmt = "%s%s.write(%s);"
+            return hdl_call(hdl_getattr(dst_hdl, "write"), [src_hdl, ])
 
-        return fmt % (dstStr, self.Value(src))
-
-    def as_hdl_Assignment(self, a):
+    def as_hdl_Assignment(self, a: Assignment):
         dst = a.dst
         assert isinstance(dst, SignalItem)
         assert not dst.virtual_only, "should not be required"

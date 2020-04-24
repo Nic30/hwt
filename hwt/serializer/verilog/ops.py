@@ -8,8 +8,8 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT, INT
 from hwt.hdl.value import Value
 from hwt.serializer.exceptions import UnsupportedEventOpErr
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class ToHdlAstVerilog_ops():

@@ -111,13 +111,15 @@ class ToHdlAst_Value():
                 if v._const:
                     var.value = self.as_hdl(v)
                 else:
-                    # default value has to be set by reset
+                    # default value has to be set by reset,
+                    # because it is not resolvable in compile time
                     var.value = None
                     pass
             elif isinstance(v, Value):
                 if v.vld_mask:
                     var.value = self.as_hdl_Value(v)
                 else:
+                    # remove value if it is entirely undefined
                     var.value = None
             else:
                 raise NotImplementedError(v)

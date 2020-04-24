@@ -1,11 +1,16 @@
 from hdlConvertor.hdlAst._expr import HdlCall, HdlBuiltinFn, HdlName
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.enum import HEnum
 
 
 class ToHdlAstSystemC_type():
+    sc_int = HdlName("sc_int", obj=LanguageKeyword())
+    sc_uint = HdlName("sc_uint", obj=LanguageKeyword())
+    sc_bigint = HdlName("sc_bigint", obj=LanguageKeyword())
+    sc_biguint = HdlName("sc_biguint", obj=LanguageKeyword())
 
-    def HdlType_bits(self, typ, declaration=False):
+    def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):
         if declaration:
             raise NotImplementedError()
 
@@ -13,19 +18,19 @@ class ToHdlAstSystemC_type():
 
         if w <= 64:
             if typ.signed:
-                typeBaseName = "int"
+                typeBaseName = self.sc_int
             else:
-                typeBaseName = "uint"
+                typeBaseName = self.sc_uint
         else:
             if typ.signed:
-                typeBaseName = "bigint"
+                typeBaseName = self.sc_bigint
             else:
-                typeBaseName = "biguint"
+                typeBaseName = self.sc_biguint
 
-        return HdlCall(HdlBuiltinFn.PARAMETRIZATION, [HdlName("sc_%s" % typeBaseName, obj=LanguageKeyword()),
-                                                      self.as_hdl_int(w)])
+        return HdlCall(HdlBuiltinFn.PARAMETRIZATION,
+                       [typeBaseName, self.as_hdl_int(w)])
 
-    def HdlType_enum(self, typ, declaration=False):
+    def as_hdl_HdlType_enum(self, typ: HEnum, declaration=False):
         if declaration:
             raise TypeError(
                 "There is problem with tracing of c enums, use Bits instead")

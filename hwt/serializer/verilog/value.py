@@ -48,52 +48,7 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
     def as_hdl_SignalItem(self, si, declaration=False):
         if declaration:
             with SignalTypeSwap(self, verilogTypeOfSig(si)):
-                v = si.def_val
-                if si.virtual_only:
-                    pass
-                elif si.drivers:
-                    pass
-                elif si.endpoints:
-                    if not v.vld_mask:
-                        raise SerializerException(
-                            "Signal %s is constant and has undefined value"
-                            % si.name)
-                else:
-                    raise SerializerException(
-                        "Signal %s should be declared but it is not used"
-                        % si.name)
-                raise NotImplementedError(si)
-                t = si._dtype
-                dimensions = []
-                while isinstance(t, HArray):
-                    # collect array dimensions
-                    dimensions.append(t.size)
-                    t = t.element_t
-
-                s = "%s %s" % (self.HdlType(t),
-                               si.name)
-                if dimensions:
-                    # to make a space between name and dimensoins
-                    dimensions = ["[%s-1:0]" % self.as_hdl(toHVal(x))
-                                  for x in dimensions]
-                    dimensions.append("")
-                    s += " ".join(reversed(dimensions))
-
-                if isinstance(v, RtlSignalBase):
-                    if v._const:
-                        return s + " = %s" % self.as_hdl(v)
-                    else:
-                        # default value has to be set by reset because it is
-                        # only signal
-                        return s
-                elif isinstance(v, Value):
-                    if v.vld_mask:
-                        return s + " = %s" % self.Value(v)
-                    else:
-                        return s
-                else:
-                    raise NotImplementedError(v)
-
+                return ToHdlAst_Value.as_hdl_SignalItem(self, si)
         else:
             return ToHdlAst_Value.as_hdl_SignalItem(self, si)
 
