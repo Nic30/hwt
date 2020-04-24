@@ -6,6 +6,7 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import BOOL, BIT
+from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.value import Value
 from hwt.serializer.generic.value import ToHdlAst_Value
@@ -31,7 +32,7 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
         else:
             raise NotImplementedError()
 
-    def as_hdl_HEnumVal(self, val):
+    def as_hdl_HEnumVal(self, val: HEnumVal):
         return HdlName(val.val, obj=val)
 
     def as_hdl_HArrayVal(self, val):

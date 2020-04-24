@@ -107,5 +107,6 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
                 self.as_hdl_Value(val.val.step),
                 val.vld_mask)
 
-    def as_hdl_HEnumVal(self, t, val: HEnumVal):
+    def as_hdl_HEnumVal(self, val: HEnumVal):
+        t = val._dtype
         return hdl_getattr(HdlName(t.name, obj=t), val.val)

@@ -16,6 +16,7 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 from hwt.code import Concat
+from hwt.hdl.types.enumVal import HEnumVal
 
 
 class ToHdlAstSimModel_value(ToHdlAst_Value):
@@ -84,8 +85,8 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
         )
         return hdl_call(self.SLICE, [self.as_hdl_int(int(a)) for a in args])
 
-    def as_hdl_HEnumVal(self, val):
-        return hdl_getattr(hdl_getattr(self.SELF,val._dtype.name), val.val)
+    def as_hdl_HEnumVal(self, val: HEnumVal):
+        return hdl_getattr(hdl_getattr(self.SELF, val._dtype.name), val.val)
 
     def as_hdl_Operator(self, op: Operator):
         ops = op.operands

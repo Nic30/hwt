@@ -13,6 +13,7 @@ from hwt.serializer.verilog.context import SignalTypeSwap
 from hwt.serializer.verilog.utils import verilogTypeOfSig
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
+from hwt.hdl.types.enumVal import HEnumVal
 
 
 class ToHdlAstSystemC_value(ToHdlAst_Value):
@@ -123,8 +124,8 @@ class ToHdlAstSystemC_value(ToHdlAst_Value):
         # [TODO] parametrized width
         return "%s<%d>(%s)" % (typeName, width, v)
 
-    def as_hdl_HEnumVal(self, val):
-        i = dtype._allValues.index(val.val)
+    def as_hdl_HEnumVal(self, val: HEnumVal):
+        i = val._dtype._allValues.index(val.val)
         assert i >= 0
         return self.as_hdl_int(i)
 
