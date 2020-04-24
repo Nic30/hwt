@@ -253,7 +253,7 @@ class ToHdlAst():
         s.switch_on = self.as_hdl_cond(sw.switchOn, False)
         s.cases = cases = []
         for key, statements in sw.cases:
-            key = self.as_hdl(key)
+            key = self.as_hdl_Value(key)
             cases.append((key, self.as_hdl_statements(statements)))
 
         s.default = self.as_hdl_statements(sw.default)
