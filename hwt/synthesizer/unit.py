@@ -63,7 +63,7 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         self._parent = None
         self._name = None
         self._shared_component_with = None
-        self._hdl_module_name = self.__class__.__name__
+        self._hdl_module_name = None
         self._lazyLoaded = []
         self._ctx = RtlNetlist(self)
         self._constraints = []
@@ -119,6 +119,10 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         synthesize all subunits, make connections between them,
         build entity and component for this unit
         """
+        if self._hdl_module_name is None:
+            self._hdl_module_name = self._getDefaultName()
+        if self._name is None:
+            self._name = self._getDefaultName()
         self._target_platform = target_platform
         self._store_manager = store_manager
         do_serialize_this, replacement = store_manager.filter.do_serialize(self)
@@ -134,8 +138,6 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             self._shared_component_with = replacement
             return
 
-        if self._name is None:
-            self._name = self._getDefaultName()
         for proc in target_platform.beforeToRtl:
             proc(self)
 
