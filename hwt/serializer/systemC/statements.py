@@ -1,5 +1,6 @@
 from hdlConvertor.hdlAst._bases import iHdlStatement
-from hdlConvertor.hdlAst._statements import HdlStmAssign
+from hdlConvertor.hdlAst._statements import HdlStmAssign, HdlStmCase,\
+    HdlStmBlock, HdlStmBreak
 from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
     hdl_call
@@ -11,6 +12,7 @@ from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.serializer.verilog.value import ToHdlAstVerilog_Value
+from hwt.hdl.switchContainer import SwitchContainer
 
 
 class ToHdlAstSystemC_statements():
@@ -29,6 +31,23 @@ class ToHdlAstSystemC_statements():
                 self, item, anyIsEventDependent)
         finally:
             self._in_sensitivity_list = orig_in_sensitivity_list
+
+    def as_hdl_SwitchContainer(self, sw: SwitchContainer) -> HdlStmCase:
+        """
+        Same as parent as_hdl_SwitchContainer but add "break" to all cases
+        """
+        sw_hdl = super(ToHdlAstSystemC_statements, self).as_hdl_SwitchContainer(sw)
+        new_cases = []
+        for c, stm in sw_hdl.cases:
+            if not isinstance(stm, HdlStmBlock):
+                _stm = HdlStmBlock()
+                _stm.body.append(stm)
+                stm = _stm
+
+            stm.body.append(HdlStmBreak())
+            new_cases.append((c, stm))
+        sw_hdl.cases = new_cases
+        return sw_hdl
 
     @internal
     def _as_hdl_Assignment(self, dst, typeOfDst, src):
