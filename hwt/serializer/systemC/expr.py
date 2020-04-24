@@ -74,44 +74,17 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
                 else:
                     return hdl_call(hdl_getattr(_si, "read"), [])
 
-    def as_hdl_BitString(self, v, width, vld_mask):
+    def as_hdl_BitString(self, v, width: int,
+                         force_vector: bool, vld_mask: int, signed):
         _v = bit_string(v, width, vld_mask)
         # if can be in hex
-        t = self.as_hdl_HdlType_bits(Bits(width))
-        return hdl_call(t, _v)
-
-    def as_hdl_BitLiteral(self, v, vld_mask):
-        raise NotImplementedError()
-        if vld_mask:
-            return self.as_hdl_int(int(bool(v)))
-        else:
-            t = self.as_hdl_HdlType_bits(Bits(1), None)
-            return hdl_call(t, ["0xX", ])
-
-    @internal
-    def _BitString(self, typeName, v, width, force_vector, vld_mask):
-        if vld_mask != mask(width):
-            if force_vector or width > 1:
-                v = self.as_hdl_BitString(v, width, vld_mask)
-            else:
-                v = self.as_hdl_BitLiteral(v, width, vld_mask)
-        else:
-            v = str(v)
-        t = HdlCall(HdlBuiltinFn.PARAMETRIZATION, [
-                    typeName, self.as_hdl_int(width)])
-        raise NotImplementedError()
-        return "%s<%d>(%s)" % (typeName, width, v)
+        t = self.as_hdl_HdlType_bits(Bits(width, signed=signed))
+        return hdl_call(t, [_v, ])
 
     def as_hdl_HEnumVal(self, val: HEnumVal):
         i = val._dtype._allValues.index(val.val)
         assert i >= 0
         return self.as_hdl_int(i)
-
-    def as_hdl_SignedBitString(self, v, width, force_vector, vld_mask):
-        return self._BitString(self.sc_bigint, v, width, force_vector, vld_mask)
-
-    def as_hdl_UnsignedBitString(self, v, width, force_vector, vld_mask):
-        return self._BitString(self.sc_biguint, v, width, force_vector, vld_mask)
 
     def as_hdl_HArrayVal(self, val):
         return [self.as_hdl_Value(v) for v in val]

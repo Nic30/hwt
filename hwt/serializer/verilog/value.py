@@ -77,15 +77,9 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
             " in initial processes")
 
     @internal
-    def _BitString(self, typeName, v, width, force_vector, vld_mask):
+    def as_hdl_BitString(self, v, width, force_vector, vld_mask, signed):
         v = bit_string(v, width, vld_mask=vld_mask)
-        if typeName:
-            return hdl_call(typeName, [v, ])
+        if signed:
+            return hdl_call(self.SIGNED, [v, ])
         else:
             return v
-
-    def SignedBitString(self, v, width, force_vector, vld_mask):
-        return self._BitString(self.SIGNED, v, width, force_vector, vld_mask)
-
-    def UnsignedBitString(self, v, width, force_vector, vld_mask):
-        return self._BitString(None, v, width, force_vector, vld_mask)

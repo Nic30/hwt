@@ -63,14 +63,8 @@ class ToHdlAst_Value():
         elif t == BOOL:
             return self.as_hdl_BoolVal(val)
         w = t.bit_length()
-        if t.signed is None:
-            return bit_string(val.val, w, val.vld_mask)
-        elif t.signed:
-            return self.SignedBitString(val.val, w, t.force_vector,
-                                        val.vld_mask)
-        else:
-            return self.UnsignedBitString(val.val, w, t.force_vector,
-                                          val.vld_mask)
+        return self.as_hdl_BitString(val.val, w, t.force_vector,
+                                     val.vld_mask, t.signed)
 
     def as_hdl_StringVal(self, val):
         return val.val

@@ -12,6 +12,7 @@ from hwt.hdl.value import Value
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
+from hdlConvertor.to.hdlUtils import bit_string
 
 
 class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
@@ -43,23 +44,25 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
             item = item.operands[0]
         return self.as_hdl(item)
 
-    def castedBitString(self, cast_fn: HdlName, v, width: int,
-                        force_vector: bool, vld_mask: int):
+    def as_hdl_BitString(self, v, width: int,
+                         force_vector: bool, vld_mask: int, signed):
+
         if vld_mask != mask(width):
-            if force_vector or width > 1:
-                v = self.BitString(v, width, vld_mask)
-            else:
-                v = self.BitLiteral(v, width, vld_mask)
+            v = bit_string(v, width, vld_mask)
+            if not force_vector and width == 1:
+                v.base = 256
         else:
-            v = HdlIntValue(v, None, None)
+            v = bit_string(v, width, vld_mask)
+
+        if signed is None:
+            return v
+        elif signed:
+            cast_fn = self.TO_SIGNED
+        else:
+            cast_fn = self.TO_UNSIGNED
+
         # [TODO] parametrized width
         return hdl_call(cast_fn, [v, HdlIntValue(width, None, None)])
-
-    def SignedBitString(self, v, width, force_vector, vld_mask):
-        return self.castedBitString(self.TO_SIGNED, v, width, force_vector, vld_mask)
-
-    def UnsignedBitString(self, v, width, force_vector, vld_mask):
-        return self.castedBitString(self.TO_UNSIGNED, v, width, force_vector, vld_mask)
 
     def as_hdl_BoolVal(self, val: BitsVal):
         if val.val:
