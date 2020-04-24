@@ -45,7 +45,7 @@ class SerializerFilterAll(SerializerFilter):
     Ignore any serialization constraints and dump everything
     """
     def do_serialize(self, unit: Unit) -> bool:
-        return True
+        return True, None
 
 
 class SerializerFilterDoNotExclude(SerializerFilter):
