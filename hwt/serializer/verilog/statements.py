@@ -33,11 +33,7 @@ class ToHdlAstVerilog_statements():
         return a
 
     def can_pop_process_wrap(self, stms, hasToBeVhdlProcess):
-        if hasToBeVhdlProcess:
-            return False
-        else:
-            assert len(stms) == 1
-            return True
+        return False  # because block contains label with process name
 
     def has_to_be_process(self, proc: HdlStatementBlock):
         for o in proc._outputs:
@@ -62,4 +58,12 @@ class ToHdlAstVerilog_statements():
                 # all input are constant and that is why this process does not have
                 # any sensitivity
                 p.sensitivity = [HdlAll, ]
+
+        # add label
+        if not isinstance(p.body, HdlStmBlock):
+            b = p.body
+            p.body = HdlStmBlock()
+            p.body.body.append(b)
+        p.body.labels.extend(p.labels)
+        p.labels.clear()
         return p
