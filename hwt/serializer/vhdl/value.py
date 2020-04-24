@@ -19,8 +19,8 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
 
     TRUE = HdlName("TRUE", obj=LanguageKeyword())
     FALSE = HdlName("FALSE", obj=LanguageKeyword())
-    TO_UNSIGNED = HdlName("TO_UNSIGNED", obj=LanguageKeyword())
-    TO_SIGNED = HdlName("TO_SIGNED", obj=LanguageKeyword())
+    #TO_UNSIGNED = HdlName("TO_UNSIGNED", obj=LanguageKeyword())
+    #TO_SIGNED = HdlName("TO_SIGNED", obj=LanguageKeyword())
 
     def as_hdl_cond(self, c, forceBool):
         assert isinstance(c, (RtlSignalBase, Value)), c
@@ -46,23 +46,30 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
 
     def as_hdl_BitString(self, v, width: int,
                          force_vector: bool, vld_mask: int, signed):
-
-        if vld_mask != mask(width):
-            v = bit_string(v, width, vld_mask)
-            if not force_vector and width == 1:
-                v.base = 256
-        else:
-            v = bit_string(v, width, vld_mask)
-
+        is_bit = not force_vector and width == 1
+        #if vld_mask != mask(width) or width >= 32 or is_bit:
+        v = bit_string(v, width, vld_mask)
+        if is_bit:
+            v.base = 256
+            return v
         if signed is None:
             return v
         elif signed:
-            cast_fn = self.TO_SIGNED
+            cast = self.SIGNED
         else:
-            cast_fn = self.TO_UNSIGNED
+            cast = self.UNSIGNED
+        return HdlCall(HdlBuiltinFn.APOSTROPHE, [cast, v])
 
-        # [TODO] parametrized width
-        return hdl_call(cast_fn, [v, HdlIntValue(width, None, None)])
+        #else:
+        #    v = HdlIntValue(v, None, None)
+        #
+        #    if signed is None:
+        #        return v
+        #    elif signed:
+        #        cast_fn = self.TO_SIGNED
+        #    else:
+        #        cast_fn = self.TO_UNSIGNED
+        #    return hdl_call(cast_fn, [v, HdlIntValue(width, None, None)])
 
     def as_hdl_BoolVal(self, val: BitsVal):
         if val.val:
