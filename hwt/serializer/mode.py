@@ -68,16 +68,17 @@ def _serializeExclude_eval(parentUnit, priv):
     Always decide not to serialize obj
 
     :param priv: private data for this function first unit of this class
-    :return: tuple (do serialize this object, next priv)
+    :return: tuple (do serialize this object, next priv, replacement unit)
     """
-
-    if priv is None:
-        priv = parentUnit
 
     # do not use this Unit instance and do not use any prelacement
     # (usefull when the Unit instance is a placeholder for something
     #  which already exists in hdl word)
-    return False, priv, None
+    if priv is None:
+        priv = parentUnit
+        return False, priv, None
+    else:
+        return False, priv, priv
 
 
 @internal
@@ -88,7 +89,7 @@ def _serializeOnce_eval(parentUnit, priv):
     :param priv: private data for this function
         (first object with class == obj.__class__)
 
-    :return: tuple (do serialize this object, next priv)
+    :return: tuple (do serialize this object, next priv, replacement unit)
         where priv is private data for this function
         (first object with class == obj.__class__)
     """
@@ -113,7 +114,7 @@ def _serializeParamsUniq_eval(parentUnit, priv):
     :param priv: private data for this function
         ({frozen_params: obj})
 
-    :return: tuple (do serialize this object, next priv)
+    :return: tuple (do serialize this object, next priv, replacement unit)
     """
 
     params = paramsToValTuple(parentUnit)
