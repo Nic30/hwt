@@ -1,5 +1,8 @@
 from itertools import chain
 
+from hdlConvertor.hdlAst._defs import HdlVariableDef
+from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
+    HdlComponentInst
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
@@ -13,6 +16,7 @@ from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.resourceAnalyzer.utils import ResourceContext
 from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import walk_assignments
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.unit import Unit
 
 
 @internal
@@ -44,7 +48,7 @@ IGNORED_OPERATORS = {
 }
 
 
-class ResourceAnalyzer(ToHdlAst):
+class ResourceAnalyzer():
     """
     Serializer which does not products any output just collect informations
     about used resources
@@ -57,8 +61,8 @@ class ResourceAnalyzer(ToHdlAst):
         self.context = ResourceContext(None)
 
     @internal
-    @classmethod
-    def HdlStatementBlock_operators(cls, sig: RtlSignal, ctx: ResourceContext, synchronous):
+    def visit_HdlStatementBlock_operators(self, sig: RtlSignal, synchronous):
+        ctx = self.context
         seen = ctx.seen
         for d in sig.drivers:
             if (not isinstance(d, Operator)
@@ -106,13 +110,13 @@ class ResourceAnalyzer(ToHdlAst):
                         or not op.hidden
                         or op in seen):
                     continue
-                cls.HdlStatementBlock_operators(op, ctx, synchronous)
+                self.visit_HdlStatementBlock_operators(op, synchronous)
 
-    @classmethod
-    def HdlStatementBlock(cls, proc: HdlStatementBlock, ctx: ResourceContext) -> None:
+    def visit_HdlStatementBlock(self, proc: HdlStatementBlock) -> None:
         """
-        Gues resource usage by HdlStatementBlock
+        Gues resource usage from HdlStatementBlock
         """
+        ctx = self.context
         seen = ctx.seen
         for stm in proc.statements:
             encl = stm._enclosed_for
@@ -159,26 +163,23 @@ class ResourceAnalyzer(ToHdlAst):
                 if not i.hidden or i in seen:
                     continue
 
-                cls.HdlStatementBlock_operators(i, ctx, ev_dep)
+                self.visit_HdlStatementBlock_operators(i, ev_dep)
 
-    def getBaseContext(self) -> ResourceContext:
-        """
-        Return context for collecting of resource informatins
-        prepared on this instance
-        """
-        return self.context
+    def visit_HdlModuleDef(self, m: HdlModuleDef) -> None:
 
-    @classmethod
-    def Architecture(cls, arch, ctx: ResourceContext) -> None:
-        for c in arch.componentInstances:
-            raise NotImplementedError()
-
-        for proc in arch.processes:
-            cls.HdlStatementBlock(proc, ctx)
+        for o in m.objs:
+            if isinstance(o, HdlStatementBlock):
+                self.visit_HdlStatementBlock(o)
+            elif isinstance(o, HdlComponentInst):
+                raise NotImplementedError()
+            else:
+                assert isinstance(o, HdlVariableDef), o
 
         # [TODO] constant to ROMs
-
-        ctx.finalize()
+    def visit_Unit(self, u: Unit):
+        self.visit_HdlModuleDef(u._ctx.arch)
 
     def report(self):
-        return self.context.resources
+        ctx = self.context
+        ctx.finalize()
+        return ctx.resources

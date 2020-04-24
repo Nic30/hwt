@@ -1,11 +1,11 @@
 from typing import Union
 
 from hwt.hdl.operator import Operator
+from hwt.hdl.statement import HdlStatement
 from hwt.serializer.resourceAnalyzer.resourceTypes import \
     ResourceFF, ResourceMUX, ResourceLatch, ResourceRAM
-from hwt.synthesizer.unit import Unit
-from hwt.hdl.statement import HdlStatement
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.unit import Unit
 
 
 class ResourceContext():

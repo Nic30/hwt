@@ -7,6 +7,7 @@ from hwt.serializer.store_manager import SaveToStream, StoreManager
 from hwt.serializer.vhdl.serializer import Vhdl2008Serializer
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
+from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 
 
 def toRtl(unit_or_cls: Unit, store_manager: StoreManager=None,
@@ -83,3 +84,26 @@ def serializeAsIpcore(unit, folderName=".", name=None,
                    target_platform=target_platform)
     p.createPackage(folderName)
     return p
+
+
+class DummySerializerCls():
+    """
+    The serializer which does not do any additional code transformations
+    and does not produce any output. It is used to generate just internal representation
+    of RTL code.
+    """
+    TO_HDL_AST = ToHdlAst
+
+
+def synthesised(u: Unit, target_platform=DummyPlatform()):
+    """
+    Elaborate design without producing any hdl
+    """
+    sm = StoreManager(DummySerializerCls)
+    if not hasattr(u, "_interfaces"):
+        u._loadDeclarations()
+
+    for _ in u._toRtl(target_platform, sm):
+        pass
+    return u
+
