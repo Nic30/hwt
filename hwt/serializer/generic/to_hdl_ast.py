@@ -419,7 +419,8 @@ class ToHdlAst():
                     p.body = statements[0]
                 else:
                     p.body = HdlStmBlock()
-                    p.body = statements
+                    assert isinstance(statements, list)
+                    p.body.body = statements
                 anyIsEventDependnt = arr_any(
                     proc._sensitivity, lambda s: isinstance(s, Operator))
                 p.sensitivity = sorted([
