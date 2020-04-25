@@ -7,12 +7,14 @@ from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_get
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import BOOL
+from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.serializer.verilog.value import ToHdlAstVerilog_Value
 from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
 
 
 class ToHdlAstSystemC_statements():
@@ -68,12 +70,16 @@ class ToHdlAstSystemC_statements():
     def as_hdl_Assignment(self, a: Assignment):
         dst = a.dst
         assert isinstance(dst, SignalItem)
-        assert not dst.virtual_only, "should not be required"
+        # assert not dst.virtual_only, "should not be required"
 
-        typeOfDst = systemCTypeOfSig(dst)
         if a.indexes is not None:
             for i in reversed(a.indexes):
                 dst = dst[i]
+
+        typeOfDst = systemCTypeOfSig(dst)
+        if dst.virtual_only and isinstance(a.src, Operator):
+            assert a.src.operator == AllOps.CONCAT
+            return self._as_hdl_Assignment(dst, typeOfDst, a.src.operands)
 
         if dst._dtype == a.src._dtype or (
                 isinstance(dst._dtype, Bits) and a.src._dtype == BOOL):

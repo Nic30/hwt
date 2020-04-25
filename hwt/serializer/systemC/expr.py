@@ -21,12 +21,18 @@ from hwt.serializer.verilog.context import SignalTypeSwap
 from hwt.serializer.verilog.ops import ToHdlAstVerilog_ops
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from pyMathBitPrecise.bit_utils import mask
+from hwt.hdl.assignment import Assignment
 
 
 class ToHdlAstSystemC_expr(ToHdlAst_Value):
     sc_signal = HdlName("sc_signal", obj=LanguageKeyword())
     static_cast = HdlName("static_cast", obj=LanguageKeyword())
     op_transl_dict = ToHdlAstVerilog_ops.op_transl_dict
+
+    def as_hdl_Value(self, v):
+        if isinstance(v, tuple):
+            return tuple((self.as_hdl(o2) for o2 in v))
+        return super(ToHdlAstSystemC_expr, self).as_hdl_Value(v)
 
     def as_hdl_operand(self, operand: Union[RtlSignal, Value], i: int,
                        operator: Operator):
@@ -39,8 +45,9 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
         if o == AllOps.INDEX:
             assert len(ops) == 2
             o0, o1 = ops
-            o0_hdl = self._operand(o0, 0, op, True, False)
-            if ops[1]._dtype == SLICE:
+            if o1._dtype == SLICE:
+                # index to .range(x, y)
+                o0_hdl = self.as_hdl_operand(o0, 0, op)
                 o0_hdl = hdl_getattr(o0_hdl, "range")
                 return hdl_call(o0_hdl, [self.as_hdl_Value(o1.val.start),
                                          self.as_hdl_Value(o1.val.stop)])
@@ -51,10 +58,11 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
             t = self.as_hdl_HdlType(op.result._dtype)
             return hdl_call(
                 HdlCall(HdlBuiltinFn.PARAMETRIZATION, [self.static_cast, t]),
-                self.as_hdl_Value(ops[0]))
+                [self.as_hdl_Value(ops[0]), ])
         elif o == AllOps.CONCAT:
-            return hdl_call(self.CONCAT,
-                            [self.as_hdl(o2) for o2 in ops])
+            o = self.createTmpVarFn("tmpConcat_", op.result._dtype)
+            o.drivers.append(Assignment(op, o, virtual_only=True))
+            return self.as_hdl(o)
         else:
             return ToHdlAstVerilog_ops.as_hdl_Operator(self, op)
 
