@@ -45,7 +45,7 @@ class ToHdlAstVhdl2008_ops():
         """
         Optionaly convert boolean to std_logic_vector
         """
-        o = self.createTmpVarFn("tmpTernary", val._dtype)
+        o = self.createTmpVarFn("tmpTernary_", val._dtype)
         cond, ifTrue, ifFalse = val.drivers[0].operands
         if_ = If(cond)
         if_.ifTrue.append(Assignment(ifTrue, o,
@@ -65,7 +65,7 @@ class ToHdlAstVhdl2008_ops():
     def _as_Bits(self, val: Union[RtlSignal, Value]):
         if val._dtype == BOOL:
             bit1_t = Bits(1)
-            o = self.createTmpVarFn("tmpBool2std_logic", bit1_t)
+            o = self.createTmpVarFn("tmpBool2std_logic_", bit1_t)
             ifTrue, ifFalse = bit1_t.from_py(1), bit1_t.from_py(0)
             if_ = If(val)
             if_.ifTrue.append(Assignment(ifTrue, o, virtual_only=True, parentStm=if_))
@@ -84,7 +84,7 @@ class ToHdlAstVhdl2008_ops():
         if not t.force_vector and t.bit_length() == 1:
             # std_logic -> std_logic_vector
             std_logic_vector = Bits(1, signed=t.signed, force_vector=True)
-            o = self.createTmpVarFn("tmp_std_logic2vector", std_logic_vector)
+            o = self.createTmpVarFn("tmp_std_logic2vector_", std_logic_vector)
             o.drivers.append(Assignment(val, o, virtual_only=True))
             return o
         else:
