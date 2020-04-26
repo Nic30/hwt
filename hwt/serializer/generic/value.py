@@ -1,8 +1,8 @@
+from copy import copy
 from typing import Union
 
 from hdlConvertor.hdlAst._defs import HdlVariableDef
 from hdlConvertor.hdlAst._expr import HdlName, HdlIntValue, HdlDirection
-from hdlConvertor.to.hdlUtils import bit_string
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT, BOOL
@@ -13,7 +13,6 @@ from hwt.hdl.value import Value
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from copy import copy
 
 
 class ToHdlAst_Value():

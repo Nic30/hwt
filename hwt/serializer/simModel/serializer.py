@@ -26,7 +26,7 @@ from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond
 
 
 class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
-                    ToHdlAst):
+                       ToHdlAst):
     """
     Serializer which converts Unit instances to simulator code
     """

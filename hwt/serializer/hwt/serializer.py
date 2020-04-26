@@ -1,14 +1,11 @@
 
 from hdlConvertor.hdlAst._expr import HdlName
-from hdlConvertor.to.const_cache import ConstCache
 from hdlConvertor.to.hwt._main import ToHwt
 from hdlConvertor.to.hwt.keywords import HWT_KEYWORDS
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
-from hwt.hdl.constants import SENSITIVITY, DIRECTION
+from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.types.enum import HEnum
-from hwt.hdl.types.enumVal import HEnumVal
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.serializer.hwt.types import ToHdlAstHwt_types
