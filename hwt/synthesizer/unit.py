@@ -271,21 +271,25 @@ def copy_HdlModuleDec(orig_u: Unit, new_u: Unit):
     assert not new_u._ctx.interfaces
     assert not new_u._ctx.signals
     assert new_u._ctx.ent is None
-    e = new_u._ctx.ent = copy(orig_u._ctx.ent)
+
     new_u._hdl_module_name = orig_u._hdl_module_name
+    e = new_u._ctx.ent = copy(orig_u._ctx.ent)
+
     params = []
     param_by_name = {p._name: p for p in new_u._params}
     for p in e.params:
-        new_p = copy(p)
-        param = new_p.origin = param_by_name[p.origin._name]
-        param.hdl_name = p.origin.hdl_name
-        new_p.value = param.get_hdl_value()
-        params.append(new_p)
+        new_p_def = copy(p)
+        old_p = new_p_def.origin = param_by_name[p.origin._name]
+        old_p.hdl_name = p.origin.hdl_name
+        new_p_def.value = old_p.get_hdl_value()
+        params.append(new_p_def)
     e.params = params
+
     e.ports = []
     for oi, ni in zip(orig_u._interfaces, new_u._interfaces):
         if oi._isExtern:
             copy_HdlModuleDec_interface(oi, ni, e.ports, new_u)
 
-    e.params.sort(key=lambda x: x.name)
+    # params should be already sorted
+    # e.params.sort(key=lambda x: x.name)
     e.ports.sort(key=lambda x: x.name)
