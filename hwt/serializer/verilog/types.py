@@ -46,17 +46,17 @@ class ToHdlAstVerilog_types():
 
     def as_hdl_HdlType_array(self, typ: HArray, declaration=False):
         if declaration:
-            return super(ToHdlAstVerilog_types, self).as_hdl_HdlType_array()
+            raise NotImplementedError()
         else:
             _int = self.as_hdl_int
             size = HdlCall(HdlBuiltinFn.DOWNTO, [_int(0),
-                                                 _int(int(typ.size))])
+                                                 _int(int(typ.size) - 1)])
             return hdl_index(self.as_hdl_HdlType(typ.element_t), size)
 
     def as_hdl_HdlType_enum(self, typ, declaration=False):
         if declaration:
             raise TypeError(
-                "Verilog does not have enum types, hwt uses Bits instead"
+                "Target language does not use enum types, this library should uses Bits instead"
                 " (this should not be required because it should have been filtered before)")
         else:
             valueCnt = len(typ._allValues)

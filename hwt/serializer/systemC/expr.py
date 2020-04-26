@@ -6,7 +6,7 @@ from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
     hdl_getattr
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
-from hwt.doc_markers import internal
+from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
@@ -20,12 +20,9 @@ from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.serializer.verilog.context import SignalTypeSwap
 from hwt.serializer.verilog.ops import ToHdlAstVerilog_ops
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from pyMathBitPrecise.bit_utils import mask
-from hwt.hdl.assignment import Assignment
 
 
 class ToHdlAstSystemC_expr(ToHdlAst_Value):
-    sc_signal = HdlName("sc_signal", obj=LanguageKeyword())
     static_cast = HdlName("static_cast", obj=LanguageKeyword())
     op_transl_dict = ToHdlAstVerilog_ops.op_transl_dict
 

@@ -32,6 +32,7 @@ class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
         ToHdlAst.__init__(self, name_scope=name_scope)
         self._is_target = False
         self._in_sensitivity_list = False
+        self.signalType = None
 
     def as_hdl_HdlPortItem(self, o: HdlPortItem):
         i = o.getInternSig()._interface
