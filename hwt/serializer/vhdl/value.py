@@ -1,6 +1,6 @@
 from hdlConvertor.hdlAst import HdlName, HdlIntValue, HdlCall,\
     HdlBuiltinFn
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call
+from hdlConvertor.to.hdlUtils import bit_string
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.operator import Operator
 from hwt.hdl.types.bits import Bits
@@ -11,8 +11,6 @@ from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.value import Value
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from pyMathBitPrecise.bit_utils import mask
-from hdlConvertor.to.hdlUtils import bit_string
 
 
 class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
@@ -34,7 +32,8 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
             raise NotImplementedError()
 
     def as_hdl_HEnumVal(self, val: HEnumVal):
-        return HdlName(val.val, obj=val)
+        name = self.name_scope.get_object_name(val)
+        return HdlName(name, obj=val)
 
     def as_hdl_HArrayVal(self, val):
         return [self.as_hdl_Value(v) for v in val]

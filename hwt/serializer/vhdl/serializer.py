@@ -21,9 +21,9 @@ from hwt.serializer.vhdl.value import ToHdlAstVhdl2008_Value
 class VhdlNameScope(NameScope):
     RE_MANY_UNDERSCORES = re.compile(r"(_{2,})")
 
-    def checkedName(self, actualName, actualObj):
+    def checked_name(self, actualName, actualObj):
         actualName = self.RE_MANY_UNDERSCORES.sub(r"_", actualName)
-        return NameScope.checkedName(self, actualName, actualObj)
+        return NameScope.checked_name(self, actualName, actualObj)
 
 
 IEEE = HdlName("IEEE", obj=LanguageKeyword())

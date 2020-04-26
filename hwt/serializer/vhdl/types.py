@@ -73,7 +73,7 @@ class ToHdlAstVhdl2008_types():
             name = getattr(typ, "name", None)
             if name is None:
                 name = "arr_t_"
-            typ.name = v.name = self.name_scope.checkedName(name, typ)
+            v.name = self.name_scope.checked_name(name, typ)
             v.type = HdlTypeType
             v.origin = typ
             size = hdl_downto(

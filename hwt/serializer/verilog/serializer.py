@@ -48,7 +48,7 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
                 if v.value.vld_mask:
                     rom = v.origin
                     p = HdlStmProcess()
-                    label = self.name_scope.checkedName(rom.name + "_rom_init", p)
+                    label = self.name_scope.checked_name(rom.name + "_rom_init", p)
                     p.labels.append(label)
                     p.body = HdlStmBlock()
                     body = p.body.body

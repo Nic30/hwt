@@ -29,21 +29,12 @@ class ToHdlAstSimModel_types():
         if declaration:
             return super(ToHdlAstSimModel_types, self).as_hdl_HdlType_array(typ, declaration=declaration)
         else:
-            return hdl_getattr(self.SELF, typ.name)
+            t_name = self.name_scope.get_object_name(typ)
+            return hdl_getattr(self.SELF, t_name)
 
     def as_hdl_HdlType_enum(self, typ, declaration=False):
         if declaration:
-            ns = self.name_scope
-
-            typedef = HdlVariableDef()
-            typedef.type = HdlTypeType
-            typedef.origin = typ
-
-            _t = typedef.value = HdlEnumDef()
-            typedef.name = _t.name = ns.checkedName(typ.name, typ)
-
-            _t.values = [ns.checkedName(v, getattr(typ, v)) for v in typ._allValues]
-
-            return typedef
+            super(ToHdlAstSimModel_types, self).as_hdl_HdlType_enum(typ, declaration=True)
         else:
-            return hdl_getattr(self.SELF, typ.name)
+            t_name = self.name_scope.get_object_name(typ)
+            return hdl_getattr(self.SELF, t_name)

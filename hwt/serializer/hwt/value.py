@@ -1,8 +1,10 @@
+from typing import Union
+
+from hdlConvertor.hdlAst._defs import HdlVariableDef
 from hdlConvertor.hdlAst._expr import HdlIntValue, HdlCall, HdlBuiltinFn,\
-    HdlName, HdlDirection
+    HdlName
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
     hdl_call
-from hwt.hdl.statement import isSameHVal
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import SLICE
@@ -10,11 +12,7 @@ from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
-from hwt.serializer.generic.indent import getIndent
 from hwt.serializer.generic.value import ToHdlAst_Value
-from hdlConvertor.hdlAst._defs import HdlVariableDef
-from typing import Union
-from hwt.serializer.simModel.serializer import ToHdlAstSimModel
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
 
 
@@ -48,7 +46,7 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
             else:
                 raise NotImplementedError()
         else:
-            #if isinstance(si, SignalItem) and si._const:
+            # if isinstance(si, SignalItem) and si._const:
             #    # to allow const cache to extract constants
             #    return self.as_hdl_Value(si._val)
             if si.hidden and hasattr(si, "origin"):
@@ -64,6 +62,7 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
             consGetter = None
 
         if consGetter and not val._is_full_valid() and not isinstance(val._dtype, HEnum):
+            # full valid values can be represented as int and do not have any constructor overhead
             return consGetter(val)
 
     def as_hdl_DictVal(self, val):
@@ -72,7 +71,7 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
     def as_hdl_HArrayVal(self, val: HArrayVal):
         if not val.vld_mask:
             return self.NONE
-        #else:
+        # else:
         #    if len(val.val) == val._dtype.size:
         #        allValuesSame = True
         #        values = iter(val.val.values())
@@ -108,5 +107,6 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
                 val.vld_mask)
 
     def as_hdl_HEnumVal(self, val: HEnumVal):
-        t = val._dtype
-        return hdl_getattr(HdlName(t.name, obj=t), val.val)
+        t_name = self.name_scope.get_object_name(val._dtype)
+        name = self.name_scope.get_object_name(val)
+        return hdl_getattr(t_name, name)

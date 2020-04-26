@@ -254,7 +254,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 if reverse_dir:
                     pi = portItemfromSignal(s, u, d)
                     # port of current top component
-                    s.name = name_scope.checkedName(s.name, s)
+                    s.name = name_scope.checked_name(s.name, s)
                     pi.connectInternSig(s)
                     ctx.ent.ports.append(pi)
                 else:

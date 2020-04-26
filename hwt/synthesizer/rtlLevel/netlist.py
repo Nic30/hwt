@@ -141,14 +141,14 @@ class RtlNetlist():
         Generate a module header (entity) for this module
         """
         self.ent = ent = HdlModuleDec()
-        ent.name = store_manager.name_scope.checkedName(name, ent)
+        ent.name = store_manager.name_scope.checked_name(name, ent)
         ns = store_manager.hierarchy_push(ent)
         # create generics
         for p in sorted(params, key=lambda x: x._name):
             hdl_val = p.get_hdl_value()
             v = HdlVariableDef()
             v.origin = p
-            v.name = p.hdl_name = ns.checkedName(p._name, p)
+            v.name = p.hdl_name = ns.checked_name(p._name, p)
             v.type = hdl_val._dtype
             v.value = hdl_val
             ent.params.append(v)
@@ -188,21 +188,21 @@ class RtlNetlist():
                         key=lambda x: (x.name, x._instId)):
                 v = HdlVariableDef()
                 v.origin = s
-                s.name = v.name = ns.checkedName(s.name, s)
+                s.name = v.name = ns.checked_name(s.name, s)
                 v.type = s._dtype
                 v.value = s.def_val
                 v.is_const = s._const
                 mdef.objs.append(v)
 
         for p in processes:
-            p.name = ns.checkedName(p.name, p)
+            p.name = ns.checked_name(p.name, p)
         mdef.objs.extend(processes)
         # instantiate subUnits in architecture
         for u in self.subUnits:
             ci = HdlComponentInst()
             ci.origin = u
             ci.module_name = HdlName(u._ctx.ent.name, obj=u._ctx.ent)
-            ci.name = ns.checkedName(u._name + "_inst", ci)
+            ci.name = ns.checked_name(u._name + "_inst", ci)
             ci.name = HdlName(ci.name, obj=ci)
             e = u._ctx.ent
 

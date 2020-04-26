@@ -13,7 +13,7 @@ from hdlConvertor.hdlAst._typeDefs import HdlEnumDef
 from hdlConvertor.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index,\
     hdl_map_asoc
-from hdlConvertor.translate.common.name_scope import NameScope
+from hdlConvertor.translate.common.name_scope import NameScope, WithNameScope
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
@@ -118,33 +118,40 @@ class ToHdlAst():
         return sFn(typ, declaration=declaration)
 
     def as_hdl_HdlType_array(self, typ: HArray, declaration=False):
+        ns = self.name_scope
         if declaration:
             dec = HdlVariableDef()
             dec.type = HdlTypeType
             if self.does_type_requires_extra_def(typ.element_t, ()):
+                # problem there is that we do not have a list of already defined types
+                # so we can not just declare an element type
                 raise NotImplementedError(typ.element_t)
+
             dec.value = hdl_index(self.as_hdl_HdlType(typ.element_t, declaration=False),
                                   self.as_hdl_int(int(typ.size)))
-            name = getattr(typ, "name", None)
-            if name is None:
-                name = "arr_t_"
-            dec.name = typ.name = self.name_scope.checkedName(name, typ)
+            name = getattr(typ, "name", "arr_t_")
+            dec.name = ns.checked_name(name, typ)
             return dec
         else:
-            return HdlName(typ.name, obj=typ)
+            name = ns.get_object_name(typ)
+            return HdlName(name, obj=typ)
 
     def as_hdl_HdlType_enum(self, typ: HEnum, declaration=False):
+        ns = self.name_scope
         if declaration:
             e = HdlEnumDef()
-            e.name = typ.name
-            e.values = list(typ._allValues)
+            e.origin = typ
+            e.name = ns.checked_name(typ.name, typ)
+            e.values = [ns.checked_name(n, getattr(typ, n))
+                        for n in typ._allValues]
             dec = HdlVariableDef()
             dec.type = HdlTypeType
             dec.value = e
-            dec.name = typ.name
+            dec.name = e.name
             return dec
         else:
-            return HdlName(typ.name, obj=typ)
+            name = ns.get_object_name(typ)
+            return HdlName(name, obj=None)
 
     def as_hdl_If(self, *args, **kwargs) -> HdlStmIf:
         return self.as_hdl_IfContainer(*args, **kwargs)
@@ -306,8 +313,11 @@ class ToHdlAst():
     def as_hdl_HdlModuleDec(self, o: HdlModuleDec):
         # convert types, exprs
         new_o = copy(o)
-        new_o.params = [self.as_hdl_GenericItem(p) for p in o.params]
-        new_o.ports = [self.as_hdl_HdlPortItem(p) for p in o.ports]
+
+        with WithNameScope(self, self.name_scope.get_child(o.name)):
+            new_o.params = [self.as_hdl_GenericItem(p) for p in o.params]
+            new_o.ports = [self.as_hdl_HdlPortItem(p) for p in o.ports]
+
         return new_o
 
     def does_type_requires_extra_def(self, t, other_types):
@@ -330,29 +340,30 @@ class ToHdlAst():
         if o.dec is not None:
             new_m.dec = self.as_hdl_HdlModuleDec(o.dec)
 
-        hdl_types, hdl_variables, processes, component_insts = \
-            ToBasicHdlSimModel.split_HdlModuleDefObjs(self, o.objs)
-        # [TODO] sorting not required as it should be done in _to_rtl()
-        hdl_variables.sort(key=lambda x: (x.name, x.origin._instId))
-        processes.sort(key=lambda x: (x.name, maxStmId(x)))
-        component_insts.sort(key=lambda x: x.name.val)
+        with WithNameScope(self, self.name_scope.get_child(o.module_name.val)):
+            hdl_types, hdl_variables, processes, component_insts = \
+                ToBasicHdlSimModel.split_HdlModuleDefObjs(self, o.objs)
+            # [TODO] sorting not required as it should be done in _to_rtl()
+            hdl_variables.sort(key=lambda x: (x.name, x.origin._instId))
+            processes.sort(key=lambda x: (x.name, maxStmId(x)))
+            component_insts.sort(key=lambda x: x.name.val)
 
-        types = set()
+            types = set()
 
-        _hdl_variables = []
-        for v in hdl_variables:
-            new_v = self.as_hdl_HdlModuleDef_variable(
-                v, types, hdl_types, hdl_variables,
-                processes, component_insts)
-            _hdl_variables.append(new_v)
-        hdl_variables = _hdl_variables
-        processes = [self.as_hdl_HdlStatementBlock(p) for p in processes]
+            _hdl_variables = []
+            for v in hdl_variables:
+                new_v = self.as_hdl_HdlModuleDef_variable(
+                    v, types, hdl_types, hdl_variables,
+                    processes, component_insts)
+                _hdl_variables.append(new_v)
+            hdl_variables = _hdl_variables
+            processes = [self.as_hdl_HdlStatementBlock(p) for p in processes]
 
-        component_insts = [self.as_hdl_HdlComponentInst(c)
-                           for c in component_insts]
-        new_m.objs = hdl_types + hdl_variables + \
-            component_insts + processes
-        return new_m
+            component_insts = [self.as_hdl_HdlComponentInst(c)
+                               for c in component_insts]
+            new_m.objs = hdl_types + hdl_variables + \
+                component_insts + processes
+            return new_m
 
     def has_to_be_process(self, proc: iHdlStatement):
         raise NotImplementedError(
@@ -379,7 +390,7 @@ class ToHdlAst():
         def createTmpVarInCurrentBlock(suggestedName, dtype):
             # create a new tmp variable in current process
             s = RtlSignal(None, None, dtype, virtual_only=True)
-            s.name = ns.checkedName(suggestedName, s)
+            s.name = ns.checked_name(suggestedName, s)
             s.hidden = False
             as_hdl = self.as_hdl_SignalItem(s, declaration=True)
             extraVars.append(s)
