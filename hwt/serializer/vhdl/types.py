@@ -77,8 +77,9 @@ class ToHdlAstVhdl2008_types():
             v.type = HdlTypeType
             v.origin = typ
             size = hdl_downto(
-                 self.as_hdl(toHVal(typ.size) - 1),
-                 self.as_hdl_int(0))
+                 self.as_hdl_int(int(typ.size) - 1),
+                 self.as_hdl_int(0)
+            )
             if self.does_type_requires_extra_def(typ.element_t, ()):
                 raise NotImplementedError(typ.element_t)
             e_t = self.as_hdl_HdlType(typ.element_t, declaration=False)

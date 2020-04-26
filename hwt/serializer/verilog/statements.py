@@ -11,7 +11,6 @@ from hwt.serializer.verilog.utils import verilogTypeOfSig
 class ToHdlAstVerilog_statements():
 
     def as_hdl_Assignment(self, a: Assignment):
-
         blocking = False
         ver_sig_t = verilogTypeOfSig(a.dst)
         if ver_sig_t in (SIGNAL_TYPE.REG, SIGNAL_TYPE.PORT_REG):
