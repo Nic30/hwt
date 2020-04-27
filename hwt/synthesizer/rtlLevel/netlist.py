@@ -203,7 +203,6 @@ class RtlNetlist():
             ci.origin = u
             ci.module_name = HdlName(u._ctx.ent.name, obj=u._ctx.ent)
             ci.name = ns.checked_name(u._name + "_inst", ci)
-            ci.name = HdlName(ci.name, obj=ci)
             e = u._ctx.ent
 
             ci.param_map.extend(e.params)
