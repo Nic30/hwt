@@ -55,6 +55,7 @@ class SaveToStream(StoreManager):
         self.stream = stream
 
     def write(self, obj: iHdlObj):
+        self.as_hdl_ast.name_scope = self.name_scope
         hdl = self.as_hdl_ast.as_hdl(obj)
         ser = self.serializer_cls.TO_HDL(self.stream)
         if hasattr(ser, "stm_outputs"):
@@ -84,5 +85,5 @@ class SaveToFilesFlat(StoreManager):
         fp = os.path.join(self.root, fName)
         self.files.append(fp)
         with open(fp, "w") as f:
-            s = SaveToStream(self.serializer_cls, self.name_scope, f)
-            s.write(self, obj)
+            s = SaveToStream(self.serializer_cls, f, self.filter, self.name_scope)
+            s.write(obj)
