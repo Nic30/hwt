@@ -1,5 +1,6 @@
 
 from hdlConvertor.hdlAst._expr import HdlName
+from hdlConvertor.hdlAst._structural import HdlModuleDef
 from hdlConvertor.to.hwt._main import ToHwt
 from hdlConvertor.to.hwt.keywords import HWT_KEYWORDS
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
@@ -10,6 +11,7 @@ from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.serializer.hwt.types import ToHdlAstHwt_types
 from hwt.serializer.hwt.value import ToHdlAstHwt_value
+from hwt.serializer.simModel.serializer import ToHdlAstSimModel
 
 
 class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
@@ -34,6 +36,9 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
 
     def can_pop_process_wrap(self, statements, hasToBeVhdlProcess):
         return False
+
+    def _as_hdl_HdlModuleDef(self, new_m: HdlModuleDef) -> HdlModuleDef:
+        return ToHdlAstSimModel._as_hdl_HdlModuleDef(self, new_m)
 
     def sensitivityListItem(self, item, anyIsEventDependnt):
         if isinstance(item, Operator):

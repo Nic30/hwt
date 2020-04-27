@@ -29,40 +29,25 @@ from hwt.hdl.types.hdlType import HdlType, MethodNotOverloaded
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
+from hwt.serializer.generic.utils import HWT_TO_HDLCONVEROTR_DIRECTION,\
+    CreateTmpVarFnSwap
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from ipCorePackager.constants import DIRECTION
-
-
-HWT_TO_HDLCONVEROTR_DIRECTION = {
-    DIRECTION.IN: HdlDirection.IN,
-    DIRECTION.INOUT: HdlDirection.INOUT,
-    DIRECTION.OUT: HdlDirection.OUT,
-}
-
-
-@internal
-class CreateTmpVarFnSwap():
-    """
-    An object which is used as a context manager for createTmpVarFn inside of :class:`~.ToHdlAst`
-    """
-
-    def __init__(self, ctx, createTmpVarFn):
-        self.ctx = ctx
-        self.createTmpVarFn = createTmpVarFn
-
-    def __enter__(self):
-        self.orig = self.ctx.createTmpVarFn
-        self.ctx.createTmpVarFn = self.createTmpVarFn
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.ctx.createTmpVarFn = self.orig
+from hwt.hdl.types.slice import Slice
 
 
 class ToHdlAst():
     """
     Base class for translators which translates hwt AST to a HDL ast
+
+    :ivar ~.name_scope: name scope for resolution of hdl names for objects
+        and for name colision checking for newly generated objects
+    :ivar ~.createTmpVarFn: A function which is used to create
+        a tmp variable in current scope. It is None by default and it is set
+        if it is possible to create a tmp variable.
+    :ivar ~.constCache: A ConstCache instance used o extract values as a constants.
+    :type ~.constCache: Optional[ConstantCache]
     """
     # used to filter statems from other object by class without using
     # isisnstance
@@ -83,6 +68,7 @@ class ToHdlAst():
             name_scope = self.getBaseNameScope()
         self.name_scope = name_scope
         self.createTmpVarFn = None
+        self.constCache = None
 
     def as_hdl(self, obj) -> iHdlObj:
         """
@@ -114,11 +100,13 @@ class ToHdlAst():
             sFn = self.as_hdl_HdlType_enum
         elif isinstance(typ, HArray):
             sFn = self.as_hdl_HdlType_array
+        elif isinstance(typ, Slice):
+            sFn = self.as_hdl_HdlType_slice
         else:
             # [todo] better error msg
             raise NotImplementedError("type declaration is not implemented"
                                       " for type %s"
-                                      % (typ.name))
+                                      % (HdlType.__repr__(typ)))
 
         return sFn(typ, declaration=declaration)
 
@@ -158,12 +146,15 @@ class ToHdlAst():
             name = ns.get_object_name(typ)
             return HdlName(name, obj=None)
 
+    def as_hdl_HdlType_slice(self, typ: Slice, declaration=False):
+        raise NotImplementedError(self)
+
     def as_hdl_If(self, *args, **kwargs) -> HdlStmIf:
         return self.as_hdl_IfContainer(*args, **kwargs)
 
     def as_hdl_cond(self, v, force_bool) -> iHdlExpr:
         if force_bool and v._dtype != BOOL:
-            return self.as_hdl(v._isOn())
+            v = v._isOn()
         return self.as_hdl(v)
 
     def as_hdl_statements(self, stm_list) -> iHdlStatement:
@@ -346,15 +337,11 @@ class ToHdlAst():
 
         return self.as_hdl_SignalItem(v, declaration=True)
 
-    def as_hdl_HdlModuleDef(self, o: HdlModuleDef) -> HdlModuleDef:
-        # :attention: name_scope should be already set to body of module
-        new_m = copy(o)
-        if o.dec is not None:
-            new_m.dec = self.as_hdl_HdlModuleDec(o.dec)
-
-        # with WithNameScope(self, self.name_scope.get_child(o.module_name.val)):
+    def _as_hdl_HdlModuleDef(self, new_m: HdlModuleDef) -> HdlModuleDef:
+        # with WithNameScope(self,
+        # self.name_scope.get_child(o.module_name.val)):
         hdl_types, hdl_variables, processes, component_insts = \
-            ToBasicHdlSimModel.split_HdlModuleDefObjs(self, o.objs)
+            ToBasicHdlSimModel.split_HdlModuleDefObjs(self, new_m.objs)
         # [TODO] sorting not required as it should be done in _to_rtl()
         hdl_variables.sort(key=lambda x: (x.name, x.origin._instId))
         processes.sort(key=lambda x: (x.name, maxStmId(x)))
@@ -363,6 +350,33 @@ class ToHdlAst():
         types = set()
 
         _hdl_variables = []
+        extraVars = []
+        ns = self.name_scope
+
+        def createTmpVarInCurrentModuleBody(suggestedName, dtype,
+                                            const=False, def_val=None):
+            # create a new tmp variable in current module
+            s = RtlSignal(None, None, dtype, virtual_only=True)
+            s.name = ns.checked_name(suggestedName, s)
+            s.hidden = False
+            s._const = const
+            if def_val is not None:
+                s.def_val = def_val
+                s._set_def_val()
+
+            as_hdl = self.as_hdl_SignalItem(s, declaration=True)
+            extraVars.append(s)
+            _hdl_variables.append(as_hdl)
+            return s
+
+        with CreateTmpVarFnSwap(self, createTmpVarInCurrentModuleBody):
+            return self._as_hdl_HdlModuleDef_body(
+                new_m, types, hdl_types, hdl_variables, _hdl_variables,
+                processes, component_insts, extraVars)
+
+    def _as_hdl_HdlModuleDef_body(
+            self, new_m, types, hdl_types, hdl_variables,
+            _hdl_variables, processes, component_insts, extraVars):
         for v in hdl_variables:
             new_v = self.as_hdl_HdlModuleDef_variable(
                 v, types, hdl_types, hdl_variables,
@@ -373,9 +387,17 @@ class ToHdlAst():
 
         component_insts = [self.as_hdl_HdlComponentInst(c)
                            for c in component_insts]
-        new_m.objs = hdl_types + hdl_variables + \
+        extraVarsInit = self.as_hdl_extraVarsInit(extraVars)
+        new_m.objs = hdl_types + hdl_variables + extraVarsInit + \
             component_insts + processes
         return new_m
+
+    def as_hdl_HdlModuleDef(self, o: HdlModuleDef) -> HdlModuleDef:
+        # :attention: name_scope should be already set to body of module
+        new_m = copy(o)
+        if o.dec is not None:
+            new_m.dec = self.as_hdl_HdlModuleDec(o.dec)
+        return self._as_hdl_HdlModuleDef(new_m)
 
     def has_to_be_process(self, proc: iHdlStatement):
         raise NotImplementedError(
@@ -384,6 +406,18 @@ class ToHdlAst():
     def can_pop_process_wrap(self, statements, hasToBeVhdlProcess):
         raise NotImplementedError(
             "This method should be overloaded in child class")
+
+    def as_hdl_extraVarsInit(self, extraVars):
+        extraVarsInit = []
+        for s in extraVars:
+            if isinstance(s.def_val, RtlSignalBase) or s.def_val.vld_mask:
+                a = Assignment(s.def_val, s, virtual_only=True)
+                extraVarsInit.append(self.as_hdl_Assignment(a))
+            else:
+                assert s.drivers, s
+            for d in s.drivers:
+                extraVarsInit.append(self.as_hdl(d))
+        return extraVarsInit
 
     def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> iHdlStatement:
         """
@@ -398,11 +432,17 @@ class ToHdlAst():
 
         hasToBeVhdlProcess = self.has_to_be_process(proc)
 
-        def createTmpVarInCurrentBlock(suggestedName, dtype):
+        def createTmpVarInCurrentBlock(suggestedName, dtype,
+                                       const=False, def_val=None):
             # create a new tmp variable in current process
             s = RtlSignal(None, None, dtype, virtual_only=True)
             s.name = self.name_scope.checked_name(suggestedName, s)
             s.hidden = False
+            s._const = const
+            if def_val is not None:
+                s.def_val = def_val
+                s._set_def_val()
+
             as_hdl = self.as_hdl_SignalItem(s, declaration=True)
             extraVars.append(s)
             extraVarsHdl.append(as_hdl)
@@ -415,15 +455,7 @@ class ToHdlAst():
                 # create a initializer for tmp variables
                 # :note: we need to do this here because now it is sure that
                 #     the drivers of tmp variable will not be modified
-                extraVarsInit = []
-                for s in extraVars:
-                    if isinstance(s.def_val, RtlSignalBase) or s.def_val.vld_mask:
-                        a = Assignment(s.def_val, s, virtual_only=True)
-                        extraVarsInit.append(self.as_hdl_Assignment(a))
-                    else:
-                        assert s.drivers, s
-                    for d in s.drivers:
-                        extraVarsInit.append(self.as_hdl(d))
+                extraVarsInit = self.as_hdl_extraVarsInit(extraVars)
 
                 hasToBeVhdlProcess |= bool(extraVars)
 

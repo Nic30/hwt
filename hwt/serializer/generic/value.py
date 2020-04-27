@@ -17,6 +17,12 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 class ToHdlAst_Value():
 
+    def is_suitable_for_const_extract(self, val: Value):
+        """
+        :return: True if an value should be extracted as a constant if possible
+        """
+        return False
+
     def as_hdl_Value(self, val):
         """
         :param dst: is signal connected with value
@@ -26,9 +32,13 @@ class ToHdlAst_Value():
         if isinstance(val, RtlSignalBase):
             return self.as_hdl_SignalItem(val)
 
-        c = self.Value_try_extract_as_const(val)
-        if c is not None:
-            return c
+        # try to extract value as constant
+        cc = self.constCache
+        if cc is not None:
+            if self.is_suitable_for_const_extract(val):
+                c = cc.extract_const_val_as_const_var(val)
+                if c is not None:
+                    return self.as_hdl(c)
 
         if isinstance(t, Slice):
             return self.as_hdl_SliceVal(val)
@@ -80,6 +90,7 @@ class ToHdlAst_Value():
                 var.origin = si
                 var.value = si._val
                 var.type = si._dtype
+                var.is_const = si._const
             v = var.value
             if isinstance(si, RtlSignalBase):
                 if si.virtual_only:
@@ -109,8 +120,13 @@ class ToHdlAst_Value():
                     var.value = None
                     pass
             elif isinstance(v, Value):
-                if v.vld_mask:
-                    var.value = self.as_hdl_Value(v)
+                if v.vld_mask or var.is_const:
+                    orig_const_cache = self.constCache
+                    try:
+                        self.constCache = None
+                        var.value = self.as_hdl_Value(v)
+                    finally:
+                        self.constCache = orig_const_cache
                 else:
                     # remove value if it is entirely undefined
                     var.value = None

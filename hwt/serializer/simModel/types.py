@@ -5,6 +5,7 @@ from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_cal
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.bits import Bits
 from pyMathBitPrecise.bits3t import Bits3t
+from hwt.hdl.types.slice import Slice
 
 
 class ToHdlAstSimModel_types():
@@ -13,6 +14,7 @@ class ToHdlAstSimModel_types():
     """
     SELF = HdlName("self", obj=LanguageKeyword())
     BITS3T = HdlName("Bits3t", obj=Bits3t)
+    SLICE = HdlName("slice", obj=slice)
 
     def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):
         assert not declaration
@@ -24,6 +26,12 @@ class ToHdlAstSimModel_types():
 
         return hdl_call(self.BITS3T, [HdlIntValue(w, None, None),
                                       HdlIntValue(int(bool(typ.signed)), None, None)])
+
+    def as_hdl_HdlType_slice(self, typ: Slice, declaration=False):
+        if declaration:
+            raise NotImplementedError()
+        else:
+            return self.SLICE
 
     def as_hdl_HdlType_array(self, typ, declaration=False):
         if declaration:

@@ -5,7 +5,7 @@ from hdlConvertor.hdlAst._expr import HdlName, HdlIntValue, HdlCall,\
     HdlBuiltinFn
 from hdlConvertor.hdlAst._statements import HdlStmIf, HdlStmAssign,\
     HdlStmProcess, HdlStmBlock
-from hdlConvertor.hdlAst._structural import HdlModuleDec
+from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlModuleDef
 from hdlConvertor.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
 from hdlConvertor.to.basic_hdl_sim_model.keywords import SIMMODEL_KEYWORDS
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
@@ -23,6 +23,7 @@ from hwt.serializer.simModel.types import ToHdlAstSimModel_types
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond
+from hwt.serializer.generic.constant_cache import ConstantCache
 
 
 class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
@@ -150,6 +151,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         return res
 
     def as_hdl_SwitchContainer(self, sw: SwitchContainer) -> HdlStmIf:
+        "switch -> if"
         switchOn = sw.switchOn
 
         def mkCond(c):
@@ -197,6 +199,17 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         p = ToHdlAst.as_hdl_HdlStatementBlock(self, proc)
         self.stm_outputs[p] = [HdlName(i.name, obj=i) for i in proc._outputs]
         return p
+
+    def as_hdl_extraVarsInit(self, extraVars):
+        return []
+
+    def _as_hdl_HdlModuleDef_body(self, *args) -> HdlModuleDef:
+        orig_const_cache = self.constCache
+        try:
+            self.constCache = ConstantCache(self.createTmpVarFn)
+            return ToHdlAst._as_hdl_HdlModuleDef_body(self, *args)
+        finally:
+            self.constCache = orig_const_cache
 
 
 class SimModelSerializer:

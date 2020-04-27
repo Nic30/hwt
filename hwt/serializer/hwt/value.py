@@ -15,11 +15,17 @@ from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
+from hwt.hdl.value import Value
 
 
 class ToHdlAstHwt_value(ToHdlAst_Value):
     NONE = HdlName("None")
     SLICE = HdlName("SLICE", obj=SLICE)
+
+    def is_suitable_for_const_extract(self, val: Value):
+        # full valid values can be represented as int and do not have any
+        # constructor overhead, entirely invalid values can be represented by None
+        return not val._is_full_valid() and not isinstance(val._dtype, HEnum)
 
     def as_hdl_BitsVal(self, val: BitsVal):
         isFullVld = val._is_full_valid()
@@ -54,18 +60,6 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
                 return self.as_hdl(si.origin)
             else:
                 return HdlName(si.name, obj=si)
-
-    def Value_try_extract_as_const(self, val):
-        # try to extract value as constant
-        try:
-            consGetter = self.constCache.getConstName
-        except AttributeError:
-            consGetter = None
-
-        if consGetter and not val._is_full_valid() and not isinstance(val._dtype, HEnum):
-            # full valid values can be represented as int and do not have any
-            # constructor overhead
-            return consGetter(val)
 
     def as_hdl_DictVal(self, val):
         return ToHdlAstSimModel_value.as_hdl_DictVal(self, val)
