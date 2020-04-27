@@ -6,7 +6,7 @@ from hwt.hdl.typeShortcuts import hInt
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, STR, BIT, INT
 from hwt.hdl.types.hdlType import HdlType
-from hwt.serializer.vhdl.serializer import Vhdl2008Serializer, _to_Vhdl2008_str,\
+from hwt.serializer.vhdl.serializer import Vhdl2008Serializer,\
     ToHdlAstVhdl2008
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.interface import Interface
@@ -22,9 +22,10 @@ from ipCorePackager.intfIpMeta import VALUE_RESOLVE
 from io import StringIO
 from hwt.serializer.store_manager import SaveToFilesFlat
 from hdlConvertor.to.vhdl.vhdl2008 import ToVhdl2008
+from hdlConvertor.hdlAst._defs import HdlVariableDef
 
 
-class VivadoTclExpressionSerializer(Vhdl2008Serializer):
+class ToHdlAstVivadoTclExpr(ToHdlAstVhdl2008):
 
     # disabled because this code is not reachable in current implemetation
     @staticmethod
@@ -54,7 +55,6 @@ class IpPackager(IpCorePackager):
         :param serializer: serializer which specifies target HDL language
         :param target_platform: specifies properties of target platform, like available resources, vendor, etc.
         """
-        assert not topUnit._wasSynthetised()
         if not name:
             name = topUnit._getDefaultName()
 
@@ -73,20 +73,19 @@ class IpPackager(IpCorePackager):
         :return: list of file namens in correct compile order
         """
         ser = self.serializer
-        name_scope = ser.getBaseNameScope()
-        store = SaveToFilesFlat(ser, saveTo, name_scope=name_scope)
+        store = SaveToFilesFlat(ser, saveTo)
         toRtl(top, name=topName, store_manager=store,
               target_platform=self.target_platform)
         return store.files
 
     @internal
-    def paramToIpValue(self, idPrefix: str, g: Param, resolve) -> Value:
+    def paramToIpValue(self, idPrefix: str, g: HdlVariableDef, resolve) -> Value:
         val = Value()
-        val.id = idPrefix + g.hdl_name
+        val.id = idPrefix + g.name
         if resolve is not VALUE_RESOLVE.NONE:
             val.resolve = resolve
-        v = g.get_hdl_value()
-        t = v._dtype
+        v = g.value
+        t = g.type
 
         def getVal():
             if v.vld_mask:
@@ -108,31 +107,26 @@ class IpPackager(IpCorePackager):
             val.text = str(getVal())
         elif t == STR:
             val.format = "string"
-            val.text = str(g.get_value())
+            val.text = v.val
         elif isinstance(t, Bits):
-            bitString(v._dtype.bit_length())
+            bitString(t.bit_length())
         else:
             raise NotImplementedError(
                 "Not implemented for datatype %s" % repr(t))
         return val
 
     @internal
-    def getParamPhysicalName(self, p: Param):
-        return p.hdl_name
+    def getParamPhysicalName(self, p: HdlVariableDef):
+        return p.name
 
     @internal
-    def getParamType(self, p: Param) -> HdlType:
-        v = p.get_value()
-        if isinstance(v, bool):
-            return BOOL
-        elif isinstance(v, int):
-            return INT
-        else:
-            return STR
+    def getParamType(self, p: HdlVariableDef) -> HdlType:
+        assert p.type in [INT, BOOL, STR], p
+        return p.type
 
     @internal
     def iterParams(self, unit: Unit):
-        return unit._entity.generics
+        return unit._ctx.ent.params
 
     @internal
     def iterInterfaces(self, top: Unit):
@@ -143,13 +137,12 @@ class IpPackager(IpCorePackager):
         """
         :see: doc of method on parent class
         """
-
-        def createTmpVar(suggestedName, dtype):
-            raise NotImplementedError(
-                "Can not seraialize hdl type %r into"
-                "ipcore format" % (hdlType))
-
-        return _to_Vhdl2008_str(hdlType)
+        buff = StringIO()
+        to_ast = ToHdlAstVhdl2008()
+        hdl = to_ast.as_hdl_HdlType(hdlType)
+        ser = ToVhdl2008(buff)
+        ser.visit_iHdlObj(hdl)
+        return buff.getvalue()
 
     @internal
     def getVectorFromType(self, dtype) -> Union[bool, None, Tuple[int, int]]:
@@ -238,14 +231,17 @@ class IpPackager(IpCorePackager):
             val = val.staticEval()
 
         buff = StringIO()
-        ns = VivadoTclExpressionSerializer.getBaseNameScope()
-        ser = VivadoTclExpressionSerializer(buff, ns)
-        hdl = ser.as_hdl(val)
+        to_hdl = ToHdlAstVivadoTclExpr()
+        ser = Vhdl2008Serializer.TO_HDL(buff)
+
+        hdl = to_hdl.as_hdl(val)
         ser.visit_iHdlObj(hdl)
         tclVal = buff.getvalue()
+
         if isinstance(val, RtlSignalBase):
-            ser = VivadoTclExpressionSerializer(buff, ns)
-            hdl = ser.as_hdl(val.staticEval())
+            buff = StringIO()
+            hdl = to_hdl.as_hdl(val.staticEval())
+            ser = Vhdl2008Serializer.TO_HDL(buff)
             ser.visit_iHdlObj(hdl)
             tclValVal = buff.getvalue()
 
