@@ -254,6 +254,9 @@ def copy_HdlModuleDec_interface(orig_i: InterfaceBase, new_i: InterfaceBase,
     new_i._direction = orig_i._direction
     if orig_i._hdl_port is not None:
         s = orig_i._sigInside
+        assert s is not None, (
+            "the component which shares a body with this component"
+            " is actually some parent of this component")
         pi = copy(orig_i._hdl_port)
         pi.unit = new_u
         ports.append(pi)
