@@ -4,6 +4,7 @@ from hwt.hdl.statement import HdlStatement
 from hwt.pyUtils.arrayQuery import arr_any
 from ipCorePackager.constants import DIRECTION
 from hdlConvertor.hdlAst._defs import HdlVariableDef
+from hwt.synthesizer.param import Param
 
 
 def systemCTypeOfSig(s):
@@ -24,7 +25,8 @@ def systemCTypeOfSig(s):
             return SIGNAL_TYPE.PORT_REG
         else:
             raise ValueError(t)
-
+    elif isinstance(s, Param):
+        return SIGNAL_TYPE.PORT_REG
     elif s._const or\
         arr_any(s.drivers,
                 lambda d: isinstance(d, HdlStatement)
