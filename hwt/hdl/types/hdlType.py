@@ -1,6 +1,11 @@
+from enum import Enum
+
 from hwt.doc_markers import internal
 from hwt.synthesizer.exceptions import TypeConversionErr
-from enum import Enum
+
+
+class MethodNotOverloaded(NotImplementedError):
+    pass
 
 
 @internal
@@ -100,6 +105,12 @@ class HdlType():
         """
         raise NotImplementedError()
 
+    def _as_hdl(self, to_Hdl: "ToHdlAst", declaration):
+        raise MethodNotOverloaded()
+
+    def _as_hdl_requires_def(self, to_Hdl: "ToHdlAst", other_types: list):
+        raise MethodNotOverloaded()
+
     def __getitem__(self, key):
         """
         [] operator to create an array of this type.
@@ -116,4 +127,5 @@ class HdlType():
             (used only by HStruct)
         :param expandStructs: expand HStructTypes (used by HStruct and Array)
         """
-        return "<%s %s>" % (self.__class__.__name__, self.name)
+        name = getattr(self, "name", "")
+        return "<%s %s>" % (self.__class__.__name__, name)

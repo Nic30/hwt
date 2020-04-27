@@ -25,7 +25,7 @@ from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import STR, BOOL
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.types.hdlType import HdlType
+from hwt.hdl.types.hdlType import HdlType, MethodNotOverloaded
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
@@ -101,6 +101,11 @@ class ToHdlAst():
                                       obj.__class__, obj)
 
     def as_hdl_HdlType(self, typ: HdlType, declaration=False):
+        try:
+            return typ._as_hdl(self, declaration)
+        except MethodNotOverloaded:
+            pass
+
         if typ == STR:
             sFn = self.as_hdl_HdlType_str
         elif isinstance(typ, Bits):
@@ -311,16 +316,22 @@ class ToHdlAst():
         return self.as_hdl_HdlModuleDef_variable(var, (), None, None, None, None)
 
     def as_hdl_HdlModuleDec(self, o: HdlModuleDec):
-        # convert types, exprs
+        # :attention: name_scope should be already set to body of module
+        # with WithNameScope(self, self.name_scope.get_child(o.name)):
+
         new_o = copy(o)
 
-        with WithNameScope(self, self.name_scope.get_child(o.name)):
-            new_o.params = [self.as_hdl_GenericItem(p) for p in o.params]
-            new_o.ports = [self.as_hdl_HdlPortItem(p) for p in o.ports]
+        # convert types, exprs
+        new_o.params = [self.as_hdl_GenericItem(p) for p in o.params]
+        new_o.ports = [self.as_hdl_HdlPortItem(p) for p in o.ports]
 
         return new_o
 
-    def does_type_requires_extra_def(self, t, other_types):
+    def does_type_requires_extra_def(self, t: HdlType, other_types: list):
+        try:
+            return t._as_hdl_requires_def(self, other_types)
+        except MethodNotOverloaded:
+            pass
         return isinstance(t, (HEnum, HArray)) and t not in other_types
 
     def as_hdl_HdlModuleDef_variable(
@@ -336,34 +347,35 @@ class ToHdlAst():
         return self.as_hdl_SignalItem(v, declaration=True)
 
     def as_hdl_HdlModuleDef(self, o: HdlModuleDef) -> HdlModuleDef:
+        # :attention: name_scope should be already set to body of module
         new_m = copy(o)
         if o.dec is not None:
             new_m.dec = self.as_hdl_HdlModuleDec(o.dec)
 
-        with WithNameScope(self, self.name_scope.get_child(o.module_name.val)):
-            hdl_types, hdl_variables, processes, component_insts = \
-                ToBasicHdlSimModel.split_HdlModuleDefObjs(self, o.objs)
-            # [TODO] sorting not required as it should be done in _to_rtl()
-            hdl_variables.sort(key=lambda x: (x.name, x.origin._instId))
-            processes.sort(key=lambda x: (x.name, maxStmId(x)))
-            component_insts.sort(key=lambda x: x.name.val)
+        # with WithNameScope(self, self.name_scope.get_child(o.module_name.val)):
+        hdl_types, hdl_variables, processes, component_insts = \
+            ToBasicHdlSimModel.split_HdlModuleDefObjs(self, o.objs)
+        # [TODO] sorting not required as it should be done in _to_rtl()
+        hdl_variables.sort(key=lambda x: (x.name, x.origin._instId))
+        processes.sort(key=lambda x: (x.name, maxStmId(x)))
+        component_insts.sort(key=lambda x: x.name)
 
-            types = set()
+        types = set()
 
-            _hdl_variables = []
-            for v in hdl_variables:
-                new_v = self.as_hdl_HdlModuleDef_variable(
-                    v, types, hdl_types, hdl_variables,
-                    processes, component_insts)
-                _hdl_variables.append(new_v)
-            hdl_variables = _hdl_variables
-            processes = [self.as_hdl_HdlStatementBlock(p) for p in processes]
+        _hdl_variables = []
+        for v in hdl_variables:
+            new_v = self.as_hdl_HdlModuleDef_variable(
+                v, types, hdl_types, hdl_variables,
+                processes, component_insts)
+            _hdl_variables.append(new_v)
+        hdl_variables = _hdl_variables
+        processes = [self.as_hdl_HdlStatementBlock(p) for p in processes]
 
-            component_insts = [self.as_hdl_HdlComponentInst(c)
-                               for c in component_insts]
-            new_m.objs = hdl_types + hdl_variables + \
-                component_insts + processes
-            return new_m
+        component_insts = [self.as_hdl_HdlComponentInst(c)
+                           for c in component_insts]
+        new_m.objs = hdl_types + hdl_variables + \
+            component_insts + processes
+        return new_m
 
     def has_to_be_process(self, proc: iHdlStatement):
         raise NotImplementedError(
@@ -385,56 +397,56 @@ class ToHdlAst():
         extraVarsHdl = []
 
         hasToBeVhdlProcess = self.has_to_be_process(proc)
-        ns = self.name_scope
 
         def createTmpVarInCurrentBlock(suggestedName, dtype):
             # create a new tmp variable in current process
             s = RtlSignal(None, None, dtype, virtual_only=True)
-            s.name = ns.checked_name(suggestedName, s)
+            s.name = self.name_scope.checked_name(suggestedName, s)
             s.hidden = False
             as_hdl = self.as_hdl_SignalItem(s, declaration=True)
             extraVars.append(s)
             extraVarsHdl.append(as_hdl)
             return s
 
-        with CreateTmpVarFnSwap(self, createTmpVarInCurrentBlock):
-            statements = [self.as_hdl(s) for s in body]
+        with WithNameScope(self, self.name_scope.level_push(proc.name)):
+            with CreateTmpVarFnSwap(self, createTmpVarInCurrentBlock):
+                statements = [self.as_hdl(s) for s in body]
 
-            # create a initializer for tmp variables
-            # :note: we need to do this here because now it is sure that
-            #     the drivers of tmp variable will not be modified
-            extraVarsInit = []
-            for s in extraVars:
-                if isinstance(s.def_val, RtlSignalBase) or s.def_val.vld_mask:
-                    a = Assignment(s.def_val, s, virtual_only=True)
-                    extraVarsInit.append(self.as_hdl_Assignment(a))
+                # create a initializer for tmp variables
+                # :note: we need to do this here because now it is sure that
+                #     the drivers of tmp variable will not be modified
+                extraVarsInit = []
+                for s in extraVars:
+                    if isinstance(s.def_val, RtlSignalBase) or s.def_val.vld_mask:
+                        a = Assignment(s.def_val, s, virtual_only=True)
+                        extraVarsInit.append(self.as_hdl_Assignment(a))
+                    else:
+                        assert s.drivers, s
+                    for d in s.drivers:
+                        extraVarsInit.append(self.as_hdl(d))
+
+                hasToBeVhdlProcess |= bool(extraVars)
+
+                if hasToBeVhdlProcess:
+                    statements = extraVarsHdl + extraVarsInit + statements
+                if self.can_pop_process_wrap(statements, hasToBeVhdlProcess):
+                    return statements[0]
                 else:
-                    assert s.drivers, s
-                for d in s.drivers:
-                    extraVarsInit.append(self.as_hdl(d))
+                    p = HdlStmProcess()
+                    p.labels.append(proc.name)
 
-            hasToBeVhdlProcess |= bool(extraVars)
-
-            if hasToBeVhdlProcess:
-                statements = extraVarsHdl + extraVarsInit + statements
-            if self.can_pop_process_wrap(statements, hasToBeVhdlProcess):
-                return statements[0]
-            else:
-                p = HdlStmProcess()
-                p.labels.append(proc.name)
-
-                if not statements:
-                    pass  # no body
-                elif len(statements) == 1:
-                    # body made of just a singe statement
-                    p.body = statements[0]
-                else:
-                    p.body = HdlStmBlock()
-                    assert isinstance(statements, list)
-                    p.body.body = statements
-                anyIsEventDependnt = arr_any(
-                    proc._sensitivity, lambda s: isinstance(s, Operator))
-                p.sensitivity = sorted([
-                    self.sensitivityListItem(s, anyIsEventDependnt)
-                    for s in proc._sensitivity])
-                return p
+                    if not statements:
+                        pass  # no body
+                    elif len(statements) == 1:
+                        # body made of just a singe statement
+                        p.body = statements[0]
+                    else:
+                        p.body = HdlStmBlock()
+                        assert isinstance(statements, list)
+                        p.body.body = statements
+                    anyIsEventDependnt = arr_any(
+                        proc._sensitivity, lambda s: isinstance(s, Operator))
+                    p.sensitivity = sorted([
+                        self.sensitivityListItem(s, anyIsEventDependnt)
+                        for s in proc._sensitivity])
+                    return p
