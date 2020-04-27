@@ -30,6 +30,12 @@ class Signal(SignalOps, Interface):
 
     :ivar ~._dtype: type of signal
     :ivar ~._sig: RtlSignal instance (physical representation of this logical signal)
+    :ivar ~._sigInside: _sig after toRtl conversion is made
+        (after toRtl conversion _sig is signal for parent unit
+        and _sigInside is signal in original unit, this separates process
+        of translating units)
+    :note: _sigInside is None if the body of component was not elaborated yet
+    :ivar _isAccessible: flag which is set False if the signal is inside of some elaborated unit
     """
 
     def __init__(self,
@@ -37,9 +43,22 @@ class Signal(SignalOps, Interface):
                  dtype=BIT,
                  loadConfig=True):
         self._sig = None
+        self._sigInside = None
+        self._isAccessible = True
         super().__init__(masterDir=masterDir,
                          loadConfig=loadConfig)
         self._dtype = dtype
+
+    def _clean(self, lockNonExternal=True):
+        """
+        :see: :func:`Interface._clean`
+        """
+        self._sigInside = self._sig
+        self._sig = None
+        if lockNonExternal and not self._isExtern:
+            self._isAccessible = False
+        if self._interfaces:
+            Interface._clean(self, lockNonExternal=lockNonExternal)
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = SignalAgent(sim, self)

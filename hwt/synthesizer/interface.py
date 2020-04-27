@@ -42,11 +42,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
     :note: only interfaces without _interfaces have
 
-    :ivar ~._sig: rtl level signal instance
-    :ivar ~._sigInside: _sig after toRtl conversion is made
-        (after toRtl conversion _sig is signal for parent unit
-        and _sigInside is signal in original unit, this separates process
-        of translating units)
     :ivar ~._boundedSigLvlUnit: RTL unit for which was this interface created
 
 
@@ -99,7 +94,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         # flags for better design error detection
         self._isExtern = False
-        self._isAccessible = True
         self._ag = None
         self._hdl_port = None
 
@@ -154,12 +148,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         if self._interfaces:
             for i in self._interfaces:
                 i._clean(lockNonExternal=lockNonExternal)
-        else:
-            self._sigInside = self._sig
-            self._sig = None
-
-        if lockNonExternal and not self._isExtern:
-            self._isAccessible = False  # [TODO] mv to signal lock
 
     @internal
     def _connectToIter(self, master, exclude=None, fit=False):
