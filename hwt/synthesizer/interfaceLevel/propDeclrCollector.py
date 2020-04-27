@@ -6,6 +6,7 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
 from hwt.synthesizer.param import Param
+from hdlConvertor.translate.common.name_scope import WithNameScope
 
 
 @internal
@@ -319,7 +320,9 @@ class PropDeclrCollector(object):
         """
         self._registerUnit(uName, u)
         u._loadDeclarations()
-        self._lazyLoaded.extend(u._toRtl(self._target_platform, self._store_manager))
+        sm = self._store_manager
+        with WithNameScope(sm, sm.name_scope.parent):
+            self._lazyLoaded.extend(u._toRtl(self._target_platform, self._store_manager))
         u._signalsForSubUnitEntity(self._ctx, "sig_" + uName)
 
     @internal
