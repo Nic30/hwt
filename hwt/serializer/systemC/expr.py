@@ -79,11 +79,11 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
                 else:
                     return hdl_call(hdl_getattr(_si, "read"), [])
 
-    def as_hdl_BitString(self, v, width: int,
-                         force_vector: bool, vld_mask: int, signed):
-        _v = bit_string(v, width, vld_mask)
-        # if can be in hex
-        t = self.as_hdl_HdlType_bits(Bits(width, signed=signed))
+    def as_hdl_BitsVal(self, val):
+        t = val._dtype
+        w = t.bit_length()
+        _v = bit_string(val.val, w, val.vld_mask)
+        t = self.as_hdl_HdlType_bits(Bits(w, signed=t.signed))
         return hdl_call(t, [_v, ])
 
     def as_hdl_HEnumVal(self, val: HEnumVal):
