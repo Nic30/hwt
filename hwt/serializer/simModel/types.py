@@ -34,7 +34,7 @@ class ToHdlAstSimModel_types():
 
     def as_hdl_HdlType_enum(self, typ, declaration=False):
         if declaration:
-            super(ToHdlAstSimModel_types, self).as_hdl_HdlType_enum(typ, declaration=True)
+            return super(ToHdlAstSimModel_types, self).as_hdl_HdlType_enum(typ, declaration=True)
         else:
             t_name = self.name_scope.get_object_name(typ)
             return hdl_getattr(self.SELF, t_name)
