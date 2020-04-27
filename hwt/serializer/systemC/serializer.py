@@ -1,5 +1,8 @@
+from typing import Optional
+
 from hdlConvertor.hdlAst._defs import HdlVariableDef
 from hdlConvertor.hdlAst._expr import HdlName, HdlCall, HdlBuiltinFn
+from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlComponentInst
 from hdlConvertor.to.systemc._main import ToSystemc
 from hdlConvertor.to.systemc.keywords import SYSTEMC_KEYWORDS
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
@@ -7,11 +10,12 @@ from hwt.hdl.portItem import HdlPortItem
 from hwt.interfaces.std import Clk
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst,\
     HWT_TO_HDLCONVEROTR_DIRECTION
+from hwt.serializer.simModel.serializer import ToHdlAstSimModel
+from hwt.serializer.systemC.expr import ToHdlAstSystemC_expr
 from hwt.serializer.systemC.statements import ToHdlAstSystemC_statements
 from hwt.serializer.systemC.type import ToHdlAstSystemC_type
-from hwt.serializer.systemC.expr import ToHdlAstSystemC_expr
 from ipCorePackager.constants import DIRECTION
-from typing import Optional
+from copy import copy
 
 
 class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
@@ -33,6 +37,9 @@ class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
         self._is_target = False
         self._in_sensitivity_list = False
         self.signalType = None
+
+    def as_hdl_HdlModuleDec(self, o: HdlModuleDec):
+        return ToHdlAstSimModel.as_hdl_HdlModuleDec(self, o)
 
     def as_hdl_HdlPortItem(self, o: HdlPortItem):
         i = o.getInternSig()._interface
@@ -66,6 +73,23 @@ class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
         var.origin = o
         var.type = t
         return var
+
+    def as_hdl_HdlComponentInst(self, o: HdlComponentInst) -> HdlComponentInst:
+        new_o = copy(o)
+        new_o.param_map = []
+
+        orig_is_target = self._is_target
+        try:
+            self._is_target = True
+            port_map = []
+            for pi in o.port_map:
+                pm = self.as_hdl_PortConnection(pi)
+                port_map.append(pm)
+            new_o.port_map = port_map
+        finally:
+            self._is_target = orig_is_target
+
+        return new_o
 
 
 class SystemCSerializer():
