@@ -103,7 +103,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
         """
         self._registerInterface(iName, intf, isPrivate=True)
         self._loadInterface(intf, False)
-        intf._signalsForInterface(self._ctx, None, self._store_manager.name_scope)
+        intf._signalsForInterface(
+            self._ctx, None, self._store_manager.name_scope)
 
     def _getDefaultName(self) -> str:
         return self.__class__.__name__
@@ -125,7 +126,8 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             self._name = self._getDefaultName()
         self._target_platform = target_platform
         self._store_manager = store_manager
-        do_serialize_this, replacement = store_manager.filter.do_serialize(self)
+        do_serialize_this, replacement = store_manager.filter.do_serialize(
+            self)
         if replacement is not None:
             assert not do_serialize_this
             assert len(self._interfaces) == len(replacement._interfaces), \
@@ -172,42 +174,46 @@ class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
             for proc in target_platform.beforeToRtlImpl:
                 proc(self)
 
-        store_manager.hierarchy_push(mdec)
-        if do_serialize_this:
-            self._loadImpl()
-            yield from self._lazyLoaded
+        try:
+            store_manager.hierarchy_push(mdec)
+            if do_serialize_this:
+                self._loadImpl()
+                yield from self._lazyLoaded
 
-            if not self._ctx.interfaces:
-                raise IntfLvlConfErr(
-                    "Can not find any external interface for unit %s"
-                    "- unit without interfaces are not synthetisable"
-                    % self._name)
+                if not self._ctx.interfaces:
+                    raise IntfLvlConfErr(
+                        "Can not find any external interface for unit %s"
+                        "- unit without interfaces are not synthetisable"
+                        % self._name)
 
-        for proc in target_platform.afterToRtlImpl:
-            proc(self)
+            for proc in target_platform.afterToRtlImpl:
+                proc(self)
 
-        mdec.params.sort(key=lambda x: x.name)
-        mdec.ports.sort(key=lambda x: x.name)
-        if do_serialize_this:
-            # synthesize signal level context
-            mdef = self._ctx.create_HdlModuleDef(target_platform, store_manager)
-            mdef.origin = self
-            for intf in self._interfaces:
-                if intf._isExtern:
-                    # reverse because other components
-                    # looks at this interface from the outside
-                    intf._reverseDirection()
-            store_manager.write(mdef)
-        yield True, self
+            mdec.params.sort(key=lambda x: x.name)
+            mdec.ports.sort(key=lambda x: x.name)
+            if do_serialize_this:
+                # synthesize signal level context
+                mdef = self._ctx.create_HdlModuleDef(
+                    target_platform, store_manager)
+                mdef.origin = self
+                for intf in self._interfaces:
+                    if intf._isExtern:
+                        # reverse because other components
+                        # looks at this interface from the outside
+                        intf._reverseDirection()
+                store_manager.write(mdef)
+            yield True, self
 
-        # after synthesis clean up interface so this Unit object can be used elsewhere
-        self._cleanAsSubunit()
-        if do_serialize_this:
-            Unit_checkCompInstances(self)
+            # after synthesis clean up interface so this Unit object can be
+            # used elsewhere
+            self._cleanAsSubunit()
+            if do_serialize_this:
+                Unit_checkCompInstances(self)
 
-        for proc in target_platform.afterToRtl:
-            proc(self)
-        store_manager.hierarchy_pop(mdec)
+            for proc in target_platform.afterToRtl:
+                proc(self)
+        finally:
+            store_manager.hierarchy_pop(mdec)
 
     def _updateParamsFrom(self, otherObj,
                           updater=_default_param_updater,
@@ -234,8 +240,8 @@ def Unit_checkCompInstances(u: Unit):
             raise IntfLvlConfErr(
                 "%s, %s: unit(s) were found in HDL but were"
                 " not registered %s" % (
-                   u.__class__.__name__, u._name,
-                   u._getstr(inRtl - inIntf)))
+                    u.__class__.__name__, u._name,
+                    u._getstr(inRtl - inIntf)))
         elif cInst_cnt < unit_cnt:
             raise IntfLvlConfErr(
                 "%s, %s: _toRtl: unit(s) are missing in produced HDL %s" % (
