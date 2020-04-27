@@ -6,12 +6,17 @@ from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT
+from hwt.hdl.types.hdlType import HdlType, MethodNotOverloaded
 from hwt.serializer.verilog.utils import SIGNAL_TYPE
 
 
 class ToHdlAstVerilog_types():
 
-    def does_type_requires_extra_def(self, t, other_types):
+    def does_type_requires_extra_def(self, t: HdlType, other_types: list):
+        try:
+            return t._as_hdl_requires_def(self, other_types)
+        except MethodNotOverloaded:
+            pass
         return False
 
     def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):

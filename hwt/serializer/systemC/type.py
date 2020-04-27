@@ -1,11 +1,12 @@
 from hdlConvertor.hdlAst._expr import HdlCall, HdlBuiltinFn, HdlName
+from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
+from hwt.hdl.types.hdlType import MethodNotOverloaded
 from hwt.serializer.verilog.types import ToHdlAstVerilog_types
-from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
 
 
 class ToHdlAstSystemC_type():
@@ -14,9 +15,18 @@ class ToHdlAstSystemC_type():
     sc_bigint = HdlName("sc_bigint", obj=LanguageKeyword())
     sc_biguint = HdlName("sc_biguint", obj=LanguageKeyword())
     sc_signal = HdlName("sc_signal", obj=LanguageKeyword())
+    STRING = HdlCall(HdlBuiltinFn.DOUBLE_COLON, HdlName("string", obj=LanguageKeyword()))
 
     def does_type_requires_extra_def(self, t, other_types):
+        try:
+            return t._as_hdl_requires_def(self, other_types)
+        except MethodNotOverloaded:
+            pass
         return False
+
+    def as_hdl_HdlType_str(self, typ, declaration=False):
+        assert not declaration
+        return self.STRING
 
     def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):
         if declaration:

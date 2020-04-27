@@ -1,15 +1,12 @@
-from io import StringIO
 import re
 
 from hdlConvertor.hdlAst._expr import HdlName, HdlAll
 from hdlConvertor.hdlAst._statements import HdlImport
 from hdlConvertor.hdlAst._structural import HdlLibrary, HdlModuleDef,\
-    HdlComponentInst, HdlContext, HdlModuleDec
+    HdlComponentInst, HdlContext
 from hdlConvertor.to.vhdl.keywords import VHLD2008_KEYWORDS
 from hdlConvertor.to.vhdl.vhdl2008 import ToVhdl2008
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
-from hwt.hdl.types.array import HArray
-from hwt.hdl.types.enum import HEnum
 from hwt.pyUtils.arrayQuery import groupedby
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.vhdl.ops import ToHdlAstVhdl2008_ops
@@ -52,9 +49,6 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         s.update(cls._keywords_dict)
         return s
 
-    def does_type_requires_extra_def(self, t, other_types):
-        return isinstance(t, (HEnum, HArray)) and t not in other_types
-
     def as_hdl_HdlModuleDef(self, o: HdlModuleDef):
         """
         Translate hwt types and expressions to HDL AST and add explicit components
@@ -90,15 +84,3 @@ class Vhdl2008Serializer():
     fileExtension = '.vhd'
     TO_HDL_AST = ToHdlAstVhdl2008
     TO_HDL = ToVhdl2008
-
-
-def _to_Vhdl2008_str(obj):
-    """
-    Convert an ebalorated hdl objects to a VHDL2008 string
-    """
-    buff = StringIO()
-    to_ast = ToHdlAstVhdl2008()
-    hdl = to_ast.as_hdl(obj)
-    ser = ToVhdl2008(buff)
-    ser.visit_iHdlObj(hdl)
-    return buff.getvalue()
