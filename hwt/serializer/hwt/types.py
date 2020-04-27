@@ -6,6 +6,7 @@ from hwt.hdl.types.bits import BITS_DEFAUTL_SIGNED, BITS_DEFAUTL_FORCEVECTOR, \
     BITS_DEFAUTL_NEGATED, Bits
 from hwt.hdl.types.defs import BOOL, INT
 from hwt.hdl.types.enum import HEnum
+from hwt.hdl.types.hdlType import MethodNotOverloaded
 
 
 class ToHdlAstHwt_types():
@@ -17,6 +18,10 @@ class ToHdlAstHwt_types():
     BITS = HdlName("Bits", obj=Bits)
 
     def does_type_requires_extra_def(self, t, other_types):
+        try:
+            return t._as_hdl_requires_def(self, other_types)
+        except MethodNotOverloaded:
+            pass
         return isinstance(t, HEnum) and t not in other_types
 
     def as_hdl_HdlType_array(self, typ: HArray, declaration=False):

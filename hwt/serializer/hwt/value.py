@@ -5,6 +5,7 @@ from hdlConvertor.hdlAst._expr import HdlIntValue, HdlCall, HdlBuiltinFn,\
     HdlName
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
     hdl_call
+from hdlConvertor.translate.common.name_scope import ObjectForNameNotFound
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import SLICE
@@ -62,7 +63,8 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
             consGetter = None
 
         if consGetter and not val._is_full_valid() and not isinstance(val._dtype, HEnum):
-            # full valid values can be represented as int and do not have any constructor overhead
+            # full valid values can be represented as int and do not have any
+            # constructor overhead
             return consGetter(val)
 
     def as_hdl_DictVal(self, val):
@@ -107,6 +109,24 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
                 val.vld_mask)
 
     def as_hdl_HEnumVal(self, val: HEnumVal):
-        t_name = self.name_scope.get_object_name(val._dtype)
-        name = self.name_scope.get_object_name(val)
-        return hdl_getattr(t_name, name)
+        try:
+            t_name = self.name_scope.get_object_name(val._dtype)
+        except ObjectForNameNotFound:
+            if self.debug:
+                t_name = val._dtype.name
+            else:
+                raise
+
+        if val.vld_mask:
+            try:
+                name = self.name_scope.get_object_name(val)
+            except ObjectForNameNotFound:
+                if self.debug:
+                    name = val.val
+                else:
+                    raise
+
+            return hdl_getattr(HdlName(t_name, obj=val._dtype), name)
+        else:
+            return hdl_call(hdl_getattr(HdlName(t_name, obj=val._dtype), "from_py"),
+                            [None, ])

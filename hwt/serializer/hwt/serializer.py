@@ -27,6 +27,7 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
         super(ToHdlAstHwt, self).__init__(name_scope)
         self._valueWidthRequired = False
         self.currentUnit = None
+        self.debug = False
 
     def has_to_be_process(self, proc):
         return True

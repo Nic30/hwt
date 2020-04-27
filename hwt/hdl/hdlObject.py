@@ -12,6 +12,7 @@ class HdlObject():
         from hwt.serializer.hwt.serializer import HwtSerializer
         name_scope = NameScope(None, "debug", False)
         to_hdl = HwtSerializer.TO_HDL_AST(name_scope)
+        to_hdl.debug = True
         hdl = to_hdl.as_hdl(self)
         buff = StringIO()
         # import sys
