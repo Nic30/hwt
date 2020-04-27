@@ -87,8 +87,12 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
 
     def as_hdl_HEnumVal(self, val: HEnumVal):
         t_name = self.name_scope.get_object_name(val._dtype)
-        name = self.name_scope.get_object_name(val)
-        return hdl_getattr(hdl_getattr(self.SELF, t_name), name)
+        if val.vld_mask:
+            name = self.name_scope.get_object_name(val)
+            return hdl_getattr(hdl_getattr(self.SELF, t_name), name)
+        else:
+            return hdl_call(hdl_getattr(hdl_getattr(self.SELF, t_name), "from_py"),
+                            [None, ])
 
     def as_hdl_Operator(self, op: Operator):
         ops = op.operands
