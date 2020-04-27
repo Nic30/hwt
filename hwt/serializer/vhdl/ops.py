@@ -117,7 +117,7 @@ class ToHdlAstVhdl2008_ops():
         if o == AllOps.INDEX:
             op0, op1 = ops
             if isinstance(op0, RtlSignalBase) and isResultOfTypeConversion(op0):
-                op0 = self.createTmpVarFn("tmpTypeConv", op0._dtype)
+                op0 = self.createTmpVarFn("tmpTypeConv_", op0._dtype)
                 op0.def_val = ops[0]
 
             # if the op0 is not signal or other index index operator it is extracted
@@ -143,7 +143,7 @@ class ToHdlAstVhdl2008_ops():
                 op0 = ops[0]
                 op0 = self._as_Bits_vec(op0)
                 if isinstance(op0, RtlSignalBase) and op0.hidden:
-                    op0 = self.createTmpVarFn("tmpTypeConv", op0._dtype)
+                    op0 = self.createTmpVarFn("tmpTypeConv_", op0._dtype)
                     op0.def_val = ops[0]
                 return self.apply_cast(_o, self.as_hdl_operand(op0))
             o = self.op_transl_dict[o]
