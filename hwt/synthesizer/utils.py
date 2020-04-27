@@ -73,14 +73,14 @@ def to_rtl_str(unit_or_cls: Unit,
 
 
 def serializeAsIpcore(unit, folderName=".", name=None,
-                      serializer=Vhdl2008Serializer,
+                      serializer_cls=Vhdl2008Serializer,
                       target_platform=DummyPlatform()):
     """
     Create an IPCore package
     """
     from hwt.serializer.ip_packager import IpPackager
     p = IpPackager(unit, name=name,
-                   serializer=serializer,
+                   serializer_cls=serializer_cls,
                    target_platform=target_platform)
     p.createPackage(folderName)
     return p
