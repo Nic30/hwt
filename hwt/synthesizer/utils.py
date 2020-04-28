@@ -8,6 +8,7 @@ from hwt.serializer.vhdl.serializer import Vhdl2008Serializer
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
+from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
 
 
 def toRtl(unit_or_cls: Unit, store_manager: StoreManager=None,
@@ -99,11 +100,11 @@ def synthesised(u: Unit, target_platform=DummyPlatform()):
     """
     Elaborate design without producing any hdl
     """
-    sm = StoreManager(DummySerializerCls)
+    sm = StoreManager(DummySerializerCls,
+                      _filter=SerializerFilterDoNotExclude())
     if not hasattr(u, "_interfaces"):
         u._loadDeclarations()
 
     for _ in u._toRtl(target_platform, sm):
         pass
     return u
-
