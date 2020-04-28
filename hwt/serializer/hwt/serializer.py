@@ -1,4 +1,6 @@
 
+from typing import Optional
+
 from hdlConvertor.hdlAst._expr import HdlName
 from hdlConvertor.hdlAst._structural import HdlModuleDef
 from hdlConvertor.to.hwt._main import ToHwt
@@ -25,8 +27,8 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
     """
     _keywords_dict = {kw: LanguageKeyword() for kw in HWT_KEYWORDS}
 
-    def __init__(self, name_scope: NameScope):
-        super(ToHdlAstHwt, self).__init__(name_scope)
+    def __init__(self, name_scope: Optional[NameScope] = None):
+        super(ToHdlAstHwt, self).__init__(name_scope=name_scope)
         self._valueWidthRequired = False
         self.currentUnit = None
         self.debug = False
