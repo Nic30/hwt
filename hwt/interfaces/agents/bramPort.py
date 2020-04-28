@@ -21,7 +21,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
         self.requests = deque()
         self.readPending = False
-        self.readed = deque()
+        self.r_data = deque()
 
         self.mem = {}
         self.requireInit = True
@@ -141,7 +141,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             yield WaitCombStable()
             # now we are after clk edge
             d = intf.dout.read()
-            self.readed.append(d)
+            self.r_data.append(d)
             if self._debugOutput is not None:
                 self._debugOutput.write("%s, on %r read_data: %d\n" % (
                                         self.intf._getFullName(),

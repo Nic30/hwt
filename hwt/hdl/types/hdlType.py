@@ -32,6 +32,9 @@ class HdlType():
         on first convert function call)
     """
 
+    def __init__(self, const=False):
+        self.const = const
+
     def from_py(self, v, vld_mask=None):
         """
         Construct value of this type.

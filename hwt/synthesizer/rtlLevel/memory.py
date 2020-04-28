@@ -1,4 +1,7 @@
 from hwt.hdl.assignment import Assignment
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlMemoryBase
@@ -42,5 +45,20 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
             source = source._auto_cast(self._dtype)
 
         a = Assignment(source, self.next)
+        return [a, ]
 
-        return [a]
+    def _getAssociatedClk(self):
+        d = self.singleDriver()
+        assert isinstance(d, IfContainer), d
+        cond = d.cond.singleDriver()
+        assert isinstance(cond, Operator) and cond.operator is AllOps.RISING_EDGE, cond
+        return cond.operands[0]
+
+    def _getAssociatedRst(self):
+        d = self.singleDriver()
+        assert isinstance(d, IfContainer), d
+        cond = d.cond.singleDriver()
+        assert isinstance(cond, Operator) and cond.operator is AllOps.RISING_EDGE, cond
+        assert len(d.ifTrue) == 1
+        reset_if = d.ifTrue[0]
+        return reset_if.cond

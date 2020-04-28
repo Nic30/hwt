@@ -313,11 +313,15 @@ class RegCntrl(Interface):
 
     def _config(self):
         self.DATA_WIDTH = Param(8)
+        self.USE_IN = Param(True)
+        self.USE_OUT = Param(True)
 
     def _declr(self):
-        self.din = VectSignal(self.DATA_WIDTH, masterDir=D.IN)
-        with self._paramsShared():
-            self.dout = VldSynced()
+        if self.USE_IN:
+            self.din = VectSignal(self.DATA_WIDTH, masterDir=D.IN)
+        if self.USE_OUT:
+            with self._paramsShared():
+                self.dout = VldSynced()
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = RegCntrlAgent(sim, self)
