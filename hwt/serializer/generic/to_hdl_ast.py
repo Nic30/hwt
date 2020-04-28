@@ -26,6 +26,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import STR, BOOL
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import HdlType, MethodNotOverloaded
+from hwt.hdl.types.slice import Slice
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
@@ -34,7 +35,6 @@ from hwt.serializer.generic.utils import HWT_TO_HDLCONVEROTR_DIRECTION,\
 from hwt.serializer.utils import maxStmId
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.hdl.types.slice import Slice
 
 
 class ToHdlAst():
