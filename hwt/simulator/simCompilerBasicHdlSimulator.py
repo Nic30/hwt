@@ -70,7 +70,9 @@ def toBasicSimulatorSimModel(
     _filter = SerializerFilterDoNotExclude()
     if build_dir is not None:
         build_private_dir = os.path.join(os.getcwd(), build_dir, unique_name)
-        store_man = SaveToFilesFlat(SimModelSerializer, build_private_dir, _filter=_filter)
+        store_man = SaveToFilesFlat(SimModelSerializer,
+                                    build_private_dir,
+                                    _filter=_filter)
     else:
         buff = StringIO()
         store_man = SaveToStream(SimModelSerializer, buff, _filter=_filter)

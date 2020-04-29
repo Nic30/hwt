@@ -4,6 +4,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.struct import HStruct
 from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 
@@ -53,7 +54,7 @@ def _default_param_updater(self, myP, otherP_val):
     myP.set_value(otherP_val)
 
 
-class UnitImplHelpers(object):
+class UnitImplHelpers(UnitBase):
 
     def _reg(self, name, dtype=BIT, def_val=None, clk=None, rst=None) -> RtlSyncSignal:
         """

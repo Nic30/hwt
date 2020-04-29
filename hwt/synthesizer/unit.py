@@ -1,20 +1,20 @@
+from copy import copy
+from typing import Optional, List
+
+from hdlConvertor.hdlAst._structural import HdlComponentInst
 from hwt.doc_markers import internal
+from hwt.hdl.portItem import HdlPortItem
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import UnitImplHelpers, \
     _default_param_updater
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
-from hdlConvertor.hdlAst._structural import HdlComponentInst
-from typing import Optional, List
-from copy import copy
-from hwt.hdl.portItem import HdlPortItem
 from ipCorePackager.constants import DIRECTION
 
 
-# from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkParams
-class Unit(UnitBase, PropDeclrCollector, UnitImplHelpers):
+class Unit(PropDeclrCollector, UnitImplHelpers):
     """
     Container of the netlist with interfaces
     and internal hierarchical structure
