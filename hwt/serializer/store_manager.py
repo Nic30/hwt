@@ -1,11 +1,13 @@
 from io import StringIO
 import os
-from typing import Type, Optional
+from typing import Type, Optional, Union
 
 from hdlConvertor.hdlAst._bases import iHdlObj
 from hdlConvertor.translate.common.name_scope import NameScope
 from hwt.pyUtils.uniqList import UniqList
+from hwt.serializer.serializer_config import DummySerializerConfig
 from hwt.serializer.serializer_filter import SerializerFilter
+from hwt.synthesizer.unit import HdlConstraintList
 
 
 class StoreManager(object):
@@ -15,7 +17,7 @@ class StoreManager(object):
     """
 
     def __init__(self,
-                 serializer_cls,
+                 serializer_cls: DummySerializerConfig,
                  _filter: Type["SerializerFilter"] = None,
                  name_scope: Optional[NameScope]= None):
         self.serializer_cls = serializer_cls
@@ -36,7 +38,7 @@ class StoreManager(object):
         self.name_scope = p
         return p
 
-    def write(self, obj: iHdlObj):
+    def write(self, obj: Union[iHdlObj, HdlConstraintList]):
         pass
 
 
@@ -46,7 +48,7 @@ class SaveToStream(StoreManager):
     """
 
     def __init__(self,
-                 serializer_cls,
+                 serializer_cls: DummySerializerConfig,
                  stream: StringIO,
                  _filter: "SerializerFilter" = None,
                  name_scope: Optional[NameScope]=None):
@@ -54,14 +56,19 @@ class SaveToStream(StoreManager):
             serializer_cls, _filter=_filter, name_scope=name_scope)
         self.stream = stream
 
-    def write(self, obj: iHdlObj):
+    def write(self, obj: Union[iHdlObj, HdlConstraintList]):
         self.as_hdl_ast.name_scope = self.name_scope
-        hdl = self.as_hdl_ast.as_hdl(obj)
-        ser = self.serializer_cls.TO_HDL(self.stream)
-        if hasattr(ser, "stm_outputs"):
-            ser.stm_outputs = self.as_hdl_ast.stm_outputs
+        if isinstance(obj, HdlConstraintList):
+            if self.serializer_cls.TO_CONSTRAINTS is not None:
+                to_constr = self.serializer_cls.TO_CONSTRAINTS(self.stream)
+                to_constr.visit_HdlConstraintList(obj)
+        else:
+            hdl = self.as_hdl_ast.as_hdl(obj)
+            ser = self.serializer_cls.TO_HDL(self.stream)
+            if hasattr(ser, "stm_outputs"):
+                ser.stm_outputs = self.as_hdl_ast.stm_outputs
 
-        ser.visit_iHdlObj(hdl)
+            ser.visit_iHdlObj(hdl)
 
 
 class SaveToFilesFlat(StoreManager):
@@ -70,7 +77,7 @@ class SaveToFilesFlat(StoreManager):
     """
 
     def __init__(self,
-                 serializer_cls,
+                 serializer_cls: DummySerializerConfig,
                  root: str,
                  _filter: "SerializerFilter"=None,
                  name_scope: Optional[NameScope]=None):
@@ -80,10 +87,15 @@ class SaveToFilesFlat(StoreManager):
         self.files = UniqList()
         os.makedirs(root, exist_ok=True)
 
-    def write(self, obj: iHdlObj):
-        fName = obj.name + self.serializer_cls.fileExtension
+    def write(self, obj: Union[iHdlObj, HdlConstraintList]):
+        if isinstance(obj, HdlConstraintList):
+            fName = "constraints" + self.serializer_cls.TO_CONSTRAINTS.fileExtension
+        else:
+            fName = obj.name + self.serializer_cls.fileExtension
+
         fp = os.path.join(self.root, fName)
         self.files.append(fp)
         with open(fp, "w") as f:
-            s = SaveToStream(self.serializer_cls, f, self.filter, self.name_scope)
+            s = SaveToStream(self.serializer_cls, f,
+                             self.filter, self.name_scope)
             s.write(obj)

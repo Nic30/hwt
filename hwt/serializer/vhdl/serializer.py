@@ -5,7 +5,6 @@ from hdlConvertor.hdlAst._statements import HdlImport
 from hdlConvertor.hdlAst._structural import HdlLibrary, HdlModuleDef,\
     HdlComponentInst, HdlContext
 from hdlConvertor.to.vhdl.keywords import VHLD2008_KEYWORDS
-from hdlConvertor.to.vhdl.vhdl2008 import ToVhdl2008
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.pyUtils.arrayQuery import groupedby
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
@@ -78,9 +77,3 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
     def as_hdl_HldComponent(self, o: HdlComponentInst):
         c = self.as_hdl_HdlModuleDec(o.origin._ctx.ent)
         return c
-
-
-class Vhdl2008Serializer():
-    fileExtension = '.vhd'
-    TO_HDL_AST = ToHdlAstVhdl2008
-    TO_HDL = ToVhdl2008

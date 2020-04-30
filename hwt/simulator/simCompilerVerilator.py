@@ -4,7 +4,7 @@ from typing import Optional
 
 from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
 from hwt.serializer.store_manager import SaveToFilesFlat
-from hwt.serializer.verilog.serializer import VerilogSerializer
+from hwt.serializer.verilog import VerilogSerializer
 from hwt.simulator.shortcuts import collect_signals
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit

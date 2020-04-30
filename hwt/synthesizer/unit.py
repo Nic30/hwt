@@ -14,6 +14,13 @@ from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from ipCorePackager.constants import DIRECTION
 
 
+class HdlConstraintList(list):
+    """
+    Containers of hw design constraints
+    """
+    pass
+
+
 class Unit(PropDeclrCollector, UnitImplHelpers):
     """
     Container of the netlist with interfaces
@@ -66,7 +73,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         self._hdl_module_name = None
         self._lazyLoaded = []
         self._ctx = RtlNetlist(self)
-        self._constraints = []
+        self._constraints = HdlConstraintList()
         self._loadConfig()
 
     @internal

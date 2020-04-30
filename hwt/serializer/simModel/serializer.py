@@ -6,7 +6,6 @@ from hdlConvertor.hdlAst._expr import HdlName, HdlIntValue, HdlCall,\
 from hdlConvertor.hdlAst._statements import HdlStmIf, HdlStmAssign,\
     HdlStmProcess, HdlStmBlock
 from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlModuleDef
-from hdlConvertor.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
 from hdlConvertor.to.basic_hdl_sim_model.keywords import SIMMODEL_KEYWORDS
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
     hdl_map_asoc, hdl_call
@@ -211,8 +210,3 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         finally:
             self.constCache = orig_const_cache
 
-
-class SimModelSerializer:
-    fileExtension = '.py'
-    TO_HDL_AST = ToHdlAstSimModel
-    TO_HDL = ToBasicHdlSimModel

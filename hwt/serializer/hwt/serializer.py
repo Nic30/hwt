@@ -3,7 +3,6 @@ from typing import Optional
 
 from hdlConvertor.hdlAst._expr import HdlName
 from hdlConvertor.hdlAst._structural import HdlModuleDef
-from hdlConvertor.to.hwt._main import ToHwt
 from hdlConvertor.to.hwt.keywords import HWT_KEYWORDS
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.constants import SENSITIVITY
@@ -56,9 +55,3 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
             return [sens, HdlName(s.name, obj=s)]
         else:
             return HdlName(item.name, obj=item)
-
-
-class HwtSerializer():
-    fileExtension = '.py'
-    TO_HDL_AST = ToHdlAstHwt
-    TO_HDL = ToHwt

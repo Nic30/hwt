@@ -6,8 +6,7 @@ from hwt.hdl.typeShortcuts import hInt
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, STR, BIT, INT
 from hwt.hdl.types.hdlType import HdlType
-from hwt.serializer.vhdl.serializer import Vhdl2008Serializer,\
-    ToHdlAstVhdl2008
+from hwt.serializer.vhdl import Vhdl2008Serializer, ToHdlAstVhdl2008
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName

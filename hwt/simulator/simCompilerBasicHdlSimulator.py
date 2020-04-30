@@ -1,18 +1,18 @@
 import importlib
+from io import StringIO
 import os
 import sys
 from types import ModuleType
 from typing import Optional
 
-from hwt.serializer.simModel.serializer import SimModelSerializer
+from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
+from hwt.serializer.simModel import SimModelSerializer
+from hwt.serializer.store_manager import SaveToFilesFlat, SaveToStream
 from hwt.simulator.basicRtlSimConfigVcd import BasicRtlSimConfigVcd
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import toRtl
 from pycocotb.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
-from hwt.serializer.store_manager import SaveToFilesFlat, SaveToStream
-from io import StringIO
-from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
 
 
 class BasicRtlSimulatorWithVCD(BasicRtlSimulator):

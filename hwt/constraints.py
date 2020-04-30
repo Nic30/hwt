@@ -6,7 +6,7 @@ from hwt.synthesizer.unit import Unit
 
 
 def get_parent_unit(obj) -> Unit:
-    if isinstance(obj, ConstrainBase):
+    if isinstance(obj, iHdlConstrain):
         return obj.get_parent()
 
     while not isinstance(obj, Unit):
@@ -17,7 +17,7 @@ def get_parent_unit(obj) -> Unit:
     return obj
 
 
-class ConstrainBase():
+class iHdlConstrain():
 
     def get_parent(self) -> Unit:
         raise NotImplementedError(self)
@@ -26,7 +26,7 @@ class ConstrainBase():
         self.get_parent()._constraints.append(self)
 
 
-class set_max_delay(ConstrainBase):
+class set_max_delay(iHdlConstrain):
     """
     Object which represents the max_delay constrain
 
@@ -52,7 +52,7 @@ class set_max_delay(ConstrainBase):
         return get_parent_unit(self.end)
 
 
-class set_false_path(ConstrainBase):
+class set_false_path(iHdlConstrain):
 
     def __init__(self, start: Union[None, Interface, RtlSignal],
                  end: Union[None, Interface, RtlSignal]):
@@ -67,7 +67,7 @@ class set_false_path(ConstrainBase):
         return get_parent_unit(o)
 
 
-class get_clock_of(ConstrainBase):
+class get_clock_of(iHdlConstrain):
     def __init__(self, obj):
         self.obj = obj
 
@@ -75,7 +75,7 @@ class get_clock_of(ConstrainBase):
         return get_parent_unit(self.obj)
 
 
-class set_async_reg(ConstrainBase):
+class set_async_reg(iHdlConstrain):
     """
     Placement constrain which tell that the register should be put as close as possible to it's src/dst
 

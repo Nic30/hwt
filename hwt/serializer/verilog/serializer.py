@@ -6,9 +6,7 @@ from hdlConvertor.hdlAst._expr import HdlTypeAuto
 from hdlConvertor.hdlAst._statements import HdlStmProcess, HdlStmBlock, HdlStmAssign,\
     HdlStmWait
 from hdlConvertor.to.verilog.keywords import IEEE1800_2017_KEYWORDS
-from hdlConvertor.to.verilog.verilog2005 import ToVerilog2005
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
-from hwt.hdl.constants import DIRECTION
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.defs import STR, INT, BOOL
@@ -88,7 +86,3 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
         return v
 
 
-class VerilogSerializer():
-    fileExtension = '.v'
-    TO_HDL_AST = ToHdlAstVerilog
-    TO_HDL = ToVerilog2005

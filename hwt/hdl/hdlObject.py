@@ -9,7 +9,7 @@ class HdlObject():
     """
 
     def __repr__(self):
-        from hwt.serializer.hwt.serializer import HwtSerializer
+        from hwt.serializer.hwt import HwtSerializer
         name_scope = NameScope(None, "debug", False)
         to_hdl = HwtSerializer.TO_HDL_AST(name_scope)
         to_hdl.debug = True

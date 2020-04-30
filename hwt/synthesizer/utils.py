@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from io import StringIO
-import os
 
-from hwt.serializer.store_manager import SaveToStream, StoreManager
-from hwt.serializer.vhdl.serializer import Vhdl2008Serializer
-from hwt.synthesizer.dummyPlatform import DummyPlatform
-from hwt.synthesizer.unit import Unit
-from hwt.serializer.generic.to_hdl_ast import ToHdlAst
+from hwt.serializer.serializer_config import DummySerializerConfig
 from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
+from hwt.serializer.store_manager import SaveToStream, StoreManager
+from hwt.serializer.vhdl import Vhdl2008Serializer
+from hwt.synthesizer.dummyPlatform import DummyPlatform
+from hwt.synthesizer.unit import Unit, HdlConstraintList
 
 
-def toRtl(unit_or_cls: Unit, store_manager: StoreManager=None,
+def toRtl(unit_or_cls: Unit, store_manager: StoreManager,
           name: str=None,
           target_platform=DummyPlatform()):
     """
@@ -34,34 +33,23 @@ def toRtl(unit_or_cls: Unit, store_manager: StoreManager=None,
         assert isinstance(name, str)
         u._hdl_module_name = u._name = name
 
-    if store_manager is None:
-        #buff = StringIO()
-        import sys
-        buff = sys.stdout
-        store_manager = SaveToStream(Vhdl2008Serializer, buff)
-    else:
-        buff = None
-
     # serialize all unit instances to HDL code
-    constraints = []
+    constraints = HdlConstraintList()
     for serialized, obj in u._toRtl(target_platform, store_manager):
         if not serialized and obj._constraints:
             raise NotImplementedError()
-        # [todo] if the instance is shared with something else copy a constrains
+            # [todo] if the instance is shared with something else make
+            # the paths in constraints relative to a component
+        else:
+            # make constrants relative to a curent top
+            pass
         constraints.extend(obj._constraints)
 
     # collect and serialize all constraints in design
     if constraints:
-        for cs_cls in target_platform.constraint_serializer:
-            f_name = os.path.join(saveTo, cs_cls.DEFAULT_FILE_NAME)
-            with open(f_name, "w") as f:
-                cs = cs_cls(f)
-                for c in constraints:
-                    cs.any(c)
-            files.append(f_name)
+        store_manager.write(constraints)
 
-    if buff is not None:
-        return buff.getvalue()
+    return store_manager
 
 
 def to_rtl_str(unit_or_cls: Unit,
@@ -87,20 +75,11 @@ def serializeAsIpcore(unit, folderName=".", name=None,
     return p
 
 
-class DummySerializerCls():
-    """
-    The serializer which does not do any additional code transformations
-    and does not produce any output. It is used to generate just internal representation
-    of RTL code.
-    """
-    TO_HDL_AST = ToHdlAst
-
-
 def synthesised(u: Unit, target_platform=DummyPlatform()):
     """
     Elaborate design without producing any hdl
     """
-    sm = StoreManager(DummySerializerCls,
+    sm = StoreManager(DummySerializerConfig,
                       _filter=SerializerFilterDoNotExclude())
     if not hasattr(u, "_interfaces"):
         u._loadDeclarations()

@@ -1,9 +1,9 @@
+from copy import copy
 from typing import Optional
 
 from hdlConvertor.hdlAst._defs import HdlVariableDef
 from hdlConvertor.hdlAst._expr import HdlName, HdlCall, HdlBuiltinFn
 from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlComponentInst
-from hdlConvertor.to.systemc._main import ToSystemc
 from hdlConvertor.to.systemc.keywords import SYSTEMC_KEYWORDS
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.portItem import HdlPortItem
@@ -15,7 +15,6 @@ from hwt.serializer.systemC.expr import ToHdlAstSystemC_expr
 from hwt.serializer.systemC.statements import ToHdlAstSystemC_statements
 from hwt.serializer.systemC.type import ToHdlAstSystemC_type
 from ipCorePackager.constants import DIRECTION
-from copy import copy
 
 
 class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
@@ -90,9 +89,3 @@ class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
             self._is_target = orig_is_target
 
         return new_o
-
-
-class SystemCSerializer():
-    fileExtension = '.cpp'
-    TO_HDL_AST = ToHdlAstSystemC
-    TO_HDL = ToSystemc
