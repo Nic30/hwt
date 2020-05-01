@@ -1,20 +1,15 @@
 from copy import copy
 from typing import Optional
 
-from hdlConvertor.hdlAst._bases import iHdlStatement, iHdlObj
-from hdlConvertor.hdlAst._defs import HdlVariableDef
-from hdlConvertor.hdlAst._expr import HdlName, HdlTypeType, HdlDirection,\
-    iHdlExpr
-from hdlConvertor.hdlAst._statements import HdlStmBlock, HdlStmIf, HdlStmCase,\
-    ALL_STATEMENT_CLASSES, HdlStmProcess, HdlStmAssign
-from hdlConvertor.hdlAst._structural import HdlModuleDef, HdlModuleDec,\
-    HdlComponentInst
-from hdlConvertor.hdlAst._typeDefs import HdlEnumDef
+from hdlConvertor.hdlAst import iHdlStatement, iHdlObj, HdlVariableDef, \
+    HdlName, HdlTypeType, iHdlExpr, HdlStmBlock, HdlStmIf, HdlStmCase,\
+    HdlStmProcess, HdlStmAssign, HdlModuleDef, HdlModuleDec,\
+    HdlComponentInst, HdlEnumDef
+from hdlConvertor.hdlAst._statements import ALL_STATEMENT_CLASSES
 from hdlConvertor.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index,\
-    hdl_map_asoc
+from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import \
+    hdl_index, hdl_map_asoc
 from hdlConvertor.translate.common.name_scope import NameScope, WithNameScope
-from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.ifContainter import IfContainer
@@ -135,7 +130,7 @@ class ToHdlAst():
             e = HdlEnumDef()
             e.origin = typ
             e.name = ns.checked_name(typ.name, typ)
-            e.values = [ns.checked_name(n, getattr(typ, n))
+            e.values = [(ns.checked_name(n, getattr(typ, n)), None)
                         for n in typ._allValues]
             dec = HdlVariableDef()
             dec.type = HdlTypeType

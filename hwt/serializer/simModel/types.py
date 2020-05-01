@@ -1,11 +1,10 @@
-from hdlConvertor.hdlAst import HdlVariableDef,  HdlName, HdlIntValue,\
-    HdlTypeType, HdlEnumDef
+from hdlConvertor.hdlAst import HdlName, HdlIntValue
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
     hdl_getattr
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.bits import Bits
-from pyMathBitPrecise.bits3t import Bits3t
 from hwt.hdl.types.slice import Slice
+from pyMathBitPrecise.bits3t import Bits3t
 
 
 class ToHdlAstSimModel_types():

@@ -5,15 +5,12 @@ from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_dow
     hdl_call
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
-from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.sliceVal import SliceVal
-from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import Value
-from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.verilog.context import SignalTypeSwap
