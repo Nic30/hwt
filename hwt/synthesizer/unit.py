@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from hdlConvertor.hdlAst._structural import HdlComponentInst
 from hwt.doc_markers import internal
@@ -44,11 +44,15 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
     :ivar ~._lazyLoaded: container of rtl object which were lazy loaded
         in implementation phase (this object has to be returned
         from _toRtl of parent before it it's own objects)
-    :ivar ~._shared_component_with: the other Unit instance which produces
-        an exactly same component in HDL
+    :type ~._shared_component_with: Optional[Tuple[Unit,
+        Dict[Interface, Interface],
+        Dict[Interface, Interface]]]
+    :ivar ~._shared_component_with: Optional typle of the other Unit instance
+        which produces an exactly same component in HDL and interface
+        map current -> shared and shared -> current
     :attention if _shared_component_with is not None the body of this instance
         is not generated at all
-        and the _shared_component_with is used instead
+        and the component from _shared_component_with is used instead
     :ivar ~._target_platform: metainformations about target platform
     :ivar ~._name: a name of this component
     :ivar ~._hdl_module_name: a name of hdl module for this compoennt
@@ -144,7 +148,13 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
             self._cleanAsSubunit()
             self._units = None
             self._private_interfaces = None
-            self._shared_component_with = replacement
+            intf_map_repl_to_self = shared_comp_build_interface_map(
+                replacement, self)
+            intf_map_self_to_repl = {
+                v: k
+                for k, v in intf_map_repl_to_self.items()}
+            self._shared_component_with = replacement, \
+                intf_map_self_to_repl, intf_map_repl_to_self
             return
 
         for proc in target_platform.beforeToRtl:
@@ -309,3 +319,26 @@ def copy_HdlModuleDec(orig_u: Unit, new_u: Unit):
     # params should be already sorted
     # e.params.sort(key=lambda x: x.name)
     e.ports.sort(key=lambda x: x.name)
+
+
+def _shared_comp_build_interface_map_list(replacement: List[InterfaceBase],
+                                          substituted: List[InterfaceBase],
+                                          res: Dict[InterfaceBase, InterfaceBase]):
+    assert len(replacement) == len(substituted)
+    for r, s in zip(replacement, substituted):
+        assert r._name == s._name, (r._name, s._name)
+        res[r] = s
+        if r._interfaces:
+            _shared_comp_build_interface_map_list(
+                r._interfaces, s._interfaces, res)
+
+
+def shared_comp_build_interface_map(replacement_u: Unit, substituted_u: Unit):
+    """
+    Build a dictionary which maps
+    interface of replacement_u to interface of substituted_u
+    """
+    res = {}
+    _shared_comp_build_interface_map_list(
+        replacement_u._interfaces, substituted_u._interfaces, res)
+    return res

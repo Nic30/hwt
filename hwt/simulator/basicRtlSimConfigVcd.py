@@ -54,7 +54,7 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
                 for u in obj._units:
                     m = getattr(model, u._name + "_inst")
                     if u._shared_component_with is not None:
-                        u = u._shared_component_with
+                        u, _, _ = u._shared_component_with
                     self.collectInterfaceSignals(u, m, res)
         else:
             sig_name = obj._sigInside.name
@@ -89,7 +89,7 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
                     for u in obj._units:
                         m = getattr(model, u._name + "_inst")
                         if u._shared_component_with is not None:
-                            u = u._shared_component_with
+                            u, _, _ = u._shared_component_with
                         self.vcdRegisterSignals(u, m, subScope, interface_signals)
 
             return subScope
