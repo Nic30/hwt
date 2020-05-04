@@ -96,7 +96,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         try:
             other._dtype.bit_length
         except AttributeError:
-            raise TypeError("Can not concat Bits and", other._dtype)
+            raise TypeError("Can not concat Bits and", other)
 
         if areValues(self, other):
             return self._concat__val(other)
@@ -397,10 +397,12 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         return bitsArithOp(self, other, AllOps.ADD)
 
     def __floordiv__(self, other) -> "Bits3val":
-        other = toHVal(other)
+        other = toHVal(other, suggestedType=self._dtype)
         if isinstance(self, Value) and isinstance(other, Value):
             return Bits3val.__floordiv__(self, other)
         else:
+            if not isinstance(other._dtype, self._dtype.__class__):
+                raise TypeError()
             return Operator.withRes(AllOps.DIV,
                                     [self, other],
                                     self._dtype.__copy__())
