@@ -41,7 +41,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
     :ivar ~._constraints: additional HW specifications
     :ivar ~._parent: parent object
     :type ~._parent: Optional[Unit]
-    :ivar ~._lazyLoaded: container of rtl object which were lazy loaded
+    :ivar ~._lazy_loaded: container of rtl object which were lazy loaded
         in implementation phase (this object has to be returned
         from _toRtl of parent before it it's own objects)
     :type ~._shared_component_with: Optional[Tuple[Unit,
@@ -66,7 +66,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         "_name", "_hdl_module_name",
         "_interfaces", "_private_interfaces",
         "_units", "_params", "_parent", "_constraints",
-        "_lazyLoaded", "_ctx", "_shared_component_with",
+        "_lazy_loaded", "_ctx", "_shared_component_with",
         "_target_platform", "_store_manager",
     ])
 
@@ -75,7 +75,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         self._name = None
         self._shared_component_with = None
         self._hdl_module_name = None
-        self._lazyLoaded = []
+        self._lazy_loaded = []
         self._ctx = RtlNetlist(self)
         self._constraints = HdlConstraintList()
         self._loadConfig()
@@ -195,7 +195,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
             store_manager.hierarchy_push(mdec)
             if do_serialize_this:
                 self._loadImpl()
-                yield from self._lazyLoaded
+                yield from self._lazy_loaded
 
                 if not self._ctx.interfaces:
                     raise IntfLvlConfErr(

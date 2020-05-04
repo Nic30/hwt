@@ -97,7 +97,7 @@ class Switch(SwitchContainer):
         super(Switch, self).__init__(switchOn, [])
         switchOn.ctx.statements.add(self)
 
-    def addCases(self, tupesValStmnts):
+    def add_cases(self, tupesValStmnts):
         """
         Add multiple case statements from iterable of tuleles
         (caseVal, statements)
@@ -228,7 +228,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
            )
 
         return Switch(index)\
-            .addCases(
+            .add_cases(
             enumerate(statementLists)
         ).Default(
             bodyFn(items[0], 0)[0],
