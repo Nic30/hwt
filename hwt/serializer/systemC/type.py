@@ -1,4 +1,4 @@
-from hdlConvertor.hdlAst._expr import HdlCall, HdlBuiltinFn, HdlName
+from hdlConvertor.hdlAst._expr import HdlOp, HdlOpType, HdlValueId
 from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
@@ -10,12 +10,12 @@ from hwt.serializer.verilog.types import ToHdlAstVerilog_types
 
 
 class ToHdlAstSystemC_type():
-    sc_int = HdlName("sc_int", obj=LanguageKeyword())
-    sc_uint = HdlName("sc_uint", obj=LanguageKeyword())
-    sc_bigint = HdlName("sc_bigint", obj=LanguageKeyword())
-    sc_biguint = HdlName("sc_biguint", obj=LanguageKeyword())
-    sc_signal = HdlName("sc_signal", obj=LanguageKeyword())
-    STRING = HdlCall(HdlBuiltinFn.DOUBLE_COLON, HdlName("string", obj=LanguageKeyword()))
+    sc_int = HdlValueId("sc_int", obj=LanguageKeyword())
+    sc_uint = HdlValueId("sc_uint", obj=LanguageKeyword())
+    sc_bigint = HdlValueId("sc_bigint", obj=LanguageKeyword())
+    sc_biguint = HdlValueId("sc_biguint", obj=LanguageKeyword())
+    sc_signal = HdlValueId("sc_signal", obj=LanguageKeyword())
+    STRING = HdlOp(HdlOpType.DOUBLE_COLON, HdlValueId("string", obj=LanguageKeyword()))
 
     def does_type_requires_extra_def(self, t, other_types):
         try:
@@ -45,10 +45,10 @@ class ToHdlAstSystemC_type():
             else:
                 typeBaseName = self.sc_biguint
 
-        t = HdlCall(HdlBuiltinFn.PARAMETRIZATION,
+        t = HdlOp(HdlOpType.PARAMETRIZATION,
                     [typeBaseName, self.as_hdl_int(w)])
         if self.signalType == SIGNAL_TYPE.WIRE:
-            t = HdlCall(HdlBuiltinFn.PARAMETRIZATION, [self.sc_signal, t])
+            t = HdlOp(HdlOpType.PARAMETRIZATION, [self.sc_signal, t])
         return t
 
     def as_hdl_HdlType_array(self, typ: HArray, declaration=False):

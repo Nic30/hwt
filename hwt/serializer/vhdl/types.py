@@ -1,5 +1,5 @@
-from hdlConvertor.hdlAst._defs import HdlVariableDef
-from hdlConvertor.hdlAst._expr import HdlName, HdlCall, HdlBuiltinFn,\
+from hdlConvertor.hdlAst._defs import HdlIdDef
+from hdlConvertor.hdlAst._expr import HdlValueId, HdlOp, HdlOpType,\
     HdlTypeType
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index,\
     hdl_downto
@@ -10,13 +10,13 @@ from hwt.hdl.types.defs import BOOL, INT
 
 
 class ToHdlAstVhdl2008_types():
-    BOOLEAN = HdlName("BOOLEAN", obj=LanguageKeyword())
-    INTEGER = HdlName("INTEGER", obj=LanguageKeyword())
-    STRING = HdlName("STRING", obj=LanguageKeyword())
-    STD_LOGIC_VECTOR = HdlName("STD_LOGIC_VECTOR", obj=LanguageKeyword())
-    STD_LOGIC = HdlName("STD_LOGIC", obj=LanguageKeyword())
-    SIGNED = HdlName("SIGNED", obj=LanguageKeyword())
-    UNSIGNED = HdlName("UNSIGNED", obj=LanguageKeyword())
+    BOOLEAN = HdlValueId("BOOLEAN", obj=LanguageKeyword())
+    INTEGER = HdlValueId("INTEGER", obj=LanguageKeyword())
+    STRING = HdlValueId("STRING", obj=LanguageKeyword())
+    STD_LOGIC_VECTOR = HdlValueId("STD_LOGIC_VECTOR", obj=LanguageKeyword())
+    STD_LOGIC = HdlValueId("STD_LOGIC", obj=LanguageKeyword())
+    SIGNED = HdlValueId("SIGNED", obj=LanguageKeyword())
+    UNSIGNED = HdlValueId("UNSIGNED", obj=LanguageKeyword())
 
     def as_hdl_HdlType_str(self, typ, declaration=False):
         assert not declaration
@@ -44,16 +44,16 @@ class ToHdlAstVhdl2008_types():
         else:
             name = self.UNSIGNED
 
-        return HdlCall(HdlBuiltinFn.CALL, [
+        return HdlOp(HdlOpType.CALL, [
             name,
-            HdlCall(HdlBuiltinFn.DOWNTO, [
+            HdlOp(HdlOpType.DOWNTO, [
                 self.as_hdl_int(w - 1),
                 self.as_hdl_int(0)
             ])])
 
     def as_hdl_HdlType_array(self, typ: HArray, declaration=False):
         if declaration:
-            v = HdlVariableDef()
+            v = HdlIdDef()
             name = getattr(typ, "name", None)
             if name is None:
                 name = "arr_t_"

@@ -1,8 +1,8 @@
 from itertools import chain
 
-from hdlConvertor.hdlAst._defs import HdlVariableDef
+from hdlConvertor.hdlAst._defs import HdlIdDef
 from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
-    HdlComponentInst
+    HdlCompInst
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
@@ -170,10 +170,10 @@ class ResourceAnalyzer():
         for o in m.objs:
             if isinstance(o, HdlStatementBlock):
                 self.visit_HdlStatementBlock(o)
-            elif isinstance(o, HdlComponentInst):
+            elif isinstance(o, HdlCompInst):
                 raise NotImplementedError()
             else:
-                assert isinstance(o, HdlVariableDef), o
+                assert isinstance(o, HdlIdDef), o
 
         # [TODO] constant to ROMs
     def visit_Unit(self, u: Unit):

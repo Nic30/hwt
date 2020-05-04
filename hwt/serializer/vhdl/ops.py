@@ -1,6 +1,6 @@
 from typing import Union
 
-from hdlConvertor.hdlAst._expr import HdlName, HdlCall, HdlBuiltinFn
+from hdlConvertor.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.code import If
@@ -31,8 +31,8 @@ def isResultOfTypeConversion(sig):
 class ToHdlAstVhdl2008_ops():
     op_transl_dict = {
         **ToHdlAstHwt_ops.op_transl_dict,
-        AllOps.RISING_EDGE: HdlBuiltinFn.RISING,
-        AllOps.FALLING_EDGE: HdlBuiltinFn.FALLING,
+        AllOps.RISING_EDGE: HdlOpType.RISING,
+        AllOps.FALLING_EDGE: HdlOpType.FALLING,
     }
     _cast_ops = {
         AllOps.BitsAsSigned: "SIGNED",
@@ -107,7 +107,7 @@ class ToHdlAstVhdl2008_ops():
         return self.as_hdl(operand)
 
     def apply_cast(self, t_name, op):
-        return hdl_call(HdlName(t_name, obj=LanguageKeyword()),
+        return hdl_call(HdlValueId(t_name, obj=LanguageKeyword()),
                         [op, ])
 
     def as_hdl_Operator(self, op: Operator):
@@ -131,12 +131,12 @@ class ToHdlAstVhdl2008_ops():
                     _op1 = self.apply_cast("UNSIGNED", _op1)
                 _op1 = self.apply_cast("TO_INTEGER", _op1)
 
-            return HdlCall(HdlBuiltinFn.INDEX, [op0, _op1])
+            return HdlOp(HdlOpType.INDEX, [op0, _op1])
         elif o == AllOps.TERNARY:
             op0 = self.as_hdl_cond(ops[0], True)
             op1 = self.as_hdl_operand(ops[1])
             op2 = self.as_hdl_operand(ops[2])
-            return HdlCall(HdlBuiltinFn.TERNARY, [op0, op1, op2])
+            return HdlOp(HdlOpType.TERNARY, [op0, op1, op2])
         else:
             _o = self._cast_ops.get(o, None)
             if _o is not None:
@@ -155,6 +155,6 @@ class ToHdlAstVhdl2008_ops():
                     op1 = self._as_Bits(op1)
                 op0 = self.as_hdl_operand(op0)
                 op1 = self.as_hdl_operand(op1)
-                return HdlCall(o, [op0, op1])
-            return HdlCall(o, [self.as_hdl_operand(o2)
+                return HdlOp(o, [op0, op1])
+            return HdlOp(o, [self.as_hdl_operand(o2)
                                for o2 in ops])

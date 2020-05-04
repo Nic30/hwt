@@ -1,4 +1,4 @@
-from hdlConvertor.hdlAst._expr import HdlBuiltinFn, HdlCall, HdlName
+from hdlConvertor.hdlAst._expr import HdlOpType, HdlOp, HdlValueId
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
     hdl_call
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
@@ -9,10 +9,10 @@ from hwt.serializer.hwt.context import ValueWidthRequirementScope
 
 
 class ToHdlAstHwt_ops():
-    CONCAT = HdlName("Concat", obj=LanguageKeyword())
+    CONCAT = HdlValueId("Concat", obj=LanguageKeyword())
     op_transl_dict = {
         **HWT_TO_HDLCONVEROTR_OPS,
-        AllOps.INDEX: HdlBuiltinFn.INDEX,
+        AllOps.INDEX: HdlOpType.INDEX,
     }
     _cast_ops = {
         AllOps.BitsAsSigned,
@@ -41,8 +41,8 @@ class ToHdlAstHwt_ops():
                 with ValueWidthRequirementScope(self, True):
                     op0 = self.as_hdl(op0)
                     op1 = self.as_hdl(op1)
-                return HdlCall(o, [cond, op0, op1])
+                return HdlOp(o, [cond, op0, op1])
             else:
                 o = self.op_transl_dict[o]
-                return HdlCall(o, [self.as_hdl(o2)
+                return HdlOp(o, [self.as_hdl(o2)
                                    for o2 in ops])

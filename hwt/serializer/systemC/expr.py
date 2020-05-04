@@ -1,6 +1,6 @@
 from typing import Union
 
-from hdlConvertor.hdlAst._expr import HdlName, HdlCall, HdlBuiltinFn
+from hdlConvertor.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
 from hdlConvertor.to.hdlUtils import bit_string
 from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
@@ -23,7 +23,7 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class ToHdlAstSystemC_expr(ToHdlAst_Value):
-    static_cast = HdlName("static_cast", obj=LanguageKeyword())
+    static_cast = HdlValueId("static_cast", obj=LanguageKeyword())
     op_transl_dict = ToHdlAstVerilog_ops.op_transl_dict
 
     def as_hdl_Value(self, v):
@@ -54,7 +54,7 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
             assert len(ops) == 1, ops
             t = self.as_hdl_HdlType(op.result._dtype)
             return hdl_call(
-                HdlCall(HdlBuiltinFn.PARAMETRIZATION, [self.static_cast, t]),
+                HdlOp(HdlOpType.PARAMETRIZATION, [self.static_cast, t]),
                 [self.as_hdl_Value(ops[0]), ])
         elif o == AllOps.CONCAT:
             o = self.createTmpVarFn("tmpConcat_", op.result._dtype)
@@ -73,7 +73,7 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
                 return self.as_hdl(si.origin)
             else:
                 sigType = systemCTypeOfSig(si)
-                _si = HdlName(si.name, obj=si)
+                _si = HdlValueId(si.name, obj=si)
                 if self._in_sensitivity_list or self._is_target or sigType is SIGNAL_TYPE.REG:
                     return _si
                 else:

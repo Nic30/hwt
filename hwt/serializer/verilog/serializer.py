@@ -1,7 +1,7 @@
 from copy import copy
 from typing import Optional
 
-from hdlConvertor.hdlAst._defs import HdlVariableDef
+from hdlConvertor.hdlAst._defs import HdlIdDef
 from hdlConvertor.hdlAst._expr import HdlTypeAuto
 from hdlConvertor.hdlAst._statements import HdlStmProcess, HdlStmBlock, HdlStmAssign,\
     HdlStmWait
@@ -66,7 +66,7 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
                 new_v.value = self.as_hdl_Value(new_v.value)
             return new_v
 
-    def as_hdl_GenericItem(self, g: HdlVariableDef):
+    def as_hdl_GenericItem(self, g: HdlIdDef):
         with SignalTypeSwap(self, SIGNAL_TYPE.PORT_WIRE):
             new_v = copy(g)
             v = g.value

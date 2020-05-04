@@ -1,6 +1,6 @@
 from typing import Union
 
-from hdlConvertor.hdlAst._expr import HdlName, HdlBuiltinFn, HdlCall
+from hdlConvertor.hdlAst._expr import HdlValueId, HdlOpType, HdlOp
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.operator import Operator
@@ -13,11 +13,11 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class ToHdlAstVerilog_ops():
-    SIGNED = HdlName("$signed", obj=LanguageKeyword())
-    UNSIGNED = HdlName("$unsigned", obj=LanguageKeyword())
+    SIGNED = HdlValueId("$signed", obj=LanguageKeyword())
+    UNSIGNED = HdlValueId("$unsigned", obj=LanguageKeyword())
     op_transl_dict = {
         **HWT_TO_HDLCONVEROTR_OPS,
-        AllOps.INDEX: HdlBuiltinFn.INDEX,
+        AllOps.INDEX: HdlOpType.INDEX,
     }
 
     def _operandIsAnotherOperand(self, operand):
@@ -62,7 +62,7 @@ class ToHdlAstVerilog_ops():
             assert width is not None, (operator, operand)
         hdl_op = self.as_hdl_Value(operand)
         if width is not None:
-            return HdlCall(HdlBuiltinFn.APOSTROPHE, [self.as_hdl_int(width), hdl_op])
+            return HdlOp(HdlOpType.APOSTROPHE, [self.as_hdl_int(width), hdl_op])
         else:
             return hdl_op
 
@@ -79,7 +79,7 @@ class ToHdlAstVerilog_ops():
                 op0 = self.as_hdl_cond([ops[0]], True)
                 op1 = self.as_hdl_operand(ops[1], 1, op)
                 op2 = self.as_hdl_operand(ops[2], 2, op)
-                return HdlCall(HdlBuiltinFn.TERNARY, [op0, op1, op2])
+                return HdlOp(HdlOpType.TERNARY, [op0, op1, op2])
         elif o == AllOps.RISING_EDGE or o == AllOps.FALLING_EDGE:
             raise UnsupportedEventOpErr()
         elif o in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.BitsAsSigned]:
@@ -97,5 +97,5 @@ class ToHdlAstVerilog_ops():
                 return op_hdl
         else:
             _o = self.op_transl_dict[o]
-            return HdlCall(_o, [self.as_hdl_operand(o2, i, op)
+            return HdlOp(_o, [self.as_hdl_operand(o2, i, op)
                                 for i, o2 in enumerate(ops)])

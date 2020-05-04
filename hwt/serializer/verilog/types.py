@@ -1,5 +1,5 @@
-from hdlConvertor.hdlAst._expr import HdlTypeAuto, HdlName, HdlCall,\
-    HdlBuiltinFn
+from hdlConvertor.hdlAst._expr import HdlTypeAuto, HdlValueId, HdlOp,\
+    HdlOpType
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index,\
     hdl_downto
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
@@ -24,13 +24,13 @@ class ToHdlAstVerilog_types():
         sigType = self.signalType
 
         if typ == INT:
-            t = HdlName("int", obj=int)
+            t = HdlValueId("int", obj=int)
         elif sigType is SIGNAL_TYPE.PORT_WIRE:
             t = HdlTypeAuto
         elif sigType is SIGNAL_TYPE.REG or sigType is SIGNAL_TYPE.PORT_REG:
-            t = HdlName("reg", obj=LanguageKeyword())
+            t = HdlValueId("reg", obj=LanguageKeyword())
         elif sigType is SIGNAL_TYPE.WIRE:
-            t = HdlName("wire", obj=LanguageKeyword())
+            t = HdlValueId("wire", obj=LanguageKeyword())
         else:
             raise ValueError(sigType)
 
@@ -47,14 +47,14 @@ class ToHdlAstVerilog_types():
         else:
             w = None
 
-        return HdlCall(HdlBuiltinFn.PARAMETRIZATION, [t, w, is_signed])
+        return HdlOp(HdlOpType.PARAMETRIZATION, [t, w, is_signed])
 
     def as_hdl_HdlType_array(self, typ: HArray, declaration=False):
         if declaration:
             raise NotImplementedError()
         else:
             _int = self.as_hdl_int
-            size = HdlCall(HdlBuiltinFn.DOWNTO, [_int(0),
+            size = HdlOp(HdlOpType.DOWNTO, [_int(0),
                                                  _int(int(typ.size) - 1)])
             return hdl_index(self.as_hdl_HdlType(typ.element_t), size)
 

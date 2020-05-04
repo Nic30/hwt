@@ -1,7 +1,7 @@
 from copy import copy
 from typing import Optional, List, Dict
 
-from hdlConvertor.hdlAst._structural import HdlComponentInst
+from hdlConvertor.hdlAst._structural import HdlCompInst
 from hwt.doc_markers import internal
 from hwt.hdl.portItem import HdlPortItem
 from hwt.synthesizer.dummyPlatform import DummyPlatform
@@ -247,7 +247,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
 @internal
 def Unit_checkCompInstances(u: Unit):
     cInstances = [o for o in u._ctx.arch.objs
-                  if isinstance(o, HdlComponentInst)]
+                  if isinstance(o, HdlCompInst)]
     cInst_cnt = len(cInstances)
     unit_cnt = len(u._units)
     if cInst_cnt != unit_cnt:

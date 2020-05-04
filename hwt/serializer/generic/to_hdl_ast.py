@@ -1,10 +1,10 @@
 from copy import copy
 from typing import Optional
 
-from hdlConvertor.hdlAst import iHdlStatement, iHdlObj, HdlVariableDef, \
-    HdlName, HdlTypeType, iHdlExpr, HdlStmBlock, HdlStmIf, HdlStmCase,\
+from hdlConvertor.hdlAst import iHdlStatement, iHdlObj, HdlIdDef, \
+    HdlValueId, HdlTypeType, iHdlExpr, HdlStmBlock, HdlStmIf, HdlStmCase,\
     HdlStmProcess, HdlStmAssign, HdlModuleDef, HdlModuleDec,\
-    HdlComponentInst, HdlEnumDef
+    HdlCompInst, HdlEnumDef
 from hdlConvertor.hdlAst._statements import ALL_STATEMENT_CLASSES
 from hdlConvertor.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import \
@@ -108,7 +108,7 @@ class ToHdlAst():
     def as_hdl_HdlType_array(self, typ: HArray, declaration=False):
         ns = self.name_scope
         if declaration:
-            dec = HdlVariableDef()
+            dec = HdlIdDef()
             dec.type = HdlTypeType
             if self.does_type_requires_extra_def(typ.element_t, ()):
                 # problem there is that we do not have a list of already defined types
@@ -122,7 +122,7 @@ class ToHdlAst():
             return dec
         else:
             name = ns.get_object_name(typ)
-            return HdlName(name, obj=typ)
+            return HdlValueId(name, obj=typ)
 
     def as_hdl_HdlType_enum(self, typ: HEnum, declaration=False):
         ns = self.name_scope
@@ -132,14 +132,14 @@ class ToHdlAst():
             e.name = ns.checked_name(typ.name, typ)
             e.values = [(ns.checked_name(n, getattr(typ, n)), None)
                         for n in typ._allValues]
-            dec = HdlVariableDef()
+            dec = HdlIdDef()
             dec.type = HdlTypeType
             dec.value = e
             dec.name = e.name
             return dec
         else:
             name = ns.get_object_name(typ)
-            return HdlName(name, obj=None)
+            return HdlValueId(name, obj=None)
 
     def as_hdl_HdlType_slice(self, typ: Slice, declaration=False):
         raise NotImplementedError(self)
@@ -272,12 +272,12 @@ class ToHdlAst():
         pm = hdl_map_asoc(intern_hdl, outer_hdl)
         return pm
 
-    def as_hdl_HdlComponentInst(self, o: HdlComponentInst) -> HdlComponentInst:
+    def as_hdl_HdlCompInst(self, o: HdlCompInst) -> HdlCompInst:
         new_o = copy(o)
         param_map = []
         for p in o.param_map:
-            assert isinstance(p, HdlVariableDef), p
-            pm = hdl_map_asoc(HdlName(p.name, obj=p), self.as_hdl(p.value))
+            assert isinstance(p, HdlIdDef), p
+            pm = hdl_map_asoc(HdlValueId(p.name, obj=p), self.as_hdl(p.value))
             param_map.append(pm)
         new_o.param_map = param_map
 
@@ -288,12 +288,12 @@ class ToHdlAst():
         new_o.port_map = port_map
         return new_o
 
-    def as_hdl_GenericItem(self, o: HdlVariableDef):
+    def as_hdl_GenericItem(self, o: HdlIdDef):
         assert not self.does_type_requires_extra_def(o.type, tuple())
         return self.as_hdl_HdlModuleDef_variable(o, None, None, None, None, None)
 
     def as_hdl_HdlPortItem(self, o: HdlPortItem):
-        var = HdlVariableDef()
+        var = HdlIdDef()
         var.direction = HWT_TO_HDLCONVEROTR_DIRECTION[o.direction]
         s = o.getInternSig()
         var.name = s.name
@@ -380,7 +380,7 @@ class ToHdlAst():
         hdl_variables = _hdl_variables
         processes = [self.as_hdl_HdlStatementBlock(p) for p in processes]
 
-        component_insts = [self.as_hdl_HdlComponentInst(c)
+        component_insts = [self.as_hdl_HdlCompInst(c)
                            for c in component_insts]
         extraVarsInit = self.as_hdl_extraVarsInit(extraVars)
         new_m.objs = hdl_types + hdl_variables + extraVarsInit + \

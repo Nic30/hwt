@@ -1,9 +1,9 @@
 from copy import copy
 from typing import Optional
 
-from hdlConvertor.hdlAst._defs import HdlVariableDef
-from hdlConvertor.hdlAst._expr import HdlName, HdlCall, HdlBuiltinFn
-from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlComponentInst
+from hdlConvertor.hdlAst._defs import HdlIdDef
+from hdlConvertor.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
+from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlCompInst
 from hdlConvertor.to.systemc.keywords import SYSTEMC_KEYWORDS
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.portItem import HdlPortItem
@@ -24,12 +24,12 @@ class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
     Serialized used to convert HWT design to SystemC code
     """
     _keywords_dict = {kw: LanguageKeyword() for kw in SYSTEMC_KEYWORDS}
-    sc_in_clk = HdlName("sc_in_clk", obj=LanguageKeyword())
-    sc_out_clk = HdlName("sc_out_clk", obj=LanguageKeyword())
-    sc_inout_clk = HdlName("sc_inout_clk", obj=LanguageKeyword())
-    sc_in = HdlName("sc_in", obj=LanguageKeyword())
-    sc_out = HdlName("sc_out", obj=LanguageKeyword())
-    sc_inout = HdlName("sc_inout", obj=LanguageKeyword())
+    sc_in_clk = HdlValueId("sc_in_clk", obj=LanguageKeyword())
+    sc_out_clk = HdlValueId("sc_out_clk", obj=LanguageKeyword())
+    sc_inout_clk = HdlValueId("sc_inout_clk", obj=LanguageKeyword())
+    sc_in = HdlValueId("sc_in", obj=LanguageKeyword())
+    sc_out = HdlValueId("sc_out", obj=LanguageKeyword())
+    sc_inout = HdlValueId("sc_inout", obj=LanguageKeyword())
 
     def __init__(self, name_scope: Optional[NameScope]=None):
         ToHdlAst.__init__(self, name_scope=name_scope)
@@ -63,9 +63,9 @@ class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
             else:
                 raise ValueError(d)
             t = self.as_hdl_HdlType(o._dtype)
-            t = HdlCall(HdlBuiltinFn.PARAMETRIZATION, [pt, t])
+            t = HdlOp(HdlOpType.PARAMETRIZATION, [pt, t])
 
-        var = HdlVariableDef()
+        var = HdlIdDef()
         var.direction = HWT_TO_HDLCONVEROTR_DIRECTION[o.direction]
         s = o.getInternSig()
         var.name = s.name
@@ -73,7 +73,7 @@ class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
         var.type = t
         return var
 
-    def as_hdl_HdlComponentInst(self, o: HdlComponentInst) -> HdlComponentInst:
+    def as_hdl_HdlCompInst(self, o: HdlCompInst) -> HdlCompInst:
         new_o = copy(o)
         new_o.param_map = []
 

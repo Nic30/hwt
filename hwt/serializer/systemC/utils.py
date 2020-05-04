@@ -3,7 +3,7 @@ from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statement import HdlStatement
 from hwt.pyUtils.arrayQuery import arr_any
 from ipCorePackager.constants import DIRECTION
-from hdlConvertor.hdlAst._defs import HdlVariableDef
+from hdlConvertor.hdlAst._defs import HdlIdDef
 from hwt.synthesizer.param import Param
 
 
@@ -11,7 +11,7 @@ def systemCTypeOfSig(s):
     """
     Check if is register or wire
     """
-    if isinstance(s, HdlVariableDef):
+    if isinstance(s, HdlIdDef):
         s = s.origin
 
     if isinstance(s, HdlPortItem):

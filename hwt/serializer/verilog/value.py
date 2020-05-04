@@ -1,5 +1,5 @@
-from hdlConvertor.hdlAst._expr import HdlIntValue, HdlBuiltinFn,\
-    HdlCall
+from hdlConvertor.hdlAst._expr import HdlValueInt, HdlOpType,\
+    HdlOp
 from hdlConvertor.to.hdlUtils import bit_string
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_downto,\
     hdl_call
@@ -20,8 +20,8 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 class ToHdlAstVerilog_Value(ToHdlAst_Value):
 
-    # TRUE = HdlName("true", obj=LanguageKeyword())
-    # FALSE = HdlName("false", obj=LanguageKeyword())
+    # TRUE = HdlValueId("true", obj=LanguageKeyword())
+    # FALSE = HdlValueId("false", obj=LanguageKeyword())
 
     def as_hdl_BoolVal(self, val: BitsVal):
         return self.as_hdl_int(val.val)
@@ -40,7 +40,7 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
     def as_hdl_HEnumVal(self, val: HEnumVal):
         i = val._dtype._allValues.index(val.val)
         assert i >= 0
-        return HdlIntValue(i, None, None)
+        return HdlValueInt(i, None, None)
 
     def as_hdl_SignalItem(self, si, declaration=False):
         if declaration:
@@ -56,14 +56,14 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
 
     def sensitivityListItem(self, item, anyIsEventDependent):
         if isinstance(item, Operator):
-            return HdlCall(HWT_TO_HDLCONVEROTR_OPS[item.operator],
+            return HdlOp(HWT_TO_HDLCONVEROTR_OPS[item.operator],
                            [self.as_hdl(item.operands[0]), ])
         elif anyIsEventDependent:
             if item._dtype.negated:
-                op = HdlBuiltinFn.FALLING
+                op = HdlOpType.FALLING
             else:
-                op = HdlBuiltinFn.RISING
-            return HdlCall(op, [self.as_hdl(item), ])
+                op = HdlOpType.RISING
+            return HdlOp(op, [self.as_hdl(item), ])
 
         return self.as_hdl(item)
 

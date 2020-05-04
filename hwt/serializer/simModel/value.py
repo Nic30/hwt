@@ -1,7 +1,7 @@
 from typing import Union
 
-from hdlConvertor.hdlAst._defs import HdlVariableDef
-from hdlConvertor.hdlAst._expr import HdlName, HdlCall, HdlBuiltinFn
+from hdlConvertor.hdlAst._defs import HdlIdDef
+from hdlConvertor.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
     hdl_getattr
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
@@ -21,26 +21,26 @@ from pyMathBitPrecise.bits3t import Bits3val, Bits3t
 
 
 class ToHdlAstSimModel_value(ToHdlAst_Value):
-    Bits3val = HdlName("Bits3val", obj=Bits3val)
-    Bits3t = HdlName("Bits3t", obj=Bits3t)
-    SELF = HdlName("self", obj=LanguageKeyword())
-    Array3val = HdlName("Array3val", obj=Array3val)
-    SLICE = HdlName("slice", obj=slice)
-    TRUE = HdlName("True", obj=True)
-    FALSE = HdlName("False", obj=False)
-    Bits3val = HdlName("Bits3val", obj=Bits3val)
-    ABits3t = HdlName("Bits3t", obj=Bits3t)
-    SELF_IO = hdl_getattr(HdlName("self", obj=LanguageKeyword()), "io")
-    CONCAT = HdlName("Concat", obj=Concat)
+    Bits3val = HdlValueId("Bits3val", obj=Bits3val)
+    Bits3t = HdlValueId("Bits3t", obj=Bits3t)
+    SELF = HdlValueId("self", obj=LanguageKeyword())
+    Array3val = HdlValueId("Array3val", obj=Array3val)
+    SLICE = HdlValueId("slice", obj=slice)
+    TRUE = HdlValueId("True", obj=True)
+    FALSE = HdlValueId("False", obj=False)
+    Bits3val = HdlValueId("Bits3val", obj=Bits3val)
+    ABits3t = HdlValueId("Bits3t", obj=Bits3t)
+    SELF_IO = hdl_getattr(HdlValueId("self", obj=LanguageKeyword()), "io")
+    CONCAT = HdlValueId("Concat", obj=Concat)
     op_transl_dict = {
         **HWT_TO_HDLCONVEROTR_OPS,
-        AllOps.INDEX: HdlBuiltinFn.INDEX,
+        AllOps.INDEX: HdlOpType.INDEX,
     }
 
     def is_suitable_for_const_extract(self, val: Value):
         return not isinstance(val._dtype, HEnum) or val.vld_mask == 0
 
-    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlVariableDef],
+    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlIdDef],
                           declaration=False):
         if not declaration and not si.hidden:
             if si._const:
@@ -139,5 +139,5 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
                             [self.as_hdl_Value(ops[1]), ])
         else:
             o = self.op_transl_dict[o]
-            return HdlCall(o, [self.as_hdl_Value(o2)
+            return HdlOp(o, [self.as_hdl_Value(o2)
                                for o2 in ops])

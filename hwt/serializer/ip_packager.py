@@ -21,7 +21,7 @@ from ipCorePackager.intfIpMeta import VALUE_RESOLVE
 from io import StringIO
 from hwt.serializer.store_manager import SaveToFilesFlat
 from hdlConvertor.to.vhdl.vhdl2008 import ToVhdl2008
-from hdlConvertor.hdlAst._defs import HdlVariableDef
+from hdlConvertor.hdlAst._defs import HdlIdDef
 
 
 class ToHdlAstVivadoTclExpr(ToHdlAstVhdl2008):
@@ -78,7 +78,7 @@ class IpPackager(IpCorePackager):
         return store.files
 
     @internal
-    def paramToIpValue(self, idPrefix: str, g: HdlVariableDef, resolve) -> Value:
+    def paramToIpValue(self, idPrefix: str, g: HdlIdDef, resolve) -> Value:
         val = Value()
         val.id = idPrefix + g.name
         if resolve is not VALUE_RESOLVE.NONE:
@@ -115,11 +115,11 @@ class IpPackager(IpCorePackager):
         return val
 
     @internal
-    def getParamPhysicalName(self, p: HdlVariableDef):
+    def getParamPhysicalName(self, p: HdlIdDef):
         return p.name
 
     @internal
-    def getParamType(self, p: HdlVariableDef) -> HdlType:
+    def getParamType(self, p: HdlIdDef) -> HdlType:
         assert p.type in [INT, BOOL, STR], p
         return p.type
 

@@ -1,9 +1,9 @@
 import re
 
-from hdlConvertor.hdlAst._expr import HdlName, HdlAll
+from hdlConvertor.hdlAst._expr import HdlValueId, HdlAll
 from hdlConvertor.hdlAst._statements import HdlImport
 from hdlConvertor.hdlAst._structural import HdlLibrary, HdlModuleDef,\
-    HdlComponentInst, HdlContext
+    HdlCompInst, HdlContext
 from hdlConvertor.to.vhdl.keywords import VHLD2008_KEYWORDS
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.pyUtils.arrayQuery import groupedby
@@ -22,9 +22,9 @@ class VhdlNameScope(NameScope):
         return NameScope.checked_name(self, actualName, actualObj)
 
 
-IEEE = HdlName("IEEE", obj=LanguageKeyword())
-std_logic_1164 = HdlName("std_logic_1164", obj=LanguageKeyword())
-numeric_std = HdlName("numeric_std", obj=LanguageKeyword())
+IEEE = HdlValueId("IEEE", obj=LanguageKeyword())
+std_logic_1164 = HdlValueId("std_logic_1164", obj=LanguageKeyword())
+numeric_std = HdlValueId("numeric_std", obj=LanguageKeyword())
 
 
 class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
@@ -55,7 +55,7 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         _o = super(ToHdlAstVhdl2008, self).as_hdl_HdlModuleDef(o)
         component_insts = []
         for c in _o.objs:
-            if isinstance(c, HdlComponentInst):
+            if isinstance(c, HdlCompInst):
                 component_insts.append(c)
 
         # select comonent instances whith an unique module_name
@@ -74,6 +74,6 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         res.objs.append(_o)
         return res
 
-    def as_hdl_HldComponent(self, o: HdlComponentInst):
+    def as_hdl_HldComponent(self, o: HdlCompInst):
         c = self.as_hdl_HdlModuleDec(o.origin._ctx.ent)
         return c

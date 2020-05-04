@@ -1,8 +1,8 @@
 from copy import copy
 from typing import Optional, List
 
-from hdlConvertor.hdlAst._expr import HdlName, HdlIntValue, HdlCall,\
-    HdlBuiltinFn
+from hdlConvertor.hdlAst._expr import HdlValueId, HdlValueInt, HdlOp,\
+    HdlOpType
 from hdlConvertor.hdlAst._statements import HdlStmIf, HdlStmAssign,\
     HdlStmProcess, HdlStmBlock
 from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlModuleDef
@@ -50,14 +50,14 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         intern, outer = o.getInternSig(), o.getOuterSig()
         assert not intern.hidden, intern
         assert not outer.hidden, outer
-        intern_hdl = HdlName(intern.name, obj=intern)
-        outer_hdl = HdlName(outer.name, obj=outer)
+        intern_hdl = HdlValueId(intern.name, obj=intern)
+        outer_hdl = HdlValueId(outer.name, obj=outer)
         pm = hdl_map_asoc(intern_hdl, outer_hdl)
         return pm
 
     def as_hdl_Assignment(self, a: Assignment):
         dst, dst_indexes, src = self._as_hdl_Assignment_auto_conversions(a)
-        ev = HdlIntValue(int(a._is_completly_event_dependent), None, None)
+        ev = HdlValueInt(int(a._is_completly_event_dependent), None, None)
         if dst_indexes is not None:
             src = (src, dst_indexes, ev)
         else:
@@ -92,9 +92,9 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         constructs condition evaluation statement
         c, cVld = sim_eval_cond(cond)
         """
-        c, cVld = HdlName("c", obj=LanguageKeyword()), HdlName("cVld", obj=LanguageKeyword())
+        c, cVld = HdlValueId("c", obj=LanguageKeyword()), HdlValueId("cVld", obj=LanguageKeyword())
         cond = self.as_hdl_cond(cond, True)
-        cond_eval = hdl_call(HdlName("sim_eval_cond", obj=sim_eval_cond), [cond])
+        cond_eval = hdl_call(HdlValueId("sim_eval_cond", obj=sim_eval_cond), [cond])
         cond_eval = HdlStmAssign(cond_eval, [c, cVld])
         cond_eval.is_blocking = True
         return c, cVld, cond_eval
@@ -126,7 +126,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         res = HdlStmBlock()
         res.body = [cond_eval, _if]
 
-        _if.cond = HdlCall(HdlBuiltinFn.NEG_LOG, [cVld, ])
+        _if.cond = HdlOp(HdlOpType.NEG_LOG, [cVld, ])
         _if.if_true = invalidate_block
 
         if_true = self.as_hdl_statements(ifc.ifTrue)
@@ -135,7 +135,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         for eif_c, eif_stms in elifs:
             c, cVld, cond_eval = self.as_hdl_IfContainer_cond_eval(eif_c)
             newIf = HdlStmIf()
-            newIf.cond = HdlCall(HdlBuiltinFn.NEG_LOG, [cVld, ])
+            newIf.cond = HdlOp(HdlOpType.NEG_LOG, [cVld, ])
             newIf.if_true = invalidate_block
 
             if_true = self.as_hdl_statements(eif_stms)
@@ -178,15 +178,15 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         if isinstance(item, Operator):
             op = item.operator
             if op == AllOps.RISING_EDGE:
-                sens = HdlBuiltinFn.RISING
+                sens = HdlOpType.RISING
             elif op == AllOps.FALLING_EDGE:
-                sens = HdlBuiltinFn.FALLING
+                sens = HdlOpType.FALLING
             else:
                 raise TypeError("This is not an event sensitivity", op)
 
-            return HdlCall(sens, [HdlName(item.operands[0].name)])
+            return HdlOp(sens, [HdlValueId(item.operands[0].name)])
         else:
-            return HdlName(item.name)
+            return HdlValueId(item.name)
 
     def has_to_be_process(self, proc):
         return True
@@ -196,7 +196,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
 
     def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> HdlStmProcess:
         p = ToHdlAst.as_hdl_HdlStatementBlock(self, proc)
-        self.stm_outputs[p] = [HdlName(i.name, obj=i) for i in proc._outputs]
+        self.stm_outputs[p] = [HdlValueId(i.name, obj=i) for i in proc._outputs]
         return p
 
     def as_hdl_extraVarsInit(self, extraVars):

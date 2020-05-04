@@ -1,5 +1,5 @@
-from hdlConvertor.hdlAst import HdlName, HdlIntValue, HdlCall,\
-    HdlBuiltinFn
+from hdlConvertor.hdlAst import HdlValueId, HdlValueInt, HdlOp,\
+    HdlOpType
 from hdlConvertor.to.hdlUtils import bit_string
 from hdlConvertor.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.operator import Operator
@@ -15,10 +15,10 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
 
-    TRUE = HdlName("TRUE", obj=LanguageKeyword())
-    FALSE = HdlName("FALSE", obj=LanguageKeyword())
-    #TO_UNSIGNED = HdlName("TO_UNSIGNED", obj=LanguageKeyword())
-    #TO_SIGNED = HdlName("TO_SIGNED", obj=LanguageKeyword())
+    TRUE = HdlValueId("TRUE", obj=LanguageKeyword())
+    FALSE = HdlValueId("FALSE", obj=LanguageKeyword())
+    #TO_UNSIGNED = HdlValueId("TO_UNSIGNED", obj=LanguageKeyword())
+    #TO_SIGNED = HdlValueId("TO_SIGNED", obj=LanguageKeyword())
 
     def as_hdl_cond(self, c, forceBool):
         assert isinstance(c, (RtlSignalBase, Value)), c
@@ -33,7 +33,7 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
 
     def as_hdl_HEnumVal(self, val: HEnumVal):
         name = self.name_scope.get_object_name(val)
-        return HdlName(name, obj=val)
+        return HdlValueId(name, obj=val)
 
     def as_hdl_HArrayVal(self, val):
         return [self.as_hdl_Value(v) for v in val]
@@ -57,10 +57,10 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
             cast = self.SIGNED
         else:
             cast = self.UNSIGNED
-        return HdlCall(HdlBuiltinFn.APOSTROPHE, [cast, v])
+        return HdlOp(HdlOpType.APOSTROPHE, [cast, v])
 
         #else:
-        #    v = HdlIntValue(v, None, None)
+        #    v = HdlValueInt(v, None, None)
         #
         #    if signed is None:
         #        return v
@@ -68,7 +68,7 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
         #        cast_fn = self.TO_SIGNED
         #    else:
         #        cast_fn = self.TO_UNSIGNED
-        #    return hdl_call(cast_fn, [v, HdlIntValue(width, None, None)])
+        #    return hdl_call(cast_fn, [v, HdlValueInt(width, None, None)])
 
     def as_hdl_BoolVal(self, val: BitsVal):
         if val.val:
@@ -81,13 +81,13 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
         v = super(ToHdlAstVhdl2008_Value, self).as_hdl_BitsVal(val)
         # handle '1' vs "1" difference (bit literal vs vector)
         if not t.force_vector and t.bit_length() == 1 and t != BOOL:
-            if isinstance(v, HdlIntValue):
+            if isinstance(v, HdlValueInt):
                 v.base = 256
             else:
                 # assert is cast
-                assert isinstance(v, HdlCall) and v.fn == HdlBuiltinFn.CALL, v
+                assert isinstance(v, HdlOp) and v.fn == HdlOpType.CALL, v
                 _v = v.ops[1]
-                if isinstance(_v, HdlIntValue):
+                if isinstance(_v, HdlValueInt):
                     _v.base = 256
                 else:
                     raise NotImplementedError()
@@ -97,11 +97,11 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
         upper = val.val.start
         if int(val.val.step) == -1:
             if isinstance(upper, Value):
-                upper = HdlIntValue(int(upper) - 1, None, None)
+                upper = HdlValueInt(int(upper) - 1, None, None)
             else:
-                upper = HdlCall(HdlBuiltinFn.SUB, [self.as_hdl_Value(upper),
-                                                   HdlIntValue(1, None, None)])
+                upper = HdlOp(HdlOpType.SUB, [self.as_hdl_Value(upper),
+                                                   HdlValueInt(1, None, None)])
         else:
             raise NotImplementedError(val.val.step)
 
-        return HdlCall(HdlBuiltinFn.DOWNTO, [upper, self.as_hdl(val.val.stop)])
+        return HdlOp(HdlOpType.DOWNTO, [upper, self.as_hdl(val.val.stop)])

@@ -1,8 +1,8 @@
 from typing import List, Optional, Union
 
-from hdlConvertor.hdlAst._defs import HdlVariableDef
+from hdlConvertor.hdlAst._defs import HdlIdDef
 from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
-    HdlComponentInst
+    HdlCompInst
 from hwt.code import If
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT
@@ -18,7 +18,7 @@ from hwt.synthesizer.rtlLevel.remove_unconnected_signals import removeUnconnecte
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 from hwt.synthesizer.rtlLevel.statements_to_HdlStatementBlocks import\
     statements_to_HdlStatementBlocks
-from hdlConvertor.hdlAst._expr import HdlName
+from hdlConvertor.hdlAst._expr import HdlValueId
 from hwt.doc_markers import internal
 from hwt.serializer.utils import maxStmId
 
@@ -146,7 +146,7 @@ class RtlNetlist():
         # create generics
         for p in sorted(params, key=lambda x: x._name):
             hdl_val = p.get_hdl_value()
-            v = HdlVariableDef()
+            v = HdlIdDef()
             v.origin = p
             v.name = p.hdl_name = ns.checked_name(p._name, p)
             v.type = hdl_val._dtype
@@ -174,7 +174,7 @@ class RtlNetlist():
         ns = store_manager.name_scope
         mdef = HdlModuleDef()
         mdef.dec = self.ent
-        mdef.module_name = HdlName(self.ent.name, obj=self.ent)
+        mdef.module_name = HdlValueId(self.ent.name, obj=self.ent)
         mdef.name = "rtl"
 
         processes = sorted(
@@ -186,7 +186,7 @@ class RtlNetlist():
                         if not s.hidden and
                         s not in self.interfaces.keys()),
                         key=lambda x: (x.name, x._instId)):
-                v = HdlVariableDef()
+                v = HdlIdDef()
                 v.origin = s
                 s.name = v.name = ns.checked_name(s.name, s)
                 v.type = s._dtype
@@ -199,10 +199,10 @@ class RtlNetlist():
         mdef.objs.extend(processes)
         # instantiate subUnits in architecture
         for u in self.subUnits:
-            ci = HdlComponentInst()
+            ci = HdlCompInst()
             ci.origin = u
-            ci.module_name = HdlName(u._ctx.ent.name, obj=u._ctx.ent)
-            ci.name = HdlName(ns.checked_name(u._name + "_inst", ci), obj=u)
+            ci.module_name = HdlValueId(u._ctx.ent.name, obj=u._ctx.ent)
+            ci.name = HdlValueId(ns.checked_name(u._name + "_inst", ci), obj=u)
             e = u._ctx.ent
 
             ci.param_map.extend(e.params)

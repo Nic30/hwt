@@ -1,8 +1,8 @@
 from copy import copy
 from typing import Union
 
-from hdlConvertor.hdlAst._defs import HdlVariableDef
-from hdlConvertor.hdlAst._expr import HdlName, HdlIntValue, HdlDirection
+from hdlConvertor.hdlAst._defs import HdlIdDef
+from hdlConvertor.hdlAst._expr import HdlValueId, HdlValueInt, HdlDirection
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT, BOOL
@@ -57,7 +57,7 @@ class ToHdlAst_Value():
 
     def as_hdl_int(self, val: int):
         assert isinstance(val, int), val
-        return HdlIntValue(val, None, None)
+        return HdlValueInt(val, None, None)
 
     def Value_try_extract_as_const(self, val):
         return None
@@ -78,14 +78,14 @@ class ToHdlAst_Value():
     def as_hdl_StringVal(self, val):
         return val.val
 
-    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlVariableDef],
+    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlIdDef],
                           declaration=False):
         if declaration:
-            if isinstance(si, HdlVariableDef):
+            if isinstance(si, HdlIdDef):
                 var = copy(si)
                 si = si.origin
             else:
-                var = HdlVariableDef()
+                var = HdlIdDef()
                 var.name = si.name
                 var.origin = si
                 var.value = si._val
@@ -138,4 +138,4 @@ class ToHdlAst_Value():
             if si.hidden and hasattr(si, "origin"):
                 # hidden signal, render it's driver instead
                 return self.as_hdl(si.origin)
-            return HdlName(si.name, obj=si)
+            return HdlValueId(si.name, obj=si)

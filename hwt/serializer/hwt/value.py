@@ -1,8 +1,8 @@
 from typing import Union
 
-from hdlConvertor.hdlAst._defs import HdlVariableDef
-from hdlConvertor.hdlAst._expr import HdlIntValue, HdlCall, HdlBuiltinFn,\
-    HdlName
+from hdlConvertor.hdlAst._defs import HdlIdDef
+from hdlConvertor.hdlAst._expr import HdlValueInt, HdlOp, HdlOpType,\
+    HdlValueId
 from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
     hdl_call
 from hdlConvertor.translate.common.name_scope import ObjectForNameNotFound
@@ -19,8 +19,8 @@ from hwt.hdl.value import Value
 
 
 class ToHdlAstHwt_value(ToHdlAst_Value):
-    NONE = HdlName("None")
-    SLICE = HdlName("SLICE", obj=SLICE)
+    NONE = HdlValueId("None")
+    SLICE = HdlValueId("SLICE", obj=SLICE)
 
     def is_suitable_for_const_extract(self, val: Value):
         # full valid values can be represented as int and do not have any
@@ -31,21 +31,21 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
         isFullVld = val._is_full_valid()
         if not self._valueWidthRequired:
             if isFullVld:
-                return HdlIntValue(val.val, None, 16)
+                return HdlValueInt(val.val, None, 16)
             elif val.vld_mask == 0:
                 return self.NONE
 
         t = self.as_hdl_HdlType_bits(val._dtype, declaration=False)
         c = hdl_getattr(t, "from_py")
-        args = [HdlIntValue(val.val, None, 16), ]
+        args = [HdlValueInt(val.val, None, 16), ]
         if not isFullVld:
-            args.append(HdlIntValue(val.vld_mask, None, 16))
+            args.append(HdlValueInt(val.vld_mask, None, 16))
 
         return hdl_call(c, args)
 
-    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlVariableDef], declaration=False):
+    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlIdDef], declaration=False):
         if declaration:
-            if isinstance(si, HdlVariableDef):
+            if isinstance(si, HdlIdDef):
                 si.type = self.as_hdl_HdlType(si.type)
                 if si.value is not None:
                     si.value = self.as_hdl_Value(si.value)
@@ -59,7 +59,7 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
             if si.hidden and hasattr(si, "origin"):
                 return self.as_hdl(si.origin)
             else:
-                return HdlName(si.name, obj=si)
+                return HdlValueId(si.name, obj=si)
 
     def as_hdl_DictVal(self, val):
         return ToHdlAstSimModel_value.as_hdl_DictVal(self, val)
@@ -89,10 +89,10 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
 
     def as_hdl_SliceVal(self, val: SliceVal):
         if val._is_full_valid():
-            return HdlCall(
-                HdlBuiltinFn.DOWNTO, [
-                    HdlIntValue(int(val.val.start), None, None),
-                    HdlIntValue(int(val.val.stop), None, None)
+            return HdlOp(
+                HdlOpType.DOWNTO, [
+                    HdlValueInt(int(val.val.start), None, None),
+                    HdlValueInt(int(val.val.stop), None, None)
                 ])
         else:
             raise NotImplementedError()
@@ -120,7 +120,7 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
                 else:
                     raise
 
-            return hdl_getattr(HdlName(t_name, obj=val._dtype), name)
+            return hdl_getattr(HdlValueId(t_name, obj=val._dtype), name)
         else:
-            return hdl_call(hdl_getattr(HdlName(t_name, obj=val._dtype), "from_py"),
+            return hdl_call(hdl_getattr(HdlValueId(t_name, obj=val._dtype), "from_py"),
                             [None, ])

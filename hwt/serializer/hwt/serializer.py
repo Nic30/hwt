@@ -1,7 +1,7 @@
 
 from typing import Optional
 
-from hdlConvertor.hdlAst._expr import HdlName
+from hdlConvertor.hdlAst._expr import HdlValueId
 from hdlConvertor.hdlAst._structural import HdlModuleDef
 from hdlConvertor.to.hwt.keywords import HWT_KEYWORDS
 from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
@@ -52,6 +52,6 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
                 raise TypeError("This is not an event sensitivity", op)
 
             s = item.operands[0]
-            return [sens, HdlName(s.name, obj=s)]
+            return [sens, HdlValueId(s.name, obj=s)]
         else:
-            return HdlName(item.name, obj=item)
+            return HdlValueId(item.name, obj=item)
