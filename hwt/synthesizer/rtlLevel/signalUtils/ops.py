@@ -264,7 +264,7 @@ class RtlSignalOps():
             # simplification of previous exception traceback
             e_simplified = copy(e)
             raise e_simplified
-        
+
     def __add__(self, other):
         try:
             return self.naryOp(AllOps.ADD, tv(self).__add__, other)
