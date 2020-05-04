@@ -26,15 +26,16 @@ setup(name="hwt",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
         "Topic :: System :: Hardware",
         "Topic :: System :: Emulators",
         "Topic :: Utilities"],
       install_requires=[
-          "jinja2",  # template engine
+          "HdlConvertorAst>=0.1",  # conversions to SystemVerilog, VHDL
           "ipCorePackager>=0.4",  # generator of IPcore packages (IP-xact, ...)
           "pycocotb>=0.5",  # simulator API
-          "pyDigitalWaveTools>=0.4",  # simulator output dumping
+          "pyDigitalWaveTools>=0.4",  # simulator output dump
           "pyMathBitPrecise>=0.2",  # math with specific bit precision
       ],
       license="MIT",
