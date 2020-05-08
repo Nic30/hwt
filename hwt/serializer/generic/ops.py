@@ -1,4 +1,4 @@
-from hdlConvertor.hdlAst._expr import HdlOpType
+from hdlConvertorAst.hdlAst._expr import HdlOpType
 from hwt.hdl.operatorDefs import AllOps
 
 

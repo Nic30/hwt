@@ -1,9 +1,9 @@
-from hdlConvertor.hdlAst._defs import HdlIdDef
-from hdlConvertor.hdlAst._expr import HdlValueId, HdlOp, HdlOpType,\
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType,\
     HdlTypeType
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index,\
     hdl_downto
-from hdlConvertor.translate.common.name_scope import LanguageKeyword
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT

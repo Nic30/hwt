@@ -1,6 +1,6 @@
 from copy import copy
 
-from hdlConvertor.hdlAst._statements import HdlStmAssign
+from hdlConvertorAst.hdlAst._statements import HdlStmAssign
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.ifContainter import IfContainer

@@ -1,7 +1,7 @@
-from hdlConvertor.hdlAst import HdlValueId, HdlValueInt, HdlOp,\
+from hdlConvertorAst.hdlAst import HdlValueId, HdlValueInt, HdlOp,\
     HdlOpType
-from hdlConvertor.to.hdlUtils import bit_string
-from hdlConvertor.translate.common.name_scope import LanguageKeyword
+from hdlConvertorAst.to.hdlUtils import bit_string
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.operator import Operator
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bitsVal import BitsVal

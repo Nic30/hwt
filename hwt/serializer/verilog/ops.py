@@ -1,8 +1,8 @@
 from typing import Union
 
-from hdlConvertor.hdlAst._expr import HdlValueId, HdlOpType, HdlOp
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call
-from hdlConvertor.translate.common.name_scope import LanguageKeyword
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOpType, HdlOp
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT, INT

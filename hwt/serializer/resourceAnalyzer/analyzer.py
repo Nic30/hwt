@@ -1,7 +1,7 @@
 from itertools import chain
 
-from hdlConvertor.hdlAst._defs import HdlIdDef
-from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
     HdlCompInst
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment

@@ -6,7 +6,7 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
 from hwt.synthesizer.param import Param
-from hdlConvertor.translate.common.name_scope import WithNameScope
+from hdlConvertorAst.translate.common.name_scope import WithNameScope
 
 
 @internal

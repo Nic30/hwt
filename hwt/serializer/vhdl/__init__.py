@@ -1,7 +1,7 @@
 """
 VHDL serializer serializes HDL objects to VHDL code.
 """
-from hdlConvertor.to.vhdl.vhdl2008 import ToVhdl2008
+from hdlConvertorAst.to.vhdl.vhdl2008 import ToVhdl2008
 from hwt.serializer.vhdl.serializer import ToHdlAstVhdl2008
 from hwt.serializer.xdc.serializer import XdcSerializer
 

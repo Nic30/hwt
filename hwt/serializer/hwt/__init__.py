@@ -1,7 +1,7 @@
 """
 Hwt serializer converts  HDL objects back to code in python for hwt.
 """
-from hdlConvertor.to.hwt._main import ToHwt
+from hdlConvertorAst.to.hwt._main import ToHwt
 from hwt.serializer.hwt.serializer import ToHdlAstHwt
 from hwt.serializer.serializer_config import DummySerializerConfig
 

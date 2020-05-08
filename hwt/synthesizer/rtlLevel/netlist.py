@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
-from hdlConvertor.hdlAst._defs import HdlIdDef
-from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
     HdlCompInst
 from hwt.code import If
 from hwt.hdl.operatorDefs import AllOps
@@ -18,7 +18,7 @@ from hwt.synthesizer.rtlLevel.remove_unconnected_signals import removeUnconnecte
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 from hwt.synthesizer.rtlLevel.statements_to_HdlStatementBlocks import\
     statements_to_HdlStatementBlocks
-from hdlConvertor.hdlAst._expr import HdlValueId
+from hdlConvertorAst.hdlAst._expr import HdlValueId
 from hwt.doc_markers import internal
 from hwt.serializer.utils import maxStmId
 

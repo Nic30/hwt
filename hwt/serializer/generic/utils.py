@@ -1,5 +1,5 @@
 from ipCorePackager.constants import DIRECTION
-from hdlConvertor.hdlAst._expr import HdlDirection
+from hdlConvertorAst.hdlAst._expr import HdlDirection
 from hwt.doc_markers import internal
 
 

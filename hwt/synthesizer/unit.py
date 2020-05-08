@@ -1,7 +1,7 @@
 from copy import copy
 from typing import Optional, List, Dict
 
-from hdlConvertor.hdlAst._structural import HdlCompInst
+from hdlConvertorAst.hdlAst._structural import HdlCompInst
 from hwt.doc_markers import internal
 from hwt.hdl.portItem import HdlPortItem
 from hwt.synthesizer.dummyPlatform import DummyPlatform

@@ -1,11 +1,11 @@
 from typing import Union
 
-from hdlConvertor.hdlAst._defs import HdlIdDef
-from hdlConvertor.hdlAst._expr import HdlValueInt, HdlOp, HdlOpType,\
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.hdlAst._expr import HdlValueInt, HdlOp, HdlOpType,\
     HdlValueId
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
     hdl_call
-from hdlConvertor.translate.common.name_scope import ObjectForNameNotFound
+from hdlConvertorAst.translate.common.name_scope import ObjectForNameNotFound
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import SLICE

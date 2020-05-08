@@ -16,7 +16,7 @@ from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.vectorUtils import fitTo
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
-from hdlConvertor.translate.common.name_scope import NameScope
+from hdlConvertorAst.translate.common.name_scope import NameScope
 
 
 def _default_param_updater(self, myP, parentPval):

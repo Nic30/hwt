@@ -1,7 +1,7 @@
-from hdlConvertor.hdlAst._expr import HdlValueInt, HdlOpType,\
+from hdlConvertorAst.hdlAst._expr import HdlValueInt, HdlOpType,\
     HdlOp
-from hdlConvertor.to.hdlUtils import bit_string
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_downto,\
+from hdlConvertorAst.to.hdlUtils import bit_string
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_downto,\
     hdl_call
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator

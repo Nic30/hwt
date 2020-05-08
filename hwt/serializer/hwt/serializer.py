@@ -1,10 +1,10 @@
 
 from typing import Optional
 
-from hdlConvertor.hdlAst._expr import HdlValueId
-from hdlConvertor.hdlAst._structural import HdlModuleDef
-from hdlConvertor.to.hwt.keywords import HWT_KEYWORDS
-from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
+from hdlConvertorAst.hdlAst._expr import HdlValueId
+from hdlConvertorAst.hdlAst._structural import HdlModuleDef
+from hdlConvertorAst.to.hwt.keywords import HWT_KEYWORDS
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps

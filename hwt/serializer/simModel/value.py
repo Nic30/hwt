@@ -1,10 +1,10 @@
 from typing import Union
 
-from hdlConvertor.hdlAst._defs import HdlIdDef
-from hdlConvertor.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
     hdl_getattr
-from hdlConvertor.translate.common.name_scope import LanguageKeyword
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.code import Concat
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps

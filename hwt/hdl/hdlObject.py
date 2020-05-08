@@ -1,5 +1,5 @@
 from io import StringIO
-from hdlConvertor.translate.common.name_scope import NameScope
+from hdlConvertorAst.translate.common.name_scope import NameScope
 
 
 class HdlObject():

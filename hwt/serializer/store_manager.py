@@ -2,8 +2,8 @@ from io import StringIO
 import os
 from typing import Type, Optional, Union
 
-from hdlConvertor.hdlAst._bases import iHdlObj
-from hdlConvertor.translate.common.name_scope import NameScope
+from hdlConvertorAst.hdlAst._bases import iHdlObj
+from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.pyUtils.uniqList import UniqList
 from hwt.serializer.serializer_config import DummySerializerConfig
 from hwt.serializer.serializer_filter import SerializerFilter

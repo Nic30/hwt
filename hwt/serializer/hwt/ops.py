@@ -1,7 +1,7 @@
-from hdlConvertor.hdlAst._expr import HdlOpType, HdlOp, HdlValueId
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
+from hdlConvertorAst.hdlAst._expr import HdlOpType, HdlOp, HdlValueId
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
     hdl_call
-from hdlConvertor.translate.common.name_scope import LanguageKeyword
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS

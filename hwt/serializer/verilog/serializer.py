@@ -1,12 +1,12 @@
 from copy import copy
 from typing import Optional
 
-from hdlConvertor.hdlAst._defs import HdlIdDef
-from hdlConvertor.hdlAst._expr import HdlTypeAuto
-from hdlConvertor.hdlAst._statements import HdlStmProcess, HdlStmBlock, HdlStmAssign,\
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.hdlAst._expr import HdlTypeAuto
+from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmBlock, HdlStmAssign,\
     HdlStmWait
-from hdlConvertor.to.verilog.keywords import IEEE1800_2017_KEYWORDS
-from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
+from hdlConvertorAst.to.verilog.keywords import IEEE1800_2017_KEYWORDS
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.defs import STR, INT, BOOL

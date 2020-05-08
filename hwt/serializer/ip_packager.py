@@ -20,8 +20,8 @@ from ipCorePackager.packager import IpCorePackager
 from ipCorePackager.intfIpMeta import VALUE_RESOLVE
 from io import StringIO
 from hwt.serializer.store_manager import SaveToFilesFlat
-from hdlConvertor.to.vhdl.vhdl2008 import ToVhdl2008
-from hdlConvertor.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.to.vhdl.vhdl2008 import ToVhdl2008
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
 
 
 class ToHdlAstVivadoTclExpr(ToHdlAstVhdl2008):

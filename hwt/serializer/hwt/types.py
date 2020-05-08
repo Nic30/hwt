@@ -1,5 +1,5 @@
-from hdlConvertor.hdlAst._expr import HdlValueId, HdlValueInt
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlValueInt
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
     hdl_map_asoc, hdl_index
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import BITS_DEFAUTL_SIGNED, BITS_DEFAUTL_FORCEVECTOR, \

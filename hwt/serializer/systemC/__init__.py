@@ -1,7 +1,7 @@
 """
 SystemC serializer serializes HDL objects to systemC code.
 """
-from hdlConvertor.to.systemc._main import ToSystemc
+from hdlConvertorAst.to.systemc._main import ToSystemc
 from hwt.serializer.serializer_config import DummySerializerConfig
 from hwt.serializer.systemC.serializer import ToHdlAstSystemC
 from hwt.serializer.xdc.serializer import XdcSerializer

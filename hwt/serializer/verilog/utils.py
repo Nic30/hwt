@@ -3,7 +3,7 @@ from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.value import Value
 
 from hwt.doc_markers import internal
-from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
+from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 from hwt.hdl.variables import SignalItem
 from typing import Union
 from ipCorePackager.constants import DIRECTION

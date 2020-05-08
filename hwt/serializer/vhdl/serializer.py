@@ -1,11 +1,11 @@
 import re
 
-from hdlConvertor.hdlAst._expr import HdlValueId, HdlAll
-from hdlConvertor.hdlAst._statements import HdlImport
-from hdlConvertor.hdlAst._structural import HdlLibrary, HdlModuleDef,\
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlAll
+from hdlConvertorAst.hdlAst._statements import HdlImport
+from hdlConvertorAst.hdlAst._structural import HdlLibrary, HdlModuleDef,\
     HdlCompInst, HdlContext
-from hdlConvertor.to.vhdl.keywords import VHLD2008_KEYWORDS
-from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
+from hdlConvertorAst.to.vhdl.keywords import VHLD2008_KEYWORDS
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.pyUtils.arrayQuery import groupedby
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.vhdl.ops import ToHdlAstVhdl2008_ops

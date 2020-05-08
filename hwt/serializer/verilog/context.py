@@ -1,4 +1,4 @@
-from hdlConvertor.to.verilog.constants import SIGNAL_TYPE
+from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 
 
 class SignalTypeSwap():

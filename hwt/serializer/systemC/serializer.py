@@ -1,11 +1,11 @@
 from copy import copy
 from typing import Optional
 
-from hdlConvertor.hdlAst._defs import HdlIdDef
-from hdlConvertor.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
-from hdlConvertor.hdlAst._structural import HdlModuleDec, HdlCompInst
-from hdlConvertor.to.systemc.keywords import SYSTEMC_KEYWORDS
-from hdlConvertor.translate.common.name_scope import LanguageKeyword, NameScope
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
+from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlCompInst
+from hdlConvertorAst.to.systemc.keywords import SYSTEMC_KEYWORDS
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.portItem import HdlPortItem
 from hwt.interfaces.std import Clk
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst,\

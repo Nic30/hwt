@@ -1,15 +1,15 @@
 from copy import copy
 from typing import Optional
 
-from hdlConvertor.hdlAst import iHdlStatement, iHdlObj, HdlIdDef, \
+from hdlConvertorAst.hdlAst import iHdlStatement, iHdlObj, HdlIdDef, \
     HdlValueId, HdlTypeType, iHdlExpr, HdlStmBlock, HdlStmIf, HdlStmCase,\
     HdlStmProcess, HdlStmAssign, HdlModuleDef, HdlModuleDec,\
     HdlCompInst, HdlEnumDef
-from hdlConvertor.hdlAst._statements import ALL_STATEMENT_CLASSES
-from hdlConvertor.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
-from hdlConvertor.translate._verilog_to_basic_hdl_sim_model.utils import \
+from hdlConvertorAst.hdlAst._statements import ALL_STATEMENT_CLASSES
+from hdlConvertorAst.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import \
     hdl_index, hdl_map_asoc
-from hdlConvertor.translate.common.name_scope import NameScope, WithNameScope
+from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.ifContainter import IfContainer
