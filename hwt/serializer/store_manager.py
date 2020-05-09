@@ -55,6 +55,9 @@ class SaveToStream(StoreManager):
         super(SaveToStream, self).__init__(
             serializer_cls, _filter=_filter, name_scope=name_scope)
         self.stream = stream
+        ser = self.ser = self.serializer_cls.TO_HDL(self.stream)
+        if hasattr(ser, "stm_outputs"):
+            ser.stm_outputs = self.as_hdl_ast.stm_outputs
 
     def write(self, obj: Union[iHdlObj, HdlConstraintList]):
         self.as_hdl_ast.name_scope = self.name_scope
@@ -64,11 +67,7 @@ class SaveToStream(StoreManager):
                 to_constr.visit_HdlConstraintList(obj)
         else:
             hdl = self.as_hdl_ast.as_hdl(obj)
-            ser = self.serializer_cls.TO_HDL(self.stream)
-            if hasattr(ser, "stm_outputs"):
-                ser.stm_outputs = self.as_hdl_ast.stm_outputs
-
-            ser.visit_iHdlObj(hdl)
+            self.ser.visit_iHdlObj(hdl)
 
 
 class SaveToFilesFlat(StoreManager):
