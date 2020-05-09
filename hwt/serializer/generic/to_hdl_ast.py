@@ -268,6 +268,7 @@ class ToHdlAst():
 
         intern, outer = o.getInternSig(), o.getOuterSig()
         intern_hdl = self.as_hdl_Value(intern)
+        intern_hdl.obj = o
         outer_hdl = self.as_hdl_Value(outer)
         pm = hdl_map_asoc(intern_hdl, outer_hdl)
         return pm
