@@ -17,12 +17,12 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.switchContainer import SwitchContainer
+from hwt.serializer.generic.constant_cache import ConstantCache
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.simModel.types import ToHdlAstSimModel_types
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond
-from hwt.serializer.generic.constant_cache import ConstantCache
 
 
 class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
@@ -31,6 +31,9 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
     Serializer which converts Unit instances to simulator code
     """
     _keywords_dict = {kw: LanguageKeyword() for kw in SIMMODEL_KEYWORDS}
+    SIM_EVAL_COND = HdlValueId("sim_eval_cond", obj=sim_eval_cond)
+    C = HdlValueId("c", obj=LanguageKeyword())
+    CVLD = HdlValueId("cVld", obj=LanguageKeyword())
 
     def __init__(self, name_scope: Optional[NameScope] = None):
         super(ToHdlAstSimModel, self).__init__(name_scope)
@@ -39,7 +42,8 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
 
     def as_hdl_HdlModuleDec(self, o: HdlModuleDec):
         # convert types, exprs
-        # delete params because they should not be used in expressions and thus are useless
+        # delete params because they should not be used in expressions and thus
+        # are useless
         new_o = copy(o)
         new_o.params = []
         new_o.ports = [self.as_hdl_HdlPortItem(p) for p in o.ports]
@@ -92,10 +96,10 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         constructs condition evaluation statement
         c, cVld = sim_eval_cond(cond)
         """
-        c, cVld = HdlValueId("c", obj=LanguageKeyword()), HdlValueId("cVld", obj=LanguageKeyword())
+        c, cVld = self.C, self.CVLD
         cond = self.as_hdl_cond(cond, True)
-        cond_eval = hdl_call(HdlValueId("sim_eval_cond", obj=sim_eval_cond), [cond])
-        cond_eval = HdlStmAssign(cond_eval, [c, cVld])
+        cond_eval = hdl_call(self.SIM_EVAL_COND, [cond])
+        cond_eval = HdlStmAssign(cond_eval, (c, cVld))
         cond_eval.is_blocking = True
         return c, cVld, cond_eval
 
@@ -120,7 +124,8 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
             else:
                 ... # original if else brach
         """
-        invalidate_block = self.as_hdl_IfContainer_out_invalidate_section(ifc._outputs, ifc)
+        invalidate_block = self.as_hdl_IfContainer_out_invalidate_section(
+            ifc._outputs, ifc)
         c, cVld, cond_eval = self.as_hdl_IfContainer_cond_eval(ifc.cond)
         _if = HdlStmIf()
         res = HdlStmBlock()
@@ -196,7 +201,10 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
 
     def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> HdlStmProcess:
         p = ToHdlAst.as_hdl_HdlStatementBlock(self, proc)
-        self.stm_outputs[p] = [HdlValueId(i.name, obj=i) for i in proc._outputs]
+        self.stm_outputs[p] = sorted(
+            [HdlValueId(i.name, obj=i)
+             for i in proc._outputs]
+        )
         return p
 
     def as_hdl_extraVarsInit(self, extraVars):
@@ -209,4 +217,3 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
             return ToHdlAst._as_hdl_HdlModuleDef_body(self, *args)
         finally:
             self.constCache = orig_const_cache
-

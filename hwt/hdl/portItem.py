@@ -51,7 +51,7 @@ class HdlPortItem():
     @internal
     def connectInternSig(self, signal):
         """
-        Connet signal from internal side of of this component to this port.
+        Connect signal from internal side of of this component to this port.
         """
         if self.direction == DIRECTION.OUT:
             if self.src is not None:
