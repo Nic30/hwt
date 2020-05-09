@@ -35,7 +35,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         which are not accessible from outside of unit
     :type _private_interfaces: List[Interface]
     :ivar ~._units: all units defined on this obj
-    :type ~._units: List[Unit] 
+    :type ~._units: List[Unit]
     :ivar ~._params: all params defined on this obj
     :type ~._params: List[Param]
     :ivar ~._constraints: additional HW specifications
@@ -43,21 +43,25 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
     :type ~._parent: Optional[Unit]
     :ivar ~._lazy_loaded: container of rtl object which were lazy loaded
         in implementation phase (this object has to be returned
-        from _toRtl of parent before it it's own objects)
+        from :func:`~._toRtl` of parent before it it's own objects)
+    :ivar ~._shared_component_with: Optional typle of the other Unit instance
+        which produces an exactly same component in HDL and interface
+        map current to shared and shared to current
     :type ~._shared_component_with: Optional[Tuple[Unit,
         Dict[Interface, Interface],
         Dict[Interface, Interface]]]
-    :ivar ~._shared_component_with: Optional typle of the other Unit instance
-        which produces an exactly same component in HDL and interface
-        map current -> shared and shared -> current
-    :attention if _shared_component_with is not None the body of this instance
-        is not generated at all
-        and the component from _shared_component_with is used instead
-    :ivar ~._target_platform: metainformations about target platform
+    :attention: if :func:`~._shared_component_with` is not None the body
+        of this instance is not generated at all
+        and the component from :func:`~._shared_component_with` is used instead
+    :ivar ~._target_platform: meta-informations about target platform
     :ivar ~._name: a name of this component
-    :ivar ~._hdl_module_name: a name of hdl module for this compoennt
+    :ivar ~._hdl_module_name: a name of hdl module for this component
         (vhdl entity name, verilog module name)
     """
+
+
+
+
 
     _serializeDecision = None
     # properties which are used internally by this library

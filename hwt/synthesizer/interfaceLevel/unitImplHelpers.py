@@ -63,15 +63,15 @@ class UnitImplHelpers(UnitBase):
         :param def_val: default value of this register,
             if this value is specified reset signal of this component is used
             to generate a reset logic
-        :param clk: optional clok signal specification,
+        :param clk: optional clock signal specification,
             (signal or tuple(signal, edge type))
         :type clk: Union[RtlSignal, Interface,
-                         Tuple[Union[RtlSignal, Interface],
-                               AllOps.RISING/FALLING_EDGE]]
+            Tuple[Union[RtlSignal, Interface],
+            AllOps.RISING/FALLING_EDGE]]
         :param rst: optional reset signal specification
         :note: rst/rst_n resolution is done from signal type,
             if it is negated type it is rst_n
-        :note: if clk or rst is not specifid default signal
+        :note: if clk or rst is not specified default signal
             from parent unit will be used
         """
         if clk is None:
