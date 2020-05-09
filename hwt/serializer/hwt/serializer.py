@@ -1,11 +1,10 @@
 
 from typing import Optional
 
-from hdlConvertorAst.hdlAst._expr import HdlValueId
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOpType
 from hdlConvertorAst.hdlAst._structural import HdlModuleDef
 from hdlConvertorAst.to.hwt.keywords import HWT_KEYWORDS
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
-from hwt.hdl.constants import SENSITIVITY
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
@@ -44,14 +43,8 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
     def sensitivityListItem(self, item, anyIsEventDependnt):
         if isinstance(item, Operator):
             op = item.operator
-            if op == AllOps.RISING_EDGE:
-                sens = SENSITIVITY.RISING
-            elif op == AllOps.FALLING_EDGE:
-                sens = SENSITIVITY.FALLING
-            else:
-                raise TypeError("This is not an event sensitivity", op)
-
-            s = item.operands[0]
-            return [sens, HdlValueId(s.name, obj=s)]
+            assert op in (AllOps.RISING_EDGE,  AllOps.FALLING_EDGE), item
+            assert not item.operands[0].hidden, item
+            return self.as_hdl_Operator(item)
         else:
             return HdlValueId(item.name, obj=item)
