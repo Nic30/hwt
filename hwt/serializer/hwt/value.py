@@ -16,6 +16,7 @@ from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
 from hwt.hdl.value import Value
+from copy import copy
 
 
 class ToHdlAstHwt_value(ToHdlAst_Value):
@@ -46,10 +47,11 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
     def as_hdl_SignalItem(self, si: Union[SignalItem, HdlIdDef], declaration=False):
         if declaration:
             if isinstance(si, HdlIdDef):
-                si.type = self.as_hdl_HdlType(si.type)
+                new_si = copy(si)
+                new_si.type = self.as_hdl_HdlType(si.type)
                 if si.value is not None:
-                    si.value = self.as_hdl_Value(si.value)
-                return si
+                    new_si.value = self.as_hdl_Value(si.value)
+                return new_si
             else:
                 raise NotImplementedError()
         else:
