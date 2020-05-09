@@ -19,7 +19,7 @@ from hwt.hdl.value import Value, areValues
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
-from pyMathBitPrecise.bits3t import Bits3val, bits_neg__val
+from pyMathBitPrecise.bits3t import Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
 
@@ -380,7 +380,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
 
     def __neg__(self):
         if isinstance(self, Value):
-            return bits_neg__val(self)
+            return Bits3val.__neg__(self)
         else:
             if not self._dtype.signed:
                 self = self._signed()
