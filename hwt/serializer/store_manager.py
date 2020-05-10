@@ -84,6 +84,7 @@ class SaveToFilesFlat(StoreManager):
             serializer_cls, _filter=_filter, name_scope=name_scope)
         self.root = root
         self.files = UniqList()
+        self.constraints_file_spoted = False
         os.makedirs(root, exist_ok=True)
 
     def write(self, obj: Union[iHdlObj, HdlConstraintList]):
@@ -94,7 +95,12 @@ class SaveToFilesFlat(StoreManager):
 
         fp = os.path.join(self.root, fName)
         self.files.append(fp)
-        with open(fp, "w") as f:
+        if self.constraints_file_spoted:
+            m = 'a'
+        else:
+            m = 'w'
+            self.constraints_file_spoted = True
+        with open(fp, m) as f:
             s = SaveToStream(self.serializer_cls, f,
                              self.filter, self.name_scope)
             s.write(obj)
