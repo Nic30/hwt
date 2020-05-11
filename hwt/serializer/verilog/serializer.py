@@ -1,242 +1,88 @@
-from hwt.hdl.architecture import Architecture
-from hwt.hdl.constants import DIRECTION
-from hwt.hdl.entity import Entity
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.portItem import PortItem
-from hwt.hdl.process import HWProcess
-from hwt.hdl.switchContainer import SwitchContainer
+from copy import copy
+from typing import Optional
+
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.hdlAst._expr import HdlTypeAuto
+from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmBlock, HdlStmAssign,\
+    HdlStmWait
+from hdlConvertorAst.to.verilog.keywords import IEEE1800_2017_KEYWORDS
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
+from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.defs import STR, INT, BOOL
-from hwt.hdl.types.typeCast import toHVal
-from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.generic.mapExpr import MapExpr
-from hdlConvertor.translate.common.name_scope import LangueKeyword
-from hwt.serializer.generic.portMap import PortMap
-from hwt.serializer.generic.serializer import GenericSerializer, CurrentUnitSwap
-from hwt.serializer.utils import maxStmId
-from hwt.serializer.verilog.context import VerilogSerializerCtx
-from hwt.serializer.verilog.keywords import VERILOG_KEYWORDS
-from hwt.serializer.verilog.ops import VerilogSerializer_ops
-from hwt.serializer.verilog.statements import VerilogSerializer_statements
-from hwt.serializer.verilog.tmplContainer import VerilogTmplContainer
-from hwt.serializer.verilog.types import VerilogSerializer_types
+from hwt.serializer.generic.to_hdl_ast import ToHdlAst
+from hwt.serializer.verilog.context import SignalTypeSwap
+from hwt.serializer.verilog.ops import ToHdlAstVerilog_ops
+from hwt.serializer.verilog.statements import ToHdlAstVerilog_statements
+from hwt.serializer.verilog.types import ToHdlAstVerilog_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
-from hwt.serializer.verilog.value import VerilogSerializer_Value
-from hwt.synthesizer.param import Param
+from hwt.serializer.verilog.value import ToHdlAstVerilog_Value
 
 
-class VerilogSerializer(VerilogTmplContainer, VerilogSerializer_types,
-                        VerilogSerializer_Value, VerilogSerializer_statements,
-                        VerilogSerializer_ops, GenericSerializer):
-    _keywords_dict = {kw: LangueKeyword() for kw in VERILOG_KEYWORDS}
-    fileExtension = '.v'
+class ToHdlAstVerilog(ToHdlAstVerilog_types,
+                      ToHdlAstVerilog_Value, ToHdlAstVerilog_statements,
+                      ToHdlAstVerilog_ops, ToHdlAst):
+    _keywords_dict = {kw: LanguageKeyword() for kw in IEEE1800_2017_KEYWORDS}
 
-    @classmethod
-    def getBaseContext(cls):
-        return VerilogSerializerCtx(cls.getBaseNameScope(), 0, None, None)
+    def __init__(self, name_scope: Optional[NameScope]=None):
+        ToHdlAst.__init__(self, name_scope=name_scope)
+        self.signalType = SIGNAL_TYPE.PORT_WIRE
 
-    @classmethod
-    def Entity(cls, ent: Entity, ctx):
-        generics, ports = cls.Entity_prepare(ent, ctx)
+    def as_hdl_HdlModuleDef_variable(
+            self, v, types, hdl_types, hdl_variables,
+            processes, component_insts):
+        new_v = copy(v)
+        with SignalTypeSwap(self, verilogTypeOfSig(v.origin)): 
+            t = v.type
+            # if type requires extra definition
+            if self.does_type_requires_extra_def(t, types):
+                _t = self.as_hdl_HdlType(t, declaration=True)
+                hdl_types.append(_t)
+                types.add(t)
+            new_v.type = self.as_hdl_HdlType(t, declaration=False)
+            # this is a array variable which requires value intialization in init
+            # process
+            if isinstance(t, HArray):
+                if v.value.vld_mask:
+                    rom = v.origin
+                    p = HdlStmProcess()
+                    label = self.name_scope.checked_name(rom.name + "_rom_init", p)
+                    p.labels.append(label)
+                    p.body = HdlStmBlock()
+                    body = p.body.body
+                    for i, _v in enumerate(rom.def_val.val):
+                        a = HdlStmAssign(self.as_hdl_int(int(_v)),
+                                         self.as_hdl(rom[i]))
+                        a.is_blocking = True
+                        body.append(a)
+                    w = HdlStmWait()
+                    w.val = []  # initial process
+                    body.append(w)
+                    processes.append(p)
+                # because we would not be able to initialize const/localparam variable later
+                new_v.is_const = False
+                new_v.value = None
+            elif new_v.value is not None:
+                new_v.value = self.as_hdl_Value(new_v.value)
+            return new_v
 
-        entVerilog = cls.moduleHeadTmpl.render(
-            indent=getIndent(ctx.indent),
-            name=ent.name,
-            ports=ports,
-            generics=generics
-        )
-
-        return cls.get_doc(ent) + entVerilog
-
-    @classmethod
-    def hardcodeRomIntoProcess(cls, rom):
-        """
-        Due to verilog restrictions it is not posible to use array constants
-        and rom memories has to be hardcoded as process
-        """
-        processes = []
-        signals = []
-        for e in rom.endpoints:
-            assert isinstance(e, Operator) and e.operator == AllOps.INDEX, e
-            me, index = e.operands
-            assert me is rom
-
-            # construct output of the rom
-            romValSig = rom.ctx.sig(rom.name, dtype=e.result._dtype)
-            romValSig.hidden = False
-            signals.append(romValSig)
-
-            # construct process which will represent content of the rom
-            cases = [(toHVal(i), [romValSig(v), ])
-                     for i, v in enumerate(rom.def_val.val)]
-            romSwitchStm = SwitchContainer(index, cases)
-
-            for (_, (stm,)) in cases:
-                stm.parentStm = romSwitchStm
-
-            p = HWProcess(rom.name, [romSwitchStm, ],
-                          {index, }, {index, }, {romValSig, })
-            processes.append(p)
-
-            # override usage of original index operator on rom
-            # to use signal generated from this process
-            for _e in e.result.endpoints:
-                _e._replace_input(e.result, romValSig)
-        rom.hidden = True
-        return processes, signals
-
-    @classmethod
-    def Architecture_var(cls, v, serializerVars, extraTypes,
-                         extraTypes_serialized, ctx, childCtx):
-        """
-        :return: list of extra discovered processes
-        """
-        t = v._dtype
-        # if type requires extra definition
-        if isinstance(t, HArray) and v.def_val.vld_mask:
-            # [TODO] use init process instead
-            if v.drivers:
-                raise SerializerException("Verilog does not support RAMs"
-                                          " with initialized value")
-            eProcs, eVars = cls.hardcodeRomIntoProcess(v)
-            for _v in eVars:
-                _procs = cls.Architecture_var(_v, serializerVars, extraTypes,
-                                              extraTypes_serialized, ctx,
-                                              childCtx)
-                eProcs.extend(_procs)
-            return eProcs
-
-        v.name = ctx.scope.checkedName(v.name, v)
-        serializedVar = cls.SignalItem(v, childCtx, declaration=True)
-        serializerVars.append(serializedVar)
-
-        return []
-
-    @classmethod
-    def Architecture(cls, arch: Architecture, ctx):
-        serializerVars = []
-        procs = []
-        extraTypes = set()
-        extraTypes_serialized = []
-        arch.variables.sort(key=lambda x: (x.name, x._instId))
-        arch.componentInstances.sort(key=lambda x: x._name)
-
-        childCtx = ctx.withIndent()
-        extraProcesses = []
-        for v in arch.variables:
-            _eProc = cls.Architecture_var(v,
-                                          serializerVars,
-                                          extraTypes,
-                                          extraTypes_serialized,
-                                          ctx,
-                                          childCtx)
-
-            extraProcesses.extend(_eProc)
-
-        arch.processes.extend(extraProcesses)
-        arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
-        for p in arch.processes:
-            p_str = cls.HWProcess(p, childCtx)
-            procs.append(p_str)
-
-        componentInstances = list(
-            map(lambda c: cls.ComponentInstance(c, childCtx),
-                arch.componentInstances))
-
-        return cls.moduleBodyTmpl.render(
-            indent=getIndent(ctx.indent),
-            entityName=arch.getEntityName(),
-            name=arch.name,
-            variables=serializerVars,
-            extraTypes=extraTypes_serialized,
-            processes=procs,
-            componentInstances=componentInstances
-        )
-
-    @classmethod
-    def ComponentInstance(cls, entity, ctx: VerilogSerializerCtx):
-        with CurrentUnitSwap(ctx, entity.origin):
-            portMaps = []
-            for pi in entity.ports:
-                pm = PortMap.fromPortItem(pi)
-                portMaps.append(pm)
-
-            genericMaps = []
-            for g in entity.generics:
-                gm = MapExpr(g, g.get_value())
-                genericMaps.append(gm)
-
-            if len(portMaps) == 0:
-                raise SerializerException("Incomplete component instance")
-
-            # [TODO] check component instance name
-            return cls.componentInstanceTmpl.render(
-                indent=getIndent(ctx.indent),
-                instanceName=entity._name,
-                entity=entity,
-                portMaps=[cls.PortConnection(x, ctx) for x in portMaps],
-                genericMaps=[cls.MapExpr(x, ctx) for x in genericMaps]
-            )
-
-    @classmethod
-    def comment(cls, comentStr):
-        return "\n".join(["/*", comentStr, "*/"])
-
-    @classmethod
-    def GenericItem(cls, g: Param, ctx):
-        v = g.get_hdl_value()
-        if v._dtype == STR or v._dtype == INT or v._dtype == BOOL:
-            t_str = ""
-        else:
-            t_str = cls.HdlType(v._dtype, ctx.forPort()) + " "
-        v_str = cls.Value(v, ctx)
-        return 'parameter %s %s= %s' % (
-                g.hdl_name, t_str, v_str)
-
-    @classmethod
-    def PortItem(cls, pi: PortItem, ctx):
-        t = cls.HdlType(pi._dtype, ctx.forPort())
-        if pi.direction == DIRECTION.IN or pi.direction == DIRECTION.INOUT:
-            verilog_t = SIGNAL_TYPE.WIRE
-        else:
-            verilog_t = verilogTypeOfSig(pi.getInternSig())
-
-        if verilog_t == SIGNAL_TYPE.REG:
-            if t:
-                f = "%s reg %s %s"
+    def as_hdl_GenericItem(self, g: HdlIdDef):
+        with SignalTypeSwap(self, SIGNAL_TYPE.PORT_WIRE):
+            new_v = copy(g)
+            v = g.value
+            if v._dtype == STR or v._dtype == INT or v._dtype == BOOL:
+                t = HdlTypeAuto
             else:
-                f = "%s reg %s"
-        else:
-            if t:
-                f = "%s %s %s"
-            else:
-                f = "%s %s"
+                t = self.as_hdl_HdlType(v._dtype)
+            new_v.type = t
+            assert new_v.value is not None, g
+            new_v.value = self.as_hdl_Value(v)
+            return new_v
 
-        if t:
-            return f % (cls.DIRECTION(pi.direction),
-                        t, pi.name)
-        else:
-            return f % (cls.DIRECTION(pi.direction),
-                        pi.name)
+    def as_hdl_HdlPortItem(self, pi: HdlPortItem):
+        with SignalTypeSwap(self, verilogTypeOfSig(pi)):
+            v = super(ToHdlAstVerilog, self).as_hdl_HdlPortItem(pi)
+            v.is_latched = self.signalType == SIGNAL_TYPE.PORT_REG
+        return v
 
-    @classmethod
-    def PortConnection(cls, pc, ctx):
-        if pc.portItem._dtype != pc.sig._dtype:
-            raise SerializerException(
-                "Port map %s is nod valid (types does not match)  (%s, %s)" % (
-                    "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx)),
-                    repr(pc.portItem._dtype), repr(pc.sig._dtype)))
-        return ".%s(%s)" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
 
-    @classmethod
-    def MapExpr(cls, m: MapExpr, ctx):
-        k = m.compSig
-        if isinstance(k, Param):
-            name = k.hdl_name
-            v = cls.Value(k.get_hdl_value(), ctx)
-        else:
-            name = cls.get_signal_name(k, ctx)
-            v = cls.asHdl(m.value, ctx)
-        return ".%s(%s)" % (name, v)

@@ -4,7 +4,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.struct import HStruct
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
+from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 
@@ -54,7 +54,7 @@ def _default_param_updater(self, myP, otherP_val):
     myP.set_value(otherP_val)
 
 
-class UnitImplHelpers(object):
+class UnitImplHelpers(UnitBase):
 
     def _reg(self, name, dtype=BIT, def_val=None, clk=None, rst=None) -> RtlSyncSignal:
         """
@@ -63,12 +63,15 @@ class UnitImplHelpers(object):
         :param def_val: default value of this register,
             if this value is specified reset signal of this component is used
             to generate a reset logic
-        :param clk: optional clok signal specification, (signal or tuple(signal, edge type))
-        :type clk: Union[RtlSignal, Interface, Tuple[Union[RtlSignal, Interface], AllOps.RISING/FALLING_EDGE]]
+        :param clk: optional clock signal specification,
+            (signal or tuple(signal, edge type))
+        :type clk: Union[RtlSignal, Interface,
+            Tuple[Union[RtlSignal, Interface],
+            AllOps.RISING/FALLING_EDGE]]
         :param rst: optional reset signal specification
         :note: rst/rst_n resolution is done from signal type,
             if it is negated type it is rst_n
-        :note: if clk or rst is not specifid default signal
+        :note: if clk or rst is not specified default signal
             from parent unit will be used
         """
         if clk is None:
@@ -124,39 +127,15 @@ class UnitImplHelpers(object):
         """
         Disconnect internal signals so unit can be reused by parent unit
         """
-        for pi in self._entity.ports:
-            pi.connectInternSig()
         for i in chain(self._interfaces, self._private_interfaces):
             i._clean()
 
     @internal
-    def _signalsForMyEntity(self, context, prefix):
+    def _signalsForSubUnitEntity(self, context, prefix: str):
         """
-        generate for all ports of subunit signals in this context
+        generate signals in this context for all ports of this subunit
         """
         for i in self._interfaces:
             if i._isExtern:
-                i._signalsForInterface(context, None, prefix + i._NAME_SEPARATOR)
+                i._signalsForInterface(context, None, None, prefix=prefix + i._NAME_SEPARATOR)
 
-    @internal
-    def _boundInterfacesToEntity(self, interfaces, ports):
-        externSignals = []
-        inftToPortDict = {}
-
-        for p in ports:
-            inftToPortDict[p._interface] = p
-
-        for intf in interfaces:
-            if intf._isExtern:
-                for s in walkPhysInterfaces(intf):
-                    externSignals.append(s)
-
-        assert len(externSignals) == len(inftToPortDict.keys())
-
-        for s in externSignals:
-            self._boundIntfSignalToEntity(s, inftToPortDict)
-
-    @internal
-    def _boundIntfSignalToEntity(self, interface, inftToPortDict):
-        portItem = inftToPortDict[interface]
-        interface._boundedEntityPort = portItem

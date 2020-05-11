@@ -46,10 +46,6 @@ class DummySimPlatform(DummyPlatform):
     DummyPlatform which ignores the constraints
     """
 
-    def __init__(self):
-        super(DummySimPlatform, self).__init__()
-        self.constraint_serializer.clear()
-
 
 class SimTestCase(unittest.TestCase):
     """

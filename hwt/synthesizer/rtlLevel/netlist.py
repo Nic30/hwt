@@ -1,276 +1,41 @@
-from copy import copy
-from itertools import compress
-from typing import List, Generator, Optional, Union, Dict, Set
+from typing import List, Optional, Union
 
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
+    HdlCompInst
 from hwt.code import If
-from hwt.doc_markers import internal
-from hwt.hdl.architecture import Architecture
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.entity import Entity
-from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.portItem import PortItem
-from hwt.hdl.process import HWProcess
-from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
-from hwt.hdl.statements import HdlStatement, HwtSyntaxError
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import Value
-from hwt.pyUtils.arrayQuery import distinctBy, where
-from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.param import Param
+from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import\
+    markVisibilityOfSignalsAndCheckDrivers
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
-from hwt.synthesizer.rtlLevel.optimalizator import removeUnconnectedSignals, \
-    reduceProcesses
+from hwt.synthesizer.rtlLevel.remove_unconnected_signals import removeUnconnectedSignals
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr,\
-    SignalDriverErrType
-from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
-from ipCorePackager.constants import DIRECTION
+from hwt.synthesizer.rtlLevel.statements_to_HdlStatementBlocks import\
+    statements_to_HdlStatementBlocks
+from hdlConvertorAst.hdlAst._expr import HdlValueId
+from hwt.doc_markers import internal
+from hwt.serializer.utils import maxStmId
 
 
 @internal
-def name_for_process(outputs: List[RtlSignal]) -> str:
-    """
-    Resolve name for process
-    """
-    out_names = []
-    for sig in outputs:
-        if not sig.hasGenericName:
-            out_names.append(sig.name)
-
-    if out_names:
-        return min(out_names)
-    else:
-        return ""
-
-
-@internal
-def cut_off_drivers_of(dstSignal, statements):
-    """
-    Cut off drivers from statements
-    """
-    separated = []
-    stm_filter = []
-    for stm in statements:
-        stm._clean_signal_meta()
-        d = stm._cut_off_drivers_of(dstSignal)
-        if d is not None:
-            separated.append(d)
-
-        f = d is not stm
-        stm_filter.append(f)
-
-    return list(compress(statements, stm_filter)), separated
-
-
-@internal
-def _statements_to_HWProcesses(_statements, tryToSolveCombLoops)\
-        -> Generator[HWProcess, None, None]:
-    assert _statements
-    # try to simplify statements
-    proc_statements = []
-    for _stm in _statements:
-        _stm._clean_signal_meta()
-        stms, _ = _stm._try_reduce()
-        proc_statements.extend(stms)
-
-    if not proc_statements:
-        return
-
-    outputs = UniqList()
-    _inputs = UniqList()
-    sensitivity = UniqList()
-    enclosed_for = set()
-    _proc_statements = []
-    for _stm in proc_statements:
-        seen = set()
-        _stm._discover_sensitivity(seen)
-        _stm._discover_enclosure()
-        if _stm._outputs:
-            # remove a statement entirely if it has no ouput
-            # (empty if statment or something similar)
-            # simulation only processes should not be processed by this function
-            # and process should always drive something, unless it is useless
-            outputs.extend(_stm._outputs)
-            _inputs.extend(_stm._inputs)
-            sensitivity.extend(_stm._sensitivity)
-            enclosed_for.update(_stm._enclosed_for)
-            _proc_statements.append(_stm)
-
-    proc_statements = _proc_statements
-    if not proc_statements:
-        # this can happen e.g. when If does not contains any Assignment
-        return
-    sensitivity_recompute = False
-    enclosure_recompute = False
-    enclosure_values = {}
-    for sig in outputs:
-        # inject nop_val if needed
-        if sig._nop_val is not NO_NOPVAL and sig not in enclosed_for:
-            enclosure_recompute = True
-            n = sig._nop_val
-            enclosure_values[sig] = n
-            if not isinstance(n, Value):
-                _inputs.append(n)
-                sensitivity_recompute = True
-
-    if enclosure_recompute:
-        # we have some enclosure values, try fill missing code branches with
-        # this values
-        do_enclose_for = list(where(outputs,
-                                    lambda o: o in enclosure_values))
-        fill_stm_list_with_enclosure(None, enclosed_for, proc_statements,
-                                     do_enclose_for, enclosure_values)
-
-    if enclosure_recompute or sensitivity_recompute:
-        for _stm in proc_statements:
-            _stm._clean_signal_meta()
-            seen = set()
-            _stm._discover_sensitivity(seen)
-            _stm._discover_enclosure()
-
-    if sensitivity_recompute:
-        sensitivity = UniqList()
-        for _stm in proc_statements:
-            sensitivity.extend(_stm._sensitivity)
-
-    for o in outputs:
-        assert not o.hidden, o
-
-    seen = set()
-    inputs = UniqList()
-    for i in _inputs:
-        inputs.extend(i._walk_public_drivers(seen))
-
-    intersect = outputs.intersection_set(sensitivity)
-    if intersect:
-        # there is a combinational loop inside a single process which
-        # can not be solved by separation of statments in process
-        if not tryToSolveCombLoops:
-            raise HwtSyntaxError(
-                "Combinational loop on signal(s)", intersect)
-
-        # try to solve combinational loops by separating drivers of signals
-        # from statements
-        for sig in intersect:
-            proc_statements, proc_stms_select = cut_off_drivers_of(
-                sig, proc_statements)
-            yield from _statements_to_HWProcesses(proc_stms_select, False)
-
-        if proc_statements:
-            yield from _statements_to_HWProcesses(proc_statements, False)
-    else:
-        # no combinational loops, wrap current statemetns to a process instance
-        name = name_for_process(outputs)
-        yield HWProcess("assig_process_" + name,
-                        proc_statements, sensitivity,
-                        inputs, outputs)
-
-
-@internal
-def statements_to_HWProcesses(statements: List[HdlStatement])\
-        -> Generator[HWProcess, None, None]:
-    """
-    Pack statements into HWProcess instances,
-    * for each out signal resolve it's drivers and collect them
-    * split statements if there is and combinational loop
-    * merge statements if it is possible
-    * resolve sensitivity lists
-    * wrap into HWProcess instance
-    * for every IO of process generate name if signal has not any
-    """
-    # create copy because this set will be reduced
-    statements = copy(statements)
-
-    # process ranks = how many assignments is probably in process
-    # used to minimize number of merge tries
-    processes = []
-    while statements:
-        stm = statements.pop()
-        proc_statements = [stm, ]
-        ps = _statements_to_HWProcesses(proc_statements, True)
-        processes.extend(ps)
-
-    yield from reduceProcesses(processes)
-
-
-@internal
-def walk_assignments(stm: HdlStatement, dst: RtlSignal)\
-        -> Generator[Assignment, None, None]:
-    if isinstance(stm, Assignment):
-        if dst is stm.dst:
-            yield stm
-    else:
-        for _stm in stm._iter_stms():
-            yield from walk_assignments(_stm, dst)
-
-
-@internal
-def markVisibilityOfSignalsAndCheckDrivers(
-        signals: Set[RtlSignal],
-        interfaceSignals: Dict[RtlSignal, DIRECTION]):
-    """
-    * check if all signals are driven by something
-    * mark signals with hidden = False if they are connecting statements
-      or if they are external interface
-    """
-    signals_with_driver_issue = []
-    for sig in signals:
-        if isinstance(sig._nop_val, (RtlSignal, InterfaceBase)):
-            sig._nop_val.hidden = False
-
-        driver_cnt = len(sig.drivers)
-        has_comb_driver = False
-        if driver_cnt > 1:
-            sig.hidden = False
-            for d in sig.drivers:
-                if not isinstance(d, Operator):
-                    sig.hidden = False
-
-                is_comb_driver = False
-
-                if isinstance(d, PortItem):
-                    is_comb_driver = True
-                elif not d._now_is_event_dependent:
-                    for a in walk_assignments(d, sig):
-                        if not a.indexes\
-                                and not a._is_completly_event_dependent:
-                            is_comb_driver = True
-                            break
-
-                if has_comb_driver and is_comb_driver:
-                    signals_with_driver_issue.append(
-                        (SignalDriverErrType.MULTIPLE_COMB_DRIVERS, sig))
-
-                has_comb_driver |= is_comb_driver
-        elif driver_cnt == 1:
-            if not isinstance(sig.drivers[0], Operator):
-                sig.hidden = False
-        else:
-            sig.hidden = False
-            if sig not in interfaceSignals.keys():
-                if not sig.def_val._is_full_valid():
-                    signals_with_driver_issue.append(
-                        (SignalDriverErrType.MISSING_DRIVER, sig))
-                sig._const = True
-
-        # chec interface direction if required
-        d = interfaceSignals.get(sig, None)
-        if d is None:
-            pass
-        elif d is DIRECTION.IN:
-            if sig.drivers:
-                signals_with_driver_issue.append(
-                    (SignalDriverErrType.INPUT_WITH_DRIVER, sig))
-        elif d is DIRECTION.OUT:
-            if not sig.drivers:
-                signals_with_driver_issue.append(
-                    (SignalDriverErrType.OUTPUT_WITHOUT_DRIVER, sig))
-
-    if signals_with_driver_issue:
-        raise SignalDriverErr(signals_with_driver_issue)
+def prepareEntity(ent, name, templateUnit):
+    ent.name = name
+    ent.generics.sort(key=lambda x: x.hdl_name)
+    ent.ports.sort(key=lambda x: x.name)
+    # copy names
+    if templateUnit is not None:
+        # sort in python is stable, ports and generic were added in same order
+        # templateUnit should have generic and ports sorted
+        for gp, gch in zip(templateUnit._entity.generics, ent.generics):
+            gch.hdl_name = gp.hdl_name
+        for pp, pch in zip(templateUnit._entity.ports, ent.ports):
+            pch.name = pp.name
 
 
 class RtlNetlist():
@@ -278,20 +43,29 @@ class RtlNetlist():
     Hierarchical container for signals
 
     :ivar ~.parent: optional parent for debug and late component inspection
-    :ivar ~.params: dictionary {name: Param instance}
     :ivar ~.signals: set of all signals in this context
     :ivar ~.statements: list of all statements which are connected to signals in this context
     :ivar ~.subUnits: is set of all units in this context
-    :ivar ~.synthesised: flag, True if synthesize method was called
+    :type ~.interfaces: Dict[RtlSignal, DIRECTION]
+    :ivar ~.interfaces: initialized in create_HdlModuleDef
+    :type ~.ent: HdlModuleDec
+    :ivar ~.ent: initialized in create_HdlModuleDec
+    :type ~.arch: HdlModuleDef
+    :ivar ~.arch: initialized in create_HdlModuleDef
+    :ivar ~.hdl_objs: The list of HDL objects which were produced by this instance
+        usually contains HdlModudeleDef but may contain imports/globals etc.
     """
 
     def __init__(self, parent: Optional["Unit"]=None):
         self.parent = parent
-        self.params = {}
         self.signals = set()
         self.statements = set()
         self.subUnits = set()
-        self.synthesised = False
+        self.interfaces = {}
+        self.hdl_objs = []
+        self.ent = None
+        self.arch = None
+        self._port_items = []
 
     def _try_cast_any_to_HdlType(self, v, dtype):
         if isinstance(v, RtlSignal):
@@ -329,23 +103,25 @@ class RtlNetlist():
                     "Probably forgotten default value on sync signal %s", name)
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                        RtlSignal.__call__(s, _def_val)
-                    ).Else(
-                        RtlSignal.__call__(s, s.next)
-                    )
+                       RtlSignal.__call__(s, _def_val)
+                       ).Else(
+                    RtlSignal.__call__(s, s.next)
+                )
             else:
                 r = [RtlSignal.__call__(s, s.next)]
 
             if isinstance(clk, (InterfaceBase, RtlSignal)):
                 clk_trigger = clk._onRisingEdge()
             else:
-                clk, clk_edge = clk  # has to be tuple of (clk_sig, AllOps.RISING/FALLING_EDGE)
+                # has to be tuple of (clk_sig, AllOps.RISING/FALLING_EDGE)
+                clk, clk_edge = clk
                 if clk_edge is AllOps.RISING_EDGE:
                     clk_trigger = clk._onRisingEdge()
                 elif clk_edge is AllOps.FALLING_EDGE:
                     clk_trigger = clk._onRisingEdge()
                 else:
-                    raise ValueError("Invalid clock edge specification", clk_edge)
+                    raise ValueError(
+                        "Invalid clock edge specification", clk_edge)
 
             If(clk_trigger,
                r
@@ -358,48 +134,84 @@ class RtlNetlist():
 
         return s
 
-    def synthesize(self, name: str,
-                   interfaces: Dict[RtlSignal, DIRECTION],
-                   targetPlatform: DummyPlatform):
+    def create_HdlModuleDec(self, name: str,
+                            store_manager: "StoreManager",
+                            params: List[Param]):
         """
-        Build Entity and Architecture instance out of netlist representation
+        Generate a module header (entity) for this module
         """
-        ent = Entity(name)
-        ent._name = name + "_inst"  # instance name
-
+        self.ent = ent = HdlModuleDec()
+        ent.name = store_manager.name_scope.checked_name(name, ent)
+        ns = store_manager.hierarchy_push(ent)
         # create generics
-        for _, v in self.params.items():
-            ent.generics.append(v)
+        for p in sorted(params, key=lambda x: x._name):
+            hdl_val = p.get_hdl_value()
+            v = HdlIdDef()
+            v.origin = p
+            v.name = p.hdl_name = ns.checked_name(p._name, p)
+            v.type = hdl_val._dtype
+            v.value = hdl_val
+            ent.params.append(v)
+        return ent
 
-        # create ports
-        for s, d in interfaces.items():
-            pi = portItemfromSignal(s, ent, d)
-            pi.registerInternSig(s)
-            ent.ports.append(pi)
-            s.hidden = False
+    def create_HdlModuleDef(self,
+                            target_platform: DummyPlatform,
+                            store_manager: "StoreManager"):
+        """
+        Generate a module body (architecture) for this module
 
+        * Resolve name collisions
+        * Convert netlist representation to HdlProcesses
+        * Remove unconnected
+        * Mark visibility of signals
+        """
         removeUnconnectedSignals(self)
-        markVisibilityOfSignalsAndCheckDrivers(self.signals, interfaces)
+        markVisibilityOfSignalsAndCheckDrivers(self.signals, self.interfaces)
 
-        for proc in targetPlatform.beforeHdlArchGeneration:
+        for proc in target_platform.beforeHdlArchGeneration:
             proc(self)
 
-        arch = Architecture(ent)
-        for p in statements_to_HWProcesses(self.statements):
-            arch.processes.append(p)
+        ns = store_manager.name_scope
+        mdef = HdlModuleDef()
+        mdef.dec = self.ent
+        mdef.module_name = HdlValueId(self.ent.name, obj=self.ent)
+        mdef.name = "rtl"
+
+        processes = sorted(
+            statements_to_HdlStatementBlocks(self.statements),
+            key=lambda x:  (x.name, maxStmId(x)))
 
         # add signals, variables etc. in architecture
-        for s in self.signals:
-            if s not in interfaces.keys() and not s.hidden:
-                arch.variables.append(s)
+        for s in sorted((s for s in self.signals
+                        if not s.hidden and
+                        s not in self.interfaces.keys()),
+                        key=lambda x: (x.name, x._instId)):
+                v = HdlIdDef()
+                v.origin = s
+                s.name = v.name = ns.checked_name(s.name, s)
+                v.type = s._dtype
+                v.value = s.def_val
+                v.is_const = s._const
+                mdef.objs.append(v)
 
+        for p in processes:
+            p.name = ns.checked_name(p.name, p)
+        mdef.objs.extend(processes)
         # instantiate subUnits in architecture
         for u in self.subUnits:
-            arch.componentInstances.append(u)
+            ci = HdlCompInst()
+            ci.origin = u
+            ci.module_name = HdlValueId(u._ctx.ent.name, obj=u._ctx.ent)
+            ci.name = HdlValueId(ns.checked_name(u._name + "_inst", ci), obj=u)
+            e = u._ctx.ent
 
-        self.synthesised = True
+            ci.param_map.extend(e.params)
+            ci.port_map.extend(e.ports)
 
-        return [ent, arch]
+            mdef.objs.append(ci)
+
+        self.arch = mdef
+        return mdef
 
     def getDebugScopeName(self):
         scope = []

@@ -4,7 +4,7 @@ from operator import and_, or_, xor, add
 from hwt.code_utils import _mkOp, _connect, _intfToSig
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
-from hwt.hdl.statements import HwtSyntaxError, HdlStatement
+from hwt.hdl.statement import HwtSyntaxError, HdlStatement
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
@@ -97,7 +97,7 @@ class Switch(SwitchContainer):
         super(Switch, self).__init__(switchOn, [])
         switchOn.ctx.statements.add(self)
 
-    def addCases(self, tupesValStmnts):
+    def add_cases(self, tupesValStmnts):
         """
         Add multiple case statements from iterable of tuleles
         (caseVal, statements)
@@ -228,7 +228,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
            )
 
         return Switch(index)\
-            .addCases(
+            .add_cases(
             enumerate(statementLists)
         ).Default(
             bodyFn(items[0], 0)[0],

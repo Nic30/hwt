@@ -53,6 +53,8 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
             if isinstance(obj, Unit):
                 for u in obj._units:
                     m = getattr(model, u._name + "_inst")
+                    if u._shared_component_with is not None:
+                        u, _, _ = u._shared_component_with
                     self.collectInterfaceSignals(u, m, res)
         else:
             sig_name = obj._sigInside.name
@@ -60,15 +62,18 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
             res.add(s)
 
     def vcdRegisterSignals(self,
-                              obj: Union[Interface, Unit],
-                              model: BasicRtlSimModel,
-                              parent: Optional[VcdVarWritingScope],
-                              interface_signals: Set[BasicRtlSimProxy]):
+                           obj: Union[Interface, Unit],
+                           model: BasicRtlSimModel,
+                           parent: Optional[VcdVarWritingScope],
+                           interface_signals: Set[BasicRtlSimProxy]):
         """
         Register signals from interfaces for Interface or Unit instances
         """
-        if hasattr(obj, "_interfaces") and obj._interfaces:
-            name = obj._name
+        if obj._interfaces:
+            if isinstance(obj, Unit):
+                name = model._name
+            else:
+                name = obj._name
             parent_ = self.vcdWriter if parent is None else parent
 
             subScope = parent_.varScope(name)
@@ -83,6 +88,8 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
                     # register interfaces from all subunits
                     for u in obj._units:
                         m = getattr(model, u._name + "_inst")
+                        if u._shared_component_with is not None:
+                            u, _, _ = u._shared_component_with
                         self.vcdRegisterSignals(u, m, subScope, interface_signals)
 
             return subScope
@@ -99,8 +106,8 @@ class BasicRtlSimConfigVcd(BasicRtlSimConfig):
                     pass
 
     def vcdRegisterRemainingSignals(self, unitScope,
-            model: BasicRtlSimModel, 
-            interface_signals: Set[BasicRtlSimProxy]):
+                                    model: BasicRtlSimModel, 
+                                    interface_signals: Set[BasicRtlSimProxy]):
         for s in model._interfaces:
             if s not in interface_signals and s not in self.vcdWriter._idScope:
                 t = s._dtype

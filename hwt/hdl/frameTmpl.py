@@ -11,7 +11,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import flatten
-from pyMathBitPrecise.bit_utils import mask, selectBitRange, setBitRange
+from pyMathBitPrecise.bit_utils import mask, get_bit_range, set_bit_range
 
 
 class FrameTmpl(object):
@@ -366,11 +366,11 @@ class FrameTmpl(object):
                     newBits = 0
                     vld = 0
                 else:
-                    newBits = selectBitRange(val, flow, fhigh - flow)
+                    newBits = get_bit_range(val, flow, fhigh - flow)
                     vld = mask(high - low)
 
-                actualVal = setBitRange(actualVal, low, high - low, newBits)
-                actualVldMask = setBitRange(actualVldMask, low, high - low, vld)
+                actualVal = set_bit_range(actualVal, low, high - low, newBits)
+                actualVldMask = set_bit_range(actualVldMask, low, high - low, vld)
 
             v = typeOfWord.getValueCls()(typeOfWord, actualVal,
                                          actualVldMask)

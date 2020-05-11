@@ -1,10 +1,13 @@
 import importlib
+from io import StringIO
 import os
 import sys
 from types import ModuleType
 from typing import Optional
 
-from hwt.serializer.simModel.serializer import SimModelSerializer
+from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
+from hwt.serializer.simModel import SimModelSerializer
+from hwt.serializer.store_manager import SaveToFilesFlat, SaveToStream
 from hwt.simulator.basicRtlSimConfigVcd import BasicRtlSimConfigVcd
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
@@ -64,16 +67,20 @@ def toBasicSimulatorSimModel(
     if unique_name is None:
         unique_name = unit._getDefaultName()
 
+    _filter = SerializerFilterDoNotExclude()
     if build_dir is not None:
         build_private_dir = os.path.join(os.getcwd(), build_dir, unique_name)
+        store_man = SaveToFilesFlat(SimModelSerializer,
+                                    build_private_dir,
+                                    _filter=_filter)
     else:
-        build_private_dir = None
+        buff = StringIO()
+        store_man = SaveToStream(SimModelSerializer, buff, _filter=_filter)
 
-    sim_code = toRtl(unit,
-                     name=unique_name,
-                     targetPlatform=target_platform,
-                     saveTo=build_private_dir,
-                     serializer=SimModelSerializer)
+    toRtl(unit,
+          name=unique_name,
+          target_platform=target_platform,
+          store_manager=store_man)
 
     if build_dir is not None:
         d = os.path.join(os.getcwd(), build_dir)
@@ -92,7 +99,7 @@ def toBasicSimulatorSimModel(
         simModule = ModuleType('simModule_' + unique_name)
         # python supports only ~100 opened brackets
         # if exceded it throws MemoryError: s_push: parser stack overflow
-        exec(sim_code, simModule.__dict__)
+        exec(buff.getvalue(), simModule.__dict__)
 
     model_cls = simModule.__dict__[unit._name]
     # can not use just function as it would get bounded to class

@@ -137,5 +137,5 @@ class SignalOps(object):
         :attention: it is not call of function it is operator of assignment
         :return: list of assignments
         """
-        assert self._isAccessible
+        assert self._isAccessible, self
         return self._sig(source)

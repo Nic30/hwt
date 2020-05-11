@@ -1,11 +1,11 @@
 from hwt.hdl.assignment import Assignment
+from hwt.hdl.ifContainter import IfContainer
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlMemoryBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
-from hwt.hdl.ifContainter import IfContainer
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
 
 
 class RtlSyncSignal(RtlMemoryBase, RtlSignal):
@@ -45,8 +45,7 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
             source = source._auto_cast(self._dtype)
 
         a = Assignment(source, self.next)
-
-        return [a]
+        return [a, ]
 
     def _getAssociatedClk(self):
         d = self.singleDriver()
@@ -63,8 +62,3 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         assert len(d.ifTrue) == 1
         reset_if = d.ifTrue[0]
         return reset_if.cond
-
-    def __repr__(self):
-        from hwt.serializer.hwt.serializer import HwtSerializer
-        ctx = HwtSerializer.getBaseContext()
-        return HwtSerializer.SignalItem(self, ctx)

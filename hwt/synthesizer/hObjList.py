@@ -1,5 +1,5 @@
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
-from hwt.hdl.statements import HdlStatement
+from hwt.hdl.statement import HdlStatement
 
 
 class HObjList(list):

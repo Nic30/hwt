@@ -40,7 +40,7 @@ class Operator(HdlObject):
                  operands: Tuple[Union[RtlSignalBase, Value]]):
         self.operands = tuple(operands)
         self.operator = operator
-        self.result = None # type: RtlSignal
+        self.result = None  # type: RtlSignal
 
     @internal
     def registerSignals(self, outputs=[]):

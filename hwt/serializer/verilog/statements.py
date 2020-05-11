@@ -1,124 +1,72 @@
+from hdlConvertorAst.hdlAst._bases import iHdlStatement
+from hdlConvertorAst.hdlAst._expr import HdlAll
+from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmWait,\
+    HdlStmBlock
+from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.operator import Operator
-from hwt.hdl.process import HWProcess
-from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.sliceVal import SliceVal
-from hwt.hdl.variables import SignalItem
-from hwt.pyUtils.arrayQuery import arr_any
-from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.constants import SIGNAL_TYPE
-from hwt.serializer.generic.indent import getIndent
+from hwt.hdl.block import HdlStatementBlock
 from hwt.serializer.verilog.utils import verilogTypeOfSig
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
-class VerilogSerializer_statements():
+class ToHdlAstVerilog_statements():
 
-    @classmethod
-    def Assignment(cls, a: Assignment, ctx):
-        dst = a.dst
-        assert isinstance(dst, SignalItem)
-        # dstSignalType = verilogTypeOfSig(dst)
-        indent_str = getIndent(ctx.indent)
-        _dst = dst
-        if a.indexes is not None:
-            for i in reversed(a.indexes):
-                if isinstance(i, SliceVal):
-                    i = i.__copy__()
-                dst = dst[i]
-        dstStr = cls.asHdl(dst, ctx)
-
-        ver_sig_t = verilogTypeOfSig(_dst)
-        if ver_sig_t == SIGNAL_TYPE.REG:
+    def as_hdl_Assignment(self, a: Assignment):
+        blocking = False
+        ver_sig_t = verilogTypeOfSig(a.dst)
+        if ver_sig_t in (SIGNAL_TYPE.REG, SIGNAL_TYPE.PORT_REG):
             evDep = False
-            for driver in _dst.drivers:
+            for driver in a.dst.drivers:
                 if driver._now_is_event_dependent:
                     evDep = True
                     break
 
-            if not evDep or _dst.virtual_only:
-                prefix = ""
-                symbol = "="
-            else:
-                prefix = ""
-                symbol = "<="
-        elif ver_sig_t == SIGNAL_TYPE.WIRE:
-            if a.parentStm is None:
-                prefix = "assign "
-            else:
-                prefix = ""
-            symbol = "="
+            if not evDep or a.dst.virtual_only:
+                blocking = True
+        elif ver_sig_t in (SIGNAL_TYPE.WIRE, SIGNAL_TYPE.PORT_WIRE):
+            blocking = True
         else:
-            ValueError(ver_sig_t)
+            raise ValueError(ver_sig_t)
 
-        firstPartOfStr = "%s%s%s" % (indent_str, prefix, dstStr)
-        src_t = a.src._dtype
-        dst_t = dst._dtype
+        a = super(ToHdlAstVerilog_statements, self).as_hdl_Assignment(a)
+        a.is_blocking = blocking
+        return a
 
-        srcStr = cls.Value(a.src, ctx)
-
-        if dst_t == src_t \
-            or (isinstance(src_t, Bits)
-                and isinstance(dst_t, Bits)
-                and src_t.bit_length() == dst_t.bit_length() == 1):
-            return "%s %s %s;" % (firstPartOfStr, symbol, srcStr)
+    def can_pop_process_wrap(self, stms, hasToBeVhdlProcess):
+        if hasToBeVhdlProcess:
+            return False
         else:
-            raise SerializerException("%s %s %s is not valid assignment\n"
-                                      " because types are different (%r; %r) "
-                                      % (dstStr, symbol, srcStr,
-                                         dst._dtype, a.src._dtype))
+            assert len(stms) == 1
+            return True
 
-    @classmethod
-    def HWProcess(cls, proc: HWProcess, ctx):
-        """
-        Serialize HWProcess objects
-        """
-        body = proc.statements
-        extraVars = []
-        extraVarsSerialized = []
+    def has_to_be_process(self, proc: HdlStatementBlock):
+        for o in proc._outputs:
+            if verilogTypeOfSig(o) in (SIGNAL_TYPE.REG, SIGNAL_TYPE.PORT_REG):
+                return True
 
-        anyIsEventDependnt = arr_any(
-            proc.sensitivityList, lambda s: isinstance(s, Operator))
-        sensitivityList = sorted(
-            map(lambda s: cls.sensitivityListItem(s, ctx,
-                                                  anyIsEventDependnt),
-                proc.sensitivityList))
+        return False
 
-        hasToBeProcess = arr_any(
-            proc.outputs,
-            lambda x: verilogTypeOfSig(x) == SIGNAL_TYPE.REG
-        )
+    def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> iHdlStatement:
+        p = super(ToHdlAstVerilog_statements,
+                  self).as_hdl_HdlStatementBlock(proc)
+        if isinstance(p, HdlStmProcess):
+            no_wait = True
+            if isinstance(p.body, HdlStmWait):
+                no_wait = False
+            elif isinstance(p.body, HdlStmBlock):
+                for _o in p.body.body:
+                    if isinstance(_o, HdlStmWait):
+                        no_wait = False
+                        break
+            if no_wait and not p.sensitivity:
+                # all input are constant and that is why this process does not have
+                # any sensitivity
+                p.sensitivity = [HdlAll, ]
 
-        if hasToBeProcess:
-            childCtx = ctx.withIndent()
-        else:
-            childCtx = ctx
-
-        def createTmpVarFn(suggestedName, dtype):
-            s = RtlSignal(None, None, dtype, virtual_only=True)
-            s.name = childCtx.scope.checkedName(suggestedName, s)
-            s.hidden = False
-            serializedS = cls.SignalItem(s, childCtx, declaration=True)
-            extraVars.append(s)
-            extraVarsSerialized.append(serializedS)
-            return s
-
-        childCtx.createTmpVarFn = createTmpVarFn
-        statemets = [cls.asHdl(s, childCtx) for s in body]
-
-        if hasToBeProcess:
-            proc.name = ctx.scope.checkedName(proc.name, proc)
-
-        extraVarsInit = []
-        for s in extraVars:
-            a = Assignment(s.def_val, s, virtual_only=True)
-            extraVarsInit.append(cls.Assignment(a, childCtx))
-
-        return cls.processTmpl.render(
-            indent=getIndent(ctx.indent),
-            name=proc.name,
-            hasToBeProcess=hasToBeProcess,
-            extraVars=extraVarsSerialized,
-            sensitivityList=" or ".join(sensitivityList),
-            statements=extraVarsInit + statemets
-        )
+            # add label
+            if not isinstance(p.body, HdlStmBlock):
+                b = p.body
+                p.body = HdlStmBlock()
+                p.body.body.append(b)
+            p.body.labels.extend(p.labels)
+            p.labels.clear()
+        return p

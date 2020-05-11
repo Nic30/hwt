@@ -37,7 +37,11 @@ class BitsVal(Bits3val, EventCapableVal, Value):
 
     @internal
     def _convSign__val(self, signed):
-        return Bits3val.cast_sign(self, signed)
+        v = Bits3val.cast_sign(self, signed)
+        if signed is not None:
+            assert v._dtype is not self._dtype, "can modify shared type instance"
+            v._dtype.force_vector = True
+        return v
 
     @internal
     def _convSign(self, signed):
@@ -56,6 +60,8 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 return self
             t = copy(self._dtype)
             t.signed = signed
+            if t.signed is not None:
+                t.force_vector = True
 
             if signed is None:
                 cnv = AllOps.BitsAsVec
@@ -90,7 +96,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         try:
             other._dtype.bit_length
         except AttributeError:
-            raise TypeError("Can not concat Bits and", other._dtype)
+            raise TypeError("Can not concat Bits and", other)
 
         if areValues(self, other):
             return self._concat__val(other)
@@ -99,7 +105,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             other_w = other._dtype.bit_length()
             resWidth = w + other_w
             Bits = self._dtype.__class__
-            resT = Bits(resWidth, signed=self._dtype.signed)
+            resT = Bits(resWidth, signed=self._dtype.signed, force_vector=True)
             # is instance of signal
             if isinstance(other, InterfaceBase):
                 other = other._sig
@@ -205,7 +211,11 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             if iamVal:
                 if isinstance(key, SLICE.getValueCls()):
                     key = key.val
-                return Bits3val.__getitem__(self, key)
+                v = Bits3val.__getitem__(self, key)
+                if v._dtype.bit_length() == 1 and not v._dtype.force_vector:
+                    assert v._dtype is not self._dtype
+                    v._dtype.force_vector = True
+                return v
             else:
                 key = SLICE.from_py(slice(start, stop, -1))
                 _resWidth = start - stop
@@ -227,7 +237,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             t = key._dtype
             if isinstance(t, Slice):
                 resT = Bits(bit_length=key.staticEval()._size(),
-                            force_vector=st.force_vector,
+                            force_vector=True,
                             signed=st.signed,
                             negated=st.negated)
             elif isinstance(t, Bits):
@@ -368,6 +378,18 @@ class BitsVal(Bits3val, EventCapableVal, Value):
 
         return vec(0, int(other))._concat(self[:other])
 
+    def __neg__(self):
+        if isinstance(self, Value):
+            return Bits3val.__neg__(self)
+        else:
+            if not self._dtype.signed:
+                self = self._signed()
+
+            resT = self._dtype
+
+            o = Operator.withRes(AllOps.MINUS_UNARY, [self], self._dtype)
+            return o._auto_cast(resT)
+
     def __sub__(self, other):
         return bitsArithOp(self, other, AllOps.SUB)
 
@@ -375,13 +397,29 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         return bitsArithOp(self, other, AllOps.ADD)
 
     def __floordiv__(self, other) -> "Bits3val":
-        other = toHVal(other)
+        other = toHVal(other, suggestedType=self._dtype)
         if isinstance(self, Value) and isinstance(other, Value):
             return Bits3val.__floordiv__(self, other)
         else:
-            return Operator.withRes(AllOps.MUL,
+            if not isinstance(other._dtype, self._dtype.__class__):
+                raise TypeError()
+            return Operator.withRes(AllOps.DIV,
                                     [self, other],
                                     self._dtype.__copy__())
+
+    def _ternary(self, a, b):
+        if isinstance(self, Value):
+            if self:
+                return a
+            else:
+                return b
+        else:
+            a = toHVal(a)
+            b = toHVal(b)
+            return Operator.withRes(
+                AllOps.TERNARY,
+                [self, a, b],
+                a._dtype.__copy__())
 
     def __mul__(self, other):
         Bits = self._dtype.__class__

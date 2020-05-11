@@ -7,7 +7,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
-from hwt.hdl.statements import HdlStatement, isSameHVal, isSameStatementList,\
+from hwt.hdl.statement import HdlStatement, isSameHVal, isSameStatementList,\
     statementsAreSame, HwtSyntaxError
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import Value
@@ -93,7 +93,7 @@ class SwitchContainer(HdlStatement):
             # generate new statement for them
             sel_sig = self.switchOn
             n = self.__class__(sel_sig)
-            n.addCases(new_cases)
+            n.add_cases(new_cases)
             if new_default:
                 n.Default(*new_default)
 
