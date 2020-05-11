@@ -4,7 +4,7 @@ from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import default_reinterpret_cast_fn
 from hwt.synthesizer.exceptions import TypeConversionErr
-from pyMathBitPrecise.bit_utils import selectBitRange, mask
+from pyMathBitPrecise.bit_utils import get_bit_range, mask
 
 
 @internal
@@ -34,8 +34,8 @@ def getBits_from_array(array, wordWidth, start, end,
         width = min(end, endOfWord) - start
         offset = start % wordWidth
 
-        val = selectBitRange(v.val, offset, width)
-        vld_mask = selectBitRange(v.vld_mask, offset, width)
+        val = get_bit_range(v.val, offset, width)
+        vld_mask = get_bit_range(v.vld_mask, offset, width)
 
         m = mask(width)
         value.val |= (val & m) << inPartOffset
