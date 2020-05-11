@@ -112,10 +112,11 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [rogue](https://github.com/slaclab/rogue) , C++/Python - Hardware Abstraction & Data Acquisition System
 * [spatial](https://github.com/stanford-ppl/spatial) - Scala, an Argon DSL like, high level abstraction
 * [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, HCL
+* [SyDpy](https://github.com/bogdanvuk/sydpy) - ?-2016, Python, HCL and verif. framework operating on TML/RTL level
+* [systemrdl-compiler](https://github.com/SystemRDL/systemrdl-compiler) - Python,c++, register description language compiler
 * [UHDM](https://github.com/alainmarcel/UHDM) - C++ SystemVerilog -> C++ model
 * [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
 * [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric HCL with HLS like features
-
 
 ## Related open-source
 

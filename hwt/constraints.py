@@ -24,7 +24,8 @@ class ConstrainBase():
 
     def register_on_parent(self):
         self.get_parent()._constraints.append(self)
-    
+
+
 class set_max_delay(ConstrainBase):
     """
     Object which represents the max_delay constrain
@@ -50,23 +51,27 @@ class set_max_delay(ConstrainBase):
     def get_parent(self) -> Unit:
         return get_parent_unit(self.end)
 
+
 class set_false_path(ConstrainBase):
-    def __init__(self, start: Union[None, Interface, RtlSignal], end: Union[None, Interface, RtlSignal]):
+
+    def __init__(self, start: Union[None, Interface, RtlSignal],
+                 end: Union[None, Interface, RtlSignal]):
         self.start = start
         self.end = end
         self.register_on_parent()
 
-    def get_parent(self)->Unit:
+    def get_parent(self) -> Unit:
         o = self.start
         if o is None:
             o = self.end
         return get_parent_unit(o)
 
+
 class get_clock_of(ConstrainBase):
     def __init__(self, obj):
         self.obj = obj
 
-    def get_parent(self)->Unit:
+    def get_parent(self) -> Unit:
         return get_parent_unit(self.obj)
 
 
@@ -82,5 +87,5 @@ class set_async_reg(ConstrainBase):
         self.sig = sig
         self.register_on_parent()
 
-    def get_parent(self)->Unit:
+    def get_parent(self) -> Unit:
         return get_parent_unit(self.sig)

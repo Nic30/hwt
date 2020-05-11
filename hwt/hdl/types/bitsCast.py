@@ -1,6 +1,4 @@
 from hwt.doc_markers import internal
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT, BOOL
@@ -50,7 +48,8 @@ def convertBits(self: Bits, sigOrVal, toType: HdlType):
             return sigOrVal._eq(self.getValueCls().from_py(self, v))
     elif isinstance(toType, Bits):
         if self.bit_length() == toType.bit_length():
-            return sigOrVal._convSign(toType.signed)
+            if self.const is toType.const:
+                return sigOrVal._convSign(toType.signed)
 
     return default_auto_cast_fn(self, sigOrVal, toType)
 

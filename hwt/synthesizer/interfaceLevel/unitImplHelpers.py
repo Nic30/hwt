@@ -1,8 +1,6 @@
 from itertools import chain
-from typing import Union
 
 from hwt.doc_markers import internal
-from hwt.hdl.constants import INTF_DIRECTION, DIRECTION
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.struct import HStruct
 from hwt.synthesizer.exceptions import IntfLvlConfErr

@@ -57,15 +57,17 @@ class HStruct(HdlType):
     :ivar ~.valueCls: Class of value for this type as usual
         in HdlType implementations
     """
-    def __init__(self, *template, name=None):
+    def __init__(self, *template, name=None, const=False):
         """
         :param template: list of tuples (type, name) or HStructField objects
             name can be None (= padding)
         :param name: optional name used for debugging purposes
         """
+        super(HStruct, self).__init__(const=const)
+
         fields = []
+        field_by_name = {}
         self.name = name
-        fieldNames = []
         bit_length = 0
         for f in template:
             try:
@@ -78,7 +80,8 @@ class HStruct(HdlType):
 
             fields.append(field)
             if field.name is not None:
-                fieldNames.append(field.name)
+                assert field.name not in field_by_name, field.name
+                field_by_name[field.name] = field
 
             t = field.dtype
             if bit_length is not None:
@@ -89,15 +92,16 @@ class HStruct(HdlType):
                     bit_length = None
 
         self.fields = tuple(fields)
-        self.__hash = hash((self.name, self.fields))
+        self.field_by_name = field_by_name
+        self.__hash = hash((self.name, self.const, self.fields))
         self.__bit_length_val = bit_length
 
-        usedNames = set(fieldNames)
+        usedNames = set(field_by_name.keys())
         assert not protectedNames.intersection(usedNames),\
             protectedNames.intersection(usedNames)
 
         class StructVal(StructValBase):
-            __slots__ = fieldNames
+            __slots__ = list(usedNames)
 
         if name is not None:
             StructVal.__name__ = name + "Val"
@@ -137,7 +141,7 @@ class HStruct(HdlType):
         if self is other:
             return True
         if (type(self) is type(other)):
-            if self.name != other.name:
+            if self.name != other.name or self.const != other.const:
                 raise False
             try:
                 self_l = self.bit_length()
