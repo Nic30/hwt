@@ -11,7 +11,7 @@ from hwt.synthesizer.unit import Unit, HdlConstraintList
 from hwt.constraints import _get_absolute_path
 
 
-def toRtl(unit_or_cls: Unit, store_manager: StoreManager,
+def to_rtl(unit_or_cls: Unit, store_manager: StoreManager,
           name: str=None,
           target_platform=DummyPlatform()):
     """
@@ -36,7 +36,7 @@ def toRtl(unit_or_cls: Unit, store_manager: StoreManager,
 
     # serialize all unit instances to HDL code
     constraints = HdlConstraintList()
-    for _, obj in u._toRtl(target_platform, store_manager):
+    for _, obj in u._to_rtl(target_platform, store_manager):
         # collect constraints directly in current component
         constraints.extend(obj._constraints)
 
@@ -78,7 +78,7 @@ def to_rtl_str(unit_or_cls: Unit,
                target_platform=DummyPlatform()):
     buff = StringIO()
     store_manager = SaveToStream(serializer_cls, buff)
-    toRtl(unit_or_cls, store_manager, name, target_platform)
+    to_rtl(unit_or_cls, store_manager, name, target_platform)
     return buff.getvalue()
 
 
@@ -105,6 +105,6 @@ def synthesised(u: Unit, target_platform=DummyPlatform()):
     if not hasattr(u, "_interfaces"):
         u._loadDeclarations()
 
-    for _ in u._toRtl(target_platform, sm):
+    for _ in u._to_rtl(target_platform, sm):
         pass
     return u

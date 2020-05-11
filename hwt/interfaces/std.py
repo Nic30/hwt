@@ -30,8 +30,8 @@ class Signal(SignalOps, Interface):
 
     :ivar ~._dtype: type of signal
     :ivar ~._sig: RtlSignal instance (physical representation of this logical signal)
-    :ivar ~._sigInside: _sig after toRtl conversion is made
-        (after toRtl conversion _sig is signal for parent unit
+    :ivar ~._sigInside: _sig after to_rtl conversion is made
+        (after to_rtl conversion _sig is signal for parent unit
         and _sigInside is signal in original unit, this separates process
         of translating units)
     :note: _sigInside is None if the body of component was not elaborated yet

@@ -331,7 +331,7 @@ class PropDeclrCollector(object):
         u._loadDeclarations()
         sm = self._store_manager
         with WithNameScope(sm, sm.name_scope.parent):
-            self._lazy_loaded.extend(u._toRtl(
+            self._lazy_loaded.extend(u._to_rtl(
                 self._target_platform, self._store_manager))
         u._signalsForSubUnitEntity(self._ctx, "sig_" + uName)
 

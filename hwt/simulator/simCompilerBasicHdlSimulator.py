@@ -11,7 +11,7 @@ from hwt.serializer.store_manager import SaveToFilesFlat, SaveToStream
 from hwt.simulator.basicRtlSimConfigVcd import BasicRtlSimConfigVcd
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
-from hwt.synthesizer.utils import toRtl
+from hwt.synthesizer.utils import to_rtl
 from pycocotb.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
 
 
@@ -77,7 +77,7 @@ def toBasicSimulatorSimModel(
         buff = StringIO()
         store_man = SaveToStream(SimModelSerializer, buff, _filter=_filter)
 
-    toRtl(unit,
+    to_rtl(unit,
           name=unique_name,
           target_platform=target_platform,
           store_manager=store_man)

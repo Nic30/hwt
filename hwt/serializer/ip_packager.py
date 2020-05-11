@@ -14,7 +14,7 @@ from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
-from hwt.synthesizer.utils import toRtl
+from hwt.synthesizer.utils import to_rtl
 from ipCorePackager.otherXmlObjs import Value
 from ipCorePackager.packager import IpCorePackager
 from ipCorePackager.intfIpMeta import VALUE_RESOLVE
@@ -73,7 +73,7 @@ class IpPackager(IpCorePackager):
         """
         ser = self.serializer
         store = SaveToFilesFlat(ser, saveTo)
-        toRtl(top, name=topName, store_manager=store,
+        to_rtl(top, name=topName, store_manager=store,
               target_platform=self.target_platform)
         return store.files
 

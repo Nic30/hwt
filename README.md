@@ -38,7 +38,7 @@ Also [serialization modes](https://github.com/Nic30/hwt/blob/master/hwt/serializ
 
 HWT performs no HLS planing or schedueling. HWT is also good as API for code generating by more advanced tools. Hierarchy of components/interfaces/types is not limited. User specifed names are checked for collision with target language.
 
-HWT designs are instances. No specific exceution is required, just use toRtl metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
+HWT designs are instances. No specific exceution is required, just use to_rtl metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
 
 
 ## HWT ecosystem
@@ -69,7 +69,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * Where is the entry point of the compiler?
   * This is not a compiler, it is library of the objects which can be converted to Verilog/VHDL and back.
 * How do I get Verilog/VHDL?
-  * Use `toRtl` method [example](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py)
+  * Use `to_rtl` method [example](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py)
 * How do I define my interface type, protocol and simulation agent?
   * Derive from any Interface class. [example](https://github.com/Nic30/hwt/blob/master/hwt/interfaces/std.py#L107) 
 * I do have c structure of UDP header, how do I send/recieve UDP packet over AXI-stream interface?

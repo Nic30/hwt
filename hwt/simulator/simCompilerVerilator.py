@@ -8,7 +8,7 @@ from hwt.serializer.verilog import VerilogSerializer
 from hwt.simulator.shortcuts import collect_signals
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
-from hwt.synthesizer.utils import toRtl
+from hwt.synthesizer.utils import to_rtl
 from pycocotb.verilator.simulator_gen import verilatorCompile, \
     generatePythonModuleWrapper, loadPythonCExtensionFromFile
 
@@ -37,7 +37,7 @@ def toVerilatorSimModel(unit: Unit,
     store_man = SaveToFilesFlat(VerilogSerializer, build_private_dir,
                                 _filter=SerializerFilterDoNotExclude())
 
-    toRtl(unit,
+    to_rtl(unit,
           name=unique_name,
           target_platform=target_platform,
           store_manager=store_man)

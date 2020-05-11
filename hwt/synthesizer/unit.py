@@ -43,7 +43,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
     :type ~._parent: Optional[Unit]
     :ivar ~._lazy_loaded: container of rtl object which were lazy loaded
         in implementation phase (this object has to be returned
-        from :func:`~._toRtl` of parent before it it's own objects)
+        from :func:`~._to_rtl` of parent before it it's own objects)
     :ivar ~._shared_component_with: Optional typle of the other Unit instance
         which produces an exactly same component in HDL and interface
         map current to shared and shared to current
@@ -129,7 +129,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
             return self.__doc__
 
     @internal
-    def _toRtl(self, target_platform: DummyPlatform,
+    def _to_rtl(self, target_platform: DummyPlatform,
                store_manager: "StoreManager"):
         """
         synthesize all subunits, make connections between them,
@@ -185,7 +185,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         if do_serialize_this:
             # prepare subunits
             for u in self._units:
-                yield from u._toRtl(target_platform, store_manager)
+                yield from u._to_rtl(target_platform, store_manager)
 
             # now every sub unit has a HdlModuleDec prepared
             for u in self._units:
@@ -265,7 +265,7 @@ def Unit_checkCompInstances(u: Unit):
                     u._getstr(inRtl - inIntf)))
         elif cInst_cnt < unit_cnt:
             raise IntfLvlConfErr(
-                "%s, %s: _toRtl: unit(s) are missing in produced HDL %s" % (
+                "%s, %s: _to_rtl: unit(s) are missing in produced HDL %s" % (
                     u._name, u.__class__.__name__,
                     str(inIntf - inRtl)))
 
