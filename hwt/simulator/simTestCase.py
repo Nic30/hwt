@@ -1,7 +1,7 @@
-from _random import Random
 from collections import deque
 from inspect import isgenerator
 import os
+from random import Random
 from typing import Optional
 import unittest
 
