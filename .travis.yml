@@ -16,15 +16,14 @@ install:
   - DIST_PACKAGES=/home/travis/virtualenv/python$PYTHON_VERSION/lib/python$PYTHON_VERSION_SHORT/site-packages
   - pip3 install coveralls codecov git+https://github.com/Nic30/pyDigitalWaveTools.git git+https://github.com/Nic30/ipCorePackager.git git+https://github.com/Nic30/pyMathBitPrecise.git git+https://github.com/Nic30/pycocotb.git
   - python3 setup.py develop
-  - rm -rf $DIST_PACKAGES/hwt-*
-  - ln -s hwt $DIST_PACKAGES/hwt
   - cd ..
   - git clone --depth=1 https://github.com/Nic30/hwtLib.git
   - pushd hwtLib
   - python3 setup.py install
   - popd
   - cd hwt
-
+  - rm -rf $DIST_PACKAGES/hwt-*
+  - ln -s hwt $DIST_PACKAGES/hwt
 
 script:
 - coverage run --branch --source=hwt ../hwtLib/setup.py test
