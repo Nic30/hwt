@@ -257,6 +257,14 @@ class RtlSignalOps():
             raise e_simplified
 
     # arithmetic
+    def __neg__(self):
+        try:
+            return self.naryOp(AllOps.ADD, tv(self).__neg__)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
+
     def __add__(self, other):
         try:
             return self.naryOp(AllOps.ADD, tv(self).__add__, other)
@@ -358,7 +366,7 @@ class RtlSignalOps():
         """
         assert not self._const, self
         if isinstance(source, InterfaceBase):
-            assert source._isAccessible
+            assert source._isAccessible, source
             source = source._sig
 
         try:

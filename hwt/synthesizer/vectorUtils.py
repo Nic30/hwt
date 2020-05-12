@@ -178,7 +178,7 @@ class BitWalker():
         except StopIteration:
             return
 
-        raise AssertionError("BitWalker there stil were some items")
+        raise AssertionError("there stil were some items")
 
 
 def iterBits(sigOrVal: Union[RtlSignal, Value], bitsInOne: int=1,
@@ -189,6 +189,8 @@ def iterBits(sigOrVal: Union[RtlSignal, Value], bitsInOne: int=1,
     :param sigOrVal: signal or value to iterate over
     :param bitsInOne: number of bits in one part
     :param skipPadding: if true padding is skipped in dense types
+    :param fillup: flag that means that if there is not enought bits
+        for last iterm fill it up with invalid bits (otherwise raise)
     """
     bw = BitWalker(sigOrVal, skipPadding, fillup)
     try:

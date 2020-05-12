@@ -15,6 +15,8 @@ from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.vectorUtils import fitTo
+from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
+from hdlConvertorAst.translate.common.name_scope import NameScope
 
 
 def _default_param_updater(self, myP, parentPval):
@@ -40,16 +42,10 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
     :note: only interfaces without _interfaces have
 
-    :ivar ~._sig: rtl level signal instance
-    :ivar ~._sigInside: _sig after toRtl conversion is made
-        (after toRtl conversion _sig is signal for parent unit
-        and _sigInside is signal in original unit, this separates process
-        of translating units)
-    :ivar ~._boundedEntityPort: entityPort for which was this interface created
     :ivar ~._boundedSigLvlUnit: RTL unit for which was this interface created
 
 
-    Agenda of direction
+    Agenda of directions and HDL
 
     :ivar ~._masterDir: specifies which direction has this interface at master
     :ivar ~._direction: means actual direction of this interface resolved
@@ -57,6 +53,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
     :ivar ~._ctx: rtl netlist context of all signals and params
         on this interface after interface is registered on parent _ctx
         is merged
+    :ivar ~._hdl_port: a HdlPortItem instance available once the unit is synthesized
 
     Agenda of simulations
 
@@ -97,8 +94,8 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         # flags for better design error detection
         self._isExtern = False
-        self._isAccessible = True
         self._ag = None
+        self._hdl_port = None
 
     def _m(self):
         """
@@ -142,7 +139,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             self._setDirectionsLikeIn(self._direction)
 
     @internal
-    def _clean(self, rmConnetions=True, lockNonExternal=True):
+    def _clean(self, lockNonExternal=True):
         """
         Remove all signals from this interface (used after unit is synthesized
         and its parent is connecting its interface to this unit)
@@ -150,14 +147,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         if self._interfaces:
             for i in self._interfaces:
-                i._clean(rmConnetions=rmConnetions,
-                         lockNonExternal=lockNonExternal)
-        else:
-            self._sigInside = self._sig
-            self._sig = None
-
-        if lockNonExternal and not self._isExtern:
-            self._isAccessible = False  # [TODO] mv to signal lock
+                i._clean(lockNonExternal=lockNonExternal)
 
     @internal
     def _connectToIter(self, master, exclude=None, fit=False):
@@ -177,7 +167,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 if mIfc._masterDir == DIRECTION.OUT:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr(
-                            "Invalid connection %r <= %r" % (ifc, mIfc))
+                            "Invalid connection", ifc, "<=", mIfc)
 
                     yield from ifc._connectTo(mIfc,
                                               exclude=exclude,
@@ -185,7 +175,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 else:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr(
-                            "Invalid connection %r <= %r" % (mIfc, ifc))
+                            "Invalid connection", mIfc, "<=", ifc)
 
                     yield from mIfc._connectTo(ifc,
                                                exclude=exclude,
@@ -201,55 +191,75 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
     @internal
     def _signalsForInterface(self,
-                             context: RtlNetlist,
+                             ctx: RtlNetlist,
                              res: Optional[Dict[RtlSignal, DIRECTION]],
+                             name_scope: Optional[NameScope],
                              prefix='', typeTransform=None,
                              reverse_dir=False):
         """
-        generate _sig for each interface which has no subinterface
-        if already has _sig return it instead
+        Generate RtlSignal _sig and HdlPortInstance _hdl_port
+        for each interface which has no subinterface
 
-        :param context: instance of RtlNetlist where signals should be created
+        :note: if already has _sig return use it instead
+
+        :param ctx: instance of RtlNetlist where signals should be created
         :param res: output dictionary where result should be stored
         :param prefix: name prefix for created signals
+        :param name_scope: name scope used to check colisions on port names
+            if this a current top (every component is checked
+            when it is seen first time)
         :param typeTransform: optional function (type) returns modified type
             for signal
         """
         if self._interfaces:
             for intf in self._interfaces:
-                intf._signalsForInterface(context, res, prefix,
+                intf._signalsForInterface(ctx, res, name_scope,
+                                          prefix=prefix,
                                           typeTransform=typeTransform,
                                           reverse_dir=reverse_dir)
         else:
-            s = self._sig
-            if s is None:
-                t = self._dtype
-                if typeTransform is not None:
-                    t = typeTransform(t)
+            assert self._sig is None, self
+            t = self._dtype
+            if typeTransform is not None:
+                t = typeTransform(t)
 
-                s = context.sig(prefix + self._getPhysicalName(), t)
-                s._interface = self
-                self._sig = s
+            s = ctx.sig(prefix + self._getPhysicalName(), t)
+            s._interface = self
+            self._sig = s
 
-                if hasattr(self, '_boundedEntityPort'):
-                    self._boundedEntityPort.connectSig(self._sig)
-            if res is not None:
+            if self._isExtern:
                 d = INTF_DIRECTION.asDirection(self._direction)
+                u = ctx.parent
                 if reverse_dir:
                     d = DIRECTION.opposite(d)
-                res[s] = d
+                    assert self._hdl_port is None, (
+                        "Now creating a hdl interface for top"
+                        " it but seems that it was already created")
+
+                if res is not None:
+                    res[s] = d
+
+                if reverse_dir:
+                    pi = portItemfromSignal(s, u, d)
+                    # port of current top component
+                    s.name = name_scope.checked_name(s.name, s)
+                    pi.connectInternSig(s)
+                    ctx.ent.ports.append(pi)
+                else:
+                    pi = self._hdl_port
+                    # port of some subcomponent which names were already checked
+                    pi.connectOuterSig(s)
+
+                self._hdl_port = pi
 
     def _getPhysicalName(self):
         """Get name in HDL """
-        if hasattr(self, "_boundedEntityPort"):
-            return self._boundedEntityPort.name
-        else:
-            def separator_getter(o):
-                if isinstance(o, Interface):
-                    return o._NAME_SEPARATOR
-                else:
-                    return "_"
-            return self._getFullName(separator_getter)
+        def separator_getter(o):
+            if isinstance(o, Interface):
+                return o._NAME_SEPARATOR
+            else:
+                return "_"
+        return self._getFullName(separator_getter)
 
     def _getFullName(self, separator_getter=lambda x: "."):
         """get all name hierarchy separated by '.' """

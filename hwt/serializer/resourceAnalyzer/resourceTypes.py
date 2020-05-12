@@ -1,7 +1,8 @@
 
 class ResourceError(Exception):
     """
-    Resource of this kind does not exists in current hardware
+    An error which means that the resource of this kind
+    does not exists in current hardware.
     """
 
 
@@ -11,7 +12,8 @@ class ResourceMUX():
         self.inputs = inputs
 
     def __repr__(self):
-        return "<ResourceMUX %d bits, %d inputs>" % (
+        return "<%s %d bits, %d inputs>" % (
+            self.__class__.__name__,
             self.bitWidth, self.inputs)
 
 

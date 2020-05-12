@@ -1,127 +1,91 @@
-from jinja2.environment import Environment
-from jinja2.loaders import PackageLoader
+from copy import copy
+from typing import Optional
 
-from hwt.hdl.constants import DIRECTION
-from hwt.hdl.entity import Entity
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
+from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlCompInst
+from hdlConvertorAst.to.systemc.keywords import SYSTEMC_KEYWORDS
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
+from hwt.hdl.portItem import HdlPortItem
 from hwt.interfaces.std import Clk
-from hwt.serializer.generic.nameScope import LangueKeyword
-from hwt.serializer.generic.serializer import GenericSerializer
-from hwt.serializer.systemC.context import SystemCCtx
-from hwt.serializer.systemC.keywords import SYSTEMC_KEYWORDS
-from hwt.serializer.systemC.ops import SystemCSerializer_ops
-from hwt.serializer.systemC.statements import SystemCSerializer_statements
-from hwt.serializer.systemC.type import SystemCSerializer_type
-from hwt.serializer.systemC.value import SystemCSerializer_value
-from hwt.serializer.utils import maxStmId
+from hwt.serializer.generic.to_hdl_ast import ToHdlAst,\
+    HWT_TO_HDLCONVEROTR_DIRECTION
+from hwt.serializer.simModel.serializer import ToHdlAstSimModel
+from hwt.serializer.systemC.expr import ToHdlAstSystemC_expr
+from hwt.serializer.systemC.statements import ToHdlAstSystemC_statements
+from hwt.serializer.systemC.type import ToHdlAstSystemC_type
+from ipCorePackager.constants import DIRECTION
 
 
-class SystemCSerializer(SystemCSerializer_value, SystemCSerializer_type,
-                        SystemCSerializer_statements, SystemCSerializer_ops,
-                        GenericSerializer):
+class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
+                      ToHdlAstSystemC_statements,
+                      ToHdlAst):
     """
     Serialized used to convert HWT design to SystemC code
     """
-    fileExtension = '.cpp'
-    _keywords_dict = {kw: LangueKeyword() for kw in SYSTEMC_KEYWORDS}
-    env = Environment(loader=PackageLoader('hwt',
-                                           'serializer/systemC/templates'))
-    moduleTmpl = env.get_template('module.cpp.template')
-    methodTmpl = env.get_template("method.cpp.template")
-    ifTmpl = env.get_template("if.cpp.template")
-    switchTmpl = env.get_template("switch.cpp.template")
+    _keywords_dict = {kw: LanguageKeyword() for kw in SYSTEMC_KEYWORDS}
+    sc_in_clk = HdlValueId("sc_in_clk", obj=LanguageKeyword())
+    sc_out_clk = HdlValueId("sc_out_clk", obj=LanguageKeyword())
+    sc_inout_clk = HdlValueId("sc_inout_clk", obj=LanguageKeyword())
+    sc_in = HdlValueId("sc_in", obj=LanguageKeyword())
+    sc_out = HdlValueId("sc_out", obj=LanguageKeyword())
+    sc_inout = HdlValueId("sc_inout", obj=LanguageKeyword())
 
-    @classmethod
-    def getBaseContext(cls):
-        return SystemCCtx(cls.getBaseNameScope(), 0, None, None)
+    def __init__(self, name_scope: Optional[NameScope]=None):
+        ToHdlAst.__init__(self, name_scope=name_scope)
+        self._is_target = False
+        self._in_sensitivity_list = False
+        self.signalType = None
 
-    @classmethod
-    def comment(cls, comentStr):
-        return "\n".join(["/*", comentStr, "*/"])
+    def as_hdl_HdlModuleDec(self, o: HdlModuleDec):
+        return ToHdlAstSimModel.as_hdl_HdlModuleDec(self, o)
 
-    @classmethod
-    def PortItem(cls, p, ctx):
-        d = cls.DIRECTION(p.direction)
-        p.name = ctx.scope.checkedName(p.name, p)
-        p.getInternSig().name = p.name
-        if isinstance(p.getInternSig()._interface, Clk):
-            return "sc_%s_clk %s;" % (d, p.name)
+    def as_hdl_HdlPortItem(self, o: HdlPortItem):
+        i = o.getInternSig()._interface
+        d = o.direction
+        if isinstance(i, Clk):
+            assert i._dtype.bit_length() == 1, i
+            if d == DIRECTION.IN:
+                t = self.sc_in_clk
+            elif d == DIRECTION.OUT:
+                t = self.sc_out_clk
+            elif d == DIRECTION.INOUT:
+                t = self.sc_inout_clk
+            else:
+                raise ValueError(d)
+        else:
+            if d == DIRECTION.IN:
+                pt = self.sc_in
+            elif d == DIRECTION.OUT:
+                pt = self.sc_out
+            elif d == DIRECTION.INOUT:
+                pt = self.sc_inout
+            else:
+                raise ValueError(d)
+            t = self.as_hdl_HdlType(o._dtype)
+            t = HdlOp(HdlOpType.PARAMETRIZATION, [pt, t])
 
-        return "sc_%s<%s> %s;" % (d,
-                                  cls.HdlType(p._dtype, ctx),
-                                  p.name)
+        var = HdlIdDef()
+        var.direction = HWT_TO_HDLCONVEROTR_DIRECTION[o.direction]
+        s = o.getInternSig()
+        var.name = s.name
+        var.origin = o
+        var.type = t
+        return var
 
-    @classmethod
-    def DIRECTION(cls, d):
-        return d.name.lower()
+    def as_hdl_HdlCompInst(self, o: HdlCompInst) -> HdlCompInst:
+        new_o = copy(o)
+        new_o.param_map = []
 
-    @classmethod
-    def Entity(cls, ent, ctx):
-        cls.Entity_prepare(ent, ctx)
-        # [TODO] separate declarations from definitions
-        doc = ent.__doc__
-        if doc and id(doc) != id(Entity.__doc__):
-            return cls.comment(doc) + "\n"
-        return ""
+        orig_is_target = self._is_target
+        try:
+            self._is_target = True
+            port_map = []
+            for pi in o.port_map:
+                pm = self.as_hdl_PortConnection(pi)
+                port_map.append(pm)
+            new_o.port_map = port_map
+        finally:
+            self._is_target = orig_is_target
 
-    @classmethod
-    def GenericItem(cls, g, ctx):
-        # [TODO] params currently serialized evaluated
-        return ""
-
-    @classmethod
-    def Architecture_var(cls, v, serializerVars, extraTypes,
-                         extraTypes_serialized, ctx, childCtx):
-        """
-        :return: list of extra discovered processes
-        """
-        v.name = ctx.scope.checkedName(v.name, v)
-        serializedVar = cls.SignalItem(v, childCtx, declaration=True)
-        serializerVars.append(serializedVar)
-
-    @classmethod
-    def Architecture(cls, arch, ctx):
-        serializerVars = []
-        procs = []
-        extraTypes = set()
-        extraTypes_serialized = []
-        arch.variables.sort(key=lambda x: (x.name, x._instId))
-        arch.componentInstances.sort(key=lambda x: x._name)
-
-        childCtx = ctx.withIndent()
-        ports = [cls.PortItem(pi, childCtx)
-                 for pi in arch.entity.ports]
-
-        extraProcesses = []
-        for v in arch.variables:
-            cls.Architecture_var(v,
-                                 serializerVars,
-                                 extraTypes,
-                                 extraTypes_serialized,
-                                 ctx,
-                                 childCtx)
-
-        arch.processes.extend(extraProcesses)
-        arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
-        for p in arch.processes:
-            procs.append(cls.HWProcess(p, childCtx))
-
-        # architecture names can be same for different entities
-        # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
-        processesSensitivity = []
-        sensitivityCtx = ctx.forSensitivityList()
-        for p in arch.processes:
-            sens = [cls.asHdl(s, sensitivityCtx)
-                    for s in p.sensitivityList]
-            processesSensitivity.append((p.name, sens))
-
-        return cls.moduleTmpl.render(
-            processesSensitivity=processesSensitivity,
-            name=arch.getEntityName(),
-            ports=ports,
-            signals=serializerVars,
-            extraTypes=extraTypes_serialized,
-            processes=procs,
-            processObjects=arch.processes,
-            componentInstances=arch.componentInstances,
-            DIRECTION=DIRECTION,
-        )
+        return new_o

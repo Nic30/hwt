@@ -1,241 +1,161 @@
 from copy import copy
-from jinja2.environment import Environment
-from jinja2.loaders import PackageLoader
+from typing import Optional, List
 
-from hwt.hdl.architecture import Architecture
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlValueInt, HdlOp,\
+    HdlOpType
+from hdlConvertorAst.hdlAst._statements import HdlStmIf, HdlStmAssign,\
+    HdlStmProcess, HdlStmBlock
+from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef
+from hdlConvertorAst.to.basic_hdl_sim_model.keywords import SIMMODEL_KEYWORDS
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
+    hdl_map_asoc, hdl_call
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.assignment import Assignment
+from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.process import HWProcess
+from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.switchContainer import SwitchContainer
-from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.enum import HEnum
-from hwt.hdl.types.enumVal import HEnumVal
-from hwt.hdl.types.typeCast import toHVal
-from hwt.pyUtils.arrayQuery import arr_any
-from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.constCache import ConstCache
-from hwt.serializer.generic.context import SerializerCtx
-from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.generic.nameScope import LangueKeyword
-from hwt.serializer.generic.serializer import GenericSerializer
-from hwt.serializer.simModel.keywords import SIMMODEL_KEYWORDS
-from hwt.serializer.simModel.ops import SimModelSerializer_ops
-from hwt.serializer.simModel.types import SimModelSerializer_types
-from hwt.serializer.simModel.value import SimModelSerializer_value
-from hwt.serializer.utils import maxStmId
-from ipCorePackager.constants import DIRECTION
+from hwt.serializer.generic.constant_cache import ConstantCache
+from hwt.serializer.generic.to_hdl_ast import ToHdlAst
+from hwt.serializer.simModel.types import ToHdlAstSimModel_types
+from hwt.serializer.simModel.value import ToHdlAstSimModel_value
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond
 
 
-env = Environment(loader=PackageLoader('hwt', 'serializer/simModel/templates'))
-unitTmpl = env.get_template('modelCls.py.template')
-processTmpl = env.get_template('process.py.template')
-ifTmpl = env.get_template("if.py.template")
-
-
-def sensitivityByOp(op):
-    """
-    get sensitivity type for operator
-    """
-    if op == AllOps.RISING_EDGE:
-        return (True, False)
-    elif op == AllOps.FALLING_EDGE:
-        return (False, True)
-    else:
-        raise TypeError()
-
-
-class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
-                         SimModelSerializer_types, GenericSerializer):
+class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
+                       ToHdlAst):
     """
     Serializer which converts Unit instances to simulator code
     """
-    _keywords_dict = {kw: LangueKeyword() for kw in SIMMODEL_KEYWORDS}
-    fileExtension = '.py'
+    _keywords_dict = {kw: LanguageKeyword() for kw in SIMMODEL_KEYWORDS}
+    SIM_EVAL_COND = HdlValueId("sim_eval_cond", obj=sim_eval_cond)
+    C = HdlValueId("c", obj=LanguageKeyword())
+    CVLD = HdlValueId("cVld", obj=LanguageKeyword())
 
-    @classmethod
-    def serializationDecision(cls, obj, serializedClasses,
-                              serializedConfiguredUnits):
-        # we need all instances for simulation
-        return True
+    def __init__(self, name_scope: Optional[NameScope] = None):
+        super(ToHdlAstSimModel, self).__init__(name_scope)
+        self.currentUnit = None
+        self.stm_outputs = {}
 
-    @classmethod
-    def stmAsHdl(cls, obj, ctx: SerializerCtx):
-        try:
-            serFn = getattr(cls, obj.__class__.__name__)
-        except AttributeError:
-            raise NotImplementedError("Not implemented for %s" % (repr(obj)))
-        return serFn(obj, ctx)
+    def as_hdl_HdlModuleDec(self, o: HdlModuleDec):
+        # convert types, exprs
+        # delete params because they should not be used in expressions and thus
+        # are useless
+        new_o = copy(o)
+        new_o.params = []
+        new_o.ports = [self.as_hdl_HdlPortItem(p) for p in o.ports]
+        return new_o
 
-    @classmethod
-    def Architecture(cls, arch: Architecture, ctx: SerializerCtx):
-        cls.Entity_prepare(arch.entity, ctx, serialize=False)
-        variables = []
-        procs = []
-        extraTypes = set()
-        extraTypes_serialized = []
-        arch.variables.sort(key=lambda x: (x.name, x._instId))
-        arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
-        arch.componentInstances.sort(key=lambda x: x._name)
+    def as_hdl_PortConnection(self, o: HdlPortItem):
+        assert isinstance(o, HdlPortItem), o
+        intern, outer = o.getInternSig(), o.getOuterSig()
+        assert not intern.hidden, intern
+        assert not outer.hidden, outer
+        intern_hdl = HdlValueId(intern.name, obj=intern)
+        outer_hdl = HdlValueId(outer.name, obj=outer)
+        pm = hdl_map_asoc(intern_hdl, outer_hdl)
+        return pm
 
-        ports = list(
-            map(lambda p: (p.name, cls.HdlType(p._dtype, ctx)),
-                arch.entity.ports))
-
-        for v in arch.variables:
-            t = v._dtype
-            # if type requires extra definition
-            if isinstance(t, HEnum) and t not in extraTypes:
-                extraTypes.add(v._dtype)
-                extraTypes_serialized.append(
-                    cls.HdlType(t, ctx, declaration=True))
-
-            v.name = ctx.scope.checkedName(v.name, v)
-            variables.append(v)
-
-        childCtx = copy(ctx)
-        childCtx.constCache = ConstCache(ctx.scope.checkedName)
-
-        def serializeVar(v):
-            dv = v.def_val
-            if isinstance(dv, HEnumVal):
-                dv = "self.%s.%s" % (dv._dtype.name, dv.val)
-            else:
-                dv = cls.Value(dv, ctx)
-
-            return v.name, cls.HdlType(v._dtype, childCtx), dv
-
-        for p in arch.processes:
-            procs.append(cls.HWProcess(p, childCtx))
-
-        constants = []
-        for c in sorted(childCtx.constCache._cache.items(), key=lambda x: x[1],
-                        reverse=True):
-            constants.append((c[1], cls.Value(c[0], ctx)))
-
-        return unitTmpl.render(
-            DIRECTION=DIRECTION,
-            name=arch.getEntityName(),
-            constants=constants,
-            ports=ports,
-            signals=[serializeVar(v) for v in variables],
-            extraTypes=extraTypes_serialized,
-            processes=procs,
-            processObjects=arch.processes,
-            processesNames=map(lambda p: p.name, arch.processes),
-            componentInstances=arch.componentInstances,
-            isOp=lambda x: isinstance(x, Operator),
-            sensitivityByOp=sensitivityByOp,
-            serialize_io=cls.sensitivityListItem,
-        )
-
-    @classmethod
-    def Assignment(cls, a: Assignment, ctx: SerializerCtx):
-        dst = a.dst
-        indentStr = getIndent(ctx.indent)
-        ev = a._is_completly_event_dependent
-
-        srcStr = "%s" % cls.Value(a.src, ctx)
-        if a.indexes is not None:
-            return "%sself.io.%s.val_next = (%s, (%s,), %s)" % (
-                indentStr, dst.name, srcStr,
-                ", ".join(map(lambda x: cls.asHdl(x, ctx),
-                              a.indexes)),
-                ev)
+    def as_hdl_Assignment(self, a: Assignment):
+        dst, dst_indexes, src = self._as_hdl_Assignment_auto_conversions(a)
+        ev = HdlValueInt(int(a._is_completly_event_dependent), None, None)
+        if dst_indexes is not None:
+            src = (src, dst_indexes, ev)
         else:
-            if not (dst._dtype == a.src._dtype):
-                srcT = a.src._dtype
-                dstT = dst._dtype
-                if (isinstance(srcT, Bits) and
-                        isinstance(dstT, Bits)):
-                    bl0 = srcT.bit_length()
-                    if bl0 == dstT.bit_length():
-                        if bl0 == 1 and srcT.force_vector != dstT.force_vector:
-                            _0 = cls.Value(toHVal(0), ctx)
-                            if srcT.force_vector:
-                                return "%sself.io.%s.val_next = ((%s)[%s], %s)"\
-                                    % (indentStr, dst.name, srcStr, _0, ev)
-                            else:
-                                return "%sself.io.%s.val_next = (%s, (%s,), %s)" % (
-                                    indentStr, dst.name, srcStr, _0, ev)
-                        elif srcT.signed == dstT.signed:
-                            return "%sself.io.%s.val_next = (%s, %s)" % (
-                                    indentStr, dst.name, srcStr, ev)
+            src = (src, ev)
+        hdl_dst = hdl_getattr(hdl_getattr(self.SELF_IO, dst.name), "val_next")
+        hdl_a = HdlStmAssign(src, hdl_dst)
+        hdl_a.is_blocking = dst.virtual_only
+        return hdl_a
 
-                raise SerializerException(
-                    ("%s <= %s  is not valid assignment\n"
-                     " because types are different (%r; %r) ") %
-                    (cls.asHdl(dst, ctx), srcStr,
-                     dst._dtype, a.src._dtype))
-            else:
-                return "%sself.io.%s.val_next = (%s, %s)" % (
-                    indentStr, dst.name, srcStr, ev)
+    def as_hdl_IfContainer_out_invalidate_section(self,
+                                                  outputs: List[RtlSignalBase],
+                                                  parent: IfContainer):
+        outputInvalidateStms = []
+        for o in outputs:
+            # [TODO] look up indexes
+            indexes = None
+            v = o._dtype.from_py(None)
+            oa = Assignment(v, o, indexes,
+                            virtual_only=True, parentStm=parent,
+                            is_completly_event_dependent=parent._is_completly_event_dependent)
+            outputInvalidateStms.append(self.as_hdl_Assignment(oa))
 
-    @classmethod
-    def comment(cls, comentStr: str):
-        return "#" + comentStr.replace("\n", "\n#")
-
-    @classmethod
-    def IfContainer(cls, ifc: IfContainer, ctx: SerializerCtx):
-        cond = cls.condAsHdl(ifc.cond, ctx)
-        ifTrue = ifc.ifTrue
-
-        if ifc.elIfs:
-            # replace elifs with nested if statements
-            ifFalse = []
-            topIf = IfContainer(ifc.cond, ifc.ifTrue, ifFalse)
-            topIf._inputs = ifc._inputs
-            topIf._outputs = ifc._outputs
-            topIf._sensitivity = ifc._sensitivity
-
-            for c, stms in ifc.elIfs:
-                _ifFalse = []
-
-                lastIf = IfContainer(c, stms, _ifFalse)
-                lastIf._inputs = ifc._inputs
-                lastIf._outputs = ifc._outputs
-                lastIf._sensitivity = ifc._sensitivity
-
-                ifFalse.append(lastIf)
-                ifFalse = _ifFalse
-
-            if ifc.ifFalse is None:
-                lastIf.ifFalse = []
-            else:
-                lastIf.ifFalse = ifc.ifFalse
-
-            return cls.IfContainer(topIf, ctx)
+        if len(outputInvalidateStms) == 1:
+            return outputInvalidateStms[0]
         else:
-            ifFalse = ifc.ifFalse
-            if ifFalse is None:
-                ifFalse = []
+            b = HdlStmBlock()
+            b.body = outputInvalidateStms
+            return b
 
-            childCtx = ctx.withIndent()
-            outputInvalidateStms = []
-            for o in ifc._outputs:
-                # [TODO] look up indexes
-                indexes = None
-                oa = Assignment(o._dtype.from_py(None), o, indexes,
-                                virtual_only=True, parentStm=ifc,
-                                is_completly_event_dependent=ifc._is_completly_event_dependent)
-                outputInvalidateStms.append(cls.stmAsHdl(oa, childCtx))
+    def as_hdl_IfContainer_cond_eval(self, cond):
+        """
+        constructs condition evaluation statement
+        c, cVld = sim_eval_cond(cond)
+        """
+        c, cVld = self.C, self.CVLD
+        cond = self.as_hdl_cond(cond, True)
+        cond_eval = hdl_call(self.SIM_EVAL_COND, [cond])
+        cond_eval = HdlStmAssign(cond_eval, (c, cVld))
+        cond_eval.is_blocking = True
+        return c, cVld, cond_eval
 
-            return ifTmpl.render(
-                indent=getIndent(ctx.indent),
-                indentNum=ctx.indent,
-                cond=cond,
-                outputInvalidateStms=outputInvalidateStms,
-                ifTrue=tuple(map(
-                    lambda obj: cls.stmAsHdl(obj, childCtx),
-                    ifTrue)),
-                ifFalse=tuple(map(
-                    lambda obj: cls.stmAsHdl(obj, childCtx),
-                    ifFalse)))
+    def as_hdl_IfContainer(self, ifc: IfContainer) -> HdlStmIf:
+        """
+        .. code-block:: python
 
-    @classmethod
-    def SwitchContainer(cls, sw: SwitchContainer,
-                        ctx: SerializerCtx):
+            if cond:
+                ...
+            else:
+                ...
+
+        will become
+
+        .. code-block:: python
+
+            c, cVld = sim_eval_cond(cond)
+            if not cVld:
+                # ivalidate outputs
+            elif c:
+                ... # original if true branch
+            else:
+                ... # original if else brach
+        """
+        invalidate_block = self.as_hdl_IfContainer_out_invalidate_section(
+            ifc._outputs, ifc)
+        c, cVld, cond_eval = self.as_hdl_IfContainer_cond_eval(ifc.cond)
+        _if = HdlStmIf()
+        res = HdlStmBlock()
+        res.body = [cond_eval, _if]
+
+        _if.cond = HdlOp(HdlOpType.NEG_LOG, [cVld, ])
+        _if.if_true = invalidate_block
+
+        if_true = self.as_hdl_statements(ifc.ifTrue)
+        _if.elifs.append((c, if_true))
+        elifs = iter(ifc.elIfs)
+        for eif_c, eif_stms in elifs:
+            c, cVld, cond_eval = self.as_hdl_IfContainer_cond_eval(eif_c)
+            newIf = HdlStmIf()
+            newIf.cond = HdlOp(HdlOpType.NEG_LOG, [cVld, ])
+            newIf.if_true = invalidate_block
+
+            if_true = self.as_hdl_statements(eif_stms)
+            newIf.elifs.append((c, if_true))
+
+            _if.if_false = HdlStmBlock()
+            _if.if_false.body = [cond_eval, newIf]
+            _if = newIf
+
+        _if.if_false = self.as_hdl_statements(ifc.ifFalse)
+
+        return res
+
+    def as_hdl_SwitchContainer(self, sw: SwitchContainer) -> HdlStmIf:
+        "switch -> if"
         switchOn = sw.switchOn
 
         def mkCond(c):
@@ -257,40 +177,43 @@ class SimModelSerializer(SimModelSerializer_value, SimModelSerializer_ops,
         topIf._inputs = sw._inputs
         topIf._outputs = sw._outputs
 
-        return cls.IfContainer(topIf, ctx)
+        return self.as_hdl_IfContainer(topIf)
 
-    @classmethod
-    def sensitivityListItem(cls, item):
+    def sensitivityListItem(self, item, anyEventDependent):
         if isinstance(item, Operator):
             op = item.operator
             if op == AllOps.RISING_EDGE:
-                sens = (True, False)
+                sens = HdlOpType.RISING
             elif op == AllOps.FALLING_EDGE:
-                sens = (False, True)
+                sens = HdlOpType.FALLING
             else:
                 raise TypeError("This is not an event sensitivity", op)
 
-            return "(%s, %s)" % (str(sens), item.operands[0].name)
+            return HdlOp(sens, [HdlValueId(item.operands[0].name)])
         else:
-            return item.name
+            return HdlValueId(item.name)
 
-    @classmethod
-    def HWProcess(cls, proc: HWProcess, ctx: SerializerCtx):
-        body = proc.statements
-        assert body
-        proc.name = ctx.scope.checkedName(proc.name, proc)
-        sensitivityList = sorted(
-            map(cls.sensitivityListItem, proc.sensitivityList))
+    def has_to_be_process(self, proc):
+        return True
 
-        childCtx = ctx.withIndent(2)
-        _body = "\n".join([
-            cls.stmAsHdl(stm, childCtx)
-            for stm in body])
+    def can_pop_process_wrap(self, statements, hasToBeVhdlProcess):
+        return False
 
-        return processTmpl.render(
-            hasConditions=arr_any(
-                body, lambda stm: not isinstance(stm, Assignment)),
-            name=proc.name,
-            sensitivityList=sensitivityList,
-            stmLines=[_body]
+    def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> HdlStmProcess:
+        p = ToHdlAst.as_hdl_HdlStatementBlock(self, proc)
+        self.stm_outputs[p] = sorted(
+            [HdlValueId(i.name, obj=i)
+             for i in proc._outputs]
         )
+        return p
+
+    def as_hdl_extraVarsInit(self, extraVars):
+        return []
+
+    def _as_hdl_HdlModuleDef_body(self, *args) -> HdlModuleDef:
+        orig_const_cache = self.constCache
+        try:
+            self.constCache = ConstantCache(self.createTmpVarFn)
+            return ToHdlAst._as_hdl_HdlModuleDef_body(self, *args)
+        finally:
+            self.constCache = orig_const_cache

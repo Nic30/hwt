@@ -1,7 +1,7 @@
 from typing import Set, List, Dict, Union, Optional
 
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements import HdlStatement
+from hwt.hdl.statement import HdlStatement
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.doc_markers import internal

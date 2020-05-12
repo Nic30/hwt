@@ -1,40 +1,16 @@
 from glob import iglob
+import os
+from typing import Optional
 
-from hwt.hdl.architecture import Architecture
-from hwt.hdl.entity import Entity
-from hwt.serializer.mode import _serializeExclude_eval
-from hwt.serializer.verilog.serializer import VerilogSerializer
+from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
+from hwt.serializer.store_manager import SaveToFilesFlat
+from hwt.serializer.verilog import VerilogSerializer
 from hwt.simulator.shortcuts import collect_signals
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
-from hwt.synthesizer.utils import toRtl
+from hwt.synthesizer.utils import to_rtl
 from pycocotb.verilator.simulator_gen import verilatorCompile, \
     generatePythonModuleWrapper, loadPythonCExtensionFromFile
-from typing import Optional
-
-
-class VerilogForVerilatorSerializer(VerilogSerializer):
-    """
-    Override serialization decision to serialize everything
-    """
-
-    @classmethod
-    def serializationDecision(cls, obj, serializedClasses,
-                              serializedConfiguredUnits):
-        isDeclaration = isinstance(obj, Entity)
-        isDefinition = isinstance(obj, Architecture)
-        if isDeclaration:
-            unit = obj.origin
-        elif isDefinition:
-            unit = obj.entity.origin
-        else:
-            return True
-
-        assert isinstance(unit, Unit)
-        if unit._serializeDecision is _serializeExclude_eval:
-            unit._serializeDecision = None
-        return VerilogSerializer.serializationDecision(
-            obj, serializedClasses, serializedConfiguredUnits)
 
 
 def toVerilatorSimModel(unit: Unit,
@@ -55,13 +31,18 @@ def toVerilatorSimModel(unit: Unit,
     :param do_compile: if false reuse existing build if exists [TODO]
     """
     if build_dir is None:
-        build_dir = "tmp/%s" % unique_name
+        build_dir = os.path.join("tmp", unique_name)
 
-    # with tempdir(suffix=unique_name) as build_dir:
-    sim_verilog = toRtl(unit,
-                        targetPlatform=target_platform,
-                        saveTo=build_dir,
-                        serializer=VerilogForVerilatorSerializer)
+    build_private_dir = os.path.join(os.getcwd(), build_dir, unique_name)
+    store_man = SaveToFilesFlat(VerilogSerializer, build_private_dir,
+                                _filter=SerializerFilterDoNotExclude())
+
+    to_rtl(unit,
+          name=unique_name,
+          target_platform=target_platform,
+          store_manager=store_man)
+    sim_verilog = store_man.files
+
     accessible_signals = collect_signals(unit)
     used_names = {x[0] for x in accessible_signals}
     assert len(used_names) == len(accessible_signals), \

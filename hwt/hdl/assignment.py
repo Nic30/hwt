@@ -1,7 +1,7 @@
 from typing import Tuple, List, Dict, Union, Optional
 
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statements import isSameHVal, HdlStatement, areSameHVals
+from hwt.hdl.statement import isSameHVal, HdlStatement, areSameHVals
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.doc_markers import internal

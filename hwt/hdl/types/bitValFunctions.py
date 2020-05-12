@@ -8,6 +8,7 @@ from hwt.hdl.value import Value, areValues
 from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
     bitsArithOp__val
+from builtins import isinstance
 
 
 # dictionary which hold information how to change operator after
@@ -65,6 +66,8 @@ def bitsCmp(self, other, op, evalFn=None):
     t = self._dtype
     other = toHVal(other, t)
     ot = other._dtype
+    if not isinstance(ot, t.__class__):
+        raise TypeError(ot)
 
     if evalFn is None:
         evalFn = op._evalFn
@@ -143,6 +146,9 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
     else:
         s_t = self._dtype
         o_t = other._dtype
+        if not isinstance(o_t, s_t.__class__):
+            raise TypeError(o_t)
+
         if s_t == o_t:
             pass
         elif o_t == BOOL and s_t != BOOL:
@@ -178,7 +184,8 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
 @internal
 def bitsArithOp(self, other, op):
     other = toHVal(other, self._dtype)
-    assert isinstance(other._dtype, Bits), other._dtype
+    if not isinstance(other._dtype, Bits):
+        raise TypeError(other._dtype)
     if areValues(self, other):
         return bitsArithOp__val(self, other, op._evalFn)
     else:

@@ -49,7 +49,7 @@ Tutorial is in hwtLib.examples.*, every file in this module contains user-entry-
 E.g. hwtLib.examples.simple.SimpleUnit is a good starting point.
 
 Component in HWT is a class which inherits from Unit class.
-Object of such a class can be converted to a vhdl/Verilog by from hwt.synthesizer.utils.toRtl function.
+Object of such a class can be converted to a vhdl/Verilog by from hwt.synthesizer.utils.to_rtl function.
 
 You can also download this doc in `PDF
 <https://media.readthedocs.org/pdf/hwtoolkit/latest/hwtoolkit.pdf>`_.

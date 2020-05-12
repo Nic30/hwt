@@ -1,31 +1,75 @@
-from typing import Union
+from typing import Union, Tuple
 
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
+from copy import copy
 
 
-def get_parent_unit(obj) -> Unit:
-    if isinstance(obj, ConstrainBase):
-        return obj.get_parent()
+class iHdlConstrain():
 
-    while not isinstance(obj, Unit):
-        if isinstance(obj, RtlSignal):
-            obj = obj.ctx.parent
-        else:
-            obj = obj._parent
-    return obj
-
-
-class ConstrainBase():
-
-    def get_parent(self) -> Unit:
+    def _get_parent(self) -> Unit:
         raise NotImplementedError(self)
 
+    def _copy_with_root_upadate(self, old_path_prefix, new_path_prefix):
+        raise NotImplementedError()
+
     def register_on_parent(self):
-        self.get_parent()._constraints.append(self)
-    
-class set_max_delay(ConstrainBase):
+        self._get_parent()._constraints.append(self)
+
+
+def _get_parent_unit(path: Tuple[Union[Unit, Interface, RtlSignal, iHdlConstrain], ...]) -> Unit:
+    """
+    Search parent Unit instance in path
+    """
+    if isinstance(path, iHdlConstrain):
+        return path._get_parent()
+
+    for o in reversed(path):
+        if isinstance(o, Unit):
+            return o
+
+    raise AssertionError("No parent unit in path", path)
+
+
+def _get_absolute_path(obj) -> Union[Tuple[Union[Unit, Interface, RtlSignal, iHdlConstrain], ...], None]:
+    """
+    Get tuple containing a path of objects from top to this object
+    """
+    if obj is None:
+        return None
+    elif isinstance(obj, iHdlConstrain):
+        return obj
+
+    path = []
+    if isinstance(obj, RtlSignal):
+        path.append(obj)
+        obj = obj.ctx.parent
+
+    while isinstance(obj, Interface):
+        obj = obj._parent
+
+    while obj is not None:
+        path.append(obj)
+        obj = obj._parent
+
+    return tuple(reversed(path))
+
+
+def _apply_path_update(path, old_path_prefix, new_path_prefix):
+    """
+    Update prefix of the path tuple
+    """
+    if isinstance(path, iHdlConstrain):
+        return path._copy_with_root_upadate(old_path_prefix, new_path_prefix)
+    assert len(path) >= len(old_path_prefix), (path, old_path_prefix)
+    for p, op in zip(path, old_path_prefix):
+        assert p is op, (path, old_path_prefix)
+
+    return (*new_path_prefix, *path[len(old_path_prefix):])
+
+
+class set_max_delay(iHdlConstrain):
     """
     Object which represents the max_delay constrain
 
@@ -40,37 +84,64 @@ class set_max_delay(ConstrainBase):
                  start: Union[Interface, RtlSignal],
                  end: Union[Interface, RtlSignal],
                  time_ns: float,
-                 datapath_only=True):
-        self.start = start
-        self.end = end
+                 datapath_only=True,
+                 ommit_registration=False):
+        self.start = _get_absolute_path(start)
+        self.end = _get_absolute_path(end)
         self.time_ns = time_ns
         self.datapath_only = datapath_only
-        self.register_on_parent()
+        if not ommit_registration:
+            self.register_on_parent()
 
-    def get_parent(self) -> Unit:
-        return get_parent_unit(self.end)
+    def _copy_with_root_upadate(self, old_path_prefix, new_path_prefix):
+        new_o = copy(self)
+        new_o.start = _apply_path_update(
+            self.start, old_path_prefix, new_path_prefix)
+        new_o.end = _apply_path_update(
+            self.end, old_path_prefix, new_path_prefix)
+        return new_o
 
-class set_false_path(ConstrainBase):
-    def __init__(self, start: Union[None, Interface, RtlSignal], end: Union[None, Interface, RtlSignal]):
-        self.start = start
-        self.end = end
-        self.register_on_parent()
+    def _get_parent(self) -> Unit:
+        return _get_parent_unit(self.end)
 
-    def get_parent(self)->Unit:
+
+class set_false_path(iHdlConstrain):
+
+    def __init__(self, start: Union[None, Interface, RtlSignal],
+                 end: Union[None, Interface, RtlSignal],
+                 ommit_registration=False):
+        self.start = _get_absolute_path(start)
+        self.end = _get_absolute_path(end)
+        if not ommit_registration:
+            self.register_on_parent()
+
+    def _copy_with_root_upadate(self, old_path_prefix, new_path_prefix):
+        return set_max_delay._copy_with_root_upadate(self, old_path_prefix, new_path_prefix)
+
+    def _get_parent(self) -> Unit:
         o = self.start
         if o is None:
             o = self.end
-        return get_parent_unit(o)
-
-class get_clock_of(ConstrainBase):
-    def __init__(self, obj):
-        self.obj = obj
-
-    def get_parent(self)->Unit:
-        return get_parent_unit(self.obj)
+        return _get_parent_unit(o)
 
 
-class set_async_reg(ConstrainBase):
+class get_clock_of(iHdlConstrain):
+
+    def __init__(self, obj: Union[Interface, RtlSignal],
+                 ommit_registration=False):
+        self.obj = _get_absolute_path(obj)
+
+    def _copy_with_root_upadate(self, old_path_prefix, new_path_prefix):
+        new_o = copy(self)
+        new_o.obj = _apply_path_update(
+            self.obj, old_path_prefix, new_path_prefix)
+        return new_o
+
+    def _get_parent(self) -> Unit:
+        return _get_parent_unit(self.obj)
+
+
+class set_async_reg(iHdlConstrain):
     """
     Placement constrain which tell that the register should be put as close as possible to it's src/dst
 
@@ -78,9 +149,17 @@ class set_async_reg(ConstrainBase):
     but should be set on FFs (possibly more) on the destination domain.
     """
 
-    def __init__(self, sig: RtlSignal):
-        self.sig = sig
-        self.register_on_parent()
+    def __init__(self, sig: RtlSignal,
+                 ommit_registration=False):
+        self.sig = _get_absolute_path(sig)
+        if not ommit_registration:
+            self.register_on_parent()
 
-    def get_parent(self)->Unit:
-        return get_parent_unit(self.sig)
+    def _copy_with_root_upadate(self, old_path_prefix, new_path_prefix):
+        new_o = copy(self)
+        new_o.sig = _apply_path_update(
+            self.sig, old_path_prefix, new_path_prefix)
+        return new_o
+
+    def _get_parent(self) -> Unit:
+        return _get_parent_unit(self.sig)

@@ -7,7 +7,7 @@ from typing import List, Tuple, Dict, Union
 
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
-from hwt.hdl.statements import HdlStatement, statementsAreSame, \
+from hwt.hdl.statement import HdlStatement, statementsAreSame, \
     isSameStatementList, seqEvalCond
 from hwt.hdl.value import Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -439,7 +439,3 @@ class IfContainer(HdlStatement):
             for s in self.ifFalse:
                 s.seqEval()
 
-    def __repr__(self):
-        from hwt.serializer.hwt.serializer import HwtSerializer
-        ctx = HwtSerializer.getBaseContext()
-        return HwtSerializer.IfContainer(self, ctx)

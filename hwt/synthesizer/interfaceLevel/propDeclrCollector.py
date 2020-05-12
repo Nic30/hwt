@@ -6,6 +6,7 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
 from hwt.synthesizer.param import Param
+from hdlConvertorAst.translate.common.name_scope import WithNameScope
 
 
 @internal
@@ -84,7 +85,13 @@ class MakeClkRstAssociations(object):
 
 class PropDeclrCollector(object):
     """
-    Collect properties of this object to containers by specified listeners
+    Class which manages the registration of components and interfaces
+    in specified elaboration phases.
+
+    It uses __setattr__ listeners to detect new properties and then calls
+    a litener function to process the registration. 
+
+    Used for Unit, Interface classes to detect and load interfaces and components.
     """
 
     def _config(self) -> None:
@@ -103,8 +110,8 @@ class PropDeclrCollector(object):
 
         * do all declarations of externally accessible objects there (Interfaces)
         * _declr method is called after _config
-        * if this object is Unit all interfaces are threaten as externally accessible interfaces
-          if this object is Interface all subinterfaces are loaded
+        * if this object is Unit all interfaces are threated as externally accessible interfaces
+          if this object is Interface instance all subinterfaces are loaded as well
         """
         pass
 
@@ -112,7 +119,7 @@ class PropDeclrCollector(object):
         """
         implementations
 
-        * implement functionality of design there
+        * implement functionality of componnent there
         * called after _declr
         """
         pass
@@ -133,6 +140,9 @@ class PropDeclrCollector(object):
     # configuration phase
     @internal
     def _loadConfig(self) -> None:
+        """
+        Load params in _config()
+        """
         if not hasattr(self, '_params'):
             self._params = []
 
@@ -282,7 +292,7 @@ class PropDeclrCollector(object):
 
     @internal
     def _declrCollector(self, name, prop):
-        if name in ["_associatedClk", "_associatedRst"]:
+        if name in ("_associatedClk", "_associatedRst"):
             object.__setattr__(self, name, prop)
             return prop
 
@@ -306,7 +316,7 @@ class PropDeclrCollector(object):
 
     # implementation phase
     @internal
-    def _loadMyImplementations(self):
+    def _loadImpl(self):
         self._setAttrListener = self._implCollector
         self._impl()
         self._setAttrListener = None
@@ -319,8 +329,11 @@ class PropDeclrCollector(object):
         """
         self._registerUnit(uName, u)
         u._loadDeclarations()
-        self._lazyLoaded.extend(u._toRtl(self._targetPlatform))
-        u._signalsForMyEntity(self._ctx, "sig_" + uName)
+        sm = self._store_manager
+        with WithNameScope(sm, sm.name_scope.parent):
+            self._lazy_loaded.extend(u._to_rtl(
+                self._target_platform, self._store_manager))
+        u._signalsForSubUnitEntity(self._ctx, "sig_" + uName)
 
     @internal
     def _registerIntfInImpl(self, iName, i):

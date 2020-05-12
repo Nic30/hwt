@@ -1,7 +1,6 @@
 from itertools import zip_longest
 from math import ceil, floor, inf
-import re
-from typing import Union, Generator
+from typing import Union, Generator, List
 
 from hwt.doc_markers import internal
 from hwt.hdl.frameTmplUtils import TransTmplWordIterator, \
@@ -12,7 +11,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.pyUtils.arrayQuery import flatten
-from pyMathBitPrecise.bit_utils import mask, selectBitRange, setBitRange
+from pyMathBitPrecise.bit_utils import mask, get_bit_range, set_bit_range
 
 
 class FrameTmpl(object):
@@ -35,10 +34,12 @@ class FrameTmpl(object):
         is called and is not builded
     :note: others ivars described in __init__
     """
-    __RE_RM_ARRAY_DOTS = re.compile("(\.\[)")
 
-    def __init__(self, origin, wordWidth, startBitAddr, endBitAddr,
-                 transParts):
+    def __init__(self, origin: HdlType,
+                 wordWidth: int,
+                 startBitAddr: int,
+                 endBitAddr: int,
+                 transParts: List[TransPart]):
         """
         :param origin: instance of HType (usually HStruct)
             from which this FrameTmpl was generated from
@@ -148,9 +149,9 @@ class FrameTmpl(object):
                 isFirstInFrame = True
                 partsPending = False
                 # start on new word
-                startOfThisFrame = _endOfThisFrame
-                endOfThisFrame = startOfThisFrame + maxFrameLen
                 lastWordI = wordI - 1
+                startOfThisFrame = lastWordI * wordWidth
+                endOfThisFrame = startOfThisFrame + maxFrameLen
 
             if isFirstInFrame:
                 partsPending = True
@@ -180,7 +181,7 @@ class FrameTmpl(object):
                 if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
                     endOfThisFrame -= paddingWords * wordWidth
                     # align end of frame to word
-            endOfThisFrame = min(startOfThisFrame +
+            endOfThisFrame = min(startOfThisFrame + 
                                  maxFrameLen, endOfThisFrame)
 
             yield FrameTmpl(transaction,
@@ -193,7 +194,7 @@ class FrameTmpl(object):
 
         # final padding on the end
         while withPadding and startOfThisFrame < transaction.bitAddrEnd:
-            endOfThisFrame = min(startOfThisFrame +
+            endOfThisFrame = min(startOfThisFrame + 
                                  maxFrameLen, transaction.bitAddrEnd)
 
             yield FrameTmpl(transaction,
@@ -297,13 +298,13 @@ class FrameTmpl(object):
 
                 lastEnd = endOfPadding
 
-            if parts:
-                # in the case end of frame is not aligned to end of word
-                yield (wIndex, parts)
+        if parts:
+            # in the case end of frame is not aligned to end of word
+            yield (wIndex, parts)
 
     @staticmethod
     def fieldToDataDict(dtype, data, res):
-        return FrameTmpl._fieldToDataDict(dtype, (dtype, ), data, res)
+        return FrameTmpl._fieldToDataDict(dtype, (dtype,), data, res)
 
     @staticmethod
     def _fieldToDataDict(dtype, path, data, res):
@@ -365,49 +366,43 @@ class FrameTmpl(object):
                     newBits = 0
                     vld = 0
                 else:
-                    newBits = selectBitRange(val, flow, fhigh - flow)
+                    newBits = get_bit_range(val, flow, fhigh - flow)
                     vld = mask(high - low)
 
-                actualVal = setBitRange(actualVal, low, high - low, newBits)
-                actualVldMask = setBitRange(actualVldMask, low, high - low, vld)
+                actualVal = set_bit_range(actualVal, low, high - low, newBits)
+                actualVldMask = set_bit_range(actualVldMask, low, high - low, vld)
 
             v = typeOfWord.getValueCls()(typeOfWord, actualVal,
                                          actualVldMask)
             yield v
 
     @internal
-    def __repr__getName(self, transPart, fieldWidth):
+    def __repr__getName(self, transPart: TransPart, fieldWidth: int):
+        """
+        Get name string for a field
+        """
         if transPart.isPadding:
             return "X" * fieldWidth
         else:
+            path = transPart.tmpl.getFieldPath()
             names = []
-            tp = transPart.tmpl
-            while tp is not None:
-                try:
-                    isArrayElm = isinstance(tp.parent.dtype, HArray)
-                except AttributeError:
-                    isArrayElm = False
-
-                if isArrayElm:
-                    arr = transPart.tmpl.parent
-                    arrS = arr.bitAddr
-                    itemW = (arr.bitAddrEnd - arrS) // arr.itemCnt
-                    s = transPart.startOfPart
-                    indx = (s - arrS) // itemW
-                    names.append("[%d]" % indx)
+            for p in path:
+                if isinstance(p, int):
+                    names.append("[%d]" % p)
                 else:
-                    o = tp.origin[-1]
-                    if o is None:
-                        break
-                    if not isinstance(o, HdlType) and o.name is not None:
-                        names.append(o.name)
-                tp = tp.parent
+                    if names:
+                        names.append(".%s" % p)
+                    else:
+                        names.append(p)
 
-            # [HOTFIX] rm dots when indexing on array
-            return self.__RE_RM_ARRAY_DOTS.sub("[", ".".join(reversed(names)))
+            return "".join(names)
 
     @internal
-    def __repr__word(self, index, width, padding, transParts):
+    def __repr__word(self,
+                     index: int,
+                     width: int,
+                     padding: int,
+                     transParts: List[TransPart]):
         buff = ["{0: <{padding}}|".format(index, padding=padding)]
         DW = self.wordWidth
         partsWithChoice = []

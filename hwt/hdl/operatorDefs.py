@@ -119,12 +119,11 @@ class AllOps():
     RISING_EDGE = OpDefinition(onRisingEdgeFn)  # unnecessary
     FALLING_EDGE = OpDefinition(onFallingEdgeFn)  # unnecessary
 
-    NEG = OpDefinition(neg)
+    MINUS_UNARY = OpDefinition(neg)
     DIV = OpDefinition(floordiv)
     ADD = OpDefinition(add)
     SUB = OpDefinition(sub)
     POW = OpDefinition(power)
-    UN_MINUS = OpDefinition(inv)
     MOD = OpDefinition(mod)
     MUL = OpDefinition(mul)
 
@@ -154,8 +153,7 @@ class AllOps():
     BitsAsVec = OpDefinition(bitsAsVec)
 
 
-for a in dir(AllOps):
-    o = getattr(AllOps, a)
+for a_name in dir(AllOps):
+    o = getattr(AllOps, a_name)
     if isinstance(o, OpDefinition):
-        o.id = a
-
+        o.id = a_name

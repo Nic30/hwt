@@ -22,8 +22,9 @@ class HStream(HdlType):
 
     def __init__(self, element_t,
                  frame_len=inf,
-                 start_offsets: Optional[List[int]]=None):
-        super(HStream, self).__init__()
+                 start_offsets: Optional[List[int]]=None,
+                 const=False):
+        super(HStream, self).__init__(const=const)
         self.element_t = element_t
         if isinstance(frame_len, float) and isinf(frame_len):
             frame_len = (1, inf)

@@ -1,89 +1,19 @@
+from builtins import isinstance
+from copy import deepcopy
 from typing import Callable, Tuple, Generator, Union, Optional
 
+from hwt.doc_markers import internal
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
+from hwt.hdl.types.stream import HStream
 from hwt.hdl.types.struct import HStruct, HStructField
 from hwt.hdl.types.union import HUnion
 from hwt.pyUtils.arrayQuery import iter_with_last
-from hwt.hdl.types.stream import HStream
-from hwt.doc_markers import internal
-from builtins import isinstance
 
 
 def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
     return (bool(transTmpl.children), not bool(transTmpl.children))
-
-
-class _DummyIteratorCtx(object):
-    """
-    Dummy version of :class:`.ObjIteratorCtx`
-    """
-    def __call__(self, prop):
-        return self
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-
-class ObjIteratorCtx(object):
-    """
-    Object Iterator context
-
-    Allows to walk object properties and keep track of it
-
-    :note: :class:`.TransTmpl` uses this object to walk other object together with structure type
-        this is useful when you need to walk generated interface together with type
-        from which it was generated from
-
-    :ivar ~.actual: actual selected object
-    :ivar ~.parent: list of collected parent of this object
-    :ivar ~.onParentNames: list, str for children which are properties,
-        int for children which are items of parent
-    """
-
-    def __init__(self, obj):
-        self.actual = obj
-        self.parents = []
-        self.onParentNames = []
-        self.nextProp = None
-
-    def __call__(self, prop: Union[str, int]):
-        """
-        Prepare to enter child property or item in sequence
-
-        :prop: str if entering a property, int if entering an item of sequence
-        """
-        self.nextProp = prop
-        return self
-
-    def __enter__(self):
-        """
-        Enter child property or item in sequence
-        """
-        prop = self.nextProp
-        self.nextProp = None
-        a = self.actual
-        if isinstance(prop, int):
-            child = a[prop]
-        else:
-            child = getattr(a, prop)
-
-        self.parents.append(a)
-        self.onParentNames.append(prop)
-        self.actual = child
-
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Move back to parent
-        """
-        self.actual = self.parents.pop()
-        self.onParentNames.pop()
 
 
 class TransTmpl(object):
@@ -100,27 +30,32 @@ class TransTmpl(object):
 
     :ivar ~.dtype: type of this item
     :ivar ~.bitAddr: offset of start of this item in bits
+    :ivar ~.bitAddrEnd: end of this item in bits
     :ivar ~.parent: object which generated this item, optional TransTmpl
     :ivar ~.origin: object which was template for generating of this item
     :ivar ~.itemCnt: if this transaction template is for array or stream this is
         item count for such an array or stream
     :ivar ~.childrenAreChoice: flag which tells if childrens are sequence
         or only one of them can be used in same time
+    :ivar rel_field_path: path in original datatype relative to parent
     """
 
     def __init__(self, dtype: HdlType, bitAddr: int=0,
                  parent: Optional['TransTmpl']=None,
-                 origin: Optional[HStructField]=None):
+                 origin: Optional[HStructField]=None,
+                 rel_field_path: Tuple[Union[str, int], ...]=tuple()):
         self.parent = parent
         assert isinstance(dtype, HdlType), dtype
         assert parent is None or isinstance(parent, TransTmpl), parent
         if origin is None:
-            origin = (dtype, )
+            origin = (dtype,)
         else:
             assert isinstance(origin, tuple), origin
         self.origin = origin
         self.dtype = dtype
         self.children = []
+        self.itemCnt = None
+        self.rel_field_path = rel_field_path
         self._loadFromHType(dtype, bitAddr)
 
     @internal
@@ -142,7 +77,6 @@ class TransTmpl(object):
 
         for f in dtype.fields:
             t = f.dtype
-            origin = (*self.origin, f)
 
             isPadding = f.name is None
 
@@ -150,7 +84,12 @@ class TransTmpl(object):
                 width = t.bit_length()
                 bitAddr += width
             else:
-                fi = TransTmpl(t, bitAddr, parent=self, origin=origin)
+                origin = (*self.origin, f)
+                fi = TransTmpl(t, bitAddr,
+                               parent=self,
+                               origin=origin,
+                               rel_field_path=(f.name,),
+                )
                 self.children.append(fi)
                 bitAddr = fi.bitAddrEnd
 
@@ -163,8 +102,11 @@ class TransTmpl(object):
 
         :return: address of it's end
         """
-        for field in dtype.fields.values():
-            ch = TransTmpl(field.dtype, 0, parent=self, origin=(*self.origin, field))
+        for f in dtype.fields.values():
+            ch = TransTmpl(f.dtype, 0, parent=self,
+                           origin=(*self.origin, f),
+                           rel_field_path=(f.name,),
+                           )
             self.children.append(ch)
         return bitAddr + dtype.bit_length()
 
@@ -177,7 +119,10 @@ class TransTmpl(object):
         """
         self.itemCnt = int(dtype.size)
         self.children = TransTmpl(
-            dtype.element_t, 0, parent=self, origin=(*self.origin, 0))
+            dtype.element_t, 0, parent=self,
+            origin=(*self.origin, 0),
+            rel_field_path=(0,)
+        )
         return bitAddr + self.itemCnt * self.children.bitAddrEnd
 
     @internal
@@ -188,7 +133,9 @@ class TransTmpl(object):
         :return: address of it's end
         """
         self.children = TransTmpl(
-            dtype.element_t, 0, parent=self, origin=self.origin)
+            dtype.element_t, 0, parent=self, origin=self.origin,
+            rel_field_path=(0,))
+
         if not isinstance(dtype.len_min, int) or dtype.len_min != dtype.len_max:
             raise ValueError("This template is ment only"
                              " for types of constant and finite size")
@@ -236,8 +183,7 @@ class TransTmpl(object):
         return self.bitAddrEnd - self.bitAddr
 
     def walkFlatten(self, offset: int=0,
-                    shouldEnterFn=_default_shouldEnterFn,
-                    otherObjItCtx: ObjIteratorCtx =_DummyIteratorCtx()
+                    shouldEnterFn=_default_shouldEnterFn
                     ) -> Generator[
             Union[Tuple[Tuple[int, int], 'TransTmpl'], 'OneOfTransaction'],
             None, None]:
@@ -269,24 +215,56 @@ class TransTmpl(object):
                 pass
             elif isinstance(t, HStruct):
                 for c in self.children:
-                    with otherObjItCtx(c.origin[-1].name):
-                        yield from c.walkFlatten(
-                            offset,
-                            shouldEnterFn,
-                            otherObjItCtx)
+                    yield from c.walkFlatten(
+                        offset,
+                        shouldEnterFn)
             elif isinstance(t, (HArray, HStream)):
                 itemSize = (self.bitAddrEnd - self.bitAddr) // self.itemCnt
                 for i in range(self.itemCnt):
-                    with otherObjItCtx(i):
-                        yield from self.children.walkFlatten(
-                            base + i * itemSize,
-                            shouldEnterFn,
-                            otherObjItCtx)
+                    if i == 0:
+                        c = self.children
+                    else:
+                        # spot a new array item
+                        c = deepcopy(self.children)
+                        assert c.rel_field_path == (0,), (c.rel_field_path)
+                        # replace the index
+                        c.rel_field_path = (i,)
+                        
+                    yield from c.walkFlatten(
+                        base + i * itemSize,
+                        shouldEnterFn)
+
             elif isinstance(t, HUnion):
                 yield OneOfTransaction(self, offset, shouldEnterFn,
                                        self.children)
             else:
                 raise TypeError(t)
+
+    def getFieldPath(self):
+        """
+        Get field path which specifies the location in original HdlType data type
+        """
+        path = []
+        tmpl = self
+        while tmpl is not None:
+            path.extend(reversed(tmpl.rel_field_path))
+            tmpl = tmpl.parent
+        return tuple(reversed(path))
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        c = self.children
+        if isinstance(c, TransTmpl):
+            c.parent = self
+        else:
+            for _c in c:
+                _c.parent = self
+
+        return result
 
     def __repr__(self, offset: int=0):
         offsetStr = "".join(["    " for _ in range(offset)])

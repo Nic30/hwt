@@ -98,7 +98,7 @@ def packIntf(intf, masterDirEqTo=DIRECTION.OUT, exclude=None):
                 d = DIRECTION.opposite(masterDirEqTo)
             else:
                 d = masterDirEqTo
-            s = i._pack(d, exclude=exclude)
+            s = packIntf(i, masterDirEqTo=d, exclude=exclude)
         else:
             if i._masterDir == masterDirEqTo:
                 s = i._sig

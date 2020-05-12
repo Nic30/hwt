@@ -1,53 +1,63 @@
-from hwt.constraints import set_max_delay, get_parent_unit, set_false_path,\
-    set_async_reg, get_clock_of, ConstrainBase
+from typing import Union, Tuple
+
+from hwt.constraints import set_max_delay, set_false_path,\
+    set_async_reg, get_clock_of, iHdlConstrain
+from hwt.hdl.types.bits import Bits
 from hwt.synthesizer.interface import Interface
+from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
-from hwt.hdl.types.bits import Bits
-from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
+from hwt.pyUtils.arrayQuery import iter_with_last
+from itertools import islice
 
 
 class XdcSerializer():
     """
-    Convert constrains containers to a XDC format
+    Convert constrains containers to a XDC format (For Xilinx Vivado)
     """
-    DEFAULT_FILE_NAME = "constraints.xdc"
+    fileExtension = ".xdc"
 
     def __init__(self, out):
         self.out = out
 
-    def _get(self, o: [Unit, RtlSignal, Interface], only_first=False):
-        if isinstance(o, ConstrainBase):
-            return self.any(o)
+    def _get(self, o: Union[Tuple[Unit, RtlSignal, Interface], iHdlConstrain], only_first=False):
+        """
+        :param only_first: if true select only first bit from vector, else select whole vector
+        """
+        if isinstance(o, iHdlConstrain):
+            return self.visit_iHdlConstrain(o)
 
         is_reg = False
-        if isinstance(o, RtlSignal):
+        _o = o[-1]
+        if isinstance(_o, RtlSignal):
             q = "get_cells"
-            n = o.name
-            for d in o.drivers:
+            for d in _o.drivers:
                 if d._now_is_event_dependent:
                     is_reg = True
-        elif isinstance(o, Interface):
+        elif isinstance(_o, Interface):
             q = "get_pins"
-            n = o._name
         else:
             raise NotImplementedError(o)
 
-        pu = get_parent_unit(o)
         w = self.out.write
         w(q)
         w(" -hier -filter {NAME =~ */")
-        path = []
+        path = o
         # [TODO] find out how to make select with ip top module/entity name
-        while pu is not None and pu._parent is not None:
-            path.append(pu._name)
-            pu = pu._parent
-        for p in reversed(path):
-            w(p)
-            w("_inst")
-            w("/")
-        w(n)
-        t = o._dtype
+        for last, p in iter_with_last(islice(path, 1, None)):
+            if isinstance(p, Unit):
+                w(p._name)
+                w("_inst")
+            elif isinstance(p, RtlSignal):
+                w(p.name)
+            elif isinstance(p, Interface):
+                w(p._name)
+            else:
+                raise NotImplementedError(p)
+            if not last:
+                w("/")
+
+        t = _o._dtype
         if is_reg:
             w("_reg")
         if isinstance(t, Bits) and (t.bit_length() > 1 or t.force_vector):
@@ -58,25 +68,28 @@ class XdcSerializer():
                 w("[*]*")
         w("}")
 
-    def get_clock_of(self, o: get_clock_of):
+    def visit_get_clock_of(self, o: get_clock_of):
         w = self.out.write
-        if isinstance(o.obj, RtlSyncSignal):
+        if isinstance(o.obj[-1], RtlSyncSignal):
             w("get_clocks -of [")
             self._get(o.obj)
             w("]")
         else:
             raise NotImplementedError()
 
-    def any(self, o):
-        return getattr(self, o.__class__.__name__)(o)
+    def visit_iHdlConstrain(self, o):
+        return getattr(self, "visit_" + o.__class__.__name__)(o)
 
-    def set_async_reg(self, o: set_async_reg):
+    def visit_HdlConstraintList(self, o_list):
+        return [self.visit_iHdlConstrain(o) for o in o_list]
+
+    def visit_set_async_reg(self, o: set_async_reg):
         w = self.out.write
         w("set_property ASYNC_REG TRUE [")
         self._get(o.sig)
         w("]\n")
 
-    def set_false_path(self, o: set_false_path):
+    def visit_set_false_path(self, o: set_false_path):
         w = self.out.write
         w("set_false_path")
         if o.start is not None:
@@ -89,7 +102,7 @@ class XdcSerializer():
             w("]")
         w("\n")
 
-    def set_max_delay(self, o: set_max_delay):
+    def visit_set_max_delay(self, o: set_max_delay):
         w = self.out.write
         w("set_max_delay -from [")
         self._get(o.start)

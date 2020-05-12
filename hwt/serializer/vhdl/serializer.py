@@ -1,203 +1,79 @@
 import re
 
-from hwt.hdl.architecture import Architecture
-from hwt.hdl.entity import Entity
-from hwt.hdl.portItem import PortItem
-from hwt.hdl.types.array import HArray
-from hwt.hdl.types.enum import HEnum
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlAll
+from hdlConvertorAst.hdlAst._statements import HdlImport
+from hdlConvertorAst.hdlAst._structural import HdlLibrary, HdlModuleDef,\
+    HdlCompInst, HdlContext
+from hdlConvertorAst.to.vhdl.keywords import VHLD2008_KEYWORDS
+from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.pyUtils.arrayQuery import groupedby
-from hwt.serializer.exceptions import SerializerException
-from hwt.serializer.generic.indent import getIndent
-from hwt.serializer.generic.mapExpr import MapExpr
-from hwt.serializer.generic.nameScope import LangueKeyword, NameScope
-from hwt.serializer.generic.portMap import PortMap
-from hwt.serializer.generic.serializer import GenericSerializer, CurrentUnitSwap
-from hwt.serializer.utils import maxStmId
-from hwt.serializer.vhdl.keywords import VHLD_KEYWORDS
-from hwt.serializer.vhdl.ops import VhdlSerializer_ops
-from hwt.serializer.vhdl.statements import VhdlSerializer_statements
-from hwt.serializer.vhdl.tmplContainer import VhdlTmplContainer
-from hwt.serializer.vhdl.types import VhdlSerializer_types
-from hwt.serializer.vhdl.utils import VhdlVersion
-from hwt.serializer.vhdl.value import VhdlSerializer_Value
-from hwt.synthesizer.param import Param
+from hwt.serializer.generic.to_hdl_ast import ToHdlAst
+from hwt.serializer.vhdl.ops import ToHdlAstVhdl2008_ops
+from hwt.serializer.vhdl.statements import ToHdlAstVhdl2008_statements
+from hwt.serializer.vhdl.types import ToHdlAstVhdl2008_types
+from hwt.serializer.vhdl.value import ToHdlAstVhdl2008_Value
 
 
 class VhdlNameScope(NameScope):
     RE_MANY_UNDERSCORES = re.compile(r"(_{2,})")
 
-    def checkedName(self, actualName, actualObj, isGlobal=False):
+    def checked_name(self, actualName, actualObj):
         actualName = self.RE_MANY_UNDERSCORES.sub(r"_", actualName)
-        return NameScope.checkedName(self, actualName, actualObj,
-                                     isGlobal=isGlobal)
+        return NameScope.checked_name(self, actualName, actualObj)
 
 
-class VhdlSerializer(VhdlTmplContainer, VhdlSerializer_Value,
-                     VhdlSerializer_ops, VhdlSerializer_types,
-                     VhdlSerializer_statements, GenericSerializer):
-    VHDL_VER = VhdlVersion.v2002
-    _keywords_dict = {kw: LangueKeyword() for kw in VHLD_KEYWORDS}
-    fileExtension = '.vhd'
-    DEFAULT_IMPORTS = """library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-"""
+IEEE = HdlValueId("IEEE", obj=LanguageKeyword())
+std_logic_1164 = HdlValueId("std_logic_1164", obj=LanguageKeyword())
+numeric_std = HdlValueId("numeric_std", obj=LanguageKeyword())
+
+
+class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
+                       ToHdlAstVhdl2008_ops, ToHdlAstVhdl2008_types,
+                       ToHdlAstVhdl2008_statements, ToHdlAst):
+    """
+    :ivar ~.name_scope: name scope used to generate a unique names for tmp variables
+        (all object should be registered in namescope before serialization)
+    """
+    _keywords_dict = {kw: LanguageKeyword() for kw in VHLD2008_KEYWORDS}
+
+    DEFAULT_IMPORTS = [
+        HdlLibrary("IEEE"),
+        HdlImport([IEEE, std_logic_1164, HdlAll]),
+        HdlImport([IEEE, numeric_std, HdlAll]),
+    ]
 
     @classmethod
     def getBaseNameScope(cls):
-        s = VhdlNameScope(True)
-        s.setLevel(1)
-        s[0].update(cls._keywords_dict)
+        s = VhdlNameScope.make_top(True)
+        s.update(cls._keywords_dict)
         return s
 
-    @classmethod
-    def Architecture(cls, arch: Architecture, ctx):
-        with CurrentUnitSwap(ctx, arch.entity.origin):
-            variables = []
-            procs = []
-            extraTypes = set()
-            extraTypes_serialized = []
-            arch.variables.sort(key=lambda x: (x.name, x._instId))
-            arch.processes.sort(key=lambda x: (x.name, maxStmId(x)))
-            arch.components.sort(key=lambda x: x.name)
-            arch.componentInstances.sort(key=lambda x: x._name)
+    def as_hdl_HdlModuleDef(self, o: HdlModuleDef):
+        """
+        Translate hwt types and expressions to HDL AST and add explicit components
+        """
+        _o = super(ToHdlAstVhdl2008, self).as_hdl_HdlModuleDef(o)
+        component_insts = []
+        for c in _o.objs:
+            if isinstance(c, HdlCompInst):
+                component_insts.append(c)
 
-            childCtx = ctx.withIndent()
+        # select comonent instances whith an unique module_name
+        components = [
+            x[1][0] for x in
+            groupedby(component_insts, lambda c: c.module_name)
+        ]
+        components.sort(key=lambda c: c.module_name)
+        components = [self.as_hdl_HldComponent(c)
+                      for c in components]
+        if components:
+            _o.objs = components + _o.objs
 
-            for v in arch.variables:
-                t = v._dtype
-                # if type requires extra definition
-                if isinstance(t, (HEnum, HArray)) and t not in extraTypes:
-                    extraTypes.add(v._dtype)
-                    t_str = cls.HdlType(t, childCtx, declaration=True)
-                    if t_str:
-                        extraTypes_serialized.append(t_str)
+        res = HdlContext()
+        res.objs.extend(self.DEFAULT_IMPORTS)
+        res.objs.append(_o)
+        return res
 
-                v.name = ctx.scope.checkedName(v.name, v)
-                serializedVar = cls.SignalItem(v, childCtx, declaration=True)
-                variables.append(serializedVar)
-
-            for p in arch.processes:
-                procs.append(cls.HWProcess(p, childCtx))
-
-            # architecture names can be same for different entities
-            # arch.name = scope.checkedName(arch.name, arch, isGlobal=True)
-
-            uniqComponents = [
-                x[1][0] for x in 
-                groupedby(arch.components, lambda c: c.name)
-            ]
-            uniqComponents.sort(key=lambda c: c.name)
-            components = [cls.Component(c, childCtx)
-                          for c in uniqComponents]
-
-            componentInstances = list(
-                map(lambda c: cls.ComponentInstance(c, childCtx),
-                    arch.componentInstances))
-
-            return cls.architectureTmpl.render(
-                indent=getIndent(ctx.indent),
-                entityName=arch.getEntityName(),
-                name=arch.name,
-                variables=variables,
-                extraTypes=extraTypes_serialized,
-                processes=procs,
-                components=components,
-                componentInstances=componentInstances
-            )
-
-    @classmethod
-    def comment(cls, comentStr):
-        return "--" + comentStr.replace("\n", "\n--")
-
-    @classmethod
-    def Component(cls, entity, ctx):
-        with CurrentUnitSwap(ctx, entity.origin):
-            return cls.componentTmpl.render(
-                indent=getIndent(ctx.indent),
-                ports=[cls.PortItem(pi, ctx) for pi in entity.ports],
-                generics=[cls.GenericItem(g, ctx) for g in entity.generics],
-                entity=entity
-            )
-
-    @classmethod
-    def ComponentInstance(cls, entity: Entity, ctx):
-        with CurrentUnitSwap(ctx, entity.origin):
-            portMaps = []
-            for pi in entity.ports:
-                pm = PortMap.fromPortItem(pi)
-                portMaps.append(pm)
-
-            genericMaps = []
-            for g in entity.generics:
-                gm = MapExpr(g, g.get_value())
-                genericMaps.append(gm)
-
-            if len(portMaps) == 0:
-                raise SerializerException("Incomplete component instance")
-
-            entity._name = ctx.scope.checkedName(entity._name, entity)
-            return cls.componentInstanceTmpl.render(
-                indent=getIndent(ctx.indent),
-                instanceName=entity._name,
-                entity=entity,
-                portMaps=[cls.PortConnection(x, ctx) for x in portMaps],
-                genericMaps=[cls.MapExpr(x, ctx) for x in genericMaps]
-            )
-
-    @classmethod
-    def Entity(cls, entity: Entity, ctx):
-        with CurrentUnitSwap(ctx, entity.origin):
-            generics, ports = cls.Entity_prepare(entity, ctx)
-            
-            entVhdl = cls.entityTmpl.render(
-                indent=getIndent(ctx.indent),
-                name=entity.name,
-                ports=ports,
-                generics=generics
-            )
-            
-            doc = entity.__doc__
-            if doc and doc is not Entity.__doc__:
-                doc = cls.comment(doc)
-                return "%s\n%s\n%s" % (doc, cls.DEFAULT_IMPORTS, entVhdl)
-            else:
-                return "%s\n%s" % (cls.DEFAULT_IMPORTS, entVhdl)
-
-    @classmethod
-    def GenericItem(cls, g: Param, ctx):
-        v = g.get_hdl_value()
-        t_str = cls.HdlType(v._dtype, ctx)
-        v_str = cls.Value(v, ctx)
-        return '%s: %s := %s' % (
-                g.hdl_name, t_str, v_str)
-
-    @classmethod
-    def PortConnection(cls, pc, ctx):
-        if pc.portItem._dtype != pc.sig._dtype:
-            raise SerializerException(
-                "Port map %s is nod valid"
-                " (types does not match)  (%r, %r)" % (
-                    "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx)),
-                    pc.portItem._dtype, pc.sig._dtype))
-        return "%s => %s" % (pc.portItem.name, cls.asHdl(pc.sig, ctx))
-
-    @classmethod
-    def DIRECTION(cls, d):
-        return d.name
-
-    @classmethod
-    def PortItem(cls, pi: PortItem, ctx):
-        return "%s: %s %s" % (pi.name, cls.DIRECTION(pi.direction),
-                              cls.HdlType(pi._dtype, ctx))
-
-    @classmethod
-    def MapExpr(cls, m: MapExpr, ctx):
-        k = m.compSig
-        if isinstance(k, Param):
-            name = k.hdl_name
-            v = cls.Value(k.get_hdl_value(), ctx)
-        else:
-            name = cls.get_signal_name(k, ctx)
-            v = cls.asHdl(m.value, ctx)
-        return "%s => %s" % (name, v)
+    def as_hdl_HldComponent(self, o: HdlCompInst):
+        c = self.as_hdl_HdlModuleDec(o.origin._ctx.ent)
+        return c

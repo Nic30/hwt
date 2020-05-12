@@ -1,7 +1,7 @@
-from _random import Random
 from collections import deque
 from inspect import isgenerator
 import os
+from random import Random
 from typing import Optional
 import unittest
 
@@ -45,10 +45,6 @@ class DummySimPlatform(DummyPlatform):
     """
     DummyPlatform which ignores the constraints
     """
-
-    def __init__(self):
-        super(DummySimPlatform, self).__init__()
-        self.constraint_serializer.clear()
 
 
 class SimTestCase(unittest.TestCase):
