@@ -341,12 +341,16 @@ def power(base, exp) -> RtlSignalBase:
 
 def ror(sig, howMany) -> RtlSignalBase:
     "Rotate right"
+    if sig._dtype.bit_length() == 1:
+        return sig
     return sig[howMany:]._concat(sig[:howMany])
 
 
 def rol(sig, howMany) -> RtlSignalBase:
     "Rotate left"
     width = sig._dtype.bit_length()
+    if width == 1:
+        return sig
     return sig[(width - howMany):]._concat(sig[:(width - howMany)])
 
 
