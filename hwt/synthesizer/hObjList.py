@@ -50,6 +50,7 @@ class HObjList(list):
         """
         for o in self:
             o._make_association(*args, **kwargs)
+        return self
 
     def _updateParamsFrom(self, *args, **kwargs):
         """
@@ -58,6 +59,7 @@ class HObjList(list):
         for o in self:
             if isinstance(o, (InterfaceBase, UnitBase, HObjList)):
                 o._updateParamsFrom(*args, **kwargs)
+        return self
 
     def __call__(self, other):
         if not isinstance(other, list):

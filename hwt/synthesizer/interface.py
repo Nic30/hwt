@@ -272,6 +272,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         """
         PropDeclrCollector._updateParamsFrom(
             self, otherObj, updater, exclude, prefix)
+        return self
 
     def _bit_length(self):
         """Sum of all width of interfaces in this interface"""

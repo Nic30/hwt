@@ -258,6 +258,7 @@ class PropDeclrCollector(object):
             # assert that what should be excluded really exists
             assert exclude_src == excluded_src, (exclude_src, excluded_src)
             assert exclude_dst == excluded_dst, (exclude_dst == excluded_dst)
+        return self
 
     # declaration phase
     @internal

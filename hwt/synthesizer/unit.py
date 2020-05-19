@@ -244,8 +244,8 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         :note: doc in
             :func:`hwt.synthesizer.interfaceLevel.propDeclCollector._updateParamsFrom`
         """
-        PropDeclrCollector._updateParamsFrom(self, otherObj,
-                                             updater, exclude, prefix)
+        return PropDeclrCollector._updateParamsFrom(self, otherObj,
+                                                    updater, exclude, prefix)
 
 
 @internal
