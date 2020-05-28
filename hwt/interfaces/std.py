@@ -223,13 +223,23 @@ class BramPort_withoutClk(Interface):
     def _config(self):
         self.ADDR_WIDTH = Param(32)
         self.DATA_WIDTH = Param(64)
+        self.HAS_R = Param(True)
+        self.HAS_W = Param(True)
 
     def _declr(self):
+        assert self.HAS_R or self.HAS_W, "has to have at least read or write part"
+
         self.addr = VectSignal(self.ADDR_WIDTH)
-        self.din = VectSignal(self.DATA_WIDTH)
-        self.dout = VectSignal(self.DATA_WIDTH, masterDir=D.IN)
+        if self.HAS_R:
+            self.din = VectSignal(self.DATA_WIDTH)
+
+        if self.HAS_R:
+            self.dout = VectSignal(self.DATA_WIDTH, masterDir=D.IN)
+
         self.en = Signal()
-        self.we = Signal()
+        if self.HAS_R and self.HAS_W:
+            # in write only mode we do not need this as well as we can use "en"
+            self.we = Signal()
 
     def _getWordAddrStep(self):
         """
