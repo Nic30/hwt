@@ -37,12 +37,12 @@ class ToHdlAstHwt_ops():
                                 [self.as_hdl(o2) for o2 in ops])
             elif o == AllOps.TERNARY:
                 cond, op0, op1 = ops
-                cond = self.visit_iHdlObj(cond)
+                cond = self.as_hdl(cond)
                 with ValueWidthRequirementScope(self, True):
                     op0 = self.as_hdl(op0)
                     op1 = self.as_hdl(op1)
-                return HdlOp(o, [cond, op0, op1])
+                return hdl_call(hdl_getattr(cond, "_ternary"), [op0, op1])
             else:
                 o = self.op_transl_dict[o]
                 return HdlOp(o, [self.as_hdl(o2)
-                                   for o2 in ops])
+                                 for o2 in ops])
