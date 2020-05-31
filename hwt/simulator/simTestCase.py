@@ -46,6 +46,8 @@ class DummySimPlatform(DummyPlatform):
     DummyPlatform which ignores the constraints
     """
 
+_UNSPECIFIED = object()
+
 
 class SimTestCase(unittest.TestCase):
     """
@@ -174,7 +176,7 @@ class SimTestCase(unittest.TestCase):
         return "%s__%s" % (cls.__name__, unit._getDefaultName())
 
     @classmethod
-    def compileSim(cls, unit, build_dir: Optional[str]=DEFAULT_BUILD_DIR,
+    def compileSim(cls, unit, build_dir: Optional[str]=_UNSPECIFIED,
                    unique_name: Optional[str]=None, onAfterToRtl=None,
                    target_platform=DummySimPlatform()):
         """
@@ -193,6 +195,9 @@ class SimTestCase(unittest.TestCase):
             and before Unit instance signals are replaced
             with simulator specific ones
         """
+        if build_dir == _UNSPECIFIED:
+            build_dir = cls.DEFAULT_BUILD_DIR
+
         if unique_name is None:
             unique_name = cls.get_unique_name(unit)
 

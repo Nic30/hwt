@@ -68,22 +68,25 @@ def toBasicSimulatorSimModel(
         unique_name = unit._getDefaultName()
 
     _filter = SerializerFilterDoNotExclude()
-    if build_dir is not None:
-        build_private_dir = os.path.join(os.getcwd(), build_dir, unique_name)
+    if build_dir is None or not do_compile:
+        buff = StringIO()
+        store_man = SaveToStream(SimModelSerializer, buff, _filter=_filter)
+    else:
+        if not os.path.isabs(build_dir):
+            build_dir = os.path.join(os.getcwd(), build_dir)
+        build_private_dir = os.path.join(build_dir, unique_name)
         store_man = SaveToFilesFlat(SimModelSerializer,
                                     build_private_dir,
                                     _filter=_filter)
-    else:
-        buff = StringIO()
-        store_man = SaveToStream(SimModelSerializer, buff, _filter=_filter)
+        store_man.module_path_prefix = unique_name
 
     to_rtl(unit,
-          name=unique_name,
-          target_platform=target_platform,
-          store_manager=store_man)
+           name=unique_name,
+           target_platform=target_platform,
+           store_manager=store_man)
 
     if build_dir is not None:
-        d = os.path.join(os.getcwd(), build_dir)
+        d = build_dir
         dInPath = d in sys.path
         if not dInPath:
             sys.path.insert(0, d)
