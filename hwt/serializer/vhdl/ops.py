@@ -157,4 +157,4 @@ class ToHdlAstVhdl2008_ops():
                 op1 = self.as_hdl_operand(op1)
                 return HdlOp(o, [op0, op1])
             return HdlOp(o, [self.as_hdl_operand(o2)
-                               for o2 in ops])
+                             for o2 in ops])
