@@ -73,7 +73,7 @@ class ToHdlAstSystemC_statements():
         # assert not dst.virtual_only, "should not be required"
 
         if a.indexes is not None:
-            for i in reversed(a.indexes):
+            for i in a.indexes:
                 dst = dst[i]
 
         typeOfDst = systemCTypeOfSig(dst)
