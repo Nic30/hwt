@@ -12,8 +12,8 @@ from hwt.constraints import _get_absolute_path
 
 
 def to_rtl(unit_or_cls: Unit, store_manager: StoreManager,
-          name: str=None,
-          target_platform=DummyPlatform()):
+           name: str=None,
+           target_platform=DummyPlatform()):
     """
     Convert unit to RTL using specified serializer
 
