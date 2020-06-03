@@ -103,6 +103,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [nmigen](https://github.com/m-labs/nmigen) -, Python, A refreshed Python toolbox for building complex digital hardware
 * [OpenTimer](https://github.com/OpenTimer/OpenTimer) - , C++,  A High-Performance Timing Analysis Tool for VLSI Systems
 * [percy](https://github.com/whaaswijk/percy) - Collection of different synthesizers and exact synthesis methods for use in applications such as circuit resynthesis and design exploration.
+* [PyChip-py-hcl](https://github.com/scutdig/PyChip-py-hcl) - , Python, Chisel3 like HCL 
 * [pygears](https://github.com/bogdanvuk/pygears) - , Python, function style HDL generator
 * [PyMTL3](https://github.com/cornell-brg/pymtl3) 2018-?
 * [PyMTL](https://github.com/cornell-brg/pymtl) - 2014-?, Python, Process based HDL

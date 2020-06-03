@@ -59,10 +59,6 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         (vhdl entity name, verilog module name)
     """
 
-
-
-
-
     _serializeDecision = None
     # properties which are used internally by this library
     _PROTECTED_NAMES = set([
@@ -130,7 +126,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
 
     @internal
     def _to_rtl(self, target_platform: DummyPlatform,
-               store_manager: "StoreManager"):
+                store_manager: "StoreManager"):
         """
         synthesize all subunits, make connections between them,
         build entity and component for this unit
@@ -217,11 +213,12 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
                 mdef = self._ctx.create_HdlModuleDef(
                     target_platform, store_manager)
                 mdef.origin = self
-                for intf in self._interfaces:
-                    if intf._isExtern:
-                        # reverse because other components
-                        # looks at this interface from the outside
-                        intf._reverseDirection()
+            for intf in self._interfaces:
+                if intf._isExtern:
+                    # reverse because other components
+                    # looks at this interface from the outside
+                    intf._reverseDirection()
+            if do_serialize_this:
                 store_manager.write(mdef)
             yield True, self
 
