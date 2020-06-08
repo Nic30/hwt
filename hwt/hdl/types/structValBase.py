@@ -1,5 +1,6 @@
 from hwt.hdl.value import Value, areValues
 from hwt.serializer.generic.indent import getIndent
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class StructValBase(Value):
@@ -28,7 +29,7 @@ class StructValBase(Value):
             else:
                 v = val.get(f.name, None)
 
-            if not isinstance(v, Value):
+            if not isinstance(v, (Value, RtlSignalBase)):
                 v = f.dtype.from_py(v)
 
             setattr(self, f.name, v)
