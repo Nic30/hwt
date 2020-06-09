@@ -354,6 +354,8 @@ class RtlSignalOps():
 
         if not indexes:
             indexes = None
+        else:
+            indexes.reverse()
 
         return intf, indexes
 

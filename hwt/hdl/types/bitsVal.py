@@ -98,6 +98,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         except AttributeError:
             raise TypeError("Can not concat Bits and", other)
 
+        self = self._vec()
         if areValues(self, other):
             return self._concat__val(other)
         else:

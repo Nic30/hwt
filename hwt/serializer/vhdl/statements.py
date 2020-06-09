@@ -21,7 +21,7 @@ class ToHdlAstVhdl2008_statements():
         assert isinstance(dst, SignalItem)
 
         if a.indexes is not None:
-            for i in reversed(a.indexes):
+            for i in a.indexes:
                 if isinstance(i, SliceVal):
                     i = i.__copy__()
                 dst = dst[i]

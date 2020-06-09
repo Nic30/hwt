@@ -1,5 +1,4 @@
 from collections import deque
-
 from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from pycocotb.agents.clk import ClockAgent
@@ -9,6 +8,10 @@ from pycocotb.triggers import WaitCombRead, WaitWriteOnly, WaitCombStable, Timer
 
 class BramPort_withoutClkAgent(SyncAgentBase):
     """
+    A simulation agent for BramPort_withoutClk interface
+    In slave mode acts as a memory, in master mode dispathes
+    requests stored in "requests" dequeu
+
     :ivar ~.requests: list of tuples (request type, address, [write data])
         - used for driver
     :ivar ~.data: list of data in memory, used for monitor
@@ -18,6 +21,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
     def __init__(self, sim: HdlSimulator, intf):
         super().__init__(sim, intf, allowNoReset=True)
+        if not intf.HAS_R or not intf.HAS_W:
+            raise NotImplementedError()
 
         self.requests = deque()
         self.readPending = False
@@ -70,13 +75,12 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     def monitor(self):
         """
         Handle read/write request on this interfaces
-        
+
         This method is executed on clock edge.
         This means that the read data should be put on dout after clock edge.
         """
         intf = self.intf
 
-        
         yield WaitCombStable()
         if self.notReset():
             en = intf.en.read()

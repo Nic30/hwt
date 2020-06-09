@@ -23,6 +23,38 @@ class HObjList(list):
             item._m()
         return self
 
+    def append(self, *args, **kwargs):
+        assert self._parent is None
+        return list.append(self, *args, **kwargs)
+
+    def clear(self, *args, **kwargs):
+        assert self._parent is None
+        return list.clear(self, *args, **kwargs)
+
+    def extend(self, *args, **kwargs):
+        assert self._parent is None
+        return list.extend(self, *args, **kwargs)
+
+    def insert(self, *args, **kwargs):
+        assert self._parent is None
+        return list.insert(self, *args, **kwargs)
+
+    def pop(self, *args, **kwargs):
+        assert self._parent is None
+        return list.pop(self, *args, **kwargs)
+
+    def remove(self, *args, **kwargs):
+        assert self._parent is None
+        return list.remove(self, *args, **kwargs)
+
+    def reverse(self, *args, **kwargs):
+        assert self._parent is None
+        return list.remove(self, *args, **kwargs)
+
+    def sort(self, *args, **kwargs):
+        assert self._parent is None
+        return list.remove(self, *args, **kwargs)
+
     def _getFullName(self, separator_getter=lambda x: "."):
         """get all name hierarchy separated by '.' """
         name = ""

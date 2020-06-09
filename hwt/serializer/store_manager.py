@@ -8,6 +8,7 @@ from hwt.pyUtils.uniqList import UniqList
 from hwt.serializer.serializer_config import DummySerializerConfig
 from hwt.serializer.serializer_filter import SerializerFilter
 from hwt.synthesizer.unit import HdlConstraintList
+from hdlConvertorAst.hdlAst import HdlModuleDef
 
 
 class StoreManager(object):
@@ -18,8 +19,8 @@ class StoreManager(object):
 
     def __init__(self,
                  serializer_cls: DummySerializerConfig,
-                 _filter: Type["SerializerFilter"] = None,
-                 name_scope: Optional[NameScope]= None):
+                 _filter: Type["SerializerFilter"]=None,
+                 name_scope: Optional[NameScope]=None):
         self.serializer_cls = serializer_cls
         self.as_hdl_ast = serializer_cls.TO_HDL_AST(name_scope=name_scope)
         self.name_scope = self.as_hdl_ast.name_scope
@@ -50,7 +51,7 @@ class SaveToStream(StoreManager):
     def __init__(self,
                  serializer_cls: DummySerializerConfig,
                  stream: StringIO,
-                 _filter: "SerializerFilter" = None,
+                 _filter: "SerializerFilter"=None,
                  name_scope: Optional[NameScope]=None):
         super(SaveToStream, self).__init__(
             serializer_cls, _filter=_filter, name_scope=name_scope)
@@ -84,23 +85,30 @@ class SaveToFilesFlat(StoreManager):
             serializer_cls, _filter=_filter, name_scope=name_scope)
         self.root = root
         self.files = UniqList()
+        self.module_path_prefix = None
         self.constraints_file_spoted = False
         os.makedirs(root, exist_ok=True)
 
     def write(self, obj: Union[iHdlObj, HdlConstraintList]):
         if isinstance(obj, HdlConstraintList):
-            fName = "constraints" + self.serializer_cls.TO_CONSTRAINTS.fileExtension
+            f_name = "constraints" + self.serializer_cls.TO_CONSTRAINTS.fileExtension
         else:
-            fName = obj.name + self.serializer_cls.fileExtension
+            if isinstance(obj, HdlModuleDef):
+                name = obj.module_name.val
+            else:
+                name = obj.name
+            f_name = name + self.serializer_cls.fileExtension
 
-        fp = os.path.join(self.root, fName)
+        fp = os.path.join(self.root, f_name)
         self.files.append(fp)
         if self.constraints_file_spoted:
             m = 'a'
         else:
             m = 'w'
             self.constraints_file_spoted = True
+
         with open(fp, m) as f:
             s = SaveToStream(self.serializer_cls, f,
                              self.filter, self.name_scope)
+            s.ser.module_path_prefix = self.module_path_prefix
             s.write(obj)
