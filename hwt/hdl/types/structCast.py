@@ -13,7 +13,7 @@ def hstruct_reinterpret_to_bits(self, sigOrVal, toType: HdlType):
     parts = []
     for f in self.fields:
         if f.name is None:
-            width = f.bit_length()
+            width = f.dtype.bit_length()
             part = vec(None, width)
         else:
             part = getattr(sigOrVal, f.name)
