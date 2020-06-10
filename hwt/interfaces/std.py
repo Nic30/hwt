@@ -225,7 +225,7 @@ class BramPort_withoutClk(Interface):
         self.DATA_WIDTH = Param(64)
         self.HAS_R = Param(True)
         self.HAS_W = Param(True)
-        self.HAS_BE = Param(False) 
+        self.HAS_BE = Param(False)
 
     def _declr(self):
         assert self.HAS_R or self.HAS_W, "has to have at least read or write part"
