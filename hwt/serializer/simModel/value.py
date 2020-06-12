@@ -102,11 +102,11 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             zero, one = BIT.from_py(0), BIT.from_py(1)
             if ops[1] == one and ops[2] == zero:
                 # ignore redundant x ? 1 : 0
-                return self.as_hdl_cond([ops[0]], True)
+                return self.as_hdl_cond(ops[0], True)
             else:
-                op0 = self.as_hdl_cond([ops[0]], True)
-                op1 = self.as_hdl_Value(ops[1], op)
-                op2 = self.as_hdl_Value(ops[2], op)
+                op0 = self.as_hdl_cond(ops[0], True)
+                op1 = self.as_hdl_Value(ops[1])
+                op2 = self.as_hdl_Value(ops[2])
                 return hdl_call(hdl_getattr(op0, "_ternary"), [op1, op2])
         elif o == AllOps.RISING_EDGE or o == AllOps.FALLING_EDGE:
             if o == AllOps.RISING_EDGE:
