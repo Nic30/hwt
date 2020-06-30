@@ -51,7 +51,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
         """
         self.model_cls = model_cls
         self.synthesised_unit = synthesised_unit
-        self.vcdWriter = None
+        self.wave_writer = None
         self._obj2scope = {}
         self._traced_signals = set()
 
@@ -133,7 +133,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
         return cls(model_cls, unit)
 
     def set_trace_file(self, file_name, trace_depth):
-        vcd = self.vcdWriter = VcdWriter(open(file_name, "w"))
+        vcd = self.wave_writer = VcdWriter(open(file_name, "w"))
         vcd.date(datetime.now())
         vcd.timescale(1)
 
@@ -146,7 +146,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
     def finalize(self):
         # because set_trace_file() may not be called
         # and it this case the vcd config is not set
-        f = self.vcdWriter._oFile
+        f = self.wave_writer._oFile
         if f not in (sys.__stderr__, sys.__stdin__, sys.__stdout__):
             f.close()
 
@@ -181,7 +181,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
                 name = model._name
             else:
                 name = obj._name
-            parent_ = self.vcdWriter if parent is None else parent
+            parent_ = self.wave_writer if parent is None else parent
 
             subScope = parent_.varScope(name)
             self._obj2scope[obj] = subScope
@@ -216,7 +216,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
                                        model: BasicRtlSimModel, 
                                        interface_signals: Set[BasicRtlSimProxy]):
         for s in model._interfaces:
-            if s not in interface_signals and s not in self.vcdWriter._idScope:
+            if s not in interface_signals and s not in self.wave_writer._idScope:
                 t = s._dtype
                 if isinstance(t, self.supported_type_classes):
                     tName, width, formatter = vcdTypeInfoForHType(t)
@@ -230,7 +230,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
         This method is called for every value change of any signal.
         """
         try:
-            self.vcdWriter.logChange(nowTime, sig, nextVal)
+            self.wave_writer.logChange(nowTime, sig, nextVal)
         except KeyError:
             # not every signal has to be registered
             # (if it is not registered it means it is ignored)
