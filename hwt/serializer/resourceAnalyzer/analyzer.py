@@ -133,7 +133,7 @@ class ResourceAnalyzer():
                 if isinstance(o._dtype, HArray):
                     assert i == 1, (o, i, " only one ram port per HdlStatementBlock")
                     for a in walk_assignments(stm, o):
-                        assert len(a.indexes) == 1, "one address per RAM port"
+                        assert len(a.indexes) == 1, ("has to have single address per RAM port", a.indexes)
                         addr = a.indexes[0]
                     ctx.registerRAM_write_port(o, addr, ev_dep)
                 elif ev_dep:
