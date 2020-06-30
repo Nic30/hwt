@@ -8,44 +8,11 @@ from typing import Optional
 from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
 from hwt.serializer.simModel import SimModelSerializer
 from hwt.serializer.store_manager import SaveToFilesFlat, SaveToStream
-from hwt.simulator.basicRtlSimConfigVcd import BasicRtlSimConfigVcd
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import to_rtl
-from pycocotb.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
 
-
-class BasicRtlSimulatorWithVCD(BasicRtlSimulator):
-
-    def __init__(self, synthesised_unit):
-        BasicRtlSimulator.__init__(self)
-        self.synthesised_unit = synthesised_unit
-
-    def set_trace_file(self, file_name, trace_depth):
-        self.config = BasicRtlSimConfigVcd(open(file_name, "w"))
-        beforeSim = self.config.beforeSim
-        if beforeSim is not None:
-            beforeSim(self, self.synthesised_unit, self.model)
-
-    def finalize(self):
-        # because set_trace_file() may not be called
-        # and it this case the vcd config is not set
-        if isinstance(self.config, BasicRtlSimConfigVcd):
-            self.config.vcdWriter._oFile.close()
-
-
-class BasicSimConstructor():
-
-    def __init__(self, model_cls, synthesised_unit):
-        self.model_cls = model_cls
-        self.synthesised_unit = synthesised_unit
-
-    def __call__(self):
-        sim = BasicRtlSimulatorWithVCD(self.synthesised_unit)
-        model = self.model_cls(sim)
-        model._init_body()
-        sim.bound_model(model)
-        return sim
+from hwt.simulator.rtlSimulatorVcd import BasicRtlSimulatorVcd
 
 
 def toBasicSimulatorSimModel(
@@ -102,8 +69,9 @@ def toBasicSimulatorSimModel(
         simModule = ModuleType('simModule_' + unique_name)
         # python supports only ~100 opened brackets
         # if exceded it throws MemoryError: s_push: parser stack overflow
-        exec(buff.getvalue(), simModule.__dict__)
+        exec(buff.getvalue(),
+             simModule.__dict__)
 
     model_cls = simModule.__dict__[unit._name]
     # can not use just function as it would get bounded to class
-    return BasicSimConstructor(model_cls, unit)
+    return BasicRtlSimulatorVcd(model_cls, unit)
