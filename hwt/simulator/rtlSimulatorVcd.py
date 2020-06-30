@@ -124,7 +124,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
         else:
             simModule = ModuleType('simModule_' + unique_name)
             # python supports only ~100 opened brackets
-            # if exceded it throws MemoryError: s_push: parser stack overflow
+            # if exceeded it throws MemoryError: s_push: parser stack overflow
             exec(buff.getvalue(),
                  simModule.__dict__)
 
