@@ -10,13 +10,13 @@ from hwt.hdl.value import Value
 from hwt.simulator.agentConnector import valToInt, autoAddAgents, \
     collect_processes_from_sim_agents
 from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
-from hwt.simulator.simCompilerBasicHdlSimulator import toBasicSimulatorSimModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from pyMathBitPrecise.bits3t import Bits3val
 from pycocotb.constants import CLK_PERIOD
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer
+from hwt.simulator.rtlSimulatorVcd import BasicRtlSimulatorVcd
 
 
 def allValuesToInts(sequenceOrVal):
@@ -76,6 +76,7 @@ class SimTestCase(unittest.TestCase):
     hdl_simulator = None
     DEFAULT_BUILD_DIR = None  # "tmp"
     DEFAULT_LOG_DIR = "tmp"
+    DEFAULT_SIMULATOR = BasicRtlSimulatorVcd
 
     def assertValEqual(self, first, second, msg=None):
         try:
@@ -202,7 +203,7 @@ class SimTestCase(unittest.TestCase):
         if unique_name is None:
             unique_name = cls.get_unique_name(unit)
 
-        cls.rtl_simulator_cls = toBasicSimulatorSimModel(  # toVerilatorSimModel(
+        cls.rtl_simulator_cls = cls.DEFAULT_SIMULATOR.build(
             unit,
             unique_name=unique_name,
             build_dir=build_dir,
