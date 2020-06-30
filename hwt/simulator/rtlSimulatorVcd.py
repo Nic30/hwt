@@ -139,7 +139,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
 
         interface_signals = set()
         self._collect_interface_signals(self.synthesised_unit, self.model, interface_signals)
-        self.vcd_register_signals(self.synthesised_unit, self.model, None, interface_signals)
+        self.wave_register_signals(self.synthesised_unit, self.model, None, interface_signals)
 
         vcd.enddefinitions()
 
@@ -168,7 +168,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
             s = getattr(model.io, sig_name)
             res.add(s)
 
-    def vcd_register_signals(self,
+    def wave_register_signals(self,
                              obj: Union[Interface, Unit],
                              model: BasicRtlSimModel,
                              parent: Optional[VcdVarWritingScope],
@@ -189,15 +189,15 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
             with subScope:
                 # register all subinterfaces
                 for chIntf in obj._interfaces:
-                    self.vcd_register_signals(chIntf, model, subScope, interface_signals)
+                    self.wave_register_signals(chIntf, model, subScope, interface_signals)
                 if isinstance(obj, Unit):
-                    self.vcd_register_remaining_signals(subScope, model, interface_signals)
+                    self.wave_register_remaining_signals(subScope, model, interface_signals)
                     # register interfaces from all subunits
                     for u in obj._units:
                         m = getattr(model, u._name + "_inst")
                         if u._shared_component_with is not None:
                             u, _, _ = u._shared_component_with
-                        self.vcd_register_signals(u, m, subScope, interface_signals)
+                        self.wave_register_signals(u, m, subScope, interface_signals)
 
             return subScope
         else:
@@ -212,7 +212,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulator):
                 except VarAlreadyRegistered:
                     pass
 
-    def vcd_register_remaining_signals(self, unitScope,
+    def wave_register_remaining_signals(self, unitScope,
                                        model: BasicRtlSimModel, 
                                        interface_signals: Set[BasicRtlSimProxy]):
         for s in model._interfaces:
