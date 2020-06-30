@@ -46,6 +46,7 @@ class DummySimPlatform(DummyPlatform):
     DummyPlatform which ignores the constraints
     """
 
+
 _UNSPECIFIED = object()
 
 
