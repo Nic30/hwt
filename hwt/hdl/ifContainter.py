@@ -9,7 +9,7 @@ from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 from hwt.hdl.statement import HdlStatement, statementsAreSame, \
     isSameStatementList, seqEvalCond
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
@@ -223,7 +223,7 @@ class IfContainer(HdlStatement):
                 ctx.extend(stm._sensitivity)
 
     @internal
-    def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, Union[Value, RtlSignalBase]]) -> None:
+    def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, Union[HValue, RtlSignalBase]]) -> None:
         enc = []
         outputs = self._outputs
         for e in enclosure.keys():

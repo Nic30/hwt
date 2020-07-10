@@ -5,25 +5,26 @@ from random import Random
 from typing import Optional
 import unittest
 
+from pyMathBitPrecise.bits3t import Bits3val
+
 from hwt.hdl.types.arrayVal import HArrayVal
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.simulator.agentConnector import valToInt, autoAddAgents, \
     collect_processes_from_sim_agents
+from hwt.simulator.rtlSimulatorVcd import BasicRtlSimulatorVcd
 from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
-from pyMathBitPrecise.bits3t import Bits3val
 from pycocotb.constants import CLK_PERIOD
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer
-from hwt.simulator.rtlSimulatorVcd import BasicRtlSimulatorVcd
 
 
 def allValuesToInts(sequenceOrVal):
     if isinstance(sequenceOrVal, HArrayVal):
         sequenceOrVal = sequenceOrVal.val
 
-    if isinstance(sequenceOrVal, (Value, Bits3val)):
+    if isinstance(sequenceOrVal, (HValue, Bits3val)):
         return valToInt(sequenceOrVal)
     elif not sequenceOrVal:
         return sequenceOrVal

@@ -2,7 +2,7 @@ from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.doc_markers import internal
 
 
-class Value():
+class HValue():
     """
     Wrap around hdl value with overloaded operators
     http://www.rafekettler.com/magicmethods.html
@@ -56,27 +56,27 @@ class Value():
             "from_py fn is not implemented for %r" % (cls))
 
     def __int__(self):
-        if isinstance(self, Value) or self._const:
+        if isinstance(self, HValue) or self._const:
             if self._is_full_valid():
                 return int(self.val)
             else:
-                raise ValueError("Value of %r is not fully defined" % self)
+                raise ValueError("HValue of %r is not fully defined" % self)
 
         raise ValueError(
-            "Value of %r is not constant it can be statically solved" % self)
+            "HValue of %r is not constant it can be statically solved" % self)
 
     def __bool__(self):
-        if isinstance(self, Value) or self._const:
+        if isinstance(self, HValue) or self._const:
             if self._is_full_valid():
                 return bool(self.val)
             else:
-                raise ValueError("Value of %r is not fully defined" % self)
+                raise ValueError("HValue of %r is not fully defined" % self)
 
         raise ValueError(
-            "Value of %r is not constant it can be statically solved" % self)
+            "HValue of %r is not constant it can be statically solved" % self)
 
     def __eq__(self, other):
-        if areValues(self, other):
+        if areHValues(self, other):
             return self._dtype == other._dtype and \
                 self.vld_mask == other.vld_mask and\
                 self.val == other.val
@@ -179,11 +179,11 @@ class Value():
     #     raise TypeError()
 
 
-def areValues(*items):
+def areHValues(*items):
     """
-    :return: True if all arguments are instances of Value class else False
+    :return: True if all arguments are instances of HValue class else False
     """
     for i in items:
-        if not isinstance(i, Value):
+        if not isinstance(i, HValue):
             return False
     return True

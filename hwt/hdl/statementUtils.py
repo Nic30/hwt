@@ -1,10 +1,10 @@
 from typing import Set, List, Dict, Union, Optional
 
+from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.statement import HdlStatement
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.doc_markers import internal
 
 
 @internal
@@ -12,7 +12,7 @@ def fill_stm_list_with_enclosure(parentStm: Optional[HdlStatement],
                                  current_enclosure: Set[RtlSignalBase],
                                  statements: List["HdlStatement"],
                                  do_enclose_for: List[RtlSignalBase],
-                                 enclosure: Dict[RtlSignalBase, Union[Value, RtlSignalBase]])\
+                                 enclosure: Dict[RtlSignalBase, Union[HValue, RtlSignalBase]])\
         -> None:
     """
     Apply enclosure on list of statements

@@ -1,7 +1,7 @@
 from hwt.doc_markers import internal
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from copy import copy
 
@@ -10,7 +10,7 @@ def slice_member_to_hval(v):
     if isinstance(v, RtlSignalBase):  # is signal
         assert isinstance(v._dtype, Bits)
         return v
-    elif isinstance(v, Value):
+    elif isinstance(v, HValue):
         if isinstance(v, Bits):
             return v
         else:
@@ -19,9 +19,9 @@ def slice_member_to_hval(v):
         return INT.from_py(v)
 
 
-class SliceVal(Value):
+class SliceVal(HValue):
     """
-    Value class for Slice type
+    HValue class for Slice type
     """
 
     @classmethod
@@ -53,7 +53,7 @@ class SliceVal(Value):
         """
         :return: how many bits is this slice selecting
         """
-        assert isinstance(self, Value)
+        assert isinstance(self, HValue)
         v = self.val
         if v.step == -1:
             return int(v.start) - int(v.stop)
@@ -70,7 +70,7 @@ class SliceVal(Value):
         return self._eq__val(other)
 
     def __copy__(self):
-        v = Value.__copy__(self)
+        v = HValue.__copy__(self)
         v.val = copy(v.val)
         return v
 

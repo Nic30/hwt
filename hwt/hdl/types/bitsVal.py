@@ -15,7 +15,7 @@ from hwt.hdl.types.eventCapableVal import EventCapableVal
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.sliceUtils import slice_to_SLICE
 from hwt.hdl.types.typeCast import toHVal
-from hwt.hdl.value import Value, areValues
+from hwt.hdl.value import HValue, areHValues
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
@@ -24,7 +24,7 @@ from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and
     vld_mask_for_or
 
 
-class BitsVal(Bits3val, EventCapableVal, Value):
+class BitsVal(Bits3val, EventCapableVal, HValue):
     """
     :attention: operator on signals are using value operator functions as well
     """
@@ -53,7 +53,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             if False value will be unsigned,
             if None value will be vector without any sign specification
         """
-        if isinstance(self, Value):
+        if isinstance(self, HValue):
             return self._convSign__val(signed)
         else:
             if self._dtype.signed == signed:
@@ -73,7 +73,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             return Operator.withRes(cnv, [self], t)
 
     def _auto_cast(self, dtype):
-        return Value._auto_cast(self, dtype)
+        return HValue._auto_cast(self, dtype)
 
     def _signed(self):
         return self._convSign(True)
@@ -99,7 +99,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             raise TypeError("Can not concat Bits and", other)
 
         self = self._vec()
-        if areValues(self, other):
+        if areHValues(self, other):
             return self._concat__val(other)
         else:
             w = self._dtype.bit_length()
@@ -165,13 +165,13 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             stop = key.val.stop
             if key.val.step != -1:
                 raise NotImplementedError()
-            startIsVal = isinstance(start, Value)
-            stopIsVal = isinstance(stop, Value)
-            indexesAreValues = startIsVal and stopIsVal
+            startIsVal = isinstance(start, HValue)
+            stopIsVal = isinstance(stop, HValue)
+            indexesareHValues = startIsVal and stopIsVal
         else:
             key = toHVal(key, INT)
 
-        iamVal = isinstance(self, Value)
+        iamVal = isinstance(self, HValue)
         iAmResultOfIndexing = (not iamVal and
                                hasattr(self, "origin") and
                                len(self.drivers) == 1 and
@@ -180,7 +180,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
 
         Bits = self._dtype.__class__
         if isSLICE:
-            if indexesAreValues and start.val == length and stop.val == 0:
+            if indexesareHValues and start.val == length and stop.val == 0:
                 # selecting all bits no conversion needed
                 return self
 
@@ -263,7 +263,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         """
         # convert index to hSlice or hInt
         indexConst = True
-        if not isinstance(index, Value):
+        if not isinstance(index, HValue):
             if isinstance(index, RtlSignalBase):
                 if index._const:
                     index = index.staticEval()
@@ -286,7 +286,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
             else:
                 itemT = BIT
 
-            if not isinstance(value, Value):
+            if not isinstance(value, HValue):
                 if isinstance(value, RtlSignalBase):
                     if value._const:
                         value = value.staticEval()._auto_cast(itemT)
@@ -300,14 +300,14 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                 valueConst = True
                 value = value._auto_cast(itemT)
 
-        if indexConst and valueConst and isinstance(self, Value):
+        if indexConst and valueConst and isinstance(self, HValue):
             return Bits3val.__setitem__(self, index, value)
 
         raise TypeError(
             "Only simulator can resolve []= for signals or invalid index")
 
     def __invert__(self):
-        if isinstance(self, Value):
+        if isinstance(self, HValue):
             return Bits3val.__invert__(self)
         else:
             try:
@@ -380,7 +380,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         return vec(0, int(other))._concat(self[:other])
 
     def __neg__(self):
-        if isinstance(self, Value):
+        if isinstance(self, HValue):
             return Bits3val.__neg__(self)
         else:
             if not self._dtype.signed:
@@ -399,7 +399,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
 
     def __floordiv__(self, other) -> "Bits3val":
         other = toHVal(other, suggestedType=self._dtype)
-        if isinstance(self, Value) and isinstance(other, Value):
+        if isinstance(self, HValue) and isinstance(other, HValue):
             return Bits3val.__floordiv__(self, other)
         else:
             if not isinstance(other._dtype, self._dtype.__class__):
@@ -409,7 +409,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
                                     self._dtype.__copy__())
 
     def _ternary(self, a, b):
-        if isinstance(self, Value):
+        if isinstance(self, HValue):
             if self:
                 return a
             else:
@@ -428,7 +428,7 @@ class BitsVal(Bits3val, EventCapableVal, Value):
         if not isinstance(other._dtype, Bits):
             raise TypeError(other)
 
-        if areValues(self, other):
+        if areHValues(self, other):
             return self._mul__val(other)
         else:
             myT = self._dtype

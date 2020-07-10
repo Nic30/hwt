@@ -4,7 +4,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statement import HdlStatement
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -107,7 +107,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
                 # _val is invalid initialization value
                 self._val = self.def_val.__copy__()
 
-        if not isinstance(self._val, Value):
+        if not isinstance(self._val, HValue):
             raise ValueError(
                 "Evaluation of signal returned not supported object (%r)"
                 % (self._val, ))

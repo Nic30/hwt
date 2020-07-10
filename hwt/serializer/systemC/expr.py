@@ -12,7 +12,7 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.enumVal import HEnumVal
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
@@ -31,7 +31,7 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
             return tuple((self.as_hdl(o2) for o2 in v))
         return super(ToHdlAstSystemC_expr, self).as_hdl_Value(v)
 
-    def as_hdl_operand(self, operand: Union[RtlSignal, Value], i: int,
+    def as_hdl_operand(self, operand: Union[RtlSignal, HValue], i: int,
                        operator: Operator):
         return self.as_hdl(operand)
 

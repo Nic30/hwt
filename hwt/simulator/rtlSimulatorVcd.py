@@ -9,7 +9,7 @@ from hwt.hdl.types.enum import HEnum
 from hwt.simulator.rtlSimulator import BasicRtlSimulatorWithSignalRegisterMethods
 from pyDigitalWaveTools.vcd.writer import VcdWriter
 from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from typing import Union
 from pycocotb.basic_hdl_simulator.sim_utils import ValueUpdater,\
     ArrayValueUpdater
@@ -30,7 +30,7 @@ class BasicRtlSimulatorVcd(BasicRtlSimulatorWithSignalRegisterMethods):
 
     def logChange(self, nowTime: int,
                   sig: BasicRtlSimProxy, 
-                  nextVal: Value,
+                  nextVal: HValue,
                   valueUpdater: Union[ValueUpdater, ArrayValueUpdater]):
         """
         This method is called for every value change of any signal.

@@ -10,7 +10,7 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -62,7 +62,7 @@ class ToHdlAstVhdl2008_ops():
         o.drivers.append(if_)
         return o
 
-    def _as_Bits(self, val: Union[RtlSignal, Value]):
+    def _as_Bits(self, val: Union[RtlSignal, HValue]):
         if val._dtype == BOOL:
             bit1_t = Bits(1)
             o = self.createTmpVarFn("tmpBool2std_logic_", bit1_t)
@@ -78,7 +78,7 @@ class ToHdlAstVhdl2008_ops():
             assert isinstance(val._dtype, Bits), val._dtype
             return val
 
-    def _as_Bits_vec(self, val: Union[RtlSignal, Value]):
+    def _as_Bits_vec(self, val: Union[RtlSignal, HValue]):
         val = self._as_Bits(val)
         t = val._dtype
         if not t.force_vector and t.bit_length() == 1:
@@ -91,7 +91,7 @@ class ToHdlAstVhdl2008_ops():
             # already a std_logic_vector
             return val
 
-    def as_hdl_operand(self, operand: Union[RtlSignal, Value]):
+    def as_hdl_operand(self, operand: Union[RtlSignal, HValue]):
         # no nested ternary in expressions like
         # ( '1'  WHEN r = f ELSE  '0' ) & "0"
         # extract them as a tmp variable

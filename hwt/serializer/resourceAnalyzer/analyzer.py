@@ -11,7 +11,7 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.statement import HdlStatement
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.resourceAnalyzer.utils import ResourceContext
 from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import walk_assignments
@@ -73,7 +73,7 @@ class ResourceAnalyzer():
             if not skip_op:
                 if d.operator == AllOps.EQ:
                     o1 = d.operands[1]
-                    if (isinstance(o1, Value)
+                    if (isinstance(o1, HValue)
                             and o1._dtype.bit_length() == 1
                             and o1.val):
                         # to bool conversion

@@ -5,11 +5,11 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.typeCast import toHVal
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-class HArrayVal(Value):
+class HArrayVal(HValue):
     """
     Class for values of array HDL type
     """
@@ -17,13 +17,13 @@ class HArrayVal(Value):
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):
         """
-        :param val: None or dictionary {index:value} or iterrable of values
+        :param val: None or dictionary {index:HValue} or iterrable of values
         :param vld_mask: if is None validity is resolved from val
             if is 0 value is invalidated
             if is 1 value has to be valid
         """
         size = typeObj.size
-        if isinstance(size, Value):
+        if isinstance(size, HValue):
             size = int(size)
 
         elements = {}
@@ -86,19 +86,19 @@ class HArrayVal(Value):
             return self._dtype.element_t.from_py(None)
 
     def __getitem__(self, key):
-        iamVal = isinstance(self, Value)
+        iamVal = isinstance(self, HValue)
         key = toHVal(key)
         isSLICE = isinstance(key, Slice.getValueCls())
 
         if isSLICE:
             raise NotImplementedError()
-        elif isinstance(key, (Value, RtlSignalBase)):
+        elif isinstance(key, (HValue, RtlSignalBase)):
             pass
         else:
             raise NotImplementedError(
                 "Index operation not implemented for index %r" % (key))
 
-        if iamVal and isinstance(key, Value):
+        if iamVal and isinstance(key, HValue):
             return self._getitem__val(key)
 
         return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.element_t)
@@ -122,10 +122,10 @@ class HArrayVal(Value):
         if isinstance(index, int):
             index = INT.from_py(index)
         else:
-            assert isinstance(self, Value)
+            assert isinstance(self, HValue)
             assert isinstance(index._dtype, Bits), index._dtype
 
-        if not isinstance(value, Value):
+        if not isinstance(value, HValue):
             value = self._dtype.element_t.from_py(value)
         else:
             assert value._dtype == self._dtype.element_t, (

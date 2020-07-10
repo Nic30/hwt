@@ -12,7 +12,7 @@ from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
@@ -37,7 +37,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
         AllOps.INDEX: HdlOpType.INDEX,
     }
 
-    def is_suitable_for_const_extract(self, val: Value):
+    def is_suitable_for_const_extract(self, val: HValue):
         return not isinstance(val._dtype, HEnum) or val.vld_mask == 0
 
     def as_hdl_SignalItem(self, si: Union[SignalItem, HdlIdDef],

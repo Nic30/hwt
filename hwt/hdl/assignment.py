@@ -1,11 +1,11 @@
 from typing import Tuple, List, Dict, Union, Optional
 
-from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statement import isSameHVal, HdlStatement, areSameHVals
-from hwt.hdl.value import Value
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
+from hwt.hdl.sensitivityCtx import SensitivityCtx
+from hwt.hdl.statement import isSameHVal, HdlStatement, areSameHVals
+from hwt.hdl.value import HValue
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class Assignment(HdlStatement):
@@ -22,8 +22,8 @@ class Assignment(HdlStatement):
     """
     __instCntr = 0
 
-    def __init__(self, src: Union[RtlSignalBase, Value], dst: Union[RtlSignalBase, Value],
-                 indexes: Optional[List[Union[RtlSignalBase, Value]]]=None, virtual_only=False,
+    def __init__(self, src: Union[RtlSignalBase, HValue], dst: Union[RtlSignalBase, HValue],
+                 indexes: Optional[List[Union[RtlSignalBase, HValue]]]=None, virtual_only=False,
                  parentStm: Optional[HdlStatement]=None,
                  sensitivity: Optional[RtlSignalBase]=None,
                  is_completly_event_dependent=False):
@@ -43,13 +43,13 @@ class Assignment(HdlStatement):
         self.src = src
         isReal = not virtual_only
 
-        if not isinstance(src, Value):
+        if not isinstance(src, HValue):
             self._inputs.append(src)
             if isReal:
                 src.endpoints.append(self)
 
         self.dst = dst
-        if not isinstance(dst, Value):
+        if not isinstance(dst, HValue):
             self._outputs.append(dst)
             if isReal:
                 dst.drivers.append(self)
@@ -57,7 +57,7 @@ class Assignment(HdlStatement):
         self.indexes = indexes
         if indexes:
             for i in indexes:
-                if not isinstance(i, Value):
+                if not isinstance(i, HValue):
                     self._inputs.append(i)
                     if isReal:
                         i.endpoints.append(self)

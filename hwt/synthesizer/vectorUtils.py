@@ -7,7 +7,7 @@ from hwt.hdl.typeShortcuts import vec
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.utils import walkFlattenFields
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -17,7 +17,7 @@ class BitWidthErr(Exception):
     """
 
 
-def fitTo_t(what: Union[RtlSignal, Value], where_t: HdlType,
+def fitTo_t(what: Union[RtlSignal, HValue], where_t: HdlType,
             extend: bool=True, shrink: bool=True):
     """
     Slice signal "what" to fit in "where"
@@ -58,7 +58,7 @@ def fitTo_t(what: Union[RtlSignal, Value], where_t: HdlType,
         return ext._concat(what)
 
 
-def fitTo(what: Union[RtlSignal, Value], where: Union[RtlSignal, Value],
+def fitTo(what: Union[RtlSignal, HValue], where: Union[RtlSignal, HValue],
           extend: bool=True, shrink: bool=True):
     return fitTo_t(what, where._dtype, extend, shrink)
 
@@ -74,11 +74,11 @@ class BitWalker():
     Walker which can walk chunks of bits on signals/values of all types
 
     :ivar ~.sigOrVal: signal or value to iterate over
-    :ivar ~.fillup: flag that means that if there is not enought bits
-        for last iterm fill it up with invalid bits (otherwise raise)
+    :ivar ~.fillup: flag that means that if there is not enough bits
+        for last item fill it up with invalid bits (otherwise raise)
     """
 
-    def __init__(self, sigOrVal: Union[RtlSignal, Value],
+    def __init__(self, sigOrVal: Union[RtlSignal, HValue],
                  skipPadding: bool=True,
                  fillup: bool=False):
         """
@@ -93,7 +93,7 @@ class BitWalker():
     @internal
     def _get(self, numberOfBits: int, doCollect: bool):
         """
-        :param numberOfBits: number of bits to get from actual possition
+        :param numberOfBits: number of bits to get from actual position
         :param doCollect: if False output is not collected just iterator moves
             in data structure
         """
@@ -101,7 +101,7 @@ class BitWalker():
             numberOfBits = int(numberOfBits)
 
         while self.actuallyHave < numberOfBits:
-            # accumulate while not has enought
+            # accumulate while not has enough
             try:
                 f = next(self.it)
             except StopIteration:
@@ -154,9 +154,9 @@ class BitWalker():
             else:
                 return actual[(actualOffset + numberOfBits):actualOffset]
 
-    def get(self, numberOfBits: int) -> Union[RtlSignal, Value]:
+    def get(self, numberOfBits: int) -> Union[RtlSignal, HValue]:
         """
-        :param numberOfBits: number of bits to get from actual possition
+        :param numberOfBits: number of bits to get from actual position
         :return: chunk of bits of specified size (instance of Value or RtlSignal)
         """
         return self._get(numberOfBits, True)
@@ -165,7 +165,7 @@ class BitWalker():
         """
         Move this iterator without care about item
 
-        :param numberOfBits: number of bits to get from actual possition
+        :param numberOfBits: number of bits to get from actual position
         """
         self._get(numberOfBits, False)
 
@@ -178,10 +178,10 @@ class BitWalker():
         except StopIteration:
             return
 
-        raise AssertionError("there stil were some items")
+        raise AssertionError("there are still some items")
 
 
-def iterBits(sigOrVal: Union[RtlSignal, Value], bitsInOne: int=1,
+def iterBits(sigOrVal: Union[RtlSignal, HValue], bitsInOne: int=1,
              skipPadding: bool=True, fillup: bool=False):
     """
     Iterate over bits in vector
@@ -189,8 +189,8 @@ def iterBits(sigOrVal: Union[RtlSignal, Value], bitsInOne: int=1,
     :param sigOrVal: signal or value to iterate over
     :param bitsInOne: number of bits in one part
     :param skipPadding: if true padding is skipped in dense types
-    :param fillup: flag that means that if there is not enought bits
-        for last iterm fill it up with invalid bits (otherwise raise)
+    :param fillup: flag that means that if there is not enough bits
+        for last item fill it up with invalid bits (otherwise raise)
     """
     bw = BitWalker(sigOrVal, skipPadding, fillup)
     try:

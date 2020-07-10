@@ -12,7 +12,7 @@ from pyMathBitPrecise.enum3t import Enum3t
 from hwt.doc_markers import internal
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.serializer.serializer_filter import SerializerFilterDoNotExclude
 from hwt.serializer.simModel import SimModelSerializer
 from hwt.serializer.store_manager import SaveToStream, SaveToFilesFlat
@@ -123,7 +123,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
 
     @internal
     def get_trace_formater(self, t)\
-            -> Tuple[str, int, Callable[[RtlSignalBase, Value], str]]:
+            -> Tuple[str, int, Callable[[RtlSignalBase, HValue], str]]:
         """
         :return: (vcd type name, vcd width, formater fn)
         """
@@ -230,7 +230,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
 
     def logChange(self, nowTime: int,
                   sig: BasicRtlSimProxy,
-                  nextVal: Value,
+                  nextVal: HValue,
                   valueUpdater: Union[ValueUpdater, ArrayValueUpdater]):
         """
         This method is called for every value change of any signal.

@@ -9,7 +9,7 @@ from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.simulator.rtlSimulator import BasicRtlSimulatorWithSignalRegisterMethods
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pyDigitalWaveTools.json.writer import JsonWriter, jsonBitsFormatter, \
@@ -25,7 +25,7 @@ class BasicRtlSimulatorJson(BasicRtlSimulatorWithSignalRegisterMethods):
 
     @internal
     def get_trace_formater(self, t: HdlType)\
-            -> Tuple[str, int, Callable[[RtlSignalBase, Value], str]]:
+            -> Tuple[str, int, Callable[[RtlSignalBase, HValue], str]]:
         """
         :return: (vcd type name, vcd width, formater fn)
         """
@@ -43,7 +43,7 @@ class BasicRtlSimulatorJson(BasicRtlSimulatorWithSignalRegisterMethods):
 
     def logChange(self, nowTime: int,
                   sig: BasicRtlSimProxy, 
-                  nextVal: Value,
+                  nextVal: HValue,
                   valueUpdater: Union[ValueUpdater, ArrayValueUpdater]):
         """
         This method is called for every value change of any signal.

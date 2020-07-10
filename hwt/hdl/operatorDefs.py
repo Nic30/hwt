@@ -1,9 +1,9 @@
 from operator import floordiv, add, sub, inv, mod, mul, ne, and_, or_, \
     xor, gt, ge, lt, le, getitem, neg
 
-from hwt.hdl.types.defs import INT, SLICE
-from hwt.hdl.value import Value
 from hwt.doc_markers import internal
+from hwt.hdl.types.defs import INT, SLICE
+from hwt.hdl.value import HValue
 
 
 class OpDefinition():
@@ -28,7 +28,7 @@ class OpDefinition():
     def eval(self, operator, simulator=None):
         """Load all operands and process them by self._evalFn"""
         def getVal(v):
-            while not isinstance(v, Value):
+            while not isinstance(v, HValue):
                 v = v._val
 
             return v

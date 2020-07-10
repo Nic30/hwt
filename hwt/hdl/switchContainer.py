@@ -6,11 +6,11 @@ from typing import List, Tuple, Dict
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
-from hwt.hdl.statement import HdlStatement, isSameHVal, isSameStatementList,\
+from hwt.hdl.statement import HdlStatement, isSameHVal, isSameStatementList, \
     statementsAreSame, HwtSyntaxError
+from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
@@ -28,7 +28,7 @@ class SwitchContainer(HdlStatement):
     """
 
     def __init__(self, switchOn: RtlSignal,
-                 cases: List[Tuple[Value, List[HdlStatement]]],
+                 cases: List[Tuple[HValue, List[HdlStatement]]],
                  default: List[HdlStatement]=None,
                  parentStm: HdlStatement=None,
                  is_completly_event_dependent: bool=False):

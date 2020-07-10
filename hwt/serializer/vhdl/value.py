@@ -8,7 +8,7 @@ from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.sliceVal import SliceVal
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
@@ -21,7 +21,7 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
     #TO_SIGNED = HdlValueId("TO_SIGNED", obj=LanguageKeyword())
 
     def as_hdl_cond(self, c, forceBool):
-        assert isinstance(c, (RtlSignalBase, Value)), c
+        assert isinstance(c, (RtlSignalBase, HValue)), c
         if not forceBool or c._dtype == BOOL:
             return self.as_hdl(c)
         elif c._dtype == BIT:
@@ -96,7 +96,7 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
     def as_hdl_SliceVal(self, val: SliceVal):
         upper = val.val.start
         if int(val.val.step) == -1:
-            if isinstance(upper, Value):
+            if isinstance(upper, HValue):
                 upper = HdlValueInt(int(upper) - 1, None, None)
             else:
                 upper = HdlOp(HdlOpType.SUB, [self.as_hdl_Value(upper),

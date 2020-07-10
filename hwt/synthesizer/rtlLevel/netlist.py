@@ -6,7 +6,7 @@ from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
 from hwt.code import If
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -72,7 +72,7 @@ class RtlNetlist():
             assert v._const, \
                 "Initial value of register has to be constant"
             return v._auto_cast(dtype)
-        elif isinstance(v, Value):
+        elif isinstance(v, HValue):
             return v._auto_cast(dtype)
         elif isinstance(v, InterfaceBase):
             return v._sig

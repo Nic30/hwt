@@ -1,9 +1,9 @@
-from hwt.hdl.value import Value, areValues
+from hwt.hdl.value import HValue, areHValues
 from hwt.serializer.generic.indent import getIndent
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-class StructValBase(Value):
+class StructValBase(HValue):
     """
     Base class for values for structure types.
     Every structure type has it's own value class derived from this.
@@ -14,7 +14,7 @@ class StructValBase(Value):
         """
         :param val: None or dict {field name: field value}
         :param typeObj: instance of String HdlType
-        :param skipCheck: flag to skip field name consystency in val
+        :param skipCheck: flag to skip field name consistency in val
         """
         self._dtype = typeObj
         if not skipCheck and val is not None:
@@ -29,7 +29,7 @@ class StructValBase(Value):
             else:
                 v = val.get(f.name, None)
 
-            if not isinstance(v, (Value, RtlSignalBase)):
+            if not isinstance(v, (HValue, RtlSignalBase)):
                 v = f.dtype.from_py(v)
 
             setattr(self, f.name, v)
@@ -69,7 +69,7 @@ class StructValBase(Value):
         return d
 
     def __eq__(self, other):
-        if areValues(self, other):
+        if areHValues(self, other):
             if self._dtype == other._dtype:
                 for f in self._dtype.fields:
                     isPadding = f.name is None
@@ -82,7 +82,7 @@ class StructValBase(Value):
             else:
                 return False
         else:
-            return super(Value, self).__eq__(other)
+            return super(HValue, self).__eq__(other)
 
     def __repr__(self, indent=0):
         buff = ["{"]

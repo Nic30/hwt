@@ -15,7 +15,7 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 
 def tv(signal):
     """
-    Value class for type of signal
+    HValue class for type of signal
     """
     return signal._dtype.getValueCls()
 

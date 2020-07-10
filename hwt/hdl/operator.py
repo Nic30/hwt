@@ -1,7 +1,7 @@
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.operatorDefs import isEventDependentOp, OpDefinition
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
 from typing import Generator, Union, Tuple
@@ -23,7 +23,7 @@ def isConst(item):
     """
     :return: True if expression is constant
     """
-    return isinstance(item, Value) or item._const
+    return isinstance(item, HValue) or item._const
 
 
 class Operator(HdlObject):
@@ -37,7 +37,7 @@ class Operator(HdlObject):
     """
 
     def __init__(self, operator: OpDefinition,
-                 operands: Tuple[Union[RtlSignalBase, Value]]):
+                 operands: Tuple[Union[RtlSignalBase, HValue]]):
         self.operands = tuple(operands)
         self.operator = operator
         self.result = None  # type: RtlSignal
@@ -53,7 +53,7 @@ class Operator(HdlObject):
                     o.drivers.append(self)
                 else:
                     o.endpoints.append(self)
-            elif isinstance(o, Value):
+            elif isinstance(o, HValue):
                 pass
             else:
                 raise NotImplementedError(
@@ -107,7 +107,7 @@ class Operator(HdlObject):
         Walk all non hiden signals in an expression
         """
         for op in self.operands:
-            if not isinstance(op, Value) and op not in seen:
+            if not isinstance(op, HValue) and op not in seen:
                 seen.add(op)
                 yield from op._walk_public_drivers(seen)
 
@@ -126,7 +126,7 @@ class Operator(HdlObject):
         Create operator with result signal
 
         :ivar ~.resT: data type of result signal
-        :ivar ~.outputs: iterable of singnals which are outputs
+        :ivar ~.outputs: iterable of signals which are outputs
             from this operator
         """
         op = Operator(opDef, operands)

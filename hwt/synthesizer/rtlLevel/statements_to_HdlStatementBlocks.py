@@ -6,7 +6,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.statement import HwtSyntaxError, HdlStatement
 from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.reduce_processes import reduceProcesses
 from hwt.synthesizer.rtlLevel.rtlSignal import NO_NOPVAL, RtlSignal
@@ -94,7 +94,7 @@ def _statements_to_HdlStatementBlocks(_statements, tryToSolveCombLoops)\
             enclosure_recompute = True
             n = sig._nop_val
             enclosure_values[sig] = n
-            if not isinstance(n, Value):
+            if not isinstance(n, HValue):
                 _inputs.append(n)
                 sensitivity_recompute = True
 

@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import NO_NOPVAL
 
@@ -48,7 +48,7 @@ def removeUnconnectedSignals(netlist):
                             netlist.statements.discard(e)
 
                     for op in inputs:
-                        if not isinstance(op, Value):
+                        if not isinstance(op, HValue):
                             op.endpoints.discard(e)
                             _toSearch.add(op)
 
