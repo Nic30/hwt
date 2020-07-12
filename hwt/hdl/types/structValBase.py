@@ -40,7 +40,9 @@ class StructValBase(HValue):
             if f.name is None:
                 continue
 
-            v = getattr(self, f.name).__copy__()
+            v = getattr(self, f.name)
+            if not isinstance(v, RtlSignalBase):
+                v = v.__copy__()
             d[f.name] = v
 
         return self.__class__(self._dtype, d, skipCheck=True)
