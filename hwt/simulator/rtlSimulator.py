@@ -23,12 +23,14 @@ from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import to_rtl
 from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
 from pyDigitalWaveTools.vcd.writer import VcdVarWritingScope, \
-    VarAlreadyRegistered, vcdBitsFormatter, vcdEnumFormatter
+    VarAlreadyRegistered
 from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
 from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
 from pycocotb.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
 from pycocotb.basic_hdl_simulator.sim_utils import ValueUpdater,\
     ArrayValueUpdater
+from pyDigitalWaveTools.vcd.value_format import VcdBitsFormatter,\
+    VcdEnumFormatter
 
 
 class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
@@ -122,15 +124,15 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
         return cls(model_cls, unit)
 
     @internal
-    def get_trace_formater(self, t)\
+    def get_trace_formatter(self, t)\
             -> Tuple[str, int, Callable[[RtlSignalBase, HValue], str]]:
         """
-        :return: (vcd type name, vcd width, formater fn)
+        :return: (vcd type name, vcd width, formatter fn)
         """
         if isinstance(t, (Bits3t, Bits)):
-            return (VCD_SIG_TYPE.WIRE, t.bit_length(), vcdBitsFormatter)
+            return (VCD_SIG_TYPE.WIRE, t.bit_length(), VcdBitsFormatter())
         elif isinstance(t, (Enum3t, HEnum)):
-            return (VCD_SIG_TYPE.REAL, 1, vcdEnumFormatter)
+            return (VCD_SIG_TYPE.REAL, 1, VcdEnumFormatter())
         else:
             raise ValueError(t)
 
@@ -206,7 +208,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
         else:
             t = obj._dtype
             if isinstance(t, self.supported_type_classes):
-                tName, width, formatter = self.get_trace_formater(t)
+                tName, width, formatter = self.get_trace_formatter(t)
                 sig_name = obj._sigInside.name
                 s = getattr(model.io, sig_name)
                 try:
@@ -222,7 +224,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
             if s not in interface_signals and s not in self.wave_writer._idScope:
                 t = s._dtype
                 if isinstance(t, self.supported_type_classes):
-                    tName, width, formatter = self.get_trace_formater(t)
+                    tName, width, formatter = self.get_trace_formatter(t)
                     try:
                         unitScope.addVar(s, s._name, tName, width, formatter)
                     except VarAlreadyRegistered:

@@ -12,29 +12,35 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import HValue
 from hwt.simulator.rtlSimulator import BasicRtlSimulatorWithSignalRegisterMethods
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from pyDigitalWaveTools.json.writer import JsonWriter, jsonBitsFormatter, \
-    jsonEnumFormatter
+from pyDigitalWaveTools.json.writer import JsonWriter
 from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
 from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
 from pycocotb.basic_hdl_simulator.sim_utils import ValueUpdater, \
     ArrayValueUpdater
+from pyDigitalWaveTools.json.value_format import JsonBitsFormatter,\
+    JsonEnumFormatter, JsonArrayFormatter
 
 
 class BasicRtlSimulatorJson(BasicRtlSimulatorWithSignalRegisterMethods):
     supported_type_classes = (Bits, HEnum, HArray, Bits3t, Enum3t, Array3t)
 
     @internal
-    def get_trace_formater(self, t: HdlType)\
+    def get_trace_formatter(self, t: HdlType)\
             -> Tuple[str, int, Callable[[RtlSignalBase, HValue], str]]:
         """
-        :return: (vcd type name, vcd width, formater fn)
+        :return: (vcd type name, vcd width, formatter fn)
         """
         if isinstance(t, (Bits3t, Bits)):
-            return (VCD_SIG_TYPE.WIRE, t.bit_length(), jsonBitsFormatter)
+            return (VCD_SIG_TYPE.WIRE, t.bit_length(), JsonBitsFormatter())
         elif isinstance(t, (Enum3t, HEnum)):
-            return (VCD_SIG_TYPE.REAL, 1, jsonEnumFormatter)
+            return (VCD_SIG_TYPE.REAL, 1, JsonEnumFormatter())
         elif isinstance(t, (HArray, Array3t)):
-            return (VCD_SIG_TYPE.ARRAY, t.size, self.get_trace_formater(t.element_t))
+            dimensions = []
+            while isinstance(t, (HArray, Array3t)):
+                dimensions.append(t.size)
+                t = t.element_t
+            _, _, elm_format = self.get_trace_formatter(t)
+            return (VCD_SIG_TYPE.ARRAY, t.bit_length(), JsonArrayFormatter(dimensions, elm_format))
         else:
             raise ValueError(t)
 
