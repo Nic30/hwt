@@ -275,5 +275,5 @@ class SingleUnitSimTestCase(SimTestCase):
     def setUpClass(cls):
         super(SingleUnitSimTestCase, cls).setUpClass()
         u = cls.getUnit()
-        assert isinstance(u, Unit)
+        assert isinstance(u, Unit), u
         cls.compileSim(u)
