@@ -51,6 +51,13 @@ class HValue():
             self.__class__.__name__, repr(self.val), vld_mask)
 
     @classmethod
+    def _from_py(cls, typeObj, val, vld_mask):
+        """
+        from_py without value normalization and type checking
+        """
+        return cls(typeObj, val, vld_mask)
+
+    @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):
         raise NotImplementedError(
             "from_py fn is not implemented for %r" % (cls))

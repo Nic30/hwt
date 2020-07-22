@@ -34,7 +34,13 @@ class HdlType():
 
     def __init__(self, const=False):
         self.const = const
-
+    
+    def _from_py(self, v, vld_mask):
+        """
+        same as from_py just without type checks
+        """
+        return self.getValueCls()._from_py(self, v, vld_mask)
+    
     def from_py(self, v, vld_mask=None):
         """
         Construct value of this type.
