@@ -95,6 +95,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [kratos](https://github.com/Kuree/kratos) - C++/Python, hardware generator/simulator
 * [lgraph](https://github.com/masc-ucsc/lgraph) - C, generic graph library
 * [llhd](https://github.com/fabianschuiki/llhd) - Rust, HCL
+* [livehd](https://github.com/masc-ucsc/livehd) - JS, utils, infrastructure for Synthesis and Simulation 
 * [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, HCL
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, HCL
 * [mockturtle](https://github.com/lsils/mockturtle) - logic network library
