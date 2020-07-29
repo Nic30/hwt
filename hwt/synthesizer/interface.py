@@ -83,7 +83,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         super().__init__()
         self._masterDir = masterDir
-        # Interface is instanciated inside of Unit first,
+        # Interface is instantiated inside of Unit first,
         # master direction actually means slave from outside view
         self._direction = INTF_DIRECTION.UNKNOWN
 
