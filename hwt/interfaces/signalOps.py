@@ -96,16 +96,44 @@ class SignalOps(object):
 
     # arithmetic
     def __neg__(self):
+        "- operator (unary minus)"
         return self._sig.__neg__()
 
     def __add__(self, other):
+        "+ operator"
         return self._sig.__add__(other)
 
     def __sub__(self, other):
+        "- operator"
         return self._sig.__sub__(other)
 
     def __mul__(self, other):
+        "* operator"
         return self._sig.__mul__(other)
+
+    def __pow__(self, other):
+        "** operator"
+        return self._sig.__pow__(other)
+
+    def __mod__(self, other):
+        "** operator"
+        return self._sig.__mod__(other)
+
+    def __truediv__(self, other):
+        "/ operator - floating point division"
+        return self._sig.__truediv__(other)
+
+    def __floordiv__(self, other):
+        "// operator - integer division"
+        return self._sig.__floordiv__(other)
+
+    def __lshift__(self, other):
+        "<< left shift (on fixed number of bits)"
+        return self._sig.__lshift__(other)
+
+    def __rshift__(self, other):
+        ">> right shift (on fixed number of bits)"
+        return self._sig.__lshift__(other)
 
     # hdl centric
     def _reversed(self):
