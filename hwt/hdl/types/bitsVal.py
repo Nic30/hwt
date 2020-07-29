@@ -407,6 +407,11 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             return Operator.withRes(AllOps.DIV,
                                     [self, other],
                                     self._dtype.__copy__())
+    def __pow__(self, other):
+        raise TypeError("Not implemented")
+
+    def __mod__(self, other):
+        raise TypeError("Not implemented")
 
     def _ternary(self, a, b):
         if isinstance(self, HValue):
