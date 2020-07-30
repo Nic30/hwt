@@ -1,0 +1,23 @@
+from hwt.doc_markers import internal
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+
+
+@internal
+def getBaseCond(c):
+    """
+    if is negated return original cond and negated flag
+    """
+    isNegated = False
+    try:
+        drivers = c.drivers
+    except AttributeError:
+        return (c, isNegated)
+
+    if len(drivers) == 1:
+        d = list(c.drivers)[0]
+        if isinstance(d, Operator) and d.operator == AllOps.NOT:
+            c = d.operands[0]
+            isNegated = True
+
+    return (c, isNegated)
