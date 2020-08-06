@@ -70,10 +70,10 @@ class ToHdlAstVhdl2008_statements():
             (dst, a.src, dst._dtype, a.src._dtype))
 
     def can_pop_process_wrap(self, stms, hasToBeVhdlProcess):
-        if hasToBeVhdlProcess:
+        if hasToBeVhdlProcess or len(stms) > 1:
             return False
         else:
-            assert len(stms) == 1
+            assert len(stms) == 1, stms
             return True
 
     def has_to_be_process(self, proc: HdlStatementBlock):
