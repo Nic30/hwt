@@ -33,7 +33,7 @@ class BasicRtlSimulatorJson(BasicRtlSimulatorWithSignalRegisterMethods):
         if isinstance(t, (Bits3t, Bits)):
             return (VCD_SIG_TYPE.WIRE, t.bit_length(), JsonBitsFormatter())
         elif isinstance(t, (Enum3t, HEnum)):
-            return (VCD_SIG_TYPE.REAL, 1, JsonEnumFormatter())
+            return (VCD_SIG_TYPE.ENUM, 1, JsonEnumFormatter())
         elif isinstance(t, (HArray, Array3t)):
             dimensions = []
             while isinstance(t, (HArray, Array3t)):
