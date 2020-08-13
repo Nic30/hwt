@@ -1,10 +1,10 @@
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
 from hwt.doc_markers import internal
 
 
-class StringVal(Value):
+class StringVal(HValue):
     """
     Value class for hdl String type
     """
@@ -44,7 +44,7 @@ class StringVal(Value):
 
     def _eq(self, other):
         other = toHVal(other, self._dtype)
-        if isinstance(other, Value):
+        if isinstance(other, HValue):
             return self._eq__val(other)
         else:
             raise NotImplementedError()

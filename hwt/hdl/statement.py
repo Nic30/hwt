@@ -3,7 +3,7 @@ from typing import List, Tuple, Union
 
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.pyUtils.arrayQuery import flatten, groupedby
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -569,21 +569,21 @@ def seqEvalCond(cond) -> bool:
     return bool(cond.staticEval().val)
 
 
-def isSameHVal(a: Value, b: Value) -> bool:
+def isSameHVal(a: HValue, b: HValue) -> bool:
     """
     :return: True if two Value instances are same
     :note: not just equal
     """
-    return a is b or (isinstance(a, Value)
-                      and isinstance(b, Value)
+    return a is b or (isinstance(a, HValue)
+                      and isinstance(b, HValue)
                       and a.val == b.val
                       and a.vld_mask == b.vld_mask)
 
 
-def areSameHVals(a: Union[None, List[Value]],
-                 b: Union[None, List[Value]]) -> bool:
+def areSameHVals(a: Union[None, List[HValue]],
+                 b: Union[None, List[HValue]]) -> bool:
     """
-    :return: True if two vectors of Value/RtlSignal instances are same
+    :return: True if two vectors of HValue/RtlSignal instances are same
     :note: not just equal
     """
     if a is b:

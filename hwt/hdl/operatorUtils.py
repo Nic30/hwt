@@ -1,12 +1,13 @@
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from typing import Union
-from hwt.hdl.value import Value
+
 from hwt.doc_markers import internal
+from hwt.hdl.value import HValue
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 @internal
 def replace_input_in_expr(parentObj: Union["Operator", "HdlStatement"],
-                          expr: Union[RtlSignalBase, Value],
+                          expr: Union[RtlSignalBase, HValue],
                           toReplace: RtlSignalBase,
                           replacement: RtlSignalBase,
                           updateEndpoints: bool) -> bool:

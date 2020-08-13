@@ -3,7 +3,7 @@ from collections import OrderedDict
 from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStructField
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.serializer.generic.indent import getIndent
 
 
@@ -11,7 +11,7 @@ protectedNames = {"clone", "staticEval",
                   "from_py", "_dtype", "_usedField", "_val"}
 
 
-class UnionValBase(Value):
+class UnionValBase(HValue):
     """
     Base class for values for union types.
     Every union type has it's own value class derived from this.
@@ -35,7 +35,7 @@ class UnionValBase(Value):
             v = None
 
         f = self._dtype.fields[memberName]
-        if not isinstance(v, Value):
+        if not isinstance(v, HValue):
             v = f.dtype.from_py(v)
         else:
             v._auto_cast(f.dtype)
@@ -83,7 +83,7 @@ class HUnionMemberHandler(object):
 
     def set(self, parent, v):
         f = parent._dtype.fields[self.field.name]
-        if not isinstance(v, Value):
+        if not isinstance(v, HValue):
             v = f.dtype.from_py(v)
         else:
             v._auto_cast(f.dtype)

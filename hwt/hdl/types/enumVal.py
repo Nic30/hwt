@@ -1,13 +1,14 @@
-from hwt.hdl.value import Value, areValues
-from hwt.hdl.types.defs import BOOL
+from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.doc_markers import internal
+from hwt.hdl.types.defs import BOOL
+from hwt.hdl.value import HValue, areHValues
+
 
 BoolVal = BOOL.getValueCls()
 
 
-class HEnumVal(Value):
+class HEnumVal(HValue):
 
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):
@@ -43,7 +44,7 @@ class HEnumVal(Value):
     def _eq(self, other):
         assert self._dtype is other._dtype
 
-        if areValues(self, other):
+        if areHValues(self, other):
             return self._eq__val(other)
         else:
             return Operator.withRes(AllOps.EQ, [self, other], BOOL)
@@ -59,7 +60,7 @@ class HEnumVal(Value):
     def __ne__(self, other):
         assert self._dtype is other._dtype
 
-        if areValues(self, other):
+        if areHValues(self, other):
             return self._ne__val(other)
         else:
-            return Operator.withRes(AllOps.NEQ, [self, other], BOOL)
+            return Operator.withRes(AllOps.NE, [self, other], BOOL)

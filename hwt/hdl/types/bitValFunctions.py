@@ -4,7 +4,7 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
-from hwt.hdl.value import Value, areValues
+from hwt.hdl.value import HValue, areHValues
 from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
     bitsArithOp__val
@@ -72,8 +72,8 @@ def bitsCmp(self, other, op, evalFn=None):
     if evalFn is None:
         evalFn = op._evalFn
 
-    iamVal = isinstance(self, Value)
-    otherIsVal = isinstance(other, Value)
+    iamVal = isinstance(self, HValue)
+    otherIsVal = isinstance(other, HValue)
     type_compatible = False
     if ot == BOOL:
         self = self._auto_cast(BOOL)
@@ -120,7 +120,7 @@ def bitsCmp(self, other, op, evalFn=None):
 
         if res is None:
             pass
-        elif isinstance(res, Value):
+        elif isinstance(res, HValue):
             return res
         else:
             assert res == AllOps.EQ, res
@@ -137,8 +137,8 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
     """
     other = toHVal(other, self._dtype)
 
-    iamVal = isinstance(self, Value)
-    otherIsVal = isinstance(other, Value)
+    iamVal = isinstance(self, HValue)
+    otherIsVal = isinstance(other, HValue)
 
     if iamVal and otherIsVal:
         other = other._auto_cast(self._dtype)
@@ -186,7 +186,7 @@ def bitsArithOp(self, other, op):
     other = toHVal(other, self._dtype)
     if not isinstance(other._dtype, Bits):
         raise TypeError(other._dtype)
-    if areValues(self, other):
+    if areHValues(self, other):
         return bitsArithOp__val(self, other, op._evalFn)
     else:
         if self._dtype.signed is None:

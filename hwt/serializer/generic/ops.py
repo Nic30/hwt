@@ -19,7 +19,7 @@ HWT_TO_HDLCONVEROTR_OPS = {
         AllOps.LT,
         AllOps.SUB,
         AllOps.MUL,
-        AllOps.NEQ,
+        AllOps.NE,
         AllOps.ADD,
     ]},
     AllOps.NOT: HdlOpType.NEG,

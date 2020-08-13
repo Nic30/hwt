@@ -9,7 +9,7 @@ from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.hObjList import HObjList
@@ -99,7 +99,7 @@ class Switch(SwitchContainer):
 
     def add_cases(self, tupesValStmnts):
         """
-        Add multiple case statements from iterable of tuleles
+        Add multiple case statements from iterable of tuples
         (caseVal, statements)
         """
         s = self
@@ -112,7 +112,7 @@ class Switch(SwitchContainer):
         assert self.parentStm is None
         caseVal = toHVal(caseVal, self.switchOn._dtype)
 
-        assert isinstance(caseVal, Value), caseVal
+        assert isinstance(caseVal, HValue), caseVal
         assert caseVal._is_full_valid(), "Cmp with invalid value"
         assert caseVal not in self._case_value_index, (
             "Switch statement already has case for value ", caseVal)
@@ -142,7 +142,7 @@ class Switch(SwitchContainer):
 
 def SwitchLogic(cases, default=None):
     """
-    Generate if tree for cases like (syntax shugar for large elifs)
+    Generate if tree for cases like (syntax sugar for large elifs)
 
     ..code-block:: python
         if cond0:
@@ -192,7 +192,7 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
     Generate for loop for static items
 
     :param parentUnit: unit where this code should be instantiated
-    :param items: items which this "for" itering on
+    :param items: items which this "for" iterating on
     :param bodyFn: function which fn(item, index) or fn(item)
         returns (statementList, ack).
         It's content is performed in every iteration.
@@ -258,7 +258,7 @@ class FsmBuilder(Switch):
     def Trans(self, stateFrom, *condAndNextState):
         """
         :param stateFrom: apply when FSM is in this state
-        :param condAndNextState: tupes (condition, newState),
+        :param condAndNextState: tuples (condition, newState),
             last does not to have condition
 
         :attention: transitions has priority, first has the biggest

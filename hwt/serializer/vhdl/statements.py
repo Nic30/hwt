@@ -9,7 +9,7 @@ from hwt.hdl.typeShortcuts import hBit
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.sliceVal import SliceVal
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 
@@ -47,7 +47,7 @@ class ToHdlAstVhdl2008_statements():
                         src = src._ternary(hBit(1), hBit(0))
                         correct = True
                 elif not src_t.strict_width:
-                    if isinstance(src, Value):
+                    if isinstance(src, HValue):
                         src = copy(src)
                         if a.indexes:
                             raise NotImplementedError()
@@ -70,10 +70,10 @@ class ToHdlAstVhdl2008_statements():
             (dst, a.src, dst._dtype, a.src._dtype))
 
     def can_pop_process_wrap(self, stms, hasToBeVhdlProcess):
-        if hasToBeVhdlProcess:
+        if hasToBeVhdlProcess or len(stms) > 1:
             return False
         else:
-            assert len(stms) == 1
+            assert len(stms) == 1, stms
             return True
 
     def has_to_be_process(self, proc: HdlStatementBlock):

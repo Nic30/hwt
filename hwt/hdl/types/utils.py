@@ -7,11 +7,11 @@ from hwt.hdl.types.stream import HStream
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.types.union import HUnion
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-def walkFlattenFields(sigOrVal: Union[RtlSignalBase, Value], skipPadding=True):
+def walkFlattenFields(sigOrVal: Union[RtlSignalBase, HValue], skipPadding=True):
     """
     Walk all simple values in HStruct or HArray
     """
@@ -35,7 +35,7 @@ def walkFlattenFields(sigOrVal: Union[RtlSignalBase, Value], skipPadding=True):
         for item in sigOrVal:
             yield from walkFlattenFields(item)
     elif isinstance(t, HStream):
-        assert isinstance(sigOrVal, Value), sigOrVal
+        assert isinstance(sigOrVal, HValue), sigOrVal
         for v in sigOrVal:
             yield from walkFlattenFields(v)
     else:
@@ -43,7 +43,7 @@ def walkFlattenFields(sigOrVal: Union[RtlSignalBase, Value], skipPadding=True):
 
 
 def HdlValue_unpack(t: HdlType,
-                    data: List[Union[Value, RtlSignalBase, int]],
+                    data: List[Union[HValue, RtlSignalBase, int]],
                     getDataFn=None, dataWidth=None):
     """
     Parse raw Bits array to a value of specified HdlType

@@ -5,11 +5,11 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.typeCast import toHVal
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-class HStreamVal(Value):
+class HStreamVal(HValue):
     """
     Class for values of HStream HDL type
     """
@@ -74,19 +74,19 @@ class HStreamVal(Value):
         return self.val[kv].__copy__()
 
     def __getitem__(self, key):
-        iamVal = isinstance(self, Value)
+        iamVal = isinstance(self, HValue)
         key = toHVal(key)
         isSLICE = isinstance(key, Slice.getValueCls())
 
         if isSLICE:
             raise NotImplementedError()
-        elif isinstance(key, (Value, RtlSignalBase)):
+        elif isinstance(key, (HValue, RtlSignalBase)):
             pass
         else:
             raise NotImplementedError(
                 "Index operation not implemented for index %r" % (key))
 
-        if iamVal and isinstance(key, Value):
+        if iamVal and isinstance(key, HValue):
             return self._getitem__val(key)
 
         return Operator.withRes(AllOps.INDEX, [self, key], self._dtype.element_t)
@@ -110,10 +110,10 @@ class HStreamVal(Value):
         if isinstance(index, int):
             index = INT.from_py(index)
         else:
-            assert isinstance(self, Value)
+            assert isinstance(self, HValue)
             assert isinstance(index._dtype, Bits), index._dtype
 
-        if not isinstance(value, Value):
+        if not isinstance(value, HValue):
             value = self._dtype.element_t.from_py(value)
         else:
             assert value._dtype == self._dtype.element_t, (

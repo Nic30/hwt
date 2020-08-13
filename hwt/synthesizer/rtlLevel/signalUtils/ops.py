@@ -15,7 +15,7 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 
 def tv(signal):
     """
-    Value class for type of signal
+    HValue class for type of signal
     """
     return signal._dtype.getValueCls()
 
@@ -67,12 +67,12 @@ class RtlSignalOps():
         # input operads may be type converted,
         # search if this happend, and return always same result signal
         try:
-            op_instanciated = (o.origin.operator == operator
+            op_instantiated = (o.origin.operator == operator
                                and o.origin.operands[0] is self)
         except AttributeError:
-            op_instanciated = False
+            op_instantiated = False
 
-        if op_instanciated:
+        if op_instantiated:
             k_real = (operator, *o.origin.operands[1:])
             real_o = used.get(k_real, None)
             if real_o is not None and real_o is not o:
@@ -218,7 +218,7 @@ class RtlSignalOps():
 
     def __ne__(self, other):
         try:
-            return self.naryOp(AllOps.NEQ, tv(self).__ne__, other)
+            return self.naryOp(AllOps.NE, tv(self).__ne__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -284,6 +284,22 @@ class RtlSignalOps():
     def __mul__(self, other):
         try:
             return self.naryOp(AllOps.MUL, tv(self).__mul__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
+
+    def __mod__(self, other):
+        try:
+            return self.naryOp(AllOps.MOD, tv(self).__mod__, other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
+
+    def __pow__(self, other):
+        try:
+            return self.naryOp(AllOps.POW, tv(self).__pow__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)

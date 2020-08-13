@@ -5,7 +5,7 @@ from hwt.hdl.types.defs import INT, BOOL
 from hwt.hdl.types.hdlType import default_auto_cast_fn, HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.synthesizer.vectorUtils import iterBits, fitTo_t
 from hwt.synthesizer.exceptions import TypeConversionErr
 
@@ -40,7 +40,7 @@ def convertBits(self: Bits, sigOrVal, toType: HdlType):
     """
     Cast Bit subtypes, (integers, bool, ...)
     """
-    if isinstance(sigOrVal, Value):
+    if isinstance(sigOrVal, HValue):
         return convertBits__val(self, sigOrVal, toType)
     elif toType == BOOL:
         if self.bit_length() == 1:
@@ -110,7 +110,7 @@ def reinterpretBits(self: Bits, sigOrVal, toType):
     Cast object of same bit size between to other type
     (f.e. bits to struct, union or array)
     """
-    if isinstance(sigOrVal, Value):
+    if isinstance(sigOrVal, HValue):
         return reinterpretBits__val(self, sigOrVal, toType)
     elif isinstance(toType, Bits):
         if self.signed != toType.signed:

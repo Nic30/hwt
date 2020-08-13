@@ -5,6 +5,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import default_reinterpret_cast_fn
 from hwt.synthesizer.exceptions import TypeConversionErr
 from pyMathBitPrecise.bit_utils import get_bit_range, mask
+from hwt.hdl.types.struct import HStruct
 
 
 @internal
@@ -93,10 +94,18 @@ def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
 
 
 @internal
+def reinterpret_harray_to_hstruct(typeFrom, sigOrVal, structT):
+    as_bits = sigOrVal._reinterpret_cast(Bits(typeFrom.bit_length()))
+    return as_bits._reinterpret_cast(structT)
+
+
+@internal
 def reinterpret_cast_harray(typeFrom, sigOrVal, toType):
     if isinstance(toType, Bits):
         return reinterptet_harray_to_bits(typeFrom, sigOrVal, toType)
     elif isinstance(toType, HArray):
         return reinterpret_harray_to_harray(typeFrom, sigOrVal, toType)
+    elif isinstance(toType, HStruct):
+        return reinterpret_harray_to_hstruct(typeFrom, sigOrVal, toType)
     else:
         return default_reinterpret_cast_fn(typeFrom, sigOrVal, toType)

@@ -32,9 +32,6 @@ class TestMatrix():
         test_matrix = self
 
         def test_wrap(self):
-            """
-            :param self: the TestCase instance
-            """
             for args in test_matrix.test_arg_values:
                 args, kwargs = test_matrix.split_args_kwargs(args)
                 try:

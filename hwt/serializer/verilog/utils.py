@@ -1,6 +1,6 @@
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.portItem import HdlPortItem
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 
 from hwt.doc_markers import internal
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
@@ -36,7 +36,7 @@ def verilogTypeOfSig(s: Union[SignalItem, HdlPortItem]):
                 and d.parentStm is None\
                 and not d.indexes\
                 and not d._now_is_event_dependent\
-                and (isinstance(d.src, Value) or not d.src.hidden):
+                and (isinstance(d.src, HValue) or not d.src.hidden):
             # primitive assignment
             return SIGNAL_TYPE.WIRE
 

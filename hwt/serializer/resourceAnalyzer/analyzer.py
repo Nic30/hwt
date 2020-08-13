@@ -11,7 +11,7 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.statement import HdlStatement
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.resourceAnalyzer.utils import ResourceContext
 from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import walk_assignments
@@ -73,7 +73,7 @@ class ResourceAnalyzer():
             if not skip_op:
                 if d.operator == AllOps.EQ:
                     o1 = d.operands[1]
-                    if (isinstance(o1, Value)
+                    if (isinstance(o1, HValue)
                             and o1._dtype.bit_length() == 1
                             and o1.val):
                         # to bool conversion
@@ -133,7 +133,7 @@ class ResourceAnalyzer():
                 if isinstance(o._dtype, HArray):
                     assert i == 1, (o, i, " only one ram port per HdlStatementBlock")
                     for a in walk_assignments(stm, o):
-                        assert len(a.indexes) == 1, "one address per RAM port"
+                        assert len(a.indexes) == 1, ("has to have single address per RAM port", a.indexes)
                         addr = a.indexes[0]
                     ctx.registerRAM_write_port(o, addr, ev_dep)
                 elif ev_dep:

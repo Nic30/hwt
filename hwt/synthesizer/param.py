@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from hwt.hdl.types.defs import INT, STR, BOOL
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 
 
 class Param():
@@ -30,7 +30,7 @@ class Param():
         INT32_MAX = 2 ** (32 - 1) - 1
         INT32_MIN = -2 ** (32 - 1)
 
-        if isinstance(v, Value):
+        if isinstance(v, HValue):
             return v._dtype
         elif isinstance(v, bool):
             return BOOL
@@ -48,7 +48,7 @@ class Param():
             t = STR
             v = t.from_py(str(v))
         else:
-            if not isinstance(v, Value):
+            if not isinstance(v, HValue):
                 v = t.from_py(v)
         return v
 

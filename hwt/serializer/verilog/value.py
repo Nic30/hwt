@@ -1,7 +1,7 @@
-from hdlConvertorAst.hdlAst._expr import HdlValueInt, HdlOpType,\
+from hdlConvertorAst.hdlAst._expr import HdlValueInt, HdlOpType, \
     HdlOp
 from hdlConvertorAst.to.hdlUtils import bit_string
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_downto,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_downto, \
     hdl_call
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
@@ -10,7 +10,7 @@ from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.sliceVal import SliceVal
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.verilog.context import SignalTypeSwap
@@ -27,7 +27,7 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
         return self.as_hdl_int(val.val)
 
     def as_hdl_cond(self, c, forceBool):
-        assert isinstance(c, (RtlSignalBase, Value))
+        assert isinstance(c, (RtlSignalBase, HValue))
         if not forceBool or c._dtype == BOOL:
             return self.as_hdl(c)
         elif c._dtype == BIT:

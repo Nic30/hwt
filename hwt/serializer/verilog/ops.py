@@ -6,7 +6,7 @@ from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT, INT
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -25,7 +25,7 @@ class ToHdlAstVerilog_ops():
                 and isinstance(operand.origin, Operator):
             return True
 
-    def as_hdl_operand(self, operand: Union[RtlSignal, Value], i: int,
+    def as_hdl_operand(self, operand: Union[RtlSignal, HValue], i: int,
                        operator: Operator):
 
         # [TODO] if operand is concatenation and parent operator

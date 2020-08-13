@@ -5,15 +5,16 @@ from random import Random
 from typing import Optional
 import unittest
 
+from pyMathBitPrecise.bits3t import Bits3val
+
 from hwt.hdl.types.arrayVal import HArrayVal
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.simulator.agentConnector import valToInt, autoAddAgents, \
     collect_processes_from_sim_agents
+from hwt.simulator.rtlSimulatorVcd import BasicRtlSimulatorVcd
 from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
-from hwt.simulator.simCompilerBasicHdlSimulator import toBasicSimulatorSimModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
-from pyMathBitPrecise.bits3t import Bits3val
 from pycocotb.constants import CLK_PERIOD
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer
@@ -23,7 +24,7 @@ def allValuesToInts(sequenceOrVal):
     if isinstance(sequenceOrVal, HArrayVal):
         sequenceOrVal = sequenceOrVal.val
 
-    if isinstance(sequenceOrVal, (Value, Bits3val)):
+    if isinstance(sequenceOrVal, (HValue, Bits3val)):
         return valToInt(sequenceOrVal)
     elif not sequenceOrVal:
         return sequenceOrVal
@@ -45,6 +46,7 @@ class DummySimPlatform(DummyPlatform):
     """
     DummyPlatform which ignores the constraints
     """
+
 
 _UNSPECIFIED = object()
 
@@ -75,6 +77,7 @@ class SimTestCase(unittest.TestCase):
     hdl_simulator = None
     DEFAULT_BUILD_DIR = None  # "tmp"
     DEFAULT_LOG_DIR = "tmp"
+    DEFAULT_SIMULATOR = BasicRtlSimulatorVcd
 
     def assertValEqual(self, first, second, msg=None):
         try:
@@ -201,7 +204,7 @@ class SimTestCase(unittest.TestCase):
         if unique_name is None:
             unique_name = cls.get_unique_name(unit)
 
-        cls.rtl_simulator_cls = toBasicSimulatorSimModel(  # toVerilatorSimModel(
+        cls.rtl_simulator_cls = cls.DEFAULT_SIMULATOR.build(
             unit,
             unique_name=unique_name,
             build_dir=build_dir,
@@ -272,5 +275,5 @@ class SingleUnitSimTestCase(SimTestCase):
     def setUpClass(cls):
         super(SingleUnitSimTestCase, cls).setUpClass()
         u = cls.getUnit()
-        assert isinstance(u, Unit)
+        assert isinstance(u, Unit), u
         cls.compileSim(u)

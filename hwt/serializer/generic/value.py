@@ -9,7 +9,7 @@ from hwt.hdl.types.defs import INT, BOOL
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.string import String
-from hwt.hdl.value import Value
+from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -17,7 +17,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 class ToHdlAst_Value():
 
-    def is_suitable_for_const_extract(self, val: Value):
+    def is_suitable_for_const_extract(self, val: HValue):
         """
         :return: True if an value should be extracted as a constant if possible
         """
@@ -26,7 +26,7 @@ class ToHdlAst_Value():
     def as_hdl_Value(self, val):
         """
         :param dst: is signal connected with value
-        :param val: value object, can be instance of Signal or Value
+        :param val: value object, can be instance of Signal or HValue
         """
         t = val._dtype
         if isinstance(val, RtlSignalBase):
@@ -119,7 +119,7 @@ class ToHdlAst_Value():
                     # because it is not resolvable in compile time
                     var.value = None
                     pass
-            elif isinstance(v, Value):
+            elif isinstance(v, HValue):
                 if v.vld_mask or var.is_const:
                     orig_const_cache = self.constCache
                     try:

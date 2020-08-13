@@ -9,7 +9,7 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(name="hwt",
-      version="3.2",
+      version="3.3",
       description="hdl synthesis toolkit",
       long_description=long_description,
       long_description_content_type="text/markdown",
@@ -34,14 +34,11 @@ setup(name="hwt",
       install_requires=[
           "hdlConvertorAst>=0.1",  # conversions to SystemVerilog, VHDL
           "ipCorePackager>=0.5",  # generator of IPcore packages (IP-xact, ...)
-          "pycocotb>=0.6",  # simulator API
-          "pyDigitalWaveTools>=0.5",  # simulator output dump
+          "pycocotb>=0.7",  # simulator API
+          "pyDigitalWaveTools>=0.6",  # simulator output dump
       ],
       license="MIT",
       packages=find_packages(),
-      package_data={"hwt": ["*.vhd", "*.v",
-                            "*.py.template",
-                            "*.cpp.template"]},
       include_package_data=True,
       zip_safe=False
 )
