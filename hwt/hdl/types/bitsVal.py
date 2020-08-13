@@ -330,7 +330,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         return bitsCmp(self, other, AllOps.EQ, eq)
 
     def __ne__(self, other):
-        return bitsCmp(self, other, AllOps.NEQ)
+        return bitsCmp(self, other, AllOps.NE)
 
     def __lt__(self, other):
         return bitsCmp(self, other, AllOps.LT)

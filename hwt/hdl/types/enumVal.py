@@ -63,4 +63,4 @@ class HEnumVal(HValue):
         if areHValues(self, other):
             return self._ne__val(other)
         else:
-            return Operator.withRes(AllOps.NEQ, [self, other], BOOL)
+            return Operator.withRes(AllOps.NE, [self, other], BOOL)

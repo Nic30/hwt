@@ -40,7 +40,9 @@ class BasicRtlSimulatorJson(BasicRtlSimulatorWithSignalRegisterMethods):
                 dimensions.append(t.size)
                 t = t.element_t
             _, _, elm_format = self.get_trace_formatter(t)
-            return (VCD_SIG_TYPE.ARRAY, t.bit_length(), JsonArrayFormatter(dimensions, elm_format))
+            return (VCD_SIG_TYPE.ARRAY,
+                    dimensions + [t.bit_length(), ],
+                    JsonArrayFormatter(dimensions, elm_format))
         else:
             raise ValueError(t)
 

@@ -138,7 +138,7 @@ class AllOps():
     CONCAT = OpDefinition(concatFn)
 
     EQ = OpDefinition(eqFn)
-    NEQ = OpDefinition(ne)
+    NE = OpDefinition(ne)
     GT = OpDefinition(gt)
     GE = OpDefinition(ge)
     LT = OpDefinition(lt)

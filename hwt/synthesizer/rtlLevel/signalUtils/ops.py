@@ -218,7 +218,7 @@ class RtlSignalOps():
 
     def __ne__(self, other):
         try:
-            return self.naryOp(AllOps.NEQ, tv(self).__ne__, other)
+            return self.naryOp(AllOps.NE, tv(self).__ne__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)

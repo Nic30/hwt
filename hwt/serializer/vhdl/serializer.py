@@ -19,6 +19,8 @@ class VhdlNameScope(NameScope):
 
     def checked_name(self, actualName, actualObj):
         actualName = self.RE_MANY_UNDERSCORES.sub(r"_", actualName)
+        if actualName[0] == "_":
+            actualName = "u" + actualName
         return NameScope.checked_name(self, actualName, actualObj)
 
 
