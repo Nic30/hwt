@@ -451,7 +451,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                 res_w = myT.bit_length() * 2
                 res_sign = self._dtype.signed
             else:
-                res_w = myT.bit_length() + other._dtype.bit_length()
+                res_w = max(myT.bit_length(), other._dtype.bit_length())
                 res_sign = self._dtype.signed or other._dtype.signed
 
             subResT = Bits(res_w, signed=res_sign)
