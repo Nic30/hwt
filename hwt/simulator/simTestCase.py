@@ -57,15 +57,15 @@ class SimTestCase(unittest.TestCase):
     hdl simulation.
 
     :attention: self.procs has to be specified before runSim()
-    :cvar _defaultSeed: default seed for ramdom generator
-    :cvar rtl_simulator_cls: class for rtl simulator to use
+    :cvar _defaultSeed: default seed for random generator
+    :cvar rtl_simulator_cls: class for RTL simulator to use
         (constructed in compileSim())
     :ivar ~.u: instance of current Unit for test, created in restartSim()
-    :ivar ~.rtl_simulator: rtl simulatr used for simulation of unit,
+    :ivar ~.rtl_simulator: RTL simulator used for simulation of unit,
         created in restartSim()
     :ivar ~.hdl_simulator: the simulator which manages the communication
-        between python code and rtl_simulator instance
-    :ivar ~.procs: list of simulation processes (python generator instances),
+        between Python code and rtl_simulator instance
+    :ivar ~.procs: list of simulation processes (Python generator instances),
         created in restartSim()
     """
     # value chosen because in this position bits are changing frequently
