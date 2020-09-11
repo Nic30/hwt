@@ -8,6 +8,11 @@ class HObjList(list):
 
     Main purpose of this class it let :class:`hwt.synthesizer.PropDeclrCollector.PropDeclrCollector`
     know that this is not an regular python array and that items should be registered as HW objects.
+    
+    :ivar _name: name of the property on parent
+    :ivar _parent: parent Unit/Interface object
+    :note: this object may be nested in HObjList instances but the parent and name will always corresponds
+        to a Unit/Interface object, if there is any
 
     :note: :class:`hwt.synthesizer.PropDeclrCollector.PropDeclrCollector` is used by
         :class:`hwt.synthesizer.interface.Interface` and :class:`hwt.synthesizer.unit.Unit`
@@ -18,22 +23,29 @@ class HObjList(list):
         self._name = None
         self._parent = None
 
+    def _on_append(self, self_obj: "HObjList", item, index: int):
+        pass
+
     def _m(self):
         for item in self:
             item._m()
         return self
 
-    def append(self, *args, **kwargs):
-        assert self._parent is None
-        return list.append(self, *args, **kwargs)
+    def append(self, item):
+        if self._on_append is not HObjList._on_append:
+            self._on_append(self, item, len(self))
+        return list.append(self, item)
 
     def clear(self, *args, **kwargs):
         assert self._parent is None
         return list.clear(self, *args, **kwargs)
 
-    def extend(self, *args, **kwargs):
-        assert self._parent is None
-        return list.extend(self, *args, **kwargs)
+    def extend(self, iterable):
+        if self._on_append is not HObjList._on_append:
+            offset = len(self)
+            for i, item in enumerate(iterable):
+                self._on_append(self, item, offset + i)
+        return list.extend(self, iterable)
 
     def insert(self, *args, **kwargs):
         assert self._parent is None
@@ -94,6 +106,9 @@ class HObjList(list):
         return self
 
     def __call__(self, other):
+        """
+        () operator behaving as assingment operator
+        """
         if not isinstance(other, list):
             raise TypeError(other)
         if len(self) != len(other):

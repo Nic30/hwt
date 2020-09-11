@@ -306,14 +306,22 @@ class PropDeclrCollector(object):
         return prop
 
     @internal
-    def _registerArray(self, name, items):
+    def _registerArray(self, name, items: HObjList):
         """
         Register array of items on interface level object
         """
         items._parent = self
         items._name = name
+        items._on_append = self._registerArray_append
         for i, item in enumerate(items):
-            setattr(self, "%s_%d" % (name, i), item)
+            self._registerArray_append(items, item, i)
+
+    @internal
+    def _registerArray_append(self, h_obj_list: HObjList, item, index: int):
+        """
+        Register a single object in the list
+        """
+        setattr(self, "%s_%d" % (h_obj_list._name, index), item)
 
     # implementation phase
     @internal
