@@ -89,6 +89,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [edalize](https://github.com/olofk/edalize) - 2018-?, Python, abstraction layer for eda tools
 * [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
 * [hammer](https://github.com/ucb-bar/hammer) - 2017-?, Python, Highly Agile Masks Made Effortlessly from RTL
+* [heterocl](https://github.com/cornell-zhang/heterocl) - 2017-?, C++, A Multi-Paradigm Programming Infrastructure for Software-Defined Reconfigurable Computing
 * [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, HCL
 * [ILAng](https://github.com/Bo-Yuan-Huang/ILAng) - modeling and verification platform for SoCs where Instruction-Level Abstraction (ILA) is used as the formal model for hardware components.
 * [jhdl](https://github.com/larsjoost/jhdl) - ?-2017, C++ Verilog/VHDL -> systemC, prototype
