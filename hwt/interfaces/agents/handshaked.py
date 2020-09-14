@@ -9,6 +9,8 @@ class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
     interface there is onMonitorReady(simulator)
     and onDriverWriteAck(simulator) unimplemented method
     which can be used for interfaces with bi-directional data streams
+    
+    :note: 2-phase (xor) handshake
 
     :attention: requires clk and rst/rstn signal (
         If you do not have any create simulation wrapper with it.
