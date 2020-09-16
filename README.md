@@ -137,4 +137,5 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 
 * [litex](https://github.com/enjoy-digital/litex) - Buildsystem for migen
 * [loam](https://github.com/phanrahan/loam) - Buildsystem for magma
-* [vivado-boards](https://github.com/Digilent/vivado-boards) - Vivado XML/TCL files with board description 
+* [vivado-boards](https://github.com/Digilent/vivado-boards) - Vivado XML/TCL files with board description
+* [nmigen-boards](https://github.com/nmigen/nmigen-boards) - board and connector meta fo nmigen
