@@ -17,10 +17,10 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
 
     def __init__(self, ctx, name, var_type, def_val=None, nop_val=NO_NOPVAL):
         """
-        :param ctx: context in which is sig. created (instance of RtlNetlist)
-        :param name: suggested name
-        :param var_type: type of signal
-        :param def_val: default value for signal
+        :param ~.ctx: context in which is sig. created (instance of RtlNetlist)
+        :param ~.name: suggested name
+        :param ~.var_type: type of signal
+        :param ~.def_val: default value for signal
             (used as def. val in hdl and for reset)
         """
         super().__init__(ctx, name, var_type, def_val)
