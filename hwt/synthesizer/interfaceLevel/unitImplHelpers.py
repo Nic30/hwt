@@ -7,6 +7,7 @@ from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
+from hwt.hdl.types.array import HArray
 
 
 def getClk(unit):
@@ -96,6 +97,8 @@ class UnitImplHelpers(UnitBase):
                     setattr(container, f.name, r)
 
             return container
+        elif isinstance(dtype, HArray):
+            raise NotImplementedError()
 
         return self._ctx.sig(name,
                              dtype=dtype,
