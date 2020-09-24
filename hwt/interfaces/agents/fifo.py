@@ -204,7 +204,7 @@ class FifoWriterAgent(SyncAgentBase):
                                  "en signal in invalid state")
 
         if en:
-            yield Timer(CLK_PERIOD / 10)
+            yield Timer(CLK_PERIOD // 10)
             yield WaitCombRead()
             self.data.append(self.get_data())
 

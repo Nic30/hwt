@@ -240,7 +240,7 @@ class SimTestCase(unittest.TestCase):
         self._rand = Random(self._defaultSeed)
         if self.rtl_simulator_cls is not None:
             # if the simulator is not compiled it is expected
-            # that it will be compiled in the test and this functio
+            # that it will be compiled in the test and this function
             # will be called later
             self.restartSim()
 
@@ -251,7 +251,7 @@ def simpleRandomizationProcess(tc: SimTestCase, agent, timeQuantum=CLK_PERIOD):
 
     def randomEnProc():
         # small space at start to modify agents when they are inactive
-        yield Timer(timeQuantum / 4)
+        yield Timer(timeQuantum // 4)
         while True:
             en = random.random() < 0.5
             if agent.getEnable() != en:

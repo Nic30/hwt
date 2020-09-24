@@ -90,7 +90,7 @@ class Clk(Signal):
         return IP_Clk
 
     def _initSimAgent(self, sim: HdlSimulator):
-        self._ag = ClockAgent(sim, self, period=freq_to_period(self.FREQ))
+        self._ag = ClockAgent(sim, self, period=int(freq_to_period(self.FREQ)))
 
 
 class Rst(Signal):
@@ -105,7 +105,7 @@ class Rst(Signal):
     def _initSimAgent(self, sim: HdlSimulator):
         clk = self._getAssociatedClk()
         self._ag = PullDownAgent(sim, self,
-                                 initDelay=0.6 * freq_to_period(clk.FREQ))
+                                 initDelay=int(0.6 * freq_to_period(clk.FREQ)))
 
 
 class Rst_n(Signal):
@@ -129,7 +129,7 @@ class Rst_n(Signal):
     def _initSimAgent(self, sim: HdlSimulator):
         clk = self._getAssociatedClk()
         self._ag = PullUpAgent(sim, self,
-                               initDelay=0.6 * freq_to_period(clk.FREQ))
+                               initDelay=int(0.6 * freq_to_period(clk.FREQ)))
 
 
 class VldSynced(Interface):
