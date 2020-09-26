@@ -61,7 +61,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
 
     def as_hdl_Assignment(self, a: Assignment):
         dst, dst_indexes, src = self._as_hdl_Assignment_auto_conversions(a)
-        ev = HdlValueInt(int(a._is_completly_event_dependent), None, None)
+        ev = HdlValueInt(int(a._event_dependent_from_branch == 0), None, None)
         if dst_indexes is not None:
             src = (src, dst_indexes, ev)
         else:
@@ -81,7 +81,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
             v = o._dtype.from_py(None)
             oa = Assignment(v, o, indexes,
                             virtual_only=True, parentStm=parent,
-                            is_completly_event_dependent=parent._is_completly_event_dependent)
+                            event_dependent_from_branch=parent._event_dependent_from_branch)
             outputInvalidateStms.append(self.as_hdl_Assignment(oa))
 
         if len(outputInvalidateStms) == 1:

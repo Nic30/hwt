@@ -3,7 +3,7 @@
 from functools import reduce
 from itertools import compress
 from operator import and_
-from typing import List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Optional
 
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
@@ -25,8 +25,8 @@ class IfContainer(HdlStatement):
     :ivar ~._ifFalse_enclosed_for: set of enclosed signals for ifFalse branch
     """
 
-    def __init__(self, cond, ifTrue=None, ifFalse=None, elIfs=None,
-                 parentStm=None, is_completly_event_dependent=False):
+    def __init__(self, cond: RtlSignalBase, ifTrue=None, ifFalse=None, elIfs=None,
+                 parentStm=None, event_dependent_from_branch: Optional[int]=None):
         """
         :param cond: RtlSignal as conditions for this if
         :param ifTrue: list of statements which should be active if cond.
@@ -39,7 +39,7 @@ class IfContainer(HdlStatement):
         self.cond = cond
         super(IfContainer, self).__init__(
             parentStm,
-            is_completly_event_dependent=is_completly_event_dependent)
+            event_dependent_from_branch=event_dependent_from_branch)
 
         if ifTrue is None:
             self.ifTrue = []

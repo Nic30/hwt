@@ -30,7 +30,7 @@ def systemCTypeOfSig(s):
     elif s._const or\
         arr_any(s.drivers,
                 lambda d: isinstance(d, HdlStatement)
-                and d._now_is_event_dependent):
+                and d._event_dependent_from_branch is not None):
 
         return SIGNAL_TYPE.REG
     else:

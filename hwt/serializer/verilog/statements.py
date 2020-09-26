@@ -16,7 +16,7 @@ class ToHdlAstVerilog_statements():
         if ver_sig_t in (SIGNAL_TYPE.REG, SIGNAL_TYPE.PORT_REG):
             evDep = False
             for driver in a.dst.drivers:
-                if driver._now_is_event_dependent:
+                if driver._event_dependent_from_branch is not None:
                     evDep = True
                     break
 

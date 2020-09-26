@@ -32,7 +32,7 @@ class XdcSerializer():
         if isinstance(_o, RtlSignal):
             q = "get_cells"
             for d in _o.drivers:
-                if d._now_is_event_dependent:
+                if d._event_dependent_from_branch is not None:
                     is_reg = True
         elif isinstance(_o, Interface):
             q = "get_pins"

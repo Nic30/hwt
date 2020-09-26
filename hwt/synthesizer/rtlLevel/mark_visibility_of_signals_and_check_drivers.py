@@ -49,10 +49,10 @@ def markVisibilityOfSignalsAndCheckDrivers(
 
                 if isinstance(d, HdlPortItem):
                     is_comb_driver = True
-                elif not d._now_is_event_dependent:
+                elif d._event_dependent_from_branch is None:
                     for a in walk_assignments(d, sig):
                         if not a.indexes\
-                                and not a._is_completly_event_dependent:
+                                and a._event_dependent_from_branch != 0:
                             is_comb_driver = True
                             break
 

@@ -18,7 +18,7 @@ class Assignment(HdlStatement):
         (list of Index/Slice objects) (f.e. [[0], [1]] means  dst[0][1])
 
     :cvar __instCntr: counter used for generating instance ids
-    :ivar ~._instId: internaly used only for intuitive sorting of statements
+    :ivar ~._instId: internally used only for intuitive sorting of statements
     """
     __instCntr = 0
 
@@ -26,7 +26,7 @@ class Assignment(HdlStatement):
                  indexes: Optional[List[Union[RtlSignalBase, HValue]]]=None, virtual_only=False,
                  parentStm: Optional[HdlStatement]=None,
                  sensitivity: Optional[RtlSignalBase]=None,
-                 is_completly_event_dependent=False):
+                 event_dependent_from_branch:Optional[int]=None):
         """
         :param dst: destination to assign to
         :param src: source which is assigned from
@@ -39,7 +39,7 @@ class Assignment(HdlStatement):
         super(Assignment, self).__init__(
             parentStm,
             sensitivity,
-            is_completly_event_dependent)
+            event_dependent_from_branch=event_dependent_from_branch)
         self.src = src
         isReal = not virtual_only
 
@@ -114,10 +114,9 @@ class Assignment(HdlStatement):
     @internal
     def _on_parent_event_dependent(self):
         """
-        After parrent statement become event dependent
+        After parent statement become event dependent
         """
-        if not self._is_completly_event_dependent:
-            self._is_completly_event_dependent = True
+        self._is_completly_event_dependent = 0
 
     @internal
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:

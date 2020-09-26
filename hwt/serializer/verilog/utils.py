@@ -35,7 +35,7 @@ def verilogTypeOfSig(s: Union[SignalItem, HdlPortItem]):
         elif isinstance(d, Assignment)\
                 and d.parentStm is None\
                 and not d.indexes\
-                and not d._now_is_event_dependent\
+                and d._event_dependent_from_branch is None\
                 and (isinstance(d.src, HValue) or not d.src.hidden):
             # primitive assignment
             return SIGNAL_TYPE.WIRE

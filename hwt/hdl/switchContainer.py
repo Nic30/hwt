@@ -1,7 +1,7 @@
 from functools import reduce
 from itertools import compress
 from operator import and_
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
@@ -31,11 +31,11 @@ class SwitchContainer(HdlStatement):
                  cases: List[Tuple[HValue, List[HdlStatement]]],
                  default: List[HdlStatement]=None,
                  parentStm: HdlStatement=None,
-                 is_completly_event_dependent: bool=False):
+                 event_dependent_from_branch: Optional[int]=None):
 
         super(SwitchContainer, self).__init__(
             parentStm=parentStm,
-            is_completly_event_dependent=is_completly_event_dependent)
+            event_dependent_from_branch=event_dependent_from_branch)
         self.switchOn = switchOn
         self.cases = cases
         self.default = default

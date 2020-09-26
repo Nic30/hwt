@@ -21,11 +21,6 @@ from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
 class If(IfContainer):
     """
     If statement generator
-
-    :ivar ~._is_completly_event_dependent: flag wihich tells if all statement
-        in this statements are event dependent
-    :ivar ~._now_is_event_dependent: flag if current scope of if is event dependent
-        (is used to mark statements as event dependent)
     """
 
     def __init__(self, cond, *statements):
@@ -45,8 +40,7 @@ class If(IfContainer):
         cond_sig.endpoints.append(self)
 
         ev_dep = arr_any(discoverEventDependency(cond_sig), lambda x: True)
-        self._is_completly_event_dependent = ev_dep
-        self._now_is_event_dependent = ev_dep
+        self._event_dependent_from_branch = 0 if ev_dep else None
 
         self._register_stements(statements, self.ifTrue)
         self._get_rtl_context().statements.add(self)
@@ -56,8 +50,8 @@ class If(IfContainer):
         self.rank += 1
         cond_sig = _intfToSig(cond)
 
-        self._now_is_event_dependent = arr_any(
-            discoverEventDependency(cond_sig), lambda x: True)
+        ev_dep = arr_any(discoverEventDependency(cond_sig), lambda x: True)
+        self._event_dependent_from_branch = len(self.elIfs) + 1 if ev_dep else None
 
         self._inputs.append(cond_sig)
         cond_sig.endpoints.append(self)
@@ -163,16 +157,16 @@ def SwitchLogic(cases, default=None):
     for cond, statements in reversed(cases):
         assigTop = If(cond,
                       statements
-                      ).Else(
-            assigTop
-        )
+                   ).Else(
+                       assigTop
+                   )
 
     return assigTop
 
 
 def In(sigOrVal, iterable):
     """
-    Hdl convertible in operator, check if any of items
+    HDL convertible "in" operator, check if any of items
     in "iterable" equals "sigOrVal"
     """
     res = None
@@ -183,7 +177,7 @@ def In(sigOrVal, iterable):
         else:
             res = res | sigOrVal._eq(i)
 
-    assert res is not None, "Parameter iterable is empty"
+    assert res is not None, "argument iterable is empty"
     return res
 
 
@@ -238,6 +232,8 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
 
 class FsmBuilder(Switch):
     """
+    A syntax sugar which automatically construct the state transition switch and state register  
+    
     :ivar ~.stateReg: register with state
     """
 

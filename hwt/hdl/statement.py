@@ -1,5 +1,5 @@
 from itertools import chain, islice
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.sensitivityCtx import SensitivityCtx
@@ -22,9 +22,7 @@ class IncompatibleStructure(Exception):
 
 class HdlStatement(HdlObject):
     """
-    :ivar ~._is_completly_event_dependent: statement does not have
-         any combinational statement
-    :ivar ~._now_is_event_dependent: statement is event (clk) dependent
+    :ivar ~._event_dependent_from_branch: index of code branch if statement is event (clk) dependent else None 
     :ivar ~.parentStm: parent instance of HdlStatement or None
     :ivar ~._inputs: UniqList of input signals for this statement
     :ivar ~._outputs: UniqList of output signals for this statement
@@ -32,14 +30,14 @@ class HdlStatement(HdlObject):
         or (rising/falling) operator
     :ivar ~._enclosed_for: set of outputs for which this statement is enclosed
         (for which there is not any unused branch)
-    :ivar ~.rank: number of used branches in statement, used as prefilter
+    :ivar ~.rank: number of used branches in statement, used as pre-filter
         for statement comparing
     """
 
-    def __init__(self, parentStm=None, sensitivity=None,
-                 is_completly_event_dependent=False):
-        self._is_completly_event_dependent = is_completly_event_dependent
-        self._now_is_event_dependent = is_completly_event_dependent
+    def __init__(self, parentStm:Optional["HdlStatement"]=None, sensitivity=None,
+                 event_dependent_from_branch:Optional[int]=None):
+        assert event_dependent_from_branch is None or isinstance(event_dependent_from_branch, int), event_dependent_from_branch
+        self._event_dependent_from_branch = event_dependent_from_branch
         self.parentStm = parentStm
         self._inputs = UniqList()
         self._outputs = UniqList()
@@ -461,8 +459,8 @@ class HdlStatement(HdlObject):
         After parent statement become event dependent
         propagate event dependency flag to child statements
         """
-        if not self._is_completly_event_dependent:
-            self._is_completly_event_dependent = True
+        if self._event_dependent_from_branch != 0:
+            self._event_dependent_from_branch = 0
             for stm in self._iter_stms():
                 stm._on_parent_event_dependent()
 
@@ -473,8 +471,8 @@ class HdlStatement(HdlObject):
         """
         was_top = self.parentStm is None
         self.parentStm = parentStm
-        if not self._now_is_event_dependent\
-                and parentStm._now_is_event_dependent:
+        if self._event_dependent_from_branch is None\
+                and parentStm._event_dependent_from_branch is not None:
             self._on_parent_event_dependent()
 
         topStatement = parentStm

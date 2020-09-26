@@ -82,7 +82,7 @@ class ResourceAnalyzer():
                     o1 = d.operands[1]
                     skip_op = True
                     if isConst(o1):
-                        # constant signal silice
+                        # constant signal slice
                         pass
                     else:
                         o0 = d.operands[0]
@@ -114,14 +114,14 @@ class ResourceAnalyzer():
 
     def visit_HdlStatementBlock(self, proc: HdlStatementBlock) -> None:
         """
-        Gues resource usage from HdlStatementBlock
+        Guess resource usage from HdlStatementBlock
         """
         ctx = self.context
         seen = ctx.seen
         for stm in proc.statements:
             encl = stm._enclosed_for
-            full_ev_dep = stm._is_completly_event_dependent
-            now_ev_dep = stm._now_is_event_dependent
+            full_ev_dep = stm._event_dependent_from_branch == 0
+            now_ev_dep = stm._event_dependent_from_branch is not None
             ev_dep = full_ev_dep or now_ev_dep
 
             out_mux_dim = count_mux_inputs_for_outputs(stm)
@@ -166,16 +166,18 @@ class ResourceAnalyzer():
                 self.visit_HdlStatementBlock_operators(i, ev_dep)
 
     def visit_HdlModuleDef(self, m: HdlModuleDef) -> None:
-
         for o in m.objs:
             if isinstance(o, HdlStatementBlock):
                 self.visit_HdlStatementBlock(o)
             elif isinstance(o, HdlCompInst):
-                raise NotImplementedError()
+                self.visit_HdlCompInst(o)
             else:
                 assert isinstance(o, HdlIdDef), o
+    
+    def visit_HdlCompInst(self, o: HdlCompInst) -> None:
+        raise NotImplementedError()
 
-        # [TODO] constant to ROMs
+    # [TODO] constant to ROMs
     def visit_Unit(self, u: Unit):
         self.visit_HdlModuleDef(u._ctx.arch)
 
