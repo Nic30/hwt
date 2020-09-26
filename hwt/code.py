@@ -66,7 +66,7 @@ class If(IfContainer):
         assert self.parentStm is None
         if self.ifFalse is not None:
             raise HwtSyntaxError(
-                "Else on this if-then-else statemen was aready used")
+                "Else on this if-then-else statement was already used")
 
         self.rank += 1
 
