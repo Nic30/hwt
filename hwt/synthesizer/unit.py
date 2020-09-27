@@ -44,9 +44,9 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
     :ivar ~._lazy_loaded: container of rtl object which were lazy loaded
         in implementation phase (this object has to be returned
         from :func:`~._to_rtl` of parent before it it's own objects)
-    :ivar ~._shared_component_with: Optional typle of the other Unit instance
+    :ivar ~._shared_component_with: Optional tuple of the other Unit instance
         which produces an exactly same component in HDL and interface
-        map current to shared and shared to current
+        signal map current to shared and shared to current
     :type ~._shared_component_with: Optional[Tuple[Unit,
         Dict[Interface, Interface],
         Dict[Interface, Interface]]]
