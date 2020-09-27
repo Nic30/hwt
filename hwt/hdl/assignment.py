@@ -116,7 +116,7 @@ class Assignment(HdlStatement):
         """
         After parent statement become event dependent
         """
-        self._is_completly_event_dependent = 0
+        self._event_dependent_from_branch = 0
 
     @internal
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
