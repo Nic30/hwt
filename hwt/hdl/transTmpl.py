@@ -10,6 +10,7 @@ from hwt.hdl.types.stream import HStream
 from hwt.hdl.types.struct import HStruct, HStructField
 from hwt.hdl.types.union import HUnion
 from hwt.pyUtils.arrayQuery import iter_with_last
+from hwt.synthesizer.typePath import TypePath
 
 
 def _default_shouldEnterFn(transTmpl: 'TransTmpl') -> Tuple[bool, bool]:
@@ -24,7 +25,7 @@ class TransTmpl(object):
     (HStruct etc.)
     * contains precalculated address range for all members of type
 
-    :note: Array/Stream items are are storead as a single instance
+    :note: Array/Stream items are are stored as a single instance
         so the memory consumption of this object is entirely independent
         on size of arrays which it describes.
 
@@ -35,17 +36,18 @@ class TransTmpl(object):
     :ivar ~.origin: object which was template for generating of this item
     :ivar ~.itemCnt: if this transaction template is for array or stream this is
         item count for such an array or stream
-    :ivar ~.childrenAreChoice: flag which tells if childrens are sequence
+    :ivar ~.childrenAreChoice: flag which tells if children are sequence
         or only one of them can be used in same time
-    :ivar rel_field_path: path in original datatype relative to parent
+    :ivar rel_field_path: path in original data type relative to parent
     """
 
     def __init__(self, dtype: HdlType, bitAddr: int=0,
                  parent: Optional['TransTmpl']=None,
                  origin: Optional[HStructField]=None,
-                 rel_field_path: Tuple[Union[str, int], ...]=tuple()):
+                 rel_field_path: TypePath=TypePath()):
         self.parent = parent
         assert isinstance(dtype, HdlType), dtype
+        assert isinstance(rel_field_path, TypePath), rel_field_path
         assert parent is None or isinstance(parent, TransTmpl), parent
         if origin is None:
             origin = (dtype,)
@@ -88,7 +90,7 @@ class TransTmpl(object):
                 fi = TransTmpl(t, bitAddr,
                                parent=self,
                                origin=origin,
-                               rel_field_path=(f.name,),
+                               rel_field_path=TypePath(f.name,),
                 )
                 self.children.append(fi)
                 bitAddr = fi.bitAddrEnd
@@ -105,7 +107,7 @@ class TransTmpl(object):
         for f in dtype.fields.values():
             ch = TransTmpl(f.dtype, 0, parent=self,
                            origin=(*self.origin, f),
-                           rel_field_path=(f.name,),
+                           rel_field_path=TypePath(f.name,),
                            )
             self.children.append(ch)
         return bitAddr + dtype.bit_length()
@@ -121,7 +123,7 @@ class TransTmpl(object):
         self.children = TransTmpl(
             dtype.element_t, 0, parent=self,
             origin=(*self.origin, 0),
-            rel_field_path=(0,)
+            rel_field_path=TypePath(0,)
         )
         return bitAddr + self.itemCnt * self.children.bitAddrEnd
 
@@ -134,7 +136,7 @@ class TransTmpl(object):
         """
         self.children = TransTmpl(
             dtype.element_t, 0, parent=self, origin=self.origin,
-            rel_field_path=(0,))
+            rel_field_path=TypePath(0,))
 
         if not isinstance(dtype.len_min, int) or dtype.len_min != dtype.len_max:
             raise ValueError("This template is ment only"
@@ -226,9 +228,9 @@ class TransTmpl(object):
                     else:
                         # spot a new array item
                         c = deepcopy(self.children)
-                        assert c.rel_field_path == (0,), (c.rel_field_path)
+                        assert c.rel_field_path == (0,), c.rel_field_path
                         # replace the index
-                        c.rel_field_path = (i,)
+                        c.rel_field_path = TypePath(i, )
                         
                     yield from c.walkFlatten(
                         base + i * itemSize,
@@ -249,7 +251,7 @@ class TransTmpl(object):
         while tmpl is not None:
             path.extend(reversed(tmpl.rel_field_path))
             tmpl = tmpl.parent
-        return tuple(reversed(path))
+        return TypePath(*reversed(path))
 
     def __deepcopy__(self, memo):
         cls = self.__class__

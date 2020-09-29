@@ -9,6 +9,7 @@ from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.typePath import TypePath
 
 
 class IntfMap(list):
@@ -226,7 +227,7 @@ def IntfMapItem_find_by_name(intf_map_item, name):
     else:
         raise NotImplementedError(intf_map_item)
 
-def IntfMap_get_by_field_path(root: IntfMap, field_path: Tuple[Union[str, int], ...]):
+def IntfMap_get_by_field_path(root: IntfMap, field_path: TypePath):
     actual = root
     # find in interfaceMap, skip first because it is the type itself
     for rec in field_path:

@@ -1,9 +1,10 @@
+from copy import copy
 from typing import Union, Tuple
 
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
-from copy import copy
+from hwt.synthesizer.componentPath import ComponentPath
 
 
 class iHdlConstrain():
@@ -41,32 +42,16 @@ def _get_absolute_path(obj) -> Union[Tuple[Union[Unit, Interface, RtlSignal, iHd
     elif isinstance(obj, iHdlConstrain):
         return obj
 
-    path = []
-    if isinstance(obj, RtlSignal):
-        path.append(obj)
-        obj = obj.ctx.parent
-
-    while isinstance(obj, Interface):
-        obj = obj._parent
-
-    while obj is not None:
-        path.append(obj)
-        obj = obj._parent
-
-    return tuple(reversed(path))
+    return ComponentPath(obj).resolve()
 
 
-def _apply_path_update(path, old_path_prefix, new_path_prefix):
+def _apply_path_update(path: ComponentPath, old_path_prefix: ComponentPath, new_path_prefix: ComponentPath):
     """
     Update prefix of the path tuple
     """
     if isinstance(path, iHdlConstrain):
         return path._copy_with_root_upadate(old_path_prefix, new_path_prefix)
-    assert len(path) >= len(old_path_prefix), (path, old_path_prefix)
-    for p, op in zip(path, old_path_prefix):
-        assert p is op, (path, old_path_prefix)
-
-    return (*new_path_prefix, *path[len(old_path_prefix):])
+    return path.update_prefix(old_path_prefix, new_path_prefix)
 
 
 class set_max_delay(iHdlConstrain):

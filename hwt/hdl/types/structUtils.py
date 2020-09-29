@@ -7,6 +7,7 @@ from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.stream import HStream
 from hwt.hdl.types.struct import HStructField, HStruct
+from hwt.synthesizer.typePath import TypePath
 
 
 filed_filter_t = Dict[Union[int, str], "filed_filter_t"]
@@ -68,7 +69,7 @@ def HdlType_select(t: HStruct, fieldsToUse: filed_filter_t):
         return t.__class__(*template)
 
 
-def field_path_get_type(root: HdlType, field_path: Tuple[Union[str, int]]):
+def field_path_get_type(root: HdlType, field_path: TypePath):
     """
     Get a data type of element using field path
     """

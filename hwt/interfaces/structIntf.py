@@ -5,6 +5,7 @@ from hwt.hdl.types.struct import HStruct
 from hwt.interfaces.agents.structIntf import StructIntfAgent
 from hwt.synthesizer.interface import Interface
 from pycocotb.hdlSimulator import HdlSimulator
+from hwt.synthesizer.typePath import TypePath
 
 
 class StructIntf(Interface):
@@ -21,7 +22,7 @@ class StructIntf(Interface):
     """
 
     def __init__(self, structT: HStruct,
-                 field_path: Tuple[Union[str, int], ...],
+                 field_path: TypePath,
                  instantiateFieldFn,
                  masterDir=DIRECTION.OUT,
                  loadConfig=True):
@@ -29,7 +30,9 @@ class StructIntf(Interface):
                            masterDir=masterDir,
                            loadConfig=loadConfig)
         if not field_path:
-            field_path = tuple()
+            field_path = TypePath()
+        else:
+            assert isinstance(field_path, TypePath), field_path
         self._field_path = field_path
         self._structT = structT
         self._instantiateFieldFn = instantiateFieldFn
@@ -49,7 +52,7 @@ class StructIntf(Interface):
             if field.name is not None:
                 # generate interface based on struct field
                 intf = self._instantiateFieldFn(self, field)
-                p = (*self._field_path, field.name)
+                p = self._field_path / field.name
                 assert p not in self._fieldsToInterfaces, p
                 self._fieldsToInterfaces[p] = intf
 
