@@ -76,6 +76,9 @@ def _Unit_constraints_copy_recursively(u: Unit, path_orig: Unit, path_new: Unit)
 def to_rtl_str(unit_or_cls: Unit,
                serializer_cls=Vhdl2008Serializer, name: str=None,
                target_platform=DummyPlatform()):
+    """
+    Generate HDL string and return it
+    """
     buff = StringIO()
     store_manager = SaveToStream(serializer_cls, buff)
     to_rtl(unit_or_cls, store_manager, name, target_platform)
@@ -98,7 +101,7 @@ def serializeAsIpcore(unit, folderName=".", name=None,
 
 def synthesised(u: Unit, target_platform=DummyPlatform()):
     """
-    Elaborate design without producing any hdl
+    Elaborate design without producing any HDL
     """
     sm = StoreManager(DummySerializerConfig,
                       _filter=SerializerFilterDoNotExclude())

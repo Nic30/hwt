@@ -26,7 +26,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
     Container of the netlist with interfaces
     and internal hierarchical structure
 
-    :cvar ~._serializeDecision: function to decide if Hdl object derived from
+    :cvar ~._serializeDecision: function to decide if HDL object derived from
         this unit should be serialized or not, if None all is always serialized
     :cvar ~._PROTECTED_NAMES: set of names which can not be overridden
     :ivar ~._interfaces: all public interfaces
@@ -34,14 +34,14 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
     :ivar ~._private_interfaces: all internal interfaces
         which are not accessible from outside of unit
     :type _private_interfaces: List[Interface]
-    :ivar ~._units: all units defined on this obj
+    :ivar ~._units: all units defined on this object
     :type ~._units: List[Unit]
-    :ivar ~._params: all params defined on this obj
+    :ivar ~._params: all params defined on this object
     :type ~._params: List[Param]
     :ivar ~._constraints: additional HW specifications
     :ivar ~._parent: parent object
     :type ~._parent: Optional[Unit]
-    :ivar ~._lazy_loaded: container of rtl object which were lazy loaded
+    :ivar ~._lazy_loaded: container of RTL object which were lazy loaded
         in implementation phase (this object has to be returned
         from :func:`~._to_rtl` of parent before it it's own objects)
     :ivar ~._shared_component_with: Optional tuple of the other Unit instance
@@ -55,8 +55,8 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         and the component from :func:`~._shared_component_with` is used instead
     :ivar ~._target_platform: meta-informations about target platform
     :ivar ~._name: a name of this component
-    :ivar ~._hdl_module_name: a name of hdl module for this component
-        (vhdl entity name, verilog module name)
+    :ivar ~._hdl_module_name: a name of HDL module for this component
+        (vhdl entity name, Verilog module name)
     """
 
     _serializeDecision = None

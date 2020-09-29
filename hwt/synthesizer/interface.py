@@ -1,5 +1,6 @@
 from typing import Dict, Optional
 
+from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdl.types.typeCast import toHVal
@@ -14,9 +15,8 @@ from hwt.synthesizer.interfaceLevel.propDeclrCollector import\
     PropDeclrCollector
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.vectorUtils import fitTo
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
-from hdlConvertorAst.translate.common.name_scope import NameScope
+from hwt.synthesizer.vectorUtils import fitTo
 
 
 def _default_param_updater(self, myP, parentPval):
@@ -151,7 +151,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
     @internal
     def _connectToIter(self, master, exclude=None, fit=False):
-        # [todo] implementatino for RtlSignals of HStruct type
+        # [todo] implementation for RtlSignals of HStruct type
         if exclude and (self in exclude or master in exclude):
             return
 
@@ -205,7 +205,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         :param ctx: instance of RtlNetlist where signals should be created
         :param res: output dictionary where result should be stored
         :param prefix: name prefix for created signals
-        :param name_scope: name scope used to check colisions on port names
+        :param name_scope: name scope used to check collisions on port names
             if this a current top (every component is checked
             when it is seen first time)
         :param typeTransform: optional function (type) returns modified type

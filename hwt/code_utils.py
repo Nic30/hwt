@@ -108,6 +108,7 @@ def _mkOp(fn):
 
     :param fn: function to perform binary operation
     """
+
     def op(*operands, key=None) -> RtlSignalBase:
         """
         :param operands: variadic parameter of input uperands
@@ -127,3 +128,7 @@ def _mkOp(fn):
         return top
 
     return op
+
+
+def inRange(n, lower, end):
+    return (n >= lower) & (n < end)
