@@ -2,8 +2,8 @@ from copy import copy
 from typing import Optional
 
 from hdlConvertorAst.hdlAst import iHdlStatement, iHdlObj, HdlIdDef, \
-    HdlValueId, HdlTypeType, iHdlExpr, HdlStmBlock, HdlStmIf, HdlStmCase,\
-    HdlStmProcess, HdlStmAssign, HdlModuleDef, HdlModuleDec,\
+    HdlValueId, HdlTypeType, iHdlExpr, HdlStmBlock, HdlStmIf, HdlStmCase, \
+    HdlStmProcess, HdlStmAssign, HdlModuleDef, HdlModuleDec, \
     HdlCompInst, HdlEnumDef
 from hdlConvertorAst.hdlAst._statements import ALL_STATEMENT_CLASSES
 from hdlConvertorAst.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
@@ -25,9 +25,9 @@ from hwt.hdl.types.slice import Slice
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
-from hwt.serializer.generic.utils import HWT_TO_HDLCONVEROTR_DIRECTION,\
+from hwt.serializer.generic.utils import HWT_TO_HDLCONVEROTR_DIRECTION, \
     CreateTmpVarFnSwap
-from hwt.serializer.utils import maxStmId
+from hwt.serializer.utils import HdlStatement_sort_key
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
@@ -340,7 +340,7 @@ class ToHdlAst():
             ToBasicHdlSimModel.split_HdlModuleDefObjs(self, new_m.objs)
         # [TODO] sorting not required as it should be done in _to_rtl()
         hdl_variables.sort(key=lambda x: (x.name, x.origin._instId))
-        processes.sort(key=lambda x: (x.name, maxStmId(x)))
+        processes.sort(key=HdlStatement_sort_key)
         component_insts.sort(key=lambda x: x.name)
 
         types = set()

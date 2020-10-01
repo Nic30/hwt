@@ -1,11 +1,15 @@
-from hwt.hdl.assignment import Assignment
 from hwt.doc_markers import internal
+from hwt.hdl.assignment import Assignment
+from hwt.hdl.statement import HdlStatement
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.block import HdlStatementBlock
 
 
 @internal
 def getMaxStmIdForStm(stm):
     """
-    Get maximum _instId from all assigments in statement
+    Get maximum _instId from all assignments in statement,
+    used for sorting of processes in architecture
     """
     maxId = 0
     if isinstance(stm, Assignment):
@@ -16,13 +20,12 @@ def getMaxStmIdForStm(stm):
         return maxId
 
 
-@internal
-def maxStmId(proc):
-    """
-    get max statement id,
-    used for sorting of processes in architecture
-    """
-    maxId = 0
-    for stm in proc.statements:
-        maxId = max(maxId, getMaxStmIdForStm(stm))
-    return maxId
+def RtlSignal_sort_key(s: RtlSignalBase):
+    return (s.name, s._instId)
+
+
+def HdlStatement_sort_key(stm: HdlStatement):
+    if isinstance(stm, HdlStatementBlock):
+        return (stm.name, getMaxStmIdForStm(stm))
+    else:
+        return ("", getMaxStmIdForStm(stm))

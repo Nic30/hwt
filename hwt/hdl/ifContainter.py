@@ -5,14 +5,15 @@ from itertools import compress
 from operator import and_
 from typing import List, Tuple, Dict, Union, Optional
 
-from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
-from hwt.hdl.statement import HdlStatement, statementsAreSame, \
-    isSameStatementList, seqEvalCond
-from hwt.hdl.value import HValue
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
+from hwt.hdl.sensitivityCtx import SensitivityCtx
+from hwt.hdl.statement import HdlStatement, statementsAreSame, \
+    isSameStatementList, seqEvalCond
+from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
+from hwt.hdl.value import HValue
+from hwt.serializer.utils import RtlSignal_sort_key
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class IfContainer(HdlStatement):
@@ -226,7 +227,7 @@ class IfContainer(HdlStatement):
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, Union[HValue, RtlSignalBase]]) -> None:
         enc = []
         outputs = self._outputs
-        for e in enclosure.keys():
+        for e in sorted(enclosure.keys(), key=RtlSignal_sort_key):
             if e in outputs and e not in self._enclosed_for:
                 enc.append(e)
 

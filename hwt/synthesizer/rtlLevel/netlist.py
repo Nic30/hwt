@@ -20,7 +20,7 @@ from hwt.synthesizer.rtlLevel.statements_to_HdlStatementBlocks import\
     statements_to_HdlStatementBlocks
 from hdlConvertorAst.hdlAst._expr import HdlValueId
 from hwt.doc_markers import internal
-from hwt.serializer.utils import maxStmId
+from hwt.serializer.utils import HdlStatement_sort_key, RtlSignal_sort_key
 
 
 @internal
@@ -36,6 +36,7 @@ def prepareEntity(ent, name, templateUnit):
             gch.hdl_name = gp.hdl_name
         for pp, pch in zip(templateUnit._entity.ports, ent.ports):
             pch.name = pp.name
+
 
 
 class RtlNetlist():
@@ -177,15 +178,15 @@ class RtlNetlist():
         mdef.module_name = HdlValueId(self.ent.name, obj=self.ent)
         mdef.name = "rtl"
 
-        processes = sorted(
-            statements_to_HdlStatementBlocks(self.statements),
-            key=lambda x:  (x.name, maxStmId(x)))
+        processes = statements_to_HdlStatementBlocks(sorted(
+            self.statements,
+            key=HdlStatement_sort_key))
 
         # add signals, variables etc. in architecture
         for s in sorted((s for s in self.signals
                         if not s.hidden and
                         s not in self.interfaces.keys()),
-                        key=lambda x: (x.name, x._instId)):
+                        key=RtlSignal_sort_key):
                 v = HdlIdDef()
                 v.origin = s
                 s.name = v.name = ns.checked_name(s.name, s)

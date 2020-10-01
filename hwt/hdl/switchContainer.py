@@ -11,6 +11,7 @@ from hwt.hdl.statement import HdlStatement, isSameHVal, isSameStatementList, \
 from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import HValue
+from hwt.serializer.utils import RtlSignal_sort_key
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
@@ -187,7 +188,7 @@ class SwitchContainer(HdlStatement):
         """
         select = []
         outputs = self._outputs
-        for e in enclosure.keys():
+        for e in sorted(enclosure.keys(), key=RtlSignal_sort_key):
             if e in outputs:
                 select.append(e)
 

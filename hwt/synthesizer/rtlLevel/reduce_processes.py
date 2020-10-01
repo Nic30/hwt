@@ -5,7 +5,7 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.statement import IncompatibleStructure, HdlStatement
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
-from hwt.serializer.utils import maxStmId
+from hwt.serializer.utils import HdlStatement_sort_key
 
 
 @internal
@@ -55,7 +55,7 @@ def reduceProcesses(processes):
     :param processes: list of processes instances
     """
     # sort to make order of merging same deterministic
-    processes.sort(key=lambda x: (x.name, maxStmId(x)), reverse=True)
+    processes.sort(key=HdlStatement_sort_key, reverse=True)
     # now try to reduce processes with nearly same structure of statements into one
     # to minimize number of processes
     for _, procs in groupedby(processes, lambda p: p.rank):
