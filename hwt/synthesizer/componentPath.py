@@ -8,7 +8,6 @@ from hwt.synthesizer.unit import Unit
 class ComponentPath(tuple):
     
     def __new__ (cls, *objs):
-        assert objs
         return super(ComponentPath, cls).__new__(cls, objs)
 
     def __truediv__(self, other):
