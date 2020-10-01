@@ -13,7 +13,7 @@ from hwt.synthesizer.rtlLevel.rtlSignal import NO_NOPVAL, RtlSignal
 
 
 @internal
-def cut_off_drivers_of(dstSignal, statements):
+def cut_off_drivers_of(dstSignal: RtlSignal, statements: List[HdlStatement]):
     """
     Cut off drivers from statements
     """
