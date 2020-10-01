@@ -25,3 +25,6 @@ class HdlStatementBlock(HdlStatement):
         self._inputs = inputs
         self._outputs = outputs
         self.rank = sum(map(lambda s: s.rank, statements))
+
+    def _iter_stms(self):
+        yield from self.statements
