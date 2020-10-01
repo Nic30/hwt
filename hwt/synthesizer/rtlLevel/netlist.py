@@ -178,9 +178,8 @@ class RtlNetlist():
         mdef.module_name = HdlValueId(self.ent.name, obj=self.ent)
         mdef.name = "rtl"
 
-        processes = statements_to_HdlStatementBlocks(sorted(
-            self.statements,
-            key=HdlStatement_sort_key))
+        processes = sorted(self.statements, key=HdlStatement_sort_key)
+        processes = sorted(statements_to_HdlStatementBlocks(processes), key=HdlStatement_sort_key)
 
         # add signals, variables etc. in architecture
         for s in sorted((s for s in self.signals
