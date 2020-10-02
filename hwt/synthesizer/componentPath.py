@@ -6,7 +6,16 @@ from hwt.synthesizer.unit import Unit
 
 
 def to_tuple_of_names(objs):
-    return tuple(o.name if isinstance(o, RtlSignal) else o._name for o in objs)
+    res = []
+    for o in objs:
+        if isinstance(o, RtlSignal):
+            name = o.name
+        elif hasattr(o, "_name"):
+            name = o._name
+        else:
+            name = repr(o)
+        res.append(name)
+    return tuple(res)
 
 
 class ComponentPath(tuple):
@@ -46,8 +55,6 @@ class ComponentPath(tuple):
             else:
                 handle = _handle
 
-  
-
             while True:
                 if obj is handle:
                     break
@@ -76,7 +83,6 @@ class ComponentPath(tuple):
                 break
 
             obj = _handle
-            
     
         return ComponentPath(*reversed(path))
     
