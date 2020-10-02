@@ -1,14 +1,14 @@
+from itertools import islice
 from typing import Union, Tuple
 
-from hwt.constraints import set_max_delay, set_false_path,\
+from hwt.constraints import set_max_delay, set_false_path, \
     set_async_reg, get_clock_of, iHdlConstrain
 from hwt.hdl.types.bits import Bits
+from hwt.pyUtils.arrayQuery import iter_with_last
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
-from hwt.pyUtils.arrayQuery import iter_with_last
-from itertools import islice
 
 
 class XdcSerializer():
@@ -34,8 +34,10 @@ class XdcSerializer():
             for d in _o.drivers:
                 if d._event_dependent_from_branch is not None:
                     is_reg = True
+
         elif isinstance(_o, Interface):
             q = "get_pins"
+
         else:
             raise NotImplementedError(o)
 
