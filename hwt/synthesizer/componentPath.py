@@ -5,6 +5,10 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
 
 
+def to_tuple_of_names(objs):
+    return tuple(o.name if isinstance(o, RtlSignal) else o._name for o in objs)
+
+
 class ComponentPath(tuple):
     
     def __new__ (cls, *objs):
@@ -19,21 +23,62 @@ class ComponentPath(tuple):
     def resolve(self) -> "ComponentPath":
         """
         Make the path absolute
+        
+        The ComponentPath is in absolute format only if:
+        
+        * The first member is a top component or path is empty
+        * All members except the last are Unit instances (last can be RtlSignal/Interface)
+        * Each successor member is instanciated in predecessor except for Unit instance with shared component
+        * If member is a Unit instance with shared component the successor must be an interface of this instance or an object from shared component 
         """
-        obj = self[0]
+        it = iter(reversed(self))
+        try:
+            obj = next(it)
+        except StopIteration:
+            # empty path
+            return self
+
         path = []
-        if isinstance(obj, RtlSignal):
-            path.append(obj)
-            obj = obj.ctx.parent
-    
-        while isinstance(obj, Interface):
-            obj = obj._parent
-    
         while obj is not None:
-            path.append(obj)
-            obj = obj._parent
+            _handle = next(it, None)
+            if isinstance(_handle, Unit) and _handle._shared_component_with is not None:
+                handle, _, _ = _handle._shared_component_with
+            else:
+                handle = _handle
+
+  
+
+            while True:
+                if obj is handle:
+                    break
     
-        return ComponentPath(*reversed(path), *self[1:])
+                if isinstance(obj, RtlSignal):
+                    # to not modify path if it is already in absolute format
+                    if not path or path[-1] is not obj:
+                        path.append(obj)
+                    obj = obj.ctx.parent
+            
+                while isinstance(obj, Interface):
+                    if obj is handle:
+                        break
+                    obj = obj._parent
+            
+                while obj is not handle:
+                    try:
+                        assert isinstance(obj, Unit), obj
+                    except:
+                        raise
+                    # to not modify path if it is already in absolute format
+                    if not path or path[-1] is not obj:
+                        path.append(obj)
+
+                    obj = obj._parent
+                break
+
+            obj = _handle
+            
+    
+        return ComponentPath(*reversed(path))
     
     def is_absolute(self):
         """
@@ -51,6 +96,18 @@ class ComponentPath(tuple):
             assert p is op, (self, old_path_prefix)
     
         return ComponentPath(*new_path_prefix, *self[len(old_path_prefix):])
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            return self.__class__(*tuple.__getitem__(self, key))
+        else:
+            return tuple.__getitem__(self, key)
+
+    def __repr__(self):
+        return "<%s %s>" % (self.__class__.__name__, str(self))
+
+    def __str__(self):
+        return "/".join(to_tuple_of_names(self))
 
     def __copy__(self):
         return self.__class__(*self)

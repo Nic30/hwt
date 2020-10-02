@@ -9,11 +9,12 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.sensitivityCtx import SensitivityCtx
+from hwt.hdl.switchContainer import SwitchContainer
 from hwt.serializer.combLoopAnalyzer.tarjan import StronglyConnectedComponentSearchTarjan
 from hwt.serializer.resourceAnalyzer.analyzer import ResourceAnalyzer
+from hwt.synthesizer.componentPath import ComponentPath
 from hwt.synthesizer.unit import Unit
 from ipCorePackager.constants import DIRECTION
-from hwt.hdl.switchContainer import SwitchContainer
 
 
 def collect_comb_inputs(ctx, seen, input_signal, comb_inputs):
@@ -35,9 +36,9 @@ def collect_comb_drivers(path_prefix: Tuple[Unit, ...],
             collect_comb_inputs(ctx, seen, inp, current_comb_inputs)
 
         for o in stm._outputs:
-            o_key = (*path_prefix, o)
+            o_key = path_prefix / o
             for i in current_comb_inputs:
-                con = comb_connection_matrix.setdefault((*path_prefix, i), set())
+                con = comb_connection_matrix.setdefault(path_prefix / i, set())
                 con.add(o_key)
 
     elif isinstance(stm, IfContainer):
@@ -84,13 +85,16 @@ def collect_comb_drivers(path_prefix: Tuple[Unit, ...],
     
     
 class CombLoopAnalyzer():
+    """
+    Visitor which can walk synthetized hwt Unit instances and detect clusters connected by combinational logic 
+    """
 
     def __init__(self):
         # RtlSignal: Set[RtlSignal]
         self.comb_connection_matrix = {}
         # RtlSignal: set of signals in comb loop
         self._report = {}
-        self.actual_path_prefix = tuple()
+        self.actual_path_prefix = ComponentPath()
 
     def visit_Unit(self, u: Unit):
         if u._shared_component_with is None:
@@ -109,13 +113,12 @@ class CombLoopAnalyzer():
         collect_comb_drivers(self.actual_path_prefix, proc, self.comb_connection_matrix, tuple())
     
     def visit_HdlCompInst(self, o: HdlCompInst) -> None:
-        #if o.origin._shared_component_with is not None:
-        #    _, current_to_comp, comp_to_current = o.origin._shared_component_with
-        #else:
-        #    current_to_comp, comp_to_current = None, None
-
         orig_path_prefix = self.actual_path_prefix 
-        in_component_path_prefix = (*orig_path_prefix, o.origin)
+        in_component_path_prefix = orig_path_prefix
+        if o.origin._shared_component_with is not None:
+            in_component_path_prefix = in_component_path_prefix / o.origin
+         
+
         try:
             assert o.origin, o
             self.actual_path_prefix = in_component_path_prefix
@@ -123,11 +126,11 @@ class CombLoopAnalyzer():
 
             for pm in o.port_map:
                 if pm.direction == DIRECTION.OUT:
-                    k = (*in_component_path_prefix, pm.src)
-                    v = (*orig_path_prefix, pm.dst)
+                    k = in_component_path_prefix / pm.src
+                    v = orig_path_prefix / pm.dst
                 elif pm.direction == DIRECTION.IN:
-                    k = (*orig_path_prefix, pm.src)
-                    v = (*in_component_path_prefix, pm.dst)
+                    k = orig_path_prefix / pm.src
+                    v = in_component_path_prefix / pm.dst
                 else:
                     raise NotImplementedError(pm.direction)
                 self.comb_connection_matrix.setdefault(k, set()).add(v)
