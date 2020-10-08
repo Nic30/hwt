@@ -219,7 +219,7 @@ class PropDeclrCollector(object):
                           otherObj: "PropDeclrCollector",
                           updater,
                           exclude: Optional[Tuple[Set[str], Set[str]]],
-                          prefix: str) -> None:
+                          prefix: str) -> "PropDeclrCollector":
         """
         Update all parameters which are defined on self from otherObj
 
