@@ -60,6 +60,15 @@ class Signal(SignalOps, Interface):
         if self._interfaces:
             Interface._clean(self, lockNonExternal=lockNonExternal)
 
+    def __copy__(self):
+        """
+        Create new instance of interface of same type and configuration
+        """
+        intf = self.__class__(masterDir=self._masterDir,
+                              dtype=self._dtype)
+        intf._updateParamsFrom(self)
+        return intf
+
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = SignalAgent(sim, self)
 
