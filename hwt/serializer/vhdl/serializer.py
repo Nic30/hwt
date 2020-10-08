@@ -1,7 +1,8 @@
 import re
 
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlAll
-from hdlConvertorAst.hdlAst._statements import HdlImport
+from hdlConvertorAst.hdlAst._statements import HdlImport, ALL_STATEMENT_CLASSES,\
+    HdlStmIf, HdlStmBlock, HdlStmFor, HdlStmForIn
 from hdlConvertorAst.hdlAst._structural import HdlLibrary, HdlModuleDef,\
     HdlCompInst, HdlContext
 from hdlConvertorAst.to.vhdl.keywords import VHLD2008_KEYWORDS
@@ -50,6 +51,28 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         s.update(cls._keywords_dict)
         return s
 
+    @staticmethod
+    def _find_HdlCompInst(o):
+        if isinstance(o, (list,tuple)):
+            for _o in o:
+                yield from ToHdlAstVhdl2008._find_HdlCompInst(_o)
+        if isinstance(o, HdlCompInst):
+            yield o
+        elif isinstance(o, HdlStmBlock) and o.in_preproc:
+            yield from ToHdlAstVhdl2008._find_HdlCompInst(o.body)
+        elif isinstance(o, HdlStmIf) and o.in_preproc:
+            if o.if_true:
+                yield from ToHdlAstVhdl2008._find_HdlCompInst(o.if_true)
+            for _, stms in o.elifs:
+                yield from ToHdlAstVhdl2008._find_HdlCompInst(stms)
+            if o.if_false:
+                yield from ToHdlAstVhdl2008._find_HdlCompInst(o.if_false)
+        elif isinstance(o, (HdlStmFor, HdlStmForIn)) and o.in_preproc:
+            if o.body:
+                yield from ToHdlAstVhdl2008._find_HdlCompInst(o.body)
+                    
+            
+            
     def as_hdl_HdlModuleDef(self, o: HdlModuleDef):
         """
         Translate hwt types and expressions to HDL AST and add explicit components
@@ -57,8 +80,7 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         _o = super(ToHdlAstVhdl2008, self).as_hdl_HdlModuleDef(o)
         component_insts = []
         for c in _o.objs:
-            if isinstance(c, HdlCompInst):
-                component_insts.append(c)
+            component_insts.extend(self._find_HdlCompInst(c))
 
         # select comonent instances whith an unique module_name
         components = [

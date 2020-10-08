@@ -339,9 +339,12 @@ class ToHdlAst():
         hdl_types, hdl_variables, processes, component_insts = \
             ToBasicHdlSimModel.split_HdlModuleDefObjs(self, new_m.objs)
         # [TODO] sorting not required as it should be done in _to_rtl()
-        hdl_variables.sort(key=lambda x: (x.name, x.origin._instId))
-        processes.sort(key=HdlStatement_sort_key)
-        component_insts.sort(key=lambda x: x.name)
+        if len(hdl_variables) > 1:
+            hdl_variables.sort(key=lambda x: (x.name, x.origin._instId))
+        if len(processes) > 1:
+            processes.sort(key=HdlStatement_sort_key)
+        if len(component_insts) > 1:
+            component_insts.sort(key=lambda x: x.name)
 
         types = set()
 
@@ -419,7 +422,7 @@ class ToHdlAst():
         """
         Serialize HdlStatementBlock objects as process if top statement
         """
-        if isinstance(proc, HdlStmProcess):
+        if isinstance(proc, ALL_STATEMENT_CLASSES):
             return proc
         assert proc.parentStm is None, proc
         body = proc.statements
