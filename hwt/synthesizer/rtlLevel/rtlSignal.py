@@ -1,6 +1,7 @@
-from typing import Generator, Union
+from typing import Generator
 
 from hwt.doc_markers import internal
+from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statement import HdlStatement
 from hwt.hdl.types.hdlType import HdlType
@@ -8,10 +9,10 @@ from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr,\
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr, \
     SignalDriverErrType
 from hwt.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
-from hwt.hdl.portItem import HdlPortItem
+
 
 NO_NOPVAL = object()
 
