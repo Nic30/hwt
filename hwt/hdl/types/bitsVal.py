@@ -433,9 +433,27 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         if not isinstance(other._dtype, Bits):
             raise TypeError(other)
 
-        if areHValues(self, other):
-            return self._mul__val(other)
+        self_is_val = isinstance(self, HValue)
+        other_is_val = isinstance(other, HValue)
+        
+        if self_is_val and other_is_val:
+            return Bits3val.__mul__(self, other)
         else:
+            # reduce *1 and *0
+            if self_is_val and self._is_full_valid():
+                _s = int(self)
+                if _s == 0:
+                    return self._dtype.from_py(0)
+                elif _s:
+                    return other._auto_cast(self._dtype)
+
+            if other_is_val and other._is_full_valid():
+                _o = int(other)
+                if _o == 0:
+                    return self._dtype.from_py(0)
+                elif _o == 1:
+                    return self
+
             myT = self._dtype
             if self._dtype.signed is None:
                 self = self._unsigned()
@@ -448,13 +466,14 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                 raise TypeError("%r %r %r" % (self, AllOps.MUL, other))
 
             if other._dtype == INT:
-                res_w = myT.bit_length() * 2
+                res_w = myT.bit_length()
                 res_sign = self._dtype.signed
+                subResT = resT = myT
             else:
                 res_w = max(myT.bit_length(), other._dtype.bit_length())
                 res_sign = self._dtype.signed or other._dtype.signed
-
-            subResT = Bits(res_w, signed=res_sign)
+                subResT = Bits(res_w, signed=res_sign)
+                resT = Bits(res_w, signed=myT.signed)
+            
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
-            resT = Bits(res_w, signed=myT.signed)
             return o._auto_cast(resT)

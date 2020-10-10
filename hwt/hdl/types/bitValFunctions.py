@@ -186,13 +186,23 @@ def bitsArithOp(self, other, op):
     other = toHVal(other, self._dtype)
     if not isinstance(other._dtype, Bits):
         raise TypeError(other._dtype)
-    if areHValues(self, other):
+    
+    self_is_val = isinstance(self, HValue)
+    other_is_val = isinstance(other, HValue)
+        
+    if self_is_val and other_is_val:
         return bitsArithOp__val(self, other, op._evalFn)
     else:
         if self._dtype.signed is None:
             self = self._unsigned()
 
+        if other_is_val and other._is_full_valid() and int(other) == 0:
+            return self
+
         resT = self._dtype
+        if self_is_val and self._is_full_valid() and int(self) == 0:
+            return other._auto_cast(resT)
+
         if isinstance(other._dtype, Bits):
             t0 = self._dtype
             t1 = other._dtype
