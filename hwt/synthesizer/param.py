@@ -57,3 +57,10 @@ class Param():
 
     def set_value(self, v):
         setattr(self._parent, self._name, v)
+        
+    def __repr__(self):
+        return "<%s at 0x%x %s=%s>" % (
+            self.__class__.__name__, 
+            id(self),
+            "<unspecified name>" if self._name is None else self._name,
+            repr(self.get_value()))
