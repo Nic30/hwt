@@ -47,7 +47,7 @@ class ToHdlAstVhdl2008_types():
         return HdlOp(HdlOpType.CALL, [
             name,
             HdlOp(HdlOpType.DOWNTO, [
-                self.as_hdl_int(w - 1),
+                self.as_hdl(w - 1),
                 self.as_hdl_int(0)
             ])])
 
