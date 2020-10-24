@@ -32,6 +32,10 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
+def createTmpVarNotPossibleOnThisPlace(suggestedName, dtype):
+    raise NotImplementedError(
+        "Can not create a tmp variable (%s of type %r) in this code section" % (suggestedName, dtype))
+
 class ToHdlAst():
     """
     Base class for translators which translates hwt AST to a HDL ast
@@ -62,7 +66,7 @@ class ToHdlAst():
         if name_scope is None:
             name_scope = self.getBaseNameScope()
         self.name_scope = name_scope
-        self.createTmpVarFn = None
+        self.createTmpVarFn = createTmpVarNotPossibleOnThisPlace
         self.constCache = None
 
     def as_hdl(self, obj) -> iHdlObj:
