@@ -16,6 +16,7 @@ from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 
 class If(IfContainer):
@@ -155,7 +156,7 @@ def SwitchLogic(cases, default=None):
         assigTop = []
 
     for cond, statements in reversed(cases):
-        if isinstance(cond, RtlSignalBase):
+        if isinstance(cond, (RtlSignalBase, InterfaceBase)):
             assigTop = If(cond,
                           statements
                        ).Else(
