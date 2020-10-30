@@ -3,6 +3,7 @@ from typing import Union
 from hwt.doc_markers import internal
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.typeCast import toHVal
+from hwt.hdl.value import HValue
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.vectorUtils import fitTo
@@ -131,4 +132,7 @@ def _mkOp(fn):
 
 
 def inRange(n, lower, end):
-    return (n >= lower) & (n < end)
+    res = (n >= lower)
+    if isinstance(n, (RtlSignalBase, InterfaceBase, HValue)) and (not isinstance(end, int) or end < 2 ** n._dtype.bit_length()):
+        res = res & (n < end)
+    return res
