@@ -155,11 +155,17 @@ def SwitchLogic(cases, default=None):
         assigTop = []
 
     for cond, statements in reversed(cases):
-        assigTop = If(cond,
-                      statements
-                   ).Else(
-                       assigTop
-                   )
+        if isinstance(cond, RtlSignalBase):
+            assigTop = If(cond,
+                          statements
+                       ).Else(
+                           assigTop
+                       )
+        else:
+            if cond:
+                assigTop = statements
+            else:
+                pass
 
     return assigTop
 
