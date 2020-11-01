@@ -48,11 +48,14 @@ class FifoReaderAgent(SyncAgentBase):
         yield WaitWriteOnly()
         self.intf.en.write(self._enabled)
 
+    def get_data(self):
+        return self.intf.data.read()
+
     def dataReader(self):
         yield Timer(1)
         if self.readPending:
             yield WaitCombRead()
-            d = self.intf.data.read()
+            d = self.get_data()
             self.data.append(d)
 
             if self.readPending_invalidate:
@@ -108,13 +111,16 @@ class FifoReaderAgent(SyncAgentBase):
                 super(FifoReaderAgent, self).getDrivers() +
                 [self.dataWriter()])
 
+    def set_data(self, d):
+        self.intf.data.write(d)
+
     def dataWriter(self):
         # delay data litle bit to have nicer wave
         # otherwise wirte happens before next clk period
         # and it means in 0 time and we will not be able to see it in wave
         yield Timer(1)
         yield WaitWriteOnly()
-        self.intf.data.write(self.lastData)
+        self.set_data(self.lastData)
         if self.lastData_invalidate:
             self.lastData = None
 
