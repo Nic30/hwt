@@ -21,6 +21,9 @@ from pycocotb.triggers import Timer
 
 
 def allValuesToInts(sequenceOrVal):
+    """
+    Convert HValue instances to int recursively (for sequences)
+    """
     if isinstance(sequenceOrVal, HArrayVal):
         sequenceOrVal = sequenceOrVal.val
 
@@ -45,6 +48,7 @@ def allValuesToInts(sequenceOrVal):
 class DummySimPlatform(DummyPlatform):
     """
     DummyPlatform which ignores the constraints
+    (hardware constranints which specifying something for circuit synthesis for a vendor tool)
     """
 
 
@@ -264,15 +268,21 @@ def simpleRandomizationProcess(tc: SimTestCase, agent, timeQuantum=CLK_PERIOD):
 
 class SingleUnitSimTestCase(SimTestCase):
     """
-    SimTestCase for simple tests with a single component
+    :class:`~.SimTestCase` for simple tests with a single component
     """
 
     @classmethod
     def getUnit(cls) -> Unit:
+        """
+        Create an Unit instance to test
+        """
         raise NotImplementedError("Implement this function in your testcase")
 
     @classmethod
     def setUpClass(cls):
+        """
+        Compile component from :func:`~.getUnit`
+        """
         super(SingleUnitSimTestCase, cls).setUpClass()
         u = cls.getUnit()
         assert isinstance(u, Unit), u
