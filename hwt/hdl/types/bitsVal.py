@@ -229,6 +229,11 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                 _v = int(key)
                 if _v < 0 or _v > length - 1:
                     raise IndexError(_v)
+                if iAmResultOfIndexing:
+                    original, parentIndex = self.origin.operands
+                    if isinstance(parentIndex._dtype, Slice):
+                        parentLower = parentIndex.val.stop
+                        return original[parentLower + _v]
 
             if iamVal:
                 return Bits3val.__getitem__(self, key)
