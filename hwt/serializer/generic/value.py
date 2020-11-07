@@ -135,7 +135,7 @@ class ToHdlAst_Value():
             var.type = self.as_hdl_HdlType(var.type)
             return var
         else:
-            if si.hidden and hasattr(si, "origin"):
+            if si.hidden and si.origin is not None:
                 # hidden signal, render it's driver instead
                 return self.as_hdl(si.origin)
             return HdlValueId(si.name, obj=si)

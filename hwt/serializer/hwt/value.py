@@ -58,7 +58,7 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
             # if isinstance(si, SignalItem) and si._const:
             #    # to allow const cache to extract constants
             #    return self.as_hdl_Value(si._val)
-            if si.hidden and hasattr(si, "origin"):
+            if si.hidden and si.origin is not None:
                 return self.as_hdl(si.origin)
             else:
                 return HdlValueId(si.name, obj=si)

@@ -173,7 +173,6 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
         iamVal = isinstance(self, HValue)
         iAmResultOfIndexing = (not iamVal and
-                               hasattr(self, "origin") and
                                len(self.drivers) == 1 and
                                isinstance(self.origin, Operator) and
                                self.origin.operator == AllOps.INDEX)

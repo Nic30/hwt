@@ -79,6 +79,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
 
         self._nop_val = nop_val
         self._const = is_const
+        self.origin = None
 
     @internal
     @classmethod

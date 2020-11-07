@@ -69,7 +69,7 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
             with SignalTypeSwap(self, sigType):
                 return ToHdlAst_Value.as_hdl_SignalItem(self, si, declaration=True)
         else:
-            if si.hidden and hasattr(si, "origin"):
+            if si.hidden and si.origin is not None:
                 return self.as_hdl(si.origin)
             else:
                 sigType = systemCTypeOfSig(si)
