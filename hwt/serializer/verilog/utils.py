@@ -7,6 +7,8 @@ from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 from hwt.hdl.variables import SignalItem
 from typing import Union
 from ipCorePackager.constants import DIRECTION
+from hwt.hdl.statement import HdlStatement
+from hdlConvertorAst.hdlAst import iHdlStatement, HdlStmIf
 
 
 @internal
@@ -38,6 +40,8 @@ def verilogTypeOfSig(s: Union[SignalItem, HdlPortItem]):
                 and d._event_dependent_from_branch is None\
                 and (isinstance(d.src, HValue) or not d.src.hidden):
             # primitive assignment
+            return SIGNAL_TYPE.WIRE
+        elif isinstance(d, iHdlStatement) and d.in_preproc:
             return SIGNAL_TYPE.WIRE
 
     return SIGNAL_TYPE.REG

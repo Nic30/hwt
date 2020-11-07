@@ -10,6 +10,8 @@ from hwt.hdl.value import HValue
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from builtins import isinstance
+from hdlConvertorAst.hdlAst import HdlValueInt
 
 
 class ToHdlAstVerilog_ops():
@@ -42,7 +44,7 @@ class ToHdlAstVerilog_ops():
 
         oper = operator.operator
         width = None
-        if operand._dtype == INT and\
+        if not isinstance(operand, RtlSignal) and operand._dtype == INT and\
            oper not in [AllOps.BitsAsUnsigned,
                         AllOps.BitsAsVec,
                         AllOps.BitsAsSigned,
@@ -62,9 +64,12 @@ class ToHdlAstVerilog_ops():
             assert width is not None, (operator, operand)
         hdl_op = self.as_hdl_Value(operand)
         if width is not None:
-            return HdlOp(HdlOpType.APOSTROPHE, [self.as_hdl_int(width), hdl_op])
-        else:
-            return hdl_op
+            if isinstance(hdl_op, HdlValueInt):
+                assert isinstance(width, int), width
+                hdl_op.bits = width
+            else:
+                return HdlOp(HdlOpType.APOSTROPHE, [self.as_hdl_int(width), hdl_op])
+        return hdl_op
 
     def as_hdl_Operator(self, op: Operator):
         ops = op.operands
