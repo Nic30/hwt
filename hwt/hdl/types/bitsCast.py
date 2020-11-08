@@ -6,8 +6,9 @@ from hwt.hdl.types.hdlType import default_auto_cast_fn, HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
 from hwt.hdl.value import HValue
-from hwt.synthesizer.vectorUtils import iterBits, fitTo_t
 from hwt.synthesizer.exceptions import TypeConversionErr
+from hwt.synthesizer.vectorUtils import iterBits, fitTo_t
+from pyMathBitPrecise.bit_utils import set_bit_range, mask
 
 
 @internal
@@ -20,10 +21,19 @@ def convertBits__val(self: Bits, val: "BitVal", toType: HdlType):
                 raise TypeConversionErr(self, toType)
             val = val._convSign__val(toType.signed)
 
-        if self.bit_length() != toType.bit_length():
+        w_from, w_to = self.bit_length(), toType.bit_length()
+        if w_from != w_to:
             if self.strict_width:
                 raise TypeConversionErr(self, toType)
-            val = toType.from_py(val.val, val.vld_mask & toType.all_mask())
+            if w_from > w_to:
+                # cut off some bits from value
+                new_m = val.vld_mask & toType.all_mask()
+            else:
+                # w_from < w_to, extend the value to some bit length
+                extra_mask_bits = mask(w_to - w_from)
+                new_m = set_bit_range(val.vld_mask, w_from, w_to - w_from, extra_mask_bits)
+            val = toType.from_py(val.val, new_m)
+
         if val._dtype != toType:
             # sign and width checked, only name, strict_* flags can be different
             val = toType.from_py(val.val, val.vld_mask)
