@@ -13,7 +13,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import\
     markVisibilityOfSignalsAndCheckDrivers
-from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
+from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.remove_unconnected_signals import removeUnconnectedSignals
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 from hwt.synthesizer.rtlLevel.statements_to_HdlStatementBlocks import\
@@ -102,14 +102,17 @@ class RtlNetlist():
             if syncRst is not None and def_val is None:
                 raise SigLvlConfErr(
                     "Probably forgotten default value on sync signal %s", name)
+            # dst_resolve_fn is overriden because default assign would assign to the "next" signal
             if syncRst is not None:
                 r = If(syncRst._isOn(),
-                       RtlSignal.__call__(s, _def_val)
-                       ).Else(
-                    RtlSignal.__call__(s, s.next)
-                )
+                       s(_def_val, dst_resolve_fn=lambda x: x)
+                    ).Else(
+                       s(s.next, dst_resolve_fn=lambda x: x)
+                    )
             else:
-                r = [RtlSignal.__call__(s, s.next)]
+                r = [
+                    s(s.next, dst_resolve_fn=lambda x: x)
+                ]
 
             if isinstance(clk, (InterfaceBase, RtlSignal)):
                 clk_trigger = clk._onRisingEdge()

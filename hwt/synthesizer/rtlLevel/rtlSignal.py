@@ -164,6 +164,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             assert self.drivers, self
         except Exception:
             raise
+
         for d in self.drivers:
             # d has to be operator otherwise this signal would be public itself
             try:

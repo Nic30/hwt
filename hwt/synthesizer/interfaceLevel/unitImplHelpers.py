@@ -5,7 +5,7 @@ from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.struct import HStruct
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
-from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
+from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 from hwt.hdl.types.array import HArray
 

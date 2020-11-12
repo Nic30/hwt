@@ -1,9 +1,6 @@
-from hwt.hdl.assignment import Assignment
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.types.typeCast import toHVal
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlMemoryBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 
@@ -29,23 +26,11 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         self.next = RtlSignal(ctx, name + "_next", var_type,
                               nop_val=nop_val)
 
-    def __call__(self, source):
+    def _getDestinationSignalForAssignmentToThis(self):
         """
-        assign to signal which is next value of this register
-
-        :return: list of assignments
+        :see: :func:` hwt.synthesizer.rtlLevel.rtlSignal.RtlSignal`
         """
-        if isinstance(source, InterfaceBase):
-            source = source._sig
-
-        if source is None:
-            source = self._dtype.from_py(None)
-        else:
-            source = toHVal(source)
-            source = source._auto_cast(self._dtype)
-
-        a = Assignment(source, self.next)
-        return [a, ]
+        return self.next
 
     def _getAssociatedClk(self):
         d = self.singleDriver()

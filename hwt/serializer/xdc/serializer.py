@@ -6,7 +6,7 @@ from hwt.constraints import set_max_delay, set_false_path, \
 from hwt.hdl.types.bits import Bits
 from hwt.pyUtils.arrayQuery import iter_with_last
 from hwt.synthesizer.interface import Interface
-from hwt.synthesizer.rtlLevel.memory import RtlSyncSignal
+from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
 

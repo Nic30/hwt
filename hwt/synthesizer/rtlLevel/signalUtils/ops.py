@@ -15,7 +15,7 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 
 def tv(signal):
     """
-    HValue class for type of signal
+    HValue class for hdl type of signal
     """
     return signal._dtype.getValueCls()
 
@@ -375,7 +375,13 @@ class RtlSignalOps():
 
         return intf, indexes
 
-    def __call__(self, source) -> Assignment:
+    def _getDestinationSignalForAssignmentToThis(self):
+        """
+        :return: a signal which should be used as a destination if assigning to this signal
+        """
+        return self
+
+    def __call__(self, source, dst_resolve_fn=lambda x: x._getDestinationSignalForAssignmentToThis()) -> Assignment:
         """
         Create assignment to this signal
 
@@ -412,6 +418,7 @@ class RtlSignalOps():
                     % (source, source._dtype, self, self._dtype))
         try:
             mainSig, indexCascade = self._getIndexCascade()
+            mainSig = dst_resolve_fn(mainSig)
             return Assignment(source, mainSig, indexCascade)
         except Exception as e:
             # simplification of previous exception traceback
