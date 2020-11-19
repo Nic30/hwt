@@ -1,19 +1,19 @@
 from itertools import chain
+from typing import Union, Optional, Tuple
 
 from hwt.doc_markers import internal
+from hwt.hdl.operatorDefs import OpDefinition
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.defs import BIT
+from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
+from hwt.interfaces.std import Signal
 from hwt.interfaces.structIntf import HdlTypeToIntf
 from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getClk, getRst
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
-from hwt.interfaces.std import Signal
-from typing import Union, Optional, Tuple
-from hwt.hdl.types.hdlType import HdlType
-from mesonbuild.cmake.client import SignalBase
-from hwt.hdl.operatorDefs import OpDefinition
 from hwt.synthesizer.typePath import TypePath
 
 
@@ -56,8 +56,8 @@ class UnitImplHelpers(UnitBase):
     def _reg(self, name: str,
              dtype: HdlType=BIT,
              def_val: Union[int, None, dict, list]=None,
-             clk: Union[SignalBase, None, Tuple[SignalBase, OpDefinition]]=None,
-             rst: Optional[SignalBase]=None) -> RtlSyncSignal:
+             clk: Union[RtlSignalBase, None, Tuple[RtlSignalBase, OpDefinition]]=None,
+             rst: Optional[RtlSignalBase]=None) -> RtlSyncSignal:
         """
         Create RTL FF register in this unit
 
