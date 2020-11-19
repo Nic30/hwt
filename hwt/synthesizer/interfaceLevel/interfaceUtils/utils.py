@@ -37,6 +37,7 @@ def walkParams(intf, discovered):
 def connectPacked(srcPacked, dstInterface, exclude=None):
     """
     Connect 1D vector signal to this structuralized interface
+    (LSB of first interface is LSB of result)
 
     :param packedSrc: vector which should be connected
     :param dstInterface: structuralized interface where should
@@ -45,7 +46,7 @@ def connectPacked(srcPacked, dstInterface, exclude=None):
     """
     offset = 0
     connections = []
-    for i in reversed(list(walkPhysInterfaces(dstInterface))):
+    for i in list(walkPhysInterfaces(dstInterface)):
         if exclude is not None and i in exclude:
             continue
         sig = i._sig
@@ -79,6 +80,7 @@ def walkFlatten(interface, shouldEnterIntfFn):
 def packIntf(intf, masterDirEqTo=DIRECTION.OUT, exclude=None):
     """
     Concatenate all signals to one big signal, recursively
+    (LSB of first interface is LSB of result)
 
     :param masterDirEqTo: only signals with this direction are packed
     :param exclude: sequence of signals/interfaces to exclude
@@ -109,6 +111,6 @@ def packIntf(intf, masterDirEqTo=DIRECTION.OUT, exclude=None):
             if res is None:
                 res = s
             else:
-                res = res._concat(s)
+                res = s._concat(res)
 
     return res
