@@ -20,7 +20,7 @@ class StructIntfAgent(AgentBase):
             for i in intf._interfaces:
                 i._ag.set_data(None)
         else:
-            assert len(d) == len(intf._interfaces)
+            assert len(d) == len(intf._interfaces), (d, intf._interfaces)
             for v, i in zip(d, intf._interfaces):
                 i._ag.set_data(v)
     
