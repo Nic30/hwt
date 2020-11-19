@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Tuple, Union, Dict
+from typing import Union, Dict
 
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
@@ -9,8 +9,9 @@ from hwt.hdl.types.stream import HStream
 from hwt.hdl.types.struct import HStructField, HStruct
 from hwt.synthesizer.typePath import TypePath
 
-
 filed_filter_t = Dict[Union[int, str], "filed_filter_t"]
+
+
 def HdlType_select(t: HStruct, fieldsToUse: filed_filter_t):
     """
     Select fields from type structure (rest will become padding)

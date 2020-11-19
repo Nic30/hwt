@@ -390,7 +390,7 @@ class RtlSignalOps():
         """
         assert not self._const, self
         if isinstance(source, InterfaceBase):
-            assert source._isAccessible, source
+            assert source._isAccessible, (source, "must be a Signal Interface which is accessible in current scope")
             source = source._sig
 
         try:

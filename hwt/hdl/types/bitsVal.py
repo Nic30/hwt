@@ -412,10 +412,10 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                                     [self, other],
                                     self._dtype.__copy__())
     def __pow__(self, other):
-        raise TypeError("Not implemented")
+        raise TypeError("** not implemented for %s" % self.__class__.__name__)
 
     def __mod__(self, other):
-        raise TypeError("Not implemented")
+        raise TypeError("%% operator not implemented for %s" % self.__class__.__name__)
 
     def _ternary(self, a, b):
         if isinstance(self, HValue):

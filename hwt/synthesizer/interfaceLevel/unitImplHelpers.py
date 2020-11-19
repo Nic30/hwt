@@ -49,7 +49,7 @@ def _flatten_map(prefix: TypePath, d: Union[None, dict, list, tuple], res: dict)
             _flatten_map(prefix / k, v, res)
         else:
             res[prefix / k] = v
-            
+
 
 class UnitImplHelpers(UnitBase):
 
