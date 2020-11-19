@@ -39,8 +39,8 @@ class Signal(SignalOps, Interface):
     """
 
     def __init__(self,
-                 masterDir=D.OUT,
                  dtype=BIT,
+                 masterDir=D.OUT,
                  loadConfig=True):
         self._sig = None
         self._sigInside = None
@@ -80,8 +80,8 @@ def VectSignal(width,
     """
     Create basic :class:`.Signal` interface where type is vector
     """
-    return Signal(masterDir,
-                  Bits(width, signed, force_vector=True),
+    return Signal(Bits(width, signed, force_vector=True),
+                  masterDir,
                   loadConfig)
 
 
