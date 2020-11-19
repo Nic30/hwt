@@ -6,7 +6,11 @@ from hwt.hdl.types.hdlType import default_auto_cast_fn, HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
 from hwt.hdl.value import HValue
+from hwt.interfaces.structIntf import HdlTypeToIntf
 from hwt.synthesizer.exceptions import TypeConversionErr
+from hwt.synthesizer.hObjList import HObjList
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.vectorUtils import iterBits, fitTo_t
 from pyMathBitPrecise.bit_utils import set_bit_range, mask
 
@@ -65,7 +69,7 @@ def convertBits(self: Bits, sigOrVal, toType: HdlType):
 
 
 @internal
-def reinterpret_bits_to_hstruct(sigOrVal, hStructT):
+def reinterpret_bits_to_hstruct__val(val, hStructT):
     """
     Reinterpret signal of type Bits to signal of type HStruct
     """
@@ -75,9 +79,48 @@ def reinterpret_bits_to_hstruct(sigOrVal, hStructT):
         t = f.dtype
         width = t.bit_length()
         if f.name is not None:
-            s = sigOrVal[(width + offset):offset]
-            s = s._reinterpret_cast(t)
-            setattr(container, f.name, s)
+            v = val[(width + offset):offset]
+            v = v._reinterpret_cast(t)
+            setattr(container, f.name, v)
+
+        offset += width
+
+    return container
+
+@internal
+def transfer_signals(src: InterfaceBase, dst: InterfaceBase):
+    if src._interfaces:
+        assert len(src._interfaces) == len(dst._interfaces), (src, dst)
+        for si, di in zip(src._interfaces, dst._interfaces):
+            transfer_signals(si, di)
+    else:
+        dst._sig = src._sig
+        dst._sigInside = src._sigInside
+
+            
+@internal
+def reinterpret_bits_to_hstruct(val, hStructT):
+    """
+    Reinterpret signal of type Bits to signal of type HStruct
+    """
+    container = HdlTypeToIntf(hStructT)
+    container._loadDeclarations()
+    offset = 0
+    for f in hStructT.fields:
+        t = f.dtype
+        width = t.bit_length()
+        if f.name is not None:
+            v = val[(width + offset):offset]
+            v = v._reinterpret_cast(t)
+            current = getattr(container, f.name)
+            if isinstance(v, InterfaceBase):
+                transfer_signals(v, current)
+            elif isinstance(v, HObjList):
+                raise NotImplementedError()
+            elif isinstance(v, (RtlSignal, HValue)):
+                current._sig = v
+            else:
+                raise NotImplementedError()
 
         offset += width
 
@@ -105,7 +148,7 @@ def reinterpretBits__val(self: Bits, val, toType: HdlType):
             val = val._convSign__val(toType.signed)
         return fitTo_t(val, toType)
     elif isinstance(toType, HStruct):
-        return reinterpret_bits_to_hstruct(val, toType)
+        return reinterpret_bits_to_hstruct__val(val, toType)
     elif isinstance(toType, HUnion):
         raise NotImplementedError()
     elif isinstance(toType, HArray):

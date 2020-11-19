@@ -1,42 +1,20 @@
 from itertools import chain
 
 from hwt.doc_markers import internal
+from hwt.hdl.types.array import HArray
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.struct import HStruct
-from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.interfaces.structIntf import HdlTypeToIntf
+from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getClk, getRst
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
-from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
-from hwt.hdl.types.array import HArray
-
-
-def getClk(unit):
-    """
-    Get clock signal from unit instance
-    """
-    try:
-        return unit.clk
-    except AttributeError:
-        pass
-
-    raise IntfLvlConfErr("Can not find clock signal on unit %r" % (unit,))
-
-
-def getRst(unit):
-    """
-    Get reset signal from unit instance
-    """
-    try:
-        return unit.rst
-    except AttributeError:
-        pass
-
-    try:
-        return unit.rst_n
-    except AttributeError:
-        pass
-
-    raise IntfLvlConfErr("Can not find reset signal on unit %r" % (unit,))
+from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
+from hwt.interfaces.std import Signal
+from typing import Union, Optional, Tuple
+from hwt.hdl.types.hdlType import HdlType
+from mesonbuild.cmake.client import SignalBase
+from hwt.hdl.operatorDefs import OpDefinition
+from hwt.synthesizer.typePath import TypePath
 
 
 def getSignalName(sig):
@@ -55,25 +33,44 @@ def _default_param_updater(self, myP, otherP_val):
     myP.set_value(otherP_val)
 
 
+@internal
+def _flatten_map(prefix: TypePath, d: Union[None, dict, list, tuple], res: dict):
+    if d is None:
+        return
+    elif isinstance(d, dict):
+        kv_it = d.items()
+    elif isinstance(d, (list, tuple)):
+        kv_it = enumerate(d)
+    else:
+        raise NotImplementedError(d)
+    
+    for k, v in kv_it:
+        if isinstance(v, (dict, list, tuple)):
+            _flatten_map(prefix / k, v, res)
+        else:
+            res[prefix / k] = v
+            
+
 class UnitImplHelpers(UnitBase):
 
-    def _reg(self, name, dtype=BIT, def_val=None, clk=None, rst=None) -> RtlSyncSignal:
+    def _reg(self, name: str,
+             dtype: HdlType=BIT,
+             def_val: Union[int, None, dict, list]=None,
+             clk: Union[SignalBase, None, Tuple[SignalBase, OpDefinition]]=None,
+             rst: Optional[SignalBase]=None) -> RtlSyncSignal:
         """
-        Create RTL register in this unit
+        Create RTL FF register in this unit
 
-        :param def_val: default value of this register,
+        :param def_val: s default value of this register,
             if this value is specified reset signal of this component is used
             to generate a reset logic
         :param clk: optional clock signal specification,
-            (signal or tuple(signal, edge type))
-        :type clk: Union[RtlSignal, Interface,
-            Tuple[Union[RtlSignal, Interface],
-            AllOps.RISING/FALLING_EDGE]]
+            (signal or tuple(signal, edge type (AllOps.RISING_EDGE/FALLING_EDGE)))
         :param rst: optional reset signal specification
         :note: rst/rst_n resolution is done from signal type,
-            if it is negated type it is rst_n
+            if it is negated type the reset signal is interpreted as rst_n
         :note: if clk or rst is not specified default signal
-            from parent unit will be used
+            from parent unit instance will be used
         """
         if clk is None:
             clk = getClk(self)
@@ -85,16 +82,17 @@ class UnitImplHelpers(UnitBase):
             rst = getRst(self)
 
         if isinstance(dtype, HStruct):
-            container = dtype.from_py(None)
-            for f in dtype.fields:
-                if f.name is not None:
-                    if def_val is None:
-                        _def_val = None
-                    else:
-                        _def_val = def_val.get(f.name, None)
-                    r = self._reg("%s_%s" % (name, f.name), f.dtype,
-                                  def_val=_def_val)
-                    setattr(container, f.name, r)
+            container = HdlTypeToIntf(dtype)
+            container._loadDeclarations()
+            flattened_def_val = {}
+            _flatten_map(TypePath(), def_val, flattened_def_val)
+            for path, intf in container._fieldsToInterfaces.items():
+                if isinstance(intf, Signal):
+                    _def_val = flattened_def_val.get(path, None)
+                    intf._sig = self._reg(
+                        "%s_%s" % (name, intf._getFullName(separator_getter=lambda x: "_")),
+                        intf._dtype,
+                        def_val=_def_val)
 
             return container
         elif isinstance(dtype, HArray):
@@ -106,9 +104,14 @@ class UnitImplHelpers(UnitBase):
                              syncRst=rst,
                              def_val=def_val)
 
-    def _sig(self, name, dtype=BIT, def_val=None, nop_val=NO_NOPVAL) -> RtlSignal:
+    def _sig(self, name: str,
+             dtype: HdlType=BIT,
+             def_val: Union[int, None, dict, list]=None,
+             nop_val: Union[int, None, dict, list, "NO_NOPVAL"]=NO_NOPVAL) -> RtlSignal:
         """
         Create signal in this unit
+        
+        :see: :func:`hwt.synthesizer.rtlLevel.netlist.RtlNetlist.sig`
         """
         if isinstance(dtype, HStruct):
             if def_val is not None:

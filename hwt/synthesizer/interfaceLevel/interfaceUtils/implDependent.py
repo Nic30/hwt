@@ -1,8 +1,8 @@
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
-from hwt.synthesizer.interfaceLevel.unitImplHelpers import getRst, getClk
 from ipCorePackager.intfIpMeta import IntfIpMetaNotSpecified
 from pycocotb.hdlSimulator import HdlSimulator
+from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getRst, getClk
 
 
 class InterfaceceImplDependentFns():

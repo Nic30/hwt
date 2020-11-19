@@ -16,7 +16,7 @@ class UnionSink(StructIntf):
     def _declr(self):
         StructIntf._declr(self)
         self._select = Handshaked()
-        self._select.DATA_WIDTH = log2ceil(len(self._structT.fields))
+        self._select.DATA_WIDTH = log2ceil(len(self._dtype.fields))
 
 
 class UnionSource(UnionSink):
@@ -28,7 +28,7 @@ class UnionSource(UnionSink):
     def _declr(self):
         StructIntf._declr(self)
         self._select = Handshaked(masterDir=DIRECTION.IN)
-        self._select.DATA_WIDTH = log2ceil(len(self._structT.fields))
+        self._select.DATA_WIDTH = log2ceil(len(self._dtype.fields))
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = UnionSourceAgent(sim, self)

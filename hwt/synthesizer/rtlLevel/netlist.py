@@ -1,26 +1,26 @@
 from typing import List, Optional, Union
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
-from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
+from hdlConvertorAst.hdlAst._expr import HdlValueId
+from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef, \
     HdlCompInst
 from hwt.code import If
+from hwt.doc_markers import internal
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import HValue
+from hwt.serializer.utils import HdlStatement_sort_key, RtlSignal_sort_key
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import\
     markVisibilityOfSignalsAndCheckDrivers
-from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.remove_unconnected_signals import removeUnconnectedSignals
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
+from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.statements_to_HdlStatementBlocks import\
     statements_to_HdlStatementBlocks
-from hdlConvertorAst.hdlAst._expr import HdlValueId
-from hwt.doc_markers import internal
-from hwt.serializer.utils import HdlStatement_sort_key, RtlSignal_sort_key
 
 
 @internal
@@ -80,8 +80,6 @@ class RtlNetlist():
         else:
             return dtype.from_py(v)
 
-        return None
-
     def sig(self, name, dtype=BIT, clk=None, syncRst=None,
             def_val=None, nop_val=NO_NOPVAL) -> Union[RtlSignal, RtlSyncSignal]:
         """
@@ -90,8 +88,9 @@ class RtlNetlist():
         :param clk: clk signal, if specified signal is synthesized
             as SyncSignal
         :param syncRst: synchronous reset signal
-        :param def_val: default value used for reset and intialization
-        :param nop_val: value used a a driver if signal is not driven by any driver
+        :param def_val: a default value used for reset and intialization
+        :param nop_val: a value which is used to drive the signal if there is no other drive
+            (used to prevent latches and to specify default values for unconnected signals)
         """
         _def_val = self._try_cast_any_to_HdlType(def_val, dtype)
         if nop_val is not NO_NOPVAL:
