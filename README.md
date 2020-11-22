@@ -99,6 +99,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [llhd](https://github.com/fabianschuiki/llhd) - Rust, HCL
 * [livehd](https://github.com/masc-ucsc/livehd) - mainly C++, An infrastructure designed for Live Hardware Development.
 * [livehd](https://github.com/masc-ucsc/livehd) - JS, utils, infrastructure for Synthesis and Simulation 
+* [Lucid HDL in Alchitry-Labs](https://github.com/alchitry/Alchitry-Labs) - Custom language and IDE inspired by Verilog
 * [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, HCL
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, HCL
 * [mockturtle](https://github.com/lsils/mockturtle) - logic network library
