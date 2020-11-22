@@ -52,14 +52,15 @@ class HStruct(HdlType):
     """
     HDL structure type
 
-    :ivar ~.fields: tuple of HStructField instances in this struct
+    :ivar ~.fields: tuple of :class:`~.HStructField` instances in this struct
     :ivar ~.name: name of this HStruct type
+    :ivar ~.field_by_name: dictionary which maps the name of the field to :class:`~.HStructField` instance
     :ivar ~.valueCls: Class of value for this type as usual
         in HdlType implementations
     """
     def __init__(self, *template, name=None, const=False):
         """
-        :param template: list of tuples (type, name) or HStructField objects
+        :param template: list of tuples (type, name) or :class:`~.HStructField` objects
             name can be None (= padding)
         :param name: optional name used for debugging purposes
         """

@@ -71,7 +71,7 @@ class RtlNetlist():
     def _try_cast_any_to_HdlType(self, v, dtype):
         if isinstance(v, RtlSignal):
             assert v._const, \
-                "Initial value of register has to be constant"
+                "Initial value of signal has to be a constant"
             return v._auto_cast(dtype)
         elif isinstance(v, HValue):
             return v._auto_cast(dtype)
