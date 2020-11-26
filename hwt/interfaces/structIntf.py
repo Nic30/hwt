@@ -1,19 +1,21 @@
+from typing import Optional, Union
+
+from hwt.code import And, Or
+from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
+from hwt.hdl.types.structCast import hstruct_reinterpret
+from hwt.hdl.types.structValBase import StructValBase
 from hwt.interfaces.agents.structIntf import StructIntfAgent
 from hwt.interfaces.std import Signal
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.typePath import TypePath
 from pycocotb.hdlSimulator import HdlSimulator
-from hwt.doc_markers import internal
-from typing import Optional, Union
-from hwt.code import And, Or
-from hwt.hdl.types.structValBase import StructValBase
 
 
 class StructIntf(Interface):
@@ -84,6 +86,8 @@ class StructIntf(Interface):
         else:
             return Or(*(si != getattr(other, si._name) for si in self._interfaces))
 
+    def _reinterpret_cast(self, toT: HdlType):
+        return hstruct_reinterpret(self._dtype, self, toT)
 
 @internal
 def _HdlTypeToIntf_instantiateFieldFn(intf, fieldInfo) -> Interface:
