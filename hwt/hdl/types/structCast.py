@@ -1,12 +1,13 @@
 from hwt.code import Concat
 from hwt.doc_markers import internal
 from hwt.hdl.typeShortcuts import vec
+from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import default_reinterpret_cast_fn, HdlType
-from hwt.hdl.value import HValue
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.types.array import HArray
 from hwt.hdl.types.struct import HStruct
+from hwt.hdl.value import HValue
+from hwt.interfaces.std import Signal
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 @internal
@@ -19,6 +20,8 @@ def hstruct_reinterpret_to_bits(self, sigOrVal, toType: HdlType):
             part = vec(None, width)
         else:
             part = getattr(sigOrVal, f.name)
+            if isinstance(part, Signal):
+                part = part._sig
             if not isinstance(part, (HValue, RtlSignalBase)):
                 part = f.dtype.from_py(part)
 
