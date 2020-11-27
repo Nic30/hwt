@@ -63,33 +63,48 @@ class SwitchContainer(HdlStatement):
         child_keep_mask = []
 
         all_cut_off = True
-        new_cases = []
-        any_case_hit = False
-        for val, stms in self.cases:
-            new_case = []
-            child_keep_mask.clear()
-            all_cut_off &= self._cut_off_drivers_of_list(
-                sig, stms, child_keep_mask, new_case)
-
-            _stms = list(compress(stms, child_keep_mask))
-            stms.clear()
-            stms.extend(_stms)
-
-            if new_case:
-                any_case_hit = True
-            new_cases.append((val, new_case))
-
         new_default = None
         if self.default:
             new_default = []
             child_keep_mask.clear()
-            all_cut_off &= self._cut_off_drivers_of_list(
+            case_eliminated = self._cut_off_drivers_of_list(
                 sig, self.default, child_keep_mask, new_default)
-            self.default = list(compress(self.default, child_keep_mask))
+            all_cut_off &= case_eliminated
+            if case_eliminated:
+                self.rank -= 1
+                self.default = None
+            else:
+                self.default = list(compress(self.default, child_keep_mask))
+
+        new_cases = []
+        case_keepmask = []
+        for val, stms in self.cases:
+            new_case = []
+            child_keep_mask.clear()
+            case_eliminated = self._cut_off_drivers_of_list(
+                sig, stms, child_keep_mask, new_case)
+            if case_eliminated:
+                self.rank -= 1
+
+            all_cut_off &= case_eliminated
+            case_keepmask.append(not case_eliminated)
+            
+            _stms = list(compress(stms, child_keep_mask))
+            stms.clear()
+            stms.extend(_stms)
+
+            if new_case or new_default:
+                # if there is a default we need to add case even in empty
+                # to prevent falling to default
+                new_cases.append((val, new_case))
+
+        self.cases = list(compress(self.cases, case_keepmask))
+        
+
 
         assert not all_cut_off, "everything was cut of but this should be already known at start"
 
-        if any_case_hit or new_default:
+        if new_cases or new_default:
             # parts were cut off
             # generate new statement for them
             sel_sig = self.switchOn
@@ -259,6 +274,7 @@ class SwitchContainer(HdlStatement):
         """
         io_change = False
 
+        # try reduce the content of the case branches
         new_cases = []
         for val, statements in self.cases:
             _statements, rank_decrease, _io_change = self._try_reduce_list(
@@ -268,12 +284,14 @@ class SwitchContainer(HdlStatement):
             new_cases.append((val, _statements))
         self.cases = new_cases
 
+        # try reduce content of the defult branch
         if self.default is not None:
             self.default, rank_decrease, _io_change = self._try_reduce_list(
                 self.default)
             self.rank -= rank_decrease
             io_change |= _io_change
 
+        # try reduce self
         reduce_self = not self._condHasEffect()
         if reduce_self:
             if self.cases:
@@ -312,7 +330,7 @@ class SwitchContainer(HdlStatement):
         type_domain_covered = bool(self.default) or len(
             self.cases) == self.switchOn._dtype.domain_size()
 
-        stmCnt = len(self.cases[0])
+        stmCnt = len(self.cases[0][1])
         if type_domain_covered and reduce(
                 and_,
                 [len(stm) == stmCnt
