@@ -112,7 +112,7 @@ class IfContainer(HdlStatement):
                 sig, self.ifFalse, child_keep_mask, newIfFalse)
             self.ifFalse = list(compress(self.ifFalse, child_keep_mask))
 
-        assert not all_cut_off, "everything was cut of but this should be already known at start"
+        assert not all_cut_off, "everything was cut of but this should be already known at the start"
 
         if newIfTrue or newIfFalse or anyElifHit or newIfFalse:
             # parts were cut off
