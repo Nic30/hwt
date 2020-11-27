@@ -71,6 +71,16 @@ class HdlStatement(HdlObject):
             out_add(stm._outputs)
 
     @internal
+    def _cut_off_drivers_of(self, sig: RtlSignalBase) -> Union[None, "HdlStatement", List["HdlStatement"]]:
+        """
+        Cut all logic from statements which drives signal sig.
+
+        :param sig: signal which drivers should be removed
+        :return: A statement or statement list which was cut off from the original statement
+        """
+        raise NotImplementedError("This is an abstract method and it should be implemented in child class")
+
+    @internal
     @staticmethod
     def _cut_off_drivers_of_list(sig: RtlSignalBase,
                                  statements: List["HdlStatement"],
