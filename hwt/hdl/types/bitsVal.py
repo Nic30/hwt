@@ -261,54 +261,37 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
     def __setitem__(self, index, value):
         """
-        this can not be called in desing description on non static values,
+        this []= operator can not be called in desing description on non static values,
         only simulator can resolve this (in design use self[index] ** value
         instead of self[index] = value)
         """
-        # convert index to hSlice or hInt
-        indexConst = True
-        if not isinstance(index, HValue):
-            if isinstance(index, RtlSignalBase):
-                if index._const:
-                    index = index.staticEval()
-                else:
-                    indexConst = False
+        if not isinstance(self, HValue):
+            raise TypeError("To assign a member of hdl arrray/vector/list/... use a[index](val) instead of a[index] = val")
 
-            elif isinstance(index, slice):
-                length = self._dtype.bit_length()
-                index = slice_to_SLICE(index, length)
-            else:
-                index = hInt(index)
-        if indexConst and not index._is_full_valid():
-            indexConst = False
+        # convert index to hSlice or hInt
+        if isinstance(index, HValue):
+            index = index
+        elif isinstance(index, slice):
+            length = self._dtype.bit_length()
+            index = slice_to_SLICE(index, length)
+            if not index._is_full_valid():
+                raise ValueError("invalid index", index)
+        else:
+            index = hInt(index)
 
         # convert value to bits of length specified by index
-        if indexConst:
-            if index._dtype == SLICE:
-                Bits = self._dtype.__class__
-                itemT = Bits(index._size())
-            else:
-                itemT = BIT
+        if index._dtype == SLICE:
+            Bits = self._dtype.__class__
+            itemT = Bits(index._size())
+        else:
+            itemT = BIT
 
-            if not isinstance(value, HValue):
-                if isinstance(value, RtlSignalBase):
-                    if value._const:
-                        value = value.staticEval()._auto_cast(itemT)
-                        valueConst = True
-                    else:
-                        valueConst = False
-                else:
-                    value = itemT.from_py(value)
-                    valueConst = True
-            else:
-                valueConst = True
-                value = value._auto_cast(itemT)
+        if isinstance(value, HValue):
+            value = value._auto_cast(itemT)
+        else:
+            value = itemT.from_py(value)
 
-        if indexConst and valueConst and isinstance(self, HValue):
-            return Bits3val.__setitem__(self, index, value)
-
-        raise TypeError(
-            "Only simulator can resolve []= for signals or invalid index")
+        return Bits3val.__setitem__(self, index, value)
 
     def __invert__(self):
         if isinstance(self, HValue):
