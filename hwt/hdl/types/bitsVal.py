@@ -261,9 +261,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
     def __setitem__(self, index, value):
         """
-        this []= operator can not be called in desing description on non static values,
-        only simulator can resolve this (in design use self[index] ** value
-        instead of self[index] = value)
+        this []= operator can not be called in desing description, it can be only used to update HValues
         """
         if not isinstance(self, HValue):
             raise TypeError("To assign a member of hdl arrray/vector/list/... use a[index](val) instead of a[index] = val")
