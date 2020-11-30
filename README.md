@@ -112,6 +112,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [pygears](https://github.com/bogdanvuk/pygears) - , Python, function style HDL generator
 * [PyMTL3](https://github.com/cornell-brg/pymtl3) 2018-?
 * [PyMTL](https://github.com/cornell-brg/pymtl) - 2014-?, Python, Process based HDL
+* [PipelineC](https://github.com/JulianKemmerer/PipelineC) - 2018-?, C++ HLS-like automatic pipelining as a language construct/compiler
 * [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, HCL
 * [Pyverilog](https://github.com/PyHDI/Pyverilog) - 2013-? Python-based Hardware Design Processing Toolkit for Verilog HDL
 * [sail](https://github.com/rems-project/sail) 2018-?, (OCaml, Standard ML, Isabelle) - architecture definition language
