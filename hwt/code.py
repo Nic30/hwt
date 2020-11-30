@@ -239,8 +239,8 @@ def StaticForEach(parentUnit, items, bodyFn, name=""):
 
 class FsmBuilder(Switch):
     """
-    A syntax sugar which automatically construct the state transition switch and state register  
-    
+    A syntax sugar which automatically construct the state transition switch and state register
+
     :ivar ~.stateReg: register with state
     """
 
@@ -387,3 +387,7 @@ def sizeof(_type) -> int:
     "get size of type in bytes"
     s = _type.bit_length()
     return math.ceil(s / 8)
+
+
+def replicate(n, v):
+    return Concat(*(v for _ in range(n)))
