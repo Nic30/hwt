@@ -5,8 +5,6 @@ from random import Random
 from typing import Optional
 import unittest
 
-from pyMathBitPrecise.bits3t import Bits3val
-
 from hwt.hdl.types.arrayVal import HArrayVal
 from hwt.hdl.value import HValue
 from hwt.simulator.agentConnector import valToInt, autoAddAgents, \
@@ -15,6 +13,7 @@ from hwt.simulator.rtlSimulatorVcd import BasicRtlSimulatorVcd
 from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
+from pyMathBitPrecise.bits3t import Bits3val
 from pycocotb.constants import CLK_PERIOD
 from pycocotb.hdlSimulator import HdlSimulator
 from pycocotb.triggers import Timer
@@ -71,11 +70,15 @@ class SimTestCase(unittest.TestCase):
         between Python code and rtl_simulator instance
     :ivar ~.procs: list of simulation processes (Python generator instances),
         created in restartSim()
+    :ivar ~.DEFAULT_BUILD_DIR: default directory where files for simulation should be stored
+    :ivar ~.DEFAULT_LOG_DIR: default directory where simulation outputs should be stored
+    :ivar ~.DEFAULT_SIMULATOR: default RTL simulator generator used on background of the test
+    :ivar ~.RECOMPILE: if False the compilation of the simulation is dissabled.
+        This is usefull while debugging of the simulation because compilation of simulation
+        may take significant amount of time and may not be required.
     """
     # value chosen because in this position bits are changing frequently
     _defaultSeed = 317
-    # while debugging only the simulation it may be useful to just
-    # disable the compilation of simulator as it saves time
     RECOMPILE = True
     rtl_simulator_cls = None
     hdl_simulator = None
