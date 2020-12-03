@@ -20,16 +20,20 @@ class BasicRtlSimulatorVcd(BasicRtlSimulatorWithSignalRegisterMethods):
 
     def create_wave_writer(self, file_name):
         self.wave_writer = VcdWriter(open(file_name, "w"))
+        self.logChange = self._logChange
 
     def finalize(self):
         # because set_trace_file() may not be called
         # and it this case the vcd config is not set
+        if self.wave_writer is None:
+            return
+
         f = self.wave_writer._oFile
         if f not in (sys.__stderr__, sys.__stdin__, sys.__stdout__):
             f.close()
 
-    def logChange(self, nowTime: int,
-                  sig: BasicRtlSimProxy, 
+    def _logChange(self, nowTime: int,
+                  sig: BasicRtlSimProxy,
                   nextVal: HValue,
                   valueUpdater: Union[ValueUpdater, ArrayValueUpdater]):
         """

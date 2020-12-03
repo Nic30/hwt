@@ -1,13 +1,10 @@
-from _io import StringIO
 from datetime import datetime
 import importlib
+from io import StringIO
 import os
 import sys
 from types import ModuleType
 from typing import Union, Optional, Set, Tuple, Callable
-
-from pyMathBitPrecise.bits3t import Bits3t
-from pyMathBitPrecise.enum3t import Enum3t
 
 from hwt.doc_markers import internal
 from hwt.hdl.types.bits import Bits
@@ -22,15 +19,17 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import to_rtl
 from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
+from pyDigitalWaveTools.vcd.value_format import VcdBitsFormatter, \
+    VcdEnumFormatter
 from pyDigitalWaveTools.vcd.writer import VcdVarWritingScope, \
     VarAlreadyRegistered
+from pyMathBitPrecise.bits3t import Bits3t
+from pyMathBitPrecise.enum3t import Enum3t
 from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
 from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
 from pycocotb.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
-from pycocotb.basic_hdl_simulator.sim_utils import ValueUpdater,\
+from pycocotb.basic_hdl_simulator.sim_utils import ValueUpdater, \
     ArrayValueUpdater
-from pyDigitalWaveTools.vcd.value_format import VcdBitsFormatter,\
-    VcdEnumFormatter
 
 
 class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
@@ -158,7 +157,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
     def _collect_interface_signals(self,
                                    obj: Union[Interface, Unit],
                                    model: BasicRtlSimModel, res: Set[BasicRtlSimProxy]):
-        intfs = getattr(obj, "_interfaces", None) 
+        intfs = getattr(obj, "_interfaces", None)
         if intfs:
             for chIntf in intfs:
                 self._collect_interface_signals(chIntf, model, res)
@@ -218,7 +217,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                     pass
 
     def wave_register_remaining_signals(self, unitScope,
-                                        model: BasicRtlSimModel, 
+                                        model: BasicRtlSimModel,
                                         interface_signals: Set[BasicRtlSimProxy]):
         for s in model._interfaces:
             if s not in interface_signals and s not in self.wave_writer._idScope:

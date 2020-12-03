@@ -1,7 +1,7 @@
 from hwt.doc_markers import internal
 from hwt.hdl.constants import INTF_DIRECTION
-from pycocotb.hdlSimulator import HdlSimulator
 from hwt.synthesizer.unit import Unit
+from pycocotb.hdlSimulator import HdlSimulator
 
 
 @internal
@@ -13,8 +13,7 @@ def autoAddAgents(unit: Unit, sim: HdlSimulator):
          as processes
     """
     for intf in unit._interfaces:
-        if not intf._isExtern:
-            continue
+        assert intf._isExtern, intf
 
         intf._initSimAgent(sim)
         assert intf._ag is not None, intf
