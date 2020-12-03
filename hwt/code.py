@@ -11,12 +11,11 @@ from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import HValue
 from hwt.pyUtils.arrayQuery import arr_any
-from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.hObjList import HObjList
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 
 class If(IfContainer):
@@ -32,7 +31,7 @@ class If(IfContainer):
         """
         cond_sig = _intfToSig(cond)
         if not isinstance(cond_sig, RtlSignalBase):
-            raise IntfLvlConfErr("Condition is not signal, it is not certain"
+            raise HwtSyntaxError("Condition is not signal, it is not certain"
                                  " if this is an error or desire ", cond_sig)
 
         super(If, self).__init__(cond_sig)

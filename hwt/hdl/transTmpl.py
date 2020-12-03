@@ -168,16 +168,6 @@ class TransTmpl(object):
         self.bitAddrEnd = ld(dtype, bitAddr)
         self.childrenAreChoice = childrenAreChoice
 
-    def getItemWidth(self) -> int:
-        """
-        Only for transactions derived from HArray
-
-        :return: width of item in original array
-        """
-        if not isinstance(self.dtype, HArray):
-            raise TypeError()
-        return (self.bitAddrEnd - self.bitAddr) // self.itemCnt
-
     def bit_length(self) -> int:
         """
         :return: number of bits in this transaction
@@ -231,7 +221,7 @@ class TransTmpl(object):
                         assert c.rel_field_path == (0,), c.rel_field_path
                         # replace the index
                         c.rel_field_path = TypePath(i, )
-                        
+
                     yield from c.walkFlatten(
                         base + i * itemSize,
                         shouldEnterFn)

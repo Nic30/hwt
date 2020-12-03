@@ -179,10 +179,10 @@ class HValue():
     # def __ge__(self, other):
     #     raise TypeError()
     #
-    # def _onRisingEdge(self, now):
+    # def _onRisingEdge(self):
     #     raise TypeError()
     #
-    # def _onFallingEdge(self, now):
+    # def _onFallingEdge(self):
     #     raise TypeError()
 
 

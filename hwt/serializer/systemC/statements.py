@@ -1,20 +1,20 @@
 from hdlConvertorAst.hdlAst._bases import iHdlStatement
-from hdlConvertorAst.hdlAst._statements import HdlStmAssign, HdlStmCase,\
+from hdlConvertorAst.hdlAst._statements import HdlStmAssign, HdlStmCase, \
     HdlStmBlock, HdlStmBreak
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_call
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import BOOL, BIT
+from hwt.hdl.types.defs import BOOL
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.serializer.verilog.value import ToHdlAstVerilog_Value
-from hwt.hdl.switchContainer import SwitchContainer
-from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
 
 
 class ToHdlAstSystemC_statements():

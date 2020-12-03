@@ -99,7 +99,8 @@ class HdlPortItem():
 
     @internal
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
-        yield from []
+        return
+        yield
 
     def __repr__(self):
         return "<%s src:%r, dst:%r>" % (self.__class__.__name__, self.src, self.dst)

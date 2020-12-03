@@ -32,9 +32,9 @@ class ToHdlAstHwt_types():
     def as_hdl_HdlType_bits(self, typ: Bits, declaration=False):
         if declaration:
             raise NotImplementedError()
-        if typ == BOOL:
+        elif typ == BOOL:
             return self.BOOL
-        if typ == INT:
+        elif typ == INT:
             return self.INT
 
         w = typ.bit_length()

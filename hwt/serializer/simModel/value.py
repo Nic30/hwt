@@ -2,7 +2,7 @@ from typing import Union
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call, \
     hdl_getattr
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.code import Concat
@@ -18,6 +18,9 @@ from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from pyMathBitPrecise.array3t import Array3val
 from pyMathBitPrecise.bits3t import Bits3val, Bits3t
+
+
+zero, one = BIT.from_py(0), BIT.from_py(1)
 
 
 class ToHdlAstSimModel_value(ToHdlAst_Value):
@@ -99,7 +102,6 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             op1 = self.as_hdl_Value(ops[1])
             return hdl_call(hdl_getattr(op0, "_eq"), [op1, ])
         elif o == AllOps.TERNARY:
-            zero, one = BIT.from_py(0), BIT.from_py(1)
             if ops[1] == one and ops[2] == zero:
                 # ignore redundant x ? 1 : 0
                 return self.as_hdl_cond(ops[0], True)

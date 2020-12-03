@@ -246,7 +246,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         """
         return PropDeclrCollector._updateParamsFrom(self, otherObj,
                                                     updater, exclude, prefix)
-    
+
 
     @internal
     def _checkCompInstances(self):
@@ -255,6 +255,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         cInst_cnt = len(cInstances)
         unit_cnt = len(self._units)
         if cInst_cnt != unit_cnt:
+            # resolve the error message
             inRtl = set(x.name for x in cInstances)
             inIntf = set(x._name for x in self._units)
             if cInst_cnt > unit_cnt:
@@ -263,12 +264,13 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
                     " not registered %s" % (
                         self.__class__.__name__, self._name,
                         self._getstr(inRtl - inIntf)))
-            elif cInst_cnt < unit_cnt:
+            else:
+                assert cInst_cnt < unit_cnt
                 raise IntfLvlConfErr(
                     "%s, %s: _to_rtl: unit(s) are missing in produced HDL %s" % (
                         self._name, self.__class__.__name__,
                         str(inIntf - inRtl)))
-    
+
 
 def copy_HdlModuleDec_interface(orig_i: InterfaceBase, new_i: InterfaceBase,
                                 ports: List[HdlPortItem], new_u: Unit):

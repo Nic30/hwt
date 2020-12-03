@@ -35,25 +35,22 @@ class OpDefinition():
 
         operands = [getVal(o) for o in operator.operands]
 
-        if isEventDependentOp(operator.operator):
-            operands.append(simulator.now)
-
         return self._evalFn(*operands)
 
     def __repr__(self):
-        return "<OpDefinition %s>" % (self.id)
+        return "<%s %s>" % (self.__class__.__name__, self.id)
 
 
 def isEventDependentOp(operator):
     return operator in (AllOps.RISING_EDGE, AllOps.FALLING_EDGE)
 
 
-def onRisingEdgeFn(a, now):
-    return a._onRisingEdge(now)
+def onRisingEdgeFn(a):
+    return a._onRisingEdge()
 
 
-def onFallingEdgeFn(a, now):
-    return a._onFallingEdge(now)
+def onFallingEdgeFn(a):
+    return a._onFallingEdge()
 
 
 def dotOpFn(a, name):

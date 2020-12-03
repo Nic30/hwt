@@ -170,8 +170,5 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
 
         for d in self.drivers:
             # d has to be operator otherwise this signal would be public itself
-            try:
-                assert not isinstance(d, HdlStatement)
-            except:
-                raise
+            assert not isinstance(d, HdlStatement)
             yield from d._walk_public_drivers(seen)

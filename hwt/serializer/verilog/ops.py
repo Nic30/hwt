@@ -1,5 +1,7 @@
+from builtins import isinstance
 from typing import Union
 
+from hdlConvertorAst.hdlAst import HdlValueInt
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOpType, HdlOp
 from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
@@ -10,9 +12,9 @@ from hwt.hdl.value import HValue
 from hwt.serializer.exceptions import UnsupportedEventOpErr
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from builtins import isinstance
-from hdlConvertorAst.hdlAst import HdlValueInt
 
+
+zero, one = BIT.from_py(0), BIT.from_py(1)
 
 class ToHdlAstVerilog_ops():
     SIGNED = HdlValueId("$signed", obj=LanguageKeyword())
@@ -76,7 +78,6 @@ class ToHdlAstVerilog_ops():
         o = op.operator
 
         if o == AllOps.TERNARY:
-            zero, one = BIT.from_py(0), BIT.from_py(1)
             if ops[1] == one and ops[2] == zero:
                 # ignore redundant x ? 1 : 0
                 return self.as_hdl_cond(ops[0], True)

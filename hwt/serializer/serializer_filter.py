@@ -1,6 +1,7 @@
-from hwt.synthesizer.unit import Unit
-from hwt.serializer.mode import _serializeExclude_eval
 from typing import Optional, Tuple
+
+from hwt.serializer.mode import _serializeExclude_eval
+from hwt.synthesizer.unit import Unit
 
 
 class SerializerFilter(object):

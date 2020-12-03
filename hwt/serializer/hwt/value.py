@@ -1,9 +1,10 @@
+from copy import copy
 from typing import Union
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
-from hdlConvertorAst.hdlAst._expr import HdlValueInt, HdlOp, HdlOpType,\
+from hdlConvertorAst.hdlAst._expr import HdlValueInt, HdlOp, HdlOpType, \
     HdlValueId
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_call
 from hdlConvertorAst.translate.common.name_scope import ObjectForNameNotFound
 from hwt.hdl.types.arrayVal import HArrayVal
@@ -12,11 +13,10 @@ from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
-from hwt.hdl.value import HValue
-from copy import copy
 
 
 class ToHdlAstHwt_value(ToHdlAst_Value):

@@ -1,7 +1,7 @@
 from itertools import chain
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
-from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef,\
+from hdlConvertorAst.hdlAst._structural import HdlModuleDef, \
     HdlCompInst
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
@@ -12,7 +12,6 @@ from hwt.hdl.statement import HdlStatement
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.value import HValue
-from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.resourceAnalyzer.utils import ResourceContext
 from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import walk_assignments
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -173,7 +172,7 @@ class ResourceAnalyzer():
                 self.visit_HdlCompInst(o)
             else:
                 assert isinstance(o, HdlIdDef), o
-    
+
     def visit_HdlCompInst(self, o: HdlCompInst) -> None:
         raise NotImplementedError()
 

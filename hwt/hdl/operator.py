@@ -1,13 +1,13 @@
+from typing import Generator, Union, Tuple
+
+from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.operatorDefs import isEventDependentOp, OpDefinition
+from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.value import HValue
 from hwt.pyUtils.arrayQuery import arr_all
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
-from typing import Generator, Union, Tuple
-
-from hwt.doc_markers import internal
-from hwt.hdl.operatorUtils import replace_input_in_expr
 
 
 @internal

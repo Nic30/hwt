@@ -21,19 +21,6 @@ def walkPhysInterfaces(intf):
         yield intf
 
 
-def walkParams(intf, discovered):
-    """
-    walk parameter instances on this interface
-    """
-    for si in intf._interfaces:
-        yield from walkParams(si, discovered)
-
-    for p in intf._params:
-        if p not in discovered:
-            discovered.add(p)
-            yield p
-
-
 def connectPacked(srcPacked, dstInterface, exclude=None):
     """
     Connect 1D vector signal to this structuralized interface

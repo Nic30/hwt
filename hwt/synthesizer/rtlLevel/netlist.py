@@ -23,22 +23,6 @@ from hwt.synthesizer.rtlLevel.statements_to_HdlStatementBlocks import\
     statements_to_HdlStatementBlocks
 
 
-@internal
-def prepareEntity(ent, name, templateUnit):
-    ent.name = name
-    ent.generics.sort(key=lambda x: x.hdl_name)
-    ent.ports.sort(key=lambda x: x.name)
-    # copy names
-    if templateUnit is not None:
-        # sort in python is stable, ports and generic were added in same order
-        # templateUnit should have generic and ports sorted
-        for gp, gch in zip(templateUnit._entity.generics, ent.generics):
-            gch.hdl_name = gp.hdl_name
-        for pp, pch in zip(templateUnit._entity.ports, ent.ports):
-            pch.name = pp.name
-
-
-
 class RtlNetlist():
     """
     Hierarchical container for signals

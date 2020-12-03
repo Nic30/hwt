@@ -1,10 +1,10 @@
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statement import HdlStatement
 from hwt.pyUtils.arrayQuery import arr_any
-from ipCorePackager.constants import DIRECTION
-from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hwt.synthesizer.param import Param
+from ipCorePackager.constants import DIRECTION
 
 
 def systemCTypeOfSig(s):
