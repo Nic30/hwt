@@ -79,34 +79,11 @@ class RtlSignalOps():
         if op_instantiated:
             # try check real operands and operator which were used after all default type conversions
             k_real = (operator, indexOfSelfInOperands, *o.origin.operands[1:])
-            real_o = used.get(k_real, None)
-            if real_o is None:
-                used[k_real] = o
-                usedOpsAlias[k_real] = usedOpsAlias[k] = {k, k_real}
-            elif real_o is not o:
-                # destroy newly created operator and result, because it is same
-                # as the signal for some existing operator with equvavelnt value
-                # (and maybe possibly slightly different type of operands)
-                # This is used for example if a[hInt(0)] and then using a[0] -> the result again a[hInt(0)]
-                # and nothing new was created but we created the new operator in opCreateDelegate and we need
-                # to destroy it
-                ctx = self.ctx
-                if ctx is not None:
-                    ctx.signals.remove(o)
-
-                op = o.origin
-                o.origin = None
-                op._destroy(False)
-
-                o = real_o
-            else:
+            if k != k_real:
                 alias = usedOpsAlias[k_real]
                 usedOpsAlias[k] = alias
                 alias.add(k)
-        else:
-            usedOpsAlias[k] = {k, }
-
-        used[k] = o
+                used[k] = o
 
         return o
 

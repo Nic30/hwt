@@ -4,17 +4,17 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
-from hwt.hdl.value import HValue, areHValues
+from hwt.hdl.value import HValue
 from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
     bitsArithOp__val
-from builtins import isinstance
 
 
 # dictionary which hold information how to change operator after
 # operands were swapped
 CMP_OP_REVERSE = {
     AllOps.EQ: AllOps.EQ,  # (a == b) == (b == a)
+    AllOps.NE: AllOps.NE,  # (a != b) == (b != a)
     AllOps.GT: AllOps.LT,  # (a > b)  == (b < a)
     AllOps.LT: AllOps.GT,  # (a < b)  == (b > a)
     AllOps.GE: AllOps.LE,  # (a >= b) == (b <= a)
@@ -186,10 +186,10 @@ def bitsArithOp(self, other, op):
     other = toHVal(other, self._dtype)
     if not isinstance(other._dtype, Bits):
         raise TypeError(other._dtype)
-    
+
     self_is_val = isinstance(self, HValue)
     other_is_val = isinstance(other, HValue)
-        
+
     if self_is_val and other_is_val:
         return bitsArithOp__val(self, other, op._evalFn)
     else:

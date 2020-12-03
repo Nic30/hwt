@@ -43,24 +43,6 @@ class Operator(HdlObject):
         self.result = None  # type: RtlSignal
 
     @internal
-    def registerSignals(self, outputs=[]):
-        """
-        Register potential signals to drivers/endpoints
-        """
-        for o in self.operands:
-            if isinstance(o, RtlSignalBase):
-                if o in outputs:
-                    o.drivers.append(self)
-                else:
-                    o.endpoints.append(self)
-            elif isinstance(o, HValue):
-                pass
-            else:
-                raise NotImplementedError(
-                    "Operator operands can be"
-                    " only signal or values got:%r" % (o))
-
-    @internal
     def _replace_input(self, toReplace: RtlSignalBase, replacement: RtlSignalBase):
         new_operands = []
         for o in self.operands:
@@ -121,7 +103,7 @@ class Operator(HdlObject):
 
     @internal
     @staticmethod
-    def withRes(opDef, operands, resT, outputs=[]):
+    def withRes(opDef, operands, resT):
         """
         Create operator with result signal
 
@@ -129,13 +111,47 @@ class Operator(HdlObject):
         :ivar ~.outputs: iterable of signals which are outputs
             from this operator
         """
+        # try return existing operator result
+        for i, o in enumerate(operands):
+            if isinstance(o, RtlSignalBase):
+                if i == 0:
+                    k = (opDef, i, *operands[1:])
+                else:
+                    k = (opDef, i, *operands[:i], *operands[i + 1:])
+                try:
+                    return o._usedOps[k]
+                except KeyError:
+                    pass
+
+        # instanciate new Operator
         op = Operator(opDef, operands)
         out = RtlSignal(getCtxFromOps(operands), None, resT)
         out._const = arr_all(op.operands, isConst)
         out.drivers.append(op)
         out.origin = op
         op.result = out
-        op.registerSignals(outputs)
+
+        # Register potential signals to drivers/endpoints
+        first_signal = True
+        for i, o in enumerate(op.operands):
+            if isinstance(o, RtlSignalBase):
+                o.endpoints.append(op)
+                if first_signal:
+                    # register operator in _usedOps operator cache
+                    if i == 0:
+                        k = (opDef, i, *operands[1:])
+                    else:
+                        k = (opDef, i, *operands[:i], *operands[i + 1:])
+                    o._usedOps[k] = out
+                    o._usedOpsAlias[k] = {k, }
+                    first_signal = False
+            elif isinstance(o, HValue):
+                pass
+            else:
+                raise NotImplementedError(
+                    "Operator operands can be"
+                    " only signal or values got:%r" % (o))
+
         if out._const:
             out.staticEval()
         return out
@@ -144,15 +160,14 @@ class Operator(HdlObject):
     def __hash__(self):
         return hash((self.operator, self.operands))
 
-    def _destroy(self, rm_from_RtlSignal_usedOps):
+    def _destroy(self):
         self.result.drivers.remove(self)
         for o in self.operands:
             if isinstance(o, RtlSignalBase):
                 o.endpoints.remove(self)
 
-        if rm_from_RtlSignal_usedOps:
-            # clean all references on this operator instance from RtlSignal._usedOps operator cache
-            _k = (self.operator, 0, *self.operands[1:])
-            for k in self.operands[0]._usedOpsAlias[_k]:
-                self.operands[0]._usedOps.pop(k)
+        # clean all references on this operator instance from RtlSignal._usedOps operator cache
+        _k = (self.operator, 0, *self.operands[1:])
+        for k in self.operands[0]._usedOpsAlias[_k]:
+            self.operands[0]._usedOps.pop(k)
 

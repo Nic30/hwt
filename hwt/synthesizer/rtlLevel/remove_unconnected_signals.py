@@ -40,11 +40,9 @@ def removeUnconnectedSignals(netlist):
                         #if e.result is sig:
                         #    e.result = None
                         removed_e = e
-                        is_op = True
                     else:
                         removed_e = e._cut_off_drivers_of(sig)
                         inputs = removed_e._inputs
-                        is_op = False
 
                     for op in inputs:
                         if not isinstance(op, HValue):
@@ -52,10 +50,7 @@ def removeUnconnectedSignals(netlist):
 
                     if removed_e is not None:
                         # must not destroy before procesing inputs
-                        if is_op:
-                            removed_e._destroy(True)
-                        else:
-                            removed_e._destroy()
+                        removed_e._destroy()
 
                 toDelete.add(sig)
                 if sig._nop_val in netlist.signals:
