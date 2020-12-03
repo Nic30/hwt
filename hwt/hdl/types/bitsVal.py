@@ -6,7 +6,7 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.typeShortcuts import hInt, vec
 from hwt.hdl.types.bitValFunctions import bitsCmp, \
-    bitsBitOp, bitsArithOp 
+    bitsBitOp, bitsArithOp
 from hwt.hdl.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
     tryReduceXor
 from hwt.hdl.types.bits import Bits
@@ -345,7 +345,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         """
         shift left
 
-        :note: arithmetic sift if type is signed else logical shift  
+        :note: arithmetic sift if type is signed else logical shift
         """
         width = self._dtype.bit_length()
         if self._dtype.signed:
@@ -357,7 +357,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         """
         shift right
 
-        :note: arithmetic sift if type is signed else logical shift  
+        :note: arithmetic sift if type is signed else logical shift
         """
         if self._dtype.signed:
             raise NotImplementedError()
@@ -393,7 +393,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                                     [self, other],
                                     self._dtype.__copy__())
     def __pow__(self, other):
-        raise TypeError("** not implemented for %s" % self.__class__.__name__)
+        raise TypeError("** operator not implemented for %s" % self.__class__.__name__)
 
     def __mod__(self, other):
         raise TypeError("%% operator not implemented for %s" % self.__class__.__name__)
@@ -420,7 +420,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
         self_is_val = isinstance(self, HValue)
         other_is_val = isinstance(other, HValue)
-        
+
         if self_is_val and other_is_val:
             return Bits3val.__mul__(self, other)
         else:
@@ -459,6 +459,6 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                 res_sign = self._dtype.signed or other._dtype.signed
                 subResT = Bits(res_w, signed=res_sign)
                 resT = Bits(res_w, signed=myT.signed)
-            
+
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
             return o._auto_cast(resT)
