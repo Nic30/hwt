@@ -27,7 +27,9 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     :ivar ~.drivers: UniqList of operators and statements
         which can drive this signal.
         If driver is statemet tree only top statement is present.
-    :ivar ~._usedOps: dictionary of used operators which can be reused
+    :ivar ~._usedOps: A dictionary of used operators which can be reused.
+    :ivar ~._usedOpsAlias: A dictionary tuple of operator and operands to set of tules of operator and operands,
+        used to resolve which combination of the operator and operands resulted in to same result.
     :ivar ~.hiden: means that this signal is part of expression
         and should not be rendered
     :ivar ~._nop_val: value which is used to fill up statements when no other
@@ -74,6 +76,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         self.endpoints = UniqList()
         self.drivers = UniqList()
         self._usedOps = {}
+        self._usedOpsAlias = {}
         self.hidden = True
         self._instId = RtlSignal._nextInstId()
 

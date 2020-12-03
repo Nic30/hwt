@@ -143,3 +143,16 @@ class Operator(HdlObject):
     @internal
     def __hash__(self):
         return hash((self.operator, self.operands))
+
+    def _destroy(self, rm_from_RtlSignal_usedOps):
+        self.result.drivers.remove(self)
+        for o in self.operands:
+            if isinstance(o, RtlSignalBase):
+                o.endpoints.remove(self)
+
+        if rm_from_RtlSignal_usedOps:
+            # clean all references on this operator instance from RtlSignal._usedOps operator cache
+            _k = (self.operator, 0, *self.operands[1:])
+            for k in self.operands[0]._usedOpsAlias[_k]:
+                self.operands[0]._usedOps.pop(k)
+

@@ -75,9 +75,11 @@ class IfContainer(HdlStatement):
         Doc on parent class :meth:`HdlStatement._cut_off_drivers_of`
         """
         if len(self._outputs) == 1 and sig in self._outputs:
-            self.parentStm = None
+            # this statement has only this output, eject this statement from its parent
+            self.parentStm = None  # because new parent will be asigned immediately after cutting of
             return self
 
+        sig.drivers.discard(self)
         # try to cut off all statements which are drivers of specified signal
         # in all branches
         child_keep_mask = []
@@ -149,6 +151,9 @@ class IfContainer(HdlStatement):
             if self._sensitivity is not None or self._enclosed_for is not None:
                 raise NotImplementedError(
                     "Sensitivity and enclosure has to be cleaned first")
+
+            if self.parentStm is None:
+                sig.drivers.append(n)
 
             return n
 
