@@ -122,6 +122,7 @@ class Operator(HdlObject):
                     return o._usedOps[k]
                 except KeyError:
                     pass
+                break
 
         # instanciate new Operator
         op = Operator(opDef, operands)
@@ -162,12 +163,19 @@ class Operator(HdlObject):
 
     def _destroy(self):
         self.result.drivers.remove(self)
-        for o in self.operands:
+        operands = self.operands
+        first_op_sig = True
+        for i, o in enumerate(operands):
             if isinstance(o, RtlSignalBase):
                 o.endpoints.remove(self)
-
-        # clean all references on this operator instance from RtlSignal._usedOps operator cache
-        _k = (self.operator, 0, *self.operands[1:])
-        for k in self.operands[0]._usedOpsAlias[_k]:
-            self.operands[0]._usedOps.pop(k)
-
+                if first_op_sig:
+                    # clean all references on this operator instance from RtlSignal._usedOps operator cache
+                    _k = (self.operator, i, *operands[:i], *operands[i + 1:])
+                    for k in o._usedOpsAlias[_k]:
+                        res = o._usedOps.pop(k)
+                        assert res is self.result
+                    first_op_sig = False
+        self.result.origin = None
+        self.result = None
+        self.operands = None
+        self.operator = None
