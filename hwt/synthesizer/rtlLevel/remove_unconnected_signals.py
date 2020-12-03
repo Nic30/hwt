@@ -33,19 +33,17 @@ def removeUnconnectedSignals(netlist):
                 except AttributeError:
                     pass
 
-                for e in list(sig.drivers):
+                for e in tuple(sig.drivers):
                     # drivers of this signal are useless rm them
                     if isinstance(e, Operator):
                         inputs = e.operands
-                        #if e.result is sig:
-                        #    e.result = None
                         removed_e = e
                     else:
                         removed_e = e._cut_off_drivers_of(sig)
                         inputs = removed_e._inputs
 
                     for op in inputs:
-                        if not isinstance(op, HValue):
+                        if isinstance(op, RtlSignalBase):
                             _toSearch.add(op)
 
                     if removed_e is not None:
