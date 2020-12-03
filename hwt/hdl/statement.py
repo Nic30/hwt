@@ -22,7 +22,7 @@ class IncompatibleStructure(Exception):
 
 class HdlStatement(HdlObject):
     """
-    :ivar ~._event_dependent_from_branch: index of code branch if statement is event (clk) dependent else None 
+    :ivar ~._event_dependent_from_branch: index of code branch if statement is event (clk) dependent else None
     :ivar ~.parentStm: parent instance of HdlStatement or None
     :ivar ~._inputs: UniqList of input signals for this statement
     :ivar ~._outputs: UniqList of output signals for this statement
@@ -69,6 +69,17 @@ class HdlStatement(HdlObject):
         for stm in self._iter_stms():
             in_add(stm._inputs)
             out_add(stm._outputs)
+
+    @internal
+    def _collect_inputs(self) -> None:
+        """
+        Collect inputs from all child statements
+        to :py:attr:`~_input` / :py:attr:`_output` attribute on this object
+        """
+        in_add = self._inputs.extend
+
+        for stm in self._iter_stms():
+            in_add(stm._inputs)
 
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase) -> Union[None, "HdlStatement", List["HdlStatement"]]:

@@ -54,6 +54,10 @@ class SwitchContainer(HdlStatement):
         """
         Doc on parent class :meth:`HdlStatement._cut_off_drivers_of`
         """
+        if self._sensitivity is not None or self._enclosed_for is not None:
+                raise NotImplementedError(
+                    "Sensitivity and enclosure has to be cleaned first")
+
         if len(self._outputs) == 1 and sig in self._outputs:
             # this statement has only this output, eject this statement from its parent
             self.parentStm = None  # because new parent will be asigned immediately after cutting of
@@ -118,23 +122,13 @@ class SwitchContainer(HdlStatement):
                 ctx.statements.add(n)
 
             # update io of this
-            self._inputs.clear()
-            self._inputs.append(sel_sig)
-            self._outputs.clear()
-
-            out_add = self._outputs.append
-            in_add = self._inputs.append
-
-            for stm in self._iter_stms():
-                for inp in stm._inputs:
-                    in_add(inp)
-
-                for outp in stm._outputs:
-                    out_add(outp)
-
-            if self._sensitivity is not None or self._enclosed_for is not None:
-                raise NotImplementedError(
-                    "Sensitivity and enclosure has to be cleaned first")
+            self._outputs.remove(sig)
+            if n._inputs:
+                self._inputs.clear()
+                self._collect_inputs()
+                for i in n._inputs:
+                    if i not in self._inputs:
+                        i.endpoints.remove(self)
 
             if self.parentStm is None:
                 sig.drivers.append(n)
@@ -149,7 +143,21 @@ class SwitchContainer(HdlStatement):
 
     @internal
     def _collect_io(self):
-        raise NotImplementedError()
+        if isinstance(self.cond, RtlSignalBase):
+            self._inputs.append(self.cond)
+        for c, _ in self.cases:
+            if isinstance(c, RtlSignalBase):
+                self._inputs.append(c)
+        super(SwitchContainer, self)._collect_io()
+
+    @internal
+    def _collect_inputs(self) -> None:
+        if isinstance(self.switchOn, RtlSignalBase):
+            self._inputs.append(self.switchOn)
+        for c, _ in self.cases:
+            if isinstance(c, RtlSignalBase):
+                self._inputs.append(c)
+        super(SwitchContainer, self)._collect_inputs()
 
     @internal
     def _discover_enclosure(self) -> None:
