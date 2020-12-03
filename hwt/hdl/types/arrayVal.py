@@ -114,10 +114,8 @@ class HArrayVal(HValue):
         """
         Only syntax sugar for user, not used inside HWT
 
-        * In HW design is not used (__getitem__ returns "reference"
-            and it is used)
-
-        * In simulator is used _setitem__val directly
+        * Not used in HW design (__getitem__ and overloaded call operator is used instead for item assigning)
+        * In simulator _setitem__val is used directly
         """
         if isinstance(index, int):
             index = INT.from_py(index)
@@ -136,11 +134,8 @@ class HArrayVal(HValue):
     def __iter__(self):
         mySize = len(self)
 
-        def it():
-            for i in range(mySize):
-                yield self[i]
-
-        return it()
+        for i in range(mySize):
+            yield self[i]
 
     def __len__(self):
         return int(self._dtype.size)
