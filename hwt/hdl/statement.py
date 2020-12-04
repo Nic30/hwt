@@ -92,6 +92,30 @@ class HdlStatement(HdlObject):
         raise NotImplementedError("This is an abstract method and it should be implemented in child class")
 
     @internal
+    def _cut_off_drivers_of_regenerate_io(self, cut_off_sig: RtlSignalBase, cut_of_smt: "HdlStatement"):
+        """
+        Update _inputs/_outputs after some part of statement was cut of
+
+        :param cut_off_sig: a signal which driver is a cut_of_stm
+        :param cut_of_smt: the statement wich was cut off from original statement (selected by cut_off_sig)
+        """
+        # update io of this
+        self._outputs.remove(cut_off_sig)
+        if cut_of_smt._inputs:
+            # update inputs on this
+            self._inputs.clear()
+            self._collect_inputs()
+            if self.parentStm is None:
+                for i in cut_of_smt._inputs:
+                    if i not in self._inputs:
+                        i.endpoints.remove(self)
+
+        if self.parentStm is None:
+            cut_off_sig.drivers.append(cut_of_smt)
+
+
+
+    @internal
     @staticmethod
     def _cut_off_drivers_of_list(sig: RtlSignalBase,
                                  statements: List["HdlStatement"],

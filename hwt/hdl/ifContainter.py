@@ -149,17 +149,7 @@ class IfContainer(HdlStatement):
                 ctx = n._get_rtl_context()
                 ctx.statements.add(n)
 
-            # update io of this
-            self._outputs.remove(sig)
-            if n._inputs:
-                self._inputs.clear()
-                self._collect_inputs()
-                for i in n._inputs:
-                    if i not in self._inputs:
-                        i.endpoints.remove(self)
-
-            if self.parentStm is None:
-                sig.drivers.append(n)
+            self._cut_off_drivers_of_regenerate_io(sig, n)
 
             return n
 
