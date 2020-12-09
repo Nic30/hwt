@@ -7,7 +7,7 @@ class NotSpecified(Exception):
     This error means that you need to implement this function
     to use this functionality
 
-    f.e. you have to implement Simulation agent for interface
+    e.g. you have to implement Simulation agent for interface
     when you create new one and you can not use existing
     """
     pass

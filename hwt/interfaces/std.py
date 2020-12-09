@@ -264,7 +264,7 @@ class BramPort_withoutClk(Interface):
 
     def _getAddrStep(self):
         """
-        :return: how many bits is one unit of address (f.e. 8 bits for
+        :return: how many bits is one unit of address (e.g. 8 bits for
             char * pointer, 36 for 36 bit bram)
         """
         return int(self.DATA_WIDTH)
