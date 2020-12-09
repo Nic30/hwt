@@ -39,20 +39,20 @@ Also [serialization modes](https://github.com/Nic30/hwt/blob/master/hwt/serializ
 
 HWT performs no HLS planing or schedueling. HWT is also good as API for code generating by more advanced tools. Hierarchy of components/interfaces/types is not limited. User specifed names are checked for collision with target language.
 
-HWT designs are instances. No specific exceution is required, just use to_rtl metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
+HWT designs are objects. No specific exceution is required, just run `python3`, import the thing and use `to_rtl` metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
 
 
 ## HWT ecosystem
 
-* [netlistDB](https://github.com/HardwareIR/netlistDB) - High performance circuit database, C++
+* [pyMathBitPrecise](https://github.com/Nic30/pyMathBitPrecise) - Bit precise integer types.
+* [pyDigitalWaveTools](https://github.com/Nic30/pyDigitalWaveTools) - wave dump IO
+* [ipCorePackager](https://github.com/Nic30/ipCorePackager) - IPCore generator (Vivado, Quartus support etc.) automatic specification of interfaces by metaclass description, register map, clk domains etc. 
 * [hwtLib](https://github.com/Nic30/hwtLib) - Library with examples and real designs.
 * [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds interactive shematic into html documentation.
 * [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
-* [hwtHls](https://github.com/Nic30/hwtHls) - High Level Synthetizer (alghorithmic description -> RTL)
-* [hwtHdlParsers](https://github.com/Nic30/hwtHdlParsers) (not maintained)- (System) Verilog/VHDL compatibility layer at which allows you to import objects from HDL.
-* [cocopy](https://github.com/potentialventures/cocotb) - Verilator simulator - Python binding
-* [ipCorePackager](https://github.com/Nic30/ipCorePackager) - IPCore generator (Vivado, Quartus support etc.) automatic specification of interfaces by metaclass description, register map, clk domains etc.
-* [pyMathBitPrecise](https://github.com/Nic30/pyMathBitPrecise) - Bit precise integer types.
+* [pycocotb](https://github.com/Nic30/pycocotb) - Verilator simulator - Python binding
+* [netlistDB](https://github.com/HardwareIR/netlistDB) - High performance circuit database, C++
+
 
 ## Installation
 
