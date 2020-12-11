@@ -9,7 +9,6 @@
 [![](https://img.shields.io/github/license/Nic30/hwt.svg)](https://github.com/Nic30/hwt)
 [![Python version](https://img.shields.io/pypi/pyversions/hwt.svg)](https://img.shields.io/pypi/pyversions/hwt.svg)
 [![Join the chat at https://gitter.im/hwt-community/community](https://badges.gitter.im/hwt-community/community.svg)](https://gitter.im/hwt-community/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[ROADMAP](https://drive.google.com/file/d/1zyegLIf7VaBRyb-ED5vgOMmHzW4SRZLp/view?usp=sharing)
 
 ## Keywords
 
@@ -81,6 +80,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 
 * [autofpga](https://github.com/ZipCPU/autofpga) - C++, A utility for Composing FPGA designs from Peripherals
 * [BinPy](https://github.com/BinPy/BinPy) - Python, An electronic simulation library
+* [blarney](https://github.com/blarney-lang/blarney) - Haskell, HCL
 * [bsc](https://github.com/B-Lang-org/bsc) - Haskell, C++, BSV - Bluespec Compiler 
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, HCL
 * [Chips-2.0](https://github.com/dawsonjon/Chips-2.0) - , , FPGA Design Suite based on C to Verilog design flow
