@@ -6,7 +6,7 @@ from hwt.hdl.types.hdlType import default_auto_cast_fn, HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.types.union import HUnion
 from hwt.hdl.value import HValue
-from hwt.interfaces.structIntf import HdlTypeToIntf
+from hwt.interfaces.structIntf import HdlType_to_Interface
 from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
@@ -103,7 +103,7 @@ def reinterpret_bits_to_hstruct(val, hStructT):
     """
     Reinterpret signal of type Bits to signal of type HStruct
     """
-    container = HdlTypeToIntf(hStructT)
+    container = HdlType_to_Interface(hStructT)
     container._loadDeclarations()
     offset = 0
     for f in hStructT.fields:

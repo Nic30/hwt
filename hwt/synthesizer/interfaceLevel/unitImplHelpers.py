@@ -8,7 +8,7 @@ from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.interfaces.std import Signal
-from hwt.interfaces.structIntf import HdlTypeToIntf
+from hwt.interfaces.structIntf import HdlType_to_Interface
 from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getClk, getRst
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -82,7 +82,7 @@ class UnitImplHelpers(UnitBase):
             rst = getRst(self)
 
         if isinstance(dtype, HStruct):
-            container = HdlTypeToIntf(dtype)
+            container = HdlType_to_Interface(dtype)
             container._loadDeclarations()
             flattened_def_val = {}
             _flatten_map(TypePath(), def_val, flattened_def_val)

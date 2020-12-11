@@ -1,3 +1,4 @@
+from copy import copy
 from typing import Optional, Union
 
 from hwt.code import And, Or
@@ -14,6 +15,7 @@ from hwt.interfaces.agents.structIntf import StructIntfAgent
 from hwt.interfaces.std import Signal
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interface import Interface
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.typePath import TypePath
 from pycocotb.hdlSimulator import HdlSimulator
 
@@ -89,20 +91,47 @@ class StructIntf(Interface):
     def _reinterpret_cast(self, toT: HdlType):
         return hstruct_reinterpret(self._dtype, self, toT)
 
+
 @internal
-def _HdlTypeToIntf_instantiateFieldFn(intf, fieldInfo) -> Interface:
+def _HdlType_to_Interface_instantiateFieldFn(intf, fieldInfo) -> Interface:
     if isinstance(intf, StructIntf):
-        c = HdlTypeToIntf(fieldInfo.dtype, field_path=intf._field_path / fieldInfo.name)
+        c = HdlType_to_Interface(fieldInfo.dtype, field_path=intf._field_path / fieldInfo.name)
         c._fieldsToInterfaces = intf._fieldsToInterfaces
     return c
 
 
-def HdlTypeToIntf(dtype: HdlType, field_path: Optional[TypePath]=None) -> Interface:
+def HdlType_to_Interface(dtype: HdlType, field_path: Optional[TypePath]=None) -> Interface:
+    """
+    Convert instance of HdlType to an interface shich represents same data.
+
+    :note: Interface is only instanciated, that means it does not have sub-interfaces
+        loaded yet, it can be done manually or by assigning to a property of parent Interface/Unit
+        instance.
+    """
     if isinstance(dtype, HStruct):
-        return StructIntf(dtype, field_path, instantiateFieldFn=_HdlTypeToIntf_instantiateFieldFn)
+        return StructIntf(dtype, field_path, instantiateFieldFn=_HdlType_to_Interface_instantiateFieldFn)
     elif isinstance(dtype, (Bits, HEnum)):
         return Signal(dtype=dtype)
     elif isinstance(dtype, HArray):
-        return HObjList(HdlTypeToIntf(dtype.elem_t) for _ in range(dtype.size))
+        return HObjList(HdlType_to_Interface(dtype.elem_t) for _ in range(dtype.size))
     else:
         raise NotImplementedError(dtype)
+
+
+def Interface_to_HdlType(intf: Union[Interface, RtlSignal], const=False):
+    """
+    Convert instance of HdlType to an interface shich represents same data.
+
+    :note: Interface instance has to have definitions loaded.
+    """
+    if isinstance(intf, Interface) and intf._interfaces:
+        return HStruct(
+            *((Interface_to_HdlType(i, const=const), i._name)
+              for i in intf._interfaces)
+        )
+    else:
+        t = intf._dtype
+        if t.const != const:
+            t = copy(t)
+            t.const = const
+        return t
