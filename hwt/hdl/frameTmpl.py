@@ -181,7 +181,7 @@ class FrameTmpl(object):
                 if trimPaddingWordsOnEnd and paddingWords > maxPaddingWords:
                     endOfThisFrame -= paddingWords * wordWidth
                     # align end of frame to word
-            endOfThisFrame = min(startOfThisFrame + 
+            endOfThisFrame = min(startOfThisFrame +
                                  maxFrameLen, endOfThisFrame)
 
             yield FrameTmpl(transaction,
@@ -194,7 +194,7 @@ class FrameTmpl(object):
 
         # final padding on the end
         while withPadding and startOfThisFrame < transaction.bitAddrEnd:
-            endOfThisFrame = min(startOfThisFrame + 
+            endOfThisFrame = min(startOfThisFrame +
                                  maxFrameLen, transaction.bitAddrEnd)
 
             yield FrameTmpl(transaction,
@@ -388,10 +388,10 @@ class FrameTmpl(object):
             names = []
             for p in path:
                 if isinstance(p, int):
-                    names.append("[%d]" % p)
+                    names.append(f"[{p:d}]")
                 else:
                     if names:
-                        names.append(".%s" % p)
+                        names.append(f".{p:s}")
                     else:
                         names.append(p)
 
@@ -403,7 +403,7 @@ class FrameTmpl(object):
                      width: int,
                      padding: int,
                      transParts: List[TransPart]):
-        buff = ["{0: <{padding}}|".format(index, padding=padding)]
+        buff = [f"{index: <{padding}}|", ]
         DW = self.wordWidth
         partsWithChoice = []
 
@@ -430,14 +430,12 @@ class FrameTmpl(object):
                 partsWithChoice.append(tp)
             else:
                 name = self.__repr__getName(tp, fieldWidth)
-            buff.append('{0: ^{fieldWidth}}|'.format(
-                name, fieldWidth=fieldWidth))
+            buff.append(f'{name: ^{fieldWidth}}|')
         return ("".join(buff), partsWithChoice)
 
     def __repr__(self, scale=1):
         buff = []
-        s = "<%s start:%d, end:%d" % (
-            self.__class__.__name__, self.startBitAddr, self.endBitAddr)
+        s = f"<{self.__class__.__name__:s} start:{self.startBitAddr:d}, end:{self.endBitAddr:d}"
         buff.append(s)
 
         padding = 5

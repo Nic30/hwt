@@ -267,17 +267,18 @@ class TransTmpl(object):
             name = None
 
         if name:
-            name = " name:%s," % name
+            name = f" name:{name:s},"
         else:
             name = ""
 
-        s = "%s<TransTmpl%s start:%d, end:%d" % (offsetStr, name,
-                                                 self.bitAddr, self.bitAddrEnd)
+        s = f"{offsetStr:s}<TransTmpl{name} start:{self.bitAddr:d}, end:{self.bitAddrEnd:d}"
         if isinstance(self.dtype, (HArray, HStream)):
-            s += ", itemCnt:%d" % (self.itemCnt) + "\n"
-            s += self.children.__repr__(offset=offset + 1) + "\n"
-            s += offsetStr + ">"
-            return s
+            s_buff = [
+                s, f", itemCnt:{self.itemCnt:d}\n",
+                self.children.__repr__(offset=offset + 1), "\n",
+                offsetStr, ">"
+            ]
+            return "".join(s_buff)
         elif not self.children:
             return s + ">"
 

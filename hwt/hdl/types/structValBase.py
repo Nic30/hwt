@@ -62,7 +62,7 @@ class StructValBase(HValue):
 
     def to_py(self):
         if not self._is_full_valid():
-            raise ValueError("Value of %r is not fully defined" % self)
+            raise ValueError(f"Value of {self} is not fully defined")
         d = {}
         for f in self._dtype.fields:
             if f.name is not None:
@@ -98,6 +98,6 @@ class StructValBase(HValue):
                 except TypeError:
                     v = repr(val)
 
-                buff.append("%s%s: %s" % (indentOfFields, f.name, v))
+                buff.append(f"{indentOfFields:s}{f.name:s}: {v:s}")
         buff.append(getIndent(indent) + "}")
         return ("\n").join(buff)

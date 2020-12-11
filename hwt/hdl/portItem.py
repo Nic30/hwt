@@ -103,4 +103,4 @@ class HdlPortItem():
         yield
 
     def __repr__(self):
-        return "<%s src:%r, dst:%r>" % (self.__class__.__name__, self.src, self.dst)
+        return f"<{self.__class__.__name__:s} src:{self.src}, dst:{self.dst}>"

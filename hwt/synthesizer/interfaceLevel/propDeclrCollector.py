@@ -15,8 +15,8 @@ def nameAvailabilityCheck(obj, propName, prop):
     Check if not redefining property on obj
     """
     if getattr(obj, propName, None) is not None:
-        raise IntfLvlConfErr("%r already has property %s old:%s new:%s" % 
-                             (obj, propName, repr(getattr(obj, propName)), prop))
+        p = getattr(obj, propName)
+        raise IntfLvlConfErr(f"{obj} already has property {propName:s} old:{p} new:{prop}")
 
 
 @internal
@@ -89,7 +89,7 @@ class PropDeclrCollector(object):
     in specified elaboration phases.
 
     It uses __setattr__ listeners to detect new properties and then calls
-    a litener function to process the registration. 
+    a litener function to process the registration.
 
     Used for Unit, Interface classes to detect and load interfaces and components.
     """

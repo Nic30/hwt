@@ -151,7 +151,7 @@ class Operator(HdlObject):
             else:
                 raise NotImplementedError(
                     "Operator operands can be"
-                    " only signal or values got:%r" % (o))
+                    f" only signal or values got: {o}")
 
         if out._const:
             out.staticEval()

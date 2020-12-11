@@ -63,5 +63,4 @@ class TransPart(object):
         return self.tmpl.bitAddrEnd == self.endOfPart
 
     def __repr__(self):
-        return "<%s %r, startOfPart:%d, endOfPart:%d>" % (
-            self.__class__.__name__, self.tmpl, self.startOfPart, self.endOfPart)
+        return f"<{self.__class__.__name__:s} {self.tmpl}, startOfPart:{self.startOfPart:d}, endOfPart:{self.endOfPart:d}>"

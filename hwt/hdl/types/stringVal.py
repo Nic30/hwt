@@ -32,7 +32,7 @@ class StringVal(HValue):
 
     def to_py(self):
         if not self._is_full_valid():
-            raise ValueError("Value of %r is not fully defined" % self)
+            raise ValueError(f"Value of {self} is not fully defined")
         return self.val
 
     @internal

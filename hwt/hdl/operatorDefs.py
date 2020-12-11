@@ -38,7 +38,7 @@ class OpDefinition():
         return self._evalFn(*operands)
 
     def __repr__(self):
-        return "<%s %s>" % (self.__class__.__name__, self.id)
+        return f"<{self.__class__.__name__:s} {self.id:s}>"
 
 
 def isEventDependentOp(operator):

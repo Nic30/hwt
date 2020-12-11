@@ -111,7 +111,7 @@ class IpPackager(IpCorePackager):
             bitString(t.bit_length())
         else:
             raise NotImplementedError(
-                "Not implemented for datatype %s" % repr(t))
+                f"Not implemented for datatype {t}")
         return val
 
     @internal

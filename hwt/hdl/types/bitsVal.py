@@ -250,11 +250,12 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             else:
                 raise TypeError(
                     "Index operation not implemented"
-                    " for index of type %r" % (t))
+                    f" for index of type {t}")
 
         else:
             raise TypeError(
-                "Index operation not implemented for index %r" % (key))
+                f"Index operation not implemented for index {key}")
+
         if st.negated and resT is BIT:
             resT = BIT_N
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
@@ -393,10 +394,10 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                                     [self, other],
                                     self._dtype.__copy__())
     def __pow__(self, other):
-        raise TypeError("** operator not implemented for %s" % self.__class__.__name__)
+        raise TypeError(f"** operator not implemented for instance of {self.__class__}")
 
     def __mod__(self, other):
-        raise TypeError("%% operator not implemented for %s" % self.__class__.__name__)
+        raise TypeError(f"% operator not implemented for instance of {self.__class__}")
 
     def _ternary(self, a, b):
         if isinstance(self, HValue):
@@ -448,7 +449,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                 if s is None:
                     other = other._unsigned()
             else:
-                raise TypeError("%r %r %r" % (self, AllOps.MUL, other))
+                raise TypeError(f"{self} {AllOps.MUL} {other}")
 
             if other._dtype == INT:
                 res_w = myT.bit_length()

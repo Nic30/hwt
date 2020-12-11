@@ -89,14 +89,27 @@ def bitsCmp(self, other, op, evalFn=None):
         other = other._auto_cast(ot)
 
     if iamVal and otherIsVal:
-        if not type_compatible:
-            raise TypeError("Values of types (%r, %r) are not comparable" % (
-                self._dtype, other._dtype))
-
-        return bitsCmp__val(self, other, evalFn)
+        if type_compatible:
+            return bitsCmp__val(self, other, evalFn)
     else:
         if type_compatible:
-            pass
+            # try to reduce useless cmp
+            res = None
+            if otherIsVal and other._is_full_valid():
+                res = bitsCmp_detect_useless_cmp(self, other, op)
+            elif iamVal and self._is_full_valid():
+                res = bitsCmp_detect_useless_cmp(other, self, CMP_OP_REVERSE[op])
+
+            if res is None:
+                pass
+            elif isinstance(res, HValue):
+                return res
+            else:
+                assert res == AllOps.EQ, res
+                op = res
+
+            return Operator.withRes(op, [self, other], BOOL)
+
         elif t.signed != ot.signed:
             if t.signed is None:
                 self = self._convSign(ot.signed)
@@ -104,30 +117,8 @@ def bitsCmp(self, other, op, evalFn=None):
             elif ot.signed is None:
                 other = other._convSign(t.signed)
                 return bitsCmp(self, other, op, evalFn)
-            else:
-                raise TypeError("Values of types (%r, %r) are not comparable" % (
-                    self._dtype, other._dtype))
-        else:
-            raise TypeError("Values of types (%r, %r) are not comparable" % (
-                self._dtype, other._dtype))
 
-        # try to reduce useless cmp
-        res = None
-        if otherIsVal and other._is_full_valid():
-            res = bitsCmp_detect_useless_cmp(self, other, op)
-        elif iamVal and self._is_full_valid():
-            res = bitsCmp_detect_useless_cmp(other, self, CMP_OP_REVERSE[op])
-
-        if res is None:
-            pass
-        elif isinstance(res, HValue):
-            return res
-        else:
-            assert res == AllOps.EQ, res
-            op = res
-
-        return Operator.withRes(op, [self, other], BOOL)
-
+    raise TypeError(f"Values of types ({self._dtype}, {other._dtype}) are not comparable")
 
 @internal
 def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):

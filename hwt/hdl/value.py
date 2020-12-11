@@ -60,27 +60,27 @@ class HValue():
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):
         raise NotImplementedError(
-            "from_py fn is not implemented for %r" % (cls))
+            f"from_py fn is not implemented for {cls}")
 
     def __int__(self):
         if isinstance(self, HValue) or self._const:
             if self._is_full_valid():
                 return int(self.val)
             else:
-                raise ValueError("HValue of %r is not fully defined" % self)
+                raise ValueError(f"HValue of {self} is not fully defined")
 
         raise ValueError(
-            "HValue of %r is not constant it can be statically solved" % self)
+            f"HValue of {self} is not constant it can be statically solved")
 
     def __bool__(self):
         if isinstance(self, HValue) or self._const:
             if self._is_full_valid():
                 return bool(self.val)
             else:
-                raise ValueError("HValue of %r is not fully defined" % self)
+                raise ValueError(f"HValue of {self} is not fully defined")
 
         raise ValueError(
-            "HValue of %r is not constant it can be statically solved" % self)
+            f"HValue of {self} is not constant it can be statically solved")
 
     def __eq__(self, other):
         if areHValues(self, other):

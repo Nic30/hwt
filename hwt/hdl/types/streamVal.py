@@ -51,7 +51,7 @@ class HStreamVal(HValue):
 
     def to_py(self):
         if not self._is_full_valid():
-            raise ValueError("Value of %r is not fully defined" % self)
+            raise ValueError(f"Value of {self} is not fully defined")
         return [v.to_py() for v in self.val]
 
     @internal
@@ -84,7 +84,7 @@ class HStreamVal(HValue):
             pass
         else:
             raise NotImplementedError(
-                "Index operation not implemented for index %r" % (key))
+                f"Index operation not implemented for index {key}")
 
         if iamVal and isinstance(key, HValue):
             return self._getitem__val(key)

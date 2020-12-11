@@ -353,7 +353,7 @@ class RtlSignalOps():
                         indexes.append(d.operands[1])
                     else:
                         raise HwtSyntaxError(
-                            "can not drive static value %r" % indexedOn)
+                            f"can not assign to a static value {indexedOn}")
             except SignalDriverErr:
                 break
 

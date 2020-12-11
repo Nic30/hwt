@@ -17,7 +17,7 @@ class InterfaceceImplDependentFns():
     def _initSimAgent(self, sim: HdlSimulator):
         raise NotSpecified("Override this function in your interface"
                            " implementation to have simultion agent"
-                           " specified (%r)" % self)
+                           f" specified ({self})")
 
     def _getAssociatedRst(self):
         """

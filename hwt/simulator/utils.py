@@ -36,14 +36,15 @@ def pprintAgents(unitOrIntf, indent=0, prefix="", file=sys.stdout):
         ag = unitOrIntf._ag
     elif isinstance(unitOrIntf, HObjList):
         for i, item in enumerate(unitOrIntf):
-            item_prefix = "%s_%d" % (prefix, i)
+            item_prefix = f"{prefix}_{i:d}"
             pprintAgents(item, indent=indent+1, prefix=item_prefix, file=file)
         return
     else:
         ag = None
 
     if ag is not None:
-        file.write("%s%s%r\n" % (getIndent(indent), prefix, ag))
+        indent_str = getIndent(indent)
+        file.write(f"{indent_str:s}{prefix:s}{ag}\n")
 
     for i in unitOrIntf._interfaces:
         pprintAgents(i, indent + 1, file=file)

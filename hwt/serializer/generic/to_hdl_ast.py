@@ -265,9 +265,8 @@ class ToHdlAst():
         assert isinstance(o, HdlPortItem), o
         if o.dst._dtype != o.src._dtype:
             raise SerializerException(
-                "Port map %s is not valid (types does not match)  (%r, %r) "
-                "%s => %s" % (o.name, o.src._dtype,
-                              o.dst._dtype, o.src, o.dst,)
+                f"Port map {o.name:s} is not valid (types does not match)  ({o.src._dtype}, {o.dst._dtype}) "
+                f"{o.src} => {o.dst}"
             )
 
         intern, outer = o.getInternSig(), o.getOuterSig()

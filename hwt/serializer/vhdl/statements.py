@@ -65,9 +65,8 @@ class ToHdlAstVhdl2008_statements():
             return hdl_a
 
         raise SerializerException(
-            "%s = %s  is not valid assignment\n"
-            " because types are different (%r; %r) " % 
-            (dst, a.src, dst._dtype, a.src._dtype))
+            f"{dst} = {a.src}  is not valid assignment\n"
+            f" because types are different ({dst._dtype}; {a.src._dtype})")
 
     def can_pop_process_wrap(self, stms, hasToBeVhdlProcess):
         if hasToBeVhdlProcess or len(stms) > 1:

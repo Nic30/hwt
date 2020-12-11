@@ -113,4 +113,4 @@ class XdcSerializer():
         w("]")
         if o.datapath_only:
             w(" -datapath_only")
-        w(" %f\n" % o.time_ns)
+        w(f" {o.time_ns:f}\n")

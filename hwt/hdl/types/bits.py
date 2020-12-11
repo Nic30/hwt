@@ -81,7 +81,7 @@ class Bits(HdlType, Bits3t):
         if c == 1:
             constr.append("1bit")
         else:
-            constr.append("%dbits" % c)
+            constr.append(f"{c:d}bits")
         if self.force_vector:
             constr.append("force_vector")
         if self.signed:

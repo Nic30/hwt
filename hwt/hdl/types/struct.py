@@ -42,7 +42,7 @@ class HStructField(object):
         return hash((self.name, self.dtype, self.meta))
 
     def __repr__(self):
-        return "<HStructField %r, %s>" % (self.dtype, self.name)
+        return f"<HStructField {self.dtype}, {self.name:s}>"
 
 
 protectedNames = {"clone", "staticEval", "from_py", "_dtype"}
@@ -76,8 +76,8 @@ class HStruct(HdlType):
             except TypeError:
                 field = f
             if not isinstance(field, HStructField):
-                raise TypeError("Template for struct field %s is"
-                                " not in valid format" % repr(f))
+                raise TypeError(f"Template for struct field {f} is"
+                                " not in valid format")
 
             fields.append(field)
             if field.name is not None:
@@ -182,19 +182,18 @@ class HStruct(HdlType):
 
         myIndent = getIndent(indent)
         childIndent = getIndent(indent + 1)
-        header = "%sstruct %s{" % (myIndent, name)
+        header = f"{myIndent:s}struct {name:s}{{"
 
         buff = [header, ]
         for f in self.fields:
             if withAddr is not None:
-                addrTag = " // start:0x%x(bit) 0x%x(byte)" % (
-                            withAddr, withAddr // 8)
+                withAddr_B = withAddr // 8
+                addrTag = f" // start:0x{withAddr:x}(bit) 0x{withAddr_B:x}(byte)"
             else:
                 addrTag = ""
 
             if f.name is None:
-                buff.append("%s//%r empty space%s" % (
-                            childIndent, f.dtype, addrTag))
+                buff.append(f"{childIndent:s}//{f.dtype} empty space{addrTag:s}")
             else:
                 buff.append("%s %s%s" % (
                                f.dtype.__repr__(indent=indent + 1,
@@ -204,5 +203,5 @@ class HStruct(HdlType):
             if withAddr is not None:
                 withAddr += f.dtype.bit_length()
 
-        buff.append("%s}" % (myIndent))
+        buff.append(f"{myIndent:s}}}")
         return "\n".join(buff)

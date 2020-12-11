@@ -11,7 +11,7 @@ def getClk(unit: UnitBase):
     except AttributeError:
         pass
 
-    raise IntfLvlConfErr("Can not find clock signal on unit %r" % (unit,))
+    raise IntfLvlConfErr(f"Can not find clock signal on unit {unit}")
 
 
 def getRst(unit: UnitBase):
@@ -28,5 +28,5 @@ def getRst(unit: UnitBase):
     except AttributeError:
         pass
 
-    raise IntfLvlConfErr("Can not find reset signal on unit %r" % (unit,))
+    raise IntfLvlConfErr(f"Can not find reset signal on unit {unit}")
 

@@ -116,7 +116,7 @@ class RtlNetlist():
         else:
             if syncRst:
                 raise SigLvlConfErr(
-                    "Signal %s has reset but has no clk" % name)
+                    f"Signal {name:s} has reset but has no clk")
             s = RtlSignal(self, name, dtype, def_val=_def_val, nop_val=nop_val)
 
         return s

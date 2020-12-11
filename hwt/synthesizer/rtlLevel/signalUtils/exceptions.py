@@ -31,23 +31,22 @@ class SignalDriverErr(Exception):
     def __str__(self):
         try:
             ctx = self.args[0][0][1].ctx
-            scope_name = "%s of class %s" % (ctx.getDebugScopeName(),
-                                             ctx.parent.__class__.__name__)
+            name = ctx.getDebugScopeName()
+            scope_name = f"{name:s} of class {ctx.parent.__class__}"
         except Exception:
             scope_name = "<no parent>"
 
-        b = ["%s raised in %s" % (self.__class__.__name__, scope_name)]
+        b = [f"{self.__class__} raised in {scope_name:s}"]
         err_sigs = sorted(self.args[0], key=lambda x: (x[0].value, x[1].name))
         prev_err_t = None
         for err_t, sig in err_sigs:
             if prev_err_t is None or prev_err_t != err_t:
                 b.append(SignalDriverErrType_labels[err_t])
                 prev_err_t = err_t
-            if err_t == SignalDriverErrType.MULTIPLE_COMB_DRIVERS:
-                b.append("    %r: %r" % (sig, sig.drivers))
-            elif err_t == SignalDriverErrType.INPUT_WITH_DRIVER:
-                b.append("    %r: %r" %
-                         (sig, sig.drivers))
+            if err_t == SignalDriverErrType.MULTIPLE_COMB_DRIVERS or\
+                    err_t == SignalDriverErrType.INPUT_WITH_DRIVER:
+                b.append(f"    {sig}: {sig.drivers}")
             else:
-                b.append("    %r" % (sig))
+                b.append(f"    {sig}")
+
         return "\n".join(b)

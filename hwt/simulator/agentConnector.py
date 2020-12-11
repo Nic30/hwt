@@ -32,8 +32,7 @@ def collect_processes_from_sim_agents(unit: Unit):
         elif intf._direction == INTF_DIRECTION.SLAVE:
             agProcs = a.getDrivers()
         else:
-            raise NotImplementedError("intf._direction %r for %r" % (
-                intf._direction, intf))
+            raise NotImplementedError(f"intf._direction {intf._direction} for {intf}")
 
         proc.extend(agProcs)
 

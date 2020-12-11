@@ -128,7 +128,7 @@ class SimTestCase(unittest.TestCase):
 
     def getTestName(self):
         className, testName = self.id().split(".")[-2:]
-        return "%s_%s" % (className, testName)
+        return f"{className:s}_{testName:s}"
 
     def runSim(self, until: float, name=None):
         if name is None:
@@ -183,7 +183,8 @@ class SimTestCase(unittest.TestCase):
 
     @classmethod
     def get_unique_name(cls, unit: Unit):
-        return "%s__%s" % (cls.__name__, unit._getDefaultName())
+        uniq_name = unit._getDefaultName()
+        return f"{cls.__name__:s}__{uniq_name:s}"
 
     @classmethod
     def compileSim(cls, unit, build_dir: Optional[str]=_UNSPECIFIED,
@@ -235,8 +236,9 @@ class SimTestCase(unittest.TestCase):
         or SingleUnitSimTestCase to setup the simulator and DUT
         """
         if unique_name is None:
-            unique_name = "%s__%s" % (self.getTestName(),
-                                      unit._getDefaultName())
+            t_name = self.getTestName()
+            u_name = unit._getDefaultName()
+            unique_name = f"{t_name:s}__{u_name:s}"
         self.compileSim(unit, build_dir, unique_name,
                         onAfterToRtl, target_platform)
         self.u = unit

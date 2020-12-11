@@ -43,7 +43,7 @@ def _flatten_map(prefix: TypePath, d: Union[None, dict, list, tuple], res: dict)
         kv_it = enumerate(d)
     else:
         raise NotImplementedError(d)
-    
+
     for k, v in kv_it:
         if isinstance(v, (dict, list, tuple)):
             _flatten_map(prefix / k, v, res)
@@ -110,7 +110,7 @@ class UnitImplHelpers(UnitBase):
              nop_val: Union[int, None, dict, list, "NO_NOPVAL"]=NO_NOPVAL) -> RtlSignal:
         """
         Create signal in this unit
-        
+
         :see: :func:`hwt.synthesizer.rtlLevel.netlist.RtlNetlist.sig`
         """
         if isinstance(dtype, HStruct):
@@ -121,7 +121,7 @@ class UnitImplHelpers(UnitBase):
             container = dtype.from_py(None)
             for f in dtype.fields:
                 if f.name is not None:
-                    r = self._sig("%s_%s" % (name, f.name), f.dtype)
+                    r = self._sig(f"{name:s}_{f.name:s}", f.dtype)
                     setattr(container, f.name, r)
 
             return container

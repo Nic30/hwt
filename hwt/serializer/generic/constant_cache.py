@@ -27,7 +27,7 @@ class ConstantCache(object):
                 if val.val < 0:
                     name = "const_m%d_" % -val.val
                 else:
-                    name = "const_%d_" % val.val
+                    name = f"const_{val.val:d}_"
             else:
                 name = "const_"
 

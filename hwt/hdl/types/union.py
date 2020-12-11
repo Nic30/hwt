@@ -56,6 +56,7 @@ class UnionValBase(HValue):
         return cls(typeObj, val)
 
     def __repr__(self, indent=0):
+        # [TODO] refactor too similar to StructValBase.__repr__
         buff = ["{"]
         indentOfFields = getIndent(indent + 1)
 
@@ -67,7 +68,7 @@ class UnionValBase(HValue):
                 except TypeError:
                     v = repr(val)
 
-                buff.append("%s%s: %s" % (indentOfFields, f.name, v))
+                buff.append(f"{indentOfFields:s}{f.name:s}: {v:s}")
         buff.append(getIndent(indent) + "}")
         return ("\n").join(buff)
 
@@ -221,12 +222,12 @@ class HUnion(HdlType):
 
         myIndent = getIndent(indent)
         childIndent = getIndent(indent + 1)
-        header = "%sunion %s{" % (myIndent, name)
+        header = f"{myIndent:s}union {name:s}{{"
 
         buff = [header, ]
         for f in self.fields.values():
             if f.name is None:
-                buff.append("%s//%r empty space" % (childIndent, f.dtype))
+                buff.append(f"{childIndent:s}//{f.dtype} empty space")
             else:
                 buff.append("%s %s" % (
                                 f.dtype.__repr__(indent=indent + 1,
@@ -234,5 +235,5 @@ class HUnion(HdlType):
                                                  expandStructs=expandStructs),
                             f.name))
 
-        buff.append("%s}" % (myIndent))
+        buff.append(f"{myIndent:s}}}")
         return "\n".join(buff)

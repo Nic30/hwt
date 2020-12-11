@@ -12,10 +12,7 @@ class ResourceMUX():
         self.inputs = inputs
 
     def __repr__(self):
-        return "<%s %d bits, %d inputs>" % (
-            self.__class__.__name__,
-            self.bitWidth, self.inputs)
-
+        return f"<{self.__class__.__name__:s} {self.bitWidth:d} bits, {self.inputs} inputs>"
 
 class ResourceFF():
     pass

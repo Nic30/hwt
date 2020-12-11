@@ -26,18 +26,18 @@ def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
 
             if op >= 1 << 31:
                 raise TypeError(
-                    "Number %d is too big to fit in 32 bit integer of HDL"
-                    " use Bits type instead" % op)
+                    f"Number {op:d} is too big to fit in 32 bit integer of HDL"
+                    " use Bits type instead")
             elif op < -(1 << 31):
                 raise TypeError(
-                    "Number %d is too small to fit in 32 bit integer"
-                    " of HDL use Bits type instead" % op)
+                    f"Number {op:d} is too small to fit in 32 bit integer"
+                    " of HDL use Bits type instead")
         try:
             hType = defaultPyConversions[type(op)]
         except KeyError:
             hType = None
 
         if hType is None:
-            raise TypeError("Unknown hardware type for %s" % (op.__class__))
+            raise TypeError(f"Unknown hardware type for instance of {op.__class__}")
 
         return hType.from_py(op)

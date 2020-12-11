@@ -258,19 +258,17 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
             # resolve the error message
             inRtl = set(x.name for x in cInstances)
             inIntf = set(x._name for x in self._units)
+            cls_name = self.__class__.__name__
             if cInst_cnt > unit_cnt:
+                diff = inRtl - inIntf
                 raise IntfLvlConfErr(
-                    "%s, %s: unit(s) were found in HDL but were"
-                    " not registered %s" % (
-                        self.__class__.__name__, self._name,
-                        self._getstr(inRtl - inIntf)))
+                    f"{cls_name:s}, {self._name:s}: unit(s) were found in HDL but were"
+                    f" not registered {diff}")
             else:
                 assert cInst_cnt < unit_cnt
+                diff = inIntf - inRtl
                 raise IntfLvlConfErr(
-                    "%s, %s: _to_rtl: unit(s) are missing in produced HDL %s" % (
-                        self._name, self.__class__.__name__,
-                        str(inIntf - inRtl)))
-
+                    f"{cls_name:s}, {self._name:s}: _to_rtl: unit(s) are missing in produced HDL {diff}")
 
 def copy_HdlModuleDec_interface(orig_i: InterfaceBase, new_i: InterfaceBase,
                                 ports: List[HdlPortItem], new_u: Unit):

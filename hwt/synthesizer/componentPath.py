@@ -19,7 +19,7 @@ def to_tuple_of_names(objs):
 
 
 class ComponentPath(tuple):
-    
+
     def __new__ (cls, *objs):
         return super(ComponentPath, cls).__new__(cls, objs)
 
@@ -32,13 +32,13 @@ class ComponentPath(tuple):
     def resolve(self) -> "ComponentPath":
         """
         Make the path absolute
-        
+
         The ComponentPath is in absolute format only if:
-        
+
         * The first member is a top component or path is empty
         * All members except the last are Unit instances (last can be RtlSignal/Interface)
         * Each successor member is instanciated in predecessor except for Unit instance with shared component
-        * If member is a Unit instance with shared component the successor must be an interface of this instance or an object from shared component 
+        * If member is a Unit instance with shared component the successor must be an interface of this instance or an object from shared component
         """
         it = iter(reversed(self))
         try:
@@ -58,18 +58,18 @@ class ComponentPath(tuple):
             while True:
                 if obj is handle:
                     break
-    
+
                 if isinstance(obj, RtlSignal):
                     # to not modify path if it is already in absolute format
                     if not path or path[-1] is not obj:
                         path.append(obj)
                     obj = obj.ctx.parent
-            
+
                 while isinstance(obj, Interface):
                     if obj is handle:
                         break
                     obj = obj._parent
-            
+
                 while obj is not handle:
                     try:
                         assert isinstance(obj, Unit), obj
@@ -83,9 +83,9 @@ class ComponentPath(tuple):
                 break
 
             obj = _handle
-    
+
         return ComponentPath(*reversed(path))
-    
+
     def is_absolute(self):
         """
         :return: True if path starts with a top component else False
@@ -100,7 +100,7 @@ class ComponentPath(tuple):
         assert len(self) >= len(old_path_prefix), (self, old_path_prefix)
         for p, op in zip(self, old_path_prefix):
             assert p is op, (self, old_path_prefix)
-    
+
         return ComponentPath(*new_path_prefix, *self[len(old_path_prefix):])
 
     def __getitem__(self, key):
@@ -110,7 +110,7 @@ class ComponentPath(tuple):
             return tuple.__getitem__(self, key)
 
     def __repr__(self):
-        return "<%s %s>" % (self.__class__.__name__, str(self))
+        return f"<{self.__class__.__name__:s} {str(self):s}>"
 
     def __str__(self):
         return "/".join(to_tuple_of_names(self))
