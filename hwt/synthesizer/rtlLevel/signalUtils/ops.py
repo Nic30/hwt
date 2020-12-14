@@ -416,7 +416,7 @@ class RtlSignalOps():
 
     def __int__(self):
         if not self._const:
-            raise TypeError("Int value of signal can be evaluated"
+            raise TypeError("Int value of signal can not be evaluated"
                             " because it is not constant expression:", self)
         else:
             return int(self._val)
