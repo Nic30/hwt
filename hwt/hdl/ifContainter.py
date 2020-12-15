@@ -403,22 +403,19 @@ class IfContainer(HdlStatement):
     def _replace_input(self, toReplace: RtlSignalBase, replacement: RtlSignalBase):
         isTopStm = self.parentStm is None
         if isTopStm:
-            if replace_input_in_expr(self, self.cond, toReplace,
-                                     replacement, isTopStm):
-                self.cond = replacement
+            self.cond = replace_input_in_expr(self, self.cond, toReplace,
+                                              replacement, isTopStm)
 
         for stm in self.ifTrue:
             stm._replace_input(toReplace, replacement)
 
-        cond_to_replace = []
-        for i, (cond, stms) in enumerate(self.elIfs):
-            if replace_input_in_expr(self, cond, toReplace, replacement, isTopStm):
-                cond_to_replace.append((i, replacement))
+        new_elifs = []
+        for (cond, stms) in self.elIfs:
+            new_cond = replace_input_in_expr(self, cond, toReplace, replacement, isTopStm)
             for stm in stms:
                 stm._replace_input(toReplace, replacement)
-        for i, newCond in cond_to_replace:
-            stm = self.elIfs[i][1]
-            self.elIfs[i] = (newCond, stm)
+            new_elifs.append((new_cond, stms))
+        self.elIfs = new_elifs
 
         if self.ifFalse is not None:
             for stm in self.ifFalse:

@@ -3,7 +3,6 @@ from typing import Generator, Union, Tuple
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.operatorDefs import isEventDependentOp, OpDefinition
-from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.value import HValue
 from hwt.pyUtils.arrayQuery import arr_all
@@ -41,16 +40,6 @@ class Operator(HdlObject):
         self.operands = tuple(operands)
         self.operator = operator
         self.result = None  # type: RtlSignal
-
-    @internal
-    def _replace_input(self, toReplace: RtlSignalBase, replacement: RtlSignalBase):
-        new_operands = []
-        for o in self.operands:
-            if replace_input_in_expr(self, o, toReplace, replacement, True):
-                new_operands.append(replacement)
-            else:
-                new_operands.append(o)
-        self.operands = tuple(new_operands)
 
     @internal
     def staticEval(self):

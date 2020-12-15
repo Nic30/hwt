@@ -349,9 +349,8 @@ class SwitchContainer(HdlStatement):
     def _replace_input(self, toReplace: RtlSignalBase,
                        replacement: RtlSignalBase) -> None:
         isTopStatement = self.parentStm is None
-        if replace_input_in_expr(self, self.switchOn, toReplace,
-                                 replacement, isTopStatement):
-            self.switchOn = replacement
+        self.switchOn = replace_input_in_expr(self, self.switchOn, toReplace,
+                                              replacement, isTopStatement)
 
         for (_, stms) in self.cases:
             for stm in stms:

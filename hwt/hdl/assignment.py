@@ -150,16 +150,13 @@ class Assignment(HdlStatement):
         isTopStatement = self.parentStm is None
 
         if self.indexes:
-            indexes_to_replace = []
-            for i, ind in enumerate(self.indexes):
-                if replace_input_in_expr(self, ind, toReplace, replacement, isTopStatement):
-                    indexes_to_replace.append((i, replacement))
+            new_indexes = []
+            for ind in self.indexes:
+                new_i = replace_input_in_expr(self, ind, toReplace, replacement, isTopStatement)
+                new_indexes.append(new_i)
+            self.indexes = new_indexes
 
-            for i, newInd in indexes_to_replace:
-                self.indexes[i] = newInd
-
-        if replace_input_in_expr(self, self.src, toReplace, replacement, isTopStatement):
-            self.src = replacement
+        self.src = replace_input_in_expr(self, self.src, toReplace, replacement, isTopStatement)
 
         self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
 
