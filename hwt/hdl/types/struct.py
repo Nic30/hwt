@@ -26,7 +26,7 @@ class HStructFieldMeta():
 
 
 class HStructField(object):
-    def __init__(self, typ, name, meta=None):
+    def __init__(self, typ: HdlType, name: str, meta=None):
         assert isinstance(name, str) or name is None, name
         assert isinstance(typ, HdlType), typ
         self.name = name
@@ -42,7 +42,11 @@ class HStructField(object):
         return hash((self.name, self.dtype, self.meta))
 
     def __repr__(self):
-        return f"<HStructField {self.dtype}, {self.name:s}>"
+        name = self.name
+        if name is None:
+            name = "<padding>"
+
+        return f"<HStructField {self.dtype}, {name:s}>"
 
 
 protectedNames = {"clone", "staticEval", "from_py", "_dtype"}
