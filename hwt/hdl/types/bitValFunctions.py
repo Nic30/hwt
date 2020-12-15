@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.operatorDefs import AllOps, OpDefinition
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
@@ -58,10 +58,17 @@ def bitsCmp_detect_useless_cmp(op0, op1, op):
 
 
 @internal
-def bitsCmp(self, other, op, evalFn=None):
+def bitsCmp(self, other, op, selfReduceVal, evalFn=None):
     """
+    Apply a generic comparison binary operator
+
     :attention: If other is Bool signal convert this to bool (not ideal,
         due VHDL event operator)
+    :ivar self: operand 0
+    :ivar other: operand 1
+    :ivar op: operator used
+    :ivar selfReduceVal: the value which is a result if operands are all same signal (e.g. a==a = 1, b<b=0)
+    :ivar evalFn: override of a python operator function (by default one from "op" is used)
     """
     t = self._dtype
     other = toHVal(other, t)
@@ -108,7 +115,10 @@ def bitsCmp(self, other, op, evalFn=None):
                 assert res == AllOps.EQ, res
                 op = res
 
-            return Operator.withRes(op, [self, other], BOOL)
+            if self is other:
+                return selfReduceVal
+            else:
+                return Operator.withRes(op, [self, other], BOOL)
 
         elif t.signed != ot.signed:
             if t.signed is None:
@@ -121,10 +131,18 @@ def bitsCmp(self, other, op, evalFn=None):
     raise TypeError(f"Values of types ({self._dtype}, {other._dtype}) are not comparable")
 
 @internal
-def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
+def bitsBitOp(self, other, op: OpDefinition, getVldFn, reduceCheckFn, selfReduceVal):
     """
+    Apply a generic bitwise binary operator
+
     :attention: If other is Bool signal, convert this to bool
         (not ideal, due VHDL event operator)
+    :ivar self: operand 0
+    :ivar other: operand 1
+    :ivar op: operator used
+    :ivar getVldFn: function to resolve invalid (X) states
+    :ivar reduceCheckFn: function to reduce useless operators (partially evaluate the expression if possible)
+    :ivar selfReduceVal: the value which is a result if operands are all same signal (e.g. a&a = a, b^b=0)
     """
     other = toHVal(other, self._dtype)
 
@@ -168,6 +186,9 @@ def bitsBitOp(self, other, op, getVldFn, reduceCheckFn):
             r = reduceCheckFn(other, self)
             if r is not None:
                 return r
+
+        elif self is other:
+            return selfReduceVal
 
         return Operator.withRes(op, [self, other], self._dtype)
 

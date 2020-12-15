@@ -313,34 +313,34 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
     # comparisons
     def _eq(self, other):
-        return bitsCmp(self, other, AllOps.EQ, eq)
+        return bitsCmp(self, other, AllOps.EQ, BIT.from_py(1), eq)
 
     def __ne__(self, other):
-        return bitsCmp(self, other, AllOps.NE)
+        return bitsCmp(self, other, AllOps.NE, BIT.from_py(0))
 
     def __lt__(self, other):
-        return bitsCmp(self, other, AllOps.LT)
+        return bitsCmp(self, other, AllOps.LT, BIT.from_py(0))
 
     def __gt__(self, other):
-        return bitsCmp(self, other, AllOps.GT)
+        return bitsCmp(self, other, AllOps.GT, BIT.from_py(0))
 
     def __ge__(self, other):
-        return bitsCmp(self, other, AllOps.GE)
+        return bitsCmp(self, other, AllOps.GE, BIT.from_py(1))
 
     def __le__(self, other):
-        return bitsCmp(self, other, AllOps.LE)
+        return bitsCmp(self, other, AllOps.LE, BIT.from_py(1))
 
     def __xor__(self, other):
         return bitsBitOp(self, other, AllOps.XOR,
-                         vld_mask_for_xor, tryReduceXor)
+                         vld_mask_for_xor, tryReduceXor, self._dtype.from_py(0))
 
     def __and__(self, other):
         return bitsBitOp(self, other, AllOps.AND,
-                         vld_mask_for_and, tryReduceAnd)
+                         vld_mask_for_and, tryReduceAnd, self)
 
     def __or__(self, other):
         return bitsBitOp(self, other, AllOps.OR,
-                         vld_mask_for_or, tryReduceOr)
+                         vld_mask_for_or, tryReduceOr, self)
 
     def __lshift__(self, other):
         """
