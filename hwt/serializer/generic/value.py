@@ -101,13 +101,11 @@ class ToHdlAst_Value():
                 elif si.endpoints:
                     if not v.vld_mask:
                         raise SerializerException(
-                            "Signal %s is constant and has undefined value"
-                            % si.name)
+                            f"Signal {si.name:s} is constant and has undefined value")
                     var.is_const = True
                 else:
                     raise SerializerException(
-                        "Signal %s should be declared but it is not used"
-                        % si.name)
+                        f"Signal {si.name:s} should be declared but it is not used")
 
             if v is None:
                 pass
