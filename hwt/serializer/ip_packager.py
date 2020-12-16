@@ -190,27 +190,6 @@ class IpPackager(IpCorePackager):
         return thisIntf._direction
 
     @internal
-    def getExprVal(self, val, do_eval=False):
-        """
-        :see: doc of method on parent class
-        """
-
-        def createTmpVar(suggestedName, dtype):
-            raise NotImplementedError(
-                "Width value can not be converted do ipcore format (%r)",
-                val)
-
-        if do_eval:
-            val = val.staticEval()
-        to_hdl = ToHdlAstVhdl2008()
-        to_hdl.createTmpVarFn = createTmpVar
-        hdl = to_hdl.as_hdl(val)
-        buff = StringIO()
-        ser = ToVhdl2008(buff)
-        ser.visit_iHdlObj(hdl)
-        return buff.getvalue()
-
-    @internal
     def getTypeWidth(self, dtype: HdlType, do_eval=False)\
             -> Tuple[int, Union[int, RtlSignal], bool]:
         """
@@ -238,7 +217,11 @@ class IpPackager(IpCorePackager):
             val = val.staticEval()
 
         buff = StringIO()
+        def createTmpVar(suggestedName, dtype):
+            raise NotImplementedError(
+                f"Width value can not be converted do ipcore format ({val})")
         to_hdl = ToHdlAstVivadoTclExpr()
+        to_hdl.createTmpVarFn = createTmpVar
         ser = Vhdl2008Serializer.TO_HDL(buff)
 
         hdl = to_hdl.as_hdl(val)
