@@ -1,11 +1,17 @@
+from io import StringIO
 import math
 from typing import List, Tuple, Union
 
+from hdlConvertorAst.hdlAst import HdlValueId
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
+from hdlConvertorAst.to.vhdl.vhdl2008 import ToVhdl2008
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.doc_markers import internal
 from hwt.hdl.typeShortcuts import hInt
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, STR, BIT, INT
 from hwt.hdl.types.hdlType import HdlType
+from hwt.serializer.store_manager import SaveToFilesFlat
 from hwt.serializer.vhdl import Vhdl2008Serializer, ToHdlAstVhdl2008
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.interface import Interface
@@ -15,21 +21,23 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.utils import to_rtl
+from ipCorePackager.intfIpMeta import VALUE_RESOLVE
 from ipCorePackager.otherXmlObjs import Value
 from ipCorePackager.packager import IpCorePackager
-from ipCorePackager.intfIpMeta import VALUE_RESOLVE
-from io import StringIO
-from hwt.serializer.store_manager import SaveToFilesFlat
-from hdlConvertorAst.to.vhdl.vhdl2008 import ToVhdl2008
-from hdlConvertorAst.hdlAst._defs import HdlIdDef
 
 
 class ToHdlAstVivadoTclExpr(ToHdlAstVhdl2008):
+    _spirit_decode = HdlValueId("spirit:decode")
+    _id = HdlValueId("id")
 
-    # disabled because this code is not reachable in current implemetation
-    @staticmethod
-    def as_hdl_SignalItem(si, declaration=False):
-        raise NotImplementedError(si)
+    def as_hdl_SignalItem(self, si, declaration=False):
+        assert(declaration == False)
+        if si.hidden:
+            assert si.origin is not None, si
+            return self.as_hdl(si.origin)
+        else:
+            id_ = hdl_call(self._id, [f'MODELPARAM_VALUE.{si.name}'])
+            return hdl_call(self._spirit_decode, [id_])
 
 
 class IpPackager(IpCorePackager):
