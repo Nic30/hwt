@@ -17,18 +17,6 @@ class NoValueExc(Exception):
     """
 
 
-def distinctBy(iterable, fn):
-    """
-    uniq operation with key selector
-    """
-    s = set()
-    for i in iterable:
-        r = fn(i)
-        if r not in s:
-            s.add(r)
-            yield i
-
-
 def single(iterable, fn):
     """
     Get value from iterable where fn(item) and check
