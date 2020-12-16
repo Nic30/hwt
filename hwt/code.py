@@ -84,7 +84,7 @@ class Switch(SwitchContainer):
         switchOn = _intfToSig(switchOn)
         if not isinstance(switchOn, RtlSignalBase):
             raise HwtSyntaxError("Select is not signal, it is not certain"
-                                 " if this an error or desire")
+                                 " if this is an error or desire")
         if arr_any(discoverEventDependency(switchOn), lambda x: True):
             raise HwtSyntaxError("Can not switch on result of event operator")
 
