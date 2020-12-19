@@ -8,11 +8,11 @@ from typing import List, Tuple, Dict, Union, Optional
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statement import HdlStatement, statementsAreSame, \
-    isSameStatementList, seqEvalCond
-from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
+from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statementUtils import  statementsAreSame, isSameStatementList
 from hwt.hdl.value import HValue
 from hwt.serializer.utils import RtlSignal_sort_key
+from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -425,12 +425,12 @@ class IfContainer(HdlStatement):
 
     @internal
     def seqEval(self):
-        if seqEvalCond(self.cond):
+        if bool(self.cond.staticEval().val):
             for s in self.ifTrue:
                 s.seqEval()
         else:
             for c in self.elIfs:
-                if seqEvalCond(c[0]):
+                if bool(c[0].staticEval().val):
                     for s in c[1]:
                         s.seqEval()
                     return

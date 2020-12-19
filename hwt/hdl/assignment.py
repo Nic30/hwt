@@ -3,8 +3,9 @@ from typing import Tuple, List, Dict, Union, Optional
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statement import isSameHVal, HdlStatement, areSameHVals
+from hwt.hdl.statement import HdlStatement
 from hwt.hdl.value import HValue
+from hwt.hdl.valueUtils import isSameHVal, areSameHVals
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 

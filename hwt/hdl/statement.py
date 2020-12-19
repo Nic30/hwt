@@ -4,7 +4,6 @@ from typing import List, Tuple, Union, Optional
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.value import HValue
 from hwt.pyUtils.arrayQuery import flatten, groupedby
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -12,12 +11,6 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 class HwtSyntaxError(Exception):
     pass
-
-
-class IncompatibleStructure(Exception):
-    """
-    Statements are not comparable due incompatible structure
-    """
 
 
 class HdlStatement(HdlObject):
@@ -601,75 +594,6 @@ class HdlStatement(HdlObject):
         if self._enclosed_for is not None:
             if self._enclosed_for.discard(toReplace):
                 self._enclosed_for.add(replacement)
-
-
-@internal
-def seqEvalCond(cond) -> bool:
-    """
-    Evaluate condition signal in sequential context
-    """
-    return bool(cond.staticEval().val)
-
-
-def isSameHVal(a: HValue, b: HValue) -> bool:
-    """
-    :return: True if two Value instances are same
-    :note: not just equal
-    """
-    return a is b or (isinstance(a, HValue)
-                      and isinstance(b, HValue)
-                      and a.val == b.val
-                      and a.vld_mask == b.vld_mask)
-
-
-def areSameHVals(a: Union[None, List[HValue]],
-                 b: Union[None, List[HValue]]) -> bool:
-    """
-    :return: True if two vectors of HValue/RtlSignal instances are same
-    :note: not just equal
-    """
-    if a is b:
-        return True
-    if a is None or b is None:
-        return False
-    if len(a) == len(b):
-        for a_, b_ in zip(a, b):
-            if not isSameHVal(a_, b_):
-                return False
-        return True
-    else:
-        return False
-
-
-def isSameStatementList(stmListA: List[HdlStatement],
-                        stmListB: List[HdlStatement]) -> bool:
-    """
-    :return: True if two lists of HdlStatement instances are same
-    """
-    if stmListA is stmListB:
-        return True
-    if stmListA is None or stmListB is None:
-        return False
-
-    for a, b in zip(stmListA, stmListB):
-        if not a.isSame(b):
-            return False
-
-    return True
-
-
-def statementsAreSame(statements: List[HdlStatement]) -> bool:
-    """
-    :return: True if all statements are same
-    """
-    iterator = iter(statements)
-    try:
-        first = next(iterator)
-    except StopIteration:
-        return True
-
-    return all(first.isSame(rest) for rest in iterator)
-
 
 @internal
 def _get_stm_with_branches(stm_it):

@@ -3,9 +3,15 @@ from itertools import islice
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
-from hwt.hdl.statement import IncompatibleStructure, HdlStatement
+from hwt.hdl.statement import HdlStatement
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import HdlStatement_sort_key
+
+
+class HwtStmIncompatibleStructure(Exception):
+    """
+    Statements are not comparable due incompatible structure
+    """
 
 
 @internal
@@ -35,7 +41,7 @@ def tryToMerge(procA: HdlStatementBlock, procB: HdlStatementBlock):
             areSetsIntersets(procA._outputs, procB._sensitivity) or
             areSetsIntersets(procB._outputs, procA._sensitivity) or
             not HdlStatement._is_mergable_statement_list(procA.statements, procB.statements)):
-        raise IncompatibleStructure()
+        raise HwtStmIncompatibleStructure()
 
     procA.statements = HdlStatement._merge_statement_lists(
         procA.statements, procB.statements)
@@ -68,7 +74,7 @@ def reduceProcesses(processes):
 
                 try:
                     pA = tryToMerge(pA, pB)
-                except IncompatibleStructure:
+                except HwtStmIncompatibleStructure:
                     continue
                 procs[iA + 1 + iB] = None
                 # procs[iA] = pA

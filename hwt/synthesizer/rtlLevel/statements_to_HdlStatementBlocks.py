@@ -5,9 +5,9 @@ from typing import Generator, List
 from hwt.doc_markers import internal
 from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.statement import HwtSyntaxError, HdlStatement
-from hwt.hdl.statementUtils import fill_stm_list_with_enclosure
 from hwt.hdl.value import HValue
 from hwt.pyUtils.uniqList import UniqList
+from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
 from hwt.synthesizer.rtlLevel.reduce_processes import reduceProcesses
 from hwt.synthesizer.rtlLevel.rtlSignal import NO_NOPVAL, RtlSignal
 
