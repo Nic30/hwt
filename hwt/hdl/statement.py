@@ -1,13 +1,13 @@
 from itertools import chain, islice
 from typing import List, Tuple, Union, Optional
 
+from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.value import HValue
 from hwt.pyUtils.arrayQuery import flatten, groupedby
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.doc_markers import internal
 
 
 class HwtSyntaxError(Exception):
@@ -186,8 +186,7 @@ class HdlStatement(HdlObject):
                 if o in stm._outputs:
                     assert not has_driver
                     has_driver = False
-                    if o in stm._enclosed_for:
-                        result.add(o)
+                    result.update(stm._enclosed_for)
                 else:
                     pass
 
@@ -333,7 +332,7 @@ class HdlStatement(HdlObject):
 
     def _is_enclosed(self) -> bool:
         """
-        :return: True if every branch in statement is covered for all signals else False
+        :return: True if every branch in statement assignas to all output signals else False
         """
         return len(self._outputs) == len(self._enclosed_for)
 
@@ -597,11 +596,11 @@ class HdlStatement(HdlObject):
             replacement: RtlSignalBase):
         if self._sensitivity is not None:
             if self._sensitivity.discard(toReplace):
-                self._sensitivity.append(replacement)
+                self._sensitivity.add(replacement)
 
         if self._enclosed_for is not None:
             if self._enclosed_for.discard(toReplace):
-                self._enclosed_for.append(replacement)
+                self._enclosed_for.add(replacement)
 
 
 @internal
