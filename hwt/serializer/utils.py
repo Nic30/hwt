@@ -1,8 +1,8 @@
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
+from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.statement import HdlStatement
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.block import HdlStatementBlock
 
 
 @internal
