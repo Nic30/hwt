@@ -1,9 +1,10 @@
+from copy import copy
+
 from hwt.doc_markers import internal
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from copy import copy
 
 
 def slice_member_to_hval(v):
@@ -68,6 +69,14 @@ class SliceVal(HValue):
 
     def _eq(self, other):
         return self._eq__val(other)
+
+    def __lt__(self, other):
+        if self.val.step != other.val.step:
+            raise ValueError()
+        if isinstance(other, INT.getValueCls()):
+            return self.val.start < other
+        else:
+            return (self.val.start, self.val.stop) < (other.val.start, other.val.stop)
 
     def __copy__(self):
         v = HValue.__copy__(self)
