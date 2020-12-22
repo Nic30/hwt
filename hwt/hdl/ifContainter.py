@@ -9,11 +9,16 @@ from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statement import HdlStatement
-from hwt.hdl.statementUtils import  statementsAreSame, isSameStatementList
+from hwt.hdl.statementUtils.comparison import  statementsAreSame, isSameStatementList
+from hwt.hdl.statementUtils.reduction import HdlStatement_merge_statement_lists, \
+    HdlStatement_try_reduce_list, is_mergable_statement_list
 from hwt.hdl.value import HValue
 from hwt.serializer.utils import RtlSignal_sort_key
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.statementUtils.signalCut import HdlStatement_cut_off_drivers_of_list
+from hwt.synthesizer.rtlLevel.signalUtils.walkers import discover_sensitivity_of_sig
+from hwt.hdl.statementUtils.ioDiscovery import HdlStatement_discover_enclosure_for_statements
 
 
 class IfContainer(HdlStatement):
@@ -92,7 +97,6 @@ class IfContainer(HdlStatement):
             raise NotImplementedError(
                     "Sensitivity and enclosure has to be cleaned first")
 
-
         if len(self._outputs) == 1 and sig in self._outputs:
             # this statement has only this output, eject this statement from its parent
             self.parentStm = None  # because new parent will be asigned immediately after cutting of
@@ -105,7 +109,7 @@ class IfContainer(HdlStatement):
 
         newIfTrue = []
         all_cut_off = True
-        all_cut_off &= self._cut_off_drivers_of_list(
+        all_cut_off &= HdlStatement_cut_off_drivers_of_list(
             sig, self.ifTrue, child_keep_mask, newIfTrue)
         self.ifTrue = list(compress(self.ifTrue, child_keep_mask))
 
@@ -114,7 +118,7 @@ class IfContainer(HdlStatement):
         for cond, stms in self.elIfs:
             newCase = []
             child_keep_mask.clear()
-            all_cut_off &= self._cut_off_drivers_of_list(
+            all_cut_off &= HdlStatement_cut_off_drivers_of_list(
                 sig, stms, child_keep_mask, newCase)
 
             _stms = list(compress(stms, child_keep_mask))
@@ -129,7 +133,7 @@ class IfContainer(HdlStatement):
         if self.ifFalse:
             newIfFalse = []
             child_keep_mask.clear()
-            all_cut_off &= self._cut_off_drivers_of_list(
+            all_cut_off &= HdlStatement_cut_off_drivers_of_list(
                 sig, self.ifFalse, child_keep_mask, newIfFalse)
             self.ifFalse = list(compress(self.ifFalse, child_keep_mask))
 
@@ -159,16 +163,16 @@ class IfContainer(HdlStatement):
         Doc on parent class :meth:`HdlStatement._discover_enclosure`
         """
         outputs = self._outputs
-        self._ifTrue_enclosed_for = self._discover_enclosure_for_statements(
+        self._ifTrue_enclosed_for = HdlStatement_discover_enclosure_for_statements(
             self.ifTrue, outputs)
 
         elif_encls = self._elIfs_enclosed_for = []
         for _, stms in self.elIfs:
-            e = self._discover_enclosure_for_statements(
+            e = HdlStatement_discover_enclosure_for_statements(
                 stms, outputs)
             elif_encls.append(e)
 
-        self._ifFalse_enclosed_for = self._discover_enclosure_for_statements(
+        self._ifFalse_enclosed_for = HdlStatement_discover_enclosure_for_statements(
             self.ifFalse, outputs)
 
         assert self._enclosed_for is None
@@ -193,7 +197,7 @@ class IfContainer(HdlStatement):
         assert self._sensitivity is None, self
         ctx = self._sensitivity = SensitivityCtx()
 
-        self._discover_sensitivity_sig(self.cond, seen, ctx)
+        discover_sensitivity_of_sig(self.cond, seen, ctx)
         if ctx.contains_ev_dependency:
             return
 
@@ -206,7 +210,7 @@ class IfContainer(HdlStatement):
             if ctx.contains_ev_dependency:
                 break
 
-            self._discover_sensitivity_sig(cond, seen, ctx)
+            discover_sensitivity_of_sig(cond, seen, ctx)
             if ctx.contains_ev_dependency:
                 break
 
@@ -263,14 +267,14 @@ class IfContainer(HdlStatement):
         # flag if IO of statement has changed
         io_change = False
 
-        self.ifTrue, rank_decrease, _io_change = self._try_reduce_list(
+        self.ifTrue, rank_decrease, _io_change = HdlStatement_try_reduce_list(
             self.ifTrue)
         self.rank -= rank_decrease
         io_change |= _io_change
 
         new_elifs = []
         for cond, statements in self.elIfs:
-            _statements, rank_decrease, _io_change = self._try_reduce_list(
+            _statements, rank_decrease, _io_change = HdlStatement_try_reduce_list(
                 statements)
             self.rank -= rank_decrease
             io_change |= _io_change
@@ -278,7 +282,7 @@ class IfContainer(HdlStatement):
         self.elIfs = new_elifs
 
         if self.ifFalse is not None:
-            self.ifFalse, rank_decrease, _io_update_required = self._try_reduce_list(
+            self.ifFalse, rank_decrease, _io_update_required = HdlStatement_try_reduce_list(
                 self.ifFalse)
             self.rank -= rank_decrease
             io_change |= _io_change
@@ -318,17 +322,17 @@ class IfContainer(HdlStatement):
             return False
 
         if (self.cond is not other.cond
-                or not self._is_mergable_statement_list(self.ifTrue, other.ifTrue)):
+                or not is_mergable_statement_list(self.ifTrue, other.ifTrue)):
             return False
 
         if len(self.elIfs) != len(other.elIfs):
             return False
 
         for (a_c, a_stm), (b_c, b_stm) in zip(self.elIfs, other.elIfs):
-            if a_c is not b_c or not self._is_mergable_statement_list(a_stm, b_stm):
+            if a_c is not b_c or not is_mergable_statement_list(a_stm, b_stm):
                 return False
 
-        if not self._is_mergable_statement_list(self.ifFalse, other.ifFalse):
+        if not is_mergable_statement_list(self.ifFalse, other.ifFalse):
             return False
         return True
 
@@ -337,7 +341,7 @@ class IfContainer(HdlStatement):
         """
         :attention: statements has to be mergable (to check use _is_mergable method)
         """
-        merge = self._merge_statement_lists
+        merge = HdlStatement_merge_statement_lists
         self.ifTrue = merge(self.ifTrue, other.ifTrue)
 
         new_elifs = []
@@ -422,6 +426,30 @@ class IfContainer(HdlStatement):
                 stm._replace_input(toReplace, replacement)
 
         self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
+
+    @internal
+    def _replace_child_statement(self, stm:"HdlStatement",
+            replacement:List["HdlStatement"],
+            update_io:bool) -> None:
+        if update_io:
+            raise NotImplementedError()
+        for branch_list in (self.ifTrue, *(elif_stms for _, elif_stms in self.elIfs), self.ifFalse):
+            if branch_list is None:
+                continue
+            try:
+                i = branch_list.index(stm)
+            except ValueError:
+                # not in list
+                continue
+
+            branch_list[i:1 + 1] = replacement
+            for rstm in replacement:
+                rstm._set_parent_stm(self)
+            # reset IO because it was shared with this statement
+            stm._destroy()
+            return
+
+        raise ValueError("Statement", stm, "not found in ", self)
 
     @internal
     def seqEval(self):

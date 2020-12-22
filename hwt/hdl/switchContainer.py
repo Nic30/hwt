@@ -7,7 +7,11 @@ from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statement import HdlStatement, HwtSyntaxError
-from hwt.hdl.statementUtils import isSameStatementList, statementsAreSame
+from hwt.hdl.statementUtils.comparison import isSameStatementList, statementsAreSame
+from hwt.hdl.statementUtils.ioDiscovery import HdlStatement_discover_enclosure_for_statements
+from hwt.hdl.statementUtils.reduction import HdlStatement_merge_statement_lists, \
+    HdlStatement_try_reduce_list, is_mergable_statement_list
+from hwt.hdl.statementUtils.signalCut import HdlStatement_cut_off_drivers_of_list
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import HValue
 from hwt.hdl.valueUtils import isSameHVal
@@ -74,7 +78,7 @@ class SwitchContainer(HdlStatement):
         if self.default:
             new_default = []
             child_keep_mask.clear()
-            case_eliminated = self._cut_off_drivers_of_list(
+            case_eliminated = HdlStatement_cut_off_drivers_of_list(
                 sig, self.default, child_keep_mask, new_default)
             all_cut_off &= case_eliminated
             if case_eliminated:
@@ -88,7 +92,7 @@ class SwitchContainer(HdlStatement):
         for val, stms in self.cases:
             new_case = []
             child_keep_mask.clear()
-            case_eliminated = self._cut_off_drivers_of_list(
+            case_eliminated = HdlStatement_cut_off_drivers_of_list(
                 sig, stms, child_keep_mask, new_case)
             if case_eliminated:
                 self.rank -= 1
@@ -158,10 +162,10 @@ class SwitchContainer(HdlStatement):
         outputs = self._outputs
 
         for _, stms in self.cases:
-            c_e = self._discover_enclosure_for_statements(stms, outputs)
+            c_e = HdlStatement_discover_enclosure_for_statements(stms, outputs)
             case_enclosures.append(c_e)
 
-        self._default_enclosed_for = self._discover_enclosure_for_statements(
+        self._default_enclosed_for = HdlStatement_discover_enclosure_for_statements(
             self.default, outputs)
 
         t = self.switchOn._dtype
@@ -243,11 +247,11 @@ class SwitchContainer(HdlStatement):
 
         if not (self.switchOn is other.switchOn and
                 len(self.cases) == len(other.cases) and
-                self._is_mergable_statement_list(self.default, other.default)):
+                is_mergable_statement_list(self.default, other.default)):
             return False
 
         for (vA, caseA), (vB, caseB) in zip(self.cases, other.cases):
-            if vA != vB or not self._is_mergable_statement_list(caseA, caseB):
+            if vA != vB or not is_mergable_statement_list(caseA, caseB):
                 return False
 
         return True
@@ -257,7 +261,7 @@ class SwitchContainer(HdlStatement):
         """
         Merge other statement to this statement
         """
-        merge = self._merge_statement_lists
+        merge = HdlStatement_merge_statement_lists
         newCases = []
         for (c, caseA), (_, caseB) in zip(self.cases, other.cases):
             newCases.append((c, merge(caseA, caseB)))
@@ -279,7 +283,7 @@ class SwitchContainer(HdlStatement):
         # try reduce the content of the case branches
         new_cases = []
         for val, statements in self.cases:
-            _statements, rank_decrease, _io_change = self._try_reduce_list(
+            _statements, rank_decrease, _io_change = HdlStatement_try_reduce_list(
                 statements)
             io_change |= _io_change
             self.rank -= rank_decrease
@@ -288,7 +292,7 @@ class SwitchContainer(HdlStatement):
 
         # try reduce content of the defult branch
         if self.default is not None:
-            self.default, rank_decrease, _io_change = self._try_reduce_list(
+            self.default, rank_decrease, _io_change = HdlStatement_try_reduce_list(
                 self.default)
             self.rank -= rank_decrease
             io_change |= _io_change
@@ -362,6 +366,30 @@ class SwitchContainer(HdlStatement):
                 stm._replace_input(toReplace, replacement)
 
         self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
+
+    @internal
+    def _replace_child_statement(self, stm: HdlStatement,
+            replacement:List[HdlStatement],
+            update_io:bool) -> None:
+        if update_io:
+            raise NotImplementedError()
+        for branch_list in (*(case_stms for _, case_stms in self.cases), self.default):
+            if branch_list is None:
+                continue
+            try:
+                i = branch_list.index(stm)
+            except ValueError:
+                # not in list
+                continue
+
+            branch_list[i:1 + 1] = replacement
+            for rstm in replacement:
+                rstm._set_parent_stm(self)
+            # reset IO because it was shared with this statement
+            stm._destroy()
+            return
+
+        raise ValueError("Statement", stm, "not found in ", self)
 
     def isSame(self, other: HdlStatement) -> bool:
         """
