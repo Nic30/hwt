@@ -1,12 +1,11 @@
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
-from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.rtlSignal import NO_NOPVAL
+from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 
 
 @internal
-def removeUnconnectedSignals(netlist):
+def removeUnconnectedSignals(netlist: "RtlNetlist"):
     """
     Remove signal if does not affect output
 
@@ -65,4 +64,4 @@ def removeUnconnectedSignals(netlist):
     for sig, dst_sigs in nop_values.items():
         if sig not in netlist.signals:
             for dst in dst_sigs:
-                dst._nop_val = NO_NOPVAL
+                dst._nop_val = NOT_SPECIFIED

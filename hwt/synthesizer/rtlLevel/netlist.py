@@ -5,7 +5,6 @@ from hdlConvertorAst.hdlAst._expr import HdlValueId
 from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef, \
     HdlCompInst
 from hwt.code import If
-from hwt.doc_markers import internal
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import HValue
@@ -17,10 +16,11 @@ from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import\
     markVisibilityOfSignalsAndCheckDrivers
 from hwt.synthesizer.rtlLevel.remove_unconnected_signals import removeUnconnectedSignals
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.statements_to_HdlStatementBlocks import\
     statements_to_HdlStatementBlocks
+from hwt.doc_markers import internal
 
 
 class RtlNetlist():
@@ -52,20 +52,8 @@ class RtlNetlist():
         self.arch = None
         self._port_items = []
 
-    def _try_cast_any_to_HdlType(self, v, dtype):
-        if isinstance(v, RtlSignal):
-            assert v._const, \
-                "Initial value of signal has to be a constant"
-            return v._auto_cast(dtype)
-        elif isinstance(v, HValue):
-            return v._auto_cast(dtype)
-        elif isinstance(v, InterfaceBase):
-            return v._sig
-        else:
-            return dtype.from_py(v)
-
     def sig(self, name, dtype=BIT, clk=None, syncRst=None,
-            def_val=None, nop_val=NO_NOPVAL) -> Union[RtlSignal, RtlSyncSignal]:
+            def_val=None, nop_val=NOT_SPECIFIED) -> Union[RtlSignal, RtlSyncSignal]:
         """
         Create new signal in this context
 
@@ -76,9 +64,9 @@ class RtlNetlist():
         :param nop_val: a value which is used to drive the signal if there is no other drive
             (used to prevent latches and to specify default values for unconnected signals)
         """
-        _def_val = self._try_cast_any_to_HdlType(def_val, dtype)
-        if nop_val is not NO_NOPVAL:
-            nop_val = self._try_cast_any_to_HdlType(nop_val, dtype)
+        _def_val = _try_cast_any_to_HValue(def_val, dtype, True)
+        if nop_val is not NOT_SPECIFIED:
+            nop_val = _try_cast_any_to_HValue(nop_val, dtype, False)
 
         if clk is not None:
             s = RtlSyncSignal(self, name, dtype, _def_val, nop_val)
@@ -139,6 +127,7 @@ class RtlNetlist():
             v.type = hdl_val._dtype
             v.value = hdl_val
             ent.params.append(v)
+
         return ent
 
     def create_HdlModuleDef(self,
@@ -152,9 +141,6 @@ class RtlNetlist():
         * Remove unconnected
         * Mark visibility of signals
         """
-        removeUnconnectedSignals(self)
-        markVisibilityOfSignalsAndCheckDrivers(self.signals, self.interfaces)
-
         for proc in target_platform.beforeHdlArchGeneration:
             proc(self)
 
@@ -210,3 +196,17 @@ class RtlNetlist():
                 break
 
         return ".".join(reversed(scope))
+
+
+@internal
+def _try_cast_any_to_HValue(v, dtype, require_const):
+    if isinstance(v, RtlSignal):
+        assert not require_const or v._const, \
+            "Initial value of signal has to be a constant"
+        return v._auto_cast(dtype)
+    elif isinstance(v, HValue):
+        return v._auto_cast(dtype)
+    elif isinstance(v, InterfaceBase):
+        return v._sig
+    else:
+        return dtype.from_py(v)

@@ -1,3 +1,7 @@
+from hwt.synthesizer.rtlLevel.extract_part_drivers import extract_part_drivers
+from hwt.synthesizer.rtlLevel.remove_unconnected_signals import removeUnconnectedSignals
+from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import markVisibilityOfSignalsAndCheckDrivers
+
 
 class DummyPlatform():
     """
@@ -10,5 +14,9 @@ class DummyPlatform():
         self.beforeToRtlImpl = []
         self.afterToRtlImpl = []
 
-        self.beforeHdlArchGeneration = []
+        self.beforeHdlArchGeneration = [
+            removeUnconnectedSignals,
+            markVisibilityOfSignalsAndCheckDrivers,
+            extract_part_drivers,
+        ]
         self.afterToRtl = []

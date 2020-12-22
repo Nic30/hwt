@@ -1,4 +1,4 @@
-from typing import Set, Dict, Generator
+from typing import Generator
 
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
@@ -7,14 +7,14 @@ from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statement import HdlStatement
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErrType,\
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErrType, \
     SignalDriverErr
 from ipCorePackager.constants import DIRECTION
 
 
 @internal
 def walk_assignments(stm: HdlStatement, dst: RtlSignal)\
-        -> Generator[Assignment, None, None]:
+        ->Generator[Assignment, None, None]:
     if isinstance(stm, Assignment):
         if dst is stm.dst:
             yield stm
@@ -24,14 +24,15 @@ def walk_assignments(stm: HdlStatement, dst: RtlSignal)\
 
 
 @internal
-def markVisibilityOfSignalsAndCheckDrivers(
-        signals: Set[RtlSignal],
-        interfaceSignals: Dict[RtlSignal, DIRECTION]):
+def markVisibilityOfSignalsAndCheckDrivers(netlist: "RtlNetlist"):
     """
     * check if all signals are driven by something
     * mark signals with hidden = False if they are connecting statements
       or if they are external interface
     """
+    signals = netlist.signals
+    interfaceSignals = netlist.interfaces
+
     signals_with_driver_issue = []
     for sig in signals:
         if isinstance(sig._nop_val, (RtlSignal, InterfaceBase)):
