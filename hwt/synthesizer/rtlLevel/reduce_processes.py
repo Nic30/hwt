@@ -3,9 +3,10 @@ from itertools import islice
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
-from hwt.hdl.statement import HdlStatement
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import HdlStatement_sort_key
+from hwt.hdl.statementUtils.reduction import HdlStatement_merge_statement_lists,\
+    is_mergable_statement_list
 
 
 class HwtStmIncompatibleStructure(Exception):
@@ -40,10 +41,10 @@ def tryToMerge(procA: HdlStatementBlock, procB: HdlStatementBlock):
             checkIfIsTooSimple(procB) or
             areSetsIntersets(procA._outputs, procB._sensitivity) or
             areSetsIntersets(procB._outputs, procA._sensitivity) or
-            not HdlStatement._is_mergable_statement_list(procA.statements, procB.statements)):
+            not is_mergable_statement_list(procA.statements, procB.statements)):
         raise HwtStmIncompatibleStructure()
 
-    procA.statements = HdlStatement._merge_statement_lists(
+    procA.statements = HdlStatement_merge_statement_lists(
         procA.statements, procB.statements)
 
     procA._outputs.extend(procB._outputs)

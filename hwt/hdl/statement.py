@@ -1,10 +1,10 @@
-from itertools import chain, islice
+from itertools import chain
 from typing import List, Tuple, Union, Optional
 
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.pyUtils.arrayQuery import flatten, groupedby
+from hwt.pyUtils.arrayQuery import flatten
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
@@ -27,7 +27,7 @@ class HdlStatement(HdlObject):
         for statement comparing
     """
 
-    def __init__(self, parentStm:Optional["HdlStatement"]=None, sensitivity=None,
+    def __init__(self, parentStm:Optional["HdlStatement"]=None, sensitivity:Optional[UniqList]=None,
                  event_dependent_from_branch:Optional[int]=None):
         assert event_dependent_from_branch is None or isinstance(event_dependent_from_branch, int), event_dependent_from_branch
         self._event_dependent_from_branch = event_dependent_from_branch
@@ -67,12 +67,24 @@ class HdlStatement(HdlObject):
     def _collect_inputs(self) -> None:
         """
         Collect inputs from all child statements
-        to :py:attr:`~_input` / :py:attr:`_output` attribute on this object
+        to :py:attr:`~_input` attribute on this object
         """
         in_add = self._inputs.extend
 
         for stm in self._iter_stms():
             in_add(stm._inputs)
+
+    @internal
+    def _collect_outputs(self) -> None:
+        """
+        Collect inputs from all child statements
+        to :py:attr:`_output` attribute on this object
+        """
+
+        out_add = self._outputs.extend
+
+        for stm in self._iter_stms():
+            out_add(stm._outputs)
 
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase) -> Union[None, "HdlStatement", List["HdlStatement"]]:
@@ -106,44 +118,6 @@ class HdlStatement(HdlObject):
         if self.parentStm is None:
             cut_off_sig.drivers.append(cut_of_smt)
 
-
-
-    @internal
-    @staticmethod
-    def _cut_off_drivers_of_list(sig: RtlSignalBase,
-                                 statements: List["HdlStatement"],
-                                 keep_mask: List[bool],
-                                 new_statements: List["HdlStatement"]):
-        """
-        Cut all logic from statements which drives signal sig.
-
-        :param sig: signal which drivers should be removed
-        :param statements: list of statements to filter
-        :param keep_mask: list of flags if True statements was driver only of sig
-        :param new_statements: output list of filtered statements
-
-        :return: True if all input statements were reduced
-        """
-        all_cut_off = True
-        for stm in statements:
-            newStm = stm._cut_off_drivers_of(sig)
-            keep = True
-            if newStm is None:
-                # statement is des not have drivers of sig
-                all_cut_off = False
-            elif newStm is stm:
-                # statement drives only sig
-                keep = False
-                new_statements.append(newStm)
-            else:
-                # statement was splited on multiple statements
-                all_cut_off = False
-                new_statements.append(newStm)
-
-            keep_mask.append(keep)
-
-        return all_cut_off
-
     @internal
     def _discover_enclosure(self) -> None:
         """
@@ -154,38 +128,6 @@ class HdlStatement(HdlObject):
                                   " on class of statement", self.__class__, self)
 
     @internal
-    @staticmethod
-    def _discover_enclosure_for_statements(statements: List['HdlStatement'],
-                                           outputs: List['RtlSignalBase']):
-        """
-        Discover enclosure for list of statements
-
-        :param statements: list of statements in one code branch
-        :param outputs: list of outputs which should be driven from this statement list
-        :return: set of signals for which this statement list have always some driver
-            (is enclosed)
-        """
-        result = set()
-        if not statements:
-            return result
-
-        for stm in statements:
-            stm._discover_enclosure()
-
-        for o in outputs:
-            has_driver = False
-
-            for stm in statements:
-                if o in stm._outputs:
-                    assert not has_driver
-                    has_driver = False
-                    result.update(stm._enclosed_for)
-                else:
-                    pass
-
-        return result
-
-    @internal
     def _discover_sensitivity(self, seen: set) -> None:
         """
         discover all sensitivity signals and store them to _sensitivity property
@@ -194,19 +136,10 @@ class HdlStatement(HdlObject):
                                   " on class of statement", self.__class__, self)
 
     @internal
-    def _discover_sensitivity_sig(self, signal: RtlSignalBase,
-                                  seen: set, ctx: SensitivityCtx):
-        casualSensitivity = set()
-        signal._walk_sensitivity(casualSensitivity, seen, ctx)
-        if not ctx.contains_ev_dependency:
-            # if event dependent sensitivity found do not add other sensitivity
-            ctx.extend(casualSensitivity)
-
-    @internal
     def _discover_sensitivity_seq(self,
                                   signals: List[RtlSignalBase],
                                   seen: set, ctx: SensitivityCtx)\
-            -> None:
+            ->None:
         """
         Discover sensitivity for list of signals
 
@@ -339,158 +272,6 @@ class HdlStatement(HdlObject):
                                       self)
 
     @internal
-    @classmethod
-    def _is_mergable_statement_list(cls, stmsA, stmsB):
-        """
-        Walk statements and compare if they can be merged into one statement list
-        """
-        if stmsA is None and stmsB is None:
-            return True
-
-        elif stmsA is None or stmsB is None:
-            return False
-
-        a_it = iter(stmsA)
-        b_it = iter(stmsB)
-
-        a = _get_stm_with_branches(a_it)
-        b = _get_stm_with_branches(b_it)
-        while a is not None or b is not None:
-            if a is None or b is None or not a._is_mergable(b):
-                return False
-
-            a = _get_stm_with_branches(a_it)
-            b = _get_stm_with_branches(b_it)
-
-        # lists are empty
-        return True
-
-    @internal
-    @staticmethod
-    def _merge_statements(statements: List["HdlStatement"])\
-            -> Tuple[List["HdlStatement"], int]:
-        """
-        Merge statements in list to remove duplicated if-then-else trees
-
-        :return: tuple (list of merged statements, rank decrease due merging)
-        :note: rank decrease is sum of ranks of reduced statements
-        :attention: statement list has to me mergable
-        """
-        order = {}
-        for i, stm in enumerate(statements):
-            order[stm] = i
-
-        new_statements = []
-        rank_decrease = 0
-
-        for rank, stms in groupedby(statements, lambda s: s.rank):
-            if rank == 0:
-                new_statements.extend(stms)
-            else:
-                if len(stms) == 1:
-                    new_statements.extend(stms)
-                    continue
-
-                # try to merge statements if they are same condition tree
-                for iA, stmA in enumerate(stms):
-                    if stmA is None:
-                        continue
-
-                    for iB, stmB in enumerate(islice(stms, iA + 1, None)):
-                        if stmB is None:
-                            continue
-
-                        if stmA._is_mergable(stmB):
-                            rank_decrease += stmB.rank
-                            stmA._merge_with_other_stm(stmB)
-                            stms[iA + 1 + iB] = None
-
-                    new_statements.append(stmA)
-
-        new_statements.sort(key=lambda stm: order[stm])
-        return new_statements, rank_decrease
-
-    @internal
-    @staticmethod
-    def _merge_statement_lists(stmsA: List["HdlStatement"], stmsB: List["HdlStatement"])\
-            -> List["HdlStatement"]:
-        """
-        Merge two lists of statements into one
-
-        :return: list of merged statements
-        """
-        if stmsA is None and stmsB is None:
-            return None
-
-        tmp = []
-
-        a_it = iter(stmsA)
-        b_it = iter(stmsB)
-
-        a = None
-        b = None
-        a_empty = False
-        b_empty = False
-
-        while not a_empty and not b_empty:
-            while not a_empty:
-                a = next(a_it, None)
-                if a is None:
-                    a_empty = True
-                    break
-                elif a.rank == 0:
-                    # simple statement does not require merging
-                    tmp.append(a)
-                    a = None
-                else:
-                    break
-
-            while not b_empty:
-                b = next(b_it, None)
-                if b is None:
-                    b_empty = True
-                    break
-                elif b.rank == 0:
-                    # simple statement does not require merging
-                    tmp.append(b)
-                    b = None
-                else:
-                    break
-
-            if a is not None or b is not None:
-                if b is None:
-                    a = b
-                    b = None
-
-                if a is not None and b is not None:
-                    a._merge_with_other_stm(b)
-
-                tmp.append(a)
-                a = None
-                b = None
-
-        return tmp
-
-    @internal
-    @staticmethod
-    def _try_reduce_list(statements: List["HdlStatement"]):
-        """
-        Simplify statements in the list
-        """
-        io_change = False
-        new_statements = []
-
-        for stm in statements:
-            reduced, _io_change = stm._try_reduce()
-            new_statements.extend(reduced)
-            io_change |= _io_change
-
-        new_statements, rank_decrease = HdlStatement._merge_statements(
-            new_statements)
-
-        return new_statements, rank_decrease, io_change
-
-    @internal
     def _on_parent_event_dependent(self):
         """
         After parent statement become event dependent
@@ -539,12 +320,11 @@ class HdlStatement(HdlObject):
     def _register_stements(self, statements: List["HdlStatement"],
                            target: List["HdlStatement"]):
         """
-        Append statements to this container under conditions specified
-        by condSet
+        Append statements to this container
         """
         for stm in flatten(statements):
             assert stm.parentStm is None, (
-                "statement instance has to have only single parent", stm)
+                "HdlStatement instance has to have only a single parent", stm)
             stm._set_parent_stm(self)
             target.append(stm)
 
@@ -552,8 +332,7 @@ class HdlStatement(HdlObject):
         """
         :return: True if other has same meaning as self
         """
-        raise NotImplementedError("This method should be implemented"
-                                  " on class of statement", self.__class__, self)
+        raise NotImplementedError("This method should be implemented in child class", self.__class__, self)
 
     @internal
     def _destroy(self):
@@ -563,14 +342,16 @@ class HdlStatement(HdlObject):
         :attention: signal endpoints/drivers will be altered
             that means they can not be used for iteration
         """
-        ctx = self._get_rtl_context()
         for i in self._inputs:
             i.endpoints.discard(self)
 
-        for o in self._outputs:
-            o.drivers.remove(self)
+        if self.parentStm is None:
+            ctx = self._get_rtl_context()
+            for o in self._outputs:
+                o.drivers.remove(self)
 
-        ctx.statements.remove(self)
+            ctx.statements.remove(self)
+            self.parentStm = None
 
     @internal
     def _replace_input(self, toReplace: RtlSignalBase,
@@ -580,7 +361,7 @@ class HdlStatement(HdlObject):
 
         :note: sensitivity/endoints are actualized
         """
-        raise NotImplementedError()
+        raise NotImplementedError("This method should be implemented in child class", self.__class__, self)
 
     @internal
     def _replace_input_update_sensitivity_and_enclosure(
@@ -595,17 +376,15 @@ class HdlStatement(HdlObject):
             if self._enclosed_for.discard(toReplace):
                 self._enclosed_for.add(replacement)
 
-@internal
-def _get_stm_with_branches(stm_it):
-    """
-    :return: first statement with rank > 0 or None if iterator empty
-    """
-    last = None
-    while last is None or last.rank == 0:
-        try:
-            last = next(stm_it)
-        except StopIteration:
-            last = None
-            break
+    @internal
+    def _replace_child_statement(self, stm: "HdlStatement",
+                                 replacement: List["HdlStatement"],
+                                 update_io: bool) -> None:
+        """
+        Replace a child statement with a list of other statements
 
-    return last
+        :attention: original statement is destroyed and entirely removed from circuit
+        :note: sensitivity/endoints are actualized
+        """
+        raise NotImplementedError("This method should be implemented in child class", self.__class__, self)
+
