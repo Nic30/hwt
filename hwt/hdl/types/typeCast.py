@@ -1,7 +1,7 @@
 
 from typing import Optional, Any
 
-from hwt.hdl.types.defs import INT, STR, BOOL
+from hwt.hdl.types.defs import INT, STR, BOOL, SLICE
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
@@ -10,7 +10,8 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
 defaultPyConversions = {int: INT,
                         str: STR,
-                        bool: BOOL}
+                        bool: BOOL,
+                        slice: SLICE}
 
 
 def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
