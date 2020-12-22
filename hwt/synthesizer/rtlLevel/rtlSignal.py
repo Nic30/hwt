@@ -8,13 +8,11 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.pyUtils.uniqList import UniqList
+from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr, \
     SignalDriverErrType
 from hwt.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
-
-
-NO_NOPVAL = object()
 
 
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
@@ -33,7 +31,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     :ivar ~.hiden: means that this signal is part of expression
         and should not be rendered
     :ivar ~._nop_val: value which is used to fill up statements when no other
-            value is assigned, use NO_NOPVAL to dissable
+            value is assigned, use NOT_SPECIFIED to disable
     :ivar ~._const: flag which tell that this signal can not have any other driver
         than a default value
 
@@ -43,7 +41,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
     __instCntr = 0
 
-    def __init__(self, ctx, name, dtype, def_val=None, nop_val=NO_NOPVAL,
+    def __init__(self, ctx, name, dtype, def_val=None, nop_val=NOT_SPECIFIED,
                  virtual_only=False, is_const=False):
         """
         :param ctx: context - RtlNetlist which is this signal part of
@@ -52,7 +50,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         :param def_val: value which is used for reset and as default value
             in hdl
         :param nop_val: value which is used to fill up statements when no other
-            value is assigned, use NO_NOPVAL to dissable
+            value is assigned, use NOT_SPECIFIED to dissable
         :param is_const: flag which tell that this signal can not have any other driver
             than a default value
         """
@@ -115,7 +113,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         if not isinstance(self._val, HValue):
             raise ValueError(
                 "Evaluation of signal returned not supported object (%r)"
-                % (self._val, ))
+                % (self._val,))
 
         return self._val
 
@@ -163,12 +161,9 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             yield self
             return
 
-        try:
-            assert self.drivers, self
-        except Exception:
-            raise
+        assert self.drivers, self
 
         for d in self.drivers:
             # d has to be operator otherwise this signal would be public itself
-            assert not isinstance(d, HdlStatement)
+            assert not isinstance(d, HdlStatement), (d.__class__)
             yield from d._walk_public_drivers(seen)

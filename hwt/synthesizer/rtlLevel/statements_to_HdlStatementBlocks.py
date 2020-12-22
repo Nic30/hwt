@@ -9,7 +9,8 @@ from hwt.hdl.value import HValue
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
 from hwt.synthesizer.rtlLevel.reduce_processes import reduceProcesses
-from hwt.synthesizer.rtlLevel.rtlSignal import NO_NOPVAL, RtlSignal
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 
 
 @internal
@@ -90,7 +91,7 @@ def _statements_to_HdlStatementBlocks(_statements, tryToSolveCombLoops)\
     enclosure_values = {}
     for sig in outputs:
         # inject nop_val if needed
-        if sig._nop_val is not NO_NOPVAL and sig not in enclosed_for:
+        if sig._nop_val is not NOT_SPECIFIED and sig not in enclosed_for:
             enclosure_recompute = True
             n = sig._nop_val
             enclosure_values[sig] = n
@@ -144,6 +145,7 @@ def _statements_to_HdlStatementBlocks(_statements, tryToSolveCombLoops)\
             yield from _statements_to_HdlStatementBlocks(proc_statements, False)
     else:
         # no combinational loops, wrap current statemetns to a process instance
+
         name = name_for_process(outputs)
         yield HdlStatementBlock("assig_process_" + name,
                                 proc_statements, sensitivity,
@@ -154,7 +156,8 @@ def _statements_to_HdlStatementBlocks(_statements, tryToSolveCombLoops)\
 def statements_to_HdlStatementBlocks(statements: List[HdlStatement])\
         -> Generator[HdlStatementBlock, None, None]:
     """
-    Pack statements into HdlStatementBlock instances,
+    Pack statements into HdlStatementBlock instances
+
     * for each out signal resolve it's drivers and collect them
     * split statements if there is and combinational loop
     * merge statements if it is possible
