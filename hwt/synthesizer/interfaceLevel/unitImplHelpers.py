@@ -12,9 +12,10 @@ from hwt.interfaces.structIntf import HdlType_to_Interface
 from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getClk, getRst
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NO_NOPVAL
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.typePath import TypePath
+from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 
 
 def getSignalName(sig):
@@ -107,7 +108,7 @@ class UnitImplHelpers(UnitBase):
     def _sig(self, name: str,
              dtype: HdlType=BIT,
              def_val: Union[int, None, dict, list]=None,
-             nop_val: Union[int, None, dict, list, "NO_NOPVAL"]=NO_NOPVAL) -> RtlSignal:
+             nop_val: Union[int, None, dict, list, "NOT_SPECIFIED"]=NOT_SPECIFIED) -> RtlSignal:
         """
         Create signal in this unit
 
@@ -116,7 +117,7 @@ class UnitImplHelpers(UnitBase):
         if isinstance(dtype, HStruct):
             if def_val is not None:
                 raise NotImplementedError()
-            if nop_val is not NO_NOPVAL:
+            if nop_val is not NOT_SPECIFIED:
                 raise NotImplementedError()
             container = dtype.from_py(None)
             for f in dtype.fields:
