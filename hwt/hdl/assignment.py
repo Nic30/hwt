@@ -6,6 +6,7 @@ from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statement import HdlStatement
 from hwt.hdl.value import HValue
 from hwt.hdl.valueUtils import isSameHVal, areSameHVals
+from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -23,10 +24,10 @@ class Assignment(HdlStatement):
     """
     __instCntr = 0
 
-    def __init__(self, src: Union[RtlSignalBase, HValue], dst: Union[RtlSignalBase, HValue],
+    def __init__(self, src: Union[RtlSignalBase, HValue], dst: RtlSignalBase,
                  indexes: Optional[List[Union[RtlSignalBase, HValue]]]=None, virtual_only=False,
                  parentStm: Optional[HdlStatement]=None,
-                 sensitivity: Optional[RtlSignalBase]=None,
+                 sensitivity: Optional[UniqList]=None,
                  event_dependent_from_branch:Optional[int]=None):
         """
         :param dst: destination to assign to
@@ -41,32 +42,32 @@ class Assignment(HdlStatement):
             parentStm,
             sensitivity,
             event_dependent_from_branch=event_dependent_from_branch)
+        self._instId = Assignment._nextInstId()
+
         self.src = src
+        self.dst = dst
+        assert isinstance(dst, RtlSignalBase), dst
+
         isReal = not virtual_only
 
-        if not isinstance(src, HValue):
+        if isinstance(src, RtlSignalBase):
             self._inputs.append(src)
             if isReal:
                 src.endpoints.append(self)
 
-        self.dst = dst
-        if not isinstance(dst, HValue):
-            self._outputs.append(dst)
-            if isReal:
-                dst.drivers.append(self)
-
         self.indexes = indexes
         if indexes:
             for i in indexes:
-                if not isinstance(i, HValue):
+                if isinstance(i, RtlSignalBase):
                     self._inputs.append(i)
                     if isReal:
                         i.endpoints.append(self)
 
-        self._instId = Assignment._nextInstId()
-
-        if not virtual_only:
+        if isReal:
+            dst.drivers.append(self)
             dst.ctx.statements.add(self)
+
+        self._outputs.append(dst)
 
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
