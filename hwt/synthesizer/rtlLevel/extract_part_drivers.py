@@ -197,6 +197,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
         new_parts_dict = {}
         split_i = 0
         end = 0
+        # :attention: parts are likely to contain parts with same indexes
         for indexes, can_directly_replace_with_src_expr, src in sorted(parts, key=lambda x: x[0]):
             if len(indexes) != 1:
                 raise NotImplementedError()
@@ -205,25 +206,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
             if isinstance(i, BitsVal):
                 low = int(i)
                 high = low + 1
-                index_key = ((high, low),)
-
-                if split_p <= low:
-                    _src = construct_tmp_dst_sig_for_slice(s, indexes, src, not can_directly_replace_with_src_expr)
-                    new_parts.append(_src)
-                    new_parts_dict[index_key] = _src, can_directly_replace_with_src_expr
-                    split_i += 1
-                else:
-                    # was already resolved
-                    # can happen if there was some slice which started on some <= index
-
-                    # check if the slice is not driven withou some top level constant assignment
-                    # which would result is multiple drivers of this slice
-                    assert src is None
-                    existing_part, _can_directly_replace_with_src_expr = new_parts_dict[index_key]
-                    assert not _can_directly_replace_with_src_expr, (s, low, high, existing_part)
-                    assert not can_directly_replace_with_src_expr, (s, low, high, existing_part)
-                    assert isinstance(existing_part, RtlSignal), (s, low, high, existing_part)
-                    continue
+                index_key = ((high, low), )
             else:
                 assert isinstance(i, SliceVal), (s, i)
                 if i.val.step != -1:
@@ -231,76 +214,101 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
                 high, low = int(i.val.start), int(i.val.stop)
                 index_key = ((high, low),)
 
-                if split_p < low:
-                    # some parts at the beginning are skiped
-                    # that means that that part is not driven by anything and we need to check
-                    # default and nop value
-                    part_indexes = (SLICE.from_py(slice(low, split_p , -1)),)
-                    _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, True)
-                    new_parts.append(_src)
-                    _index_key = ((low, split_p),)
-                    new_parts_dict[_index_key] = _src, True
-                    split_i += 1
-                    split_p = split_point[split_i]
-                    assert split_p == low
+            while split_p < low:
+                # some parts at the beginning are skiped
+                # that means that that part is not driven by anything
+                # and we need to check default and nop value
+                part_indexes = (SLICE.from_py(slice(low, split_p , -1)),)
+                _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, True)
+                new_parts.append(_src)
+                _index_key = ((low, split_p),)
+                new_parts_dict[_index_key] = _src, True
+                split_i += 1
+                split_p = split_point[split_i]
 
-                if split_p > low:
-                    # some parts at the beginning were already resolved
-                    if split_p >= high:
-                        # was already resolved
-                        continue
+
+            this_start_split_p_i = split_i
+            if split_p > low:
+                # some parts at the beginning were already resolved
+                # This can happen if there was some part which started on some <= index and overlaps with this part.
+                try:
+                    _, _can_directly_replace_with_src_expr = new_parts_dict[index_key]
+                    assert not _can_directly_replace_with_src_expr, (s, index_key)
+                    # was already resolved and checked no need to check it again
+                    continue
+                except KeyError:
+                    pass
+
+
+                for i in range(split_i, -1, -1):
+                    _sp = split_point[i]
+                    if _sp == low:
+                        this_start_split_p_i = i
+
+            assert split_point[this_start_split_p_i] == low
+            # just at the start of this slice
+            next_split_p = split_point[this_start_split_p_i + 1]
+            assert next_split_p <= high, "The next split point can be at most end of current part"
+            if next_split_p == high:
+                assert this_start_split_p_i == split_i, "We should see this part for the first time or the split_i should already be higher"
+                # all bits on this slice are alwyas driven at once, we can instantiate whole part
+                assert split_p == low
+                _src = construct_tmp_dst_sig_for_slice(s, indexes, src, not can_directly_replace_with_src_expr)
+                new_parts.append(_src)
+                new_parts_dict[index_key] = _src, can_directly_replace_with_src_expr
+                split_i += 1
+            else:
+                # list of part keys for later search
+                _split_parts = []
+                prev_sp = split_point[this_start_split_p_i]
+                dst_offset = low
+                assert not can_directly_replace_with_src_expr
+                # continue instanciating parts until we reach the end of this part
+                for sp_i, sp in zip(range(this_start_split_p_i + 1, len(split_point)),
+                                    islice(split_point, this_start_split_p_i + 1, None)):
+                    # need to generate sub slice
+                    # because this slice has actually multiple individualy driven parts
+
+                    # we need to generate all slice parts because there could be a case where only some sub parts are
+                    # driven elsewhere and we would othervise resolve those segments as a constantly driven
+                    # but they are in fact driven from this slice
+                    if sp > high:
+                        break
+
+                    part_key = ((sp, prev_sp),)
+                    if sp_i <= split_i:
+                        # check if the slice is not driven from some top level constant assignment
+                        # which would result is multiple drivers of this slice
+                        assert src is None
+                        existing_part, _can_directly_replace_with_src_expr = new_parts_dict[part_key]
+                        assert not _can_directly_replace_with_src_expr, (s, low, high, existing_part)
+                        assert not can_directly_replace_with_src_expr, (s, low, high, existing_part)
+                        assert isinstance(existing_part, RtlSignal), (s, low, high, existing_part)
                     else:
-                        # we still missing some parts from this slice
-                        raise NotImplementedError()
-                else:
-                    # just at the start of this slice
-                    next_split_p = split_point[split_i + 1]
-                    assert next_split_p <= high
-                    if next_split_p < high:
-                        # need to generate sub slice
-                        # because this slice has actually multiple individualy driven parts
+                        assert sp_i == split_i +1, (s, sp_i, split_i)
+                        # get actual input signal
+                        if src is None:
+                            _src = None
+                        else:
+                            _src = src[sp - dst_offset:prev_sp - dst_offset]
 
-                        # we need to generate all slice parts because there could be a case where only some sub parts are
-                        # driven elsewhere and we would othervise resolve those segments as a constantly driven
-                        # but they are in fact driven from this slice
+                        part_indexes = (SLICE.from_py(slice(sp, prev_sp, -1)),)
+                        _src = construct_tmp_dst_sig_for_slice(s, part_indexes, _src, True)
 
-                        # list of part keys for later search
-                        _split_parts = []
-                        prev_sp = split_p
-                        dst_offset = low
-                        for sp in islice(split_point, split_i + 1, None):
-                            if sp > high:
-                                break
-                            part_indexes = (SLICE.from_py(slice(sp, prev_sp, -1)),)
-                            assert not can_directly_replace_with_src_expr
-                            # get actual input signal
-                            if src is None:
-                                _src = None
-                            else:
-                                _src = src[sp - dst_offset:prev_sp - dst_offset]
-                            _src = construct_tmp_dst_sig_for_slice(s, part_indexes, _src, True)
-
-                            part_key = ((sp, prev_sp),)
-                            _split_parts.append(part_key)
-                            new_parts.append(_src)
-                            new_parts_dict[part_key] = _src, can_directly_replace_with_src_expr
-
-                            prev_sp = sp
-                            split_i += 1
-
-                        new_parts_dict[index_key] = _split_parts, False
-                    else:
-                        # all bits on this slice are alwyas driven at once
-                        _src = construct_tmp_dst_sig_for_slice(s, indexes, src, not can_directly_replace_with_src_expr)
                         new_parts.append(_src)
-                        new_parts_dict[index_key] = _src, can_directly_replace_with_src_expr
+                        new_parts_dict[part_key] = _src, can_directly_replace_with_src_expr
+
                         split_i += 1
+                    _split_parts.append(part_key)
+                    prev_sp = sp
+
+                new_parts_dict[index_key] = _split_parts, False
 
             end = max(end, high)
 
         if end < split_point[-1]:
-            high, low = split_point[-1], end
             # something unconnected at the end
+            high, low = split_point[-1], end
             part_indexes = (SLICE.from_py(slice(high, low , -1)),)
             _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, True)
             new_parts.append(_src)
@@ -308,6 +316,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
             new_parts_dict[index_key] = _src, True
 
         # construct assignment of concatenation from all parts
+        assert new_parts, (s, parts)
         s(Concat(*reversed(new_parts)))
         final_signal_parts[s] = new_parts_dict
 
