@@ -90,6 +90,8 @@ class Switch(SwitchContainer):
 
         super(Switch, self).__init__(switchOn, [])
         switchOn.ctx.statements.add(self)
+        self._inputs.append(switchOn)
+        switchOn.endpoints.append(self)
 
     def add_cases(self, tupesValStmnts):
         """
@@ -115,11 +117,6 @@ class Switch(SwitchContainer):
         case = []
         self._case_value_index[caseVal] = len(self.cases)
         self.cases.append((caseVal, case))
-
-        cond = self.switchOn._eq(caseVal)
-        self._inputs.append(cond)
-        cond.endpoints.append(self)
-
         self._register_stements(statements, case)
 
         return self
