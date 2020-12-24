@@ -35,8 +35,8 @@ def markVisibilityOfSignalsAndCheckDrivers(netlist: "RtlNetlist"):
 
     signals_with_driver_issue = []
     for sig in signals:
-        if isinstance(sig._nop_val, (RtlSignal, InterfaceBase)):
-            sig._nop_val.hidden = False
+        #if isinstance(sig._nop_val, (RtlSignal, InterfaceBase)):
+        #    sig._nop_val.hidden = False
 
         driver_cnt = len(sig.drivers)
         has_comb_driver = False
