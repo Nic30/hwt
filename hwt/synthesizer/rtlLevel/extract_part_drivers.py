@@ -14,6 +14,7 @@ from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.value import HValue
+from hwt.pyUtils.uniqList import UniqList
 from hwt.serializer.utils import RtlSignal_sort_key, HdlStatement_sort_key
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -77,19 +78,14 @@ def extract_part_drivers_stm(stm: HdlStatement, signal_parts: Dict[RtlSignal, Li
                 # because otherwise it would not have some overlapping parts driven diferently
                 # inder some condition
                 stm.parentStm._replace_child_statement(stm, replacement, False)
-                return True
-
-            if do_remove_stm:
+            elif do_remove_stm:
                 # remove current assignment because we are using src directly
                 assert stm.parentStm is None, stm
                 stm._destroy()
             else:
                 # rewrite the Assignment instance to use new dst
-                stm._outputs.discard(stm.dst)
-                stm._outputs.append(new_dsts)
-                stm.dst = new_dsts
-                stm.indexes = None
-                dst.drivers.append(stm)
+                replacement = [new_dsts(stm.src), ]
+                stm.parentStm._replace_child_statement(stm, replacement, False)
 
             return True
 
@@ -99,9 +95,20 @@ def extract_part_drivers_stm(stm: HdlStatement, signal_parts: Dict[RtlSignal, Li
             modified |= extract_part_drivers_stm(_stm, signal_parts)
         if modified:
             assert not stm._enclosed_for, "_enclosed_for is expected not to be initialized yet"
-            stm._outputs.clear()
-            stm._inputs.clear()
+            outputs = stm._outputs
+            inputs = stm._inputs
+            stm._outputs = UniqList()
+            stm._inputs = UniqList()
             stm._collect_io()
+            if stm.parentStm is None:
+                for o in outputs:
+                    if o not in stm._outputs:
+                        o.drivers.remove(stm)
+
+                for i in inputs:
+                    if i not in stm._inputs:
+                        i.endpoints.remove(stm)
+
             return True
 
     else:
@@ -145,8 +152,6 @@ def construct_tmp_dst_sig_for_slice(dst: RtlSignal, indexes: List[Union[BitsVal,
 
     if is_signal_needed:
         tmp_sig = dst.ctx.sig(name, dst._dtype, def_val=def_val, nop_val=nop_val)
-        tmp_sig.hidden = False
-        tmp_sig.hasGenericName = False
         return tmp_sig
     elif src is not None:
         return src
@@ -219,7 +224,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
                 # that means that that part is not driven by anything
                 # and we need to check default and nop value
                 part_indexes = (SLICE.from_py(slice(low, split_p , -1)),)
-                _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, True)
+                _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, False)
                 new_parts.append(_src)
                 _index_key = ((low, split_p),)
                 new_parts_dict[_index_key] = _src, True
@@ -255,6 +260,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
                 assert split_p == low
                 _src = construct_tmp_dst_sig_for_slice(s, indexes, src, not can_directly_replace_with_src_expr)
                 new_parts.append(_src)
+                assert index_key not in new_parts_dict, (s, index_key)
                 new_parts_dict[index_key] = _src, can_directly_replace_with_src_expr
                 split_i += 1
             else:
@@ -310,7 +316,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
             # something unconnected at the end
             high, low = split_point[-1], end
             part_indexes = (SLICE.from_py(slice(high, low , -1)),)
-            _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, True)
+            _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, False)
             new_parts.append(_src)
             index_key = ((high, low),)
             new_parts_dict[index_key] = _src, True
