@@ -428,8 +428,8 @@ class IfContainer(HdlStatement):
         self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
 
     @internal
-    def _replace_child_statement(self, stm:"HdlStatement",
-            replacement:List["HdlStatement"],
+    def _replace_child_statement(self, stm:HdlStatement,
+            replacement:List[HdlStatement],
             update_io:bool) -> None:
         if update_io:
             raise NotImplementedError()
@@ -442,7 +442,8 @@ class IfContainer(HdlStatement):
                 # not in list
                 continue
 
-            branch_list[i:1 + 1] = replacement
+            self.rank -= stm.rank
+            branch_list[i:i + 1] = replacement
             for rstm in replacement:
                 rstm._set_parent_stm(self)
             # reset IO because it was shared with this statement
