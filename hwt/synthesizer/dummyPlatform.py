@@ -15,8 +15,8 @@ class DummyPlatform():
         self.afterToRtlImpl = []
 
         self.beforeHdlArchGeneration = [
+            extract_part_drivers,
             removeUnconnectedSignals,
             markVisibilityOfSignalsAndCheckDrivers,
-            extract_part_drivers,
         ]
         self.afterToRtl = []
