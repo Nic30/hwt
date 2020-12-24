@@ -11,6 +11,7 @@ from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_
 from hwt.synthesizer.rtlLevel.reduce_processes import reduceProcesses
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 @internal
@@ -95,7 +96,7 @@ def _statements_to_HdlStatementBlocks(_statements, tryToSolveCombLoops)\
             enclosure_recompute = True
             n = sig._nop_val
             enclosure_values[sig] = n
-            if not isinstance(n, HValue):
+            if isinstance(n, RtlSignalBase):
                 _inputs.append(n)
                 sensitivity_recompute = True
 
@@ -113,10 +114,10 @@ def _statements_to_HdlStatementBlocks(_statements, tryToSolveCombLoops)\
             _stm._discover_sensitivity(seen)
             _stm._discover_enclosure()
 
-    if sensitivity_recompute:
-        sensitivity = UniqList()
-        for _stm in proc_statements:
-            sensitivity.extend(_stm._sensitivity)
+        if sensitivity_recompute:
+            sensitivity.clear()
+            for _stm in proc_statements:
+                sensitivity.extend(_stm._sensitivity)
 
     for o in outputs:
         assert not o.hidden, o

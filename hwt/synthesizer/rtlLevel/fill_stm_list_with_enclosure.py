@@ -10,7 +10,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 @internal
 def fill_stm_list_with_enclosure(parentStm: Optional[HdlStatement],
                                  current_enclosure: Set[RtlSignalBase],
-                                 statements: List["HdlStatement"],
+                                 statements: List[HdlStatement],
                                  do_enclose_for: List[RtlSignalBase],
                                  enclosure: Dict[RtlSignalBase, Union[HValue, RtlSignalBase]])\
         -> None:
