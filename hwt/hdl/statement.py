@@ -294,22 +294,25 @@ class HdlStatement(HdlObject):
             self._on_parent_event_dependent()
 
         topStatement = parentStm
-        while topStatement.parentStm is not None:
+        parents = []
+        while True:
+            parents.append(topStatement)
+            if topStatement.parentStm is None:
+                break
             topStatement = topStatement.parentStm
-
-        parent_out_add = topStatement._outputs.append
-        parent_in_add = topStatement._inputs.append
 
         if was_top:
             for inp in self._inputs:
                 inp.endpoints.discard(self)
                 inp.endpoints.append(topStatement)
-                parent_in_add(inp)
+                for p in parents:
+                    p._inputs.append(inp)
 
             for outp in self._outputs:
                 outp.drivers.discard(self)
                 outp.drivers.append(topStatement)
-                parent_out_add(outp)
+                for p in parents:
+                    p._outputs.append(outp)
 
             ctx = self._get_rtl_context()
             ctx.statements.discard(self)
