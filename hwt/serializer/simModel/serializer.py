@@ -28,7 +28,7 @@ from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond
 class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
                        ToHdlAst):
     """
-    Serializer which converts Unit instances to simulator code
+    Serializer which converts :class:`hwt.synthesizer.unit.Unit` instances to simulator code
     """
     _keywords_dict = {kw: LanguageKeyword() for kw in SIMMODEL_KEYWORDS}
     SIM_EVAL_COND = HdlValueId("sim_eval_cond", obj=sim_eval_cond)

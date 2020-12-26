@@ -67,7 +67,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                  loadConfig=True):
         """
         This constructor is called when constructing new interface,
-        it is usually done manually while creating Unit or
+        it is usually done manually while creating :class:`hwt.synthesizer.unit.Unit` or
         automatically while extracting interfaces from UnitWithSoure
 
         :param masterDir: direction which this interface should have for master
@@ -83,7 +83,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         super().__init__()
         self._masterDir = masterDir
-        # Interface is instantiated inside of Unit first,
+        # Interface is instantiated inside of :class:`hwt.synthesizer.unit.Unit` first,
         # master direction actually means slave from outside view
         self._direction = INTF_DIRECTION.UNKNOWN
 

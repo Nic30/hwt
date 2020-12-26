@@ -7,7 +7,7 @@ from hwt.hdl.value import HValue
 class Param():
     """
     Class used to mark object as a configuration of HDL module. (
-    The parameter instance will not appear on Unit instance,
+    The parameter instance will not appear on :class:`hwt.synthesizer.unit.Unit` instance,
     instead the value will appear.
     The parameter instance will be stored
     in ._params property of Unit/Interface object)
@@ -57,10 +57,10 @@ class Param():
 
     def set_value(self, v):
         setattr(self._parent, self._name, v)
-        
+
     def __repr__(self):
         return "<%s at 0x%x %s=%s>" % (
-            self.__class__.__name__, 
+            self.__class__.__name__,
             id(self),
             "<unspecified name>" if self._name is None else self._name,
             repr(self.get_value()))

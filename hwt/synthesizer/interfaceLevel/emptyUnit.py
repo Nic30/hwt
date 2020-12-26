@@ -18,7 +18,7 @@ def connect_to_const(val, intf: Interface):
 
 class EmptyUnit(Unit):
     """
-    Unit used for prototyping all output interfaces are connected
+    :class:`hwt.synthesizer.unit.Unit` used for prototyping all output interfaces are connected
     to _def_val and this is only think which architecture contains
 
     :cvar _def_val: this value is used to initialize all signals

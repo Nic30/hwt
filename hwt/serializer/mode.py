@@ -71,8 +71,8 @@ def _serializeExclude_eval(parentUnit, priv):
     :return: tuple (do serialize this object, next priv, replacement unit)
     """
 
-    # do not use this Unit instance and do not use any prelacement
-    # (usefull when the Unit instance is a placeholder for something
+    # do not use this :class:`hwt.synthesizer.unit.Unit` instance and do not use any prelacement
+    # (usefull when the :class:`hwt.synthesizer.unit.Unit` instance is a placeholder for something
     #  which already exists in hdl word)
     if priv is None:
         priv = parentUnit
@@ -97,9 +97,9 @@ def _serializeOnce_eval(parentUnit, priv):
         priv = parentUnit
         serialize = True
         replacement = None
-        # use this Unit instance and store it for later use
+        # use this :class:`hwt.synthesizer.unit.Unit` instance and store it for later use
     else:
-        # use existing Unit instance
+        # use existing :class:`hwt.synthesizer.unit.Unit` instance
         serialize = False
         replacement = priv
 
@@ -129,5 +129,5 @@ def _serializeParamsUniq_eval(parentUnit, priv):
         # serialize new
         return True, priv, None
 
-    # use previous Unit instance with same config
+    # use previous :class:`hwt.synthesizer.unit.Unit` instance with same config
     return False, priv, prevUnit

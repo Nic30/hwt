@@ -6,11 +6,11 @@ from hwt.synthesizer.unit import Unit
 
 class SerializerFilter(object):
     """
-    Base class for filters used to exclude some Unit instances from
+    Base class for filters used to exclude some :class:`hwt.synthesizer.unit.Unit` instances from
     target HDL (in order to prevent code duplication, archetype colisions etc.)
 
     This base implementation keeps track about others objects and calls
-    _serializeDecision on the Unit instance to decide if instance should be excluded.
+    _serializeDecision on the :class:`hwt.synthesizer.unit.Unit` instance to decide if instance should be excluded.
     """
     def __init__(self):
         self.serializedClasses = {}  # type: Type[Unit]: Unit
@@ -31,7 +31,7 @@ class SerializerFilter(object):
         assert isinstance(unit, Unit)
         sd = unit._serializeDecision
         if sd is None:
-            # the Unit instance does not have any filter function
+            # the :class:`hwt.synthesizer.unit.Unit` instance does not have any filter function
             return True, None
         else:
             # use UnitInstance filer function

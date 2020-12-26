@@ -61,32 +61,32 @@ def collect_comb_drivers(path_prefix: Tuple[Unit, ...],
 
         if not found_event_dep and stm.ifFalse is not None:
             for sub_stm in stms:
-                collect_comb_drivers(path_prefix, sub_stm, comb_connection_matrix, current_comb_inputs)           
+                collect_comb_drivers(path_prefix, sub_stm, comb_connection_matrix, current_comb_inputs)
 
     elif isinstance(stm, HdlStatementBlock):
         for sub_stm in stm.statements:
             collect_comb_drivers(path_prefix, sub_stm, comb_connection_matrix, comb_inputs)
 
     elif isinstance(stm, SwitchContainer):
-        current_comb_inputs = set(comb_inputs) 
+        current_comb_inputs = set(comb_inputs)
         ctx = SensitivityCtx()
         seen = set()
         collect_comb_inputs(ctx, seen, stm.switchOn, current_comb_inputs)
         cases = stm.cases
         if stm.default is not None:
             cases = chain(cases, ((None, stm.default),))
-            
+
         for (_, case_stms) in cases:
             for sub_stm in case_stms:
                 collect_comb_drivers(path_prefix, sub_stm, comb_connection_matrix, current_comb_inputs)
 
     else:
         raise NotImplementedError(stm)
-    
-    
+
+
 class CombLoopAnalyzer():
     """
-    Visitor which can walk synthetized hwt Unit instances and detect clusters connected by combinational logic 
+    Visitor which can walk synthetized hwt :class:`hwt.synthesizer.unit.Unit` instances and detect clusters connected by combinational logic
     """
 
     def __init__(self):
@@ -111,13 +111,13 @@ class CombLoopAnalyzer():
 
     def visit_HdlStatementBlock(self, proc: HdlStatementBlock) -> None:
         collect_comb_drivers(self.actual_path_prefix, proc, self.comb_connection_matrix, tuple())
-    
+
     def visit_HdlCompInst(self, o: HdlCompInst) -> None:
-        orig_path_prefix = self.actual_path_prefix 
+        orig_path_prefix = self.actual_path_prefix
         in_component_path_prefix = orig_path_prefix
         if o.origin._shared_component_with is not None:
             in_component_path_prefix = in_component_path_prefix / o.origin
-         
+
 
         try:
             assert o.origin, o

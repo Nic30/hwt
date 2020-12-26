@@ -63,7 +63,7 @@ class SimTestCase(unittest.TestCase):
     :cvar _defaultSeed: default seed for random generator
     :cvar rtl_simulator_cls: class for RTL simulator to use
         (constructed in compileSim())
-    :ivar ~.u: instance of current Unit for test, created in restartSim()
+    :ivar ~.u: instance of current :class:`hwt.synthesizer.unit.Unit` for test, created in restartSim()
     :ivar ~.rtl_simulator: RTL simulator used for simulation of unit,
         created in restartSim()
     :ivar ~.hdl_simulator: the simulator which manages the communication
@@ -203,7 +203,7 @@ class SimTestCase(unittest.TestCase):
             (if is None it is automatically generated)
         :param onAfterToRtl: callback fn(unit) which will be called
             after unit will be synthesised to RTL
-            and before Unit instance signals are replaced
+            and before :class:`hwt.synthesizer.unit.Unit` instance signals are replaced
             with simulator specific ones
         """
         if build_dir == _UNSPECIFIED:
@@ -279,7 +279,7 @@ class SingleUnitSimTestCase(SimTestCase):
     @classmethod
     def getUnit(cls) -> Unit:
         """
-        Create an Unit instance to test
+        Create an :class:`hwt.synthesizer.unit.Unit` instance to test
         """
         raise NotImplementedError("Implement this function in your testcase")
 

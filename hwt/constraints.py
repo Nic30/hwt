@@ -1,3 +1,10 @@
+"""
+This module contains the objects to store hardware constraints.
+Hardware constrains are usually stored in XDC/UCF files and they specify somethings
+which can not be described using HDL (SystemVerilog/VHDL) like relation between clock.
+Placement of component if FPGA etc.
+"""
+
 from copy import copy
 from typing import Union, Tuple
 
@@ -5,6 +12,7 @@ from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.componentPath import ComponentPath
+
 
 
 class iHdlConstrain():
@@ -21,7 +29,7 @@ class iHdlConstrain():
 
 def _get_parent_unit(path: Tuple[Union[Unit, Interface, RtlSignal, iHdlConstrain], ...]) -> Unit:
     """
-    Search parent Unit instance in path
+    Search parent :class:`hwt.synthesizer.unit.Unit` instance in path
     """
     if isinstance(path, iHdlConstrain):
         return path._get_parent()

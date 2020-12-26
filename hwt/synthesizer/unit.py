@@ -44,7 +44,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
     :ivar ~._lazy_loaded: container of RTL object which were lazy loaded
         in implementation phase (this object has to be returned
         from :func:`~._to_rtl` of parent before it it's own objects)
-    :ivar ~._shared_component_with: Optional tuple of the other Unit instance
+    :ivar ~._shared_component_with: Optional tuple of the other :class:`hwt.synthesizer.unit.Unit` instance
         which produces an exactly same component in HDL and interface
         signal map current to shared and shared to current
     :type ~._shared_component_with: Optional[Tuple[Unit,
@@ -225,7 +225,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
 
             yield True, self
 
-            # after synthesis clean up interface so this Unit object can be
+            # after synthesis clean up interface so this :class:`hwt.synthesizer.unit.Unit` object can be
             # used elsewhere
             self._cleanAsSubunit()
             if do_serialize_this:

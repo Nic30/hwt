@@ -54,7 +54,7 @@ class IpPackager(IpCorePackager):
                  serializer_cls=Vhdl2008Serializer,
                  target_platform=DummyPlatform()):
         """
-        :param topObj: Unit instance of top component
+        :param topObj: :class:`hwt.synthesizer.unit.Unit` instance of top component
         :param name: optional name of top
         :param extra_files: list of extra HDL/constrain file names for files
             which should be distributed in this IP-core

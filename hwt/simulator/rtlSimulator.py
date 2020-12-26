@@ -178,7 +178,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                               parent: Optional[VcdVarWritingScope],
                               interface_signals: Set[BasicRtlSimProxy]):
         """
-        Register signals from interfaces for Interface or Unit instances
+        Register signals from interfaces for Interface or :class:`hwt.synthesizer.unit.Unit` instances
         """
         if obj._interfaces:
             if isinstance(obj, Unit):

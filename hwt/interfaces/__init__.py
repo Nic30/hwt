@@ -1,3 +1,3 @@
 """
-This package is contains primitive hardware interfaces.
+This package contains primitive hardware interfaces.
 """

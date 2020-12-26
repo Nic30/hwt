@@ -106,20 +106,19 @@ class PropDeclrCollector(object):
 
     def _declr(self) -> None:
         """
-        declarations
+        In this function user should specify the declaration of interfaces for communication with outside word.
+        It is also better to declare sub components there as it allows for better paralelization during the build.
 
-        * do all declarations of externally accessible objects there (Interfaces)
         * _declr method is called after _config
-        * if this object is Unit all interfaces are threated as externally accessible interfaces
+        * if this object is :class:`hwt.synthesizer.unit.Unit` all interfaces are threated as externally accessible interfaces
           if this object is Interface instance all subinterfaces are loaded as well
         """
         pass
 
     def _impl(self) -> None:
         """
-        implementations
+        Implementation - construct main body of the component in this function.
 
-        * implement functionality of componnent there
         * called after _declr
         """
         pass
