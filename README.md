@@ -115,10 +115,11 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [PipelineC](https://github.com/JulianKemmerer/PipelineC) - 2018-?, Python, C++ HLS-like automatic pipelining as a language construct/compiler
 * [PyRTL](https://github.com/UCSBarchlab/PyRTL) - 2015-?, Python, HCL
 * [Pyverilog](https://github.com/PyHDI/Pyverilog) - 2013-? Python-based Hardware Design Processing Toolkit for Verilog HDL
-* [sail](https://github.com/rems-project/sail) 2018-?, (OCaml, Standard ML, Isabelle) - architecture definition language
 * [rogue](https://github.com/slaclab/rogue) , C++/Python - Hardware Abstraction & Data Acquisition System
+* [sail](https://github.com/rems-project/sail) 2018-?, (OCaml, Standard ML, Isabelle) - architecture definition language
 * [spatial](https://github.com/stanford-ppl/spatial) - Scala, an Argon DSL like, high level abstraction
 * [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, HCL
+* [Silice](https://github.com/sylefeb/Silice) - ?, C++, Custom HDL
 * [SyDpy](https://github.com/bogdanvuk/sydpy) - ?-2016, Python, HCL and verif. framework operating on TML/RTL level
 * [systemrdl-compiler](https://github.com/SystemRDL/systemrdl-compiler) - Python,c++, register description language compiler
 * [UHDM](https://github.com/alainmarcel/UHDM) - C++ SystemVerilog -> C++ model
