@@ -1,0 +1,5 @@
+git+git://github.com/Nic30/pyMathBitPrecise.git@master#egg=pyMathBitPrecise
+git+git://github.com/Nic30/pyDigitalWaveTools.git@master#egg=pyDigitalWaveTools
+git+git://github.com/Nic30/hdlConvertorAst.git@master#egg=hdlConvertorAst
+git+git://github.com/Nic30/ipCorePackager.git@master#egg=ipCorePackager
+git+git://github.com/Nic30/pycocotb.git@master#egg=pycocotb

@@ -17,7 +17,7 @@ install:
   - cd ..
   - git clone --depth=1 https://github.com/Nic30/hwtLib.git
   - pip3 install coveralls codecov
-  - pip3 install -r hwtLib/docs/requirements.hwt.txt
+  - pip3 install -r hwtLib/doc/requirements.txt
   - pushd hwt
   - python3 setup.py develop
   - popd

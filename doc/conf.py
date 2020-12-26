@@ -200,4 +200,4 @@ def setup(app):
 
 # update *.rst pages
 apidoc_main(["--module-first", "--full",
-             "--output-dir", "../docs", "../hwt"])
+             "--output-dir", "../doc", "../hwt"])
