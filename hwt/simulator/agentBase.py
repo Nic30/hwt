@@ -1,8 +1,8 @@
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from pycocotb.agents.base import AgentBase, SyncAgentBase as pcSyncAgentBase,\
+from hwtSimApi.agents.base import AgentBase, SyncAgentBase as pcSyncAgentBase,\
     AgentWitReset as pcAgentWitReset
-from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.process_utils import OnRisingCallbackLoop
+from hwtSimApi.hdlSimulator import HdlSimulator
+from hwtSimApi.process_utils import OnRisingCallbackLoop
 
 
 class AgentWitReset(pcAgentWitReset):

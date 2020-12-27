@@ -29,7 +29,7 @@ What is HWToolkit (hwt)
 * HWT is build as abstraction layer over all HDL languages to shield users from tricky features of such a languages.
   However nothings is sacrificed and everything can be overriden.
 
-* HWT uses UVM like verification environment implemented in pycocotb. Pycocotb can use verilator or python based simulator
+* HWT uses UVM like verification environment implemented in hwtSimApi. Pycocotb can use verilator or python based simulator
   to achieve high-speed simulation or nearly-zero simulator spin-up.
 
 * Most of parts of HWT ecosystem are independent and you can use them separately.

@@ -25,10 +25,10 @@ from pyDigitalWaveTools.vcd.writer import VcdVarWritingScope, \
     VarAlreadyRegistered
 from pyMathBitPrecise.bits3t import Bits3t
 from pyMathBitPrecise.enum3t import Enum3t
-from pycocotb.basic_hdl_simulator.model import BasicRtlSimModel
-from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
-from pycocotb.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
-from pycocotb.basic_hdl_simulator.sim_utils import ValueUpdater, \
+from hwtSimApi.basic_hdl_simulator.model import BasicRtlSimModel
+from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
+from hwtSimApi.basic_hdl_simulator.rtlSimulator import BasicRtlSimulator
+from hwtSimApi.basic_hdl_simulator.sim_utils import ValueUpdater, \
     ArrayValueUpdater
 
 
@@ -68,7 +68,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
               target_platform=DummyPlatform(),
               do_compile=True) -> "BasicRtlSimulatorVcd":
         """
-        Create a pycocotb.basic_hdl_simulator based simulation model
+        Create a hwtSimApi.basic_hdl_simulator based simulation model
         for specified unit and load it to python
 
         :param unit: interface level unit which you wont prepare for simulation

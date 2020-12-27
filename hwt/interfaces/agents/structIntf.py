@@ -1,5 +1,5 @@
-from pycocotb.agents.base import AgentBase
-from pycocotb.hdlSimulator import HdlSimulator
+from hwtSimApi.agents.base import AgentBase
+from hwtSimApi.hdlSimulator import HdlSimulator
 
 
 class StructIntfAgent(AgentBase):

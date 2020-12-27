@@ -2,8 +2,8 @@ from collections import deque
 
 from hwt.hdl.constants import NOP
 from hwt.simulator.agentBase import SyncAgentBase
-from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.triggers import WaitCombRead, WaitWriteOnly
+from hwtSimApi.hdlSimulator import HdlSimulator
+from hwtSimApi.triggers import WaitCombRead, WaitWriteOnly
 
 
 class RdSyncedAgent(SyncAgentBase):

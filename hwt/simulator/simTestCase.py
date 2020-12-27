@@ -14,9 +14,9 @@ from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
 from pyMathBitPrecise.bits3t import Bits3val
-from pycocotb.constants import CLK_PERIOD
-from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.triggers import Timer
+from hwtSimApi.constants import CLK_PERIOD
+from hwtSimApi.hdlSimulator import HdlSimulator
+from hwtSimApi.triggers import Timer
 
 
 def allValuesToInts(sequenceOrVal):

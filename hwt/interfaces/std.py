@@ -14,11 +14,11 @@ from hwt.interfaces.agents.vldSynced import VldSyncedAgent
 from hwt.interfaces.signalOps import SignalOps
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.param import Param
-from pycocotb.agents.clk import ClockAgent
-from pycocotb.agents.rst import PullDownAgent
-from pycocotb.agents.rst import PullUpAgent
-from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.utils import freq_to_period
+from hwtSimApi.agents.clk import ClockAgent
+from hwtSimApi.agents.rst import PullDownAgent
+from hwtSimApi.agents.rst import PullUpAgent
+from hwtSimApi.hdlSimulator import HdlSimulator
+from hwtSimApi.utils import freq_to_period
 
 
 D = DIRECTION

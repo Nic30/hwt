@@ -4,8 +4,8 @@ from hwt.interfaces.std import Signal, Clk
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.param import Param
 from ipCorePackager.intfIpMeta import IntfIpMetaNotSpecified
-from pycocotb.agents.peripheral.tristate import TristateAgent, TristateClkAgent
-from pycocotb.hdlSimulator import HdlSimulator
+from hwtSimApi.agents.peripheral.tristate import TristateAgent, TristateClkAgent
+from hwtSimApi.hdlSimulator import HdlSimulator
 
 
 class TristateSig(Interface):

@@ -1,6 +1,6 @@
 from hwt.simulator.agentBase import SyncAgentBase
-from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.agents.handshaked import HandshakedAgent as pcHandshakedAgent
+from hwtSimApi.hdlSimulator import HdlSimulator
+from hwtSimApi.agents.handshaked import HandshakedAgent as pcHandshakedAgent
 
 
 class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):

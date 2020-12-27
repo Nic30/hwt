@@ -34,7 +34,7 @@ setup(name="hwt",
       install_requires=[
           "hdlConvertorAst>=0.6",  # conversions to SystemVerilog, VHDL
           "ipCorePackager>=0.5",  # generator of IPcore packages (IP-xact, ...)
-          "pycocotb>=1.0",  # simulator API
+          "hwtSimApi>=1.0",  # simulator API
           "pyDigitalWaveTools>=1.0",  # simulator output dump
       ],
       license="MIT",

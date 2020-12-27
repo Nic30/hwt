@@ -1,7 +1,7 @@
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import NotSpecified
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
 from ipCorePackager.intfIpMeta import IntfIpMetaNotSpecified
-from pycocotb.hdlSimulator import HdlSimulator
+from hwtSimApi.hdlSimulator import HdlSimulator
 from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getRst, getClk
 
 

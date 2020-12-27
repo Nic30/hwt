@@ -2,10 +2,10 @@ from collections import deque
 
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from pycocotb.agents.base import AgentBase
-from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable
-from pycocotb.constants import CLK_PERIOD
+from hwtSimApi.agents.base import AgentBase
+from hwtSimApi.hdlSimulator import HdlSimulator
+from hwtSimApi.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable
+from hwtSimApi.constants import CLK_PERIOD
 
 
 class SignalAgent(SyncAgentBase):

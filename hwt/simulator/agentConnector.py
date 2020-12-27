@@ -1,7 +1,7 @@
 from hwt.doc_markers import internal
 from hwt.hdl.constants import INTF_DIRECTION
 from hwt.synthesizer.unit import Unit
-from pycocotb.hdlSimulator import HdlSimulator
+from hwtSimApi.hdlSimulator import HdlSimulator
 
 
 @internal

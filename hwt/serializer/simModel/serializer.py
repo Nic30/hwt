@@ -22,7 +22,7 @@ from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.simModel.types import ToHdlAstSimModel_types
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from pycocotb.basic_hdl_simulator.sim_utils import sim_eval_cond
+from hwtSimApi.basic_hdl_simulator.sim_utils import sim_eval_cond
 
 
 class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,

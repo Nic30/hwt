@@ -14,8 +14,8 @@ from hwt.simulator.rtlSimulator import BasicRtlSimulatorWithSignalRegisterMethod
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pyDigitalWaveTools.json.writer import JsonWriter
 from pyDigitalWaveTools.vcd.common import VCD_SIG_TYPE
-from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
-from pycocotb.basic_hdl_simulator.sim_utils import ValueUpdater, \
+from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
+from hwtSimApi.basic_hdl_simulator.sim_utils import ValueUpdater, \
     ArrayValueUpdater
 from pyDigitalWaveTools.json.value_format import JsonBitsFormatter,\
     JsonEnumFormatter, JsonArrayFormatter

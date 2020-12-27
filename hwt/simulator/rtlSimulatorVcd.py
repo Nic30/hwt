@@ -8,10 +8,10 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.simulator.rtlSimulator import BasicRtlSimulatorWithSignalRegisterMethods
 from pyDigitalWaveTools.vcd.writer import VcdWriter
-from pycocotb.basic_hdl_simulator.proxy import BasicRtlSimProxy
+from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
 from hwt.hdl.value import HValue
 from typing import Union
-from pycocotb.basic_hdl_simulator.sim_utils import ValueUpdater,\
+from hwtSimApi.basic_hdl_simulator.sim_utils import ValueUpdater,\
     ArrayValueUpdater
 
 

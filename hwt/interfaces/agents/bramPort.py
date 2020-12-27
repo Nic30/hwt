@@ -1,9 +1,9 @@
 from collections import deque
 from hwt.hdl.constants import READ, WRITE, NOP
 from hwt.simulator.agentBase import SyncAgentBase
-from pycocotb.agents.clk import ClockAgent
-from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.triggers import WaitCombRead, WaitWriteOnly, WaitCombStable, Timer
+from hwtSimApi.agents.clk import ClockAgent
+from hwtSimApi.hdlSimulator import HdlSimulator
+from hwtSimApi.triggers import WaitCombRead, WaitWriteOnly, WaitCombStable, Timer
 
 
 class BramPort_withoutClkAgent(SyncAgentBase):

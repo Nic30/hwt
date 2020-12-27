@@ -49,7 +49,8 @@ HWT designs are objects. No specific exceution is required, just run `python3`, 
 * [hwtLib](https://github.com/Nic30/hwtLib) - Library with examples and real designs.
 * [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds interactive shematic into html documentation.
 * [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
-* [pycocotb](https://github.com/Nic30/pycocotb) - Verilator simulator - Python binding
+* [hwtSimApi](https://github.com/Nic30/hwtSimApi) - Backup RTL simulator writen in Python
+* [hwtSimApiVerilator](https://github.com/Nic30/hwtSimApi) - Binding for Verilator simulator generator
 * [netlistDB](https://github.com/HardwareIR/netlistDB) - High performance circuit database, C++
 
 

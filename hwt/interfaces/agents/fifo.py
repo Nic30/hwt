@@ -1,11 +1,11 @@
 from collections import deque
 
 from hwt.simulator.agentBase import SyncAgentBase
-from pycocotb.process_utils import OnRisingCallbackLoop
-from pycocotb.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable,\
+from hwtSimApi.process_utils import OnRisingCallbackLoop
+from hwtSimApi.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable,\
     WaitTimeslotEnd
-from pycocotb.hdlSimulator import HdlSimulator
-from pycocotb.constants import CLK_PERIOD
+from hwtSimApi.hdlSimulator import HdlSimulator
+from hwtSimApi.constants import CLK_PERIOD
 
 
 class FifoReaderAgent(SyncAgentBase):

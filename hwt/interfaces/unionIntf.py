@@ -3,7 +3,7 @@ from hwt.hdl.constants import DIRECTION
 from hwt.interfaces.agents.unionIntf import UnionSourceAgent
 from hwt.interfaces.std import Handshaked
 from hwt.interfaces.structIntf import StructIntf
-from pycocotb.hdlSimulator import HdlSimulator
+from hwtSimApi.hdlSimulator import HdlSimulator
 
 
 class UnionSink(StructIntf):

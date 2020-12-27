@@ -5,7 +5,7 @@ from enum import Enum
 
 # import constants from other packages to have them on one place
 from ipCorePackager.constants import INTF_DIRECTION, DIRECTION
-from pycocotb.constants import Time, CLK_PERIOD
+from hwtSimApi.constants import Time, CLK_PERIOD
 
 READ = "READ"
 WRITE = "WRITE"
