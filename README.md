@@ -1,6 +1,6 @@
 # HWToolkit (hwt),
 # the library for hardware development in Python
-[![Build Status](https://travis-ci.org/Nic30/hwt.svg?branch=master)](https://travis-ci.org/Nic30/hwt)
+[![CircleCI](https://circleci.com/gh/Nic30/hwt.svg?style=svg)](https://circleci.com/gh/Nic30/hwt)
 [![Coverage Status](https://coveralls.io/repos/github/Nic30/hwt/badge.svg?branch=master)](https://coveralls.io/github/Nic30/hwt?branch=master)
 [![codecov](https://codecov.io/gh/Nic30/hwt/branch/master/graph/badge.svg)](https://codecov.io/gh/Nic30/hwt)
 [![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt)
