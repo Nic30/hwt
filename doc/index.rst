@@ -3,7 +3,7 @@ Welcome to HWToolkit (hwt) generated documentation!
 
 This documentation is automatically generated from actual source code.
 
-What is HWToolkit (hwt) 
+What is HWToolkit (hwt)
 -----------------------
 
 * Is a Hardware Construction Framework. It is similar to a HCLs like Chisel3 but it is rather set of object with a normal
@@ -29,7 +29,7 @@ What is HWToolkit (hwt)
 * HWT is build as abstraction layer over all HDL languages to shield users from tricky features of such a languages.
   However nothings is sacrificed and everything can be overriden.
 
-* HWT uses UVM like verification environment implemented in hwtSimApi. Pycocotb can use verilator or python based simulator
+* HWT uses UVM like verification environment implemented in hwtSimApi. hwtSimApi can use verilator or python based simulator
   to achieve high-speed simulation or nearly-zero simulator spin-up.
 
 * Most of parts of HWT ecosystem are independent and you can use them separately.
