@@ -38,16 +38,3 @@ def collect_processes_from_sim_agents(unit: Unit):
 
     return proc
 
-
-def valuesToInts(values):
-    """
-    Iterable of values to ints (nonvalid = None)
-    """
-    return [valToInt(d) for d in values]
-
-
-def valToInt(v):
-    try:
-        return int(v)
-    except ValueError:
-        return None

@@ -1,47 +1,18 @@
-from collections import deque
-from inspect import isgenerator
 import os
 from random import Random
 from typing import Optional
 import unittest
 
-from hwt.hdl.types.arrayVal import HArrayVal
-from hwt.hdl.value import HValue
-from hwt.simulator.agentConnector import valToInt, autoAddAgents, \
+from hwt.simulator.agentConnector import autoAddAgents, \
     collect_processes_from_sim_agents
 from hwt.simulator.rtlSimulatorVcd import BasicRtlSimulatorVcd
-from hwt.simulator.shortcuts import reconnectUnitSignalsToModel
+from hwt.simulator.utils import reconnectUnitSignalsToModel, valToInt,\
+    allValuesToInts
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
-from pyMathBitPrecise.bits3t import Bits3val
 from hwtSimApi.constants import CLK_PERIOD
 from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.triggers import Timer
-
-
-def allValuesToInts(sequenceOrVal):
-    """
-    Convert HValue instances to int recursively (for sequences)
-    """
-    if isinstance(sequenceOrVal, HArrayVal):
-        sequenceOrVal = sequenceOrVal.val
-
-    if isinstance(sequenceOrVal, (HValue, Bits3val)):
-        return valToInt(sequenceOrVal)
-    elif not sequenceOrVal:
-        return sequenceOrVal
-    elif (isinstance(sequenceOrVal, (list, tuple, deque))
-          or isgenerator(sequenceOrVal)):
-        seq = []
-        for i in sequenceOrVal:
-            seq.append(allValuesToInts(i))
-
-        if isinstance(sequenceOrVal, tuple):
-            return tuple(seq)
-
-        return seq
-    else:
-        return sequenceOrVal
 
 
 class DummySimPlatform(DummyPlatform):
@@ -255,6 +226,9 @@ class SimTestCase(unittest.TestCase):
 
 
 def simpleRandomizationProcess(tc: SimTestCase, agent, timeQuantum=CLK_PERIOD):
+    """
+    A process for simulator which will randomly enable/dissable the egent for an interface
+    """
     seed = tc._rand.getrandbits(64)
     random = Random(seed)
 
