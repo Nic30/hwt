@@ -110,11 +110,12 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             # is instance of signal
             if isinstance(other, InterfaceBase):
                 other = other._sig
-            if isinstance(other._dtype, Bits):
+
+            if other._dtype == BOOL:
+                other = other._auto_cast(BIT)
+            elif isinstance(other._dtype, Bits):
                 if other._dtype.signed is not None:
                     other = other._vec()
-            elif other._dtype == BOOL:
-                other = other._auto_cast(BIT)
             else:
                 raise TypeError(other._dtype)
 
