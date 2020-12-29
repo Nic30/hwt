@@ -136,25 +136,6 @@ class HdlStatement(HdlObject):
                                   " on class of statement", self.__class__, self)
 
     @internal
-    def _discover_sensitivity_seq(self,
-                                  signals: List[RtlSignalBase],
-                                  seen: set, ctx: SensitivityCtx)\
-            ->None:
-        """
-        Discover sensitivity for list of signals
-
-        """
-        casualSensitivity = set()
-        for s in signals:
-            s._walk_sensitivity(casualSensitivity, seen, ctx)
-            if ctx.contains_ev_dependency:
-                break
-
-        # if event dependent sensitivity found do not add other sensitivity
-        if not ctx.contains_ev_dependency:
-            ctx.extend(casualSensitivity)
-
-    @internal
     def _get_rtl_context(self):
         """
         get RtlNetlist context from signals
