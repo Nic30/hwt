@@ -96,7 +96,7 @@ class Assignment(HdlStatement):
             if inp not in seen:
                 seen.add(inp)
                 inp._walk_sensitivity(casualSensitivity, seen, ctx)
-        self._sensitivity.extend(casualSensitivity)
+        ctx.extend(casualSensitivity)
 
     @internal
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, HdlStatement]):
