@@ -2,10 +2,10 @@ version: 2.1
 
 orbs:
   python: circleci/python@0.2.1
-  py: nic30/python-all-in-1@0.2.42
+  py: nic30/python-all-in-1@0.2.44
 
 jobs:
-  install-and-test:
+  install-test-deploy:
     executor: python/default
     resource_class: small
     steps:
@@ -17,21 +17,14 @@ jobs:
       - py/install-setup-py
       # - python/save-cache
       - py/test-and-coverage
-
-  deploy:
-    executor: python/default
-    steps:
-      - py/deploy-pypi
+      - py/deploy-pypi-on-tag
 
 workflows:
   main:
     jobs:
-      - install-and-test
-      - deploy:
-         requires:
-           - install-and-test
-         filters:
-           tags:
-             only: /v[0-9]+(\.[0-9]+)*/
-           branches:
-             ignore: /.*/
+      - install-test-deploy:
+          context:
+            - pypi
+          filters:
+            tags:
+              only: /.*/
