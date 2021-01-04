@@ -1,3 +1,5 @@
+from typing import Union
+
 from hwt.doc_markers import internal
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
@@ -69,7 +71,7 @@ def convertBits(self: Bits, sigOrVal, toType: HdlType):
 
 
 @internal
-def reinterpret_bits_to_hstruct__val(val, hStructT):
+def reinterpret_bits_to_hstruct__val(val: HValue, hStructT: HStruct):
     """
     Reinterpret signal of type Bits to signal of type HStruct
     """
@@ -97,9 +99,9 @@ def transfer_signals(src: InterfaceBase, dst: InterfaceBase):
         dst._sig = src._sig
         dst._sigInside = src._sigInside
 
-            
+
 @internal
-def reinterpret_bits_to_hstruct(val, hStructT):
+def reinterpret_bits_to_hstruct(val: Union[RtlSignal, HValue], hStructT: HStruct):
     """
     Reinterpret signal of type Bits to signal of type HStruct
     """
@@ -128,10 +130,13 @@ def reinterpret_bits_to_hstruct(val, hStructT):
 
 
 @internal
-def reinterpret_bits_to_harray(sigOrVal, hArrayT):
+def reinterpret_bits_to_harray(sigOrVal: Union[RtlSignal, HValue], hArrayT: HArray):
     elmT = hArrayT.element_t
     elmWidth = elmT.bit_length()
-    a = hArrayT.from_py(None)
+    if isinstance(sigOrVal, HValue):
+        a = hArrayT.from_py(None)
+    else:
+        a = HObjList([None for _ in range(hArrayT.size)])
     for i, item in enumerate(iterBits(sigOrVal,
                                       bitsInOne=elmWidth,
                                       skipPadding=False)):
@@ -142,7 +147,7 @@ def reinterpret_bits_to_harray(sigOrVal, hArrayT):
 
 
 @internal
-def reinterpretBits__val(self: Bits, val, toType: HdlType):
+def reinterpretBits__val(self: Bits, val: HValue, toType: HdlType):
     if isinstance(toType, Bits):
         if self.signed != toType.signed:
             val = val._convSign__val(toType.signed)
@@ -158,7 +163,7 @@ def reinterpretBits__val(self: Bits, val, toType: HdlType):
 
 
 @internal
-def reinterpretBits(self: Bits, sigOrVal, toType):
+def reinterpretBits(self: Bits, sigOrVal: Union[RtlSignal, HValue], toType: HdlType):
     """
     Cast object of same bit size between to other type
     (f.e. bits to struct, union or array)
