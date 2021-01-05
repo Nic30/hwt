@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple, Set
 
 from hdlConvertorAst.hdlAst._structural import HdlCompInst
 from hwt.doc_markers import internal
@@ -236,9 +236,9 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         finally:
             store_manager.hierarchy_pop(mdec)
 
-    def _updateParamsFrom(self, otherObj,
+    def _updateParamsFrom(self, otherObj: PropDeclrCollector,
                           updater=_default_param_updater,
-                          exclude=None,
+                          exclude: Optional[Tuple[Set[str], Set[str]]]=None,
                           prefix=""):
         """
         :note: doc in
@@ -246,7 +246,6 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         """
         return PropDeclrCollector._updateParamsFrom(self, otherObj,
                                                     updater, exclude, prefix)
-
 
     @internal
     def _checkCompInstances(self):
@@ -269,6 +268,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
                 diff = inIntf - inRtl
                 raise IntfLvlConfErr(
                     f"{cls_name:s}, {self._name:s}: _to_rtl: unit(s) are missing in produced HDL {diff}")
+
 
 def copy_HdlModuleDec_interface(orig_i: InterfaceBase, new_i: InterfaceBase,
                                 ports: List[HdlPortItem], new_u: Unit):
