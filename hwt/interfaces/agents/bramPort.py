@@ -21,9 +21,9 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 
     def __init__(self, sim: HdlSimulator, intf):
         super().__init__(sim, intf, allowNoReset=True)
-        if not intf.HAS_R or not intf.HAS_W:
+        if intf.HAS_BE:
             raise NotImplementedError()
-
+        self.HAS_WE = hasattr(intf, "we")
         self.requests = deque()
         self.readPending = False
         self.r_data = deque()
@@ -35,8 +35,10 @@ class BramPort_withoutClkAgent(SyncAgentBase):
     def doReq(self, req):
         rw = req[0]
         addr = req[1]
+        intf = self.intf
 
         if rw == READ:
+            assert intf.HAS_R, intf
             rw = 0
             wdata = None
             self.readPending = True
@@ -45,6 +47,7 @@ class BramPort_withoutClkAgent(SyncAgentBase):
                                         self.intf._getFullName(),
                                         self.sim.now, addr))
         elif rw == WRITE:
+            assert intf.HAS_W, intf
             wdata = req[2]
             rw = 1
             if self._debugOutput is not None:
@@ -55,10 +58,11 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         else:
             raise NotImplementedError(rw)
 
-        intf = self.intf
-        intf.we.write(rw)
         intf.addr.write(addr)
-        intf.din.write(wdata)
+        if self.HAS_WE:
+            intf.we.write(rw)
+        if intf.HAS_W:
+            intf.din.write(wdata)
 
     def onReadReq(self, addr):
         """
@@ -86,8 +90,13 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             en = intf.en.read()
             en = int(en)
             if en:
-                we = intf.we.read()
-                we = int(we)
+                if self.HAS_WE:
+                    we = intf.we.read()
+                    we = int(we)
+                elif intf.HAS_W:
+                    we = 1
+                else:
+                    we = 0
 
                 addr = intf.addr.read()
                 if we:
@@ -119,7 +128,9 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         if self.requireInit:
             yield WaitWriteOnly()
             intf.en.write(0)
-            intf.we.write(0)
+
+            if self.HAS_WE:
+                intf.we.write(0)
             self.requireInit = False
 
         readPending = self.readPending
@@ -129,7 +140,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
             req = self.requests.popleft()
             if req is NOP:
                 intf.en.write(0)
-                intf.we.write(0)
+                if self.HAS_WE:
+                    intf.we.write(0)
                 self.readPending = False
             else:
                 self.doReq(req)
@@ -137,7 +149,8 @@ class BramPort_withoutClkAgent(SyncAgentBase):
         else:
             yield WaitWriteOnly()
             intf.en.write(0)
-            intf.we.write(0)
+            if self.HAS_WE:
+                intf.we.write(0)
             self.readPending = False
 
         if readPending:
