@@ -156,6 +156,10 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             return
 
         if self._interfaces:
+            if len(self._interfaces) != len(master._interfaces):
+                raise IntfLvlConfErr(
+                    "Interaces has different structure", self, "<=", master,
+                    self._interfaces, master._interfaces)
             for ifc in self._interfaces:
                 if exclude and ifc in exclude:
                     continue
@@ -181,6 +185,10 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                                                exclude=exclude,
                                                fit=fit)
         else:
+            if master._interfaces:
+                raise IntfLvlConfErr(
+                    "Interaces has different structure", self, "<=", master,
+                     self._interfaces, master._interfaces)
             dstSig = toHVal(self)
             srcSig = toHVal(master)
 
@@ -254,11 +262,13 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
     def _getPhysicalName(self):
         """Get name in HDL """
+
         def separator_getter(o):
             if isinstance(o, Interface):
                 return o._NAME_SEPARATOR
             else:
                 return "_"
+
         return self._getFullName(separator_getter)
 
     def _getFullName(self, separator_getter=lambda x: "."):
