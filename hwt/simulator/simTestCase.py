@@ -128,6 +128,8 @@ class SimTestCase(unittest.TestCase):
         """
         Randomly disable and enable interface for testing purposes
         """
+        assert intf._isExtern, intf
+        assert intf._ag is not None, intf
         randomEnProc = simpleRandomizationProcess(self, intf._ag)
         self.procs.append(randomEnProc())
 
