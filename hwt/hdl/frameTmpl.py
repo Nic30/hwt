@@ -134,7 +134,7 @@ class FrameTmpl(object):
             # check if padding at potential end of frame can be cut off
             if (not isFirstInFrame
                     and trimPaddingWordsOnEnd
-                    and wordI - lastWordI > 1):
+                    and wordI - lastWordI > maxPaddingWords + 1):
                 # there is too much continual padding,
                 # cut it out and start new frame
                 _endOfThisFrame = (lastWordI + 1) * wordWidth
