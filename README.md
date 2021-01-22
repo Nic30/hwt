@@ -19,11 +19,11 @@
 ## How HWT can help you?
 
 * The lower layer (IR, HDL serializers) is a shield against a problems related to VHDL/Verilog. It is checking for correctness and synthetisability and removing specific of HDLs.
-* The system level and HLS layer allows you to quickly build desing generators with advance optimisation techniques of your choice. 
+* The system level and HLS layer allows you to quickly build desing generators with advance optimisation techniques of your choice.
 * Simulator API and it's UVM simulation environment is just python object with C++ binding. This makes it easy to use while not sacrificing performance.
 * Rich type system can describe also data locality and packet features. This significantly simplifies configuration of component which are working with packets or any data over remote bus.
 * HWT is not compiler nor transpiler but it is actually a core library. It contains only necessary stuff and you can can modify/extend any part any time.
-  Because the word of HW developement is always full of unexpected situations. 
+  Because the word of HW developement is always full of unexpected situations.
 
 
 ## Features
@@ -45,7 +45,7 @@ HWT designs are objects. No specific exceution is required, just run `python3`, 
 
 * [pyMathBitPrecise](https://github.com/Nic30/pyMathBitPrecise) - Bit precise integer types.
 * [pyDigitalWaveTools](https://github.com/Nic30/pyDigitalWaveTools) - wave dump IO
-* [ipCorePackager](https://github.com/Nic30/ipCorePackager) - IPCore generator (Vivado, Quartus support etc.) automatic specification of interfaces by metaclass description, register map, clk domains etc. 
+* [ipCorePackager](https://github.com/Nic30/ipCorePackager) - IPCore generator (Vivado, Quartus support etc.) automatic specification of interfaces by metaclass description, register map, clk domains etc.
 * [hwtLib](https://github.com/Nic30/hwtLib) - Library with examples and real designs.
 * [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds interactive shematic into html documentation.
 * [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
@@ -72,7 +72,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * How do I get Verilog/VHDL?
   * Use `to_rtl` method [example](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/simple.py)
 * How do I define my interface type, protocol and simulation agent?
-  * Derive from any Interface class. [example](https://github.com/Nic30/hwt/blob/master/hwt/interfaces/std.py#L107) 
+  * Derive from any Interface class. [example](https://github.com/Nic30/hwt/blob/master/hwt/interfaces/std.py#L107)
 * I do have c structure of UDP header, how do I send/recieve UDP packet over AXI-stream interface?
   * Define HStruct type composed of eth_header_t, IPv4_header_t and HStream(uint8_t) and use [AxisFrameGen](https://github.com/Nic30/hwtLib/blob/master/hwtLib/amba/axis_comp/frameGen.py). There is and example of [ping responder](https://github.com/Nic30/hwtLib/blob/master/hwtLib/examples/builders/pingResponder.py)
 
@@ -82,7 +82,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [autofpga](https://github.com/ZipCPU/autofpga) - C++, A utility for Composing FPGA designs from Peripherals
 * [BinPy](https://github.com/BinPy/BinPy) - Python, An electronic simulation library
 * [blarney](https://github.com/blarney-lang/blarney) - Haskell, HCL
-* [bsc](https://github.com/B-Lang-org/bsc) - Haskell, C++, BSV - Bluespec Compiler 
+* [bsc](https://github.com/B-Lang-org/bsc) - Haskell, C++, BSV - Bluespec Compiler
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, HCL
 * [Chips-2.0](https://github.com/dawsonjon/Chips-2.0) - , , FPGA Design Suite based on C to Verilog design flow
 * [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
@@ -99,7 +99,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [lgraph](https://github.com/masc-ucsc/lgraph) - C, generic graph library
 * [llhd](https://github.com/fabianschuiki/llhd) - Rust, HCL
 * [livehd](https://github.com/masc-ucsc/livehd) - mainly C++, An infrastructure designed for Live Hardware Development.
-* [livehd](https://github.com/masc-ucsc/livehd) - JS, utils, infrastructure for Synthesis and Simulation 
+* [livehd](https://github.com/masc-ucsc/livehd) - JS, utils, infrastructure for Synthesis and Simulation
 * [Lucid HDL in Alchitry-Labs](https://github.com/alchitry/Alchitry-Labs) - Custom language and IDE inspired by Verilog
 * [magma](https://github.com/phanrahan/magma/) - 2017-?, Python, HCL
 * [migen](https://github.com/m-labs/migen) - 2013-?, Python, HCL
@@ -109,7 +109,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [nmigen](https://github.com/m-labs/nmigen) -, Python, A refreshed Python toolbox for building complex digital hardware
 * [OpenTimer](https://github.com/OpenTimer/OpenTimer) - , C++,  A High-Performance Timing Analysis Tool for VLSI Systems
 * [percy](https://github.com/whaaswijk/percy) - Collection of different synthesizers and exact synthesis methods for use in applications such as circuit resynthesis and design exploration.
-* [PyChip-py-hcl](https://github.com/scutdig/PyChip-py-hcl) - , Python, Chisel3 like HCL 
+* [PyChip-py-hcl](https://github.com/scutdig/PyChip-py-hcl) - , Python, Chisel3 like HCL
 * [pygears](https://github.com/bogdanvuk/pygears) - , Python, function style HDL generator
 * [PyMTL3](https://github.com/cornell-brg/pymtl3) 2018-?
 * [PyMTL](https://github.com/cornell-brg/pymtl) - 2014-?, Python, Process based HDL
@@ -144,3 +144,8 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [loam](https://github.com/phanrahan/loam) - Buildsystem for magma
 * [vivado-boards](https://github.com/Digilent/vivado-boards) - Vivado XML/TCL files with board description
 * [nmigen-boards](https://github.com/nmigen/nmigen-boards) - board and connector meta fo nmigen
+
+
+## Sources of informations in this area
+
+* [computer-engineering-resources](https://github.com/rajesh-s/computer-engineering-resources) - list of conferences and hardware projects
