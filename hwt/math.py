@@ -98,7 +98,7 @@ def shiftIntArray(values: List[Union[int, BitsVal]], item_width: int, shift: int
     t = Bits(item_width)
     if shift > 0:
         # <<
-        for i in range(shift // item_width):
+        for _ in range(shift // item_width):
             new_v.append(None)
         prev = None
         for v in values:
