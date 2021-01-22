@@ -22,6 +22,7 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 from pyMathBitPrecise.bits3t import Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
+from pyMathBitPrecise.bit_utils import ValidityError
 
 
 class BitsVal(Bits3val, EventCapableVal, HValue):
@@ -409,6 +410,12 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         else:
             a = toHVal(a)
             b = toHVal(b)
+            try:
+                if a == b:
+                    return a
+            except ValidityError:
+                pass
+            
             return Operator.withRes(
                 AllOps.TERNARY,
                 [self, a, b],
