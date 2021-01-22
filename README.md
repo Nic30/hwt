@@ -2,7 +2,6 @@
 # the library for hardware development in Python
 [![CircleCI](https://circleci.com/gh/Nic30/hwt.svg?style=svg)](https://circleci.com/gh/Nic30/hwt)
 [![Coverage Status](https://coveralls.io/repos/github/Nic30/hwt/badge.svg?branch=master)](https://coveralls.io/github/Nic30/hwt?branch=master)
-[![codecov](https://codecov.io/gh/Nic30/hwt/branch/master/graph/badge.svg)](https://codecov.io/gh/Nic30/hwt)
 [![PyPI version](https://badge.fury.io/py/hwt.svg)](http://badge.fury.io/py/hwt)
 [![Documentation Status](https://readthedocs.org/projects/hwtoolkit/badge/?version=latest)](http://hwtoolkit.readthedocs.io/en/latest/?badge=latest)
 [![Google group](https://img.shields.io/badge/google%20group-online-green.svg)](https://groups.google.com/forum/#!forum/hwt-community)
