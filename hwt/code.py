@@ -16,6 +16,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
+from hwt.math import log2ceil
 
 
 class If(IfContainer):
@@ -93,13 +94,13 @@ class Switch(SwitchContainer):
         self._inputs.append(switchOn)
         switchOn.endpoints.append(self)
 
-    def add_cases(self, tupesValStmnts):
+    def add_cases(self, tupesValStms):
         """
         Add multiple case statements from iterable of tuples
         (caseVal, statements)
         """
         s = self
-        for val, statements in tupesValStmnts:
+        for val, statements in tupesValStms:
             s = s.Case(val, statements)
         return s
 
@@ -133,7 +134,7 @@ class Switch(SwitchContainer):
 
 def SwitchLogic(cases, default=None):
     """
-    Generate if tree for cases like (syntax sugar for large elifs)
+    Generate if tree for cases like (syntax sugar for large generated elifs)
 
     ..code-block:: python
         if cond0:
@@ -146,25 +147,38 @@ def SwitchLogic(cases, default=None):
     :param case: iterable of tuples (condition, statements)
     :param default: default statements
     """
-    if default is not None:
-        assigTop = default
-    else:
-        assigTop = []
-
-    for cond, statements in reversed(cases):
+    assigTop = None
+    hasElse = False
+    for cond, statements in cases:
         if isinstance(cond, (RtlSignalBase, InterfaceBase)):
-            assigTop = If(cond,
-                          statements
-                       ).Else(
-                           assigTop
-                       )
+            if assigTop is None:
+                assigTop = If(cond,
+                             statements
+                           )
+            else:
+                assigTop = assigTop.Elif(cond, statements)
         else:
             if cond:
-                assigTop = statements
+                if assigTop is None:
+                    assigTop = statements
+                else:
+                    assigTop.Else(statements)
+                    hasElse = True
             else:
                 pass
 
-    return assigTop
+    if assigTop is None:
+        if default is None:
+            return []
+        else:
+            return default
+    else:
+        if hasElse:
+            return assigTop
+        elif default is not None:
+            assigTop = assigTop.Else(default)
+
+        return assigTop
 
 
 def In(sigOrVal, iterable):
@@ -334,10 +348,6 @@ Xor = _mkOp(xor)
 Concat = _mkOp(concatFn)
 
 
-def power(base, exp) -> RtlSignalBase:
-    return toHVal(base) ** exp
-
-
 def ror(sig, howMany) -> RtlSignalBase:
     "Rotate right"
     if sig._dtype.bit_length() == 1:
@@ -351,39 +361,6 @@ def rol(sig, howMany) -> RtlSignalBase:
     if width == 1:
         return sig
     return sig[(width - howMany):]._concat(sig[:(width - howMany)])
-
-
-def log2ceil(x):
-    """
-    Returns no of bits required to store x-1
-    for example x=8 returns 3
-    """
-
-    if not isinstance(x, (int, float)):
-        x = int(x)
-
-    if x == 0 or x == 1:
-        res = 1
-    else:
-        res = math.ceil(math.log2(x))
-
-    return res
-
-
-def isPow2(num) -> bool:
-    """
-    Check if number or constant is power of two
-    """
-    if not isinstance(num, int):
-        num = int(num)
-    return num != 0 and ((num & (num - 1)) == 0)
-
-
-def sizeof(_type) -> int:
-    "get size of type in bytes"
-    s = _type.bit_length()
-    return math.ceil(s / 8)
-
 
 def replicate(n, v):
     return Concat(*(v for _ in range(n)))
