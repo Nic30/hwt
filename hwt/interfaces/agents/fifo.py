@@ -22,6 +22,8 @@ class FifoReaderAgent(SyncAgentBase):
         # flags to keep data coherent when enable state changes
         self.lastData_invalidate = False
         self.readPending_invalidate = False
+        if intf.DATA_WIDTH == 0:
+            raise NotImplementedError()
 
     def setEnable_asDriver(self, en):
         lastEn = self._enabled
@@ -169,6 +171,8 @@ class FifoWriterAgent(SyncAgentBase):
         super(FifoWriterAgent, self).__init__(
             sim, intf, allowNoReset=allowNoReset)
         self.data = deque()
+        if intf.DATA_WIDTH == 0:
+            raise NotImplementedError()
 
     def driver_init(self):
         yield WaitWriteOnly()
