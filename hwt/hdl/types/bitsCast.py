@@ -105,7 +105,7 @@ def reinterpret_bits_to_hstruct(val: Union[RtlSignal, HValue], hStructT: HStruct
     """
     Reinterpret signal of type Bits to signal of type HStruct
     """
-    container = HdlType_to_Interface(hStructT)
+    container = HdlType_to_Interface().apply(hStructT)
     container._loadDeclarations()
     offset = 0
     for f in hStructT.fields:

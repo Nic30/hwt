@@ -48,6 +48,7 @@ class StructIntf(Interface):
 
         self._field_path = field_path
         self._dtype = structT
+        assert self._dtype.fields, "Needs to have at least some mebers (othervise this interface is useless)"
         self._instantiateFieldFn = instantiateFieldFn
         self._fieldsToInterfaces = {}
 
@@ -92,15 +93,7 @@ class StructIntf(Interface):
         return hstruct_reinterpret(self._dtype, self, toT)
 
 
-@internal
-def _HdlType_to_Interface_instantiateFieldFn(intf, fieldInfo) -> Interface:
-    if isinstance(intf, StructIntf):
-        c = HdlType_to_Interface(fieldInfo.dtype, field_path=intf._field_path / fieldInfo.name)
-        c._fieldsToInterfaces = intf._fieldsToInterfaces
-    return c
-
-
-def HdlType_to_Interface(dtype: HdlType, field_path: Optional[TypePath]=None) -> Interface:
+class HdlType_to_Interface():
     """
     Convert instance of HdlType to an interface shich represents same data.
 
@@ -108,30 +101,51 @@ def HdlType_to_Interface(dtype: HdlType, field_path: Optional[TypePath]=None) ->
         loaded yet, it can be done manually or by assigning to a property of parent Interface/Unit
         instance.
     """
-    if isinstance(dtype, HStruct):
-        return StructIntf(dtype, field_path, instantiateFieldFn=_HdlType_to_Interface_instantiateFieldFn)
-    elif isinstance(dtype, (Bits, HEnum)):
-        return Signal(dtype=dtype)
-    elif isinstance(dtype, HArray):
-        return HObjList(HdlType_to_Interface(dtype.elem_t) for _ in range(dtype.size))
-    else:
-        raise NotImplementedError(dtype)
+
+    def apply(self, dtype: HdlType, field_path: Optional[TypePath]=None) -> Interface:
+        """
+        Run the connversion
+        """
+        if isinstance(dtype, HStruct):
+            return StructIntf(dtype, field_path,
+                              instantiateFieldFn=self.instantiateFieldFn)
+        elif isinstance(dtype, (Bits, HEnum)):
+            return Signal(dtype=dtype)
+        elif isinstance(dtype, HArray):
+            return HObjList(self.apply(dtype.elem_t)
+                            for _ in range(dtype.size))
+        else:
+            raise NotImplementedError(dtype)
+
+    @internal
+    def instantiateFieldFn(self, intf, fieldInfo) -> Interface:
+        if isinstance(intf, StructIntf):
+            c = self.apply(
+                fieldInfo.dtype,
+                field_path=intf._field_path / fieldInfo.name)
+            c._fieldsToInterfaces = intf._fieldsToInterfaces
+        return c
 
 
-def Interface_to_HdlType(intf: Union[Interface, RtlSignal], const=False):
+class Interface_to_HdlType():
     """
     Convert instance of HdlType to an interface shich represents same data.
 
     :note: Interface instance has to have definitions loaded.
     """
-    if isinstance(intf, Interface) and intf._interfaces:
-        return HStruct(
-            *((Interface_to_HdlType(i, const=const), i._name)
-              for i in intf._interfaces)
-        )
-    else:
-        t = intf._dtype
-        if t.const != const:
-            t = copy(t)
-            t.const = const
-        return t
+
+    def apply(self, intf: Union[Interface, RtlSignal], const=False):
+        """
+        Run the connversion
+        """
+        if isinstance(intf, Interface) and intf._interfaces:
+            return HStruct(
+                *((self.apply(i, const=const), i._name)
+                  for i in intf._interfaces)
+            )
+        else:
+            t = intf._dtype
+            if t.const != const:
+                t = copy(t)
+                t.const = const
+            return t

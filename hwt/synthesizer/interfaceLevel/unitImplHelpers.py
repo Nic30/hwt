@@ -83,7 +83,7 @@ class UnitImplHelpers(UnitBase):
             rst = getRst(self)
 
         if isinstance(dtype, HStruct):
-            container = HdlType_to_Interface(dtype)
+            container = HdlType_to_Interface().apply(dtype)
             container._loadDeclarations()
             flattened_def_val = {}
             _flatten_map(TypePath(), def_val, flattened_def_val)
