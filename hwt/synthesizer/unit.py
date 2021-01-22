@@ -129,7 +129,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
                 store_manager: "StoreManager"):
         """
         synthesize all subunits, make connections between them,
-        build entity and component for this unit
+        build verilog like module/vhdl like entity and architecture for this unit
         """
         if self._hdl_module_name is None:
             self._hdl_module_name = self._getDefaultName()

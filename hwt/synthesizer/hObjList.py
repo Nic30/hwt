@@ -1,14 +1,17 @@
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
 from hwt.hdl.statement import HdlStatement
+from typing import TypeVar, Generic, Iterable, List
+
+T = TypeVar("T", InterfaceBase, UnitBase, None)
 
 
-class HObjList(list):
+class HObjList(list, Generic[T]):
     """
     Regular list with some interface/unit methods delegated on items.
 
     Main purpose of this class it let :class:`hwt.synthesizer.PropDeclrCollector.PropDeclrCollector`
     know that this is not an regular python array and that items should be registered as HW objects.
-    
+
     :ivar _name: name of the property on parent
     :ivar _parent: parent Unit/Interface object
     :note: this object may be nested in HObjList instances but the parent and name will always corresponds
@@ -23,15 +26,15 @@ class HObjList(list):
         self._name = None
         self._parent = None
 
-    def _on_append(self, self_obj: "HObjList", item, index: int):
+    def _on_append(self, self_obj: "HObjList", item: T, index: int):
         pass
 
-    def _m(self):
+    def _m(self) -> "HObjList":
         for item in self:
             item._m()
         return self
 
-    def append(self, item):
+    def append(self, item: T):
         if self._on_append is not HObjList._on_append:
             self._on_append(self, item, len(self))
         return list.append(self, item)
@@ -40,7 +43,7 @@ class HObjList(list):
         assert self._parent is None
         return list.clear(self, *args, **kwargs)
 
-    def extend(self, iterable):
+    def extend(self, iterable: Iterable[T]):
         if self._on_append is not HObjList._on_append:
             offset = len(self)
             for i, item in enumerate(iterable):
@@ -51,7 +54,7 @@ class HObjList(list):
         assert self._parent is None
         return list.insert(self, *args, **kwargs)
 
-    def pop(self, *args, **kwargs):
+    def pop(self, *args, **kwargs) -> T:
         assert self._parent is None
         return list.pop(self, *args, **kwargs)
 
@@ -67,7 +70,7 @@ class HObjList(list):
         assert self._parent is None
         return list.remove(self, *args, **kwargs)
 
-    def _getFullName(self, separator_getter=lambda x: "."):
+    def _getFullName(self, separator_getter=lambda x: ".") -> str:
         """get all name hierarchy separated by '.' """
         name = ""
         tmp = self
@@ -105,11 +108,11 @@ class HObjList(list):
                 o._updateParamsFrom(*args, **kwargs)
         return self
 
-    def __call__(self, other):
+    def __call__(self, other: List[T]):
         """
         () operator behaving as assingment operator
         """
-        if not isinstance(other, list):
+        if not isinstance(other, (list, tuple)):
             raise TypeError(other)
         if len(self) != len(other):
             raise ValueError("Different number of interfaces in list",

@@ -1,6 +1,9 @@
+from typing import TypeVar, Generic, Union
+
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BIT, BIT_N
+from hwt.hdl.types.hdlType import HdlType
 from hwt.interfaces.agents.bramPort import BramPortAgent
 from hwt.interfaces.agents.bramPort import BramPort_withoutClkAgent
 from hwt.interfaces.agents.fifo import FifoReaderAgent
@@ -23,8 +26,8 @@ from hwtSimApi.utils import freq_to_period
 
 D = DIRECTION
 
-
-class Signal(SignalOps, Interface):
+T = TypeVar("T", bound=HdlType)
+class Signal(SignalOps, Interface, Generic[T]):
     """
     Basic wire interface
 
@@ -39,9 +42,9 @@ class Signal(SignalOps, Interface):
     """
 
     def __init__(self,
-                 dtype=BIT,
-                 masterDir=D.OUT,
-                 loadConfig=True):
+                 dtype: HdlType=BIT,
+                 masterDir: DIRECTION=D.OUT,
+                 loadConfig: bool=True):
         self._sig = None
         self._sigInside = None
         self._isAccessible = True
@@ -73,8 +76,8 @@ class Signal(SignalOps, Interface):
         self._ag = SignalAgent(sim, self)
 
 
-def VectSignal(width,
-               signed=None,
+def VectSignal(width: int,
+               signed: Union[bool, None]=None,
                masterDir=D.OUT,
                loadConfig=True):
     """
@@ -102,7 +105,7 @@ class Clk(Signal):
         self._ag = ClockAgent(sim, self, period=int(freq_to_period(self.FREQ)))
 
 
-class Rst(Signal):
+class Rst(Signal[Bits]):
     """
     Basic :class:`.Signal` interface which is interpreted as reset signal
     """
@@ -117,7 +120,7 @@ class Rst(Signal):
                                  initDelay=int(0.6 * freq_to_period(clk.FREQ)))
 
 
-class Rst_n(Signal):
+class Rst_n(Signal[Bits]):
     """
     Basic :class:`.Signal` interface which is interpreted as reset signal
     with negative polarity (active in 0)
@@ -202,7 +205,6 @@ class HandshakeSync(Interface):
     :ivar ~.vld: when high master is sending data to slave
 
     transaction happens when both ready and valid are high
-
     """
 
     def _declr(self):
@@ -303,7 +305,8 @@ class FifoWriter(Interface):
     def _declr(self):
         self.en = Signal()
         self.wait = Signal(masterDir=D.IN)
-        self.data = VectSignal(self.DATA_WIDTH)
+        if self.DATA_WIDTH:
+            self.data = VectSignal(self.DATA_WIDTH)
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = FifoWriterAgent(sim, self)
@@ -313,12 +316,15 @@ class FifoWriter(Interface):
         return IP_FifoWriter
 
 
-class FifoReader(FifoWriter):
+class FifoReader(Interface):
     """
     FIFO read port interface
     """
+    def _config(self):
+        FifoWriter._config(self)
+
     def _declr(self):
-        super()._declr()
+        FifoWriter._declr(self)
         self.en._masterDir = D.IN
         self.wait._masterDir = D.OUT
 

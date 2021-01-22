@@ -16,7 +16,7 @@ class HStream(HdlType):
     :ivar ~.len_max: maximum repetitions of element_t (inclusive interval)
     :ivar ~.start_offsets: list of numbers which represents the number of invalid bytes
         before valid data on stream (invalid bytes means the bytes
-        which does not have bit validity set, e.g. Axi4Stream keep=0b10 -> offset=1 
+        which does not have bit validity set, e.g. Axi4Stream keep=0b10 -> offset=1
         )
     """
 
@@ -37,7 +37,7 @@ class HStream(HdlType):
 
     def bit_length(self):
         if self.len_min != self.len_max or isinf(self.len_max):
-            raise TypeError("HStream does not have constant size", self)
+            raise TypeError("This HStream does not have constant size", self)
         else:
             # len_min == len_max
             return self.len_min * self.element_t.bit_length()

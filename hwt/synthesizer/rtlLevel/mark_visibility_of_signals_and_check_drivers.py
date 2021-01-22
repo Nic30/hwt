@@ -5,7 +5,6 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statement import HdlStatement
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErrType, \
     SignalDriverErr

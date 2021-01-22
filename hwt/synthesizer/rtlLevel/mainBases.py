@@ -1,4 +1,11 @@
-class RtlSignalBase():
+from typing import TypeVar, Generic
+
+from hwt.hdl.types.hdlType import HdlType
+
+T = TypeVar("T", bound=HdlType)
+
+
+class RtlSignalBase(Generic[T]):
     """
     Main base class for all rtl signals
     """

@@ -5,6 +5,9 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct, HStructFieldMeta, HStructField
 from hwt.interfaces.std import BramPort_withoutClk, RegCntrl, VldSynced, Signal
+from hwt.interfaces.structIntf import StructIntf
+from hwt.interfaces.unionIntf import UnionSink, UnionSource
+from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.interfaceLevel.unitImplHelpers import getSignalName
@@ -24,7 +27,7 @@ class IntfMap(list):
 
 
 @internal
-def _HTypeFromIntfMap(intf):
+def _HTypeFromIntfMap(intf: Union[RtlSignalBase, VldSynced, RegCntrl, BramPort_withoutClk, StructIntf, UnionSink, UnionSource]):
     name = getSignalName(intf)
     if isinstance(intf, (RtlSignalBase, Signal)):
         dtype = intf._dtype
@@ -140,7 +143,7 @@ def isPaddingInIntfMap(item):
     return False
 
 
-def _walkStructIntfAndIntfMap_unpack(structIntf, intfMap):
+def _walkStructIntfAndIntfMap_unpack(structIntf: Union[HObjList, StructIntf, UnionSink, UnionSource], intfMap):
     """
     Try to unpack intfMap and apply the selection on structIntf
 
@@ -165,13 +168,13 @@ def _walkStructIntfAndIntfMap_unpack(structIntf, intfMap):
     return getattr(structIntf, name), item
 
 
-def walkStructIntfAndIntfMap(structIntf, intfMap):
+def walkStructIntfAndIntfMap(structIntf: Union[HObjList, StructIntf, UnionSink, UnionSource], intfMap):
     """
-    Walk StructInterfacece and interface map
+    Walk StructInterface and interface map
     and yield tuples (Interface in StructInterface, interface in intfMap)
     which are on same place
 
-    :param structIntf: HObjList or StructIntf or UnionIntf instance
+    :param structIntf: an interface to walk
     :param intfMap: interface map
 
     :note: typical usecase is when there is StructIntf generated from description in intfMap
