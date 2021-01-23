@@ -134,7 +134,6 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
                     sign = self.TRUE
                 else:
                     sign = self.FALSE
-                    # cast_sign()
                 return hdl_call(hdl_getattr(op_hdl, "cast_sign"), [sign, ])
             else:
                 return op_hdl
