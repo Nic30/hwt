@@ -363,7 +363,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         :note: arithmetic sift if type is signed else logical shift
         """
         if self._dtype.signed:
-            raise NotImplementedError()
+            return self[:self._dtype.bit_length() - other]._concat(self[:other])
 
         return vec(0, int(other))._concat(self[:other])
 
@@ -415,7 +415,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                     return a
             except ValidityError:
                 pass
-            
+
             return Operator.withRes(
                 AllOps.TERNARY,
                 [self, a, b],
