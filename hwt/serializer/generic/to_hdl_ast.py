@@ -166,7 +166,6 @@ class ToHdlAst():
     def _as_hdl_Assignment_auto_conversions(self, a: Assignment):
         dst = a.dst
         src = a.src
-
         dst_indexes = a.indexes
         if a.indexes is not None:
             dst_indexes = [self.as_hdl(x) for x in dst_indexes]

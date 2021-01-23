@@ -1,7 +1,7 @@
 
 from typing import Optional
 
-from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOpType
+from hdlConvertorAst.hdlAst._expr import HdlValueId
 from hdlConvertorAst.hdlAst._structural import HdlModuleDef
 from hdlConvertorAst.to.hwt.keywords import HWT_KEYWORDS
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope

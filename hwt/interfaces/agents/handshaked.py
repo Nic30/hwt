@@ -1,6 +1,6 @@
 from hwt.simulator.agentBase import SyncAgentBase
-from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.agents.handshaked import HandshakedAgent as pcHandshakedAgent
+from hwtSimApi.hdlSimulator import HdlSimulator
 
 
 class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
@@ -9,7 +9,7 @@ class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
     interface there is onMonitorReady(simulator)
     and onDriverWriteAck(simulator) unimplemented method
     which can be used for interfaces with bi-directional data streams
-    
+
     :note: 2-phase (xor) handshake
 
     :attention: requires clk and rst/rstn signal (
