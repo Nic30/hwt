@@ -12,6 +12,8 @@ from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
+from hdlConvertorAst.hdlAst import HdlStmCase
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class ToHdlAstVhdl2008_statements():
@@ -67,6 +69,21 @@ class ToHdlAstVhdl2008_statements():
         raise SerializerException(
             f"{dst} = {a.src}  is not valid assignment\n"
             f" because types are different ({dst._dtype}; {a.src._dtype})")
+
+    def as_hdl_SwitchContainer(self, sw: SwitchContainer) -> HdlStmCase:
+        s = HdlStmCase()
+        switchOn = sw.switchOn
+        if isinstance(switchOn, RtlSignalBase) and switchOn.hidden:
+            switchOn = self.createTmpVarFn("tmpTypeConv_", switchOn._dtype, def_val=switchOn)
+
+        s.switch_on = self.as_hdl_cond(switchOn, False)
+        s.cases = cases = []
+        for key, statements in sw.cases:
+            key = self.as_hdl_Value(key)
+            cases.append((key, self.as_hdl_statements(statements)))
+
+        s.default = self.as_hdl_statements(sw.default)
+        return s
 
     def can_pop_process_wrap(self, stms, hasToBeVhdlProcess):
         if hasToBeVhdlProcess or len(stms) > 1:
