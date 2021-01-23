@@ -57,8 +57,14 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
                 HdlOp(HdlOpType.PARAMETRIZATION, [self.static_cast, t]),
                 [self.as_hdl_Value(ops[0]), ])
         elif o == AllOps.CONCAT:
-            o = self.createTmpVarFn("tmpConcat_", op.result._dtype)
-            o.drivers.append(Assignment(op, o, virtual_only=True))
+            isNew, o = self.tmpVars.create_var_cached("tmpConcat_",
+                                                      op.result._dtype,
+                                                      postponed_init=True,
+                                                      extra_args=(AllOps.CONCAT, op.result))
+            if isNew:
+                o.drivers.append(Assignment(op, o, virtual_only=True))
+                self.tmpVars.finish_var_init(o)
+
             return self.as_hdl(o)
         else:
             return ToHdlAstVerilog_ops.as_hdl_Operator(self, op)

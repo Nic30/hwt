@@ -12,7 +12,7 @@ class SignalTypeSwap():
         self.signalType = signalType
 
     def __enter__(self):
-        self.orig = self.ctx.createTmpVarFn
+        self.orig = self.ctx.signalType
         self.ctx.signalType = self.signalType
 
     def __exit__(self, exc_type, exc_val, exc_tb):

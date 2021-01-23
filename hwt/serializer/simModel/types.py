@@ -1,5 +1,5 @@
 from hdlConvertorAst.hdlAst import HdlValueId, HdlValueInt
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call, \
     hdl_getattr
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.bits import Bits

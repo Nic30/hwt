@@ -1,13 +1,13 @@
 from copy import copy
 from typing import Optional, List
 
-from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlValueInt, HdlOp,\
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlValueInt, HdlOp, \
     HdlOpType
-from hdlConvertorAst.hdlAst._statements import HdlStmIf, HdlStmAssign,\
+from hdlConvertorAst.hdlAst._statements import HdlStmIf, HdlStmAssign, \
     HdlStmProcess, HdlStmBlock
 from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef
 from hdlConvertorAst.to.basic_hdl_sim_model.keywords import SIMMODEL_KEYWORDS
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_map_asoc, hdl_call
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.assignment import Assignment
@@ -19,6 +19,7 @@ from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.serializer.generic.constant_cache import ConstantCache
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
+from hwt.serializer.simModel.tmpVarConstructorConstOnly import TmpVarConstructorConstOnly
 from hwt.serializer.simModel.types import ToHdlAstSimModel_types
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -34,6 +35,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
     SIM_EVAL_COND = HdlValueId("sim_eval_cond", obj=sim_eval_cond)
     C = HdlValueId("c", obj=LanguageKeyword())
     CVLD = HdlValueId("cVld", obj=LanguageKeyword())
+    TMP_VAR_CONSTRUCTOR = TmpVarConstructorConstOnly
 
     def __init__(self, name_scope: Optional[NameScope] = None):
         super(ToHdlAstSimModel, self).__init__(name_scope)
@@ -213,7 +215,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
     def _as_hdl_HdlModuleDef_body(self, *args) -> HdlModuleDef:
         orig_const_cache = self.constCache
         try:
-            self.constCache = ConstantCache(self.createTmpVarFn)
+            self.constCache = ConstantCache(self, self.tmpVars)
             return ToHdlAst._as_hdl_HdlModuleDef_body(self, *args)
         finally:
             self.constCache = orig_const_cache

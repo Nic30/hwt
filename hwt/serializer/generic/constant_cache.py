@@ -1,5 +1,4 @@
-from typing import Callable
-
+from hwt.serializer.generic.tmpVarConstructor import TmpVarConstructor
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -9,13 +8,14 @@ class ConstantCache(object):
     Used to extract constants as constant variables.
     """
 
-    def __init__(self, create_tmp_var_fn: Callable[[str, object], RtlSignalBase]):
-        self.create_tmp_var_fn = create_tmp_var_fn
+    def __init__(self, toHdlAst, tmpVars: TmpVarConstructor):
+        self.tmpVars = tmpVars
+        self.toHdlAst = toHdlAst
 
         # {value:usedName}
         self._cache = {}
 
-    def extract_const_val_as_const_var(self, val):
+    def extract_const_val_as_const_var(self, val) -> RtlSignalBase:
         """
         Create a constant variable with a value specified
         or use existitng variable with same value
@@ -31,7 +31,15 @@ class ConstantCache(object):
             else:
                 name = "const_"
 
-            c = self.create_tmp_var_fn(name, val._dtype, def_val=val, const=True)
-            c.const = True
+            toHdlAst = self.toHdlAst
+            cc = toHdlAst.constCache
+            try:
+                # dissable const cache as the value is beeing extracted
+                # and we want to prevent recursion
+                toHdlAst.constCache = None
+                c = self.tmpVars.create_var(name, val._dtype, def_val=val, const=True)
+            finally:
+                toHdlAst.constCache = cc
+
             self._cache[val] = c
             return c

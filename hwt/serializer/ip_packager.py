@@ -217,11 +217,7 @@ class IpPackager(IpCorePackager):
             val = val.staticEval()
 
         buff = StringIO()
-        def createTmpVar(suggestedName, dtype):
-            raise NotImplementedError(
-                f"Width value can not be converted do ipcore format ({val})")
         to_hdl = ToHdlAstVivadoTclExpr()
-        to_hdl.createTmpVarFn = createTmpVar
         ser = Vhdl2008Serializer.TO_HDL(buff)
 
         hdl = to_hdl.as_hdl(val)

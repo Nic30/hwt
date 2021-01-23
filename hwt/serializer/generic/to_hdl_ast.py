@@ -25,16 +25,13 @@ from hwt.hdl.types.slice import Slice
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
+from hwt.serializer.generic.tmpVarConstructor import TmpVarConstructor, \
+    NoTmpVars
 from hwt.serializer.generic.utils import HWT_TO_HDLCONVEROTR_DIRECTION, \
-    CreateTmpVarFnSwap
+    TmpVarsSwap
 from hwt.serializer.utils import HdlStatement_sort_key
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
-
-def createTmpVarNotPossibleOnThisPlace(suggestedName, dtype):
-    raise NotImplementedError(
-        "Can not create a tmp variable (%s of type %r) in this code section" % (suggestedName, dtype))
 
 class ToHdlAst():
     """
@@ -42,15 +39,15 @@ class ToHdlAst():
 
     :ivar ~.name_scope: name scope for resolution of hdl names for objects
         and for name colision checking for newly generated objects
-    :ivar ~.createTmpVarFn: A function which is used to create
-        a tmp variable in current scope. It is None by default and it is set
-        if it is possible to create a tmp variable.
+    :ivar ~.tmpVars: A object which is used to create a tmp variable in current scope.
+        It is set if it is possible to create a tmp variable.
     :ivar ~.constCache: A ConstCache instance used o extract values as a constants.
     :type ~.constCache: Optional[ConstantCache]
     """
     # used to filter statems from other object by class without using
     # isisnstance
     ALL_STATEMENT_CLASSES = [*ALL_STATEMENT_CLASSES, HdlStatementBlock]
+    TMP_VAR_CONSTRUCTOR = TmpVarConstructor
     _keywords_dict = {}
 
     @classmethod
@@ -66,7 +63,7 @@ class ToHdlAst():
         if name_scope is None:
             name_scope = self.getBaseNameScope()
         self.name_scope = name_scope
-        self.createTmpVarFn = createTmpVarNotPossibleOnThisPlace
+        self.tmpVars = NoTmpVars()
         self.constCache = None
 
     def as_hdl(self, obj) -> iHdlObj:
@@ -351,46 +348,31 @@ class ToHdlAst():
 
         types = set()
 
-        _hdl_variables = []
-        extraVars = []
-        ns = self.name_scope
+        extraVars = self.TMP_VAR_CONSTRUCTOR(self, self.name_scope)
 
-        def createTmpVarInCurrentModuleBody(suggestedName, dtype,
-                                            const=False, def_val=None):
-            # create a new tmp variable in current module
-            s = RtlSignal(None, None, dtype, virtual_only=True)
-            s.name = ns.checked_name(suggestedName, s)
-            s.hidden = False
-            s._const = const
-            if def_val is not None:
-                s.def_val = def_val
-                s._set_def_val()
-
-            as_hdl = self.as_hdl_SignalItem(s, declaration=True)
-            extraVars.append(s)
-            _hdl_variables.append(as_hdl)
-            return s
-
-        with CreateTmpVarFnSwap(self, createTmpVarInCurrentModuleBody):
+        with TmpVarsSwap(self, extraVars):
             return self._as_hdl_HdlModuleDef_body(
-                new_m, types, hdl_types, hdl_variables, _hdl_variables,
-                processes, component_insts, extraVars)
+                new_m, types, hdl_types, hdl_variables, extraVars,
+                processes, component_insts)
 
     def _as_hdl_HdlModuleDef_body(
             self, new_m, types, hdl_types, hdl_variables,
-            _hdl_variables, processes, component_insts, extraVars):
+            extraVars: TmpVarConstructor, processes, component_insts):
+
+        _hdl_variables = []
         for v in hdl_variables:
             new_v = self.as_hdl_HdlModuleDef_variable(
                 v, types, hdl_types, hdl_variables,
                 processes, component_insts)
             _hdl_variables.append(new_v)
         hdl_variables = _hdl_variables
+
         processes = [self.as_hdl_HdlStatementBlock(p) for p in processes]
 
         component_insts = [self.as_hdl_HdlCompInst(c)
                            for c in component_insts]
-        extraVarsInit = self.as_hdl_extraVarsInit(extraVars)
-        new_m.objs = hdl_types + hdl_variables + extraVarsInit + \
+        extraVars.sort_hdl_declarations_first()
+        new_m.objs = hdl_types + hdl_variables + extraVars.extraVarsHdl + \
             component_insts + processes
         return new_m
 
@@ -409,18 +391,6 @@ class ToHdlAst():
         raise NotImplementedError(
             "This method should be overloaded in child class")
 
-    def as_hdl_extraVarsInit(self, extraVars):
-        extraVarsInit = []
-        for s in extraVars:
-            if isinstance(s.def_val, RtlSignalBase) or s.def_val.vld_mask:
-                a = Assignment(s.def_val, s, virtual_only=True)
-                extraVarsInit.append(self.as_hdl_Assignment(a))
-            else:
-                assert s.drivers, s
-            for d in s.drivers:
-                extraVarsInit.append(self.as_hdl(d))
-        return extraVarsInit
-
     def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> iHdlStatement:
         """
         Serialize HdlStatementBlock objects as process if top statement
@@ -429,40 +399,20 @@ class ToHdlAst():
             return proc
         assert proc.parentStm is None, proc
         body = proc.statements
-        extraVars = []
-        extraVarsHdl = []
 
         hasToBeVhdlProcess = self.has_to_be_process(proc)
 
-        def createTmpVarInCurrentBlock(suggestedName, dtype,
-                                       const=False, def_val=None):
-            # create a new tmp variable in current process
-            s = RtlSignal(None, None, dtype, virtual_only=True)
-            s.name = self.name_scope.checked_name(suggestedName, s)
-            s.hidden = False
-            s._const = const
-            if def_val is not None:
-                s.def_val = def_val
-                s._set_def_val()
-
-            as_hdl = self.as_hdl_SignalItem(s, declaration=True)
-            extraVars.append(s)
-            extraVarsHdl.append(as_hdl)
-            return s
-
         with WithNameScope(self, self.name_scope.level_push(proc.name)):
-            with CreateTmpVarFnSwap(self, createTmpVarInCurrentBlock):
+            tmpVars = self.TMP_VAR_CONSTRUCTOR(self, self.name_scope)
+            with TmpVarsSwap(self, tmpVars):
                 statements = [self.as_hdl(s) for s in body]
 
-                # create a initializer for tmp variables
-                # :note: we need to do this here because now it is sure that
-                #     the drivers of tmp variable will not be modified
-                extraVarsInit = self.as_hdl_extraVarsInit(extraVars)
-
-                hasToBeVhdlProcess |= bool(extraVars)
+                hasToBeVhdlProcess |= bool(tmpVars.extraVarsHdl)
 
                 if hasToBeVhdlProcess:
-                    statements = extraVarsHdl + extraVarsInit + statements
+                    tmpVars.sort_hdl_declarations_first()
+                    statements = tmpVars.extraVarsHdl + statements
+
                 if self.can_pop_process_wrap(statements, hasToBeVhdlProcess):
                     return statements[0]
                 else:

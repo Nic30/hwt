@@ -16,6 +16,7 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 zero, one = BIT.from_py(0), BIT.from_py(1)
 
+
 class ToHdlAstVerilog_ops():
     SIGNED = HdlValueId("$signed", obj=LanguageKeyword())
     UNSIGNED = HdlValueId("$unsigned", obj=LanguageKeyword())
@@ -39,8 +40,7 @@ class ToHdlAstVerilog_ops():
         if operator.operator != AllOps.CONCAT\
                 and self._operandIsAnotherOperand(operand)\
                 and operand.origin.operator == AllOps.CONCAT:
-            tmpVar = self.createTmpVarFn("tmp_concat_", operand._dtype)
-            tmpVar.def_val = operand
+            _, tmpVar = self.tmpVars.create_var_cached("tmp_concat_", operand._dtype, def_val=operand)
             # Assignment(tmpVar, operand, virtual_only=True)
             operand = tmpVar
 

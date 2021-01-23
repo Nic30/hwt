@@ -43,36 +43,49 @@ class ToHdlAstVhdl2008_ops():
     @internal
     def _tmp_var_for_ternary(self, val: RtlSignal):
         """
-        Optionaly convert boolean to std_logic_vector
+        Optionally convert boolean to std_logic_vector
         """
-        o = self.createTmpVarFn("tmpTernary_", val._dtype)
-        cond, ifTrue, ifFalse = val.drivers[0].operands
-        if_ = If(cond)
-        if_.ifTrue.append(Assignment(ifTrue, o,
-                                     virtual_only=True,
-                                     parentStm=if_))
-        if_.ifFalse = []
-        if_.ifFalse.append(Assignment(ifFalse, o,
-                                      virtual_only=True,
-                                      parentStm=if_))
-        if_._outputs.append(o)
-        for obj in (cond, ifTrue, ifFalse):
-            if isinstance(obj, RtlSignalBase):
-                if_._inputs.append(obj)
-        o.drivers.append(if_)
+        isNew, o = self.tmpVars.create_var_cached(
+            "tmpTernary_",
+            val._dtype,
+            postponed_init=True,
+            extra_args=(val, bool, 1, 0))
+        if isNew:
+            cond, ifTrue, ifFalse = val.drivers[0].operands
+            if_ = If(cond)
+            if_.ifTrue.append(Assignment(ifTrue, o,
+                                         virtual_only=True,
+                                         parentStm=if_))
+            if_.ifFalse = []
+            if_.ifFalse.append(Assignment(ifFalse, o,
+                                          virtual_only=True,
+                                          parentStm=if_))
+            if_._outputs.append(o)
+            for obj in (cond, ifTrue, ifFalse):
+                if isinstance(obj, RtlSignalBase):
+                    if_._inputs.append(obj)
+            o.drivers.append(if_)
+            self.tmpVars.finish_var_init(o)
+
         return o
 
     def _as_Bits(self, val: Union[RtlSignal, HValue]):
         if val._dtype == BOOL:
             bit1_t = Bits(1)
-            o = self.createTmpVarFn("tmpBool2std_logic_", bit1_t)
-            ifTrue, ifFalse = bit1_t.from_py(1), bit1_t.from_py(0)
-            if_ = If(val)
-            if_.ifTrue.append(Assignment(ifTrue, o, virtual_only=True, parentStm=if_))
-            if_.ifFalse = []
-            if_.ifFalse.append(Assignment(ifFalse, o, virtual_only=True, parentStm=if_))
-            if_._outputs.append(o)
-            o.drivers.append(if_)
+            isNew, o = self.tmpVars.create_var_cached(
+                "tmpBool2std_logic_",
+                bit1_t,
+                postponed_init=True,
+                extra_args=(val, int, 1, 0))
+            if isNew:
+                ifTrue, ifFalse = bit1_t.from_py(1), bit1_t.from_py(0)
+                if_ = If(val)
+                if_.ifTrue.append(Assignment(ifTrue, o, virtual_only=True, parentStm=if_))
+                if_.ifFalse = []
+                if_.ifFalse.append(Assignment(ifFalse, o, virtual_only=True, parentStm=if_))
+                if_._outputs.append(o)
+                o.drivers.append(if_)
+                self.tmpVars.finish_var_init(o)
             return o
         else:
             assert isinstance(val._dtype, Bits), val._dtype
@@ -84,8 +97,14 @@ class ToHdlAstVhdl2008_ops():
         if not t.force_vector and t.bit_length() == 1:
             # std_logic -> std_logic_vector
             std_logic_vector = Bits(1, signed=t.signed, force_vector=True)
-            o = self.createTmpVarFn("tmp_std_logic2vector_", std_logic_vector)
-            o.drivers.append(Assignment(val, o, virtual_only=True))
+            isNew, o = self.tmpVars.create_var_cached(
+                "tmp_std_logic2vector_",
+                std_logic_vector,
+                postponed_init=True,
+                extra_args=(val, std_logic_vector))
+            if isNew:
+                o.drivers.append(Assignment(val, o, virtual_only=True))
+                self.tmpVars.finish_var_init(o)
             return o
         else:
             # already a std_logic_vector
@@ -117,8 +136,7 @@ class ToHdlAstVhdl2008_ops():
         if o == AllOps.INDEX:
             op0, op1 = ops
             if isinstance(op0, RtlSignalBase) and isResultOfTypeConversion(op0):
-                op0 = self.createTmpVarFn("tmpTypeConv_", op0._dtype)
-                op0.def_val = ops[0]
+                _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
 
             # if the op0 is not signal or other index index operator it is extracted
             # as tmp variable
@@ -143,9 +161,9 @@ class ToHdlAstVhdl2008_ops():
                 op0 = ops[0]
                 op0 = self._as_Bits_vec(op0)
                 if isinstance(op0, RtlSignalBase) and op0.hidden:
-                    op0 = self.createTmpVarFn("tmpTypeConv_", op0._dtype)
-                    op0.def_val = ops[0]
+                    _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
                 return self.apply_cast(_o, self.as_hdl_operand(op0))
+
             o = self.op_transl_dict[o]
             if len(ops) == 2:
                 res_t = op.result._dtype

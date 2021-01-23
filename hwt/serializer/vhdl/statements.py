@@ -1,5 +1,6 @@
 from copy import copy
 
+from hdlConvertorAst.hdlAst import HdlStmCase
 from hdlConvertorAst.hdlAst._statements import HdlStmAssign
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
@@ -12,7 +13,6 @@ from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
-from hdlConvertorAst.hdlAst import HdlStmCase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -74,7 +74,7 @@ class ToHdlAstVhdl2008_statements():
         s = HdlStmCase()
         switchOn = sw.switchOn
         if isinstance(switchOn, RtlSignalBase) and switchOn.hidden:
-            switchOn = self.createTmpVarFn("tmpTypeConv_", switchOn._dtype, def_val=switchOn)
+            _, switchOn = self.tmpVars.create_var_cached("tmpTypeConv_", switchOn._dtype, def_val=switchOn)
 
         s.switch_on = self.as_hdl_cond(switchOn, False)
         s.cases = cases = []
