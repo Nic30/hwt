@@ -2,7 +2,6 @@ from ipCorePackager.constants import DIRECTION
 from hdlConvertorAst.hdlAst._expr import HdlDirection
 from hwt.doc_markers import internal
 
-
 HWT_TO_HDLCONVEROTR_DIRECTION = {
     DIRECTION.IN: HdlDirection.IN,
     DIRECTION.INOUT: HdlDirection.INOUT,
