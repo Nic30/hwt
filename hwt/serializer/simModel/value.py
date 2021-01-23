@@ -39,6 +39,11 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
         **HWT_TO_HDLCONVEROTR_OPS,
         AllOps.INDEX: HdlOpType.INDEX,
     }
+    _cast_ops = {
+        AllOps.BitsAsSigned,
+        AllOps.BitsAsUnsigned,
+        AllOps.BitsAsVec,
+    }
 
     def is_suitable_for_const_extract(self, val: HValue):
         return not isinstance(val._dtype, HEnum) or val.vld_mask == 0
@@ -119,13 +124,13 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             # pop .val
             op0 = op0.ops[0]
             return hdl_call(hdl_getattr(op0, fn), [])
-        elif o in [AllOps.BitsAsUnsigned, AllOps.BitsAsVec, AllOps.BitsAsSigned]:
+        elif o in self._cast_ops:
             op0, = ops
             do_cast = bool(op0._dtype.signed) != bool(op.result._dtype.signed)
 
             op_hdl = self.as_hdl_Value(op0)
             if do_cast:
-                if bool(op0._dtype.signed):
+                if bool(op.result._dtype.signed):
                     sign = self.TRUE
                 else:
                     sign = self.FALSE
