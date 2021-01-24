@@ -23,6 +23,40 @@ def _default_param_updater(self, myP, parentPval):
     myP.set_value(parentPval)
 
 
+class IntfStructureErr(IntfLvlConfErr):
+
+    def __init__(self, src, dst):
+        super(IntfStructureErr, self).__init__()
+        self.src = src
+        self.dst = dst
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        missing_on_src = []
+        missing_on_dst = []
+        dst = self.dst
+        src = self.src
+        for i in src._interfaces:
+            i2 = getattr(dst, i._name, None)
+            if i2 is None:
+                missing_on_dst.append(i)
+
+        for i in dst._interfaces:
+            i2 = getattr(src, i._name, None)
+            if i2 is None:
+                missing_on_src.append(i)
+
+        buff = [f"<{self.__class__.__name__} {dst} <= {src}"]
+        if missing_on_dst:
+            buff.append(f", missing on dst: {missing_on_dst}")
+        if missing_on_src:
+            buff.append(f", missing on src: {missing_on_src}")
+        buff.append(">")
+        return "".join(buff)
+
+
 class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 PropDeclrCollector, InterfaceDirectionFns):
     """
@@ -157,9 +191,8 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         if self._interfaces:
             if len(self._interfaces) != len(master._interfaces):
-                raise IntfLvlConfErr(
-                    "Interaces has different structure", self, "<=", master,
-                    self._interfaces, master._interfaces)
+                raise IntfStructureErr(self, master)
+
             for ifc in self._interfaces:
                 if exclude and ifc in exclude:
                     continue
