@@ -84,6 +84,7 @@ class UnitImplHelpers(UnitBase):
 
         if isinstance(dtype, HStruct):
             container = HdlType_to_Interface().apply(dtype)
+            container._name = name
             container._loadDeclarations()
             flattened_def_val = {}
             _flatten_map(TypePath(), def_val, flattened_def_val)
