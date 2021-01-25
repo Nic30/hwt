@@ -166,16 +166,33 @@ def bitsBitOp(self, other, op: OpDefinition, getVldFn, reduceCheckFn, selfReduce
         elif o_t != BOOL and s_t == BOOL:
             other = other._auto_cast(BOOL)
             return op._evalFn(self, other)
-        elif s_t.bit_length() == 1 and o_t.bit_length() == 1\
-                and s_t.signed is o_t.signed \
-                and s_t.force_vector != o_t.force_vector:
-            if s_t.force_vector:
-                self = self[0]
-            else:
-                other = other[0]
         else:
-            raise TypeError("Can not apply operator %r (%r, %r)" %
-                            (op, self._dtype, other._dtype))
+            if s_t.signed is not o_t.signed and bool(s_t.signed) == bool(o_t.signed):
+                # automatically cast unsigned to vector
+                if s_t.signed == False and o_t.signed is None:
+                    self = self._vec()
+                    s_t = self._dtype
+                elif s_t.signed is None and o_t.signed == False:
+                    other = other._vec()
+                    o_t = other._dtype
+                else:
+                    raise ValueError("Invalid value for signed flag of type", s_t.signed, o_t.signed, s_t, o_t)
+
+            if s_t == o_t:
+                # due to previsous cast the type may become the same
+                pass
+            elif s_t.bit_length() == 1 and o_t.bit_length() == 1\
+                    and s_t.signed is o_t.signed \
+                    and s_t.force_vector != o_t.force_vector:
+                # automatically cast to vector with a single item to a single bit
+                if s_t.force_vector:
+                    self = self[0]
+                else:
+                    other = other[0]
+
+            else:
+                raise TypeError("Can not apply operator %r (%r, %r)" %
+                                (op, self._dtype, other._dtype))
 
         if otherIsVal:
             r = reduceCheckFn(self, other)
