@@ -1,10 +1,10 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Set
 
 from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdl.types.typeCast import toHVal
-from hwt.synthesizer.exceptions import IntfLvlConfErr
+from hwt.synthesizer.exceptions import IntfLvlConfErr, InterfaceStructureErr
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import \
     InterfaceDirectionFns
@@ -22,39 +22,6 @@ from hwt.synthesizer.vectorUtils import fitTo
 def _default_param_updater(self, myP, parentPval):
     myP.set_value(parentPval)
 
-
-class IntfStructureErr(IntfLvlConfErr):
-
-    def __init__(self, dst, src):
-        super(IntfStructureErr, self).__init__()
-        self.src = src
-        self.dst = dst
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        missing_on_src = []
-        missing_on_dst = []
-        dst = self.dst
-        src = self.src
-        for i in src._interfaces:
-            i2 = getattr(dst, i._name, None)
-            if i2 is None:
-                missing_on_dst.append(i)
-
-        for i in dst._interfaces:
-            i2 = getattr(src, i._name, None)
-            if i2 is None:
-                missing_on_src.append(i)
-
-        buff = [f"<{self.__class__.__name__} {dst} <= {src}"]
-        if missing_on_dst:
-            buff.append(f", missing on dst: {missing_on_dst}")
-        if missing_on_src:
-            buff.append(f", missing on src: {missing_on_src}")
-        buff.append(">")
-        return "".join(buff)
 
 
 class Interface(InterfaceBase, InterfaceceImplDependentFns,
@@ -190,14 +157,16 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             return
 
         if self._interfaces:
-            if len(self._interfaces) != len(master._interfaces):
-                raise IntfStructureErr(self, master)
-
+            seen_master_intfs = []
             for ifc in self._interfaces:
                 if exclude and ifc in exclude:
+                    mIfc = getattr(master, ifc._name, None)
+                    if mIfc is not None:
+                        seen_master_intfs.append(mIfc)
                     continue
 
                 mIfc = getattr(master, ifc._name)
+                seen_master_intfs.append(mIfc)
                 if exclude and mIfc in exclude:
                     continue
 
@@ -217,11 +186,23 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                     yield from mIfc._connectTo(ifc,
                                                exclude=exclude,
                                                fit=fit)
+
+            if len(seen_master_intfs) != len(master._interfaces):
+                if exclude:
+                    # there is a possiblity that the master interface was excluded,
+                    # but we did not see it as the interface of the same name was not present on self
+                    for ifc in self._interfaces:
+                        if ifc in exclude or ifc not in seen_master_intfs:
+                            continue
+                        else:
+                            # ifc is an interface which is extra on master and is missing an equivalent on slave
+                            raise InterfaceStructureErr(self, master, exclude)
+                else:
+                    raise InterfaceStructureErr(self, master, exclude)
         else:
             if master._interfaces:
-                raise IntfLvlConfErr(
-                    "Interaces has different structure", self, "<=", master,
-                     self._interfaces, master._interfaces)
+                raise InterfaceStructureErr(self, master, exclude)
+
             dstSig = toHVal(self)
             srcSig = toHVal(master)
 
