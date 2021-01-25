@@ -25,7 +25,7 @@ def _default_param_updater(self, myP, parentPval):
 
 class IntfStructureErr(IntfLvlConfErr):
 
-    def __init__(self, src, dst):
+    def __init__(self, dst, src):
         super(IntfStructureErr, self).__init__()
         self.src = src
         self.dst = dst
