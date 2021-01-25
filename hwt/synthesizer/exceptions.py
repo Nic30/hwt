@@ -64,3 +64,6 @@ class InterfaceStructureErr(IntfLvlConfErr):
             buff.append(f", missing on src: {missing_on_src}")
         buff.append(">")
         return "".join(buff)
+
+    def __copy__(self):
+        return self.__class__(self.dst, self.src, self.exclude)

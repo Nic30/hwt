@@ -17,11 +17,11 @@ from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 from hwt.synthesizer.vectorUtils import fitTo
+from copy import copy
 
 
 def _default_param_updater(self, myP, parentPval):
     myP.set_value(parentPval)
-
 
 
 class Interface(InterfaceBase, InterfaceceImplDependentFns,
@@ -115,7 +115,12 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         :attention: it is not call of function it is operator of assignment
         """
         assert self._direction != INTF_DIRECTION.MASTER
-        return self._connectTo(other)
+        try:
+            return self._connectTo(other)
+        except Exception as e:
+            # simplification of previous exception traceback
+            e_simplified = copy(e)
+            raise e_simplified
 
     @internal
     def _loadDeclarations(self):
