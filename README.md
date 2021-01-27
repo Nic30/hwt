@@ -125,6 +125,8 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [UHDM](https://github.com/alainmarcel/UHDM) - C++ SystemVerilog -> C++ model
 * [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
 * [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric HCL with HLS like features
+* [wyre](https://github.com/nickmqb/wyre) - 2020-2020, Mupad, Minimalistic HDL
+
 
 ## Related open-source
 
