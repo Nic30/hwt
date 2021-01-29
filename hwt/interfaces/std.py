@@ -27,6 +27,8 @@ from hwtSimApi.utils import freq_to_period
 D = DIRECTION
 
 T = TypeVar("T", bound=HdlType)
+
+
 class Signal(SignalOps, Interface, Generic[T]):
     """
     Basic wire interface
@@ -299,6 +301,7 @@ class FifoWriter(Interface):
     """
     FIFO write port interface
     """
+
     def _config(self):
         self.DATA_WIDTH = Param(8)
 
@@ -320,6 +323,7 @@ class FifoReader(Interface):
     """
     FIFO read port interface
     """
+
     def _config(self):
         FifoWriter._config(self)
 
