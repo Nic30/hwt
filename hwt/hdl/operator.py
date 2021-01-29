@@ -156,7 +156,8 @@ class Operator(HdlObject):
         first_op_sig = True
         for i, o in enumerate(operands):
             if isinstance(o, RtlSignalBase):
-                o.endpoints.remove(self)
+                # discard because operads may bethe same signal
+                o.endpoints.discard(self)
                 if first_op_sig:
                     # clean all references on this operator instance from RtlSignal._usedOps operator cache
                     _k = (self.operator, i, *operands[:i], *operands[i + 1:])
