@@ -16,6 +16,8 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.typePath import TypePath
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
+from hwt.synthesizer.interface import Interface
+from ipCorePackager.constants import INTF_DIRECTION
 
 
 def getSignalName(sig):
@@ -50,6 +52,13 @@ def _flatten_map(prefix: TypePath, d: Union[None, dict, list, tuple], res: dict)
             _flatten_map(prefix / k, v, res)
         else:
             res[prefix / k] = v
+
+
+@internal
+def _set_direction_to_unknown(intf: Interface):
+    intf._direction = INTF_DIRECTION.UNKNOWN
+    for i in intf._interfaces:
+        _set_direction_to_unknown(i)
 
 
 class UnitImplHelpers(UnitBase):
@@ -96,15 +105,18 @@ class UnitImplHelpers(UnitBase):
                         intf._dtype,
                         def_val=_def_val)
 
+            _set_direction_to_unknown(container)
             return container
         elif isinstance(dtype, HArray):
             raise NotImplementedError()
 
-        return self._ctx.sig(name,
-                             dtype=dtype,
-                             clk=clk,
-                             syncRst=rst,
-                             def_val=def_val)
+        return self._ctx.sig(
+            name,
+            dtype=dtype,
+            clk=clk,
+            syncRst=rst,
+            def_val=def_val
+        )
 
     def _sig(self, name: str,
              dtype: HdlType=BIT,
