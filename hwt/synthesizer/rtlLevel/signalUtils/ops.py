@@ -378,6 +378,16 @@ class RtlSignalOps():
         :return: list of assignments
         """
         assert not self._const, self
+        if self.hidden:
+            try:
+                d = self.singleDriver()
+            except:
+                d = None
+            operator = getattr(d, "operator", None)
+            if operator is not None:
+                assert operator.allowsAssignTo, ("Assignment to", self, "is not allowed by operator definition")
+
+
         if isinstance(source, InterfaceBase):
             assert source._isAccessible, (source, "must be a Signal Interface which is accessible in current scope")
             source = source._sig

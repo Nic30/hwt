@@ -14,9 +14,10 @@ class OpDefinition():
     :ivar ~._evalFn: function which evaluates operands
     """
 
-    def __init__(self, evalFn):
+    def __init__(self, evalFn, allowsAssignTo=False):
         self.id = None  # assigned automatically in AllOps
         self._evalFn = evalFn
+        self.allowsAssignTo = allowsAssignTo
 
     def __eq__(self, other):
         return type(self) == type(other) and self.id == other.id
@@ -130,8 +131,8 @@ class AllOps():
     OR = OpDefinition(or_)
 
     DOT = OpDefinition(dotOpFn)
-    DOWNTO = OpDefinition(downtoFn)
-    TO = OpDefinition(toFn)
+    DOWNTO = OpDefinition(downtoFn, allowsAssignTo=True)
+    TO = OpDefinition(toFn, allowsAssignTo=True)
     CONCAT = OpDefinition(concatFn)
 
     EQ = OpDefinition(eqFn)
