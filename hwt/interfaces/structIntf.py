@@ -124,7 +124,9 @@ class HdlType_to_Interface():
                 fieldInfo.dtype,
                 field_path=intf._field_path / fieldInfo.name)
             c._fieldsToInterfaces = intf._fieldsToInterfaces
-        return c
+            return c
+        else:
+            raise NotImplementedError(intf)
 
 
 class Interface_to_HdlType():

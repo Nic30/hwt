@@ -8,15 +8,14 @@ from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.interfaces.std import Signal
-from hwt.interfaces.structIntf import HdlType_to_Interface
+from hwt.interfaces.structIntf import HdlType_to_Interface, StructIntf
+from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getClk, getRst
 from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
+from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
-from hwt.synthesizer.typePath import TypePath
-from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
-from hwt.synthesizer.interface import Interface
 from ipCorePackager.constants import INTF_DIRECTION
 
 
@@ -37,28 +36,101 @@ def _default_param_updater(self, myP, otherP_val):
 
 
 @internal
-def _flatten_map(prefix: TypePath, d: Union[None, dict, list, tuple], res: dict):
-    if d is None:
-        return
-    elif isinstance(d, dict):
-        kv_it = d.items()
-    elif isinstance(d, (list, tuple)):
-        kv_it = enumerate(d)
-    else:
-        raise NotImplementedError(d)
-
-    for k, v in kv_it:
-        if isinstance(v, (dict, list, tuple)):
-            _flatten_map(prefix / k, v, res)
+def _normalize_default_value_dict_for_interface_array(root_val: dict,
+                                                      val: Union[dict, list, None],
+                                                      name_prefix: str,
+                                                      hobj_list: HObjList,
+                                                      neutral_value):
+    for i, intf in enumerate(hobj_list):
+        if val is neutral_value:
+            continue
+        elif isinstance(val, dict):
+            _val = val.get(i, neutral_value)
         else:
-            res[prefix / k] = v
+            _val = val[i]
+        if _val is neutral_value:
+            continue
+
+        elm_name = f"{name_prefix:s}_{i:d}"
+        if isinstance(intf, HObjList):
+            _normalize_default_value_dict_for_interface_array(root_val, _val, elm_name, intf, neutral_value)
+        else:
+            root_val[elm_name] = _val
 
 
 @internal
-def _set_direction_to_unknown(intf: Interface):
+def _instanciate_signals(intf, clk, rst, def_val, nop_val, signal_create_fn):
     intf._direction = INTF_DIRECTION.UNKNOWN
-    for i in intf._interfaces:
-        _set_direction_to_unknown(i)
+    if isinstance(intf, Signal):
+        name = intf._getFullName(separator_getter=lambda x: "_")
+        intf._sig = signal_create_fn(
+            name,
+            intf._dtype,
+            clk, rst, def_val, nop_val)
+
+    elif isinstance(intf, HObjList):
+        intf_len = len(intf)
+        if isinstance(def_val, dict):
+            for k in def_val.keys():
+                assert k > 0 and k < intf_len, ("Default value for", intf, " specifies ", k, " which is not present on interface")
+        elif def_val is not None:
+            assert len(def_val) == intf_len, ("Default value does not have same size, ", len(def_val), intf_len, intf)
+
+        if isinstance(nop_val, dict):
+            for k in nop_val.keys():
+                assert k > 0 and k < intf_len, ("Nop value for", intf, " specifies ", k, " which is not present on interface")
+        elif nop_val is not NOT_SPECIFIED:
+            assert len(nop_val) == intf_len, ("Nop value does not have same size, ", len(nop_val), intf_len, intf)
+
+        for i, elm in enumerate(intf):
+            if def_val is None:
+                _def_val = None
+            elif isinstance(def_val, dict):
+                _def_val = def_val.get(i, None)
+            else:
+                _def_val = def_val[i]
+
+            if nop_val is NOT_SPECIFIED:
+                _nop_val = NOT_SPECIFIED
+            elif isinstance(nop_val, dict):
+                _nop_val = nop_val.get(i, NOT_SPECIFIED)
+            else:
+                _nop_val = nop_val[i]
+            _instanciate_signals(elm, clk, rst, _def_val, _nop_val, signal_create_fn)
+
+    elif isinstance(intf, StructIntf):
+        if def_val is not None:
+            for k in tuple(def_val.keys()):
+                _i = getattr(intf, k, NOT_SPECIFIED)
+                assert _i is not NOT_SPECIFIED, ("Default value for", intf, " specifies ", k, " which is not present on interface")
+                if isinstance(_i, HObjList):
+                    _normalize_default_value_dict_for_interface_array(
+                        def_val, def_val[k], k, _i, None)
+
+        if nop_val is not NOT_SPECIFIED:
+            for k in tuple(nop_val.keys()):
+                _i = getattr(intf, k, NOT_SPECIFIED)
+                assert _i is not NOT_SPECIFIED, ("Nop value for", intf, " specifies ", k, " which is not present on interface")
+                if isinstance(_i, HObjList):
+                    _normalize_default_value_dict_for_interface_array(
+                        nop_val, nop_val[k],
+                        k, _i, NOT_SPECIFIED)
+
+        for elm in intf._interfaces:
+            name = elm._name
+            if def_val is None:
+                _def_val = None
+            else:
+                _def_val = def_val.get(name, None)
+
+            if nop_val is NOT_SPECIFIED:
+                _nop_val = NOT_SPECIFIED
+            else:
+                _nop_val = nop_val.get(name, NOT_SPECIFIED)
+
+            _instanciate_signals(elm, clk, rst, _def_val, _nop_val, signal_create_fn)
+    else:
+        raise NotImplementedError(intf)
 
 
 class UnitImplHelpers(UnitBase):
@@ -91,32 +163,25 @@ class UnitImplHelpers(UnitBase):
         elif rst is None:
             rst = getRst(self)
 
-        if isinstance(dtype, HStruct):
+        if isinstance(dtype, (HStruct, HArray)):
             container = HdlType_to_Interface().apply(dtype)
             container._name = name
             container._loadDeclarations()
-            flattened_def_val = {}
-            _flatten_map(TypePath(), def_val, flattened_def_val)
-            for path, intf in container._fieldsToInterfaces.items():
-                if isinstance(intf, Signal):
-                    _def_val = flattened_def_val.get(path, None)
-                    intf._sig = self._reg(
-                        "%s_%s" % (name, intf._getFullName(separator_getter=lambda x: "_")),
-                        intf._dtype,
-                        def_val=_def_val)
-
-            _set_direction_to_unknown(container)
+            _instanciate_signals(
+                container, clk, rst, def_val, NOT_SPECIFIED,
+                lambda name, dtype, clk, rst, def_val, nop_val: self._reg(name, dtype,
+                                                                          def_val=def_val,
+                                                                          clk=clk, rst=rst))
             return container
-        elif isinstance(dtype, HArray):
-            raise NotImplementedError()
-
-        return self._ctx.sig(
-            name,
-            dtype=dtype,
-            clk=clk,
-            syncRst=rst,
-            def_val=def_val
-        )
+        else:
+            # primitive data type signal
+            return self._ctx.sig(
+                name,
+                dtype=dtype,
+                clk=clk,
+                syncRst=rst,
+                def_val=def_val
+            )
 
     def _sig(self, name: str,
              dtype: HdlType=BIT,
@@ -127,20 +192,19 @@ class UnitImplHelpers(UnitBase):
 
         :see: :func:`hwt.synthesizer.rtlLevel.netlist.RtlNetlist.sig`
         """
-        if isinstance(dtype, HStruct):
-            if def_val is not None:
-                raise NotImplementedError()
-            if nop_val is not NOT_SPECIFIED:
-                raise NotImplementedError()
-            container = dtype.from_py(None)
-            for f in dtype.fields:
-                if f.name is not None:
-                    r = self._sig(f"{name:s}_{f.name:s}", f.dtype)
-                    setattr(container, f.name, r)
-
+        if isinstance(dtype, (HStruct, HArray)):
+            container = HdlType_to_Interface().apply(dtype)
+            container._name = name
+            container._loadDeclarations()
+            _instanciate_signals(
+                container, None, None, def_val, nop_val,
+                lambda name, dtype, clk, rst, def_val, nop_val: self._sig(name, dtype,
+                                                                          def_val=def_val,
+                                                                          nop_val=nop_val))
             return container
-
-        return self._ctx.sig(name, dtype=dtype, def_val=def_val, nop_val=nop_val)
+        else:
+            # primitive data type signal
+            return self._ctx.sig(name, dtype=dtype, def_val=def_val, nop_val=nop_val)
 
     @internal
     def _cleanAsSubunit(self):

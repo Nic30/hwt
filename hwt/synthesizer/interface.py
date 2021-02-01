@@ -1,4 +1,5 @@
-from typing import Dict, Optional, Set
+from copy import copy
+from typing import Dict, Optional
 
 from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
@@ -17,7 +18,6 @@ from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 from hwt.synthesizer.vectorUtils import fitTo
-from copy import copy
 
 
 def _default_param_updater(self, myP, parentPval):
