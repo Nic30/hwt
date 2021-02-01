@@ -41,6 +41,18 @@ def _normalize_default_value_dict_for_interface_array(root_val: dict,
                                                       name_prefix: str,
                                                       hobj_list: HObjList,
                                                       neutral_value):
+    """
+    This function is called to convert data in format
+    .. code-block:: python
+
+        {"x": [3, 4]}
+        # into
+        {"x_0": 3, "x_1": 4}
+
+    This is required because the items of HObjList are stored in _interfaces as a separate items
+    and thus we can not resolve the value association otherwise.
+    """
+
     for i, intf in enumerate(hobj_list):
         if val is neutral_value:
             continue
