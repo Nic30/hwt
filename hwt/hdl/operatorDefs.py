@@ -131,8 +131,8 @@ class AllOps():
     OR = OpDefinition(or_)
 
     DOT = OpDefinition(dotOpFn)
-    DOWNTO = OpDefinition(downtoFn, allowsAssignTo=True)
-    TO = OpDefinition(toFn, allowsAssignTo=True)
+    DOWNTO = OpDefinition(downtoFn)
+    TO = OpDefinition(toFn)
     CONCAT = OpDefinition(concatFn)
 
     EQ = OpDefinition(eqFn)
@@ -142,7 +142,7 @@ class AllOps():
     LT = OpDefinition(lt)
     LE = OpDefinition(le)
 
-    INDEX = OpDefinition(getitem)
+    INDEX = OpDefinition(getitem, allowsAssignTo=True)
     TERNARY = OpDefinition(ternaryFn)
     CALL = OpDefinition(callFn)
 
