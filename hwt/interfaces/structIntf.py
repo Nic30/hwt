@@ -112,7 +112,7 @@ class HdlType_to_Interface():
         elif isinstance(dtype, (Bits, HEnum)):
             return Signal(dtype=dtype)
         elif isinstance(dtype, HArray):
-            return HObjList(self.apply(dtype.elem_t)
+            return HObjList(self.apply(dtype.element_t)
                             for _ in range(dtype.size))
         else:
             raise NotImplementedError(dtype)
