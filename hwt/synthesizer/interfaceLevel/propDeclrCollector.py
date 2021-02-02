@@ -361,12 +361,18 @@ class PropDeclrCollector(object):
     @internal
     def _implCollector(self, name, prop):
         """
-        Hangle property definitions in _impl phase
+        Handle property definitions in _impl phase
         """
         if isinstance(prop, InterfaceBase):
+            if prop._parent is self:
+                return prop
             self._registerIntfInImpl(name, prop)
         elif isinstance(prop, UnitBase):
+            if prop._parent is self:
+                return prop
             self._registerUnitInImpl(name, prop)
         elif isinstance(prop, HObjList):
+            if prop._parent is self:
+                return prop
             self._registerArray(name, prop)
         return prop
