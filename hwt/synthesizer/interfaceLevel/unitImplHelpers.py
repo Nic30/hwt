@@ -11,7 +11,7 @@ from hwt.interfaces.std import Signal
 from hwt.interfaces.structIntf import HdlType_to_Interface, StructIntf
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getClk, getRst
-from hwt.synthesizer.interfaceLevel.mainBases import UnitBase
+from hwt.synthesizer.interfaceLevel.mainBases import UnitBase, InterfaceBase
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -145,6 +145,16 @@ def _instanciate_signals(intf, clk, rst, def_val, nop_val, signal_create_fn):
         raise NotImplementedError(intf)
 
 
+@internal
+def _loadDeclarations(intf_or_list: Union[HObjList, InterfaceBase], name: str):
+    if isinstance(intf_or_list, HObjList):
+        for i, intf in enumerate(intf_or_list):
+            _loadDeclarations(intf, f"{name:s}_{i:d}")
+    else:
+        intf_or_list._name = name
+        intf_or_list._loadDeclarations()
+
+
 class UnitImplHelpers(UnitBase):
 
     def _reg(self, name: str,
@@ -177,13 +187,13 @@ class UnitImplHelpers(UnitBase):
 
         if isinstance(dtype, (HStruct, HArray)):
             container = HdlType_to_Interface().apply(dtype)
-            container._name = name
-            container._loadDeclarations()
+            _loadDeclarations(container, name)
             _instanciate_signals(
                 container, clk, rst, def_val, NOT_SPECIFIED,
                 lambda name, dtype, clk, rst, def_val, nop_val: self._reg(name, dtype,
                                                                           def_val=def_val,
                                                                           clk=clk, rst=rst))
+            container._parent = self
             return container
         else:
             # primitive data type signal
@@ -204,15 +214,15 @@ class UnitImplHelpers(UnitBase):
 
         :see: :func:`hwt.synthesizer.rtlLevel.netlist.RtlNetlist.sig`
         """
-        if isinstance(dtype, (HStruct, HArray)):
+        if isinstance(dtype, HStruct):
             container = HdlType_to_Interface().apply(dtype)
-            container._name = name
-            container._loadDeclarations()
+            _loadDeclarations(container, name)
             _instanciate_signals(
                 container, None, None, def_val, nop_val,
                 lambda name, dtype, clk, rst, def_val, nop_val: self._sig(name, dtype,
                                                                           def_val=def_val,
                                                                           nop_val=nop_val))
+            container._parent = self
             return container
         else:
             # primitive data type signal
