@@ -80,7 +80,11 @@ class XdcSerializer():
             raise NotImplementedError()
 
     def visit_iHdlConstrain(self, o):
-        return getattr(self, "visit_" + o.__class__.__name__)(o)
+        visitFn = getattr(self, "visit_" + o.__class__.__name__, None)
+        if visitFn is None:
+            return o.to_xdc(self, o)
+        else:
+            return visitFn(o)
 
     def visit_HdlConstraintList(self, o_list):
         return [self.visit_iHdlConstrain(o) for o in o_list]
