@@ -14,7 +14,6 @@ from hwt.synthesizer.unit import Unit
 from hwt.synthesizer.componentPath import ComponentPath
 
 
-
 class iHdlConstrain():
 
     def _get_parent(self) -> Unit:
@@ -156,3 +155,4 @@ class set_async_reg(iHdlConstrain):
 
     def _get_parent(self) -> Unit:
         return _get_parent_unit(self.sig)
+
