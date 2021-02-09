@@ -66,6 +66,8 @@ class ComponentPath(tuple):
                     obj = obj.ctx.parent
 
                 while isinstance(obj, Interface):
+                    if not path:
+                        path.append(obj)
                     if obj is handle:
                         break
                     obj = obj._parent
