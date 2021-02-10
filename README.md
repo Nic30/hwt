@@ -86,6 +86,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [Chips-2.0](https://github.com/dawsonjon/Chips-2.0) - , , FPGA Design Suite based on C to Verilog design flow
 * [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
 * [DUH](https://github.com/sifive/duh) - JS, simple convertor between verilog/scala/ipxact
+* [DFiant](https://github.com/DFiantHDL/DFiant) 2019-?, Scala, dataflow based HDL
 * [edalize](https://github.com/olofk/edalize) - 2018-?, Python, abstraction layer for eda tools
 * [garnet](https://github.com/StanfordAHA/garnet) -2018-?, Python, Coarse-Grained Reconfigurable Architecture generator based on magma
 * [hammer](https://github.com/ucb-bar/hammer) - 2017-?, Python, Highly Agile Masks Made Effortlessly from RTL
