@@ -5,7 +5,7 @@ from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlValueInt, HdlDirection
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import INT, BOOL
+from hwt.hdl.types.defs import INT, BOOL, FLOAT64
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.string import String
@@ -13,6 +13,7 @@ from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.types.float import HFloat
 
 
 class ToHdlAst_Value():
@@ -50,6 +51,8 @@ class ToHdlAst_Value():
             return self.as_hdl_HEnumVal(val)
         elif isinstance(t, String):
             return self.as_hdl_StringVal(val)
+        elif isinstance(t, HFloat):
+            return self.as_hdl_HFloatVal(val)
         else:
             raise SerializerException(
                 "can not resolve value serialization for %r"
@@ -77,6 +80,11 @@ class ToHdlAst_Value():
 
     def as_hdl_StringVal(self, val):
         return val.val
+
+    def as_hdl_HFloatVal(self, val):
+        if val._dtype != FLOAT64:
+            raise NotImplementedError(val._dtype)
+        return float(val)
 
     def as_hdl_SignalItem(self, si: Union[SignalItem, HdlIdDef],
                           declaration=False):

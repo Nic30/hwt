@@ -1,5 +1,5 @@
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlValueInt
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call, \
     hdl_map_asoc, hdl_index
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import BITS_DEFAUTL_SIGNED, BITS_DEFAUTL_FORCEVECTOR, \
@@ -7,6 +7,7 @@ from hwt.hdl.types.bits import BITS_DEFAUTL_SIGNED, BITS_DEFAUTL_FORCEVECTOR, \
 from hwt.hdl.types.defs import BOOL, INT
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import MethodNotOverloaded
+from hwt.hdl.types.float import HFloat
 
 
 class ToHdlAstHwt_types():
@@ -54,3 +55,6 @@ class ToHdlAstHwt_types():
             add_kw("negated", typ.negated)
 
         return hdl_call(self.BITS, args)
+
+    def as_hdl_HdlType_float(self, typ: HFloat, declaration=False):
+        return hdl_call(HdlValueId("HFloat"), typ.exponent_w, typ.mantisa_w)

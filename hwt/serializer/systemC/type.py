@@ -7,6 +7,8 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.hdlType import MethodNotOverloaded
 from hwt.serializer.verilog.types import ToHdlAstVerilog_types
+from hwt.hdl.types.defs import FLOAT64
+from hwt.hdl.types.float import HFloat
 
 
 class ToHdlAstSystemC_type():
@@ -63,3 +65,9 @@ class ToHdlAstSystemC_type():
     def as_hdl_HdlType_enum(self, typ: HEnum, declaration=False):
         return ToHdlAstVerilog_types.as_hdl_HdlType_enum(
             self, typ, declaration=declaration)
+
+    def as_hdl_HdlType_float(self, typ: HFloat, declaration=False):
+        if typ == FLOAT64:
+            return HdlValueId("double")
+        else:
+            raise NotImplementedError(typ)

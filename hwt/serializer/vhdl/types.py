@@ -1,12 +1,13 @@
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
-from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType,\
+from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType, \
     HdlTypeType
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index, \
     hdl_downto
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import BOOL, INT
+from hwt.hdl.types.defs import BOOL, INT, FLOAT64
+from hwt.hdl.types.float import HFloat
 
 
 class ToHdlAstVhdl2008_types():
@@ -71,3 +72,9 @@ class ToHdlAstVhdl2008_types():
             return v
         else:
             return super(ToHdlAstVhdl2008_types, self).as_hdl_HdlType_array(typ, declaration)
+
+    def as_hdl_HdlType_float(self, typ: HFloat, declaration=False):
+        if typ == FLOAT64:
+            return HdlValueId("real")
+        else:
+            raise NotImplementedError(typ)

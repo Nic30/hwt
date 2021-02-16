@@ -31,6 +31,7 @@ from hwt.serializer.generic.utils import HWT_TO_HDLCONVEROTR_DIRECTION, \
     TmpVarsSwap
 from hwt.serializer.utils import HdlStatement_sort_key
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.types.float import HFloat
 
 
 class ToHdlAst():
@@ -98,6 +99,8 @@ class ToHdlAst():
             sFn = self.as_hdl_HdlType_array
         elif isinstance(typ, Slice):
             sFn = self.as_hdl_HdlType_slice
+        elif isinstance(typ, HFloat):
+            sFn = self.as_hdl_HdlType_float
         else:
             # [todo] better error msg
             raise NotImplementedError("type declaration is not implemented"

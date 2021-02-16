@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from hwt.hdl.types.defs import INT, STR, BOOL
+from hwt.hdl.types.defs import INT, STR, BOOL, FLOAT64
 from hwt.hdl.value import HValue
 
 
@@ -38,6 +38,8 @@ class Param():
             return STR
         elif isinstance(v, int) and v >= INT32_MIN and v <= INT32_MAX:
             return INT
+        elif isinstance(v, float):
+            return FLOAT64
         else:
             return None
 

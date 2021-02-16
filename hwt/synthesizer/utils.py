@@ -29,6 +29,8 @@ def to_rtl(unit_or_cls: Unit, store_manager: StoreManager,
     else:
         u = unit_or_cls()
 
+    u._target_platform = target_platform
+    u._store_manager = store_manager
     u._loadDeclarations()
     if name is not None:
         assert isinstance(name, str)

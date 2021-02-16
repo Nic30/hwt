@@ -1,17 +1,19 @@
 
 from typing import Optional, Any
 
-from hwt.hdl.types.defs import INT, STR, BOOL, SLICE
+from hwt.hdl.types.defs import INT, STR, BOOL, SLICE, FLOAT64
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 
-
-defaultPyConversions = {int: INT,
-                        str: STR,
-                        bool: BOOL,
-                        slice: SLICE}
+defaultPyConversions = {
+    int: INT,
+    str: STR,
+    bool: BOOL,
+    slice: SLICE,
+    float: FLOAT64
+}
 
 
 def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
@@ -21,10 +23,10 @@ def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
     elif isinstance(op, InterfaceBase):
         return op._sig
     else:
-        if isinstance(op, int):
-            if suggestedType is not None:
-                return suggestedType.from_py(op)
+        if suggestedType is not None:
+            return suggestedType.from_py(op)
 
+        if isinstance(op, int):
             if op >= 1 << 31:
                 raise TypeError(
                     f"Number {op:d} is too big to fit in 32 bit integer of HDL"
@@ -33,6 +35,7 @@ def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
                 raise TypeError(
                     f"Number {op:d} is too small to fit in 32 bit integer"
                     " of HDL use Bits type instead")
+
         try:
             hType = defaultPyConversions[type(op)]
         except KeyError:
