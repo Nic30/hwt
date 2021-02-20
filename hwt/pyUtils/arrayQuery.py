@@ -3,6 +3,8 @@ from itertools import zip_longest
 from math import inf
 from types import GeneratorType
 
+from hdlConvertorAst.to.hdlUtils import iter_with_last
+
 
 class DuplicitValueExc(Exception):
     """
@@ -85,24 +87,6 @@ def where(iterable, fn):
     for i in iterable:
         if fn(i):
             yield i
-
-
-def iter_with_last(iterable):
-    """
-    :return: generator of tuples (isLastFlag, item)
-    """
-    # Ensure it's an iterator and get the first field
-    iterable = iter(iterable)
-    try:
-        prev = next(iterable)
-    except StopIteration:
-        return
-    for item in iterable:
-        # Lag by one item so I know I'm not at the end
-        yield False, prev
-        prev = item
-    # Last item
-    yield True, prev
 
 
 def groupedby(collection, fn):
