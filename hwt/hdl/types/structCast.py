@@ -1,6 +1,5 @@
 from hwt.code import Concat
 from hwt.doc_markers import internal
-from hwt.hdl.typeShortcuts import vec
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import default_reinterpret_cast_fn, HdlType
@@ -17,7 +16,7 @@ def hstruct_reinterpret_to_bits(self, sigOrVal, toType: HdlType):
     for f in self.fields:
         if f.name is None:
             width = f.dtype.bit_length()
-            part = vec(None, width)
+            part = Bits(width).from_py(None)
         else:
             part = getattr(sigOrVal, f.name)
             if isinstance(part, Signal):

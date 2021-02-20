@@ -6,9 +6,8 @@ from hwt.hdl.assignment import Assignment
 from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.switchContainer import SwitchContainer
-from hwt.hdl.typeShortcuts import hBit
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.defs import BOOL
+from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.sliceVal import SliceVal
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
@@ -46,7 +45,7 @@ class ToHdlAstVhdl2008_statements():
                         src = src[0]
                         correct = True
                     elif src_t == BOOL:
-                        src = src._ternary(hBit(1), hBit(0))
+                        src = src._ternary(BIT.from_py(1), BIT.from_py(0))
                         correct = True
                 elif not src_t.strict_width:
                     if isinstance(src, HValue):

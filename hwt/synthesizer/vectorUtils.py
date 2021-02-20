@@ -3,7 +3,6 @@ from math import ceil
 from typing import Union
 
 from hwt.doc_markers import internal
-from hwt.hdl.typeShortcuts import vec
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.utils import walkFlattenFields
@@ -53,7 +52,7 @@ def fitTo_t(what: Union[RtlSignalBase, HValue], where_t: HdlType,
             ext = reduce(lambda a, b: a._concat(b), [msb for _ in range(w)])
         else:
             # 0 extend
-            ext = vec(0, w)
+            ext = Bits(w).from_py(0)
 
         return ext._concat(what)
 

@@ -4,7 +4,6 @@ from operator import eq
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.typeShortcuts import hInt, vec
 from hwt.hdl.types.bitValFunctions import bitsCmp, \
     bitsBitOp, bitsArithOp
 from hwt.hdl.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
@@ -278,7 +277,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             if not index._is_full_valid():
                 raise ValueError("invalid index", index)
         else:
-            index = hInt(index)
+            index = INT.from_py(index)
 
         # convert value to bits of length specified by index
         if index._dtype == SLICE:
@@ -354,7 +353,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         if self._dtype.signed:
             raise NotImplementedError()
 
-        return self[(width - int(other)):]._concat(vec(0, int(other)))
+        return self[(width - int(other)):]._concat(Bits(int(other)).from_py(0))
 
     def __rshift__(self, other):
         """
@@ -365,7 +364,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         if self._dtype.signed:
             return self[:self._dtype.bit_length() - other]._concat(self[:other])
 
-        return vec(0, int(other))._concat(self[:other])
+        return Bits(int(other)).from_py(0)._concat(self[:other])
 
     def __neg__(self):
         if isinstance(self, HValue):

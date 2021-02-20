@@ -7,7 +7,6 @@ from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.to.vhdl.vhdl2008 import ToVhdl2008
 from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.doc_markers import internal
-from hwt.hdl.typeShortcuts import hInt
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, STR, BIT, INT
 from hwt.hdl.types.hdlType import HdlType
@@ -159,7 +158,7 @@ class IpPackager(IpCorePackager):
         if dtype == BIT:
             return False
         elif isinstance(dtype, Bits):
-            return [dtype.bit_length() - 1, hInt(0)]
+            return [dtype.bit_length() - 1, INT.from_py(0)]
 
     @internal
     def getInterfaceType(self, intf: Interface) -> HdlType:
@@ -212,7 +211,7 @@ class IpPackager(IpCorePackager):
         :see: doc of method on parent class
         """
         if isinstance(val, int):
-            val = hInt(val)
+            val = INT.from_py(val)
         if do_eval:
             val = val.staticEval()
 
