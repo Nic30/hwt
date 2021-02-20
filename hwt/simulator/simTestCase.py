@@ -206,7 +206,7 @@ class SimTestCase(unittest.TestCase):
             target_platform=DummySimPlatform()):
         """
         Use this method if you did not used compileSim()
-        or SingleUnitSimTestCase to setup the simulator and DUT
+        to setup the simulator and DUT
         """
         if unique_name is None:
             t_name = self.getTestName()
@@ -245,26 +245,3 @@ def simpleRandomizationProcess(tc: SimTestCase, agent, timeQuantum=CLK_PERIOD):
             yield Timer(delay)
 
     return randomEnProc
-
-
-class SingleUnitSimTestCase(SimTestCase):
-    """
-    :class:`~.SimTestCase` for simple tests with a single component
-    """
-
-    @classmethod
-    def getUnit(cls) -> Unit:
-        """
-        Create an :class:`hwt.synthesizer.unit.Unit` instance to test
-        """
-        raise NotImplementedError("Implement this function in your testcase")
-
-    @classmethod
-    def setUpClass(cls):
-        """
-        Compile component from :func:`~.getUnit`
-        """
-        super(SingleUnitSimTestCase, cls).setUpClass()
-        u = cls.getUnit()
-        assert isinstance(u, Unit), u
-        cls.compileSim(u)
