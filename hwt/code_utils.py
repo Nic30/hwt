@@ -2,10 +2,8 @@ from typing import Union
 
 from hwt.doc_markers import internal
 from hwt.hdl.types.defs import BIT
-from hwt.hdl.types.typeCast import toHVal
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.synthesizer.vectorUtils import fitTo
 from ipCorePackager.constants import DIRECTION
 
 
@@ -74,31 +72,6 @@ def _intfToSig(obj):
         return obj._sig
     else:
         return obj
-
-
-@internal
-def _connect(src, dst, exclude, fit):
-    # [TODO]: support for RtlSignals of struct type + interface with same signal structure
-    if isinstance(src, InterfaceBase):
-        if isinstance(dst, InterfaceBase):
-            return dst._connectTo(src, exclude=exclude, fit=fit)
-
-    assert not exclude, (
-        "dst does not contain subinterfaces,"
-        " excluded should be already processed in this state",
-        src, dst, exclude
-    )
-    if src is None:
-        src = dst._dtype.from_py(None)
-    else:
-        src = toHVal(src)
-
-    if fit:
-        src = fitTo(src, dst)
-
-    src = src._auto_cast(dst._dtype)
-
-    return dst(src)
 
 
 @internal

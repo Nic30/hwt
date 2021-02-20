@@ -8,7 +8,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.utils import walkFlattenFields
 from hwt.hdl.value import HValue
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class BitWidthErr(Exception):
@@ -17,7 +17,7 @@ class BitWidthErr(Exception):
     """
 
 
-def fitTo_t(what: Union[RtlSignal, HValue], where_t: HdlType,
+def fitTo_t(what: Union[RtlSignalBase, HValue], where_t: HdlType,
             extend: bool=True, shrink: bool=True):
     """
     Slice signal "what" to fit in "where"
@@ -58,7 +58,7 @@ def fitTo_t(what: Union[RtlSignal, HValue], where_t: HdlType,
         return ext._concat(what)
 
 
-def fitTo(what: Union[RtlSignal, HValue], where: Union[RtlSignal, HValue],
+def fitTo(what: Union[RtlSignalBase, HValue], where: Union[RtlSignalBase, HValue],
           extend: bool=True, shrink: bool=True):
     return fitTo_t(what, where._dtype, extend, shrink)
 
@@ -78,7 +78,7 @@ class BitWalker():
         for last item fill it up with invalid bits (otherwise raise)
     """
 
-    def __init__(self, sigOrVal: Union[RtlSignal, HValue],
+    def __init__(self, sigOrVal: Union[RtlSignalBase, HValue],
                  skipPadding: bool=True,
                  fillup: bool=False):
         """
@@ -154,7 +154,7 @@ class BitWalker():
             else:
                 return actual[(actualOffset + numberOfBits):actualOffset]
 
-    def get(self, numberOfBits: int) -> Union[RtlSignal, HValue]:
+    def get(self, numberOfBits: int) -> Union[RtlSignalBase, HValue]:
         """
         :param numberOfBits: number of bits to get from actual position
         :return: chunk of bits of specified size (instance of Value or RtlSignal)
@@ -181,7 +181,7 @@ class BitWalker():
         raise AssertionError("there are still some items")
 
 
-def iterBits(sigOrVal: Union[RtlSignal, HValue], bitsInOne: int=1,
+def iterBits(sigOrVal: Union[RtlSignalBase, HValue], bitsInOne: int=1,
              skipPadding: bool=True, fillup: bool=False):
     """
     Iterate over bits in vector

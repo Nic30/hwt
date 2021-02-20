@@ -1,22 +1,20 @@
-import math
 from operator import and_, or_, xor, add
 
-from hwt.code_utils import _mkOp, _connect, _intfToSig
+from hwt.code_utils import _mkOp, _intfToSig
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
-from hwt.hdl.statement import HwtSyntaxError, HdlStatement
+from hwt.hdl.statement import HwtSyntaxError
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import HValue
+from hwt.math import log2ceil
 from hwt.pyUtils.arrayQuery import arr_any
-from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
-from hwt.math import log2ceil
 
 
 class If(IfContainer):
@@ -312,34 +310,6 @@ class FsmBuilder(Switch):
         return d
 
 
-def connect(src, *destinations, exclude: set=None, fit=False):
-    """
-    Connect src (signals/interfaces/values) to all destinations
-
-    :param exclude: interfaces on any level on src or destinations
-        which should be excluded from connection process
-    :param fit: auto fit source width to destination width
-    """
-    assignemnts = []
-
-    if isinstance(src, HObjList):
-        for dst in destinations:
-            assert len(src) == len(dst), (src, dst)
-        _destinations = [iter(d) for d in destinations]
-        for _src in src:
-            dsts = [next(d) for d in _destinations]
-            assignemnts.extend(connect(_src, *dsts, exclude=exclude, fit=fit))
-    else:
-        for dst in destinations:
-            r = _connect(src, dst, exclude=exclude, fit=fit)
-            if isinstance(r, HdlStatement):
-                assignemnts.append(r)
-            else:
-                assignemnts.extend(r)
-
-    return assignemnts
-
-
 # variadic operator functions
 And = _mkOp(and_)
 Add = _mkOp(add)
@@ -361,6 +331,7 @@ def rol(sig, howMany) -> RtlSignalBase:
     if width == 1:
         return sig
     return sig[(width - howMany):]._concat(sig[:(width - howMany)])
+
 
 def replicate(n, v):
     return Concat(*(v for _ in range(n)))

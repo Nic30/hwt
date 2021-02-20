@@ -110,13 +110,13 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         return self
 
-    def __call__(self, other):
+    def __call__(self, other, exclude=None, fit=False):
         """
         :attention: it is not call of function it is operator of assignment
         """
         assert self._direction != INTF_DIRECTION.MASTER
         try:
-            return self._connectTo(other)
+            return self._connectTo(other, exclude, fit)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -155,8 +155,15 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             for i in self._interfaces:
                 i._clean(lockNonExternal=lockNonExternal)
 
+    def _connectTo(self, master, exclude=None, fit=False):
+        """
+        connect to another interface interface (on rtl level)
+        works like self <= master in VHDL
+        """
+        return list(self._connectToIter(master, exclude, fit))
+
     @internal
-    def _connectToIter(self, master, exclude=None, fit=False):
+    def _connectToIter(self, master, exclude, fit):
         # [todo] implementation for RtlSignals of HStruct type
         if exclude and (self in exclude or master in exclude):
             return
@@ -180,17 +187,17 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                         raise IntfLvlConfErr(
                             "Invalid connection", ifc, "<=", mIfc)
 
-                    yield from ifc._connectTo(mIfc,
-                                              exclude=exclude,
-                                              fit=fit)
+                    yield from ifc._connectToIter(mIfc,
+                                                  exclude,
+                                                  fit)
                 else:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr(
                             "Invalid connection", mIfc, "<=", ifc)
 
-                    yield from mIfc._connectTo(ifc,
-                                               exclude=exclude,
-                                               fit=fit)
+                    yield from mIfc._connectToIter(ifc,
+                                                   exclude,
+                                                   fit)
 
             if len(seen_master_intfs) != len(master._interfaces):
                 if exclude:
@@ -323,13 +330,6 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             return w
         else:
             return self._dtype.bit_length()
-
-    def _connectTo(self, master, exclude=None, fit=False):
-        """
-        connect to another interface interface (on rtl level)
-        works like self <= master in VHDL
-        """
-        return list(self._connectToIter(master, exclude, fit))
 
     def __repr__(self):
         s = [self.__class__.__name__]

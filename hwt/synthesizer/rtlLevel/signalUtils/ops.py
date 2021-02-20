@@ -4,6 +4,7 @@ from operator import lshift, rshift
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
 from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.statement import HwtSyntaxError
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.sliceUtils import slice_to_SLICE
 from hwt.hdl.types.typeCast import toHVal
@@ -11,7 +12,7 @@ from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
-from hwt.hdl.statement import HwtSyntaxError
+from hwt.synthesizer.vectorUtils import fitTo_t
 
 
 def tv(signal):
@@ -370,7 +371,10 @@ class RtlSignalOps():
         """
         return self
 
-    def __call__(self, source, dst_resolve_fn=lambda x: x._getDestinationSignalForAssignmentToThis()) -> Assignment:
+    def __call__(self, source,
+                 dst_resolve_fn=lambda x: x._getDestinationSignalForAssignmentToThis(),
+                 exclude=None,
+                 fit=False) -> Assignment:
         """
         Create assignment to this signal
 
@@ -378,6 +382,9 @@ class RtlSignalOps():
         :return: list of assignments
         """
         assert not self._const, self
+        if exclude is not None and (self in exclude or source in exclude):
+            return []
+
         if self.hidden:
             try:
                 d = self.singleDriver()
@@ -393,8 +400,8 @@ class RtlSignalOps():
             source = source._sig
 
         try:
-            requires_type_check = False
             if source is None:
+                requires_type_check = False
                 source = self._dtype.from_py(None)
             else:
                 requires_type_check = True
@@ -407,6 +414,8 @@ class RtlSignalOps():
         if requires_type_check:
             err = False
             try:
+                if fit:
+                    source = fitTo_t(source, self._dtype)
                 source = source._auto_cast(self._dtype)
             except TypeConversionErr:
                 err = True

@@ -158,7 +158,7 @@ class SignalOps(object):
     def _ternary(self, ifTrue, ifFalse):
         return self._sig._ternary(ifTrue, ifFalse)
 
-    def __call__(self, source):
+    def __call__(self, source, exclude=None, fit=False):
         """
         connect this signal to driver
 
@@ -166,4 +166,4 @@ class SignalOps(object):
         :return: list of assignments
         """
         assert self._isAccessible, self
-        return self._sig(source)
+        return self._sig(source, exclude=None, fit=fit)

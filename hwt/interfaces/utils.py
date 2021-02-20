@@ -1,4 +1,3 @@
-from hwt.code import connect
 from hwt.interfaces.std import Clk, Rst_n, Rst
 
 
@@ -28,7 +27,7 @@ def _tryConnect(src, unit, intfName):
     except AttributeError:
         return
     if not dst._sig.drivers:
-        connect(src, dst)
+        dst(src)
 
 
 def propagateClk(obj):

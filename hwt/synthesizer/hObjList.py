@@ -108,7 +108,7 @@ class HObjList(list, Generic[T]):
                 o._updateParamsFrom(*args, **kwargs)
         return self
 
-    def __call__(self, other: List[T]):
+    def __call__(self, other: List[T], exclude=None, fit=False):
         """
         () operator behaving as assingment operator
         """
@@ -120,7 +120,7 @@ class HObjList(list, Generic[T]):
 
         statements = []
         for a, b in zip(self, other):
-            stms = a(b)
+            stms = a(b, exclude=exclude, fit=fit)
             if isinstance(stms, HdlStatement):
                 statements.append(stms)
             else:
