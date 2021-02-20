@@ -174,9 +174,12 @@ class ToHdlAst():
             dst_indexes = [self.as_hdl(x) for x in dst_indexes]
             correct = True
         else:
-            if not (dst._dtype == a.src._dtype):
+            if dst._dtype == a.src._dtype:
+                correct = True
+            else:
                 srcT = a.src._dtype
                 dstT = dst._dtype
+                correct = False
                 if (isinstance(srcT, Bits) and
                         isinstance(dstT, Bits)):
                     bl0 = srcT.bit_length()
@@ -190,8 +193,6 @@ class ToHdlAst():
                                 correct = True
                         elif srcT.signed == dstT.signed:
                             correct = True
-            else:
-                correct = True
 
         if not correct:
             raise SerializerException((
