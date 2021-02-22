@@ -42,15 +42,7 @@ HWT designs are objects. No specific exceution is required, just run `python3`, 
 
 ## HWT ecosystem
 
-* [pyMathBitPrecise](https://github.com/Nic30/pyMathBitPrecise) - Bit precise integer types.
-* [pyDigitalWaveTools](https://github.com/Nic30/pyDigitalWaveTools) - wave dump IO
-* [ipCorePackager](https://github.com/Nic30/ipCorePackager) - IPCore generator (Vivado, Quartus support etc.) automatic specification of interfaces by metaclass description, register map, clk domains etc.
-* [hwtLib](https://github.com/Nic30/hwtLib) - Library with examples and real designs.
-* [sphinx-hwt](https://github.com/Nic30/sphinx-hwt) - Plugin for sphinx documentation generator which adds interactive shematic into html documentation.
-* [hdlConvertor](https://github.com/Nic30/hdlConvertor) - (System) Verilog/VHDL parser
-* [hwtSimApi](https://github.com/Nic30/hwtSimApi) - Backup RTL simulator writen in Python
-* [hwtSimApiVerilator](https://github.com/Nic30/hwtSimApi) - Binding for Verilator simulator generator
-* [netlistDB](https://github.com/HardwareIR/netlistDB) - High performance circuit database, C++
+![hwt_ecosystem_packages.png](doc/_static/hwt_ecosystem_packages.png)
 
 
 ## Installation

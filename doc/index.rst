@@ -37,10 +37,7 @@ What is HWToolkit (hwt)
 Other usefull libraries
 -----------------------
 
-* hwtLib - Library of common components, utils etc.
-* sphinx-hwt - Plugin for sphinx documentation generator which adds interactive shematic into html documentation.
-* hwtHls - High-Level Synthesis (HLS) framework (pre-alfa) build on top of hwt.
-
+.. image:: _static/hwt_ecosystem_packages.png
 
 Where to start
 --------------
