@@ -85,7 +85,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [heterocl](https://github.com/cornell-zhang/heterocl) - 2017-?, C++, A Multi-Paradigm Programming Infrastructure for Software-Defined Reconfigurable Computing
 * [hoodlum](https://github.com/tcr/hoodlum) - 2016-?, Rust, HCL
 * [ILAng](https://github.com/Bo-Yuan-Huang/ILAng) - modeling and verification platform for SoCs where Instruction-Level Abstraction (ILA) is used as the formal model for hardware components.
-* [jhdl](https://github.com/larsjoost/jhdl) - ?-2017, C++ Verilog/VHDL -> systemC, prototype
+* :skull: [jhdl](https://github.com/larsjoost/jhdl) - ?-2017, C++ Verilog/VHDL -> systemC, prototype
 * [Kactus2](http://funbase.cs.tut.fi) - IP-core packager
 * [kratos](https://github.com/Kuree/kratos) - C++/Python, hardware generator/simulator
 * [lgraph](https://github.com/masc-ucsc/lgraph) - C, generic graph library
@@ -112,12 +112,12 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [spatial](https://github.com/stanford-ppl/spatial) - Scala, an Argon DSL like, high level abstraction
 * [SpinalHDL](https://github.com/SpinalHDL/SpinalHDL) - 2015-?, Scala, HCL
 * [Silice](https://github.com/sylefeb/Silice) - ?, C++, Custom HDL
-* [SyDpy](https://github.com/bogdanvuk/sydpy) - ?-2016, Python, HCL and verif. framework operating on TML/RTL level
+* :skull: [SyDpy](https://github.com/bogdanvuk/sydpy) - ?-2016, Python, HCL and verif. framework operating on TML/RTL level
 * [systemrdl-compiler](https://github.com/SystemRDL/systemrdl-compiler) - Python,c++, register description language compiler
 * [UHDM](https://github.com/alainmarcel/UHDM) - C++ SystemVerilog -> C++ model
-* [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
+* :skull: [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
 * [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric HCL with HLS like features
-* [wyre](https://github.com/nickmqb/wyre) - 2020-2020, Mupad, Minimalistic HDL
+* :skull:  [wyre](https://github.com/nickmqb/wyre) - 2020-2020, Mupad, Minimalistic HDL
 
 
 ## Related open-source
