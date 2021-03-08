@@ -17,7 +17,7 @@ class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
         Without it you can very easily end up with a combinational loop.)
     """
 
-    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
+    def __init__(self, sim: HdlSimulator, intf: "Handshaked", allowNoReset=False):
         rst = self._discoverReset(intf, allowNoReset)
         clk = intf._getAssociatedClk()
         pcHandshakedAgent.__init__(self, sim, intf, clk, rst)
@@ -52,6 +52,43 @@ class HandshakedAgent(SyncAgentBase, pcHandshakedAgent):
     def set_data(self, data):
         """write data to interface"""
         self.intf.data.write(data)
+
+
+class UniversalHandshakedAgent(HandshakedAgent):
+    """
+    Same thing like :class:`hwt.interfaces.agents.handshaked.HandshakedAgent`
+    just the get_data/set_data method is predefined to use a tuple constructed
+    from signals available on this interface.
+
+    :ivar ~._signals: tuple of data signals of this interface (excluding ready and valid signal)
+    :ivar ~._sigCnt: len(_signals)
+    """
+
+    def __init__(self, sim: HdlSimulator, intf: "Handshaked", allowNoReset=False):
+        HandshakedAgent.__init__(self, sim, intf, allowNoReset=allowNoReset)
+
+        signals = []
+        for i in intf._interfaces:
+            if i is not self.get_ready_signal(intf) and i is not self.get_valid_signal(intf):
+                signals.append(i)
+        self._signals = tuple(signals)
+        self._sigCnt = len(signals)
+
+    def get_data(self):
+        return tuple(sig.read() for sig in self._signals)
+
+    def set_data(self, data):
+        if data is None:
+            for sig in self._signals:
+                sig.write(None)
+        else:
+            assert len(data) == self._sigCnt, (
+                "invalid number of data for an interface",
+                len(data),
+                self._signals,
+                self.intf._getFullName())
+            for sig, val in zip(self._signals, data):
+                sig.write(val)
 
 
 class HandshakeSyncAgent(HandshakedAgent):
