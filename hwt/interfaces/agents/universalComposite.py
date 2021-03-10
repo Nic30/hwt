@@ -2,7 +2,7 @@ from hwt.pyUtils.arrayQuery import flatten
 from hwt.synthesizer.interface import Interface
 from hwtSimApi.agents.base import AgentBase
 from hwtSimApi.hdlSimulator import HdlSimulator
-from ipCorePackager.constants import DIRECTION, INTF_DIRECTION
+from ipCorePackager.constants import INTF_DIRECTION
 
 
 class UniversalCompositeAgent(AgentBase):
