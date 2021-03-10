@@ -13,7 +13,7 @@ class UniversalCompositeAgent(AgentBase):
     def getEnable(self):
         return self.__enable
 
-    def setEnable(self, v):
+    def setEnable(self, v: bool):
         """
         Distribute change of enable on child agents
         """
