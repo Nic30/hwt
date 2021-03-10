@@ -68,8 +68,10 @@ class UniversalHandshakedAgent(HandshakedAgent):
         HandshakedAgent.__init__(self, sim, intf, allowNoReset=allowNoReset)
 
         signals = []
+        rd = self.get_ready_signal(intf)
+        vld = self.get_valid_signal(intf)
         for i in intf._interfaces:
-            if i is not self.get_ready_signal(intf) and i is not self.get_valid_signal(intf):
+            if i._sigInside is not rd and i._sigInside is not vld:
                 signals.append(i)
         self._signals = tuple(signals)
         self._sigCnt = len(signals)
