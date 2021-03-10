@@ -77,20 +77,26 @@ class UniversalHandshakedAgent(HandshakedAgent):
         self._sigCnt = len(signals)
 
     def get_data(self):
-        return tuple(sig.read() for sig in self._signals)
+        if self._sigCnt == 1:
+            return self._signals[0].read()
+        else:
+            return tuple(sig.read() for sig in self._signals)
 
     def set_data(self, data):
         if data is None:
             for sig in self._signals:
                 sig.write(None)
         else:
-            assert len(data) == self._sigCnt, (
-                "invalid number of data for an interface",
-                len(data),
-                self._signals,
-                self.intf._getFullName())
-            for sig, val in zip(self._signals, data):
-                sig.write(val)
+            if self._sigCnt == 1:
+                self._signals[0].write(data)
+            else:
+                assert len(data) == self._sigCnt, (
+                    "invalid number of data for an interface",
+                    len(data),
+                    self._signals,
+                    self.intf._getFullName())
+                for sig, val in zip(self._signals, data):
+                    sig.write(val)
 
 
 class HandshakeSyncAgent(HandshakedAgent):
