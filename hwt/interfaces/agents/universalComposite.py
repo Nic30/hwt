@@ -7,8 +7,7 @@ from ipCorePackager.constants import INTF_DIRECTION
 
 class UniversalCompositeAgent(AgentBase):
     """
-    Composite agent with agent for addr and data channel
-    enable is shared
+    Composite agent which just instanciates agents for every subinterface
     """
 
     def getEnable(self):
