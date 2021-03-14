@@ -96,8 +96,10 @@ class UniversalHandshakedAgent(HandshakedAgent):
                     self._signals,
                     self.intf._getFullName())
                 for sig, val in zip(self._signals, data):
-                    sig.write(val)
-
+                    try:
+                        sig.write(val)
+                    except:
+                        raise ValueError("Error while writing ", val, "to ", sig)
 
 class HandshakeSyncAgent(HandshakedAgent):
     """
