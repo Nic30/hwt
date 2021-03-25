@@ -76,6 +76,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [bsc](https://github.com/B-Lang-org/bsc) - Haskell, C++, BSV - Bluespec Compiler
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, HCL
 * [Chips-2.0](https://github.com/dawsonjon/Chips-2.0) - , , FPGA Design Suite based on C to Verilog design flow
+* [circt](https://github.com/llvm/circt) - 2020-?, C++/LLVM, compiler infrastructure 
 * [concat](https://github.com/conal/concat) - 2016-?, Haskell, Haskell to hardware
 * [DUH](https://github.com/sifive/duh) - JS, simple convertor between verilog/scala/ipxact
 * [DFiant](https://github.com/DFiantHDL/DFiant) 2019-?, Scala, dataflow based HDL
