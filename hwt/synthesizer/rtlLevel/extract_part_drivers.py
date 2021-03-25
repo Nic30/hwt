@@ -246,7 +246,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
                 # that means that that part is not driven by anything
                 # and we need to check default and nop value
                 part_indexes = (SLICE.from_py(slice(low, split_p , -1)),)
-                _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, True)
+                _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, isinstance(s._nop_val, RtlSignal))
                 new_parts.append(_src)
                 _index_key = ((low, split_p),)
                 new_parts_dict[_index_key] = _src, True
@@ -336,7 +336,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
             # something unconnected at the end
             high, low = split_point[-1], end
             part_indexes = (SLICE.from_py(slice(high, low , -1)),)
-            _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, True)
+            _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, isinstance(s._nop_val, RtlSignal))
             new_parts.append(_src)
             index_key = ((high, low),)
             new_parts_dict[index_key] = _src, True
