@@ -138,8 +138,8 @@ class SwitchContainer(HdlStatement):
 
     @internal
     def _collect_io(self):
-        if isinstance(self.cond, RtlSignalBase):
-            self._inputs.append(self.cond)
+        if isinstance(self.switchOn, RtlSignalBase):
+            self._inputs.append(self.switchOn)
         for c, _ in self.cases:
             if isinstance(c, RtlSignalBase):
                 self._inputs.append(c)
