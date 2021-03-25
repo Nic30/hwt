@@ -48,46 +48,65 @@ def _format_indexes(indexes):
         for i in indexes)
 
 
-def extract_part_drivers_stm(stm: HdlStatement, signal_parts: Dict[RtlSignal, List[Tuple[RtlSignal, List[HValue]]]]):
+def extract_part_drivers_stm(stm: HdlStatement,
+                             signal_parts: Dict[RtlSignal,
+                                                List[Tuple[RtlSignal, List[HValue]]]]
+                             ) -> bool:
+    """
+    :returns: True if statement was modified
+    """
     if isinstance(stm, Assignment):
+        dst = stm.dst
+        parts = signal_parts.get(dst, None)
+        if parts is None:
+            return False
         if stm.indexes and len(stm.indexes) == 1:
-            dst = stm.dst
-            parts = signal_parts.get(dst, None)
-            if parts is None:
-                return False
             indexes = _format_indexes(stm.indexes)
             new_dsts, do_remove_stm = parts[indexes]
-            if isinstance(new_dsts, list):
-                assert len(new_dsts) > 1, (dst, new_dsts, stm)
-                assert not do_remove_stm, (dst, new_dsts, stm)
-                # the driven slice was split to multiple sub slices
-                replacement = []
-                dst_offset = new_dsts[0][-1][1]
-                for i in new_dsts:
-                    new_dst = parts[i][0]
-                    new_src = stm.src
-                    for _i in i:
-                        high, low = _i[0] - dst_offset, _i[1] - dst_offset
-                        assert high > 0 and low >= 0, dst_offset
-                        assert high > low, (dst, stm, (high, low))
-                        new_src = new_src[high:low]
-                    a = new_dst(new_src)
-                    replacement.append(a)
+        else:
+            # collect only parts which do not have sub parts (are primitive parts)
+            new_dsts = []
+            for k, d in parts.items():
+                if not isinstance(d, list):
+                    new_dsts.append(k)
+            new_dsts.sort()
+            do_remove_stm = False
 
-                # it has to hav parent statement because it needs to be nested
-                # because otherwise it would not have some overlapping parts driven diferently
-                # inder some condition
-                stm.parentStm._replace_child_statement(stm, replacement, False)
-            elif do_remove_stm:
-                # remove current assignment because we are using src directly
-                assert stm.parentStm is None, stm
+        if isinstance(new_dsts, list):
+            if stm.parentStm is None:
+                return False
+            assert len(new_dsts) > 1, (dst, new_dsts, stm)
+            # assert not do_remove_stm, (dst, new_dsts, stm)
+            # the driven slice was split to multiple sub slices
+            replacement = []
+            dst_offset = new_dsts[0][-1][1]
+            for i in new_dsts:
+                new_dst = parts[i][0]
+                new_src = stm.src
+                for _i in i:
+                    high, low = _i[0] - dst_offset, _i[1] - dst_offset
+                    assert high > 0 and low >= 0, dst_offset
+                    assert high > low, (dst, stm, (high, low))
+                    new_src = new_src[high:low]
+                a = new_dst(new_src)
+                replacement.append(a)
+
+            # it has to have parent statement because it needs to be nested
+            # because otherwise it would not have some overlapping parts driven diferently
+            # under some condition
+            stm.parentStm._replace_child_statement(stm, replacement, False)
+            if do_remove_stm:
                 stm._destroy()
-            else:
-                # rewrite the Assignment instance to use new dst
-                replacement = [new_dsts(stm.src), ]
-                stm.parentStm._replace_child_statement(stm, replacement, False)
 
-            return True
+        elif do_remove_stm:
+            # remove current assignment because we are using src directly
+            # assert stm.parentStm is None, (stm, stm.parentStm)
+            stm._destroy()
+        else:
+            # rewrite the Assignment instance to use new dst
+            replacement = [new_dsts(stm.src), ]
+            stm.parentStm._replace_child_statement(stm, replacement, False)
+        return True
 
     elif isinstance(stm, (IfContainer, SwitchContainer, HdlStatementBlock)):
         modified = False
@@ -118,7 +137,10 @@ def extract_part_drivers_stm(stm: HdlStatement, signal_parts: Dict[RtlSignal, Li
 
 
 @internal
-def construct_tmp_dst_sig_for_slice(dst: RtlSignal, indexes: List[Union[BitsVal, SliceVal]], src: Optional[RtlSignal], is_signal_needed: bool) -> RtlSignal:
+def construct_tmp_dst_sig_for_slice(dst: RtlSignal,
+                                    indexes: List[Union[BitsVal, SliceVal]],
+                                    src: Optional[RtlSignal],
+                                    is_signal_needed: bool) -> RtlSignal:
     """
     Construct a tmp signal or value which will be used instead of slice from original signal
 
@@ -211,7 +233,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
             if isinstance(i, BitsVal):
                 low = int(i)
                 high = low + 1
-                index_key = ((high, low), )
+                index_key = ((high, low),)
             else:
                 assert isinstance(i, SliceVal), (s, i)
                 if i.val.step != -1:
@@ -224,13 +246,12 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
                 # that means that that part is not driven by anything
                 # and we need to check default and nop value
                 part_indexes = (SLICE.from_py(slice(low, split_p , -1)),)
-                _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, False)
+                _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, True)
                 new_parts.append(_src)
                 _index_key = ((low, split_p),)
                 new_parts_dict[_index_key] = _src, True
                 split_i += 1
                 split_p = split_point[split_i]
-
 
             this_start_split_p_i = split_i
             if split_p > low:
@@ -243,7 +264,6 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
                     continue
                 except KeyError:
                     pass
-
 
                 for i in range(split_i, -1, -1):
                     _sp = split_point[i]
@@ -291,7 +311,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
                         assert not can_directly_replace_with_src_expr, (s, low, high, existing_part)
                         assert isinstance(existing_part, RtlSignal), (s, low, high, existing_part)
                     else:
-                        assert sp_i == split_i +1, (s, sp_i, split_i)
+                        assert sp_i == split_i + 1, (s, sp_i, split_i)
                         # get actual input signal
                         if src is None:
                             _src = None
@@ -316,7 +336,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
             # something unconnected at the end
             high, low = split_point[-1], end
             part_indexes = (SLICE.from_py(slice(high, low , -1)),)
-            _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, False)
+            _src = construct_tmp_dst_sig_for_slice(s, part_indexes, None, True)
             new_parts.append(_src)
             index_key = ((high, low),)
             new_parts_dict[index_key] = _src, True
