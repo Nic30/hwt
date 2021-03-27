@@ -102,17 +102,18 @@ class HdlType_to_Interface():
         instance.
     """
 
-    def apply(self, dtype: HdlType, field_path: Optional[TypePath]=None) -> Interface:
+    def apply(self, dtype: HdlType, field_path: Optional[TypePath]=None, masterDir=DIRECTION.OUT) -> Interface:
         """
         Run the connversion
         """
         if isinstance(dtype, HStruct):
             return StructIntf(dtype, field_path,
-                              instantiateFieldFn=self.instantiateFieldFn)
+                              instantiateFieldFn=self.instantiateFieldFn,
+                              masterDir=masterDir)
         elif isinstance(dtype, (Bits, HEnum)):
-            return Signal(dtype=dtype)
+            return Signal(dtype=dtype, masterDir=masterDir)
         elif isinstance(dtype, HArray):
-            return HObjList(self.apply(dtype.element_t)
+            return HObjList(self.apply(dtype.element_t, masterDir=masterDir)
                             for _ in range(dtype.size))
         else:
             raise NotImplementedError(dtype)
