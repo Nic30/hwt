@@ -3,7 +3,6 @@ from hwt.hdl.types.hdlType import HdlType
 from hwt.serializer.generic.indent import getIndent
 from pyMathBitPrecise.bits3t import Bits3t
 
-
 BITS_DEFAUTL_SIGNED = None
 BITS_DEFAUTL_FORCEVECTOR = False
 BITS_DEFAUTL_NEGATED = False
@@ -28,7 +27,7 @@ class Bits(HdlType, Bits3t):
         bit_length = int(bit_length)
         assert bit_length > 0, bit_length
         Bits3t.__init__(self, bit_length, signed, name=name,
-                        force_vector=force_vector,
+                        force_vector=force_vector or signed is not None,
                         strict_sign=strict_sign, strict_width=strict_width)
 
     @internal
@@ -80,18 +79,22 @@ class Bits(HdlType, Bits3t):
         c = self.bit_length()
         if c == 1:
             constr.append("1bit")
+            if self.force_vector:
+                constr.append("force_vector")
         else:
             constr.append(f"{c:d}bits")
-        if self.force_vector:
-            constr.append("force_vector")
-        if self.signed:
-            constr.append("signed")
+
         if self.const:
             constr.append("const")
+
+        if self.signed:
+            constr.append("signed")
         elif self.signed is False:
             constr.append("unsigned")
+
         if not self.strict_sign:
             constr.append("strict_sign=False")
+
         if not self.strict_width:
             constr.append("strict_width=False")
 
