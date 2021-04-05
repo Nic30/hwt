@@ -55,10 +55,7 @@ class ComponentPath(tuple):
             else:
                 handle = _handle
 
-            while True:
-                if obj is handle:
-                    break
-
+            if obj is not handle:
                 if isinstance(obj, RtlSignal):
                     # to not modify path if it is already in absolute format
                     if not path or path[-1] is not obj:
@@ -82,7 +79,6 @@ class ComponentPath(tuple):
                         path.append(obj)
 
                     obj = obj._parent
-                break
 
             obj = _handle
 
