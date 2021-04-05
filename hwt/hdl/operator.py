@@ -48,14 +48,7 @@ class Operator(HdlObject):
         """
         for o in self.operands:
             o.staticEval()
-        self.result._val = self.evalFn()
-
-    @internal
-    def evalFn(self, simulator=None):
-        """
-        Syntax sugar
-        """
-        return self.operator.eval(self, simulator=simulator)
+        self.result._val = self.operator.eval(self, simulator=None)
 
     @internal
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
@@ -63,7 +56,7 @@ class Operator(HdlObject):
 
         if isEventDependentOp(self.operator):
             if ctx.contains_ev_dependency:
-                assert self in ctx, "has to have only one clock one clock"
+                assert self in ctx, "has to have only a single clock signal"
             ctx.contains_ev_dependency = True
             ctx.append(self)
         else:
@@ -143,7 +136,9 @@ class Operator(HdlObject):
                     f" only signal or values got: {o}")
 
         if out._const:
+            # if this signal is constant precompute its value
             out.staticEval()
+
         return out
 
     @internal

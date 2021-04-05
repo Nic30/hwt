@@ -287,7 +287,7 @@ class IfContainer(HdlStatement):
             self.rank -= rank_decrease
             io_change |= _io_change
 
-        reduce_self = not self.condHasEffect(
+        reduce_self = not self._condHasEffect(
             self.ifTrue, self.ifFalse, self.elIfs)
 
         if reduce_self:
@@ -359,7 +359,7 @@ class IfContainer(HdlStatement):
 
     @internal
     @staticmethod
-    def condHasEffect(ifTrue, ifFalse, elIfs):
+    def _condHasEffect(ifTrue, ifFalse, elIfs):
         stmCnt = len(ifTrue)
         # [TODO] condition in empty if stm
         if ifFalse is not None \
@@ -451,19 +451,4 @@ class IfContainer(HdlStatement):
             return
 
         raise ValueError("Statement", stm, "not found in ", self)
-
-    @internal
-    def seqEval(self):
-        if bool(self.cond.staticEval().val):
-            for s in self.ifTrue:
-                s.seqEval()
-        else:
-            for c in self.elIfs:
-                if bool(c[0].staticEval().val):
-                    for s in c[1]:
-                        s.seqEval()
-                    return
-
-            for s in self.ifFalse:
-                s.seqEval()
 

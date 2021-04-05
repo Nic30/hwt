@@ -161,8 +161,3 @@ class Assignment(HdlStatement):
         self.src = replace_input_in_expr(self, self.src, toReplace, replacement, isTopStatement)
 
         self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
-
-    @internal
-    def seqEval(self):
-        """Sequentially evaluate this assignment"""
-        self.dst._val = self.src.staticEval()
