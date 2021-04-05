@@ -147,7 +147,8 @@ class HdlStatement(HdlObject):
                 # Param instances does not have context
                 continue
         raise HwtSyntaxError(
-            "Statement does not have any signal in any context", self)
+            "Statement does not have any signal in any context,"
+            " it should have at least some output or should be alreary optimized out", self)
 
     def _iter_stms(self):
         """
