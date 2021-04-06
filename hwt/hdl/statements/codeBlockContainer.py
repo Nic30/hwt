@@ -1,8 +1,8 @@
 from typing import List, Set, Tuple
 
 from hwt.doc_markers import internal
-from hwt.hdl.statement import HdlStatement
-from hwt.hdl.statementUtils.reduction import HdlStatement_try_reduce_list
+from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.utils.reduction import HdlStatement_try_reduce_list
 from hwt.pyUtils.uniqList import UniqList
 
 

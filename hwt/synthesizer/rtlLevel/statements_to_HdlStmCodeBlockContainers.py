@@ -3,8 +3,8 @@ from itertools import compress
 from typing import Generator, List
 
 from hwt.doc_markers import internal
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
-from hwt.hdl.statement import HwtSyntaxError, HdlStatement
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.statement import HwtSyntaxError, HdlStatement
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
@@ -84,7 +84,7 @@ def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops)\
 
     proc_statements = _proc_statements
     if not proc_statements:
-        # this can happen e.g. when If does not contains any Assignment
+        # this can happen e.g. when If does not contains any HdlAssignmentContainer
         return
     sensitivity_recompute = False
     enclosure_recompute = False

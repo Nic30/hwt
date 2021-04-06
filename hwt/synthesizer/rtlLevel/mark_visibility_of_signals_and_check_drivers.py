@@ -1,10 +1,10 @@
 from typing import Generator
 
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import HdlPortItem
-from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.statement import HdlStatement
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErrType, \
     SignalDriverErr
@@ -13,8 +13,8 @@ from ipCorePackager.constants import DIRECTION
 
 @internal
 def walk_assignments(stm: HdlStatement, dst: RtlSignal)\
-        ->Generator[Assignment, None, None]:
-    if isinstance(stm, Assignment):
+        ->Generator[HdlAssignmentContainer, None, None]:
+    if isinstance(stm, HdlAssignmentContainer):
         if dst is stm.dst:
             yield stm
     else:

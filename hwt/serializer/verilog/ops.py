@@ -41,7 +41,7 @@ class ToHdlAstVerilog_ops():
                 and self._operandIsAnotherOperand(operand)\
                 and operand.origin.operator == AllOps.CONCAT:
             _, tmpVar = self.tmpVars.create_var_cached("tmp_concat_", operand._dtype, def_val=operand)
-            # Assignment(tmpVar, operand, virtual_only=True)
+            # HdlAssignmentContainer(tmpVar, operand, virtual_only=True)
             operand = tmpVar
 
         oper = operator.operator

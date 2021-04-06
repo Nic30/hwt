@@ -3,14 +3,14 @@ from hdlConvertorAst.hdlAst._expr import HdlAll
 from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmWait,\
     HdlStmBlock
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.serializer.verilog.utils import verilogTypeOfSig
 
 
 class ToHdlAstVerilog_statements():
 
-    def as_hdl_Assignment(self, a: Assignment):
+    def as_hdl_HdlAssignmentContainer(self, a: HdlAssignmentContainer):
         blocking = False
         ver_sig_t = verilogTypeOfSig(a.dst)
         if ver_sig_t in (SIGNAL_TYPE.REG, SIGNAL_TYPE.PORT_REG):
@@ -27,7 +27,7 @@ class ToHdlAstVerilog_statements():
         else:
             raise ValueError(ver_sig_t)
 
-        a = super(ToHdlAstVerilog_statements, self).as_hdl_Assignment(a)
+        a = super(ToHdlAstVerilog_statements, self).as_hdl_HdlAssignmentContainer(a)
         a.is_blocking = blocking
         return a
 

@@ -5,10 +5,10 @@ from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_call
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.variables import SignalItem
@@ -52,7 +52,7 @@ class ToHdlAstSystemC_statements():
         return sw_hdl
 
     @internal
-    def _as_hdl_Assignment(self, dst, typeOfDst, src):
+    def _as_hdl_HdlAssignmentContainer(self, dst, typeOfDst, src):
 
         orig_is_target = self._is_target
         try:
@@ -67,7 +67,7 @@ class ToHdlAstSystemC_statements():
         else:
             return hdl_call(hdl_getattr(dst_hdl, "write"), [src_hdl, ])
 
-    def as_hdl_Assignment(self, a: Assignment):
+    def as_hdl_HdlAssignmentContainer(self, a: HdlAssignmentContainer):
         dst = a.dst
         assert isinstance(dst, SignalItem)
         # assert not dst.virtual_only, "should not be required"
@@ -79,11 +79,11 @@ class ToHdlAstSystemC_statements():
         typeOfDst = systemCTypeOfSig(dst)
         if dst.virtual_only and isinstance(a.src, Operator):
             assert a.src.operator == AllOps.CONCAT
-            return self._as_hdl_Assignment(dst, typeOfDst, a.src.operands)
+            return self._as_hdl_HdlAssignmentContainer(dst, typeOfDst, a.src.operands)
 
         if dst._dtype == a.src._dtype or (
                 isinstance(dst._dtype, Bits) and a.src._dtype == BOOL):
-            return self._as_hdl_Assignment(dst, typeOfDst, a.src)
+            return self._as_hdl_HdlAssignmentContainer(dst, typeOfDst, a.src)
         else:
             raise SerializerException("%r <= %r  is not valid assignment\n"
                                       " because types are different (%r; %r) "

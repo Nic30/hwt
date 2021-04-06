@@ -1,11 +1,11 @@
 from operator import and_, or_, xor, add
 
 from hwt.code_utils import _mkOp, _intfToSig
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
-from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
-from hwt.hdl.statement import HwtSyntaxError
-from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.ifContainter import IfContainer
+from hwt.hdl.statements.statement import HwtSyntaxError
+from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal

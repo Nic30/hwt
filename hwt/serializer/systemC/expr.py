@@ -3,12 +3,12 @@ from typing import Union
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
 from hdlConvertorAst.to.hdlUtils import bit_string
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call,\
+from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call, \
     hdl_getattr
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
-from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.enumVal import HEnumVal
@@ -62,7 +62,7 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
                                                       postponed_init=True,
                                                       extra_args=(AllOps.CONCAT, op.result))
             if isNew:
-                o.drivers.append(Assignment(op, o, virtual_only=True))
+                o.drivers.append(HdlAssignmentContainer(op, o, virtual_only=True))
                 self.tmpVars.finish_var_init(o)
 
             return self.as_hdl(o)

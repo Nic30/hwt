@@ -3,12 +3,12 @@ from typing import Dict, List, Tuple, Union, Optional
 
 from hwt.code import Concat
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
-from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import isConst
-from hwt.hdl.statement import HdlStatement
-from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.ifContainter import IfContainer
+from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import SLICE
@@ -21,7 +21,7 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 def find_independent_slice_drivers(stm: HdlStatement):
-    if isinstance(stm, Assignment):
+    if isinstance(stm, HdlAssignmentContainer):
         if stm.indexes and len(stm.indexes) == 1 and isinstance(stm.dst._dtype, Bits):
             dst = stm.dst
             for i in stm.indexes:
@@ -55,7 +55,7 @@ def extract_part_drivers_stm(stm: HdlStatement,
     """
     :returns: True if statement was modified
     """
-    if isinstance(stm, Assignment):
+    if isinstance(stm, HdlAssignmentContainer):
         dst = stm.dst
         parts = signal_parts.get(dst, None)
         if parts is None:
@@ -103,7 +103,7 @@ def extract_part_drivers_stm(stm: HdlStatement,
             # assert stm.parentStm is None, (stm, stm.parentStm)
             stm._destroy()
         else:
-            # rewrite the Assignment instance to use new dst
+            # rewrite the HdlAssignmentContainer instance to use new dst
             replacement = [new_dsts(stm.src), ]
             stm.parentStm._replace_child_statement(stm, replacement, False)
         return True

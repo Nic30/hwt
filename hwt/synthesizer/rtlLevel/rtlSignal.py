@@ -3,7 +3,7 @@ from typing import Generator
 from hwt.doc_markers import internal
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem

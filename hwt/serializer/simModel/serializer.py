@@ -10,13 +10,13 @@ from hdlConvertorAst.to.basic_hdl_sim_model.keywords import SIMMODEL_KEYWORDS
 from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_map_asoc, hdl_call
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
-from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.portItem import HdlPortItem
-from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.ifContainter import IfContainer
+from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.serializer.generic.constant_cache import ConstantCache
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.simModel.tmpVarConstructorConstOnly import TmpVarConstructorConstOnly
@@ -37,7 +37,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
     CVLD = HdlValueId("cVld", obj=LanguageKeyword())
     TMP_VAR_CONSTRUCTOR = TmpVarConstructorConstOnly
 
-    def __init__(self, name_scope: Optional[NameScope] = None):
+    def __init__(self, name_scope: Optional[NameScope]=None):
         super(ToHdlAstSimModel, self).__init__(name_scope)
         self.currentUnit = None
         self.stm_outputs = {}
@@ -61,8 +61,8 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         pm = hdl_map_asoc(intern_hdl, outer_hdl)
         return pm
 
-    def as_hdl_Assignment(self, a: Assignment):
-        dst, dst_indexes, src = self._as_hdl_Assignment_auto_conversions(a)
+    def as_hdl_HdlAssignmentContainer(self, a: HdlAssignmentContainer):
+        dst, dst_indexes, src = self._as_hdl_HdlAssignmentContainer_auto_conversions(a)
         ev = HdlValueInt(int(a._event_dependent_from_branch == 0), None, None)
         if dst_indexes is not None:
             src = (src, dst_indexes, ev)
@@ -81,10 +81,10 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
             # [TODO] look up indexes
             indexes = None
             v = o._dtype.from_py(None)
-            oa = Assignment(v, o, indexes,
+            oa = HdlAssignmentContainer(v, o, indexes,
                             virtual_only=True, parentStm=parent,
                             event_dependent_from_branch=parent._event_dependent_from_branch)
-            outputInvalidateStms.append(self.as_hdl_Assignment(oa))
+            outputInvalidateStms.append(self.as_hdl_HdlAssignmentContainer(oa))
 
         if len(outputInvalidateStms) == 1:
             return outputInvalidateStms[0]

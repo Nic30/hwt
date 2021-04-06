@@ -1,6 +1,6 @@
 from typing import List
 
-from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statements.statement import HdlStatement
 
 
 def isSameStatementList(stmListA: List[HdlStatement],

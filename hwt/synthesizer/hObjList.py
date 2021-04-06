@@ -1,5 +1,5 @@
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
-from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statements.statement import HdlStatement
 from typing import TypeVar, Generic, Iterable, List
 
 T = TypeVar("T", InterfaceBase, UnitBase, None)

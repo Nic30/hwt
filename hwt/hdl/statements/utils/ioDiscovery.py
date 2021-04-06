@@ -1,7 +1,7 @@
 from typing import List
 
 from hwt.doc_markers import internal
-from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statements.statement import HdlStatement
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 

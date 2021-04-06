@@ -2,9 +2,9 @@ from copy import copy
 from operator import lshift, rshift
 
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.statement import HwtSyntaxError
+from hwt.hdl.statements.statement import HwtSyntaxError
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.sliceUtils import slice_to_SLICE
 from hwt.hdl.types.typeCast import toHVal
@@ -172,7 +172,7 @@ class RtlSignalOps():
 
     def __or__(self, other):
         try:
-            return self.naryOp(AllOps.OR,  0, tv(self).__or__, other)
+            return self.naryOp(AllOps.OR, 0, tv(self).__or__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -180,7 +180,7 @@ class RtlSignalOps():
 
     def __lshift__(self, other):
         try:
-            return self.naryOp(lshift, 0,  tv(self).__lshift__, other)
+            return self.naryOp(lshift, 0, tv(self).__lshift__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -374,7 +374,7 @@ class RtlSignalOps():
     def __call__(self, source,
                  dst_resolve_fn=lambda x: x._getDestinationSignalForAssignmentToThis(),
                  exclude=None,
-                 fit=False) -> Assignment:
+                 fit=False) -> HdlAssignmentContainer:
         """
         Create assignment to this signal
 
@@ -393,7 +393,6 @@ class RtlSignalOps():
             operator = getattr(d, "operator", None)
             if operator is not None:
                 assert operator.allowsAssignTo, ("Assignment to", self, "is not allowed by operator definition")
-
 
         if isinstance(source, InterfaceBase):
             assert source._isAccessible, (source, "must be a Signal Interface which is accessible in current scope")
@@ -427,7 +426,7 @@ class RtlSignalOps():
         try:
             mainSig, indexCascade = self._getIndexCascade()
             mainSig = dst_resolve_fn(mainSig)
-            return Assignment(source, mainSig, indexCascade)
+            return HdlAssignmentContainer(source, mainSig, indexCascade)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)

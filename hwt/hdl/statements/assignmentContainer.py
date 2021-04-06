@@ -3,14 +3,14 @@ from typing import Tuple, List, Dict, Union, Optional
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.value import HValue
 from hwt.hdl.valueUtils import isSameHVal, areSameHVals
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
-class Assignment(HdlStatement):
+class HdlAssignmentContainer(HdlStatement):
     """
     Assignment container
 
@@ -38,11 +38,11 @@ class Assignment(HdlStatement):
             is only virtual and should not be added into
             netlist, because it is only for internal notation
         """
-        super(Assignment, self).__init__(
+        super(HdlAssignmentContainer, self).__init__(
             parentStm,
             sensitivity,
             event_dependent_from_branch=event_dependent_from_branch)
-        self._instId = Assignment._nextInstId()
+        self._instId = HdlAssignmentContainer._nextInstId()
 
         self.src = src
         self.dst = dst
@@ -121,7 +121,7 @@ class Assignment(HdlStatement):
         self._event_dependent_from_branch = 0
 
     @internal
-    def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
+    def _try_reduce(self) -> Tuple[List[HdlStatement], bool]:
         return [self, ], False
 
     @internal

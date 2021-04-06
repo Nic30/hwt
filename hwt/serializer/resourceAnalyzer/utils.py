@@ -1,7 +1,7 @@
 from typing import Union
 
 from hwt.hdl.operator import Operator
-from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statements.statement import HdlStatement
 from hwt.serializer.resourceAnalyzer.resourceTypes import \
     ResourceFF, ResourceMUX, ResourceLatch, ResourceRAM
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal

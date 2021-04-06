@@ -5,11 +5,11 @@ from typing import Tuple
 from hdlConvertorAst.hdlAst._bases import iHdlStatement
 from hdlConvertorAst.hdlAst._statements import HdlStmBlock
 from hdlConvertorAst.hdlAst._structural import HdlModuleDef, HdlCompInst
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
-from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.ifContainter import IfContainer
+from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.serializer.combLoopAnalyzer.tarjan import StronglyConnectedComponentSearchTarjan
 from hwt.serializer.resourceAnalyzer.analyzer import ResourceAnalyzer
 from hwt.synthesizer.componentPath import ComponentPath
@@ -27,7 +27,7 @@ def collect_comb_drivers(path_prefix: Tuple[Unit, ...],
                          stm: iHdlStatement,
                          comb_connection_matrix: dict,
                          comb_inputs: tuple):
-    if isinstance(stm, Assignment):
+    if isinstance(stm, HdlAssignmentContainer):
         ctx = SensitivityCtx()
         seen = set()
         # merge condition inputs to current_comb_inputs

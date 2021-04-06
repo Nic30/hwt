@@ -1,7 +1,7 @@
 from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statement import HwtSyntaxError
+from hwt.hdl.statements.statement import HwtSyntaxError
 
 
 class HdlPortItem():

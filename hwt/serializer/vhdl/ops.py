@@ -5,9 +5,9 @@ from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.code import If
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT
 from hwt.hdl.value import HValue
@@ -53,11 +53,11 @@ class ToHdlAstVhdl2008_ops():
         if isNew:
             cond, ifTrue, ifFalse = val.drivers[0].operands
             if_ = If(cond)
-            if_.ifTrue.append(Assignment(ifTrue, o,
+            if_.ifTrue.append(HdlAssignmentContainer(ifTrue, o,
                                          virtual_only=True,
                                          parentStm=if_))
             if_.ifFalse = []
-            if_.ifFalse.append(Assignment(ifFalse, o,
+            if_.ifFalse.append(HdlAssignmentContainer(ifFalse, o,
                                           virtual_only=True,
                                           parentStm=if_))
             if_._outputs.append(o)
@@ -80,9 +80,9 @@ class ToHdlAstVhdl2008_ops():
             if isNew:
                 ifTrue, ifFalse = bit1_t.from_py(1), bit1_t.from_py(0)
                 if_ = If(val)
-                if_.ifTrue.append(Assignment(ifTrue, o, virtual_only=True, parentStm=if_))
+                if_.ifTrue.append(HdlAssignmentContainer(ifTrue, o, virtual_only=True, parentStm=if_))
                 if_.ifFalse = []
-                if_.ifFalse.append(Assignment(ifFalse, o, virtual_only=True, parentStm=if_))
+                if_.ifFalse.append(HdlAssignmentContainer(ifFalse, o, virtual_only=True, parentStm=if_))
                 if_._outputs.append(o)
                 o.drivers.append(if_)
                 self.tmpVars.finish_var_init(o)
@@ -103,7 +103,7 @@ class ToHdlAstVhdl2008_ops():
                 postponed_init=True,
                 extra_args=(val, std_logic_vector))
             if isNew:
-                o.drivers.append(Assignment(val, o, virtual_only=True))
+                o.drivers.append(HdlAssignmentContainer(val, o, virtual_only=True))
                 self.tmpVars.finish_var_init(o)
             return o
         else:

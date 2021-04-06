@@ -1,11 +1,11 @@
 from itertools import islice
 
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import HdlStatement_sort_key
-from hwt.hdl.statementUtils.reduction import HdlStatement_merge_statement_lists,\
+from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_lists,\
     is_mergable_statement_list
 
 
@@ -21,7 +21,7 @@ def checkIfIsTooSimple(proc):
        and it is useless to merge them"""
     try:
         a, = proc.statements
-        if isinstance(a, Assignment):
+        if isinstance(a, HdlAssignmentContainer):
             return True
     except ValueError:
         pass

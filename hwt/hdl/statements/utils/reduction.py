@@ -2,8 +2,8 @@ from itertools import islice
 from typing import List, Tuple
 
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.statement import HdlStatement
 from hwt.pyUtils.arrayQuery import groupedby
 
 
@@ -102,7 +102,7 @@ def HdlStatement_reduce_overriden_assignments(statements: List[HdlStatement]):
             io_change = True
             continue
 
-        if isinstance(stm, Assignment):
+        if isinstance(stm, HdlAssignmentContainer):
             fully_driven_outputs.update(stm._outputs)
 
         new_statements.append(stm)

@@ -1,8 +1,8 @@
 from typing import Set, List, Dict, Union, Optional
 
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
@@ -43,7 +43,7 @@ def fill_stm_list_with_enclosure(parentStm: Optional[HdlStatement],
         # any statement was not related with this signal,
         if not enclosed:
             e = enclosure[e_sig]
-            a = Assignment(e, e_sig)
+            a = HdlAssignmentContainer(e, e_sig)
             statements.append(a)
 
             if parentStm is not None:

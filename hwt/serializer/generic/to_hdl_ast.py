@@ -10,16 +10,17 @@ from hdlConvertorAst.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
 from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import \
     hdl_index, hdl_map_asoc
 from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
-from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import HdlPortItem
-from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.ifContainter import IfContainer
+from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import STR, BOOL
 from hwt.hdl.types.enum import HEnum
+from hwt.hdl.types.float import HFloat
 from hwt.hdl.types.hdlType import HdlType, MethodNotOverloaded
 from hwt.hdl.types.slice import Slice
 from hwt.pyUtils.arrayQuery import arr_any
@@ -31,7 +32,6 @@ from hwt.serializer.generic.utils import HWT_TO_HDLCONVEROTR_DIRECTION, \
     TmpVarsSwap
 from hwt.serializer.utils import HdlStatement_sort_key
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.types.float import HFloat
 
 
 class ToHdlAst():
@@ -166,7 +166,7 @@ class ToHdlAst():
             b.body = [self.as_hdl(s) for s in stm_list]
             return b
 
-    def _as_hdl_Assignment_auto_conversions(self, a: Assignment):
+    def _as_hdl_HdlAssignmentContainer_auto_conversions(self, a: HdlAssignmentContainer):
         dst = a.dst
         src = a.src
         dst_indexes = a.indexes
@@ -201,8 +201,8 @@ class ToHdlAst():
                 (dst, src, dst._dtype, a.src._dtype))
         return dst, dst_indexes, self.as_hdl_Value(src)
 
-    def as_hdl_Assignment(self, a: Assignment):
-        dst, dst_indexes, src = self._as_hdl_Assignment_auto_conversions(a)
+    def as_hdl_HdlAssignmentContainer(self, a: HdlAssignmentContainer):
+        dst, dst_indexes, src = self._as_hdl_HdlAssignmentContainer_auto_conversions(a)
         dst = self.as_hdl(dst)
         if dst_indexes:
             for i in dst_indexes:

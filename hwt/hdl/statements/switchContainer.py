@@ -6,12 +6,12 @@ from typing import List, Tuple, Dict, Optional
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statement import HdlStatement, HwtSyntaxError
-from hwt.hdl.statementUtils.comparison import isSameStatementList, statementsAreSame
-from hwt.hdl.statementUtils.ioDiscovery import HdlStatement_discover_enclosure_for_statements
-from hwt.hdl.statementUtils.reduction import HdlStatement_merge_statement_lists, \
+from hwt.hdl.statements.statement import HdlStatement, HwtSyntaxError
+from hwt.hdl.statements.utils.comparison import isSameStatementList, statementsAreSame
+from hwt.hdl.statements.utils.ioDiscovery import HdlStatement_discover_enclosure_for_statements
+from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_lists, \
     HdlStatement_try_reduce_list, is_mergable_statement_list
-from hwt.hdl.statementUtils.signalCut import HdlStatement_cut_off_drivers_of_list
+from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.value import HValue
 from hwt.hdl.valueUtils import isSameHVal

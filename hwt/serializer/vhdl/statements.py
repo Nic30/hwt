@@ -2,10 +2,10 @@ from copy import copy
 
 from hdlConvertorAst.hdlAst import HdlStmCase
 from hdlConvertorAst.hdlAst._statements import HdlStmAssign
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
-from hwt.hdl.ifContainter import IfContainer
-from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.ifContainter import IfContainer
+from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.sliceVal import SliceVal
@@ -17,7 +17,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 class ToHdlAstVhdl2008_statements():
 
-    def as_hdl_Assignment(self, a: Assignment):
+    def as_hdl_HdlAssignmentContainer(self, a: HdlAssignmentContainer):
         _dst = dst = a.dst
         assert isinstance(dst, SignalItem)
 

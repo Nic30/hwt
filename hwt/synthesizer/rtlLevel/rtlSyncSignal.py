@@ -1,9 +1,9 @@
-from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.statements.ifContainter import IfContainer
+from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.mainBases import RtlMemoryBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 
 
 class RtlSyncSignal(RtlMemoryBase, RtlSignal):

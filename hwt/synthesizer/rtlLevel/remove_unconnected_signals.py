@@ -1,11 +1,11 @@
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
-from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import HdlPortItem
-from hwt.hdl.statement import HdlStatement
-from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.ifContainter import IfContainer
+from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from ipCorePackager.constants import DIRECTION
@@ -15,7 +15,7 @@ from ipCorePackager.constants import DIRECTION
 def walkInputsForSpecificOutput(output_sig: RtlSignalBase, stm: HdlStatement):
     if output_sig not in stm._outputs:
         return
-    if isinstance(stm, Assignment):
+    if isinstance(stm, HdlAssignmentContainer):
         assert stm.dst is output_sig
         yield from stm._inputs
     elif isinstance(stm, IfContainer):

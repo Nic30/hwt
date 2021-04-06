@@ -1,7 +1,7 @@
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
-from hwt.hdl.statement import HdlStatement
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.statement import HdlStatement
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -12,7 +12,7 @@ def getMaxStmIdForStm(stm):
     used for sorting of processes in architecture
     """
     maxId = 0
-    if isinstance(stm, Assignment):
+    if isinstance(stm, HdlAssignmentContainer):
         return stm._instId
     else:
         for _stm in stm._iter_stms():

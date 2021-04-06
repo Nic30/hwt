@@ -1,14 +1,13 @@
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.portItem import HdlPortItem
-from hwt.hdl.value import HValue
-
-from hwt.doc_markers import internal
-from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
-from hwt.hdl.variables import SignalItem
 from typing import Union
+
+from hdlConvertorAst.hdlAst import iHdlStatement
+from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
+from hwt.doc_markers import internal
+from hwt.hdl.portItem import HdlPortItem
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.value import HValue
+from hwt.hdl.variables import SignalItem
 from ipCorePackager.constants import DIRECTION
-from hwt.hdl.statement import HdlStatement
-from hdlConvertorAst.hdlAst import iHdlStatement, HdlStmIf
 
 
 @internal
@@ -34,7 +33,7 @@ def verilogTypeOfSig(s: Union[SignalItem, HdlPortItem]):
         if isinstance(d, HdlPortItem):
             # input port
             return SIGNAL_TYPE.WIRE
-        elif isinstance(d, Assignment)\
+        elif isinstance(d, HdlAssignmentContainer)\
                 and d.parentStm is None\
                 and not d.indexes\
                 and d._event_dependent_from_branch is None\

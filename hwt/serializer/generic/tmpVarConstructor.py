@@ -2,7 +2,7 @@ from typing import Optional, Union, Tuple
 
 from hdlConvertorAst.hdlAst import HdlIdDef
 from hdlConvertorAst.translate.common.name_scope import NameScope
-from hwt.hdl.assignment import Assignment
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -57,8 +57,8 @@ class TmpVarConstructor():
         hdl = self.extraVarsHdl
 
         if isinstance(var.def_val, RtlSignalBase) or var.def_val.vld_mask:
-            a = Assignment(var.def_val, var, virtual_only=True)
-            hdl.append(self.toHdlAst.as_hdl_Assignment(a))
+            a = HdlAssignmentContainer(var.def_val, var, virtual_only=True)
+            hdl.append(self.toHdlAst.as_hdl_HdlAssignmentContainer(a))
         else:
             assert var._const or var.drivers, (var, var.def_val)
 

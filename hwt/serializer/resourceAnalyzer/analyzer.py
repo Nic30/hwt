@@ -4,12 +4,12 @@ from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._structural import HdlModuleDef, \
     HdlCompInst
 from hwt.doc_markers import internal
-from hwt.hdl.assignment import Assignment
-from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.operator import Operator, isConst
 from hwt.hdl.operatorDefs import AllOps
-from hwt.hdl.statement import HdlStatement
-from hwt.hdl.switchContainer import SwitchContainer
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.array import HArray
 from hwt.hdl.value import HValue
 from hwt.serializer.resourceAnalyzer.utils import ResourceContext
@@ -20,11 +20,11 @@ from hwt.synthesizer.unit import Unit
 
 @internal
 def _count_mux_inputs_for_outputs(stm: HdlStatement, cnt):
-    if isinstance(stm, Assignment):
+    if isinstance(stm, HdlAssignmentContainer):
         cnt[stm.dst] += 1
     else:
         for _stm in stm._iter_stms():
-            if isinstance(_stm, Assignment):
+            if isinstance(_stm, HdlAssignmentContainer):
                 cnt[_stm.dst] += 1
             else:
                 _count_mux_inputs_for_outputs(_stm, cnt)
