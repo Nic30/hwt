@@ -2,6 +2,7 @@ from itertools import islice
 from typing import List, Tuple
 
 from hwt.doc_markers import internal
+from hwt.hdl.assignment import Assignment
 from hwt.hdl.statement import HdlStatement
 from hwt.pyUtils.arrayQuery import groupedby
 
@@ -83,7 +84,30 @@ def HdlStatement_try_reduce_list(statements: List[HdlStatement]):
     new_statements, rank_decrease = HdlStatement_merge_statements(
         new_statements)
 
+    new_statements, io_change, _rank_decrease = HdlStatement_reduce_overriden_assignments(new_statements)
+    rank_decrease += _rank_decrease
     return new_statements, rank_decrease, io_change
+
+
+@internal
+def HdlStatement_reduce_overriden_assignments(statements: List[HdlStatement]):
+    io_change = False
+    new_statements = []
+    rank_decrease = 0
+
+    fully_driven_outputs = set()
+    for stm in reversed(statements):
+        if fully_driven_outputs.issuperset(stm._outputs):
+            rank_decrease += stm.rank
+            io_change = True
+            continue
+
+        if isinstance(stm, Assignment):
+            fully_driven_outputs.update(stm._outputs)
+
+        new_statements.append(stm)
+
+    return list(reversed(new_statements)), io_change, rank_decrease
 
 
 @internal

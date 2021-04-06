@@ -1,10 +1,10 @@
-from hwt.pyUtils.uniqList import UniqList
 from hwt.doc_markers import internal
+from hwt.pyUtils.uniqList import UniqList
 
 
 class SensitivityCtx(UniqList):
     """
-    Sensitivity list used for resolution of sensitivity for statements and HdlStatementBlock instances
+    Sensitivity list used for resolution of sensitivity for statement instances
 
     :ivar ~.contains_ev_dependency: True if this contains event dependent
         sensitivity

@@ -3,7 +3,6 @@ from typing import List, Tuple, Union, Optional
 
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
-from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.pyUtils.arrayQuery import flatten
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -136,7 +135,7 @@ class HdlStatement(HdlObject):
                                   " on class of statement", self.__class__, self)
 
     @internal
-    def _get_rtl_context(self):
+    def _get_rtl_context(self) -> 'RtlNetlist':
         """
         get RtlNetlist context from signals
         """

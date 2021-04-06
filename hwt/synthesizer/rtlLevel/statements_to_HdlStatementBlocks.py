@@ -5,13 +5,12 @@ from typing import Generator, List
 from hwt.doc_markers import internal
 from hwt.hdl.block import HdlStatementBlock
 from hwt.hdl.statement import HwtSyntaxError, HdlStatement
-from hwt.hdl.value import HValue
 from hwt.pyUtils.uniqList import UniqList
+from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.reduce_processes import reduceProcesses
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
-from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 @internal
@@ -148,9 +147,10 @@ def _statements_to_HdlStatementBlocks(_statements, tryToSolveCombLoops)\
         # no combinational loops, wrap current statemetns to a process instance
 
         name = name_for_process(outputs)
-        yield HdlStatementBlock("assig_process_" + name,
-                                proc_statements, sensitivity,
-                                inputs, outputs)
+        yield HdlStatementBlock.from_known_io(
+            "assig_process_" + name,
+            proc_statements, sensitivity,
+            inputs, outputs)
 
 
 @internal
