@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.statement import HdlStatement
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
@@ -25,7 +25,7 @@ def RtlSignal_sort_key(s: RtlSignalBase):
 
 
 def HdlStatement_sort_key(stm: HdlStatement):
-    if isinstance(stm, HdlStatementBlock):
+    if isinstance(stm, HdlStmCodeBlockContainer):
         return (stm.name, getMaxStmIdForStm(stm))
     else:
         return ("", getMaxStmIdForStm(stm))

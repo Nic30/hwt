@@ -11,7 +11,7 @@ from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_
     hdl_map_asoc, hdl_call
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
@@ -201,8 +201,8 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
     def can_pop_process_wrap(self, statements, hasToBeVhdlProcess):
         return False
 
-    def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> HdlStmProcess:
-        p = ToHdlAst.as_hdl_HdlStatementBlock(self, proc)
+    def as_hdl_HdlStmCodeBlockContainer(self, proc: HdlStmCodeBlockContainer) -> HdlStmProcess:
+        p = ToHdlAst.as_hdl_HdlStmCodeBlockContainer(self, proc)
         self.stm_outputs[p] = sorted(
             [HdlValueId(i.name, obj=i)
              for i in proc._outputs]

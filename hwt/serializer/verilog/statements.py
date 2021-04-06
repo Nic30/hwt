@@ -4,7 +4,7 @@ from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmWait,\
     HdlStmBlock
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.serializer.verilog.utils import verilogTypeOfSig
 
 
@@ -38,16 +38,16 @@ class ToHdlAstVerilog_statements():
             assert len(stms) == 1
             return True
 
-    def has_to_be_process(self, proc: HdlStatementBlock):
+    def has_to_be_process(self, proc: HdlStmCodeBlockContainer):
         for o in proc._outputs:
             if verilogTypeOfSig(o) in (SIGNAL_TYPE.REG, SIGNAL_TYPE.PORT_REG):
                 return True
 
         return False
 
-    def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> iHdlStatement:
+    def as_hdl_HdlStmCodeBlockContainer(self, proc: HdlStmCodeBlockContainer) -> iHdlStatement:
         p = super(ToHdlAstVerilog_statements,
-                  self).as_hdl_HdlStatementBlock(proc)
+                  self).as_hdl_HdlStmCodeBlockContainer(proc)
         if isinstance(p, HdlStmProcess):
             no_wait = True
             if isinstance(p.body, HdlStmWait):

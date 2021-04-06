@@ -6,27 +6,23 @@ from hwt.hdl.statementUtils.reduction import HdlStatement_try_reduce_list
 from hwt.pyUtils.uniqList import UniqList
 
 
-class HdlStatementBlock(HdlStatement):
+class HdlStmCodeBlockContainer(HdlStatement):
     """
     Hdl block statement used also to represent a HDL process
 
     :ivar ~.name: name used as id in target HDL
     :ivar ~.statements: list of statements in body of process
 
-    :note: HdlStatementBlock do not have to be process in target HDL, for example
+    :note: HdlStmCodeBlockContainer do not have to be process in target HDL, for example
         simple process which contains only unconditional assignment will
         be rendered just as assignment
     """
 
     def __init__(self, *statements):
-        super(HdlStatementBlock, self).__init__()
+        super(HdlStmCodeBlockContainer, self).__init__()
         self.name = None
-        self.statements = []
-        self._register_stements(statements, self.statements)
-        self.rank = sum(map(lambda s: s.rank, statements))
-        if self._outputs:
-            ctx = self._get_rtl_context()
-            ctx.statements.add(self)
+        self.statements = list(statements)
+        self.rank = 0
 
     @internal
     @classmethod

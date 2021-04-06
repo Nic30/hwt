@@ -3,7 +3,7 @@ from copy import copy
 from hdlConvertorAst.hdlAst import HdlStmCase
 from hdlConvertorAst.hdlAst._statements import HdlStmAssign
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
@@ -91,7 +91,7 @@ class ToHdlAstVhdl2008_statements():
             assert len(stms) == 1, stms
             return True
 
-    def has_to_be_process(self, proc: HdlStatementBlock):
+    def has_to_be_process(self, proc: HdlStmCodeBlockContainer):
         for x in proc.statements:
             if isinstance(x, (IfContainer, SwitchContainer)):
                 return True

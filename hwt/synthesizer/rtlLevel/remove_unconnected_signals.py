@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import HdlPortItem
@@ -28,7 +28,7 @@ def walkInputsForSpecificOutput(output_sig: RtlSignalBase, stm: HdlStatement):
         yield stm.switchOn
         for _stm in stm._iter_stms():
             yield from walkInputsForSpecificOutput(output_sig, _stm)
-    elif isinstance(stm, HdlStatementBlock):
+    elif isinstance(stm, HdlStmCodeBlockContainer):
         for _stm in stm._iter_stms():
             yield from walkInputsForSpecificOutput(output_sig, _stm)
     else:

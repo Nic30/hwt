@@ -3,7 +3,7 @@ from itertools import compress
 from typing import Generator, List
 
 from hwt.doc_markers import internal
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.statement import HwtSyntaxError, HdlStatement
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
@@ -49,8 +49,8 @@ def name_for_process(outputs: List[RtlSignal]) -> str:
 
 
 @internal
-def _statements_to_HdlStatementBlocks(_statements, tryToSolveCombLoops)\
-        -> Generator[HdlStatementBlock, None, None]:
+def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops)\
+        -> Generator[HdlStmCodeBlockContainer, None, None]:
     assert _statements
     # try to simplify statements
     proc_statements = []
@@ -139,31 +139,31 @@ def _statements_to_HdlStatementBlocks(_statements, tryToSolveCombLoops)\
         for sig in intersect:
             proc_statements, proc_stms_select = cut_off_drivers_of(
                 sig, proc_statements)
-            yield from _statements_to_HdlStatementBlocks(proc_stms_select, False)
+            yield from _statements_to_HdlStmCodeBlockContainers(proc_stms_select, False)
 
         if proc_statements:
-            yield from _statements_to_HdlStatementBlocks(proc_statements, False)
+            yield from _statements_to_HdlStmCodeBlockContainers(proc_statements, False)
     else:
         # no combinational loops, wrap current statemetns to a process instance
 
         name = name_for_process(outputs)
-        yield HdlStatementBlock.from_known_io(
+        yield HdlStmCodeBlockContainer.from_known_io(
             "assig_process_" + name,
             proc_statements, sensitivity,
             inputs, outputs)
 
 
 @internal
-def statements_to_HdlStatementBlocks(statements: List[HdlStatement])\
-        -> Generator[HdlStatementBlock, None, None]:
+def statements_to_HdlStmCodeBlockContainers(statements: List[HdlStatement])\
+        -> Generator[HdlStmCodeBlockContainer, None, None]:
     """
-    Pack statements into HdlStatementBlock instances
+    Pack statements into HdlStmCodeBlockContainer instances
 
     * for each out signal resolve it's drivers and collect them
     * split statements if there is and combinational loop
     * merge statements if it is possible
     * resolve sensitivity lists
-    * wrap into HdlStatementBlock instance
+    * wrap into HdlStmCodeBlockContainer instance
     * for every IO of process generate name if signal has not any
     """
     # create copy because this set will be reduced
@@ -175,7 +175,7 @@ def statements_to_HdlStatementBlocks(statements: List[HdlStatement])\
     while statements:
         stm = statements.pop()
         proc_statements = [stm, ]
-        ps = _statements_to_HdlStatementBlocks(proc_statements, True)
+        ps = _statements_to_HdlStmCodeBlockContainers(proc_statements, True)
         processes.extend(ps)
 
     yield from reduceProcesses(processes)

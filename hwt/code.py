@@ -1,6 +1,7 @@
 from operator import and_, or_, xor, add
 
 from hwt.code_utils import _mkOp, _intfToSig
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operatorDefs import concatFn
 from hwt.hdl.statement import HwtSyntaxError
@@ -15,6 +16,21 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
+
+
+class CodeBlock(HdlStmCodeBlockContainer):
+    """
+    Cointainer for list of statements
+    """
+
+    def __init__(self, *statements):
+        super(CodeBlock, self).__init__(*statements)
+        self._register_stements(statements, self.statements)
+        self.rank = sum(map(lambda s: s.rank, statements))
+
+        if self._outputs:
+            ctx = self._get_rtl_context()
+            ctx.statements.add(self)
 
 
 class If(IfContainer):

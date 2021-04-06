@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple, Union, Optional
 from hwt.code import Concat
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import isConst
 from hwt.hdl.statement import HdlStatement
@@ -108,7 +108,7 @@ def extract_part_drivers_stm(stm: HdlStatement,
             stm.parentStm._replace_child_statement(stm, replacement, False)
         return True
 
-    elif isinstance(stm, (IfContainer, SwitchContainer, HdlStatementBlock)):
+    elif isinstance(stm, (IfContainer, SwitchContainer, HdlStmCodeBlockContainer)):
         modified = False
         for _stm in stm._iter_stms():
             modified |= extract_part_drivers_stm(_stm, signal_parts)

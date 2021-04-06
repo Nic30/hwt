@@ -2,7 +2,7 @@ from itertools import islice
 
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import HdlStatement_sort_key
 from hwt.hdl.statementUtils.reduction import HdlStatement_merge_statement_lists,\
@@ -29,7 +29,7 @@ def checkIfIsTooSimple(proc):
 
 
 @internal
-def tryToMerge(procA: HdlStatementBlock, procB: HdlStatementBlock):
+def tryToMerge(procA: HdlStmCodeBlockContainer, procB: HdlStmCodeBlockContainer):
     """
     Try merge procB into procA
 

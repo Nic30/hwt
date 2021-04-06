@@ -18,8 +18,8 @@ from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers impor
 from hwt.synthesizer.rtlLevel.remove_unconnected_signals import removeUnconnectedSignals
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
-from hwt.synthesizer.rtlLevel.statements_to_HdlStatementBlocks import\
-    statements_to_HdlStatementBlocks
+from hwt.synthesizer.rtlLevel.statements_to_HdlStmCodeBlockContainers import\
+    statements_to_HdlStmCodeBlockContainers
 from hwt.doc_markers import internal
 
 
@@ -151,7 +151,7 @@ class RtlNetlist():
         mdef.name = "rtl"
 
         processes = sorted(self.statements, key=HdlStatement_sort_key)
-        processes = sorted(statements_to_HdlStatementBlocks(processes), key=HdlStatement_sort_key)
+        processes = sorted(statements_to_HdlStmCodeBlockContainers(processes), key=HdlStatement_sort_key)
 
         # add signals, variables etc. in architecture
         for s in sorted((s for s in self.signals

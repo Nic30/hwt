@@ -5,7 +5,7 @@ from hdlConvertorAst.hdlAst._structural import HdlModuleDef, \
     HdlCompInst
 from hwt.doc_markers import internal
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.operator import Operator, isConst
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.statement import HdlStatement
@@ -60,7 +60,7 @@ class ResourceAnalyzer():
         self.context = ResourceContext(None)
 
     @internal
-    def visit_HdlStatementBlock_operators(self, sig: RtlSignal, synchronous):
+    def visit_HdlStmCodeBlockContainer_operators(self, sig: RtlSignal, synchronous):
         ctx = self.context
         seen = ctx.seen
         for d in sig.drivers:
@@ -109,11 +109,11 @@ class ResourceAnalyzer():
                         or not op.hidden
                         or op in seen):
                     continue
-                self.visit_HdlStatementBlock_operators(op, synchronous)
+                self.visit_HdlStmCodeBlockContainer_operators(op, synchronous)
 
-    def visit_HdlStatementBlock(self, proc: HdlStatementBlock) -> None:
+    def visit_HdlStmCodeBlockContainer(self, proc: HdlStmCodeBlockContainer) -> None:
         """
-        Guess resource usage from HdlStatementBlock
+        Guess resource usage from HdlStmCodeBlockContainer
         """
         ctx = self.context
         seen = ctx.seen
@@ -130,7 +130,7 @@ class ResourceAnalyzer():
 
                 i = out_mux_dim[o]
                 if isinstance(o._dtype, HArray):
-                    assert i == 1, (o, i, " only one ram port per HdlStatementBlock")
+                    assert i == 1, (o, i, " only one ram port per HdlStmCodeBlockContainer")
                     for a in walk_assignments(stm, o):
                         assert len(a.indexes) == 1, ("has to have single address per RAM port", a.indexes)
                         addr = a.indexes[0]
@@ -162,12 +162,12 @@ class ResourceAnalyzer():
                 if not i.hidden or i in seen:
                     continue
 
-                self.visit_HdlStatementBlock_operators(i, ev_dep)
+                self.visit_HdlStmCodeBlockContainer_operators(i, ev_dep)
 
     def visit_HdlModuleDef(self, m: HdlModuleDef) -> None:
         for o in m.objs:
-            if isinstance(o, HdlStatementBlock):
-                self.visit_HdlStatementBlock(o)
+            if isinstance(o, HdlStmCodeBlockContainer):
+                self.visit_HdlStmCodeBlockContainer(o)
             elif isinstance(o, HdlCompInst):
                 self.visit_HdlCompInst(o)
             else:

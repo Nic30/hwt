@@ -11,7 +11,7 @@ from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import \
     hdl_index, hdl_map_asoc
 from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import HdlPortItem
@@ -47,7 +47,7 @@ class ToHdlAst():
     """
     # used to filter statems from other object by class without using
     # isisnstance
-    ALL_STATEMENT_CLASSES = [*ALL_STATEMENT_CLASSES, HdlStatementBlock]
+    ALL_STATEMENT_CLASSES = [*ALL_STATEMENT_CLASSES, HdlStmCodeBlockContainer]
     TMP_VAR_CONSTRUCTOR = TmpVarConstructor
     _keywords_dict = {}
 
@@ -370,7 +370,7 @@ class ToHdlAst():
             _hdl_variables.append(new_v)
         hdl_variables = _hdl_variables
 
-        processes = [self.as_hdl_HdlStatementBlock(p) for p in processes]
+        processes = [self.as_hdl_HdlStmCodeBlockContainer(p) for p in processes]
 
         component_insts = [self.as_hdl_HdlCompInst(c)
                            for c in component_insts]
@@ -394,9 +394,9 @@ class ToHdlAst():
         raise NotImplementedError(
             "This method should be overloaded in child class")
 
-    def as_hdl_HdlStatementBlock(self, proc: HdlStatementBlock) -> iHdlStatement:
+    def as_hdl_HdlStmCodeBlockContainer(self, proc: HdlStmCodeBlockContainer) -> iHdlStatement:
         """
-        Serialize HdlStatementBlock objects as process if top statement
+        Serialize HdlStmCodeBlockContainer objects as process if top statement
         """
         if isinstance(proc, ALL_STATEMENT_CLASSES):
             return proc

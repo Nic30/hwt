@@ -6,7 +6,7 @@ from hdlConvertorAst.hdlAst._bases import iHdlStatement
 from hdlConvertorAst.hdlAst._statements import HdlStmBlock
 from hdlConvertorAst.hdlAst._structural import HdlModuleDef, HdlCompInst
 from hwt.hdl.assignment import Assignment
-from hwt.hdl.block import HdlStatementBlock
+from hwt.hdl.statements.codeBlock import HdlStmCodeBlockContainer
 from hwt.hdl.ifContainter import IfContainer
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.switchContainer import SwitchContainer
@@ -63,7 +63,7 @@ def collect_comb_drivers(path_prefix: Tuple[Unit, ...],
             for sub_stm in stms:
                 collect_comb_drivers(path_prefix, sub_stm, comb_connection_matrix, current_comb_inputs)
 
-    elif isinstance(stm, HdlStatementBlock):
+    elif isinstance(stm, HdlStmCodeBlockContainer):
         for sub_stm in stm.statements:
             collect_comb_drivers(path_prefix, sub_stm, comb_connection_matrix, comb_inputs)
 
@@ -109,7 +109,7 @@ class CombLoopAnalyzer():
     def visit_HdlModuleDef(self, m: HdlModuleDef) -> None:
         ResourceAnalyzer.visit_HdlModuleDef(self, m)
 
-    def visit_HdlStatementBlock(self, proc: HdlStatementBlock) -> None:
+    def visit_HdlStmCodeBlockContainer(self, proc: HdlStmCodeBlockContainer) -> None:
         collect_comb_drivers(self.actual_path_prefix, proc, self.comb_connection_matrix, tuple())
 
     def visit_HdlCompInst(self, o: HdlCompInst) -> None:
