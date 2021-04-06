@@ -24,7 +24,7 @@ class CodeBlock(HdlStmCodeBlockContainer):
     """
 
     def __init__(self, *statements):
-        super(CodeBlock, self).__init__(*statements)
+        super(CodeBlock, self).__init__()
         self._register_stements(statements, self.statements)
         self.rank = sum(map(lambda s: s.rank, statements))
 

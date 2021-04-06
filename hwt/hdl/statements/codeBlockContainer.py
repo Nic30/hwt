@@ -18,10 +18,10 @@ class HdlStmCodeBlockContainer(HdlStatement):
         be rendered just as assignment
     """
 
-    def __init__(self, *statements):
+    def __init__(self):
         super(HdlStmCodeBlockContainer, self).__init__()
         self.name = None
-        self.statements = list(statements)
+        self.statements = []
         self.rank = 0
 
     @internal
