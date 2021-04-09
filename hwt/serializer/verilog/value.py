@@ -45,9 +45,9 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
     def as_hdl_SignalItem(self, si, declaration=False):
         if declaration:
             with SignalTypeSwap(self, verilogTypeOfSig(si)):
-                return ToHdlAst_Value.as_hdl_SignalItem(self, si)
+                return ToHdlAst_Value.as_hdl_SignalItem(self, si, declaration=declaration)
         else:
-            return ToHdlAst_Value.as_hdl_SignalItem(self, si)
+            return ToHdlAst_Value.as_hdl_SignalItem(self, si, declaration=declaration)
 
     def as_hdl_SliceVal(self, val: SliceVal):
         upper = val.val.start - 1
