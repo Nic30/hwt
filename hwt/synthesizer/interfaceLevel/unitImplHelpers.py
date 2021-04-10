@@ -7,7 +7,7 @@ from hwt.hdl.types.array import HArray
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.struct import HStruct
-from hwt.interfaces.std import Signal
+from hwt.interfaces.std import Signal, Clk, Rst, Rst_n
 from hwt.interfaces.structIntf import HdlType_to_Interface, StructIntf
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.getDefaultClkRts import getClk, getRst
@@ -71,10 +71,10 @@ def _normalize_default_value_dict_for_interface_array(root_val: dict,
 
 
 @internal
-def _instanciate_signals(intf, clk, rst, def_val, nop_val, signal_create_fn):
+def _instanciate_signals(intf: Union[Signal, HObjList,StructIntf], clk: Clk, rst: Union[Rst, Rst_n], def_val, nop_val, signal_create_fn):
     intf._direction = INTF_DIRECTION.UNKNOWN
     if isinstance(intf, Signal):
-        name = intf._getFullName(separator_getter=lambda x: "_")
+        name = intf._getHdlName()
         intf._sig = signal_create_fn(
             name,
             intf._dtype,

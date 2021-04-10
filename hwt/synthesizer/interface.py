@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
@@ -65,6 +65,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
     _NAME_SEPARATOR = "_"
 
     def __init__(self, masterDir=DIRECTION.OUT,
+                 hdl_name:Optional[Union[str, Dict[str, str]]]=None,
                  loadConfig=True):
         """
         This constructor is called when constructing new interface,
@@ -97,6 +98,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         self._isExtern = False
         self._ag = None
         self._hdl_port = None
+        self._hdl_name_override = hdl_name
 
     def _m(self):
         """
@@ -257,7 +259,9 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             if typeTransform is not None:
                 t = typeTransform(t)
 
-            s = ctx.sig(prefix + self._getPhysicalName(), t)
+            hdl_name = prefix + self._getHdlName()
+
+            s = ctx.sig(hdl_name, t)
             s._interface = self
             self._sig = s
 
@@ -286,20 +290,13 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
                 self._hdl_port = pi
 
-    def _getPhysicalName(self):
+    def _getHdlName(self):
         """Get name in HDL """
+        return HObjList._getHdlName(self)
 
-        def separator_getter(o):
-            if isinstance(o, Interface):
-                return o._NAME_SEPARATOR
-            else:
-                return "_"
-
-        return self._getFullName(separator_getter)
-
-    def _getFullName(self, separator_getter=lambda x: "."):
+    def _getFullName(self):
         """get all name hierarchy separated by '.' """
-        return HObjList._getFullName(self, separator_getter=separator_getter)
+        return HObjList._getFullName(self)
 
     def _updateParamsFrom(self, otherObj, updater=_default_param_updater,
                           exclude=None, prefix=""):

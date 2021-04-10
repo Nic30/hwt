@@ -1,6 +1,6 @@
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
 from hwt.hdl.statements.statement import HdlStatement
-from typing import TypeVar, Generic, Iterable, List
+from typing import TypeVar, Generic, Iterable, List, Union, Tuple
 
 T = TypeVar("T", InterfaceBase, UnitBase, None)
 
@@ -25,6 +25,7 @@ class HObjList(list, Generic[T]):
         list.__init__(self, *args, **kwargs)
         self._name = None
         self._parent = None
+        self._hdl_name_override = kwargs.pop("hdl_name", None)
 
     def _on_append(self, self_obj: "HObjList", item: T, index: int):
         pass
@@ -70,23 +71,74 @@ class HObjList(list, Generic[T]):
         assert self._parent is None
         return list.remove(self, *args, **kwargs)
 
-    def _getFullName(self, separator_getter=lambda x: ".") -> str:
+    def _getHdlName(self):
+        """Get name in HDL """
+
+        # list of name or tulple (name, separator)
+        name: List[Union[str, Tuple[str, str]]] = []
+        tmp = self
+        while isinstance(tmp, (InterfaceBase, HObjList)):
+            n = tmp._name
+
+            if name:
+                name_sep = getattr(tmp, "_NAME_SEPARATOR", "_")
+                n = (n, name_sep)
+            else:
+                # no need to add separator at the end because this is a last part of the name
+                n = n
+
+            add_name_part_from_this = True
+            name_override = tmp._hdl_name_override
+            if name_override is not None:
+                # recursively apply renames
+                if isinstance(name_override, str):
+                    if isinstance(n, tuple) and name_override:
+                        n = (name_override, n[1])
+                    else:
+                        n = name_override
+                elif isinstance(name_override, dict):
+                    last_name = name[-1]
+                    if isinstance(last_name, tuple):
+                        last_name = last_name[0]
+                    no = name_override.get(last_name, None)
+                    if no is not None:
+                        if isinstance(no, str):
+                            # everything what we resolved so far is overriden on this parent
+                            name = [no, ]
+                            add_name_part_from_this = False
+                        else:
+                            raise NotImplementedError()
+
+                else:
+                    raise TypeError(name_override)
+
+            if add_name_part_from_this:
+                name.append(n)
+            tmp = getattr(tmp, "_parent", None)
+
+        _name = []
+        for n in reversed(name):
+            if isinstance(n, str):
+                _name.append(n)
+            else:
+                _name.extend(n)
+
+        return "".join(_name)
+
+    def _getFullName(self) -> str:
         """get all name hierarchy separated by '.' """
         name = ""
         tmp = self
         while isinstance(tmp, (InterfaceBase, HObjList)):
-            if hasattr(tmp, "_name"):
-                n = tmp._name
-            else:
-                n = ''
+            n = tmp._name
+
             if name == '':
                 name = n
             else:
-                name = n + separator_getter(tmp) + name
-            if hasattr(tmp, "_parent"):
-                tmp = tmp._parent
-            else:
-                tmp = None
+                name = n + "." + name
+
+            tmp = getattr(tmp, "_parent", None)
+
         return name
 
     def _make_association(self, *args, **kwargs):

@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Union
+from typing import TypeVar, Generic, Union, Optional, Dict
 
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.types.bits import Bits
@@ -46,11 +46,13 @@ class Signal(SignalOps, Interface, Generic[T]):
     def __init__(self,
                  dtype: HdlType=BIT,
                  masterDir: DIRECTION=D.OUT,
+                 hdl_name:Optional[Union[str, Dict[str, str]]]=None,
                  loadConfig: bool=True):
         self._sig = None
         self._sigInside = None
         self._isAccessible = True
         super().__init__(masterDir=masterDir,
+                         hdl_name=hdl_name,
                          loadConfig=loadConfig)
         self._dtype = dtype
 
@@ -81,12 +83,14 @@ class Signal(SignalOps, Interface, Generic[T]):
 def VectSignal(width: int,
                signed: Union[bool, None]=None,
                masterDir=D.OUT,
+               hdl_name:Optional[Union[str, Dict[str, str]]]=None,
                loadConfig=True):
     """
     Create basic :class:`.Signal` interface where type is vector
     """
     return Signal(Bits(width, signed, force_vector=True),
                   masterDir,
+                  hdl_name,
                   loadConfig)
 
 
@@ -131,9 +135,11 @@ class Rst_n(Signal[Bits]):
     def __init__(self,
                  masterDir=D.OUT,
                  dtype=BIT_N,
+                 hdl_name:Optional[Union[str, Dict[str, str]]]=None,
                  loadConfig=True):
         super(Rst_n, self).__init__(masterDir=masterDir,
                                     dtype=dtype,
+                                    hdl_name=hdl_name,
                                     loadConfig=loadConfig)
 
     def _getIpCoreIntfClass(self):

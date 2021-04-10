@@ -70,11 +70,12 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         "_target_platform", "_store_manager",
     ])
 
-    def __init__(self):
+    def __init__(self, hdl_name_override:Optional[str]=None):
         self._parent = None
         self._name = None
         self._shared_component_with = None
         self._hdl_module_name = None
+        self._hdl_name_override = hdl_name_override
         self._lazy_loaded = []
         self._ctx = RtlNetlist(self)
         self._constraints = HdlConstraintList()
@@ -132,7 +133,10 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         build verilog like module/vhdl like entity and architecture for this unit
         """
         if self._hdl_module_name is None:
-            self._hdl_module_name = self._getDefaultName()
+            if self._hdl_name_override:
+                self._hdl_module_name = self._hdl_name_override
+            else:
+                self._hdl_module_name = self._getDefaultName()
         if self._name is None:
             self._name = self._getDefaultName()
         self._target_platform = target_platform
