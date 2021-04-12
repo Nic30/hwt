@@ -22,10 +22,11 @@ class HObjList(list, Generic[T]):
     """
 
     def __init__(self, *args, **kwargs):
+        hdl_name_override = kwargs.pop("hdl_name", None)
         list.__init__(self, *args, **kwargs)
         self._name = None
         self._parent = None
-        self._hdl_name_override = kwargs.pop("hdl_name", None)
+        self._hdl_name_override = hdl_name_override
 
     def _on_append(self, self_obj: "HObjList", item: T, index: int):
         pass
