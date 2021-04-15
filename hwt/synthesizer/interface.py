@@ -82,6 +82,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         self._associatedClk = None
         self._associatedRst = None
         self._parent = None
+        self._name = None
 
         super().__init__()
         self._masterDir = masterDir
