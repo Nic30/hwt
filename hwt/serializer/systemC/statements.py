@@ -2,7 +2,7 @@ from hdlConvertorAst.hdlAst._bases import iHdlStatement
 from hdlConvertorAst.hdlAst._statements import HdlStmAssign, HdlStmCase, \
     HdlStmBlock, HdlStmBreak
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_call
 from hwt.doc_markers import internal
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer

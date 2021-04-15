@@ -5,7 +5,7 @@ from typing import List, Tuple, Union
 from hdlConvertorAst.hdlAst import HdlValueId
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.to.vhdl.vhdl2008 import ToVhdl2008
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.doc_markers import internal
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, STR, BIT, INT

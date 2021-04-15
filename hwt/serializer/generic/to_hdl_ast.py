@@ -7,7 +7,7 @@ from hdlConvertorAst.hdlAst import iHdlStatement, iHdlObj, HdlIdDef, \
     HdlCompInst, HdlEnumDef
 from hdlConvertorAst.hdlAst._statements import ALL_STATEMENT_CLASSES
 from hdlConvertorAst.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import \
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import \
     hdl_index, hdl_map_asoc
 from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope
 from hwt.hdl.operator import Operator

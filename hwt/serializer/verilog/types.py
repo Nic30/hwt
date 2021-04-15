@@ -1,6 +1,6 @@
 from hdlConvertorAst.hdlAst._expr import HdlTypeAuto, HdlValueId, HdlOp, \
     HdlOpType
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index, \
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_index, \
     hdl_downto
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.array import HArray

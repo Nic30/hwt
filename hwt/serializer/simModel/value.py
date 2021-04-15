@@ -2,7 +2,7 @@ from typing import Union
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_call, \
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call, \
     hdl_getattr
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.code import Concat

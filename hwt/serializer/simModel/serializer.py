@@ -7,7 +7,7 @@ from hdlConvertorAst.hdlAst._statements import HdlStmIf, HdlStmAssign, \
     HdlStmProcess, HdlStmBlock
 from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef
 from hdlConvertorAst.to.basic_hdl_sim_model.keywords import SIMMODEL_KEYWORDS
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_map_asoc, hdl_call
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.operator import Operator

@@ -4,7 +4,7 @@ from typing import Union
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueInt, HdlOp, HdlOpType, \
     HdlValueId
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_getattr, \
     hdl_call
 from hdlConvertorAst.translate.common.name_scope import ObjectForNameNotFound
 from hwt.hdl.types.arrayVal import HArrayVal

@@ -1,6 +1,6 @@
 from hdlConvertorAst.hdlAst._expr import HdlOp, HdlOpType, HdlValueId
 from hdlConvertorAst.to.verilog.constants import SIGNAL_TYPE
-from hdlConvertorAst.translate._verilog_to_basic_hdl_sim_model.utils import hdl_index
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_index
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
