@@ -76,6 +76,7 @@ def reinterpret_bits_to_hstruct__val(val: HValue, hStructT: HStruct):
     Reinterpret signal of type Bits to signal of type HStruct
     """
     container = hStructT.from_py(None)
+    hStructT.vld_mask = int(val._is_full_valid())
     offset = 0
     for f in hStructT.fields:
         t = f.dtype
@@ -135,6 +136,7 @@ def reinterpret_bits_to_harray(sigOrVal: Union[RtlSignal, HValue], hArrayT: HArr
     elmWidth = elmT.bit_length()
     if isinstance(sigOrVal, HValue):
         a = hArrayT.from_py(None)
+        a.vld_mask = int(sigOrVal._is_full_valid())
     else:
         a = HObjList([None for _ in range(hArrayT.size)])
     for i, item in enumerate(iterBits(sigOrVal,
