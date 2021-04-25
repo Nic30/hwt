@@ -23,6 +23,8 @@ def hstruct_reinterpret_to_bits(self, sigOrVal, toType: HdlType):
                 part = part._sig
             if not isinstance(part, (HValue, RtlSignalBase)):
                 part = f.dtype.from_py(part)
+            elif isinstance(part, HValue) and not isinstance(part._dtype, toType.__class__):
+                part = part._reinterpret_cast(toType.__class__(part._dtype.bit_length()))
 
         parts.append(part)
 
