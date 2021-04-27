@@ -71,6 +71,25 @@ class StructValBase(HValue):
                 d[f.name] = val
         return d
 
+    def __ne__(self, other):
+        if areHValues(self, other):
+            if self._dtype == other._dtype:
+                for f in self._dtype.fields:
+                    isPadding = f.name is None
+                    if not isPadding:
+                        sf = getattr(self, f.name)
+                        of = getattr(other, f.name)
+                        if (sf != of):
+                            return True
+                return False
+            else:
+                return True
+        else:
+            return super(HValue, self).__ne__(other)
+
+    def _eq(self, other):
+        return self.__eq__(other)
+
     def __eq__(self, other):
         if areHValues(self, other):
             if self._dtype == other._dtype:
@@ -100,5 +119,6 @@ class StructValBase(HValue):
                     v = repr(val)
 
                 buff.append(f"{indentOfFields:s}{f.name:s}: {v:s}")
+
         buff.append(getIndent(indent) + "}")
         return ("\n").join(buff)
