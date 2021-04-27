@@ -83,6 +83,7 @@ def reinterpret_harray_to_harray(typeFrom, sigOrVal, arrayT):
         reinterpretElmToType = Bits(myWidthOfElm)
 
     res = arrayT.from_py(None)
+    res.vld_mask = sigOrVal.vld_mask
     for i in range(size):
         start = i * widthOfElm
         end = (i + 1) * widthOfElm
