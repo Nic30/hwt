@@ -102,6 +102,9 @@ class SimTestCase(unittest.TestCase):
         return f"{className:s}_{testName:s}"
 
     def runSim(self, until: float, name=None):
+        """
+        Collect sim. processes from iterface agents and run simulation
+        """
         if name is None:
             if self.DEFAULT_LOG_DIR is None:
                 outputFileName = None
