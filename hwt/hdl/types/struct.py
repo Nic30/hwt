@@ -147,7 +147,7 @@ class HStruct(HdlType):
             return True
         if (type(self) is type(other)):
             if self.name != other.name or self.const != other.const:
-                raise False
+                return False
             try:
                 self_l = self.bit_length()
             except TypeError:
