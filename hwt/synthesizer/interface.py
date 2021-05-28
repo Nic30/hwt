@@ -18,6 +18,7 @@ from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 from hwt.synthesizer.vectorUtils import fitTo
+from hwt.hdl.value import HValue
 
 
 def _default_param_updater(self, myP, parentPval):
@@ -185,7 +186,16 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 if exclude and mIfc in exclude:
                     continue
 
-                if mIfc._masterDir == DIRECTION.OUT:
+                if isinstance(mIfc, HValue):
+                    # HStruct values
+                    if (ifc._masterDir in (DIRECTION.OUT, DIRECTION.INOUT) and ifc._direction == INTF_DIRECTION.MASTER) or\
+                        (ifc._masterDir == DIRECTION.IN and ifc._direction == INTF_DIRECTION.SLAVE):
+                        raise IntfLvlConfErr(
+                            "Invalid connection", ifc, "<=", mIfc)
+                    yield from ifc._connectToIter(mIfc,
+                                                  exclude,
+                                                  fit)
+                elif mIfc._masterDir == DIRECTION.OUT:
                     if ifc._masterDir != mIfc._masterDir:
                         raise IntfLvlConfErr(
                             "Invalid connection", ifc, "<=", mIfc)
@@ -201,8 +211,12 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                     yield from mIfc._connectToIter(ifc,
                                                    exclude,
                                                    fit)
+            if isinstance(master, HValue):
+                master_intf_cnt = len(master._dtype.fields)
+            else:
+                master_intf_cnt = len(master._interfaces)
 
-            if len(seen_master_intfs) != len(master._interfaces):
+            if len(seen_master_intfs) != master_intf_cnt:
                 if exclude:
                     # there is a possiblity that the master interface was excluded,
                     # but we did not see it as the interface of the same name was not present on self
@@ -215,7 +229,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                 else:
                     raise InterfaceStructureErr(self, master, exclude)
         else:
-            if master._interfaces:
+            if not isinstance(master, HValue) and master._interfaces:
                 raise InterfaceStructureErr(self, master, exclude)
 
             dstSig = toHVal(self)
