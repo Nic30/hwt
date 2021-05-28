@@ -25,7 +25,7 @@ def RtlSignal_sort_key(s: RtlSignalBase):
 
 
 def HdlStatement_sort_key(stm: HdlStatement):
-    if isinstance(stm, HdlStmCodeBlockContainer):
+    if isinstance(stm, HdlStmCodeBlockContainer) and stm.name is not None:
         return (stm.name, getMaxStmIdForStm(stm))
     else:
         return ("", getMaxStmIdForStm(stm))
