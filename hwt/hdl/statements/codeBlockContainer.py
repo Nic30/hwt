@@ -1,9 +1,12 @@
+from itertools import compress
 from typing import List, Set, Tuple
 
 from hwt.doc_markers import internal
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.statements.utils.reduction import HdlStatement_try_reduce_list
+from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
 from hwt.pyUtils.uniqList import UniqList
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class HdlStmCodeBlockContainer(HdlStatement):
@@ -46,3 +49,44 @@ class HdlStmCodeBlockContainer(HdlStatement):
     @internal
     def _iter_stms(self):
         yield from self.statements
+
+
+    @internal
+    def _cut_off_drivers_of(self, sig: RtlSignalBase):
+        """
+        Doc on parent class :meth:`HdlStatement._cut_off_drivers_of`
+        """
+        if self._sensitivity is not None or self._enclosed_for is not None:
+            raise NotImplementedError(
+                    "Sensitivity and enclosure has to be cleaned first")
+
+        if len(self._outputs) == 1 and sig in self._outputs:
+            # this statement has only this output, eject this statement from its parent
+            self.parentStm = None  # because new parent will be asigned immediately after cutting of
+            return self
+
+        sig.drivers.discard(self)
+        # try to cut off all statements which are drivers of specified signal
+        # in all branches
+        child_keep_mask = []
+
+        newStatements = []
+        all_cut_off = True
+        all_cut_off &= HdlStatement_cut_off_drivers_of_list(
+            sig, self.statements, child_keep_mask, newStatements)
+        self.statements = list(compress(self.statements, child_keep_mask))
+
+        assert not all_cut_off, "everything was cut of but this should be already known at the start"
+
+        if newStatements:
+            # parts were cut off
+            # generate new statement for them
+            n = self.__class__(*newStatements)
+
+            if self.parentStm is None:
+                ctx = n._get_rtl_context()
+                ctx.statements.add(n)
+
+            self._cut_off_drivers_of_regenerate_io(sig, n)
+
+            return n
