@@ -93,7 +93,8 @@ class HdlStatement(HdlObject):
         :param sig: signal which drivers should be removed
         :return: A statement or statement list which was cut off from the original statement
         """
-        raise NotImplementedError("This is an abstract method and it should be implemented in child class")
+        raise NotImplementedError("This is an abstract method and it should be implemented in child class",
+                                  self.__class__)
 
     @internal
     def _cut_off_drivers_of_regenerate_io(self, cut_off_sig: RtlSignalBase, cut_of_smt: "HdlStatement"):
