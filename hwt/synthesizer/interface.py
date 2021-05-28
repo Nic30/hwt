@@ -5,6 +5,7 @@ from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
 from hwt.hdl.types.typeCast import toHVal
+from hwt.hdl.value import HValue
 from hwt.synthesizer.exceptions import IntfLvlConfErr, InterfaceStructureErr
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.interfaceUtils.directionFns import \
@@ -18,7 +19,6 @@ from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 from hwt.synthesizer.vectorUtils import fitTo
-from hwt.hdl.value import HValue
 
 
 def _default_param_updater(self, myP, parentPval):
