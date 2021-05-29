@@ -4,6 +4,7 @@ from hwt.hdl.constants import NOP
 from hwt.simulator.agentBase import SyncAgentBase
 from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.triggers import WaitCombRead, WaitWriteOnly, WaitCombStable
+from pyMathBitPrecise.bit_utils import ValidityError
 
 
 class VldSyncedAgent(SyncAgentBase):
@@ -43,7 +44,11 @@ class VldSyncedAgent(SyncAgentBase):
         if self.notReset():
             intf = self.intf
             vld = self.get_valid()
-            vld = int(vld)
+            try:
+                vld = int(vld)
+            except ValidityError:
+                raise ValidityError(self.sim.now, self.intf._getFullName(),
+                                    "vld signal in invalid state (would cause desynchronisation)")
             if vld:
                 d = self.get_data()
                 if self._debugOutput is not None:
