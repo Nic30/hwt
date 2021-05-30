@@ -61,6 +61,14 @@ class StructValBase(HValue):
             val = None
         return cls(typeObj, val)
 
+    def _is_full_valid(self):
+        for f in self._dtype.fields:
+            if f.name is not None:
+                val = getattr(self, f.name, None)
+                if val is None or not val._is_full_valid():
+                    return False
+        return True
+
     def to_py(self):
         if not self._is_full_valid():
             raise ValueError(f"Value of {self} is not fully defined")
