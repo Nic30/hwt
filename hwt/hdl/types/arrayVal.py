@@ -7,6 +7,7 @@ from hwt.hdl.types.slice import Slice
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from pyMathBitPrecise.bit_utils import ValidityError
 
 
 class HArrayVal(HValue):
@@ -31,13 +32,20 @@ class HArrayVal(HValue):
             val = None
 
         if val is None:
-            pass
+            vld_mask = 0
         elif isinstance(val, dict):
+            if vld_mask is None:
+                vld_mask = 1
+
             for k, v in val.items():
                 if not isinstance(k, int):
                     k = int(k)
-                elements[k] = typeObj.element_t.from_py(v)
+                e = elements[k] = typeObj.element_t.from_py(v)
+                vld_mask &= e._is_full_valid()
         else:
+            if vld_mask is None:
+                vld_mask = 1
+
             for k, v in enumerate(val):
                 if isinstance(v, RtlSignalBase):  # is signal
                     assert v._dtype == typeObj.element_t
@@ -45,20 +53,21 @@ class HArrayVal(HValue):
                 else:
                     e = typeObj.element_t.from_py(v)
                 elements[k] = e
+                vld_mask &= e._is_full_valid()
 
-        _mask = int(bool(val))
-        if vld_mask is None:
-            vld_mask = _mask
-        else:
-            assert (vld_mask == _mask)
+        if len(elements) != size:
+            vld_mask = 0
 
         return cls(typeObj, elements, vld_mask)
 
     def to_py(self):
         if not self._is_full_valid():
-            raise ValueError(f"Value of {self} is not fully defined")
+            raise ValidityError(f"Value of {self} is not fully defined")
 
-        return [v.to_py() for _, v in sorted(self.val.items())]
+        v = self.val
+        invalid_elm = self._dtype.element_t.from_py(None)
+        return [v.get(i, invalid_elm).to_py()
+                for i in range(self._dtype.size)]
 
     @internal
     def __hash__(self):
@@ -130,7 +139,12 @@ class HArrayVal(HValue):
             assert value._dtype == self._dtype.element_t, (
                 value._dtype, self._dtype.element_t)
 
-        return self._setitem__val(index, value)
+        ret = self._setitem__val(index, value)
+        self.vld_mask = int(
+            len(self.val) == self._dtype.size and
+            all(e._is_full_valid() for e in self.val.values())
+        )
+        return ret
 
     def __iter__(self):
         mySize = len(self)
