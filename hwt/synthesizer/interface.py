@@ -1,9 +1,10 @@
 from copy import copy
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, List, Generator
 
 from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
 from hwt.hdl.constants import DIRECTION, INTF_DIRECTION
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import HValue
 from hwt.synthesizer.exceptions import IntfLvlConfErr, InterfaceStructureErr
@@ -114,7 +115,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
         return self
 
-    def __call__(self, other, exclude=None, fit=False):
+    def __call__(self, other, exclude=None, fit=False) -> List[HdlAssignmentContainer]:
         """
         :attention: it is not call of function it is operator of assignment
         """
@@ -159,7 +160,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             for i in self._interfaces:
                 i._clean(lockNonExternal=lockNonExternal)
 
-    def _connectTo(self, master, exclude=None, fit=False):
+    def _connectTo(self, master, exclude=None, fit=False) -> List[HdlAssignmentContainer]:
         """
         connect to another interface interface (on rtl level)
         works like self <= master in VHDL
@@ -167,8 +168,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         return list(self._connectToIter(master, exclude, fit))
 
     @internal
-    def _connectToIter(self, master, exclude, fit):
-        # [todo] implementation for RtlSignals of HStruct type
+    def _connectToIter(self, master, exclude, fit) -> Generator[HdlAssignmentContainer, None, None]:
         if exclude and (self in exclude or master in exclude):
             return
 
@@ -305,11 +305,11 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
                 self._hdl_port = pi
 
-    def _getHdlName(self):
+    def _getHdlName(self) -> str:
         """Get name in HDL """
         return HObjList._getHdlName(self)
 
-    def _getFullName(self):
+    def _getFullName(self) -> str:
         """get all name hierarchy separated by '.' """
         return HObjList._getFullName(self)
 
@@ -322,7 +322,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             self, otherObj, updater, exclude, prefix)
         return self
 
-    def _bit_length(self):
+    def _bit_length(self) -> int:
         """Sum of all width of interfaces in this interface"""
         try:
             interfaces = self._interfaces
@@ -343,7 +343,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         else:
             return self._dtype.bit_length()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = [self.__class__.__name__]
         s.append("name=%s" % self._getFullName())
         if hasattr(self, '_width'):
