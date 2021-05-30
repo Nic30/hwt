@@ -139,6 +139,7 @@ def reinterpret_bits_to_harray(sigOrVal: Union[RtlSignal, HValue], hArrayT: HArr
         a.vld_mask = int(sigOrVal._is_full_valid())
     else:
         a = HObjList([None for _ in range(hArrayT.size)])
+
     for i, item in enumerate(iterBits(sigOrVal,
                                       bitsInOne=elmWidth,
                                       skipPadding=False)):
