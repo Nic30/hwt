@@ -1,22 +1,24 @@
 
 import sys
-
-from pyMathBitPrecise.bits3t import Bits3t
-from pyMathBitPrecise.enum3t import Enum3t
+from typing import Union
 
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
-from hwt.simulator.rtlSimulator import BasicRtlSimulatorWithSignalRegisterMethods
-from pyDigitalWaveTools.vcd.writer import VcdWriter
-from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
 from hwt.hdl.value import HValue
-from typing import Union
-from hwtSimApi.basic_hdl_simulator.sim_utils import ValueUpdater,\
+from hwt.simulator.rtlSimulator import BasicRtlSimulatorWithSignalRegisterMethods
+from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
+from hwtSimApi.basic_hdl_simulator.sim_utils import ValueUpdater, \
     ArrayValueUpdater
+from pyDigitalWaveTools.vcd.writer import VcdWriter
+#from pyMathBitPrecise.array3t import Array3t
+from pyMathBitPrecise.bits3t import Bits3t
+from pyMathBitPrecise.enum3t import Enum3t
 
 
 class BasicRtlSimulatorVcd(BasicRtlSimulatorWithSignalRegisterMethods):
-    supported_type_classes = (Bits, HEnum, Bits3t, Enum3t)
+    supported_type_classes = (Bits, HEnum, Bits3t, Enum3t,
+                              #Array3t
+                              )
 
     def create_wave_writer(self, file_name):
         self.wave_writer = VcdWriter(open(file_name, "w"))
