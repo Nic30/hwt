@@ -9,7 +9,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.enumVal import HEnumVal
-from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.types.sliceVal import HSliceVal
 from hwt.hdl.value import HValue
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
@@ -49,7 +49,7 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
         else:
             return ToHdlAst_Value.as_hdl_SignalItem(self, si, declaration=declaration)
 
-    def as_hdl_SliceVal(self, val: SliceVal):
+    def as_hdl_HSliceVal(self, val: HSliceVal):
         upper = val.val.start - 1
         return hdl_downto(self.as_hdl_Value(upper),
                           self.as_hdl_Value(val.val.stop))

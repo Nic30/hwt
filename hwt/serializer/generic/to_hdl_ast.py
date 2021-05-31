@@ -7,9 +7,9 @@ from hdlConvertorAst.hdlAst import iHdlStatement, iHdlObj, HdlIdDef, \
     HdlCompInst, HdlEnumDef
 from hdlConvertorAst.hdlAst._statements import ALL_STATEMENT_CLASSES
 from hdlConvertorAst.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
+from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope
 from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import \
     hdl_index, hdl_map_asoc
-from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
@@ -22,7 +22,7 @@ from hwt.hdl.types.defs import STR, BOOL
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.float import HFloat
 from hwt.hdl.types.hdlType import HdlType, MethodNotOverloaded
-from hwt.hdl.types.slice import Slice
+from hwt.hdl.types.slice import HSlice
 from hwt.pyUtils.arrayQuery import arr_any
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.exceptions import UnsupportedEventOpErr
@@ -97,7 +97,7 @@ class ToHdlAst():
             sFn = self.as_hdl_HdlType_enum
         elif isinstance(typ, HArray):
             sFn = self.as_hdl_HdlType_array
-        elif isinstance(typ, Slice):
+        elif isinstance(typ, HSlice):
             sFn = self.as_hdl_HdlType_slice
         elif isinstance(typ, HFloat):
             sFn = self.as_hdl_HdlType_float
@@ -145,7 +145,7 @@ class ToHdlAst():
             name = ns.get_object_name(typ)
             return HdlValueId(name, obj=None)
 
-    def as_hdl_HdlType_slice(self, typ: Slice, declaration=False):
+    def as_hdl_HdlType_slice(self, typ: HSlice, declaration=False):
         raise NotImplementedError(self)
 
     def as_hdl_If(self, *args, **kwargs) -> HdlStmIf:

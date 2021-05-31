@@ -81,7 +81,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             self.as_hdl_int(val.vld_mask)
         ])
 
-    def as_hdl_SliceVal(self, val):
+    def as_hdl_HSliceVal(self, val):
         args = (
             val.val.start,
             val.val.stop,

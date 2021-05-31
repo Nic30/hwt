@@ -20,9 +20,9 @@ def slice_member_to_hval(v):
         return INT.from_py(v)
 
 
-class SliceVal(HValue):
+class HSliceVal(HValue):
     """
-    HValue class for Slice type
+    HValue class for HSlice type
     """
 
     @classmethod
@@ -64,7 +64,7 @@ class SliceVal(HValue):
             raise NotImplementedError(self)
 
     def _eq_val(self, other):
-        assert isinstance(other, SliceVal)
+        assert isinstance(other, HSliceVal)
         return self.val == other.val
 
     def _eq(self, other):

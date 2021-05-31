@@ -7,13 +7,13 @@ from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT, BOOL, FLOAT64
 from hwt.hdl.types.enum import HEnum
-from hwt.hdl.types.slice import Slice
-from hwt.hdl.types.string import String
+from hwt.hdl.types.float import HFloat
+from hwt.hdl.types.slice import HSlice
+from hwt.hdl.types.string import HString
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.hdl.types.float import HFloat
 
 
 class ToHdlAst_Value():
@@ -41,16 +41,16 @@ class ToHdlAst_Value():
                 if c is not None:
                     return self.as_hdl(c)
 
-        if isinstance(t, Slice):
-            return self.as_hdl_SliceVal(val)
+        if isinstance(t, HSlice):
+            return self.as_hdl_HSliceVal(val)
         elif isinstance(t, HArray):
             return self.as_hdl_HArrayVal(val)
         elif isinstance(t, Bits):
             return self.as_hdl_BitsVal(val)
         elif isinstance(t, HEnum):
             return self.as_hdl_HEnumVal(val)
-        elif isinstance(t, String):
-            return self.as_hdl_StringVal(val)
+        elif isinstance(t, HString):
+            return self.as_hdl_HStringVal(val)
         elif isinstance(t, HFloat):
             return self.as_hdl_HFloatVal(val)
         else:
@@ -78,7 +78,7 @@ class ToHdlAst_Value():
         return self.as_hdl_BitString(val.val, w, t.force_vector,
                                      val.vld_mask, t.signed)
 
-    def as_hdl_StringVal(self, val):
+    def as_hdl_HStringVal(self, val):
         return val.val
 
     def as_hdl_HFloatVal(self, val):

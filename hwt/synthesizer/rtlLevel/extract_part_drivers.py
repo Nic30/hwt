@@ -12,7 +12,7 @@ from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import SLICE
-from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.types.sliceVal import HSliceVal
 from hwt.hdl.value import HValue
 from hwt.pyUtils.uniqList import UniqList
 from hwt.serializer.utils import RtlSignal_sort_key, HdlStatement_sort_key
@@ -138,7 +138,7 @@ def extract_part_drivers_stm(stm: HdlStatement,
 
 @internal
 def construct_tmp_dst_sig_for_slice(dst: RtlSignal,
-                                    indexes: List[Union[BitsVal, SliceVal]],
+                                    indexes: List[Union[BitsVal, HSliceVal]],
                                     src: Optional[RtlSignal],
                                     is_signal_needed: bool) -> RtlSignal:
     """
@@ -161,7 +161,7 @@ def construct_tmp_dst_sig_for_slice(dst: RtlSignal,
 
         if is_signal_needed:
             dst = dst[i]
-            if isinstance(i, SliceVal):
+            if isinstance(i, HSliceVal):
                 if int(i.val.step) == -1:
                     stop = int(i.val.stop)
                     start = int(i.val.start)
@@ -198,7 +198,7 @@ def resolve_splitpoints(s: RtlSignal, parts):
             add_split_point(i + 1)
         else:
             # index is slice
-            assert isinstance(i, SliceVal), (s, i)
+            assert isinstance(i, HSliceVal), (s, i)
             add_split_point(int(i.val.start))
             add_split_point(int(i.val.stop))
 
@@ -235,7 +235,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
                 high = low + 1
                 index_key = ((high, low),)
             else:
-                assert isinstance(i, SliceVal), (s, i)
+                assert isinstance(i, HSliceVal), (s, i)
                 if i.val.step != -1:
                     raise NotImplementedError(s, i)
                 high, low = int(i.val.start), int(i.val.stop)

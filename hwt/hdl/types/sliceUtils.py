@@ -1,6 +1,6 @@
 from hwt.doc_markers import internal
 from hwt.hdl.types.defs import INT, SLICE
-from hwt.hdl.types.slice import Slice
+from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.typeCast import toHVal
 
 
@@ -25,4 +25,4 @@ def slice_to_SLICE(sliceVals, width):
         stop = toHVal(stop)
 
     v = slice(start, stop, step)
-    return Slice.getValueCls()(SLICE, v, 1)
+    return HSlice.getValueCls()(SLICE, v, 1)

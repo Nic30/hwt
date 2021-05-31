@@ -12,7 +12,7 @@ from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
-from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.types.sliceVal import HSliceVal
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.generic.value import ToHdlAst_Value
@@ -89,7 +89,7 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
         # by item
         return self.as_hdl_DictVal(val.val)
 
-    def as_hdl_SliceVal(self, val: SliceVal):
+    def as_hdl_HSliceVal(self, val: HSliceVal):
         if val._is_full_valid():
             return HdlOp(
                 HdlOpType.DOWNTO, [
@@ -98,7 +98,7 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
                 ])
         else:
             raise NotImplementedError()
-            return "SliceVal(slice(%s, %s, %s), SLICE, %d)" % (
+            return "HSliceVal(slice(%s, %s, %s), SLICE, %d)" % (
                 self.as_hdl_Value(val.val.start),
                 self.as_hdl_Value(val.val.stop),
                 self.as_hdl_Value(val.val.step),

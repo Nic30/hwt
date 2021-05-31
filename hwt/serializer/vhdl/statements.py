@@ -8,7 +8,7 @@ from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, BIT
-from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.types.sliceVal import HSliceVal
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
@@ -23,7 +23,7 @@ class ToHdlAstVhdl2008_statements():
 
         if a.indexes is not None:
             for i in a.indexes:
-                if isinstance(i, SliceVal):
+                if isinstance(i, HSliceVal):
                     i = i.__copy__()
                 dst = dst[i]
 

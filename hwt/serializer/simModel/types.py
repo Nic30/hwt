@@ -3,7 +3,7 @@ from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_c
     hdl_getattr
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.slice import Slice
+from hwt.hdl.types.slice import HSlice
 from pyMathBitPrecise.bits3t import Bits3t
 
 
@@ -26,7 +26,7 @@ class ToHdlAstSimModel_types():
         return hdl_call(self.BITS3T, [HdlValueInt(w, None, None),
                                       HdlValueInt(int(bool(typ.signed)), None, None)])
 
-    def as_hdl_HdlType_slice(self, typ: Slice, declaration=False):
+    def as_hdl_HdlType_slice(self, typ: HSlice, declaration=False):
         if declaration:
             raise NotImplementedError()
         else:

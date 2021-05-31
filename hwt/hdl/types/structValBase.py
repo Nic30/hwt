@@ -13,7 +13,7 @@ class StructValBase(HValue):
     def __init__(self, typeObj, val, skipCheck=False):
         """
         :param val: None or dict {field name: field value}
-        :param typeObj: instance of String HdlType
+        :param typeObj: instance of HString HdlType
         :param skipCheck: flag to skip field name consistency in val
         """
         self._dtype = typeObj
@@ -52,7 +52,7 @@ class StructValBase(HValue):
     def from_py(cls, typeObj, val, vld_mask=None):
         """
         :param val: None or dict {field name: field value}
-        :param typeObj: instance of String HdlType
+        :param typeObj: instance of HString HdlType
         :param vld_mask: if is None validity is resolved from val
             if is 0 value is invalidated
             if is 1 value has to be valid

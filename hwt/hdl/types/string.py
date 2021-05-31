@@ -2,7 +2,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 
 
-class String(HdlType):
+class HString(HdlType):
 
     def all_mask(self):
         return 1
@@ -13,6 +13,6 @@ class String(HdlType):
         try:
             return cls._valCls
         except AttributeError:
-            from hwt.hdl.types.stringVal import StringVal
-            cls._valCls = StringVal
+            from hwt.hdl.types.stringVal import HStringVal
+            cls._valCls = HStringVal
             return cls._valCls

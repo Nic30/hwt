@@ -4,16 +4,16 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.doc_markers import internal
 
 
-class StringVal(HValue):
+class HStringVal(HValue):
     """
-    Value class for hdl String type
+    Value class for hdl HString type
     """
 
     @classmethod
     def from_py(cls, typeObj, val, vld_mask=None):
         """
         :param val: python string or None
-        :param typeObj: instance of String HdlType
+        :param typeObj: instance of HString HdlType
         :param vld_mask: if is None validity is resolved from val
             if is 0 value is invalidated
             if is 1 value has to be valid

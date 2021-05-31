@@ -9,7 +9,7 @@ from pyMathBitPrecise.floatt import FloattVal
 
 class HFloatVal(HValue, FloattVal):
     """
-    HValue class for Slice type
+    HValue class for HFloat type
     """
 
     @classmethod

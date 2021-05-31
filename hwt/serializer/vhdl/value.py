@@ -1,4 +1,4 @@
-from hdlConvertorAst.hdlAst import HdlValueId, HdlValueInt, HdlOp,\
+from hdlConvertorAst.hdlAst import HdlValueId, HdlValueInt, HdlOp, \
     HdlOpType
 from hdlConvertorAst.to.hdlUtils import bit_string
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
@@ -7,7 +7,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.enumVal import HEnumVal
-from hwt.hdl.types.sliceVal import SliceVal
+from hwt.hdl.types.sliceVal import HSliceVal
 from hwt.hdl.value import HValue
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -93,7 +93,7 @@ class ToHdlAstVhdl2008_Value(ToHdlAst_Value):
                     raise NotImplementedError()
         return v
 
-    def as_hdl_SliceVal(self, val: SliceVal):
+    def as_hdl_HSliceVal(self, val: HSliceVal):
         upper = val.val.start
         if int(val.val.step) == -1:
             if isinstance(upper, HValue):

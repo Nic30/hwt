@@ -2,7 +2,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.types.hdlType import HdlType
 
 
-class Slice(HdlType):
+class HSlice(HdlType):
     """
     Slice type, used for selecting items from arrays or vectors
     """
@@ -13,6 +13,6 @@ class Slice(HdlType):
         try:
             return cls._valCls
         except AttributeError:
-            from hwt.hdl.types.sliceVal import SliceVal
-            cls._valCls = SliceVal
+            from hwt.hdl.types.sliceVal import HSliceVal
+            cls._valCls = HSliceVal
             return cls._valCls

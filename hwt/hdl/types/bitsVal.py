@@ -11,7 +11,7 @@ from hwt.hdl.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT, BIT, SLICE, BIT_N
 from hwt.hdl.types.eventCapableVal import EventCapableVal
-from hwt.hdl.types.slice import Slice
+from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.sliceUtils import slice_to_SLICE
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import HValue, areHValues
@@ -158,7 +158,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             key = slice_to_SLICE(key, length)
             isSLICE = True
         else:
-            isSLICE = isinstance(key, Slice.getValueCls())
+            isSLICE = isinstance(key, HSlice.getValueCls())
 
         if isSLICE:
             # :note: downto notation
@@ -187,7 +187,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             if iAmResultOfIndexing:
                 # try reduce self and parent slice to one
                 original, parentIndex = self.origin.operands
-                if isinstance(parentIndex._dtype, Slice):
+                if isinstance(parentIndex._dtype, HSlice):
                     parentLower = parentIndex.val.stop
                     start = start + parentLower
                     stop = stop + parentLower
@@ -231,7 +231,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                     raise IndexError(_v)
                 if iAmResultOfIndexing:
                     original, parentIndex = self.origin.operands
-                    if isinstance(parentIndex._dtype, Slice):
+                    if isinstance(parentIndex._dtype, HSlice):
                         parentLower = parentIndex.val.stop
                         return original[parentLower + _v]
 
@@ -241,7 +241,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             resT = BIT
         elif isinstance(key, RtlSignalBase):
             t = key._dtype
-            if isinstance(t, Slice):
+            if isinstance(t, HSlice):
                 resT = Bits(bit_length=key.staticEval()._size(),
                             force_vector=True,
                             signed=st.signed,
@@ -268,7 +268,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         if not isinstance(self, HValue):
             raise TypeError("To assign a member of hdl arrray/vector/list/... use a[index](val) instead of a[index] = val")
 
-        # convert index to hSlice or hInt
+        # convert index to HSlice or hInt
         if isinstance(index, HValue):
             index = index
         elif isinstance(index, slice):

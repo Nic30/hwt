@@ -3,7 +3,7 @@ from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT
-from hwt.hdl.types.slice import Slice
+from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -76,7 +76,7 @@ class HStreamVal(HValue):
     def __getitem__(self, key):
         iamVal = isinstance(self, HValue)
         key = toHVal(key)
-        isSLICE = isinstance(key, Slice.getValueCls())
+        isSLICE = isinstance(key, HSlice.getValueCls())
 
         if isSLICE:
             raise NotImplementedError()
