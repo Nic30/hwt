@@ -36,29 +36,38 @@ class ToHdlAstVhdl2008_statements():
         else:
             src = a.src
             if (isinstance(dst_t, Bits) and isinstance(src_t, Bits)):
-                # std_logic <->  std_logic_vector(0 downto 0) auto conversions
-                if dst_t.bit_length() == src_t.bit_length() == 1:
-                    if dst_t.force_vector and not src_t.force_vector:
-                        dst = dst[0]
-                        correct = True
-                    elif not dst_t.force_vector and src_t.force_vector:
-                        src = src[0]
-                        correct = True
-                    elif src_t == BOOL:
-                        src = src._ternary(BIT.from_py(1), BIT.from_py(0))
-                        correct = True
-                elif not src_t.strict_width:
-                    if isinstance(src, HValue):
-                        src = copy(src)
-                        if a.indexes:
+                # std_logic <-> boolean <->  std_logic_vector(0 downto 0) auto conversions
+                while not (dst_t == src_t):
+                    # while is used because the casting could be required multiple times
+                    correct = False
+                    if dst_t.bit_length() == src_t.bit_length() == 1:
+                        if dst_t.force_vector and not src_t.force_vector:
+                            dst = dst[0]
+                            correct = True
+                        elif not dst_t.force_vector and src_t.force_vector:
+                            src = src[0]
+                            correct = True
+                        elif src_t == BOOL:
+                            src = src._ternary(BIT.from_py(1), BIT.from_py(0))
+                            correct = True
+                    elif not src_t.strict_width:
+                        if isinstance(src, HValue):
+                            src = copy(src)
+                            if a.indexes:
+                                raise NotImplementedError()
+
+                            src._dtype = dst_t
+                            correct = True
+                        else:
                             raise NotImplementedError()
+                            pass
 
-                        src._dtype = dst_t
-                        correct = True
-                    else:
-                        raise NotImplementedError()
-                        pass
+                    src_t = src._dtype
+                    dst_t = dst._dtype
 
+                    if not correct:
+                        # automatic type cast can not be performed
+                        break
         if correct:
             src = self.as_hdl(src)
             hdl_a = HdlStmAssign(src, self.as_hdl(dst))
