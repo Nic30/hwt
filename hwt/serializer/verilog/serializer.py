@@ -17,6 +17,7 @@ from hwt.serializer.verilog.statements import ToHdlAstVerilog_statements
 from hwt.serializer.verilog.types import ToHdlAstVerilog_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import ToHdlAstVerilog_Value
+from hwt.hdl.types.bits import Bits
 
 
 class ToHdlAstVerilog(ToHdlAstVerilog_types,
@@ -32,7 +33,7 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
             self, v, types, hdl_types, hdl_variables,
             processes, component_insts):
         new_v = copy(v)
-        with SignalTypeSwap(self, verilogTypeOfSig(v.origin)): 
+        with SignalTypeSwap(self, verilogTypeOfSig(v.origin)):
             t = v.type
             # if type requires extra definition
             if self.does_type_requires_extra_def(t, types):

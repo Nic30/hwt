@@ -13,6 +13,9 @@ from hwt.hdl.types.float import HFloat
 
 
 class ToHdlAstVerilog_types():
+    INT = HdlValueId("int", obj=int)
+    REG = HdlValueId("reg", obj=LanguageKeyword())
+    WIRE = HdlValueId("wire", obj=LanguageKeyword())
 
     def does_type_requires_extra_def(self, t: HdlType, other_types: list):
         try:
@@ -26,17 +29,18 @@ class ToHdlAstVerilog_types():
         sigType = self.signalType
 
         if typ == INT:
-            t = HdlValueId("int", obj=int)
+            t = self.INT
         elif sigType is SIGNAL_TYPE.PORT_WIRE:
             t = HdlTypeAuto
         elif sigType is SIGNAL_TYPE.REG or sigType is SIGNAL_TYPE.PORT_REG:
-            t = HdlValueId("reg", obj=LanguageKeyword())
+            t = self.REG
         elif sigType is SIGNAL_TYPE.WIRE:
-            t = HdlValueId("wire", obj=LanguageKeyword())
+            t = self.WIRE
         else:
             raise ValueError(sigType)
 
-        if typ.signed is None:
+        if typ.signed is None or typ.signed == False:
+            # [yosys] do not produce unsigned type as yosys support is limited
             is_signed = None
         else:
             is_signed = self.as_hdl_int(int(typ.signed))
