@@ -32,7 +32,7 @@ setup(name="hwt",
         "Topic :: System :: Emulators",
         "Topic :: Utilities"],
       install_requires=[
-          "hdlConvertorAst>=0.6",  # conversions to SystemVerilog, VHDL
+          "hdlConvertorAst>=0.9", # conversions to SystemVerilog, VHDL
           "ipCorePackager>=0.5",  # generator of IPcore packages (IP-xact, ...)
           "hwtSimApi>=1.0",  # simulator API
           "pyDigitalWaveTools>=1.0",  # simulator output dump
