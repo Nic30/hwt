@@ -151,9 +151,19 @@ class ToHdlAstVhdl2008_ops():
 
             return HdlOp(HdlOpType.INDEX, [op0, _op1])
         elif o == AllOps.TERNARY:
-            op0 = self.as_hdl_cond(ops[0], True)
-            op1 = self.as_hdl_operand(ops[1])
-            op2 = self.as_hdl_operand(ops[2])
+            _c, _op0, _op1 = ops
+            op0 = self.as_hdl_cond(_c, True)
+            op1 = self.as_hdl_operand(_op0)
+            t0 = _op0._dtype
+            t1 = _op1._dtype
+            if not (t0 == t1):
+                assert isinstance(t0, Bits) and\
+                       isinstance(t1, Bits) and\
+                       t0.bit_length() == t1.bit_length() and\
+                       bool(t0.signed) == bool(t1.signed), (t0, t1)
+                _, _op1 = self.tmpVars.create_var_cached("tmpTypeConv_", t0, def_val=_op1)
+
+            op2 = self.as_hdl_operand(_op1)
             return HdlOp(HdlOpType.TERNARY, [op0, op1, op2])
         else:
             _o = self._cast_ops.get(o, None)
