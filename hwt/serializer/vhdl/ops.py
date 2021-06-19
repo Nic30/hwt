@@ -141,13 +141,19 @@ class ToHdlAstVhdl2008_ops():
             # if the op0 is not signal or other index index operator it is extracted
             # as tmp variable
             op0 = self.as_hdl_operand(op0)
-            _op1 = self.as_hdl_operand(ops[1])
 
             if isinstance(op1._dtype, Bits) and op1._dtype != INT:
-                sig = op1._dtype.signed
-                if sig is None:
+                if op1._dtype.signed is None:
+                    if op1._dtype.bit_length() == 1 and not op1._dtype.force_vector:
+                        _, op1 = self.tmpVars.create_var_cached("tmpTypeConv_", Bits(1, force_vector=True), def_val=op1)
+                    _op1 = self.as_hdl_operand(op1)
                     _op1 = self.apply_cast("UNSIGNED", _op1)
+                else:
+                    _op1 = self.as_hdl_operand(op1)
+
                 _op1 = self.apply_cast("TO_INTEGER", _op1)
+            else:
+                _op1 = self.as_hdl_operand(op1)
 
             return HdlOp(HdlOpType.INDEX, [op0, _op1])
         elif o == AllOps.TERNARY:
