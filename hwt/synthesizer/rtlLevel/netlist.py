@@ -69,7 +69,9 @@ class RtlNetlist():
             nop_val = _try_cast_any_to_HValue(nop_val, dtype, False)
 
         if clk is not None:
-            s = RtlSyncSignal(self, name, dtype, _def_val, nop_val)
+            s = RtlSyncSignal(self, name, dtype,
+                              _def_val if isinstance(_def_val, HValue) else dtype.from_py(None),
+                              nop_val)
             if syncRst is not None and def_val is None:
                 raise SigLvlConfErr(
                     "Probably forgotten default value on sync signal %s", name)
@@ -105,6 +107,7 @@ class RtlNetlist():
             if syncRst:
                 raise SigLvlConfErr(
                     f"Signal {name:s} has reset but has no clk")
+            assert isinstance(_def_val, HValue) or (isinstance(_def_val, RtlSignal) and _def_val._const), (_def_val, "The default value needs to be constant")
             s = RtlSignal(self, name, dtype, def_val=_def_val, nop_val=nop_val)
 
         return s
