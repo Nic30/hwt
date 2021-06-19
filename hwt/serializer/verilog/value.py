@@ -70,7 +70,7 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
     def as_hdl_HArrayVal(self, val):
         raise ValueError(
             "Verilog do not have a array constants(they are part of SV)"
-            " and thats why array constants whould converted to initialization"
+            " and that is why array constants should converted to initialization"
             " in initial processes")
 
     @internal
