@@ -408,12 +408,16 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                 return b
         else:
             a = toHVal(a)
-            b = toHVal(b)
+            b = toHVal(b, suggestedType=a._dtype)
             try:
                 if a == b:
                     return a
             except ValidityError:
                 pass
+
+            if not (a._dtype == b._dtype):
+                # all case values of ternary has to have same type
+                b = b._auto_cast(a._dtype)
 
             return Operator.withRes(
                 AllOps.TERNARY,
