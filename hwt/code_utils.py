@@ -5,6 +5,7 @@ from hwt.hdl.types.defs import BIT
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from ipCorePackager.constants import DIRECTION
+from hwt.hdl.value import HValue
 
 
 def rename_signal(unit_instance: "Unit",
@@ -21,9 +22,11 @@ def rename_signal(unit_instance: "Unit",
         t = BIT
     else:
         t = sig._dtype
-
-    s = unit_instance._sig(name, t)
-    s(sig)
+    if isinstance(sig, (HValue, int, bool)):
+        s = unit_instance._sig(name, t, def_val=sig)
+    else:
+        s = unit_instance._sig(name, t)
+        s(sig)
     return s
 
 
