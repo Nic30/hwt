@@ -43,6 +43,9 @@ class ToHdlAstVerilog_ops():
             _, tmpVar = self.tmpVars.create_var_cached("tmp_concat_", operand._dtype, def_val=operand)
             # HdlAssignmentContainer(tmpVar, operand, virtual_only=True)
             operand = tmpVar
+        elif operator.operator == AllOps.INDEX and i == 0 and self._operandIsAnotherOperand(operand):
+            _, tmpVar = self.tmpVars.create_var_cached("tmp_index_", operand._dtype, def_val=operand)
+            operand = tmpVar
 
         oper = operator.operator
         width = None
