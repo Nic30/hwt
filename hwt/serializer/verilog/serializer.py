@@ -3,7 +3,7 @@ from typing import Optional
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlTypeAuto
-from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmBlock, HdlStmAssign,\
+from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmBlock, HdlStmAssign, \
     HdlStmWait
 from hdlConvertorAst.to.verilog.keywords import IEEE1800_2017_KEYWORDS
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
@@ -17,7 +17,6 @@ from hwt.serializer.verilog.statements import ToHdlAstVerilog_statements
 from hwt.serializer.verilog.types import ToHdlAstVerilog_types
 from hwt.serializer.verilog.utils import SIGNAL_TYPE, verilogTypeOfSig
 from hwt.serializer.verilog.value import ToHdlAstVerilog_Value
-from hwt.hdl.types.bits import Bits
 
 
 class ToHdlAstVerilog(ToHdlAstVerilog_types,
