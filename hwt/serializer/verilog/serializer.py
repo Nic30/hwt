@@ -64,7 +64,11 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
                 new_v.is_const = False
                 new_v.value = None
             elif new_v.value is not None:
-                new_v.value = self.as_hdl_Value(new_v.value)
+                if new_v.value.vld_mask:
+                    new_v.value = self.as_hdl_Value(new_v.value)
+                else:
+                    # 'x' is a default value no need to specify it extra
+                    new_v.value = None
             return new_v
 
     def as_hdl_GenericItem(self, g: HdlIdDef):
