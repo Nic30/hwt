@@ -18,6 +18,7 @@ class SignalItem(HdlObject):
             virtual and should not be added into
             netlist, because it is only for internal notation
         """
+        assert isinstance(name, str), name
         self.name = name
         self._dtype = dtype
         self.virtual_only = virtual_only

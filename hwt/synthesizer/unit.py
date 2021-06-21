@@ -75,6 +75,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
         self._name = None
         self._shared_component_with = None
         self._hdl_module_name = None
+        assert hdl_name_override is None or isinstance(hdl_name_override, str), hdl_name_override
         self._hdl_name_override = hdl_name_override
         self._lazy_loaded = []
         self._ctx = RtlNetlist(self)
