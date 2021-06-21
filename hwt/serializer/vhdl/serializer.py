@@ -70,9 +70,7 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         elif isinstance(o, (HdlStmFor, HdlStmForIn)) and o.in_preproc:
             if o.body:
                 yield from ToHdlAstVhdl2008._find_HdlCompInst(o.body)
-                    
-            
-            
+
     def as_hdl_HdlModuleDef(self, o: HdlModuleDef):
         """
         Translate hwt types and expressions to HDL AST and add explicit components

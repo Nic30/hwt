@@ -1,6 +1,7 @@
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.statements.ifContainter import IfContainer
+from hwt.hdl.types.hdlType import HdlType
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.mainBases import RtlMemoryBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -13,7 +14,7 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
     to main signal on every clock rising edge
     """
 
-    def __init__(self, ctx, name, var_type, def_val=None, nop_val=NOT_SPECIFIED):
+    def __init__(self, ctx: 'RtlNetlist', name: str, var_type: HdlType, def_val=None, nop_val=NOT_SPECIFIED):
         """
         :param ~.ctx: context in which is sig. created (instance of RtlNetlist)
         :param ~.name: suggested name

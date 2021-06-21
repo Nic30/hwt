@@ -52,7 +52,7 @@ class RtlNetlist():
         self.arch = None
         self._port_items = []
 
-    def sig(self, name, dtype=BIT, clk=None, syncRst=None,
+    def sig(self, name: str, dtype=BIT, clk=None, syncRst=None,
             def_val=None, nop_val=NOT_SPECIFIED) -> Union[RtlSignal, RtlSyncSignal]:
         """
         Create new signal in this context

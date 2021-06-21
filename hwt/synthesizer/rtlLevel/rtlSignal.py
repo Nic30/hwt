@@ -41,7 +41,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
     __instCntr = 0
 
-    def __init__(self, ctx, name, dtype, def_val=None, nop_val=NOT_SPECIFIED,
+    def __init__(self, ctx: 'RtlNetlist', name: str, dtype: HdlType, def_val=None, nop_val=NOT_SPECIFIED,
                  virtual_only=False, is_const=False):
         """
         :param ctx: context - RtlNetlist which is this signal part of
