@@ -392,7 +392,12 @@ class RtlSignalOps():
                 d = None
             operator = getattr(d, "operator", None)
             if operator is not None:
-                assert operator.allowsAssignTo, ("Assignment to", self, "is not allowed by operator definition")
+                if operator.allowsAssignTo:
+                    pass
+                elif operator == AllOps.NOT:
+                    return d.operands[0](~source, dst_resolve_fn=dst_resolve_fn, exclude=exclude, fit=fit)
+                else:
+                    raise AssertionError("Assignment to", self, "is not allowed by operator definition")
 
         if isinstance(source, InterfaceBase):
             assert source._isAccessible, (source, "must be a Signal Interface which is accessible in current scope")
