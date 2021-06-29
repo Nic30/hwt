@@ -203,7 +203,7 @@ class SimTestCase(unittest.TestCase):
     def compileSimAndStart(
             self,
             unit: Unit,
-            build_dir: Optional[str]=DEFAULT_BUILD_DIR,
+            build_dir: Optional[str]=_UNSPECIFIED,
             unique_name: Optional[str]=None,
             onAfterToRtl=None,
             target_platform=DummySimPlatform()):
