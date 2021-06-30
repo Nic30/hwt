@@ -1,12 +1,15 @@
 import re
+from typing import List
 
+from hdlConvertorAst.hdlAst import HdlOp, HdlModuleDec, HdlOpType, HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlAll
-from hdlConvertorAst.hdlAst._statements import HdlImport, ALL_STATEMENT_CLASSES,\
+from hdlConvertorAst.hdlAst._statements import HdlImport, \
     HdlStmIf, HdlStmBlock, HdlStmFor, HdlStmForIn
-from hdlConvertorAst.hdlAst._structural import HdlLibrary, HdlModuleDef,\
+from hdlConvertorAst.hdlAst._structural import HdlLibrary, HdlModuleDef, \
     HdlCompInst, HdlContext
 from hdlConvertorAst.to.vhdl.keywords import VHLD2008_KEYWORDS
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.pyUtils.arrayQuery import groupedby
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
 from hwt.serializer.vhdl.ops import ToHdlAstVhdl2008_ops
@@ -53,7 +56,7 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
 
     @staticmethod
     def _find_HdlCompInst(o):
-        if isinstance(o, (list,tuple)):
+        if isinstance(o, (list, tuple)):
             for _o in o:
                 yield from ToHdlAstVhdl2008._find_HdlCompInst(_o)
         if isinstance(o, HdlCompInst):
@@ -70,6 +73,20 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         elif isinstance(o, (HdlStmFor, HdlStmForIn)) and o.in_preproc:
             if o.body:
                 yield from ToHdlAstVhdl2008._find_HdlCompInst(o.body)
+
+    def _as_hdl_HdlModuleDef_param_asserts(self, new_m: HdlModuleDec) -> List[HdlOp]:
+        res = []
+        for p in new_m.params:
+            p: HdlIdDef
+            if p.value is None:
+                continue
+            a = hdl_call(HdlValueId("assert"), [
+                 HdlOp(HdlOpType.EQ, [HdlValueId(p.name), self.as_hdl(p.value)]),
+                 "Generated only for this value",
+                 HdlValueId("error")])
+            res.append(a)
+
+        return res
 
     def as_hdl_HdlModuleDef(self, o: HdlModuleDef):
         """
@@ -88,8 +105,13 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         components.sort(key=lambda c: c.module_name)
         components = [self.as_hdl_HldComponent(c)
                       for c in components]
-        if components:
-            _o.objs = components + _o.objs
+        param_asserts = self._as_hdl_HdlModuleDef_param_asserts(o.dec)
+        if components or param_asserts:
+            # :note: it is important that the asserts are at the end because
+            # we are detecting the declarations from the beginnig and assert there would
+            # disturb that
+            objs = [*components, *_o.objs, *param_asserts]
+            _o.objs = objs
 
         res = HdlContext()
         res.objs.extend(self.DEFAULT_IMPORTS)
