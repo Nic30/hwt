@@ -15,7 +15,7 @@ setup(name="hwt",
       long_description_content_type="text/markdown",
       url="https://github.com/Nic30/hwt",
       author="Michal Orsak",
-      author_email="michal.o.socials@gmail.com",
+      author_email="Nic30original@gmail.com",
       classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
