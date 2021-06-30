@@ -60,7 +60,7 @@ class ToHdlAst():
         s.update(cls._keywords_dict)
         return s
 
-    def __init__(self, name_scope: Optional[NameScope] = None):
+    def __init__(self, name_scope: Optional[NameScope]=None):
         if name_scope is None:
             name_scope = self.getBaseNameScope()
         self.name_scope = name_scope
@@ -375,8 +375,8 @@ class ToHdlAst():
         component_insts = [self.as_hdl_HdlCompInst(c)
                            for c in component_insts]
         extraVars.sort_hdl_declarations_first()
-        new_m.objs = hdl_types + hdl_variables + extraVars.extraVarsHdl + \
-            component_insts + processes
+        new_m.objs = hdl_types + hdl_variables + \
+            extraVars.extraVarsHdl + component_insts + processes
         return new_m
 
     def as_hdl_HdlModuleDef(self, o: HdlModuleDef) -> HdlModuleDef:
