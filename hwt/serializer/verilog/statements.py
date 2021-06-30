@@ -57,6 +57,7 @@ class ToHdlAstVerilog_statements():
                     if isinstance(_o, HdlStmWait):
                         no_wait = False
                         break
+
             if no_wait and not p.sensitivity:
                 # all input are constant and that is why this process does not have
                 # any sensitivity
