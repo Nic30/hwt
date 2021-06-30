@@ -1,12 +1,15 @@
-from copy import copy
-from typing import Optional
+from copy import copy, deepcopy
+from typing import Optional, List
 
+from hdlConvertorAst.hdlAst import HdlModuleDef, HdlStmIf, HdlModuleDec, HdlOp, \
+    HdlOpType, HdlValueId
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlTypeAuto
 from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmBlock, HdlStmAssign, \
     HdlStmWait
 from hdlConvertorAst.to.verilog.keywords import IEEE1800_2017_KEYWORDS
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.defs import STR, INT, BOOL
@@ -70,6 +73,35 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
                     new_v.value = None
             return new_v
 
+    def _as_hdl_HdlModuleDef_param_asserts(self, new_m: HdlModuleDec) -> List[HdlOp]:
+        res = []
+        for p in new_m.params:
+            p: HdlIdDef
+            if p.value is None:
+                continue
+            # [TODO] this is actually requires SV>=2009
+            # generate
+            # if (p==x) begin
+            #     $error("%m Generated only for this param value");
+            # end
+            # endgenerate
+            i = HdlStmIf()
+            i.in_preproc = True
+            i.cond = HdlOp(HdlOpType.NE, [HdlValueId(p.name), deepcopy(p.value)])
+            i.if_true = hdl_call(HdlValueId("$error"), [
+                 "%m Generated only for this param value",
+                 ])
+            res.append(i)
+
+        return res
+
+    def as_hdl_HdlModuleDef(self, o: HdlModuleDef):
+        o = super(ToHdlAstVerilog, self).as_hdl_HdlModuleDef(o)
+        param_asserts = self._as_hdl_HdlModuleDef_param_asserts(o.dec)
+
+        o.objs.extend(param_asserts)
+        return o
+
     def as_hdl_GenericItem(self, g: HdlIdDef):
         with SignalTypeSwap(self, SIGNAL_TYPE.PORT_WIRE):
             new_v = copy(g)
@@ -88,5 +120,4 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
             v = super(ToHdlAstVerilog, self).as_hdl_HdlPortItem(pi)
             v.is_latched = self.signalType == SIGNAL_TYPE.PORT_REG
         return v
-
 
