@@ -5,6 +5,7 @@ from hdlConvertorAst.hdlAst._expr import HdlValueId
 from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef, \
     HdlCompInst
 from hwt.code import If
+from hwt.doc_markers import internal
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import HValue
@@ -13,14 +14,10 @@ from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import SigLvlConfErr
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import Param
-from hwt.synthesizer.rtlLevel.mark_visibility_of_signals_and_check_drivers import\
-    markVisibilityOfSignalsAndCheckDrivers
-from hwt.synthesizer.rtlLevel.remove_unconnected_signals import removeUnconnectedSignals
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.statements_to_HdlStmCodeBlockContainers import\
     statements_to_HdlStmCodeBlockContainers
-from hwt.doc_markers import internal
 
 
 class RtlNetlist():
