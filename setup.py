@@ -32,10 +32,10 @@ setup(name="hwt",
         "Topic :: System :: Emulators",
         "Topic :: Utilities"],
       install_requires=[
-          "hdlConvertorAst>=0.9", # conversions to SystemVerilog, VHDL
-          "ipCorePackager>=0.5",  # generator of IPcore packages (IP-xact, ...)
-          "hwtSimApi>=1.0",  # simulator API
-          "pyDigitalWaveTools>=1.0",  # simulator output dump
+          "hdlConvertorAst>=1.0", # conversions to SystemVerilog, VHDL
+          "ipCorePackager>=0.6",  # generator of IPcore packages (IP-xact, ...)
+          "hwtSimApi>=1.3",  # simulator API
+          "pyDigitalWaveTools>=1.1",  # simulator output dump
       ],
       license="MIT",
       packages=find_packages(),
