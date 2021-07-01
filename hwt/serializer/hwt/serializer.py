@@ -12,6 +12,8 @@ from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.serializer.hwt.types import ToHdlAstHwt_types
 from hwt.serializer.hwt.value import ToHdlAstHwt_value
 from hwt.serializer.simModel.serializer import ToHdlAstSimModel
+from hwt.code import CodeBlock
+from hdlConvertorAst.hdlAst import HdlStmBlock
 
 
 class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
@@ -25,7 +27,7 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
     """
     _keywords_dict = {kw: LanguageKeyword() for kw in HWT_KEYWORDS}
 
-    def __init__(self, name_scope: Optional[NameScope] = None):
+    def __init__(self, name_scope: Optional[NameScope]=None):
         super(ToHdlAstHwt, self).__init__(name_scope=name_scope)
         self._valueWidthRequired = False
         self.currentUnit = None
@@ -43,8 +45,15 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
     def sensitivityListItem(self, item, anyIsEventDependnt):
         if isinstance(item, Operator):
             op = item.operator
-            assert op in (AllOps.RISING_EDGE,  AllOps.FALLING_EDGE), item
+            assert op in (AllOps.RISING_EDGE, AllOps.FALLING_EDGE), item
             assert not item.operands[0].hidden, item
             return self.as_hdl_Operator(item)
         else:
             return HdlValueId(item.name, obj=item)
+
+    def as_hdl_CodeBlock(self, o: CodeBlock):
+        res = HdlStmBlock()
+        for _o in o.statements:
+            res.body.append(self.as_hdl(_o))
+        return res
+
