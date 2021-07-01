@@ -6,6 +6,7 @@ from hwt.hdl.hdlObject import HdlObject
 from hwt.pyUtils.arrayQuery import flatten
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from copy import deepcopy, copy
 
 
 class HwtSyntaxError(Exception):
@@ -25,6 +26,8 @@ class HdlStatement(HdlObject):
     :ivar ~.rank: number of used branches in statement, used as pre-filter
         for statement comparing
     """
+    _DEEPCOPY_SKIP = ('parentStm',)
+    _DEEPCOPY_SHALLOW_ONLY = ("_inputs", "_outputs", "_enclosed_for", "_sensitivity")
 
     def __init__(self, parentStm:Optional["HdlStatement"]=None,
                  sensitivity:Optional[UniqList]=None,
@@ -38,6 +41,23 @@ class HdlStatement(HdlObject):
 
         self._sensitivity = sensitivity
         self.rank = 0
+
+    def __deepcopy__(self, memo: dict):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if v is None:
+                new_v = None
+            elif k in self._DEEPCOPY_SKIP:
+                new_v = None
+            elif k in self._DEEPCOPY_SHALLOW_ONLY:
+                new_v = copy(v)
+            else:
+                new_v = deepcopy(v, memo)
+
+            setattr(result, k, new_v)
+        return result
 
     @internal
     def _clean_signal_meta(self):

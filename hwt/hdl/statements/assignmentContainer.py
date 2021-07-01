@@ -17,11 +17,15 @@ class HdlAssignmentContainer(HdlStatement):
     :ivar ~.src: source
     :ivar ~.dst: destination signal
     :ivar ~.indexes: description of index selector on dst
-        (list of Index/Slice objects) (f.e. [[0], [1]] means  dst[0][1])
+        (list of Index/Slice objects) (f.e. [0, 1] means  dst[0][1])
 
     :cvar __instCntr: counter used for generating instance ids
     :ivar ~._instId: internally used only for intuitive sorting of statements
     """
+
+    _DEEPCOPY_SKIP = (*HdlStatement._DEEPCOPY_SKIP, 'src', 'dst', 'indexes')
+    _DEEPCOPY_SHALLOW_ONLY = (*HdlStatement._DEEPCOPY_SHALLOW_ONLY, "indexes")
+
     __instCntr = 0
 
     def __init__(self, src: Union[RtlSignalBase, HValue], dst: RtlSignalBase,
@@ -68,6 +72,13 @@ class HdlAssignmentContainer(HdlStatement):
             dst.ctx.statements.add(self)
 
         self._outputs.append(dst)
+
+    def __deepcopy__(self, memo: dict):
+        result = super(HdlAssignmentContainer, self).__deepcopy__(memo)
+        result.src = self.src
+        result.dst = self.dst
+        result._instId = self._nextInstId()
+        return result
 
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):

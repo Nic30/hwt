@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set
 
 from hwt.doc_markers import internal
 from hwt.hdl.statements.statement import HdlStatement
@@ -6,8 +6,9 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 @internal
-def HdlStatement_discover_enclosure_for_statements(statements: List[HdlStatement],
-                                       outputs: List[RtlSignalBase]):
+def HdlStatement_discover_enclosure_for_statements(
+        statements: List[HdlStatement],
+        outputs: List[RtlSignalBase]) -> Set[RtlSignalBase]:
     """
     Discover enclosure for list of statements
 
@@ -35,5 +36,4 @@ def HdlStatement_discover_enclosure_for_statements(statements: List[HdlStatement
                 pass
 
     return result
-
 

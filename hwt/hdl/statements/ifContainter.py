@@ -1,20 +1,20 @@
 
 
+from copy import deepcopy
 from functools import reduce
 from itertools import compress
 from operator import and_
-from typing import List, Tuple, Dict, Union, Optional, Callable
+from typing import List, Tuple, Dict, Optional, Callable, Set
 
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statements.utils.ioDiscovery import HdlStatement_discover_enclosure_for_statements
-from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.statements.utils.comparison import  statementsAreSame, isSameStatementList
+from hwt.hdl.statements.utils.ioDiscovery import HdlStatement_discover_enclosure_for_statements
 from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_lists, \
     HdlStatement_try_reduce_list, is_mergable_statement_list
-from hwt.hdl.value import HValue
+from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
 from hwt.serializer.utils import RtlSignal_sort_key
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -30,6 +30,8 @@ class IfContainer(HdlStatement):
     :ivar ~._elIfs_enclosed_for: list of sets of enclosed signals for each elif
     :ivar ~._ifFalse_enclosed_for: set of enclosed signals for ifFalse branch
     """
+    _DEEPCOPY_SHALLOW_ONLY = (*HdlStatement._DEEPCOPY_SHALLOW_ONLY, '_ifTrue_enclosed_for', '_elIfs_enclosed_for', '_ifFalse_enclosed_for')
+    _DEEPCOPY_SKIP = (*HdlStatement._DEEPCOPY_SKIP, 'cond', 'elIfs')
 
     def __init__(self, cond: RtlSignalBase, ifTrue=None, ifFalse=None, elIfs=None,
                  parentStm=None, event_dependent_from_branch: Optional[int]=None):
@@ -48,19 +50,23 @@ class IfContainer(HdlStatement):
             event_dependent_from_branch=event_dependent_from_branch)
 
         if ifTrue is None:
-            self.ifTrue = []
-        else:
-            self.ifTrue = ifTrue
+            ifTrue = []
+        self.ifTrue: List[HdlStatement] = ifTrue
 
         if elIfs is None:
-            self.elIfs = []
-        else:
-            self.elIfs = elIfs
+            elIfs = []
+        self.elIfs: List[Tuple[RtlSignalBase, List[HdlStatement]]] = elIfs
 
-        self.ifFalse = ifFalse
-        self._ifTrue_enclosed_for = None
-        self._elIfs_enclosed_for = None
-        self._ifFalse_enclosed_for = None
+        self.ifFalse: Optional[List[HdlStatement]] = ifFalse
+        self._ifTrue_enclosed_for: Optional[Set[RtlSignalBase]] = None
+        self._elIfs_enclosed_for: Optional[Set[RtlSignalBase]] = None
+        self._ifFalse_enclosed_for: Optional[Set[RtlSignalBase]] = None
+
+    def __deepcopy__(self, memo: dict):
+        result = super(IfContainer, self).__deepcopy__(memo)
+        result.cond = self.cond
+        result.elIfs = [(c, deepcopy(stms, memo)) for c, stms in self.elIfs]
+        return result
 
     @internal
     def _collect_io(self):

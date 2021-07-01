@@ -96,3 +96,23 @@ class HdlStmCodeBlockContainer(HdlStatement):
             self._cut_off_drivers_of_regenerate_io(sig, n)
 
             return n
+
+    @internal
+    def _replace_child_statement(self, stm:HdlStatement,
+            replacement:List[HdlStatement],
+            update_io:bool) -> None:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_child_statement`
+        """
+
+        if update_io:
+            raise NotImplementedError()
+
+        i = self.statements.index(stm)
+
+        self.rank -= stm.rank
+        self.statements[i:i + 1] = replacement
+        for rstm in replacement:
+            rstm._set_parent_stm(self)
+        # reset IO because it was shared with this statement
+        stm._destroy()

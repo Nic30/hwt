@@ -1,7 +1,8 @@
+from copy import deepcopy, copy
 from functools import reduce
 from itertools import compress
 from operator import and_
-from typing import List, Tuple, Dict, Optional, Callable
+from typing import List, Tuple, Dict, Optional, Callable, Set
 
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
@@ -32,6 +33,8 @@ class SwitchContainer(HdlStatement):
     :ivar ~._case_enclosed_for: list of sets of enclosed signal for each case branch
     :ivar ~._default_enclosed_for: set of enclosed signals for branch default
     """
+    _DEEPCOPY_SKIP = (*HdlStatement._DEEPCOPY_SKIP, 'switchOn', 'cases')
+    _DEEPCOPY_SHALLOW_ONLY = (*HdlStatement._DEEPCOPY_SHALLOW_ONLY, '_case_value_index', '_case_enclosed_for', '_default_enclosed_for')
 
     def __init__(self, switchOn: RtlSignal,
                  cases: List[Tuple[HValue, List[HdlStatement]]],
@@ -51,8 +54,17 @@ class SwitchContainer(HdlStatement):
             assert v not in self._case_value_index, v
             self._case_value_index[v] = i
 
-        self._case_enclosed_for = None
-        self._default_enclosed_for = None
+        self._case_enclosed_for: Optional[List[Set[RtlSignal]]] = None
+        self._default_enclosed_for: Optional[Set[RtlSignal]] = None
+
+    def __deepcopy__(self, memo: dict):
+        result = super(SwitchContainer, self).__deepcopy__(memo)
+        result.switchOn = self.switchOn
+        result.cases = [(c, deepcopy(stms, memo)) for c, stms in self.cases]
+        result._case_value_index = copy(self._case_value_index)
+        result._case_enclosed_for = copy(self._case_enclosed_for)
+        result._default_enclosed_for = copy(self._default_enclosed_for)
+        return result
 
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
