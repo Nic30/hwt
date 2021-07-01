@@ -1,7 +1,7 @@
 from functools import reduce
 from itertools import compress
 from operator import and_
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, Callable
 
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
@@ -57,7 +57,7 @@ class SwitchContainer(HdlStatement):
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
-        Doc on parent class :meth:`HdlStatement._cut_off_drivers_of`
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._cut_off_drivers_of`
         """
         if self._sensitivity is not None or self._enclosed_for is not None:
                 raise NotImplementedError(
@@ -132,12 +132,18 @@ class SwitchContainer(HdlStatement):
 
     @internal
     def _clean_signal_meta(self):
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._clean_signal_meta`
+        """
         self._case_enclosed_for = None
         self._default_enclosed_for = None
         HdlStatement._clean_signal_meta(self)
 
     @internal
     def _collect_io(self):
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._collect_io`
+        """
         if isinstance(self.switchOn, RtlSignalBase):
             self._inputs.append(self.switchOn)
         for c, _ in self.cases:
@@ -147,6 +153,9 @@ class SwitchContainer(HdlStatement):
 
     @internal
     def _collect_inputs(self) -> None:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._collect_inputs`
+        """
         if isinstance(self.switchOn, RtlSignalBase):
             self._inputs.append(self.switchOn)
         for c, _ in self.cases:
@@ -156,6 +165,9 @@ class SwitchContainer(HdlStatement):
 
     @internal
     def _discover_enclosure(self) -> None:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._discover_enclosure`
+        """
         assert self._enclosed_for is None
         enclosure = self._enclosed_for = set()
         case_enclosures = self._case_enclosed_for = []
@@ -186,7 +198,7 @@ class SwitchContainer(HdlStatement):
     @internal
     def _discover_sensitivity(self, seen) -> None:
         """
-        Doc on parent class :meth:`HdlStatement._discover_sensitivity`
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._discover_sensitivity`
         """
         assert self._sensitivity is None, self
         ctx = self._sensitivity = SensitivityCtx()
@@ -203,9 +215,9 @@ class SwitchContainer(HdlStatement):
             ctx.extend(stm._sensitivity)
 
     @internal
-    def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, HdlStatement]) -> None:
+    def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, Callable[[], HdlStatement]]) -> None:
         """
-        :attention: enclosure has to be discoverd first use _discover_enclosure()  method
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._fill_enclosure`
         """
         select = []
         outputs = self._outputs
@@ -229,7 +241,7 @@ class SwitchContainer(HdlStatement):
 
     def _iter_stms(self):
         """
-        Doc on parent class :meth:`HdlStatement._iter_stms`
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
         """
         for _, stms in self.cases:
             yield from stms
@@ -240,7 +252,7 @@ class SwitchContainer(HdlStatement):
     @internal
     def _is_mergable(self, other) -> bool:
         """
-        :return: True if other can be merged into this statement else False
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._is_mergable`
         """
         if not isinstance(other, SwitchContainer):
             return False
@@ -257,9 +269,9 @@ class SwitchContainer(HdlStatement):
         return True
 
     @internal
-    def _merge_with_other_stm(self, other: "IfContainer") -> None:
+    def _merge_with_other_stm(self, other: "SwitchContainer") -> None:
         """
-        Merge other statement to this statement
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._merge_with_other_stm`
         """
         merge = HdlStatement_merge_statement_lists
         newCases = []
@@ -276,7 +288,7 @@ class SwitchContainer(HdlStatement):
     @internal
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
         """
-        Doc on parent class :meth:`HdlStatement._try_reduce`
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._try_reduce`
         """
         io_change = False
 
@@ -353,6 +365,9 @@ class SwitchContainer(HdlStatement):
     @internal
     def _replace_input(self, toReplace: RtlSignalBase,
                        replacement: RtlSignalBase) -> None:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_input`
+        """
         isTopStatement = self.parentStm is None
         self.switchOn = replace_input_in_expr(self, self.switchOn, toReplace,
                                               replacement, isTopStatement)
@@ -371,6 +386,10 @@ class SwitchContainer(HdlStatement):
     def _replace_child_statement(self, stm: HdlStatement,
             replacement:List[HdlStatement],
             update_io:bool) -> None:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_child_statement`
+        """
+
         if update_io:
             raise NotImplementedError()
         for branch_list in (*(case_stms for _, case_stms in self.cases), self.default):
@@ -394,7 +413,7 @@ class SwitchContainer(HdlStatement):
 
     def isSame(self, other: HdlStatement) -> bool:
         """
-        Doc on parent class :meth:`HdlStatement.isSame`
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement.isSame`
         """
         if self is other:
             return True

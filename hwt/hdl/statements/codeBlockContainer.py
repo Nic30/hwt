@@ -18,7 +18,7 @@ class HdlStmCodeBlockContainer(HdlStatement):
 
     :note: HdlStmCodeBlockContainer do not have to be process in target HDL, for example
         simple process which contains only unconditional assignment will
-        be rendered just as assignment
+        be rendered just as assignment. It depends on capabilities of the target HDL.
     """
 
     def __init__(self):
@@ -29,9 +29,9 @@ class HdlStmCodeBlockContainer(HdlStatement):
 
     @internal
     @classmethod
-    def from_known_io(cls, name: str, statements: List['HdlStatement'],
+    def from_known_io(cls, name: str, statements: List[HdlStatement],
                  sensitivity: Set["RtlSignal"],
-                 inputs: UniqList, outputs: UniqList):
+                 inputs: UniqList, outputs: UniqList) -> 'HdlStmCodeBlockContainer':
         self = cls()
         self.name = name
         self.statements = statements
@@ -43,18 +43,24 @@ class HdlStmCodeBlockContainer(HdlStatement):
 
     @internal
     def _try_reduce(self) -> Tuple[List["HdlStatement"], bool]:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._try_reduce`
+        """
         new_statements, _, io_change = HdlStatement_try_reduce_list(self.statements)
         return new_statements, io_change
 
     @internal
     def _iter_stms(self):
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
+        """
         yield from self.statements
 
 
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
-        Doc on parent class :meth:`HdlStatement._cut_off_drivers_of`
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._cut_off_drivers_of`
         """
         if self._sensitivity is not None or self._enclosed_for is not None:
             raise NotImplementedError(

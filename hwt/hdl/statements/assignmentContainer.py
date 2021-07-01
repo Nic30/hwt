@@ -72,7 +72,7 @@ class HdlAssignmentContainer(HdlStatement):
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
-        Cut off statements which are driver of specified signal
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._cut_off_drivers_of`
         """
         if self.dst is sig:
             self.parentStm = None
@@ -82,12 +82,18 @@ class HdlAssignmentContainer(HdlStatement):
 
     @internal
     def _discover_enclosure(self) -> None:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._discover_enclosure`
+        """
         assert self._enclosed_for is None
         self._enclosed_for = set()
         self._enclosed_for.update(self._outputs)
 
     @internal
     def _discover_sensitivity(self, seen: set) -> None:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._discover_sensitivity`
+        """
         assert self._sensitivity is None
         ctx = self._sensitivity = SensitivityCtx()
 
@@ -102,13 +108,15 @@ class HdlAssignmentContainer(HdlStatement):
     def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, HdlStatement]):
         """
         The assignment does not have any uncovered code branches
+
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._fill_enclosure`
         """
         pass
 
     @internal
     def _iter_stms(self):
         """
-        Iterate all statements in this statement
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
         """
         return
         yield
@@ -116,19 +124,28 @@ class HdlAssignmentContainer(HdlStatement):
     @internal
     def _on_parent_event_dependent(self):
         """
-        After parent statement become event dependent
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._on_parent_event_dependent`
         """
         self._event_dependent_from_branch = 0
 
     @internal
     def _try_reduce(self) -> Tuple[List[HdlStatement], bool]:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._try_reduce`
+        """
         return [self, ], False
 
     @internal
     def _is_mergable(self, other: HdlStatement) -> bool:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._is_mergable`
+        """
         return isinstance(other, self.__class__)
 
     def isSame(self, other):
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement.isSame`
+        """
         if isinstance(other, self.__class__):
             if isSameHVal(self.dst, other.dst)\
                     and isSameHVal(self.src, other.src)\
@@ -149,6 +166,9 @@ class HdlAssignmentContainer(HdlStatement):
     @internal
     def _replace_input(self, toReplace: RtlSignalBase,
                        replacement: RtlSignalBase) -> None:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_input`
+        """
         isTopStatement = self.parentStm is None
 
         if self.indexes:

@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple, Union, Optional, Dict, Callable
 
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
@@ -26,7 +26,8 @@ class HdlStatement(HdlObject):
         for statement comparing
     """
 
-    def __init__(self, parentStm:Optional["HdlStatement"]=None, sensitivity:Optional[UniqList]=None,
+    def __init__(self, parentStm:Optional["HdlStatement"]=None,
+                 sensitivity:Optional[UniqList]=None,
                  event_dependent_from_branch:Optional[int]=None):
         assert event_dependent_from_branch is None or isinstance(event_dependent_from_branch, int), event_dependent_from_branch
         self._event_dependent_from_branch = event_dependent_from_branch
@@ -136,6 +137,16 @@ class HdlStatement(HdlObject):
                                   " on class of statement", self.__class__, self)
 
     @internal
+    def _fill_enclosure(self, enclosure: Dict[RtlSignalBase, Callable[[], 'HdlStatement']]) -> None:
+        """
+        Add assignments to a default values to a code branches which are not assigning to specified output signal.
+
+        :attention: enclosure has to be discoverd first use _discover_enclosure()  method
+        """
+        raise NotImplementedError("This method should be implemented"
+                                  " on class of statement", self.__class__, self)
+
+    @internal
     def _get_rtl_context(self) -> 'RtlNetlist':
         """
         get RtlNetlist context from signals
@@ -153,6 +164,15 @@ class HdlStatement(HdlObject):
     def _iter_stms(self):
         """
         :return: iterator over all children statements
+        """
+        raise NotImplementedError("This method should be implemented"
+                                  " on class of statement", self.__class__,
+                                  self)
+
+    @internal
+    def _merge_with_other_stm(self, other: "HdlStatement") -> None:
+        """
+        :attention: statements has to be mergable (to check use _is_mergable method)
         """
         raise NotImplementedError("This method should be implemented"
                                   " on class of statement", self.__class__,

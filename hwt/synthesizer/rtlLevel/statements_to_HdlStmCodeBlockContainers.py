@@ -7,7 +7,8 @@ from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.statement import HwtSyntaxError, HdlStatement
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
-from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure
+from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure, \
+    HdlAssignmentContainer_constructor
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.reduce_processes import reduceProcesses
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
@@ -50,7 +51,7 @@ def name_for_process(outputs: List[RtlSignal]) -> str:
 
 @internal
 def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops)\
-        -> Generator[HdlStmCodeBlockContainer, None, None]:
+        ->Generator[HdlStmCodeBlockContainer, None, None]:
     assert _statements
     # try to simplify statements
     proc_statements = []
@@ -94,7 +95,7 @@ def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops)\
         if sig._nop_val is not NOT_SPECIFIED and sig not in enclosed_for:
             enclosure_recompute = True
             n = sig._nop_val
-            enclosure_values[sig] = n
+            enclosure_values[sig] = HdlAssignmentContainer_constructor(n, sig)
             if isinstance(n, RtlSignalBase):
                 _inputs.append(n)
                 sensitivity_recompute = True
@@ -155,7 +156,7 @@ def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops)\
 
 @internal
 def statements_to_HdlStmCodeBlockContainers(statements: List[HdlStatement])\
-        -> Generator[HdlStmCodeBlockContainer, None, None]:
+        ->Generator[HdlStmCodeBlockContainer, None, None]:
     """
     Pack statements into HdlStmCodeBlockContainer instances
 
