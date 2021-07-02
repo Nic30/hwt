@@ -10,7 +10,7 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 setup(name="hwt",
       version="3.8",
-      description="hdl synthesis toolkit",
+      description="A library for a construction and analysis of digital circuits",
       long_description=long_description,
       long_description_content_type="text/markdown",
       url="https://github.com/Nic30/hwt",
