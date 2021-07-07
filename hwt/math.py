@@ -138,3 +138,11 @@ def shiftIntArray(values: List[Union[int, BitsVal]], item_width: int, shift: int
             new_v.append(_v)
 
     return new_v
+
+
+def hMin(a, b):
+    return (a < b)._ternary(a, b)
+
+
+def hMax(a, b):
+    return (a > b)._ternary(a, b)
