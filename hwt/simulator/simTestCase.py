@@ -6,7 +6,7 @@ import unittest
 from hwt.simulator.agentConnector import autoAddAgents, \
     collect_processes_from_sim_agents
 from hwt.simulator.rtlSimulatorVcd import BasicRtlSimulatorVcd
-from hwt.simulator.utils import reconnectUnitSignalsToModel, valToInt,\
+from hwt.simulator.utils import reconnectUnitSignalsToModel, valToInt, \
     allValuesToInts
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.unit import Unit
@@ -156,6 +156,17 @@ class SimTestCase(unittest.TestCase):
             unit, rtl_simulator, hdl_simulator
 
         return unit, rtl_simulator, self.procs
+
+    def rmSim(self):
+        """
+        Remove all buid sim objects from this object
+
+        :note: Can be used to avoid unneccessary sim intialization (from prev. test) before next test.
+        """
+        self.u = None
+        self.rtl_simulator_cls = None
+        self.rtl_simulator = None
+        self.hdl_simulator = None
 
     @classmethod
     def get_unique_name(cls, unit: Unit):
