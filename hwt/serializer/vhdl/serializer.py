@@ -47,6 +47,8 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         HdlImport([IEEE, std_logic_1164, HdlAll]),
         HdlImport([IEEE, numeric_std, HdlAll]),
     ]
+    ASSERT = HdlValueId("assert")
+    FAILURE = HdlValueId("failure")
 
     @classmethod
     def getBaseNameScope(cls):
@@ -80,10 +82,10 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
             p: HdlIdDef
             if p.value is None:
                 continue
-            a = hdl_call(HdlValueId("assert"), [
+            a = hdl_call(self.ASSERT, [
                  HdlOp(HdlOpType.EQ, [HdlValueId(p.name), self.as_hdl(p.value)]),
                  "Generated only for this value",
-                 HdlValueId("error")])
+                 self.FAILURE])
             res.append(a)
 
         return res
