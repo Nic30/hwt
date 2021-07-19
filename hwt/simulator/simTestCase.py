@@ -164,9 +164,12 @@ class SimTestCase(unittest.TestCase):
         :note: Can be used to avoid unneccessary sim intialization (from prev. test) before next test.
         """
         self.u = None
+        self.__class__.u = None
         self.rtl_simulator_cls = None
+        self.__class__.rtl_simulator_cls = None
         self.rtl_simulator = None
         self.hdl_simulator = None
+        self.__class__.hdl_simulator = None
 
     @classmethod
     def get_unique_name(cls, unit: Unit):
