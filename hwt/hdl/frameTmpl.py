@@ -1,6 +1,6 @@
 from itertools import zip_longest
 from math import ceil, floor, inf
-from typing import Union, Generator, List
+from typing import Union, Generator, List, Tuple
 
 from hwt.doc_markers import internal
 from hwt.hdl.frameTmplUtils import TransTmplWordIterator, \
@@ -218,7 +218,8 @@ class FrameTmpl(object):
         """
         return ceil((self.endBitAddr - self.startBitAddr) / self.wordWidth)
 
-    def walkWords(self, showPadding: bool=False):
+    def walkWords(self, showPadding: bool=False)\
+            -> Generator[Tuple[int, List[Union[TransPart, ChoicesOfFrameParts]]], None, None]:
         """
         Walk enumerated words in this frame
 
@@ -230,7 +231,7 @@ class FrameTmpl(object):
         """
         wIndex = 0
         lastEnd = self.startBitAddr
-        parts = []
+        parts: List[TransPart] = []
         for p in self.parts:
             end = p.startOfPart
             if showPadding and end != lastEnd:
