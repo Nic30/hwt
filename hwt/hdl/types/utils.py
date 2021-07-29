@@ -42,9 +42,9 @@ def walkFlattenFields(sigOrVal: Union[RtlSignalBase, HValue], skipPadding=True):
         raise NotImplementedError(t)
 
 
-def HdlValue_unpack(t: HdlType,
+def HValue_from_words(t: HdlType,
                     data: List[Union[HValue, RtlSignalBase, int]],
-                    getDataFn=None, dataWidth=None):
+                    getDataFn=None, dataWidth=None) -> HValue:
     """
     Parse raw Bits array to a value of specified HdlType
     """
@@ -115,7 +115,7 @@ def HdlValue_unpack(t: HdlType,
     return val
 
 
-def is_only_padding(t: HdlType):
+def is_only_padding(t: HdlType) -> bool:
     if isinstance(t, HStruct):
         for f in t.fields:
             if f.name is not None and not is_only_padding(f.dtype):
