@@ -213,8 +213,7 @@ def resolve_splitpoints(s: RtlSignal, parts):
 
 
 def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
-    # :type: Dict[RtlSignal, Dict[Tuple[Tuple[int, int], ...], Union[HValue, RtlSignal]]]
-    final_signal_parts = {}
+    final_signal_parts: Dict[RtlSignal, Dict[Tuple[Tuple[int, int], ...], Union[HValue, RtlSignal]]] = {}
     # split part intervals to non-overlapping chunks
     for s, parts in sorted(signal_parts.items(), key=lambda x: RtlSignal_sort_key(x[0])):
         split_point = resolve_splitpoints(s, parts)
@@ -228,6 +227,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
         for indexes, can_directly_replace_with_src_expr, src in sorted(parts, key=lambda x: x[0]):
             if len(indexes) != 1:
                 raise NotImplementedError()
+
             i = indexes[0]
             split_p = split_point[split_i]
             if isinstance(i, BitsVal):
@@ -288,7 +288,7 @@ def resolve_final_parts_from_splitpoints_and_parts(signal_parts):
                 _split_parts = []
                 prev_sp = split_point[this_start_split_p_i]
                 dst_offset = low
-                assert not can_directly_replace_with_src_expr
+                assert not can_directly_replace_with_src_expr, (indexes, src)
                 # continue instanciating parts until we reach the end of this part
                 for sp_i, sp in zip(range(this_start_split_p_i + 1, len(split_point)),
                                     islice(split_point, this_start_split_p_i + 1, None)):
