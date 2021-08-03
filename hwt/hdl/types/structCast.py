@@ -6,6 +6,7 @@ from hwt.hdl.types.hdlType import default_reinterpret_cast_fn, HdlType
 from hwt.hdl.types.struct import HStruct
 from hwt.hdl.value import HValue
 from hwt.interfaces.std import Signal
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -21,9 +22,9 @@ def hstruct_reinterpret_to_bits(self, sigOrVal, toType: HdlType):
             part = getattr(sigOrVal, f.name)
             if isinstance(part, Signal):
                 part = part._sig
-            if not isinstance(part, (HValue, RtlSignalBase)):
+            if not isinstance(part, (HValue, RtlSignalBase, InterfaceBase)):
                 part = f.dtype.from_py(part)
-            elif isinstance(part, HValue) and not isinstance(part._dtype, toType.__class__):
+            elif not isinstance(part._dtype, toType.__class__):
                 part = part._reinterpret_cast(toType.__class__(part._dtype.bit_length()))
 
         parts.append(part)
