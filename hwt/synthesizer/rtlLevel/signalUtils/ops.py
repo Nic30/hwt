@@ -3,7 +3,7 @@ from operator import lshift, rshift
 
 from hwt.doc_markers import internal
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
-from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.operatorDefs import AllOps, OpDefinition, CAST_OPS
 from hwt.hdl.statements.statement import HwtSyntaxError
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.sliceUtils import slice_to_SLICE
@@ -46,7 +46,7 @@ class RtlSignalOps():
             raise e_simplified
 
     @internal
-    def naryOp(self, operator, indexOfSelfInOperands, opCreateDelegate , *otherOps) -> RtlSignalBase:
+    def naryOp(self, operator: OpDefinition, opCreateDelegate , *otherOps) -> RtlSignalBase:
         """
         Try lookup operator with this parameters in _usedOps
         if not found create new one and stored it in _usedOps
@@ -57,6 +57,7 @@ class RtlSignalOps():
 
         :return: RtlSignal which is result of newly created operator
         """
+        indexOfSelfInOperands = 0
         k = (operator, indexOfSelfInOperands, *otherOps)
         used = self._usedOps
         try:
@@ -64,10 +65,7 @@ class RtlSignalOps():
         except KeyError:
             pass
 
-        if indexOfSelfInOperands == 0:
-            o = opCreateDelegate(self, *otherOps)
-        else:
-            o = opCreateDelegate(*otherOps[:indexOfSelfInOperands], self, *otherOps[indexOfSelfInOperands])
+        o = opCreateDelegate(self, *otherOps)
         # input operads may be type converted,
         # search if this happend, and return always same result signal
         try:
@@ -90,7 +88,7 @@ class RtlSignalOps():
 
     def __invert__(self):
         try:
-            return self.naryOp(AllOps.NOT, 0, tv(self).__invert__)
+            return self.naryOp(AllOps.NOT, tv(self).__invert__)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -98,7 +96,7 @@ class RtlSignalOps():
 
     def _onRisingEdge(self):
         try:
-            return self.naryOp(AllOps.RISING_EDGE, 0, tv(self)._onRisingEdge)
+            return self.naryOp(AllOps.RISING_EDGE, tv(self)._onRisingEdge)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -106,7 +104,7 @@ class RtlSignalOps():
 
     def _onFallingEdge(self):
         try:
-            return self.naryOp(AllOps.FALLING_EDGE, 0, tv(self)._onFallingEdge)
+            return self.naryOp(AllOps.FALLING_EDGE, tv(self)._onFallingEdge)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -156,7 +154,7 @@ class RtlSignalOps():
     # logic
     def __and__(self, other):
         try:
-            return self.naryOp(AllOps.AND, 0, tv(self).__and__, other)
+            return self.naryOp(AllOps.AND, tv(self).__and__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -164,7 +162,7 @@ class RtlSignalOps():
 
     def __xor__(self, other):
         try:
-            return self.naryOp(AllOps.XOR, 0, tv(self).__xor__, other)
+            return self.naryOp(AllOps.XOR, tv(self).__xor__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -172,7 +170,7 @@ class RtlSignalOps():
 
     def __or__(self, other):
         try:
-            return self.naryOp(AllOps.OR, 0, tv(self).__or__, other)
+            return self.naryOp(AllOps.OR, tv(self).__or__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -180,7 +178,7 @@ class RtlSignalOps():
 
     def __lshift__(self, other):
         try:
-            return self.naryOp(lshift, 0, tv(self).__lshift__, other)
+            return self.naryOp(lshift, tv(self).__lshift__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -188,7 +186,7 @@ class RtlSignalOps():
 
     def __rshift__(self, other):
         try:
-            return self.naryOp(rshift, 0, tv(self).__rshift__, other)
+            return self.naryOp(rshift, tv(self).__rshift__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -200,7 +198,7 @@ class RtlSignalOps():
         __eq__ is not overloaded because it will destroy hashability of object
         """
         try:
-            return self.naryOp(AllOps.EQ, 0, tv(self)._eq, other)
+            return self.naryOp(AllOps.EQ, tv(self)._eq, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -208,7 +206,7 @@ class RtlSignalOps():
 
     def __ne__(self, other):
         try:
-            return self.naryOp(AllOps.NE, 0, tv(self).__ne__, other)
+            return self.naryOp(AllOps.NE, tv(self).__ne__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -216,7 +214,7 @@ class RtlSignalOps():
 
     def __ge__(self, other):
         try:
-            return self.naryOp(AllOps.GE, 0, tv(self).__ge__, other)
+            return self.naryOp(AllOps.GE, tv(self).__ge__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -224,7 +222,7 @@ class RtlSignalOps():
 
     def __gt__(self, other):
         try:
-            return self.naryOp(AllOps.GT, 0, tv(self).__gt__, other)
+            return self.naryOp(AllOps.GT, tv(self).__gt__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -232,7 +230,7 @@ class RtlSignalOps():
 
     def __lt__(self, other):
         try:
-            return self.naryOp(AllOps.LT, 0, tv(self).__lt__, other)
+            return self.naryOp(AllOps.LT, tv(self).__lt__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -240,7 +238,7 @@ class RtlSignalOps():
 
     def __le__(self, other):
         try:
-            return self.naryOp(AllOps.LE, 0, tv(self).__le__, other)
+            return self.naryOp(AllOps.LE, tv(self).__le__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -249,7 +247,7 @@ class RtlSignalOps():
     # arithmetic
     def __neg__(self):
         try:
-            return self.naryOp(AllOps.ADD, 0, tv(self).__neg__)
+            return self.naryOp(AllOps.ADD, tv(self).__neg__)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -257,7 +255,7 @@ class RtlSignalOps():
 
     def __add__(self, other):
         try:
-            return self.naryOp(AllOps.ADD, 0, tv(self).__add__, other)
+            return self.naryOp(AllOps.ADD, tv(self).__add__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -265,7 +263,7 @@ class RtlSignalOps():
 
     def __sub__(self, other):
         try:
-            return self.naryOp(AllOps.SUB, 0, tv(self).__sub__, other)
+            return self.naryOp(AllOps.SUB, tv(self).__sub__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -273,7 +271,7 @@ class RtlSignalOps():
 
     def __mul__(self, other):
         try:
-            return self.naryOp(AllOps.MUL, 0, tv(self).__mul__, other)
+            return self.naryOp(AllOps.MUL, tv(self).__mul__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -281,7 +279,7 @@ class RtlSignalOps():
 
     def __mod__(self, other):
         try:
-            return self.naryOp(AllOps.MOD, 0, tv(self).__mod__, other)
+            return self.naryOp(AllOps.MOD, tv(self).__mod__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -289,7 +287,7 @@ class RtlSignalOps():
 
     def __pow__(self, other):
         try:
-            return self.naryOp(AllOps.POW, 0, tv(self).__pow__, other)
+            return self.naryOp(AllOps.POW, tv(self).__pow__, other)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -297,7 +295,7 @@ class RtlSignalOps():
 
     def __floordiv__(self, divider):
         try:
-            return self.naryOp(AllOps.DIV, 0, tv(self).__floordiv__, divider)
+            return self.naryOp(AllOps.DIV, tv(self).__floordiv__, divider)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -307,7 +305,7 @@ class RtlSignalOps():
         try:
             if isinstance(key, slice):
                 key = slice_to_SLICE(key, self._dtype.bit_length())
-            return self.naryOp(AllOps.INDEX, 0, tv(self).__getitem__, key)
+            return self.naryOp(AllOps.INDEX, tv(self).__getitem__, key)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -315,7 +313,7 @@ class RtlSignalOps():
 
     def _concat(self, *operands):
         try:
-            return self.naryOp(AllOps.CONCAT, 0, tv(self)._concat, *operands)
+            return self.naryOp(AllOps.CONCAT, tv(self)._concat, *operands)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -323,7 +321,7 @@ class RtlSignalOps():
 
     def _ternary(self, ifTrue, ifFalse):
         try:
-            return self.naryOp(AllOps.TERNARY, 0, tv(self)._ternary, ifTrue, ifFalse)
+            return self.naryOp(AllOps.TERNARY, tv(self)._ternary, ifTrue, ifFalse)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)
@@ -336,14 +334,16 @@ class RtlSignalOps():
         """
         intf = self
         indexes = []
+        sign_cast_seen = False
         while True:
             try:
-                # now I am result of the index  xxx[xx] <= source
+                # now self is the result of the index  xxx[xx] <= source
                 # get index op
                 d = intf.singleDriver()
                 try:
                     op = d.operator
                 except AttributeError:
+                    # probably port or statement
                     break
 
                 if op == AllOps.INDEX:
@@ -355,6 +355,14 @@ class RtlSignalOps():
                     else:
                         raise HwtSyntaxError(
                             f"can not assign to a static value {indexedOn}")
+                elif op in CAST_OPS:
+                    sign_cast_seen = True
+                    intf = d.operands[0]
+                else:
+                    # the coccatenations should have been already resolved before entering of this function
+                    raise HwtSyntaxError(
+                        f"can not assign to result of operator {d}")
+
             except SignalDriverErr:
                 break
 
@@ -363,7 +371,7 @@ class RtlSignalOps():
         else:
             indexes.reverse()
 
-        return intf, indexes
+        return intf, indexes, sign_cast_seen
 
     def _getDestinationSignalForAssignmentToThis(self):
         """
@@ -384,20 +392,6 @@ class RtlSignalOps():
         assert not self._const, self
         if exclude is not None and (self in exclude or source in exclude):
             return []
-
-        if self.hidden:
-            try:
-                d = self.singleDriver()
-            except:
-                d = None
-            operator = getattr(d, "operator", None)
-            if operator is not None:
-                if operator.allowsAssignTo:
-                    pass
-                elif operator == AllOps.NOT:
-                    return d.operands[0](~source, dst_resolve_fn=dst_resolve_fn, exclude=exclude, fit=fit)
-                else:
-                    raise AssertionError("Assignment to", self, "is not allowed by operator definition")
 
         if isinstance(source, InterfaceBase):
             assert source._isAccessible, (source, "must be a Signal Interface which is accessible in current scope")
@@ -428,9 +422,57 @@ class RtlSignalOps():
                     ("Can not connect %r (of type %r) to %r "
                      "(of type %r) due type incompatibility")
                     % (source, source._dtype, self, self._dtype))
+        if self.hidden:
+            try:
+                d = self.singleDriver()
+            except:
+                d = None
+            operator = getattr(d, "operator", None)
+            if operator is not None:
+                if operator.allowsAssignTo:
+                    if operator == AllOps.NOT:
+                        # instead of assigning to negation we assign the negation
+                        return d.operands[0](~source, dst_resolve_fn=dst_resolve_fn, exclude=exclude, fit=fit)
+                    elif operator in CAST_OPS:
+                        # we need to assert that src and dst type matches, but we do not anything else
+                        dst = d.operands[0]
+                        src_sign = source._dtype.signed
+                        dst_sign = dst._dtype.signed
+                        if src_sign == dst_sign:
+                            return dst(source)
+                        elif dst_sign is None:
+                            return dst(source._vec())
+                        elif dst_sign:
+                            return dst(source._signed())
+                        else:
+                            return dst(source._unsigned())
+
+                    elif operator == AllOps.CONCAT:
+                        offset = 0
+                        res = []
+                        # reversed because LSB first
+                        for op in reversed(d.operands):
+                            w = op._dtype.bit_length()
+                            res.append(op(source[w + offset: offset]))
+                            offset += w
+                        return res
+                else:
+                    raise AssertionError("Assignment to", self, "is not allowed by operator definition")
+
         try:
-            mainSig, indexCascade = self._getIndexCascade()
+            mainSig, indexCascade, signCastSeen = self._getIndexCascade()
             mainSig = dst_resolve_fn(mainSig)
+            if signCastSeen:
+                src_sign = source._dtype.signed
+                dst_sign = mainSig._dtype.signed
+                if src_sign == dst_sign:
+                    pass
+                elif dst_sign is None:
+                    source = source._vec()
+                elif dst_sign:
+                    source = source._signed()
+                else:
+                    source = source._unsigned()
             return HdlAssignmentContainer(source, mainSig, indexCascade)
         except Exception as e:
             # simplification of previous exception traceback

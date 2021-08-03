@@ -1,5 +1,6 @@
 from copy import copy
 from operator import eq
+from typing import Union
 
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
@@ -18,10 +19,18 @@ from hwt.hdl.value import HValue, areHValues
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
+from pyMathBitPrecise.bit_utils import ValidityError
 from pyMathBitPrecise.bits3t import Bits3val
 from pyMathBitPrecise.bits3t_vld_masks import vld_mask_for_xor, vld_mask_for_and, \
     vld_mask_for_or
-from pyMathBitPrecise.bit_utils import ValidityError
+
+
+@internal
+def _get_operator_i_am_the_result_of(val_or_sig: Union[RtlSignalBase, HValue]):
+    if not isinstance(val_or_sig, HValue) and len(val_or_sig.drivers) == 1 and isinstance(val_or_sig.origin, Operator):
+        return val_or_sig.origin.operator
+    else:
+        return None
 
 
 class BitsVal(Bits3val, EventCapableVal, HValue):
@@ -160,38 +169,26 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         else:
             isSLICE = isinstance(key, HSlice.getValueCls())
 
+        if not isSLICE:
+            key = toHVal(key, INT)
+
+        iamVal = isinstance(self, HValue)
+        iAmResultOf = _get_operator_i_am_the_result_of(self)
+
+        Bits = self._dtype.__class__
         if isSLICE:
             # :note: downto notation
             start = key.val.start
             stop = key.val.stop
             if key.val.step != -1:
                 raise NotImplementedError()
+
             startIsVal = isinstance(start, HValue)
             stopIsVal = isinstance(stop, HValue)
             indexesareHValues = startIsVal and stopIsVal
-        else:
-            key = toHVal(key, INT)
-
-        iamVal = isinstance(self, HValue)
-        iAmResultOfIndexing = (not iamVal and
-                               len(self.drivers) == 1 and
-                               isinstance(self.origin, Operator) and
-                               self.origin.operator == AllOps.INDEX)
-
-        Bits = self._dtype.__class__
-        if isSLICE:
             if indexesareHValues and start.val == length and stop.val == 0:
                 # selecting all bits no conversion needed
                 return self
-
-            if iAmResultOfIndexing:
-                # try reduce self and parent slice to one
-                original, parentIndex = self.origin.operands
-                if isinstance(parentIndex._dtype, HSlice):
-                    parentLower = parentIndex.val.stop
-                    start = start + parentLower
-                    stop = stop + parentLower
-                    return original[start:stop]
 
             # check start boundaries
             if startIsVal:
@@ -209,6 +206,37 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             if startIsVal and stopIsVal and _start - _stop <= 0:
                 raise IndexError(_start, _stop)
 
+            if iAmResultOf == AllOps.INDEX:
+                # try reduce self and parent slice to one
+                original, parentIndex = self.origin.operands
+                if isinstance(parentIndex._dtype, HSlice):
+                    parentLower = parentIndex.val.stop
+                    start = start + parentLower
+                    stop = stop + parentLower
+                    return original[start:stop]
+            elif startIsVal and stopIsVal:
+                # index directly in the member of concatenation
+                # :note: start points at MSB and stop on LSB (start:stop, eg 8:0)
+                stop = int(stop)
+                start = int(start)
+                if iAmResultOf == AllOps.CONCAT:
+                    op_h, op_l = self.origin.operands
+                    op_l_w = op_l._dtype.bit_length()
+                    assert start > stop, (start, stop, "Should be in MSB:LSB format")
+                    if start <= op_l_w:
+                        # entirely in first operand of concat
+                        return op_l[key]
+                    elif stop >= op_l_w:
+                        # intirely in second operand of concat
+                        start -= op_l_w
+                        stop -= op_l_w
+                        return op_h[key._dtype.from_py(slice(start, stop, -1))]
+                    else:
+                        # partially in op_h and op_l, allpy slice on concat operands and return concatenation of it
+                        op_l = op_l[:stop]
+                        op_h = op_h[start - op_l_w:0]
+                        return op_h._concat(op_l)
+
             if iamVal:
                 if isinstance(key, SLICE.getValueCls()):
                     key = key.val
@@ -224,16 +252,36 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                             signed=st.signed, negated=st.negated)
 
         elif isinstance(key, Bits.getValueCls()):
+            # int like value addressing a single bit
             if key._is_full_valid():
                 # check index range
                 _v = int(key)
                 if _v < 0 or _v > length - 1:
                     raise IndexError(_v)
-                if iAmResultOfIndexing:
+                if iAmResultOf == AllOps.INDEX:
+                    # index directly in parent signal
                     original, parentIndex = self.origin.operands
                     if isinstance(parentIndex._dtype, HSlice):
                         parentLower = parentIndex.val.stop
                         return original[parentLower + _v]
+                else:
+                    # index directly in the member of concatenation
+                    update_key = False
+                    while iAmResultOf == AllOps.CONCAT:
+                        op_h, op_l = self.origin.operands
+                        op_l_w = op_l._dtype.bit_length()
+                        if _v < op_l_w:
+                            self = op_l
+                        else:
+                            self = op_h
+                            _v -= op_l_w
+                            update_key = True
+
+                        iAmResultOf = _get_operator_i_am_the_result_of(self)
+                        st = self._dtype
+
+                    if update_key:
+                        key = key._dtype.from_py(_v)
 
             if iamVal:
                 return Bits3val.__getitem__(self, key)
@@ -394,6 +442,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             return Operator.withRes(AllOps.DIV,
                                     [self, other],
                                     self._dtype.__copy__())
+
     def __pow__(self, other):
         raise TypeError(f"** operator not implemented for instance of {self.__class__}")
 

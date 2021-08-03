@@ -28,6 +28,7 @@ class OpDefinition():
 
     def eval(self, operator, simulator=None):
         """Load all operands and process them by self._evalFn"""
+
         def getVal(v):
             while not isinstance(v, HValue):
                 v = v._val
@@ -125,7 +126,7 @@ class AllOps():
     MOD = OpDefinition(mod)
     MUL = OpDefinition(mul)
 
-    NOT = OpDefinition(inv)
+    NOT = OpDefinition(inv, allowsAssignTo=True)
     XOR = OpDefinition(xor)
     AND = OpDefinition(and_)
     OR = OpDefinition(or_)
@@ -133,7 +134,7 @@ class AllOps():
     DOT = OpDefinition(dotOpFn)
     DOWNTO = OpDefinition(downtoFn)
     TO = OpDefinition(toFn)
-    CONCAT = OpDefinition(concatFn)
+    CONCAT = OpDefinition(concatFn, allowsAssignTo=True)
 
     EQ = OpDefinition(eqFn)
     NE = OpDefinition(ne)
@@ -146,12 +147,14 @@ class AllOps():
     TERNARY = OpDefinition(ternaryFn)
     CALL = OpDefinition(callFn)
 
-    BitsAsSigned = OpDefinition(bitsAsSignedFn)
-    BitsAsUnsigned = OpDefinition(bitsAsUnsignedFn)
-    BitsAsVec = OpDefinition(bitsAsVec)
+    BitsAsSigned = OpDefinition(bitsAsSignedFn, allowsAssignTo=True)
+    BitsAsUnsigned = OpDefinition(bitsAsUnsignedFn, allowsAssignTo=True)
+    BitsAsVec = OpDefinition(bitsAsVec, allowsAssignTo=True)
 
 
 for a_name in dir(AllOps):
     o = getattr(AllOps, a_name)
     if isinstance(o, OpDefinition):
         o.id = a_name
+
+CAST_OPS = (AllOps.BitsAsVec, AllOps.BitsAsSigned, AllOps.BitsAsUnsigned)
