@@ -1,3 +1,5 @@
+from typing import Callable, Union
+
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps, OpDefinition
@@ -5,10 +7,10 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import HValue
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
     bitsArithOp__val
-
 
 # dictionary which hold information how to change operator after
 # operands were swapped
@@ -130,8 +132,13 @@ def bitsCmp(self, other, op, selfReduceVal, evalFn=None):
 
     raise TypeError(f"Values of types ({self._dtype}, {other._dtype}) are not comparable")
 
+
 @internal
-def bitsBitOp(self, other, op: OpDefinition, getVldFn, reduceCheckFn, selfReduceVal):
+def bitsBitOp(self: Union[RtlSignalBase, HValue], other,
+              op: OpDefinition,
+              getVldFn: Callable[[HValue, HValue], int],
+              reduceCheckFn: Callable[[RtlSignalBase, HValue], bool],
+              selfReduceVal: Union[RtlSignalBase, HValue]):
     """
     Apply a generic bitwise binary operator
 
