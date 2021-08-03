@@ -233,8 +233,14 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                         return op_h[key._dtype.from_py(slice(start, stop, -1))]
                     else:
                         # partially in op_h and op_l, allpy slice on concat operands and return concatenation of it
-                        op_l = op_l[:stop]
-                        op_h = op_h[start - op_l_w:0]
+                        if stop != 0 or op_l._dtype.bit_length() > 1:
+                            op_l = op_l[:stop]
+
+                        if op_h._dtype.bit_length() == 1:
+                            assert start - op_l_w == 1, ("Out of range slice (but this error should be catched sooner)", self, key)
+                        else:
+                            op_h = op_h[start - op_l_w:0]
+
                         return op_h._concat(op_l)
 
             if iamVal:
