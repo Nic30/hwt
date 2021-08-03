@@ -3,10 +3,11 @@ from typing import Union
 
 from hdlConvertorAst.hdlAst import HdlValueInt
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOpType, HdlOp
-from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BIT, INT
 from hwt.hdl.value import HValue
 from hwt.serializer.exceptions import UnsupportedEventOpErr
@@ -105,6 +106,12 @@ class ToHdlAstVerilog_ops():
             else:
                 return op_hdl
         else:
-            _o = self.op_transl_dict[o]
-            return HdlOp(_o, [self.as_hdl_operand(o2, i, op)
-                              for i, o2 in enumerate(ops)])
+            op0_t = ops[0]._dtype
+            if o == AllOps.INDEX and isinstance(op0_t, Bits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
+                assert int(ops[1]) == 0, ops
+                # drop whole index operator
+                return self.as_hdl_operand(ops[0], 0, op)
+            else:
+                _o = self.op_transl_dict[o]
+                return HdlOp(_o, [self.as_hdl_operand(o2, i, op)
+                                  for i, o2 in enumerate(ops)])

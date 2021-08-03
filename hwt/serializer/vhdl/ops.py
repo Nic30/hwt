@@ -1,8 +1,9 @@
 from typing import Union
 
+from hdlConvertorAst.hdlAst import HdlValueInt
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlOp, HdlOpType
-from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword
+from hdlConvertorAst.translate.verilog_to_basic_hdl_sim_model.utils import hdl_call
 from hwt.code import If
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
@@ -141,11 +142,16 @@ class ToHdlAstVhdl2008_ops():
             # if the op0 is not signal or other index index operator it is extracted
             # as tmp variable
             op0 = self.as_hdl_operand(op0)
+            op0_t = ops[0]._dtype
+            if isinstance(op0_t, Bits) and op0_t.bit_length() == 1 and not op0_t.force_vector:
+                assert int(ops[1]) == 0, ops
+                # drop whole index operator because it is useless
+                return op0
 
             if isinstance(op1._dtype, Bits) and op1._dtype != INT:
                 if op1._dtype.signed is None:
                     if op1._dtype.bit_length() == 1 and not op1._dtype.force_vector:
-                        _, op1 = self.tmpVars.create_var_cached("tmpTypeConv_", Bits(1, force_vector=True), def_val=op1)
+                        _, op1 = self.tmpVars.create_var_cached("tmp1bToUnsigned_", Bits(1, force_vector=True), def_val=op1)
                     _op1 = self.as_hdl_operand(op1)
                     _op1 = self.apply_cast("UNSIGNED", _op1)
                 else:
@@ -156,6 +162,7 @@ class ToHdlAstVhdl2008_ops():
                 _op1 = self.as_hdl_operand(op1)
 
             return HdlOp(HdlOpType.INDEX, [op0, _op1])
+
         elif o == AllOps.TERNARY:
             _c, _op0, _op1 = ops
             op0 = self.as_hdl_cond(_c, True)
@@ -167,7 +174,7 @@ class ToHdlAstVhdl2008_ops():
                        isinstance(t1, Bits) and\
                        t0.bit_length() == t1.bit_length() and\
                        bool(t0.signed) == bool(t1.signed), (t0, t1)
-                _, _op1 = self.tmpVars.create_var_cached("tmpTypeConv_", t0, def_val=_op1)
+                _, _op1 = self.tmpVars.create_var_cached("tmpTernaryAutoCast_", t0, def_val=_op1)
 
             op2 = self.as_hdl_operand(_op1)
             return HdlOp(HdlOpType.TERNARY, [op0, op1, op2])
@@ -177,7 +184,7 @@ class ToHdlAstVhdl2008_ops():
                 op0 = ops[0]
                 op0 = self._as_Bits_vec(op0)
                 if isinstance(op0, RtlSignalBase) and op0.hidden:
-                    _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
+                    _, op0 = self.tmpVars.create_var_cached("tmpCastExpr_", op0._dtype, def_val=op0)
                 return self.apply_cast(_o, self.as_hdl_operand(op0))
 
             o = self.op_transl_dict[o]
@@ -187,8 +194,16 @@ class ToHdlAstVhdl2008_ops():
                 if isinstance(res_t, Bits) and res_t != BOOL:
                     op0 = self._as_Bits(op0)
                     op1 = self._as_Bits(op1)
-                op0 = self.as_hdl_operand(op0)
-                op1 = self.as_hdl_operand(op1)
-                return HdlOp(o, [op0, op1])
+                _op0 = self.as_hdl_operand(op0)
+                _op1 = self.as_hdl_operand(op1)
+                if isinstance(_op0, HdlValueId) and\
+                        _op0.obj._dtype == BOOL and\
+                        isinstance(_op1, HdlValueInt) and\
+                        _op1.val and\
+                        o == HdlOpType.EQ:
+                    # drop unnecessary casts
+                    return _op0
+                else:
+                    return HdlOp(o, [_op0, _op1])
             return HdlOp(o, [self.as_hdl_operand(o2)
                              for o2 in ops])
