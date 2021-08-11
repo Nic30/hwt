@@ -1,3 +1,4 @@
+from hwt.hdl.types.hdlType import HdlType
 from hwt.interfaces.std import HandshakeSync
 from hwt.interfaces.structIntf import HdlType_to_Interface
 from hwt.synthesizer.param import Param
@@ -9,11 +10,10 @@ class HsStructIntf(HandshakeSync):
     """
 
     def _config(self):
-        self.T = Param(None)
+        self.T: HdlType = Param(None)
 
     def _declr(self):
-        assert self.T is not None
+        assert isinstance(self.T, HdlType), self.T
         self.data = HdlType_to_Interface().apply(self.T)
         HandshakeSync._declr(self)
-
 
