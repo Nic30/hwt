@@ -15,3 +15,5 @@ class HsStructIntf(HandshakeSync):
         assert self.T is not None
         self.data = HdlType_to_Interface().apply(self.T)
         HandshakeSync._declr(self)
+
+
