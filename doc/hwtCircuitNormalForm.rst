@@ -186,4 +186,19 @@ yes - assignment only to single destination
     b <= d;
 
 
+Concatenations always on top of expression tree
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Rationale: We need to move indexing operators under the concatenations
+    in order to make structural hashing as efficient as possible. We need to do this also for other
+    bitwise operators and not just for index operators.
+
+no: The indexing is at the top of operator tree and the concatenation is at bottom.
+.. code-block:: verilog
+    wire[4-1:0] b;
+    wire c;
+    ~({a, b, c}[2-1:0])
+
+yes: The indexing is at the bottom of operator tree and concatenation is on top.
+.. code-block:: verilog
+    {~b[1-1:0], ~c}
