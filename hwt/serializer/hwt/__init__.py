@@ -5,6 +5,7 @@ from hdlConvertorAst.to.hwt._main import ToHwt
 from hwt.serializer.hwt.serializer import ToHdlAstHwt
 from hwt.serializer.serializer_config import DummySerializerConfig
 from hdlConvertorAst.hdlAst import iHdlObj
+from hwt.serializer.exceptions import SerializerException
 
 
 class HwtSerializer(DummySerializerConfig):
@@ -18,7 +19,7 @@ class ToHdlAstDebugHwt(ToHdlAstHwt):
     def as_hdl(self, obj) -> iHdlObj:
         try:
             return super(ToHdlAstDebugHwt, self).as_hdl(obj)
-        except:
+        except SerializerException:
             return obj.__repr__()
 
 
