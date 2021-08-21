@@ -42,6 +42,7 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
 
     :attention: does not remove signals in cycles which does not affect outputs
     """
+    # walk circut from outputs to inputs and collect seen signals
     toSearch = [s for s, d in netlist.interfaces.items() if d != DIRECTION.IN]
     seen = set(toSearch)
     for c in netlist.subUnits:
@@ -70,10 +71,12 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
                     _toSearch.append(nv)
         toSearch = _toSearch
 
+    # add all io because it can not be removed
     seen.update([s for s, d in netlist.interfaces.items() if d == DIRECTION.IN])
     for c in netlist.subUnits:
         seen.update(sig._sig for sig in walkPhysInterfaces(c))
 
+    # remove signals which were not seen
     for sig in netlist.signals:
         if sig in seen:
             continue

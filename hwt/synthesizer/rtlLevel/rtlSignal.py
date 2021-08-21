@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, Dict, Tuple, Set, Union
 
 from hwt.doc_markers import internal
 from hwt.hdl.portItem import HdlPortItem
@@ -13,6 +13,12 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr, \
     SignalDriverErrType
 from hwt.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
+
+OperatorCaheKeyType = Union[
+    Tuple['OpDefinition', int, object],
+    Tuple['OpDefinition', int, object, object],
+    Tuple['OpDefinition', int, object, object, object],
+]
 
 
 class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
@@ -72,11 +78,11 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
 
         # set can not be used because hash of items are changing
         self.endpoints = UniqList()
-        self.drivers = UniqList()
-        self._usedOps = {}
-        self._usedOpsAlias = {}
-        self.hidden = True
-        self._instId = RtlSignal._nextInstId()
+        self.drivers: UniqList[HdlStatement, "Operator"] = UniqList()
+        self._usedOps: Dict[OperatorCaheKeyType, RtlSignal] = {}
+        self._usedOpsAlias: Dict[OperatorCaheKeyType, Set[OperatorCaheKeyType]] = {}
+        self.hidden: bool = True
+        self._instId: int = RtlSignal._nextInstId()
 
         self._nop_val = nop_val
         self._const = is_const

@@ -6,6 +6,13 @@ from hwt.hdl.types.defs import INT, SLICE
 from hwt.hdl.value import HValue
 
 
+def _getVal(v):
+    while not isinstance(v, HValue):
+        v = v._val
+
+    return v
+
+
 class OpDefinition():
     """
     Operator definition
@@ -28,14 +35,7 @@ class OpDefinition():
 
     def eval(self, operator, simulator=None):
         """Load all operands and process them by self._evalFn"""
-
-        def getVal(v):
-            while not isinstance(v, HValue):
-                v = v._val
-
-            return v
-
-        operands = [getVal(o) for o in operator.operands]
+        operands = [_getVal(o) for o in operator.operands]
 
         return self._evalFn(*operands)
 

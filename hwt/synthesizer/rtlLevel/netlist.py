@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Set
 
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId
@@ -18,6 +18,8 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.statements_to_HdlStmCodeBlockContainers import\
     statements_to_HdlStmCodeBlockContainers
+from ipCorePackager.constants import DIRECTION
+from hwt.hdl.statements.statement import HdlStatement
 
 
 class RtlNetlist():
@@ -28,26 +30,19 @@ class RtlNetlist():
     :ivar ~.signals: set of all signals in this context
     :ivar ~.statements: list of all statements which are connected to signals in this context
     :ivar ~.subUnits: is set of all units in this context
-    :type ~.interfaces: Dict[RtlSignal, DIRECTION]
     :ivar ~.interfaces: initialized in create_HdlModuleDef
-    :type ~.ent: HdlModuleDec
     :ivar ~.ent: initialized in create_HdlModuleDec
-    :type ~.arch: HdlModuleDef
     :ivar ~.arch: initialized in create_HdlModuleDef
-    :ivar ~.hdl_objs: The list of HDL objects which were produced by this instance
-        usually contains HdlModudeleDef but may contain imports/globals etc.
     """
 
     def __init__(self, parent: Optional["Unit"]=None):
         self.parent = parent
-        self.signals = set()
-        self.statements = set()
-        self.subUnits = set()
-        self.interfaces = {}
-        self.hdl_objs = []
-        self.ent = None
-        self.arch = None
-        self._port_items = []
+        self.signals: Set[RtlSignal] = set()
+        self.statements: Set[HdlStatement] = set()
+        self.subUnits: Set["Unit"] = set()
+        self.interfaces: Dict[RtlSignal, DIRECTION] = {}
+        self.ent: Optional[HdlModuleDec] = None
+        self.arch: Optional[HdlModuleDef] = None
 
     def sig(self, name: str, dtype=BIT, clk=None, syncRst=None,
             def_val=None, nop_val=NOT_SPECIFIED) -> Union[RtlSignal, RtlSyncSignal]:
