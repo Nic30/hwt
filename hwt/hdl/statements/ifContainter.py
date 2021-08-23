@@ -4,7 +4,7 @@ from copy import deepcopy
 from functools import reduce
 from itertools import compress
 from operator import and_
-from typing import List, Tuple, Dict, Optional, Callable, Set
+from typing import List, Tuple, Dict, Optional, Callable, Set, Generator
 
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
@@ -267,7 +267,7 @@ class IfContainer(HdlStatement):
 
         self._enclosed_for.update(enc)
 
-    def _iter_stms(self):
+    def _iter_stms(self) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
         """
@@ -276,6 +276,10 @@ class IfContainer(HdlStatement):
             yield from stms
         if self.ifFalse is not None:
             yield from self.ifFalse
+
+    def _iter_all_elifs(self) -> Generator[Tuple[RtlSignalBase, List[HdlStatement]], None, None]:
+        yield (self.cond, self.ifTrue)
+        yield from self.elIfs
 
     @internal
     def _try_reduce(self) -> Tuple[bool, List[HdlStatement]]:
