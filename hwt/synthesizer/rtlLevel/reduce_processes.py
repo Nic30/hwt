@@ -37,9 +37,7 @@ def tryToMerge(procA: HdlStmCodeBlockContainer, procB: HdlStmCodeBlockContainer)
     :attention: procA is now result if merge has succeed
     :return: procA which is now result of merge
     """
-    if (checkIfIsTooSimple(procA) or
-            checkIfIsTooSimple(procB) or
-            areSetsIntersets(procA._outputs, procB._sensitivity) or
+    if (areSetsIntersets(procA._outputs, procB._sensitivity) or
             areSetsIntersets(procB._outputs, procA._sensitivity) or
             not is_mergable_statement_list(procA.statements, procB.statements)):
         raise HwtStmIncompatibleStructure()
@@ -66,6 +64,13 @@ def reduceProcesses(processes):
     # now try to reduce processes with nearly same structure of statements into one
     # to minimize number of processes
     for _, procs in groupedby(processes, lambda p: p.rank):
+        _procs = []
+        for p in procs:
+            if checkIfIsTooSimple(p):
+                yield p
+            else:
+                _procs.append(p)
+        procs = _procs
         for iA, pA in enumerate(procs):
             if pA is None:
                 continue
