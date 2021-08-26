@@ -1,4 +1,5 @@
 
+
 class ResourceError(Exception):
     """
     An error which means that the resource of this kind
@@ -6,7 +7,14 @@ class ResourceError(Exception):
     """
 
 
-class ResourceMUX():
+class RtlResourceType():
+    """
+    A base class for resource type desctiptions.
+    """
+
+
+class ResourceMUX(RtlResourceType):
+
     def __init__(self, bitWidth, inputs):
         self.bitWidth = bitWidth
         self.inputs = inputs
@@ -14,15 +22,16 @@ class ResourceMUX():
     def __repr__(self):
         return f"<{self.__class__.__name__:s} {self.bitWidth:d} bits, {self.inputs} inputs>"
 
-class ResourceFF():
+
+class ResourceFF(RtlResourceType):
     pass
 
 
-class ResourceLatch():
+class ResourceLatch(RtlResourceType):
     pass
 
 
-class ResourceRAM():
+class ResourceRAM(RtlResourceType):
     """
     Specifier of type of RAM like memory
     """
