@@ -180,8 +180,11 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                     if mIfc is not None:
                         seen_master_intfs.append(mIfc)
                     continue
+                try:
+                    mIfc = getattr(master, ifc._name)
+                except AttributeError:
+                    raise IntfLvlConfErr("Invalid interface structure", ifc, "<=", master, "src missing", ifc._name)
 
-                mIfc = getattr(master, ifc._name)
                 seen_master_intfs.append(mIfc)
                 if exclude and mIfc in exclude:
                     continue
