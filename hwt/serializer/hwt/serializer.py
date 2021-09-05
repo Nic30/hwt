@@ -1,10 +1,12 @@
 
 from typing import Optional
 
+from hdlConvertorAst.hdlAst import HdlStmBlock
 from hdlConvertorAst.hdlAst._expr import HdlValueId
 from hdlConvertorAst.hdlAst._structural import HdlModuleDef
 from hdlConvertorAst.to.hwt.keywords import HWT_KEYWORDS
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
+from hwt.code import CodeBlock
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.serializer.generic.to_hdl_ast import ToHdlAst
@@ -12,8 +14,6 @@ from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.serializer.hwt.types import ToHdlAstHwt_types
 from hwt.serializer.hwt.value import ToHdlAstHwt_value
 from hwt.serializer.simModel.serializer import ToHdlAstSimModel
-from hwt.code import CodeBlock
-from hdlConvertorAst.hdlAst import HdlStmBlock
 
 
 class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
