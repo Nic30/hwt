@@ -110,3 +110,44 @@ class SaveToFilesFlat(StoreManager):
                              self.filter, self.name_scope)
             s.ser.module_path_prefix = self.module_path_prefix
             s.write(obj)
+
+
+class SaveToSingleFiles(StoreManager):
+    """
+    Store all produced code to a single directory, all component source code to single file
+    and all constrains to single file.
+    """
+
+    def __init__(self,
+                 serializer_cls: DummySerializerConfig,
+                 root: str,
+                 name: str,
+                 _filter: "SerializerFilter"=None,
+                 name_scope: Optional[NameScope]=None):
+        super(SaveToSingleFiles, self).__init__(
+            serializer_cls, _filter=_filter, name_scope=name_scope)
+        self.root = root
+        self.comp_name = name
+        self.file_const = os.path.join(self.root, self.comp_name + self.serializer_cls.TO_CONSTRAINTS.fileExtension)
+        self.file_src = os.path.join(self.root, self.comp_name + self.serializer_cls.fileExtension)
+        self.files = UniqList()
+        self.module_path_prefix = None
+        os.makedirs(root, exist_ok=True)
+
+    def write(self, obj: Union[iHdlObj, HdlConstraintList]):
+        if isinstance(obj, HdlConstraintList):
+            f_name = self.file_const
+        else:
+            f_name = self.file_src
+
+        if f_name in self.files:
+            m = 'w'
+            self.files.append(f_name)
+        else:
+            m = 'a'
+
+        with open(f_name, m) as f:
+            s = SaveToStream(self.serializer_cls, f,
+                             self.filter, self.name_scope)
+            s.ser.module_path_prefix = self.module_path_prefix
+            s.write(obj)
