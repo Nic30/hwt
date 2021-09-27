@@ -8,7 +8,7 @@ from hdlConvertorAst.to.systemc.keywords import SYSTEMC_KEYWORDS
 from hdlConvertorAst.translate.common.name_scope import LanguageKeyword, NameScope
 from hwt.hdl.portItem import HdlPortItem
 from hwt.interfaces.std import Clk
-from hwt.serializer.generic.to_hdl_ast import ToHdlAst,\
+from hwt.serializer.generic.to_hdl_ast import ToHdlAst, \
     HWT_TO_HDLCONVEROTR_DIRECTION
 from hwt.serializer.simModel.serializer import ToHdlAstSimModel
 from hwt.serializer.systemC.expr import ToHdlAstSystemC_expr

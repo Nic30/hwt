@@ -128,7 +128,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
 
     @internal
     def _to_rtl(self, target_platform: DummyPlatform,
-                store_manager: "StoreManager"):
+                store_manager: "StoreManager", add_param_asserts=True):
         """
         synthesize all subunits, make connections between them,
         build verilog like module/vhdl like entity and architecture for this unit
@@ -226,6 +226,8 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
                     intf._reverseDirection()
 
             if do_serialize_this:
+                if add_param_asserts and self._params:
+                    mdef.objs.extend(store_manager.as_hdl_ast._as_hdl_HdlModuleDef_param_asserts(mdec))
                 store_manager.write(mdef)
 
             yield True, self

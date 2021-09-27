@@ -1,8 +1,8 @@
-from copy import copy, deepcopy
+from copy import copy
 from typing import Optional, List
 
-from hdlConvertorAst.hdlAst import HdlModuleDef, HdlStmIf, HdlModuleDec, HdlOp, \
-    HdlOpType, HdlValueId
+from hdlConvertorAst.hdlAst import HdlStmIf, HdlOp, \
+    HdlOpType, HdlValueId, HdlModuleDec, iHdlStatement
 from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlTypeAuto
 from hdlConvertorAst.hdlAst._statements import HdlStmProcess, HdlStmBlock, HdlStmAssign, \
@@ -73,34 +73,23 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
                     new_v.value = None
             return new_v
 
-    def _as_hdl_HdlModuleDef_param_asserts(self, new_m: HdlModuleDec) -> List[HdlOp]:
-        res = []
-        for p in new_m.params:
-            p: HdlIdDef
-            if p.value is None:
-                continue
-            # [TODO] this is actually requires SV>=2009
-            # generate
-            # if (p==x) begin
-            #     $error("%m Generated only for this param value");
-            # end
-            # endgenerate
-            i = HdlStmIf()
-            i.in_preproc = True
-            i.cond = HdlOp(HdlOpType.NE, [HdlValueId(p.name), deepcopy(p.value)])
-            i.if_true = hdl_call(HdlValueId("$error"), [
-                 "%m Generated only for this param value",
-                 ])
-            res.append(i)
+    def _static_assert_false(self, msg:str):
+        return hdl_call(HdlValueId("$error"), [f"%m {msg:s}"])
 
-        return res
-
-    def as_hdl_HdlModuleDef(self, o: HdlModuleDef):
-        o = super(ToHdlAstVerilog, self).as_hdl_HdlModuleDef(o)
-        param_asserts = self._as_hdl_HdlModuleDef_param_asserts(o.dec)
-
-        o.objs.extend(param_asserts)
-        return o
+    def _static_assert_symbol_eq(self, symbol_name:str, v):
+        i = HdlStmIf()
+        i.in_preproc = True
+        # [TODO] this actually requires SV>=2009
+        # generate
+        # if (p==x) begin
+        #     $error("%m Generated only for this param value");
+        # end
+        # endgenerate
+        i.cond = HdlOp(HdlOpType.NE, [HdlValueId(symbol_name), v])
+        i.if_true = hdl_call(HdlValueId("$error"), [
+             "%m Generated only for this param value",
+             ])
+        return i
 
     def as_hdl_GenericItem(self, g: HdlIdDef):
         with SignalTypeSwap(self, SIGNAL_TYPE.PORT_WIRE):
@@ -121,3 +110,5 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
             v.is_latched = self.signalType == SIGNAL_TYPE.PORT_REG
         return v
 
+    def _as_hdl_HdlModuleDef_param_asserts(self, new_m: HdlModuleDec) -> List[iHdlStatement]:
+        return ToHdlAst._as_hdl_HdlModuleDef_param_asserts_real(self, new_m)

@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from hdlConvertorAst.hdlAst import HdlOp, HdlModuleDec, HdlOpType, HdlIdDef
+from hdlConvertorAst.hdlAst import HdlOp, HdlModuleDec, HdlOpType, iHdlStatement
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlAll
 from hdlConvertorAst.hdlAst._statements import HdlImport, \
     HdlStmIf, HdlStmBlock, HdlStmFor, HdlStmForIn
@@ -76,19 +76,20 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
             if o.body:
                 yield from ToHdlAstVhdl2008._find_HdlCompInst(o.body)
 
-    def _as_hdl_HdlModuleDef_param_asserts(self, new_m: HdlModuleDec) -> List[HdlOp]:
-        res = []
-        for p in new_m.params:
-            p: HdlIdDef
-            if p.value is None:
-                continue
-            a = hdl_call(self.ASSERT, [
-                 HdlOp(HdlOpType.EQ, [HdlValueId(p.name), self.as_hdl(p.value)]),
+    def _static_assert_false(self, msg:str):
+        return hdl_call(self.ASSERT, [
+                 self.FALSE,
+                 msg,
+                 self.FAILURE])
+
+    def _static_assert_symbol_eq(self, symbol_name:str, v):
+        return hdl_call(self.ASSERT, [
+                 HdlOp(HdlOpType.EQ, [HdlValueId(symbol_name), v]),
                  "Generated only for this value",
                  self.FAILURE])
-            res.append(a)
 
-        return res
+    def _as_hdl_HdlModuleDef_param_asserts(self, new_m: HdlModuleDec) -> List[iHdlStatement]:
+        return ToHdlAst._as_hdl_HdlModuleDef_param_asserts_real(self, new_m)
 
     def as_hdl_HdlModuleDef(self, o: HdlModuleDef):
         """
@@ -107,12 +108,11 @@ class ToHdlAstVhdl2008(ToHdlAstVhdl2008_Value,
         components.sort(key=lambda c: c.module_name)
         components = [self.as_hdl_HldComponent(c)
                       for c in components]
-        param_asserts = self._as_hdl_HdlModuleDef_param_asserts(o.dec)
-        if components or param_asserts:
+        if components:
             # :note: it is important that the asserts are at the end because
             # we are detecting the declarations from the beginnig and assert there would
             # disturb that
-            objs = [*components, *_o.objs, *param_asserts]
+            objs = [*components, *_o.objs]
             _o.objs = objs
 
         res = HdlContext()

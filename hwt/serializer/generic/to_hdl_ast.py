@@ -1,10 +1,10 @@
-from copy import copy
-from typing import Optional
+from copy import copy, deepcopy
+from typing import Optional, List, Union
 
 from hdlConvertorAst.hdlAst import iHdlStatement, iHdlObj, HdlIdDef, \
     HdlValueId, HdlTypeType, iHdlExpr, HdlStmBlock, HdlStmIf, HdlStmCase, \
     HdlStmProcess, HdlStmAssign, HdlModuleDef, HdlModuleDec, \
-    HdlCompInst, HdlEnumDef
+    HdlCompInst, HdlEnumDef, HdlOp
 from hdlConvertorAst.hdlAst._statements import ALL_STATEMENT_CLASSES
 from hdlConvertorAst.to.basic_hdl_sim_model._main import ToBasicHdlSimModel
 from hdlConvertorAst.translate.common.name_scope import NameScope, WithNameScope
@@ -32,6 +32,8 @@ from hwt.serializer.generic.utils import HWT_TO_HDLCONVEROTR_DIRECTION, \
     TmpVarsSwap
 from hwt.serializer.utils import HdlStatement_sort_key
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.value import HValue
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 class ToHdlAst():
@@ -339,7 +341,7 @@ class ToHdlAst():
     def _as_hdl_HdlModuleDef(self, new_m: HdlModuleDef) -> HdlModuleDef:
         # with WithNameScope(self,
         # self.name_scope.get_child(o.module_name.val)):
-        hdl_types, hdl_variables, processes, component_insts = \
+        hdl_types, hdl_variables, processes, component_insts, others = \
             ToBasicHdlSimModel.split_HdlModuleDefObjs(self, new_m.objs)
         # [TODO] sorting not required as it should be done in _to_rtl()
         if len(hdl_variables) > 1:
@@ -356,11 +358,12 @@ class ToHdlAst():
         with TmpVarsSwap(self, extraVars):
             return self._as_hdl_HdlModuleDef_body(
                 new_m, types, hdl_types, hdl_variables, extraVars,
-                processes, component_insts)
+                processes, component_insts, others)
 
     def _as_hdl_HdlModuleDef_body(
             self, new_m, types, hdl_types, hdl_variables,
-            extraVars: TmpVarConstructor, processes, component_insts):
+            extraVars: TmpVarConstructor, processes: List[iHdlStatement],
+            component_insts: List[HdlCompInst], others: List[Union[HdlOp, iHdlStatement]]):
 
         _hdl_variables = []
         for v in hdl_variables:
@@ -376,7 +379,7 @@ class ToHdlAst():
                            for c in component_insts]
         extraVars.sort_hdl_declarations_first()
         new_m.objs = hdl_types + hdl_variables + \
-            extraVars.extraVarsHdl + component_insts + processes
+            extraVars.extraVarsHdl + component_insts + processes + others
         return new_m
 
     def as_hdl_HdlModuleDef(self, o: HdlModuleDef) -> HdlModuleDef:
@@ -437,3 +440,27 @@ class ToHdlAst():
                         self.sensitivityListItem(s, anyIsEventDependnt)
                         for s in proc._sensitivity])
                     return p
+
+    def _static_assert_false(self, msg:str):
+        raise NotImplementedError("Should be implemented in child class")
+
+    def _static_assert_symbol_eq(self, symbol_name:str, v):
+        raise NotImplementedError("Should be implemented in child class")
+
+    def _as_hdl_HdlModuleDef_param_asserts(self, new_m: HdlModuleDec) -> List[iHdlStatement]:
+        return []
+
+    def _as_hdl_HdlModuleDef_param_asserts_real(self, new_m: HdlModuleDec) -> List[iHdlStatement]:
+        res = []
+        for p in new_m.params:
+            p: HdlIdDef
+            if p.value is None:
+                continue
+            v = p.value
+            if isinstance(v, (HValue, RtlSignal)):
+                v = self.as_hdl(v)
+            else:
+                v = deepcopy(v)
+            res.append(self._static_assert_symbol_eq(p.name, v))
+
+        return res
