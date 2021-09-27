@@ -2,6 +2,8 @@ from hwt.hdl.value import HValue
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
 from hwt.doc_markers import internal
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
 
 
 class HStringVal(HValue):
@@ -44,7 +46,11 @@ class HStringVal(HValue):
 
     def _eq(self, other):
         other = toHVal(other, self._dtype)
-        if isinstance(other, HValue):
+        self_is_val = isinstance(self, HValue)
+        other_is_val = isinstance(self, HValue)
+
+        if self_is_val and other_is_val:
             return self._eq__val(other)
         else:
-            raise NotImplementedError()
+            assert self._dtype == other._dtype, (self, self._dtype, other, other._dtype)
+            return Operator.withRes(AllOps.EQ, [self, other], BOOL)

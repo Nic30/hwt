@@ -5,6 +5,10 @@ import math
 from hwt.doc_markers import internal
 from hwt.hdl.value import HValue
 from pyMathBitPrecise.floatt import FloattVal
+from hwt.hdl.types.typeCast import toHVal
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.types.defs import BOOL
 
 
 class HFloatVal(HValue, FloattVal):
@@ -56,7 +60,15 @@ class HFloatVal(HValue, FloattVal):
         return self.val == other.val
 
     def _eq(self, other):
-        return self._eq__val(other)
+        other = toHVal(other, self._dtype)
+        self_is_val = isinstance(self, HValue)
+        other_is_val = isinstance(self, HValue)
+
+        if self_is_val and other_is_val:
+            return self._eq__val(other)
+        else:
+            assert self._dtype == other._dtype, (self, self._dtype, other, other._dtype)
+            return Operator.withRes(AllOps.EQ, [self, other], BOOL)
 
     def __copy__(self):
         v = HValue.__copy__(self)
