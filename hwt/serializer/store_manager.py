@@ -140,7 +140,7 @@ class SaveToSingleFiles(StoreManager):
         else:
             f_name = self.file_src
 
-        if f_name in self.files:
+        if f_name not in self.files:
             m = 'w'
             self.files.append(f_name)
         else:
