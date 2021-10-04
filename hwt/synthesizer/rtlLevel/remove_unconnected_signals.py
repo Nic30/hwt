@@ -15,7 +15,7 @@ from ipCorePackager.constants import DIRECTION
 def walkInputsForSpecificOutput(output_sig: RtlSignalBase, stm: HdlStatement):
     if output_sig not in stm._outputs:
         return
-    if isinstance(stm, HdlAssignmentContainer):
+    elif isinstance(stm, HdlAssignmentContainer):
         assert stm.dst is output_sig
         yield from stm._inputs
     elif isinstance(stm, IfContainer):
