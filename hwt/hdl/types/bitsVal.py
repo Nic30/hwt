@@ -282,7 +282,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                             self = op_h
                             _v -= op_l_w
                             update_key = True
-
+                        iamVal = isinstance(self, HValue)
                         iAmResultOf = _get_operator_i_am_the_result_of(self)
                         st = self._dtype
 
