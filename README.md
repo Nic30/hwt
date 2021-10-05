@@ -122,7 +122,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * :skull: [Verilog.jl](https://github.com/interplanetary-robot/Verilog.jl) - 2017-2017, Julia, simple Julia to Verilog transpiler
 * [veriloggen](https://github.com/PyHDI/veriloggen) - 2015-?, Python, Verilog centric HCL with HLS like features
 * :skull:  [wyre](https://github.com/nickmqb/wyre) - 2020-2020, Mupad, Minimalistic HDL
-
+* [phi](https://github.com/donn/Phi) - 2019-?, custom language, llvm based compiler of custom hdl
 
 ## Related open-source
 
