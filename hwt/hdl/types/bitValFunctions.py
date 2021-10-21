@@ -129,6 +129,12 @@ def bitsCmp(self, other, op, selfReduceVal, evalFn=None):
             elif ot.signed is None:
                 other = other._convSign(t.signed)
                 return bitsCmp(self, other, op, evalFn)
+        elif t.force_vector != ot.force_vector:
+            if t.force_vector:
+                self = self[0]
+            else:
+                other = other[0]
+            return bitsCmp(self, other, op, evalFn)
 
     raise TypeError(f"Values of types ({self._dtype}, {other._dtype}) are not comparable")
 
