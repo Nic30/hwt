@@ -1,8 +1,8 @@
 from hwt.hdl.types.hdlType import HdlType
+from hwt.interfaces.agents.handshaked import HandshakedAgent
 from hwt.interfaces.std import HandshakeSync
 from hwt.interfaces.structIntf import HdlType_to_Interface
 from hwt.synthesizer.param import Param
-from hwt.interfaces.agents.handshaked import HandshakedAgent
 from hwtSimApi.hdlSimulator import HdlSimulator
 
 
@@ -15,7 +15,7 @@ class HsStructIntf(HandshakeSync):
         self.T: HdlType = Param(None)
 
     def _declr(self):
-        assert isinstance(self.T, HdlType), self.T
+        assert isinstance(self.T, HdlType), (self.T, self._name)
         self.data = HdlType_to_Interface().apply(self.T)
         HandshakeSync._declr(self)
 
