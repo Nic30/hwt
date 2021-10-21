@@ -180,10 +180,13 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                     if mIfc is not None:
                         seen_master_intfs.append(mIfc)
                     continue
-                try:
-                    mIfc = getattr(master, ifc._name)
-                except AttributeError:
-                    raise IntfLvlConfErr("Invalid interface structure", ifc, "<=", master, "src missing", ifc._name)
+                if master is None:
+                    mIfc = ifc._dtype.from_py(None)
+                else:
+                    try:
+                        mIfc = getattr(master, ifc._name)
+                    except AttributeError:
+                        raise IntfLvlConfErr("Invalid interface structure", ifc, "<=", master, "src missing", ifc._name)
 
                 seen_master_intfs.append(mIfc)
                 if exclude and mIfc in exclude:
@@ -214,7 +217,9 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
                     yield from mIfc._connectToIter(ifc,
                                                    exclude,
                                                    fit)
-            if isinstance(master, HValue):
+            if master is None:
+                master_intf_cnt = len(self._interfaces)
+            elif isinstance(master, HValue):
                 master_intf_cnt = len(master._dtype.fields)
             else:
                 master_intf_cnt = len(master._interfaces)
