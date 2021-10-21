@@ -16,7 +16,7 @@ def nameAvailabilityCheck(obj, propName, prop):
     but allow to cast current property to a parameter
     """
     cur = getattr(obj, propName, None)
-    if cur is not None and cur is not prop._initval:
+    if cur is not None and (not isinstance(prop, Param) or cur is not prop._initval):
         p = getattr(obj, propName)
         raise IntfLvlConfErr(f"{obj} already has property {propName:s} old:{p} new:{prop}")
 
