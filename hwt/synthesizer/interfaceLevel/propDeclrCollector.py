@@ -13,8 +13,10 @@ from hdlConvertorAst.translate.common.name_scope import WithNameScope
 def nameAvailabilityCheck(obj, propName, prop):
     """
     Check if not redefining property on obj
+    but allow to cast current property to a parameter
     """
-    if getattr(obj, propName, None) is not None:
+    cur = getattr(obj, propName, None)
+    if cur is not None and cur is not prop._initval:
         p = getattr(obj, propName)
         raise IntfLvlConfErr(f"{obj} already has property {propName:s} old:{p} new:{prop}")
 
