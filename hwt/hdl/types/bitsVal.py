@@ -45,10 +45,12 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         return cls(typeObj, val, vld_mask=vld_mask)
 
     @internal
-    def _convSign__val(self, signed):
+    def _convSign__val(self, signed:Union[bool, None]):
         v = Bits3val.cast_sign(self, signed)
         if signed is not None:
-            assert v._dtype is not self._dtype, "can modify shared type instance"
+            if v._dtype is self._dtype:
+                # can modify shared type instance
+                v._dtype = copy(v._dtype)
             v._dtype.force_vector = True
         return v
 
