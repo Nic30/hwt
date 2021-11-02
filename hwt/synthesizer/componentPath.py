@@ -70,10 +70,7 @@ class ComponentPath(tuple):
                     obj = obj._parent
 
                 while obj is not handle:
-                    try:
-                        assert isinstance(obj, Unit), obj
-                    except:
-                        raise
+                    assert isinstance(obj, Unit), obj
                     # to not modify path if it is already in absolute format
                     if not path or path[-1] is not obj:
                         path.append(obj)
