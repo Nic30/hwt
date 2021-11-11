@@ -50,7 +50,6 @@ def to_rtl(unit_or_cls: Unit, store_manager: StoreManager,
             assert obj._shared_component_with[0]._shared_component_with is None
             path_old = _get_absolute_path(obj._shared_component_with[0])
             path_new = _get_absolute_path(obj)
-            print(path_old, "->", path_new)
             for c in _Unit_constraints_copy_recursively(
                     obj, path_old, path_new):
                 constraints.append(c)
