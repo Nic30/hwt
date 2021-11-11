@@ -85,7 +85,7 @@ class set_max_delay(iHdlConstrain):
         if not ommit_registration:
             self.register_on_parent()
 
-    def _copy_with_root_upadate(self, old_path_prefix, new_path_prefix):
+    def _copy_with_root_upadate(self, old_path_prefix: ComponentPath, new_path_prefix: ComponentPath):
         new_o = copy(self)
         new_o.start = _apply_path_update(
             self.start, old_path_prefix, new_path_prefix)
@@ -107,7 +107,7 @@ class set_false_path(iHdlConstrain):
         if not ommit_registration:
             self.register_on_parent()
 
-    def _copy_with_root_upadate(self, old_path_prefix, new_path_prefix):
+    def _copy_with_root_upadate(self, old_path_prefix: ComponentPath, new_path_prefix: ComponentPath):
         return set_max_delay._copy_with_root_upadate(self, old_path_prefix, new_path_prefix)
 
     def _get_parent(self) -> Unit:
@@ -123,7 +123,7 @@ class get_clock_of(iHdlConstrain):
                  ommit_registration=False):
         self.obj = _get_absolute_path(obj)
 
-    def _copy_with_root_upadate(self, old_path_prefix, new_path_prefix):
+    def _copy_with_root_upadate(self, old_path_prefix: ComponentPath, new_path_prefix: ComponentPath):
         new_o = copy(self)
         new_o.obj = _apply_path_update(
             self.obj, old_path_prefix, new_path_prefix)
@@ -147,7 +147,7 @@ class set_async_reg(iHdlConstrain):
         if not ommit_registration:
             self.register_on_parent()
 
-    def _copy_with_root_upadate(self, old_path_prefix, new_path_prefix):
+    def _copy_with_root_upadate(self, old_path_prefix: ComponentPath, new_path_prefix: ComponentPath):
         new_o = copy(self)
         new_o.sig = _apply_path_update(
             self.sig, old_path_prefix, new_path_prefix)

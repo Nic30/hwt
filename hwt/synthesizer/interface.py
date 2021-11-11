@@ -357,5 +357,5 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
         if hasattr(self, '_width'):
             s.append("_width=%s" % str(self._width))
         if hasattr(self, '_masterDir'):
-            s.append("_masterDir=%s" % str(self._masterDir))
+            s.append("_masterDir=%s" % self._masterDir.name)
         return "<%s>" % (', '.join(s))
