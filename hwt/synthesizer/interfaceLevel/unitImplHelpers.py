@@ -71,7 +71,8 @@ def _normalize_default_value_dict_for_interface_array(root_val: dict,
 
 
 @internal
-def _instanciate_signals(intf: Union[Signal, HObjList,StructIntf], clk: Clk, rst: Union[Rst, Rst_n], def_val, nop_val, signal_create_fn):
+def _instanciate_signals(intf: Union[Signal, HObjList, StructIntf],
+                         clk: Clk, rst: Union[Rst, Rst_n], def_val, nop_val, signal_create_fn):
     intf._direction = INTF_DIRECTION.UNKNOWN
     if isinstance(intf, Signal):
         name = intf._getHdlName()
@@ -110,7 +111,7 @@ def _instanciate_signals(intf: Union[Signal, HObjList,StructIntf], clk: Clk, rst
                 _nop_val = nop_val[i]
             _instanciate_signals(elm, clk, rst, _def_val, _nop_val, signal_create_fn)
 
-    elif isinstance(intf, StructIntf):
+    else:
         if def_val is not None:
             for k in tuple(def_val.keys()):
                 _i = getattr(intf, k, NOT_SPECIFIED)
@@ -141,18 +142,36 @@ def _instanciate_signals(intf: Union[Signal, HObjList,StructIntf], clk: Clk, rst
                 _nop_val = nop_val.get(name, NOT_SPECIFIED)
 
             _instanciate_signals(elm, clk, rst, _def_val, _nop_val, signal_create_fn)
-    else:
-        raise NotImplementedError(intf)
 
 
 @internal
-def _loadDeclarations(intf_or_list: Union[HObjList, InterfaceBase], name: str):
+def _loadDeclarations(intf_or_list: Union[HObjList, InterfaceBase], suggested_name: str):
     if isinstance(intf_or_list, HObjList):
         for i, intf in enumerate(intf_or_list):
-            _loadDeclarations(intf, f"{name:s}_{i:d}")
+            _loadDeclarations(intf, f"{suggested_name:s}_{i:d}")
     else:
-        intf_or_list._name = name
+        intf_or_list._name = suggested_name
         intf_or_list._loadDeclarations()
+
+
+def Interface_without_registration(
+        parent:UnitBase,
+        container: Union[InterfaceBase, HObjList],
+        suggested_name:str,
+        def_val: Union[int, None, dict, list]=None,
+        nop_val: Union[int, None, dict, list, "NOT_SPECIFIED"]=NOT_SPECIFIED):
+    """
+    Load all parts of interface and construct signals in RtlNetlist context with an automatic name check,
+    without need to explicitely add the interface in _interfaces list.
+    """
+    _loadDeclarations(container, suggested_name)
+    _instanciate_signals(
+        container, None, None, def_val, nop_val,
+        lambda name, dtype, clk, rst, def_val, nop_val: parent._sig(name, dtype,
+                                                                  def_val=def_val,
+                                                                  nop_val=nop_val))
+    container._parent = parent
+    return container
 
 
 class UnitImplHelpers(UnitBase):
@@ -216,14 +235,7 @@ class UnitImplHelpers(UnitBase):
         """
         if isinstance(dtype, HStruct):
             container = HdlType_to_Interface().apply(dtype)
-            _loadDeclarations(container, name)
-            _instanciate_signals(
-                container, None, None, def_val, nop_val,
-                lambda name, dtype, clk, rst, def_val, nop_val: self._sig(name, dtype,
-                                                                          def_val=def_val,
-                                                                          nop_val=nop_val))
-            container._parent = self
-            return container
+            return Interface_without_registration(self, container, name, def_val=def_val, nop_val=nop_val)
         else:
             # primitive data type signal
             return self._ctx.sig(name, dtype=dtype, def_val=def_val, nop_val=nop_val)
