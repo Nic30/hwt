@@ -352,10 +352,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             return self._dtype.bit_length()
 
     def __repr__(self) -> str:
-        s = [self.__class__.__name__]
-        s.append("name=%s" % self._getFullName())
+        s = [" ".join([self.__class__.__name__, self._getFullName()])]
         if hasattr(self, '_width'):
             s.append("_width=%s" % str(self._width))
-        if hasattr(self, '_masterDir'):
-            s.append("_masterDir=%s" % self._masterDir.name)
         return "<%s>" % (', '.join(s))
