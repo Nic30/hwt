@@ -158,3 +158,4 @@ for a_name in dir(AllOps):
         o.id = a_name
 
 CAST_OPS = (AllOps.BitsAsVec, AllOps.BitsAsSigned, AllOps.BitsAsUnsigned)
+BITWISE_OPS = (AllOps.NOT, AllOps.XOR, AllOps.AND, AllOps.OR)
