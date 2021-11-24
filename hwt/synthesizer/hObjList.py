@@ -133,8 +133,11 @@ class HObjList(list, Generic[T]):
         while isinstance(tmp, (InterfaceBase, HObjList)):
             n = tmp._name
 
+
             if name == '':
-                name = n
+                if n is not None:
+                    assert isinstance(n, str), (name, n)
+                    name = n
             else:
                 name = n + "." + name
 
