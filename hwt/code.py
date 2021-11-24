@@ -179,7 +179,9 @@ def SwitchLogic(cases, default=None):
                     assigTop.Else(statements)
                     hasElse = True
             else:
-                pass
+                raise HwtSyntaxError("Condition is not signal, it is not certain"
+                                     " if this is an error or desire ", cond)
+
 
     if assigTop is None:
         if default is None:
