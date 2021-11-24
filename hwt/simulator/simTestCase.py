@@ -165,7 +165,10 @@ class SimTestCase(unittest.TestCase):
         """
         self.u = None
         self.__class__.u = None
-        self.rtl_simulator_cls = None
+        try:
+            delattr(self, "rtl_simulator_cls")
+        except AttributeError:
+            pass
         self.__class__.rtl_simulator_cls = None
         self.rtl_simulator = None
         self.hdl_simulator = None
