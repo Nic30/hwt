@@ -352,7 +352,16 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             return self._dtype.bit_length()
 
     def __repr__(self) -> str:
-        s = [" ".join([self.__class__.__name__, self._getFullName()])]
+        if hasattr(self, "_dtype"):
+            t = f" {self._dtype}"
+        else:
+            t = ""
+
+
         if hasattr(self, '_width'):
-            s.append("_width=%s" % str(self._width))
-        return "<%s>" % (', '.join(s))
+            w = " _width=%s" % str(self._width)
+        else:
+            w = ""
+
+        name = self._getFullName()
+        return f"<{self.__class__.__name__} {name:s}{w:s}{t:s}>"
