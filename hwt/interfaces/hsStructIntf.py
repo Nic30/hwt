@@ -16,6 +16,7 @@ class HsStructIntf(HandshakeSync):
 
     def _declr(self):
         assert isinstance(self.T, HdlType), (self.T, self._name)
+        self._dtype = self.T
         self.data = HdlType_to_Interface().apply(self.T)
         HandshakeSync._declr(self)
 
