@@ -47,6 +47,18 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     """
     __instCntr = 0
 
+    __slots__ = [
+        "ctx",
+        "endpoints",
+        "drivers",
+        "_usedOps",
+        "_usedOpsAlias",
+        "hidden",
+        "_instId",
+        "_nop_val",
+        "_const",
+        "origin",
+    ]
     def __init__(self, ctx: 'RtlNetlist', name: str, dtype: HdlType, def_val=None, nop_val=NOT_SPECIFIED,
                  virtual_only=False, is_const=False):
         """

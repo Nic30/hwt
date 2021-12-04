@@ -7,6 +7,7 @@ class UniqList(Generic[T], list):
     """
     List of unique items
     """
+    __slots__ = ["__s"]
 
     def __init__(self, initSeq: Optional[Sequence[T]]=None):
         super(UniqList, self).__init__()
