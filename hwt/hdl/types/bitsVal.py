@@ -227,12 +227,24 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
                     assert start > stop, (start, stop, "Should be in MSB:LSB format")
                     if start <= op_l_w:
                         # entirely in first operand of concat
-                        return op_l[key]
+                        if op_l_w == 1:
+                            if isinstance(key._dtype, HSlice):
+                                assert int(key.val.start) == 1 and int(key.val.stop) == 0 and int(key.val.step) == -1, key
+                                return op_l
+                            else:
+                                assert int(key) == 0, key
+                                return op_l
+                        else:
+                            return op_l[key]
                     elif stop >= op_l_w:
                         # intirely in second operand of concat
                         start -= op_l_w
                         stop -= op_l_w
-                        return op_h[key._dtype.from_py(slice(start, stop, -1))]
+                        if op_h._dtype.bit_length() == 1:
+                            assert start - stop == 1
+                            return op_h
+                        else:
+                            return op_h[key._dtype.from_py(slice(start, stop, -1))]
                     else:
                         # partially in op_h and op_l, allpy slice on concat operands and return concatenation of it
                         if stop != 0 or op_l._dtype.bit_length() > 1:
