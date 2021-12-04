@@ -1,9 +1,10 @@
 from typing import Set, List, Dict, Optional, Callable
 
 from hwt.doc_markers import internal
-from hwt.hdl.statements.statement import HdlStatement
-from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class HdlAssignmentContainer_constructor():
@@ -19,10 +20,10 @@ class HdlAssignmentContainer_constructor():
 @internal
 def fill_stm_list_with_enclosure(parentStm: Optional[HdlStatement],
                                  current_enclosure: Set[RtlSignalBase],
-                                 statements: List[HdlStatement],
+                                 statements: ListOfHdlStatement,
                                  do_enclose_for: List[RtlSignalBase],
                                  enclosure: Dict[RtlSignalBase, Callable[[], HdlStatement]])\
-        ->List[HdlStatement]:
+        ->ListOfHdlStatement:
     """
     Apply enclosure on list of statements
     (fill all unused code branches with assignments from value specified by enclosure)
@@ -37,7 +38,7 @@ def fill_stm_list_with_enclosure(parentStm: Optional[HdlStatement],
     :return: new statements
     """
     if statements is None:
-        statements = []
+        statements = ListOfHdlStatement()
 
     for e_sig in do_enclose_for:
         if e_sig in current_enclosure:

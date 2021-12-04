@@ -1,15 +1,15 @@
 from typing import List
 
 from hwt.doc_markers import internal
-from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 @internal
 def HdlStatement_cut_off_drivers_of_list(sig: RtlSignalBase,
-                             statements: List[HdlStatement],
+                             statements: ListOfHdlStatement,
                              keep_mask: List[bool],
-                             new_statements: List[HdlStatement]):
+                             new_statements: ListOfHdlStatement) -> bool:
     """
     Cut all logic from statements which drives signal sig.
 

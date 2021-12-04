@@ -1,15 +1,16 @@
-from itertools import islice
-from typing import List, Tuple
+from itertools import islice, zip_longest
+from typing import Tuple
 
 from hwt.doc_markers import internal
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
-from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.pyUtils.arrayQuery import groupedby
+from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 
 
 @internal
-def HdlStatement_merge_statement_lists(stmsA: List[HdlStatement], stmsB: List[HdlStatement])\
-        ->List[HdlStatement]:
+def HdlStatement_merge_statement_lists(stmsA: ListOfHdlStatement, stmsB: ListOfHdlStatement)\
+        ->ListOfHdlStatement:
     """
     Merge two lists of statements into one
 
@@ -17,11 +18,32 @@ def HdlStatement_merge_statement_lists(stmsA: List[HdlStatement], stmsB: List[Hd
     """
     if stmsA is None and stmsB is None:
         return None
+    elif stmsA is None:
+        return stmsB
+    elif stmsB is None:
+        return stmsA
 
-    tmp = []
+    tmp = ListOfHdlStatement()
 
-    a_it = iter(stmsA)
-    b_it = iter(stmsB)
+    # copy all with already known not to merge
+    if stmsA.firstStmWithBranchesI is NOT_SPECIFIED:
+        # we need to check items ourselfs
+        a_it = iter(stmsA)
+    elif stmsA.firstStmWithBranchesI is not None:
+        # we know the first item which requires extra care, we can copy all predecessors
+        tmp.extend(islice(stmsA, 0, stmsA.firstStmWithBranchesI))
+        a_it = islice(stmsA, stmsA.firstStmWithBranchesI, None)
+    else:
+        # items do no require any care, we can copy them all, but instead we use original list
+        # to avoid copy
+        tmp = stmsA
+        a_it = iter(tuple())
+
+    if stmsB.firstStmWithBranchesI is not None:
+        tmp.extend(islice(stmsB, 0, stmsB.firstStmWithBranchesI))
+        b_it = islice(stmsB, stmsB.firstStmWithBranchesI, None)
+    else:
+        b_it = iter(stmsB)
 
     a = None
     b = None
@@ -54,7 +76,7 @@ def HdlStatement_merge_statement_lists(stmsA: List[HdlStatement], stmsB: List[Hd
                 break
 
         if a is not None or b is not None:
-            if b is None:
+            if a is None:
                 a = b
                 b = None
 
@@ -69,12 +91,13 @@ def HdlStatement_merge_statement_lists(stmsA: List[HdlStatement], stmsB: List[Hd
 
 
 @internal
-def HdlStatement_try_reduce_list(statements: List[HdlStatement]):
+def HdlStatement_try_reduce_list(statements: ListOfHdlStatement)\
+        ->Tuple[ListOfHdlStatement, int, bool]:
     """
     Simplify statements in the list
     """
     io_change = False
-    new_statements = []
+    new_statements = ListOfHdlStatement()
 
     for stm in statements:
         reduced, _io_change = stm._try_reduce()
@@ -90,7 +113,8 @@ def HdlStatement_try_reduce_list(statements: List[HdlStatement]):
 
 
 @internal
-def HdlStatement_reduce_overriden_assignments(statements: List[HdlStatement]):
+def HdlStatement_reduce_overriden_assignments(statements: ListOfHdlStatement)\
+        ->Tuple[ListOfHdlStatement, bool, int]:
     io_change = False
     new_statements = []
     rank_decrease = 0
@@ -107,12 +131,12 @@ def HdlStatement_reduce_overriden_assignments(statements: List[HdlStatement]):
 
         new_statements.append(stm)
 
-    return list(reversed(new_statements)), io_change, rank_decrease
+    return ListOfHdlStatement(reversed(new_statements)), io_change, rank_decrease
 
 
 @internal
-def HdlStatement_merge_statements(statements: List[HdlStatement])\
-        ->Tuple[List[HdlStatement], int]:
+def HdlStatement_merge_statements(statements: ListOfHdlStatement)\
+        ->Tuple[ListOfHdlStatement, int]:
     """
     Merge statements in list to remove duplicated if-then-else trees
 
@@ -124,7 +148,7 @@ def HdlStatement_merge_statements(statements: List[HdlStatement])\
     for i, stm in enumerate(statements):
         order[stm] = i
 
-    new_statements = []
+    new_statements = ListOfHdlStatement()
     rank_decrease = 0
 
     for rank, stms in groupedby(statements, lambda s: s.rank):
@@ -156,7 +180,7 @@ def HdlStatement_merge_statements(statements: List[HdlStatement])\
 
 
 @internal
-def is_mergable_statement_list(stmsA, stmsB):
+def is_mergable_statement_list(stmsA: ListOfHdlStatement, stmsB: ListOfHdlStatement):
     """
     Walk statements and compare if they can be merged into one statement list
     """
@@ -166,33 +190,15 @@ def is_mergable_statement_list(stmsA, stmsB):
     elif stmsA is None or stmsB is None:
         return False
 
-    a_it = iter(stmsA)
-    b_it = iter(stmsB)
-
-    a = _get_stm_with_branches(a_it)
-    b = _get_stm_with_branches(b_it)
-    while a is not None or b is not None:
+    # [todo] there is a performance error when the list has no statements with rank != 0
+    # all items needs to be checked everytime, for "rtl register if (clk)" statements
+    # this is a problem as this list can grow large (100K+ items) and needs to be compared with every
+    # not yet merged statement
+    for (a, b) in zip_longest(stmsA._iter_stms_with_branches(),
+                              stmsB._iter_stms_with_branches()):
         if a is None or b is None or not a._is_mergable(b):
             return False
-
-        a = _get_stm_with_branches(a_it)
-        b = _get_stm_with_branches(b_it)
 
     # lists are empty
     return True
 
-
-@internal
-def _get_stm_with_branches(stm_it):
-    """
-    :return: first statement with rank > 0 or None if iterator empty
-    """
-    last = None
-    while last is None or last.rank == 0:
-        try:
-            last = next(stm_it)
-        except StopIteration:
-            last = None
-            break
-
-    return last

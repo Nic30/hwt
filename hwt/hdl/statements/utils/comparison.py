@@ -1,10 +1,8 @@
-from typing import List
-
-from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 
 
-def isSameStatementList(stmListA: List[HdlStatement],
-                        stmListB: List[HdlStatement]) -> bool:
+def isSameStatementList(stmListA: ListOfHdlStatement,
+                        stmListB: ListOfHdlStatement) -> bool:
     """
     :return: True if two lists of HdlStatement instances are same
     """
@@ -20,7 +18,7 @@ def isSameStatementList(stmListA: List[HdlStatement],
     return True
 
 
-def statementsAreSame(statements: List[HdlStatement]) -> bool:
+def statementsAreSame(statements: ListOfHdlStatement) -> bool:
     """
     :return: True if all statements are same
     """

@@ -10,6 +10,7 @@ from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HdlStatement, HwtSyntaxError
 from hwt.hdl.statements.utils.comparison import isSameStatementList, statementsAreSame
 from hwt.hdl.statements.utils.ioDiscovery import HdlStatement_discover_enclosure_for_statements
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_lists, \
     HdlStatement_try_reduce_list, is_mergable_statement_list
 from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
@@ -37,8 +38,8 @@ class SwitchContainer(HdlStatement):
     _DEEPCOPY_SHALLOW_ONLY = (*HdlStatement._DEEPCOPY_SHALLOW_ONLY, '_case_value_index', '_case_enclosed_for', '_default_enclosed_for')
 
     def __init__(self, switchOn: RtlSignal,
-                 cases: List[Tuple[HValue, List[HdlStatement]]],
-                 default: List[HdlStatement]=None,
+                 cases: List[Tuple[HValue, ListOfHdlStatement]],
+                 default: Optional[ListOfHdlStatement]=None,
                  parentStm: HdlStatement=None,
                  event_dependent_from_branch: Optional[int]=None):
 
@@ -88,7 +89,7 @@ class SwitchContainer(HdlStatement):
         all_cut_off = True
         new_default = None
         if self.default:
-            new_default = []
+            new_default = ListOfHdlStatement()
             child_keep_mask.clear()
             case_eliminated = HdlStatement_cut_off_drivers_of_list(
                 sig, self.default, child_keep_mask, new_default)
@@ -102,7 +103,7 @@ class SwitchContainer(HdlStatement):
         new_cases = []
         case_keepmask = []
         for val, stms in self.cases:
-            new_case = []
+            new_case = ListOfHdlStatement()
             child_keep_mask.clear()
             case_eliminated = HdlStatement_cut_off_drivers_of_list(
                 sig, stms, child_keep_mask, new_case)
@@ -291,9 +292,9 @@ class SwitchContainer(HdlStatement):
             newCases.append((c, merge(caseA, caseB)))
 
         self.cases = newCases
-
-        if self.default is not None:
-            self.default = merge(self.default, other.default)
+        other.cases = None
+        self.default = merge(self.default, other.default)
+        other.default = None
 
         self._on_merge(other)
 
@@ -396,7 +397,7 @@ class SwitchContainer(HdlStatement):
 
     @internal
     def _replace_child_statement(self, stm: HdlStatement,
-            replacement:List[HdlStatement],
+            replacement:ListOfHdlStatement,
             update_io:bool) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_child_statement`

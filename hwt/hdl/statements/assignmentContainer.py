@@ -4,6 +4,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.value import HValue
 from hwt.hdl.valueUtils import isSameHVal, areSameHVals
 from hwt.pyUtils.uniqList import UniqList
@@ -140,11 +141,11 @@ class HdlAssignmentContainer(HdlStatement):
         self._event_dependent_from_branch = 0
 
     @internal
-    def _try_reduce(self) -> Tuple[List[HdlStatement], bool]:
+    def _try_reduce(self) -> Tuple[ListOfHdlStatement, bool]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._try_reduce`
         """
-        return [self, ], False
+        return ListOfHdlStatement((self, )), False
 
     @internal
     def _is_mergable(self, other: HdlStatement) -> bool:

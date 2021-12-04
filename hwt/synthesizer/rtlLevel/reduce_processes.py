@@ -3,10 +3,10 @@ from itertools import islice
 from hwt.doc_markers import internal
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
+from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_lists, \
+    is_mergable_statement_list
 from hwt.pyUtils.arrayQuery import areSetsIntersets, groupedby
 from hwt.serializer.utils import HdlStatement_sort_key
-from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_lists,\
-    is_mergable_statement_list
 
 
 class HwtStmIncompatibleStructure(Exception):
@@ -29,7 +29,8 @@ def checkIfIsTooSimple(proc):
 
 
 @internal
-def tryToMerge(procA: HdlStmCodeBlockContainer, procB: HdlStmCodeBlockContainer):
+def tryToMerge(procA: HdlStmCodeBlockContainer,
+               procB: HdlStmCodeBlockContainer):
     """
     Try merge procB into procA
 
@@ -44,6 +45,7 @@ def tryToMerge(procA: HdlStmCodeBlockContainer, procB: HdlStmCodeBlockContainer)
 
     procA.statements = HdlStatement_merge_statement_lists(
         procA.statements, procB.statements)
+    procB.statements = None
 
     procA._outputs.extend(procB._outputs)
     procA._inputs.extend(procB._inputs)
@@ -61,6 +63,7 @@ def reduceProcesses(processes):
     """
     # sort to make order of merging same deterministic
     processes.sort(key=HdlStatement_sort_key, reverse=True)
+
     # now try to reduce processes with nearly same structure of statements into one
     # to minimize number of processes
     for _, procs in groupedby(processes, lambda p: p.rank):
@@ -70,6 +73,7 @@ def reduceProcesses(processes):
                 yield p
             else:
                 _procs.append(p)
+
         procs = _procs
         for iA, pA in enumerate(procs):
             if pA is None:

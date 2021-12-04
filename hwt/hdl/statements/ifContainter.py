@@ -12,6 +12,7 @@ from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.statements.utils.comparison import  statementsAreSame, isSameStatementList
 from hwt.hdl.statements.utils.ioDiscovery import HdlStatement_discover_enclosure_for_statements
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.statements.utils.reduction import HdlStatement_merge_statement_lists, \
     HdlStatement_try_reduce_list, is_mergable_statement_list
 from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
@@ -50,14 +51,14 @@ class IfContainer(HdlStatement):
             event_dependent_from_branch=event_dependent_from_branch)
 
         if ifTrue is None:
-            ifTrue = []
-        self.ifTrue: List[HdlStatement] = ifTrue
+            ifTrue = ListOfHdlStatement()
+        self.ifTrue: ListOfHdlStatement = ifTrue
 
         if elIfs is None:
             elIfs = []
-        self.elIfs: List[Tuple[RtlSignalBase, List[HdlStatement]]] = elIfs
+        self.elIfs: List[Tuple[RtlSignalBase, ListOfHdlStatement]] = elIfs
 
-        self.ifFalse: Optional[List[HdlStatement]] = ifFalse
+        self.ifFalse: Optional[ListOfHdlStatement] = ifFalse
         self._ifTrue_enclosed_for: Optional[Set[RtlSignalBase]] = None
         self._elIfs_enclosed_for: Optional[Set[RtlSignalBase]] = None
         self._ifFalse_enclosed_for: Optional[Set[RtlSignalBase]] = None
@@ -277,12 +278,12 @@ class IfContainer(HdlStatement):
         if self.ifFalse is not None:
             yield from self.ifFalse
 
-    def _iter_all_elifs(self) -> Generator[Tuple[RtlSignalBase, List[HdlStatement]], None, None]:
+    def _iter_all_elifs(self) -> Generator[Tuple[RtlSignalBase, ListOfHdlStatement], None, None]:
         yield (self.cond, self.ifTrue)
         yield from self.elIfs
 
     @internal
-    def _try_reduce(self) -> Tuple[bool, List[HdlStatement]]:
+    def _try_reduce(self) -> Tuple[bool, ListOfHdlStatement]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._try_reduce`
         """
@@ -315,7 +316,7 @@ class IfContainer(HdlStatement):
         if reduce_self:
             res = self.ifTrue
         else:
-            res = [self, ]
+            res = ListOfHdlStatement((self, ))
 
         self._on_reduce(reduce_self, io_change, res)
 
@@ -376,8 +377,8 @@ class IfContainer(HdlStatement):
 
         self.ifFalse = merge(self.ifFalse, other.ifFalse)
 
-        other.ifTrue = []
-        other.elIfs = []
+        other.ifTrue = None
+        other.elIfs = None
         other.ifFalse = None
 
         self._on_merge(other)
@@ -457,7 +458,7 @@ class IfContainer(HdlStatement):
 
     @internal
     def _replace_child_statement(self, stm:HdlStatement,
-            replacement:List[HdlStatement],
+            replacement:ListOfHdlStatement,
             update_io:bool) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_child_statement`

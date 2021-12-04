@@ -3,6 +3,7 @@ from typing import List, Set, Tuple
 
 from hwt.doc_markers import internal
 from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.statements.utils.reduction import HdlStatement_try_reduce_list
 from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
 from hwt.pyUtils.uniqList import UniqList
@@ -29,7 +30,7 @@ class HdlStmCodeBlockContainer(HdlStatement):
 
     @internal
     @classmethod
-    def from_known_io(cls, name: str, statements: List[HdlStatement],
+    def from_known_io(cls, name: str, statements: ListOfHdlStatement,
                  sensitivity: Set["RtlSignal"],
                  inputs: UniqList, outputs: UniqList) -> 'HdlStmCodeBlockContainer':
         self = cls()
@@ -99,7 +100,7 @@ class HdlStmCodeBlockContainer(HdlStatement):
 
     @internal
     def _replace_child_statement(self, stm:HdlStatement,
-            replacement:List[HdlStatement],
+            replacement:ListOfHdlStatement,
             update_io:bool) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_child_statement`

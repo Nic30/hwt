@@ -1,13 +1,13 @@
 from typing import List, Set
 
 from hwt.doc_markers import internal
-from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 @internal
 def HdlStatement_discover_enclosure_for_statements(
-        statements: List[HdlStatement],
+        statements: ListOfHdlStatement,
         outputs: List[RtlSignalBase]) -> Set[RtlSignalBase]:
     """
     Discover enclosure for list of statements

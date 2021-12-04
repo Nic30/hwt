@@ -1,10 +1,11 @@
 from copy import copy
 from itertools import compress
-from typing import Generator, List
+from typing import Generator, List, Tuple
 
 from hwt.doc_markers import internal
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
-from hwt.hdl.statements.statement import HwtSyntaxError, HdlStatement
+from hwt.hdl.statements.statement import HwtSyntaxError
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.fill_stm_list_with_enclosure import fill_stm_list_with_enclosure, \
@@ -15,11 +16,12 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
 @internal
-def cut_off_drivers_of(dstSignal: RtlSignal, statements: List[HdlStatement]):
+def cut_off_drivers_of(dstSignal: RtlSignal, statements: ListOfHdlStatement)\
+        -> Tuple[ListOfHdlStatement, ListOfHdlStatement]:
     """
     Cut off drivers from statements
     """
-    separated = []
+    separated = ListOfHdlStatement()
     stm_filter = []
     for stm in statements:
         stm._clean_signal_meta()
@@ -30,7 +32,7 @@ def cut_off_drivers_of(dstSignal: RtlSignal, statements: List[HdlStatement]):
         f = d is not stm
         stm_filter.append(f)
 
-    return list(compress(statements, stm_filter)), separated
+    return ListOfHdlStatement(compress(statements, stm_filter)), separated
 
 
 @internal
@@ -50,11 +52,11 @@ def name_for_process(outputs: List[RtlSignal]) -> str:
 
 
 @internal
-def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops)\
+def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops: bool)\
         ->Generator[HdlStmCodeBlockContainer, None, None]:
     assert _statements
     # try to simplify statements
-    proc_statements = []
+    proc_statements = ListOfHdlStatement()
     for _stm in _statements:
         _stm._clean_signal_meta()
         stms, _ = _stm._try_reduce()
@@ -67,7 +69,7 @@ def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops)\
     _inputs = UniqList()
     sensitivity = UniqList()
     enclosed_for = set()
-    _proc_statements = []
+    _proc_statements = ListOfHdlStatement()
     for _stm in proc_statements:
         seen = set()
         _stm._discover_sensitivity(seen)
@@ -155,7 +157,7 @@ def _statements_to_HdlStmCodeBlockContainers(_statements, tryToSolveCombLoops)\
 
 
 @internal
-def statements_to_HdlStmCodeBlockContainers(statements: List[HdlStatement])\
+def statements_to_HdlStmCodeBlockContainers(statements: ListOfHdlStatement)\
         ->Generator[HdlStmCodeBlockContainer, None, None]:
     """
     Pack statements into HdlStmCodeBlockContainer instances
