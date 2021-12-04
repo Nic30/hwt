@@ -21,11 +21,12 @@ from hwt.serializer.vhdl.value import ToHdlAstVhdl2008_Value
 class VhdlNameScope(NameScope):
     RE_MANY_UNDERSCORES = re.compile(r"(_{2,})")
 
-    def checked_name(self, actualName, actualObj):
-        actualName = self.RE_MANY_UNDERSCORES.sub(r"_", actualName)
-        if actualName[0] == "_":
-            actualName = "u" + actualName
-        return NameScope.checked_name(self, actualName, actualObj)
+    def checked_name(self, suggested_name, actualObj):
+        suggested_name = self._sanitize_name(suggested_name)
+        suggested_name = self.RE_MANY_UNDERSCORES.sub(r"_", suggested_name)
+        if suggested_name[0] == "_":
+            suggested_name = "u" + suggested_name
+        return NameScope.checked_name(self, suggested_name, actualObj)
 
 
 IEEE = HdlValueId("IEEE", obj=LanguageKeyword())
