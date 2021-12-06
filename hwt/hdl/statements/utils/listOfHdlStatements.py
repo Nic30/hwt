@@ -1,12 +1,12 @@
 from itertools import islice
-from typing import List, Sequence
+from typing import Sequence
 
 from hwt.doc_markers import internal
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 
 
-class ListOfHdlStatement(list, List[HdlStatement]):
+class ListOfHdlStatement(list):
     """
     A list of hdl statements used in statements to keep track of children
     """
