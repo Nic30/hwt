@@ -1,19 +1,29 @@
+from typing import Optional, Set
+
 from hwt.synthesizer.interface import Interface
 from hwt.synthesizer.unit import Unit
 from ipCorePackager.constants import INTF_DIRECTION
 
 
-def connect_to_const(val, intf: Interface):
+def connect_to_const(val, intf: Interface, exclude=None):
+    for _ in _connect_to_const_it(val, intf, exclude):
+        pass
+
+
+def _connect_to_const_it(val, intf: Interface, exclude: Optional[Set[Interface]]):
     """
     Connect constant to all output ports, used mainly during the debbug
     to dissable interface
     """
+    if exclude is not None and intf in exclude:
+        return
+
     if intf._interfaces:
         for i in intf._interfaces:
-            connect_to_const(val, i)
+            yield from _connect_to_const_it(val, i, exclude)
     else:
         if intf._direction == INTF_DIRECTION.SLAVE:
-            intf(val)
+            yield intf(val)
 
 
 class EmptyUnit(Unit):
