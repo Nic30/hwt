@@ -7,6 +7,7 @@ from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef, \
 from hwt.code import If
 from hwt.doc_markers import internal
 from hwt.hdl.operatorDefs import AllOps
+from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.value import HValue
 from hwt.serializer.utils import HdlStatement_sort_key, RtlSignal_sort_key
@@ -19,7 +20,6 @@ from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.statements_to_HdlStmCodeBlockContainers import\
     statements_to_HdlStmCodeBlockContainers
 from ipCorePackager.constants import DIRECTION
-from hwt.hdl.statements.statement import HdlStatement
 
 
 class RtlNetlist():
