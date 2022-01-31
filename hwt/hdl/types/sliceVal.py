@@ -5,6 +5,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.types.bitsVal import BitsVal
 
 
 def slice_member_to_hval(v):
@@ -12,7 +13,7 @@ def slice_member_to_hval(v):
         assert isinstance(v._dtype, Bits)
         return v
     elif isinstance(v, HValue):
-        if isinstance(v, Bits):
+        if isinstance(v, BitsVal):
             return v
         else:
             return v._auto_cast(INT)
