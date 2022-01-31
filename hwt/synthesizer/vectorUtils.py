@@ -4,7 +4,6 @@ from typing import Union
 
 from hwt.doc_markers import internal
 from hwt.hdl.types.bits import Bits
-from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.types.utils import walkFlattenFields
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
@@ -16,7 +15,7 @@ class BitWidthErr(Exception):
     """
 
 
-def fitTo_t(what: Union[RtlSignalBase, HValue], where_t: HdlType,
+def fitTo_t(what: Union[RtlSignalBase, HValue], where_t: Bits,
             extend: bool=True, shrink: bool=True):
     """
     Slice signal "what" to fit in "where"
@@ -54,7 +53,10 @@ def fitTo_t(what: Union[RtlSignalBase, HValue], where_t: HdlType,
             # 0 extend
             ext = Bits(w).from_py(0)
 
-        return ext._concat(what)
+        res = ext._concat(what)
+        if where_t.signed is not None:
+            return res._reinterpret_cast(where_t)
+        return res
 
 
 def fitTo(what: Union[RtlSignalBase, HValue], where: Union[RtlSignalBase, HValue],
