@@ -162,7 +162,7 @@ def Interface_without_registration(
         nop_val: Union[int, None, dict, list, "NOT_SPECIFIED"]=NOT_SPECIFIED):
     """
     Load all parts of interface and construct signals in RtlNetlist context with an automatic name check,
-    without need to explicitely add the interface in _interfaces list.
+    without need to explicitly add the interface in _interfaces list.
     """
     _loadDeclarations(container, suggested_name)
     _instanciate_signals(
