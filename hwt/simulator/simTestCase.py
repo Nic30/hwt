@@ -101,7 +101,7 @@ class SimTestCase(unittest.TestCase):
         className, testName = self.id().split(".")[-2:]
         return f"{className:s}_{testName:s}"
 
-    def runSim(self, until: float, name=None):
+    def runSim(self, until: int, name=None):
         """
         Collect sim. processes from iterface agents and run simulation
         """
