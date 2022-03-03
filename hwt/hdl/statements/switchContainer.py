@@ -2,7 +2,7 @@ from copy import deepcopy, copy
 from functools import reduce
 from itertools import compress
 from operator import and_
-from typing import List, Tuple, Dict, Optional, Callable, Set
+from typing import List, Tuple, Dict, Optional, Callable, Set, Generator
 
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
@@ -72,16 +72,9 @@ class SwitchContainer(HdlStatement):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._cut_off_drivers_of`
         """
-        if self._sensitivity is not None or self._enclosed_for is not None:
-                raise NotImplementedError(
-                    "Sensitivity and enclosure has to be cleaned first")
-
-        if len(self._outputs) == 1 and sig in self._outputs:
-            # this statement has only this output, eject this statement from its parent
-            self.parentStm = None  # because new parent will be asigned immediately after cutting of
+        if self._try_cut_off_whole_stm(sig):
             return self
 
-        sig.drivers.discard(self)
         # try to cut off all statements which are drivers of specified signal
         # in all branches
         child_keep_mask = []
@@ -252,7 +245,8 @@ class SwitchContainer(HdlStatement):
 
         self._enclosed_for.update(select)
 
-    def _iter_stms(self):
+    @internal
+    def _iter_stms(self) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
         """
@@ -261,6 +255,17 @@ class SwitchContainer(HdlStatement):
 
         if self.default is not None:
             yield from self.default
+
+    @internal
+    def _iter_stms_for_output(self, output: RtlSignalBase) -> Generator[HdlStatement, None, None]:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms_for_output`
+        """
+        for _, stms in self.cases:
+            yield from stms.iterStatementsWithOutput(output)
+
+        if self.default is not None:
+            yield from self.default.iterStatementsWithOutput(output)
 
     @internal
     def _is_mergable(self, other) -> bool:
@@ -417,7 +422,7 @@ class SwitchContainer(HdlStatement):
             self.rank -= stm.rank
             branch_list[i:i + 1] = replacement
             for rstm in replacement:
-                rstm._set_parent_stm(self)
+                rstm._set_parent_stm(self, branch_list)
             # reset IO because it was shared with this statement
             stm._destroy()
             return

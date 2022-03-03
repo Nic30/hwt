@@ -22,14 +22,14 @@ def walkInputsForSpecificOutput(output_sig: RtlSignalBase, stm: HdlStatement):
         yield stm.cond
         for c, _ in stm.elIfs:
             yield c
-        for _stm in stm._iter_stms():
+        for _stm in stm._iter_stms_for_output(output_sig):
             yield from walkInputsForSpecificOutput(output_sig, _stm)
     elif isinstance(stm, SwitchContainer):
         yield stm.switchOn
-        for _stm in stm._iter_stms():
+        for _stm in stm._iter_stms_for_output(output_sig):
             yield from walkInputsForSpecificOutput(output_sig, _stm)
     elif isinstance(stm, HdlStmCodeBlockContainer):
-        for _stm in stm._iter_stms():
+        for _stm in stm._iter_stms_for_output(output_sig):
             yield from walkInputsForSpecificOutput(output_sig, _stm)
     else:
         raise NotImplementedError(stm)

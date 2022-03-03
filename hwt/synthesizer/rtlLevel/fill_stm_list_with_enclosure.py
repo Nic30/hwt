@@ -37,6 +37,7 @@ def fill_stm_list_with_enclosure(parentStm: Optional[HdlStatement],
     :attention: original statements parameter can be modified
     :return: new statements
     """
+    assert do_enclose_for
     if statements is None:
         statements = ListOfHdlStatement()
 
@@ -44,12 +45,11 @@ def fill_stm_list_with_enclosure(parentStm: Optional[HdlStatement],
         if e_sig in current_enclosure:
             continue
         enclosed = False
-        for stm in statements:
-            if e_sig in stm._outputs:
-                if e_sig not in stm._enclosed_for:
-                    stm._fill_enclosure(enclosure)
-                enclosed = True
-                break
+        for stm in statements.iterStatementsWithOutput(e_sig):
+            if e_sig not in stm._enclosed_for:
+                stm._fill_enclosure(enclosure)
+            enclosed = True
+            break
         # any statement was not related with this signal,
         if not enclosed:
             e = enclosure[e_sig]
@@ -58,6 +58,6 @@ def fill_stm_list_with_enclosure(parentStm: Optional[HdlStatement],
             statements.append(a)
 
             if parentStm is not None:
-                a._set_parent_stm(parentStm)
+                a._set_parent_stm(parentStm, statements)
 
     return statements

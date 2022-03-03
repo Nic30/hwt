@@ -1,4 +1,4 @@
-from typing import Tuple, List, Dict, Union, Optional
+from typing import Tuple, List, Dict, Union, Optional, Generator
 
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
@@ -32,6 +32,7 @@ class HdlAssignmentContainer(HdlStatement):
     def __init__(self, src: Union[RtlSignalBase, HValue], dst: RtlSignalBase,
                  indexes: Optional[List[Union[RtlSignalBase, HValue]]]=None, virtual_only=False,
                  parentStm: Optional[HdlStatement]=None,
+                 parentStmList: Optional[ListOfHdlStatement]=None,
                  sensitivity: Optional[UniqList]=None,
                  event_dependent_from_branch:Optional[int]=None):
         """
@@ -45,6 +46,7 @@ class HdlAssignmentContainer(HdlStatement):
         """
         super(HdlAssignmentContainer, self).__init__(
             parentStm,
+            parentStmList,
             sensitivity,
             event_dependent_from_branch=event_dependent_from_branch)
         self._instId = HdlAssignmentContainer._nextInstId()
@@ -86,11 +88,8 @@ class HdlAssignmentContainer(HdlStatement):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._cut_off_drivers_of`
         """
-        if self.dst is sig:
-            self.parentStm = None
+        if self._try_cut_off_whole_stm(sig):
             return self
-        else:
-            return None
 
     @internal
     def _discover_enclosure(self) -> None:
@@ -126,9 +125,17 @@ class HdlAssignmentContainer(HdlStatement):
         pass
 
     @internal
-    def _iter_stms(self):
+    def _iter_stms(self) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
+        """
+        return
+        yield
+
+    @internal
+    def _iter_stms_for_output(self, output: RtlSignalBase) -> Generator[HdlStatement, None, None]:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms_for_output`
         """
         return
         yield
@@ -145,7 +152,7 @@ class HdlAssignmentContainer(HdlStatement):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._try_reduce`
         """
-        return ListOfHdlStatement((self, )), False
+        return ListOfHdlStatement((self,)), False
 
     @internal
     def _is_mergable(self, other: HdlStatement) -> bool:

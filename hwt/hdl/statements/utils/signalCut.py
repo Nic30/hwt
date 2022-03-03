@@ -22,19 +22,23 @@ def HdlStatement_cut_off_drivers_of_list(sig: RtlSignalBase,
     """
     all_cut_off = True
     for stm in statements:
-        newStm = stm._cut_off_drivers_of(sig)
-        keep = True
-        if newStm is None:
-            # statement is des not have drivers of sig
-            all_cut_off = False
-        elif newStm is stm:
-            # statement drives only sig
-            keep = False
-            new_statements.append(newStm)
+        if sig in stm._outputs:
+            newStm = stm._cut_off_drivers_of(sig)
+            keep = True
+            if newStm is None:
+                # statement is des not have drivers of sig
+                all_cut_off = False
+            elif newStm is stm:
+                # statement drives only sig
+                keep = False
+                new_statements.append(newStm)
+            else:
+                # statement was splited on multiple statements
+                all_cut_off = False
+                new_statements.append(newStm)
         else:
-            # statement was splited on multiple statements
             all_cut_off = False
-            new_statements.append(newStm)
+            keep = True
 
         keep_mask.append(keep)
 

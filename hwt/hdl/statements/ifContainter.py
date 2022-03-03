@@ -109,16 +109,9 @@ class IfContainer(HdlStatement):
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._cut_off_drivers_of`
         """
-        if self._sensitivity is not None or self._enclosed_for is not None:
-            raise NotImplementedError(
-                    "Sensitivity and enclosure has to be cleaned first")
-
-        if len(self._outputs) == 1 and sig in self._outputs:
-            # this statement has only this output, eject this statement from its parent
-            self.parentStm = None  # because new parent will be asigned immediately after cutting of
+        if self._try_cut_off_whole_stm(sig):
             return self
 
-        sig.drivers.discard(self)
         # try to cut off all statements which are drivers of specified signal
         # in all branches
         child_keep_mask = []
@@ -127,7 +120,7 @@ class IfContainer(HdlStatement):
         all_cut_off = True
         all_cut_off &= HdlStatement_cut_off_drivers_of_list(
             sig, self.ifTrue, child_keep_mask, newIfTrue)
-        self.ifTrue = list(compress(self.ifTrue, child_keep_mask))
+        self.ifTrue = ListOfHdlStatement(compress(self.ifTrue, child_keep_mask))
 
         newElifs = []
         anyElifHit = False
@@ -151,7 +144,7 @@ class IfContainer(HdlStatement):
             child_keep_mask.clear()
             all_cut_off &= HdlStatement_cut_off_drivers_of_list(
                 sig, self.ifFalse, child_keep_mask, newIfFalse)
-            self.ifFalse = list(compress(self.ifFalse, child_keep_mask))
+            self.ifFalse = ListOfHdlStatement(compress(self.ifFalse, child_keep_mask))
 
         assert not all_cut_off, "everything was cut of but this should be already known at the start"
 
@@ -268,6 +261,7 @@ class IfContainer(HdlStatement):
 
         self._enclosed_for.update(enc)
 
+    @internal
     def _iter_stms(self) -> Generator[HdlStatement, None, None]:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms`
@@ -278,6 +272,18 @@ class IfContainer(HdlStatement):
         if self.ifFalse is not None:
             yield from self.ifFalse
 
+    @internal
+    def _iter_stms_for_output(self, output: RtlSignalBase) -> Generator[HdlStatement, None, None]:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms_for_output`
+        """
+        yield from self.ifTrue.iterStatementsWithOutput(output)
+        for _, stms in self.elIfs:
+            yield from stms.iterStatementsWithOutput(output)
+        if self.ifFalse is not None:
+            yield from self.ifFalse.iterStatementsWithOutput(output)
+
+    @internal
     def _iter_all_elifs(self) -> Generator[Tuple[RtlSignalBase, ListOfHdlStatement], None, None]:
         yield (self.cond, self.ifTrue)
         yield from self.elIfs
@@ -316,7 +322,7 @@ class IfContainer(HdlStatement):
         if reduce_self:
             res = self.ifTrue
         else:
-            res = ListOfHdlStatement((self, ))
+            res = ListOfHdlStatement((self,))
 
         self._on_reduce(reduce_self, io_change, res)
 
@@ -358,9 +364,7 @@ class IfContainer(HdlStatement):
             if a_c is not b_c or not is_mergable_statement_list(a_stm, b_stm):
                 return False
 
-        if not is_mergable_statement_list(self.ifFalse, other.ifFalse):
-            return False
-        return True
+        return is_mergable_statement_list(self.ifFalse, other.ifFalse)
 
     @internal
     def _merge_with_other_stm(self, other: "IfContainer") -> None:
@@ -478,7 +482,7 @@ class IfContainer(HdlStatement):
             self.rank -= stm.rank
             branch_list[i:i + 1] = replacement
             for rstm in replacement:
-                rstm._set_parent_stm(self)
+                rstm._set_parent_stm(self, branch_list)
             # reset IO because it was shared with this statement
             stm._destroy()
             return

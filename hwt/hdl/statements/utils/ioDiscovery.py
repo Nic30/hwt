@@ -27,13 +27,10 @@ def HdlStatement_discover_enclosure_for_statements(
     for o in outputs:
         has_driver = False
 
-        for stm in statements:
-            if o in stm._outputs:
-                assert not has_driver
-                has_driver = False
-                result.update(stm._enclosed_for)
-            else:
-                pass
+        for stm in statements.iterStatementsWithOutput(o):
+            assert not has_driver
+            has_driver = False
+            result.update(stm._enclosed_for)
 
     return result
 

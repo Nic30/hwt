@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import List, Tuple, Union, Optional, Dict, Callable
+from typing import List, Tuple, Union, Optional, Dict, Callable, Generator
 
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
@@ -17,6 +17,7 @@ class HdlStatement(HdlObject):
     """
     :ivar ~._event_dependent_from_branch: index of code branch if statement is event (clk) dependent else None
     :ivar ~.parentStm: parent instance of HdlStatement or None
+    :ivar ~.parentStmList: list in parent statement where this statement is stored
     :ivar ~._inputs: UniqList of input signals for this statement
     :ivar ~._outputs: UniqList of output signals for this statement
     :ivar ~._sensitivity: UniqList of input signals
@@ -26,15 +27,17 @@ class HdlStatement(HdlObject):
     :ivar ~.rank: number of used branches in statement, used as pre-filter
         for statement comparing
     """
-    _DEEPCOPY_SKIP = ('parentStm',)
+    _DEEPCOPY_SKIP = ('parentStm', 'parentStmList')
     _DEEPCOPY_SHALLOW_ONLY = ("_inputs", "_outputs", "_enclosed_for", "_sensitivity")
 
     def __init__(self, parentStm:Optional["HdlStatement"]=None,
+                 parentStmList: Optional["ListOfHdlStatement"]=None,
                  sensitivity:Optional[UniqList]=None,
                  event_dependent_from_branch:Optional[int]=None):
         assert event_dependent_from_branch is None or isinstance(event_dependent_from_branch, int), event_dependent_from_branch
         self._event_dependent_from_branch = event_dependent_from_branch
         self.parentStm = parentStm
+        self.parentStmList = parentStmList
         self._inputs = UniqList()
         self._outputs = UniqList()
         self._enclosed_for = None
@@ -57,6 +60,7 @@ class HdlStatement(HdlObject):
                 new_v = deepcopy(v, memo)
 
             setattr(result, k, new_v)
+
         return result
 
     @internal
@@ -83,6 +87,10 @@ class HdlStatement(HdlObject):
             in_add(stm._inputs)
             out_add(stm._outputs)
 
+        if self.parentStmList is not None:
+            for o in self._outputs:
+                self.parentStmList._registerOutput(o, self)
+
     @internal
     def _collect_inputs(self) -> None:
         """
@@ -105,6 +113,35 @@ class HdlStatement(HdlObject):
 
         for stm in self._iter_stms():
             out_add(stm._outputs)
+
+        if self.parentStmList is not None:
+            for o in self._outputs:
+                self.parentStmList._registerOutput(o, self)
+
+    @internal
+    def _try_cut_off_whole_stm(self, sig: RtlSignalBase) -> bool:
+        """
+        Try cut of output from statement and if this is only output of statement cut off whole statement.
+        Otherwise prepare for cutting of the signal from this statement.
+
+        :param sig: signal which drivers should be removed
+        :return: true if was removed or False if pruning of sig from this statement is requried
+        """
+        if self._sensitivity is not None or self._enclosed_for is not None:
+                raise NotImplementedError(
+                    "Sensitivity and enclosure has to be cleaned first")
+
+        if self.parentStmList is not None:
+            self.parentStmList._unregisterOutput(sig, self)
+
+        if len(self._outputs) == 1 and sig is self._outputs[0]:
+            # this statement has only this output, eject this statement from its parent
+            self.parentStm = None  # because new parent will be asigned immediately after cutting of
+            self.parentStmList = None
+            return True
+
+        sig.drivers.discard(self)
+        return False
 
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase) -> Union[None, "HdlStatement", List["HdlStatement"]]:
@@ -138,6 +175,9 @@ class HdlStatement(HdlObject):
 
         if self.parentStm is None:
             cut_off_sig.drivers.append(cut_of_smt)
+
+        if self.parentStmList is not None:
+            self.parentStmList._unregisterOutput(cut_off_sig, self)
 
     @internal
     def _discover_enclosure(self) -> None:
@@ -181,6 +221,7 @@ class HdlStatement(HdlObject):
             "Statement does not have any signal in any context,"
             " it should have at least some output or should be alreary optimized out", self)
 
+    @internal
     def _iter_stms(self):
         """
         :return: iterator over all children statements
@@ -188,6 +229,14 @@ class HdlStatement(HdlObject):
         raise NotImplementedError("This method should be implemented"
                                   " on class of statement", self.__class__,
                                   self)
+
+    @internal
+    def _iter_stms_for_output(self, output: RtlSignalBase) -> Generator["HdlStatement", None, None]:
+        """
+        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms_for_output`
+        """
+        return
+        yield
 
     @internal
     def _merge_with_other_stm(self, other: "HdlStatement") -> None:
@@ -212,6 +261,8 @@ class HdlStatement(HdlObject):
         """
 
         parentStm = self.parentStm
+        parentStmList = self.parentStmList
+        
         if self_reduced:
             was_top = parentStm is None
             # update signal drivers/endpoints
@@ -228,28 +279,42 @@ class HdlStatement(HdlObject):
 
             for stm in result_statements:
                 stm.parentStm = parentStm
-                if parentStm is None:
+                stm.parentStmList = parentStmList
+                if was_top:
                     # connect signals to child statements
                     for inp in stm._inputs:
                         inp.endpoints.append(stm)
                     for outp in stm._outputs:
                         outp.drivers.append(stm)
+                else:
+                    for outp in stm._outputs:
+                        if parentStmList is not None:
+                            parentStmList._registerOutput(outp, stm)
         else:
             # parent has to update it's inputs/outputs
             if io_changed:
+                if parentStmList is not None:
+                    for o in self._outputs:
+                        parentStmList._unregisterOutput(o, self)
                 self._inputs = UniqList()
                 self._outputs = UniqList()
                 self._collect_io()
 
     @internal
-    def _on_merge(self, other):
+    def _on_merge(self, other: "HdlStatement"):
         """
         After merging statements update IO, sensitivity and context
 
         :attention: rank is not updated
         """
         self._inputs.extend(other._inputs)
-        self._outputs.extend(other._outputs)
+        if self.parentStmList is not None:
+            for o in other._outputs:
+                if o not in self._outputs:
+                    self._outputs.append(o)
+                    self.parentStmList._registerOutput(o, self)
+        else:
+            self._outputs.extend(other._outputs)
 
         if self._sensitivity is not None:
             self._sensitivity.extend(other._sensitivity)
@@ -305,10 +370,11 @@ class HdlStatement(HdlObject):
                 stm._on_parent_event_dependent()
 
     @internal
-    def _set_parent_stm(self, parentStm: "HdlStatement"):
+    def _set_parent_stm(self, parentStm: "HdlStatement", parentStmList: "ListOfHdlStatements"):
         """
         Assign parent statement and propagate dependency flags if necessary
         """
+        assert parentStm is not self.parentStm
         was_top = self.parentStm is None
         self.parentStm = parentStm
         if self._event_dependent_from_branch is None\
@@ -340,17 +406,20 @@ class HdlStatement(HdlObject):
             ctx.statements.discard(self)
 
         parentStm.rank += self.rank
+        self.parentStmList = parentStmList
+        for o in self._outputs:
+            parentStmList._registerOutput(o, self)
 
     @internal
     def _register_stements(self, statements: List["HdlStatement"],
-                           target: List["HdlStatement"]):
+                           target: "ListOfHdlStatements"):
         """
         Append statements to this container
         """
         for stm in flatten(statements):
             assert stm.parentStm is None, (
                 "HdlStatement instance has to have only a single parent", stm)
-            stm._set_parent_stm(self)
+            stm._set_parent_stm(self, target)
             target.append(stm)
 
     def isSame(self, other: "HdlStatement") -> bool:
@@ -377,6 +446,11 @@ class HdlStatement(HdlObject):
 
             ctx.statements.remove(self)
             self.parentStm = None
+
+            if self.parentStmList is not None:
+                self.parentStmList = None
+                for o in self._outputs:
+                    self.parentStmList._unregisterOutput(o, self)
 
     @internal
     def _replace_input(self, toReplace: RtlSignalBase,

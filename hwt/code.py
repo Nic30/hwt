@@ -6,6 +6,7 @@ from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.statements.statement import HwtSyntaxError
 from hwt.hdl.statements.switchContainer import SwitchContainer
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.typeCast import toHVal
@@ -71,9 +72,9 @@ class If(IfContainer):
         self._inputs.append(cond_sig)
         cond_sig.endpoints.append(self)
 
-        case = []
-        self.elIfs.append((cond_sig, case))
-        self._register_stements(statements, case)
+        stms = ListOfHdlStatement()
+        self.elIfs.append((cond_sig, stms))
+        self._register_stements(statements, stms)
 
         return self
 
@@ -85,7 +86,7 @@ class If(IfContainer):
 
         self.rank += 1
 
-        self.ifFalse = []
+        self.ifFalse = ListOfHdlStatement()
         self._register_stements(statements, self.ifFalse)
         return self
 
@@ -129,10 +130,10 @@ class Switch(SwitchContainer):
             "Switch statement already has case for value ", caseVal)
 
         self.rank += 1
-        case = []
+        stms = ListOfHdlStatement()
         self._case_value_index[caseVal] = len(self.cases)
-        self.cases.append((caseVal, case))
-        self._register_stements(statements, case)
+        self.cases.append((caseVal, stms))
+        self._register_stements(statements, stms)
 
         return self
 
@@ -141,7 +142,7 @@ class Switch(SwitchContainer):
         """
         assert self.parentStm is None
         self.rank += 1
-        self.default = []
+        self.default = ListOfHdlStatement()
         self._register_stements(statements, self.default)
         return self
 
