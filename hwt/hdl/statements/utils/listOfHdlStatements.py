@@ -1,3 +1,4 @@
+from copy import deepcopy
 from itertools import islice
 from typing import Sequence, Dict, List, Union
 
@@ -113,3 +114,10 @@ class ListOfHdlStatement(list):
         res = list.sort(self, *args, **kwargs)
         self.firstStmWithBranchesI = None
         return res
+
+    def __deepcopy__(self, memo: dict):
+        cls = self.__class__
+        result = cls(deepcopy(i, memo) for i in self)
+        memo[id(self)] = result
+        return result
+
