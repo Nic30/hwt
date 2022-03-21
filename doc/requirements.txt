@@ -1,5 +1,5 @@
-git+git://github.com/Nic30/pyMathBitPrecise.git@master#egg=pyMathBitPrecise
-git+git://github.com/Nic30/pyDigitalWaveTools.git@master#egg=pyDigitalWaveTools
-git+git://github.com/Nic30/hdlConvertorAst.git@master#egg=hdlConvertorAst
-git+git://github.com/Nic30/ipCorePackager.git@master#egg=ipCorePackager
-git+git://github.com/Nic30/hwtSimApi.git@master#egg=hwtSimApi
+git+https://github.com/Nic30/pyMathBitPrecise.git@master#egg=pyMathBitPrecise
+git+https://github.com/Nic30/pyDigitalWaveTools.git@master#egg=pyDigitalWaveTools
+git+https://github.com/Nic30/hdlConvertorAst.git@master#egg=hdlConvertorAst
+git+https://github.com/Nic30/ipCorePackager.git@master#egg=ipCorePackager
+git+https://github.com/Nic30/hwtSimApi.git@master#egg=hwtSimApi

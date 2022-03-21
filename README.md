@@ -52,7 +52,7 @@ This library is a regular python package. You can install it using:
 sudo pip3 install hwt
 
 # or directly from git
-pip3 install --upgrade --force-reinstall --no-cache-dir -r https://raw.githubusercontent.com/Nic30/hwt/master/doc/requirements.txt git+git://github.com/Nic30/hwt.git@master#egg=hwt
+pip3 install --upgrade --force-reinstall --no-cache-dir -r https://raw.githubusercontent.com/Nic30/hwt/master/doc/requirements.txt git+https://github.com/Nic30/hwt.git@master#egg=hwt
 ```
 
 Then you are able to use functions and classes defined in the hwt library from a python console or script.
