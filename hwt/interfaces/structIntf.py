@@ -48,7 +48,7 @@ class StructIntf(Interface):
 
         self._field_path = field_path
         self._dtype = structT
-        assert self._dtype.fields, "Needs to have at least some mebers (othervise this interface is useless)"
+        assert self._dtype.fields, "Needs to have at least some members (otherwise this interface is useless)"
         self._instantiateFieldFn = instantiateFieldFn
         self._fieldsToInterfaces = {}
 
@@ -95,16 +95,16 @@ class StructIntf(Interface):
 
 class HdlType_to_Interface():
     """
-    Convert instance of HdlType to an interface shich represents same data.
+    Convert instance of HdlType to an interface which represents same data.
 
-    :note: Interface is only instanciated, that means it does not have sub-interfaces
+    :note: Interface is only instantiated, that means it does not have sub-interfaces
         loaded yet, it can be done manually or by assigning to a property of parent Interface/Unit
         instance.
     """
 
     def apply(self, dtype: HdlType, field_path: Optional[TypePath]=None, masterDir=DIRECTION.OUT) -> Interface:
         """
-        Run the connversion
+        Run the conversion
         """
         if isinstance(dtype, HStruct):
             return StructIntf(dtype, field_path,
@@ -132,7 +132,7 @@ class HdlType_to_Interface():
 
 class Interface_to_HdlType():
     """
-    Convert instance of HdlType to an interface shich represents same data.
+    Convert instance of HdlType to an interface which represents same data.
 
     :note: Interface instance has to have definitions loaded.
     """

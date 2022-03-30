@@ -7,7 +7,7 @@ from ipCorePackager.constants import INTF_DIRECTION
 
 class UniversalCompositeAgent(AgentBase):
     """
-    Composite agent which just instanciates agents for every subinterface
+    Composite agent which just instantiates agents for every subinterface
     """
 
     def __init__(self, sim: HdlSimulator, intf: Interface):

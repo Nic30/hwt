@@ -71,7 +71,7 @@ def _normalize_default_value_dict_for_interface_array(root_val: dict,
 
 
 @internal
-def _instanciate_signals(intf: Union[Signal, HObjList, StructIntf],
+def _instantiate_signals(intf: Union[Signal, HObjList, StructIntf],
                          clk: Clk, rst: Union[Rst, Rst_n], def_val, nop_val, signal_create_fn):
     intf._direction = INTF_DIRECTION.UNKNOWN
     if isinstance(intf, Signal):
@@ -109,7 +109,7 @@ def _instanciate_signals(intf: Union[Signal, HObjList, StructIntf],
                 _nop_val = nop_val.get(i, NOT_SPECIFIED)
             else:
                 _nop_val = nop_val[i]
-            _instanciate_signals(elm, clk, rst, _def_val, _nop_val, signal_create_fn)
+            _instantiate_signals(elm, clk, rst, _def_val, _nop_val, signal_create_fn)
 
     else:
         if def_val is not None:
@@ -141,7 +141,7 @@ def _instanciate_signals(intf: Union[Signal, HObjList, StructIntf],
             else:
                 _nop_val = nop_val.get(name, NOT_SPECIFIED)
 
-            _instanciate_signals(elm, clk, rst, _def_val, _nop_val, signal_create_fn)
+            _instantiate_signals(elm, clk, rst, _def_val, _nop_val, signal_create_fn)
 
 
 @internal
@@ -165,7 +165,7 @@ def Interface_without_registration(
     without need to explicitly add the interface in _interfaces list.
     """
     _loadDeclarations(container, suggested_name)
-    _instanciate_signals(
+    _instantiate_signals(
         container, None, None, def_val, nop_val,
         lambda name, dtype, clk, rst, def_val, nop_val: parent._sig(name, dtype,
                                                                   def_val=def_val,
@@ -207,7 +207,7 @@ class UnitImplHelpers(UnitBase):
         if isinstance(dtype, (HStruct, HArray)):
             container = HdlType_to_Interface().apply(dtype)
             _loadDeclarations(container, name)
-            _instanciate_signals(
+            _instantiate_signals(
                 container, clk, rst, def_val, NOT_SPECIFIED,
                 lambda name, dtype, clk, rst, def_val, nop_val: self._reg(name, dtype,
                                                                           def_val=def_val,

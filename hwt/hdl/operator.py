@@ -106,7 +106,7 @@ class Operator(HdlObject):
                     pass
                 break
 
-        # instanciate new Operator
+        # instantiate new Operator
         op = Operator(opDef, operands)
         out = RtlSignal(getCtxFromOps(operands), None, resT)
         out._const = arr_all(op.operands, isConst)

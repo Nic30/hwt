@@ -37,7 +37,7 @@ class ComponentPath(tuple):
 
         * The first member is a top component or path is empty
         * All members except the last are :class:`hwt.synthesizer.unit.Unit` instances (last can be RtlSignal/Interface)
-        * Each successor member is instanciated in predecessor except for :class:`hwt.synthesizer.unit.Unit` instance with shared component
+        * Each successor member is instantiated in predecessor except for :class:`hwt.synthesizer.unit.Unit` instance with shared component
         * If member is a :class:`hwt.synthesizer.unit.Unit` instance with shared component the successor must be an interface of this instance or an object from shared component
         """
         it = iter(reversed(self))
