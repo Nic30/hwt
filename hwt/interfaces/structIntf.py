@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Optional, Union
+from typing import Optional, Union, Set
 
 from hwt.code import And, Or
 from hwt.doc_markers import internal
@@ -137,15 +137,22 @@ class Interface_to_HdlType():
     :note: Interface instance has to have definitions loaded.
     """
 
-    def apply(self, intf: Union[Interface, RtlSignal], const=False):
+    def apply(self, intf: Union[Interface, RtlSignal], const=False, exclude: Optional[Set[Interface]]=None):
         """
-        Run the connversion
+        Run the conversion
         """
+        assert exclude is None or intf not in exclude
         if isinstance(intf, Interface) and intf._interfaces:
-            return HStruct(
-                *((self.apply(i, const=const), i._name)
-                  for i in intf._interfaces)
-            )
+            if exclude is None:
+                return HStruct(
+                    *((self.apply(i, const=const), i._name)
+                      for i in intf._interfaces)
+                )
+            else:
+                return HStruct(
+                    *((self.apply(i, const=const), i._name)
+                      for i in intf._interfaces if i not in exclude)
+                )
         else:
             t = intf._dtype
             if t.const != const:
