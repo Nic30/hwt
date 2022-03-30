@@ -17,7 +17,7 @@ from hwt.synthesizer.vectorUtils import fitTo_t
 
 def tv(signal):
     """
-    HValue class for hdl type of signal
+    HValue class for HDL type of signal
     """
     return signal._dtype.getValueCls()
 
@@ -359,7 +359,7 @@ class RtlSignalOps():
                     sign_cast_seen = True
                     intf = d.operands[0]
                 else:
-                    # the coccatenations should have been already resolved before entering of this function
+                    # the concatenations should have been already resolved before entering of this function
                     raise HwtSyntaxError(
                         f"can not assign to result of operator {d}")
 

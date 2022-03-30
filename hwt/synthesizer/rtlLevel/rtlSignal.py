@@ -30,11 +30,11 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         for which this signal is driver.
     :ivar ~.drivers: UniqList of operators and statements
         which can drive this signal.
-        If driver is statemet tree only top statement is present.
+        If driver is statement tree only top statement is present.
     :ivar ~._usedOps: A dictionary of used operators which can be reused.
-    :ivar ~._usedOpsAlias: A dictionary tuple of operator and operands to set of tules of operator and operands,
+    :ivar ~._usedOpsAlias: A dictionary tuple of operator and operands to set of tuples of operator and operands,
         used to resolve which combination of the operator and operands resulted in to same result.
-    :ivar ~.hiden: means that this signal is part of expression
+    :ivar ~.hidden: means that this signal is part of expression
         and should not be rendered
     :ivar ~._nop_val: value which is used to fill up statements when no other
             value is assigned, use NOT_SPECIFIED to disable
@@ -66,9 +66,9 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         :param name: name hint for this signal, if is None name
             is chosen automatically
         :param def_val: value which is used for reset and as default value
-            in hdl
+            in HDL
         :param nop_val: value which is used to fill up statements when no other
-            value is assigned, use NOT_SPECIFIED to dissable
+            value is assigned, use NOT_SPECIFIED to disable
         :param is_const: flag which tell that this signal can not have any other driver
             than a default value
         """
@@ -172,7 +172,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     @internal
     def _walk_public_drivers(self, seen: set) -> Generator["RtlSignal", None, None]:
         """
-        Walk all non hiden signals in an expression
+        Walk all non hidden signals in an expression
         """
         seen.add(self)
         if not self.hidden:
