@@ -495,7 +495,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
     def __mul__(self, other):
         Bits = self._dtype.__class__
-        other = toHVal(other)
+        other = toHVal(other, suggestedType=self._dtype)
         if not isinstance(other._dtype, Bits):
             raise TypeError(other)
 
