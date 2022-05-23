@@ -124,6 +124,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * :skull:  [wyre](https://github.com/nickmqb/wyre) - 2020-2020, Mupad, Minimalistic HDL
 * [phi](https://github.com/donn/Phi) - 2019-?, custom language, llvm based compiler of custom hdl
 * [prga](https://github.com/PrincetonUniversity/prga) - 2019-?. Python, prototyping platform with integrated yosys
+* [Hardcaml](https://github.com/janestreet/hardcaml) - OCaml, HCL
 
 ## Related open-source
 
