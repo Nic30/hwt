@@ -1,4 +1,5 @@
 # select = map, groupBy = itertools.groupby
+from collections import deque
 from itertools import zip_longest
 from math import inf
 from types import GeneratorType
@@ -117,7 +118,7 @@ def flatten(iterables, level=inf):
     :param level: maximum depth of flattening
     """
     if level >= 0 and isinstance(iterables, (list, tuple, GeneratorType,
-                                             map, zip)):
+                                             map, zip, set, deque)):
         level -= 1
         for i in iterables:
             yield from flatten(i, level=level)
