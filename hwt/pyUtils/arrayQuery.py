@@ -5,6 +5,7 @@ from math import inf
 from types import GeneratorType
 
 from hdlConvertorAst.to.hdlUtils import iter_with_last
+from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
 
 
 class DuplicitValueExc(Exception):
@@ -143,8 +144,12 @@ def areSetsIntersets(setA, setB):
 def balanced_reduce(arr, opFn):
     while len(arr) > 1:
         nextArr = []
-        for a, b in grouper(2, arr):
-            nextArr.append(opFn(a, b))
+        for a, b in grouper(2, arr, NOT_SPECIFIED):
+            if b is NOT_SPECIFIED:
+                # if number of items was odd we have 1 leftover
+                nextArr.append(a)
+            else:
+                nextArr.append(opFn(a, b))
         arr = nextArr
 
     return arr[0]
