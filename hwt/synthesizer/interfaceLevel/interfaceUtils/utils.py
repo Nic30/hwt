@@ -1,5 +1,10 @@
+from typing import Union
+
 from hwt.hdl.constants import DIRECTION
+from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import BIT
+from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
 class NotSpecified(Exception):
@@ -64,7 +69,7 @@ def walkFlatten(interface, shouldEnterIntfFn):
             yield from walkFlatten(intf, shouldEnterIntfFn)
 
 
-def packIntf(intf, masterDirEqTo=DIRECTION.OUT, exclude=None):
+def packIntf(intf, masterDirEqTo=DIRECTION.OUT, exclude=None) -> Union[BitsVal, RtlSignalBase[Bits]]:
     """
     Concatenate all signals to one big signal, recursively
     (LSB of first interface is LSB of result)
@@ -96,7 +101,7 @@ def packIntf(intf, masterDirEqTo=DIRECTION.OUT, exclude=None):
 
         if s is not None:
             if res is None:
-                res = s
+                res = s._reinterpret_cast(Bits(s._dtype.bit_length()))
             else:
                 res = s._concat(res)
 
