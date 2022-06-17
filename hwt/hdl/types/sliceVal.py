@@ -97,3 +97,13 @@ class HSliceVal(HValue):
     def __hash__(self):
         v = self.val
         return hash((self._dtype, v.start, v.stop, v.step))
+    
+    def __repr__(self):
+        v = self.val
+        if self._is_full_valid():
+            return f"<{self.__class__.__name__:s} slice({int(v.start):d}, {int(v.stop):d}, {int(v.step):d})>"
+        else:
+            vld_mask = ", mask {0:x}".format(self.vld_mask)
+        return "<{0:s} {1:s}{2:s}>".format(
+            self.__class__.__name__, repr(v), vld_mask)
+
