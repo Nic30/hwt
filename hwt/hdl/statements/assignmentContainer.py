@@ -54,23 +54,13 @@ class HdlAssignmentContainer(HdlStatement):
         self.src = src
         self.dst = dst
         assert isinstance(dst, RtlSignalBase), dst
-
-        isReal = not virtual_only
-
-        if isinstance(src, RtlSignalBase):
-            self._inputs.append(src)
-            if isReal:
-                src.endpoints.append(self)
-
         self.indexes = indexes
-        if indexes:
-            for i in indexes:
-                if isinstance(i, RtlSignalBase):
-                    self._inputs.append(i)
-                    if isReal:
-                        i.endpoints.append(self)
+        self._collect_inputs()
 
-        if isReal:
+        if not virtual_only:
+            for i in self._inputs:
+                i.endpoints.append(self)
+                
             dst.drivers.append(self)
             dst.ctx.statements.add(self)
 
@@ -83,6 +73,18 @@ class HdlAssignmentContainer(HdlStatement):
         result._instId = self._nextInstId()
         return result
 
+    @internal
+    def _collect_inputs(self) -> None:
+        src = self.src
+        if isinstance(src, RtlSignalBase):
+            self._inputs.append(src)
+
+        indexes = self.indexes
+        if indexes:
+            for i in indexes:
+                if isinstance(i, RtlSignalBase):
+                    self._inputs.append(i)
+        
     @internal
     def _cut_off_drivers_of(self, sig: RtlSignalBase):
         """
