@@ -1,34 +1,68 @@
-from typing import Union
+from typing import Union, Tuple
 
 from hwt.doc_markers import internal
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.pyUtils.uniqList import UniqList
 # from hwt.hdl.operator import Operator
 
 
 @internal
-def replace_input_in_expr(parentObj: Union["Operator", "HdlStatement"],
-                          expr: Union[RtlSignalBase, HValue],
-                          toReplace: RtlSignalBase,
-                          replacement: RtlSignalBase,
-                          updateEndpoints: bool) -> RtlSignalBase:
+def does_expr_contain_expr(expr: Union[RtlSignalBase, HValue], subExprToFind: Union[RtlSignalBase, HValue]):
+    if expr is subExprToFind:
+        return True
+    if isinstance(expr, RtlSignalBase) and expr.hidden:
+        # :note: must be opeator because otherwise this expr should not be hidden
+        for op in expr.origin.operands:
+            if does_expr_contain_expr(op, subExprToFind):
+                return True
+    
+    return False
+
+
+@internal
+def _replace_input_in_expr(expr: Union[RtlSignalBase, HValue],
+                           toReplace: RtlSignalBase,
+                           replacement: RtlSignalBase,
+                           ) -> RtlSignalBase:
     """
-    :return: True if expr is toReplace and should be replaced else False
+    :return: newly rewritten expression with the subexpression replaced
     """
     if expr is toReplace:
-        if updateEndpoints:
-            expr.endpoints.discard(parentObj)
-            replacement.endpoints.append(parentObj)
         return replacement
+
     elif isinstance(expr, RtlSignalBase) and expr.hidden:
         op = expr.origin
         # assert isinstance(op, Operator), op
-        new_operands = []
-        for o in op.operands:
-            new_o = replace_input_in_expr(op, o, toReplace, replacement, True)
-            new_operands.append(new_o)
-
-        res = op.operator._evalFn(*new_operands)
+        ops = (_replace_input_in_expr(o, toReplace, replacement)
+               for o in op.operands)
+        res = op.operator._evalFn(*ops)
         return res
+
     else:
         return expr
+
+
+@internal
+def replace_input_in_expr(topStatement: "HdlStatement",
+                          parentStm: "HdlStatement",
+                          expr: Union[RtlSignalBase, HValue],
+                          toReplace: RtlSignalBase,
+                          replacement: RtlSignalBase,
+                          # maybeDisconnectedSignals: UniqList[RtlSignalBase]
+                          ) -> Tuple[RtlSignalBase, bool]:
+    """
+    :return: tuple (newExpression, True if expr is toReplace and should be replaced else False)
+    """
+    didContainExpr = does_expr_contain_expr(expr, toReplace)
+    if didContainExpr:
+        res = _replace_input_in_expr(expr, toReplace, replacement)
+        # maybeDisconnectedSignals.append(expr)
+        expr.endpoints.discard(topStatement)
+        if not isinstance(res, HValue):
+            res.endpoints.append(topStatement)
+
+        return res, True
+    else:
+        return expr, False
+

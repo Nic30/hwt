@@ -181,22 +181,26 @@ class HdlAssignmentContainer(HdlStatement):
         i = cls.__instCntr
         cls.__instCntr += 1
         return i
-
+    
     @internal
-    def _replace_input(self, toReplace: RtlSignalBase,
-                       replacement: RtlSignalBase) -> None:
+    def _replace_input_nested(self, topStm: HdlStatement, toReplace: RtlSignalBase,
+                              replacement: RtlSignalBase) -> None:
+       
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_input`
         """
-        isTopStatement = self.parentStm is None
-
+        didUpdate = False
         if self.indexes:
             new_indexes = []
             for ind in self.indexes:
-                new_i = replace_input_in_expr(self, ind, toReplace, replacement, isTopStatement)
+                new_i, _didUpdate = replace_input_in_expr(topStm, self, ind, toReplace, replacement)
                 new_indexes.append(new_i)
+                didUpdate |= _didUpdate
+                
             self.indexes = new_indexes
 
-        self.src = replace_input_in_expr(self, self.src, toReplace, replacement, isTopStatement)
-
-        self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
+        self.src, _didUpdate = replace_input_in_expr(topStm, self, self.src, toReplace, replacement)
+        didUpdate |= _didUpdate
+        if didUpdate:
+            self._replace_input_update_sensitivity_and_inputs(toReplace, replacement)
+        return didUpdate

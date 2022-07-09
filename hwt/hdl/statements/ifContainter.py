@@ -432,33 +432,38 @@ class IfContainer(HdlStatement):
                             return False
                     return True
         return False
-
+    
     @internal
-    def _replace_input(self, toReplace: RtlSignalBase, replacement: RtlSignalBase):
+    def _replace_input_nested(self, topStm: HdlStatement, toReplace: RtlSignalBase,
+                              replacement: RtlSignalBase) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_input`
         """
-        isTopStm = self.parentStm is None
-        if isTopStm:
-            self.cond = replace_input_in_expr(self, self.cond, toReplace,
-                                              replacement, isTopStm)
+        didUpdate = False
+        self.cond, _didUpdate = replace_input_in_expr(topStm, self, self.cond, toReplace,
+                                                      replacement)
+        didUpdate |= _didUpdate
 
         for stm in self.ifTrue:
-            stm._replace_input(toReplace, replacement)
+            didUpdate |= stm._replace_input_nested(topStm, toReplace, replacement)
 
         new_elifs = []
         for (cond, stms) in self.elIfs:
-            new_cond = replace_input_in_expr(self, cond, toReplace, replacement, isTopStm)
+            new_cond, _didUpdate = replace_input_in_expr(topStm, self, cond, toReplace, replacement)
+            didUpdate |= _didUpdate
             for stm in stms:
-                stm._replace_input(toReplace, replacement)
+                didUpdate |= stm._replace_input_nested(topStm, toReplace, replacement)
             new_elifs.append((new_cond, stms))
         self.elIfs = new_elifs
 
         if self.ifFalse is not None:
             for stm in self.ifFalse:
-                stm._replace_input(toReplace, replacement)
+                _didUpdate = stm._replace_input_nested(topStm, toReplace, replacement)
+                didUpdate |= _didUpdate
 
-        self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
+        if didUpdate:
+            self._replace_input_update_sensitivity_and_inputs(toReplace, replacement)
+        return didUpdate
 
     @internal
     def _replace_child_statement(self, stm:HdlStatement,

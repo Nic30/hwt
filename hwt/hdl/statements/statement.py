@@ -19,6 +19,7 @@ class HdlStatement(HdlObject):
     :ivar ~.parentStm: parent instance of HdlStatement or None
     :ivar ~.parentStmList: list in parent statement where this statement is stored
     :ivar ~._inputs: UniqList of input signals for this statement
+        (All input signals which are directly used in any statement. Note that the expression is also the signal.)
     :ivar ~._outputs: UniqList of output signals for this statement
     :ivar ~._sensitivity: UniqList of input signals
         or (rising/falling) operator
@@ -233,7 +234,7 @@ class HdlStatement(HdlObject):
     @internal
     def _iter_stms_for_output(self, output: RtlSignalBase) -> Generator["HdlStatement", None, None]:
         """
-        :see: :meth:`hwt.hdl.statements.statement.HdlStatement._iter_stms_for_output`
+        :return: iterator of sub statements which have specified output as an output
         """
         return
         yield
@@ -453,27 +454,38 @@ class HdlStatement(HdlObject):
                     self.parentStmList._unregisterOutput(o, self)
 
     @internal
-    def _replace_input(self, toReplace: RtlSignalBase,
+    def _replace_input_nested(self, topStm: "HdlStatement", toReplace: RtlSignalBase,
                        replacement: RtlSignalBase) -> None:
-        """
-        Replace input signal with another
-
-        :note: sensitivity/endoints are actualized
-        """
+        
         raise NotImplementedError("This method should be implemented in child class", self.__class__, self)
 
     @internal
-    def _replace_input_update_sensitivity_and_enclosure(
+    def _replace_input(self, toReplace: RtlSignalBase,
+                             replacement: RtlSignalBase) -> bool:
+        """
+        Replace input signal with another
+        :return: True if the expression was present in this statement (and was replaced)
+        :note: sensitivity/endpoints are actualized
+        :note: calling on children does not update parent's _inputs, _sensitivity or _enclosed_for
+        """
+        assert self.parentStm is None, self
+        return self._replace_input_nested(self, toReplace, replacement)
+
+    @internal
+    def _replace_input_update_sensitivity_and_inputs(
             self,
             toReplace: RtlSignalBase,
             replacement: RtlSignalBase):
+        """
+        This function updates _sensitivity and _inputs containers after the input was replaced in this statement.
+        """
+        
+        # if we replace something some input expression may be altered thus full re-computation is required
+        self._inputs.clear()
+        self._collect_inputs()
         if self._sensitivity is not None:
-            if self._sensitivity.discard(toReplace):
-                self._sensitivity.add(replacement)
-
-        if self._enclosed_for is not None:
-            if self._enclosed_for.discard(toReplace):
-                self._enclosed_for.add(replacement)
+            self._sensitivity = None
+            self._discover_sensitivity(set())
 
     @internal
     def _replace_child_statement(self, stm: "HdlStatement",

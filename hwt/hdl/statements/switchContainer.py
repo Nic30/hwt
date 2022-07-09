@@ -381,24 +381,28 @@ class SwitchContainer(HdlStatement):
         return True
 
     @internal
-    def _replace_input(self, toReplace: RtlSignalBase,
-                       replacement: RtlSignalBase) -> None:
+    def _replace_input_nested(self, topStm: "HdlStatement", toReplace: RtlSignalBase,
+                              replacement: RtlSignalBase) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_input`
         """
-        isTopStatement = self.parentStm is None
-        self.switchOn = replace_input_in_expr(self, self.switchOn, toReplace,
-                                              replacement, isTopStatement)
+        didUpdate = False
+        self.switchOn, _didUpdate = replace_input_in_expr(topStm, self, self.switchOn, toReplace,
+                                                          replacement)
+        didUpdate |= _didUpdate
 
         for (_, stms) in self.cases:
             for stm in stms:
-                stm._replace_input(toReplace, replacement)
+                stm: HdlStatement
+                didUpdate |= stm._replace_input_nested(topStm, toReplace, replacement)
 
         if self.default is not None:
             for stm in self.default:
-                stm._replace_input(toReplace, replacement)
+                didUpdate |= stm._replace_input_nested(topStm, toReplace, replacement)
 
-        self._replace_input_update_sensitivity_and_enclosure(toReplace, replacement)
+        if didUpdate:
+            self._replace_input_update_sensitivity_and_inputs(toReplace, replacement)
+        return didUpdate
 
     @internal
     def _replace_child_statement(self, stm: HdlStatement,
