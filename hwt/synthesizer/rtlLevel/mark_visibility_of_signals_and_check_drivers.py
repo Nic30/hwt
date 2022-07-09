@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, Tuple, List
 
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
@@ -32,9 +32,9 @@ def markVisibilityOfSignalsAndCheckDrivers(netlist: "RtlNetlist"):
     signals = netlist.signals
     interfaceSignals = netlist.interfaces
 
-    signals_with_driver_issue = []
+    signals_with_driver_issue: List[Tuple[SignalDriverErrType, RtlSignal]] = []
     for sig in signals:
-        #if isinstance(sig._nop_val, (RtlSignal, InterfaceBase)):
+        # if isinstance(sig._nop_val, (RtlSignal, InterfaceBase)):
         #    sig._nop_val.hidden = False
 
         driver_cnt = len(sig.drivers)
@@ -59,6 +59,7 @@ def markVisibilityOfSignalsAndCheckDrivers(netlist: "RtlNetlist"):
                 if has_comb_driver and is_comb_driver:
                     signals_with_driver_issue.append(
                         (SignalDriverErrType.MULTIPLE_COMB_DRIVERS, sig))
+                    break
 
                 has_comb_driver |= is_comb_driver
         elif driver_cnt == 1:
