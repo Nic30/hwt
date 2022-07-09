@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
@@ -11,6 +11,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
     bitsArithOp__val
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 
 # dictionary which hold information how to change operator after
 # operands were swapped
@@ -140,11 +141,29 @@ def bitsCmp(self, other, op, selfReduceVal, evalFn=None):
 
 
 @internal
+def extractNegation(sig: RtlSignalBase):
+    """
+    :return: tuple(the signal without negation, True if signal was negated)
+    """
+    try:
+        d = sig.singleDriver()
+    except SignalDriverErr:
+        return (sig, False)
+    
+    if isinstance(d, Operator) and d.operator == AllOps.NOT:
+        return d.operands[0], True
+    return sig, False
+
+
+@internal
 def bitsBitOp(self: Union[RtlSignalBase, HValue], other,
               op: OpDefinition,
               getVldFn: Callable[[HValue, HValue], int],
-              reduceCheckFn: Callable[[RtlSignalBase, HValue], bool],
-              selfReduceVal: Union[RtlSignalBase, HValue]):
+              reduceValCheckFn: Callable[[RtlSignalBase, HValue], bool],
+              reduceSigCheckFn: Callable[[RtlSignalBase,  # op0Original
+                                          bool,  # op0Negated
+                                          bool  # op1Negated
+                                          ], Union[RtlSignalBase, HValue]]):
     """
     Apply a generic bitwise binary operator
 
@@ -154,8 +173,11 @@ def bitsBitOp(self: Union[RtlSignalBase, HValue], other,
     :ivar other: operand 1
     :ivar op: operator used
     :ivar getVldFn: function to resolve invalid (X) states
-    :ivar reduceCheckFn: function to reduce useless operators (partially evaluate the expression if possible)
-    :ivar selfReduceVal: the value which is a result if operands are all same signal (e.g. a&a = a, b^b=0)
+    :ivar reduceValCheckFn: function to reduce useless operators (partially evaluate the expression if possible)
+    :ivar reduceSigCheckFn: function to reduce useless operators for signals and its negation flags
+        (e.g. a&a = a, a&~a=0, b^b=0)
+        function parameters are in format (op0Original:RtlSignalBase, op0Negated: bool, op1Negated:bool) -> Union[RtlSignalBase, HValue]:
+        returns result signal if reduction is possible else None
     """
     other = toHVal(other, self._dtype)
 
@@ -204,21 +226,24 @@ def bitsBitOp(self: Union[RtlSignalBase, HValue], other,
                     other = other[0]
 
             else:
-                raise TypeError("Can not apply operator %r (%r, %r)" %
+                raise TypeError("Can not apply operator %r (%r, %r)" % 
                                 (op, self._dtype, other._dtype))
 
         if otherIsVal:
-            r = reduceCheckFn(self, other)
+            r = reduceValCheckFn(self, other)
             if r is not None:
                 return r
 
         elif iamVal:
-            r = reduceCheckFn(other, self)
+            r = reduceValCheckFn(other, self)
             if r is not None:
                 return r
 
-        elif self is other:
-            return selfReduceVal
+        else:
+            _self, _self_n = extractNegation(self)
+            _other, _other_n = extractNegation(other)
+            if _self is _other:
+                return reduceSigCheckFn(self, _self_n, _other_n)
 
         return Operator.withRes(op, [self, other], self._dtype)
 

@@ -8,7 +8,7 @@ from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.bitValFunctions import bitsCmp, \
     bitsBitOp, bitsArithOp
 from hwt.hdl.types.bitVal_opReduce import tryReduceOr, tryReduceAnd, \
-    tryReduceXor
+    tryReduceXor, reduceSigCheckFnAnd, reduceSigCheckFnOr, reduceSigCheckFnXor
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT, BIT, SLICE, BIT_N
 from hwt.hdl.types.eventCapableVal import EventCapableVal
@@ -401,15 +401,15 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
     def __xor__(self, other):
         return bitsBitOp(self, other, AllOps.XOR,
-                         vld_mask_for_xor, tryReduceXor, self._dtype.from_py(0))
+                         vld_mask_for_xor, tryReduceXor, reduceSigCheckFnXor)
 
     def __and__(self, other):
         return bitsBitOp(self, other, AllOps.AND,
-                         vld_mask_for_and, tryReduceAnd, self)
+                         vld_mask_for_and, tryReduceAnd, reduceSigCheckFnAnd)
 
     def __or__(self, other):
         return bitsBitOp(self, other, AllOps.OR,
-                         vld_mask_for_or, tryReduceOr, self)
+                         vld_mask_for_or, tryReduceOr, reduceSigCheckFnOr)
 
     def __lshift__(self, other):
         """
