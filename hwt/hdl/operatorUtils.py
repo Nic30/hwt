@@ -11,7 +11,7 @@ from hwt.pyUtils.uniqList import UniqList
 def does_expr_contain_expr(expr: Union[RtlSignalBase, HValue], subExprToFind: Union[RtlSignalBase, HValue]):
     if expr is subExprToFind:
         return True
-    if isinstance(expr, RtlSignalBase) and expr.hidden:
+    if isinstance(expr, RtlSignalBase) and expr.hidden and expr.origin is not None:
         # :note: must be opeator because otherwise this expr should not be hidden
         for op in expr.origin.operands:
             if does_expr_contain_expr(op, subExprToFind):
