@@ -159,3 +159,4 @@ for a_name in dir(AllOps):
 
 CAST_OPS = (AllOps.BitsAsVec, AllOps.BitsAsSigned, AllOps.BitsAsUnsigned)
 BITWISE_OPS = (AllOps.NOT, AllOps.XOR, AllOps.AND, AllOps.OR)
+COMPARE_OPS = (AllOps.EQ, AllOps.NE, AllOps.GT, AllOps.GE, AllOps.LT, AllOps.LE)
