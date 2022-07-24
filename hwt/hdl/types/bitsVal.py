@@ -381,6 +381,9 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             return Bits3val.__hash__(self)
 
     # comparisons
+    def _isOn(self):
+        return self._auto_cast(BOOL)
+
     def _eq(self, other):
         return bitsCmp(self, other, AllOps.EQ, BIT.from_py(1), eq)
 
