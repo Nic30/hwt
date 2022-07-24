@@ -1,6 +1,8 @@
 from typing import Union
 
 from hwt.doc_markers import internal
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import INT, BOOL
@@ -13,6 +15,7 @@ from hwt.synthesizer.exceptions import TypeConversionErr
 from hwt.synthesizer.hObjList import HObjList
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 from hwt.synthesizer.vectorUtils import iterBits, fitTo_t
 from pyMathBitPrecise.bit_utils import set_bit_range, mask
 
@@ -61,6 +64,18 @@ def convertBits(self: Bits, sigOrVal, toType: HdlType):
     elif toType == BOOL:
         if self.bit_length() == 1:
             v = 0 if sigOrVal._dtype.negated else 1
+            if isinstance(sigOrVal, RtlSignal):
+                sigOrVal: RtlSignal
+                try:
+                    d = sigOrVal.singleDriver()
+                except SignalDriverErr:
+                    d = None
+
+                if d is not None and isinstance(d, Operator) and d.operator == AllOps.NOT:
+                    # signal itself is negated, ~a = 1 to a = 0
+                    v = int(not bool(v))
+                    sigOrVal = d.operands[0]
+
             return sigOrVal._eq(self.getValueCls().from_py(self, v))
     elif isinstance(toType, Bits):
         if self.bit_length() == toType.bit_length():
@@ -89,6 +104,7 @@ def reinterpret_bits_to_hstruct__val(val: HValue, hStructT: HStruct):
         offset += width
 
     return container
+
 
 @internal
 def transfer_signals(src: InterfaceBase, dst: InterfaceBase):
