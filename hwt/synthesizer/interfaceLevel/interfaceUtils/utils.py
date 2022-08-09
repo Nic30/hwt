@@ -43,11 +43,14 @@ def connectPacked(srcPacked, dstInterface, exclude=None):
             continue
         sig = i._sig
         t = sig._dtype
-        if t == BIT:
-            s = srcPacked[offset]
+        w = t.bit_length()
+        if w == 1:
+            if srcPacked._dtype.bit_length() == 1:
+                s = srcPacked
+            else:
+                s = srcPacked[offset]
             offset += 1
         else:
-            w = t.bit_length()
             s = srcPacked[(w + offset): offset]
             offset += w
         connections.append(sig(s))
