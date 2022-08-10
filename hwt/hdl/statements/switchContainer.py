@@ -423,10 +423,8 @@ class SwitchContainer(HdlStatement):
                 # not in list
                 continue
 
-            self.rank -= stm.rank
-            branch_list[i:i + 1] = replacement
-            for rstm in replacement:
-                rstm._set_parent_stm(self, branch_list)
+            branch_list.replace(self, stm, i, replacement)
+
             # reset IO because it was shared with this statement
             stm._destroy()
             return

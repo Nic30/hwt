@@ -115,6 +115,20 @@ class ListOfHdlStatement(list):
         self.firstStmWithBranchesI = None
         return res
 
+    def replace(self, parentStm: HdlStatement, toReplaceStm: HdlStatement, index: int, replacement: List[HdlStatement]):
+        """
+        Replace a single statement in this list with the list of statements while updating all cached values.
+        """
+        parentStm.rank -= toReplaceStm.rank
+        self[index:index + 1] = replacement
+        for o in toReplaceStm._outputs:
+            self._unregisterOutput(o, toReplaceStm)
+
+        for rstm in replacement:
+            for o in rstm._outputs:
+                self._registerOutput(o, rstm)
+            rstm._set_parent_stm(parentStm, self)
+
     def __deepcopy__(self, memo: dict):
         cls = self.__class__
         result = cls(deepcopy(i, memo) for i in self)

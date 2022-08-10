@@ -108,11 +108,8 @@ class HdlStmCodeBlockContainer(HdlStatement):
         if update_io:
             raise NotImplementedError()
 
-        i = self.statements.index(stm)
-
-        self.rank -= stm.rank
-        self.statements[i:i + 1] = replacement
-        for rstm in replacement:
-            rstm._set_parent_stm(self, self.statements)
+        statements: ListOfHdlStatement = self.statements
+        i = statements.index(stm)
+        statements.replace(self, stm, i, replacement)
         # reset IO because it was shared with this statement
         stm._destroy()
