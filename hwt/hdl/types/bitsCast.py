@@ -79,9 +79,12 @@ def convertBits(self: Bits, sigOrVal, toType: HdlType):
             return sigOrVal._eq(self.getValueCls().from_py(self, v))
     elif isinstance(toType, Bits):
         if self.bit_length() == toType.bit_length():
-            if self.const is toType.const:
-                return sigOrVal._convSign(toType.signed)
+            #if self.force_vector != toType.force_vector:
+            #    raise NotImplementedError(self, toType)
 
+            if self.const == toType.const:
+                return sigOrVal._convSign(toType.signed)
+            
     return default_auto_cast_fn(self, sigOrVal, toType)
 
 

@@ -486,6 +486,9 @@ class RtlSignalOps():
         else:
             return int(self._val)
 
+    def __len__(self):
+        return tv(self).__len__(self)
+
     def __bool__(self):
         if not self._const:
             raise TypeError("Bool value of signal can be evaluated"

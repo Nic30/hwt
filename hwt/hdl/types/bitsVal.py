@@ -161,18 +161,28 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         """
         st = self._dtype
         length = st.bit_length()
-        if length == 1 and not st.force_vector:
-            # assert not indexing on single bit
-            raise TypeError("indexing on single bit")
 
         if isinstance(key, slice):
+            
             key = slice_to_SLICE(key, length)
             isSLICE = True
         else:
             isSLICE = isinstance(key, HSlice.getValueCls())
 
+        is1bScalar = length == 1 and not st.force_vector
         if not isSLICE:
+            if is1bScalar and \
+                    ((isinstance(key, int) and key == 0) or\
+                     (isinstance(key, BitsVal) and key._is_full_valid() and int(key) == 0)):
+                return self
             key = toHVal(key, INT)
+        else:
+            if is1bScalar and key.val.start == 1 and key.val.stop == 0 and key.val.step == -1:
+                return self
+
+        if is1bScalar:
+            # assert not indexing on single bit
+            raise IndexError("indexing on single bit")
 
         iamVal = isinstance(self, HValue)
         iAmResultOf = _get_operator_i_am_the_result_of(self)
@@ -546,3 +556,6 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
             return o._auto_cast(resT)
+    
+    def __len__(self):
+        return self._dtype.bit_length()

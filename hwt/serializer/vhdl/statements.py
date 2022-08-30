@@ -13,6 +13,9 @@ from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.hdl.operator import Operator
+from hwt.hdl.operatorDefs import AllOps
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 
 
 class ToHdlAstVhdl2008_statements():
@@ -27,10 +30,18 @@ class ToHdlAstVhdl2008_statements():
                     i = i.__copy__()
                 dst = dst[i]
 
-        src_t = a.src._dtype
+        src = a.src
+        src_t = src._dtype
         dst_t = dst._dtype
         correct = False
-        src = a.src
+        if src_t == BIT and isinstance(src, RtlSignalBase) and src.hidden:
+            try:
+                d = src.singleDriver()
+            except SignalDriverErr:
+                d = None
+            if d is not None and isinstance(d, Operator) and d.operator is AllOps.INDEX and d.operands[0]._dtype == BOOL:
+                src_t = BOOL
+            
         if dst_t == src_t:
             correct = True
         else:
