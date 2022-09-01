@@ -1,12 +1,13 @@
 from typing import Union, Tuple
 
 from hwt.doc_markers import internal
+from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from hwt.pyUtils.uniqList import UniqList
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
+
+
 # from hwt.hdl.operator import Operator
-
-
 @internal
 def does_expr_contain_expr(expr: Union[RtlSignalBase, HValue], subExprToFind: Union[RtlSignalBase, HValue]):
     if expr is subExprToFind:
@@ -33,6 +34,13 @@ def _replace_input_in_expr(expr: Union[RtlSignalBase, HValue],
 
     elif isinstance(expr, RtlSignalBase) and expr.hidden:
         op = expr.origin
+        if op is None:
+            try:
+                op = expr.singleDriver()
+            except SignalDriverErr:
+                return expr
+        if isinstance(op, HdlStatement):
+            return expr
         # assert isinstance(op, Operator), op
         ops = (_replace_input_in_expr(o, toReplace, replacement)
                for o in op.operands)
