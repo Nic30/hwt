@@ -51,7 +51,7 @@ def connectPacked(srcPacked, dstInterface, exclude=None):
                 s = srcPacked[offset]
             offset += 1
         else:
-            s = srcPacked[(w + offset): offset]
+            s = srcPacked[(w + offset): offset] # src is likely to have insuficient amount of bits
             offset += w
         connections.append(sig(s))
 
