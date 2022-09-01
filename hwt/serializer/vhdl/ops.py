@@ -15,6 +15,7 @@ from hwt.hdl.value import HValue
 from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 
 
 @internal
@@ -130,6 +131,19 @@ class ToHdlAstVhdl2008_ops():
         return hdl_call(HdlValueId(t_name, obj=LanguageKeyword()),
                         [op, ])
 
+    def _wrapConcatInTmpVariable(self, op):
+        if isinstance(op, RtlSignalBase) and op.hidden:
+            # if left operand is concatenation and this is not concatenation we must extract it as tmp variable
+            # because VHDL would not be able to resolve type of concatenated signal otherwise
+            try:
+                d = op.singleDriver()
+            except SignalDriverErr:
+                d = None
+    
+            if d is not None and isinstance(d, Operator) and d.operator is AllOps.CONCAT:
+                _, op = self.tmpVars.create_var_cached("tmpConcatExpr_", op._dtype, def_val=op)
+        return op
+
     def as_hdl_Operator(self, op: Operator):
         ops = op.operands
         o = op.operator
@@ -186,24 +200,30 @@ class ToHdlAstVhdl2008_ops():
                 if isinstance(op0, RtlSignalBase) and op0.hidden:
                     _, op0 = self.tmpVars.create_var_cached("tmpCastExpr_", op0._dtype, def_val=op0)
                 return self.apply_cast(_o, self.as_hdl_operand(op0))
-
+            
             o = self.op_transl_dict[o]
             if len(ops) == 2:
                 res_t = op.result._dtype
                 op0, op1 = ops
+
+                if o is not AllOps.CONCAT:
+                    op0 = self._wrapConcatInTmpVariable(op0)
+                    op1 = self._wrapConcatInTmpVariable(op1)
+
                 if isinstance(res_t, Bits) and res_t != BOOL:
                     op0 = self._as_Bits(op0)
                     op1 = self._as_Bits(op1)
+
                 _op0 = self.as_hdl_operand(op0)
                 _op1 = self.as_hdl_operand(op1)
-                if isinstance(_op0, HdlValueId) and\
-                        _op0.obj._dtype == BOOL and\
+                if o == HdlOpType.EQ and isinstance(_op0, HdlValueId) and\
+                        (isinstance(_op0.obj._dtype, Bits) and self._expandBitsOperandType(_op0.obj) == BOOL) and\
                         isinstance(_op1, HdlValueInt) and\
-                        _op1.val and\
-                        o == HdlOpType.EQ:
+                        _op1.val:
                     # drop unnecessary casts
                     return _op0
                 else:
                     return HdlOp(o, [_op0, _op1])
+
             return HdlOp(o, [self.as_hdl_operand(o2)
                              for o2 in ops])

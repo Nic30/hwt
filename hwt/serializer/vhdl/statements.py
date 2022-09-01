@@ -19,7 +19,18 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 
 
 class ToHdlAstVhdl2008_statements():
-
+    
+    @staticmethod
+    def _expandBitsOperandType(v):
+        if v._dtype == BIT and isinstance(v, RtlSignalBase) and v.hidden:
+            try:
+                d = v.singleDriver()
+            except SignalDriverErr:
+                d = None
+            if d is not None and isinstance(d, Operator) and d.operator is AllOps.INDEX and d.operands[0]._dtype == BOOL:
+                return BOOL
+        return v._dtype
+    
     def as_hdl_HdlAssignmentContainer(self, a: HdlAssignmentContainer):
         _dst = dst = a.dst
         assert isinstance(dst, SignalItem)
@@ -31,16 +42,9 @@ class ToHdlAstVhdl2008_statements():
                 dst = dst[i]
 
         src = a.src
-        src_t = src._dtype
         dst_t = dst._dtype
         correct = False
-        if src_t == BIT and isinstance(src, RtlSignalBase) and src.hidden:
-            try:
-                d = src.singleDriver()
-            except SignalDriverErr:
-                d = None
-            if d is not None and isinstance(d, Operator) and d.operator is AllOps.INDEX and d.operands[0]._dtype == BOOL:
-                src_t = BOOL
+        src_t = self._expandBitsOperandType(src)
             
         if dst_t == src_t:
             correct = True
