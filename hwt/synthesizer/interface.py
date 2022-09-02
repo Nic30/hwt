@@ -130,7 +130,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
     @internal
     def _loadDeclarations(self):
         """
-        load declaratoins from _declr method
+        load declarations from _declr method
         This function is called first for parent and then for children
         """
         if not hasattr(self, "_interfaces"):
