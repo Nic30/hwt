@@ -206,7 +206,7 @@ class ToHdlAstVhdl2008_ops():
                 res_t = op.result._dtype
                 op0, op1 = ops
 
-                if o is not AllOps.CONCAT:
+                if o != HdlOpType.CONCAT:
                     op0 = self._wrapConcatInTmpVariable(op0)
                     op1 = self._wrapConcatInTmpVariable(op1)
 
