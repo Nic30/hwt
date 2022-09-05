@@ -30,6 +30,27 @@ def getSignalName(sig):
     return sig.name
 
 
+def getInterfaceName(top: "Unit", io: Union[InterfaceBase, RtlSignal]):
+    if isinstance(io, InterfaceBase):
+        prefix = []
+        parent = io._parent
+        while parent is not None:
+            if parent is top:
+                break
+            
+            prefix.append(parent._name)
+            parent = parent._parent
+        n = io._getFullName()
+        if prefix:
+            prefix.reverse()
+            prefix.append(n)
+            return ".".join(prefix)
+        else:
+            return n
+    else:
+        return getSignalName(io)
+
+
 @internal
 def _default_param_updater(self, myP, otherP_val):
     myP.set_value(otherP_val)
