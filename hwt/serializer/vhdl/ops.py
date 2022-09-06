@@ -9,6 +9,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
+from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL, INT
 from hwt.hdl.value import HValue
@@ -58,7 +59,7 @@ class ToHdlAstVhdl2008_ops():
             if_.ifTrue.append(HdlAssignmentContainer(ifTrue, o,
                                          virtual_only=True,
                                          parentStm=if_))
-            if_.ifFalse = []
+            if_.ifFalse = ListOfHdlStatement()
             if_.ifFalse.append(HdlAssignmentContainer(ifFalse, o,
                                           virtual_only=True,
                                           parentStm=if_))
@@ -67,6 +68,7 @@ class ToHdlAstVhdl2008_ops():
                 if isinstance(obj, RtlSignalBase):
                     if_._inputs.append(obj)
             o.drivers.append(if_)
+            if_._discover_enclosure()
             self.tmpVars.finish_var_init(o)
 
         return o
