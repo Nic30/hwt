@@ -69,6 +69,21 @@ class UniqList(Generic[T], list):
         c.extend(self)
         return c
 
+    def __setitem__(self, i: int, v: T):
+        if isinstance(i, slice):
+            for item in self[i]:
+                self.__s.remove(item)
+            v = UniqList(v)
+            list.__setitem__(self, i, v)
+            self.__s.update(v)
+            
+        else:
+            assert isinstance(i, int)
+            cur = self[i]
+            self.__s.remove(cur)
+            list.__setitem__(self, i, v)
+            self.__s.add(v)
+
     def __copy__(self):
         return self.copy()
 
