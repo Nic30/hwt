@@ -5,6 +5,7 @@ from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
+from hwt.hdl.portItem import HdlPortItem
 
 
 # from hwt.hdl.operator import Operator
@@ -39,8 +40,9 @@ def _replace_input_in_expr(expr: Union[RtlSignalBase, HValue],
                 op = expr.singleDriver()
             except SignalDriverErr:
                 return expr
-        if isinstance(op, HdlStatement):
+        if isinstance(op, (HdlPortItem, HdlStatement)):
             return expr
+            raise NotImplementedError()
         # assert isinstance(op, Operator), op
         ops = (_replace_input_in_expr(o, toReplace, replacement)
                for o in op.operands)
