@@ -29,7 +29,6 @@ def getSignalName(sig):
         pass
     return sig.name
 
-
 def getInterfaceName(top: "Unit", io: Union[InterfaceBase, RtlSignal]):
     if isinstance(io, InterfaceBase):
         prefix = []
