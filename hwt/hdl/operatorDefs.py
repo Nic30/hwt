@@ -160,3 +160,20 @@ for a_name in dir(AllOps):
 CAST_OPS = (AllOps.BitsAsVec, AllOps.BitsAsSigned, AllOps.BitsAsUnsigned)
 BITWISE_OPS = (AllOps.NOT, AllOps.XOR, AllOps.AND, AllOps.OR)
 COMPARE_OPS = (AllOps.EQ, AllOps.NE, AllOps.GT, AllOps.GE, AllOps.LT, AllOps.LE)
+# a dictionary mapping operator to an operator with the same result if the operands are swapped or result is negated
+CMP_OPS_SWAP_OP = {
+    AllOps.GT: AllOps.LE,
+    AllOps.GE: AllOps.LT,
+    AllOps.LT: AllOps.GE,
+    AllOps.LE: AllOps.GT,
+}
+CMP_OPS_NEGAT_RESULT = {
+    AllOps.EQ: AllOps.NE,
+    AllOps.NE: AllOps.EQ,
+    **CMP_OPS_SWAP_OP,
+}
+# always commutative operators for which order of operands does not matter
+ALWAYS_COMMUTATIVE_OPS = (AllOps.EQ, AllOps.NE, AllOps.XOR, AllOps.AND, AllOps.OR, AllOps.ADD, AllOps.MUL)
+# always commutative associative operators for which order of operands in expression tree does not matter
+ALWAYS_ASSOCIATIVE_COMMUTATIVE_OPS = (AllOps.XOR, AllOps.AND, AllOps.OR, AllOps.ADD, AllOps.MUL)
+EVENT_OPS = (AllOps.RISING_EDGE, AllOps.FALLING_EDGE)
