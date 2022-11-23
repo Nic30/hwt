@@ -9,6 +9,7 @@ from hwt.doc_markers import internal
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.types.defs import BIT
+from hwt.hdl.types.hdlType import HdlType
 from hwt.hdl.value import HValue
 from hwt.serializer.utils import HdlStatement_sort_key, RtlSignal_sort_key
 from hwt.synthesizer.dummyPlatform import DummyPlatform
@@ -17,8 +18,7 @@ from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.param import Param
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NOT_SPECIFIED
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
-from hwt.synthesizer.rtlLevel.statements_to_HdlStmCodeBlockContainers import\
-    statements_to_HdlStmCodeBlockContainers
+from hwt.synthesizer.rtlLevel.statements_to_HdlStmCodeBlockContainers import statements_to_HdlStmCodeBlockContainers
 from ipCorePackager.constants import DIRECTION
 
 
@@ -49,10 +49,10 @@ class RtlNetlist():
         """
         Create new signal in this context
 
-        :param clk: clk signal, if specified signal is synthesized
-            as SyncSignal
+        :param clk: clock signal, if specified signal is synthesized
+            as RtlSyncSignal
         :param syncRst: synchronous reset signal
-        :param def_val: a default value used for reset and intialization
+        :param def_val: a default value used for reset and initialization
         :param nop_val: a value which is used to drive the signal if there is no other drive
             (used to prevent latches and to specify default values for unconnected signals)
         """
@@ -67,7 +67,7 @@ class RtlNetlist():
             if syncRst is not None and def_val is None:
                 raise SigLvlConfErr(
                     "Probably forgotten default value on sync signal %s", name)
-            # dst_resolve_fn is overriden because default assign would assign to the "next" signal
+            # dst_resolve_fn is overridden because default assign would assign to the "next" signal
             if syncRst is not None:
                 r = If(syncRst._isOn(),
                        s(_def_val, dst_resolve_fn=lambda x: x)
@@ -148,18 +148,20 @@ class RtlNetlist():
         processes = sorted(self.statements, key=HdlStatement_sort_key)
         processes = sorted(statements_to_HdlStmCodeBlockContainers(processes), key=HdlStatement_sort_key)
 
-        # add signals, variables etc. in architecture
+        # add signals, variables, etc. in architecture
         for s in sorted((s for s in self.signals
                         if not s.hidden and
                         s not in self.interfaces.keys()),
                         key=RtlSignal_sort_key):
-                v = HdlIdDef()
-                v.origin = s
-                s.name = v.name = ns.checked_name(s.name, s)
-                v.type = s._dtype
-                v.value = s.def_val
-                v.is_const = s._const
-                mdef.objs.append(v)
+            s: RtlSignal
+            assert s.ctx is self, ("RtlSignals in this context must know that they are in this context", s)
+            v = HdlIdDef()
+            v.origin = s
+            s.name = v.name = ns.checked_name(s.name, s)
+            v.type = s._dtype
+            v.value = s.def_val
+            v.is_const = s._const
+            mdef.objs.append(v)
 
         for p in processes:
             p.name = ns.checked_name(p.name, p)
@@ -194,7 +196,7 @@ class RtlNetlist():
 
 
 @internal
-def _try_cast_any_to_HValue(v, dtype, require_const):
+def _try_cast_any_to_HValue(v, dtype: HdlType, require_const: bool):
     if isinstance(v, RtlSignal):
         assert not require_const or v._const, \
             "Initial value of signal has to be a constant"

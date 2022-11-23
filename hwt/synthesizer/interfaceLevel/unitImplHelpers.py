@@ -17,6 +17,7 @@ from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from ipCorePackager.constants import INTF_DIRECTION
+from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 
 
 def getSignalName(sig):
@@ -269,7 +270,7 @@ class UnitImplHelpers(UnitBase):
             i._clean()
 
     @internal
-    def _signalsForSubUnitEntity(self, context, prefix: str):
+    def _signalsForSubUnitEntity(self, context: RtlNetlist, prefix: str):
         """
         generate signals in this context for all ports of this subunit
         """

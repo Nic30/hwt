@@ -128,12 +128,9 @@ class Operator(HdlObject):
                     o._usedOps[k] = out
                     o._usedOpsAlias[k] = {k, }
                     first_signal = False
-            elif isinstance(o, HValue):
-                pass
             else:
-                raise NotImplementedError(
-                    "Operator operands can be"
-                    f" only signal or values got: {o}")
+                assert isinstance(o, HValue), (
+                    "Operator operands can be only signal or values got:", o)
 
         if out._const:
             # if this signal is constant precompute its value
@@ -151,7 +148,7 @@ class Operator(HdlObject):
         first_op_sig = True
         for i, o in enumerate(operands):
             if isinstance(o, RtlSignalBase):
-                # discard because operads may bethe same signal
+                # discard because operands may be the same signal
                 o.endpoints.discard(self)
                 if first_op_sig:
                     # clean all references on this operator instance from RtlSignal._usedOps operator cache

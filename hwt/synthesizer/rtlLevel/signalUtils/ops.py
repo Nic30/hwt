@@ -66,8 +66,8 @@ class RtlSignalOps():
             pass
 
         o = opCreateDelegate(self, *otherOps)
-        # input operads may be type converted,
-        # search if this happend, and return always same result signal
+        # input operands may be type converted,
+        # search if this happened, and return always same result signal
         try:
             op_instantiated = (o.origin.operator == operator
                                and o.origin.operands[indexOfSelfInOperands] is self)

@@ -7,10 +7,10 @@ from hwt.hdl.statements.statement import HwtSyntaxError
 class HdlPortItem():
     """
     HDL entity/module/component port item
-    Used to split signal paths on compomponent boundary.
+    Used to split signal paths on component boundary.
 
     :note: src/dst are named based on input output signal direction
-        bouth dst and src can be parent/component signal, it depends on direction
+        both dst and src can be parent/component signal, it depends on direction
     """
 
     def __init__(self, name, direction, dtype, unit):

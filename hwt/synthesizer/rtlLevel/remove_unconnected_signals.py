@@ -42,7 +42,7 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
 
     :attention: does not remove signals in cycles which does not affect outputs
     """
-    # walk circut from outputs to inputs and collect seen signals
+    # walk circuit from outputs to inputs and collect seen signals
     toSearch = [s for s, d in netlist.interfaces.items() if d != DIRECTION.IN]
     seen = set(toSearch)
     for c in netlist.subUnits:
@@ -91,7 +91,7 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
                 removed_e = e._cut_off_drivers_of(sig)
 
             if removed_e is not None:
-                # must not destroy before procesing inputs
+                # must not destroy before processing inputs
                 removed_e._destroy()
 
     netlist.signals = seen

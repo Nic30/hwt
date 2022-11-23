@@ -44,6 +44,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     :cvar __instCntr: counter used for generating instance ids
     :ivar ~._instId: internally used only for intuitive sorting of statements
         in serialized code
+    :ivar ~.origin: optionally an object which generated this signal
     """
     __instCntr = 0
 
@@ -57,6 +58,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         "_instId",
         "_nop_val",
         "_const",
+        "_interface",
         "origin",
     ]
     def __init__(self, ctx: 'RtlNetlist', name: str, dtype: HdlType, def_val=None, nop_val=NOT_SPECIFIED,
@@ -84,13 +86,13 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         self.ctx = ctx
 
         if ctx:
-            # params does not have any context on created
+            # params do not have any context on created
             # and it is assigned after param is bounded to unit or interface
             ctx.signals.add(self)
 
         # set can not be used because hash of items are changing
-        self.endpoints = UniqList()
-        self.drivers: UniqList[HdlStatement, "Operator"] = UniqList()
+        self.endpoints: UniqList[Union[HdlStatement, HdlPortItem, "Operator"]] = UniqList()
+        self.drivers: UniqList[HdlStatement, HdlPortItem, "Operator"] = UniqList()
         self._usedOps: Dict[OperatorCaheKeyType, RtlSignal] = {}
         self._usedOpsAlias: Dict[OperatorCaheKeyType, Set[OperatorCaheKeyType]] = {}
         self.hidden: bool = True
