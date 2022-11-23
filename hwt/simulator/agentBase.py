@@ -1,5 +1,5 @@
 from hwt.synthesizer.exceptions import IntfLvlConfErr
-from hwtSimApi.agents.base import AgentBase, SyncAgentBase as pcSyncAgentBase,\
+from hwtSimApi.agents.base import AgentBase, SyncAgentBase as pcSyncAgentBase, \
     AgentWitReset as pcAgentWitReset
 from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.process_utils import OnRisingCallbackLoop
@@ -43,12 +43,10 @@ class SyncAgentBase(AgentWitReset, pcSyncAgentBase):
     """
     SELECTED_EDGE_CALLBACK = OnRisingCallbackLoop
 
-    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False,
-                 wrap_monitor_and_driver_in_edge_callback=True):
+    def __init__(self, sim: HdlSimulator, intf, allowNoReset=False):
         self.intf = intf
         clk = self.intf._getAssociatedClk()
         rst = self._discoverReset(intf, allowNoReset)
         pcSyncAgentBase.__init__(
-            self, sim, intf, clk, rst, 
-            wrap_monitor_and_driver_in_edge_callback=wrap_monitor_and_driver_in_edge_callback)
+            self, sim, intf, clk, rst)
 

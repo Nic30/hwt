@@ -2,7 +2,7 @@ from collections import deque
 
 from hwt.simulator.agentBase import SyncAgentBase
 from hwtSimApi.process_utils import OnRisingCallbackLoop
-from hwtSimApi.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable,\
+from hwtSimApi.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable, \
     WaitTimeslotEnd
 from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.constants import CLK_PERIOD
@@ -69,9 +69,9 @@ class FifoReaderAgent(SyncAgentBase):
         self.dataReader = OnRisingCallbackLoop(self.sim, self.clk,
                                                self.dataReader,
                                                self.getEnable)
-        return ([self.monitor_init()] +
-                super(FifoReaderAgent, self).getMonitors() +
-                [self.dataReader()])
+        yield self.monitor_init()
+        yield from super(FifoReaderAgent, self).getMonitors()
+        yield self.dataReader()
 
     def monitor(self):
         """
@@ -109,9 +109,9 @@ class FifoReaderAgent(SyncAgentBase):
         self.dataWriter = OnRisingCallbackLoop(self.sim, self.clk,
                                                self.dataWriter,
                                                self.getEnable)
-        return ([self.driver_init()] +
-                super(FifoReaderAgent, self).getDrivers() +
-                [self.dataWriter()])
+        yield self.driver_init()
+        yield from super(FifoReaderAgent, self).getDrivers()
+        yield self.dataWriter()
 
     def set_data(self, d):
         self.intf.data.write(d)
@@ -243,7 +243,9 @@ class FifoWriterAgent(SyncAgentBase):
         intf.en.write(v)
 
     def getDrivers(self):
-        return SyncAgentBase.getDrivers(self) + [self.driver_init()]
+        yield from SyncAgentBase.getDrivers(self)
+        yield self.driver_init()
 
     def getMonitors(self):
-        return SyncAgentBase.getMonitors(self) + [self.monitor_init()]
+        yield from SyncAgentBase.getMonitors(self)
+        yield self.monitor_init()

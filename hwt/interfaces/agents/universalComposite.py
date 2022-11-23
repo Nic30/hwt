@@ -1,4 +1,3 @@
-from hwt.pyUtils.arrayQuery import flatten
 from hwt.synthesizer.interface import Interface
 from hwtSimApi.agents.base import AgentBase
 from hwtSimApi.hdlSimulator import HdlSimulator
@@ -28,15 +27,15 @@ class UniversalCompositeAgent(AgentBase):
             o._ag.setEnable(v)
 
     def getDrivers(self):
-        return list(flatten(
-            (i._ag.getMonitors() if i._direction == INTF_DIRECTION.MASTER else i._ag.getDrivers()
-            for i in self.intf._interfaces),
-            level=1
-        ))
+        for i in self.intf._interfaces:
+            if i._direction == INTF_DIRECTION.MASTER:
+                yield from i._ag.getMonitors()
+            else:
+                yield from i._ag.getDrivers()
 
     def getMonitors(self):
-        return list(flatten(
-            (i._ag.getMonitors() if i._direction == INTF_DIRECTION.MASTER else i._ag.getDrivers()
-            for i in self.intf._interfaces),
-            level=1
-        ))
+        for i in self.intf._interfaces:
+            if i._direction == INTF_DIRECTION.MASTER:
+                yield from i._ag.getMonitors()
+            else:
+                yield from i._ag.getDrivers()

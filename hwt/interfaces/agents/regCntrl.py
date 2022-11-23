@@ -42,7 +42,9 @@ class RegCntrlAgent(SyncAgentBase):
     dout = property(dout_getter, dout_setter)
 
     def getDrivers(self):
-        return self._din.getMonitors() + self._dout.getDrivers()
+        yield from self._din.getMonitors()
+        yield from self._dout.getDrivers()
 
     def getMonitors(self):
-        return self._din.getDrivers() + self._dout.getMonitors()
+        yield from self._din.getDrivers()
+        yield from self._dout.getMonitors()

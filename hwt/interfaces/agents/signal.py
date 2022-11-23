@@ -3,9 +3,9 @@ from collections import deque
 from hwt.simulator.agentBase import SyncAgentBase
 from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwtSimApi.agents.base import AgentBase
+from hwtSimApi.constants import CLK_PERIOD
 from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.triggers import Timer, WaitWriteOnly, WaitCombRead, WaitCombStable
-from hwtSimApi.constants import CLK_PERIOD
 
 
 class SignalAgent(SyncAgentBase):
@@ -30,7 +30,7 @@ class SignalAgent(SyncAgentBase):
         self.data = deque()
 
         self.initPending = True
-
+    
         if self.clk is None:
             if self.delay is None:
                 self.delay = CLK_PERIOD
@@ -42,12 +42,39 @@ class SignalAgent(SyncAgentBase):
             if self.delay:
                 raise ValueError("clock and delay synchronization at once")
             c = self.SELECTED_EDGE_CALLBACK
-            self.monitor = c(sim, self.clk, self.monitorWithClk, self.getEnable)
-            self.driver = c(sim, self.clk, self.driverWithClk, self.getEnable)
+            self.monitor = c(self.sim, self.clk, self.monitorWithClk, self.getEnable)
+            self.driver = c(self.sim, self.clk, self.driverWithClk, self.getEnable)
 
     def getDrivers(self):
-        d = SyncAgentBase.getDrivers(self)
-        return [self.driverInit()] + d
+        yield self.driverInit()
+        if self.clk is None:
+            if self.delay is None:
+                self.delay = CLK_PERIOD
+            yield self.driverWithTimer()
+        else:
+            if self.initDelay:
+                raise NotImplementedError("initDelay only without clock")
+            if self.delay:
+                raise ValueError("clock and delay synchronization at once")
+            c = self.SELECTED_EDGE_CALLBACK
+            if not isinstance(self.driver, c):
+                self.driver = c(self.sim, self.clk, self.driverWithClk, self.getEnable)
+            yield self.driver()
+            
+    def getMonitors(self):
+        if self.clk is None:
+            if self.delay is None:
+                self.delay = CLK_PERIOD
+            yield self.monitorWithTimer()
+        else:
+            if self.initDelay:
+                raise NotImplementedError("initDelay only without clock")
+            if self.delay:
+                raise ValueError("clock and delay synchronization at once")
+            c = self.SELECTED_EDGE_CALLBACK
+            if not isinstance(self.monitor, c):
+                self.monitor = c(self.sim, self.clk, self.monitorWithClk, self.getEnable)
+            yield self.monitor()
 
     def driverInit(self):
         yield WaitWriteOnly()

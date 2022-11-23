@@ -168,7 +168,6 @@ class BramPort_withoutClkAgent(SyncAgentBase):
 class BramPortAgent(BramPort_withoutClkAgent):
 
     def getDrivers(self):
-        drivers = super(BramPortAgent, self).getDrivers()
+        yield from super(BramPortAgent, self).getDrivers()
         self.clk_ag = ClockAgent(self.sim, self.intf.clk)
-        drivers.extend(self.clk_ag.getDrivers())
-        return drivers
+        yield from self.clk_ag.getDrivers()
