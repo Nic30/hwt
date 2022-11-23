@@ -9,7 +9,7 @@ from typing import List, Tuple, Dict, Optional, Callable, Set, Generator
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.statement import HdlStatement, SignalReplaceSpecType
 from hwt.hdl.statements.utils.comparison import  statementsAreSame, isSameStatementList
 from hwt.hdl.statements.utils.ioDiscovery import HdlStatement_discover_enclosure_for_statements
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
@@ -434,35 +434,33 @@ class IfContainer(HdlStatement):
         return False
     
     @internal
-    def _replace_input_nested(self, topStm: HdlStatement, toReplace: RtlSignalBase,
-                              replacement: RtlSignalBase) -> None:
+    def _replace_input_nested(self, topStm: HdlStatement, toReplace: SignalReplaceSpecType) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_input`
         """
         didUpdate = False
-        self.cond, _didUpdate = replace_input_in_expr(topStm, self, self.cond, toReplace,
-                                                      replacement)
+        self.cond, _didUpdate = replace_input_in_expr(topStm, self, self.cond, toReplace)
         didUpdate |= _didUpdate
 
         for stm in self.ifTrue:
-            didUpdate |= stm._replace_input_nested(topStm, toReplace, replacement)
+            didUpdate |= stm._replace_input_nested(topStm, toReplace)
 
         new_elifs = []
         for (cond, stms) in self.elIfs:
-            new_cond, _didUpdate = replace_input_in_expr(topStm, self, cond, toReplace, replacement)
+            new_cond, _didUpdate = replace_input_in_expr(topStm, self, cond, toReplace)
             didUpdate |= _didUpdate
             for stm in stms:
-                didUpdate |= stm._replace_input_nested(topStm, toReplace, replacement)
+                didUpdate |= stm._replace_input_nested(topStm, toReplace)
             new_elifs.append((new_cond, stms))
         self.elIfs = new_elifs
 
         if self.ifFalse is not None:
             for stm in self.ifFalse:
-                _didUpdate = stm._replace_input_nested(topStm, toReplace, replacement)
+                _didUpdate = stm._replace_input_nested(topStm, toReplace)
                 didUpdate |= _didUpdate
 
         if didUpdate:
-            self._replace_input_update_sensitivity_and_inputs(toReplace, replacement)
+            self._replace_input_update_sensitivity_and_inputs(toReplace)
         return didUpdate
 
     @internal

@@ -3,7 +3,7 @@ from typing import Tuple, List, Dict, Union, Optional, Generator
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.statements.statement import HdlStatement, SignalReplaceSpecType
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.value import HValue
 from hwt.hdl.valueUtils import isSameHVal, areSameHVals
@@ -185,8 +185,7 @@ class HdlAssignmentContainer(HdlStatement):
         return i
     
     @internal
-    def _replace_input_nested(self, topStm: HdlStatement, toReplace: RtlSignalBase,
-                              replacement: RtlSignalBase) -> None:
+    def _replace_input_nested(self, topStm: HdlStatement, toReplace: SignalReplaceSpecType) -> None:
        
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_input`
@@ -195,14 +194,14 @@ class HdlAssignmentContainer(HdlStatement):
         if self.indexes:
             new_indexes = []
             for ind in self.indexes:
-                new_i, _didUpdate = replace_input_in_expr(topStm, self, ind, toReplace, replacement)
+                new_i, _didUpdate = replace_input_in_expr(topStm, self, ind, toReplace)
                 new_indexes.append(new_i)
                 didUpdate |= _didUpdate
                 
             self.indexes = new_indexes
 
-        self.src, _didUpdate = replace_input_in_expr(topStm, self, self.src, toReplace, replacement)
+        self.src, _didUpdate = replace_input_in_expr(topStm, self, self.src, toReplace)
         didUpdate |= _didUpdate
         if didUpdate:
-            self._replace_input_update_sensitivity_and_inputs(toReplace, replacement)
+            self._replace_input_update_sensitivity_and_inputs(toReplace)
         return didUpdate

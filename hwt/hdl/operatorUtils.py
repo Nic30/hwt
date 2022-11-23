@@ -1,37 +1,29 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict
 
 from hwt.doc_markers import internal
-from hwt.hdl.statements.statement import HdlStatement
+from hwt.hdl.portItem import HdlPortItem
+from hwt.hdl.statements.statement import HdlStatement, SignalReplaceSpecType
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
-from hwt.hdl.portItem import HdlPortItem
-
 
 # from hwt.hdl.operator import Operator
-@internal
-def does_expr_contain_expr(expr: Union[RtlSignalBase, HValue], subExprToFind: Union[RtlSignalBase, HValue]):
-    if expr is subExprToFind:
-        return True
-    if isinstance(expr, RtlSignalBase) and expr.hidden and expr.origin is not None:
-        # :note: must be opeator because otherwise this expr should not be hidden
-        for op in expr.origin.operands:
-            if does_expr_contain_expr(op, subExprToFind):
-                return True
-    
-    return False
 
 
 @internal
-def _replace_input_in_expr(expr: Union[RtlSignalBase, HValue],
-                           toReplace: RtlSignalBase,
-                           replacement: RtlSignalBase,
-                           ) -> RtlSignalBase:
+def _replace_input_in_expr(expr: Union[RtlSignalBase, HValue], toReplace: SignalReplaceSpecType) -> RtlSignalBase:
     """
-    :return: newly rewritten expression with the subexpression replaced
+    :return: newly rewritten expression with the subexpression replaced, True if changed else False
     """
-    if expr is toReplace:
-        return replacement
+    if isinstance(toReplace, dict):
+        replacement = toReplace.get(expr, None)
+    else:
+        _toReplace, replacement = toReplace
+        if expr is not _toReplace:
+            replacement = None
+            
+    if replacement is not None:
+        return replacement, True
 
     elif isinstance(expr, RtlSignalBase) and expr.hidden:
         op = expr.origin
@@ -39,40 +31,48 @@ def _replace_input_in_expr(expr: Union[RtlSignalBase, HValue],
             try:
                 op = expr.singleDriver()
             except SignalDriverErr:
-                return expr
+                return expr, False
         if isinstance(op, (HdlPortItem, HdlStatement)):
-            return expr
-            raise NotImplementedError()
+            return expr, False
+
         # assert isinstance(op, Operator), op
-        ops = (_replace_input_in_expr(o, toReplace, replacement)
-               for o in op.operands)
-        res = op.operator._evalFn(*ops)
-        return res
+        operandChanged = False
+        ops = []
+        for o in op.operands:
+            _o, _change = _replace_input_in_expr(o, toReplace)
+            ops.append(_o)
+            operandChanged |= _change
+            
+        if operandChanged:
+            res = op.operator._evalFn(*ops)
+            return res, True
+        else:
+            return expr, False
 
     else:
-        return expr
+        return expr, False
 
 
 @internal
 def replace_input_in_expr(topStatement: "HdlStatement",
                           parentStm: "HdlStatement",
                           expr: Union[RtlSignalBase, HValue],
-                          toReplace: RtlSignalBase,
-                          replacement: RtlSignalBase,
+                          toReplace: SignalReplaceSpecType,
                           # maybeDisconnectedSignals: UniqList[RtlSignalBase]
                           ) -> Tuple[RtlSignalBase, bool]:
     """
     :return: tuple (newExpression, True if expr is toReplace and should be replaced else False)
     """
-    didContainExpr = does_expr_contain_expr(expr, toReplace)
+    res, didContainExpr = _replace_input_in_expr(expr, toReplace)
     if didContainExpr:
-        res = _replace_input_in_expr(expr, toReplace, replacement)
         # maybeDisconnectedSignals.append(expr)
-        expr.endpoints.discard(topStatement)
+        if not isinstance(expr, HValue):
+            expr.endpoints.discard(topStatement)
         if not isinstance(res, HValue):
             res.endpoints.append(topStatement)
 
         return res, True
     else:
+        assert res is expr
         return expr, False
 

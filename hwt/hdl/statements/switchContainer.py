@@ -7,7 +7,7 @@ from typing import List, Tuple, Dict, Optional, Callable, Set, Generator
 from hwt.doc_markers import internal
 from hwt.hdl.operatorUtils import replace_input_in_expr
 from hwt.hdl.sensitivityCtx import SensitivityCtx
-from hwt.hdl.statements.statement import HdlStatement, HwtSyntaxError
+from hwt.hdl.statements.statement import HdlStatement, HwtSyntaxError, SignalReplaceSpecType
 from hwt.hdl.statements.utils.comparison import isSameStatementList, statementsAreSame
 from hwt.hdl.statements.utils.ioDiscovery import HdlStatement_discover_enclosure_for_statements
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
@@ -381,27 +381,25 @@ class SwitchContainer(HdlStatement):
         return True
 
     @internal
-    def _replace_input_nested(self, topStm: "HdlStatement", toReplace: RtlSignalBase,
-                              replacement: RtlSignalBase) -> None:
+    def _replace_input_nested(self, topStm: "HdlStatement", toReplace: SignalReplaceSpecType) -> None:
         """
         :see: :meth:`hwt.hdl.statements.statement.HdlStatement._replace_input`
         """
         didUpdate = False
-        self.switchOn, _didUpdate = replace_input_in_expr(topStm, self, self.switchOn, toReplace,
-                                                          replacement)
+        self.switchOn, _didUpdate = replace_input_in_expr(topStm, self, self.switchOn, toReplace)
         didUpdate |= _didUpdate
 
         for (_, stms) in self.cases:
             for stm in stms:
                 stm: HdlStatement
-                didUpdate |= stm._replace_input_nested(topStm, toReplace, replacement)
+                didUpdate |= stm._replace_input_nested(topStm, toReplace)
 
         if self.default is not None:
             for stm in self.default:
-                didUpdate |= stm._replace_input_nested(topStm, toReplace, replacement)
+                didUpdate |= stm._replace_input_nested(topStm, toReplace)
 
         if didUpdate:
-            self._replace_input_update_sensitivity_and_inputs(toReplace, replacement)
+            self._replace_input_update_sensitivity_and_inputs(toReplace)
         return didUpdate
 
     @internal

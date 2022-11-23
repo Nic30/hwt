@@ -1,3 +1,4 @@
+from copy import deepcopy, copy
 from itertools import chain
 from typing import List, Tuple, Union, Optional, Dict, Callable, Generator
 
@@ -6,11 +7,12 @@ from hwt.hdl.hdlObject import HdlObject
 from hwt.pyUtils.arrayQuery import flatten
 from hwt.pyUtils.uniqList import UniqList
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
-from copy import deepcopy, copy
 
 
 class HwtSyntaxError(Exception):
     pass
+
+SignalReplaceSpecType = Union[Tuple[RtlSignalBase, RtlSignalBase], Dict[RtlSignalBase, RtlSignalBase]]
 
 
 class HdlStatement(HdlObject):
@@ -126,7 +128,7 @@ class HdlStatement(HdlObject):
         Otherwise prepare for cutting of the signal from this statement.
 
         :param sig: signal which drivers should be removed
-        :return: true if was removed or False if pruning of sig from this statement is requried
+        :return: true if was removed or False if pruning of sig from this statement is required
         """
         if self._sensitivity is not None or self._enclosed_for is not None:
                 raise NotImplementedError(
@@ -454,14 +456,11 @@ class HdlStatement(HdlObject):
                     self.parentStmList._unregisterOutput(o, self)
 
     @internal
-    def _replace_input_nested(self, topStm: "HdlStatement", toReplace: RtlSignalBase,
-                       replacement: RtlSignalBase) -> None:
-        
+    def _replace_input_nested(self, topStm: "HdlStatement", toReplace: SignalReplaceSpecType) -> None:
         raise NotImplementedError("This method should be implemented in child class", self.__class__, self)
 
     @internal
-    def _replace_input(self, toReplace: RtlSignalBase,
-                             replacement: RtlSignalBase) -> bool:
+    def _replace_input(self, toReplace: SignalReplaceSpecType) -> bool:
         """
         Replace input signal with another
         :return: True if the expression was present in this statement (and was replaced)
@@ -469,15 +468,16 @@ class HdlStatement(HdlObject):
         :note: calling on children does not update parent's _inputs, _sensitivity or _enclosed_for
         """
         assert self.parentStm is None, self
-        return self._replace_input_nested(self, toReplace, replacement)
+        return self._replace_input_nested(self, toReplace)
 
     @internal
     def _replace_input_update_sensitivity_and_inputs(
             self,
-            toReplace: RtlSignalBase,
-            replacement: RtlSignalBase):
+            toReplace: SignalReplaceSpecType):
         """
         This function updates _sensitivity and _inputs containers after the input was replaced in this statement.
+
+        :attention: it does not perform the replace of the input. It should be called after the replace.
         """
         
         # if we replace something some input expression may be altered thus full re-computation is required
