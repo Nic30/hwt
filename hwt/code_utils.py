@@ -22,11 +22,13 @@ def rename_signal(unit_instance: "Unit",
         t = BIT
     else:
         t = sig._dtype
+
     if isinstance(sig, (HValue, int, bool)):
-        s = unit_instance._sig(name, t, def_val=sig)
+        s = unit_instance._sig(name, t, def_val=sig, nop_val=sig)
     else:
         s = unit_instance._sig(name, t)
         s(sig)
+
     return s
 
 
