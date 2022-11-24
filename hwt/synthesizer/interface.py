@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Dict, Optional, Union, List, Generator
+from typing import Dict, Optional, Union, List, Generator, Callable
 
 from hdlConvertorAst.translate.common.name_scope import NameScope
 from hwt.doc_markers import internal
@@ -20,6 +20,8 @@ from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.utils import portItemfromSignal
 from hwt.synthesizer.vectorUtils import fitTo
+from hwtSimApi.agents.base import AgentBase
+from hwt.hdl.portItem import HdlPortItem
 
 
 def _default_param_updater(self, myP, parentPval):
@@ -53,7 +55,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
     :ivar ~._masterDir: specifies which direction has this interface at master
     :ivar ~._direction: means actual direction of this interface resolved
         by its drivers
-    :ivar ~._ctx: rtl netlist context of all signals and params
+    :ivar ~._ctx: RTL netlist context of all signals and params
         on this interface after interface is registered on parent _ctx
         is merged
     :ivar ~._hdl_port: a HdlPortItem instance available once the unit is synthesized
@@ -61,7 +63,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
     Agenda of simulations
 
     :ivar ~._ag: agent object connected to this interface
-        (initialized only before simultion)
+        (initialized only before simulation)
     """
 
     _NAME_SEPARATOR = "_"
@@ -80,27 +82,26 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
             where multiplyedBy is the size
         :param loadConfig: do load config in __init__
         """
-        self._setAttrListener = None
-        self._associatedClk = None
-        self._associatedRst = None
-        self._parent = None
-        self._name = None
+        self._setAttrListener: Optional[Callable[[str, object], None]] = None
+        self._associatedClk: Optional[Interface] = None
+        self._associatedRst: Optional[Interface] = None
+        self._parent: Optional["Unit"] = None
+        self._name: Optional[str] = None
 
         super().__init__()
-        self._masterDir = masterDir
+        self._masterDir: DIRECTION = masterDir
         # Interface is instantiated inside of :class:`hwt.synthesizer.unit.Unit` first,
         # master direction actually means slave from outside view
-        self._direction = INTF_DIRECTION.UNKNOWN
-
-        self._ctx = None
+        self._direction: INTF_DIRECTION = INTF_DIRECTION.UNKNOWN
+        self._ctx: Optional[RtlNetlist] = None
 
         if loadConfig:
             self._loadConfig()
 
         # flags for better design error detection
         self._isExtern = False
-        self._ag = None
-        self._hdl_port = None
+        self._ag: Optional[AgentBase] = None
+        self._hdl_port: Optional[HdlPortItem] = None
         self._hdl_name_override = hdl_name
 
     def _m(self):
@@ -162,7 +163,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
     def _connectTo(self, master, exclude=None, fit=False) -> List[HdlAssignmentContainer]:
         """
-        connect to another interface interface (on rtl level)
+        connect to another interface interface (on RTL level)
         works like self <= master in VHDL
         """
         return list(self._connectToIter(master, exclude, fit))
@@ -226,7 +227,7 @@ class Interface(InterfaceBase, InterfaceceImplDependentFns,
 
             if len(seen_master_intfs) != master_intf_cnt:
                 if exclude:
-                    # there is a possiblity that the master interface was excluded,
+                    # there is a possibility that the master interface was excluded,
                     # but we did not see it as the interface of the same name was not present on self
                     for ifc in self._interfaces:
                         if ifc in exclude or ifc not in seen_master_intfs:

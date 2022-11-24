@@ -61,6 +61,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         "_interface",
         "origin",
     ]
+
     def __init__(self, ctx: 'RtlNetlist', name: str, dtype: HdlType, def_val=None, nop_val=NOT_SPECIFIED,
                  virtual_only=False, is_const=False):
         """
@@ -150,7 +151,15 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         return self.drivers[0]
 
     @internal
-    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
+    def _walk_sensitivity(self, casualSensitivity: Set[RtlSignalBase], seen: Set[RtlSignalBase], ctx: SensitivityCtx):
+        """
+        Walk expression and collect signals which is this expression sensitive to.
+        (:see: what is signal sensitivity in vhdl/verilog)
+        
+        :param casualSensitivity: set of public signals which is this expression sensitive to but rising/faling edge operator is not present
+        :param seen: set of all seen signals
+        :param ctx: context where sensitivity
+        """
         seen.add(self)
 
         if self._const:

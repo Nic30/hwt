@@ -99,6 +99,9 @@ class HdlPortItem():
 
     @internal
     def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
+        """
+        :see: :meth:`hwt.synthesizer.rtlLevel.rtlSignal.RtlSignal._walk_sensitivity`
+        """
         return
         yield
 

@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Optional, List, Dict, Tuple, Set
+from typing import Optional, List, Dict, Tuple, Set, Union
 
 from hdlConvertorAst.hdlAst._structural import HdlCompInst
 from hwt.doc_markers import internal
@@ -71,13 +71,13 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
     ])
 
     def __init__(self, hdl_name_override:Optional[str]=None):
-        self._parent = None
-        self._name = None
+        self._parent: Optional[Unit] = None
+        self._name: Optional[str] = None
         self._shared_component_with = None
-        self._hdl_module_name = None
+        self._hdl_module_name: Optional[str] = None
         assert hdl_name_override is None or isinstance(hdl_name_override, str), hdl_name_override
         self._hdl_name_override = hdl_name_override
-        self._lazy_loaded = []
+        self._lazy_loaded: List[Union[Unit, InterfaceBase]] = []
         self._ctx = RtlNetlist(self)
         self._constraints = HdlConstraintList()
         self._loadConfig()

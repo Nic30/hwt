@@ -293,7 +293,7 @@ class PropDeclrCollector(object):
             intf._isExtern = True
 
     @internal
-    def _declrCollector(self, name, prop):
+    def _declrCollector(self, name: str, prop: object):
         if name in ("_associatedClk", "_associatedRst"):
             object.__setattr__(self, name, prop)
             return prop
