@@ -1,3 +1,5 @@
+from collections import deque
+
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
 from hwt.hdl.portItem import HdlPortItem
@@ -15,24 +17,28 @@ from ipCorePackager.constants import DIRECTION
 def walkInputsForSpecificOutput(output_sig: RtlSignalBase, stm: HdlStatement):
     if output_sig not in stm._outputs:
         return
+
     elif isinstance(stm, HdlAssignmentContainer):
         assert stm.dst is output_sig
         yield from stm._inputs
+        return
+
     elif isinstance(stm, IfContainer):
         yield stm.cond
         for c, _ in stm.elIfs:
             yield c
-        for _stm in stm._iter_stms_for_output(output_sig):
-            yield from walkInputsForSpecificOutput(output_sig, _stm)
+
     elif isinstance(stm, SwitchContainer):
         yield stm.switchOn
-        for _stm in stm._iter_stms_for_output(output_sig):
-            yield from walkInputsForSpecificOutput(output_sig, _stm)
+
     elif isinstance(stm, HdlStmCodeBlockContainer):
-        for _stm in stm._iter_stms_for_output(output_sig):
-            yield from walkInputsForSpecificOutput(output_sig, _stm)
+        pass
+    
     else:
         raise NotImplementedError(stm)
+    
+    for _stm in stm._iter_stms_for_output(output_sig):
+        yield from walkInputsForSpecificOutput(output_sig, _stm)
 
 
 @internal
@@ -43,42 +49,53 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
     :attention: does not remove signals in cycles which does not affect outputs
     """
     # walk circuit from outputs to inputs and collect seen signals
-    toSearch = [s for s, d in netlist.interfaces.items() if d != DIRECTION.IN]
+    toSearch = deque(s for s, d in netlist.interfaces.items() if d != DIRECTION.IN)
     seen = set(toSearch)
     for c in netlist.subUnits:
-        toSearch.extend(sig._sig for sig in walkPhysInterfaces(c))
+        for sig in walkPhysInterfaces(c):
+            s = sig._sig
+            assert s.ctx is netlist, (s, "must be in the same netlist")
+            toSearch.append(s)
 
     while toSearch:
-        _toSearch = []
-        for sig in toSearch:
-            for e in sig.drivers:
-                if isinstance(e, Operator):
-                    inputs = e.operands
-                elif isinstance(e, HdlPortItem):
-                    # we are already added inputs of all components
-                    continue
-                else:
-                    inputs = walkInputsForSpecificOutput(sig, e)
-                for i in inputs:
-                    if isinstance(i, RtlSignalBase) and i not in seen:
-                        seen.add(i)
-                        _toSearch.append(i)
+        sig = toSearch.popleft()
+        
+        for e in sig.drivers:
+            if isinstance(e, Operator):
+                inputs = e.operands
+            elif isinstance(e, HdlPortItem):
+                # we are already added inputs of all components
+                continue
+            else:
+                assert e in netlist.statements, ("Statement must be registered in the netlist", e)
+                inputs = walkInputsForSpecificOutput(sig, e)
 
-            nv = sig._nop_val
-            if isinstance(nv, RtlSignalBase):
-                if nv not in seen:
-                    seen.add(nv)
-                    _toSearch.append(nv)
-        toSearch = _toSearch
+            for i in inputs:
+                if isinstance(i, RtlSignalBase) and i not in seen:
+                    assert i.ctx is netlist, (netlist.parent, sig, "all inputs must be in the same netlist", i)
+                    seen.add(i)
+                    toSearch.append(i)
+
+        nv = sig._nop_val
+        if isinstance(nv, RtlSignalBase):
+            if nv not in seen:
+                assert nv.ctx is netlist, nv
+                seen.add(nv)
+                toSearch.append(nv)
+
 
     # add all io because it can not be removed
-    seen.update([s for s, d in netlist.interfaces.items() if d == DIRECTION.IN])
+    seen.update(s for s, d in netlist.interfaces.items() if d == DIRECTION.IN)
     for c in netlist.subUnits:
-        seen.update(sig._sig for sig in walkPhysInterfaces(c))
+        for sig in walkPhysInterfaces(c):
+            s = sig._sig
+            assert s.ctx is netlist, (netlist.parent, s, "must be in the same netlist")
+            seen.add(s)
 
     # remove signals which were not seen
     for sig in netlist.signals:
         if sig in seen:
+            # if it was seen it was used and it should not be removed
             continue
 
         for e in tuple(sig.drivers):
