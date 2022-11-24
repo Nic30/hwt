@@ -1,4 +1,4 @@
-from typing import Generator, Union, Tuple
+from typing import Generator, Union, Tuple, Optional, Set
 
 from hwt.doc_markers import internal
 from hwt.hdl.hdlObject import HdlObject
@@ -6,7 +6,8 @@ from hwt.hdl.operatorDefs import isEventDependentOp, OpDefinition
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.value import HValue
 from hwt.pyUtils.arrayQuery import arr_all
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, RtlSignalBase, \
+    OperatorCaheKeyType
 
 
 @internal
@@ -39,7 +40,7 @@ class Operator(HdlObject):
                  operands: Tuple[Union[RtlSignalBase, HValue]]):
         self.operands = tuple(operands)
         self.operator = operator
-        self.result = None  # type: RtlSignal
+        self.result: Optional[RtlSignal] = None
 
     @internal
     def staticEval(self):
@@ -51,7 +52,10 @@ class Operator(HdlObject):
         self.result._val = self.operator.eval(self, simulator=None)
 
     @internal
-    def _walk_sensitivity(self, casualSensitivity: set, seen: set, ctx: SensitivityCtx):
+    def _walk_sensitivity(self, casualSensitivity: Set[RtlSignal], seen: Set[RtlSignal], ctx: SensitivityCtx):
+        """
+        :see: :meth:`hwt.synthesizer.rtlLevel.rtlSignal.RtlSignal._walk_sensitivity`
+        """
         seen.add(self)
 
         if isEventDependentOp(self.operator):
@@ -74,14 +78,6 @@ class Operator(HdlObject):
             if not isinstance(op, HValue) and op not in seen:
                 seen.add(op)
                 yield from op._walk_public_drivers(seen)
-
-    @internal
-    def __eq__(self, other):
-        return self is other or (
-            type(self) is type(other) and
-            self.operator == other.operator and
-            self.operands == other.operands
-        )
 
     @internal
     @staticmethod
@@ -139,9 +135,61 @@ class Operator(HdlObject):
         return out
 
     @internal
-    def __hash__(self):
-        return hash((self.operator, self.operands))
+    def _replace_input(self, inp: RtlSignal, replacement: RtlSignal):
+        """
+        Replace operand signal (non-recursively)
+        
+        :attention: costly operation because all records in operand cache for all inputs may be potentially updated
+        """
+        newOperands = []
+        modified = False
+        for op in self.operands:
+            if op is inp:
+                modified = True
+                newOperands.append(replacement)
+            else:
+                newOperands.append(op)
 
+        assert modified, self
+        res = self.result
+        for op in self.operands:
+            if isinstance(op, RtlSignal):
+                op: RtlSignal
+                for k, v in tuple(op._usedOps.items()):
+                    k: OperatorCaheKeyType
+                    if v is res:
+                        if op is inp:
+                            # this operand is  originally replaced "inp" the cache key must be transfered
+                            # from original operand to a new replacement
+                            op._usedOps.pop(k)
+                            replacement._usedOps[k] = v
+                            aliases = op._usedOpsAlias.pop(k)
+                            aliases.remove(k)
+                            _aliases = None
+                            for a in aliases:
+                                _aliases = replacement._usedOpsAlias.get(a, None)
+                                if _aliases is not None:
+                                    break
+                            if _aliases is None:
+                                _aliases = {k, }
+                            else:
+                                _aliases.add(k)
+                            replacement._usedOpsAlias[k] = _aliases
+                        else:
+                            # some other operand is originally replaced "inp" the cache key must be updated
+                            op._usedOps.pop(k)
+                            kNew = (*k[0:2], *(replacement if _op is inp else _op for _op in k[2:]))
+                            op._usedOps[k] = v
+                            aliases = op._usedOpsAlias.pop(k)
+                            aliases.remove(k)
+                            aliases.add(kNew)
+                            op._usedOpsAlias[kNew] = aliases
+            
+        self.operands = tuple(newOperands)
+        inp.endpoints.discard(self)
+        replacement.endpoints.append(self)
+
+    @internal
     def _destroy(self):
         self.result.drivers.remove(self)
         operands = self.operands
