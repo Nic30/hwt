@@ -14,6 +14,7 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr, \
     SignalDriverErrType
 from hwt.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
 
+
 OperatorCaheKeyType = Union[
     Tuple['OpDefinition', int, object],
     Tuple['OpDefinition', int, object, object],
@@ -34,6 +35,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
     :ivar ~._usedOps: A dictionary of used operators which can be reused.
     :ivar ~._usedOpsAlias: A dictionary tuple of operator and operands to set of tuples of operator and operands,
         used to resolve which combination of the operator and operands resulted in to same result.
+    :note: The _usedOps, _usedOpsAlias cache record is generated only for the left most signal in expression.
     :ivar ~.hidden: means that this signal is part of expression
         and should not be rendered
     :ivar ~._nop_val: value which is used to fill up statements when no other

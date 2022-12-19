@@ -54,7 +54,8 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
     for c in netlist.subUnits:
         for sig in walkPhysInterfaces(c):
             s = sig._sig
-            assert s.ctx is netlist, (s, "must be in the same netlist")
+            assert s is not None, (netlist.parent, sig, "broken Interface instance")
+            assert s.ctx is netlist, (netlist.parent, s, "must be in the same netlist")
             toSearch.append(s)
 
     while toSearch:
@@ -72,7 +73,7 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
 
             for i in inputs:
                 if isinstance(i, RtlSignalBase) and i not in seen:
-                    assert i.ctx is netlist, (netlist.parent, sig, "all inputs must be in the same netlist", i)
+                    assert i.ctx is netlist, (netlist.parent, e, "all inputs must be in the same netlist", i)
                     seen.add(i)
                     toSearch.append(i)
 
@@ -89,6 +90,7 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
     for c in netlist.subUnits:
         for sig in walkPhysInterfaces(c):
             s = sig._sig
+            assert s is not None, (netlist.parent, sig, "broken Interface instance after initial scan")
             assert s.ctx is netlist, (netlist.parent, s, "must be in the same netlist")
             seen.add(s)
 
@@ -97,6 +99,7 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
         if sig in seen:
             # if it was seen it was used and it should not be removed
             continue
+        assert sig.ctx is netlist, (netlist.parent, sig, "must be in the same netlist")
 
         for e in tuple(sig.drivers):
             # drivers of this signal are useless rm them

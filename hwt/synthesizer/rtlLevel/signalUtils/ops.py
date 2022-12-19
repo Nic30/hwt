@@ -195,7 +195,7 @@ class RtlSignalOps():
     # cmp
     def _eq(self, other):
         """
-        __eq__ is not overloaded because it will destroy hashability of object
+        :attention: __eq__ is not overloaded because it will destroy hashability of object
         """
         try:
             return self.naryOp(AllOps.EQ, tv(self)._eq, other)
