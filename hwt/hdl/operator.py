@@ -141,6 +141,7 @@ class Operator(HdlObject):
         
         :attention: costly operation because all records in operand cache for all inputs may be potentially updated
         """
+        assert self.result.ctx is replacement.ctx, self
         newOperands = []
         modified = False
         for op in self.operands:
@@ -175,16 +176,18 @@ class Operator(HdlObject):
                             else:
                                 _aliases.add(k)
                             replacement._usedOpsAlias[k] = _aliases
+
                         else:
                             # some other operand is originally replaced "inp" the cache key must be updated
                             op._usedOps.pop(k)
                             kNew = (*k[0:2], *(replacement if _op is inp else _op for _op in k[2:]))
-                            op._usedOps[k] = v
+                            op._usedOps[kNew] = v
                             aliases = op._usedOpsAlias.pop(k)
                             aliases.remove(k)
                             aliases.add(kNew)
                             op._usedOpsAlias[kNew] = aliases
-            
+                break  # _usedOps/_usedOpsAlias is relevant only for the first operand
+
         self.operands = tuple(newOperands)
         inp.endpoints.discard(self)
         replacement.endpoints.append(self)
@@ -196,14 +199,14 @@ class Operator(HdlObject):
         first_op_sig = True
         for i, o in enumerate(operands):
             if isinstance(o, RtlSignalBase):
-                # discard because operands may be the same signal
+                # discard because same signal can be on multiple places in operand list
                 o.endpoints.discard(self)
                 if first_op_sig:
                     # clean all references on this operator instance from RtlSignal._usedOps operator cache
                     _k = (self.operator, i, *operands[:i], *operands[i + 1:])
                     for k in o._usedOpsAlias[_k]:
                         res = o._usedOps.pop(k)
-                        assert res is self.result
+                        assert res is self.result, (self.result.ctx.parent, "Operator was not stored properly in operand cache", res, self.result, o)
                     first_op_sig = False
         self.result.origin = None
         self.result = None
