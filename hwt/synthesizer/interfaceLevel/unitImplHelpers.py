@@ -30,7 +30,9 @@ def getSignalName(sig):
         pass
     return sig.name
 
-def getInterfaceName(top: "Unit", io: Union[InterfaceBase, RtlSignal]):
+
+def getInterfaceName(top: "Unit", io: Union[InterfaceBase, RtlSignal,
+                                            Tuple[Union[InterfaceBase, RtlSignal]]]):
     if isinstance(io, InterfaceBase):
         prefix = []
         parent = io._parent
@@ -47,6 +49,8 @@ def getInterfaceName(top: "Unit", io: Union[InterfaceBase, RtlSignal]):
             return ".".join(prefix)
         else:
             return n
+    elif isinstance(io, tuple):
+        return f"({', '.join(getInterfaceName(top, _io) for _io in io)})"
     else:
         return getSignalName(io)
 
