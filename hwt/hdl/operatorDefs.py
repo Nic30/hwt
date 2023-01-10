@@ -160,17 +160,22 @@ for a_name in dir(AllOps):
 CAST_OPS = (AllOps.BitsAsVec, AllOps.BitsAsSigned, AllOps.BitsAsUnsigned)
 BITWISE_OPS = (AllOps.NOT, AllOps.XOR, AllOps.AND, AllOps.OR)
 COMPARE_OPS = (AllOps.EQ, AllOps.NE, AllOps.GT, AllOps.GE, AllOps.LT, AllOps.LE)
-# a dictionary mapping operator to an operator with the same result if the operands are swapped or result is negated
-CMP_OPS_SWAP_OP = {
+# change of compare operator on operand order swap
+CMP_OP_SWAP = {
+    AllOps.EQ: AllOps.EQ,
+    AllOps.NE: AllOps.NE,
+    AllOps.GT: AllOps.LT,
+    AllOps.GE: AllOps.LE,
+    AllOps.LT: AllOps.GT,
+    AllOps.LE: AllOps.GE,
+}
+CMP_OPS_NEG = {
+    AllOps.EQ: AllOps.NE,
+    AllOps.NE: AllOps.EQ,
     AllOps.GT: AllOps.LE,
     AllOps.GE: AllOps.LT,
     AllOps.LT: AllOps.GE,
     AllOps.LE: AllOps.GT,
-}
-CMP_OPS_NEGAT_RESULT = {
-    AllOps.EQ: AllOps.NE,
-    AllOps.NE: AllOps.EQ,
-    **CMP_OPS_SWAP_OP,
 }
 # always commutative operators for which order of operands does not matter
 ALWAYS_COMMUTATIVE_OPS = (AllOps.EQ, AllOps.NE, AllOps.XOR, AllOps.AND, AllOps.OR, AllOps.ADD, AllOps.MUL)
