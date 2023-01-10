@@ -18,7 +18,7 @@ class UniqList(Generic[T], list):
 
     def append(self, item: T) -> bool:
         """
-        :returns: True if the item was in list already
+        :return: True if the item was in list already
         """
         if item in self.__s:
             return False
@@ -43,7 +43,7 @@ class UniqList(Generic[T], list):
 
     def discard(self, item: T) -> bool:
         """
-        :returns: True if the item was in list already
+        :return: True if the item was in list already
         """
         if item in self.__s:
             self.remove(item)

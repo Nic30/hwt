@@ -305,7 +305,7 @@ class RtlNetlistPassExtractPartDrivers():
                                                     List[Tuple[RtlSignal, List[HValue]]]]
                                  ) -> bool:
         """
-        :returns: True if statement was modified
+        :return: True if statement was modified
         """
         if isinstance(stm, HdlAssignmentContainer):
             dst = stm.dst

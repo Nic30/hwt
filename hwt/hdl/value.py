@@ -11,7 +11,7 @@ class HValue():
     """
     __slots__ = ["_dtype", "val", "vld_mask"]
 
-    def __init__(self, dtype, val, vld_mask):
+    def __init__(self, dtype: "HdlType", val, vld_mask):
         """
         :param val: pythonic value representing this value
         :param dtype: data type object from which this value was derived from
