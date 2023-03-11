@@ -1,4 +1,5 @@
 from operator import and_, or_, xor, add
+from typing import Union
 
 from hwt.code_utils import _mkOp, _intfToSig
 from hwt.hdl.operatorDefs import concatFn
@@ -183,7 +184,6 @@ def SwitchLogic(cases, default=None):
                 raise HwtSyntaxError("Condition is not a signal, it is not certain"
                                      " if this is an error or desire ", cond)
 
-
     if assigTop is None:
         if default is None:
             return []
@@ -337,14 +337,14 @@ Xor = _mkOp(xor)
 Concat = _mkOp(concatFn)
 
 
-def ror(sig, howMany) -> RtlSignalBase:
+def ror(sig:Union[RtlSignalBase, HValue], howMany: int) -> RtlSignalBase:
     "Rotate right"
     if sig._dtype.bit_length() == 1:
         return sig
     return sig[howMany:]._concat(sig[:howMany])
 
 
-def rol(sig, howMany) -> RtlSignalBase:
+def rol(sig:Union[RtlSignalBase, HValue], howMany:int) -> RtlSignalBase:
     "Rotate left"
     width = sig._dtype.bit_length()
     if width == 1:
