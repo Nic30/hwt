@@ -141,7 +141,7 @@ class ToHdlAstVhdl2008_ops():
                 d = op.singleDriver()
             except SignalDriverErr:
                 d = None
-    
+
             if d is not None and isinstance(d, Operator) and d.operator is AllOps.CONCAT:
                 _, op = self.tmpVars.create_var_cached("tmpConcatExpr_", op._dtype, def_val=op)
         return op
@@ -154,6 +154,8 @@ class ToHdlAstVhdl2008_ops():
             op0, op1 = ops
             if isinstance(op0, RtlSignalBase) and isResultOfTypeConversion(op0):
                 _, op0 = self.tmpVars.create_var_cached("tmpTypeConv_", op0._dtype, def_val=op0)
+            if isinstance(op1, RtlSignalBase) and isResultOfTypeConversion(op1):
+                _, op1 = self.tmpVars.create_var_cached("tmpIndexTypeConv_", op1._dtype, def_val=op1)
 
             # if the op0 is not signal or other index index operator it is extracted
             # as tmp variable
@@ -202,7 +204,7 @@ class ToHdlAstVhdl2008_ops():
                 if isinstance(op0, RtlSignalBase) and op0.hidden:
                     _, op0 = self.tmpVars.create_var_cached("tmpCastExpr_", op0._dtype, def_val=op0)
                 return self.apply_cast(_o, self.as_hdl_operand(op0))
-            
+
             o = self.op_transl_dict[o]
             if len(ops) == 2:
                 res_t = op.result._dtype
