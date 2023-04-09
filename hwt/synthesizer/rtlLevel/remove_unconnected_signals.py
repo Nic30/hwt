@@ -10,6 +10,7 @@ from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.synthesizer.interfaceLevel.interfaceUtils.utils import walkPhysInterfaces
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from ipCorePackager.constants import DIRECTION
 
 
@@ -33,10 +34,10 @@ def walkInputsForSpecificOutput(output_sig: RtlSignalBase, stm: HdlStatement):
 
     elif isinstance(stm, HdlStmCodeBlockContainer):
         pass
-    
+
     else:
         raise NotImplementedError(stm)
-    
+
     for _stm in stm._iter_stms_for_output(output_sig):
         yield from walkInputsForSpecificOutput(output_sig, _stm)
 
@@ -60,7 +61,7 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
 
     while toSearch:
         sig = toSearch.popleft()
-        
+
         for e in sig.drivers:
             if isinstance(e, Operator):
                 inputs = e.operands
@@ -84,7 +85,6 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
                 seen.add(nv)
                 toSearch.append(nv)
 
-
     # add all io because it can not be removed
     seen.update(s for s, d in netlist.interfaces.items() if d == DIRECTION.IN)
     for c in netlist.subUnits:
@@ -96,6 +96,7 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
 
     # remove signals which were not seen
     for sig in netlist.signals:
+        sig: RtlSignal
         if sig in seen:
             # if it was seen it was used and it should not be removed
             continue
@@ -113,5 +114,12 @@ def removeUnconnectedSignals(netlist: "RtlNetlist"):
             if removed_e is not None:
                 # must not destroy before processing inputs
                 removed_e._destroy()
+        intf = getattr(sig, "_interface", None)
+        if intf:
+            if intf._sig is sig:
+                intf._sig = None
+            else:
+                assert intf._sigInside is None or intf._sigInside is sig, (intf, intf._sigInside, sig)
+                intf._sigInside = None
 
     netlist.signals = seen

@@ -124,7 +124,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
 
     @internal
     def get_trace_formatter(self, t)\
-            -> Tuple[str, int, Callable[[RtlSignalBase, HValue], str]]:
+            ->Tuple[str, int, Callable[[RtlSignalBase, HValue], str]]:
         """
         :return: (vcd type name, vcd width, formatter fn)
         """
@@ -162,15 +162,21 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
             for chIntf in intfs:
                 self._collect_interface_signals(chIntf, model, res)
             if isinstance(obj, Unit):
+                for privChIntf in obj._private_interfaces:
+                    self._collect_interface_signals(privChIntf, model, res)
+
                 for u in obj._units:
                     m = getattr(model, u._name + "_inst")
                     if u._shared_component_with is not None:
                         u, _, _ = u._shared_component_with
                     self._collect_interface_signals(u, m, res)
         else:
-            sig_name = obj._sigInside.name
-            s = getattr(model.io, sig_name)
-            res.add(s)
+            s = obj._sigInside
+            if s is not None:
+                # _sigInside is None if the signal was optimized out
+                sig_name = s.name
+                s = getattr(model.io, sig_name)
+                res.add(s)
 
     def wave_register_signals(self,
                               obj: Union[Interface, Unit],
@@ -195,6 +201,9 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                 for chIntf in obj._interfaces:
                     self.wave_register_signals(chIntf, model, subScope, interface_signals)
                 if isinstance(obj, Unit):
+                    for chIntf in obj._private_interfaces:
+                        self.wave_register_signals(chIntf, model, subScope, interface_signals)
+
                     self.wave_register_remaining_signals(subScope, model, interface_signals)
                     # register interfaces from all subunits
                     for u in obj._units:
@@ -206,7 +215,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
             return subScope
         else:
             t = obj._dtype
-            if isinstance(t, self.supported_type_classes):
+            if obj._sigInside is not None and isinstance(t, self.supported_type_classes):
                 tName, width, formatter = self.get_trace_formatter(t)
                 sig_name = obj._sigInside.name
                 s = getattr(model.io, sig_name)
