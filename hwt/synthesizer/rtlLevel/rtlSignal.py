@@ -14,7 +14,6 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr, \
     SignalDriverErrType
 from hwt.synthesizer.rtlLevel.signalUtils.ops import RtlSignalOps
 
-
 OperatorCaheKeyType = Union[
     Tuple['OpDefinition', int, object],
     Tuple['OpDefinition', int, object, object],
@@ -78,6 +77,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
             than a default value
         """
 
+        self._instId: int = RtlSignal._nextInstId()
         if name is None:
             name = "sig_"
             self.hasGenericName = True
@@ -99,7 +99,6 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         self._usedOps: Dict[OperatorCaheKeyType, RtlSignal] = {}
         self._usedOpsAlias: Dict[OperatorCaheKeyType, Set[OperatorCaheKeyType]] = {}
         self.hidden: bool = True
-        self._instId: int = RtlSignal._nextInstId()
 
         self._nop_val = nop_val
         self._const = is_const
@@ -157,7 +156,7 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         """
         Walk expression and collect signals which is this expression sensitive to.
         (:see: what is signal sensitivity in vhdl/verilog)
-        
+
         :param casualSensitivity: set of public signals which is this expression sensitive to but rising/faling edge operator is not present
         :param seen: set of all seen signals
         :param ctx: context where sensitivity

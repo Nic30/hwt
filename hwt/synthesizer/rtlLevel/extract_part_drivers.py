@@ -193,7 +193,7 @@ class RtlNetlistPassExtractPartDrivers():
                     index_key = ((high, low),)
 
                 while split_p < low:
-                    # some parts at the beginning are skiped
+                    # some parts at the beginning are skipped
                     # that means that that part is not driven by anything
                     # and we need to check default and nop value
                     part_indexes = (SLICE.from_py(slice(low, split_p , -1)),)
