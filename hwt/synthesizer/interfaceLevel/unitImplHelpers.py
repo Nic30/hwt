@@ -39,7 +39,7 @@ def getInterfaceName(top: "Unit", io: Union[InterfaceBase, RtlSignal,
         while parent is not None:
             if parent is top:
                 break
-            
+
             prefix.append(parent._name)
             parent = parent._parent
         n = io._getFullName()
@@ -105,6 +105,7 @@ def _instantiate_signals(intf: Union[Signal, HObjList, StructIntf],
             name,
             intf._dtype,
             clk, rst, def_val, nop_val)
+        intf._sig._interface = intf
 
     elif isinstance(intf, HObjList):
         intf_len = len(intf)
@@ -196,6 +197,7 @@ def Interface_without_registration(
                                                                   def_val=def_val,
                                                                   nop_val=nop_val))
     container._parent = parent
+    parent._private_interfaces.append(container)
     return container
 
 
