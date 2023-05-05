@@ -51,6 +51,7 @@ class If(IfContainer):
             raise HwtSyntaxError("Condition is not signal, it is not certain"
                                  " if this is an error or desire ", cond_sig)
 
+        assert cond_sig._dtype.bit_length() == 1, cond_sig
         super(If, self).__init__(cond_sig)
         self.rank = 1
         self._inputs.append(cond_sig)
@@ -67,6 +68,7 @@ class If(IfContainer):
         self.rank += 1
         cond_sig = _intfToSig(cond)
 
+        assert cond_sig._dtype.bit_length() == 1, cond_sig
         ev_dep = arr_any(discoverEventDependency(cond_sig), lambda x: True)
         self._event_dependent_from_branch = len(self.elIfs) + 1 if ev_dep else None
 
