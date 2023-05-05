@@ -113,8 +113,8 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                 sys.path.pop(0)
         else:
             simModule = ModuleType('simModule_' + unique_name)
-            # python supports only ~100 opened brackets
-            # if exceeded it throws MemoryError: s_push: parser stack overflow
+            # python supports only ~100 opened brackets; MemoryError: s_push: parser stack overflow
+            # python supports only ~100 levels of indentation; IndentationError: too many levels of indentation
             exec(buff.getvalue(),
                  simModule.__dict__)
 
@@ -142,9 +142,9 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
             ww.date(datetime.now())
             ww.timescale(1)
 
-            interface_signals = set()
-            self._collect_interface_signals(self.synthesised_unit, self.model, interface_signals)
-            self.wave_register_signals(self.synthesised_unit, self.model, None, interface_signals)
+            empty_hiearchy_containers = set()
+            self._collect_empty_hiearchy_containers(self.synthesised_unit, self.model, empty_hiearchy_containers)
+            self._wave_register_signals(self.synthesised_unit, self.model, None, empty_hiearchy_containers)
 
             ww.enddefinitions()
 
@@ -154,38 +154,51 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
     def finalize(self):
         pass
 
-    def _collect_interface_signals(self,
+    def _collect_empty_hiearchy_containers(self,
                                    obj: Union[Interface, Unit],
-                                   model: BasicRtlSimModel, res: Set[BasicRtlSimProxy]):
+                                   model: BasicRtlSimModel,
+                                   res: Set[Union[Unit, Interface]]):
         intfs = getattr(obj, "_interfaces", None)
+        isEmpty = True
         if intfs:
             for chIntf in intfs:
-                self._collect_interface_signals(chIntf, model, res)
+                isEmpty &= self._collect_empty_hiearchy_containers(chIntf, model, res)
+
             if isinstance(obj, Unit):
-                for privChIntf in obj._private_interfaces:
-                    self._collect_interface_signals(privChIntf, model, res)
+                seenNames: Set[str] = set()
+                for chIntf in obj._private_interfaces:
+                    # skip io without name and with duplicit name
+                    if chIntf._name is not None and chIntf._name not in seenNames:
+                        seenNames.add(chIntf._name)
+                        isEmpty &= self._collect_empty_hiearchy_containers(chIntf, model, res)
 
                 for u in obj._units:
                     m = getattr(model, u._name + "_inst")
                     if u._shared_component_with is not None:
                         u, _, _ = u._shared_component_with
-                    self._collect_interface_signals(u, m, res)
+                    isEmpty &= self._collect_empty_hiearchy_containers(u, m, res)
+            if isEmpty:
+                res.add(obj)
         else:
             s = obj._sigInside
             if s is not None:
                 # _sigInside is None if the signal was optimized out
                 sig_name = s.name
-                s = getattr(model.io, sig_name)
-                res.add(s)
+                s = getattr(model.io, sig_name, None)
+                if s is not None:
+                    return False
+        return isEmpty
 
-    def wave_register_signals(self,
+    def _wave_register_signals(self,
                               obj: Union[Interface, Unit],
                               model: BasicRtlSimModel,
                               parent: Optional[VcdVarWritingScope],
-                              interface_signals: Set[BasicRtlSimProxy]):
+                              empty_hiearchy_containers: Set[Union[Unit, Interface]]):
         """
         Register signals from interfaces for Interface or :class:`hwt.synthesizer.unit.Unit` instances
         """
+        if obj in empty_hiearchy_containers:
+            return
         if obj._interfaces:
             if isinstance(obj, Unit):
                 name = model._name
@@ -199,33 +212,37 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
             with subScope:
                 # register all subinterfaces
                 for chIntf in obj._interfaces:
-                    self.wave_register_signals(chIntf, model, subScope, interface_signals)
+                    self._wave_register_signals(chIntf, model, subScope, empty_hiearchy_containers)
                 if isinstance(obj, Unit):
                     for chIntf in obj._private_interfaces:
-                        self.wave_register_signals(chIntf, model, subScope, interface_signals)
+                        # skip io without name and with duplicit name
+                        if chIntf._name is not None and chIntf._name not in subScope.children:
+                            self._wave_register_signals(chIntf, model, subScope, empty_hiearchy_containers)
 
-                    self.wave_register_remaining_signals(subScope, model, interface_signals)
+                    self._wave_register_remaining_signals(subScope, model, empty_hiearchy_containers)
                     # register interfaces from all subunits
                     for u in obj._units:
                         m = getattr(model, u._name + "_inst")
                         if u._shared_component_with is not None:
                             u, _, _ = u._shared_component_with
-                        self.wave_register_signals(u, m, subScope, interface_signals)
+                        self._wave_register_signals(u, m, subScope, empty_hiearchy_containers)
 
-            return subScope
         else:
             t = obj._dtype
             if obj._sigInside is not None and isinstance(t, self.supported_type_classes):
-                tName, width, formatter = self.get_trace_formatter(t)
-                sig_name = obj._sigInside.name
-                s = getattr(model.io, sig_name)
-                try:
-                    parent.addVar(s, sig_name,
-                                  tName, width, formatter)
-                except VarAlreadyRegistered:
-                    pass
+                s = obj._sigInside
+                #if isinstance(s, BasicRtlSimProxy):
+                sig_name = s.name
+                s = getattr(model.io, sig_name, None)
+                if s is not None:
+                    tName, width, formatter = self.get_trace_formatter(t)
+                    try:
+                        parent.addVar(s, sig_name,
+                                      tName, width, formatter)
+                    except VarAlreadyRegistered:
+                        pass
 
-    def wave_register_remaining_signals(self, unitScope,
+    def _wave_register_remaining_signals(self, unitScope,
                                         model: BasicRtlSimModel,
                                         interface_signals: Set[BasicRtlSimProxy]):
         for s in model._interfaces:
