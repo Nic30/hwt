@@ -74,7 +74,7 @@ def HValue_from_words(t: HdlType,
             try:
                 actual = getDataFn(next(fData))
             except StopIteration:
-                raise ValueError("Input data too short")
+                raise ValueError("Insufficcient amount of data to build value for specified type", t, v, required)
 
             if dataWidth is None:
                 dataWidth = actual._dtype.bit_length()
@@ -87,7 +87,7 @@ def HValue_from_words(t: HdlType,
             try:
                 d = getDataFn(next(fData))
             except StopIteration:
-                raise ValueError("Input data too short")
+                raise ValueError("Insufficcient amount of data to build value for specified type", t, v, required, actuallyHave)
 
             actual = d._concat(actual)
             actuallyHave += dataWidth
@@ -110,7 +110,7 @@ def HValue_from_words(t: HdlType,
     if actual is not None:
         assert actual._dtype.bit_length(
         ) - actualOffset < dataWidth, (
-            "It should be just a padding at the end of frame"
+            "It should be just a padding at the end of frame, but there is some additional data"
         )
     return val
 
