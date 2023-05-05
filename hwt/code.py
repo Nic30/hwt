@@ -343,15 +343,38 @@ def ror(sig:Union[RtlSignalBase, HValue], howMany: int) -> RtlSignalBase:
     "Rotate right"
     if sig._dtype.bit_length() == 1:
         return sig
-    return sig[howMany:]._concat(sig[:howMany])
+
+    if isinstance(howMany, int):
+        return sig[howMany:]._concat(sig[:howMany])
+    elif isinstance(howMany, HValue):
+        return ror(sig, int(howMany))
+    else:
+        t = howMany._dtype
+        if not isinstance(t, Bits) or t.signed:
+            raise NotImplementedError(t)
+        res = sig
+        for i in range(1, t.domain_size() - 1):
+            res = howMany._eq(i)._ternary(ror(sig, i), res)
+        return  res
 
 
-def rol(sig:Union[RtlSignalBase, HValue], howMany:int) -> RtlSignalBase:
+def rol(sig:Union[RtlSignalBase, HValue], howMany:Union[RtlSignalBase, int]) -> RtlSignalBase:
     "Rotate left"
-    width = sig._dtype.bit_length()
-    if width == 1:
-        return sig
-    return sig[(width - howMany):]._concat(sig[:(width - howMany)])
+    if isinstance(howMany, int):
+        width = sig._dtype.bit_length()
+        if width == 1:
+            return sig
+        return sig[(width - howMany):]._concat(sig[:(width - howMany)])
+    elif isinstance(howMany, HValue):
+        return rol(sig, int(howMany))
+    else:
+        t = howMany._dtype
+        if not isinstance(t, Bits) or t.signed:
+            raise NotImplementedError(t)
+        res = sig
+        for i in range(1, t.domain_size() - 1):
+            res = howMany._eq(i)._ternary(rol(sig, i), res)
+        return  res
 
 
 def replicate(n, v):
