@@ -219,7 +219,6 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                         if chIntf._name is not None and chIntf._name not in subScope.children:
                             self._wave_register_signals(chIntf, model, subScope, empty_hiearchy_containers)
 
-                    self._wave_register_remaining_signals(subScope, model, empty_hiearchy_containers)
                     # register interfaces from all subunits
                     for u in obj._units:
                         m = getattr(model, u._name + "_inst")
@@ -227,6 +226,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                             u, _, _ = u._shared_component_with
                         self._wave_register_signals(u, m, subScope, empty_hiearchy_containers)
 
+                    self._wave_register_remaining_signals(subScope, model, empty_hiearchy_containers)
         else:
             t = obj._dtype
             if obj._sigInside is not None and isinstance(t, self.supported_type_classes):
@@ -237,8 +237,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
                 if s is not None:
                     tName, width, formatter = self.get_trace_formatter(t)
                     try:
-                        parent.addVar(s, sig_name,
-                                      tName, width, formatter)
+                        parent.addVar(s, sig_name, tName, width, formatter)
                     except VarAlreadyRegistered:
                         pass
 
