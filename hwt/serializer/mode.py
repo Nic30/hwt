@@ -72,7 +72,7 @@ def _serializeExclude_eval(parentUnit, priv):
     """
 
     # do not use this :class:`hwt.synthesizer.unit.Unit` instance and do not use any prelacement
-    # (usefull when the :class:`hwt.synthesizer.unit.Unit` instance is a placeholder for something
+    # (useful when the :class:`hwt.synthesizer.unit.Unit` instance is a placeholder for something
     #  which already exists in hdl word)
     if priv is None:
         priv = parentUnit

@@ -45,7 +45,7 @@ class SimTestCase(unittest.TestCase):
     :ivar ~.DEFAULT_LOG_DIR: default directory where simulation outputs should be stored
     :ivar ~.DEFAULT_SIMULATOR: default RTL simulator generator used on background of the test
     :ivar ~.RECOMPILE: if False the compilation of the simulation is dissabled.
-        This is usefull while debugging of the simulation because compilation of simulation
+        This is useful while debugging of the simulation because compilation of simulation
         may take significant amount of time and may not be required.
     """
     # value chosen because in this position bits are changing frequently
@@ -95,6 +95,7 @@ class SimTestCase(unittest.TestCase):
                     v2 = v1
                 _seq2.append(v2)
             seq2 = _seq2
+            
         self.assertSequenceEqual(seq1, seq2, msg, seq_type)
 
     def getTestName(self):
