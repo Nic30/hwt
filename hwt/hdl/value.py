@@ -1,8 +1,11 @@
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.doc_markers import internal
+from typing import TypeVar, Generic
+
+T = TypeVar("T", bound="HdlType")
 
 
-class HValue():
+class HValue(Generic[T]):
     """
     Wrap around hdl value with overloaded operators
     http://www.rafekettler.com/magicmethods.html
