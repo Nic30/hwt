@@ -123,7 +123,8 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
         return cls(model_cls, unit)
 
     @internal
-    def get_trace_formatter(self, t)\
+    @staticmethod
+    def get_trace_formatter(t)\
             ->Tuple[str, int, Callable[[RtlSignalBase, HValue], str]]:
         """
         :return: (vcd type name, vcd width, formatter fn)
