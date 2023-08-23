@@ -103,7 +103,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [mockturtle](https://github.com/lsils/mockturtle) - logic network library
 * [moore](https://github.com/fabianschuiki/moore) - Rust, HDL -> model compiler
 * [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
-* [nmigen](https://github.com/m-labs/nmigen) -, Python, A refreshed Python toolbox for building complex digital hardware
+* [Amaranth HDL](https://github.com/amaranth-lang/amaranth) -, Python, (previously nMigen) A refreshed Python toolbox for building complex digital hardware
 * [OpenTimer](https://github.com/OpenTimer/OpenTimer) - , C++,  A High-Performance Timing Analysis Tool for VLSI Systems
 * [percy](https://github.com/whaaswijk/percy) - Collection of different synthesizers and exact synthesis methods for use in applications such as circuit resynthesis and design exploration.
 * [PyChip-py-hcl](https://github.com/scutdig/PyChip-py-hcl) - , Python, Chisel3 like HCL

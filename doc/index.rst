@@ -34,7 +34,7 @@ What is HWToolkit (hwt)
 
 * Most of parts of HWT ecosystem are independent and you can use them separately.
 
-Other usefull libraries
+Other useful libraries
 -----------------------
 
 .. image:: _static/hwt_ecosystem_packages.png

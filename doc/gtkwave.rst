@@ -1,4 +1,4 @@
-GTKWave usefull tweaks
+GTKWave useful tweaks
 ======================
 
 .. code-block:: text
