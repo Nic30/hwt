@@ -431,9 +431,6 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         :note: arithmetic sift if type is signed else logical shift
         """
         width = self._dtype.bit_length()
-        if self._dtype.signed:
-            raise NotImplementedError()
-
         return self[(width - int(other)):]._concat(Bits(int(other)).from_py(0))
 
     def __rshift__(self, other):
