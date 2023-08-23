@@ -4,7 +4,7 @@ from hwtSimApi.hdlSimulator import HdlSimulator
 
 class StructIntfAgent(AgentBase):
     """
-    Agent for StructIntf inteface
+    Agent for StructIntf interface
 
     :summary: only purpose is to instantiate agents for child interfaces
     """
@@ -19,6 +19,10 @@ class StructIntfAgent(AgentBase):
         if d is None:
             for i in intf._interfaces:
                 i._ag.set_data(None)
+        elif getattr(d, "_dtype", None) is intf._dtype:
+            for i in intf._interfaces:
+                v = getattr(d, i._name)
+                i._ag.set_data(v)           
         else:
             assert len(d) == len(intf._interfaces), (d, intf._interfaces)
             for v, i in zip(d, intf._interfaces):
