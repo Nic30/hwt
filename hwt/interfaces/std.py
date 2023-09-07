@@ -23,7 +23,6 @@ from hwtSimApi.agents.rst import PullUpAgent
 from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.utils import freq_to_period
 
-
 D = DIRECTION
 
 T = TypeVar("T", bound=HdlType)
@@ -48,8 +47,8 @@ class Signal(SignalOps, Interface, Generic[T]):
                  masterDir: DIRECTION=D.OUT,
                  hdl_name:Optional[Union[str, Dict[str, str]]]=None,
                  loadConfig: bool=True):
-        self._sig = None
-        self._sigInside = None
+        self._sig: Optional["RtlSignal"] = None
+        self._sigInside: Optional["RtlSignal"] = None
         self._isAccessible = True
         super().__init__(masterDir=masterDir,
                          hdl_name=hdl_name,
