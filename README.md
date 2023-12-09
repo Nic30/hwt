@@ -102,6 +102,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [amaranth](https://github.com/amaranth-lang/amaranth)/[migen](https://github.com/m-labs/migen) - 2013-?, Python, HCL
 * [mockturtle](https://github.com/lsils/mockturtle) - logic network library
 * [moore](https://github.com/fabianschuiki/moore) - Rust, HDL -> model compiler
+* [msdsl](https://github.com/sgherbst/msdsl) - Python, real number model -> verilog
 * [MyHDL](https://github.com/myhdl/myhdl) - 2004-?, Python, Process based HDL
 * [Amaranth HDL](https://github.com/amaranth-lang/amaranth) -, Python, (previously nMigen) A refreshed Python toolbox for building complex digital hardware
 * [OpenTimer](https://github.com/OpenTimer/OpenTimer) - , C++,  A High-Performance Timing Analysis Tool for VLSI Systems
