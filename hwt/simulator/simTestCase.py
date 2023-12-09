@@ -9,10 +9,12 @@ from hwt.simulator.rtlSimulatorVcd import BasicRtlSimulatorVcd
 from hwt.simulator.utils import reconnectUnitSignalsToModel, valToInt, \
     allValuesToInts
 from hwt.synthesizer.dummyPlatform import DummyPlatform
+from hwt.synthesizer.exceptions import IntfLvlConfErr
 from hwt.synthesizer.unit import Unit
 from hwtSimApi.constants import CLK_PERIOD
 from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.triggers import Timer
+from hwtSimApi.utils import freq_to_period
 
 
 class DummySimPlatform(DummyPlatform):
@@ -95,7 +97,7 @@ class SimTestCase(unittest.TestCase):
                     v2 = v1
                 _seq2.append(v2)
             seq2 = _seq2
-            
+
         self.assertSequenceEqual(seq1, seq2, msg, seq_type)
 
     def getTestName(self):
@@ -134,7 +136,12 @@ class SimTestCase(unittest.TestCase):
         """
         assert intf._isExtern, intf
         assert intf._ag is not None, intf
-        randomEnProc = simpleRandomizationProcess(self, intf._ag)
+        try:
+            clk = intf._getAssociatedClk()
+        except IntfLvlConfErr:
+            clk = None
+        clk_period = int(freq_to_period(clk.FREQ))
+        randomEnProc = simpleRandomizationProcess(self, intf._ag, timeQuantum=clk_period)
         self.procs.append(randomEnProc())
 
     def restartSim(self):
