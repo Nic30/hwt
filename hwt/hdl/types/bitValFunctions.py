@@ -263,11 +263,11 @@ def bitsArithOp(self, other, op):
         if self._dtype.signed is None:
             self = self._unsigned()
 
-        if other_is_val and other._is_full_valid() and int(other) == 0:
+        if op in (AllOps.ADD, AllOps.SUB) and other_is_val and other._is_full_valid() and int(other) == 0:
             return self
 
         resT = self._dtype
-        if self_is_val and self._is_full_valid() and int(self) == 0:
+        if op == AllOps.ADD and self_is_val and self._is_full_valid() and int(self) == 0:
             return other._auto_cast(resT)
 
         if isinstance(other._dtype, Bits):
