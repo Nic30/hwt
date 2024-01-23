@@ -45,7 +45,7 @@ class RtlNetlist():
         self.arch: Optional[HdlModuleDef] = None
 
     def sig(self, name: str, dtype=BIT, clk=None, syncRst=None,
-            def_val=None, nop_val=NOT_SPECIFIED) -> Union[RtlSignal, RtlSyncSignal]:
+            def_val=None, nop_val=NOT_SPECIFIED, nextSig=NOT_SPECIFIED) -> Union[RtlSignal, RtlSyncSignal]:
         """
         Create new signal in this context
 
@@ -55,6 +55,9 @@ class RtlNetlist():
         :param def_val: a default value used for reset and initialization
         :param nop_val: a value which is used to drive the signal if there is no other drive
             (used to prevent latches and to specify default values for unconnected signals)
+        :param nextSig: the signal which should be used as "next" signal for this register
+            if is not specified the new signal is generated. (Next signal holds value which should be in register in next clk.)
+        
         """
         _def_val = _try_cast_any_to_HValue(def_val, dtype, True)
         if nop_val is not NOT_SPECIFIED:
@@ -63,7 +66,8 @@ class RtlNetlist():
         if clk is not None:
             s = RtlSyncSignal(self, name, dtype,
                               _def_val if isinstance(_def_val, HValue) else dtype.from_py(None),
-                              nop_val)
+                              nop_val,
+                              nextSig)
             if syncRst is not None and def_val is None:
                 raise SigLvlConfErr(
                     "Probably forgotten default value on sync signal %s", name)
@@ -99,6 +103,10 @@ class RtlNetlist():
             if syncRst:
                 raise SigLvlConfErr(
                     f"Signal {name:s} has reset but has no clk")
+            if nextSig is not NOT_SPECIFIED:
+                raise SigLvlConfErr(
+                    f"Signal {name:s} has nextSig which is used for next register value, but has no clock and thus is not a register.")
+
             assert isinstance(_def_val, HValue) or (isinstance(_def_val, RtlSignal) and _def_val._const), (_def_val, "The default value needs to be constant")
             s = RtlSignal(self, name, dtype, def_val=_def_val, nop_val=nop_val)
 

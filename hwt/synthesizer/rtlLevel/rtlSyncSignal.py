@@ -1,9 +1,11 @@
+from typing import Optional
+
 from hwt.hdl.operator import Operator
 from hwt.hdl.operatorDefs import AllOps
 from hwt.hdl.statements.ifContainter import IfContainer
 from hwt.hdl.types.hdlType import HdlType
 from hwt.synthesizer.rtlLevel.constants import NOT_SPECIFIED
-from hwt.synthesizer.rtlLevel.mainBases import RtlMemoryBase
+from hwt.synthesizer.rtlLevel.mainBases import RtlMemoryBase, RtlSignalBase
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -14,7 +16,9 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
     to main signal on every clock rising edge
     """
 
-    def __init__(self, ctx: 'RtlNetlist', name: str, var_type: HdlType, def_val=None, nop_val=NOT_SPECIFIED):
+    def __init__(self, ctx: 'RtlNetlist', name: str, var_type: HdlType,
+                 def_val=None, nop_val=NOT_SPECIFIED,
+                 nextSig:Optional[RtlSignalBase]=NOT_SPECIFIED):
         """
         :param ~.ctx: context in which is sig. created (instance of RtlNetlist)
         :param ~.name: suggested name
@@ -25,8 +29,14 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
         super().__init__(ctx, name, var_type, def_val)
         if nop_val is NOT_SPECIFIED:
             nop_val = self
-        self.next = RtlSignal(ctx, name + "_next", var_type,
+        if nextSig is NOT_SPECIFIED:
+            self.next = RtlSignal(ctx, name + "_next", var_type,
                               nop_val=nop_val)
+        else:
+            assert nextSig._dtype is var_type
+            self.next = nextSig
+            if self.next._nop_val is NOT_SPECIFIED:
+                self.next._nop_val = self
 
     def _getDestinationSignalForAssignmentToThis(self):
         """

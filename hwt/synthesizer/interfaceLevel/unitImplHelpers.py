@@ -31,8 +31,8 @@ def getSignalName(sig):
     return sig.name
 
 
-def getInterfaceName(top: "Unit", io: Union[InterfaceBase, RtlSignal,
-                                            Tuple[Union[InterfaceBase, RtlSignal]]]):
+def getInterfaceName(top: UnitBase, io: Union[InterfaceBase, RtlSignal,
+                                              Tuple[Union[InterfaceBase, RtlSignal]]]):
     if isinstance(io, InterfaceBase):
         prefix = []
         parent = io._parent
@@ -97,14 +97,17 @@ def _normalize_default_value_dict_for_interface_array(root_val: dict,
 
 @internal
 def _instantiate_signals(intf: Union[Signal, HObjList, StructIntf],
-                         clk: Clk, rst: Union[Rst, Rst_n], def_val, nop_val, signal_create_fn):
+                         clk: Clk, rst: Union[Rst, Rst_n],
+                         def_val:Union[int, None, dict, list],
+                         nop_val:Union[int, None, dict, list],
+                         nextSig: Optional[RtlSignalBase], signal_create_fn):
     intf._direction = INTF_DIRECTION.UNKNOWN
     if isinstance(intf, Signal):
         name = intf._getHdlName()
         intf._sig = signal_create_fn(
             name,
             intf._dtype,
-            clk, rst, def_val, nop_val)
+            clk, rst, def_val, nop_val, nextSig)
         intf._sig._interface = intf
 
     elif isinstance(intf, HObjList):
@@ -135,7 +138,11 @@ def _instantiate_signals(intf: Union[Signal, HObjList, StructIntf],
                 _nop_val = nop_val.get(i, NOT_SPECIFIED)
             else:
                 _nop_val = nop_val[i]
-            _instantiate_signals(elm, clk, rst, _def_val, _nop_val, signal_create_fn)
+            if nextSig is NOT_SPECIFIED:
+                _nextSig = NOT_SPECIFIED
+            else:
+                _nextSig = nextSig.get(i, NOT_SPECIFIED)
+            _instantiate_signals(elm, clk, rst, _def_val, _nop_val, _nextSig, signal_create_fn)
 
     else:
         if def_val is not None:
@@ -167,7 +174,11 @@ def _instantiate_signals(intf: Union[Signal, HObjList, StructIntf],
             else:
                 _nop_val = nop_val.get(name, NOT_SPECIFIED)
 
-            _instantiate_signals(elm, clk, rst, _def_val, _nop_val, signal_create_fn)
+            if nextSig is NOT_SPECIFIED:
+                _nextSig = NOT_SPECIFIED
+            else:
+                _nextSig = getattr(nextSig, name)
+            _instantiate_signals(elm, clk, rst, _def_val, _nop_val, _nextSig, signal_create_fn)
 
 
 @internal
@@ -185,17 +196,19 @@ def Interface_without_registration(
         container: Union[InterfaceBase, HObjList],
         suggested_name:str,
         def_val: Union[int, None, dict, list]=None,
-        nop_val: Union[int, None, dict, list, "NOT_SPECIFIED"]=NOT_SPECIFIED):
+        nop_val: Union[int, None, dict, list, "NOT_SPECIFIED"]=NOT_SPECIFIED,
+        nextSig:Optional[RtlSignalBase]=NOT_SPECIFIED):
     """
     Load all parts of interface and construct signals in RtlNetlist context with an automatic name check,
     without need to explicitly add the interface in _interfaces list.
     """
     _loadDeclarations(container, suggested_name)
     _instantiate_signals(
-        container, None, None, def_val, nop_val,
-        lambda name, dtype, clk, rst, def_val, nop_val: parent._sig(name, dtype,
+        container, None, None, def_val, nop_val, nextSig,
+        lambda name, dtype, clk, rst, def_val, nop_val, nextSig: parent._sig(name, dtype,
                                                                   def_val=def_val,
-                                                                  nop_val=nop_val))
+                                                                  nop_val=nop_val,
+                                                                  ))
     container._parent = parent
     parent._private_interfaces.append(container)
     return container
@@ -207,7 +220,8 @@ class UnitImplHelpers(UnitBase):
              dtype: HdlType=BIT,
              def_val: Union[int, None, dict, list]=None,
              clk: Union[RtlSignalBase, None, Tuple[RtlSignalBase, OpDefinition]]=None,
-             rst: Optional[RtlSignalBase]=None) -> RtlSyncSignal:
+             rst: Optional[RtlSignalBase]=None,
+             nextSig:Optional[RtlSignalBase]=NOT_SPECIFIED) -> RtlSyncSignal:
         """
         Create RTL FF register in this unit
 
@@ -217,6 +231,8 @@ class UnitImplHelpers(UnitBase):
         :param clk: optional clock signal specification,
             (signal or tuple(signal, edge type (AllOps.RISING_EDGE/FALLING_EDGE)))
         :param rst: optional reset signal specification
+        :param nextSig: the signal which should be used as "next" signal for this register
+            if is not specified the new signal is generated. (Next signal holds value which should be in register in next clk.)
         :note: rst/rst_n resolution is done from signal type,
             if it is negated type the reset signal is interpreted as rst_n
         :note: if clk or rst is not specified default signal
@@ -235,10 +251,11 @@ class UnitImplHelpers(UnitBase):
             container = HdlType_to_Interface().apply(dtype)
             _loadDeclarations(container, name)
             _instantiate_signals(
-                container, clk, rst, def_val, NOT_SPECIFIED,
-                lambda name, dtype, clk, rst, def_val, nop_val: self._reg(name, dtype,
-                                                                          def_val=def_val,
-                                                                          clk=clk, rst=rst))
+                container, clk, rst, def_val, nextSig, NOT_SPECIFIED,
+                lambda name, dtype, clk, rst, def_val, nop_val, nextSig: self._reg(name, dtype,
+                                                                                   def_val=def_val,
+                                                                                   clk=clk, rst=rst,
+                                                                                   nextSig=nextSig))
             container._parent = self
             return container
         else:
@@ -248,7 +265,8 @@ class UnitImplHelpers(UnitBase):
                 dtype=dtype,
                 clk=clk,
                 syncRst=rst,
-                def_val=def_val
+                def_val=def_val,
+                nextSig=nextSig,
             )
 
     def _sig(self, name: str,
