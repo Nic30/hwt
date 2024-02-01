@@ -163,7 +163,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         length = st.bit_length()
 
         if isinstance(key, slice):
-            
+
             key = slice_to_SLICE(key, length)
             isSLICE = True
         else:
@@ -206,13 +206,13 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             if startIsVal:
                 _start = int(start)
                 if _start < 0 or _start > length:
-                    raise IndexError(_start, length)
+                    raise IndexError("start index is out of range", _start, length)
 
             # check end boundaries
             if stopIsVal:
                 _stop = int(stop)
                 if _stop < 0 or _stop > length:
-                    raise IndexError(_stop, length)
+                    raise IndexError("stop index is out of range", _stop, length)
 
             # check width of selected range
             if startIsVal and stopIsVal and _start - _stop <= 0:
@@ -426,23 +426,44 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
     def __lshift__(self, other):
         """
-        shift left
-
-        :note: arithmetic sift if type is signed else logical shift
+        shift left with 0 padding
         """
+        other = int(other)
+        if other == 0:
+            return self
+
+        assert other > 0, ("shift amount must be positive value", other)
         width = self._dtype.bit_length()
-        return self[(width - int(other)):]._concat(Bits(int(other)).from_py(0))
+        suffix = Bits(min(width, other)).from_py(0)
+        if other >= width:
+            return suffix
+        else:
+            return self[(width - other):]._concat(suffix)
 
     def __rshift__(self, other):
         """
         shift right
 
-        :note: arithmetic sift if type is signed else logical shift
+        :note: arithmetic shift if type is signed else logical shift with 0 padding
         """
+        other = int(other)
+        if other == 0:
+            return self
+        assert other > 0, ("shift amount must be positive value", other)
+        width = self._dtype.bit_length()
         if self._dtype.signed:
-            return self[:self._dtype.bit_length() - other]._concat(self[:other])
+            # arithmetical shift
+            msb = self[width - 1]
+            prefix = msb
+            for _ in range(min(other, width) - 1):
+                prefix = prefix._concat(msb)
+        else:
+            prefix = Bits(min(width, other)).from_py(0)
 
-        return Bits(int(other)).from_py(0)._concat(self[:other])
+        if other >= width:
+            return prefix
+        else:
+            return prefix._concat(self[:other])
 
     def __neg__(self):
         if isinstance(self, HValue):
@@ -553,6 +574,6 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
             o = Operator.withRes(AllOps.MUL, [self, other], subResT)
             return o._auto_cast(resT)
-    
+
     def __len__(self):
         return self._dtype.bit_length()
