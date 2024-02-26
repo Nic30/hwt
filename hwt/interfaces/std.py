@@ -151,7 +151,13 @@ class Rst_n(Signal[Bits]):
                                initDelay=int(0.6 * freq_to_period(clk.FREQ)))
 
 
-class VldSynced(Interface):
+class VldSync(Interface):
+
+    def _declr(self):
+        self.vld = Signal()
+
+
+class VldSynced(VldSync):
     """
     Interface data+valid signal, if vld=1 then data are valid and slave should
     accept them
@@ -162,13 +168,19 @@ class VldSynced(Interface):
 
     def _declr(self):
         self.data = VectSignal(self.DATA_WIDTH)
-        self.vld = Signal()
+        VldSync._declr(self)
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = VldSyncedAgent(sim, self)
 
 
-class RdSynced(Interface):
+class RdSync(Interface):
+
+    def _declr(self) -> None:
+        self.rd = Signal(masterDir=D.IN)
+
+
+class RdSynced(RdSync):
     """
     Interface data+ready signal, if rd=1 then slave has read data and master
     should actualize data
@@ -179,28 +191,10 @@ class RdSynced(Interface):
 
     def _declr(self):
         self.data = VectSignal(self.DATA_WIDTH)
-        self.rd = Signal(masterDir=D.IN)
+        RdSync._declr(self)
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = RdSyncedAgent(sim, self)
-
-
-class Handshaked(VldSynced):
-    """
-    Interface data+ready+valid signal, if rd=1 slave is ready to accept data,
-    if vld=1 master is sending data,
-    if rd=1 and vld=1 then data is transfered otherwise master
-    and slave has to wait on each other
-
-    :attention: one rd/vld is set it must not go down until transaction is made
-    """
-
-    def _declr(self):
-        super()._declr()
-        self.rd = Signal(masterDir=D.IN)
-
-    def _initSimAgent(self, sim: HdlSimulator):
-        self._ag = HandshakedAgent(sim, self)
 
 
 class HandshakeSync(Interface):
@@ -215,11 +209,32 @@ class HandshakeSync(Interface):
     """
 
     def _declr(self):
-        self.vld = Signal()
-        self.rd = Signal(masterDir=D.IN)
+        VldSync._declr(self)
+        RdSync._declr(self)
 
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HandshakeSyncAgent(sim, self)
+
+
+class Handshaked(HandshakeSync):
+    """
+    Interface data+ready+valid signal, if rd=1 slave is ready to accept data,
+    if vld=1 master is sending data,
+    if rd=1 and vld=1 then data is transfered otherwise master
+    and slave has to wait on each other
+
+    :attention: one rd/vld is set it must not go down until transaction is made
+    """
+
+    def _config(self):
+        self.DATA_WIDTH = Param(64)
+
+    def _declr(self):
+        VldSynced._declr(self)
+        RdSync._declr(self)
+
+    def _initSimAgent(self, sim: HdlSimulator):
+        self._ag = HandshakedAgent(sim, self)
 
 
 class ReqDoneSync(Interface):

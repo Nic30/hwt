@@ -1,14 +1,15 @@
 from hwt.hdl.types.hdlType import HdlType
-from hwt.interfaces.agents.handshaked import HandshakedAgent
-from hwt.interfaces.std import HandshakeSync
+from hwt.interfaces.agents.rdSynced import RdSyncedAgent
+from hwt.interfaces.std import RdSynced, Signal
 from hwt.interfaces.structIntf import HdlType_to_Interface
 from hwt.synthesizer.param import Param
 from hwtSimApi.hdlSimulator import HdlSimulator
+from ipCorePackager.constants import DIRECTION
 
 
-class HsStructIntf(HandshakeSync):
+class RdSyncedStructIntf(RdSynced):
     """
-    A handshaked interface which has a data signal of type specified in configuration of this interface
+    A RdSynced interface which has a data signal of type specified in configuration of this interface
     """
 
     def _config(self):
@@ -18,16 +19,16 @@ class HsStructIntf(HandshakeSync):
         assert isinstance(self.T, HdlType), (self.T, self._name)
         self._dtype = self.T
         self.data = HdlType_to_Interface().apply(self.T)
-        HandshakeSync._declr(self)
+        self.rd = Signal(masterDir=DIRECTION.IN)
 
     def _initSimAgent(self, sim:HdlSimulator):
-        self._ag = HsStructIntfAgent(sim, self)
+        self._ag = RdSyncedStructIntfAgent(sim, self)
 
 
-class HsStructIntfAgent(HandshakedAgent):
+class RdSyncedStructIntfAgent(RdSyncedAgent):
 
-    def __init__(self, sim:HdlSimulator, intf:HsStructIntf, allowNoReset=False):
-        HandshakedAgent.__init__(self, sim, intf, allowNoReset=allowNoReset)
+    def __init__(self, sim:HdlSimulator, intf:RdSyncedStructIntf, allowNoReset=False):
+        RdSyncedAgent.__init__(self, sim, intf, allowNoReset=allowNoReset)
         intf.data._initSimAgent(sim)
         self._data_ag = intf.data._ag
 
