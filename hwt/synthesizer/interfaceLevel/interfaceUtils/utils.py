@@ -3,7 +3,7 @@ from typing import Union
 from hwt.hdl.constants import DIRECTION
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.bitsVal import BitsVal
-from hwt.hdl.types.defs import BIT
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 
 
@@ -18,7 +18,7 @@ class NotSpecified(Exception):
     pass
 
 
-def walkPhysInterfaces(intf):
+def walkPhysInterfaces(intf: InterfaceBase):
     if intf._interfaces:
         for si in intf._interfaces:
             yield from walkPhysInterfaces(si)
@@ -26,7 +26,7 @@ def walkPhysInterfaces(intf):
         yield intf
 
 
-def connectPacked(srcPacked, dstInterface, exclude=None):
+def connectPacked(srcPacked: RtlSignalBase, dstInterface, exclude=None):
     """
     Connect 1D vector signal to this structuralized interface
     (LSB of first interface is LSB of result)
@@ -58,7 +58,7 @@ def connectPacked(srcPacked, dstInterface, exclude=None):
     return connections
 
 
-def walkFlatten(interface, shouldEnterIntfFn):
+def walkFlatten(interface: InterfaceBase, shouldEnterIntfFn):
     """
     :param shouldEnterIntfFn: function (actual interface)
         returns tuple (shouldEnter, shouldYield)
@@ -72,7 +72,7 @@ def walkFlatten(interface, shouldEnterIntfFn):
             yield from walkFlatten(intf, shouldEnterIntfFn)
 
 
-def packIntf(intf, masterDirEqTo=DIRECTION.OUT, exclude=None) -> Union[BitsVal, RtlSignalBase[Bits]]:
+def packIntf(intf: InterfaceBase, masterDirEqTo=DIRECTION.OUT, exclude=None) -> Union[BitsVal, RtlSignalBase[Bits]]:
     """
     Concatenate all signals to one big signal, recursively
     (LSB of first interface is LSB of result)
