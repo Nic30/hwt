@@ -30,7 +30,7 @@ def bitsCmp_detect_useless_cmp(op0, op1, op):
     v = int(op1)
     width = op1._dtype.bit_length()
     if op0._dtype.signed:
-        min_val = -1 if width == 1 else mask(width - 1) - 1
+        min_val = -1 if width == 1 else -mask(width - 1) - 1
         max_val = 0 if width == 1 else mask(width - 1)
     else:
         min_val = 0
@@ -90,7 +90,7 @@ def bitsCmp(self, other, op, selfReduceVal, evalFn=None):
         type_compatible = True
     elif t == ot:
         type_compatible = True
-    # lock type widht/signed to other type with
+    # lock type width/signed to other type with
     elif not ot.strict_width or not ot.strict_sign:
         type_compatible = True
         other = other._auto_cast(t)
