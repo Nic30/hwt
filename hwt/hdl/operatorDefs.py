@@ -21,8 +21,8 @@ class OpDefinition():
     :ivar ~._evalFn: function which evaluates operands
     """
 
-    def __init__(self, evalFn, allowsAssignTo=False):
-        self.id = None  # assigned automatically in AllOps
+    def __init__(self, evalFn, allowsAssignTo=False, idStr=None):
+        self.id = idStr  # assigned automatically in AllOps
         self._evalFn = evalFn
         self.allowsAssignTo = allowsAssignTo
 
