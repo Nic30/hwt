@@ -64,6 +64,8 @@ class RtlNetlist():
             nop_val = _try_cast_any_to_HValue(nop_val, dtype, False)
 
         if clk is not None:
+            if nextSig is not None and isinstance(nextSig, InterfaceBase):
+                nextSig = nextSig._sig
             s = RtlSyncSignal(self, name, dtype,
                               _def_val if isinstance(_def_val, HValue) else dtype.from_py(None),
                               nop_val,
