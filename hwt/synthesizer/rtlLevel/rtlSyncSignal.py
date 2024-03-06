@@ -33,6 +33,7 @@ class RtlSyncSignal(RtlMemoryBase, RtlSignal):
             self.next = RtlSignal(ctx, name + "_next", var_type,
                               nop_val=nop_val)
         else:
+            assert isinstance(nextSig, RtlSignalBase)
             assert nextSig._dtype is var_type
             self.next = nextSig
             if self.next._nop_val is NOT_SPECIFIED:
