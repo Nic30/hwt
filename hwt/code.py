@@ -1,11 +1,11 @@
 from operator import and_, or_, xor, add
-from typing import Union
+from typing import Union, Sequence, Optional, Tuple
 
 from hwt.code_utils import _mkOp, _intfToSig
 from hwt.hdl.operatorDefs import concatFn
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 from hwt.hdl.statements.ifContainter import IfContainer
-from hwt.hdl.statements.statement import HwtSyntaxError
+from hwt.hdl.statements.statement import HwtSyntaxError, HdlStatement
 from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.types.bits import Bits
@@ -14,7 +14,7 @@ from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import HValue
 from hwt.math import log2ceil
 from hwt.pyUtils.arrayQuery import arr_any
-from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
+from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase, UnitBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
     discoverEventDependency
@@ -22,10 +22,10 @@ from hwt.synthesizer.rtlLevel.signalUtils.walkers import \
 
 class CodeBlock(HdlStmCodeBlockContainer):
     """
-    Cointainer for list of statements
+    Container for list of statements
     """
 
-    def __init__(self, *statements):
+    def __init__(self, *statements: Sequence[HdlStatement]):
         super(CodeBlock, self).__init__()
         self._register_stements(statements, self.statements)
         self.rank = sum(map(lambda s: s.rank, statements))
@@ -40,7 +40,7 @@ class If(IfContainer):
     If statement generator
     """
 
-    def __init__(self, cond, *statements):
+    def __init__(self, cond: Union[RtlSignalBase, InterfaceBase], *statements: Sequence[HdlStatement]):
         """
         :param cond: condition in if statement
         :param statements: list of statements which should be active
@@ -63,7 +63,7 @@ class If(IfContainer):
         self._register_stements(statements, self.ifTrue)
         self._get_rtl_context().statements.add(self)
 
-    def Elif(self, cond, *statements):
+    def Elif(self, cond: Union[RtlSignalBase, InterfaceBase], *statements: Sequence[HdlStatement]):
         assert self.parentStm is None
         self.rank += 1
         cond_sig = _intfToSig(cond)
@@ -81,7 +81,7 @@ class If(IfContainer):
 
         return self
 
-    def Else(self, *statements):
+    def Else(self, *statements: Sequence[HdlStatement]):
         assert self.parentStm is None
         if self.ifFalse is not None:
             raise HwtSyntaxError(
@@ -99,7 +99,7 @@ class Switch(SwitchContainer):
     Switch statement generator
     """
 
-    def __init__(self, switchOn):
+    def __init__(self, switchOn: Union[RtlSignalBase, InterfaceBase]):
         switchOn = _intfToSig(switchOn)
         if not isinstance(switchOn, RtlSignalBase):
             raise HwtSyntaxError("Select is not signal, it is not certain"
@@ -112,7 +112,7 @@ class Switch(SwitchContainer):
         self._inputs.append(switchOn)
         switchOn.endpoints.append(self)
 
-    def add_cases(self, tupesValStms):
+    def add_cases(self, tupesValStms: Sequence[Tuple[Union[HValue, int], Sequence[HdlStatement]]]):
         """
         Add multiple case statements from iterable of tuples
         (caseVal, statements)
@@ -122,7 +122,7 @@ class Switch(SwitchContainer):
             s = s.Case(val, statements)
         return s
 
-    def Case(self, caseVal, *statements):
+    def Case(self, caseVal: Union[HValue, int], *statements: Sequence[HdlStatement]):
         "c-like case of switch statement"
         assert self.parentStm is None
         caseVal = toHVal(caseVal, self.switchOn._dtype)
@@ -140,7 +140,7 @@ class Switch(SwitchContainer):
 
         return self
 
-    def Default(self, *statements):
+    def Default(self, *statements: Sequence[HdlStatement]):
         """c-like default of switch statement
         """
         assert self.parentStm is None
@@ -150,7 +150,8 @@ class Switch(SwitchContainer):
         return self
 
 
-def SwitchLogic(cases, default=None):
+def SwitchLogic(cases: Sequence[Tuple[Union[RtlSignalBase, InterfaceBase, HValue, bool], Sequence[HdlStatement]]],
+                default: Optional[Sequence[HdlStatement]]=None):
     """
     Generate if tree for cases like (syntax sugar for large generated elifs)
 
@@ -200,7 +201,7 @@ def SwitchLogic(cases, default=None):
         return assigTop
 
 
-def In(sigOrVal, iterable):
+def In(sigOrVal: Union[RtlSignalBase, InterfaceBase, HValue], iterable: Sequence[Union[RtlSignalBase, InterfaceBase, HValue]]):
     """
     HDL convertible "in" operator, check if any of items
     in "iterable" equals "sigOrVal"
@@ -217,7 +218,7 @@ def In(sigOrVal, iterable):
     return res
 
 
-def StaticForEach(parentUnit, items, bodyFn, name=""):
+def StaticForEach(parentUnit: UnitBase, items, bodyFn, name=""):
     """
     Generate for loop for static items
 
