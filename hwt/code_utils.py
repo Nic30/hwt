@@ -2,10 +2,10 @@ from typing import Union
 
 from hwt.doc_markers import internal
 from hwt.hdl.types.defs import BIT
+from hwt.hdl.value import HValue
 from hwt.synthesizer.interfaceLevel.mainBases import InterfaceBase
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
 from ipCorePackager.constants import DIRECTION
-from hwt.hdl.value import HValue
 
 
 def rename_signal(unit_instance: "Unit",

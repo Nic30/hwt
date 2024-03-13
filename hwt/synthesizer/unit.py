@@ -205,7 +205,7 @@ class Unit(PropDeclrCollector, UnitImplHelpers):
                 if not self._ctx.interfaces:
                     raise IntfLvlConfErr(
                         "Can not find any external interface for unit %s"
-                        "- unit without interfaces are not synthetisable"
+                        "- unit without interfaces are not synthesisable"
                         % self._name)
 
             for proc in target_platform.afterToRtlImpl:
