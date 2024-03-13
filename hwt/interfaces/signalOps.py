@@ -133,7 +133,7 @@ class SignalOps(object):
 
     def __rshift__(self, other):
         ">> right shift (on fixed number of bits)"
-        return self._sig.__lshift__(other)
+        return self._sig.__rshift__(other)
 
     # hdl centric
     def _reversed(self):
