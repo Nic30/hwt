@@ -490,7 +490,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         else:
             if not isinstance(other._dtype, self._dtype.__class__):
                 raise TypeError()
-            return Operator.withRes(AllOps.DIV,
+            return Operator.withRes(AllOps.SDIV if self._dtype.signed else AllOps.UDIV,
                                     [self, other],
                                     self._dtype.__copy__())
 

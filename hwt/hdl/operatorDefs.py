@@ -120,6 +120,9 @@ class AllOps():
 
     MINUS_UNARY = OpDefinition(neg)
     DIV = OpDefinition(floordiv)
+    UDIV = OpDefinition(lambda a, b: a._unsigned() // b._unsigned())
+    SDIV = OpDefinition(lambda a, b: a._signed() <= b._signed())
+
     ADD = OpDefinition(add)
     SUB = OpDefinition(sub)
     POW = OpDefinition(power)
@@ -143,6 +146,16 @@ class AllOps():
     LT = OpDefinition(lt)
     LE = OpDefinition(le)
 
+    ULE = OpDefinition(lambda a, b: a._unsigned() <= b._unsigned())
+    ULT = OpDefinition(lambda a, b: a._unsigned() < b._unsigned())
+    UGT = OpDefinition(lambda a, b: a._unsigned() > b._unsigned())
+    UGE = OpDefinition(lambda a, b: a._unsigned() >= b._unsigned())
+
+    SLE = OpDefinition(lambda a, b: a._signed() <= b._signed())
+    SLT = OpDefinition(lambda a, b: a._signed() < b._signed())
+    SGT = OpDefinition(lambda a, b: a._signed() > b._signed())
+    SGE = OpDefinition(lambda a, b: a._signed() >= b._signed())
+
     INDEX = OpDefinition(getitem, allowsAssignTo=True)
     TERNARY = OpDefinition(ternaryFn)
     CALL = OpDefinition(callFn)
@@ -159,23 +172,62 @@ for a_name in dir(AllOps):
 
 CAST_OPS = (AllOps.BitsAsVec, AllOps.BitsAsSigned, AllOps.BitsAsUnsigned)
 BITWISE_OPS = (AllOps.NOT, AllOps.XOR, AllOps.AND, AllOps.OR)
-COMPARE_OPS = (AllOps.EQ, AllOps.NE, AllOps.GT, AllOps.GE, AllOps.LT, AllOps.LE)
+COMPARE_OPS = (
+    AllOps.EQ,
+    AllOps.NE,
+    AllOps.GT,
+    AllOps.GE,
+    AllOps.LT,
+    AllOps.LE,
+    AllOps.ULE,
+    AllOps.ULT,
+    AllOps.UGT,
+    AllOps.UGE,
+    AllOps.SLE,
+    AllOps.SLT,
+    AllOps.SGT,
+    AllOps.SGE,
+)
 # change of compare operator on operand order swap
 CMP_OP_SWAP = {
     AllOps.EQ: AllOps.EQ,
     AllOps.NE: AllOps.NE,
+
     AllOps.GT: AllOps.LT,
     AllOps.GE: AllOps.LE,
     AllOps.LT: AllOps.GT,
     AllOps.LE: AllOps.GE,
+
+    AllOps.UGT: AllOps.ULT,
+    AllOps.UGE: AllOps.ULE,
+    AllOps.ULT: AllOps.UGT,
+    AllOps.ULE: AllOps.UGE,
+
+    AllOps.SGT: AllOps.SLT,
+    AllOps.SGE: AllOps.SLE,
+    AllOps.SLT: AllOps.SGT,
+    AllOps.SLE: AllOps.SGE,
+
 }
 CMP_OPS_NEG = {
     AllOps.EQ: AllOps.NE,
     AllOps.NE: AllOps.EQ,
+
     AllOps.GT: AllOps.LE,
     AllOps.GE: AllOps.LT,
     AllOps.LT: AllOps.GE,
     AllOps.LE: AllOps.GT,
+
+    AllOps.UGT: AllOps.ULE,
+    AllOps.UGE: AllOps.ULT,
+    AllOps.ULT: AllOps.UGE,
+    AllOps.ULE: AllOps.UGT,
+
+    AllOps.SGT: AllOps.SLE,
+    AllOps.SGE: AllOps.SLT,
+    AllOps.SLT: AllOps.SGE,
+    AllOps.SLE: AllOps.SGT,
+
 }
 # always commutative operators for which order of operands does not matter
 ALWAYS_COMMUTATIVE_OPS = (AllOps.EQ, AllOps.NE, AllOps.XOR, AllOps.AND, AllOps.OR, AllOps.ADD, AllOps.MUL)

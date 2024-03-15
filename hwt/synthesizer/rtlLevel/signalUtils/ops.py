@@ -2,9 +2,10 @@ from copy import copy
 from operator import lshift, rshift
 
 from hwt.doc_markers import internal
-from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.operatorDefs import AllOps, OpDefinition, CAST_OPS
+from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.statement import HwtSyntaxError
+from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.sliceUtils import slice_to_SLICE
 from hwt.hdl.types.typeCast import toHVal
@@ -295,7 +296,8 @@ class RtlSignalOps():
 
     def __floordiv__(self, divider):
         try:
-            return self.naryOp(AllOps.DIV, tv(self).__floordiv__, divider)
+            t = self._dtype
+            return self.naryOp(AllOps.DIV if not isinstance(t, Bits) else AllOps.SDIV if t.signed else AllOps.UDIV, tv(self).__floordiv__, divider)
         except Exception as e:
             # simplification of previous exception traceback
             e_simplified = copy(e)

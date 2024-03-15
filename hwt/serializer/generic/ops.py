@@ -22,7 +22,19 @@ HWT_TO_HDLCONVERTOR_OPS = {
         AllOps.NE,
         AllOps.ADD,
     ]},
-    
+    AllOps.UDIV: HdlOpType.DIV,
+    AllOps.SDIV: HdlOpType.DIV,
+
+    AllOps.ULE: HdlOpType.LE,
+    AllOps.ULT: HdlOpType.LT,
+    AllOps.UGT: HdlOpType.GT,
+    AllOps.UGE: HdlOpType.GE,
+
+    AllOps.SLE: HdlOpType.LE,
+    AllOps.SLT: HdlOpType.LT,
+    AllOps.SGT: HdlOpType.GT,
+    AllOps.SGE: HdlOpType.GE,
+
     AllOps.NOT: HdlOpType.NEG,
     AllOps.MINUS_UNARY: HdlOpType.MINUS_UNARY,
     AllOps.RISING_EDGE: HdlOpType.RISING,
