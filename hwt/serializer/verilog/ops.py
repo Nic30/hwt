@@ -11,7 +11,7 @@ from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BIT, INT
 from hwt.hdl.value import HValue
 from hwt.serializer.exceptions import UnsupportedEventOpErr
-from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
+from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 
 
@@ -22,7 +22,7 @@ class ToHdlAstVerilog_ops():
     SIGNED = HdlValueId("$signed", obj=LanguageKeyword())
     UNSIGNED = HdlValueId("$unsigned", obj=LanguageKeyword())
     op_transl_dict = {
-        **HWT_TO_HDLCONVEROTR_OPS,
+        **HWT_TO_HDLCONVERTOR_OPS,
         AllOps.INDEX: HdlOpType.INDEX,
     }
 

@@ -14,7 +14,7 @@ from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
-from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
+from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from pyMathBitPrecise.array3t import Array3val
 from pyMathBitPrecise.bits3t import Bits3val, Bits3t
@@ -36,7 +36,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
     SELF_IO = hdl_getattr(HdlValueId("self", obj=LanguageKeyword()), "io")
     CONCAT = HdlValueId("Concat", obj=Concat)
     op_transl_dict = {
-        **HWT_TO_HDLCONVEROTR_OPS,
+        **HWT_TO_HDLCONVERTOR_OPS,
         AllOps.INDEX: HdlOpType.INDEX,
     }
     _cast_ops = {

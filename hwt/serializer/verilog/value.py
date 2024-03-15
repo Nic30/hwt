@@ -11,7 +11,7 @@ from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.enumVal import HEnumVal
 from hwt.hdl.types.sliceVal import HSliceVal
 from hwt.hdl.value import HValue
-from hwt.serializer.generic.ops import HWT_TO_HDLCONVEROTR_OPS
+from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.verilog.context import SignalTypeSwap
 from hwt.serializer.verilog.utils import verilogTypeOfSig
@@ -56,7 +56,7 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
 
     def sensitivityListItem(self, item, anyIsEventDependent):
         if isinstance(item, Operator):
-            return HdlOp(HWT_TO_HDLCONVEROTR_OPS[item.operator],
+            return HdlOp(HWT_TO_HDLCONVERTOR_OPS[item.operator],
                            [self.as_hdl(item.operands[0]), ])
         elif anyIsEventDependent:
             if item._dtype.negated:
