@@ -8,10 +8,11 @@ from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
 from hwt.hdl.value import HValue
 from hwt.synthesizer.rtlLevel.mainBases import RtlSignalBase
+from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
     bitsArithOp__val
-from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
+
 
 # dictionary which hold information how to change operator after
 # operands were swapped
@@ -59,9 +60,13 @@ def bitsCmp_detect_useless_cmp(op0, op1, op):
             # because value can not be greater than max
             return AllOps.EQ
 
+AnyHValue = Union[HValue, RtlSignalBase]
 
 @internal
-def bitsCmp(self, other, op, selfReduceVal, evalFn=None):
+def bitsCmp(self: AnyHValue, other: AnyHValue,
+            op: OpDefinition,
+            selfReduceVal: HValue,
+            evalFn:Callable[[AnyHValue, AnyHValue], AnyHValue]=None):
     """
     Apply a generic comparison binary operator
 
@@ -137,7 +142,7 @@ def bitsCmp(self, other, op, selfReduceVal, evalFn=None):
                 other = other[0]
             return bitsCmp(self, other, op, evalFn)
 
-    raise TypeError(f"Values of types ({self._dtype}, {other._dtype}) are not comparable")
+    raise TypeError(f"Values of types (", self._dtype, other._dtype, ") are not comparable")
 
 
 @internal
