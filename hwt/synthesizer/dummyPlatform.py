@@ -6,7 +6,7 @@ from hwt.synthesizer.rtlLevel.remove_unconnected_signals import removeUnconnecte
 class DummyPlatform():
     """
     Dummy synthesis platform, base class of all chip and toolset specific platforms.
-    Plaform in this context is a set of configurations which do describe the target toolset and chip/node.
+    Platform in this context is a set of configurations which do describe the target toolset and chip/node.
     It can also contains pre/post processing callbacks and optimizations required for this target.
 
     :note: all processors has to be callable with only one parameter
