@@ -33,6 +33,7 @@ class HArrayVal(HValue):
 
         if val is None:
             vld_mask = 0
+
         elif isinstance(val, dict):
             if vld_mask is None:
                 vld_mask = 1
@@ -40,6 +41,10 @@ class HArrayVal(HValue):
             for k, v in val.items():
                 if not isinstance(k, int):
                     k = int(k)
+
+                if k >= size:
+                    raise ValueError("Initialization value dictionary contains index which is larger than size of initialized array", typeObj, k)
+
                 e = elements[k] = typeObj.element_t.from_py(v)
                 vld_mask &= e._is_full_valid()
         else:
@@ -47,6 +52,9 @@ class HArrayVal(HValue):
                 vld_mask = 1
 
             for k, v in enumerate(val):
+                if k >= size:
+                    raise ValueError("Initialization value sequence is larger than size of initialized array", typeObj, val)
+
                 if isinstance(v, RtlSignalBase):  # is signal
                     assert v._dtype == typeObj.element_t
                     e = v
