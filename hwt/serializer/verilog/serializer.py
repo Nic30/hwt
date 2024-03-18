@@ -53,7 +53,7 @@ class ToHdlAstVerilog(ToHdlAstVerilog_types,
                     p.labels.append(label)
                     p.body = HdlStmBlock()
                     body = p.body.body
-                    for i, _v in enumerate(rom.def_val.val):
+                    for i, _v in enumerate(rom.def_val):
                         a = HdlStmAssign(self.as_hdl_int(int(_v)),
                                          self.as_hdl(rom[i]))
                         a.is_blocking = True
