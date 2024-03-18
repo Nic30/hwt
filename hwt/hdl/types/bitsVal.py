@@ -401,16 +401,16 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         return bitsCmp(self, other, AllOps.NE, BIT.from_py(0))
 
     def __lt__(self, other):
-        return bitsCmp(self, other, AllOps.LT, BIT.from_py(0))
+        return bitsCmp(self, other, AllOps.SLT if self._dtype.signed else AllOps.ULT, BIT.from_py(0), evalFn=AllOps.LT._evalFn)
 
     def __gt__(self, other):
-        return bitsCmp(self, other, AllOps.GT, BIT.from_py(0))
+        return bitsCmp(self, other, AllOps.SGT if self._dtype.signed else AllOps.UGT, BIT.from_py(0), evalFn=AllOps.GT._evalFn)
 
     def __ge__(self, other):
-        return bitsCmp(self, other, AllOps.GE, BIT.from_py(1))
+        return bitsCmp(self, other, AllOps.SGE if self._dtype.signed else AllOps.UGE, BIT.from_py(1), evalFn=AllOps.GE._evalFn)
 
     def __le__(self, other):
-        return bitsCmp(self, other, AllOps.LE, BIT.from_py(1))
+        return bitsCmp(self, other, AllOps.SLE if self._dtype.signed else AllOps.SLE, BIT.from_py(1), evalFn=AllOps.LE._evalFn)
 
     def __xor__(self, other):
         return bitsBitOp(self, other, AllOps.XOR,
