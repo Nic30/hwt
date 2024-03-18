@@ -188,15 +188,16 @@ COMPARE_OPS = (
     AllOps.SGT,
     AllOps.SGE,
 )
+
 # change of compare operator on operand order swap
 CMP_OP_SWAP = {
-    AllOps.EQ: AllOps.EQ,
-    AllOps.NE: AllOps.NE,
-
-    AllOps.GT: AllOps.LT,
-    AllOps.GE: AllOps.LE,
-    AllOps.LT: AllOps.GT,
-    AllOps.LE: AllOps.GE,
+    AllOps.EQ: AllOps.EQ,   # (a == b) == (b == a) 
+    AllOps.NE: AllOps.NE,   # (a != b) == (b != a) 
+    
+    AllOps.GT: AllOps.LT,   # (a > b)  == (b < a) 
+    AllOps.GE: AllOps.LE,   # (a >= b) == (b <= a)
+    AllOps.LT: AllOps.GT,   # (a < b)  == (b > a)
+    AllOps.LE: AllOps.GE,   # (a <= b) == (b >= a)
 
     AllOps.UGT: AllOps.ULT,
     AllOps.UGE: AllOps.ULE,
@@ -209,6 +210,7 @@ CMP_OP_SWAP = {
     AllOps.SLE: AllOps.SGE,
 
 }
+
 CMP_OPS_NEG = {
     AllOps.EQ: AllOps.NE,
     AllOps.NE: AllOps.EQ,
@@ -229,6 +231,7 @@ CMP_OPS_NEG = {
     AllOps.SLE: AllOps.SGT,
 
 }
+
 # always commutative operators for which order of operands does not matter
 ALWAYS_COMMUTATIVE_OPS = (AllOps.EQ, AllOps.NE, AllOps.XOR, AllOps.AND, AllOps.OR, AllOps.ADD, AllOps.MUL)
 # always commutative associative operators for which order of operands in expression tree does not matter

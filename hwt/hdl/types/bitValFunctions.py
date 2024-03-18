@@ -1,8 +1,8 @@
-from typing import Callable, Union, Optional
+from typing import Callable, Union
 
 from hwt.doc_markers import internal
 from hwt.hdl.operator import Operator
-from hwt.hdl.operatorDefs import AllOps, OpDefinition
+from hwt.hdl.operatorDefs import AllOps, OpDefinition, CMP_OP_SWAP
 from hwt.hdl.types.bits import Bits
 from hwt.hdl.types.defs import BOOL
 from hwt.hdl.types.typeCast import toHVal
@@ -12,18 +12,6 @@ from hwt.synthesizer.rtlLevel.signalUtils.exceptions import SignalDriverErr
 from pyMathBitPrecise.bit_utils import mask
 from pyMathBitPrecise.bits3t import bitsCmp__val, bitsBitOp__val, \
     bitsArithOp__val
-
-
-# dictionary which hold information how to change operator after
-# operands were swapped
-CMP_OP_REVERSE = {
-    AllOps.EQ: AllOps.EQ,  # (a == b) == (b == a)
-    AllOps.NE: AllOps.NE,  # (a != b) == (b != a)
-    AllOps.GT: AllOps.LT,  # (a > b)  == (b < a)
-    AllOps.LT: AllOps.GT,  # (a < b)  == (b > a)
-    AllOps.GE: AllOps.LE,  # (a >= b) == (b <= a)
-    AllOps.LE: AllOps.GE,  # (a <= b) == (b >= a)
-}
 
 
 @internal
@@ -113,7 +101,7 @@ def bitsCmp(self: AnyHValue, other: AnyHValue,
             if otherIsVal and other._is_full_valid():
                 res = bitsCmp_detect_useless_cmp(self, other, op)
             elif iamVal and self._is_full_valid():
-                res = bitsCmp_detect_useless_cmp(other, self, CMP_OP_REVERSE[op])
+                res = bitsCmp_detect_useless_cmp(other, self, CMP_OP_SWAP[op])
 
             if res is None:
                 pass
