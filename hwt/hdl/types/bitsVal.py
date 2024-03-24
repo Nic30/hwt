@@ -410,7 +410,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         return bitsCmp(self, other, AllOps.SGE if self._dtype.signed else AllOps.UGE, BIT.from_py(1), evalFn=AllOps.GE._evalFn)
 
     def __le__(self, other):
-        return bitsCmp(self, other, AllOps.SLE if self._dtype.signed else AllOps.SLE, BIT.from_py(1), evalFn=AllOps.LE._evalFn)
+        return bitsCmp(self, other, AllOps.SLE if self._dtype.signed else AllOps.ULE, BIT.from_py(1), evalFn=AllOps.LE._evalFn)
 
     def __xor__(self, other):
         return bitsBitOp(self, other, AllOps.XOR,
