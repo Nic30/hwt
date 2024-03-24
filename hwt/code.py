@@ -1,6 +1,8 @@
 from operator import and_, or_, xor, add
+from types import GeneratorType
 from typing import Union, Sequence, Optional, Tuple
 
+from hdlConvertorAst.to.hdlUtils import iter_with_last
 from hwt.code_utils import _mkOp, _intfToSig
 from hwt.hdl.operatorDefs import concatFn
 from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
@@ -168,7 +170,7 @@ def SwitchLogic(cases: Sequence[Tuple[Union[RtlSignalBase, InterfaceBase, HValue
     """
     assigTop = None
     hasElse = False
-    for cond, statements in cases:
+    for last, (cond, statements) in iter_with_last(cases):
         if isinstance(cond, (RtlSignalBase, InterfaceBase)):
             if assigTop is None:
                 assigTop = If(cond,
@@ -183,9 +185,13 @@ def SwitchLogic(cases: Sequence[Tuple[Union[RtlSignalBase, InterfaceBase, HValue
                 else:
                     assigTop.Else(statements)
                     hasElse = True
-            else:
-                raise HwtSyntaxError("Condition is not a signal, it is not certain"
-                                     " if this is an error or desire ", cond)
+
+                if last or isinstance(cases, GeneratorType):
+                    # allow True as a condition for default
+                    break
+            
+            raise HwtSyntaxError("Condition is not a signal, it is not certain"
+                                 " if this is an error or desire ", cond, cases)
 
     if assigTop is None:
         if default is None:
