@@ -78,6 +78,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * :skull: [jamesjiang52/Bitwise](https://github.com/jamesjiang52/Bitwise) - Python, simple HCL.
 * [blarney](https://github.com/blarney-lang/blarney) - Haskell, HCL
 * [bsc](https://github.com/B-Lang-org/bsc) - Haskell, C++, BSV - Bluespec Compiler
+* [Cement HDL/CmtHDL](https://github.com/pku-liang/Cement) - Rust, eHDL
 * [chisel](https://chisel.eecs.berkeley.edu/) - 2012-?, Scala, HCL
 * [Chips-2.0](https://github.com/dawsonjon/Chips-2.0) - , , FPGA Design Suite based on C to Verilog design flow
 * [circt](https://github.com/llvm/circt) - 2020-?, C++/LLVM, compiler infrastructure
@@ -131,6 +132,14 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 * [Hardcaml](https://github.com/janestreet/hardcaml) - OCaml, HCL
 * [magia-hdl](https://github.com/magia-hdl/magia) - 2023-?, Python, HCL
 * [Metron](https://github.com/aappleby/Metron) - C++, C++ -> SystemVerilog syntax translator
+
+### Dictionary
+* IR - Internal Representation
+* HDL - Hardware Design Languge (Lang. construct maps directly to specific HW part)
+* eHDL - Embedded HDL (HDL construct avare source code generator)
+* HCL - Hardware Construction Language (User code constructs IR. IR can be directly transipled to HDL)
+* HLS - High Level Synthesis (User code is translated to IR. IR is compiled
+ to HDL IR in multiple complex steps, typically contains scheduling, arch. mapping etc.)
 
 ## Related open-source
 
