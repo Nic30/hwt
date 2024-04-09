@@ -163,7 +163,6 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
         length = st.bit_length()
 
         if isinstance(key, slice):
-
             key = slice_to_SLICE(key, length)
             isSLICE = True
         else:
@@ -285,36 +284,38 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
             # int like value addressing a single bit
             if key._is_full_valid():
                 # check index range
-                _v = int(key)
-                if _v < 0 or _v > length - 1:
-                    raise IndexError(_v)
+                _index = int(key)
+                if _index < 0 or _index > length - 1:
+                    raise IndexError(_index)
                 if iAmResultOf == AllOps.INDEX:
                     # index directly in parent signal
                     original, parentIndex = self.origin.operands
                     if isinstance(parentIndex._dtype, HSlice):
                         parentLower = parentIndex.val.stop
-                        return original[parentLower + _v]
+                        return original[parentLower + _index]
                 else:
                     # index directly in the member of concatenation
                     update_key = False
                     while iAmResultOf == AllOps.CONCAT:
                         op_h, op_l = self.origin.operands
                         op_l_w = op_l._dtype.bit_length()
-                        if _v < op_l_w:
+                        if _index < op_l_w:
                             self = op_l
                         else:
                             self = op_h
-                            _v -= op_l_w
+                            _index -= op_l_w
                             update_key = True
                         iamVal = isinstance(self, HValue)
                         iAmResultOf = _get_operator_i_am_the_result_of(self)
-                        st = self._dtype
+                        st = self._dtype  # [todo] check if swap of negated flag can cause anything wrong
 
                     if update_key:
-                        key = key._dtype.from_py(_v)
+                        key = key._dtype.from_py(_index)
 
             if iamVal:
                 return Bits3val.__getitem__(self, key)
+            elif key._is_full_valid() and int(key) == 0 and self._dtype == BIT or self._dtype == BIT_N:
+                return self
 
             resT = BIT
         elif isinstance(key, RtlSignalBase):
@@ -337,6 +338,7 @@ class BitsVal(Bits3val, EventCapableVal, HValue):
 
         if st.negated and resT is BIT:
             resT = BIT_N
+
         return Operator.withRes(AllOps.INDEX, [self, key], resT)
 
     def __setitem__(self, index, value):
