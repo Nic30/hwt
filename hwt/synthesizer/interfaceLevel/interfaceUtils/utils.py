@@ -46,13 +46,16 @@ def connectPacked(srcPacked: RtlSignalBase, dstInterface, exclude=None):
         w = t.bit_length()
         if w == 1:
             if srcPacked._dtype.bit_length() == 1:
+                assert offset == 0, srcPacked
                 s = srcPacked
             else:
                 s = srcPacked[offset]
             offset += 1
         else:
-            s = srcPacked[(w + offset): offset] # src is likely to have insuficient amount of bits
+            assert srcPacked._dtype.bit_length() >= w + offset, ("Insufficient amount of bits in srcPacked", srcPacked, w, offset)
+            s = srcPacked[(w + offset): offset]  # src is likely to have insufficient amount of bits
             offset += w
+
         connections.append(sig(s))
 
     return connections
