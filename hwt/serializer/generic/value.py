@@ -5,11 +5,14 @@ from hdlConvertorAst.hdlAst._defs import HdlIdDef
 from hdlConvertorAst.hdlAst._expr import HdlValueId, HdlValueInt, HdlDirection
 from hwt.hdl.types.array import HArray
 from hwt.hdl.types.bits import Bits
+from hwt.hdl.types.bitsVal import BitsVal
 from hwt.hdl.types.defs import INT, BOOL, FLOAT64
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.float import HFloat
+from hwt.hdl.types.function import HFunction, HFunctionVal
 from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.string import HString
+from hwt.hdl.types.stringVal import HStringVal
 from hwt.hdl.value import HValue
 from hwt.hdl.variables import SignalItem
 from hwt.serializer.exceptions import SerializerException
@@ -53,6 +56,8 @@ class ToHdlAst_Value():
             return self.as_hdl_HStringVal(val)
         elif isinstance(t, HFloat):
             return self.as_hdl_HFloatVal(val)
+        elif isinstance(t, HFunction):
+            return self.as_hdl_HFunctionVal(val)
         else:
             raise SerializerException(
                 "can not resolve value serialization for %r"
@@ -65,10 +70,10 @@ class ToHdlAst_Value():
     def Value_try_extract_as_const(self, val):
         return None
 
-    def as_hdl_IntegerVal(self, val):
+    def as_hdl_IntegerVal(self, val: BitsVal):
         return self.as_hdl_int(int(val.val))
 
-    def as_hdl_BitsVal(self, val):
+    def as_hdl_BitsVal(self, val: BitsVal):
         t = val._dtype
         if t == INT:
             return self.as_hdl_IntegerVal(val)
@@ -78,7 +83,10 @@ class ToHdlAst_Value():
         return self.as_hdl_BitString(val.val, w, t.force_vector,
                                      val.vld_mask, t.signed)
 
-    def as_hdl_HStringVal(self, val):
+    def as_hdl_HStringVal(self, val: HStringVal):
+        return val.val
+
+    def as_hdl_HFunctionVal(self, val: HFunctionVal):
         return val.val
 
     def as_hdl_HFloatVal(self, val):

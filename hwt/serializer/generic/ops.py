@@ -39,4 +39,6 @@ HWT_TO_HDLCONVERTOR_OPS = {
     AllOps.MINUS_UNARY: HdlOpType.MINUS_UNARY,
     AllOps.RISING_EDGE: HdlOpType.RISING,
     AllOps.FALLING_EDGE: HdlOpType.FALLING,
+    AllOps.CALL: HdlOpType.CALL,
+    AllOps.DOT: HdlOpType.DOT,
 }
