@@ -241,7 +241,12 @@ class ReqDoneSync(Interface):
     """
     Synchronization interface, if req=1 slave begins operation and when
     it's done it asserts done=1 for one clk tick req does not need to stay high
+
+    AMBA CXS Protocol Specification https://developer.arm.com/documentation/ihi0079/latest/  (req=CXSVALID, done=CXSCRDGNT)
     """
+
+    def _config(self) -> None:
+        self.CREDIT_CNT = Param(1)
 
     def _declr(self):
         self.req = Signal()
