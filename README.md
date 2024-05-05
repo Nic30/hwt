@@ -73,6 +73,7 @@ Installation of [hwtLib](https://github.com/Nic30/hwtLib) is recomended as it co
 ## Similar projects
 
 * [autofpga](https://github.com/ZipCPU/autofpga) - C++, A utility for Composing FPGA designs from Peripherals
+* :skull: [baremetal](https://github.com/dawsonjon/baremetal) - Python, simple HCL
 * [BinPy](https://github.com/BinPy/BinPy) - Python, An electronic simulation library
 * :skull: [pervognsen/Bitwise](https://github.com/pervognsen/bitwise) - Python, HDL which translates python directly
 * :skull: [jamesjiang52/Bitwise](https://github.com/jamesjiang52/Bitwise) - Python, simple HCL.
