@@ -36,7 +36,7 @@ Also [serialization modes](https://github.com/Nic30/hwt/blob/master/hwt/serializ
 
 HWT performs no HLS planing or schedueling. HWT is also good as API for code generating by more advanced tools. Hierarchy of components/interfaces/types is not limited. User specifed names are checked for collision with target language.
 
-HWT designs are objects. No specific exceution is required, just run `python3`, import the thing and use `to_rtl` metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
+HWT designs are objects. No specific compiler execeution is required, just run `python3`, import the thing and use `to_rtl` metod or other (take a look at [examples](https://github.com/Nic30/hwtLib/blob/master/hwtLib/)).
 
 
 ## HWT ecosystem
