@@ -3,7 +3,7 @@ from hwt.constants import DIRECTION
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HwtSyntaxError
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.variables import SignalItem
+from hwt.hdl.variables import HdlSignalItem
 
 
 class HdlPortItem():
@@ -24,8 +24,8 @@ class HdlPortItem():
         self.dst = None
 
     @classmethod
-    def fromSignal(cls, s: SignalItem, component, d: DIRECTION):
-        return cls(s.name, d, s._dtype, component)
+    def fromSignal(cls, s: HdlSignalItem, component, d: DIRECTION):
+        return cls(s._name, d, s._dtype, component)
 
     @internal
     def connectOuterSig(self, signal):

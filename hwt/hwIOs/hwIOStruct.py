@@ -22,6 +22,7 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.typePath import TypePath
 from hwtSimApi.hdlSimulator import HdlSimulator
 from ipCorePackager.constants import DIRECTION
+from hwt.pyUtils.typingFuture import override
 
 
 class HwIOStruct(HwIO):
@@ -56,6 +57,7 @@ class HwIOStruct(HwIO):
         self._instantiateFieldFn = instantiateFieldFn
         self._fieldsToHwIOs = {}
 
+    @override
     def _declr(self):
         _t = self._dtype
         if isinstance(_t, HStruct):
@@ -76,9 +78,11 @@ class HwIOStruct(HwIO):
 
                 setattr(self, field.name, hwIO)
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIOStructAgent(sim, self)
 
+    @override
     def _eq(self, other: Union["HwIOStruct", HStructConstBase]):
         if isinstance(other, self.__class__):
             assert self._dtype == other._dtype
@@ -86,6 +90,7 @@ class HwIOStruct(HwIO):
         else:
             return And(*(sHwIO._eq(getattr(other, sHwIO._name)) for sHwIO in self._hwIOs))
 
+    @override
     def __ne__(self, other: Union["HwIOStruct", HStructConstBase]):
         if isinstance(other, self.__class__):
             assert self._dtype == other._dtype
@@ -93,6 +98,7 @@ class HwIOStruct(HwIO):
         else:
             return Or(*(sHwIO != getattr(other, sHwIO._name) for sHwIO in self._hwIOs))
 
+    @override
     def _reinterpret_cast(self, toT: HdlType):
         return hstruct_reinterpret(self._dtype, self, toT)
 
@@ -170,15 +176,18 @@ class HwIOStructRd(HwIODataRd):
     A HwIODataRd interface which has a data signal of type specified in configuration of this interface
     """
 
+    @override
     def _config(self):
         self.T: HdlType = HwParam(None)
 
+    @override
     def _declr(self):
         assert isinstance(self.T, HdlType), (self.T, self._name)
         self._dtype = self.T
         self.data = HdlType_to_HwIO().apply(self.T)
         self.rd = HwIOSignal(masterDir=DIRECTION.IN)
 
+    @override
     def _initSimAgent(self, sim:HdlSimulator):
         self._ag = HwIOStructRdAgent(sim, self)
 
@@ -190,9 +199,11 @@ class HwIOStructRdAgent(HwIODataRdAgent):
         hwIO.data._initSimAgent(sim)
         self._data_ag = hwIO.data._ag
 
+    @override
     def set_data(self, data):
         return self._data_ag.set_data(data)
 
+    @override
     def get_data(self):
         return self._data_ag.get_data()
 
@@ -205,12 +216,14 @@ class HwIOStructVld(HwIODataVld):
     def _config(self):
         self.T: HdlType = HwParam(None)
 
+    @override
     def _declr(self):
         assert isinstance(self.T, HdlType), (self.T, self._name)
         self._dtype = self.T
         self.data = HdlType_to_HwIO().apply(self.T)
         self.vld = HwIOSignal()
 
+    @override
     def _initSimAgent(self, sim:HdlSimulator):
         self._ag = HwIOStructVldAgent(sim, self)
 
@@ -222,26 +235,32 @@ class HwIOStructVldAgent(HwIODataVldAgent):
         hwIO.data._initSimAgent(sim)
         self._data_ag = hwIO.data._ag
 
+    @override
     def set_data(self, data):
         return self._data_ag.set_data(data)
 
+    @override
     def get_data(self):
         return self._data_ag.get_data()
+
 
 class HwIOStructRdVld(HwIORdVldSync):
     """
     A handshaked interface which has a data signal of type specified in configuration of this interface
     """
 
+    @override
     def _config(self):
         self.T: HdlType = HwParam(None)
 
+    @override
     def _declr(self):
         assert isinstance(self.T, HdlType), (self.T, self._name)
         self._dtype = self.T
         self.data = HdlType_to_HwIO().apply(self.T)
         HwIORdVldSync._declr(self)
 
+    @override
     def _initSimAgent(self, sim:HdlSimulator):
         self._ag = HwIOStructRdVldAgent(sim, self)
 
@@ -253,8 +272,10 @@ class HwIOStructRdVldAgent(HwIODataRdVldAgent):
         hwIO.data._initSimAgent(sim)
         self._data_ag = hwIO.data._ag
 
+    @override
     def set_data(self, data):
         return self._data_ag.set_data(data)
 
+    @override
     def get_data(self):
         return self._data_ag.get_data()

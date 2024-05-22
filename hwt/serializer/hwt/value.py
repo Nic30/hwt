@@ -14,7 +14,7 @@ from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumConst import HEnumConst
 from hwt.hdl.types.sliceConst import HSliceConst
-from hwt.hdl.variables import SignalItem
+from hwt.hdl.variables import HdlSignalItem
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.simModel.value import ToHdlAstSimModel_value
 
@@ -44,7 +44,7 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
 
         return hdl_call(c, args)
 
-    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlIdDef], declaration=False):
+    def as_hdl_HdlSignalItem(self, si: Union[HdlSignalItem, HdlIdDef], declaration=False):
         if declaration:
             if isinstance(si, HdlIdDef):
                 new_si = copy(si)
@@ -55,13 +55,13 @@ class ToHdlAstHwt_value(ToHdlAst_Value):
             else:
                 raise NotImplementedError()
         else:
-            # if isinstance(si, SignalItem) and si._const:
+            # if isinstance(si, HdlSignalItem) and si._const:
             #    # to allow const cache to extract constants
             #    return self.as_hdl_Value(si._val)
             if si.hidden and si.origin is not None:
                 return self.as_hdl(si.origin)
             else:
-                return HdlValueId(si.name, obj=si)
+                return HdlValueId(si._name, obj=si)
 
     def as_hdl_HDictConst(self, val):
         return ToHdlAstSimModel_value.as_hdl_HDictConst(self, val)

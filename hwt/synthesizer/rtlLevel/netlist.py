@@ -5,21 +5,23 @@ from hdlConvertorAst.hdlAst._expr import HdlValueId
 from hdlConvertorAst.hdlAst._structural import HdlModuleDec, HdlModuleDef, \
     HdlCompInst
 from hwt.code import If
+from hwt.constants import NOT_SPECIFIED
 from hwt.doc_markers import internal
-from hwt.hwParam import HwParam
 from hwt.hdl.const import HConst
 from hwt.hdl.operatorDefs import HwtOps
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.hdlType import HdlType
+from hwt.hwParam import HwParam
 from hwt.mainBases import HwIOBase
 from hwt.serializer.utils import HdlStatement_sort_key, RtlSignal_sort_key
 from hwt.synthesizer.dummyPlatform import DummyPlatform
 from hwt.synthesizer.exceptions import SigLvlConfErr
-from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal, NOT_SPECIFIED
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from hwt.synthesizer.rtlLevel.rtlSyncSignal import RtlSyncSignal
 from hwt.synthesizer.rtlLevel.statements_to_HdlStmCodeBlockContainers import statements_to_HdlStmCodeBlockContainers
 from ipCorePackager.constants import DIRECTION
+from hwt.hdl.statements.codeBlockContainer import HdlStmCodeBlockContainer
 
 
 class RtlNetlist():
@@ -31,8 +33,8 @@ class RtlNetlist():
     :ivar ~.statements: list of all statements which are connected to signals in this context
     :ivar ~.subHwModules: is set of all units in this context
     :ivar ~.hwIOs: initialized in create_HdlModuleDef
-    :ivar ~.ent: initialized in create_HdlModuleDec
-    :ivar ~.arch: initialized in create_HdlModuleDef
+    :ivar ~.hwModDec: initialized in create_HdlModuleDec
+    :ivar ~.hwModDef: initialized in create_HdlModuleDef
     """
 
     def __init__(self, parent: Optional["HwModule"]=None):
@@ -41,8 +43,8 @@ class RtlNetlist():
         self.statements: Set[HdlStatement] = set()
         self.subHwModules: Set["HwModule"] = set()
         self.hwIOs: Dict[RtlSignal, DIRECTION] = {}
-        self.ent: Optional[HdlModuleDec] = None
-        self.arch: Optional[HdlModuleDef] = None
+        self.hwModDec: Optional[HdlModuleDec] = None
+        self.hwModDef: Optional[HdlModuleDef] = None
 
     def sig(self, name: str, dtype=BIT, clk=None, syncRst=None,
             def_val=None, nop_val=NOT_SPECIFIED, nextSig=NOT_SPECIFIED) -> Union[RtlSignal, RtlSyncSignal]:
@@ -120,20 +122,21 @@ class RtlNetlist():
         """
         Generate a module header (entity) for this module
         """
-        self.ent = ent = HdlModuleDec()
-        ent.name = store_manager.name_scope.checked_name(name, ent)
-        ns = store_manager.hierarchy_push(ent)
+        self.hwModDec = hwModDec = HdlModuleDec()
+        hwModDec.name = store_manager.name_scope.checked_name(name, hwModDec)
+        ns = store_manager.hierarchy_push(hwModDec)
         # create generics
         for p in sorted(params, key=lambda x: x._name):
             hdl_val = p.get_hdl_value()
             v = HdlIdDef()
             v.origin = p
-            v.name = p._hdl_name = ns.checked_name(p._name, p)
+            # sanitize param name
+            v.name = p._name = ns.checked_name(p._name, p)
             v.type = hdl_val._dtype
             v.value = hdl_val
-            ent.params.append(v)
+            hwModDec.params.append(v)
 
-        return ent
+        return hwModDec
 
     def create_HdlModuleDef(self,
                             target_platform: DummyPlatform,
@@ -151,8 +154,8 @@ class RtlNetlist():
 
         ns = store_manager.name_scope
         mdef = HdlModuleDef()
-        mdef.dec = self.ent
-        mdef.module_name = HdlValueId(self.ent.name, obj=self.ent)
+        mdef.dec = self.hwModDec
+        mdef.module_name = HdlValueId(self.hwModDec.name, obj=self.hwModDec)
         mdef.name = "rtl"
 
         processes = sorted(self.statements, key=HdlStatement_sort_key)
@@ -167,29 +170,31 @@ class RtlNetlist():
             assert s.ctx is self, ("RtlSignals in this context must know that they are in this context", s)
             v = HdlIdDef()
             v.origin = s
-            s.name = v.name = ns.checked_name(s.name, s)
+            v.name = s._name = ns.checked_name(s._name, s)
             v.type = s._dtype
             v.value = s.def_val
             v.is_const = s._const
             mdef.objs.append(v)
 
         for p in processes:
+            p: HdlStmCodeBlockContainer
             p.name = ns.checked_name(p.name, p)
+
         mdef.objs.extend(processes)
         # instantiate subModules in architecture
         for sm in self.subHwModules:
             ci = HdlCompInst()
             ci.origin = sm
-            ci.module_name = HdlValueId(sm._ctx.ent.name, obj=sm._ctx.ent)
+            ci.module_name = HdlValueId(sm._ctx.hwModDec.name, obj=sm._ctx.hwModDec)
             ci.name = HdlValueId(ns.checked_name(sm._name + "_inst", ci), obj=sm)
-            e = sm._ctx.ent
+            hwModDec = sm._ctx.hwModDec
 
-            ci.param_map.extend(e.params)
-            ci.port_map.extend(e.ports)
+            ci.param_map.extend(hwModDec.params)
+            ci.port_map.extend(hwModDec.ports)
 
             mdef.objs.append(ci)
 
-        self.arch = mdef
+        self.hwModDef = mdef
         return mdef
 
     def getDebugScopeName(self):

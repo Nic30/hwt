@@ -14,7 +14,7 @@ from hwt.hdl.types.slice import HSlice
 from hwt.hdl.types.string import HString
 from hwt.hdl.types.stringConst import HStringConst
 from hwt.hdl.const import HConst
-from hwt.hdl.variables import SignalItem
+from hwt.hdl.variables import HdlSignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.mainBases import RtlSignalBase
 
@@ -34,7 +34,7 @@ class ToHdlAst_Value():
         """
         t = val._dtype
         if isinstance(val, RtlSignalBase):
-            return self.as_hdl_SignalItem(val)
+            return self.as_hdl_HdlSignalItem(val)
 
         # try to extract value as constant
         cc = self.constCache
@@ -94,7 +94,7 @@ class ToHdlAst_Value():
             raise NotImplementedError(val._dtype)
         return float(val)
 
-    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlIdDef],
+    def as_hdl_HdlSignalItem(self, si: Union[HdlSignalItem, HdlIdDef],
                           declaration=False):
         if declaration:
             if isinstance(si, HdlIdDef):
@@ -102,7 +102,7 @@ class ToHdlAst_Value():
                 si = si.origin
             else:
                 var = HdlIdDef()
-                var.name = si.name
+                var.name = si._name
                 var.origin = si
                 var.value = si._val
                 var.type = si._dtype
@@ -117,11 +117,11 @@ class ToHdlAst_Value():
                 elif si.endpoints:
                     if not v.vld_mask:
                         raise SerializerException(
-                            f"Signal {si.name:s} is constant and has undefined value")
+                            f"Signal {si._name:s} is constant and has undefined value")
                     var.is_const = True
                 else:
                     raise SerializerException(
-                        f"Signal {si.name:s} should be declared but it is not used")
+                        f"Signal {si._name:s} should be declared but it is not used")
 
             if v is None:
                 pass
@@ -152,4 +152,4 @@ class ToHdlAst_Value():
             if si.hidden and si.origin is not None:
                 # hidden signal, render it's driver instead
                 return self.as_hdl(si.origin)
-            return HdlValueId(si.name, obj=si)
+            return HdlValueId(si._name, obj=si)

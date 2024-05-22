@@ -36,7 +36,7 @@ class SignalDriverErr(Exception):
             scope_name = "<no parent>"
 
         b = [f"{self.__class__} raised in {scope_name:s}"]
-        err_sigs = sorted(self.args[0], key=lambda x: (x[0].value, x[1].name))
+        err_sigs = sorted(self.args[0], key=lambda x: (x[0].value, x[1]._name))
         prev_err_t = None
         for err_t, sig in err_sigs:
             if prev_err_t is None or prev_err_t != err_t:

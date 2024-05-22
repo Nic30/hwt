@@ -9,6 +9,7 @@ from hwt.pyUtils.setList import SetList
 from hwt.serializer.serializer_config import DummySerializerConfig
 from hwt.serializer.serializer_filter import SerializerFilter
 from hwt.hwModule import HdlConstraintList
+from hdlConvertorAst.hdlAst._structural import HdlModuleDec
 
 
 class StoreManager(object):
@@ -28,12 +29,12 @@ class StoreManager(object):
             _filter = SerializerFilter()
         self.filter = _filter
 
-    def hierarchy_push(self, obj: "HwModule") -> NameScope:
+    def hierarchy_push(self, obj: Union[HdlModuleDec, HdlModuleDef]) -> NameScope:
         c = self.name_scope.level_push(obj.name)
         self.name_scope = c
         return c
 
-    def hierarchy_pop(self, obj: "HwModule") -> NameScope:
+    def hierarchy_pop(self, obj: Union[HdlModuleDec, HdlModuleDef]) -> NameScope:
         p = self.name_scope.parent
         assert p is not None
         self.name_scope = p

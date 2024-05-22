@@ -30,7 +30,7 @@ def _default_param_updater(self, myP, parentPval):
 
 
 class HwIO(HwIOBase, HwIOImplDependentFns,
-                PropDeclrCollector, HwIODirectionFns):
+           PropDeclrCollector, HwIODirectionFns):
     """
     Base class for all interfaces in interface synthesizer
 
@@ -59,7 +59,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
     :ivar ~._ctx: RTL netlist context of all signals and params
         on this interface after interface is registered on parent _ctx
         is merged
-    :ivar ~._hdl_port: a HdlPortItem instance available once the unit is synthesized
+    :ivar ~._hdlPort: a HdlPortItem instance available once the unit is synthesized
 
     Agenda of simulations
 
@@ -70,7 +70,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
     _NAME_SEPARATOR = "_"
 
     def __init__(self, masterDir=DIRECTION.OUT,
-                 hdl_name:Optional[Union[str, Dict[str, str]]]=None,
+                 hdlName:Optional[Union[str, Dict[str, str]]]=None,
                  loadConfig=True):
         """
         This constructor is called when constructing new interface,
@@ -78,9 +78,6 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         automatically while extracting interfaces from HwModuleWithSoure
 
         :param masterDir: direction which this interface should have for master
-        :param multiplyedBy: this can be instance of integer or Param,
-            this mean the interface is array of the interfaces
-            where multiplyedBy is the size
         :param loadConfig: do load config in __init__
         """
         self._setAttrListener: Optional[Callable[[str, object], None]] = None
@@ -102,8 +99,8 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
         # flags for better design error detection
         self._isExtern = False
         self._ag: Optional[AgentBase] = None
-        self._hdl_port: Optional[HdlPortItem] = None
-        self._hdl_name_override = hdl_name
+        self._hdlPort: Optional[HdlPortItem] = None
+        self._hdlNameOverride = hdlName
 
     def _m(self):
         """
@@ -152,7 +149,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
             self._setDirectionsLikeIn(self._direction)
 
     @internal
-    def _clean(self, lockNonExternal=True):
+    def _cleanRtlSignals(self, lockNonExternal=True):
         """
         Remove all signals from this interface (used after unit is synthesized
         and its parent is connecting its interface to this unit)
@@ -160,7 +157,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
 
         if self._hwIOs:
             for sHwIO in self._hwIOs:
-                sHwIO._clean(lockNonExternal=lockNonExternal)
+                sHwIO._cleanRtlSignals(lockNonExternal=lockNonExternal)
 
     def _connectTo(self, master, exclude=None, fit=False) -> List[HdlAssignmentContainer]:
         """
@@ -258,7 +255,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
                              prefix='', typeTransform=None,
                              reverse_dir=False):
         """
-        Generate RtlSignal _sig and HdlPortInstance _hdl_port
+        Generate RtlSignal _sig and HdlPortInstance _hdlPort
         for each interface which has no subinterface
 
         :note: if already has _sig return use it instead
@@ -284,9 +281,9 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
             if typeTransform is not None:
                 t = typeTransform(t)
 
-            hdl_name = prefix + self._getHdlName()
+            hdlName = prefix + self._getHdlName()
 
-            s = ctx.sig(hdl_name, t)
+            s = ctx.sig(hdlName, t)
             s._hwIO = self
             self._sig = s
 
@@ -295,7 +292,7 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
                 m = ctx.parent
                 if reverse_dir:
                     d = DIRECTION.opposite(d)
-                    assert self._hdl_port is None, (
+                    assert self._hdlPort is None, (
                         "Now creating a hdl interface for top"
                         " it but seems that it was already created")
 
@@ -305,15 +302,15 @@ class HwIO(HwIOBase, HwIOImplDependentFns,
                 if reverse_dir:
                     pi = HdlPortItem.fromSignal(s, m, d)
                     # port of current top component
-                    s.name = name_scope.checked_name(s.name, s)
+                    s._name = name_scope.checked_name(s._name, s)
                     pi.connectInternSig(s)
-                    ctx.ent.ports.append(pi)
+                    ctx.hwModDec.ports.append(pi)
                 else:
-                    pi = self._hdl_port
+                    pi = self._hdlPort
                     # port of some subcomponent which names were already checked
                     pi.connectOuterSig(s)
 
-                self._hdl_port = pi
+                self._hdlPort = pi
 
     def _getHdlName(self) -> str:
         """Get name in HDL """

@@ -39,7 +39,7 @@ class TmpVarConstructor():
                postponed_init=False) -> RtlSignal:
         # create a new tmp variable in current process
         s = RtlSignal(None, None, dtype, virtual_only=True)
-        s.name = self.name_scope.checked_name(suggestedName, s)
+        s._name = self.name_scope.checked_name(suggestedName, s)
         s.hidden = False
         s._const = const
 
@@ -62,7 +62,7 @@ class TmpVarConstructor():
         else:
             assert var._const or var.drivers, (var, var.def_val)
 
-        as_hdl = self.toHdlAst.as_hdl_SignalItem(var, declaration=True)
+        as_hdl = self.toHdlAst.as_hdl_HdlSignalItem(var, declaration=True)
 
         for d in var.drivers:
             hdl.append(self.toHdlAst.as_hdl(d))

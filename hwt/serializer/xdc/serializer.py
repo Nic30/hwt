@@ -51,7 +51,7 @@ class XdcSerializer():
                 w(p._name)
                 w("_inst")
             elif isinstance(p, RtlSignal):
-                w(p.name)
+                w(p._name)
             elif isinstance(p, HwIO):
                 w(p._name)
             else:

@@ -184,7 +184,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
             s = obj._sigInside
             if s is not None:
                 # _sigInside is None if the signal was optimized out
-                sig_name = s.name
+                sig_name = s._name
                 s = getattr(model.io, sig_name, None)
                 if s is not None:
                     return False
@@ -233,7 +233,7 @@ class BasicRtlSimulatorWithSignalRegisterMethods(BasicRtlSimulator):
             if obj._sigInside is not None and isinstance(t, self.supported_type_classes):
                 s = obj._sigInside
                 #if isinstance(s, BasicRtlSimProxy):
-                sig_name = s.name
+                sig_name = s._name
                 s = getattr(model.io, sig_name, None)
                 if s is not None:
                     tName, width, formatter = self.get_trace_formatter(t)

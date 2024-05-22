@@ -24,11 +24,11 @@ class HObjList(list, Generic[T]):
     """
 
     def __init__(self, *args, **kwargs):
-        hdl_name_override = kwargs.pop("hdl_name", None)
+        hdlNameOverride = kwargs.pop("hdlName", None)
         list.__init__(self, *args, **kwargs)
         self._name: Optional[str] = None
         self._parent: Optional[Union["HwModule", "Interface"]] = None
-        self._hdl_name_override: Optional[str] = hdl_name_override
+        self._hdlNameOverride: Optional[str] = hdlNameOverride
 
     def _on_append(self, self_obj: "HObjList", item: T, index: int):
         pass
@@ -91,7 +91,7 @@ class HObjList(list, Generic[T]):
                 n = n
 
             add_name_part_from_this = True
-            name_override = tmp._hdl_name_override
+            name_override = tmp._hdlNameOverride
             if name_override is not None:
                 # recursively apply renames
                 if isinstance(name_override, str):

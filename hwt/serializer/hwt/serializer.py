@@ -1,5 +1,5 @@
 
-from typing import Optional
+from typing import Optional, Union
 
 from hdlConvertorAst.hdlAst import HdlStmBlock
 from hdlConvertorAst.hdlAst._expr import HdlValueId
@@ -14,6 +14,7 @@ from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.serializer.hwt.types import ToHdlAstHwt_types
 from hwt.serializer.hwt.value import ToHdlAstHwt_value
 from hwt.serializer.simModel.serializer import ToHdlAstSimModel
+from hwt.hdl.variables import HdlSignalItem
 
 
 class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
@@ -36,20 +37,20 @@ class ToHdlAstHwt(ToHdlAstHwt_value, ToHdlAstHwt_ops,
     def has_to_be_process(self, proc):
         return True
 
-    def can_pop_process_wrap(self, statements, hasToBeVhdlProcess):
+    def can_pop_process_wrap(self, statements, hasToBeVhdlProcess: bool):
         return False
 
     def _as_hdl_HdlModuleDef(self, new_m: HdlModuleDef) -> HdlModuleDef:
         return ToHdlAstSimModel._as_hdl_HdlModuleDef(self, new_m)
 
-    def sensitivityListItem(self, item, anyIsEventDependnt):
+    def sensitivityListItem(self, item: Union[HdlSignalItem, HOperatorNode], anyIsEventDependent: bool):
         if isinstance(item, HOperatorNode):
             op = item.operator
             assert op in (HwtOps.RISING_EDGE, HwtOps.FALLING_EDGE), item
             assert not item.operands[0].hidden, item
             return self.as_hdl_HOperatorNode(item)
         else:
-            return HdlValueId(item.name, obj=item)
+            return HdlValueId(item._name, obj=item)
 
     def as_hdl_CodeBlock(self, o: CodeBlock):
         res = HdlStmBlock()

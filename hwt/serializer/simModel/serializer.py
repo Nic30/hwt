@@ -56,8 +56,8 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
         intern, outer = o.getInternSig(), o.getOuterSig()
         assert not intern.hidden, intern
         assert not outer.hidden, outer
-        intern_hdl = HdlValueId(intern.name, obj=intern)
-        outer_hdl = HdlValueId(outer.name, obj=outer)
+        intern_hdl = HdlValueId(intern._name, obj=intern)
+        outer_hdl = HdlValueId(outer._name, obj=outer)
         pm = hdl_map_asoc(intern_hdl, outer_hdl)
         return pm
 
@@ -68,7 +68,7 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
             src = (src, dst_indexes, ev)
         else:
             src = (src, ev)
-        hdl_dst = hdl_getattr(hdl_getattr(self.SELF_IO, dst.name), "val_next")
+        hdl_dst = hdl_getattr(hdl_getattr(self.SELF_IO, dst._name), "val_next")
         hdl_a = HdlStmAssign(src, hdl_dst)
         hdl_a.is_blocking = dst.virtual_only
         return hdl_a
@@ -191,9 +191,9 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
             else:
                 raise TypeError("This is not an event sensitivity", op)
 
-            return HdlOp(sens, [HdlValueId(item.operands[0].name)])
+            return HdlOp(sens, [HdlValueId(item.operands[0]._name)])
         else:
-            return HdlValueId(item.name)
+            return HdlValueId(item._name)
 
     def has_to_be_process(self, proc):
         return True
@@ -204,8 +204,8 @@ class ToHdlAstSimModel(ToHdlAstSimModel_value, ToHdlAstSimModel_types,
     def as_hdl_HdlStmCodeBlockContainer(self, proc: HdlStmCodeBlockContainer) -> HdlStmProcess:
         p = ToHdlAst.as_hdl_HdlStmCodeBlockContainer(self, proc)
         self.stm_outputs[p] = sorted(
-            [HdlValueId(i.name, obj=i)
-             for i in proc._outputs]
+            [HdlValueId(o._name, obj=o)
+             for o in proc._outputs]
         )
         return p
 

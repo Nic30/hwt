@@ -3,14 +3,20 @@ from hwt.hdl.hdlObject import HdlObject
 from hwt.mainBases import RtlSignalBase
 
 
-class SignalItem(HdlObject):
+class HdlSignalItem(HdlObject):
     """
-    basic hdl signal used to design circuits
+    Basic hdl signal used to design circuits
     """
-
-    def __init__(self, name, dtype, def_val=None, virtual_only=False):
+    __slots__ = [
+        "_name",
+        "_dtype",
+        "virtual_only",
+        "def_val",
+    ]
+    
+    def __init__(self, name: str, dtype: "HdlType", def_val=None, virtual_only=False):
         """
-        :param name: name for better orientation in netlists
+        :param _name: name for better orientation in netlists
             (used only in serialization)
         :param dtype: data type of this signal
         :param def_val: value for initialization
@@ -19,7 +25,7 @@ class SignalItem(HdlObject):
             netlist, because it is only for internal notation
         """
         assert isinstance(name, str), name
-        self.name = name
+        self._name = name
         self._dtype = dtype
         self.virtual_only = virtual_only
         if def_val is None:

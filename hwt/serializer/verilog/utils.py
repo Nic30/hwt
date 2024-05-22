@@ -6,12 +6,12 @@ from hwt.doc_markers import internal
 from hwt.hdl.const import HConst
 from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
-from hwt.hdl.variables import SignalItem
+from hwt.hdl.variables import HdlSignalItem
 from ipCorePackager.constants import DIRECTION
 
 
 @internal
-def verilogTypeOfSig(s: Union[SignalItem, HdlPortItem]):
+def verilogTypeOfSig(s: Union[HdlSignalItem, HdlPortItem]):
     """
     Check if is register or wire
     """

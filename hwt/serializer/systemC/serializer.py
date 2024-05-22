@@ -68,7 +68,7 @@ class ToHdlAstSystemC(ToHdlAstSystemC_expr, ToHdlAstSystemC_type,
         var = HdlIdDef()
         var.direction = HWT_TO_HDLCONVEROTR_DIRECTION[o.direction]
         s = o.getInternSig()
-        var.name = s.name
+        var.name = s._name
         var.origin = o
         var.type = t
         return var

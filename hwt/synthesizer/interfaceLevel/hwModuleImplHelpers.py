@@ -24,15 +24,11 @@ def getSignalName(sig: RtlSignalBase):
     """
     Name getter which works for RtlSignal and HwIO instances as well
     """
-    try:
-        return sig._name
-    except AttributeError:
-        pass
-    return sig.name
+    return sig._name
 
 
 def HwIO_getName(top: HwModuleBase, io: Union[HwIOBase, RtlSignal,
-                                           Tuple[Union[HwIOBase, RtlSignal]]]):
+                                              Tuple[Union[HwIOBase, RtlSignal]]]):
     if isinstance(io, HwIOBase):
         prefix = []
         parent = io._parent
@@ -286,12 +282,12 @@ class HwModuleImplHelpers(HwModuleBase):
             return self._ctx.sig(name, dtype=dtype, def_val=def_val, nop_val=nop_val)
 
     @internal
-    def _cleanAsSubunit(self):
+    def _cleanThisSubunitRtlSignals(self):
         """
         Disconnect internal signals so unit can be reused by parent unit
         """
-        for hio in chain(self._hwIOs, self._private_hwIOs):
-            hio._clean()
+        for hwio in chain(self._hwIOs, self._private_hwIOs):
+            hwio._cleanRtlSignals()
 
     @internal
     def _signalsForSubHwModuleEntity(self, context: RtlNetlist, prefix: str):

@@ -98,10 +98,10 @@ class CombLoopAnalyzer():
 
     def visit_HwModule(self, m: HwModule):
         if m._shared_component_with is None:
-            arch = m._ctx.arch
+            arch = m._ctx.hwModDef
         else:
             _m, _, _ = m._shared_component_with
-            arch = _m._ctx.arch
+            arch = _m._ctx.hwModDef
         assert arch is not None, m
 
         self.visit_HdlModuleDef(arch)

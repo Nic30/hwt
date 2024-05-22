@@ -227,7 +227,7 @@ def HwIOObjMapItem_find_by_name(hwIOMapItem, name: str):
                 if x._name == name:
                     return x
             elif isinstance(x, RtlSignalBase):
-                if x.name == name:
+                if x._hdlName == name:
                     return x
             else:
                 v, n = x

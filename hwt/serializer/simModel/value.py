@@ -13,12 +13,12 @@ from hwt.hdl.types.bitsConst import HBitsConst
 from hwt.hdl.types.defs import BIT
 from hwt.hdl.types.enum import HEnum
 from hwt.hdl.types.enumConst import HEnumConst
-from hwt.hdl.variables import SignalItem
+from hwt.hdl.variables import HdlSignalItem
 from hwt.serializer.generic.ops import HWT_TO_HDLCONVERTOR_OPS
 from hwt.serializer.generic.value import ToHdlAst_Value
 from pyMathBitPrecise.array3t import Array3val
 from pyMathBitPrecise.bits3t import Bits3val, Bits3t
-
+from hwt.pyUtils.typingFuture import override
 
 zero, one = BIT.from_py(0), BIT.from_py(1)
 
@@ -48,17 +48,19 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
     def is_suitable_for_const_extract(self, val: HConst):
         return not isinstance(val._dtype, HEnum) or val.vld_mask == 0
 
-    def as_hdl_SignalItem(self, si: Union[SignalItem, HdlIdDef],
+    @override
+    def as_hdl_HdlSignalItem(self, si: Union[HdlSignalItem, HdlIdDef],
                           declaration=False):
         if not declaration and not si.hidden:
             if si._const:
-                return hdl_getattr(self.SELF, si.name)
+                return hdl_getattr(self.SELF, si._name)
             else:
-                return hdl_getattr(hdl_getattr(self.SELF_IO, si.name), "val")
+                return hdl_getattr(hdl_getattr(self.SELF_IO, si._name), "val")
         else:
-            return super(ToHdlAstSimModel_value, self).as_hdl_SignalItem(
+            return super(ToHdlAstSimModel_value, self).as_hdl_HdlSignalItem(
                 si, declaration=declaration)
 
+    @override
     def as_hdl_HBitsConst(self, val: HBitsConst):
         dtype = val._dtype
         as_hdl_int = self.as_hdl_int
@@ -74,6 +76,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             for k, v in val.items()
         }
 
+    @override
     def as_hdl_HArrayConst(self, val):
         return hdl_call(self.Array3val, [
             self.as_hdl_HdlType(val._dtype),
@@ -81,6 +84,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             self.as_hdl_int(val.vld_mask)
         ])
 
+    @override
     def as_hdl_HSliceConst(self, val):
         args = (
             val.val.start,
@@ -89,6 +93,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
         )
         return hdl_call(self.SLICE, [self.as_hdl_int(int(a)) for a in args])
 
+    @override
     def as_hdl_HEnumConst(self, val: HEnumConst):
         t_name = self.name_scope.get_object_name(val._dtype)
         if val.vld_mask:
@@ -98,6 +103,7 @@ class ToHdlAstSimModel_value(ToHdlAst_Value):
             return hdl_call(hdl_getattr(hdl_getattr(self.SELF, t_name), "from_py"),
                             [None, ])
 
+    @override
     def as_hdl_HOperatorNode(self, op: HOperatorNode):
         ops = op.operands
         o = op.operator

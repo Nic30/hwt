@@ -12,6 +12,8 @@ from hwt.mainBases import HwIOBase, HwModuleOrHwIOBase
 from hwt.serializer.generic.indent import getIndent
 from pyMathBitPrecise.bit_utils import ValidityError
 from pyMathBitPrecise.bits3t import Bits3val
+from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
+from hwtSimApi.basic_hdl_simulator.proxy import BasicRtlSimProxy
 
 
 def pprintHwIO(hio: Union[HwModule, HwIOBase], indent:int=0, prefix:str="", file=sys.stdout):
@@ -72,22 +74,30 @@ def reconnectHwModuleSignalsToModel(synthesisedHwModuleOrHwIO: HwModuleOrHwIOBas
     """
     obj = synthesisedHwModuleOrHwIO
 
-    for hio in obj._hwIOs:
-        if hio._hwIOs:
-            reconnectHwModuleSignalsToModel(hio, rtl_simulator)
+    for hwio in obj._hwIOs:
+        if hwio._hwIOs:
+            reconnectHwModuleSignalsToModel(hwio, rtl_simulator)
         else:
             # reconnect signal from model
-            name = hio._sigInside.name
+            si = hwio._sigInside
+            if isinstance(si, RtlSignal):
+                name = si._name
+            else:
+                assert isinstance(si, BasicRtlSimProxy), si
+                name = si._hdlName
+
             # update name and dtype
-            s = getattr(rtl_simulator.io, name)
+            s = getattr(rtl_simulator.io, name, None)
+            if s is None:
+                raise AttributeError()
             if s._dtype is None:
-                s._dtype = hio._dtype
-            s._name = hio._name
-            s.name = name
-            hio.read = s.read
-            hio.write = s.write
-            hio.wait = s.wait
-            hio._sigInside = s
+                s._dtype = hwio._dtype
+            s._name = hwio._name
+            s._hdlName = name
+            hwio.read = s.read
+            hwio.write = s.write
+            hwio.wait = s.wait
+            hwio._sigInside = s
 
 
 def HConstSequenceToInts(values: Sequence[HConst]):

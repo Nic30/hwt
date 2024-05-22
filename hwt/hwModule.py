@@ -1,7 +1,7 @@
 from copy import copy
 from typing import Optional, List, Dict, Tuple, Set, Union
 
-from hdlConvertorAst.hdlAst._structural import HdlCompInst
+from hdlConvertorAst.hdlAst._structural import HdlCompInst, HdlModuleDec
 from hwt.doc_markers import internal
 from hwt.hdl.portItem import HdlPortItem
 from hwt.mainBases import HwIOBase
@@ -12,6 +12,7 @@ from hwt.synthesizer.interfaceLevel.hwModuleImplHelpers import HwModuleImplHelpe
 from hwt.synthesizer.interfaceLevel.propDeclrCollector import PropDeclrCollector
 from hwt.synthesizer.rtlLevel.netlist import RtlNetlist
 from ipCorePackager.constants import DIRECTION
+from hdlConvertorAst.hdlAst._defs import HdlIdDef
 
 
 class HdlConstraintList(list):
@@ -70,13 +71,13 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         "_target_platform", "_store_manager",
     ])
 
-    def __init__(self, hdl_name_override:Optional[str]=None):
+    def __init__(self, hdlName:Optional[str]=None):
         self._parent: Optional[HwModule] = None
         self._name: Optional[str] = None
         self._shared_component_with = None
         self._hdl_module_name: Optional[str] = None
-        assert hdl_name_override is None or isinstance(hdl_name_override, str), hdl_name_override
-        self._hdl_name_override = hdl_name_override
+        assert hdlName is None or isinstance(hdlName, str), hdlName
+        self._hdlNameOverride = hdlName
         self._lazy_loaded: List[Union[HwModule, HwIOBase]] = []
         self._ctx = RtlNetlist(self)
         self._constraints = HdlConstraintList()
@@ -134,8 +135,8 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
         build verilog like module/vhdl like entity and architecture for this unit
         """
         if self._hdl_module_name is None:
-            if self._hdl_name_override:
-                self._hdl_module_name = self._hdl_name_override
+            if self._hdlNameOverride:
+                self._hdl_module_name = self._hdlNameOverride
             else:
                 self._hdl_module_name = self._getDefaultName()
         if self._name is None:
@@ -150,7 +151,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
                 "No lazy loaded interfaces declared in _impl()"
             copy_HdlModuleDec(replacement, self)
             yield False, self
-            self._cleanAsSubunit()
+            self._cleanThisSubunitRtlSignals()
             self._subHwModules = None
             self._private_hwIOs = None
             hwIO_map_repl_to_self = sharedCompBuildHwIOMap(
@@ -234,7 +235,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
 
             # after synthesis clean up interface so this :class:`hwt.hwModule.HwModule` object can be
             # used elsewhere
-            self._cleanAsSubunit()
+            self._cleanThisSubunitRtlSignals()
             if do_serialize_this:
                 self._checkCompInstances()
 
@@ -256,7 +257,7 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
 
     @internal
     def _checkCompInstances(self):
-        cInstances = [o for o in self._ctx.arch.objs
+        cInstances = [o for o in self._ctx.hwModDef.objs
                       if isinstance(o, HdlCompInst)]
         cInst_cnt = len(cInstances)
         unit_cnt = len(self._subHwModules)
@@ -280,12 +281,12 @@ class HwModule(PropDeclrCollector, HwModuleImplHelpers):
 def copy_HdlModuleDec_HwIO(orig_io: HwIOBase, new_io: HwIOBase,
                            ports: List[HdlPortItem], new_m: HwModule):
     new_io._direction = orig_io._direction
-    if orig_io._hdl_port is not None:
+    if orig_io._hdlPort is not None:
         s = orig_io._sigInside
         assert s is not None, (
             "the component which shares a body with this component"
             " is actually some parent of this component")
-        pi = copy(orig_io._hdl_port)
+        pi = copy(orig_io._hdlPort)
         pi.module = new_m
         ports.append(pi)
         d = pi.direction
@@ -295,7 +296,7 @@ def copy_HdlModuleDec_HwIO(orig_io: HwIOBase, new_io: HwIOBase,
             pi.src = None
         else:
             raise NotImplementedError(d)
-        new_io._hdl_port = pi
+        new_io._hdlPort = pi
         new_io._sigInside = s
     else:
         for hwIO in orig_io._hwIOs:
@@ -307,29 +308,32 @@ def copy_HdlModuleDec(orig_m: HwModule, new_m: HwModule):
     assert not new_m._ctx.statements
     assert not new_m._ctx.hwIOs
     assert not new_m._ctx.signals
-    assert new_m._ctx.ent is None
+    assert new_m._ctx.hwModDec is None
 
     new_m._hdl_module_name = orig_m._hdl_module_name
-    e = new_m._ctx.ent = copy(orig_m._ctx.ent)
+    hwModDec = new_m._ctx.hwModDec = copy(orig_m._ctx.hwModDec)
+    hwModDec: HdlModuleDec
 
     params = []
     param_by_name = {p._name: p for p in new_m._hwParams}
-    for p in e.params:
+    for p in hwModDec.params:
+        p: HdlIdDef
         new_p_def = copy(p)
         old_p = new_p_def.origin = param_by_name[p.origin._name]
-        old_p._hdl_name = p.origin._hdl_name
+        old_p._name = p.origin._name
         new_p_def.value = old_p.get_hdl_value()
         params.append(new_p_def)
-    e.params = params
 
-    e.ports = []
+    hwModDec.params = params
+
+    hwModDec.ports = []
     for hwO, hwI in zip(orig_m._hwIOs, new_m._hwIOs):
         if hwO._isExtern:
-            copy_HdlModuleDec_HwIO(hwO, hwI, e.ports, new_m)
+            copy_HdlModuleDec_HwIO(hwO, hwI, hwModDec.ports, new_m)
 
     # params should be already sorted
-    # e.params.sort(key=lambda x: x.name)
-    e.ports.sort(key=lambda x: x.name)
+    # hwModDec.params.sort(key=lambda x: x.name)
+    hwModDec.ports.sort(key=lambda x: x.name)
 
 
 def _sharedCompBuildHwIOMapList(replacement: List[HwIOBase],

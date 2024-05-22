@@ -7,7 +7,7 @@ from hwt.hdl.portItem import HdlPortItem
 from hwt.hdl.sensitivityCtx import SensitivityCtx
 from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.variables import SignalItem
+from hwt.hdl.variables import HdlSignalItem
 from hwt.mainBases import RtlSignalBase
 from hwt.pyUtils.setList import SetList
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr, \
@@ -22,7 +22,7 @@ OperatorCaheKeyType = Union[
 ]
 
 
-class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
+class RtlSignal(RtlSignalBase, HdlSignalItem, RtlSignalOps):
     """
     RtlSignal signal is container of connection
     between statements and operators
@@ -57,6 +57,8 @@ class RtlSignal(RtlSignalBase, SignalItem, RtlSignalOps):
         "_usedOps",
         "_usedOpsAlias",
         "hidden",
+        "_hdlName"
+        "hasGenericName",
         "_instId",
         "_nop_val",
         "_const",

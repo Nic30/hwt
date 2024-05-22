@@ -17,12 +17,12 @@ class HwParam():
     :ivar ~._name: name of parameter on parent HwModule/HwIO instance
     :ivar ~._parent: parent object instance
     """
-    __slots__ = ["_initval", "_name", "_hdl_name", "_parent"]
+    __slots__ = ["_initval", "_name", "_hdlName", "_parent"]
 
     def __init__(self, initval):
         self._initval = initval
         self._name = None
-        self._hdl_name = None
+        self._hdlName = None
         self._parent: "PropDeclrCollector" = None
 
     def get_hdl_type(self):

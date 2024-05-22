@@ -13,7 +13,8 @@ from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import SLICE
 from hwt.hdl.types.enumConst import HEnumConst
-from hwt.hdl.variables import SignalItem
+from hwt.hdl.variables import HdlSignalItem
+from hwt.pyUtils.typingFuture import override
 from hwt.serializer.generic.value import ToHdlAst_Value
 from hwt.serializer.hwt.ops import ToHdlAstHwt_ops
 from hwt.serializer.systemC.utils import systemCTypeOfSig
@@ -69,17 +70,18 @@ class ToHdlAstSystemC_expr(ToHdlAst_Value):
         else:
             return ToHdlAstVerilog_ops.as_hdl_HOperatorNode(self, op)
 
-    def as_hdl_SignalItem(self, si: SignalItem, declaration=False):
+    @override
+    def as_hdl_HdlSignalItem(self, si: HdlSignalItem, declaration=False):
         if declaration:
             sigType = systemCTypeOfSig(si)
             with SignalTypeSwap(self, sigType):
-                return ToHdlAst_Value.as_hdl_SignalItem(self, si, declaration=True)
+                return ToHdlAst_Value.as_hdl_HdlSignalItem(self, si, declaration=True)
         else:
             if si.hidden and si.origin is not None:
                 return self.as_hdl(si.origin)
             else:
                 sigType = systemCTypeOfSig(si)
-                _si = HdlValueId(si.name, obj=si)
+                _si = HdlValueId(si._name, obj=si)
                 if self._in_sensitivity_list or self._is_target or sigType is SIGNAL_TYPE.REG:
                     return _si
                 else:

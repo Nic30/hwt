@@ -8,11 +8,8 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 def to_tuple_of_names(objs):
     res = []
     for o in objs:
-        if isinstance(o, RtlSignal):
-            name = o.name
-        elif hasattr(o, "_name"):
-            name = o._name
-        else:
+        name = getattr(o, "_name", None)
+        if name is None:
             name = repr(o)
         res.append(name)
     return tuple(res)

@@ -178,7 +178,7 @@ class ResourceAnalyzer():
 
     # [TODO] constant to ROMs
     def visit_HwModule(self, m: HwModule):
-        self.visit_HdlModuleDef(m._ctx.arch)
+        self.visit_HdlModuleDef(m._ctx.hwModDef)
 
     def report(self):
         ctx = self.context

@@ -42,12 +42,12 @@ class ToHdlAstVerilog_Value(ToHdlAst_Value):
         assert i >= 0
         return HdlValueInt(i, None, None)
 
-    def as_hdl_SignalItem(self, si, declaration=False):
+    def as_hdl_HdlSignalItem(self, si, declaration=False):
         if declaration:
             with SignalTypeSwap(self, verilogTypeOfSig(si)):
-                return ToHdlAst_Value.as_hdl_SignalItem(self, si, declaration=declaration)
+                return ToHdlAst_Value.as_hdl_HdlSignalItem(self, si, declaration=declaration)
         else:
-            return ToHdlAst_Value.as_hdl_SignalItem(self, si, declaration=declaration)
+            return ToHdlAst_Value.as_hdl_HdlSignalItem(self, si, declaration=declaration)
 
     def as_hdl_HSliceConst(self, val: HSliceConst):
         upper = val.val.start - 1

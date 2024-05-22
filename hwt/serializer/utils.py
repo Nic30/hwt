@@ -21,7 +21,7 @@ def getMaxStmIdForStm(stm: HdlStatement):
 
 
 def RtlSignal_sort_key(s: RtlSignalBase):
-    return (s.name, s._instId)
+    return (s._name, s._instId)
 
 
 def HdlStatement_sort_key(stm: HdlStatement):

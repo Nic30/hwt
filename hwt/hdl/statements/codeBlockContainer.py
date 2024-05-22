@@ -6,8 +6,8 @@ from hwt.hdl.statements.statement import HdlStatement
 from hwt.hdl.statements.utils.listOfHdlStatements import ListOfHdlStatement
 from hwt.hdl.statements.utils.reduction import HdlStatement_try_reduce_list
 from hwt.hdl.statements.utils.signalCut import HdlStatement_cut_off_drivers_of_list
-from hwt.pyUtils.setList import SetList
 from hwt.mainBases import RtlSignalBase
+from hwt.pyUtils.setList import SetList
 
 
 class HdlStmCodeBlockContainer(HdlStatement):

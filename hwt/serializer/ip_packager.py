@@ -23,19 +23,20 @@ from hwt.synthesizer.rtlLevel.rtlSignal import RtlSignal
 from ipCorePackager.intfIpMeta import VALUE_RESOLVE
 from ipCorePackager.otherXmlObjs import Value
 from ipCorePackager.packager import IpCorePackager
+from hwt.hdl.variables import HdlSignalItem
 
 
 class ToHdlAstVivadoTclExpr(ToHdlAstVhdl2008):
     _spirit_decode = HdlValueId("spirit:decode")
     _id = HdlValueId("id")
 
-    def as_hdl_SignalItem(self, si, declaration=False):
+    def as_hdl_HdlSignalItem(self, si: HdlSignalItem, declaration=False):
         assert(declaration == False)
         if si.hidden:
             assert si.origin is not None, si
             return self.as_hdl(si.origin)
         else:
-            id_ = hdl_call(self._id, [f'MODELPARAM_VALUE.{si.name}'])
+            id_ = hdl_call(self._id, [f'MODELPARAM_VALUE.{si._name}'])
             return hdl_call(self._spirit_decode, [id_])
 
 
@@ -132,7 +133,7 @@ class IpPackager(IpCorePackager):
 
     @internal
     def iterParams(self, module: HwModule):
-        return module._ctx.ent.params
+        return module._ctx.hwModDec.params
 
     @internal
     def iterInterfaces(self, top: HwModule):
@@ -179,7 +180,7 @@ class IpPackager(IpCorePackager):
         """
         :see: doc of method on parent class
         """
-        return hwIO._sigInside.name
+        return hwIO._sigInside._name
 
     @internal
     def getInterfaceDirection(self, thisHwIO: HwIO):

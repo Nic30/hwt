@@ -42,7 +42,7 @@ def construct_tmp_dst_sig_for_slice(dst: RtlSignal,
         resolved from default and nop value
     """
     if is_signal_needed:
-        name = dst.name
+        name = dst._name
 
     def_val = dst.def_val
     nop_val = dst._nop_val

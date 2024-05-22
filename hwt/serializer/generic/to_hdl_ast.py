@@ -79,7 +79,7 @@ class ToHdlAst():
         if serFn is not None:
             return serFn(obj)
         elif isinstance(obj, RtlSignalBase):
-            return self.as_hdl_SignalItem(obj)
+            return self.as_hdl_HdlSignalItem(obj)
         else:
             raise SerializerException(self,
                                       "Not implemented for obj of",
@@ -267,7 +267,7 @@ class ToHdlAst():
         assert isinstance(o, HdlPortItem), o
         if o.dst._dtype != o.src._dtype:
             raise SerializerException(
-                f"Port map {o.name:s} is not valid (types does not match)  ({o.src._dtype}, {o.dst._dtype}) "
+                f"Port map {o._name:s} is not valid (types does not match)  ({o.src._dtype}, {o.dst._dtype}) "
                 f"{o.src} => {o.dst}"
             )
 
@@ -282,6 +282,7 @@ class ToHdlAst():
         new_o = copy(o)
         param_map = []
         for p in o.param_map:
+            p: HdlIdDef
             assert isinstance(p, HdlIdDef), p
             pm = hdl_map_asoc(HdlValueId(p.name, obj=p), self.as_hdl(p.value))
             param_map.append(pm)
@@ -289,6 +290,7 @@ class ToHdlAst():
 
         port_map = []
         for pi in o.port_map:
+            pi: HdlPortItem
             pm = self.as_hdl_PortConnection(pi)
             port_map.append(pm)
         new_o.port_map = port_map
@@ -302,14 +304,14 @@ class ToHdlAst():
         var = HdlIdDef()
         var.direction = HWT_TO_HDLCONVEROTR_DIRECTION[o.direction]
         s = o.getInternSig()
-        var.name = s.name
+        var.name = s._name
         var.origin = o
         var.type = o._dtype
         return self.as_hdl_HdlModuleDef_variable(var, (), None, None, None, None)
 
     def as_hdl_HdlModuleDec(self, o: HdlModuleDec):
         # :attention: name_scope should be already set to body of module
-        # with WithNameScope(self, self.name_scope.get_child(o.name)):
+        # with WithNameScope(self, self.name_scope.get_child(o._name)):
 
         new_o = copy(o)
 
@@ -336,7 +338,7 @@ class ToHdlAst():
             hdl_types.append(_t)
             types.add(t)
 
-        return self.as_hdl_SignalItem(v, declaration=True)
+        return self.as_hdl_HdlSignalItem(v, declaration=True)
 
     def _as_hdl_HdlModuleDef(self, new_m: HdlModuleDef) -> HdlModuleDef:
         # with WithNameScope(self,

@@ -4,7 +4,7 @@ from typing import Optional, Any
 from hwt.hdl.const import HConst
 from hwt.hdl.types.defs import INT, STR, BOOL, SLICE, FLOAT64
 from hwt.hdl.types.hdlType import HdlType
-from hwt.hdl.variables import SignalItem
+from hwt.hdl.variables import HdlSignalItem
 from hwt.mainBases import HwIOBase
 
 
@@ -19,7 +19,7 @@ defaultPyConversions = {
 
 def toHVal(op: Any, suggestedType: Optional[HdlType]=None):
     """Convert python or hdl value/signal object to hdl value/signal object"""
-    if isinstance(op, HConst) or isinstance(op, SignalItem):
+    if isinstance(op, HConst) or isinstance(op, HdlSignalItem):
         return op
     elif isinstance(op, HwIOBase):
         return op._sig

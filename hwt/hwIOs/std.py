@@ -21,7 +21,7 @@ from hwtSimApi.agents.rst import PullUpAgent
 from hwtSimApi.hdlSimulator import HdlSimulator
 from hwtSimApi.utils import freq_to_period
 from ipCorePackager.constants import DIRECTION
-
+from hwt.pyUtils.typingFuture import override
 
 T = TypeVar("T", bound=HdlType)
 
@@ -43,17 +43,17 @@ class HwIOSignal(SignalOps, HwIO, Generic[T]):
     def __init__(self,
                  dtype: HdlType=BIT,
                  masterDir: DIRECTION=DIRECTION.OUT,
-                 hdl_name:Optional[Union[str, Dict[str, str]]]=None,
+                 hdlName:Optional[Union[str, Dict[str, str]]]=None,
                  loadConfig: bool=True):
         self._sig: Optional["RtlSignal"] = None
         self._sigInside: Optional["RtlSignal"] = None
         self._isAccessible = True
         super().__init__(masterDir=masterDir,
-                         hdl_name=hdl_name,
+                         hdlName=hdlName,
                          loadConfig=loadConfig)
         self._dtype = dtype
 
-    def _clean(self, lockNonExternal=True):
+    def _cleanRtlSignals(self, lockNonExternal=True):
         """
         :see: :func:`HwIO._clean`
         """
@@ -62,8 +62,9 @@ class HwIOSignal(SignalOps, HwIO, Generic[T]):
         if lockNonExternal and not self._isExtern:
             self._isAccessible = False
         if self._hwIOs:
-            HwIO._clean(self, lockNonExternal=lockNonExternal)
+            HwIO._cleanRtlSignals(self, lockNonExternal=lockNonExternal)
 
+    @override
     def __copy__(self):
         """
         Create new instance of interface of same type and configuration
@@ -73,6 +74,7 @@ class HwIOSignal(SignalOps, HwIO, Generic[T]):
         hwIO._updateParamsFrom(self)
         return hwIO
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = HwIOSignalAgent(sim, self)
 
@@ -80,14 +82,14 @@ class HwIOSignal(SignalOps, HwIO, Generic[T]):
 def HwIOVectSignal(width: int,
                signed: Union[bool, None]=None,
                masterDir=DIRECTION.OUT,
-               hdl_name:Optional[Union[str, Dict[str, str]]]=None,
+               hdlName:Optional[Union[str, Dict[str, str]]]=None,
                loadConfig=True):
     """
     Create basic :class:`.HwIOSignal` interface where type is vector
     """
     return HwIOSignal(HBits(width, signed, force_vector=True),
                   masterDir,
-                  hdl_name,
+                  hdlName,
                   loadConfig)
 
 
@@ -97,13 +99,16 @@ class HwIOClk(HwIOSignal):
     """
     DEFAULT_FREQ = int(100e6)
 
+    @override
     def _config(self):
         self.FREQ = HwParam(HwIOClk.DEFAULT_FREQ)
 
+    @override
     def _getIpCoreIntfClass(self):
         from hwt.hwIOs.std_ip_defs import IP_Clk
         return IP_Clk
 
+    @override
     def _initSimAgent(self, sim: HdlSimulator):
         self._ag = ClockAgent(sim, self, period=int(freq_to_period(self.FREQ)))
 
@@ -132,11 +137,11 @@ class HwIORst_n(HwIOSignal[HBits]):
     def __init__(self,
                  masterDir=DIRECTION.OUT,
                  dtype=BIT_N,
-                 hdl_name:Optional[Union[str, Dict[str, str]]]=None,
+                 hdlName:Optional[Union[str, Dict[str, str]]]=None,
                  loadConfig=True):
         super(HwIORst_n, self).__init__(masterDir=masterDir,
                                     dtype=dtype,
-                                    hdl_name=hdl_name,
+                                    hdlName=hdlName,
                                     loadConfig=loadConfig)
 
     def _getIpCoreIntfClass(self):

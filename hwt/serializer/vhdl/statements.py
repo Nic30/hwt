@@ -12,7 +12,7 @@ from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL, BIT
 from hwt.hdl.types.sliceConst import HSliceConst
-from hwt.hdl.variables import SignalItem
+from hwt.hdl.variables import HdlSignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.mainBases import RtlSignalBase
 from hwt.synthesizer.rtlLevel.exceptions import SignalDriverErr
@@ -33,7 +33,7 @@ class ToHdlAstVhdl2008_statements():
     
     def as_hdl_HdlAssignmentContainer(self, a: HdlAssignmentContainer):
         _dst = dst = a.dst
-        assert isinstance(dst, SignalItem)
+        assert isinstance(dst, HdlSignalItem)
 
         if a.indexes is not None:
             for i in a.indexes:

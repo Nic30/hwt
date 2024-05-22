@@ -11,7 +11,7 @@ from hwt.hdl.statements.assignmentContainer import HdlAssignmentContainer
 from hwt.hdl.statements.switchContainer import SwitchContainer
 from hwt.hdl.types.bits import HBits
 from hwt.hdl.types.defs import BOOL
-from hwt.hdl.variables import SignalItem
+from hwt.hdl.variables import HdlSignalItem
 from hwt.serializer.exceptions import SerializerException
 from hwt.serializer.systemC.utils import systemCTypeOfSig
 from hwt.serializer.verilog.value import ToHdlAstVerilog_Value
@@ -69,7 +69,7 @@ class ToHdlAstSystemC_statements():
 
     def as_hdl_HdlAssignmentContainer(self, a: HdlAssignmentContainer):
         dst = a.dst
-        assert isinstance(dst, SignalItem)
+        assert isinstance(dst, HdlSignalItem)
         # assert not dst.virtual_only, "should not be required"
 
         if a.indexes is not None:

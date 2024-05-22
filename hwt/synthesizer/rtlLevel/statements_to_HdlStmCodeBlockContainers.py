@@ -43,7 +43,7 @@ def name_for_process(outputs: List[RtlSignal]) -> str:
     out_names = []
     for sig in outputs:
         if not sig.hasGenericName:
-            out_names.append(sig.name)
+            out_names.append(sig._name)
 
     if out_names:
         return min(out_names)
